@@ -160,7 +160,7 @@ void CrossAssetModel::update() {
     for (Size i = 0; i < p_.size(); ++i) {
         p_[i]->update();
     }
-    stateProcess_->flushCache();
+    stateProcess_->resetCache(0); // disable cache
     notifyObservers();
 }
 

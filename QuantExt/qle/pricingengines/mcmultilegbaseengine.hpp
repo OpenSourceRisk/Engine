@@ -35,6 +35,22 @@
 
 namespace QuantExt {
 
+// statistics
+
+struct McEngineStats : public QuantLib::Singleton<McEngineStats> {
+    McEngineStats() {
+        other_timer.start();
+        other_timer.stop();
+        path_timer.stop();
+        path_timer.start();
+        calc_timer.start();
+        calc_timer.stop();
+    }
+    boost::timer::cpu_timer other_timer;
+    boost::timer::cpu_timer path_timer;
+    boost::timer::cpu_timer calc_timer;
+};
+
 class McMultiLegBaseEngine {
 
 protected:

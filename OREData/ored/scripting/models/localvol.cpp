@@ -166,6 +166,7 @@ void LocalVol::populatePathValues(const Size nSamples, std::map<Date, std::vecto
         ++date;
         for (Size j = 0; j < indices_.size(); ++j) {
             rvs[j][i] = &paths[*date][j];
+            rvs[j][i]->expand();
         }
     }
 
@@ -204,7 +205,7 @@ void LocalVol::populatePathValues(const Size nSamples, std::map<Date, std::vecto
             // on the effective simulation dates populate the underlying paths
             if (i + 1 == *pos) {
                 for (Size j = 0; j < indices_.size(); ++j)
-                    rvs[j][date]->set(path, std::exp(logState[j]));
+                    rvs[j][date]->data()[path] = std::exp(logState[j]);
                 ++date;
                 ++pos;
             }

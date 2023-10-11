@@ -26,7 +26,49 @@
 
 #include <iostream>
 
+// if defined, RandomVariableStats are updated (this might impact perfomance!), default is undefined
+//#define ENABLE_RANDOMVARIABLE_STATS
+
 namespace QuantExt {
+
+namespace {
+
+#ifdef ENABLE_RANDOMVARIABLE_STATS
+
+inline void resumeDataStats() {
+    if (RandomVariableStats::instance().enabled)
+        RandomVariableStats::instance().data_timer.resume();
+}
+
+inline void stopDataStats(const std::size_t n) {
+    if (RandomVariableStats::instance().enabled) {
+        RandomVariableStats::instance().data_timer.stop();
+        RandomVariableStats::instance().data_ops += n;
+    }
+}
+
+inline void resumeCalcStats() {
+    if (RandomVariableStats::instance().enabled)
+        RandomVariableStats::instance().calc_timer.resume();
+}
+
+inline void stopCalcStats(const std::size_t n) {
+    if (RandomVariableStats::instance().enabled) {
+        RandomVariableStats::instance().calc_timer.stop();
+        RandomVariableStats::instance().calc_ops += n;
+    }
+}
+
+#else
+
+inline void resumeDataStats() {}
+inline void stopDataStats(const std::size_t n) {}
+inline void resumeCalcStats() {}
+inline void stopCalcStats(const std::size_t n) {}
+
+#endif
+
+} // namespace
 
 Filter::~Filter() { clear(); }
 
@@ -36,9 +78,11 @@ Filter::Filter(const Filter& r) {
     n_ = r.n_;
     constantData_ = r.constantData_;
     if (r.data_) {
+        resumeDataStats();
         data_ = new bool[n_];
         // std::memcpy(data_, r.data_, n_ * sizeof(bool));
         std::copy(r.data_, r.data_ + n_, data_);
+        stopDataStats(n_);
     } else {
         data_ = nullptr;
     }
@@ -63,6 +107,7 @@ Filter& Filter::operator=(const Filter& r) {
     } else {
         deterministic_ = false;
         if (r.n_ != 0) {
+            resumeDataStats();
             if (n_ != r.n_) {
                 if (data_)
                     delete[] data_;
@@ -70,6 +115,7 @@ Filter& Filter::operator=(const Filter& r) {
             }
             // std::memcpy(data_, r.data_, r.n_ * sizeof(bool));
             std::copy(r.data_, r.data_ + r.n_, data_);
+            stopDataStats(r.n_);
         } else {
             if (data_) {
                 delete[] data_;
@@ -109,22 +155,15 @@ void Filter::clear() {
 void Filter::updateDeterministic() {
     if (deterministic_ || !initialised())
         return;
+    resumeCalcStats();
     for (Size i = 0; i < n_; ++i) {
-        if (data_[i] != constantData_)
+        if (data_[i] != constantData_) {
+            stopCalcStats(i);
             return;
+        }
     }
     setAll(constantData_);
-}
-
-void Filter::set(const Size i, const bool v) {
-    QL_REQUIRE(i < n_, "Filter::set(" << i << "): out of bounds, size is " << n_);
-    if (deterministic_) {
-        if (v != constantData_)
-            expand();
-        else
-            return;
-    }
-    data_[i] = v;
+    stopCalcStats(n_);
 }
 
 void Filter::setAll(const bool v) {
@@ -142,27 +181,14 @@ void Filter::resetSize(const Size n) {
     n_ = n;
 }
 
-bool Filter::operator[](const Size i) const {
-    if (deterministic_)
-        return constantData_;
-    else
-        return data_[i];
-}
-
-bool Filter::at(const Size i) const {
-    QL_REQUIRE(n_ > 0, "Filter::at(" << i << "): dimension is zero");
-    if (deterministic_)
-        return constantData_;
-    QL_REQUIRE(i < n_, "Filter::at(" << i << "): out of bounds, size is " << n_);
-    return operator[](i);
-}
-
 void Filter::expand() {
     if (!deterministic_)
         return;
     deterministic_ = false;
+    resumeDataStats();
     data_ = new bool[n_];
     std::fill(data_, data_ + n_, constantData_);
+    stopDataStats(n_);
 }
 
 bool operator==(const Filter& a, const Filter& b) {
@@ -171,9 +197,13 @@ bool operator==(const Filter& a, const Filter& b) {
     if (a.deterministic_ && b.deterministic_) {
         return a.constantData_ == b.constantData_;
     } else {
+        resumeCalcStats();
         for (Size j = 0; j < a.size(); ++j)
-            if (a[j] != b[j])
+            if (a[j] != b[j]) {
+                stopCalcStats(j);
                 return false;
+            }
+        stopCalcStats(a.size());
     }
     return true;
 }
@@ -194,9 +224,11 @@ Filter operator&&(Filter x, const Filter& y) {
     if (x.deterministic_) {
         x.constantData_ = x.constantData_ && y.constantData_;
     } else {
+        resumeCalcStats();
         for (Size i = 0; i < x.size(); ++i) {
             x.data_[i] = x.data_[i] && y[i];
         }
+        stopCalcStats(x.size());
     }
     return x;
 }
@@ -215,9 +247,11 @@ Filter operator||(Filter x, const Filter& y) {
     if (x.deterministic_) {
         x.constantData_ = x.constantData_ || y.constantData_;
     } else {
+        resumeCalcStats();
         for (Size i = 0; i < x.size(); ++i) {
             x.data_[i] = x.data_[i] || y[i];
         }
+        stopCalcStats(x.size());
     }
     return x;
 }
@@ -232,9 +266,11 @@ Filter equal(Filter x, const Filter& y) {
     if (x.deterministic_) {
         x.constantData_ = x.constantData_ == y.constantData_;
     } else {
+        resumeCalcStats();
         for (Size i = 0; i < x.size(); ++i) {
             x.data_[i] = x.data_[i] == y[i];
         }
+        stopCalcStats(x.size());
     }
     return x;
 }
@@ -243,9 +279,11 @@ Filter operator!(Filter x) {
     if (x.deterministic_)
         x.constantData_ = !x.constantData_;
     else {
+        resumeCalcStats();
         for (Size i = 0; i < x.size(); ++i) {
             x.data_[i] = !x.data_[i];
         }
+        stopCalcStats(x.size());
     }
     return x;
 }
@@ -259,9 +297,11 @@ RandomVariable::RandomVariable(const RandomVariable& r) {
     n_ = r.n_;
     constantData_ = r.constantData_;
     if (r.data_) {
+        resumeDataStats();
         data_ = new double[n_];
         // std::memcpy(data_, r.data_, n_ * sizeof(double));
         std::copy(r.data_, r.data_ + n_, data_);
+        stopDataStats(n_);
     } else {
         data_ = nullptr;
     }
@@ -288,6 +328,7 @@ RandomVariable& RandomVariable::operator=(const RandomVariable& r) {
     } else {
         deterministic_ = false;
         if (r.n_ != 0) {
+            resumeDataStats();
             if (n_ != r.n_) {
                 if (data_)
                     delete[] data_;
@@ -295,6 +336,7 @@ RandomVariable& RandomVariable::operator=(const RandomVariable& r) {
             }
             // std::memcpy(data_, r.data_, r.n_ * sizeof(double));
             std::copy(r.data_, r.data_ + r.n_, data_);
+            stopDataStats(r.n_);
         } else {
             if (data_) {
                 delete[] data_;
@@ -335,11 +377,13 @@ RandomVariable::RandomVariable(const Filter& f, const Real valueTrue, const Real
         data_ = nullptr;
         setAll(f.at(0) ? valueTrue : valueFalse);
     } else {
+        resumeDataStats();
         constantData_ = 0.0;
         deterministic_ = false;
         data_ = new double[n_];
         for (Size i = 0; i < n_; ++i)
             set(i, f[i] ? valueTrue : valueFalse);
+        stopDataStats(n_);
     }
     time_ = time;
 }
@@ -349,9 +393,11 @@ RandomVariable::RandomVariable(const QuantLib::Array& array, const Real time) {
     deterministic_ = false;
     time_ = time;
     if (n_ != 0) {
+        resumeDataStats();
         data_ = new double[n_];
         // std::memcpy(data_, array.begin(), n_ * sizeof(double));
         std::copy(array.begin(), array.end(), data_);
+        stopDataStats(n_);
     } else {
         data_ = nullptr;
     }
@@ -362,7 +408,9 @@ void RandomVariable::copyToMatrixCol(QuantLib::Matrix& m, const Size j) const {
     if (deterministic_)
         std::fill(m.column_begin(j), std::next(m.column_end(j), n_), constantData_);
     else if (n_ != 0) {
+        resumeDataStats();
         std::copy(data_, data_ + n_, m.column_begin(j));
+        stopDataStats(n_);
     }
 }
 
@@ -370,8 +418,10 @@ void RandomVariable::copyToArray(QuantLib::Array& array) const {
     if (deterministic_)
         std::fill(array.begin(), array.end(), constantData_);
     else if (n_ != 0) {
+        resumeDataStats();
         // std::memcpy(array.begin(), data_, n_ * sizeof(double));
         std::copy(data_, data_ + n_, array.begin());
+        stopDataStats(n_);
     }
 }
 
@@ -390,22 +440,14 @@ void RandomVariable::updateDeterministic() {
     if (deterministic_ || !initialised())
         return;
     for (Size i = 0; i < n_; ++i) {
-        if (!QuantLib::close_enough(data_[i], constantData_))
-            return;
-    }
-    setAll(constantData_);
-}
-
-void RandomVariable::set(const Size i, const Real v) {
-    QL_REQUIRE(i < n_, "RandomVariable::set(" << i << "): out of bounds, size is " << n_);
-    if (deterministic_) {
-        if (!QuantLib::close_enough(v, constantData_)) {
-            expand();
-        } else {
+        resumeCalcStats();
+        if (!QuantLib::close_enough(data_[i], constantData_)) {
+            stopCalcStats(i);
             return;
         }
     }
-    data_[i] = v;
+    setAll(constantData_);
+    stopCalcStats(n_);
 }
 
 void RandomVariable::setAll(const Real v) {
@@ -423,27 +465,14 @@ void RandomVariable::resetSize(const Size n) {
     n_ = n;
 }
 
-Real RandomVariable::operator[](const Size i) const {
-    if (deterministic_)
-        return constantData_;
-    else
-        return data_[i];
-}
-
-Real RandomVariable::at(const Size i) const {
-    QL_REQUIRE(n_ > 0, "RandomVariable::at(" << i << "): dimension is zero");
-    if (deterministic_)
-        return constantData_;
-    QL_REQUIRE(i < n_, "RandomVariable::at(" << i << "): out of bounds, size is " << n_);
-    return operator[](i);
-}
-
 void RandomVariable::expand() {
     if (!deterministic_)
         return;
     deterministic_ = false;
+    resumeDataStats();
     data_ = new double[n_];
     std::fill(data_, data_ + n_, constantData_);
+    stopDataStats(n_);
 }
 
 void RandomVariable::checkTimeConsistencyAndUpdate(const Real t) {
@@ -464,9 +493,12 @@ bool operator==(const RandomVariable& a, const RandomVariable& b) {
     if (a.deterministic_ && b.deterministic_) {
         return a.constantData_ == b.constantData_;
     } else {
+        resumeCalcStats();
         for (Size j = 0; j < a.size(); ++j)
-            if (a[j] != b[j])
+            if (a[j] != b[j]) {
+                stopCalcStats(j);
                 return false;
+            }
     }
     return QuantLib::close_enough(a.time(), b.time());
 }
@@ -488,9 +520,11 @@ RandomVariable& RandomVariable::operator+=(const RandomVariable& y) {
     if (deterministic_)
         constantData_ += y.constantData_;
     else {
+        resumeCalcStats();
         for (Size i = 0; i < n_; ++i) {
             data_[i] += y[i];
         }
+        stopCalcStats(n_);
     }
     return *this;
 }
@@ -510,9 +544,11 @@ RandomVariable& RandomVariable::operator-=(const RandomVariable& y) {
     if (deterministic_)
         constantData_ -= y.constantData_;
     else {
+        resumeCalcStats();
         for (Size i = 0; i < n_; ++i) {
             data_[i] -= y[i];
         }
+        stopCalcStats(n_);
     }
     return *this;
 }
@@ -532,9 +568,11 @@ RandomVariable& RandomVariable::operator*=(const RandomVariable& y) {
     if (deterministic_)
         constantData_ *= y.constantData_;
     else {
+        resumeCalcStats();
         for (Size i = 0; i < n_; ++i) {
             data_[i] *= y[i];
         }
+        stopCalcStats(n_);
     }
     return *this;
 }
@@ -554,9 +592,11 @@ RandomVariable& RandomVariable::operator/=(const RandomVariable& y) {
     if (deterministic_)
         constantData_ /= y.constantData_;
     else {
+        resumeCalcStats();
         for (Size i = 0; i < n_; ++i) {
             data_[i] /= y[i];
         }
+        stopCalcStats(n_);
     }
     return *this;
 }
@@ -600,9 +640,11 @@ RandomVariable max(RandomVariable x, const RandomVariable& y) {
     if (x.deterministic())
         x.constantData_ = std::max(x.constantData_, y.constantData_);
     else {
+        resumeCalcStats();
         for (Size i = 0; i < x.size(); ++i) {
             x.data_[i] = std::max(x.data_[i], y[i]);
         }
+        stopCalcStats(x.size());
     }
     return x;
 }
@@ -618,9 +660,11 @@ RandomVariable min(RandomVariable x, const RandomVariable& y) {
     if (x.deterministic())
         x.constantData_ = std::min(x.constantData_, y.constantData_);
     else {
+        resumeCalcStats();
         for (Size i = 0; i < x.size(); ++i) {
             x.data_[i] = std::min(x.data_[i], y[i]);
         }
+        stopCalcStats(x.size());
     }
     return x;
 }
@@ -638,9 +682,11 @@ RandomVariable pow(RandomVariable x, const RandomVariable& y) {
     if (x.deterministic())
         x.constantData_ = std::pow(x.constantData_, y.constantData_);
     else {
+        resumeCalcStats();
         for (Size i = 0; i < x.size(); ++i) {
             x.data_[i] = std::pow(x.data_[i], y[i]);
         }
+        stopCalcStats(x.size());
     }
     return x;
 }
@@ -649,9 +695,11 @@ RandomVariable operator-(RandomVariable x) {
     if (x.deterministic_)
         x.constantData_ = -x.constantData_;
     else {
+        resumeCalcStats();
         for (Size i = 0; i < x.n_; ++i) {
             x.data_[i] = -x.data_[i];
         }
+        stopCalcStats(x.n_);
     }
     return x;
 }
@@ -660,9 +708,11 @@ RandomVariable abs(RandomVariable x) {
     if (x.deterministic_)
         x.constantData_ = std::abs(x.constantData_);
     else {
+        resumeCalcStats();
         for (Size i = 0; i < x.n_; ++i) {
             x.data_[i] = std::abs(x.data_[i]);
         }
+        stopCalcStats(x.n_);
     }
     return x;
 }
@@ -671,9 +721,11 @@ RandomVariable exp(RandomVariable x) {
     if (x.deterministic_)
         x.constantData_ = std::exp(x.constantData_);
     else {
+        resumeCalcStats();
         for (Size i = 0; i < x.n_; ++i) {
             x.data_[i] = std::exp(x.data_[i]);
         }
+        stopCalcStats(x.n_);
     }
     return x;
 }
@@ -681,10 +733,13 @@ RandomVariable exp(RandomVariable x) {
 RandomVariable log(RandomVariable x) {
     if (x.deterministic_)
         x.constantData_ = std::log(x.constantData_);
-    else
+    else {
+        resumeCalcStats();
         for (Size i = 0; i < x.n_; ++i) {
             x.data_[i] = std::log(x.data_[i]);
         }
+        stopCalcStats(x.n_);
+    }
     return x;
 }
 
@@ -692,9 +747,11 @@ RandomVariable sqrt(RandomVariable x) {
     if (x.deterministic_)
         x.constantData_ = std::sqrt(x.constantData_);
     else {
+        resumeCalcStats();
         for (Size i = 0; i < x.n_; ++i) {
             x.data_[i] = std::sqrt(x.data_[i]);
         }
+        stopCalcStats(x.n_);
     }
     return x;
 }
@@ -703,9 +760,11 @@ RandomVariable sin(RandomVariable x) {
     if (x.deterministic_)
         x.constantData_ = std::sin(x.constantData_);
     else {
+        resumeCalcStats();
         for (Size i = 0; i < x.n_; ++i) {
             x.data_[i] = std::sin(x.data_[i]);
         }
+        stopCalcStats(x.n_);
     }
     return x;
 }
@@ -714,9 +773,11 @@ RandomVariable cos(RandomVariable x) {
     if (x.deterministic_)
         x.constantData_ = std::cos(x.constantData_);
     else {
+        resumeCalcStats();
         for (Size i = 0; i < x.n_; ++i) {
             x.data_[i] = std::cos(x.data_[i]);
         }
+        stopCalcStats(x.n_);
     }
     return x;
 }
@@ -726,9 +787,11 @@ RandomVariable normalCdf(RandomVariable x) {
     if (x.deterministic_)
         x.constantData_ = boost::math::cdf(n, x.constantData_);
     else {
+        resumeCalcStats();
         for (Size i = 0; i < x.n_; ++i) {
             x.data_[i] = boost::math::cdf(n, x.data_[i]);
         }
+        stopCalcStats(x.n_);
     }
     return x;
 }
@@ -738,9 +801,11 @@ RandomVariable normalPdf(RandomVariable x) {
     if (x.deterministic_)
         x.constantData_ = boost::math::pdf(n, x.constantData_);
     else {
+        resumeCalcStats();
         for (Size i = 0; i < x.n_; ++i) {
             x.data_[i] = boost::math::pdf(n, x.data_[i]);
         }
+        stopCalcStats(x.n_);
     }
     return x;
 }
@@ -754,10 +819,12 @@ Filter close_enough(const RandomVariable& x, const RandomVariable& y) {
     if (x.deterministic_ && y.deterministic_) {
         return Filter(x.size(), QuantLib::close_enough(x.constantData_, y.constantData_));
     }
+    resumeCalcStats();
     Filter result(x.size(), false);
     for (Size i = 0; i < x.size(); ++i) {
         result.set(i, QuantLib::close_enough(x[i], y[i]));
     }
+    stopCalcStats(x.size());
     return result;
 }
 
@@ -768,10 +835,12 @@ bool close_enough_all(const RandomVariable& x, const RandomVariable& y) {
     if (x.deterministic_ && y.deterministic_) {
         return QuantLib::close_enough(x.constantData_, y.constantData_);
     }
+    resumeCalcStats();
     for (Size i = 0; i < x.size(); ++i) {
         if (!QuantLib::close_enough(x[i], y[i]))
             return false;
     }
+    stopCalcStats(x.size());
     return true;
 }
 
@@ -785,11 +854,13 @@ RandomVariable conditionalResult(const Filter& f, RandomVariable x, const Random
     x.checkTimeConsistencyAndUpdate(y.time());
     if (f.deterministic())
         return f.at(0) ? x : y;
+    resumeCalcStats();
     x.expand();
     for (Size i = 0; i < f.size(); ++i) {
         if (!f[i])
             x.set(i, y[i]);
     }
+    stopCalcStats(f.size());
     return x;
 }
 
@@ -804,9 +875,11 @@ RandomVariable indicatorEq(RandomVariable x, const RandomVariable& y, const Real
     if (x.deterministic()) {
         x.constantData_ = QuantLib::close_enough(x.constantData_, y.constantData_) ? trueVal : falseVal;
     } else {
+        resumeCalcStats();
         for (Size i = 0; i < x.n_; ++i) {
             x.data_[i] = QuantLib::close_enough(x.data_[i], y[i]) ? trueVal : falseVal;
         }
+        stopCalcStats(x.n_);
     }
     return x;
 }
@@ -824,9 +897,11 @@ RandomVariable indicatorGt(RandomVariable x, const RandomVariable& y, const Real
             (x.constantData_ > y.constantData_ && !QuantLib::close_enough(x.constantData_, y.constantData_)) ? trueVal
                                                                                                              : falseVal;
     } else {
+        resumeCalcStats();
         for (Size i = 0; i < x.n_; ++i) {
             x.data_[i] = (x.data_[i] > y[i] && !QuantLib::close_enough(x.data_[i], y[i])) ? trueVal : falseVal;
         }
+        stopCalcStats(x.n_);
     }
     return x;
 }
@@ -844,9 +919,11 @@ RandomVariable indicatorGeq(RandomVariable x, const RandomVariable& y, const Rea
             (x.constantData_ > y.constantData_ || QuantLib::close_enough(x.constantData_, y.constantData_)) ? trueVal
                                                                                                             : falseVal;
     } else {
+        resumeCalcStats();
         for (Size i = 0; i < x.n_; ++i) {
             x.data_[i] = (x.data_[i] > y[i] || QuantLib::close_enough(x.data_[i], y[i])) ? trueVal : falseVal;
         }
+        stopCalcStats(x.n_);
     }
     return x;
 }
@@ -861,10 +938,12 @@ Filter operator<(const RandomVariable& x, const RandomVariable& y) {
         return Filter(x.size(),
                       x.constantData_ < y.constantData_ && !QuantLib::close_enough(x.constantData_, y.constantData_));
     }
+    resumeCalcStats();
     Filter result(x.size(), false);
     for (Size i = 0; i < x.size(); ++i) {
         result.set(i, x[i] < y[i] && !QuantLib::close_enough(x[i], y[i]));
     }
+    stopCalcStats(x.size());
     return result;
 }
 
@@ -878,10 +957,12 @@ Filter operator<=(const RandomVariable& x, const RandomVariable& y) {
         return Filter(x.size(),
                       x.constantData_ < y.constantData_ || QuantLib::close_enough(x.constantData_, y.constantData_));
     }
+    resumeCalcStats();
     Filter result(x.size(), false);
     for (Size i = 0; i < x.size(); ++i) {
         result.set(i, x[i] < y[i] || QuantLib::close_enough(x[i], y[i]));
     }
+    stopCalcStats(x.size());
     return result;
 }
 
@@ -912,10 +993,12 @@ Filter operator>=(const RandomVariable& x, const RandomVariable& y) {
         return Filter(x.size(),
                       x.constantData_ > y.constantData_ || QuantLib::close_enough(x.constantData_, y.constantData_));
     }
+    resumeCalcStats();
     Filter result(x.size(), false);
     for (Size i = 0; i < x.size(); ++i) {
         result.set(i, x[i] > y[i] || QuantLib::close_enough(x[i], y[i]));
     }
+    stopCalcStats(x.size());
     return result;
 }
 
@@ -935,10 +1018,12 @@ RandomVariable applyFilter(RandomVariable x, const Filter& f) {
     }
     if (x.deterministic_ && QuantLib::close_enough(x.constantData_, 0.0))
         return x;
+    resumeCalcStats();
     for (Size i = 0; i < x.size(); ++i) {
         if (!f[i])
             x.set(i, 0.0);
     }
+    stopCalcStats(x.size());
     return x;
 }
 
@@ -958,10 +1043,12 @@ RandomVariable applyInverseFilter(RandomVariable x, const Filter& f) {
     }
     if (x.deterministic_ && QuantLib::close_enough(x.constantData_, 0.0))
         return x;
+    resumeCalcStats();
     for (Size i = 0; i < x.size(); ++i) {
         if (f[i])
             x.set(i, 0.0);
     }
+    stopCalcStats(x.size());
     return x;
 }
 
@@ -981,6 +1068,8 @@ Array regressionCoefficients(
     QL_REQUIRE(r.size() >= basisFn.size(), "regressionCoefficients(): sample size ("
                                                << r.size() << ") must be geq basis fns size (" << basisFn.size()
                                                << ")");
+
+    resumeCalcStats();
 
     Matrix A(r.size(), basisFn.size());
     for (Size j = 0; j < basisFn.size(); ++j) {
@@ -1014,13 +1103,14 @@ Array regressionCoefficients(
     else
         r.copyToArray(b);
 
+    Array res;
     if (regressionMethod == RandomVariableRegressionMethod::SVI) {
         SVD svd(A);
         const Matrix& V = svd.V();
         const Matrix& U = svd.U();
         const Array& w = svd.singularValues();
         Real threshold = r.size() * QL_EPSILON * svd.singularValues()[0];
-        Array res(basisFn.size(), 0.0);
+        res = Array(basisFn.size(), 0.0);
         for (Size i = 0; i < basisFn.size(); ++i) {
             if (w[i] > threshold) {
                 Real u = std::inner_product(U.column_begin(i), U.column_end(i), b.begin(), Real(0.0)) / w[i];
@@ -1029,13 +1119,15 @@ Array regressionCoefficients(
                 }
             }
         }
-        return res;
     } else if (regressionMethod == RandomVariableRegressionMethod::QR) {
-        Array res = qrSolve(A, b);
-        return res;
+        res = qrSolve(A, b);
     } else {
         QL_FAIL("regressionCoefficients(): unknown regression method, expected SVI or QR.");
     }
+
+    // rough estimate, SVI is O(mn min(m,n))
+    stopCalcStats(r.size() * basisFn.size() * std::min(r.size(), basisFn.size()));
+    return res;
 }
 
 RandomVariable conditionalExpectation(
@@ -1070,9 +1162,11 @@ RandomVariable conditionalExpectation(
 RandomVariable expectation(const RandomVariable& r) {
     if (r.deterministic())
         return r;
+    resumeCalcStats();
     Real sum = 0.0;
     for (Size i = 0; i < r.size(); ++i)
         sum += r[i];
+    stopCalcStats(r.size());
     return RandomVariable(r.size(), sum / static_cast<Real>(r.size()));
 }
 
@@ -1097,6 +1191,8 @@ RandomVariable indicatorDerivative(const RandomVariable& x, const double eps) {
     if (QuantLib::close_enough(eps, 0.0) || x.deterministic())
         return tmp;
 
+    resumeCalcStats();
+
     Real sum = 0.0;
     for (Size i = 0; i < x.size(); ++i) {
         sum += x[i] * x[i];
@@ -1120,6 +1216,8 @@ RandomVariable indicatorDerivative(const RandomVariable& x, const double eps) {
         // logistic function
         tmp.set(i, std::exp(-1.0 / delta * ax) / (delta * std::pow(1.0 + std::exp(-1.0 / delta * ax), 2.0)));
     }
+
+    stopCalcStats(x.size() * 8);
 
     return tmp;
 }

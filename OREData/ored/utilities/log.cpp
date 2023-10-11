@@ -397,11 +397,16 @@ StructuredMessage::StructuredMessage(const Category& category, const Group& grou
 
     if (!subFields.empty()) {
         vector<boost::any> subFieldsVector;
+        bool addedSubField = false;
         for (const auto& sf : subFields) {
-            map<string, boost::any> subField({{"name", sf.first}, {"value", sf.second}});
-            subFieldsVector.push_back(subField);
+            if (!sf.second.empty()) {
+                map<string, boost::any> subField({{"name", sf.first}, {"value", sf.second}});
+                subFieldsVector.push_back(subField);
+                addedSubField = true;
+            }
         }
-        data_["sub_fields"] = subFieldsVector;
+        if (addedSubField)
+            data_["sub_fields"] = subFieldsVector;
     }
 }
 
@@ -413,14 +418,29 @@ void StructuredMessage::log() const {
 
 void StructuredMessage::addSubFields(const map<string, string>& subFields) {
     if (!subFields.empty()) {
+
+        // First check that there is at least one non-empty subfield
+        bool hasNonEmptySubField = false;
+        for (const auto& sf : subFields) {
+            if (!sf.second.empty()) {
+                hasNonEmptySubField = true;
+                break;
+            }
+        }
+        if (!hasNonEmptySubField)
+            return;
+
         if (data_.find("sub_fields") == data_.end()) {
             data_["sub_fields"] = vector<boost::any>();
         }
 
         for (const auto& sf : subFields) {
-            map<string, boost::any> subField({{"name", sf.first}, {"value", sf.second}});
-            boost::any_cast<vector<boost::any>&>(data_.at("sub_fields")).push_back(subField);
+            if (!sf.second.empty()) {
+                map<string, boost::any> subField({{"name", sf.first}, {"value", sf.second}});
+                boost::any_cast<vector<boost::any>&>(data_.at("sub_fields")).push_back(subField);
+            }
         }
+
     }
 }
 
