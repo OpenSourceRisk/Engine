@@ -26,7 +26,6 @@
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/math/randomvariable.hpp>
 
-
 namespace ore {
 namespace data {
 
@@ -52,6 +51,17 @@ boost::any valueToAny(const boost::shared_ptr<Model>& model, const ValueType& v)
 }
 
 } // namespace
+
+Real ScriptedInstrumentPricingEngine::addMcErrorEstimate(const std::string& label, const ValueType& v) const {
+    if (model_->type() != Model::Type::MC)
+        return Null<Real>();
+    if (v.which() != ValueTypeWhich::Number)
+        return Null<Real>();
+    Real var = variance(boost::get<RandomVariable>(v)).at(0);
+    Real errEst = std::sqrt(var / static_cast<double>(model_->size()));
+    results_.additionalResults[label] = errEst;
+    return errEst;
+}
 
 void ScriptedInstrumentPricingEngine::calculate() const {
 
@@ -112,12 +122,14 @@ void ScriptedInstrumentPricingEngine::calculate() const {
     // set additional results, if this feature is enabled
 
     if (generateAdditionalResults_) {
+        results_.errorEstimate = addMcErrorEstimate("NPV_MCErrEst", npv->second);
         for (auto const& r : additionalResults_) {
             auto s = workingContext->scalars.find(r.second);
             bool resultSet = false;
             if (s != workingContext->scalars.end()) {
                 boost::any t = valueToAny(model_, s->second);
                 results_.additionalResults[r.first] = t;
+                addMcErrorEstimate(r.first + "_MCErrEst", s->second);
                 DLOG("got additional result '" << r.first << "' referencing script variable '" << r.second << "'");
                 resultSet = true;
             }
@@ -158,6 +170,9 @@ void ScriptedInstrumentPricingEngine::calculate() const {
                     QL_FAIL("got empty result vector for result variable '"
                             << r.first << "' referencing script variable '" << r.second << "', this is unexpected");
                 }
+                for (auto const& d : v->second) {
+                    addMcErrorEstimate(r.first + "_MCErrEst", d);
+                }
                 resultSet = true;
             }
             QL_REQUIRE(resultSet, "could not set additional result '" << r.first << "' referencing script variable '"
@@ -168,6 +183,7 @@ void ScriptedInstrumentPricingEngine::calculate() const {
 
         paylog->consolidateAndSort();
         std::vector<CashFlowResults> cashFlowResults(paylog->size());
+        std::map<Size, Size> cashflowNumber;
         for (Size i = 0; i < paylog->size(); ++i) {
             // cashflow is written as expectation of deflated base ccy amount at T0, converted to flow ccy
             // with the T0 FX Spot and compounded back to the pay date on T0 curves
@@ -182,6 +198,10 @@ void ScriptedInstrumentPricingEngine::calculate() const {
                                  << cashFlowResults[i].currency << cashFlowResults[i].amount << " "
                                  << cashFlowResults[i].currency << "-" << model_->baseCcy() << " " << fx << " discount("
                                  << cashFlowResults[i].currency << ") " << discount);
+            addMcErrorEstimate("cashflow_" + std::to_string(paylog->legNos().at(i)) + "_" +
+                                   std::to_string(++cashflowNumber[paylog->legNos().at(i)]) + "_MCErrEst",
+                               paylog->amounts().at(i) /
+                                   RandomVariable(paylog->amounts().at(i).size(), (fx * discount)));
         }
         results_.additionalResults["cashFlowResults"] = cashFlowResults;
 
