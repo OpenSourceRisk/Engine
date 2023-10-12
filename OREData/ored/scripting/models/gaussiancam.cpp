@@ -446,9 +446,10 @@ RandomVariable GaussianCam::getIrIndexValue(const Size indexNo, const Date& d, c
     // ensure a valid fixing date
     fixingDate = irIndices_[indexNo].second->fixingCalendar().adjust(fixingDate);
     // look up required fixing in cache and return it if found
-    auto cacheValue = irIndexValueCache_.find(std::make_tuple(indexNo, d, fixingDate));
-    if (cacheValue != irIndexValueCache_.end())
+    if (auto cacheValue = irIndexValueCache_.find(std::make_tuple(indexNo, d, fixingDate));
+        cacheValue != irIndexValueCache_.end()) {
         return cacheValue->second;
+    }
     // compute value, add to cache and return it
     Size currencyIdx = irIndexPositionInCam_[indexNo];
     LgmVectorised lgmv(cam_->irlgm1f(currencyIdx));
