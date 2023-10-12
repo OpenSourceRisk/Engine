@@ -22,6 +22,7 @@ RUN apt-get update \
 ENV PATH="/usr/lib/ccache:$PATH"
 ENV CCACHE_DIR="/ccache"
 ENV CCACHE_SLOPPINESS="pch_defines,time_macros"
+ENV CCACHE_MAXSIZE="10G"
 
 # Need the dos2unix all if building from Windows because the shell 
 # scripts fail if there are CRLF present in the files
@@ -39,6 +40,6 @@ RUN --mount=type=cache,target=/ccache/ make -j ${num_cores} \
   && ldconfig
 
 # output the ccache stats
-RUN ccache -s -v
+RUN ccache -s
 
 CMD bash

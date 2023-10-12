@@ -45,6 +45,6 @@ RUN mkdir -p html \
   && rm -rf ore
 
 # output the ccache stats
-RUN ccache -s -v
+RUN ccache -s
 
 CMD bash
