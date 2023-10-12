@@ -89,7 +89,6 @@ protected:
     const Size timeStepsPerYear_;
     const IborFallbackConfig iborFallbackConfig_;
     const std::vector<Size> projectedStateProcessIndices_;
-    const std::vector<std::string> conditionalExpectationModelStates_;
 
     // updated in performCalculations()
     mutable Date referenceDate_;                      // the model reference date
@@ -97,6 +96,19 @@ protected:
     mutable TimeGrid timeGrid_;                       // the (possibly refined) time grid for the simulation
     mutable std::vector<Size> positionInTimeGrid_;    // for each effective simulation date the index in the time grid
     mutable std::map<Date, std::vector<std::size_t>> underlyingPaths_; // per simulation date index states
+    mutable std::map<Date, std::vector<std::size_t>> irStates_;        // per simulation date ir states for currencies_
+    mutable std::map<Date, std::vector<std::size_t>> infStates_;       // per simulation date dk (x,y) or jy (x,y)
+    mutable std::vector<Size> indexPositionInProcess_;                 // maps index no to position in state process
+    mutable std::vector<Size> infIndexPositionInProcess_;              // maps inf index no to position in state process
+    mutable std::vector<Size> currencyPositionInProcess_;              // maps currency no to position in state process
+    mutable std::vector<Size> irIndexPositionInCam_;                   // maps ir index no to currency idx in cam
+    mutable std::vector<Size> infIndexPositionInCam_;                  // maps inf index no to inf idx in cam
+    mutable std::vector<Size> currencyPositionInCam_; // maps currency no to position in cam parametrizations
+    mutable std::vector<Size> eqIndexInCam_;      // maps index no to eq position in cam (or null, if not an eq index)
+    mutable bool conditionalExpectationUseIr_;    // derived from input conditionalExpectationModelState
+    mutable bool conditionalExpectationUseInf_;   // derived from input conditionalExpectationModelState
+    mutable bool conditionalExpectationUseAsset_; // derived from input conditionalExpectationModelState
+
     mutable std::size_t underlyingPathsCgVersion_ = 0;
 
     // data when paths are injected via the AMCModelCG interface

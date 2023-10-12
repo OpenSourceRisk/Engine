@@ -90,6 +90,7 @@ public:
     std::size_t cgVersion() const override;
     const std::vector<std::vector<std::size_t>>& randomVariates() const override; // dim / steps
     std::vector<std::pair<std::size_t, double>> modelParameters() const override;
+    std::vector<std::pair<std::size_t, std::function<double(void)>>>& modelParameterFunctors() const override;
 
 protected:
     // get (non-ir) index (forward) value for index[indexNo] for (fwd >=) d >= reference date

@@ -432,6 +432,10 @@ std::vector<std::pair<std::size_t, double>> ModelCGImpl::modelParameters() const
     return res;
 }
 
+std::vector<std::pair<std::size_t, std::function<double(void)>>>& ModelCGImpl::modelParameterFunctors() const {
+    return modelParameters_;
+}
+
 void ModelCGImpl::addModelParameter(const std::string& id, std::function<double(void)> f) const {
     if (g_->variables().find(id) == g_->variables().end()) {
         Size node = cg_var(*g_, id, true);

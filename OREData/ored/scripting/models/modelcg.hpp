@@ -59,10 +59,11 @@ public:
     virtual QuantLib::Size size() const { return n_; }
 
     // if not null, this model uses a separate mc training phase for NPV() calcs
-    virtual Size trainingPaths() const { return QuantLib::Null<Size>(); }
+    virtual Size trainingSamples() const { return Null<Size>(); }
 
-    // enable / disable the usage of the training paths (if trainingPaths() is not null)
-    virtual void enableTrainingPaths(const bool enable) const {}
+    /* enable / disable the usage of the training paths (if trainingPaths() is not null)
+       the model should be using training paths only temporarily and reset to normal model via RAII */
+    virtual void toggleTrainingPaths() const {}
 
     // the eval date
     virtual const Date& referenceDate() const = 0;
@@ -128,6 +129,7 @@ public:
     virtual std::size_t cgVersion() const = 0;
     virtual const std::vector<std::vector<std::size_t>>& randomVariates() const = 0; // dim / steps
     virtual std::vector<std::pair<std::size_t, double>> modelParameters() const = 0;
+    virtual std::vector<std::pair<std::size_t, std::function<double(void)>>>& modelParameterFunctors() const = 0;
 
     // get fx spot as of today directly, i.e. bypassing the cg
     virtual Real getDirectFxSpotT0(const std::string& forCcy, const std::string& domCcy) const = 0;

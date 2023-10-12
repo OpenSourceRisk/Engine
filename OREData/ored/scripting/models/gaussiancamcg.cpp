@@ -44,22 +44,35 @@ GaussianCamCG::GaussianCamCG(
     // check inputs
 
     QL_REQUIRE(!cam_.empty(), "model is empty");
-    QL_REQUIRE(!curves_.empty(), "no curves given");
-    QL_REQUIRE(currencies_.size() == curves_.size(), "number of currencies (" << currencies_.size()
-                                                                              << ") does not match number of curves ("
-                                                                              << curves_.size() << ")");
-    QL_REQUIRE(currencies_.size() == fxSpots_.size() + 1,
-               "number of currencies (" << currencies_.size() << ") does not match number of fx spots ("
-                                        << fxSpots_.size() << ") + 1");
+
+    // check restrictions on cam model (ir-fx with hw, bs and Euler disc only at the moment)
+
+    QL_REQUIRE(cam_->discretization() == CrossAssetModel::Discretization::Euler,
+               "GaussianCamCG required discretization 'Euler'.");
+
+    QL_REQUIRE(cam_->components(CrossAssetModel::AssetType::IR) > 0, "GaussianCamCG: no IR component given");
+    QL_REQUIRE(cam_->components(CrossAssetModel::AssetType::INF) == 0, "GaussianCamCG: asset type INF not supported");
+    QL_REQUIRE(cam_->components(CrossAssetModel::AssetType::CR) == 0, "GaussianCamCG: asset type CR not supported");
+    QL_REQUIRE(cam_->components(CrossAssetModel::AssetType::EQ) == 0, "GaussianCamCG: asset type EQ not supported");
+    QL_REQUIRE(cam_->components(CrossAssetModel::AssetType::COM) == 0, "GaussianCamCG: asset type COM not supported");
+
+    for (Size i = 0; i < cam_->components(CrossAssetModel::AssetType::IR); ++i) {
+        QL_REQUIRE(cam_->modelType(CrossAssetModel::AssetType::IR, i) == CrossAssetModel::ModelType::HW,
+                   "GaussianCamCG: IR model type HW required.");
+    }
+    for (Size i = 0; i < cam_->components(CrossAssetModel::AssetType::FX); ++i) {
+        QL_REQUIRE(cam_->modelType(CrossAssetModel::AssetType::FX, i) == CrossAssetModel::ModelType::BS,
+                   "GaussianCamCG: FX model type BS required.");
+    }
 
     // register with observables
 
+    for (auto const& o : curves_)
+        registerWith(o);
     for (auto const& o : fxSpots_)
         registerWith(o);
-    for (auto const& o : correlations_)
-        registerWith(o.second);
 
-    registerWith(model_);
+    registerWith(cam_);
 
     // set conditional expectation model states
 
@@ -91,7 +104,7 @@ Size GaussianCamCG::size() const {
     }
 }
 
-void GaussianCmCG::performCalculations() const {
+void GaussianCamCG::performCalculations() const {
 
     // needed for base class performCalculations()
 
@@ -106,144 +119,180 @@ void GaussianCmCG::performCalculations() const {
 
     if (cgVersion() != underlyingPathsCgVersion_) {
 
-        // set up time grid
+        // set up eff sim dates and time grid
 
-        effectiveSimulationDates_ = model_->effectiveSimulationDates();
+        effectiveSimulationDates_.clear();
+        effectiveSimulationDates_.insert(referenceDate());
+        for (auto const& d : simulationDates_) {
+            if (d >= referenceDate())
+                effectiveSimulationDates_.insert(d);
+        }
 
         std::vector<Real> times;
         for (auto const& d : effectiveSimulationDates_) {
             times.push_back(curves_.front()->timeFromReference(d));
         }
 
-        timeGrid_ = model_->discretisationTimeGrid();
+        Size steps = std::max(std::lround(timeStepsPerYear_ * times.back() + 0.5), 1l);
+        timeGrid_ = TimeGrid(times.begin(), times.end(), steps);
+
         positionInTimeGrid_.resize(times.size());
         for (Size i = 0; i < positionInTimeGrid_.size(); ++i)
             positionInTimeGrid_[i] = timeGrid_.index(times[i]);
 
+        // clear underlying paths
+
         underlyingPaths_.clear();
         underlyingPathsCgVersion_ = cgVersion();
     }
+
+    // noting to do if underlying paths are populated
+
+    if (!underlyingPaths_.empty())
+        return;
+
+    // exit if there are no future simulation dates (i.e. only the reference date)
+
+    if (effectiveSimulationDates_.size() == 1)
+        return;
+
+    // init underlying path where we map a date to a node representing the path value
+
+    for (auto const& d : effectiveSimulationDates_) {
+        underlyingPaths_[d] = std::vector<std::size_t>(indices_.size(), ComputationGraph::nan);
+        irStates_[d] = std::vector<RandomVariable>(currencies_.size(), ComputationGraph::nan);
+        infStates_[d] = std::vector<std::pair<RandomVariable, RandomVariable>>(
+            infIndices_.size(), std::make_pair(ComputationGraph::nan, ComputationGraph::nan));
+    }
+
+    // populate index mappings
+
+    currencyPositionInProcess_.clear();
+    currencyPositionInCam_.clear();
+    for (Size i = 0; i < currencies_.size(); ++i) {
+        currencyPositionInProcess_.push_back(
+            cam_->pIdx(CrossAssetModel::AssetType::IR, cam_->ccyIndex(parseCurrency(currencies_[i]))));
+        currencyPositionInCam_.push_back(
+            cam_->idx(CrossAssetModel::AssetType::IR, cam_->ccyIndex(parseCurrency(currencies_[i]))));
+    }
+
+    irIndexPositionInCam_.clear();
+    for (Size i = 0; i < irIndices_.size(); ++i) {
+        irIndexPositionInCam_.push_back(cam_->ccyIndex(irIndices_[i].second->currency()));
+    }
+
+    infIndexPositionInProcess_.clear();
+    infIndexPositionInCam_.clear();
+    for (Size i = 0; i < infIndices_.size(); ++i) {
+        Size infIdx = cam_->infIndex(infIndices_[i].first.infName());
+        infIndexPositionInProcess_.push_back(cam_->pIdx(CrossAssetModel::AssetType::INF, infIdx));
+        infIndexPositionInCam_.push_back(infIdx);
+    }
+
+    indexPositionInProcess_.clear();
+    for (Size i = 0; i < indices_.size(); ++i) {
+        if (indices_[i].isFx()) {
+            // FX
+            Size ccyIdx = cam_->ccyIndex(parseCurrency(indexCurrencies_[i]));
+            QL_REQUIRE(ccyIdx > 0, "fx index '" << indices_[i] << "' has unexpected for ccy = base ccy");
+            indexPositionInProcess_.push_back(cam_->pIdx(CrossAssetModel::AssetType::FX, ccyIdx - 1));
+            eqIndexInCam_.push_back(Null<Size>());
+        } else if (indices_[i].isEq()) {
+            // EQ
+            Size eqIdx = cam_->eqIndex(indices_[i].eq()->name());
+            indexPositionInProcess_.push_back(cam_->pIdx(CrossAssetModel::AssetType::EQ, eqIdx));
+            eqIndexInCam_.push_back(eqIdx);
+        } else {
+            QL_FAIL("index '" << indices_[i].name() << "' expected to be FX or EQ");
+        }
+    }
+
+    // set the required random variables to evolve the stochastic process
+
+    randomVariates_ = std::vector<std::vector<std::size_t>>(cam_->brownians() + cam_->auxBrownians(),
+                                                            std::vector<std::size_t>(timeGrid_.size() - 1));
+    for (Size j = 0; j < cam_->brownians() + cam_->auxBrownians(); ++j) {
+        for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
+            randomVariates_[j][i] = cg_var(*g_, "__rv_" + std::to_string(j) + "_" + std::to_string(i), true);
+        }
+    }
+
+    // evolve the stochastic process, for now we only evolve IR LGM process #0 as a PoC (!)
+
+    auto p = cam_->stateProcess();
+
+    for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
+        std::string id = "__sqrtVar_0_" + std::to_string(i);
+        addModelParameter(id, [p] { return std::sqrt(p->irlgm1f(0)->zeta(t + dt) - p->irlgm1f(0)->zeta(t)); });
+    }
+
+    std::string id = "__z_0";
+    std::size_t irState;
+    addModelParameter(id, [p] { return p->initalValues()[0]; });
+    irState = cg_var(*g_, id);
+    irStates_[*effectiveSimulationDates_.begin()] = irState;
+
+    std::size_t dateIndex = 1;
+    for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
+        state = cg_add(
+            *g_, state,
+            cg_mult(*g_, cg_var(*g_, "__sqrtVar_0_" + std::to_string(i)), cg_var(*g_, "__rv_" + std::to_string(i))));
+        if (positionInTimeGrid[dateIndex] == i) {
+            irStates_[*std::next(effectiveSimulationDates_.begin(), dateIndex)] = state;
+            ++dateIndex;
+        }
+    }
+    QL_REQUIRE(dateIndex == effectiveSimulationDates_.size(),
+               "internal error, did not populate all irState time steps.");
+
+    // populate path values
 }
 
-std::size_t BlackScholesCGBase::getIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
-    Date effFwd = fwd;
-    if (indices_[indexNo].isComm()) {
-        Date expiry = indices_[indexNo].comm(d)->expiryDate();
-        // if a future is referenced we set the forward date effectively used below to the future's expiry date
-        if (expiry != Date())
-            effFwd = expiry;
-        // if the future expiry is past the obsdate, we return the spot as of the obsdate, i.e. we
-        // freeze the future value after its expiry, but keep it available for observation
-        // TOOD should we throw an exception instead?
-        effFwd = std::max(effFwd, d);
-    }
-    QL_REQUIRE(underlyingPaths_.find(d) != underlyingPaths_.end(), "did not find path for " << d);
-    auto res = underlyingPaths_.at(d).at(indexNo);
-    // compute forwarding factor
-    if (effFwd != Null<Date>()) {
-        auto p = model_->processes().at(indexNo);
-        std::string idf = std::to_string(indexNo) + "_" + ore::data::to_string(effFwd);
-        std::string idd = std::to_string(indexNo) + "_" + ore::data::to_string(d);
-        addModelParameter("__div_" + idd, [p, d]() { return p->dividendYield()->discount(d); });
-        addModelParameter("__div_" + idf, [p, effFwd]() { return p->dividendYield()->discount(effFwd); });
-        addModelParameter("__rfr_" + idd, [p, d]() { return p->riskFreeRate()->discount(d); });
-        addModelParameter("__rfr_" + idf, [p, effFwd]() { return p->riskFreeRate()->discount(effFwd); });
-        res = cg_mult(*g_, res,
-                      cg_mult(*g_, cg_var(*g_, "__div_" + idf),
-                              cg_div(*g_, cg_var(*g_, "__rfr_" + idd),
-                                     cg_mult(*g_, cg_var(*g_, "__div_" + idd), cg_var(*g_, "__rfr_" + idf)))));
-    }
-    return res;
+std::size_t GaussianCamCG::getIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
+    QL_FAIL("GaussianCamCG::getIndexValue(): not implemented");
 }
 
-std::size_t BlackScholesCGBase::getIrIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
-    Date effFixingDate = d;
+std::size_t GaussianCamCG::getIrIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
+    Date fixingDate = d;
     if (fwd != Null<Date>())
-        effFixingDate = fwd;
+        fixingDate = fwd;
     // ensure a valid fixing date
-    effFixingDate = irIndices_.at(indexNo).second->fixingCalendar().adjust(effFixingDate);
-    auto index = irIndices_.at(indexNo).second;
-    std::string id = "__irFix_" + index->name() + "_" + ore::data::to_string(effFixingDate);
-    addModelParameter(id, [index, effFixingDate]() { return index->fixing(effFixingDate); });
-    return cg_var(*g_, id);
+    fixingDate = irIndices_[indexNo].second->fixingCalendar().adjust(fixingDate);
+    Size currencyIdx = irIndexPositionInCam_[indexNo];
+    LgmCG lgmcg(*g_, cam_->irlgm1f(currencyIdx), modelParameters_);
+    return lgmcg.fixing(irIndices_[indexNo].second, fixingDate, d, irStates_.at(d).at(currencyIdx));
 }
 
-std::size_t BlackScholesCGBase::getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
-    Date effFixingDate = d;
-    if (fwd != Null<Date>())
-        effFixingDate = fwd;
-    auto index = infIndices_.at(indexNo).second;
-    std::string id = "__infFix_" + index->name() + "_" + ore::data::to_string(effFixingDate);
-    addModelParameter(id, [index, effFixingDate]() { return index->fixing(effFixingDate); });
-    return cg_var(*g_, id);
+std::size_t GaussianCamCG::getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
+    QL_FAIL("GaussianCamCG::getInfIndexValue(): not implemented");
 }
 
-namespace {
-struct comp {
-    comp(const std::string& indexInput) : indexInput_(indexInput) {}
-    template <typename T> bool operator()(const std::pair<IndexInfo, boost::shared_ptr<T>>& p) const {
-        return p.first.name() == indexInput_;
-    }
-    const std::string indexInput_;
-};
-} // namespace
-
-std::size_t BlackScholesCGBase::fwdCompAvg(const bool isAvg, const std::string& indexInput, const Date& obsdate,
-                                           const Date& start, const Date& end, const Real spread, const Real gearing,
-                                           const Integer lookback, const Natural rateCutoff, const Natural fixingDays,
-                                           const bool includeSpread, const Real cap, const Real floor,
-                                           const bool nakedOption, const bool localCapFloor) const {
+std::size_t GaussianCamCG::fwdCompAvg(const bool isAvg, const std::string& indexInput, const Date& obsdate,
+                                      const Date& start, const Date& end, const Real spread, const Real gearing,
+                                      const Integer lookback, const Natural rateCutoff, const Natural fixingDays,
+                                      const bool includeSpread, const Real cap, const Real floor,
+                                      const bool nakedOption, const bool localCapFloor) const {
     calculate();
-    auto index = std::find_if(irIndices_.begin(), irIndices_.end(), comp(indexInput));
-    QL_REQUIRE(index != irIndices_.end(),
-               "BlackScholesCGBase::fwdCompAvg(): did not find ir index " << indexInput << " - this is unexpected.");
-    auto on = boost::dynamic_pointer_cast<OvernightIndex>(index->second);
-    QL_REQUIRE(on, "BlackScholesCGBase::fwdCompAvg(): expected on index for " << indexInput);
-    // if we want to support cap / floors we need the OIS CF surface
-    QL_REQUIRE(cap > 999998.0 && floor < -999998.0,
-               "BlackScholesCGBase:fwdCompAvg(): cap (" << cap << ") / floor (" << floor << ") not supported");
-    boost::shared_ptr<QuantLib::FloatingRateCoupon> coupon;
-    boost::shared_ptr<QuantLib::FloatingRateCouponPricer> pricer;
-    if (isAvg) {
-        coupon = boost::make_shared<QuantExt::AverageONIndexedCoupon>(
-            end, 1.0, start, end, on, gearing, spread, rateCutoff, on->dayCounter(), lookback * Days, fixingDays);
-        pricer = boost::make_shared<AverageONIndexedCouponPricer>();
-    } else {
-        coupon = boost::make_shared<QuantExt::OvernightIndexedCoupon>(end, 1.0, start, end, on, gearing, spread, Date(),
-                                                                      Date(), on->dayCounter(), false, includeSpread,
-                                                                      lookback * Days, rateCutoff, fixingDays);
-        pricer = boost::make_shared<OvernightIndexedCouponPricer>();
-    }
-    coupon->setPricer(pricer);
-    std::string id = "__fwdCompAvg_" + std::to_string(g_->size());
-    addModelParameter(id, [coupon]() { return coupon->rate(); });
-    return cg_var(*g_, id);
+    QL_FAIL("GaussianCamCG::fwdCompAvg(): not implemented");
 }
 
-std::size_t BlackScholesCGBase::getDiscount(const Size idx, const Date& s, const Date& t) const {
-    std::string ids = "__curve_" + std::to_string(idx) + "_" + ore::data::to_string(s);
-    std::string idt = "__curve_" + std::to_string(idx) + "_" + ore::data::to_string(t);
-    auto c = curves_.at(idx);
-    addModelParameter(ids, [c, s] { return c->discount(s); });
-    addModelParameter(idt, [c, t] { return c->discount(t); });
-    return cg_div(*g_, cg_var(*g_, idt), cg_var(*g_, ids));
+std::size_t GaussianCamCG::getDiscount(const Size idx, const Date& s, const Date& t) const {
+    QL_FAIL("GaussianCamCG::getDiscount(): not implemented");
 }
 
-std::size_t BlackScholesCGBase::getNumeraire(const Date& s) const {
-    std::string id = "__curve_0_" + ore::data::to_string(s);
-    auto c = curves_.at(0);
-    addModelParameter(id, [c, s] { return c->discount(s); });
-    return cg_div(*g_, cg_const(*g_, 1.0), cg_var(*g_, id));
+std::size_t GaussianCamCG::getNumeraire(const Date& s) const {
+    LgmCG lgmcg(*g_, cam_->irlgm1f(currencyPositionInCam_[0])->parametrization(), modelParameters_);
+    return lgmcg.numeraire(s, irStates_.at(s)[0]);
 }
 
-std::size_t BlackScholesCGBase::getFxSpot(const Size idx) const {
+std::size GaussianCamCG::getFxSpot(const Size idx) const {
     std::string id = "__fxspot_" + std::to_string(idx);
     auto c = fxSpots_.at(idx);
     addModelParameter(id, [c] { return c->value(); });
     return cg_var(*g_, id);
 }
 
-Real BlackScholesCGBase::getDirectFxSpotT0(const std::string& forCcy, const std::string& domCcy) const {
+Real GaussianCamCG::getDirectFxSpotT0(const std::string& forCcy, const std::string& domCcy) const {
     auto c1 = std::find(currencies_.begin(), currencies_.end(), forCcy);
     auto c2 = std::find(currencies_.begin(), currencies_.end(), domCcy);
     QL_REQUIRE(c1 != currencies_.end(), "currency " << forCcy << " not handled");
@@ -258,20 +307,20 @@ Real BlackScholesCGBase::getDirectFxSpotT0(const std::string& forCcy, const std:
     return fx;
 }
 
-Real BlackScholesCGBase::getDirectDiscountT0(const Date& paydate, const std::string& currency) const {
+Real GaussianCamCG::getDirectDiscountT0(const Date& paydate, const std::string& currency) const {
     auto c = std::find(currencies_.begin(), currencies_.end(), currency);
     QL_REQUIRE(c != currencies_.end(), "currency " << currency << " not handled");
     Size cidx = std::distance(currencies_.begin(), c);
     return curves_.at(cidx)->discount(paydate);
 }
 
-std::size_t BlackScholesCGBase::npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
-                                    const boost::optional<long>& memSlot, const std::size_t addRegressor1,
-                                    const std::size_t addRegressor2) const {
+std::size_t GaussianCamCG::npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
+                               const boost::optional<long>& memSlot, const std::size_t addRegressor1,
+                               const std::size_t addRegressor2) const {
 
     calculate();
 
-    QL_REQUIRE(!memSlot, "BlackScholesCGBase::npv() with memSlot not yet supported!");
+    QL_REQUIRE(!memSlot, "GuassiaCamCG::npv() with memSlot not yet supported!");
 
     // if obsdate is today, take a plain expectation
 
@@ -283,10 +332,7 @@ std::size_t BlackScholesCGBase::npv(const std::size_t amount, const Date& obsdat
 
     std::vector<std::size_t> state;
 
-    if (!underlyingPaths_.empty()) {
-        for (auto const& r : underlyingPaths_.at(obsdate))
-            state.push_back(r);
-    }
+    state.push_back(irStates_.at(0).at(obsdate));
 
     if (addRegressor1 != ComputationGraph::nan)
         state.push_back(addRegressor1);
@@ -295,7 +341,7 @@ std::size_t BlackScholesCGBase::npv(const std::size_t amount, const Date& obsdat
 
     // if the state is empty, return the plain expectation (no conditioning)
 
-    if(state.empty()) {
+    if (state.empty()) {
         return cg_conditionalExpectation(*g_, amount, {}, cg_const(*g_, 1.0));
     }
 
@@ -308,6 +354,12 @@ std::size_t BlackScholesCGBase::npv(const std::size_t amount, const Date& obsdat
     // compute conditional expectation and return the result
 
     return cg_conditionalExpectation(*g_, amount, state, filter);
+}
+
+void GaussianCamCG::injectPaths(const std::vector<QuantLib::Real>* pathTimes,
+                                const std::vector<std::vector<std::size_t>>* variates,
+                                const std::vector<bool>* isRelevantTime, const bool stickyCloseOutRun) override {
+    QL_FAIL("GaussianCamCG::injectPaths(): not implemented");
 }
 
 } // namespace data
