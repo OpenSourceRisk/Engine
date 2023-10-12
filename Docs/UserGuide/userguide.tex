@@ -203,15 +203,15 @@ enhancements in the form of source code. See the FAQ section on the ORE site \ci
 
 \subsection{Scope}
 
-ORE currently provides portfolio pricing, cash flow generation, sensitivity analysis, stress testing and a range of contemporary derivative portfolio analytics. The latter are based on a Monte Carlo simulation framework which yields 
-the evolution of various {\bf credit exposure} measures:
+ORE currently provides portfolio pricing, cash flow generation, market risk analysis and a range of contemporary derivative portfolio analytics. The latter are based on a Monte Carlo simulation framework which yields 
+the evolution of various exposure measures:
 \begin{itemize}
 \item EE aka EPE (Expected Exposure or Expected Positive Exposure)
 \item ENE (Expected Negative Exposure, i.e. the counterparty's perspective)
 \item 'Basel' exposure measures relevant for regulatory capital charges under internal model methods 
 \item PFE (Potential Future Exposure at some user defined quantile)
 \end{itemize}
-and {\bf derivative value adjustments}
+and derivative value adjustments (xVA)
 \begin{itemize}
 \item CVA (Credit Value Adjustment)
 \item DVA (Debit Value Adjustment)
@@ -234,7 +234,7 @@ Thanks to Acadia's open-source strategy, ORE's financial instrument scope was ex
 \end{itemize}
 These contributions were accompanied by analytics extensions to enhance ORE usability
 \begin{itemize}
-\item Exposure simulation for xVA and PFE including Commodity and American Monte Carlo for Exotics, released in December 22 with ORE v8
+\item Exposure simulation for xVA and PFE, adding Commodity to the asset class coverage, and adding American Monte Carlo for Exotics, released in December 22 with ORE v8
 \item Market Risk including multi-threaded sensitivity analysis, par sensitivity conversion, parametric delta/gamma VaR with Cornish-Fisher expansion and Saddlepoint method, released in March 23 with ORE v9
 \item Portfolio Credit Model, released in June 23 with ORE v10
 \item ISDA's Standard Initial Margin Model (SIMM), released in June 23 with ORE v10
@@ -244,7 +244,7 @@ With ORE v11 the release of the {\em Scripted Trade} framework followed. This al
 The user can now extend the instrument scope conveniently by adding payoff scripts (embedded into the trade XML or in separate script "library" XML) and without recompiling the code base.
 
 \medskip 
-The product coverage of the 11th release of ORE in October 2023 is sketched in Table \ref{tab_coverage}.
+The product coverage of the latest release of ORE is sketched in Table \ref{tab_coverage}.
 \begin{table}[hbt]
 \scriptsize
 \begin{center}
