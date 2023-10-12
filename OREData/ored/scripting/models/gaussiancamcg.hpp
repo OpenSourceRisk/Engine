@@ -10,30 +10,20 @@
 
 #pragma once
 
-#include <orepscriptedtrade/ored/models/amcmodelcg.hpp>
-#include <orepscriptedtrade/ored/models/modelcgimpl.hpp>
-
 #include <ored/model/crossassetmodelbuilder.hpp>
+#include <ored/scripting/models/amcmodelcg.hpp>
+#include <ored/scripting/models/modelcgimpl.hpp>
 
 #include <qle/processes/crossassetstateprocess.hpp>
 
 #include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
 
-namespace oreplus {
+namespace ore {
 namespace data {
 
 class GaussianCamCG : public ModelCGImpl, public AmcModelCG {
 public:
-    /* For the constructor arguments see ModelCGImpl, plus:
-       - eq, com processes are given with arbitrary riskFreeRate() and dividendYield(), these two curves only define
-         the forward curve drift for each asset
-       - the base ccy is the first ccy in the currency vector, the fx spots are given as for-base, the ccy curves define
-         the fx forwards
-       - fx processes must be given w.r.t. the base ccy and consistent with the given fx spots and curves, but we do not
-         require fx processes for all currencies (but they are required, if an fx index is evaluated in eval())
-       - correlations are for index pair names and must be constant; if not given for a pair, we assume zero correlation
-       - regressionOrder is the regression order used to compute conditional expectations in npv()
-     */
+    /* For the constructor arguments see ModelCGImpl, plus the notes in GaussianCam */
     GaussianCamCG(const Handle<CrossAssetModel>& cam, const Size paths, const std::vector<std::string>& currencies,
                   const std::vector<Handle<YieldTermStructure>>& curves, const std::vector<Handle<Quote>>& fxSpots,
                   const std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>>& irIndices,
@@ -68,6 +58,11 @@ public:
 
 protected:
     // ModelCGImpl interface implementation
+    virtual std::size_t getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
+                                             const std::size_t barrier, const bool above) const override {
+        QL_FAIL("getFutureBarrierProb not implemented by GaussianCamCG");
+    }
+    // ModelCGImpl interface implementation
     void performCalculations() const override;
     std::size_t getIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>()) const override;
     std::size_t getIrIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>()) const override;
@@ -78,16 +73,9 @@ protected:
 
     // input parameters
     const Handle<CrossAssetModel> cam_;
-    const std::vector<std::string>& currencies_;
     const std::vector<Handle<YieldTermStructure>> curves_;
     const std::vector<Handle<Quote>> fxSpots_;
-    const std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>> irIndices_;
-    const std::vector<std::pair<std::string, boost::shared_ptr<ZeroInflationIndex>>> infIndices_;
-    const std::vector<std::string>& indices_;
-    const std::vector<std::string> indexCurrencies_;
-    const std::set<Date> simulationDates_;
     const Size timeStepsPerYear_;
-    const IborFallbackConfig iborFallbackConfig_;
     const std::vector<Size> projectedStateProcessIndices_;
 
     // updated in performCalculations()
@@ -97,7 +85,8 @@ protected:
     mutable std::vector<Size> positionInTimeGrid_;    // for each effective simulation date the index in the time grid
     mutable std::map<Date, std::vector<std::size_t>> underlyingPaths_; // per simulation date index states
     mutable std::map<Date, std::vector<std::size_t>> irStates_;        // per simulation date ir states for currencies_
-    mutable std::map<Date, std::vector<std::size_t>> infStates_;       // per simulation date dk (x,y) or jy (x,y)
+    mutable std::map<Date, std::vector<std::pair<std::size_t, std::size_t>>>
+        infStates_;                                                    // per simulation date dk (x,y) or jy (x,y)
     mutable std::vector<Size> indexPositionInProcess_;                 // maps index no to position in state process
     mutable std::vector<Size> infIndexPositionInProcess_;              // maps inf index no to position in state process
     mutable std::vector<Size> currencyPositionInProcess_;              // maps currency no to position in state process
@@ -120,4 +109,4 @@ protected:
 };
 
 } // namespace data
-} // namespace oreplus
+} // namespace ore

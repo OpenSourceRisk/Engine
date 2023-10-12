@@ -29,20 +29,19 @@
 
 namespace QuantExt {
 
-RandomVariable LgmCG::numeraire(const Date& d, const std::size_t x) const {
+std::size_t LgmCG::numeraire(const Date& d, const std::size_t x) const {
+    modelParameters_.clear();
     QL_FAIL("TODO");
 }
 
-RandomVariable LgmCG::discountBond(const Date& d, const Date& e, const std::size_t x) const {
+std::size_t LgmCG::discountBond(const Date& d, const Date& e, const std::size_t x) const {
     QL_FAIL("TODO");
 }
 
-RandomVariable LgmCG::reducedDiscountBond(const Date& d t, const Date& e, const std::size_t x) const {
-    QL_FAIL("TODO");
-}
+std::size_t LgmCG::reducedDiscountBond(const Date& d, const Date& e, const std::size_t x) const { QL_FAIL("TODO"); }
 
 /* Handles IborIndex and SwapIndex. Requires observation time t <= fixingDate */
-RandomVariable LgmCG::fixing(const boost::shared_ptr<InterestRateIndex>& index, const Date& fixingDate, const Date& t,
+std::size_t LgmCG::fixing(const boost::shared_ptr<InterestRateIndex>& index, const Date& fixingDate, const Date& t,
                       const std::size_t x) const {
     QL_FAIL("TODO");
 }

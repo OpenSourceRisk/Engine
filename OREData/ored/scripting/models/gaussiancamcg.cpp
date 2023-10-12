@@ -3,28 +3,26 @@
  All rights reserved.
 */
 
-#include <orepscriptedtrade/ored/models/gaussiancamcg.hpp>
+#include <ored/scripting/models/gaussiancamcg.hpp>
 
-#include <qle/math/randomvariable_ops.hpp>
 
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/to_string.hpp>
 
+#include <ql/math/comparison.hpp>
+#include <ql/math/matrixutilities/pseudosqrt.hpp>
+#include <ql/quotes/simplequote.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/math/randomvariablelsmbasissystem.hpp>
+#include <qle/models/lgmcg.hpp>
 
-#include <ql/math/comparison.hpp>
-#include <ql/math/matrixutilities/pseudosqrt.hpp>
-#include <ql/quotes/simplequote.hpp>
-
-namespace oreplus {
+namespace ore {
 namespace data {
 
 using namespace QuantLib;
 using namespace QuantExt;
-using namespace ore::data;
 
 GaussianCamCG::GaussianCamCG(
     const Handle<CrossAssetModel>& cam, const Size paths, const std::vector<std::string>& currencies,
@@ -35,11 +33,10 @@ GaussianCamCG::GaussianCamCG(
     const std::set<Date>& simulationDates, const Size timeStepsPerYear, const IborFallbackConfig& iborFallbackConfig,
     const std::vector<Size>& projectedStateProcessIndices,
     const std::vector<std::string>& conditionalExpectationModelStates)
-    : cam_(cam), paths_(paths), currencies_(currencies), curves_(curves), fxSpots_(fxSpots), irIndices_(irIndices),
-      infIndices_(infIndices), indices_(indices), indexCurrencies_(indexCurrencies), simulationDates_(simulationDates),
-      timeStepsPerYear_(timeStepsPerYear), iborFallbackConfig_(iborFallbackConfig),
-      projectedStateProcessIndices_(projectedStateProcessIndices),
-      conditionalExpectationModelStates_(conditionalExpectationModelStates) {
+    : ModelCGImpl(curves.front()->dayCounter(), paths, currencies, irIndices, infIndices, indices, indexCurrencies,
+                  simulationDates, iborFallbackConfig),
+      cam_(cam), curves_(curves), fxSpots_(fxSpots), timeStepsPerYear_(timeStepsPerYear),
+      projectedStateProcessIndices_(projectedStateProcessIndices) {
 
     // check inputs
 
@@ -98,7 +95,7 @@ const Date& GaussianCamCG::referenceDate() const {
 
 Size GaussianCamCG::size() const {
     if (injectedPathTimes_ == nullptr)
-        return Model::size();
+        return ModelCG::size();
     else {
         return overwriteModelSize_;
     }
@@ -160,8 +157,8 @@ void GaussianCamCG::performCalculations() const {
 
     for (auto const& d : effectiveSimulationDates_) {
         underlyingPaths_[d] = std::vector<std::size_t>(indices_.size(), ComputationGraph::nan);
-        irStates_[d] = std::vector<RandomVariable>(currencies_.size(), ComputationGraph::nan);
-        infStates_[d] = std::vector<std::pair<RandomVariable, RandomVariable>>(
+        irStates_[d] = std::vector<std::size_t>(currencies_.size(), ComputationGraph::nan);
+        infStates_[d] = std::vector<std::pair<std::size_t, std::size_t>>(
             infIndices_.size(), std::make_pair(ComputationGraph::nan, ComputationGraph::nan));
     }
 
@@ -222,23 +219,25 @@ void GaussianCamCG::performCalculations() const {
     auto p = cam_->stateProcess();
 
     for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
-        std::string id = "__sqrtVar_0_" + std::to_string(i);
-        addModelParameter(id, [p] { return std::sqrt(p->irlgm1f(0)->zeta(t + dt) - p->irlgm1f(0)->zeta(t)); });
+        std::string id = "__diffusion_0_" + std::to_string(i);
+        Real t = timeGrid_[i];
+        Real dt = timeGrid_.dt(i);
+        addModelParameter(id, [p, t, dt] { return p->diffusion(t, Array())(0, 0) * std::sqrt(dt); });
     }
 
     std::string id = "__z_0";
     std::size_t irState;
-    addModelParameter(id, [p] { return p->initalValues()[0]; });
+    addModelParameter(id, [p] { return p->initialValues()[0]; });
     irState = cg_var(*g_, id);
-    irStates_[*effectiveSimulationDates_.begin()] = irState;
+    irStates_[*effectiveSimulationDates_.begin()][0] = irState;
 
     std::size_t dateIndex = 1;
     for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
-        state = cg_add(
-            *g_, state,
-            cg_mult(*g_, cg_var(*g_, "__sqrtVar_0_" + std::to_string(i)), cg_var(*g_, "__rv_" + std::to_string(i))));
-        if (positionInTimeGrid[dateIndex] == i) {
-            irStates_[*std::next(effectiveSimulationDates_.begin(), dateIndex)] = state;
+        irState = cg_add(
+            *g_, irState,
+            cg_mult(*g_, cg_var(*g_, "__diffusion_0_" + std::to_string(i)), cg_var(*g_, "__rv_" + std::to_string(i))));
+        if (positionInTimeGrid_[dateIndex] == i) {
+            irStates_[*std::next(effectiveSimulationDates_.begin(), dateIndex)][0] = irState;
             ++dateIndex;
         }
     }
@@ -281,11 +280,11 @@ std::size_t GaussianCamCG::getDiscount(const Size idx, const Date& s, const Date
 }
 
 std::size_t GaussianCamCG::getNumeraire(const Date& s) const {
-    LgmCG lgmcg(*g_, cam_->irlgm1f(currencyPositionInCam_[0])->parametrization(), modelParameters_);
+    LgmCG lgmcg(*g_, cam_->irlgm1f(currencyPositionInCam_[0]), modelParameters_);
     return lgmcg.numeraire(s, irStates_.at(s)[0]);
 }
 
-std::size GaussianCamCG::getFxSpot(const Size idx) const {
+std::size_t GaussianCamCG::getFxSpot(const Size idx) const {
     std::string id = "__fxspot_" + std::to_string(idx);
     auto c = fxSpots_.at(idx);
     addModelParameter(id, [c] { return c->value(); });
@@ -332,7 +331,7 @@ std::size_t GaussianCamCG::npv(const std::size_t amount, const Date& obsdate, co
 
     std::vector<std::size_t> state;
 
-    state.push_back(irStates_.at(0).at(obsdate));
+    state.push_back(irStates_.at(obsdate).at(0));
 
     if (addRegressor1 != ComputationGraph::nan)
         state.push_back(addRegressor1);
@@ -358,9 +357,9 @@ std::size_t GaussianCamCG::npv(const std::size_t amount, const Date& obsdate, co
 
 void GaussianCamCG::injectPaths(const std::vector<QuantLib::Real>* pathTimes,
                                 const std::vector<std::vector<std::size_t>>* variates,
-                                const std::vector<bool>* isRelevantTime, const bool stickyCloseOutRun) override {
+                                const std::vector<bool>* isRelevantTime, const bool stickyCloseOutRun) {
     QL_FAIL("GaussianCamCG::injectPaths(): not implemented");
 }
 
 } // namespace data
-} // namespace oreplus
+} // namespace ore

@@ -34,25 +34,24 @@ using namespace QuantLib;
 
 class LgmCG {
 public:
-    LgmCG() = default;
-    LgmCG(const boost::shared_ptr<QuantExt::ComputationGraph>& g, const boost::shared_ptr<IrLgm1fParametrization>& p,
+    LgmCG(QuantExt::ComputationGraph& g, const boost::shared_ptr<IrLgm1fParametrization>& p,
           std::vector<std::pair<std::size_t, std::function<double(void)>>>& modelParameters)
-        : g_, p_(p), modelParameters_(modelParameters) {}
+        : g_(g), p_(p), modelParameters_(modelParameters) {}
 
     boost::shared_ptr<IrLgm1fParametrization> parametrization() const { return p_; }
 
-    RandomVariable numeraire(const Date& d, const std::size_t x) const;
+    std::size_t numeraire(const Date& d, const std::size_t x) const;
 
-    RandomVariable discountBond(const Date& d, const Date& e, const std::size_t x) const;
+    std::size_t discountBond(const Date& d, const Date& e, const std::size_t x) const;
 
-    RandomVariable reducedDiscountBond(const Date& d t, const Date& e, const std::size_t x) const;
+    std::size_t reducedDiscountBond(const Date& d, const Date& e, const std::size_t x) const;
 
     /* Handles IborIndex and SwapIndex. Requires observation time t <= fixingDate */
-    RandomVariable fixing(const boost::shared_ptr<InterestRateIndex>& index, const Date& fixingDate, const Date& t,
-                          const std::size_t x) const;
+    std::size_t fixing(const boost::shared_ptr<InterestRateIndex>& index, const Date& fixingDate, const Date& t,
+                       const std::size_t x) const;
 
 private:
-    boost::shared_ptr<QuantExt::ComputationGraph> g_;
+    QuantExt::ComputationGraph& g_;
     boost::shared_ptr<IrLgm1fParametrization> p_;
     std::vector<std::pair<std::size_t, std::function<double(void)>>>& modelParameters_;
 };

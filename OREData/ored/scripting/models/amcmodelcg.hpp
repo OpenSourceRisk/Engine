@@ -12,7 +12,7 @@
 
 #include <qle/math/randomvariable.hpp>
 
-namespace oreplus {
+namespace ore {
 namespace data {
 
 class AmcModelCG {
@@ -24,4 +24,4 @@ public:
 };
 
 } // namespace data
-} // namespace oreplus
+} // namespace ore

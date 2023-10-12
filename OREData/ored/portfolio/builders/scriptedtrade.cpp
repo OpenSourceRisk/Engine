@@ -21,6 +21,7 @@
 #include <ored/scripting/models/blackscholescg.hpp>
 #include <ored/scripting/models/fdblackscholesbase.hpp>
 #include <ored/scripting/models/gaussiancam.hpp>
+#include <ored/scripting/models/gaussiancamcg.hpp>
 #include <ored/scripting/models/localvol.hpp>
 #include <ored/scripting/engines/scriptedinstrumentpricingengine.hpp>
 #include <ored/scripting/engines/scriptedinstrumentpricingenginecg.hpp>
@@ -1483,9 +1484,9 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
 
     // effective time steps per year: zero for exact evolution, otherwise the pricing engine parameter
     if (useCg_) {
-        model_ = boost::make_shared<GaussianCamCG>(
+        modelCG_ = boost::make_shared<GaussianCamCG>(
             camBuilder->model(), modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-            modelIndices_, modelIndicesCurrencies_, simulationDates_, regressionOrder_,
+            modelIndices_, modelIndicesCurrencies_, simulationDates_,
             camBuilder->model()->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_,
             iborFallbackConfig, std::vector<Size>(), conditionalExpectationModelStates);
     } else {
@@ -1537,9 +1538,9 @@ void ScriptedTradeEngineBuilder::buildGaussianCamAMC(
 
     // effective time steps per year: zero for exact evolution, otherwise the pricing engine parameter
     if (useCg_) {
-        model_ = boost::make_shared<GaussianCamCG>(
+        modelCG_ = boost::make_shared<GaussianCamCG>(
             projectedModel, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-            modelIndices_, modelIndicesCurrencies_, simulationDates_, regressionOrder_,
+            modelIndices_, modelIndicesCurrencies_, simulationDates_,
             projectedModel->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_,
             iborFallbackConfig, projectedStateProcessIndices, conditionalExpectationModelStates);
     } else {

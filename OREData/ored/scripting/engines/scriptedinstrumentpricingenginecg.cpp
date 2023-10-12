@@ -73,8 +73,8 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
     QL_REQUIRE(!useExternalComputeFramework_ || !useCachedSensis_,
                "ScriptedInstrumentPricingEngineCG: when using external compute framework, usage of cached sensis is "
                "not supported yet");
-    QL_REQUIRE(model_->trainingPaths() == Null<Size>(), "ScriptedInstrumentPricingEngineCG: separate training phase "
-                                                        "not supported, trainingSamples can not be specified.");
+    QL_REQUIRE(model_->trainingSamples() == Null<Size>(), "ScriptedInstrumentPricingEngineCG: separate training phase "
+                                                          "not supported, trainingSamples can not be specified.");
 
     lastCalculationWasValid_ = false;
 
