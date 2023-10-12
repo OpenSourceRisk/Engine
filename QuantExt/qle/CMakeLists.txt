@@ -204,6 +204,7 @@ models/jyimpliedyoyinflationtermstructure.cpp
 models/jyimpliedzeroinflationtermstructure.cpp
 models/lgm.cpp
 models/lgmcalibrationinfo.cpp
+models/lgmcg.cpp
 models/lgmconvolutionsolver2.cpp
 models/lgmimplieddefaulttermstructure.cpp
 models/lgmimpliedyieldtermstructure.cpp
@@ -702,6 +703,7 @@ models/jyimpliedyoyinflationtermstructure.hpp
 models/jyimpliedzeroinflationtermstructure.hpp
 models/lgm.hpp
 models/lgmcalibrationinfo.hpp
+models/lgmcg.hpp
 models/lgmconvolutionsolver2.hpp
 models/lgmimplieddefaulttermstructure.hpp
 models/lgmimpliedyieldtermstructure.hpp
