@@ -1,0 +1,21 @@
+name: C/C++ CI
+
+on: [push]
+
+jobs:
+  build:
+    name: building
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: get QuantLib
+      run: |
+        git submodule update --init
+    - name: Set up Boost
+      run: |
+        sudo apt update
+        sudo apt install -y libboost-all-dev libboost-test-dev
+    - name: cmake configure
+      run : mkdir build; cd build; cmake -DQL_BUILD_EXAMPLES=false -DQL_BUILD_TEST_SUITE=false -DQL_BUILD_BENCHMARK=false -DQL_ENABLE_SESSIONS=true -DORE_BUILD_DOC=false ..
+    - name: cmake build
+      run: cd build/; pwd; cmake --build . -j $(nproc)
