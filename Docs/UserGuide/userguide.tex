@@ -325,17 +325,18 @@ Scripted Trades & Y & Y & Y & Y \\
 a cross currency model consisting of an arbitrage free combination of Linear Gauss Markov models for all interest rates
 and lognormal processes for FX rates and EQ prices, Dodgson-Kainth (or Jarrow-Yildirim) models for inflation. The model components are calibrated to cross currency discounting and forward curves, Swaptions, FX Options, EQ Options and CPI caps/floors. With the 8th release, Commodity simulation has been added, as well as the foundation for a multi-factor Hull-White based IR/FX/COM simulation model. 
 
-\subsection{Language Bindings}
+\subsection{ORE in Python or Java}
 
-Since early versions of ORE we provide language bindings following QuantLib's example using SWIG. The ORE SWIG wrapper extends (contains) the QuantLib SWIG module and offers moreover 
-access to a part of ORE's functionality in Python and Java (other language bindings are untested). Since ORE v9, Python {\em wheels} are provided for each release, so that users can install the 
-most recent ORE Python module by calling
+ORE is written in C++ and comes with a command line executable {\tt ore.exe} that supports batch processes. 
+But since early versions of ORE we also provide language bindings following QuantLib's example using SWIG, in ORE's case with focus on Python and Java modules. 
+The ORE SWIG module extends (contains) the QuantLib SWIG module and offers moreover access to a part of ORE's functionality.
+Since ORE v9, Python {\em wheels} are provided for each release, so that users can install the most recent ORE Python module by calling
 
 \medskip
 \centerline{\tt pip install open-source-risk-engine}
  
 \medskip
-See Example 42 on how to use ORE-Python.
+See section \ref{example:42} on how to use ORE-Python. 
 
 \subsection{Roadmap}
 
