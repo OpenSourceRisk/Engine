@@ -294,6 +294,9 @@ RandomVariable conditionalExpectation(
 // time zero expectation
 RandomVariable expectation(const RandomVariable& r);
 
+// time zero variance
+RandomVariable variance(const RandomVariable& r);
+
 // black formula
 RandomVariable black(const RandomVariable& omega, const RandomVariable& t, const RandomVariable& strike,
                      const RandomVariable& forward, const RandomVariable& impliedVol);
