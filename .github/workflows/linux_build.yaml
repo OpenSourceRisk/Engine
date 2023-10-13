@@ -1,6 +1,21 @@
 name: C/C++ CI
 
-on: [push]
+on:
+  push:
+    branches: master
+  pull_request:
+    branches: master
+    types: [ready_for_review, opened, synchronize, reopened]
+    paths:
+      - ./App/**
+      - ./OREAnalytics/**
+      - '!./OREAnalytics/doc/**'
+      - ./OREData/**
+      - '!./OREData/doc/**'
+      - ./ORETest/**
+      - ./QuantExt/**
+      - '!./QuantExt/doc/**'
+      - CMakeLists.txt
 
 jobs:
   build:
