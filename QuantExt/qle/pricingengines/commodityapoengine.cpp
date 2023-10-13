@@ -126,7 +126,8 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
     if (!res.times.empty()) {
         res.tn = res.times.back();
         double s = EA2 / (EA * EA);
-        // if future vol = 0 for all dates EA2 = EA*EA, but
+        // if future vol = 0 for all dates, then EA2 = EA*EA, but
+        // due to numerical precision EA2 can be actually less than EA*EA 
         if (s < 1.0 || QuantLib::close_enough(s, 1)) {
             res.sigma = 0.0;
         } else {
