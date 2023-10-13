@@ -963,7 +963,7 @@ if(ORE_ENABLE_OPENCL)
   endif()
 endif()
 
-if(NOT USE_GLOBAL_ORE_BUILD)
+if(NOT USE_GLOBAL_ORE_BUILD AND QL_USE_PCH)
  target_precompile_headers(${QLE_LIB_NAME}
    PUBLIC
     <ql/any.hpp>
