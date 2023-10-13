@@ -21,7 +21,7 @@ RUN apt-get update \
 
 ENV PATH="/usr/lib/ccache:$PATH"
 ENV CCACHE_DIR="/ccache"
-ENV CCACHE_SLOPPINESS="pch_defines,time_macros"
+#ENV CCACHE_SLOPPINESS="pch_defines,time_macros"
 ENV CCACHE_MAXSIZE="10G"
 
 # Need the dos2unix all if building from Windows because the shell 
