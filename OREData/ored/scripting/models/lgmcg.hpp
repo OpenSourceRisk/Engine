@@ -28,9 +28,10 @@
 
 #include <ql/indexes/iborindex.hpp>
 
-namespace QuantExt {
+namespace ore::data {
 
 using namespace QuantLib;
+using namespace QuantExt;
 
 class LgmCG {
 public:
@@ -56,4 +57,4 @@ private:
     std::vector<std::pair<std::size_t, std::function<double(void)>>>& modelParameters_;
 };
 
-} // namespace QuantExt
+} // namespace ore::data

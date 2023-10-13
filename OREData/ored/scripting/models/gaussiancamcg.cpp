@@ -4,8 +4,7 @@
 */
 
 #include <ored/scripting/models/gaussiancamcg.hpp>
-
-
+#include <ored/scripting/models/lgmcg.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/to_string.hpp>
 
@@ -16,7 +15,6 @@
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/math/randomvariablelsmbasissystem.hpp>
-#include <qle/models/lgmcg.hpp>
 
 namespace ore {
 namespace data {

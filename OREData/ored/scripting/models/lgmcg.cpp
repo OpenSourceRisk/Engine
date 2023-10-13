@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/models/lgmcg.hpp>
+#include <ored/scripting/models/lgmcg.hpp>
 
 #include <ql/instruments/overnightindexedswap.hpp>
 #include <ql/instruments/vanillaswap.hpp>
@@ -27,23 +27,22 @@
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/swapindex.hpp>
 
-namespace QuantExt {
+namespace ore::data {
 
 std::size_t LgmCG::numeraire(const Date& d, const std::size_t x) const {
+
     modelParameters_.clear();
     QL_FAIL("TODO");
 }
 
-std::size_t LgmCG::discountBond(const Date& d, const Date& e, const std::size_t x) const {
-    QL_FAIL("TODO");
-}
+std::size_t LgmCG::discountBond(const Date& d, const Date& e, const std::size_t x) const { QL_FAIL("TODO"); }
 
 std::size_t LgmCG::reducedDiscountBond(const Date& d, const Date& e, const std::size_t x) const { QL_FAIL("TODO"); }
 
 /* Handles IborIndex and SwapIndex. Requires observation time t <= fixingDate */
 std::size_t LgmCG::fixing(const boost::shared_ptr<InterestRateIndex>& index, const Date& fixingDate, const Date& t,
-                      const std::size_t x) const {
+                          const std::size_t x) const {
     QL_FAIL("TODO");
 }
 
-} // namespace QuantExt
+} // namespace ore::data
