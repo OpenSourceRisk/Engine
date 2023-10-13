@@ -98,11 +98,11 @@ std::size_t ComputationGraph::constant(const double x) {
 
 const std::map<double, std::size_t>& ComputationGraph::constants() const { return constants_; }
 
-std::size_t ComputationGraph::variable(const std::string& name, const bool createIfNotExists) {
+std::size_t ComputationGraph::variable(const std::string& name, const VarDoesntExist v) {
     auto c = variables_.find(name);
     if (c != variables_.end())
         return c->second;
-    else if (createIfNotExists) {
+    else if (v == VarDoesntExist::Create) {
         std::size_t node = predecessors_.size();
         variables_.insert(std::make_pair(name, node));
         variableVersion_[name] = 0;
@@ -113,8 +113,13 @@ std::size_t ComputationGraph::variable(const std::string& name, const bool creat
         isConstant_.push_back(false);
         constantValue_.push_back(0.0);
         return node;
-    } else {
+    } else if (v == VarDoesntExist::Nan) {
+        return nan;
+    } else if (v == VarDoesntExist::Throw) {
         QL_FAIL("ComputationGraph::variable(" << name << ") not found.");
+    } else {
+        QL_FAIL("ComputationGraph::variable(): internal error, VarDoesntExist enum '" << static_cast<int>(v)
+                                                                                      << "' not covered.");
     }
 }
 
@@ -142,8 +147,8 @@ double ComputationGraph::constantValue(const std::size_t node) const { return co
 
 std::size_t cg_const(ComputationGraph& g, const double value) { return g.constant(value); }
 
-std::size_t cg_var(ComputationGraph& g, const std::string& name, const bool createIfNotExists) {
-    return g.variable(name, createIfNotExists);
+std::size_t cg_var(ComputationGraph& g, const std::string& name, const ComputationGraph::VarDoesntExist v) {
+    return g.variable(name, v);
 }
 
 std::size_t cg_add(ComputationGraph& g, const std::size_t a, const std::size_t b, const std::string& label) {
@@ -290,5 +295,5 @@ std::size_t cg_normalPdf(ComputationGraph& g, const std::size_t a, const std::st
         return cg_const(g, boost::math::pdf(n, g.constantValue(a)));
     return g.insert({a}, RandomVariableOpCode::NormalPdf, label);
 }
-    
+
 } // namespace QuantExt

@@ -201,7 +201,7 @@ std::size_t ModelCGImpl::eval(const std::string& indexInput, const Date& obsdate
                                     std::distance(infIndices_.begin(), inf), lim.first, obsdate, fwddate, baseDate);
         // if the index is not interpolated we are done
         if (!indexInfo.inf()->interpolated()) {
-        return indexStart;
+            return indexStart;
         }
         // otherwise we need to get a second value and interpolate as in ZeroInflationIndex
         std::size_t indexEnd = getInflationIndexFixing(returnMissingFixingAsNull, indexInput, inf->second,
@@ -436,11 +436,18 @@ std::vector<std::pair<std::size_t, std::function<double(void)>>>& ModelCGImpl::m
     return modelParameters_;
 }
 
-void ModelCGImpl::addModelParameter(const std::string& id, std::function<double(void)> f) const {
-    if (g_->variables().find(id) == g_->variables().end()) {
-        Size node = cg_var(*g_, id, true);
-        modelParameters_.push_back(std::make_pair(node, f));
+std::size_t ModelCGImpl::addModelParameter(const std::string& id, std::function<double(void)> f) const {
+    return ::ore::data::addModelParameter(*g_, modelParameters_, id, f);
+}
+
+std::size_t addModelParameter(ComputationGraph& g, std::vector<std::pair<std::size_t, std::function<double(void)>>>& m,
+                              const std::string& id, std::function<double(void)> f) {
+    std::size_t n;
+    if (n = g.variable(id, ComputationGraph::VarDoesntExist::Nan); n == ComputationGraph::nan) {
+        n = cg_var(g, id, ComputationGraph::VarDoesntExist::Create);
+        m.push_back(std::make_pair(n, f));
     }
+    return n;
 }
 
 } // namespace data

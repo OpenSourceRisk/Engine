@@ -208,7 +208,8 @@ void GaussianCamCG::performCalculations() const {
                                                             std::vector<std::size_t>(timeGrid_.size() - 1));
     for (Size j = 0; j < cam_->brownians() + cam_->auxBrownians(); ++j) {
         for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
-            randomVariates_[j][i] = cg_var(*g_, "__rv_" + std::to_string(j) + "_" + std::to_string(i), true);
+            randomVariates_[j][i] = cg_var(*g_, "__rv_" + std::to_string(j) + "_" + std::to_string(i),
+                                           ComputationGraph::VarDoesntExist::Create);
         }
     }
 
@@ -225,8 +226,7 @@ void GaussianCamCG::performCalculations() const {
 
     std::string id = "__z_0";
     std::size_t irState;
-    addModelParameter(id, [p] { return p->initialValues()[0]; });
-    irState = cg_var(*g_, id);
+    irState = addModelParameter(id, [p] { return p->initialValues()[0]; });
     irStates_[*effectiveSimulationDates_.begin()][0] = irState;
 
     std::size_t dateIndex = 1;
@@ -256,7 +256,7 @@ std::size_t GaussianCamCG::getIrIndexValue(const Size indexNo, const Date& d, co
     // ensure a valid fixing date
     fixingDate = irIndices_[indexNo].second->fixingCalendar().adjust(fixingDate);
     Size currencyIdx = irIndexPositionInCam_[indexNo];
-    LgmCG lgmcg(*g_, cam_->irlgm1f(currencyIdx), modelParameters_);
+    LgmCG lgmcg(currencies_[currencyIdx], *g_, cam_->irlgm1f(currencyIdx), modelParameters_);
     return lgmcg.fixing(irIndices_[indexNo].second, fixingDate, d, irStates_.at(d).at(currencyIdx));
 }
 
@@ -278,15 +278,14 @@ std::size_t GaussianCamCG::getDiscount(const Size idx, const Date& s, const Date
 }
 
 std::size_t GaussianCamCG::getNumeraire(const Date& s) const {
-    LgmCG lgmcg(*g_, cam_->irlgm1f(currencyPositionInCam_[0]), modelParameters_);
+    LgmCG lgmcg(currencies_[0], *g_, cam_->irlgm1f(currencyPositionInCam_[0]), modelParameters_);
     return lgmcg.numeraire(s, irStates_.at(s)[0]);
 }
 
 std::size_t GaussianCamCG::getFxSpot(const Size idx) const {
     std::string id = "__fxspot_" + std::to_string(idx);
     auto c = fxSpots_.at(idx);
-    addModelParameter(id, [c] { return c->value(); });
-    return cg_var(*g_, id);
+    return addModelParameter(id, [c] { return c->value(); });
 }
 
 Real GaussianCamCG::getDirectFxSpotT0(const std::string& forCcy, const std::string& domCcy) const {

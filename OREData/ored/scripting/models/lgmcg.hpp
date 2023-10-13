@@ -35,23 +35,31 @@ using namespace QuantExt;
 
 class LgmCG {
 public:
-    LgmCG(QuantExt::ComputationGraph& g, const boost::shared_ptr<IrLgm1fParametrization>& p,
+    LgmCG(const std::string& qualifier, QuantExt::ComputationGraph& g,
+          const boost::shared_ptr<IrLgm1fParametrization>& p,
           std::vector<std::pair<std::size_t, std::function<double(void)>>>& modelParameters)
-        : g_(g), p_(p), modelParameters_(modelParameters) {}
+        : qualifier_(qualifier), g_(g), p_(p), modelParameters_(modelParameters) {}
 
     boost::shared_ptr<IrLgm1fParametrization> parametrization() const { return p_; }
 
-    std::size_t numeraire(const Date& d, const std::size_t x) const;
+    std::size_t numeraire(const Date& d, const std::size_t x,
+                          const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
+                          const std::string& discountCurveId = "default") const;
 
-    std::size_t discountBond(const Date& d, const Date& e, const std::size_t x) const;
+    std::size_t discountBond(const Date& d, const Date& e, const std::size_t x,
+                             const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
+                             const std::string& discountCurveId = "default") const;
 
-    std::size_t reducedDiscountBond(const Date& d, const Date& e, const std::size_t x) const;
+    std::size_t reducedDiscountBond(const Date& d, const Date& e, const std::size_t x,
+                                    const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
+                                    const std::string& discountCurveId = "default") const;
 
     /* Handles IborIndex and SwapIndex. Requires observation time t <= fixingDate */
     std::size_t fixing(const boost::shared_ptr<InterestRateIndex>& index, const Date& fixingDate, const Date& t,
                        const std::size_t x) const;
 
 private:
+    std::string qualifier_;
     QuantExt::ComputationGraph& g_;
     boost::shared_ptr<IrLgm1fParametrization> p_;
     std::vector<std::pair<std::size_t, std::function<double(void)>>>& modelParameters_;
