@@ -337,6 +337,7 @@ termstructures/dynamicyoyoptionletvolatilitystructure.cpp
 termstructures/eqcommoptionsurfacestripper.cpp
 termstructures/equityforwardcurvestripper.cpp
 termstructures/flatcorrelation.cpp
+termstructures/flatforwarddividendcurve.cpp
 termstructures/futurepricehelper.cpp
 termstructures/fxblackvolsurface.cpp
 termstructures/fxvannavolgasmilesection.cpp
@@ -860,6 +861,7 @@ termstructures/dynamicyoyoptionletvolatilitystructure.hpp
 termstructures/eqcommoptionsurfacestripper.hpp
 termstructures/equityforwardcurvestripper.hpp
 termstructures/flatcorrelation.hpp
+termstructures/flatforwarddividendcurve.hpp
 termstructures/futurepricehelper.hpp
 termstructures/fxblackvolsurface.hpp
 termstructures/fxsmilesection.hpp

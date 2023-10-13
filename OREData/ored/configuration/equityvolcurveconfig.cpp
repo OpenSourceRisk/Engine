@@ -49,7 +49,7 @@ EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(
         calendar, solverConfig, preferOutOfTheMoney) {}
 
 const string EquityVolatilityCurveConfig::quoteStem(const string& volType) const {
-    return "EQUITY_OPTION/" + volType + "/" + curveID_ + "/" + ccy_ + "/";
+    return "EQUITY_OPTION/" + volType + "/" + equityId() + "/" + ccy_ + "/";
 }
 
 void EquityVolatilityCurveConfig::populateQuotes() {
