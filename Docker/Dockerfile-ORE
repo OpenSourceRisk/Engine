@@ -44,4 +44,7 @@ RUN mkdir -p html \
   && mkdir /html/qle && cp -r /ore/QuantExt/doc/html/* /html/qle \
   && rm -rf ore
 
+# output the ccache stats
+RUN ccache -s
+
 CMD bash
