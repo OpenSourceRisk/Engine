@@ -126,20 +126,16 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
     if (!res.times.empty()) {
         res.tn = res.times.back();
         double s = EA2 / (EA * EA);
-        // if future vol = 0 for all dates EA2 = EA*EA, but 
+        // if future vol = 0 for all dates EA2 = EA*EA, but
         if (s < 1.0 || QuantLib::close_enough(s, 1)) {
             res.sigma = 0.0;
         } else {
-            res.sigma = std::sqrt(std::log(s) / res.tn);    
+            res.sigma = std::sqrt(std::log(s) / res.tn);
         }
     } else {
         res.tn = 0;
-        res.sigma = 0;    
+        res.sigma = 0;
     }
-
-    
-
-
     return res;
 }
 } // namespace CommodityAveragePriceOptionMomementMatching
