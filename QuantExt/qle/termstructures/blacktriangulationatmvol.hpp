@@ -77,24 +77,20 @@ public:
     //@}
 protected:
     virtual Volatility blackVolImpl(Time t, Real) const override {
-        if (staticVol2_) {
-            if (auto tmp = staticVolCache_.find(t); tmp != staticVolCache_.end())
-                return tmp->second;
-        }
-        // get ATM vols and correlation
-        Volatility v1 = vol1_->blackVol(t, Null<Real>());
-        Volatility v2 = vol2_->blackVol(t, Null<Real>());
         Real c = rho_->correlation(t);
-
-        // get vol^2
-        Volatility volSquared = v1 * v1 + v2 * v2 - 2.0 * c * v1 * v2;
-        if (volSquared <= 0)
-            return 0;
-        Volatility tmp = std::sqrt(volSquared);
+        Volatility v1 = vol1_->blackVol(t, Null<Real>());
+        Real v2 = Null<Real>();
         if (staticVol2_) {
-            staticVolCache_[t] = tmp;
+            if (auto tmp = staticVolCache_.find(t); tmp != staticVolCache_.end()) {
+                v2 = tmp->second;
+            } else {
+                v2 = vol2_->blackVol(t, Null<Real>());
+                staticVolCache_[t] = v2;
+            }
+        } else {
+            v2 = vol2_->blackVol(t, Null<Real>());
         }
-        return tmp;
+        return std::sqrt(std::max(0.0, v1 * v1 + v2 * v2 - 2.0 * c * v1 * v2))
     }
 
 private:
