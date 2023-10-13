@@ -31,11 +31,12 @@ EquityCurveConfig::EquityCurveConfig(const string& curveID, const string& curveD
                                      const EquityCurveConfig::Type& type, const string& equitySpotQuote,
                                      const vector<string>& fwdQuotes, const string& dayCountID,
                                      const string& dividendInterpVariable, const string& dividendInterpMethod,
-                                     bool extrapolation, const QuantLib::Exercise::Type& exerciseStyle)
+                                     const bool dividendExtrapolation, const bool extrapolation,
+                                     const QuantLib::Exercise::Type& exerciseStyle)
     : CurveConfig(curveID, curveDescription), fwdQuotes_(fwdQuotes), forecastingCurve_(forecastingCurve),
-      currency_(currency), calendar_(calendar), type_(type), equitySpotQuoteID_(equitySpotQuote), dayCountID_(dayCountID),
-      divInterpVariable_(dividendInterpVariable), divInterpMethod_(dividendInterpMethod), extrapolation_(extrapolation),
-      exerciseStyle_(exerciseStyle) {
+      currency_(currency), calendar_(calendar), type_(type), equitySpotQuoteID_(equitySpotQuote), dayCountID_(dayCountID), 
+      divInterpVariable_(dividendInterpVariable), divInterpMethod_(dividendInterpMethod), dividendExtrapolation_(dividendExtrapolation), 
+      extrapolation_(extrapolation), exerciseStyle_(exerciseStyle) {
     quotes_ = fwdQuotes;
     quotes_.insert(quotes_.begin(), equitySpotQuote);
     populateRequiredCurveIds();
@@ -72,7 +73,7 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
         divInterpVariable_ = "Zero";
         divInterpMethod_ = divInterpVariable_ == "Zero" ? "Linear" : "LogLinear";
     }
-
+    dividendExtrapolation_ = XMLUtils::getChildValueAsBool(node, "DividendExtrapolation");
     extrapolation_ = XMLUtils::getChildValueAsBool(node, "Extrapolation"); // defaults to true
 
     if (type_ == Type::NoDividends) {
@@ -105,6 +106,7 @@ XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, divInterpNode, "InterpolationVariable", divInterpVariable_);
         XMLUtils::addChild(doc, divInterpNode, "InterpolationMethod", divInterpMethod_);
     }
+    XMLUtils::addChild(doc, node, "DividendExtrapolation", dividendExtrapolation_);
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
 
     return node;
