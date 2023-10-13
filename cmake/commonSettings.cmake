@@ -145,6 +145,9 @@ else()
     add_compiler_flag("-pthread" usePThreadCompilerFlag)
     add_linker_flag("-pthread" usePThreadLinkerFlag)
 
+    # see https://ccache.dev/manual/4.8.3.html#_precompiled_headers
+    add_compiler_flag("-Xclang -fno-pch-timestamp" supportsNoPchTimestamp)
+
     # enable boost assert handler
     add_compiler_flag("-DBOOST_ENABLE_ASSERT_HANDLER" enableAssertionHandler)
 
