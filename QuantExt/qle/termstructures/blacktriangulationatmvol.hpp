@@ -90,7 +90,7 @@ protected:
         } else {
             v2 = vol2_->blackVol(t, Null<Real>());
         }
-        return std::sqrt(std::max(0.0, v1 * v1 + v2 * v2 - 2.0 * c * v1 * v2))
+        return std::sqrt(std::max(0.0, v1 * v1 + v2 * v2 - 2.0 * c * v1 * v2));
     }
 
 private:
