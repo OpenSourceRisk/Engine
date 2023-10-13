@@ -7,6 +7,7 @@ on:
     branches: master
     types: [ready_for_review, opened, synchronize, reopened]
     paths:
+      - .github/workflows/linux_build.yaml
       - ./App/**
       - ./OREAnalytics/**
       - '!./OREAnalytics/doc/**'
