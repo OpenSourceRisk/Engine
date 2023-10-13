@@ -283,10 +283,12 @@ if(ORE_USE_ZLIB)
     add_definitions(-DORE_USE_ZLIB)
 endif()
 
+if (QL_USE_PCH)
 target_precompile_headers(${OREA_LIB_NAME}
   PUBLIC
     <orea/app/inputparameters.hpp>
     <orea/scenario/scenariosimmarketparameters.hpp>)
+endif()
 
 install(DIRECTORY . DESTINATION include/orea
         FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
