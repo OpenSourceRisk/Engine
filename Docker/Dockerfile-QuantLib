@@ -32,8 +32,7 @@ RUN cd /ore/QuantLib \
   && cmake .. -DQL_USE_PCH=ON -DCMAKE_BUILD_TYPE=${cmake_build_type} -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_EXTENSIONS=OFF -DCMAKE_CXX_FLAGS="-D BOOST_ENABLE_ASSERT_HANDLER -mavx2 -fpch-preprocess" -DQL_ENABLE_SESSIONS=ON -DQL_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DQL_BUILD_EXAMPLES=OFF -DQL_BUILD_BENCHMARK=OFF
  
 WORKDIR /ore/QuantLib/build.ql
-RUN --mount=type=cache,target=/ccache/ \
-  && ccache -z \
+RUN --mount=type=cache,target=/ccache/ ccache -z \
   && make -j ${num_cores} \
   && ccache -s \
   && make install \
