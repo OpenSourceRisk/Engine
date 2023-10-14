@@ -16,13 +16,8 @@ ARG cmake_build_type
 COPY QuantLib /ore/QuantLib
 
 RUN apt-get update \
-  && DEBIAN_FRONTEND=noninteractive apt-get install -y doxygen graphviz ccache \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -y doxygen graphviz \
   && apt-get clean
-
-ENV PATH="/usr/lib/ccache:$PATH"
-ENV CCACHE_DIR="/ccache"
-#ENV CCACHE_SLOPPINESS="pch_defines,time_macros"
-ENV CCACHE_MAXSIZE="10G"
 
 # Need the dos2unix all if building from Windows because the shell 
 # scripts fail if there are CRLF present in the files
