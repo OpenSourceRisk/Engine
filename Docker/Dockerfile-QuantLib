@@ -35,7 +35,6 @@ RUN cd /ore/QuantLib \
 WORKDIR /ore/QuantLib/build.ql
 RUN --mount=type=cache,target=/ccache/ ccache -z \
   && make -j ${num_cores} \
-  && ccache -C \
   && ccache -s \
   && make install \
   && cd / \
