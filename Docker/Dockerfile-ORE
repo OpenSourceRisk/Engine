@@ -31,7 +31,9 @@ RUN cd /ore \
   && cmake .. -DQL_USE_PCH=ON -DORE_BUILD_DOC=ON -DCMAKE_BUILD_TYPE=${cmake_build_type} -DCMAKE_CXX_FLAGS="-mavx2" -DORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DORE_USE_ZLIB=ON -D ORE_ENABLE_OPENCL=ON
 
 WORKDIR /ore/build.ore
-RUN --mount=type=cache,target=/ccache/ make -j ${num_cores} \
+RUN --mount=type=cache,target=/ccache/ \
+  && ccache -z \
+  && make -j ${num_cores} \
   && ccache -s \
   && make install \
   && make doc_quantext 2>&1 | grep -v "ignoring unsupported tag" \
