@@ -32,6 +32,7 @@ RUN cd /ore \
 
 WORKDIR /ore/build.ore
 RUN --mount=type=cache,target=/ccache/ make -j ${num_cores} \
+  && ccache -s \
   && make install \
   && make doc_quantext 2>&1 | grep -v "ignoring unsupported tag" \
   && make doc_ored 2>&1 | grep -v "ignoring unsupported tag" \
@@ -43,8 +44,5 @@ RUN mkdir -p html \
   && mkdir /html/orea && cp -r /ore/OREAnalytics/doc/html/* /html/orea \
   && mkdir /html/qle && cp -r /ore/QuantExt/doc/html/* /html/qle \
   && rm -rf ore
-
-# output the ccache stats
-RUN ccache -s
 
 CMD bash

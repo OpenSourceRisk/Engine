@@ -34,12 +34,10 @@ RUN cd /ore/QuantLib \
 WORKDIR /ore/QuantLib/build.ql
 RUN --mount=type=cache,target=/ccache/ make -j ${num_cores} \
   && make install \
+  && ccache -s \
   && cd / \
   && cp -r /ore/QuantLib/test-suite /usr/local/include \
   && rm -rf ore \
   && ldconfig
-
-# output the ccache stats
-RUN ccache -s
 
 CMD bash
