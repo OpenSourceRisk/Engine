@@ -531,7 +531,9 @@ pair<map<string, Real>, bool> SimmCalculator::irDeltaMargin(const NettingSetDeta
         }
         // Divide by the concentration risk threshold
         Real concThreshold = simmConfiguration_->concentrationThreshold(RiskType::IRCurve, qualifier);
-        concentrationRisk[qualifier] /= concThreshold * market_->fxRate("USD" + resultCcy_)->value();
+        if (resultCcy_ != "USD")
+            concThreshold *= market_->fxRate("USD" + resultCcy_)->value();
+        concentrationRisk[qualifier] /= concThreshold;
         // Final concentration risk amount
         concentrationRisk[qualifier] = max(1.0, sqrt(std::abs(concentrationRisk[qualifier])));
 
@@ -705,7 +707,9 @@ pair<map<string, Real>, bool> SimmCalculator::irVegaMargin(const NettingSetDetai
         }
         // Divide by the concentration risk threshold
         Real concThreshold = simmConfiguration_->concentrationThreshold(RiskType::IRVol, qualifier);
-        concentrationRisk[qualifier] /= concThreshold * market_->fxRate("USD" + resultCcy_)->value();
+        if (resultCcy_ != "USD")
+            concThreshold *= market_->fxRate("USD" + resultCcy_)->value();
+        concentrationRisk[qualifier] /= concThreshold;
         
         // Final concentration risk amount
         concentrationRisk[qualifier] = max(1.0, sqrt(std::abs(concentrationRisk[qualifier])));
@@ -1027,7 +1031,9 @@ pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& ne
             }
             // Divide by the concentration risk threshold
             Real concThreshold = simmConfiguration_->concentrationThreshold(rt, qualifier);
-            concentrationRisk[qualifier] /= concThreshold * market_->fxRate("USD" + resultCcy_)->value();
+            if (resultCcy_ != "USD")
+                concThreshold *= market_->fxRate("USD" + resultCcy_)->value();
+            concentrationRisk[qualifier] /= concThreshold;
             // Final concentration risk amount
             concentrationRisk[qualifier] = max(1.0, sqrt(std::abs(concentrationRisk[qualifier])));
         }
