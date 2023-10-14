@@ -150,6 +150,8 @@ else()
     # see https://ccache.dev/manual/4.8.3.html#_precompiled_headers
     add_compiler_flag("-Xclang -fno-pch-timestamp" supportsNoPchTimestamp)
 
+    add_compiler_flag("-fpch-preprocess" supportsPchPreprocess)
+
     # enable boost assert handler
     add_compiler_flag("-DBOOST_ENABLE_ASSERT_HANDLER" enableAssertionHandler)
 
