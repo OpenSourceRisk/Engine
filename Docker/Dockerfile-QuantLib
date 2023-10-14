@@ -21,8 +21,9 @@ RUN apt-get update \
 
 ENV PATH="/usr/lib/ccache:$PATH"
 ENV CCACHE_DIR="/ccache"
-#ENV CCACHE_SLOPPINESS="pch_defines,time_macros,pch_defines,time_macros,include_file_mtime,include_file_ctim"
 ENV CCACHE_MAXSIZE="10G"
+# needed if QL_USE_PCH is ON
+#ENV CCACHE_SLOPPINESS="pch_defines,time_macros,pch_defines,time_macros,include_file_mtime,include_file_ctim"
 
 # - Need the dos2unix all if building from Windows because the shell
 #   scripts fail if there are CRLF present in the files
