@@ -25,6 +25,10 @@
 
 #include <boost/math/distributions/normal.hpp>
 
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/variance.hpp>
+
 #include <iostream>
 
 // if defined, RandomVariableStats are updated (this might impact perfomance!), default is undefined
@@ -1169,6 +1173,18 @@ RandomVariable expectation(const RandomVariable& r) {
         sum += r[i];
     stopCalcStats(r.size());
     return RandomVariable(r.size(), sum / static_cast<Real>(r.size()));
+}
+
+RandomVariable variance(const RandomVariable& r) {
+    if (r.deterministic())
+        return RandomVariable(r.size(), 0.0);
+    resumeCalcStats();
+    boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::variance>> acc;
+    for (Size i = 0; i < r.size(); ++i) {
+        acc(r[i]);
+    }
+    stopCalcStats(r.size());
+    return RandomVariable(r.size(), boost::accumulators::variance(acc));
 }
 
 RandomVariable black(const RandomVariable& omega, const RandomVariable& t, const RandomVariable& strike,

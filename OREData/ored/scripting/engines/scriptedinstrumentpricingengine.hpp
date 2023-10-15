@@ -50,9 +50,11 @@ public:
 
 private:
     void calculate() const override;
+    Real addMcErrorEstimate(const std::string& label, const ValueType& v) const;
+
     // calculation state, true iff calculate() was called at least once and last call went without errors
     mutable bool lastCalculationWasValid_ = false;
-    //
+
     const std::string npv_;
     const std::vector<std::pair<std::string, std::string>> additionalResults_;
     const boost::shared_ptr<Model> model_;

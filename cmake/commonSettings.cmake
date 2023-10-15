@@ -4,6 +4,8 @@ include(CheckLinkerFlag)
 option(MSVC_LINK_DYNAMIC_RUNTIME "Link against dynamic runtime" ON)
 option(MSVC_PARALLELBUILD "Use flag /MP" ON)
 
+option(QL_USE_PCH OFF)
+
 # define build type clang address sanitizer + undefined behaviour + LIBCPP assertions, but keep O2
 set(CMAKE_CXX_FLAGS_CLANG_ASAN_O2 "-fsanitize=address,undefined -fno-omit-frame-pointer -D_LIBCPP_ENABLE_ASSERTIONS=1 -g -O2")
 
@@ -144,6 +146,13 @@ else()
     # add pthread flag
     add_compiler_flag("-pthread" usePThreadCompilerFlag)
     add_linker_flag("-pthread" usePThreadLinkerFlag)
+
+    if(QL_USE_PCH)
+      # see https://ccache.dev/manual/4.8.3.html#_precompiled_headers
+      add_compiler_flag("-Xclang -fno-pch-timestamp" supportsNoPchTimestamp)
+      # needed for gcc, although the ccache documentation does not strictly require this
+      add_compiler_flag("-fpch-preprocess" supportsPchPreprocess)
+    endif()
 
     # enable boost assert handler
     add_compiler_flag("-DBOOST_ENABLE_ASSERT_HANDLER" enableAssertionHandler)
