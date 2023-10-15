@@ -59,7 +59,7 @@ public:
     virtual QuantLib::Size size() const { return n_; }
 
     // if not null, this model uses a separate mc training phase for NPV() calcs
-    virtual Size trainingSamples() const { return Null<Size>(); }
+    virtual Size trainingSamples() const { return QuantLib::Null<Size>(); }
 
     /* enable / disable the usage of the training paths (if trainingPaths() is not null)
        the model should be using training paths only temporarily and reset to normal model via RAII */
