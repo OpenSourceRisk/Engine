@@ -223,13 +223,13 @@ Allowable values:  The MIC code of the exchange, see Table \ref{tab:mic}. Mandat
 \item \lstinline!PriceType! [Optional]:
 Only valid when  \lstinline!Type! is  \emph{Commodity}.  Whether the Spot or Future price is referenced. 
 
-Allowable values:  \emph{Spot}, \emph{FutureSettlemment}. Mandatory when  \lstinline!Type! is  \emph{Commodity} .
+Allowable values:  \emph{Spot}, \emph{FutureSettlement}. Mandatory when  \lstinline!Type! is  \emph{Commodity} .
 
 \item \lstinline!FutureMonthOffset! [Optional]:
-Only valid when  \lstinline!Type! is  \emph{Commodity}. Only relevant for the \emph{FutureSettlemment} price type, in which case the the $N+1$th future with
+Only valid when  \lstinline!Type! is  \emph{Commodity}. Only relevant for the \emph{FutureSettlement} price type, in which case the the $N+1$th future with
   expiry greater than ObservationDate for the given commodity underlying will be referenced.
 
-Allowable values:  An integer. Mandatory for when  \lstinline!Type! is  \emph{Commodity} and \lstinline!PriceType! is \emph{FutureSettlemment}.
+Allowable values:  An integer. Mandatory for when  \lstinline!Type! is  \emph{Commodity} and \lstinline!PriceType! is \emph{FutureSettlement}.
 
 \item \lstinline!DeliveryRollDays! [Optional]:
 Only valid when  \lstinline!Type! is  \emph{Commodity}.  The number of days the observation date is rolled forward before the
