@@ -82,7 +82,7 @@ const boost::shared_ptr<ore::data::Conventions>& InstrumentConventions::conventi
     if (numberOfEmittedWarnings_ < max_num_warnings) {
         ++numberOfEmittedWarnings_;
         WLOG("InstrumentConventions: Could not find conventions for "
-             << dt << ", using convetions from " << it->first
+             << dt << ", using conventions from " << it->first
              << (numberOfEmittedWarnings_ == max_num_warnings ? " (no more warnings of this type will be emitted)"
                                                               : ""));
     }
