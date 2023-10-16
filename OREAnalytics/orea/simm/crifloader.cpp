@@ -175,6 +175,10 @@ void CrifLoader::add(CrifRecord cr, const bool onDiffAmountCcy) {
                     it->amount += cr.amount;
                     updated = true;
                 }
+                if (cr.hasAmountResultCcy() && cr.hasResultCcy() && it->resultCurrency == cr.resultCurrency) {
+                    it->amountResultCcy += cr.amountResultCcy;
+                    updated = true;
+                }
                 if (updated)
                     DLOG("Updated net CRIF records: " << cr);
             } else if (it->riskType == RiskType::AddOnNotionalFactor ||
@@ -208,6 +212,10 @@ void CrifLoader::add(CrifRecord cr, const bool onDiffAmountCcy) {
             }
             if (cr.hasAmount() && cr.hasAmountCcy() && it->amountCurrency == cr.amountCurrency) {
                 it->amount += cr.amount;
+                updated = true;
+            }
+            if (cr.hasAmountResultCcy() && cr.hasResultCcy() && it->resultCurrency == cr.resultCurrency) {
+                it->amountResultCcy += cr.amountResultCcy;
                 updated = true;
             }
             if (updated)
@@ -559,7 +567,9 @@ void CrifLoader::fillAmountUsd(const boost::shared_ptr<ore::data::Market> market
                 if (!cr.hasAmount() || !cr.hasAmountCcy()) {
                     WLOG(ore::data::StructuredTradeWarningMessage(
                         cr.tradeId, cr.tradeType, "Populating CRIF amount USD",
-                        "CRIF record is missing one of Amount and AmountCurrency: " + to_string(cr)));
+                        "CRIF record is missing one of Amount and AmountCurrency, and there is no amountUsd value to "
+                        "fall back to: " +
+                            to_string(cr)));
                 } else {
                     Real usdSpot = market->fxRate(cr.amountCurrency + "USD")->value();
                     cr.amountUsd = cr.amount * usdSpot;
