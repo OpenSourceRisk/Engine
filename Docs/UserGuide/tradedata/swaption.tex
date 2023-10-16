@@ -148,7 +148,7 @@ The relevant fields in the \lstinline!OptionData! node for a Swaption are:
 
 Allowable values:  See section \ref{ss:premiums}
 
-\item An \lstinline!ExerciseData! [Optional] node where one  \lstinline!Date! element is given, and one \lstinline!Price! element can optionally also be given.  See Listing \ref{lst:exercise_data}
+\item An \lstinline!ExerciseData! [Optional] node where one  \lstinline!Date! element must be given, and one \lstinline!Price! element can optionally also be given.  See Listing \ref{lst:exercise_data}
 
 This node marks the Swaption as exercised. If the \lstinline!ExerciseData! node is omitted it is assumed the Swaption has not been exercised. 
 
@@ -157,6 +157,8 @@ The effective exercise date is the next \lstinline!ExerciseDate! in the \lstinli
   
   For a cash-settled Swaption, the \lstinline!Price! given in \lstinline!ExerciseData!
   represents the cash settlement amount. It is paid according to the \lstinline!PaymentData! node: If an explicit list of payment dates is given, the payment takes place on the next date following the effective exercise date. If the \lstinline!PaymentData! is rules-based, the payment date is derived from the effective exercise date using the given calendar, lag and convention.
+  
+If a Swaption is cash-settled and has an \lstinline!ExerciseData! node with a \lstinline!Date!  but no \lstinline!Price!, then the Swaption is considered exercised on the given date, but without a settlement amount being paid.   
   
  \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
