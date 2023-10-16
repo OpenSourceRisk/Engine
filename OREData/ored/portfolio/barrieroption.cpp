@@ -130,8 +130,8 @@ void BarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
             barrier_.levels()[0].value(), barrier_.levels()[1].value(), rebate, payoff, exercise);
     }
 
-    boost::shared_ptr<QuantLib::PricingEngine> barrierEngine = barrierPricigingEngine(engineFactory, expiryDate, payDate);
-    boost::shared_ptr<QuantLib::PricingEngine> vanillaEngine = vanillaPricigingEngine(engineFactory, expiryDate, payDate);
+    boost::shared_ptr<QuantLib::PricingEngine> barrierEngine = barrierPricingEngine(engineFactory, expiryDate, payDate);
+    boost::shared_ptr<QuantLib::PricingEngine> vanillaEngine = vanillaPricingEngine(engineFactory, expiryDate, payDate);
    
     // set pricing engines
     barrier->setPricingEngine(barrierEngine);

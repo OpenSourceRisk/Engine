@@ -257,8 +257,8 @@ XMLNode* TRS::toXML(XMLDocument& doc) {
 
 boost::shared_ptr<QuantExt::FxIndex>
 TRS::getFxIndex(const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
-                const std::string& foreign,
-                std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices) const {
+                const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices,
+                std::set<std::string>& missingFxIndexPairs) const {
     if (domestic == foreign)
         return nullptr;
     std::set<std::string> requiredCcys = {domestic, foreign};
@@ -275,7 +275,15 @@ TRS::getFxIndex(const boost::shared_ptr<Market> market, const std::string& confi
             return fx;
         }
     }
-    QL_FAIL("TRS:getFxIndex(): no fx terms for " << domestic << " vs " << foreign);
+
+    // build a fx index, so that the processing can continue, but add to the error messages,
+    // which - if not empty - will fail the trade build eventually
+
+    std::string f("FX-GENERIC-" + domestic + "-" + foreign);
+    auto fx = buildFxIndex(f, domestic, foreign, market, configuration, false);
+    fxIndices[f] = fx;
+    missingFxIndexPairs.insert(domestic + foreign);
+    return fx;
 }
 
 void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
@@ -381,13 +389,16 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // get fx indices for conversion return and add cf ccy to funding ccy
 
+    std::set<std::string> missingFxIndexPairs;
+
     auto fxIndexReturn = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
-                                    returnData_.currency(), fundingCurrency, initialFxIndices);
+                                    returnData_.currency(), fundingCurrency, initialFxIndices, missingFxIndexPairs);
     auto fxIndexAdditionalCashflows =
         additionalCashflowData_.legData().currency().empty()
             ? fxIndexReturn
             : getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
-                         additionalCashflowData_.legData().currency(), fundingCurrency, fxIndicesDummy);
+                         additionalCashflowData_.legData().currency(), fundingCurrency, fxIndicesDummy,
+                         missingFxIndexPairs);
 
     Real initialPrice = returnData_.initialPrice();
 
@@ -411,13 +422,13 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         std::vector<Leg> returnLegs;
         auto builder = TrsUnderlyingBuilderFactory::instance().getBuilder(
             underlyingDerivativeId_[i].empty() ? underlying_[i]->tradeType() : "Derivative");
-        builder->build(id(), underlying_[i], valuationDates, paymentDates, fundingCurrency,
-                       engineFactory, underlyingIndex[i], underlyingMultiplier[i],
-                       localIndexNamesAndQuantities, localFxIndices,
-                       underlying_.size() == 1 ? initialPrice : dummyInitialPrice,
-                       assetCurrency[i], localCreditRiskCurrency, creditQualifierMapping_, localMaturity,
+        builder->build(id(), underlying_[i], valuationDates, paymentDates, fundingCurrency, engineFactory,
+                       underlyingIndex[i], underlyingMultiplier[i], localIndexNamesAndQuantities, localFxIndices,
+                       underlying_.size() == 1 ? initialPrice : dummyInitialPrice, assetCurrency[i],
+                       localCreditRiskCurrency, creditQualifierMapping_, localMaturity,
                        std::bind(&TRS::getFxIndex, this, std::placeholders::_1, std::placeholders::_2,
-                                 std::placeholders::_3, std::placeholders::_4, std::placeholders::_5),
+                                 std::placeholders::_3, std::placeholders::_4, std::placeholders::_5,
+                                 std::ref(missingFxIndexPairs)),
                        underlyingDerivativeId_[i], requiredFixings_, returnLegs);
 
         addTRSRequiredFixings(requiredFixings_, returnLegs, fxIndexReturn);
@@ -442,7 +453,7 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                             << fundingCurrency << ", return ccy is " << returnData_.currency());
 
         fxIndexAsset[i] = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
-                                     assetCurrency[i], fundingCurrency, localFxIndices);
+                                     assetCurrency[i], fundingCurrency, localFxIndices, missingFxIndexPairs);
         DLOG("underlying #" << (i + 1) << " index (" << underlyingIndex[i]->name() << ") built.");
         DLOG("underlying #" << (i + 1) << " multiplier is " << underlyingMultiplier[i]);      
 
@@ -455,18 +466,24 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         fxIndices.insert(localFxIndices.begin(), localFxIndices.end());
     }
 
+    // check that we have all fx terms that we needed to build the fx indices
+
+    QL_REQUIRE(missingFxIndexPairs.empty(), "TRS::build(): missing FXTerms for the following pairs: "
+                                                << boost::algorithm::join(missingFxIndexPairs, ", "));
+
     // set initial price currency
 
-    std::string initialPriceCurrency;
-    if (returnData_.initialPrice() != Null<Real>() && !returnData_.initialPriceCurrency().empty())
-        initialPriceCurrency = returnData_.initialPriceCurrency();
-    else {
-        initialPriceCurrency = assetCurrency.front();
-        for (Size i = 1; i < assetCurrency.size(); ++i) {
-            QL_REQUIRE(assetCurrency[i] == initialPriceCurrency,
-                       "TRS::build(): can not determine unique initial price currency, since it is not given in the "
-                       "trade data and the underlyings have different asset currencies (e.g. '"
-                           << assetCurrency[i] << ", " << initialPriceCurrency << ")");
+    QL_REQUIRE(!assetCurrency.empty(), "TRS::build(): no underlying given.");
+
+    std::string initialPriceCurrency =
+        returnData_.initialPriceCurrency().empty() ? assetCurrency.front() : returnData_.initialPriceCurrency();
+
+    if (initialPrice != Null<Real>() && returnData_.initialPriceCurrency().empty()) {
+        for (auto const& ccy : assetCurrency) {
+            QL_REQUIRE(ccy == initialPriceCurrency, "TRS::build(): can not determine unique initial price currency "
+                                                    "from asset currencies for initial price ("
+                                                        << returnData_.initialPrice()
+                                                        << "), please add the initial price currency to the trade xml");
         }
     }
 
