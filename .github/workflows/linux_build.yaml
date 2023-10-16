@@ -2,7 +2,7 @@ name: C/C++ CI
 
 on:
   push:
-    branches: master
+#    branches: master
   pull_request:
     branches: master
     types: [ready_for_review, opened, synchronize, reopened]
@@ -31,7 +31,7 @@ jobs:
     - name: Set up Boost
       run: |
         sudo apt update
-        sudo apt install -y libboost-all-dev libboost-test-dev
+        sudo apt install -y libboost-all-dev libboost-test-dev ninja-build
     - name: cmake configure
       run : mkdir build; cd build; cmake -DCMAKE_BUILD_TYPE=Release -DQL_BUILD_EXAMPLES=false -DQL_BUILD_TEST_SUITE=false -DQL_BUILD_BENCHMARK=false -DQL_ENABLE_SESSIONS=true -DORE_BUILD_DOC=false -G "Ninja" ..
     - name: cmake build
