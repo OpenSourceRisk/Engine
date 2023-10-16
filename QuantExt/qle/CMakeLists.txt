@@ -164,7 +164,6 @@ methods/fdmblackscholesop.cpp
 methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.cpp
 methods/fdmdefaultableequityjumpdiffusionop.cpp
 methods/fdmquantohelper.cpp
-methods/interpolatedvariatemultipathgenerator.cpp
 methods/multipathgeneratorbase.cpp
 methods/multipathvariategenerator.cpp
 methods/projectedbufferedmultipathgenerator.cpp
@@ -635,7 +634,6 @@ methods/fdmblackscholesop.hpp
 methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.hpp
 methods/fdmdefaultableequityjumpdiffusionop.hpp
 methods/fdmquantohelper.hpp
-methods/interpolatedvariatemultipathgenerator.hpp
 methods/multipathgeneratorbase.hpp
 methods/multipathvariategenerator.hpp
 methods/pathgeneratorfactory.hpp
@@ -963,6 +961,24 @@ if(ORE_ENABLE_OPENCL)
     find_package(OpenCL REQUIRED)
     target_link_libraries(${QLE_LIB_NAME} OpenCL::OpenCL)
   endif()
+endif()
+
+if(NOT USE_GLOBAL_ORE_BUILD AND QL_USE_PCH)
+ target_precompile_headers(${QLE_LIB_NAME}
+   PUBLIC
+    <ql/any.hpp>
+    <ql/errors.hpp>
+    <ql/index.hpp>
+    <ql/indexes/indexmanager.hpp>
+    <ql/instrument.hpp>
+    <ql/indexes/interestrateindex.hpp>
+    <ql/math/array.hpp>
+    <ql/math/interpolations/cubicinterpolation.hpp>
+    <ql/math/matrix.hpp>
+    <ql/methods/finitedifferences/operators/fdmlinearop.hpp>
+    <ql/patterns/observable.hpp>
+    <ql/qldefines.hpp>
+    <ql/termstructure.hpp>)
 endif()
 
 install(DIRECTORY . DESTINATION include/qle

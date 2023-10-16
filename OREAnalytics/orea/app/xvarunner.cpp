@@ -94,6 +94,9 @@ void XvaRunner::bufferSimulationPaths() {
     LOG("XvaRunner::bufferSimulationPaths() called");
 
     auto stateProcess = model_->stateProcess();
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(stateProcess)) {
+        tmp->resetCache(scenarioGeneratorData_->getGrid()->timeGrid().size() - 1);
+    }
     auto pathGen = MultiPathGeneratorFactory().build(scenarioGeneratorData_->sequenceType(), stateProcess,
                                                      scenarioGeneratorData_->getGrid()->timeGrid(),
                                                      scenarioGeneratorData_->seed(), scenarioGeneratorData_->ordering(),

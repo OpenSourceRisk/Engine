@@ -309,6 +309,9 @@ boost::shared_ptr<analytics::ScenarioSimMarket> buildScenarioSimMarket(boost::sh
     parameters->setAdditionalScenarioDataCcys({"EUR"});
 
     // Path generator
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(model->stateProcess())) {
+        tmp->resetCache(dateGrid->timeGrid().size() - 1);
+    }
     boost::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGen =
         boost::make_shared<MultiPathGeneratorMersenneTwister>(model->stateProcess(), dateGrid->timeGrid(), seed, antithetic);
 

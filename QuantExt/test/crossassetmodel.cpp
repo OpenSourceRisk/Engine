@@ -566,6 +566,12 @@ BOOST_AUTO_TEST_CASE(testCcyLgm3fForeignPayouts) {
     TimeGrid grid(T, steps);
     PseudoRandom::rsg_type sg2 = PseudoRandom::make_sequence_generator(steps, seed);
 
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
+        tmp->resetCache(grid.size() - 1);
+    }
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(usdProcess)) {
+        tmp->resetCache(grid.size() - 1);
+    }
     MultiPathGeneratorMersenneTwister pg(process, grid, seed, false);
     PathGenerator<PseudoRandom::rsg_type> pg2(usdProcess, grid, sg2, false);
 
@@ -1224,6 +1230,12 @@ BOOST_AUTO_TEST_CASE(testLgm5fMoments) {
 
     TimeGrid grid(T, steps);
 
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
+        tmp->resetCache(grid.size() - 1);
+    }
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
+        tmp->resetCache(grid.size() - 1);
+    }
     MultiPathGeneratorSobolBrownianBridge pgen(p_euler, grid);
     MultiPathGeneratorSobolBrownianBridge pgen2(p_exact, grid);
 
@@ -1388,12 +1400,14 @@ BOOST_AUTO_TEST_CASE(testLgmGsrEquivalence) {
                 // summarize a possible problem, so we output differences
                 // in the mean as well
                 if (std::fabs(mean(stat_gsr) - mean(stat_lgm)) > tol ||
-                    std::fabs(variance(stat_gsr) - variance(stat_lgm)) > tol) {
+                    std::fabs(boost::accumulators::variance(stat_gsr) - boost::accumulators::variance(stat_lgm)) >
+                        tol) {
                     BOOST_ERROR("failed to verify LGM-GSR equivalence, "
                                 "(mean,variance) of zero rate is ("
-                                << mean(stat_gsr) << "," << variance(stat_gsr) << ") for GSR, (" << mean(stat_lgm)
-                                << "," << variance(stat_lgm) << ") for LGM, for T=" << T[i] << ", sigma=" << sigma[j]
-                                << ", kappa=" << kappa[k] << ", shift=" << shift);
+                                << mean(stat_gsr) << "," << boost::accumulators::variance(stat_gsr) << ") for GSR, ("
+                                << mean(stat_lgm) << "," << boost::accumulators::variance(stat_lgm)
+                                << ") for LGM, for T=" << T[i] << ", sigma=" << sigma[j] << ", kappa=" << kappa[k]
+                                << ", shift=" << shift);
                 }
             }
         }
@@ -1481,8 +1495,14 @@ BOOST_AUTO_TEST_CASE(testIrFxCrCirppMartingaleProperty) {
     LowDiscrepancy::rsg_type sg2 = LowDiscrepancy::make_sequence_generator(process2->factors() * steps, seed);
 
     TimeGrid grid1(T, 1);
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process1)) {
+        tmp->resetCache(grid1.size() - 1);
+    }
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg1(process1, grid1, sg1, false);
     TimeGrid grid2(T, steps);
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process2)) {
+        tmp->resetCache(grid2.size() - 1);
+    }
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg2(process2, grid2, sg2, false);
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > eurzb1, usdzb1, gbpzb1, n1eur1, n2usd1,
@@ -1703,8 +1723,14 @@ BOOST_AUTO_TEST_CASE(testIrFxCrMoments) {
     Size seed = 18;
     TimeGrid grid(T, steps);
 
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
+        tmp->resetCache(grid.size() - 1);
+    }
     MultiPathGeneratorSobolBrownianBridge pgen(p_euler, grid, SobolBrownianGenerator::Diagonal, seed,
                                                SobolRsg::JoeKuoD7);
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
+        tmp->resetCache(grid.size() - 1);
+    }
     MultiPathGeneratorSobolBrownianBridge pgen2(p_exact, grid, SobolBrownianGenerator::Diagonal, seed,
                                                 SobolRsg::JoeKuoD7);
 
@@ -2285,8 +2311,14 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
 
     BOOST_TEST_MESSAGE("build multi path generator");
     TimeGrid grid1(T, 1);
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process1)) {
+        tmp->resetCache(grid1.size() - 1);
+    }
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg1(process1, grid1, sg1, false);
     TimeGrid grid2(T, steps);
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process2)) {
+        tmp->resetCache(grid2.size() - 1);
+    }
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg2(process2, grid2, sg2, false);
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > eurzb1, usdzb1, gbpzb1, infeur1, infgbp1,
@@ -2541,6 +2573,12 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMoments,
     Size seed = 18;
     TimeGrid grid(T, steps);
 
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
+        tmp->resetCache(grid.size() - 1);
+    }
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
+        tmp->resetCache(grid.size() - 1);
+    }
     MultiPathGeneratorSobolBrownianBridge pgen(p_euler, grid, SobolBrownianGenerator::Diagonal, seed,
                                                SobolRsg::JoeKuoD7);
     MultiPathGeneratorSobolBrownianBridge pgen2(p_exact, grid, SobolBrownianGenerator::Diagonal, seed,
@@ -2877,7 +2915,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMartingaleProperty) {
     IrFxInfCrEqModelTestData d;
 
     boost::shared_ptr<StochasticProcess> process1 = d.modelExact->stateProcess();
-    boost::shared_ptr<StochasticProcess> process2 = d.modelExact->stateProcess();
+    boost::shared_ptr<StochasticProcess> process2 = d.modelEuler->stateProcess();
 
     Size n = 50000;                         // number of paths
     Size seed = 18;                         // rng seed
@@ -2891,8 +2929,14 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMartingaleProperty) {
     LowDiscrepancy::rsg_type sg2 = LowDiscrepancy::make_sequence_generator(process2->factors() * steps, seed);
 
     TimeGrid grid1(T, 1);
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process1)) {
+        tmp->resetCache(grid1.size() - 1);
+    }
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg1(process1, grid1, sg1, false);
     TimeGrid grid2(T, steps);
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process2)) {
+        tmp->resetCache(grid2.size() - 1);
+    }
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg2(process2, grid2, sg2, false);
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > eurzb1, usdzb1, gbpzb1, infeur1, infgbp1,
@@ -3128,8 +3172,14 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMoments) {
     Size seed = 18;
     TimeGrid grid(T, steps);
 
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
+        tmp->resetCache(grid.size() - 1);
+    }
     MultiPathGeneratorSobolBrownianBridge pgen(p_euler, grid, SobolBrownianGenerator::Diagonal, seed,
                                                SobolRsg::JoeKuoD7);
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
+        tmp->resetCache(grid.size() - 1);
+    }
     MultiPathGeneratorSobolBrownianBridge pgen2(p_exact, grid, SobolBrownianGenerator::Diagonal, seed,
                                                 SobolRsg::JoeKuoD7);
 
@@ -3429,7 +3479,13 @@ BOOST_AUTO_TEST_CASE(testEqLgm5fPayouts) {
     TimeGrid grid_euler(T, steps_euler);
     PseudoRandom::rsg_type sg2 = PseudoRandom::make_sequence_generator(steps, seed);
 
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
+        tmp->resetCache(grid.size() - 1);
+    }
     MultiPathGeneratorMersenneTwister pg(process, grid, seed, false);
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process2)) {
+        tmp->resetCache(grid_euler.size() - 1);
+    }
     MultiPathGeneratorMersenneTwister pg2(process2, grid_euler, seed, false);
 
     // test
@@ -3639,7 +3695,14 @@ BOOST_AUTO_TEST_CASE(testEqLgm5fMoments) {
     TimeGrid grid_euler(T, steps_euler);
     TimeGrid grid_exact(T, steps_exact);
 
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
+        tmp->resetCache(grid_euler.size() - 1);
+    }
     MultiPathGeneratorSobolBrownianBridge pgen(p_euler, grid_euler);
+
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
+        tmp->resetCache(grid_exact.size() - 1);
+    }
     MultiPathGeneratorSobolBrownianBridge pgen2(p_exact, grid_exact);
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > e_eu[5], e_eu2[5];
@@ -3726,6 +3789,16 @@ BOOST_AUTO_TEST_CASE(testEqLgm5fMoments) {
     }
 
     BOOST_TEST_MESSAGE("Testing correlation matrix recovery in presence of equity simulation");
+
+    // reset caching so that we can retrieve further info from the processes
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
+        tmp->resetCache(0);
+    }
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
+        tmp->resetCache(grid_euler.size() - 1);
+    }
+
+
     Matrix corr_input = d.ccLgmExact->correlation();
     BOOST_CHECK(corr_input.rows() == corr_input.columns());
     Size dim = corr_input.rows();
@@ -4376,6 +4449,9 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByAlpha) {
     boost::shared_ptr<StochasticProcess> process = model->stateProcess();
     LowDiscrepancy::rsg_type sg = LowDiscrepancy::make_sequence_generator(process->factors() * steps, seed);
     TimeGrid grid(T, steps);
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
+        tmp->resetCache(grid.size() - 1);
+    }
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg(process, grid, sg, false);
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > floor;
@@ -4510,6 +4586,9 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByH) {
     boost::shared_ptr<StochasticProcess> process = model->stateProcess();
     LowDiscrepancy::rsg_type sg = LowDiscrepancy::make_sequence_generator(process->factors() * steps, seed);
     TimeGrid grid(T, steps);
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
+        tmp->resetCache(grid.size() - 1);
+    }
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg(process, grid, sg, false);
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > floor;
@@ -4654,6 +4733,9 @@ BOOST_AUTO_TEST_CASE(testCrCalibration) {
     boost::shared_ptr<StochasticProcess> process = model->stateProcess();
     LowDiscrepancy::rsg_type sg = LowDiscrepancy::make_sequence_generator(process->factors() * steps, seed);
     TimeGrid grid(T, steps);
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
+        tmp->resetCache(grid.size() - 1);
+    }
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg(process, grid, sg, false);
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > cdso;
