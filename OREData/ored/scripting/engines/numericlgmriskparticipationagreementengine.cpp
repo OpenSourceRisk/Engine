@@ -439,7 +439,6 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
     std::vector<std::vector<Size>> onRateCutoff(eventDates.size());
     std::vector<std::vector<bool>> onIncludeSpread(eventDates.size());
     std::vector<std::vector<Period>> onLookback(eventDates.size());
-    std::vector<std::vector<DayCounter>> onAccrualDayCounter(eventDates.size());
     std::vector<std::vector<bool>> onLocalCapFloor(eventDates.size());
     std::vector<std::vector<int>> floatingCouponsLatestRelevantCallEventIndex(eventDates.size());
 
@@ -572,7 +571,6 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
                     onRateCutoff[i].push_back(0);
                     onIncludeSpread[i].push_back(false);
                     onLookback[i].push_back(0 * Days);
-                    onAccrualDayCounter[i].push_back(DayCounter());
                     onLocalCapFloor[i].push_back(false);
                     onIsAveraging[i].push_back(false);
                     floatingCouponsLatestRelevantCallEventIndex[i].push_back(getLatestRelevantCallIndex(
@@ -598,7 +596,6 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
                         onRateCutoff[i].push_back(onCouponAnalyzer.rateCutoff());
                         onIncludeSpread[i].push_back(onCouponAnalyzer.includeSpread());
                         onLookback[i].push_back(onCouponAnalyzer.lookback());
-                        onAccrualDayCounter[i].push_back(onCouponAnalyzer.dayCounter());
                         onIsAveraging[i].push_back(onCouponAnalyzer.isAveraging());
                         payTimes[i].push_back(discountCurves_[baseCcy_]->timeFromReference(c->date()));
                         floatingCouponsLatestRelevantCallEventIndex[i].push_back(
@@ -675,17 +672,17 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
             RandomVariable rate;
             if (auto on = boost::dynamic_pointer_cast<OvernightIndex>(floatingIndices[i][k])) {
                 if (onIsAveraging[i][k]) {
-                    rate = lgm.averagedOnRate(on, onFixingDates[i][k], onValueDates[i][k], onDt[i][k],
-                                              onRateCutoff[i][k], onIncludeSpread[i][k], floatingSpreads[i][k],
-                                              floatingGearings[i][k], onLookback[i][k], onAccrualDayCounter[i][k],
-                                              floatingCaps[i][k], floatingFloors[i][k], onLocalCapFloor[i][k],
-                                              nakedOption[i][k], eventTimes[i], states);
+                    rate =
+                        lgm.averagedOnRate(on, onFixingDates[i][k], onValueDates[i][k], onDt[i][k], onRateCutoff[i][k],
+                                           onIncludeSpread[i][k], floatingSpreads[i][k], floatingGearings[i][k],
+                                           onLookback[i][k], floatingCaps[i][k], floatingFloors[i][k],
+                                           onLocalCapFloor[i][k], nakedOption[i][k], eventTimes[i], states);
                 } else {
                     rate = lgm.compoundedOnRate(on, onFixingDates[i][k], onValueDates[i][k], onDt[i][k],
                                                 onRateCutoff[i][k], onIncludeSpread[i][k], floatingSpreads[i][k],
-                                                floatingGearings[i][k], onLookback[i][k], onAccrualDayCounter[i][k],
-                                                floatingCaps[i][k], floatingFloors[i][k], onLocalCapFloor[i][k],
-                                                nakedOption[i][k], eventTimes[i], states);
+                                                floatingGearings[i][k], onLookback[i][k], floatingCaps[i][k],
+                                                floatingFloors[i][k], onLocalCapFloor[i][k], nakedOption[i][k],
+                                                eventTimes[i], states);
                 }
             } else if (auto ibor = boost::dynamic_pointer_cast<IborIndex>(floatingIndices[i][k])) {
                 rate = computeIborRate(lgm.fixing(ibor, eventDates[i], eventTimes[i], states), floatingSpreads[i][k],
@@ -720,16 +717,14 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
                                 rate = lgm.averagedOnRate(
                                     on, onFixingDates[t][k], onValueDates[t][k], onDt[t][k], onRateCutoff[t][k],
                                     onIncludeSpread[t][k], floatingSpreads[t][k], floatingGearings[t][k],
-                                    onLookback[t][k], onAccrualDayCounter[t][k], floatingCaps[t][k],
-                                    floatingFloors[t][k], onLocalCapFloor[t][k], nakedOption[t][k], eventTimes[i],
-                                    states);
+                                    onLookback[t][k], floatingCaps[t][k], floatingFloors[t][k], onLocalCapFloor[t][k],
+                                    nakedOption[t][k], eventTimes[i], states);
                             } else {
                                 rate = lgm.compoundedOnRate(
                                     on, onFixingDates[t][k], onValueDates[t][k], onDt[t][k], onRateCutoff[t][k],
                                     onIncludeSpread[t][k], floatingSpreads[t][k], floatingGearings[t][k],
-                                    onLookback[t][k], onAccrualDayCounter[t][k], floatingCaps[t][k],
-                                    floatingFloors[t][k], onLocalCapFloor[t][k], nakedOption[t][k], eventTimes[i],
-                                    states);
+                                    onLookback[t][k], floatingCaps[t][k], floatingFloors[t][k], onLocalCapFloor[t][k],
+                                    nakedOption[t][k], eventTimes[i], states);
                             }
                         } else if (auto ibor = boost::dynamic_pointer_cast<IborIndex>(floatingIndices[t][k])) {
                             rate = computeIborRate(
@@ -758,16 +753,14 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
                                 rate = lgm.averagedOnRate(
                                     on, onFixingDates[t][k], onValueDates[t][k], onDt[t][k], onRateCutoff[t][k],
                                     onIncludeSpread[t][k], floatingSpreads[t][k], floatingGearings[t][k],
-                                    onLookback[t][k], onAccrualDayCounter[t][k], floatingCaps[t][k],
-                                    floatingFloors[t][k], onLocalCapFloor[t][k], nakedOption[t][k], eventTimes[i],
-                                    states);
+                                    onLookback[t][k], floatingCaps[t][k], floatingFloors[t][k], onLocalCapFloor[t][k],
+                                    nakedOption[t][k], eventTimes[i], states);
                             } else {
                                 rate = lgm.compoundedOnRate(
                                     on, onFixingDates[t][k], onValueDates[t][k], onDt[t][k], onRateCutoff[t][k],
                                     onIncludeSpread[t][k], floatingSpreads[t][k], floatingGearings[t][k],
-                                    onLookback[t][k], onAccrualDayCounter[t][k], floatingCaps[t][k],
-                                    floatingFloors[t][k], onLocalCapFloor[t][k], nakedOption[t][k], eventTimes[i],
-                                    states);
+                                    onLookback[t][k], floatingCaps[t][k], floatingFloors[t][k], onLocalCapFloor[t][k],
+                                    nakedOption[t][k], eventTimes[i], states);
                             }
                         } else if (auto ibor = boost::dynamic_pointer_cast<IborIndex>(floatingIndices[t][k])) {
                             rate = computeIborRate(

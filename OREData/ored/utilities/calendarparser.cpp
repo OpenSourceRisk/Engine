@@ -365,6 +365,7 @@ void CalendarParser::reset() {
         {"ZMW", AmendedCalendar(WeekendsOnly(), "ZMW")},
 
         // ISO 10383 MIC Exchange
+        {"XASX", Australia(Australia::ASX)},
         {"BVMF", Brazil(Brazil::Exchange)},
         {"XTSE", Canada(Canada::TSX)},
         {"XSHG", China(China::SSE)},
