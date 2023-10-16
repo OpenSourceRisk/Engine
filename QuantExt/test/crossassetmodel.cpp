@@ -1400,12 +1400,14 @@ BOOST_AUTO_TEST_CASE(testLgmGsrEquivalence) {
                 // summarize a possible problem, so we output differences
                 // in the mean as well
                 if (std::fabs(mean(stat_gsr) - mean(stat_lgm)) > tol ||
-                    std::fabs(variance(stat_gsr) - variance(stat_lgm)) > tol) {
+                    std::fabs(boost::accumulators::variance(stat_gsr) - boost::accumulators::variance(stat_lgm)) >
+                        tol) {
                     BOOST_ERROR("failed to verify LGM-GSR equivalence, "
                                 "(mean,variance) of zero rate is ("
-                                << mean(stat_gsr) << "," << variance(stat_gsr) << ") for GSR, (" << mean(stat_lgm)
-                                << "," << variance(stat_lgm) << ") for LGM, for T=" << T[i] << ", sigma=" << sigma[j]
-                                << ", kappa=" << kappa[k] << ", shift=" << shift);
+                                << mean(stat_gsr) << "," << boost::accumulators::variance(stat_gsr) << ") for GSR, ("
+                                << mean(stat_lgm) << "," << boost::accumulators::variance(stat_lgm)
+                                << ") for LGM, for T=" << T[i] << ", sigma=" << sigma[j] << ", kappa=" << kappa[k]
+                                << ", shift=" << shift);
                 }
             }
         }

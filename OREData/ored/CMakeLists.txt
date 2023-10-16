@@ -745,6 +745,14 @@ target_link_libraries(${ORED_LIB_NAME} ${QL_LIB_NAME})
 target_link_libraries(${ORED_LIB_NAME} ${Boost_LIBRARIES})
 
 
+if (QL_USE_PCH)
+target_precompile_headers(${ORED_LIB_NAME}
+  PUBLIC
+    <ored/portfolio/enginefactory.hpp>
+    <ored/utilities/log.hpp>
+    <ored/utilities/parsers.hpp>)
+endif()
+
 install(DIRECTORY . DESTINATION include/ored
         FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
 

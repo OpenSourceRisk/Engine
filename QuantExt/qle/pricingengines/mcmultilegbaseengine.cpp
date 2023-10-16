@@ -327,8 +327,8 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
                                     const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
             RandomVariable effectiveRate = lgmVectorised_[indexCcyIdx].compoundedOnRate(
                 on->overnightIndex(), on->fixingDates(), on->valueDates(), on->dt(), on->rateCutoff(),
-                on->includeSpread(), on->spread(), on->gearing(), on->lookback(), on->dayCounter(), Null<Real>(),
-                Null<Real>(), false, false, simTime, *states.at(0).at(0));
+                on->includeSpread(), on->spread(), on->gearing(), on->lookback(), Null<Real>(), Null<Real>(), false,
+                false, simTime, *states.at(0).at(0));
             RandomVariable fxFixing(n, 1.0);
             if (isFxLinked) {
                 if (fxLinkedFixedFxRate != Null<Real>()) {
@@ -368,8 +368,8 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
                 cfon->underlying()->overnightIndex(), cfon->underlying()->fixingDates(),
                 cfon->underlying()->valueDates(), cfon->underlying()->dt(), cfon->underlying()->rateCutoff(),
                 cfon->underlying()->includeSpread(), cfon->underlying()->spread(), cfon->underlying()->gearing(),
-                cfon->underlying()->lookback(), cfon->underlying()->dayCounter(), cfon->cap(), cfon->floor(),
-                cfon->localCapFloor(), cfon->nakedOption(), simTime, *states.at(0).at(0));
+                cfon->underlying()->lookback(), cfon->cap(), cfon->floor(), cfon->localCapFloor(), cfon->nakedOption(),
+                simTime, *states.at(0).at(0));
             RandomVariable fxFixing(n, 1.0);
             if (isFxLinked) {
                 if (fxLinkedFixedFxRate != Null<Real>()) {
@@ -407,8 +407,8 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
                                     const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
             RandomVariable effectiveRate = lgmVectorised_[indexCcyIdx].averagedOnRate(
                 av->overnightIndex(), av->fixingDates(), av->valueDates(), av->dt(), av->rateCutoff(), false,
-                av->spread(), av->gearing(), av->lookback(), av->dayCounter(), Null<Real>(), Null<Real>(), false, false,
-                simTime, *states.at(0).at(0));
+                av->spread(), av->gearing(), av->lookback(), Null<Real>(), Null<Real>(), false, false, simTime,
+                *states.at(0).at(0));
             RandomVariable fxFixing(n, 1.0);
             if (isFxLinked) {
                 if (fxLinkedFixedFxRate != Null<Real>()) {
@@ -448,8 +448,8 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
                 cfav->underlying()->overnightIndex(), cfav->underlying()->fixingDates(),
                 cfav->underlying()->valueDates(), cfav->underlying()->dt(), cfav->underlying()->rateCutoff(),
                 cfav->includeSpread(), cfav->underlying()->spread(), cfav->underlying()->gearing(),
-                cfav->underlying()->lookback(), cfav->underlying()->dayCounter(), cfav->cap(), cfav->floor(),
-                cfav->localCapFloor(), cfav->nakedOption(), simTime, *states.at(0).at(0));
+                cfav->underlying()->lookback(), cfav->cap(), cfav->floor(), cfav->localCapFloor(), cfav->nakedOption(),
+                simTime, *states.at(0).at(0));
             RandomVariable fxFixing(n, 1.0);
             if (isFxLinked) {
                 if (fxLinkedFixedFxRate != Null<Real>()) {

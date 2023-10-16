@@ -190,8 +190,7 @@ RandomVariable LgmVectorised::compoundedOnRate(const boost::shared_ptr<Overnight
                                                const std::vector<Date>& fixingDates,
                                                const std::vector<Date>& valueDates, const std::vector<Real>& dt,
                                                const Natural rateCutoff, const bool includeSpread, const Real spread,
-                                               const Real gearing, const Period lookback,
-                                               const DayCounter& accrualDayCounter, Real cap, Real floor,
+                                               const Real gearing, const Period lookback, Real cap, Real floor,
                                                const bool localCapFloor, const bool nakedOption, const Time t,
                                                const RandomVariable& x) const {
 
@@ -290,13 +289,13 @@ RandomVariable LgmVectorised::compoundedOnRate(const boost::shared_ptr<Overnight
         if (includeSpread) {
             compoundFactorWithoutSpreadLgm *= disc1 / disc2;
             Real tau =
-                accrualDayCounter.yearFraction(valueDates[i], valueDates.back()) / (valueDates.back() - valueDates[i]);
+                index->dayCounter().yearFraction(valueDates[i], valueDates.back()) / (valueDates.back() - valueDates[i]);
             compoundFactorLgm *= RandomVariable(
                 x.size(), std::pow(1.0 + tau * spread, static_cast<int>(valueDates.back() - valueDates[i])));
         }
     }
 
-    Rate tau = accrualDayCounter.yearFraction(valueDates.front(), valueDates.back());
+    Rate tau = index->dayCounter().yearFraction(valueDates.front(), valueDates.back());
     RandomVariable rate = (compoundFactorLgm - RandomVariable(x.size(), 1.0)) / RandomVariable(x.size(), tau);
     RandomVariable swapletRate = RandomVariable(x.size(), gearing) * rate;
     RandomVariable effectiveSpread, effectiveIndexFixing;
@@ -349,9 +348,8 @@ RandomVariable LgmVectorised::averagedOnRate(const boost::shared_ptr<OvernightIn
                                              const std::vector<Date>& fixingDates, const std::vector<Date>& valueDates,
                                              const std::vector<Real>& dt, const Natural rateCutoff,
                                              const bool includeSpread, const Real spread, const Real gearing,
-                                             const Period lookback, const DayCounter& accrualDayCounter, Real cap,
-                                             Real floor, const bool localCapFloor, const bool nakedOption, const Time t,
-                                             const RandomVariable& x) const {
+                                             const Period lookback, Real cap, Real floor, const bool localCapFloor,
+                                             const bool nakedOption, const Time t, const RandomVariable& x) const {
 
     QL_REQUIRE(!includeSpread || QuantLib::close_enough(gearing, 1.0),
                "LgmVectorised::averageOnRate(): if include spread = true, only a gearing 1.0 is allowed - scale "
@@ -432,7 +430,7 @@ RandomVariable LgmVectorised::averagedOnRate(const boost::shared_ptr<OvernightIn
         accumulatedRateLgm += log(disc1 / disc2);
     }
 
-    Rate tau = accrualDayCounter.yearFraction(valueDates.front(), valueDates.back());
+    Rate tau = index->dayCounter().yearFraction(valueDates.front(), valueDates.back());
     RandomVariable rate =
         RandomVariable(x.size(), gearing / tau) * accumulatedRateLgm + RandomVariable(x.size(), spread);
 

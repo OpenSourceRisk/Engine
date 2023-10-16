@@ -52,10 +52,10 @@ public:
 
     //! create the pricing engines
     boost::shared_ptr<QuantLib::PricingEngine>
-    vanillaPricigingEngine(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+    vanillaPricingEngine(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
                            const QuantLib::Date& paymentDate = QuantLib::Date()) override;
     boost::shared_ptr<QuantLib::PricingEngine>
-    barrierPricigingEngine(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+    barrierPricingEngine(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
                            const QuantLib::Date& paymentDate = QuantLib::Date()) override;
 };
 
