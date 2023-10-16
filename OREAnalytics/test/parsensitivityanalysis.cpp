@@ -17,19 +17,23 @@
 */
 
 #include "parsensitivityanalysis.hpp"
-#include <test/oreatoplevelfixture.hpp>
-#include <test/testmarket.hpp>
-#include <test/testportfolio.hpp>
-#include <boost/timer/timer.hpp>
+#include "testmarket.hpp"
+#include "testportfolio.hpp"
+
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/engine/observationmode.hpp>
+#include <orea/engine/parsensitivityanalysis.hpp>
 #include <orea/engine/sensitivityanalysis.hpp>
 #include <orea/engine/valuationcalculator.hpp>
 #include <orea/engine/valuationengine.hpp>
+#include <orea/engine/zerotoparcube.hpp>
+#include <orea/scenario/deltascenariofactory.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
+#include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
+
 #include <ored/model/lgmdata.hpp>
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
@@ -45,16 +49,15 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/osutils.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <orea/engine/parsensitivityanalysis.hpp>
-#include <orea/engine/sensitivityanalysisplus.hpp>
-#include <orea/engine/zerotoparcube.hpp>
-#include <orea/scenario/sensitivityscenariodata.hpp>
-#include <orea/scenario/deltascenariofactory.hpp>
-#include <ql/math/randomnumbers/mt19937uniformrng.hpp>
+
 #include <ql/termstructures/yield/piecewiseyieldcurve.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+
+#include <test/oreatoplevelfixture.hpp>
+
+#include <boost/timer/timer.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -1151,9 +1154,8 @@ void testParConversion(ObservationMode::Mode om) {
     // first build the par analysis object, so that we can align the pillars for the zero sensi analysis
     ParSensitivityAnalysis parAnalysis(today, simMarketData, *sensiData, "default");
     parAnalysis.alignPillars();
-    boost::shared_ptr<SensitivityAnalysis> zeroAnalysis =
-        boost::make_shared<SensitivityAnalysisPlus>(portfolio, initMarket, "default", engineData,
-                                                    simMarketData, sensiData, false);
+    boost::shared_ptr<SensitivityAnalysis> zeroAnalysis = boost::make_shared<SensitivityAnalysis>(
+        portfolio, initMarket, "default", engineData, simMarketData, sensiData, false);
     BOOST_TEST_MESSAGE("SensitivityAnalysis object built");
     zeroAnalysis->overrideTenors(true);
     zeroAnalysis->generateSensitivities();

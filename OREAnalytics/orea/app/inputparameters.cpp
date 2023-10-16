@@ -23,10 +23,10 @@
 #include <orea/engine/sensitivityfilestream.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <orea/simm/simmbucketmapperbase.hpp>
-#include <ored/ored.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/utilities/currencyconfig.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/portfolio/scriptedtrade.hpp>
 
 namespace ore {
 namespace analytics {
@@ -65,6 +65,18 @@ void InputParameters::setRefDataManager(const std::string& xml) {
 
 void InputParameters::setRefDataManagerFromFile(const std::string& fileName) {
     refDataManager_ = boost::make_shared<BasicReferenceDataManager>(fileName);
+}
+
+void InputParameters::setScriptLibrary(const std::string& xml) {
+    ScriptLibraryData data;
+    data.fromXMLString(xml);
+    ScriptLibraryStorage::instance().set(std::move(data));
+}
+
+void InputParameters::setScriptLibraryFromFile(const std::string& fileName) {
+    ScriptLibraryData data;
+    data.fromFile(fileName);
+    ScriptLibraryStorage::instance().set(std::move(data));
 }
 
 void InputParameters::setConventions(const std::string& xml) {
@@ -501,13 +513,13 @@ OutputParameters::OutputParameters(const boost::shared_ptr<Parameters>& params) 
                "dim regression output grid points size (" << dimOutputGridPoints.size() << ") "
                << "and file names size (" << dimRegressionFileNames_.size() << ") do not match");
     for (Size i = 0; i < dimRegressionFileNames_.size(); ++i)
-        fileNameMap_["dim_regression_" + to_string(i)] = dimRegressionFileNames_[i];
+        fileNameMap_["dim_regression_" + std::to_string(i)] = dimRegressionFileNames_[i];
 
     tmp = params->get("xva", "creditMigrationTimeSteps", false);
     if (tmp != "") {
         auto ts = parseListOfValues<Size>(tmp, &parseInteger);
         for (auto const& t : ts) {
-            fileNameMap_["credit_migration_" + to_string(t)] =
+            fileNameMap_["credit_migration_" + std::to_string(t)] =
                 params->get("xva", "creditMigrationOutputFiles") + "_" + std::to_string(t);
         }
     }

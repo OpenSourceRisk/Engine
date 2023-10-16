@@ -157,7 +157,7 @@ Log::Log() : loggers_(), enabled_(false), mask_(255), ls_() {
 }
 
 void Log::registerLogger(const boost::shared_ptr<Logger>& logger) {
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    std::unique_lock<std::shared_mutex> lock(mutex_);
     QL_REQUIRE(loggers_.find(logger->name()) == loggers_.end(),
                "Logger with name " << logger->name() << " already registered");
     loggers_[logger->name()] = logger;
@@ -170,13 +170,13 @@ void Log::registerIndependentLogger(const boost::shared_ptr<IndependentLogger>& 
 }
 
 boost::shared_ptr<Logger>& Log::logger(const string& name) {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     QL_REQUIRE(loggers_.find(name) != loggers_.end(), "No logger found with name " << name);
     return loggers_[name];
 }
 
 void Log::removeLogger(const string& name) {
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    std::unique_lock<std::shared_mutex> lock(mutex_);
     map<string, boost::shared_ptr<Logger>>::iterator it = loggers_.find(name);
     map<string, boost::shared_ptr<IndependentLogger>>::iterator iit = independentLoggers_.find(name);
     if (it != loggers_.end()) {
@@ -190,7 +190,7 @@ void Log::removeLogger(const string& name) {
 }
 
 void Log::removeAllLoggers() {
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    std::unique_lock<std::shared_mutex> lock(mutex_);
     loggers_.clear();
     logging::core::get()->remove_all_sinks();
     independentLoggers_.clear();
@@ -327,7 +327,7 @@ LoggerStream::~LoggerStream() {
     while (getline(ss_, text)) {
         // we expand the MLOG macro here so we can overwrite __FILE__ and __LINE__
         if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(mask_)) {
-            boost::unique_lock<boost::shared_mutex> lock(ore::data::Log::instance().mutex());
+            std::unique_lock<std::shared_mutex> lock(ore::data::Log::instance().mutex());
             ore::data::Log::instance().header(mask_, filename_, lineNo_);
             ore::data::Log::instance().logStream() << text;
             ore::data::Log::instance().log(mask_);
@@ -359,7 +359,12 @@ string JSONMessage::jsonify(const boost::any& obj) {
         arrayStr += " ]";
         return arrayStr;
     } else if (obj.type() == typeid(string)) {
-        return '\"' + boost::any_cast<string>(obj) + '\"';
+        string str = boost::any_cast<string>(obj);
+        boost::replace_all(str, "\\", "\\\\"); // do this before the below otherwise we get \\"
+        boost::replace_all(str, "\"", "\\\"");
+        boost::replace_all(str, "\r", "\\r");
+        boost::replace_all(str, "\n", "\\n");
+        return '\"' + str + '\"';
     } else if (obj.type() == typeid(StructuredMessage::Category)) {
         return to_string(boost::any_cast<StructuredMessage::Category>(obj));
     } else if (obj.type() == typeid(StructuredMessage::Group)) {
@@ -392,11 +397,16 @@ StructuredMessage::StructuredMessage(const Category& category, const Group& grou
 
     if (!subFields.empty()) {
         vector<boost::any> subFieldsVector;
+        bool addedSubField = false;
         for (const auto& sf : subFields) {
-            map<string, boost::any> subField({{"name", sf.first}, {"value", sf.second}});
-            subFieldsVector.push_back(subField);
+            if (!sf.second.empty()) {
+                map<string, boost::any> subField({{"name", sf.first}, {"value", sf.second}});
+                subFieldsVector.push_back(subField);
+                addedSubField = true;
+            }
         }
-        data_["sub_fields"] = subFieldsVector;
+        if (addedSubField)
+            data_["sub_fields"] = subFieldsVector;
     }
 }
 
@@ -408,15 +418,29 @@ void StructuredMessage::log() const {
 
 void StructuredMessage::addSubFields(const map<string, string>& subFields) {
     if (!subFields.empty()) {
+
+        // First check that there is at least one non-empty subfield
+        bool hasNonEmptySubField = false;
+        for (const auto& sf : subFields) {
+            if (!sf.second.empty()) {
+                hasNonEmptySubField = true;
+                break;
+            }
+        }
+        if (!hasNonEmptySubField)
+            return;
+
         if (data_.find("sub_fields") == data_.end()) {
             data_["sub_fields"] = vector<boost::any>();
         }
 
         for (const auto& sf : subFields) {
-            map<string, boost::any> subField({{"name", sf.first}, {"value", sf.second}});
-            auto subFields = boost::any_cast<vector<boost::any>>(data_.at("sub_fields"));
-            subFields.push_back(subField);
+            if (!sf.second.empty()) {
+                map<string, boost::any> subField({{"name", sf.first}, {"value", sf.second}});
+                boost::any_cast<vector<boost::any>&>(data_.at("sub_fields")).push_back(subField);
+            }
         }
+
     }
 }
 

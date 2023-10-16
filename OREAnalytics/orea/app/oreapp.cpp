@@ -25,13 +25,19 @@
 #pragma warning(disable : 4503)
 #endif
 
+#include <orea/app/marketdatacsvloader.hpp>
 #include <orea/app/marketdatainmemoryloader.hpp>
 #include <orea/app/oreapp.hpp>
-#include <orea/orea.hpp>
-#include <ored/ored.hpp>
+#include <orea/app/structuredanalyticserror.hpp>
+#include <orea/app/structuredanalyticswarning.hpp>
+#include <orea/cube/cube_io.hpp>
+#include <orea/engine/observationmode.hpp>
+
 #include <ored/report/inmemoryreport.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/utilities/currencyconfig.hpp>
+
+#include <qle/version.hpp>
 
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/time/calendars/all.hpp>
@@ -40,8 +46,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/timer/timer.hpp>
-
-#include <iostream>
 
 using namespace std;
 using namespace ore::data;
@@ -564,6 +568,16 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         WLOG("Reference data not found");
     }
 
+    tmp = params_->get("setup", "scriptLibrary", false);
+    if (tmp != "") {
+        string scriptFile = inputPath + "/" + tmp;
+        LOG("Loading script library from file: " << scriptFile);
+        inputs->setScriptLibraryFromFile(scriptFile);        
+    }
+    else {
+        WLOG("Script library not loaded");
+    }
+    
     if (params_->has("setup", "conventionsFile") && params_->get("setup", "conventionsFile") != "") {
         string conventionsFile = inputPath + "/" + params_->get("setup", "conventionsFile");
         LOG("Loading conventions from file: " << conventionsFile);
@@ -1385,7 +1399,9 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
 }
 
 void OREApp::setupLog(const std::string& path, const std::string& file, Size mask,
-                      const boost::filesystem::path& logRootPath, const std::string& progressLogFile, Size progressLogRotationSize, bool progressLogToConsole, const std::string& structuredLogFile, Size structuredLogRotationSize) {
+                      const boost::filesystem::path& logRootPath, const std::string& progressLogFile,
+                      Size progressLogRotationSize, bool progressLogToConsole, const std::string& structuredLogFile,
+                      Size structuredLogRotationSize) {
     closeLog();
     
     boost::filesystem::path p{path};
@@ -1419,6 +1435,8 @@ void OREApp::setupLog(const std::string& path, const std::string& file, Size mas
 }
 
 void OREApp::closeLog() { Log::instance().removeAllLoggers(); }
+
+std::string OREApp::version() { return std::string(OPEN_SOURCE_RISK_VERSION); }
 
 } // namespace analytics
 } // namespace ore

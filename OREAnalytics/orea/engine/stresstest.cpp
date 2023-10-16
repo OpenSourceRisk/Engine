@@ -16,30 +16,17 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/lexical_cast.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/engine/stresstest.hpp>
+#include <orea/engine/valuationcalculator.hpp>
 #include <orea/engine/valuationengine.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
-#include <ored/utilities/log.hpp>
-#include <ql/errors.hpp>
-#include <ql/instruments/makeois.hpp>
-#include <ql/instruments/makevanillaswap.hpp>
-#include <ql/math/solvers1d/newtonsafe.hpp>
-#include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
-#include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
-#include <ql/pricingengines/swap/discountingswapengine.hpp>
-#include <ql/termstructures/yield/oisratehelper.hpp>
-#include <qle/instruments/crossccybasisswap.hpp>
-#include <qle/instruments/deposit.hpp>
-#include <qle/instruments/forwardrateagreement.hpp>
-#include <qle/instruments/fxforward.hpp>
-#include <qle/pricingengines/crossccyswapengine.hpp>
-#include <qle/pricingengines/depositengine.hpp>
-#include <qle/pricingengines/discountingfxforwardengine.hpp>
 
-#include <iomanip>
-#include <iostream>
+#include <ored/utilities/log.hpp>
+
+#include <ql/errors.hpp>
+
+#include <boost/lexical_cast.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -59,12 +46,13 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                        const boost::shared_ptr<ReferenceDataManager>& referenceData,
                        const IborFallbackConfig& iborFallbackConfig, bool continueOnError) {
 
-    LOG("Build Simulation Market");
+    LOG("Run Stress Test");
+    DLOG("Build Simulation Market");
     boost::shared_ptr<ScenarioSimMarket> simMarket = boost::make_shared<ScenarioSimMarket>(
         market, simMarketData, Market::defaultConfiguration, curveConfigs, todaysMarketParams,
         continueOnError, false, false, false, iborFallbackConfig);
 
-    LOG("Build Stress Scenario Generator");
+    DLOG("Build Stress Scenario Generator");
     Date asof = market->asofDate();
     boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
     scenarioFactory = scenarioFactory ? scenarioFactory : boost::make_shared<CloneScenarioFactory>(baseScenario);
@@ -72,7 +60,7 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
         boost::make_shared<StressScenarioGenerator>(stressData, baseScenario, simMarketData, simMarket, scenarioFactory);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
-    LOG("Build Engine Factory");
+    DLOG("Build Engine Factory");
     map<MarketContext, string> configurations;
     configurations[MarketContext::pricing] = marketConfiguration;
     auto ed = boost::make_shared<EngineData>(*engineData);
@@ -80,28 +68,21 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     boost::shared_ptr<EngineFactory> factory =
         boost::make_shared<EngineFactory>(ed, simMarket, configurations, referenceData, iborFallbackConfig);
 
-    LOG("Reset and Build Portfolio");
+    DLOG("Reset and Build Portfolio");
     portfolio->reset();
     portfolio->build(factory, "stress analysis");
 
-    LOG("Build the cube object to store sensitivities");
+    DLOG("Build the cube object to store sensitivities");
     boost::shared_ptr<NPVCube> cube = boost::make_shared<DoublePrecisionInMemoryCube>(
         asof, portfolio->ids(), vector<Date>(1, asof), scenarioGenerator->samples());
 
-    boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>(
-        "1,0W"); // TODO - extend the DateGrid interface so that it can actually take a vector of dates as input
+    DLOG("Run Stress Scenarios");
+    boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>("1,0W", NullCalendar());
     vector<boost::shared_ptr<ValuationCalculator>> calculators;
     calculators.push_back(boost::make_shared<NPVCalculator>(simMarketData->baseCcy()));
     ValuationEngine engine(asof, dg, simMarket, factory->modelBuilders());
-    LOG("Run Stress Scenarios");
-    /*ostringstream o;
-    o.str("");
-    o << "Stress scenarios " << portfolio->size() << " x " << dg->size() << " x " << scenarioGenerator->samples() <<
-    "... ";
-    auto progressBar = boost::make_shared<SimpleProgressBar>(o.str());
-    auto progressLog = boost::make_shared<ProgressLog>("Building scenarios...");
-    engine.registerProgressIndicator(progressBar);
-    engine.registerProgressIndicator(progressLog);*/
+
+    engine.registerProgressIndicator(boost::make_shared<ProgressLog>("stress scenarios", 100, oreSeverity::notice));
     engine.buildCube(portfolio, cube, calculators);
 
     /*****************
@@ -111,15 +92,20 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     shiftedNPV_.clear();
     delta_.clear();
     labels_.clear();
-    size_t i = 0;
-    for (auto tradeIt = portfolio->trades().begin(); tradeIt != portfolio->trades().end(); ++tradeIt, ++i) {
-        string tradeId = tradeIt->first;
-        Real npv0 = cube->getT0(i, 0);
+    trades_.clear();
+    for (auto const& [tradeId, trade] : portfolio->trades()) {
+        auto index = cube->idsAndIndexes().find(tradeId);
+        if (index == cube->idsAndIndexes().end()) {
+            ALOG("cube does not contain tradeId '" << tradeId << "'");
+            continue;
+        }
+        Real npv0 = cube->getT0(index->second, 0);
         trades_.insert(tradeId);
         baseNPV_[tradeId] = npv0;
         for (Size j = 0; j < scenarioGenerator->samples(); ++j) {
-            string label = scenarioGenerator->scenarios()[j]->label();
-            Real npv = cube->get(i, 0, j, 0);
+            const string& label = scenarioGenerator->scenarios()[j]->label();
+            TLOG("Adding stress test result for trade '" << tradeId << "' and scenario #" << j << " '" << label << "'");
+            Real npv = cube->get(index->second, 0, j, 0);
             pair<string, string> p(tradeId, label);
             shiftedNPV_[p] = npv;
             delta_[p] = npv - npv0;
@@ -137,15 +123,16 @@ void StressTest::writeReport(const boost::shared_ptr<ore::data::Report>& report,
     report->addColumn("Scenario NPV", double(), 2);
     report->addColumn("Sensitivity", double(), 2);
 
-    for (auto data : shiftedNPV_) {
-        string id = data.first.first;
-        string factor = data.first.second;
-        Real npv = data.second;
-        Real base = baseNPV_[id];
+    for (auto const& [id, npv] : shiftedNPV_) {
+        string tradeId = id.first;
+        string factor = id.second;
+        Real base = baseNPV_[tradeId];
         Real sensi = npv - base;
-        if (fabs(sensi) > outputThreshold) {
+        TLOG("Adding stress report result for tradeId '" << tradeId << "' and scenario '" << factor << ": sensi = "
+                                                         << sensi << ", threshold = " << outputThreshold);
+        if (fabs(sensi) > outputThreshold || QuantLib::close_enough(sensi, outputThreshold)) {
             report->next();
-            report->add(id);
+            report->add(tradeId);
             report->add(factor);
             report->add(base);
             report->add(npv);

@@ -64,7 +64,7 @@
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
-#include <test/testmarket.hpp>
+#include "testmarket.hpp"
 
 #include <boost/timer/timer.hpp>
 
@@ -347,7 +347,9 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
 
     // Multi path generator
     BigNatural seed = 42;
-    // bool antithetic = true;
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(stateProcess)) {
+        tmp->resetCache(grid->timeGrid().size() - 1);
+    }
     boost::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGen;
     if (sobol) {
         if (brownianBridge)
@@ -672,6 +674,9 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket2) {
     simMarket->scenarioGenerator() = sg;
 
     // set up model based simulation (mimicking exactly the scenario generator builder above)
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(stateProcess)) {
+        tmp->resetCache(grid->timeGrid().size() - 1);
+    }
     MultiPathGeneratorSobol pathGen(stateProcess, grid->timeGrid(), 42);
 
     Size samples = 10000;
@@ -777,9 +782,6 @@ BOOST_AUTO_TEST_CASE(testVanillaSwapExposure) {
     model->irlgm1f(0)->shift() = 20.0;
 
     Size samples = 5000;
-
-    // State process
-    boost::shared_ptr<StochasticProcess> stateProcess = model->stateProcess();
 
     // Simulation market parameters, we just need the yield curve structure here
     BOOST_TEST_MESSAGE("set up sim market parameters");
@@ -917,9 +919,6 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposure) {
     // Model
     boost::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
 
-    // State process
-    boost::shared_ptr<StochasticProcess> stateProcess = model->stateProcess();
-
     // Simulation market parameters
     BOOST_TEST_MESSAGE("set up sim market parameters");
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig(new ScenarioSimMarketParameters);
@@ -1044,9 +1043,6 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposureZeroIrVol) {
     }
     model->update();
 
-    // State process
-    boost::shared_ptr<StochasticProcess> stateProcess = model->stateProcess();
-
     // Simulation market parameters
     BOOST_TEST_MESSAGE("set up sim market parameters");
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig(new ScenarioSimMarketParameters);
@@ -1169,9 +1165,6 @@ BOOST_AUTO_TEST_CASE(testCpiSwapExposure) {
     }
 
     model->update();
-
-    // State process
-    boost::shared_ptr<StochasticProcess> stateProcess = model->stateProcess();
 
     // Simulation market parameters
     BOOST_TEST_MESSAGE("set up sim market parameters");

@@ -27,7 +27,7 @@ namespace ore {
 namespace data {
 
 boost::shared_ptr<LegAdditionalData> LegDataFactory::build(const string& legType) {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     auto it = map_.find(legType);
     if (it == map_.end())
         return nullptr;
@@ -36,7 +36,7 @@ boost::shared_ptr<LegAdditionalData> LegDataFactory::build(const string& legType
 
 void LegDataFactory::addBuilder(const string& legType, function<boost::shared_ptr<LegAdditionalData>()> builder,
                                 const bool allowOverwrite) {
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    std::unique_lock<std::shared_mutex> lock(mutex_);
     QL_REQUIRE(map_.insert(std::make_pair(legType, builder)).second || allowOverwrite,
                "LegDataFactory::addBuilder(" << legType << "): builder for key already exists.");
 }

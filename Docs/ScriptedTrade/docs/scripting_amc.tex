@@ -1,0 +1,61 @@
+Scripted trades can be used in combination with AMC analytics type. Usually a separate script will be used within this
+analytics type because of the special inputs and outputs of AMC scripts as outlined below. To set up a separate script
+that should be used within the AMC analytics type, the attribute purpose should be given the value \verb+AMC+, i.e. in
+the script library we could have
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Script>
+    <Name>BermudanSwaption</Name>
+    <!-- default script -->
+    <Script>
+    ...
+    </Script>
+    <!-- script that will be preferred in an AMC context -->
+    <Script purpose="AMC">
+    ...
+    </Script>
+  </Script>
+\end{minted}
+
+and similar for embedded scripts. A script that in run withing the AMC analytics type gets a special input event array
+\verb+_AMC_SimDates+ that contains the dates on which a conditional NPV is required as an output. This output has to be
+delivered in a number array \verb+_AMC_NPV+ which has the same size. Typically one will build a new schedule from the
+amc sim dates and other event dates using something like
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <NewSchedules>
+    <NewSchedule>
+      <Name>ExerciseAndSimDates</Name>
+      <Operation>Join</Operation>
+      <Schedules>
+        <Schedule>_AMC_SimDates</Schedule>
+        <Schedule>ExerciseDates</Schedule>
+      </Schedules>
+    </NewSchedule>
+  </NewSchedules>
+\end{minted}
+
+within the script node (see \ref{scriptNode}). When looping over the common event dates, the DATEINDEX() function can be
+used to distinguish the different kind of events.
+
+The AMC analytics type supports several simulation modes w.r.t. mpor grids
+
+\begin{itemize}
+\item no close-out lag
+\item close-out lag with mpor mode actual date
+\item close-out lag with mpor mode sticky date
+\end{itemize}
+
+In the first two cases the \verb+_AMC_SimDate+ grid will consist of all valuation and close-out dates specified in the
+simulation setup. In the last case the \verb+_AMC_SimDate+ grid will consist only of the valuation date and two runs
+will be performed on these dates, one using the original and another one using a time-shifted stochastic process. Since
+it is not desirable that exercise decisions or barrier hit indicators are recomputed in the second run, it is possible
+to define a set of variables for which values are computed in the first run and then reused in these second
+run. Assignments to these variables in the second run are ignored. The definition of such variables is done in the
+script node (see \ref{scriptNode}):
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <StickyCloseOutStates>
+    <StickyCloseOutState>ExerciseIndicator</StickyCloseOutState>
+  </StickyCloseOutStates>
+\end{minted}

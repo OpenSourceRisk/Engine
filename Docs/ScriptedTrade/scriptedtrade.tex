@@ -1,0 +1,250 @@
+\documentclass[12pt, a4paper]{article}
+
+\setcounter{tocdepth}{4}
+\setcounter{secnumdepth}{4}
+
+\usepackage[hyphens]{url}
+\usepackage[urlcolor=blue]{hyperref}
+%\usepackage[disable]{todonotes}
+\usepackage[colorinlistoftodos,prependcaption]{todonotes}
+\usepackage{amsmath}%
+\usepackage{amsfonts}%
+\usepackage{amssymb}%
+\usepackage{graphicx}
+%\usepackage[miktex]{gnuplottex}
+%\ShellEscapetrue
+\usepackage{epstopdf}
+\usepackage{longtable}
+\usepackage{floatrow}
+\usepackage{minted}
+\usepackage{textcomp}
+\usepackage{color,soul}
+\usepackage[font={small,it}]{caption}
+\floatsetup[listing]{style=Plaintop}
+
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true, %set true if you want colored links
+    linktoc=all,     %set to all if you want both sections and subsections linked
+    linkcolor=blue,  %choose some color if you want links to stand out
+}
+
+% Turn off indentation but allow \indent command to still work.
+\newlength\tindent
+\setlength{\tindent}{\parindent}
+\setlength{\parindent}{0pt}
+\renewcommand{\indent}{\hspace*{\tindent}}
+
+\addtolength{\textwidth}{0.8in}
+\addtolength{\oddsidemargin}{-.4in}
+\addtolength{\evensidemargin}{-.4in}
+\addtolength{\textheight}{1.6in}
+\addtolength{\topmargin}{-.8in}
+
+\usepackage{longtable,supertabular}
+\usepackage{listings}
+\lstset{
+  frame=top,frame=bottom,
+  basicstyle=\ttfamily,
+  language=XML,
+  tabsize=2,
+  belowskip=2\medskipamount
+}
+
+\usepackage{tabu}
+\tabulinesep=1.0mm
+\restylefloat{table}
+
+\usepackage{siunitx}
+
+\renewcommand\P{\ensuremath{\mathbb{P}}}
+\newcommand\E{\ensuremath{\mathbb{E}}}
+\newcommand\Q{\ensuremath{\mathbb{Q}}}
+\newcommand\I{\mathds{1}}
+\newcommand\F{\ensuremath{\mathcal F}}
+\newcommand\V{\ensuremath{\mathbb{V}}}
+\newcommand\YOY{{\rm YOY}}
+\newcommand\Prob{\ensuremath{\mathbb{P}}}
+\newcommand{\D}[1]{\mbox{d}#1}
+\newcommand{\VR}{\mathit{VR}}
+\newcommand{\NPV}{\mathit{NPV}}
+\newcommand{\CMS}{\mathit{CMS}}
+\newcommand{\CDS}{\mathit{CDS}}
+\newcommand{\CVA}{\mathit{CVA}}
+\newcommand{\DVA}{\mathit{DVA}}
+\newcommand{\FVA}{\mathit{FVA}}
+\newcommand{\COLVA}{\mathit{COLVA}}
+\newcommand{\FCA}{\mathit{FCA}}
+\newcommand{\FBA}{\mathit{FBA}}
+\newcommand{\KVA}{\mathit{KVA}}
+\newcommand{\MVA}{\mathit{MVA}}
+\newcommand{\PFE}{\mathit{PFE}}
+\newcommand{\EE}{\mathit{EE}}
+\newcommand{\EPE}{\mathit{EPE}}
+\newcommand{\ENE}{\mathit{ENE}}
+\newcommand{\PD}{\mathit{PD}}
+\newcommand{\LGD}{\mathit{LGD}}
+\newcommand{\DIM}{\mathit{DIM}}
+\newcommand{\IM}{\mathit{IM}}
+\newcommand{\bs}{\textbackslash}
+\newcommand{\REDY}{\color{red}Y}
+\newcommand{\flt}{\mathit{flt}}
+\newcommand{\fix}{\mathit{fix}}
+\newcommand{\form}{\mathit{form}}
+\newcommand{\OIS}{\mathit{OIS}}
+\newcommand{\ON}{\mathit{ON}}
+
+% used in the inputted tex files to distinguish the module documentation
+% and the product catalogue documentation, for the latter this command
+% should not be defined
+\newcommand{\STModuleDoc}{}
+
+\begin{document}
+
+\title{ORE+ Trade Scripting Module}
+\author{Quaternion Risk Management}
+\date{22 June 2023}
+\maketitle
+
+\newpage
+
+%-------------------------------------------------------------------------------
+\section*{Document History}
+
+\begin{center}
+\begin{supertabular}{|p{2.2cm}|p{4.0cm}|p{9cm}|}
+  \hline
+  Date & Author & Comment \\
+  \hline
+  16-04-2019 & Peter Caspers & initial version\\
+  24-07-2019 & Peter Caspers & phase 1 draft\\
+  02-10-2019 & Peter Caspers & add interest rate indices \\
+  21-10-2019 & Peter Caspers & add SORT and PERMUTE functions \\
+  29-10-2019 & Peter Caspers & add product tag, local vol model \\
+  28-11-2019 & Peter Caspers & add LOGPAY function and product tag \\
+  05-12-2019 & Peter Caspers & add free style xml \\
+  06-01-2020 & Peter Caspers & add HISTFIXING function \\
+  09-01-2020 & Peter Caspers & add FWDCOMP function \\
+  16-01-2020 & Peter Caspers & updates for ScheduleCoarsening, GaussianCam and LocalVol \\
+  13-02-2020 & Peter Caspers & updates for Commodity \\
+  22-04-2020 & Peter Caspers & add ABOVEPROB, BELOWPROB functions \\
+  18-08-2020 & Peter Caspers & add DATEINDEX function \\
+  21-09-2020 & Peter Caspers & add specifics on AMC \\
+  06-10-2020 & Peter Caspers & extended version of LOGPAY() function \\
+  03-12-2020 & Peter Caspers & additions for FD and calibration \\
+  01-07-2021 & Peter Caspers & add case $d1>d2$ for ABOVEPROB, BELOWPROB \\
+  13-09-2021 & Nathaniel Volfango & update Index section and add note on payment currency \\
+  11-02-2022 & Peter Caspers & extend FWDCOMP, add FWDAVG function (breaking change) \\
+  22-06-2023 & Peter Caspers & add config flags for external devices
+ \\ \hline
+\end{supertabular}
+\end{center}
+
+\vspace{3cm}
+
+\newpage
+
+%-------------------------------------------------------------------------------
+\section*{Breaking Changes}
+
+\begin{center}
+\begin{supertabular}{|p{2.2cm}|p{13cm}|}
+  \hline
+  Date & Breaking Change \\
+  \hline
+  11-02-2022 & If the (optional) spread is given in FWDCOMP(), a gearing must be given too
+ \\ \hline
+\end{supertabular}
+\end{center}
+
+\vspace{3cm}
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+\vspace*{\fill}
+
+\textcircled{c} 2019 Quaternion Risk Management Limited.  All rights reserved.
+Quaternion\textsuperscript{\textregistered} is a trademark of Quaternion Risk Management Limited and is also registered
+at the UK Intellectual Property Office and the U.S. Patent and Trademark Office.  All other trademarks are the property
+of their respective owners. Open Source Risk Engine\textsuperscript{\textcircled{c}} (ORE) is sponsored by Quaternion
+Risk Management Limited.
+
+\newpage
+
+%-------------------------------------------------------------------------------
+\section{Summary}
+
+This document describes the ORE+ trade scripting module.
+
+\section{Trade Representation}
+
+\subsection{General Structure}\label{generalStructure}
+\input{docs/generalstructure.tex}
+
+\subsection{Script Node}\label{scriptNode}
+\input{docs/scriptnode.tex}
+
+\subsection{Data Node}\label{dataNode}
+\input{docs/datanode.tex}
+
+\subsection{Event}\label{event}
+\input{docs/event.tex}
+
+\subsection{Number}
+\input{docs/number.tex}
+
+\subsection{Index}\label{data_index}
+\input{docs/index.tex}
+
+\subsection{Currency}
+\input{docs/currency.tex}
+
+\subsection{Daycounter}
+\input{docs/daycounter.tex}
+
+\subsection{Compact Trade XML}\label{compactXml}
+\input{docs/compacttradexml.tex}
+
+\subsection{A comment on the Payment Currency in Scripted Trades}\label{sss:payccy_st}
+\input{docs/noteonpayccy.tex}
+
+\subsection{Convenience Trade Wrappers}
+\input{docs/conveniencewrappers.tex}
+
+\subsection{SIMM product type deduction}
+\input{docs/simmproducttype.tex}
+
+\subsection{Scripting and AMC}\label{scripting_amc}
+\input{docs/scripting_amc.tex}
+
+\section{Scripting Language}
+\input{docs/language.tex}
+
+\section{Models}
+\input{docs/models.tex}
+
+\section{Error Diagnostics and Debugging}
+\input{docs/errordiagnostics.tex}
+
+\section{Implementation Details}
+\input{docs/implementationdetails.tex}
+
+  
+\begin{thebibliography}{*}
+
+\bibitem{andreasen_huge_localvol} Andreasen J., Huge B.: Volatility Interpolation (2010) \url{https://ssrn.com/abstract=1694972}
+
+\bibitem{daily_spread_curves} Caspers, Peter: Daily Spread Curves and Ester (September 30, 2019). Available at SSRN:
+  \url{https://ssrn.com/abstract=3500090} or \url{http://dx.doi.org/10.2139/ssrn.3500090}
+
+% \bibitem{savine}Savine, Antoine: Financial Cashflow Scripting: Beyond Valuation, slides available at \url{https://www.slideshare.net/AntoineSavine/financial-cashflow-scripting-beyond-valuation}
+
+% \bibitem{nx}Numerix payoff language ({\color{red}publicly available papers?})
+
+\end{thebibliography}
+
+\end{document}

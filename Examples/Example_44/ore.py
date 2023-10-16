@@ -18,7 +18,7 @@ from ORE import *
 
 print ("Loading parameters...")
 params = Parameters()
-params.fromFile("Input/ore.xml")
+params.fromFile("Input/ore_SIMM2.4_10D.xml")
 
 print ("Creating OREApp...")
 ore = OREApp(params, True)

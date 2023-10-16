@@ -59,7 +59,6 @@ engine/parsensitivitycubestream.cpp
 engine/riskfilter.cpp
 engine/sensitivityaggregator.cpp
 engine/sensitivityanalysis.cpp
-engine/sensitivityanalysisplus.cpp
 engine/sensitivitycubestream.cpp
 engine/sensitivityfilestream.cpp
 engine/sensitivityinmemorystream.cpp
@@ -85,7 +84,6 @@ scenario/scenariogeneratortransform.cpp
 scenario/scenarioshiftcalculator.cpp
 scenario/scenariosimmarket.cpp
 scenario/scenariosimmarketparameters.cpp
-scenario/scenariosimmarketplus.cpp
 scenario/scenariowriter.cpp
 scenario/sensitivityscenariodata.cpp
 scenario/sensitivityscenariogenerator.cpp
@@ -197,7 +195,6 @@ engine/parsensitivitycubestream.hpp
 engine/riskfilter.hpp
 engine/sensitivityaggregator.hpp
 engine/sensitivityanalysis.hpp
-engine/sensitivityanalysisplus.hpp
 engine/sensitivitycubestream.hpp
 engine/sensitivityfilestream.hpp
 engine/sensitivityinmemorystream.hpp
@@ -230,7 +227,6 @@ scenario/scenariogeneratortransform.hpp
 scenario/scenarioshiftcalculator.hpp
 scenario/scenariosimmarket.hpp
 scenario/scenariosimmarketparameters.hpp
-scenario/scenariosimmarketplus.hpp
 scenario/scenariowriter.hpp
 scenario/sensitivityscenariodata.hpp
 scenario/sensitivityscenariogenerator.hpp
@@ -285,6 +281,13 @@ target_link_libraries(${OREA_LIB_NAME} ${Boost_LIBRARIES})
 if(ORE_USE_ZLIB)
     target_link_libraries(${OREA_LIB_NAME} ${ZLIB_LIBRARIES})
     add_definitions(-DORE_USE_ZLIB)
+endif()
+
+if (QL_USE_PCH)
+target_precompile_headers(${OREA_LIB_NAME}
+  PUBLIC
+    <orea/app/inputparameters.hpp>
+    <orea/scenario/scenariosimmarketparameters.hpp>)
 endif()
 
 install(DIRECTORY . DESTINATION include/orea

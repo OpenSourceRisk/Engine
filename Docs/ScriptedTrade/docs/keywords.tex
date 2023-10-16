@@ -1,0 +1,49 @@
+The language uses keywords and predefined function names as listed in table \ref{tab:keywords} which may may not be used as
+variable identifiers.
+
+\begin{table}[!htbp]
+  \begin{tabular}{l | l}
+    Keyword & Context\\ \hline
+    \verb+IF+ & Control Flow \\
+    \verb+THEN+ & \\
+    \verb+ELSE+ & \\
+    \verb+END+ & \\
+    \verb+FOR+ & \\
+    \verb+IN+ & \\
+    \verb+DO+ & \\ \hline
+    \verb+NUMBER+ & Type Identifiers \\ \hline
+    \verb+OR+ & Logical Operators \\
+    \verb+AND+ & \\ \hline
+    \verb+abs+ & Functions\\
+    \verb+exp+ & \\
+    \verb+ln+ & \\
+    \verb+sqrt+ & \\
+    \verb+normalCdf+ & \\
+    \verb+normalPdf+ & \\
+    \verb+max+ & \\
+    \verb+min+ & \\
+    \verb+pow+ & \\
+    \verb+black+ & \\
+    \verb+dcf+ & \\
+    \verb+days+ & \\ \hline
+    \verb+PAY+ & Model dependent functions\\
+    \verb+LOGPAY+ & \\
+    \verb+NPV+ & \\
+    \verb+HISTFIXING+ & \\
+    \verb+DISCOUNT+ & \\
+    \verb+FWDCOMP+ & \\ \hline
+    \verb+SIZE+ & Other Statements \\
+    \verb+REQUIRE+ &  \\
+    \verb+SORT+ & \\
+    \verb+PERMUTE+ & \\
+  \end{tabular}
+  \caption{Reserved keywords.}
+  \label{tab:keywords}
+\end{table}
+
+In addition the following variable identifiers are automatically populated with special values when running the script
+engine on a trade:
+
+\begin{itemize}
+\item \verb+TODAY+: the current evaluation date
+\end{itemize}

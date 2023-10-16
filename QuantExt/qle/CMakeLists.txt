@@ -1,6 +1,9 @@
 # cpp files, this list is maintained manually
 
-set(QuantExt_SRC calendars/amendedcalendar.cpp
+set(QuantExt_SRC ad/computationgraph.cpp
+ad/external_randomvariable_ops.cpp
+ad/ssaform.cpp
+calendars/amendedcalendar.cpp
 calendars/austria.cpp
 calendars/belgium.cpp
 calendars/cme.cpp
@@ -63,6 +66,7 @@ cashflows/strippedcapflooredcpicoupon.cpp
 cashflows/strippedcapflooredyoyinflationcoupon.cpp
 cashflows/subperiodscoupon.cpp
 cashflows/subperiodscouponpricer.cpp
+cashflows/trscashflow.cpp
 cashflows/yoyinflationcoupon.cpp
 cashflows/zerofixedcoupon.cpp
 currencies/africa.cpp
@@ -120,7 +124,6 @@ instruments/doubleoibasisswap.cpp
 instruments/equityforward.cpp
 instruments/fixedbmaswap.cpp
 instruments/forwardbond.cpp
-instruments/forwardrateagreement.cpp
 instruments/fxforward.cpp
 instruments/genericswaption.cpp
 instruments/impliedbondspread.cpp
@@ -156,9 +159,11 @@ math/randomvariable_io.cpp
 math/randomvariable_ops.cpp
 math/randomvariablelsmbasissystem.cpp
 methods/brownianbridgepathinterpolator.cpp
+methods/fdmblackscholesmesher.cpp
+methods/fdmblackscholesop.cpp
 methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.cpp
 methods/fdmdefaultableequityjumpdiffusionop.cpp
-methods/interpolatedvariatemultipathgenerator.cpp
+methods/fdmquantohelper.cpp
 methods/multipathgeneratorbase.cpp
 methods/multipathvariategenerator.cpp
 methods/projectedbufferedmultipathgenerator.cpp
@@ -193,6 +198,7 @@ models/gaussian1dcrossassetadaptor.cpp
 models/gaussianlhplossmodel.cpp
 models/hullwhitebucketing.cpp
 models/hwmodel.cpp
+models/infdkvectorised.cpp
 models/infjyparameterization.cpp
 models/jyimpliedyoyinflationtermstructure.cpp
 models/jyimpliedzeroinflationtermstructure.cpp
@@ -211,6 +217,8 @@ models/normalsabrsmilesection.cpp
 models/parametrization.cpp
 models/piecewiseconstanthelper.cpp
 models/projectedcrossassetmodel.cpp
+models/representativefxoption.cpp
+models/representativeswaption.cpp
 models/transitionmatrix.cpp
 models/yoycapfloorhelper.cpp
 models/yoyinflationmodeltermstructure.cpp
@@ -381,7 +389,13 @@ utilities/time.cpp)
 
 # hpp files, this list is maintained manually
 
-set(QuantExt_HDR auto_link.hpp
+set(QuantExt_HDR ad/backwardderivatives.hpp
+ad/computationgraph.hpp
+ad/external_randomvariable_ops.hpp
+ad/forwardderivatives.hpp
+ad/forwardevaluation.hpp
+ad/ssaform.hpp
+auto_link.hpp
 calendars/amendedcalendar.hpp
 calendars/austria.hpp
 calendars/belgium.hpp
@@ -447,6 +461,7 @@ cashflows/strippedcapflooredcpicoupon.hpp
 cashflows/strippedcapflooredyoyinflationcoupon.hpp
 cashflows/subperiodscoupon.hpp
 cashflows/subperiodscouponpricer.hpp
+cashflows/trscashflow.hpp
 cashflows/yoyinflationcoupon.hpp
 cashflows/zerofixedcoupon.hpp
 currencies/africa.hpp
@@ -563,7 +578,6 @@ instruments/doubleoibasisswap.hpp
 instruments/equityforward.hpp
 instruments/fixedbmaswap.hpp
 instruments/forwardbond.hpp
-instruments/forwardrateagreement.hpp
 instruments/fxforward.hpp
 instruments/genericswaption.hpp
 instruments/impliedbondspread.hpp
@@ -599,6 +613,7 @@ math/discretedistribution.hpp
 math/fillemptymatrix.hpp
 math/flatextrapolation.hpp
 math/flatextrapolation2d.hpp
+math/kendallrankcorrelation.hpp
 math/logquadraticinterpolation.hpp
 math/matrixfunctions.hpp
 math/method_mt.hpp
@@ -614,9 +629,11 @@ math/randomvariablelsmbasissystem.hpp
 math/stabilisedglls.hpp
 math/trace.hpp
 methods/brownianbridgepathinterpolator.hpp
+methods/fdmblackscholesmesher.hpp
+methods/fdmblackscholesop.hpp
 methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.hpp
 methods/fdmdefaultableequityjumpdiffusionop.hpp
-methods/interpolatedvariatemultipathgenerator.hpp
+methods/fdmquantohelper.hpp
 methods/multipathgeneratorbase.hpp
 methods/multipathvariategenerator.hpp
 methods/pathgeneratorfactory.hpp
@@ -672,6 +689,7 @@ models/hwconstantparametrization.hpp
 models/hwmodel.hpp
 models/hwparametrization.hpp
 models/infdkparametrization.hpp
+models/infdkvectorised.hpp
 models/infjyparameterization.hpp
 models/inhomogeneouspooldef.hpp
 models/irlgm1fconstantparametrization.hpp
@@ -702,6 +720,8 @@ models/piecewiseconstanthelper.hpp
 models/poollossmodel.hpp
 models/projectedcrossassetmodel.hpp
 models/pseudoparameter.hpp
+models/representativefxoption.hpp
+models/representativeswaption.hpp
 models/transitionmatrix.hpp
 models/yoycapfloorhelper.hpp
 models/yoyinflationmodeltermstructure.hpp
@@ -941,6 +961,24 @@ if(ORE_ENABLE_OPENCL)
     find_package(OpenCL REQUIRED)
     target_link_libraries(${QLE_LIB_NAME} OpenCL::OpenCL)
   endif()
+endif()
+
+if(NOT USE_GLOBAL_ORE_BUILD AND QL_USE_PCH)
+ target_precompile_headers(${QLE_LIB_NAME}
+   PUBLIC
+    <ql/any.hpp>
+    <ql/errors.hpp>
+    <ql/index.hpp>
+    <ql/indexes/indexmanager.hpp>
+    <ql/instrument.hpp>
+    <ql/indexes/interestrateindex.hpp>
+    <ql/math/array.hpp>
+    <ql/math/interpolations/cubicinterpolation.hpp>
+    <ql/math/matrix.hpp>
+    <ql/methods/finitedifferences/operators/fdmlinearop.hpp>
+    <ql/patterns/observable.hpp>
+    <ql/qldefines.hpp>
+    <ql/termstructure.hpp>)
 endif()
 
 install(DIRECTORY . DESTINATION include/qle

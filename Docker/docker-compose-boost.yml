@@ -3,6 +3,8 @@ version: '3'
 services:
   build_env_boost:
     image: build_env_boost:${BOOST_TAG}
+    cap_drop:
+      - NET_RAW
     build:
       context: .
       dockerfile: Dockerfile-Boost

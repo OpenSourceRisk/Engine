@@ -1,0 +1,63 @@
+An event is defined either as a scalar
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <Event>
+      <Name>Expiry</Name>
+      <Value>2020-02-09</Value>
+    </Event>
+\end{minted}
+
+or as an array of dates using ORE's ScheduleData node, e.g.
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <Event>
+      <Name>ExerciseDates</Name>
+      <ScheduleData>
+        <Rules>
+         <StartDate>2016-02-06</StartDate>
+         <EndDate>2016-05-06</EndDate>
+         <Tenor>1D</Tenor>
+         <Calendar>TARGET,US</Calendar>
+         <Convention>F</Convention>
+         <Rule>Forward</Rule>
+       </Rules>
+      </ScheduleData>
+    </Event>
+\end{minted}
+
+using a rule based schedule or
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <Event>
+      <Name>ValuationDates</Name>
+      <ScheduleData>
+        <Dates>
+          <Dates>
+            <Date>2018-03-10</Date>
+            <Date>2019-03-10</Date>
+            <Date>2020-03-10</Date>
+            <Date>2021-03-10</Date>
+            <Date>2022-03-10</Date>
+            <Date>2023-03-10</Date>
+            <Date>2024-03-11</Date>
+          </Dates>
+        </Dates>
+      </ScheduleData>
+    </Event>
+\end{minted}
+
+using a list of dates. An array of dates can also be deduced from another, previously defined array by specifying a
+shift rule which is useful e.g. to generate fixing or payment schedules from accrual schedules, or notification and
+settlement schedules from exercise date schedules. Example:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <Event>
+      <Name>FixingDates</Name>
+      <DerivedSchedule>
+        <BaseSchedule>AccrualDates</BaseSchedule>
+        <Shift>-2D</Shift>
+        <Calendar>TARGET</Calendar>
+        <Convention>MF</Convention>
+      </DerivedSchedule>
+    </Event>
+\end{minted}

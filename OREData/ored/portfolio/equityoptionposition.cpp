@@ -133,7 +133,7 @@ void EquityOptionPosition::build(const boost::shared_ptr<ore::data::EngineFactor
         indices_.push_back(boost::make_shared<QuantExt::GenericIndex>(
             "GENERIC-MD/EQUITY_OPTION/PRICE/" + underlyingName + "/" + eq->currency().code() + "/" +
             ore::data::to_string(optionExpiry) + "/" + strikeStr.str() + "/" +
-            (optionType == Option::Call ? "C" : "P")));
+            (optionType == Option::Call ? "C" : "P"), optionExpiry));
     }
 
     // get fx quotes

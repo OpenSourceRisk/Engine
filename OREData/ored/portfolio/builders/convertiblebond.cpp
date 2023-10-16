@@ -224,8 +224,8 @@ boost::shared_ptr<QuantLib::PricingEngine> ConvertibleBondFDDefaultableEquityJum
                  << ", EQ-" << equity->name() << " not found, fall back to zero correlation.");
         }
         equity = boost::make_shared<CompoEquityIndex>(equity, fx, startDate);
-        volatility = Handle<BlackVolTermStructure>(
-            boost::make_shared<BlackTriangulationATMVolTermStructure>(volatility, fxVol, corrCurve));
+        volatility = Handle<BlackVolTermStructure>(boost::make_shared<BlackTriangulationATMVolTermStructure>(
+            volatility, fxVol, corrCurve, parseBool(engineParameter("FxVolIsStatic", {}, false, "false"))));
     }
 
     // set up calibration grid

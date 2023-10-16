@@ -20,6 +20,7 @@
 #include <ored/portfolio/cbo.hpp>
 #include <qle/instruments/bondbasket.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <qle/indexes/genericindex.hpp>
@@ -247,6 +248,7 @@ CBO::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceD
 
 void CBOTrsUnderlyingBuilder::build(
     const std::string& parentId, const boost::shared_ptr<Trade>& underlying, const std::vector<Date>& valuationDates,
+    const std::vector<Date>& paymentDates, const std::string& fundingCurrency,
     const boost::shared_ptr<EngineFactory>& engineFactory, boost::shared_ptr<QuantLib::Index>& underlyingIndex,
     Real& underlyingMultiplier, std::map<std::string, double>& indexQuantities,
     std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
@@ -256,15 +258,21 @@ void CBOTrsUnderlyingBuilder::build(
         const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
         const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
-    const std::string& underlyingDerivativeId) const {
+    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
     auto t = boost::dynamic_pointer_cast<ore::data::CBO>(underlying);
     QL_REQUIRE(t, "could not cast to ore::data::CBO, this is unexpected");
     string indexName = "GENERIC-" + t->investedTrancheName();
+    IndexNameTranslator::instance().add(indexName, indexName);
     indexQuantities[indexName] = t->underlyingMultiplier();
     underlyingIndex = boost::make_shared<QuantExt::GenericIndex>(indexName);
     underlyingMultiplier = t->underlyingMultiplier();
     assetCurrency = t->npvCurrency();
     creditRiskCurrency = t->npvCurrency();
+
+    auto fxIndex = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
+                              assetCurrency, fundingCurrency, fxIndices);
+    returnLegs.push_back(QuantExt::TRSLeg(valuationDates, paymentDates, underlyingMultiplier, underlyingIndex, fxIndex)
+        .withInitialPrice(initialPrice));
 
     //fill the SimmCreditQualifierMapping
     auto bonds = t->bondBasketData().bonds();

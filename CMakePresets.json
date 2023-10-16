@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "configurePresets": [
     {
       "name": "windows-ninja-x64-debug",
@@ -146,6 +146,75 @@
           ]
         }
       }
+    },
+    {
+      "name": "linux-gcc-base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "g++",
+        "BOOST_ROOT": "$env{BOOST}",
+        "QL_BUILD_EXAMPLES": false,
+        "QL_BUILD_TEST_SUITE": false,
+        "QL_BUILD_BENCHMARK": false,
+        "QL_ENABLE_SESSIONS": true,
+        "ORE_BUILD_DOC": false
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "_release",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "_debug",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "_relwithdebinfo",
+      "hidden": true,
+      "cacheVariables": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "_ninja",
+      "hidden": true,
+      "generator": "Ninja"
+    },
+    {
+      "name": "linux-gcc-ninja-debug",
+      "inherits": [
+        "linux-gcc-base",
+        "_ninja",
+        "_debug"
+      ]
+    },
+    {
+      "name": "linux-gcc-ninja-release",
+      "inherits": [
+        "linux-gcc-base",
+        "_ninja",
+        "_release"
+      ]
+    },
+    {
+      "name": "linux-gcc-ninja-relwithdebinfo",
+      "inherits": [
+        "linux-gcc-base",
+        "_ninja",
+        "_relwithdebinfo"
+      ]
     }
   ],
   "buildPresets": [
