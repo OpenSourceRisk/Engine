@@ -522,12 +522,12 @@ RandomVariable GaussianCam::fwdCompAvg(const bool isAvg, const std::string& inde
     const auto& modelTime = curves_.front()->timeFromReference(effobsdate);
     if (isAvg) {
         return lgmv.averagedOnRate(on, coupon->fixingDates(), coupon->valueDates(), coupon->dt(), rateCutoff,
-                                   includeSpread, spread, gearing, lookback * Days, on->dayCounter(), cap, floor,
-                                   localCapFloor, nakedOption, modelTime, modelState);
+                                   includeSpread, spread, gearing, lookback * Days, cap, floor, localCapFloor,
+                                   nakedOption, modelTime, modelState);
     } else {
         return lgmv.compoundedOnRate(on, coupon->fixingDates(), coupon->valueDates(), coupon->dt(), rateCutoff,
-                                     includeSpread, spread, gearing, lookback * Days, on->dayCounter(), cap, floor,
-                                     localCapFloor, nakedOption, modelTime, modelState);
+                                     includeSpread, spread, gearing, lookback * Days, cap, floor, localCapFloor,
+                                     nakedOption, modelTime, modelState);
     }
 }
 
