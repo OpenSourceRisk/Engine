@@ -59,7 +59,7 @@ using namespace QuantExt;
 CalendarParser::CalendarParser() { reset(); }
 
 QuantLib::Calendar CalendarParser::parseCalendar(const std::string& name) const {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     auto it = calendars_.find(name);
     if (it != calendars_.end())
         return it->second;
@@ -94,7 +94,7 @@ QuantLib::Calendar CalendarParser::parseCalendar(const std::string& name) const 
 
 QuantLib::Calendar CalendarParser::addCalendar(const std::string baseName, std::string& newName) {
     auto cal = parseCalendar(baseName);
-    std::unique_lock<std::shared_mutex> lock(mutex_);
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     auto it = calendars_.find(newName);
     if (it == calendars_.end()) {
         QuantExt::AmendedCalendar tmp(cal, newName);
@@ -108,7 +108,7 @@ QuantLib::Calendar CalendarParser::addCalendar(const std::string baseName, std::
 void CalendarParser::reset() {
     resetAddedAndRemovedHolidays();
 
-    std::unique_lock<std::shared_mutex> lock(mutex_);
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
 
     // When adding to the static map, keep in mind that the calendar name on the LHS might be used to add or remove
     // holidays in calendaradjustmentconfig.xml. The calendar on the RHS of the mapping will then be adjusted, so this
@@ -435,7 +435,7 @@ void CalendarParser::reset() {
 }
 
 void CalendarParser::resetAddedAndRemovedHolidays() {
-    std::unique_lock<std::shared_mutex> lock(mutex_);
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     for (auto& m : calendars_) {
         m.second.resetAddedAndRemovedHolidays();
     }

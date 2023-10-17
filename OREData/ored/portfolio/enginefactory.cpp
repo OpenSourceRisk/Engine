@@ -64,7 +64,7 @@ std::string EngineBuilder::modelParameter(const std::string& p, const std::vecto
 
 void EngineBuilderFactory::addEngineBuilder(const std::function<boost::shared_ptr<EngineBuilder>()>& builder,
                                             const bool allowOverwrite) {
-    std::unique_lock<std::shared_mutex> lock(mutex_);
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     auto tmp = builder();
     auto key = make_tuple(tmp->model(), tmp->engine(), tmp->tradeTypes());
     auto it = std::remove_if(engineBuilderBuilders_.begin(), engineBuilderBuilders_.end(),
@@ -84,7 +84,7 @@ void EngineBuilderFactory::addAmcEngineBuilder(
     const std::function<boost::shared_ptr<EngineBuilder>(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
                                                          const std::vector<Date>& grid)>& builder,
     const bool allowOverwrite) {
-    std::unique_lock<std::shared_mutex> lock(mutex_);
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     auto tmp = builder(nullptr, {});
     auto key = make_tuple(tmp->model(), tmp->engine(), tmp->tradeTypes());
     auto it = std::remove_if(
@@ -104,7 +104,7 @@ void EngineBuilderFactory::addAmcEngineBuilder(
 
 void EngineBuilderFactory::addLegBuilder(const std::function<boost::shared_ptr<LegBuilder>()>& builder,
                                          const bool allowOverwrite) {
-    std::unique_lock<std::shared_mutex> lock(mutex_);
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     auto key = builder()->legType();
     auto it =
         std::remove_if(legBuilderBuilders_.begin(), legBuilderBuilders_.end(),
@@ -116,7 +116,7 @@ void EngineBuilderFactory::addLegBuilder(const std::function<boost::shared_ptr<L
 }
 
 std::vector<boost::shared_ptr<EngineBuilder>> EngineBuilderFactory::generateEngineBuilders() const {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     std::vector<boost::shared_ptr<EngineBuilder>> result;
     for (auto const& b : engineBuilderBuilders_)
         result.push_back(b());
@@ -126,7 +126,7 @@ std::vector<boost::shared_ptr<EngineBuilder>> EngineBuilderFactory::generateEngi
 std::vector<boost::shared_ptr<EngineBuilder>>
 EngineBuilderFactory::generateAmcEngineBuilders(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
                                                 const std::vector<Date>& grid) const {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     std::vector<boost::shared_ptr<EngineBuilder>> result;
     for (auto const& b : amcEngineBuilderBuilders_)
         result.push_back(b(cam, grid));
@@ -134,7 +134,7 @@ EngineBuilderFactory::generateAmcEngineBuilders(const boost::shared_ptr<QuantExt
 }
 
 std::vector<boost::shared_ptr<LegBuilder>> EngineBuilderFactory::generateLegBuilders() const {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     std::vector<boost::shared_ptr<LegBuilder>> result;
     for (auto const& b : legBuilderBuilders_)
         result.push_back(b());

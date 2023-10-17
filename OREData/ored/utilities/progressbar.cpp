@@ -116,7 +116,7 @@ MultiThreadedProgressIndicator::MultiThreadedProgressIndicator(
     : indicators_(indicators) {}
 
 void MultiThreadedProgressIndicator::updateProgress(const unsigned long progress, const unsigned long total) {
-    std::unique_lock<std::shared_mutex> lock(mutex_);
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     threadData_[std::this_thread::get_id()] = std::make_pair(progress, total);
     unsigned long progressTmp = 0;
     unsigned long totalTmp = 0;
@@ -129,7 +129,7 @@ void MultiThreadedProgressIndicator::updateProgress(const unsigned long progress
 }
 
 void MultiThreadedProgressIndicator::reset() {
-    std::unique_lock<std::shared_mutex> lock(mutex_);
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     for (auto& i : indicators_)
         i->reset();
     threadData_.clear();
