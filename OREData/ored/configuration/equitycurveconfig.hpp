@@ -56,7 +56,7 @@ public:
                       const string& currency, const string& calendar, const Type& type, const string& equitySpotQuote,
                       const vector<string>& quotes, const string& dayCountID = "",
                       const string& dividendInterpVariable = "Zero", const string& dividendInterpMethod = "Linear",
-                      const bool dividendExtrapolation = true, const bool extrapolation = true,
+                      const bool dividendExtrapolation = false, const bool extrapolation = false,
                       const QuantLib::Exercise::Type& exerciseStyle = QuantLib::Exercise::Type::European);
     //! Default constructor
     EquityCurveConfig() {}
