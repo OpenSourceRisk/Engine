@@ -130,7 +130,8 @@
 
 %\title{Open Source Risk Engine \\ User Guide  }
 \title{ORE User Guide}
-\author{Acadia Inc.}
+%\author{Quaternion Risk Management Ltd.}
+%\author{Acadia Inc.}
 \date{16 October 2023}
 \maketitle
 
@@ -652,66 +653,38 @@ Alternatively, compile all Boost libraries directly from the source code:
 
 \begin{enumerate}
 
-\item Download and install Visual Studio Community Edition (Version 2013 or later). 
+\item Download and install Visual Studio Community Edition (Version 2017 or later). 
 During the installation, make sure you install the Visual
 C++ support under the Programming Languages features (disabled by default).
 
 \item Configure boost paths: \\
 
-\medskip
-  Since the release of Visual Studio 2019, the user property files 'Microsoft.Cpp.Win32.user' and
-  'Microsoft.Cpp.x64.user' are no longer created on installation. There are now 2 ways to configure the boost paths for Visual Studio.
-  
-\begin{enumerate}  
-\item Set environment variables:
-	\begin{itemize}
+Set environment variables, e.g.:
+\begin{itemize}
   	\item  {\tt \%BOOST\%} pointing to your directory, e.g, {\tt C:{\bs}boost\_1\_72\_0} 
   	\item {\tt \%BOOST\_LIB32\%} pointing to your Win32 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib32\-msvc\-14.0} 
 	\item  {\tt \%BOOST\_LIB64\%} pointing to your x64 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib64\-msvc\-14.0} 
-     \end{itemize}
-     These are used by the ore user.props files.
-\item Create you own property file and add as a property sheet following the instructions at \url{https://docs.microsoft.com/en-us/cpp/build/create-reusable-property-configurations?view=msvc-160&viewFallbackFrom=vs-2019}
+ \end{itemize}
+
 \end{enumerate}
 
-  For older versions of Visual Studio you can use the Microsoft user property files. Open any of the Visual Studio 
-  solution files in item 3 below and select View $\rightarrow$ Other Windows $\rightarrow$ Property Manager. It does not 
-  matter which solution you open, if it is for example the Quant\-Ext solution you should see two Projects 'QuantExt' and 
-  'quantexttestsuite' in the property manager. Expand any of them (e.g. QuantExt) and then one of the Win32 or x64 
-  configurations. The settings will be specific for the Win32 or x64 configuration but otherwise it does not matter which of 
-  the projects or configurations you expand, they all contain the same configuration file. You should now see 
-  'Microsoft.Cpp.Win32.user' respectively 'Microsoft.Cpp.x64.user' depending on whether you chose a Win32 or a x64 
-  configuration. Click on this file to open the property pages. Select VC++ Directories and then add your boost directory to 
-  the 'Include Directories' entry. Likewise add your boost library directory (the directory that contains the *.lib files) to the 
-  'Library Directories' entry. If for example your boost installation is in {\tt
-    C:{\bs}boost\_1\_72\_0} and the libraries reside in the {\tt stage{\bs}lib} subfolder, add {\tt
-    C:{\bs}boost\_1\_72\_0} to the 'Include Directories' entry and {\tt C:{\bs}boost\_1\_72\_0{\bs}stage{\bs} lib} to the
-  'Library Directories' entry. Press OK. 
-  (Alternatively, create and use an environment variable {\tt \%BOOST\%} pointing to your directory {\tt C:{\bs}boost\_1\_72\_0} instead of the directory itself.) 
-  If you want to configure the boost paths for Win32 resp. x64 as well, repeat
-  the previous step for 'Microsoft.Cpp. Win32.user' respectively 'Microsoft.Cpp.x64.user'. To complete the configuration
-  just close the property manager window.
+%\subsubsection*{Use Visual Studio's CMake capabilities}
 
-\item Open the {\tt oreEverything\_*.sln} and build the entire solution (again, make sure to select the correct platform in the configuration manager first).
-\end{enumerate}
+From Visual Studio 2015 onward, you can use Visual Studio's capability to parse the CMakeLists.txt in the ORE root directory. 
 
-\subsubsection*{Generate Visual Studio Projects with CMake}
+Start the development environment, e.g {\tt "C:{\bs}Program Files (x86){\bs}Microsoft Visual Studio{\bs}2019{\bs}Community{\bs}Common7{\bs}IDE{\bs}devenv.exe"} and open the CMakeLists.txt file using File, Menu, CMake...
+Once the file has been parsed successfully and CMake generation has been finished (observable in the output window), you can switch in the solution explorer from the file view to the projects view, where the CMake Targets View can be selected. In this view, the various target projects can be seen below "ORE Project" and be used in a similar manner as the usual VS projects.
 
-ORE 1.8.9 and later will be shipped without the Visual Studio project and solution files. The Visual Studio projects can be auto-generated from the CMake project files.
+The executables are built in the subfolder {\tt /build/TARGET/CONFIGURATION/EXECUTABLE}, e.g. {\tt /build/App/Release/ore.exe}, the debug and launch settings are set in launch.vs.json and not in the GUI.
+
+%\subsubsection*{Generate Visual Studio Projects with CMake}
+\medskip
+
+Alternatively, Visual Studio project files can be auto-generated from the CMake project files.
 
 \begin{enumerate}
 
-\item Download and install Visual Studio Community Edition (Version 2013 or later). 
-During the installation, make sure you install the Visual
-C++ support under the Programming Languages features (disabled by default).
-
 \item Download and install CMake for Windows (https://cmake.org/download/). Visual Studio Community Edition 2019 or later supports CMake and you can install the feature 'C++ CMake Tools for Windows' instead of installing CMake as standalone program.
-
-\item Set environment variables: \\
-	\begin{itemize}
-  	\item  {\tt \%BOOST\%} pointing to your directory, e.g, {\tt C:{\bs}boost\_1\_72\_0} 
-  	\item {\tt \%BOOST\_LIB32\%} pointing to your Win32 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib32\-msvc\-14.0} 
-	\item  {\tt \%BOOST\_LIB64\%} pointing to your x64 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib64\-msvc\-14.0} 
-     \end{itemize}
 
 \item Generate MSVC project files from CMake files:
 \begin{itemize}
@@ -736,19 +709,6 @@ The solution and project files will be generated in the {\tt $\langle$ORE\_ROOT$
 
 \item or open the MSVC solution file {\tt build{\bs}ORE.sln} and build the entire solution with Visual Studio (again, make sure to select the correct platform in the configuration manager first).
 \end{enumerate}
-
-\subsubsection*{Use Visual Studio's CMake capabilities}
-
-Alternatively, from Visual Studio 2015 onward, you can use Visual Studios capability to parse the CMakeLists.txt in the ORE root directory, by first setting the CMake BOOST variables in the environment:
-
-{\tt set BOOST\_INCLUDE\_DIR=} pointing to your boost directory, e.g {\tt C:{\bs}boost\_1\_72\_0}
-{\tt set BOOST\_LIBRARYDIR=} pointing to your Win32 or x64 boost lib directory, e.g {\tt C:{\bs}boost\_1\_72\_0{\bs}lib32\-msvc\-14.0} or {\tt C:{\bs}boost\_1\_72\_0{\bs}lib64\-msvc\-14.0}
-{\tt set BOOST\_ROOT=} pointing to your boost directory, e.g {\tt C:{\bs}boost\_1\_72\_0}
-
-Afterwards, start the development environment, e.g {\tt "C:{\bs}Program Files (x86){\bs}Microsoft Visual Studio{\bs}2019{\bs}Community{\bs}Common7{\bs}IDE{\bs}devenv.exe"} and open the CMakeLists.txt file using File, Menu, CMake...
-Once the file has been parsed successfully and CMake generation has been finished (observable in the output window), you can switch in the solution explorer from the file view to the projects view, where the CMake Targets View can be selected. In this view, the various target projects can be seen below "ORE Project" and be used in a similar manner as the usual VS projects.
-
-The executables are built in the subfolder {\tt /build/TARGET/CONFIGURATION/EXECUTABLE}, e.g. {\tt /build/App/Release/ore.exe}, the debug and launch settings are set in launch.vs.json and not in the GUI.
 
 \subsubsection*{Unix}
 
@@ -807,51 +767,11 @@ automatically.
 
 \end{itemize}
  
-\subsubsection*{Building on Windows with CMake}
-
-One advantage of the CMake build system is that it covers both Unix and Windows builds. 
-The same set of {\tt CMakeLists.txt} files as above allows building ORE on Windows. The following instructions use the {\tt Ninja} build system ({\url{ninja-build.org}) that covers the role of {\tt make} on Unix systems and calls the Visual Studio C++ compiler and linker. 
-
-
-\begin{enumerate}
-\item Set environment variables: \\
-	\begin{itemize}
-  	\item  {\tt \%BOOST\%} pointing to your directory, e.g, {\tt C:{\bs}boost\_1\_72\_0} 
-  	\item {\tt \%BOOST\_LIB32\%} pointing to your Win32 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib32\-msvc\-14.0} 
-	\item  {\tt \%BOOST\_LIB64\%} pointing to your x64 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib64\-msvc\-14.0} 
-     \end{itemize}
-\item Open a command prompt, change to directory C:{\textbackslash}Program Files (x86){\textbackslash}Microsoft Visual Studio 14.0{\textbackslash}VC and run\\
-\medskip
-{\tt vcvarsall.bat x64} \\
-\medskip
-to initialize the compiler-related environment.
-\item Change to the ORE project directory that contains the {\tt QuantLib}, {\tt QuantExt}, etc, folders; create subdirectory {\tt build} and change to subdirectory {\tt build}
-\item Configure CMake e.g. by invoking \\
-\medskip
-{\tt cmake -D BOOST\_INCLUDEDIR=\%BOOST\% } \textbackslash\\
-{\tt \hspace{2cm} -D BOOST\_LIBRARYDIR=\%BOOST\_LIB64\% }\textbackslash\\
-{\tt \hspace{2cm} -D CMAKE\_BUILD\_TYPE=Release }\textbackslash\\
-{\tt \hspace{2cm} -D MSVC\_LINK\_DYNAMIC\_RUNTIME=true} \textbackslash\\
-{\tt \hspace{2cm} -D QL\_ENABLE\_SESSIONS=ON}  \textbackslash\\
-{\tt \hspace{2cm} -G "Visual Studio 17 2022" ..} \\
-\medskip
-where the -G option allows choosing the desired build system generator.
-\item Build all ORE libraries including QuantLib by invoking \\
-\medskip
-  {\tt cmake --build build -v --config Release} \\
-\medskip
-
-\item Run all test suites by invoking \\
-  \medskip {\tt ctest -j4}
-\end{enumerate}
-
-For the best results, it is recommended, to compile ORE without the compiler flag \emph{QL\_USE\_INDEXED\_COUPON}. Not all ORE classes (in particular coupons and rate helpers) support this functionality yet and the results might not always be what is expected.
-
 \subsubsection*{ZLIB support}
 
 To enable zlib support configure CMake with the flag {\tt -DORE\_USE\_ZLIB=ON}. 
 
-If zlib is not installed on the system, it can be installed with the package manager VCPKG:
+If zlib is not installed on the system, it can be installed on Windows with the package manager VCPKG:
 
 \begin{itemize}
 \item Install vcpkg: https://vcpkg.io/en/getting-started.html
@@ -1142,7 +1062,6 @@ Use cmake to generate the project Makefiles
 \hspace{1cm} -DBoost\_NO\_SYSTEM\_PATHS=1 $\backslash$\\
 \hspace{1cm} -DBOOST\_ROOT=\$BOOST\_INC $\backslash$\\
 \hspace{1cm} -DBOOST\_LIBRARYDIR=\$BOOST\_LIB}
-}
 
 \medskip
 Execute the following to kick off the build:
