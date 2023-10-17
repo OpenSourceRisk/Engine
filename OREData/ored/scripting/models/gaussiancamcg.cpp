@@ -43,7 +43,7 @@ GaussianCamCG::GaussianCamCG(
     // check restrictions on cam model (ir-fx with hw, bs and Euler disc only at the moment)
 
     QL_REQUIRE(cam_->discretization() == CrossAssetModel::Discretization::Euler,
-               "GaussianCamCG required discretization 'Euler'.");
+               "GaussianCamCG requires discretization 'Euler'.");
 
     QL_REQUIRE(cam_->components(CrossAssetModel::AssetType::IR) > 0, "GaussianCamCG: no IR component given");
     QL_REQUIRE(cam_->components(CrossAssetModel::AssetType::INF) == 0, "GaussianCamCG: asset type INF not supported");
@@ -52,8 +52,8 @@ GaussianCamCG::GaussianCamCG(
     QL_REQUIRE(cam_->components(CrossAssetModel::AssetType::COM) == 0, "GaussianCamCG: asset type COM not supported");
 
     for (Size i = 0; i < cam_->components(CrossAssetModel::AssetType::IR); ++i) {
-        QL_REQUIRE(cam_->modelType(CrossAssetModel::AssetType::IR, i) == CrossAssetModel::ModelType::HW,
-                   "GaussianCamCG: IR model type HW required.");
+        QL_REQUIRE(cam_->modelType(CrossAssetModel::AssetType::IR, i) == CrossAssetModel::ModelType::LGM1F,
+                   "GaussianCamCG: IR model type LGM required.");
     }
     for (Size i = 0; i < cam_->components(CrossAssetModel::AssetType::FX); ++i) {
         QL_REQUIRE(cam_->modelType(CrossAssetModel::AssetType::FX, i) == CrossAssetModel::ModelType::BS,
@@ -231,16 +231,16 @@ void GaussianCamCG::performCalculations() const {
 
     std::size_t dateIndex = 1;
     for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
-        irState = cg_add(
-            *g_, irState,
-            cg_mult(*g_, cg_var(*g_, "__diffusion_0_" + std::to_string(i)), cg_var(*g_, "__rv_" + std::to_string(i))));
-        if (positionInTimeGrid_[dateIndex] == i) {
+        irState = cg_add(*g_, irState,
+                         cg_mult(*g_, cg_var(*g_, "__diffusion_0_" + std::to_string(i)),
+                                 cg_var(*g_, "__rv_0_" + std::to_string(i))));
+        if (positionInTimeGrid_[dateIndex] == i + 1) {
             irStates_[*std::next(effectiveSimulationDates_.begin(), dateIndex)][0] = irState;
             ++dateIndex;
         }
     }
     QL_REQUIRE(dateIndex == effectiveSimulationDates_.size(),
-               "internal error, did not populate all irState time steps.");
+               "GaussianCamCG:internal error, did not populate all irState time steps.");
 
     // populate path values
 }
