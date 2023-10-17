@@ -198,17 +198,17 @@
 #include <qle/math/openclenvironment.hpp>
 #include <qle/math/basiccpuenvironment.hpp>
 
-
-#include <shared_mutex>
+#include <boost/thread/lock_types.hpp>
+#include <boost/thread/shared_mutex.hpp>
 
 namespace ore::data {
 
 void initBuilders() {
 
-    static std::shared_mutex mutex;
+    static boost::shared_mutex mutex;
     static bool hasRun = false;
 
-    std::unique_lock<std::shared_mutex> lock(mutex);
+    boost::unique_lock<boost::shared_mutex> lock(mutex);
 
     if (hasRun)
         return;
