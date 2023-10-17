@@ -600,17 +600,17 @@ in step 2, which also performs the steps in 3.
 \subsubsection{Boost}\label{sec:boost}
 
 QuantLib and ORE depend on the boost C++ libraries. Hence these need to be installed before building QuantLib and
-ORE. On all platforms the minimum required boost version is 1\_63 as of ORE release 5.
-%Older versions may work on some platforms and system configurations, but were not tested.
+ORE. On all platforms the minimum required boost version is 1\_78.
+%Other versions may work on some platforms and system configurations, but were not tested.
 
 \subsubsection*{Windows}
 
 \begin{enumerate}
-\item Download the pre-compiled binaries for MSVC-14 (MSVC2015) from \cite{boost-binaries}
+\item Download the pre-compiled binaries for your MSVC version (e.g. MSVC-14.2 for MSVC2019) from \cite{boost-binaries}
 %, any recent version should work
 \begin{itemize}
-\item 32-bit: \cite{boost-binaries}{\bs}VERSION{\bs}boost\_VERSION-msvc-14.0-32.exe{\bs}download 
-\item 64-bit: \cite{boost-binaries}{\bs}VERSION{\bs}boost\_VERSION-msvc-14.0-64.exe{\bs}download
+\item 32-bit: \cite{boost-binaries}{\bs}VERSION{\bs}boost\_VERSION-msvc-14.2-32.exe{\bs}download 
+\item 64-bit: \cite{boost-binaries}{\bs}VERSION{\bs}boost\_VERSION-msvc-14.2-64.exe{\bs}download
 \end{itemize}
 \item Start the installation file and choose an installation folder (the ``boost root directory''). Take a note of that folder as it will be needed later on.   
 \item Finish the installation by clicking Next a couple of times.
@@ -621,8 +621,8 @@ Alternatively, compile all Boost libraries directly from the source code:
 \begin{enumerate}
 \item Open a Visual Studio Tools Command Prompt
 \begin{itemize}
-\item 32-bit: VS2015/VS2013 x86 Native Tools Command Prompt
-\item 64-bit: VS2015/VS2013 x64 Native Tools Command Prompt
+\item 32-bit: VS2019 x86 Native Tools Command Prompt
+\item 64-bit: VS2019 x64 Native Tools Command Prompt
 \end{itemize}
 \item Navigate to the boost root directory
 \item Run bootstrap.bat
@@ -662,29 +662,37 @@ C++ support under the Programming Languages features (disabled by default).
 Set environment variables, e.g.:
 \begin{itemize}
   	\item  {\tt \%BOOST\%} pointing to your directory, e.g, {\tt C:{\bs}boost\_1\_72\_0} 
-  	\item {\tt \%BOOST\_LIB32\%} pointing to your Win32 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib32\-msvc\-14.0} 
-	\item  {\tt \%BOOST\_LIB64\%} pointing to your x64 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib64\-msvc\-14.0} 
+  	\item {\tt \%BOOST\_LIB32\%} pointing to your Win32 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib32\-msvc\-14.2} 
+	\item  {\tt \%BOOST\_LIB64\%} pointing to your x64 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib64\-msvc\-14.2} 
  \end{itemize}
+ 
+\item Download and install CMake for Windows (https://cmake.org/download/). Visual Studio Community Edition 2019 or later supports CMake and you can install the feature 'C++ CMake Tools for Windows' instead of installing CMake as standalone program.
 
 \end{enumerate}
 
-%\subsubsection*{Use Visual Studio's CMake capabilities}
+%\subsubsection*{Visual Studio with CMake}
 
-From Visual Studio 2015 onward, you can use Visual Studio's capability to parse the CMakeLists.txt in the ORE root directory. 
+From Visual Studio 2015 and later supports CMake Projects.
 
-Start the development environment, e.g {\tt "C:{\bs}Program Files (x86){\bs}Microsoft Visual Studio{\bs}2019{\bs}Community{\bs}Common7{\bs}IDE{\bs}devenv.exe"} and open the CMakeLists.txt file using File, Menu, CMake...
-Once the file has been parsed successfully and CMake generation has been finished (observable in the output window), you can switch in the solution explorer from the file view to the projects view, where the CMake Targets View can be selected. In this view, the various target projects can be seen below "ORE Project" and be used in a similar manner as the usual VS projects.
+\begin{enumerate}
+\item Start Visual Studio 2017 or later.
+\item Select "Open a local folder" from the start page or menu.
+\item In the dialog window, select the ORE root directory.
+\item Visual Studio will read the cmake presets from CMakePresets.json and the project file CMakeList.txt and configure the project.
+\item Once the configuration is finished and one can build the project.
+\item The executables are built in the subfolder {\tt /build/TARGET/CONFIGURATION/EXECUTABLE}, e.g. {\tt /build/App/Release/ore.exe}.
+\end{enumerate}
 
-The executables are built in the subfolder {\tt /build/TARGET/CONFIGURATION/EXECUTABLE}, e.g. {\tt /build/App/Release/ore.exe}, the debug and launch settings are set in launch.vs.json and not in the GUI.
+ORE is shipped with configuration and build presets using Visual Studio 2022 and the Ninja build system. Those presets are configured in the CMakePreset.json which is read by Visual Studio by default when opening the CMake project. If you want to use Visual Studio 2019 or Visual Studio 2017 instead, you would have to change the Generator in the CMakePreset.json from "Visual Studio 17 2022" to "Visual Studio 16 2019" or "Visual Studio 15 2017".
+
+You can switch in the solution explorer from the file view to the projects view, where the CMake Targets View can be selected. In this view, the various target projects can be seen below "ORE Project" and be used in a similar manner as the usual VS projects.
 
 %\subsubsection*{Generate Visual Studio Projects with CMake}
 \medskip
 
-Alternatively, Visual Studio project files can be auto-generated from the CMake project files.
+Alternatively, Visual Studio project files can be auto-generated from the CMake project files or ORE can be built with the CMake command line tool, similar to UNIX / Mac systems.
 
 \begin{enumerate}
-
-\item Download and install CMake for Windows (https://cmake.org/download/). Visual Studio Community Edition 2019 or later supports CMake and you can install the feature 'C++ CMake Tools for Windows' instead of installing CMake as standalone program.
 
 \item Generate MSVC project files from CMake files:
 \begin{itemize}
@@ -709,6 +717,27 @@ The solution and project files will be generated in the {\tt $\langle$ORE\_ROOT$
 
 \item or open the MSVC solution file {\tt build{\bs}ORE.sln} and build the entire solution with Visual Studio (again, make sure to select the correct platform in the configuration manager first).
 \end{enumerate}
+
+\subsubsection*{Optional: Install optional dependencies with VCPKG}
+
+VCPKG is an open source c++ library manager. ORE can be built optionally with ZLIB and Eigen library support. 
+
+For both features the libraries needed to be installed on the system. On Windows one can use the VCPKG package manager to install those dependencies:
+
+\begin{itemize}
+\item Install vcpkg: https://vcpkg.io/en/getting-started.html
+\item Install dependencies with invoking the command \\
+\medskip
+{\tt vcpkg install --triplet x64-windows zlib} \\
+{\tt vcpkg install --triplet x64-windows eigen3} \\
+\medskip
+\end{itemize}
+
+To make VCPKG visible to CMAKE, create an environment variable {\tt VCPKG\_ROOT} pointing to the root of the vcpkg directory and configure ORE with the flag {\tt -DCMAKE\_TOOLCHAIN\_FILE=\%VCPKG\_ROOT\%/scripts/buildsystems/vcpkg.cmake}. 
+
+To use VCPKG with Visual Studio add the toolChainFile to the configurePresets in the CMakePresets.json:
+
+{\tt "toolchainFile": "\$env\{VCPKG\_ROOT\}/scripts/buildsystems/vcpkg.cmake",}
 
 \subsubsection*{Unix}
 
@@ -771,17 +800,7 @@ automatically.
 
 To enable zlib support configure CMake with the flag {\tt -DORE\_USE\_ZLIB=ON}. 
 
-If zlib is not installed on the system, it can be installed on Windows with the package manager VCPKG:
-
-\begin{itemize}
-\item Install vcpkg: https://vcpkg.io/en/getting-started.html
-\item Install dependencies with invoking the command \\
-\medskip
-{\tt vcpkg install --triplet x64-windows zlib} \\
-\medskip
-\end{itemize}
-
-To make VCPKG visible to CMAKE in Visual studio, create an environment variable {\tt VCPKG\_ROOT} pointing to the root of the vcpkg directory and configure ORE with the flag {\tt -DCMAKE\_TOOLCHAIN\_FILE=\%VCPKG\_ROOT\%/scripts/buildsystems/vcpkg.cmake}.
+If zlib is not installed on the system, it can be installed on Windows with the package manager VCPKG.
 
 \subsection{Python and Jupyter}\label{sec:python}
 
