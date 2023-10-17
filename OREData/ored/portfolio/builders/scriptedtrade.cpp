@@ -1474,10 +1474,12 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
 
     std::string configurationInCcy = configuration(MarketContext::irCalibration);
     std::string configurationXois = configuration(MarketContext::pricing);
+    auto discretization = useCg_ ? CrossAssetModel::Discretization::Euler : CrossAssetModel::Discretization::Exact;
     auto camBuilder = boost::make_shared<CrossAssetModelBuilder>(
         market_,
         boost::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, infConfigs, crLgmConfigs, crCirConfigs,
-                                                comConfigs, 0, camCorrelations, bootstrapTolerance_),
+                                                comConfigs, 0, camCorrelations, bootstrapTolerance_, "LGM",
+                                                discretization),
         configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
         configurationXois, !calibrate_ || zeroVolatility_, continueOnCalibrationError_, referenceCalibrationGrid_,
         SalvagingAlgorithm::Spectral, id);
