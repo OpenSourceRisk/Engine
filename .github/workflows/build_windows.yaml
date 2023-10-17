@@ -1,0 +1,29 @@
+name: C/C++ CI Windows
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: building
+    runs-on: windows-2022
+    steps:
+    - uses: actions/checkout@v3
+    - name: get QuantLib
+      run: |
+        git submodule update --init
+    - name: Set up Boost
+      run: |
+        choco install -y boost-msvc-14.3
+        choco install -y ninja
+    - name: cmake configure
+      run : |
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Release -DQL_BUILD_EXAMPLES=false -DQL_BUILD_TEST_SUITE=false -DQL_BUILD_BENCHMARK=false -DQL_ENABLE_SESSIONS=true -DORE_BUILD_DOC=false -DBOOST_ROOT="C:\ProgramData\chocolatey\lib\boost" -G "Ninja" ..
+    - name: cmake build
+      run: |
+        cd build/
+        pwd; 
+        cmake --build . -j $NUMBER_OF_PROCESSORS
