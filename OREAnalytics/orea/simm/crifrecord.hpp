@@ -57,6 +57,10 @@ struct CrifRecord {
     std::string amountCurrency;
     mutable QuantLib::Real amount = QuantLib::Null<QuantLib::Real>();
     mutable QuantLib::Real amountUsd = QuantLib::Null<QuantLib::Real>();
+    
+    // additional fields used exclusively by the SIMM calculator for handling amounts converted in a given result ccy
+    std::string resultCurrency;
+    mutable QuantLib::Real amountResultCcy = QuantLib::Null<QuantLib::Real>();
 
     // optional data
     std::string tradeType;
@@ -102,6 +106,8 @@ struct CrifRecord {
     bool hasAmountCcy() const { return !amountCurrency.empty(); }
     bool hasAmount() const { return amount != QuantLib::Null<QuantLib::Real>(); }
     bool hasAmountUsd() const { return amountUsd != QuantLib::Null<QuantLib::Real>(); }
+    bool hasResultCcy() const { return !resultCurrency.empty(); }
+    bool hasAmountResultCcy() const { return amountResultCcy != QuantLib::Null<QuantLib::Real>(); }
 
     // We use (and require) amountUsd for all risk types except for SIMM parameters AddOnNotionalFactor and
     // ProductClassMultiplier as these are multipliers and not amounts denominated in the amountCurrency
