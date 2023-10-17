@@ -25,7 +25,7 @@ namespace ore {
 namespace data {
 
 std::string IndexNameTranslator::oreName(const std::string& qlName) const {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     auto n = data_.left.find(qlName);
     if (n == data_.left.end())
         return qlName;
@@ -34,20 +34,20 @@ std::string IndexNameTranslator::oreName(const std::string& qlName) const {
 }
 
 std::string IndexNameTranslator::qlName(const std::string& oreName) const {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     auto n = data_.right.find(oreName);
     QL_REQUIRE(n != data_.right.end(), "IndexNameTranslator: oreName '" << oreName << "' not found.");
     return n->second;
 }
 
 void IndexNameTranslator::add(const std::string& qlName, const std::string& oreName) {
-    std::unique_lock<std::shared_mutex> lock(mutex_);
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     data_.insert(boost::bimap<std::string, std::string>::value_type(qlName, oreName));
     TLOG("IndexNameTranslator: adding '" << qlName << "' <-> '" << oreName << "'");
 }
 
 void IndexNameTranslator::clear() {
-    std::unique_lock<std::shared_mutex> lock(mutex_);
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     data_.clear();
 }
 

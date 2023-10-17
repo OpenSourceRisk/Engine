@@ -50,11 +50,11 @@ struct TrsUnderlyingBuilder {
 class TrsUnderlyingBuilderFactory
     : public QuantLib::Singleton<TrsUnderlyingBuilderFactory, std::integral_constant<bool, true>> {
     map<std::string, boost::shared_ptr<TrsUnderlyingBuilder>> builders_;
-    mutable std::shared_mutex mutex_;
+    mutable boost::shared_mutex mutex_;
 
 public:
     std::map<std::string, boost::shared_ptr<TrsUnderlyingBuilder>> getBuilders() const {
-        std::shared_lock<std::shared_mutex> lock(mutex_);
+        boost::shared_lock<boost::shared_mutex> lock(mutex_);
         return builders_;
     }
     boost::shared_ptr<TrsUnderlyingBuilder> getBuilder(const std::string& tradeType) const;

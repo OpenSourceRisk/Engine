@@ -43,7 +43,7 @@ using namespace QuantExt;
 CurrencyParser::CurrencyParser() { reset(); }
 
 QuantLib::Currency CurrencyParser::parseCurrency(const std::string& name) const {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     {
         auto it = currencies_.find(name);
         if (it != currencies_.end()) {
@@ -66,7 +66,7 @@ QuantLib::Currency CurrencyParser::parseCurrency(const std::string& name) const 
 }
 
 QuantLib::Currency CurrencyParser::parseMinorCurrency(const std::string& name) const {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     auto it = minorCurrencies_.find(name);
     if (it != minorCurrencies_.end()) {
         return it->second;
@@ -117,7 +117,7 @@ bool CurrencyParser::isValidCurrency(const std::string& name) const {
 }
 
 bool CurrencyParser::isMinorCurrency(const std::string& name) const {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     return minorCurrencies_.find(name) != minorCurrencies_.end();
 }
 
@@ -126,17 +126,17 @@ bool CurrencyParser::isPseudoCurrency(const std::string& name) const {
 }
 
 bool CurrencyParser::isPreciousMetal(const std::string& name) const {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     return preciousMetals_.find(name) != preciousMetals_.end();
 }
 
 bool CurrencyParser::isCryptoCurrency(const std::string& name) const {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     return cryptoCurrencies_.find(name) != cryptoCurrencies_.end();
 }
 
 bool CurrencyParser::hasMinorCurrency(const std::string& name) const {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     for (auto const& c : minorCurrencies_) {
         if (c.second.code() == name)
             return true;
@@ -145,7 +145,7 @@ bool CurrencyParser::hasMinorCurrency(const std::string& name) const {
 }
 
 std::string CurrencyParser::getMinorCurrency(const std::string& name) const {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     for (auto const& c : minorCurrencies_) {
         if (c.second.code() == name)
             return c.first;
@@ -154,7 +154,7 @@ std::string CurrencyParser::getMinorCurrency(const std::string& name) const {
 }
 
 std::set<std::string> CurrencyParser::pseudoCurrencyCodes() const {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     std::set<std::string> tmp;
     for (auto const& c : preciousMetals_)
         tmp.insert(c.first);
@@ -173,7 +173,7 @@ QuantLib::Real CurrencyParser::convertMinorToMajorCurrency(const std::string& s,
 }
 
 void CurrencyParser::addCurrency(const std::string& newName, const QuantLib::Currency& currency) {
-    std::unique_lock<std::shared_mutex> lock(mutex_);
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     if (currencies_.find(newName) != currencies_.end() || preciousMetals_.find(newName) != preciousMetals_.end() ||
         cryptoCurrencies_.find(newName) != cryptoCurrencies_.end())
         return;
@@ -188,7 +188,7 @@ void CurrencyParser::addMinorCurrencyCodes(const QuantLib::Currency& currency) {
 }
 
 void CurrencyParser::reset() {
-    std::unique_lock<std::shared_mutex> lock(mutex_);
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
 
     currencies_ = {{"AED", AEDCurrency()}, {"AOA", AOACurrency()}, {"ARS", ARSCurrency()}, {"ATS", ATSCurrency()},
                    {"AUD", AUDCurrency()}, {"BEF", BEFCurrency()}, {"BGN", BGNCurrency()}, {"BHD", BHDCurrency()},

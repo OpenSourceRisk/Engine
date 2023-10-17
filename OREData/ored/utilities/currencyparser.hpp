@@ -27,8 +27,8 @@
 #include <ql/patterns/singleton.hpp>
 #include <ql/time/calendar.hpp>
 
-
-#include <shared_mutex>
+#include <boost/thread/lock_types.hpp>
+#include <boost/thread/shared_mutex.hpp>
 
 namespace ore {
 namespace data {
@@ -63,7 +63,7 @@ public:
 private:
     void addMinorCurrencyCodes(const QuantLib::Currency& currency);
 
-    mutable std::shared_mutex mutex_;
+    mutable boost::shared_mutex mutex_;
     std::map<std::string, QuantLib::Currency> currencies_;
     std::map<std::string, QuantLib::Currency> minorCurrencies_;
     std::map<std::string, QuantLib::Currency> preciousMetals_;
