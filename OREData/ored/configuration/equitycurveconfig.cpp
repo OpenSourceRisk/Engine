@@ -73,8 +73,8 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
         divInterpVariable_ = "Zero";
         divInterpMethod_ = divInterpVariable_ == "Zero" ? "Linear" : "LogLinear";
     }
-    dividendExtrapolation_ = XMLUtils::getChildValueAsBool(node, "DividendExtrapolation");
-    extrapolation_ = XMLUtils::getChildValueAsBool(node, "Extrapolation"); // defaults to true
+    dividendExtrapolation_ = XMLUtils::getChildValueAsBool(node, "DividendExtrapolation", false, false);
+    extrapolation_ = XMLUtils::getChildValueAsBool(node, "Extrapolation", false, false);
 
     if (type_ == Type::NoDividends) {
         QL_REQUIRE(fwdQuotes_.size() == 0,
