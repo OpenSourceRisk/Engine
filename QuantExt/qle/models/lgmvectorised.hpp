@@ -63,17 +63,17 @@ public:
     RandomVariable compoundedOnRate(const boost::shared_ptr<OvernightIndex>& index,
                                     const std::vector<Date>& fixingDates, const std::vector<Date>& valueDates,
                                     const std::vector<Real>& dt, const Natural rateCutoff, const bool includeSpread,
-                                    const Real spread, const Real gearing, const Period lookback,
-                                    const DayCounter& accrualDayCounter, Real cap, Real floor, const bool localCapFloor,
-                                    const bool nakedOption, const Time t, const RandomVariable& x) const;
+                                    const Real spread, const Real gearing, const Period lookback, Real cap, Real floor,
+                                    const bool localCapFloor, const bool nakedOption, const Time t,
+                                    const RandomVariable& x) const;
 
     /* Exact if no cap/floors are present and t <= first value date.
        Approximations are applied for t > first value date or when cap / floors are present. */
     RandomVariable averagedOnRate(const boost::shared_ptr<OvernightIndex>& index, const std::vector<Date>& fixingDates,
                                   const std::vector<Date>& valueDates, const std::vector<Real>& dt,
                                   const Natural rateCutoff, const bool includeSpread, const Real spread,
-                                  const Real gearing, const Period lookback, const DayCounter& accrualDayCounter,
-                                  Real cap, Real floor, const bool localCapFloor, const bool nakedOption, const Time t,
+                                  const Real gearing, const Period lookback, Real cap, Real floor,
+                                  const bool localCapFloor, const bool nakedOption, const Time t,
                                   const RandomVariable& x) const;
 
     /* Exact if no cap/floors are present and t <= first value date.

@@ -159,8 +159,8 @@ public:
 protected:
     boost::shared_ptr<QuantExt::FxIndex>
     getFxIndex(const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
-               const std::string& foreign,
-               std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices) const;
+               const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices,
+               std::set<std::string>& missingFxIndexPairs) const;
 
     mutable std::vector<boost::shared_ptr<Trade>> underlying_;
     // empty if underlying is not from a Derivative subnode of UnderlyingData

@@ -267,13 +267,13 @@ void OvernightIndexedCouponPricer::compute() const {
             compoundFactorWithoutSpread *= startDiscount / endDiscount;
             // this is an approximation, see "Ester / Daily Spread Curve Setup in ORE":
             // set tau to an average value
-            Real tau = coupon_->dayCounter().yearFraction(dates[i], dates.back()) / (dates.back() - dates[i]);
+            Real tau = index->dayCounter().yearFraction(dates[i], dates.back()) / (dates.back() - dates[i]);
             // now use formula (4) from the paper
             compoundFactor *= std::pow(1.0 + tau * coupon_->spread(), static_cast<int>(dates.back() - dates[i]));
         }
     }
 
-    Rate tau = coupon_->dayCounter().yearFraction(dates.front(), dates.back());
+    Rate tau = index->dayCounter().yearFraction(dates.front(), dates.back());
     Rate rate = (compoundFactor - 1.0) / tau;
     swapletRate_ = coupon_->gearing() * rate;
     if (!coupon_->includeSpread()) {
