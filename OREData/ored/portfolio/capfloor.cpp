@@ -578,8 +578,7 @@ const std::map<std::string, boost::any>& CapFloor::additionalData() const {
                         boost::shared_ptr<CashFlow> c = flow;
                         if (auto strippedCfc = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(flow)) {
                             c = strippedCfc->underlying();
-                        } else 
-                            continue;
+                        }
 
                         if (auto cfc = boost::dynamic_pointer_cast<CappedFlooredCoupon>(c)) {
                             // enfore coupon pricer to hold the results of the current coupon
