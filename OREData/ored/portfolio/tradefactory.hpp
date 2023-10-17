@@ -27,7 +27,8 @@
 #include <ql/patterns/singleton.hpp>
 
 #include <boost/make_shared.hpp>
-#include <shared_mutex>
+#include <boost/thread/lock_types.hpp>
+#include <boost/thread/shared_mutex.hpp>
 
 namespace ore {
 namespace data {
@@ -61,7 +62,7 @@ public:
 */
 class TradeFactory : public QuantLib::Singleton<TradeFactory, std::integral_constant<bool, true>> {
     std::map<std::string, boost::shared_ptr<AbstractTradeBuilder>> builders_;
-    mutable std::shared_mutex mutex_;
+    mutable boost::shared_mutex mutex_;
 
 public:
     std::map<std::string, boost::shared_ptr<AbstractTradeBuilder>> getBuilders() const;
