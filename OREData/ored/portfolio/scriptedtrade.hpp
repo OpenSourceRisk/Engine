@@ -277,7 +277,7 @@ protected:
 
 class ScriptLibraryStorage : public QuantLib::Singleton<ScriptLibraryStorage, std::integral_constant<bool, true>> {
     ScriptLibraryData data_;
-    mutable std::shared_mutex mutex_;
+    mutable boost::shared_mutex mutex_;
 
 public:
     const ScriptLibraryData& get() const;

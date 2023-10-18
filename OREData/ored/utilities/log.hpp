@@ -37,7 +37,6 @@
 #include <iostream>
 #include <string>
 #include <time.h>
-#include <shared_mutex>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/log/attributes/mutable_constant.hpp>
@@ -65,7 +64,8 @@
 #include <sstream>
 
 #include <boost/any.hpp>
-
+#include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/lock_types.hpp>
 
 enum oreSeverity {
     alert = ORE_ALERT,
@@ -405,48 +405,48 @@ public:
     void log(unsigned m);
 
     //! mutex to acquire locks
-    std::shared_mutex& mutex() { return mutex_; }
+    boost::shared_mutex& mutex() { return mutex_; }
 
     // Avoid a large number of warnings in VS by adding 0 !=
     bool filter(unsigned mask) {
-        std::shared_lock<std::shared_mutex> lock(mutex());
+        boost::shared_lock<boost::shared_mutex> lock(mutex());
         return 0 != (mask & mask_);
     }
     unsigned mask() {
-        std::shared_lock<std::shared_mutex> lock(mutex());
+        boost::shared_lock<boost::shared_mutex> lock(mutex());
         return mask_;
     }
     void setMask(unsigned mask) {
-        std::unique_lock<std::shared_mutex> lock(mutex());
+        boost::unique_lock<boost::shared_mutex> lock(mutex());
         mask_ = mask;
     }
     const boost::filesystem::path& rootPath() {
-        std::unique_lock<std::shared_mutex> lock(mutex());
+        boost::unique_lock<boost::shared_mutex> lock(mutex());
         return rootPath_;
     }
     void setRootPath(const boost::filesystem::path& pth) {
-        std::unique_lock<std::shared_mutex> lock(mutex());
+        boost::unique_lock<boost::shared_mutex> lock(mutex());
         rootPath_ = pth;
     }
     int maxLen() {
-        std::unique_lock<std::shared_mutex> lock(mutex());
+        boost::unique_lock<boost::shared_mutex> lock(mutex());
         return maxLen_;
     }
     void setMaxLen(const int n) {
-        std::unique_lock<std::shared_mutex> lock(mutex());
+        boost::unique_lock<boost::shared_mutex> lock(mutex());
         maxLen_ = n;
     }
 
     bool enabled() {
-        std::shared_lock<std::shared_mutex> lock(mutex());
+        boost::shared_lock<boost::shared_mutex> lock(mutex());
         return enabled_;
     }
     void switchOn() {
-        std::unique_lock<std::shared_mutex> lock(mutex());
+        boost::unique_lock<boost::shared_mutex> lock(mutex());
         enabled_ = true;
     }
     void switchOff() {
-        std::unique_lock<std::shared_mutex> lock(mutex());
+        boost::unique_lock<boost::shared_mutex> lock(mutex());
         enabled_ = false;
     }
 
@@ -472,7 +472,7 @@ private:
 
     int pid_ = 0;
 
-    mutable std::shared_mutex mutex_;
+    mutable boost::shared_mutex mutex_;
 
     std::map<std::string, std::function<bool(const std::string&)>> excludeFilters_;
 };
@@ -486,7 +486,7 @@ private:
             std::ostringstream __ore_mlog_tmp_stringstream__;                                                          \
             __ore_mlog_tmp_stringstream__ << text;                                                                     \
             if (!ore::data::Log::instance().checkExcludeFilters(__ore_mlog_tmp_stringstream__.str())) {                \
-                std::unique_lock<std::shared_mutex> lock(ore::data::Log::instance().mutex());                      \
+                boost::unique_lock<boost::shared_mutex> lock(ore::data::Log::instance().mutex());                      \
                 ore::data::Log::instance().header(mask, __FILE__, __LINE__);                                           \
                 ore::data::Log::instance().logStream() << __ore_mlog_tmp_stringstream__.str();                         \
                 ore::data::Log::instance().log(mask);                                                                  \
@@ -515,7 +515,7 @@ private:
 #define MEM_LOG_USING_LEVEL(LEVEL)                                                                                      \
     {                                                                                                                   \
         if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(LEVEL)) {                         \
-            std::unique_lock<std::shared_mutex> lock(ore::data::Log::instance().mutex());                           \
+            boost::unique_lock<boost::shared_mutex> lock(ore::data::Log::instance().mutex());                           \
             ore::data::Log::instance().header(LEVEL, __FILE__, __LINE__);                                               \
             ore::data::Log::instance().logStream() << std::to_string(ore::data::os::getPeakMemoryUsageBytes()) << "|";  \
             ore::data::Log::instance().logStream() << std::to_string(ore::data::os::getMemoryUsageBytes());             \
@@ -710,39 +710,39 @@ private:
     bool enabled_;
     QuantLib::Size width_;
     QuantLib::Size progressBarWidth_;
-    mutable std::shared_mutex mutex_;
+    mutable boost::shared_mutex mutex_;
 
 public:
     bool enabled() {
-        std::shared_lock<std::shared_mutex> lock(mutex());
+        boost::shared_lock<boost::shared_mutex> lock(mutex());
         return enabled_;
     }
     QuantLib::Size width() {
-        std::shared_lock<std::shared_mutex> lock(mutex_);
+        boost::shared_lock<boost::shared_mutex> lock(mutex_);
         return width_;
     }
     QuantLib::Size progressBarWidth() {
-        std::shared_lock<std::shared_mutex> lock(mutex_);
+        boost::shared_lock<boost::shared_mutex> lock(mutex_);
         return progressBarWidth_;
     }
     void switchOn() {
-        std::unique_lock<std::shared_mutex> lock(mutex_);
+        boost::unique_lock<boost::shared_mutex> lock(mutex_);
         enabled_ = true;
     }
     void switchOff() {
-        std::unique_lock<std::shared_mutex> lock(mutex_);
+        boost::unique_lock<boost::shared_mutex> lock(mutex_);
         enabled_ = false;
     }
     void setWidth(QuantLib::Size w) {
-        std::unique_lock<std::shared_mutex> lock(mutex_);
+        boost::unique_lock<boost::shared_mutex> lock(mutex_);
         width_ = w;
     }
     void setProgressBarWidth(QuantLib::Size w) {
-        std::unique_lock<std::shared_mutex> lock(mutex_);
+        boost::unique_lock<boost::shared_mutex> lock(mutex_);
         progressBarWidth_ = w;
     }
     //! mutex to acquire locks
-    std::shared_mutex& mutex() { return mutex_; }
+    boost::shared_mutex& mutex() { return mutex_; }
 };
 
 #define CONSOLEW(text)                                                                                                 \
@@ -754,7 +754,7 @@ public:
             Size len = oss.str().length();                                                                             \
             Size wsLen = w > len ? w - len : 1;                                                                        \
             oss << std::string(wsLen, ' ');                                                                            \
-            std::unique_lock<std::shared_mutex> lock(ore::data::ConsoleLog::instance().mutex());                   \
+            boost::unique_lock<boost::shared_mutex> lock(ore::data::ConsoleLog::instance().mutex());                   \
             std::cout << oss.str();                                                                                    \
             std::cout << std::flush;                                                                                   \
         }                                                                                                              \
@@ -765,7 +765,7 @@ public:
         if (ore::data::ConsoleLog::instance().enabled()) {                                                             \
             std::ostringstream oss;                                                                                    \
             oss << text;                                                                                               \
-            std::unique_lock<std::shared_mutex> lock(ore::data::ConsoleLog::instance().mutex());                   \
+            boost::unique_lock<boost::shared_mutex> lock(ore::data::ConsoleLog::instance().mutex());                   \
             std::cout << oss.str() << "\n";                                                                            \
             std::cout << std::flush;                                                                                   \
         }                                                                                                              \
