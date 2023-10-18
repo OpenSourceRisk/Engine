@@ -330,7 +330,7 @@ double BondBuilder::Result::inflationFactor() const {
 BondBuilder::Result BondFactory::build(const boost::shared_ptr<EngineFactory>& engineFactory,
                                        const boost::shared_ptr<ReferenceDataManager>& referenceData,
                                        const std::string& securityId) const {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     for (auto const& b : builders_) {
         if (referenceData->hasData(b.first, securityId)) {
             auto tmp = b.second->build(engineFactory, referenceData, securityId);
@@ -347,7 +347,7 @@ BondBuilder::Result BondFactory::build(const boost::shared_ptr<EngineFactory>& e
 
 void BondFactory::addBuilder(const std::string& referenceDataType, const boost::shared_ptr<BondBuilder>& builder,
                              const bool allowOverwrite) {
-    std::unique_lock<std::shared_mutex> lock(mutex_);
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     QL_REQUIRE(builders_.insert(std::make_pair(referenceDataType, builder)).second || allowOverwrite,
                "BondFactory::addBuilder(" << referenceDataType << "): builder for key already exists.");
 }

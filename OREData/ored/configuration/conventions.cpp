@@ -71,7 +71,7 @@ Convention::Convention(const string& id, Type type) : type_(type), id_(id) {}
 
 const boost::shared_ptr<ore::data::Conventions>& InstrumentConventions::conventions(QuantLib::Date d) const {
     QL_REQUIRE(!conventions_.empty(), "InstrumentConventions: No conventions provided.");
-    std::shared_lock<std::shared_mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     Date dt = d == Date() ? Settings::instance().evaluationDate() : d;
     auto it = conventions_.lower_bound(dt);
     if(it != conventions_.end() && it->first == dt)
@@ -91,7 +91,7 @@ const boost::shared_ptr<ore::data::Conventions>& InstrumentConventions::conventi
 
 void InstrumentConventions::setConventions(
     const boost::shared_ptr<ore::data::Conventions>& conventions, QuantLib::Date d) {
-    std::unique_lock<std::shared_mutex> lock(mutex_);
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     conventions_[d] = conventions;
 }
 
@@ -2467,7 +2467,7 @@ void Conventions::fromXML(XMLNode* node) {
 }
 
 XMLNode* Conventions::toXML(XMLDocument& doc) {
-    std::unique_lock<std::shared_mutex> lock(mutex_);
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
 
     XMLNode* conventionsNode = doc.allocNode("Conventions");
 
@@ -2480,7 +2480,7 @@ XMLNode* Conventions::toXML(XMLDocument& doc) {
 }
 
 void Conventions::clear() const {
-    std::unique_lock<std::shared_mutex> lock(mutex_);
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     data_.clear();
 }
 
@@ -2509,7 +2509,7 @@ std::string flip(const std::string& id, const std::string& sep = "-") {
 boost::shared_ptr<Convention> Conventions::get(const string& id) const {
 
     {
-        std::shared_lock<std::shared_mutex> lock(mutex_);
+        boost::shared_lock<boost::shared_mutex> lock(mutex_);
         if (auto it = data_.find(id); it != data_.end()) {
             used_.insert(id);
             return it->second;
@@ -2522,7 +2522,7 @@ boost::shared_ptr<Convention> Conventions::get(const string& id) const {
 
     std::string type, unparsed;
     {
-        std::unique_lock<std::shared_mutex> lock(mutex_);
+        boost::unique_lock<boost::shared_mutex> lock(mutex_);
         if (auto it = unparsed_.find(id); it != unparsed_.end()) {
             std::tie(type, unparsed) = it->second;
             unparsed_.erase(id);
@@ -2597,7 +2597,7 @@ boost::shared_ptr<Convention> Conventions::get(const string& id) const {
 }
 
 boost::shared_ptr<Convention> Conventions::getFxConvention(const string& ccy1, const string& ccy2) const {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     for (auto c : data_) {
         auto fxCon = boost::dynamic_pointer_cast<FXConvention>(c.second);
         if (fxCon) {
@@ -2629,7 +2629,7 @@ std::set<boost::shared_ptr<Convention>> Conventions::get(const Convention::Type&
     std::set<std::string> unparsedIds;
     std::string typeStr = ore::data::to_string(type);
     {
-        std::shared_lock<std::shared_mutex> lock(mutex_);
+        boost::shared_lock<boost::shared_mutex> lock(mutex_);
         for (auto const& d : data_) {
             if (d.second->type() == type) {
                 used_.insert(d.first);
@@ -2653,7 +2653,7 @@ bool Conventions::has(const string& id) const {
     } catch (const std::exception& e) {
         return false;
     }
-    std::shared_lock<std::shared_mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     return data_.find(id) != data_.end() || unparsed_.find(id) != unparsed_.end() ||
            data_.find(flip(id)) != data_.end() || unparsed_.find(flip(id)) != unparsed_.end();
 }
@@ -2663,7 +2663,7 @@ bool Conventions::has(const std::string& id, const Convention::Type& type) const
 }
 
 void Conventions::add(const boost::shared_ptr<Convention>& convention) const {
-    std::unique_lock<std::shared_mutex> lock(mutex_);
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     const string& id = convention->id();
     QL_REQUIRE(data_.find(id) == data_.end(), "Convention already exists for id " << id);
     data_[id] = convention;

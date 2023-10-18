@@ -27,8 +27,8 @@
 #include <functional>
 #include <ql/patterns/singleton.hpp>
 #include <string>
-#include <shared_mutex>
-
+#include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/lock_types.hpp>
 
 namespace ore {
 namespace data {
@@ -64,7 +64,7 @@ public:
                     const bool allowOverwrite = false);
 
 private:
-    std::shared_mutex mutex_;
+    boost::shared_mutex mutex_;
     map_type map_;
 };
 
