@@ -176,7 +176,7 @@ class EngineBuilderFactory : public QuantLib::Singleton<EngineBuilderFactory, st
                                                                const std::vector<Date>& grid)>>
         amcEngineBuilderBuilders_;
     std::vector<std::function<boost::shared_ptr<LegBuilder>()>> legBuilderBuilders_;
-    mutable std::shared_mutex mutex_;
+    mutable boost::shared_mutex mutex_;
 
 public:
     void addEngineBuilder(const std::function<boost::shared_ptr<EngineBuilder>()>& builder,
