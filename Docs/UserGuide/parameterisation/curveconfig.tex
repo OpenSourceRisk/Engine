@@ -309,8 +309,9 @@ Listing \ref{lst:eqcurve_configuration} shows the configuration of equity forwar
       <!-- See Table \ref{tab:allow_interp_methods} for allowed interpolation methods -->
       <InterpolationMethod>Linear</InterpolationMethod>
     </DividendInterpolation>
-    <!-- Optional node, defaults to true -->
-    <Extrapolation>True</Extrapolation>
+    <DividendExtrapolation>False</DividendExtrapolation>
+    <!-- Optional node, defaults to false -->
+    <Extrapolation>False</Extrapolation>
     <DayCounter>A365</DayCounter>
   </EquityCurve>
   <EquityCurve>
@@ -336,7 +337,8 @@ The meaning of each of the elements is given below.
 \item Quotes [Optional]: Market datum IDs/names to be used in building the curve structure.
 \item DayCounter [Optional]: The term structure's day counter used in date to time conversions. Defaults to {\tt A365F}.
 \item DividendInterpolation [Optional]: This node contains an \lstinline!InterpolationVariable! and \lstinline!InterpolationMethod! sub-node, which define the variable on which the interpolation is performed and the interpolation method for the dividend curve, respectively. The allowable values are found in Table \ref{tab:allow_interp_variables} and Table \ref{tab:allow_interp_methods}, respectively. This should not be provided if \lstinline!Type! is {\tt NoDividends}.
-\item Extrapolation [Optional]: Boolean flag indicating whether extrapolation is allowed. Defaults to {\tt True}.
+\item DividendExtrapolation [Optional]: Boolean flag indicating whether extrapolation in the dividend curve is allowed. If True the dividend curve is extrapolated forward at the risk free rate beyond the last date of the curve - this is only considered when \lstinline!Extrapolation! is False. Defaults to {\tt False}.
+\item Extrapolation [Optional]: Boolean flag indicating whether extrapolation in the forward price is allowed. Defaults to {\tt False}.
 \end{itemize}
 
 The equity curves here consists of a spot equity price, as well as a set of either forward prices or else dividend 
@@ -358,6 +360,7 @@ There are a number of fields common to all configurations:
 \begin{itemize}
 \item CurveId: Unique identifier for the curve.
 \item CurveDescription [Optional]: A description of the curve. This field may be left blank.
+\item EquityId: [Optional] Identifies the underlying equity name, this is used in the construction of the \lstinline!Quote! strings. If omitted the \lstinline!CurveId! is used instead.
 \item Currency: Currency of the equity.
 \item Calendar [Optional]: allowable value is any valid calendar. Defaults to \lstinline!NullCalendar!.
 \item DayCounter [Optional]: allowable value is any valid day counter. Defaults to \lstinline!A365!.
@@ -374,10 +377,11 @@ Listing \ref{lst:eqoptionvol_constant} shows the configuration of equity volatil
   <EquityVolatility>
     <CurveId>SP5</CurveId>
     <CurveDescription>Lognormal option implied vols for SP 500</CurveDescription>
+    <EquityId>RIC:.SP5</EquityId>
     <Currency>USD</Currency>
     <DayCounter>Actual/365 (Fixed)</DayCounter>
     <Constant>
-      <Quote>EQUITY_OPTION/RATE_LNVOL/SP5/USD/5Y/ATMF</Quote>
+      <Quote>EQUITY_OPTION/RATE_LNVOL/RIC:.SP5/USD/5Y/ATMF</Quote>
     </Constant>
   </EquityVolatility>
   <EquityVolatility>
@@ -398,13 +402,14 @@ Secondly, the volatility curve configuration layout is given in Listing \ref{lst
   <EquityVolatility>
     <CurveId>SP5</CurveId>
     <CurveDescription>Lognormal option implied vols for SP 500</CurveDescription>
+    <EquityId>RIC:.SP5</EquityId>
     <Currency>USD</Currency>
     <DayCounter>Actual/365 (Fixed)</DayCounter>
     <Curve>
       <QuoteType>ImpliedVolatility</QuoteType>
       <VolatilityType>Lognormal</VolatilityType>
       <Quotes>
-        <Quote>EQUITY_OPTION/RATE_LNVOL/SP5/USD/*</Quote>
+        <Quote>EQUITY_OPTION/RATE_LNVOL/RIC:.SP5/USD/*</Quote>
       </Quotes>
       <Interpolation>LinearFlat</Interpolation>
       <Extrapolation>Flat</Extrapolation>
@@ -463,6 +468,7 @@ When this configuration is used, the market is searched for quote strings of the
   <EquityVolatility>
     <CurveId>SP5</CurveId>
     <CurveDescription>Lognormal option implied vols for SP 500</CurveDescription>
+    <EquityId>RIC:.SP5</EquityId>
     <Currency>USD</Currency>
     <DayCounter>Actual/365 (Fixed)</DayCounter>
     <StrikeSurface>
@@ -509,6 +515,7 @@ see \ref{md:equity_option_iv} for details of the market data.
   <EquityVolatility>
     <CurveId>SP5</CurveId>
     <CurveDescription>Lognormal option implied vols for SP 500</CurveDescription>
+    <EquityId>RIC:.SP5</EquityId>
     <Currency>USD</Currency>
     <DayCounter>Actual/365 (Fixed)</DayCounter>
     <MoneynessSurface>
@@ -542,6 +549,7 @@ Finally, the volatility proxy surface configuration layout is given in Listing \
   <EquityVolatility>
     <CurveId>ABC</CurveId>
     <CurveDescription>Lognormal option implied vols for APC - proxied from SP5</CurveDescription>
+    <EquityId>RIC:.SP5</EquityId>
     <Currency>USD</Currency>
     <DayCounter>Actual/365 (Fixed)</DayCounter>
     <ProxySurface>

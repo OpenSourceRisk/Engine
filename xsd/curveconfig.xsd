@@ -172,6 +172,7 @@
     <xs:sequence>
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
+      <xs:element type="xs:string" name="EquityId" minOccurs="0" maxOccurs="1"/>
       <xs:element type="extendedCurrencyCode" name="Currency"/>      
       <xs:element type="dimensionType" name="Dimension" minOccurs="0"/>
       <xs:element type="xs:string" name="Expiries" minOccurs="0"/>
@@ -442,6 +443,7 @@
       <xs:element type="quoteType" name="Quotes" minOccurs="0" maxOccurs="1"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
       <xs:element type="dividendInterpolation" name="DividendInterpolation" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="DividendExtrapolation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
