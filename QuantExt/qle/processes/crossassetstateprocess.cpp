@@ -33,7 +33,7 @@ using namespace QuantLib;
 
 namespace {
 
-inline void setValue(Matrix& m, const Real& value, const QuantExt::CrossAssetModel* model,
+inline void setValue(Matrix& m, const Real& value, const boost::shared_ptr<QuantExt::CrossAssetModel>& model,
                      const QuantExt::CrossAssetModel::AssetType& t1, const Size& i1,
                      const QuantExt::CrossAssetModel::AssetType& t2, const Size& i2, const Size& offset1 = 0,
                      const Size& offset2 = 0) {
@@ -42,7 +42,7 @@ inline void setValue(Matrix& m, const Real& value, const QuantExt::CrossAssetMod
     m[i][j] = m[j][i] = value;
 }
 
-inline void setValue2(Matrix& m, const Real& value, const QuantExt::CrossAssetModel* model,
+inline void setValue2(Matrix& m, const Real& value, const boost::shared_ptr<QuantExt::CrossAssetModel>& model,
                       const QuantExt::CrossAssetModel::AssetType& t1, const Size& i1,
                       const QuantExt::CrossAssetModel::AssetType& t2, const Size& i2, const Size& offset1 = 0,
                       const Size& offset2 = 0) {
@@ -52,7 +52,7 @@ inline void setValue2(Matrix& m, const Real& value, const QuantExt::CrossAssetMo
 }
 } // anonymous namespace
 
-CrossAssetStateProcess::CrossAssetStateProcess(const CrossAssetModel* const model)
+CrossAssetStateProcess::CrossAssetStateProcess(const boost::shared_ptr<CrossAssetModel>& model)
     : StochasticProcess(), model_(model), cirppCount_(0) {
 
     if (model_->discretization() == CrossAssetModel::Discretization::Euler) {
@@ -267,9 +267,9 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
             }
         }
 
-        if(timeStepsToCache_m_ > 0) {
+        if (timeStepsToCache_m_ > 0) {
             cache_m_.push_back(res);
-            if(cache_m_.size() == timeStepsToCache_m_)
+            if (cache_m_.size() == timeStepsToCache_m_)
                 cacheNotReady_m_ = false;
         }
     } else {
@@ -338,28 +338,31 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
 }
 
 Matrix CrossAssetStateProcess::diffusion(Time t, const Array& x) const {
+    std::cout << "getting diffusion at time " << t << " sqrt corr = " << sqrtCorrelation_ << std::endl;
     return diffusionOnCorrelatedBrownians(t, x) * sqrtCorrelation_;
 }
 
 Matrix CrossAssetStateProcess::diffusionOnCorrelatedBrownians(Time t, const Array& x) const {
     if (cacheNotReady_d_) {
         Matrix tmp = diffusionOnCorrelatedBrowniansImpl(t, x);
-        if(timeStepsToCache_d_ > 0) {
+        if (timeStepsToCache_d_ > 0) {
             cache_d_.push_back(tmp);
-            if(cache_d_.size() == timeStepsToCache_d_)
+            if (cache_d_.size() == timeStepsToCache_d_)
                 cacheNotReady_d_ = false;
         }
         return tmp;
     } else {
         Matrix tmp = cache_d_[timeStepCache_d_++];
-        if(timeStepCache_d_ == timeStepsToCache_d_)
+        if (timeStepCache_d_ == timeStepsToCache_d_)
             timeStepCache_d_ = 0;
         return tmp;
     }
 }
 
 Matrix CrossAssetStateProcess::diffusionOnCorrelatedBrowniansImpl(Time t, const Array&) const {
+    std::cout << "diffusionOnCorrelatedBrownianImpl " << t << std::endl;
     Matrix res(model_->dimension(), model_->brownians(), 0.0);
+    std::cout << "diffusionOnCorrelatedBrownianImpl " << t << " check" << std::endl;
     Size n = model_->components(CrossAssetModel::AssetType::IR);
     Size m = model_->components(CrossAssetModel::AssetType::FX);
     Size d = model_->components(CrossAssetModel::AssetType::INF);
@@ -442,7 +445,7 @@ Array getProjectedArray(const Array& source, Size start, Size length) {
     return Array(std::next(source.begin(), start), std::next(source.begin(), start + length));
 }
 
-void applyFxDriftAdjustment(Array& state, const CrossAssetModel* model, Size i, Time t0, Time dt) {
+void applyFxDriftAdjustment(Array& state, const boost::shared_ptr<CrossAssetModel>& model, Size i, Time t0, Time dt) {
 
     // the specifics depend on the ir and fx model types and their discretizations
 
@@ -573,7 +576,7 @@ Array CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Ar
     return res;
 }
 
-CrossAssetStateProcess::ExactDiscretization::ExactDiscretization(const CrossAssetModel* const model,
+CrossAssetStateProcess::ExactDiscretization::ExactDiscretization(const boost::shared_ptr<CrossAssetModel>& model,
                                                                  SalvagingAlgorithm::Type salvaging)
     : model_(model), salvaging_(salvaging) {
 
@@ -608,9 +611,9 @@ Matrix CrossAssetStateProcess::ExactDiscretization::diffusion(const StochasticPr
     if (cacheNotReady_d_) {
         Matrix res = pseudoSqrt(covariance(p, t0, x0, dt), salvaging_);
         // note that covariance actually does not depend on x0
-        if(timeStepsToCache_d_ > 0) {
+        if (timeStepsToCache_d_ > 0) {
             cache_d_.push_back(res);
-            if(cache_d_.size() == timeStepsToCache_d_)
+            if (cache_d_.size() == timeStepsToCache_d_)
                 cacheNotReady_d_ = false;
         }
         return res;
@@ -626,9 +629,9 @@ Matrix CrossAssetStateProcess::ExactDiscretization::covariance(const StochasticP
                                                                Time dt) const {
     if (cacheNotReady_v_) {
         Matrix res = covarianceImpl(p, t0, x0, dt);
-        if(timeStepsToCache_v_ > 0) {
+        if (timeStepsToCache_v_ > 0) {
             cache_v_.push_back(res);
-            if(cache_v_.size() == timeStepsToCache_v_)
+            if (cache_v_.size() == timeStepsToCache_v_)
                 cacheNotReady_v_ = false;
         }
         return res;
@@ -647,13 +650,13 @@ Array CrossAssetStateProcess::ExactDiscretization::driftImpl1(const StochasticPr
     Size e = model_->components(CrossAssetModel::AssetType::EQ);
     Array res(model_->dimension(), 0.0);
     for (Size i = 0; i < n; ++i) {
-        res[model_->pIdx(CrossAssetModel::AssetType::IR, i, 0)] = ir_expectation_1(model_, i, t0, dt);
+        res[model_->pIdx(CrossAssetModel::AssetType::IR, i, 0)] = ir_expectation_1(*model_, i, t0, dt);
     }
     for (Size j = 0; j < m; ++j) {
-        res[model_->pIdx(CrossAssetModel::AssetType::FX, j, 0)] = fx_expectation_1(model_, j, t0, dt);
+        res[model_->pIdx(CrossAssetModel::AssetType::FX, j, 0)] = fx_expectation_1(*model_, j, t0, dt);
     }
     for (Size k = 0; k < e; ++k) {
-        res[model_->pIdx(CrossAssetModel::AssetType::EQ, k, 0)] = eq_expectation_1(model_, k, t0, dt);
+        res[model_->pIdx(CrossAssetModel::AssetType::EQ, k, 0)] = eq_expectation_1(*model_, k, t0, dt);
     }
 
     // If inflation is JY, need to take account of the drift.
@@ -661,7 +664,7 @@ Array CrossAssetStateProcess::ExactDiscretization::driftImpl1(const StochasticPr
         if (model_->modelType(CrossAssetModel::AssetType::INF, i) == CrossAssetModel::ModelType::JY) {
             std::tie(res[model_->pIdx(CrossAssetModel::AssetType::INF, i, 0)],
                      res[model_->pIdx(CrossAssetModel::AssetType::INF, i, 1)]) =
-                inf_jy_expectation_1(model_, i, t0, dt);
+                inf_jy_expectation_1(*model_, i, t0, dt);
         }
     }
 
@@ -686,18 +689,18 @@ Array CrossAssetStateProcess::ExactDiscretization::driftImpl2(const StochasticPr
 
     for (Size i = 0; i < n; ++i) {
         res[model_->pIdx(CrossAssetModel::AssetType::IR, i, 0)] +=
-            ir_expectation_2(model_, i, x0[model_->pIdx(CrossAssetModel::AssetType::IR, i, 0)]);
+            ir_expectation_2(*model_, i, x0[model_->pIdx(CrossAssetModel::AssetType::IR, i, 0)]);
     }
     for (Size j = 0; j < m; ++j) {
         res[model_->pIdx(CrossAssetModel::AssetType::FX, j, 0)] +=
-            fx_expectation_2(model_, j, t0, x0[model_->pIdx(CrossAssetModel::AssetType::FX, j, 0)],
+            fx_expectation_2(*model_, j, t0, x0[model_->pIdx(CrossAssetModel::AssetType::FX, j, 0)],
                              x0[model_->pIdx(CrossAssetModel::AssetType::IR, j + 1, 0)],
                              x0[model_->pIdx(CrossAssetModel::AssetType::IR, 0, 0)], dt);
     }
     for (Size k = 0; k < e; ++k) {
         Size eqCcyIdx = model_->ccyIndex(model_->eqbs(k)->currency());
         res[model_->pIdx(CrossAssetModel::AssetType::EQ, k, 0)] +=
-            eq_expectation_2(model_, k, t0, x0[model_->pIdx(CrossAssetModel::AssetType::EQ, k, 0)],
+            eq_expectation_2(*model_, k, t0, x0[model_->pIdx(CrossAssetModel::AssetType::EQ, k, 0)],
                              x0[model_->pIdx(CrossAssetModel::AssetType::IR, eqCcyIdx, 0)], dt);
     }
 
@@ -710,7 +713,7 @@ Array CrossAssetStateProcess::ExactDiscretization::driftImpl2(const StochasticPr
                                           x0[model_->pIdx(CrossAssetModel::AssetType::INF, i, 1)]);
             std::tie(res[model_->pIdx(CrossAssetModel::AssetType::INF, i, 0)],
                      res[model_->pIdx(CrossAssetModel::AssetType::INF, i, 1)]) =
-                inf_jy_expectation_2(model_, i, t0, state_0, zi_i_0, dt);
+                inf_jy_expectation_2(*model_, i, t0, state_0, zi_i_0, dt);
         } else {
             res[model_->pIdx(CrossAssetModel::AssetType::INF, i, 0)] =
                 x0[model_->pIdx(CrossAssetModel::AssetType::INF, i, 0)];
@@ -766,37 +769,37 @@ Matrix CrossAssetStateProcess::ExactDiscretization::covarianceImpl(const Stochas
 
     if (model_->measure() == IrModel::Measure::BA) {
         // aux-aux
-        setValue(res, aux_aux_covariance(model_, t0, dt), model_, CrossAssetModel::AssetType::IR, 0,
+        setValue(res, aux_aux_covariance(*model_, t0, dt), model_, CrossAssetModel::AssetType::IR, 0,
                  CrossAssetModel::AssetType::IR, 0, 1, 1);
         // aux-ir
         for (Size j = 0; j < n; ++j) {
-            setValue(res, aux_ir_covariance(model_, j, t0, dt), model_, CrossAssetModel::AssetType::IR, 0,
+            setValue(res, aux_ir_covariance(*model_, j, t0, dt), model_, CrossAssetModel::AssetType::IR, 0,
                      CrossAssetModel::AssetType::IR, j, 1, 0);
         }
         // aux-fx
         for (Size j = 0; j < m; ++j) {
-            setValue(res, aux_fx_covariance(model_, j, t0, dt), model_, CrossAssetModel::AssetType::IR, 0,
+            setValue(res, aux_fx_covariance(*model_, j, t0, dt), model_, CrossAssetModel::AssetType::IR, 0,
                      CrossAssetModel::AssetType::FX, j, 1, 0);
         }
     }
     // ir-ir
     for (Size i = 0; i < n; ++i) {
         for (Size j = 0; j <= i; ++j) {
-            setValue(res, ir_ir_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::IR, i,
+            setValue(res, ir_ir_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::IR, i,
                      CrossAssetModel::AssetType::IR, j, 0, 0);
         }
     }
     // ir-fx
     for (Size i = 0; i < n; ++i) {
         for (Size j = 0; j < m; ++j) {
-            setValue(res, ir_fx_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::IR, i,
+            setValue(res, ir_fx_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::IR, i,
                      CrossAssetModel::AssetType::FX, j, 0, 0);
         }
     }
     // fx-fx
     for (Size i = 0; i < m; ++i) {
         for (Size j = 0; j <= i; ++j) {
-            setValue(res, fx_fx_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::FX, i,
+            setValue(res, fx_fx_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::FX, i,
                      CrossAssetModel::AssetType::FX, j);
         }
     }
@@ -804,29 +807,29 @@ Matrix CrossAssetStateProcess::ExactDiscretization::covarianceImpl(const Stochas
     for (Size j = 0; j < d; ++j) {
         for (Size i = 0; i <= j; ++i) {
             // infz-infz
-            setValue(res, infz_infz_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::INF, i,
+            setValue(res, infz_infz_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::INF, i,
                      CrossAssetModel::AssetType::INF, j, 0, 0);
             // infz-infy
-            setValue(res, infz_infy_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::INF, i,
+            setValue(res, infz_infy_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::INF, i,
                      CrossAssetModel::AssetType::INF, j, 0, 1);
-            setValue(res, infz_infy_covariance(model_, j, i, t0, dt), model_, CrossAssetModel::AssetType::INF, i,
+            setValue(res, infz_infy_covariance(*model_, j, i, t0, dt), model_, CrossAssetModel::AssetType::INF, i,
                      CrossAssetModel::AssetType::INF, j, 1, 0);
             // infy-infy
-            setValue(res, infy_infy_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::INF, i,
+            setValue(res, infy_infy_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::INF, i,
                      CrossAssetModel::AssetType::INF, j, 1, 1);
         }
         for (Size i = 0; i < n; ++i) {
             // ir-inf
-            setValue(res, ir_infz_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::IR, i,
+            setValue(res, ir_infz_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::IR, i,
                      CrossAssetModel::AssetType::INF, j, 0, 0);
-            setValue(res, ir_infy_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::IR, i,
+            setValue(res, ir_infy_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::IR, i,
                      CrossAssetModel::AssetType::INF, j, 0, 1);
         }
         for (Size i = 0; i < (n - 1); ++i) {
             // fx-inf
-            setValue(res, fx_infz_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::FX, i,
+            setValue(res, fx_infz_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::FX, i,
                      CrossAssetModel::AssetType::INF, j, 0, 0);
-            setValue(res, fx_infy_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::FX, i,
+            setValue(res, fx_infy_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::FX, i,
                      CrossAssetModel::AssetType::INF, j, 0, 1);
         }
     }
@@ -840,40 +843,40 @@ Matrix CrossAssetStateProcess::ExactDiscretization::covarianceImpl(const Stochas
             if (model_->modelType(CrossAssetModel::AssetType::CR, i) != CrossAssetModel::ModelType::LGM1F)
                 continue;
             // crz-crz
-            setValue(res, crz_crz_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::CR, i,
+            setValue(res, crz_crz_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::CR, i,
                      CrossAssetModel::AssetType::CR, j, 0, 0);
             // crz-cry
-            setValue(res, crz_cry_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::CR, i,
+            setValue(res, crz_cry_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::CR, i,
                      CrossAssetModel::AssetType::CR, j, 0, 1);
-            setValue(res, crz_cry_covariance(model_, j, i, t0, dt), model_, CrossAssetModel::AssetType::CR, i,
+            setValue(res, crz_cry_covariance(*model_, j, i, t0, dt), model_, CrossAssetModel::AssetType::CR, i,
                      CrossAssetModel::AssetType::CR, j, 1, 0);
             // cry-cry
-            setValue(res, cry_cry_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::CR, i,
+            setValue(res, cry_cry_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::CR, i,
                      CrossAssetModel::AssetType::CR, j, 1, 1);
         }
         for (Size i = 0; i < n; ++i) {
             // ir-cr
-            setValue(res, ir_crz_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::IR, i,
+            setValue(res, ir_crz_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::IR, i,
                      CrossAssetModel::AssetType::CR, j, 0, 0);
-            setValue(res, ir_cry_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::IR, i,
+            setValue(res, ir_cry_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::IR, i,
                      CrossAssetModel::AssetType::CR, j, 0, 1);
         }
         for (Size i = 0; i < (n - 1); ++i) {
             // fx-cr
-            setValue(res, fx_crz_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::FX, i,
+            setValue(res, fx_crz_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::FX, i,
                      CrossAssetModel::AssetType::CR, j, 0, 0);
-            setValue(res, fx_cry_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::FX, i,
+            setValue(res, fx_cry_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::FX, i,
                      CrossAssetModel::AssetType::CR, j, 0, 1);
         }
         for (Size i = 0; i < d; ++i) {
             // inf-cr
-            setValue(res, infz_crz_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::INF, i,
+            setValue(res, infz_crz_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::INF, i,
                      CrossAssetModel::AssetType::CR, j, 0, 0);
-            setValue(res, infy_crz_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::INF, i,
+            setValue(res, infy_crz_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::INF, i,
                      CrossAssetModel::AssetType::CR, j, 1, 0);
-            setValue(res, infz_cry_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::INF, i,
+            setValue(res, infz_cry_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::INF, i,
                      CrossAssetModel::AssetType::CR, j, 0, 1);
-            setValue(res, infy_cry_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::INF, i,
+            setValue(res, infy_cry_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::INF, i,
                      CrossAssetModel::AssetType::CR, j, 1, 1);
         }
     }
@@ -882,24 +885,24 @@ Matrix CrossAssetStateProcess::ExactDiscretization::covarianceImpl(const Stochas
     for (Size j = 0; j < e; ++j) {
         for (Size i = 0; i <= j; ++i) {
             // eq-eq
-            setValue(res, eq_eq_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::EQ, i,
+            setValue(res, eq_eq_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::EQ, i,
                      CrossAssetModel::AssetType::EQ, j, 0, 0);
         }
         for (Size i = 0; i < n; ++i) {
             // ir-eq
-            setValue(res, ir_eq_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::IR, i,
+            setValue(res, ir_eq_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::IR, i,
                      CrossAssetModel::AssetType::EQ, j, 0, 0);
         }
         for (Size i = 0; i < (n - 1); ++i) {
             // fx-eq
-            setValue(res, fx_eq_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::FX, i,
+            setValue(res, fx_eq_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::FX, i,
                      CrossAssetModel::AssetType::EQ, j, 0, 0);
         }
         for (Size i = 0; i < d; ++i) {
             // inf-eq
-            setValue(res, infz_eq_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::INF, i,
+            setValue(res, infz_eq_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::INF, i,
                      CrossAssetModel::AssetType::EQ, j, 0, 0);
-            setValue(res, infy_eq_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::INF, i,
+            setValue(res, infy_eq_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::INF, i,
                      CrossAssetModel::AssetType::EQ, j, 1, 0);
         }
         for (Size i = 0; i < c; ++i) {
@@ -907,9 +910,9 @@ Matrix CrossAssetStateProcess::ExactDiscretization::covarianceImpl(const Stochas
             if (model_->modelType(CrossAssetModel::AssetType::CR, i) != CrossAssetModel::ModelType::LGM1F)
                 continue;
             // cr-eq
-            setValue(res, crz_eq_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::CR, i,
+            setValue(res, crz_eq_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::CR, i,
                      CrossAssetModel::AssetType::EQ, j, 0, 0);
-            setValue(res, cry_eq_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::CR, i,
+            setValue(res, cry_eq_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::CR, i,
                      CrossAssetModel::AssetType::EQ, j, 1, 0);
         }
     }
@@ -918,24 +921,24 @@ Matrix CrossAssetStateProcess::ExactDiscretization::covarianceImpl(const Stochas
     for (Size j = 0; j < com; ++j) {
         for (Size i = 0; i <= j; ++i) {
             // com-com
-            setValue(res, com_com_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::COM, i,
+            setValue(res, com_com_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::COM, i,
                      CrossAssetModel::AssetType::COM, j, 0, 0);
         }
         for (Size i = 0; i < n; ++i) {
             // ir-com
-            setValue(res, ir_com_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::IR, i,
+            setValue(res, ir_com_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::IR, i,
                      CrossAssetModel::AssetType::COM, j, 0, 0);
         }
         for (Size i = 0; i < (n - 1); ++i) {
             // fx-com
-            setValue(res, fx_com_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::FX, i,
+            setValue(res, fx_com_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::FX, i,
                      CrossAssetModel::AssetType::COM, j, 0, 0);
         }
         for (Size i = 0; i < d; ++i) {
             // inf-com
-            setValue(res, infz_com_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::INF, i,
+            setValue(res, infz_com_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::INF, i,
                      CrossAssetModel::AssetType::COM, j, 0, 0);
-            setValue(res, infy_com_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::INF, i,
+            setValue(res, infy_com_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::INF, i,
                      CrossAssetModel::AssetType::COM, j, 1, 0);
         }
         for (Size i = 0; i < c; ++i) {
@@ -943,14 +946,14 @@ Matrix CrossAssetStateProcess::ExactDiscretization::covarianceImpl(const Stochas
             if (model_->modelType(CrossAssetModel::AssetType::CR, i) != CrossAssetModel::ModelType::LGM1F)
                 continue;
             // cr-com
-            setValue(res, crz_com_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::CR, i,
+            setValue(res, crz_com_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::CR, i,
                      CrossAssetModel::AssetType::COM, j, 0, 0);
-            setValue(res, cry_com_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::CR, i,
+            setValue(res, cry_com_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::CR, i,
                      CrossAssetModel::AssetType::COM, j, 1, 0);
         }
         for (Size i = 0; i < e; ++i) {
             // eq-com
-            setValue(res, eq_com_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::EQ, i,
+            setValue(res, eq_com_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::EQ, i,
                      CrossAssetModel::AssetType::COM, j, 0, 0);
         }
     }
@@ -958,20 +961,20 @@ Matrix CrossAssetStateProcess::ExactDiscretization::covarianceImpl(const Stochas
     // ir, fx, creditstate - creditstate
     for (Size i = 0; i < n; ++i) {
         for (Size j = 0; j < u; ++j) {
-            setValue(res, ir_crstate_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::IR, i,
+            setValue(res, ir_crstate_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::IR, i,
                      CrossAssetModel::AssetType::CrState, j, 0, 0);
         }
     }
     for (Size i = 0; i < m; ++i) {
         for (Size j = 0; j < u; ++j) {
-            setValue(res, fx_crstate_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::FX, i,
+            setValue(res, fx_crstate_covariance(*model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::FX, i,
                      CrossAssetModel::AssetType::CrState, j, 0, 0);
         }
     }
     for (Size i = 0; i < u; ++i) {
         for (Size j = 0; j <= i; ++j) {
-            setValue(res, crstate_crstate_covariance(model_, i, j, t0, dt), model_, CrossAssetModel::AssetType::CrState,
-                     i, CrossAssetModel::AssetType::CrState, j, 0, 0);
+            setValue(res, crstate_crstate_covariance(*model_, i, j, t0, dt), model_,
+                     CrossAssetModel::AssetType::CrState, i, CrossAssetModel::AssetType::CrState, j, 0, 0);
         }
     }
 

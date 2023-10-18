@@ -274,7 +274,8 @@ std::size_t GaussianCamCG::fwdCompAvg(const bool isAvg, const std::string& index
 }
 
 std::size_t GaussianCamCG::getDiscount(const Size idx, const Date& s, const Date& t) const {
-    QL_FAIL("GaussianCamCG::getDiscount(): not implemented");
+    LgmCG lgmcg(currencies_[idx], *g_, cam_->irlgm1f(currencyPositionInCam_[idx]), modelParameters_);
+    return lgmcg.discountBond(s, t, irStates_.at(s)[idx]);
 }
 
 std::size_t GaussianCamCG::getNumeraire(const Date& s) const {

@@ -235,13 +235,13 @@ Size CrossAssetModel::aIdx(const AssetType t, const Size i, const Size offset) c
     return aIdx_[(Size)t][i];
 }
 
-const Real& CrossAssetModel::correlation(const AssetType s, const Size i, const AssetType t, const Size j,
-                                         const Size iOffset, const Size jOffset) const {
+Real CrossAssetModel::correlation(const AssetType s, const Size i, const AssetType t, const Size j, const Size iOffset,
+                                  const Size jOffset) const {
     return rho_(cIdx(s, i, iOffset), cIdx(t, j, jOffset));
 }
 
-void CrossAssetModel::correlation(const AssetType s, const Size i, const AssetType t, const Size j, const Real value,
-                                  const Size iOffset, const Size jOffset) {
+void CrossAssetModel::setCorrelation(const AssetType s, const Size i, const AssetType t, const Size j, const Real value,
+                                     const Size iOffset, const Size jOffset) {
     Size row = cIdx(s, i, iOffset);
     Size column = cIdx(t, j, jOffset);
     QL_REQUIRE(row != column || close_enough(value, 1.0), "correlation must be 1 at (" << row << "," << column << ")");
@@ -268,7 +268,9 @@ void CrossAssetModel::initDefaultIntegrator() {
     setIntegrationPolicy(boost::make_shared<SimpsonIntegral>(1.0E-8, 100), true);
 }
 
-void CrossAssetModel::initStateProcess() { stateProcess_ = boost::make_shared<CrossAssetStateProcess>(this); }
+void CrossAssetModel::initStateProcess() {
+    stateProcess_ = boost::make_shared<CrossAssetStateProcess>(shared_from_this());
+}
 
 void CrossAssetModel::setIntegrationPolicy(const boost::shared_ptr<Integrator> integrator,
                                            const bool usePiecewiseIntegration) const {
@@ -592,7 +594,8 @@ void CrossAssetModel::initializeParametrizations() {
 
     j = 0;
     while (i < p_.size() && getComponentType(i).first == CrossAssetModel::AssetType::COM) {
-        boost::shared_ptr<CommoditySchwartzParametrization> csp = boost::dynamic_pointer_cast<CommoditySchwartzParametrization>(p_[i]);
+        boost::shared_ptr<CommoditySchwartzParametrization> csp =
+            boost::dynamic_pointer_cast<CommoditySchwartzParametrization>(p_[i]);
         boost::shared_ptr<CommoditySchwartzModel> csm =
             csp ? boost::make_shared<CommoditySchwartzModel>(csp, getComSchwartzDiscretization(discretization_))
                 : nullptr;
@@ -884,8 +887,8 @@ std::pair<Real, Real> CrossAssetModel::infdkI(const Size i, const Time t, const 
     std::pair<Real, Real> Vs = infdkV(i, t, T);
     V0 = Vs.first;
     V_tilde = Vs.second;
-    Real Hyt = Hy(i).eval(this, t);
-    Real HyT = Hy(i).eval(this, T);
+    Real Hyt = Hy(i).eval(*this, t);
+    Real HyT = Hy(i).eval(*this, T);
 
     // TODO account for seasonality ...
     // compute final results depending on z and y
@@ -930,20 +933,20 @@ std::pair<Real, Real> CrossAssetModel::crlgm1fS(const Size i, const Size ccy, co
     cache_key k = {i, ccy, t, T};
     boost::unordered_map<cache_key, std::pair<Real, Real>>::const_iterator it = cache_crlgm1fS_.find(k);
     Real V0, V_tilde;
-    Real Hlt = Hl(i).eval(this, t);
-    Real HlT = Hl(i).eval(this, T);
+    Real Hlt = Hl(i).eval(*this, t);
+    Real HlT = Hl(i).eval(*this, T);
 
     if (it == cache_crlgm1fS_.end()) {
         // compute V0 and V_tilde
         if (ccy == 0) {
             // domestic credit
-            Real Hzt = Hz(0).eval(this, t);
-            Real HzT = Hz(0).eval(this, T);
-            Real zetal0 = zetal(i).eval(this, t);
-            Real zetal1 = integral(this, P(Hl(i), al(i), al(i)), 0.0, t);
-            Real zetal2 = integral(this, P(Hl(i), Hl(i), al(i), al(i)), 0.0, t);
-            Real zetanl0 = integral(this, P(rzl(0, i), az(0), al(i)), 0.0, t);
-            Real zetanl1 = integral(this, P(rzl(0, i), Hl(i), az(0), al(i)), 0.0, t);
+            Real Hzt = Hz(0).eval(*this, t);
+            Real HzT = Hz(0).eval(*this, T);
+            Real zetal0 = zetal(i).eval(*this, t);
+            Real zetal1 = integral(*this, P(Hl(i), al(i), al(i)), 0.0, t);
+            Real zetal2 = integral(*this, P(Hl(i), Hl(i), al(i), al(i)), 0.0, t);
+            Real zetanl0 = integral(*this, P(rzl(0, i), az(0), al(i)), 0.0, t);
+            Real zetanl1 = integral(*this, P(rzl(0, i), Hl(i), az(0), al(i)), 0.0, t);
             // opposite signs for last two terms in the book
             V0 = 0.5 * Hlt * Hlt * zetal0 - Hlt * zetal1 + 0.5 * zetal2 + Hzt * Hlt * zetanl0 - Hzt * zetanl1;
             V_tilde = -0.5 * (HlT * HlT - Hlt * Hlt) * zetal0 + (HlT - Hlt) * zetal1 -
@@ -978,51 +981,52 @@ std::pair<Real, Real> CrossAssetModel::crcirppS(const Size i, const Time t, cons
 }
 
 Real CrossAssetModel::infV(const Size i, const Size ccy, const Time t, const Time T) const {
-    Real HyT = Hy(i).eval(this, T);
+    Real HyT = Hy(i).eval(*this, T);
     Real HdT = irlgm1f(0)->H(T);
     Real rhody = correlation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::INF, i, 0, 0);
     Real V;
     if (ccy == 0) {
-        V = 0.5 * (HyT * HyT * (zetay(i).eval(this, T) - zetay(i).eval(this, t)) -
-                   2.0 * HyT * integral(this, P(Hy(i), ay(i), ay(i)), t, T) +
-                   integral(this, P(Hy(i), Hy(i), ay(i), ay(i)), t, T)) -
-            rhody * HdT * (HyT * integral(this, P(az(0), ay(i)), t, T) - integral(this, P(az(0), Hy(i), ay(i)), t, T));
+        V = 0.5 * (HyT * HyT * (zetay(i).eval(*this, T) - zetay(i).eval(*this, t)) -
+                   2.0 * HyT * integral(*this, P(Hy(i), ay(i), ay(i)), t, T) +
+                   integral(*this, P(Hy(i), Hy(i), ay(i), ay(i)), t, T)) -
+            rhody * HdT *
+                (HyT * integral(*this, P(az(0), ay(i)), t, T) - integral(*this, P(az(0), Hy(i), ay(i)), t, T));
     } else {
         Real HfT = irlgm1f(ccy)->H(T);
         Real rhofy = correlation(CrossAssetModel::AssetType::IR, ccy, CrossAssetModel::AssetType::INF, i, 0, 0);
         Real rhoxy = correlation(CrossAssetModel::AssetType::FX, ccy - 1, CrossAssetModel::AssetType::INF, i, 0, 0);
-        V = 0.5 * (HyT * HyT * (zetay(i).eval(this, T) - zetay(i).eval(this, t)) -
-                   2.0 * HyT * integral(this, P(Hy(i), ay(i), ay(i)), t, T) +
-                   integral(this, P(Hy(i), Hy(i), ay(i), ay(i)), t, T)) -
-            rhody * (HyT * integral(this, P(Hz(0), az(0), ay(i)), t, T) -
-                     integral(this, P(Hz(0), az(0), Hy(i), ay(i)), t, T)) -
-            rhofy * (HfT * HyT * integral(this, P(az(ccy), ay(i)), t, T) -
-                     HfT * integral(this, P(az(ccy), Hy(i), ay(i)), t, T) -
-                     HyT * integral(this, P(Hz(ccy), az(ccy), ay(i)), t, T) +
-                     integral(this, P(Hz(ccy), az(ccy), Hy(i), ay(i)), t, T)) +
-            rhoxy * (HyT * integral(this, P(sx(ccy - 1), ay(i)), t, T) -
-                     integral(this, P(sx(ccy - 1), Hy(i), ay(i)), t, T));
+        V = 0.5 * (HyT * HyT * (zetay(i).eval(*this, T) - zetay(i).eval(*this, t)) -
+                   2.0 * HyT * integral(*this, P(Hy(i), ay(i), ay(i)), t, T) +
+                   integral(*this, P(Hy(i), Hy(i), ay(i), ay(i)), t, T)) -
+            rhody * (HyT * integral(*this, P(Hz(0), az(0), ay(i)), t, T) -
+                     integral(*this, P(Hz(0), az(0), Hy(i), ay(i)), t, T)) -
+            rhofy * (HfT * HyT * integral(*this, P(az(ccy), ay(i)), t, T) -
+                     HfT * integral(*this, P(az(ccy), Hy(i), ay(i)), t, T) -
+                     HyT * integral(*this, P(Hz(ccy), az(ccy), ay(i)), t, T) +
+                     integral(*this, P(Hz(ccy), az(ccy), Hy(i), ay(i)), t, T)) +
+            rhoxy * (HyT * integral(*this, P(sx(ccy - 1), ay(i)), t, T) -
+                     integral(*this, P(sx(ccy - 1), Hy(i), ay(i)), t, T));
     }
     return V;
 }
 
 Real CrossAssetModel::crV(const Size i, const Size ccy, const Time t, const Time T) const {
-    Real HlT = Hl(i).eval(this, T);
-    Real HfT = Hz(ccy).eval(this, T);
+    Real HlT = Hl(i).eval(*this, T);
+    Real HfT = Hz(ccy).eval(*this, T);
     Real rhodl = correlation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::CR, i, 0, 0);
     Real rhofl = correlation(CrossAssetModel::AssetType::IR, ccy, CrossAssetModel::AssetType::CR, i, 0, 0);
     Real rhoxl = correlation(CrossAssetModel::AssetType::FX, ccy - 1, CrossAssetModel::AssetType::CR, i, 0, 0);
-    return 0.5 * (HlT * HlT * (zetal(i).eval(this, T) - zetal(i).eval(this, t)) -
-                  2.0 * HlT * integral(this, P(Hl(i), al(i), al(i)), t, T) +
-                  integral(this, P(Hl(i), Hl(i), al(i), al(i)), t, T)) +
-           rhodl * (HlT * integral(this, P(Hz(0), az(0), al(i)), t, T) -
-                    integral(this, P(Hz(0), az(0), Hl(i), al(i)), t, T)) +
-           rhofl * (HfT * HlT * integral(this, P(az(ccy), al(i)), t, T) -
-                    HfT * integral(this, P(az(ccy), Hl(i), al(i)), t, T) -
-                    HlT * integral(this, P(Hz(ccy), az(ccy), al(i)), t, T) +
-                    integral(this, P(Hz(ccy), az(ccy), Hl(i), al(i)), t, T)) -
-           rhoxl *
-               (HlT * integral(this, P(sx(ccy - 1), al(i)), t, T) - integral(this, P(sx(ccy - 1), Hl(i), al(i)), t, T));
+    return 0.5 * (HlT * HlT * (zetal(i).eval(*this, T) - zetal(i).eval(*this, t)) -
+                  2.0 * HlT * integral(*this, P(Hl(i), al(i), al(i)), t, T) +
+                  integral(*this, P(Hl(i), Hl(i), al(i), al(i)), t, T)) +
+           rhodl * (HlT * integral(*this, P(Hz(0), az(0), al(i)), t, T) -
+                    integral(*this, P(Hz(0), az(0), Hl(i), al(i)), t, T)) +
+           rhofl * (HfT * HlT * integral(*this, P(az(ccy), al(i)), t, T) -
+                    HfT * integral(*this, P(az(ccy), Hl(i), al(i)), t, T) -
+                    HlT * integral(*this, P(Hz(ccy), az(ccy), al(i)), t, T) +
+                    integral(*this, P(Hz(ccy), az(ccy), Hl(i), al(i)), t, T)) -
+           rhoxl * (HlT * integral(*this, P(sx(ccy - 1), al(i)), t, T) -
+                    integral(*this, P(sx(ccy - 1), Hl(i), al(i)), t, T));
 }
 
 Handle<ZeroInflationTermStructure> inflationTermStructure(const boost::shared_ptr<CrossAssetModel>& model, Size index) {

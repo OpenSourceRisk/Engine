@@ -47,13 +47,15 @@
 #include <ql/math/matrix.hpp>
 #include <ql/models/model.hpp>
 
+#include <boost/enable_shared_from_this.hpp>
+
 namespace QuantExt {
 using namespace QuantLib;
 
 //! Cross Asset Model
 /*! \ingroup crossassetmodel
  */
-class CrossAssetModel : public LinkableCalibratedModel {
+class CrossAssetModel : public LinkableCalibratedModel, public boost::enable_shared_from_this<CrossAssetModel> {
 public:
     enum class AssetType : Size { IR = 0, FX = 1, INF = 2, CR = 3, EQ = 4, COM = 5, CrState = 6 };
     enum class ModelType { LGM1F, HW, BS, DK, CIRPP, JY, GAB, GENERIC };
@@ -252,10 +254,10 @@ public:
     Size pIdx(const AssetType t, const Size i, const Size offset = 0) const;
 
     /*! correlation between two components */
-    const Real& correlation(const AssetType s, const Size i, const AssetType t, const Size j, const Size iOffset = 0,
-                            const Size jOffset = 0) const;
+    Real correlation(const AssetType s, const Size i, const AssetType t, const Size j, const Size iOffset = 0,
+                     const Size jOffset = 0) const;
     /*! set correlation */
-    void correlation(const AssetType s, const Size i, const AssetType t, const Size j, const Real value,
+    void setCorrelation(const AssetType s, const Size i, const AssetType t, const Size j, const Real value,
                      const Size iOffset = 0, const Size jOffset = 0);
 
     /*! get discretization */
