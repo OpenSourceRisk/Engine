@@ -444,7 +444,6 @@ protected:
     virtual void finalizeArguments();
     virtual void checkModelConsistency() const;
     virtual void initDefaultIntegrator();
-    virtual void initStateProcess();
 
     /* helper function for infdkI, crlgm1fS */
     Real infV(const Size idx, const Size ccy, const Time t, const Time T) const;
@@ -492,7 +491,7 @@ protected:
     IrModel::Measure measure_;
     Discretization discretization_;
     mutable boost::shared_ptr<Integrator> integrator_;
-    boost::shared_ptr<CrossAssetStateProcess> stateProcess_;
+    mutable boost::shared_ptr<CrossAssetStateProcess> stateProcess_;
 
     /* calibration constraints */
 
@@ -509,8 +508,6 @@ QuantLib::Handle<QuantLib::ZeroInflationTermStructure>
 inflationTermStructure(const boost::shared_ptr<CrossAssetModel>& model, QuantLib::Size index);
 
 // inline
-
-inline const boost::shared_ptr<StochasticProcess> CrossAssetModel::stateProcess() const { return stateProcess_; }
 
 inline Size CrossAssetModel::dimension() const { return totalDimension_; }
 

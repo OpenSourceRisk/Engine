@@ -33,7 +33,7 @@ using namespace QuantLib;
 
 namespace {
 
-inline void setValue(Matrix& m, const Real& value, const boost::shared_ptr<QuantExt::CrossAssetModel>& model,
+inline void setValue(Matrix& m, const Real& value, const boost::shared_ptr<const QuantExt::CrossAssetModel>& model,
                      const QuantExt::CrossAssetModel::AssetType& t1, const Size& i1,
                      const QuantExt::CrossAssetModel::AssetType& t2, const Size& i2, const Size& offset1 = 0,
                      const Size& offset2 = 0) {
@@ -42,7 +42,7 @@ inline void setValue(Matrix& m, const Real& value, const boost::shared_ptr<Quant
     m[i][j] = m[j][i] = value;
 }
 
-inline void setValue2(Matrix& m, const Real& value, const boost::shared_ptr<QuantExt::CrossAssetModel>& model,
+inline void setValue2(Matrix& m, const Real& value, const boost::shared_ptr<const QuantExt::CrossAssetModel>& model,
                       const QuantExt::CrossAssetModel::AssetType& t1, const Size& i1,
                       const QuantExt::CrossAssetModel::AssetType& t2, const Size& i2, const Size& offset1 = 0,
                       const Size& offset2 = 0) {
@@ -52,8 +52,8 @@ inline void setValue2(Matrix& m, const Real& value, const boost::shared_ptr<Quan
 }
 } // anonymous namespace
 
-CrossAssetStateProcess::CrossAssetStateProcess(const boost::shared_ptr<CrossAssetModel>& model)
-    : StochasticProcess(), model_(model), cirppCount_(0) {
+CrossAssetStateProcess::CrossAssetStateProcess(boost::shared_ptr<const CrossAssetModel> model)
+    : StochasticProcess(), model_(std::move(model)), cirppCount_(0) {
 
     if (model_->discretization() == CrossAssetModel::Discretization::Euler) {
         discretization_ = boost::make_shared<EulerDiscretization>();
@@ -445,7 +445,8 @@ Array getProjectedArray(const Array& source, Size start, Size length) {
     return Array(std::next(source.begin(), start), std::next(source.begin(), start + length));
 }
 
-void applyFxDriftAdjustment(Array& state, const boost::shared_ptr<CrossAssetModel>& model, Size i, Time t0, Time dt) {
+void applyFxDriftAdjustment(Array& state, const boost::shared_ptr<const CrossAssetModel>& model, Size i, Time t0,
+                            Time dt) {
 
     // the specifics depend on the ir and fx model types and their discretizations
 
@@ -576,9 +577,9 @@ Array CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Ar
     return res;
 }
 
-CrossAssetStateProcess::ExactDiscretization::ExactDiscretization(const boost::shared_ptr<CrossAssetModel>& model,
+CrossAssetStateProcess::ExactDiscretization::ExactDiscretization(boost::shared_ptr<const CrossAssetModel> model,
                                                                  SalvagingAlgorithm::Type salvaging)
-    : model_(model), salvaging_(salvaging) {
+    : model_(std::move(model)), salvaging_(salvaging) {
 
     QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
                "CrossAssetStateProces::ExactDiscretization is only supported by LGM1F IR model types.");

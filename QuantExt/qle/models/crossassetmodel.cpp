@@ -107,6 +107,13 @@ CrossAssetModel::CrossAssetModel(const std::vector<boost::shared_ptr<IrModel>>& 
     initialize();
 }
 
+const boost::shared_ptr<StochasticProcess> CrossAssetModel::stateProcess() const {
+    if (stateProcess_ == nullptr) {
+        stateProcess_ = boost::make_shared<CrossAssetStateProcess>(shared_from_this());
+    }
+    return stateProcess_;
+}
+
 Size CrossAssetModel::components(const AssetType t) const { return components_[(Size)t]; }
 
 Size CrossAssetModel::ccyIndex(const Currency& ccy) const {
@@ -261,15 +268,10 @@ void CrossAssetModel::initialize() {
     finalizeArguments();
     checkModelConsistency();
     initDefaultIntegrator();
-    initStateProcess();
 }
 
 void CrossAssetModel::initDefaultIntegrator() {
     setIntegrationPolicy(boost::make_shared<SimpsonIntegral>(1.0E-8, 100), true);
-}
-
-void CrossAssetModel::initStateProcess() {
-    stateProcess_ = boost::make_shared<CrossAssetStateProcess>(shared_from_this());
 }
 
 void CrossAssetModel::setIntegrationPolicy(const boost::shared_ptr<Integrator> integrator,
