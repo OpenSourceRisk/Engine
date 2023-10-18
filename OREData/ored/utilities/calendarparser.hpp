@@ -26,8 +26,8 @@
 #include <ql/patterns/singleton.hpp>
 #include <ql/time/calendar.hpp>
 
-#include <shared_mutex>
-
+#include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/lock_types.hpp>
 
 namespace ore {
 namespace data {
@@ -41,7 +41,7 @@ public:
     void resetAddedAndRemovedHolidays();
 
 private:
-    mutable std::shared_mutex mutex_;
+    mutable boost::shared_mutex mutex_;
     std::map<std::string, QuantLib::Calendar> calendars_;
 };
 

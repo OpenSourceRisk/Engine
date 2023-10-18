@@ -157,7 +157,7 @@ Log::Log() : loggers_(), enabled_(false), mask_(255), ls_() {
 }
 
 void Log::registerLogger(const boost::shared_ptr<Logger>& logger) {
-    std::unique_lock<std::shared_mutex> lock(mutex_);
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     QL_REQUIRE(loggers_.find(logger->name()) == loggers_.end(),
                "Logger with name " << logger->name() << " already registered");
     loggers_[logger->name()] = logger;
@@ -170,13 +170,13 @@ void Log::registerIndependentLogger(const boost::shared_ptr<IndependentLogger>& 
 }
 
 boost::shared_ptr<Logger>& Log::logger(const string& name) {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     QL_REQUIRE(loggers_.find(name) != loggers_.end(), "No logger found with name " << name);
     return loggers_[name];
 }
 
 void Log::removeLogger(const string& name) {
-    std::unique_lock<std::shared_mutex> lock(mutex_);
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     map<string, boost::shared_ptr<Logger>>::iterator it = loggers_.find(name);
     map<string, boost::shared_ptr<IndependentLogger>>::iterator iit = independentLoggers_.find(name);
     if (it != loggers_.end()) {
@@ -190,7 +190,7 @@ void Log::removeLogger(const string& name) {
 }
 
 void Log::removeAllLoggers() {
-    std::unique_lock<std::shared_mutex> lock(mutex_);
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     loggers_.clear();
     logging::core::get()->remove_all_sinks();
     independentLoggers_.clear();
@@ -327,7 +327,7 @@ LoggerStream::~LoggerStream() {
     while (getline(ss_, text)) {
         // we expand the MLOG macro here so we can overwrite __FILE__ and __LINE__
         if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(mask_)) {
-            std::unique_lock<std::shared_mutex> lock(ore::data::Log::instance().mutex());
+            boost::unique_lock<boost::shared_mutex> lock(ore::data::Log::instance().mutex());
             ore::data::Log::instance().header(mask_, filename_, lineNo_);
             ore::data::Log::instance().logStream() << text;
             ore::data::Log::instance().log(mask_);
