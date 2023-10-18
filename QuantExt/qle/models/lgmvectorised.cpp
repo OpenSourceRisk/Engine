@@ -443,12 +443,12 @@ RandomVariable LgmVectorised::averagedOnRate(const boost::shared_ptr<OvernightIn
         std::swap(cap, floor);
     }
 
-    if (nakedOption)
-        rate = RandomVariable(x.size(), 0.0);
-
     RandomVariable forwardRate = (rate - RandomVariable(x.size(), spread)) / RandomVariable(x.size(), gearing);
     RandomVariable floorletRate(x.size(), 0.0);
     RandomVariable capletRate(x.size(), 0.0);
+
+    if (nakedOption)
+        rate = RandomVariable(x.size(), 0.0);
 
     if (floor != Null<Real>()) {
         // ignore localCapFloor, treat as global
@@ -560,12 +560,12 @@ RandomVariable LgmVectorised::averagedBmaRate(const boost::shared_ptr<BMAIndex>&
         std::swap(cap, floor);
     }
 
-    if (nakedOption)
-        avgBMA = RandomVariable(x.size(), 0.0);
-
     RandomVariable forwardRate = (avgBMA - RandomVariable(x.size(), spread)) / RandomVariable(x.size(), gearing);
     RandomVariable floorletRate(x.size(), 0.0);
     RandomVariable capletRate(x.size(), 0.0);
+
+    if (nakedOption)
+        avgBMA = RandomVariable(x.size(), 0.0);
 
     if (floor != Null<Real>()) {
         // ignore localCapFloor, treat as global
