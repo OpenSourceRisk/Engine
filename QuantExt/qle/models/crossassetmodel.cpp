@@ -107,7 +107,7 @@ CrossAssetModel::CrossAssetModel(const std::vector<boost::shared_ptr<IrModel>>& 
     initialize();
 }
 
-const boost::shared_ptr<StochasticProcess> CrossAssetModel::stateProcess() const {
+boost::shared_ptr<CrossAssetStateProcess> CrossAssetModel::stateProcess() const {
     if (stateProcess_ == nullptr) {
         stateProcess_ = boost::make_shared<CrossAssetStateProcess>(shared_from_this());
     }
@@ -167,7 +167,7 @@ void CrossAssetModel::update() {
     for (Size i = 0; i < p_.size(); ++i) {
         p_[i]->update();
     }
-    stateProcess_->resetCache(0); // disable cache
+    stateProcess()->resetCache(0); // disable cache
     notifyObservers();
 }
 

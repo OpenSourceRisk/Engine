@@ -89,7 +89,7 @@ public:
                     const Discretization discretization = Discretization::Exact);
 
     /*! returns the state process with a given discretization */
-    const boost::shared_ptr<StochasticProcess> stateProcess() const;
+    boost::shared_ptr<CrossAssetStateProcess> stateProcess() const;
 
     /*! total dimension of model (sum of number of state variables) */
     Size dimension() const;
