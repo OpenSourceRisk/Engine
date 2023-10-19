@@ -876,13 +876,19 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const boost::shar
 
         // process par helpers
 
+        std::set<RiskFactorKey::KeyType> survivalAndRateCurveTypes = {
+            RiskFactorKey::KeyType::SurvivalProbability, RiskFactorKey::KeyType::DiscountCurve,
+            RiskFactorKey::KeyType::YieldCurve, RiskFactorKey::KeyType::IndexCurve};
+
         for (auto const& p : parHelpers_) {
 
             // skip if par helper has no sensi to zero risk factor (except the special treatment below kicks in)
 
             if (p.second->isCalculated() &&
-                (p.first.keytype != RiskFactorKey::KeyType::SurvivalProbability || p.first != desc[i].key1()))
+                (survivalAndRateCurveTypes.find(p.first.keytype) == survivalAndRateCurveTypes.end() ||
+                 p.first != desc[i].key1())) {
                 continue;
+            }
 
             // compute fair and base quotes
 
@@ -894,14 +900,14 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const boost::shar
 
             // special treatments for certain risk factors
 
-            // for curves with survival probabilities going to zero quickly we might see a sensitivity
-            // that is close to zero, which we sanitise here in order to prevent the Jacobi matrix
+            // for curves with survival probabilities / discount factors going to zero quickly we might see a
+            // sensitivity that is close to zero, which we sanitise here in order to prevent the Jacobi matrix
             // getting ill-conditioned or even singular
 
-            if (p.first.keytype == RiskFactorKey::KeyType::SurvivalProbability && p.first == desc[i].key1() &&
-                std::abs(tmp) < 0.01) {
-                WLOG("Setting Diagonal Default Curve Sensi " << p.first << " w.r.t. " << desc[i].key1()
-                                                             << " to 0.01 (got " << tmp << ")");
+            if (survivalAndRateCurveTypes.find(p.first.keytype) != survivalAndRateCurveTypes.end() &&
+                p.first == desc[i].key1() && std::abs(tmp) < 0.01) {
+                WLOG("Setting Diagonal Sensi " << p.first << " w.r.t. " << desc[i].key1() << " to 0.01 (got " << tmp
+                                               << ")");
                 tmp = 0.01;
             }
 
@@ -999,16 +1005,35 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const boost::shar
                         std::inserter(parKeysZero, parKeysZero.begin()));
     std::set_difference(rawKeysCheck.begin(), rawKeysCheck.end(), rawKeysNonZero.begin(), rawKeysNonZero.end(),
                         std::inserter(rawKeysZero, rawKeysZero.begin()));
-    for (auto const& k : parKeysZero) {
-        WLOG("Found par instrument which has no sensitivity to any of the risk factors: \"" << k << "\"");
-    }
-    for (auto const& k : rawKeysZero) {
-        WLOG("Found risk factor w.r.t. which no par instrument has a sensitivity: \"" << k << "\"");
+    std::set<RiskFactorKey> problematicKeys;
+    problematicKeys.insert(parKeysZero.begin(), parKeysZero.end());
+    problematicKeys.insert(rawKeysZero.begin(), rawKeysZero.end());
+    for (auto const& k : problematicKeys) {
+        std::string type;
+        if (parKeysZero.find(k) != parKeysZero.end())
+            type = "par instrument is insensitive to all zero risk factors";
+        else if (rawKeysZero.find(k) != rawKeysZero.end())
+            type = "zero risk factor that does not affect an par instrument";
+        else
+            type = "unknown";
+        Real parHelperValue = Null<Real>();
+        if (auto tmp = parHelpers_.find(k); tmp != parHelpers_.end())
+            parHelperValue = impliedQuote(tmp->second);
+        else if (auto tmp = parCaps_.find(k); tmp != parCaps_.end())
+            parHelperValue = tmp->second->NPV();
+        else if (auto tmp = parYoYCaps_.find(k); tmp != parYoYCaps_.end())
+            parHelperValue = tmp->second->NPV();
+        Real zeroFactorValue = Null<Real>();
+        if (simMarket->baseScenarioAbsolute()->has(k))
+            zeroFactorValue = simMarket->baseScenarioAbsolute()->get(k);
+        WLOG("zero/par relation problem for key '"
+             << k << "', type " + type + ", par value = "
+             << (parHelperValue == Null<Real>() ? "na" : std::to_string(parHelperValue))
+             << ", zero value = " << (zeroFactorValue == Null<Real>() ? "na" : std::to_string(zeroFactorValue)));
     }
 
     LOG("Computing par rate and flat vol sensitivities done");
-
-} // namespace sensitivity
+} // compute par instrument sensis
 
 void ParSensitivityAnalysis::alignPillars() {
     LOG("Align simulation market pillars to actual latest relevant dates of par instruments");
