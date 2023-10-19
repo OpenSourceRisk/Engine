@@ -67,7 +67,7 @@ CrossAssetStateProcess::CrossAssetStateProcess(boost::shared_ptr<const CrossAsse
     // set up CR CIR++ processes, defer the euler discretisation check to evolve()
     for (Size i = 0; i < model_->components(CrossAssetModel::AssetType::CR); ++i) {
         if (model_->modelType(CrossAssetModel::AssetType::CR, i) == CrossAssetModel::ModelType::CIRPP) {
-            crCirpp_.push_back(model->crcirppModel(i)->stateProcess());
+            crCirpp_.push_back(model_->crcirppModel(i)->stateProcess());
             cirppCount_++;
         } else {
             crCirpp_.push_back(boost::shared_ptr<CrCirppStateProcess>());
