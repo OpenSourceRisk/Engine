@@ -26,6 +26,7 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/termstructures/yield/zerocurve.hpp>
 #include <qle/termstructures/equityforwardcurvestripper.hpp>
+#include <qle/termstructures/flatforwarddividendcurve.hpp>
 #include <qle/termstructures/optionpricesurface.hpp>
 
 #include <ored/utilities/parsers.hpp>
@@ -412,11 +413,11 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             dividendDiscountFactors.push_back(std::exp(-dividendRates[i] * t));
         }
 
-        boost::shared_ptr<YieldTermStructure> divCurve;
+        boost::shared_ptr<YieldTermStructure> baseDivCurve;
         // Build Dividend Term Structure
         if (dividendRates.size() == 1) {
             // We only have 1 quote so we build a flat curve
-            divCurve.reset(new FlatForward(asof, dividendRates[0], dc_));
+            baseDivCurve.reset(new FlatForward(asof, dividendRates[0], dc_));
         } else {
             // Build a ZeroCurve
             Size n = terms_.size();
@@ -439,14 +440,25 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                     std::exp(-rates.back() * maxTime)); // flat zero extrapolation used to imply dividend DF
             }
             if (dividendInterpVariable_ == YieldCurve::InterpolationVariable::Zero) {
-                divCurve = zerocurve(dates, rates, dc_, dividendInterpMethod_);
+                baseDivCurve = zerocurve(dates, rates, dc_, dividendInterpMethod_);
             } else if (dividendInterpVariable_ == YieldCurve::InterpolationVariable::Discount) {
-                divCurve = discountcurve(dates, discounts, dc_, dividendInterpMethod_);
+                baseDivCurve = discountcurve(dates, discounts, dc_, dividendInterpMethod_);
             } else {
                 QL_FAIL("Unsupported interpolation variable for dividend yield curve");
             }
-            divCurve->enableExtrapolation();
         }
+        
+        boost::shared_ptr<YieldTermStructure> divCurve;
+        if (config->extrapolation()) {
+            divCurve = baseDivCurve;
+            divCurve->enableExtrapolation();
+        } else {
+            divCurve = QuantLib::ext::make_shared<FlatForwardDividendCurve>(
+                asof, Handle<YieldTermStructure>(baseDivCurve), forecastYieldTermStructure);
+            if (config->dividendExtrapolation())
+                divCurve->enableExtrapolation();
+        }
+
         dividendYieldTermStructure = Handle<YieldTermStructure>(divCurve);
 
         equityIndex_ =

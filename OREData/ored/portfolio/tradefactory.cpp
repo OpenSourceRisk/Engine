@@ -27,12 +27,12 @@ namespace ore {
 namespace data {
 
 std::map<std::string, boost::shared_ptr<AbstractTradeBuilder>> TradeFactory::getBuilders() const {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     return builders_;
 }
 
 boost::shared_ptr<AbstractTradeBuilder> TradeFactory::getBuilder(const std::string& className) const {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     auto b = builders_.find(className);
     QL_REQUIRE(b != builders_.end(), "TradeFactory::getBuilder(" << className << "): no builder found");
     return b->second;
@@ -40,7 +40,7 @@ boost::shared_ptr<AbstractTradeBuilder> TradeFactory::getBuilder(const std::stri
 
 void TradeFactory::addBuilder(const std::string& className, const boost::shared_ptr<AbstractTradeBuilder>& builder,
                               const bool allowOverwrite) {
-    std::unique_lock<std::shared_mutex> lock(mutex_);
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     QL_REQUIRE(builders_.insert(std::make_pair(className, builder)).second || allowOverwrite,
                "TradeFactory: duplicate builder for className '" << className << "'.");
 }
