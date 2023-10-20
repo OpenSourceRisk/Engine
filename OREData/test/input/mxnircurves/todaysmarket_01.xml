@@ -1,9 +1,0 @@
-<TodaysMarket>
-  <DiscountingCurves id="default">
-    <DiscountingCurve currency="MXN">Yield/MXN/MXN-TIIE-28D</DiscountingCurve>
-  </DiscountingCurves>
-  <IndexForwardingCurves id="default">
-    <Index name="MXN-TIIE-28D">Yield/MXN/MXN-TIIE-28D</Index>
-  </IndexForwardingCurves>
-</TodaysMarket>
-

@@ -1,8 +1,0 @@
-<TodaysMarket>
-  <YieldCurves id="default"/>
-  <DiscountingCurves id="default"/>
-  <IndexForwardingCurves/>
-  <BaseCorrelations id="default">
-    <BaseCorrelation name="BASE_CORR_TEST">BaseCorrelation/BASE_CORR_TEST</BaseCorrelation>
-  </BaseCorrelations>
-</TodaysMarket>
