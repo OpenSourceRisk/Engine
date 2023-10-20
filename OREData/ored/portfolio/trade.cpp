@@ -253,7 +253,11 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                         quantity = eqc->legInitialNotional() / eqc->initialPrice();
                     }
                 }
-                additionalData_["quantity[" + legID + "]"] = quantity;
+                additionalData_["initialQuantity[" + legID + "]"] = quantity;
+                
+                Real currentPrice = eqc->equityCurve()->fixing(asof);
+                if (currentPrice != Null<Real>() && originalNotional != Null<Real>())
+                    additionalData_["currentQuantity" + legID + "]"] = originalNotional / currentPrice;
             }
         }
     }
