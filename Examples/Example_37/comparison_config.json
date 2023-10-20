@@ -1,0 +1,39 @@
+{
+  "csv_settings": {
+    "files": {
+      "eigenvalues\\.csv": {
+        "keys": [
+          "number"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "value"
+            ],
+            "abs_tol": 1E-8,
+            "rel_tol": 1e-10
+          }
+        ]
+      },
+      "eigenvectors.csv": {
+        "keys": [
+            "tenor"
+        ],
+        "use_cols": [
+            "eigenvector_1",
+            "eigenvector_2"
+        ],
+        "column_settings": [
+          {
+            "names": [
+                "eigenvector_1",
+                "eigenvector_2"
+            ],
+            "abs_tol": 1E-8,
+            "rel_tol": 1e-10
+          }
+        ]
+      }
+    }
+  }
+}

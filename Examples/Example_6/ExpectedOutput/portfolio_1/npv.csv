@@ -1,0 +1,3 @@
+#TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency,Notional,NotionalCurrency,Notional(Base),NettingSet,CounterParty
+collar_01,CapFloor,2035-10-29,19.729029,-559849.941442,EUR,-559849.941442,EUR,1000000.00,EUR,1000000.00,CPTY_A,CPTY_A
+swap_01,Swap,2035-10-29,19.729029,367880.320966,EUR,367880.320966,EUR,1000000.00,EUR,1000000.00,CPTY_A,CPTY_A

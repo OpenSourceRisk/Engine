@@ -1,0 +1,337 @@
+\subsection{Pricing Engine Configuration}\label{pricingengine_config}
+
+An example pricing engine configuration looks as follows.
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+   <Product type="ScriptedTrade">
+    <Model>Generic</Model>
+    <ModelParameters>
+      <!-- shared parameters -->
+      <Parameter name="Model">BlackScholes</Parameter>
+      <Parameter name="InfModelType">DK</Parameter>
+      <Parameter name="BaseCcy">USD</Parameter>
+      <Parameter name="EnforceBaseCcy">false</Parameter>
+      <Parameter name="GridCoarsening">3M(1W),1Y(1M),5Y(3M),10Y(1Y),50Y(5Y)</Parameter>
+      <Parameter name="IrReversion">0.0</Parameter> <!-- fallback for other ccys -->
+      <Parameter name="IrReversion_EUR">0.0</Parameter>
+      <Parameter name="IrReversion_GBP">0.0</Parameter>
+      <Parameter name="FullDynamicIr">true</Parameter>
+      <Parameter name="FullDynamicFx">true</Parameter>
+      <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+      <Parameter name="Calibration">Deal</Parameter>
+      <!-- product specific parameters -->
+      <Parameter name="Model_SingleAssetOption(EQ)">BlackScholes</Parameter>
+      <Parameter name="Model_SingleAssetOption(FX)">BlackScholes</Parameter>
+      <Parameter name="Model_SingleAssetOption(COMM)">BlackScholes</Parameter>
+      <Parameter name="Model_SingleAssetOptionBwd(EQ)">BlackScholes</Parameter>
+      <Parameter name="Model_SingleAssetOptionBwd(FX)">BlackScholes</Parameter>
+      <Parameter name="Model_SingleAssetOptionBwd(COMM)">BlackScholes</Parameter>
+      <Parameter name="Model_SingleUnderlyingIrOption">GaussianCam</Parameter>
+      <Parameter name="Model_MultiUnderlyingIrOption">GaussianCam</Parameter>
+      <Parameter name="Model_IrHybrid(EQ)">GaussianCam</Parameter>
+      <Parameter name="Model_IrHybrid(FX)">GaussianCam</Parameter>
+      <Parameter name="Model_IrHybrid(COMM)">GaussianCam</Parameter>
+    </ModelParameters>
+    <Engine>Generic</Engine>
+    <EngineParameters>
+      <!-- shared parameters -->
+      <Parameter name="Engine">MC</Parameter>
+      <Parameter name="Samples">10000</Parameter>
+      <Parameter name="StateGridPoints">200</Parameter>
+      <Parameter name="MesherEpsilon">1E-4</Parameter>
+      <Parameter name="MesherScaling">1.5</Parameter>
+      <Parameter name="MesherConcentration">0.1</Parameter>
+      <Parameter name="MesherMaxConcentratingPoints">9999</Parameter>
+      <Parameter name="MesherIsStatic">true</Parameter>
+      <Parameter name="RegressionOrder">2</Parameter>
+      <Parameter name="TimeStepsPerYear">24</Parameter>
+      <Parameter name="Interactive">false</Parameter>
+      <Parameter name="BootstrapTolerance">0.1</Parameter>
+      <!-- product specific parameters -->
+      <Parameter name="RegressionOrder_SingleAssetOption(EQ)">6</Parameter>
+      <Parameter name="RegressionOrder_SingleAssetOption(FX)">6</Parameter>
+      <Parameter name="RegressionOrder_SingleAssetOption(COMM)">6</Parameter>
+      <Parameter name="Engine_SingleAssetOptionBwd(EQ)">FD</Parameter>
+      <Parameter name="Engine_SingleAssetOptionBwd(FX)">FD</Parameter>
+      <Parameter name="Engine_SingleAssetOptionBwd(COMM)">FD</Parameter>
+      <Parameter name="Engine_SingleUnderlyingIrOption">6</Parameter>
+      <Parameter name="useAD_MultiAssetOptionAD(EQ)">true</Parameter>
+      <Parameter name="useAD_MultiAssetOptionAD(FX)">true</Parameter>
+      <Parameter name="useAD_MultiAssetOptionAD(COMM)">true</Parameter>
+      <!-- MultiUnderlyingIrOption -->
+      <!-- IrHybrid(EQ) -->
+      <!-- IrHybrid(FX) -->
+      <!-- IrHybrid(COMM) -->
+    </EngineParameters>
+  </Product>
+\end{minted}
+
+The model parameters have the following meaning:
+
+\begin{itemize}
+\item Model: The model to be used. Currently BlackScholes, LocalVolDupire, LocalVolAndreasenHuge, GaussianCam are
+  supported
+\item BaseCcy: The default base ccy for the model. See \ref{baseccy_determination} for the way the base ccy is
+  determined for a model.
+\item EnforceBaseCcy: Enforce the base ccy from the model settings to be used, see \ref{baseccy_determination} for more
+  details.
+\item FullDynamicFx: by default, dynamic fx processes are generated only for FX indices on which the script explicitly
+  depends; if this parameter is true, dynamic fx processes are also generated for payment and equity / commodity ccys
+  not equal to the base ccy of the model or any of the currencies covered by those FX indices; if the parameter is false
+  on the other hand zero volatility paths are assumed for these additional ccys
+\item FullDynamicIr: by default, dynamic ir processes are generated only for currencies of the IR indices on which the
+  script depends; if the parameter is true, dynamic ir processes are also generated for currencies from fx indices, and
+  payment and equity / commodity ccys not equal to the base ccy of the model; if the parameter is false zero volatility
+  paths are assumed for these ccys
+\item InfModelType: Optional, defaults to ``DK''. For the GaussianCam model two flavours of inflation models are
+  avaiable, Dodgson-Kainth (``DK'') and Jarrow-Yildrim (``JY''). This parameter selects the flavour to use. Only applies
+  to model = GaussianCam
+\item ReferenceCalibrationGrid: If given, only one calibration point per defined interval will be used (to avoid
+  oscillations in the calibrated model volatility function or also to improve the calibration speed), only applicable to
+  model = GaussianCam
+\item Calibration: Deal or ATM. For Deal the calibration spec of a script is used to calibrate a model. For ATM an ATM
+  calibration is used. Optional, defaults to Deal.
+\end{itemize}
+
+The engine parameters have the following meaning:
+
+\begin{itemize}
+\item Engine: The engine to be used. Currently MC and FD is supported.
+\item Samples: The number of MC samples used. Only relevant for Engine = MC.
+\item StateGridPoints: The number of grid points in state direction. Only relevant for Engine = FD.
+\item MesherEpsilon: The FD mesher epsilon, optional, defaults to 1E-4.
+\item MesherScaling: The FD mesher scaling factor, optional, defaults tp 1.5.
+\item MesherConcentration: The FD mesher concentration parameter, optional, defaults to 0.1
+\item MesherMaxConcentrationPoints: The maximum number of mesher concentration points to use, optional, defaults to
+  9999, in which all calibration strikes from a script are used. For 1 only the first strike from the list is used, for
+  2 the first two strikes, etc.
+\item MesherIsStatic: If true, the mesher is built only once and reused under scenario / sensitivity computations. If
+  false, the mesher is rebuilt for each repricing. Optional, defaults to false. For sensitivity runs it should be set to
+  true.
+\item RegressionOrder: The order of the polynomial basis to compute conditional expectations via regression
+  analysis. Applies to MC only.
+\item SequenceType: The sequence type used for pricing. Defaults to SobolBrownianBridge. Possible values
+  SobolBrownianBridge, MersenneTwister, MersenneTwisterAnithetic, Sobol. Applies to MC only.
+\item PolynomType: The polynom type used for regression analysis. Defaults to Monomial. Possible values Monomial,
+  Laguerre, Hermite, Hyperbolic, Legendre, Chebyshev, Chebychev2nd. Applies to MC only.
+\item TrainingSamples: If given, pricing and training are separate phases and traning phase is using this number of
+  samples. Notice that NPVMEM() should be used to reuse regression coefficients from the training phase in the pricing
+  phase. Applies to MC only.
+\item TrainingSeed: The seed used for rng in training phase. Only applies if TrainingSamples are given (and thus
+  training and pricing phases are separate). Defaults to 43. Applies to MC only.
+\item TrainingSequenceType: The sequence type used for training. Only applies if TrainingSamples are given (and thus
+  training and pricing phases are separate). See SequenceType for possible values. Defaults to MersenneTwister. Applies
+  to MC only.
+\item SobolOrdering: Sobol sequence ordering for brownian bridge. Defaults to Steps. Possible values Steps, Factors,
+  Diagonal. Applies to MC only.
+\item SobolDirectionIntegers: Sobol direction integers. Defaults to JoeKuoD7. Possible values Unit, Jaeckel,
+  SobolLevitan, SobolLevitanLemieux, JoeKuoD5, JoeKuoD6, JoeKuoD7, Kuo, Kuo2, Kuo3. Applies to MC only.
+\item Seed: The seed for rng in pricing phase. Defaults to 42. Applies to MC only.
+\item TimeStepsPerYear: The number of time steps used to discretise the process. For 0 only the relevant simulation
+  times are used. Otherwise at least the given number of step are used in the discretisation grid per year.
+\item CalibrationMoneyness: Moneyness of options used for smile calibration. Applies to the LocalVolAndreasenHuge model
+  only. The moneyness is defined as a ``standardised moneyness'' $\ln(K/F) / \sigma\sqrt{t}$ with $K$ strike, $F$ ATMF
+  forward, $\sigma$ ATMF market vol, $t$ option time to expiry
+\item BootstrapTolerance: tolerance for calibration bootstrap, only applies to model = GaussianCam
+\item Interactive: If true an interactive session is started on script execution for debugging purposes; should be false
+  except for debugging purposes
+\item UseAD: If true and RunType in the global pricing engine parameters is SensitivityDelta, a first order pnl
+  expansion using AD sensitivities is used to compute scenario NPVs.
+\item UseCG: If true a computation graph is used to price trades instead of the runtime interpreter . If UseAD or
+  UseExternalComputingDevice is true, this implies that UseCG is true irrespective of how it is configured.
+\item UseExternalComputingDevice: If true and RunType is not NPV (generating additional results) and AD sensitivities
+  are {\em not} used, an external compute device is used for the calculations.
+\item ExternalComputeDevice: The external compute device to use if UseExternalComputingDevice is effective.
+\end{itemize}
+
+\subsection{Product Tags und pricing engine configuration}\label{producttags_engineconfig}
+
+All parameters in the pricing engine configuration can be differentiated by product tags, see \ref{scriptNode} for how
+to add these to a script definition. If a script has a product tag \verb+TAG+ assigned, parameters with suffix
+\verb+_TAG+ are relevant if given. If for a parameter no version with the product tag is given, the corresponding
+parameter without a tag is used as a fallback.
+
+Product tags may contain the asset class variable \verb+{AssetClass}+ which is replaced by \verb+EQ+, \verb+FX+ or
+\verb+COMM+ depending on the underlying asset class. If more than one index type eq, fx, comm occurs in the trade, the
+asset class variable is set to \verb+HYBRID+. Notice that interest rate indices do not affect the asset class variable:
+If e.g. an equity trade contains an interest rate funding leg, the asset class shouuld still be EQ. Trades with exotic
+interest rate elements on the other hand can be distinguished by the product tag itself, see below for an example. If no
+eq, fx, comm index occurs in the trade, the asset class variable is left blank.
+
+Table \ref{tab:producttag} gives a typical example for grouping scripts using the product tag. The suffix ``AD'' is
+meant to mark scripts that are suitable for AAD sensitivity computations.
+
+\begin{table}[!htbp]
+  \scriptsize
+  \begin{tabular}{l | l | l | l}
+    Product Tag & Examples & Suitable Models & Suitable Engines \\ \hline
+    \verb+SingleAssetOption({AssetClass})+ & FX TaRF & BS, LV, GCAM & MC \\
+    \verb+SingleAssetOptionAD({AssetClass})+ & FX TaRF & BS, LV, GCAM & MC \\
+    \verb+SingleAssetOptionBwd({AssetClass})+ & EQ American Option & BS, LV, GCAM & MC, FD \\
+    \verb+MultiAssetOption({AssetClass})+ & EQ Autocallable & BS, LV, GCAM & MC \\
+    \verb+MultiAssetOptionAD({AssetClass})+ & EQ Autocallable & BS, LV, GCAM & MC \\
+    \verb+SingleUnderlyingIrOption+ & IR TaRN & LGM1F & MC \\
+    \verb+SingleUnderlyingIrOptionBwd+ & Bermudan swaption & LGM1F & MC, FD, Conv \\
+    \verb+MultiUnderlyingIrOption+ & Cross currency swaption & GCAM & MC \\
+    \verb+IrHybrid({AssetClass})+ & IR-EQ basket option & GCAM & MC \\
+  \end{tabular}
+  \caption{Grouping trades by product tag (Example), models are abbreviated as\\ BS = BlackScholes, LV = LocalVol, GCAM =
+    GaussianCrossAsset}
+  \label{tab:producttag}
+\end{table}
+
+\subsection{BlackScholes model}\label{blackscholes}
+
+Models black scholes processes for EQ, FX, COMM underlyings. The strike slice of the input volatility is chosen as ATMF
+or as the first strike given in the list of calibration strikes for an index.
+
+See \ref{pricingengine_config} for the impact of the model parameter FullDynamicFx on the model setup.
+
+TimeStepsPerYear are ignored if the correlation structure is trivial, because then the process can be discretised
+exactly. Otherwise the given time steps per year are used to build a grid on which covariance matrices are computed
+assuming a constant volatility between the grid points. The actual MC paths are evoloved using these covariance matrices
+on the original (non-refined) time grid, i.e. taking large, exact steps again.
+
+\smallskip
+Available Engine types: MC, FD
+
+\subsection{LocalVolDupire, LocallVolAndreasenHuge models}
+
+Models local volatility processes for EQ, FX, COMM underlyings using the full smile from input volatility term
+structures. To construct the local volatility surface either the classic Dupire formula or the Andreasen-Huge method is
+used, see \cite{andreasen_huge_localvol} for the latter. The parameter FullDynamicFx has an analoguous meaning as in the
+case of the BlackScholes model.
+
+Calibration strike specifications (see \ref{calibration}) are not relevant for this model.
+
+See \ref{pricingengine_config} for the impact of the model parameter FullDynamicFx on the model setup.
+
+\smallskip
+Available Engine types: MC
+
+\subsection{GaussianCam models}
+
+Models black scholes processes for EQ, FX, COMM and LGM 1F processes for IR. For INF processes Dodgson-Kainth (``DK'')
+and Jarrow-Yidlrim (``JY'') models are available. The strike slice of the input volatility is chosen as ATMF / fair
+forward swap rate. Furthermore,
+
+\begin{itemize}
+\item For IR processes a strip of atm coterminal swaptions is used for the model calibration.
+\item For INF processes a strip of atm CPI cap/floors is used for the model calibration. For DK the reversion is
+  calibrated and the volatility is fixed at $0.00050$. For JY the index volatility is calibrated. The reversion of the
+  real rate process is fixed at $0$ and the volatility at $0.0030$. The real rate process is assumed to be uncorrelated
+  to the nominal rate and index process within the JY model, and also to all other IR, EQ, FX, COMM processes in the
+  model.
+\end{itemize}
+
+Calibration strike specifications (see \ref{calibration}) are not yet supported by this model.
+
+See \ref{pricingengine_config} for the impact of the model parameters FullDynamicFx, FullDynamicIr on the model setup.
+
+\smallskip
+Available Engine types: MC
+
+\subsection{Base Currency Determination}\label{baseccy_determination}
+
+The base currency of a model is determined using the following ruleset:
+
+\begin{itemize}
+\item If the model parameter EnforceBaseCcy is set to true, the base ccy is read from the model parameter BaseCcy
+\item Otherwise base ccy candidates are collected as the
+  \begin{itemize}
+    \item target (domestic) currencies of underlying fx indices
+    \item if no fx indices are present in the model, all pay currencies that can occur
+  \end{itemize}
+\item If the set of base ccy candidates contains exactly one element, the base ccy is chosed as this currency
+\item Otherwise the base ccy from the model parameters is chosen to be the model base ccy
+\end{itemize}
+
+\subsection{Grid Coarsening}\label{grid_coarsening}
+
+Date schedules that are eligible for grid coarsening are listed in the (optional) ScheduleCoarsening subnode of the
+script (see \ref{scriptNode})
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <Script>
+      <Code>...</Code>
+      <NPV>...</NPV>
+      <Results>...</Results>
+      <ProductTag>...</ProductTag>
+      <ScheduleCoarsening>
+        <EligibleSchedule>ObservationDates</EligibleSchedule>
+        <EligibleSchedule>KnockOutDates</EligibleSchedule>
+      </ScheduleCoarsening>
+    </Script>
+\end{minted}
+
+If a date schedule is eligible for grid coarsening the original grid is coarsened using the model parameter
+GridCoarsening if this is not empty (meaning no coarsening is applied). The parameter consists of a comma separated list
+of pairs of periods like 3M(1W),1Y(1M),5Y(3M),10Y(1Y),50Y(5Y). The coarsening procedure then works as follows (for the
+example rule):
+
+\begin{itemize}
+\item dates before or equal to the evaluation date are always kepts
+\item out to 3M in each subperiod of length 1W starting at the evaluation date at most one date of the original grid is
+  kept in the result grid
+\item out to 1Y in each subperiod of length 1M starting at the last subperiod end date from the previous step at most
+  one date of the original grid is kept
+\item etc. ... until all subperiods out to the last period 50Y are covered, all dates in the original grid that lie
+  beyond the last subperiod are not present in the result grid
+\end{itemize}
+
+\subsection{Calibration}\label{calibration}
+
+The calibration approach for the model is specified on the engine parameter level (see \ref{pricingengine_config}). If
+the model parameter \verb+Calibration+ is set to \verb+Deal+, information on the calibration instruments is extracted
+from the CalibrationSpc subnode of the script node (see \ref{scriptNode}). If this subnode is not given, the calibration
+falls back to ATMF, meaning that ATMF instruments (coterminals for IR) are used for calibration.
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+   <Script>
+     <Code>...</Code>
+     <NPV>...</NPV>
+     <Results>...</Results>
+     <CalibrationSpec>
+        <Calibration>
+          <Index>Underlying</Index>
+          <Strikes>
+            <Strike>Strike</Strike>
+            <Strike>KnockOutLevel</Strike>
+          </Strikes>
+        </Calibration>
+      </CalibrationSpec>
+    </Script>
+\end{minted}
+
+The node CalibrationSpec can have one subnode Calibration per Index occuring in the script. For each index a list of
+calibration strikes can be specified. The list should start with the most important calibration strike and continue with
+strikes of decreasing importance. In the example (which could be a typcial setup for barrier option) the most important
+strike is given by the Strike variable and a secondary strike is given by the KnockOutLevel.
+
+The usage of the calibration strikes is twofold:
+
+\begin{itemize}
+\item For the determination of calibration strikes. This is only relevant / supported by the BlackScholes model, which
+  will use the first strike from the list to read the volatility from the market term structure (if Calibration is set
+  to Deal in the model parameters).
+\item To determine concentration points for an FD mesher if \verb+Engine+ is set to \verb+FD+. The first $n$ strikes are
+  used as concentration points where $n$ is the minimum of specified strikes and the engine parameter
+  \verb+MesherMaxConcentrationPoints+.
+\end{itemize}
+
+\subsection{FX tags and correlation curves}\label{fxtags_correlationcurves}
+
+FX indices contain a ``tag'', e.g. we can have two different EURUSD indices FX-ECB-EUR-USD and FX-CLOSE-EUR-USD with
+different historical fixings. This is respected in the script engine, i.e. historical fixings are retrieved using the
+exact FX index name including the tag.
+
+For projection on the other hand we only have one set of market data per currency pair (FX Spot, forwarding curves and
+volatilities). This also holds for implied correlations, therefore correlation curves should be set up using the tag
+``GENERIC'' always, e.g. the correlation between the pairs EUR-USD and JPY-USD shold be set up as
+FX-GENERIC-JPY-USD:FX-GENERIC-EUR-USD. The ordering of the indices in the pair follow the usual rules, i.e.
+
+\begin{itemize}
+\item COM $<$ EQ $<$ FX $<$ IBOR $<$ CMS
+\item smaller period $<$ greater period for IBOR and CMS indices
+\item alphabetical order of index names for COM, EQ indices resp. of CCY1 then CCY2 for FX indices
+\end{itemize}

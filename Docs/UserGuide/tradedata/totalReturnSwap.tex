@@ -1,0 +1,485 @@
+\subsubsection{Generic Total Return Swap / Contract for Difference (CFD)}
+\label{ss:GenericTRS}
+
+A generic total return swap / CFD (Trade type: \emph{TotalReturnSwap} or \emph{ContractForDifference}) is set up using a
+TotalReturnSwapData (or ContractForDifferenceData) block as shown in listing \ref{lst:trsdata} and
+\ref{lst:trsdata_cfd}. Both trade types behave exactly the same.
+
+Usually CFDs are traded without a funding component and captured with only two dates in the return schedule, namely the
+start date on which the initial price is fixed and a fictitious closing date usually set to ``tomorrow'' or another
+suitable future date. See listing \ref{lst:trsdata_cfd} for the setup of a CFD on STOXX50E with initial price 3399.20 on
+2019-09-28.
+
+The generic total return swap is priced using the {\em accrual method} as opposed to a {\em full discounting method} as
+it is used for the {\em equity swap} trade type. The accrual method is common practice when daily unwind rights are
+present in the trade terms or when the underlying valuation is too complex to allow for future projection.
+
+The TotalReturnSwapData (ContractForDifferenceData) block is comprised of four sub-blocks, which are
+
+\begin{itemize}
+\item {\tt UnderlyingData} containing one or more {\tt Trade} subnodes describing the asset position of the TRS
+\item {\tt ReturnData} describing the fixing and payment schedule of the return leg and specifying indices for FX conversion if applicable
+\item {\tt FundingData} (optional) containing one or more funding legs of the TRS, whose notionals are based on either
+  \begin{itemize}
+    \item ``PeriodReset'': the underlying price on the last valuation date before or on the accrual start date of the relevant funding
+      coupon, this price is converted to the funding currency using the FX rate on this same valuation date for compo /
+      cross currency swaps (see below)
+    \item ``DailyReset'': the underlying price on each day of the accrual period, again converted to the funding
+      currency using the FX rate the the same date for compo / cross currency swaps. This notional type is only
+      supported for fixed rate funding legs.
+    \item ``Fixed'': a fixed notional given explicitly in the funding leg
+  \end{itemize}
+
+\item {\tt AdditionalCashflowData} (optional) a single leg of type Cashflow containing additional payments
+\end{itemize}
+
+The {\tt ReturnData} and {\tt FundingData} schedule periods often match, but this is not a strict requirement: In
+general, the funding notional is determined as described above dependent on the notional types ``PeriodReset'',
+``DailyReset'', ``Fixed''.
+
+Notice that in every case, the {\tt UnderlyingData} schedule (if applicable to the underlying trade type as e.g. for a
+bond) is completely independent from the funding / return schedules: The underlying schedule defines the underlying
+flows to compute its NPV, and is not directly related to the return swap itself.
+
+Generic TRS can be used to represent total return swaps on a wide range of underlying assets including e.g. single bonds
+or equities, CFDs on an underlying basket of EquityPositions, proprietary indices on equity options and equity or bond
+indices.
+
+\begin{itemize}
+\item The {\tt UnderlyingData} block specifies on or more underlyings, which can be a trades of one of the following
+  types. See the trade type specific sections for details on the setup of these underlyings.
+  \begin{itemize}
+  \item Bond: See \ref{ss:bond}, the trade data is given in a BondData sub node.
+  \item ForwardBond: See \ref{ss:BondForward_refdata}, the trade data is given in a ForwardBondData sub node.
+  \item CBO: See \ref{ss:CBOData}, the trade data is given in a CBOData sub node.
+  \item CommodityPosition: See \ref{ss:commodity_position}, the trade data is given in a CommodityPositionData sub node.
+  \item ConvertibleBond: See \ref{ss:convertible_bond}, the trade data is given in a ConvertibleBondData sub
+    node. When using reference data, a TRS on a convertible bond can also be captured as a TRS on a bond, i.e. there is
+    no need to distinguish between a TRS on a Bond and a TRS on a convertible Bond in this case, the pricer will figure
+    out which underlying to set up based on the type of reference data that is set up for the ISIN referenced in the
+    security id field.
+  \item EquityPosition: See \ref{ss:equity_position}, the trade data is given in a EquityPositionData sub
+    node. Notice that the equities given in the basket must be available as quoted market data.
+  \item EquityOptionPosition: See \ref{ss:equity_option_position}, the trade data is given in a EquityOptionPositionData
+    sub node.
+  \item BondPosition: See \ref{ss:bond_position}, the trade data is given in a BondBasketData sub node.
+  \item Derivative: An arbitrary underlying derivative trade (of any type covered by ORE), allowing the set up of a so called Portfolio Swap with multiple underlying derivatives. The derivative subnode has
+    exactly two subnodes
+    \begin{itemize}
+      \item Id: A unqiue identifier for the derivative position. Historical prices must be given under the fixing name
+        ``GENERIC-$<Id>$''.
+      \item Trade: The root node of a derivative trade.
+    \end{itemize}
+
+  \end{itemize}
+
+  Each trade is specified by a \verb+TradeType+ and a trade type dependent data block as listed above. Listing
+  \ref{lst:trsdata} shows an example for a convertible bond underlying. Listing \ref{lst:trsdata2} shows an example for
+  an equity basket underlying. Listing \ref{lst:trsdata3} shows an example for a bond basket underlying. Listing
+  \ref{lst:trsdata4} shows an example for a derivative underlying (a swaption in this case).
+
+\item The {\tt ReturnData} block specifies the details of the return leg.
+  \begin{itemize}
+  \item Payer: Indicates whether the return leg is paid.
+  
+    Allowable values: \emph{true, false}
+    
+  \item Currency: The currency in which the return is expressed. This can be different from the underlying currency
+    (``composite'' swap) and also from the funding leg currency (``cross currency'' swap). The ``composite'' and ``cross
+    currency'' features can occur alone or in combination.
+    
+    Allowable values: A valid currency code, see \lstinline!Currency! in Table \ref{tab:allow_stand_data}, provided it is the same as on the funding leg.
+    
+  \item ScheduleData: The reference schedule for the return leg, where the valuation dates are derived from this schedule
+    using the ObservationLag, ObservationConvention and ObservationCalendar fields. The payment dates are derived from
+    this schedule using the PaymentLag, PaymentConvention and PaymentCalendar fields. The payment dates can also be
+    given as an explicit list in the PaymentDates node.
+    
+    Allowable values: A \lstinline!ScheduleData! block as defined in section \ref{ss:schedule_data}
+    
+  \item ObservationLag [Optional]: The lag between the valuation date and the reference schedule period start date.
+  
+    Allowable values: Any valid period, i.e. a non-negative whole number, followed by \emph{D} (days), \emph{W} (weeks), \emph{M} (months), \emph{Y} (years). Defaults to \emph{0D} if left blank or omitted.
+    
+  \item ObservationConvention [Optional]: The roll convention to be used when applying the observation lag.
+  
+    Allowable values: A valid roll convention (\emph{F, MF, P, MP, U, NEAREST}), see Table \ref{tab:convention} Roll Convention. Defaults to \emph{U} if left blank or omitted.
+    
+  \item ObservationCalendar [Optional]: The calendar to be used when applying the observation lag.
+  
+      Allowable values: Any valid calendar, see Table \ref{tab:calendar} Calendar. Defaults to the \emph{NullCalendar} (no holidays) if left blank or omitted.
+      
+  \item PaymentLag [Optional]: The lag between the reference schedule period end date and the payment date.
+  
+    Allowable values: Any valid period, i.e.\ a non-negative whole number, optionally followed by \emph{D} (days), \emph{W} (weeks), \emph{M} (months),
+  \emph{Y} (years). Defaults to \emph{0D} if left blank or omitted. If a whole number is given and no letter, it is assumed that it is a number of  \emph{D} (days).
+    
+  \item PaymentConvention [Optional]: The business day convention to be used when applying the payment lag.
+  
+    Allowable values: A valid roll convention (\emph{F, MF, P, MP, U, NEAREST}), see Table \ref{tab:convention} Roll Convention. Defaults to \emph{U} if left blank or omitted.
+    
+  \item PaymentCalendar [Optional]: The calendar to be used when applying the payment lag.
+  
+    Allowable values: Any valid calendar, see Table \ref{tab:calendar} Calendar. Defaults to the \emph{NullCalendar} (no holidays) if left blank or omitted.
+    
+  \item PaymentDates [Optional]: This node allows for the specification of a list of explicit payment dates, using
+    \lstinline!PaymentDate! elements. The list must contain exactly $n-1$ dates where $n$ is the number of dates in the
+    reference schedule given in the ScheduleData node. See Listing \ref{lst:paymentdatestrs} for an example with an
+    assumed ScheduleData with 4 dates.
+    
+    \begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+                <PaymentDates>
+                      <PaymentDate>2020-01-15</PaymentDate>
+                      <PaymentDate>2021-01-15</PaymentDate>
+                      <PaymentDate>2022-01-17</PaymentDate>
+                </PaymentDates>
+\end{minted}
+\caption{Payment dates}
+\label{lst:paymentdatestrs}
+\end{listing}
+    
+  \item InitialPrice [Optional]: The equity (or bond) price of the underlying
+    on the valuation date associated with the start date. Commonly contractually given. The price can be given in the
+    underlying currency or the return currency as specified by the InitialPriceCurrency field and is given as
+    \begin{itemize}
+    \item a (dirty) price for Bond, ForwardBond and Convertible Bond underlyings, the format is dependent on the price quotation method of the referenced bond:
+      \begin{itemize}
+      \item Percentage of Par: the InitialPrice should be given as e.g. $1.02$ for $102\%$ relative dirty price
+      \item Currency per Unit: the InitialPrice should be given as e.g. $0.51$ for a dirty amount of $51$ USD per unit
+        of the bond worth (say) $50.0$ USD.
+      \end{itemize}
+      \item the weighted price of one unit of the bond underlying basket, notice that this is always a ``percentage of
+        par'' price regardless of the quotation style of the the single bonds in the basket
+      \item the (weighted) price of (one unit of) the equity underlying (basket)
+      \item the (weighted) price of (one unit of) the equity option underlying (basket)
+      \item an {\em absolute amount in the initial price ccy (``dollar amount'')} if more than one underlying is
+        specified and if a derivative is specified
+      \item absolute NPV if underlying is a CBO
+    \end{itemize}
+    Notice that for an equity basket underlying with several currencies involved, the initial price is assumed to be given in the
+    return currency in case no InitialPriceCurrency is given.
+
+    Allowable values: A real number. If omitted or left blank it defaults to the equity (or bond) price of the valuation
+    date associated with the start date. When this valuation date is in the future there is no fixed price, 
+    and in these cases the InitialPrice defaults to the forward price.
+    
+  \item InitialPriceCurrency [Optional]: Only relevant if InitialPrice is given. This specifies whether the initial
+    price is given in the asset currency, the return currency or the funding currency.
+    
+    Allowable values: One of the currencies in ReturnData / Currency (return currency), FundingData/ LegData / currency
+    (funding currency) or the currency of the underlying asset. Defaults to the return currency if omitted.
+
+  \item FXTerms [Mandatory when underlying asset / return / additional cashflow / funding currencies differ]: If the
+    underlying asset currency is different from the return currency, an FXIndex for the conversion underlying / return currency
+    must be given. The same holds for the funding and additional cashflow currencies: Whenever one of these currencies
+    are different from the underlying currency, an FXIndex for the conversion to the underlying currency must be given. If multiple currencies differ, 
+    multiple FXIndex elements must be given.
+
+    \begin{itemize}
+    \item FXIndex: The fx index to use for the conversion, this must contain the funding / return / additional cashflow
+      currency and the underlying asset currency (in the order defined in table \ref{tab:fxindex_data}, i.e. it does not
+      matter which one is the funding / return / additional cashflow currency and which is the underlying currency)
+        
+        Allowable values: see \ref{tab:fxindex_data}
+    \end{itemize}
+
+    Notice that for an underlying of type EquityPosition or EquityOptionPosition additional \verb+FXIndex+
+    entries are required if there is more than one equity position in a different currency: Eventually, for each equity currency there must be a \verb+FXIndex+ specifying the
+    conversion from the equity currency to the funding currency (or for the return/cashflow vs funding currency conversion). In this case multiple \verb+FXIndex+ entries are used within a single \lstinline!FXTerms! node, see \ref{lst:fxterms}. 
+    
+    
+        \begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+                <FXTerms>
+                      <FXIndex>FX-TR20H-GBP-SEK</FXIndex>
+                      <FXIndex>FX-TR20H-GBP-EUR</FXIndex>
+                      <FXIndex>FX-TR20H-GBP-USD</FXIndex>
+                </FXTerms>
+\end{minted}
+\caption{FXTerms with multiple FXIndex}
+\label{lst:fxterms}
+\end{listing}
+
+  \item PayUnderlyingCashFlowsImmediately [Optional]: If true, underlying cashflows like coupon or amortisation payments
+    from bonds or dividend payments from equities, are paid when they occur. If false, these cashflows are paid together
+    with the next return payment. If omitted, the default value is false for trade type TotalReturnSwap and true for
+    trade type ContractForDifference.
+
+  Allowable values: true (immediate payment of underlying cashflwos) or false (underlying cashflows are paid on the next
+                    return payment date)
+
+\end{itemize}
+
+\item The {\tt FundingData} block specifies the details of the funding leg(s). The block is optional and can be omitted
+  if no funding legs are present in the swap (e.g. for CFDs). It contains one or more LegData nodes, see
+  \ref{ss:leg_data}. Allowed leg types are
+  \begin{itemize}
+  \item Fixed
+  \item Floating
+  \item CMS
+  \item CMB
+  \end{itemize}
+  The number of coupons defined by the legs often match the number of periods of the return schedule, but this is not a
+  strict requirement. All funding legs must share the same payment currency.
+
+  There are several ways to determine the notional of each funding leg, which is determined by additional, optional
+  NotionalType tags. If given, there must be exactly one NotionalType tag for each LegData nodes. The types have the
+  following meanings:
+
+  \begin{itemize}
+    \item ``PeriodReset'': the notional of a funding period is determined by the underlying price on the last valuation
+      date before or on the accrual start date of the relevant funding coupon, this price is converted to the funding
+      currency using the FX rate on this same valuation date for compo / cross currency swaps.
+    \item ``DailyReset'': the notional of a funding period is determined by the underlying price on each day of the
+      accrual period, again converted to the funding currency using the FX rate the the same date for compo / cross
+      currency swaps. This notional type is only supported for fixed rate funding legs.
+    \item ``Fixed'': The notional is explicitly given in the leg data.
+  \end{itemize}
+
+  If the NotionalType tags are not given, they default to ``PeriodReset'' in case no explicit notional is given on the
+  leg and ``Fixed'' in case an explicit notional is given on the leg. See listing \ref{lst:trsdata} for and example with
+  two funding legs, one with a notional of type DailyReset and one with a notional of type PeriodReset.
+
+  If a FundingResetGracePeriod is given, a lag of the given number of calendar days is applied when determining the
+  relevant return valuation date that determines the funding notional. For example if FundingResetGracePeriod is set to
+  2, a valuation date that lies at most 2 calendar days after the funding accrual start date will be still considered
+  eligible for this period.
+
+\item The {\tt AdditionalCashflowData} block is optional and specifies unpaid amounts to be included in the NPV. The
+  type of this leg must be Cashflow. The currency of the leg must be either the asset currency or the funding currency
+  or the return currency.
+\end{itemize}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<TotalReturnSwapData>
+  <UnderlyingData>
+    <Trade>
+      <TradeType>Bond</TradeType>
+      <BondData>
+        <SecurityId>ISIN:XY1000000000</SecurityId>
+        <BondNotional>1000000.00</BondNotional>
+      </BondData>
+    </Trade>
+  </UnderlyingData>
+  <ReturnData>
+    <Payer>false</Payer>
+    <Currency>EUR</Currency>
+    <ScheduleData>...</ScheduleData>
+    <ObservationLag>0D</ObservationLag>
+    <ObservationConvention>P</ObservationConvention>
+    <ObservationCalendar>USD</ObservationCalendar>
+    <PaymentLag>2D</PaymentLag>
+    <PaymentConvention>F</PaymentConvention>
+    <PaymentCalendar>TARGET</PaymentCalendar>
+    <!-- <PaymentDates> -->
+    <!--   <PaymentDate> ... </PaymentDate> -->
+    <!--   <PaymentDate> ... </PaymentDate> -->
+    <!-- </PaymentDates> -->
+    <InitialPrice>1.05</InitialPrice>
+    <InitialPriceCurrency>EUR</InitialPriceCurrency>
+    <FXTerms>
+      <FXIndex>FX-ECB-EUR-USD</FXIndex>
+      <FXIndex>FX-ECB-GBP-USD</FXIndex>
+    </FXTerms>
+    <PayUnderlyingCashFlowsImmediately>false</PayUnderlyingCashFlowsImmediately>
+  </ReturnData>
+  <FundingData>
+    <FundingResetGracePeriod>2</FundingResetGracePeriod>
+    <NotionalType>DailyReset</NotionalType>
+    <LegData>
+      <Payer>true</Payer>
+      <LegType>Fixed</LegType>
+      ...
+    </LegData>
+    <NotionalType>PeriodReset</NotionalType>
+    <LegData>
+      <Payer>true</Payer>
+      <LegType>Floating</LegType>
+      ...
+    </LegData>
+  </FundingData>
+  <AdditionalCashflowData>
+    <LegData>
+      <Payer>false</Payer>
+      <LegType>Cashflow</LegType>
+      ...
+    </LegData>
+  </AdditionalCashflowData>
+</TotalReturnSwapData>
+\end{minted}
+\caption{Generic Total Return Swap with Convertible Bond underlying}
+\label{lst:trsdata}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <TotalReturnSwapData>
+      <UnderlyingData>
+        <Trade>
+          <TradeType>EquityPosition</TradeType>
+          <EquityPositionData>
+            <!-- basket price = quantity x sum_i ( weight_i x equityPrice_i x fx_i ) -->
+            <Quantity>1000</Quantity>
+            <Underlying>
+              <Type>Equity</Type>
+              <Name>BE0003565737</Name>
+              <Weight>0.5</Weight>
+              <IdentifierType>ISIN</IdentifierType>
+              <Currency>EUR</Currency>
+              <Exchange>XFRA</Exchange>
+            </Underlying>
+            <Underlying>
+              <Type>Equity</Type>
+              <Name>GB00BH4HKS39</Name>
+              <Weight>0.5</Weight>
+              <IdentifierType>ISIN</IdentifierType>
+              <Currency>GBP</Currency>
+              <Exchange>XLON</Exchange>
+            </Underlying>
+          </EquityPositionData>
+        </Trade>
+      </UnderlyingData>
+      <ReturnData>
+        ...
+        <InitialPrice>112.0</InitialPrice>
+        <InitialPriceCurrency>USD</InitialPriceCurrency>
+        <FXTerms>
+          <FXIndex>FX-ECB-EUR-USD</FXIndex>
+          <FXIndex>FX-TR20H-GBP-USD</FXIndex>
+        </FXTerms>
+      </ReturnData>
+      <FundingData>
+        <LegData>
+          <Payer>true</Payer>
+          <LegType>Floating</LegType>
+          <Currency>USD</Currency>
+          ...
+        </LegData>
+      </FundingData>
+      <AdditionalCashflowData>
+        <LegData>
+          <Payer>false</Payer>
+          <LegType>Cashflow</LegType>
+          ...
+        </LegData>
+      </AdditionalCashflowData>
+    </TotalReturnSwapData>
+  </Trade>
+\end{minted}
+\caption{Generic Total Return Swap with equity basket underlying}
+\label{lst:trsdata2}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <TotalReturnSwapData>
+      <UnderlyingData>
+        <Trade>
+          <TradeType>BondPosition</TradeType>
+          <BondBasketData>
+            <Quantity>100000000</Quantity>
+            <Identifier>ISIN:GB00B4KT9Q30</Identifier>
+          </BondBasketData>
+        </Trade>
+      </UnderlyingData>
+      <!-- omitting ReturnData, FundingData, AdditionalCashflowData -->
+    </TotalReturnSwapData>
+  </Trade>
+\end{minted}
+\caption{Generic Total Return Swap with bond basket underlying}
+\label{lst:trsdata3}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <TotalReturnSwapData>
+      <UnderlyingData>
+        <Derivative>
+          <Id>DERIV:XR3JF32BFD</Id>
+          <Trade>
+            <TradeType>Swaption</TradeType>
+              <SwaptionData> ... </SwaptionData>
+          </Trade>
+        </Derivative>
+      </UnderlyingData>
+      <!-- omitting ReturnData, FundingData, AdditionalCashflowData -->
+    </TotalReturnSwapData>
+  </Trade>
+\end{minted}
+\caption{Generic Total Return Swap on a derivative underlying}
+\label{lst:trsdata4}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <TotalReturnSwapData>
+      <UnderlyingData>
+        <Trade>
+          <TradeType>CommodityPosition</TradeType>
+          <CommodityPositionData>
+            <!-- basket price = quantity x sum_i ( weight_i x price_i x fx_i ) -->
+            <Quantity>1000</Quantity>
+            <Underlying>
+              <Type>Commodity</Type>
+              <Name>RIC:.BCOM</Name>
+              <Weight>1.0</Weight>
+              <PriceType>Spot</PriceType>
+            </Underlying>
+          </CommodityPositionData>
+        </Trade>
+      </UnderlyingData>
+      <!-- omitting ReturnData, FundingData, AdditionalCashflowData -->
+    </TotalReturnSwapData>
+  </Trade>
+\end{minted}
+\caption{Generic Total Return Swap on a commodity index underlying}
+\label{lst:trsdata5}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <ContractForDifferenceData>
+      <UnderlyingData>
+	<Trade>
+	  <TradeType>EquityPosition</TradeType>
+	  <EquityPositionData>
+	    <Quantity>1000</Quantity>
+	    <Underlying>
+	      <Type>Equity</Type>
+	      <Name>.STOXX50E</Name>
+	      <Weight>1.0</Weight>
+	      <IdentifierType>RIC</IdentifierType>
+	    </Underlying>
+	  </EquityPositionData>
+	</Trade>
+      </UnderlyingData>
+      <ReturnData>
+	<Payer>false</Payer>
+	<Currency>EUR</Currency>
+	<ScheduleData>
+	  <Dates>
+	    <Dates>
+	      <!-- the start date of the CFD on which the initial price was set -->
+	      <Date>2018-09-28</Date>
+	      <!-- fictitious closing date, e.g. set to "tomorrow" -->
+	      <Date>2019-01-04</Date>
+	    </Dates>
+	  </Dates>
+	</ScheduleData>
+	<InitialPrice>3399.20</InitialPrice>
+	<InitialPriceCurrency>EUR</InitialPriceCurrency>
+      </ReturnData>
+      </ContractForDifferenceData>
+\end{minted}
+\caption{CFD on STOXX50E with initial price 3399.20 EUR}
+\label{lst:trsdata_cfd}
+\end{listing}

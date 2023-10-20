@@ -1,0 +1,12 @@
+<TodaysMarket>
+  <DiscountingCurves id="default">
+    <DiscountingCurve currency="USD">Yield/USD/USD-FedFunds</DiscountingCurve>
+  </DiscountingCurves>
+  <IndexForwardingCurves/>
+  <CDSVolatilities id="default">
+		<CDSVolatility name="RED:2I65BYDY8">CDSVolatility/RED:2I65BYDY8</CDSVolatility>
+	</CDSVolatilities>
+  <DefaultCurves id="default">
+    <DefaultCurve name="RED:2I65BYDY8_5Y">Default/USD/RED:2I65BYDY8_5Y</DefaultCurve>
+  </DefaultCurves>
+</TodaysMarket>

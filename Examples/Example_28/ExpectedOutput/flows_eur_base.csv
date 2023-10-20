@@ -1,0 +1,5 @@
+#TradeId,Type,CashflowNo,LegNo,PayDate,FlowType,Amount,Currency,Coupon,Accrual,AccrualStartDate,AccrualEndDate,AccruedAmount,fixingDate,fixingValue,Notional,DiscountFactor,PresentValue,FXRate(Local-Base),PresentValue(Base),BaseCurrency,FloorStrike,CapStrike,FloorVolatility,CapVolatility
+FXFWD_1Y,FxForward,1,0,2017-02-06,Notional,11000000.0000,EUR,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,1.0031836048,11035019.6524294037,1.0000000000,11035019.6524294037,EUR,#N/A,#N/A,#N/A,#N/A
+FXFWD_1Y,FxForward,1,1,2017-02-06,Notional,-9009771.1702,GBP,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,0.9943267977,-8958656.9157694615,1.2316211336,-11033671.1864322908,EUR,#N/A,#N/A,#N/A,#N/A
+FXFWD_5Y,FxForward,1,0,2021-02-05,Notional,11000000.0000,EUR,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,1.0089508155,11098458.9701417014,1.0000000000,11098458.9701417014,EUR,#N/A,#N/A,#N/A,#N/A
+FXFWD_5Y,FxForward,1,1,2021-02-05,Notional,-9512182.2988,GBP,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,0.9467453751,-9005614.5988154188,1.2316211336,-11091505.2612581495,EUR,#N/A,#N/A,#N/A,#N/A

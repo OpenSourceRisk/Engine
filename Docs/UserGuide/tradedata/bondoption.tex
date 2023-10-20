@@ -1,0 +1,70 @@
+\subsubsection{Bond Option}
+\label{ss:bondoption}
+
+The structure of a trade node representing a \emph{BondOption}  is shown in
+listing \ref{lst:bondoption_data}: 
+\begin{itemize}
+\item The \lstinline!BondOptionData!  node is the trade data container for
+the option part of a bond option trade type. Vanilla bond 
+options are supported, the exercise style must be \emph{European}. 
+The \lstinline!BondOptionData!  node includes one and 
+only one \lstinline!OptionData! trade component sub-node plus elements
+specific to the bond option. 
+\item The latter also includes the underlying Bond description in the \lstinline!BondData!
+  node, see section \ref{ss:bond}, listing \ref{lst:bonddata} for details
+\end{itemize}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Trade id="...">
+    <TradeType>BondOption</TradeType>
+    <Envelope>
+        ...
+    </Envelope>
+    <BondOptionData>
+      <OptionData>
+          ...
+      </OptionData>
+      <StrikeData>
+        <StrikePrice>
+          <Value>11809123.56</Value>
+          <Currency>EUR</Currency>
+        </StrikePrice>
+      </StrikeData>
+      <Redemption>100.00</Redemption>
+      <PriceType>Dirty</PriceType>
+      <KnocksOut>false</KnocksOut>
+      <BondData>
+         <VolatilityCurveId>YieldVols-EUR</VolatilityCurveId>
+          ...
+      <BondData>
+    </BondOptionData>
+  </Trade>
+\end{minted}
+\caption{Bond Option data}
+\label{lst:bondoption_data}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!BondOptionData!  node follow below.
+
+\begin{itemize}
+	\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data} Option Data. Note 
+	that the bond option type allows for \emph{European} option style only.
+  \item StrikeData: A node containing the strike information.
+	Allowable values: Supports \lstinline!StrikePrice! and \lstinline!StrikeYield! as described in Section \ref{ss:strikedata}.
+
+  \item Redemption: Redemption ratio in percent
+	\item PriceType: This node defines which strike should be used for the pricing. If the node takes the value Dirty, 
+	the strike price should be set equal to the value of the Strike node. If the node takes the value Clean, 
+	the strike price should be set equal to the value of the Strike node plus accrued interest at the expiration date of the option.\\
+	Allowable values: Dirty or Clean.
+  \item KnocksOut: If true the option knocks out if the underlying defaults before the option expiry, if false the
+    option is written on the recovery value in case of a default of the bond before the option expiry
+\end{itemize}
+
+The meanings and allowable values of the elements in the \lstinline!BondData! are:
+
+\begin{itemize}
+  \item VolatilityCurveId: The yield volatility curve to use for the valuation of this bond option.
+\end{itemize}

@@ -1,0 +1,3 @@
+#TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency,Notional,NotionalCurrency,Notional(Base),NettingSet,CounterParty
+Swap_Prime_20y,Swap,2036-03-03,20.073770,-41.591028,USD,-41.591028,USD,10000000.00,USD,10000000.00,CPTY_A,CPTY_A
+Swap_FedFunds_20y,Swap,2036-03-03,20.073770,-17.528574,USD,-17.528574,USD,10000000.00,USD,10000000.00,CPTY_A,CPTY_A

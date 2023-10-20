@@ -1,0 +1,64 @@
+\subsubsection{StrikeData}
+\label{ss:strikedata}
+
+This trade component that can be used to define the strike entity for commodity, equity and bond options. It can be used to define either a Price or Yield strike, with examples below in  \ref{lst:strikeprice} and \ref{lst:strikeyield} respectively.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+        <StrikeData>
+		<StrikePrice>
+			<Value>1</Value>
+			<Currency>EUR</Currency>
+		</StrikePrice>
+	</StrikeData>
+\end{minted}
+\caption{Strike Price}
+\label{lst:strikeprice}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!StrikePrice! node are as follows:
+
+\begin{itemize}
+
+\item \lstinline!Value!: The strike price.
+
+Allowable values: Any positive real number.
+
+\item \lstinline!Currency! [Mandatory for Quanto/Compo, Optional otherwise]: The currency of the amount given in \lstinline!Value!, i.e. the strike currency.
+
+	Note:\\
+	Quanto: The payment/leg currency and the currency the underlying asset is quoted in differ. The strike currency is in the currency the asset is quoted in.\\
+	Compo (Composite): The payment/leg currency and the currency the underlying asset is quoted in differ. The strike currency is in the payment/leg currency.
+
+Allowable values: See Table \ref{tab:currency} \lstinline!Currency!. Minor Currencies in Table \ref{tab:currency} are also allowable. In non-quanto/compo cases, if left blank or omitted, it defaults to the currency of the leg for equity and commodity options, and to the currency the underlying bond is quoted in for BondOptions using reference data.
+
+\end{itemize}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+	<StrikeData>
+		<StrikeYield>
+			<Yield>0.055</Yield>
+			<Compounding>SimpleThenCompounded</Compounding>
+		</StrikeYield>
+	</StrikeData>
+\end{minted}
+\caption{Strike Yield}
+\label{lst:strikeyield}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!StrikeYield! node are as follows:
+
+\begin{itemize}
+
+\item \lstinline!Yield!: A Yield quoted in decimal form, e.g. 10\% should be entered as 0.1.
+
+Allowable values: Any real number.
+
+\item \lstinline!Compounding! [Optional]: The compounding or the yield given in  \lstinline!Yield!. 
+
+Allowable values: {\em Simple, Compounded, Continuous, SimpleThenCompounded}. Defaults to \emph{SimpleThenCompounded} if left blank or omitted.
+
+\end{itemize}

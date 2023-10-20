@@ -1,0 +1,123 @@
+\subsubsection{FX Double Barrier Option}
+
+The \lstinline!FxDoubleBarrierOptionData!  node is the trade data container for the \emph{FxDoubleBarrierOption} trade type.  
+
+An FX Double Barrier Option is a path-dependent option whose existence depends upon
+an FX spot rate reaching one of the two pre-set barrier levels. Exercise is European, and barriers are American (continuously monitored).
+
+FX Double Barrier options can be knock-in or knock-out:
+\begin{itemize}
+\item A knock-in option is a barrier option that only comes into existence/becomes active
+when the FX spot rate reaches the one of the barrier level at any point in the
+option's life. Once a barrier is knocked-in, the option will not cease to exist until
+the option expires and effectively it becomes a Vanilla FX Option.
+\item A knock-out option starts its life active, but ceases to exist/becomes inactive, if
+the one of the barriers is reached during the life of the option.
+\end{itemize}
+
+The barrier levels of an FX Double Barrier Option are quoted as the amount in SoldCurrency
+per unit BoughtCurrency. The \lstinline!FxDoubleBarrierOptionData!  node includes one  \lstinline!OptionData! trade component sub-node and one \lstinline!BarrierData! trade component sub-node plus elements
+specific to the FX Double Barrier Option. The structure of an example \lstinline!FxDoubleBarrierOptionData! node for a FX Double Barrier Option is shown in Listing
+\ref{lst:FxDoubleBarrieroption_data}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+        <FxDoubleBarrierOptionData>
+            <OptionData>
+                <LongShort>Long</LongShort>
+                <!-- Bought and Sold currencies/amounts are switched for Put -->
+                <OptionType>Call</OptionType>
+                <Style>European</Style>
+                <ExerciseDates>
+                 <ExerciseDate>2021-12-14</ExerciseDate>
+                </ExerciseDates>                
+                ...
+            </OptionData>
+            <BarrierData>
+                <Type>KnockOut</Type> <!-- KnockOut or KnockIn -->
+                <Levels>
+                    <Level>1.1</Level>
+                    <Level>1.2</Level>
+                </Levels>
+                <Rebate>0.0</Rebate>   
+            </BarrierData>
+            <StartDate>2019-01-25</StartDate>
+            <Calendar>TARGET</Calendar>            
+            <FXIndex>FX-ECB-EUR-USD</FXIndex>
+            <BoughtCurrency>EUR</BoughtCurrency>
+            <BoughtAmount>1000000</BoughtAmount>
+            <SoldCurrency>USD</SoldCurrency>
+            <SoldAmount>1100000</SoldAmount>
+        </FxDoubleBarrierOptionData>
+\end{minted}
+\caption{FX Double Barrier Option data}
+\label{lst:FxDoubleBarrieroption_data}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!FxDoubleBarrierOptionData!  node follow below.
+
+\begin{itemize}
+
+
+\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data}. 
+The relevant fields in the \lstinline!OptionData! node for an FxDoubleBarrierOption are:
+
+\begin{itemize}
+\item \lstinline!LongShort! The allowable values are \emph{Long} or \emph{Short}.
+
+\item \lstinline!OptionType! The allowable values are \emph{Call} or \emph{Put}. \\
+ \emph{Call} means that the holder of the option, upon expiry - assuming knock-in or no knock-out - has the right to receive the BoughtAmount and pay the SoldAmount. \\\emph{Put} means that the Bought and Sold currencies/amounts are switched compared to the trade data node. 
+For example, holder of BoughtCurrency EUR SoldCurrency JPY FX Double Barrier Call Option has the right to buy EUR using JPY, while
+holder of the Put counterpart has the right to buy JPY using EUR, or equivalently sell EUR for JPY. An alternative to define the latter option is to copy the Call option with following changes:\\
+a) swapping BoughtCurrency with SoldCurrency, b) swapping BoughtAmount with SoldAmount and c) inverting the barrier level (for example changing 110 to 0.0090909). Here barrier level is
+quoted as amount of EUR per unit JPY, which is not commonly seen on market and inconsistent with the format in Call options. For these reasons, using Put/Call flag instead is recommended.
+
+\item  \lstinline!Style! The FX Double Barrier Option type allows for \emph{European} option exercise style only.
+
+\item  \lstinline!Settlement! The allowable values are \emph{Cash} or \emph{Physical}.
+
+\item A \lstinline!PaymentData! [Optional] node can be added which defines the settlement of the option payoff.
+
+\item An \lstinline!ExerciseDates! node where exactly one ExerciseDate date element must be given.
+
+\item \lstinline!Premiums! [Optional]: Option premium amounts paid by the option buyer to the option seller.
+
+Allowable values:  See section \ref{ss:premiums}
+
+\end{itemize}
+
+
+\item \lstinline!BarrierData!: This is a trade component sub-node outlined in section \ref{ss:barrier_data}.
+Levels specified in BarrierData should be quoted as the amount in SoldCurrnecy per unit BoughtCurrency, with both currencies as defined in FxDoubleBarrierOptionData node.
+Changing the option from Call to Put or vice versa does not require switching the barrier levels. Two levels in ascending order should be defined in \lstinline!Levels!. \lstinline!Type! should be \emph{KnockOut} or \emph{KnockIn}.
+
+\item \lstinline!StartDate! [Optional]: The start date for checking if a barrier has been breached prior to today's date.  If omitted or left blank no check is made and it is assumed no barrier has been breached in the past. Has no impact if set to today's date or a date in the future.
+
+Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item \lstinline!Calendar! [Optional]: The calendar associated with the FX Index. Required if StartDate is set to a date prior to today's date, otherwise optional.
+
+Allowable values: See Table \ref{tab:calendar} Calendar.
+
+\item \lstinline!FXIndex! [Optional]: A reference to an FX Index source to check if the barrier has been breached. Required if StartDate is set to a date prior to today's date, otherwise optional and can be omitted but not left blank.
+
+Allowable values:  The format of the FX Index is``FX-SOURCE-CCY1-CCY2'' as described in table \ref{tab:fxindex_data}. 
+
+\item \lstinline!BoughtCurrency!: The bought currency of the FX barrier option. See OptionData above for more details.
+
+Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.
+
+\item \lstinline!BoughtAmount!: The amount in the BoughtCurrency.  
+
+Allowable values:  Any positive real number.
+
+\item \lstinline!SoldCurrency!: The sold currency of the FX barrier option. See OptionData above for more details.
+
+Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.
+
+\item \lstinline!SoldAmount!: The amount in the SoldCurrency.  
+
+Allowable values:  Any positive real number.
+
+\end{itemize}

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CalendarAdjustments>
+    <!-- we check that new calendars can't be declared in terms of each other-->
+    <Calendar name= "WeekendsOnly_new">
+        <BaseCalendar>WeekendsOnly</BaseCalendar>
+        <AdditionalHolidays>
+            <Date>2019-06-20</Date>
+        </AdditionalHolidays>
+        <AdditionalBusinessDays/>
+    </Calendar>
+    <Calendar name= "WeekendsOnly_newer">
+        <BaseCalendar>WeekendsOnly_new</BaseCalendar>
+        <AdditionalHolidays>
+            <Date>2019-06-21</Date>
+        </AdditionalHolidays>
+        <AdditionalBusinessDays/>
+    </Calendar>
+</CalendarAdjustments>

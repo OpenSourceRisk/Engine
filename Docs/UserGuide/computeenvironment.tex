@@ -1,0 +1,538 @@
+\documentclass[12pt, a4paper]{article}
+
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  urlcolor=blue
+}
+
+% Avoid warning about missing font for \textbackslash character.
+\usepackage[T1]{fontenc}
+
+% For nicer paragraph spacing
+\usepackage{parskip}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{epstopdf}
+\usepackage{longtable}
+\usepackage{floatrow}
+\usepackage{makecell}
+
+% Use \setminted here to get horizontal line above and below listings
+\usepackage{minted}
+\setminted{
+   frame=lines,
+   framesep=2mm
+}
+
+\usepackage{textcomp}
+\usepackage{color,soul}
+\usepackage[font={small,it}]{caption}
+\floatsetup[listing]{style=Plaintop}
+\floatsetup[longlisting]{style=Plaintop}
+
+% Turn off indentation but allow \indent command to still work.
+\newlength\tindent
+\setlength{\tindent}{\parindent}
+\setlength{\parindent}{0pt}
+\renewcommand{\indent}{\hspace*{\tindent}}
+
+\addtolength{\textwidth}{0.8in}
+\addtolength{\oddsidemargin}{-.4in}
+\addtolength{\evensidemargin}{-.4in}
+\addtolength{\textheight}{1.6in}
+\addtolength{\topmargin}{-.8in}
+
+\usepackage{longtable,supertabular}
+\usepackage{listings}
+\lstset{
+  frame=top,frame=bottom,
+  basicstyle=\ttfamily,
+  language=XML,
+  tabsize=2,
+  belowskip=2\medskipamount
+}
+
+\usepackage{tabu}
+\tabulinesep=1.0mm
+\restylefloat{table}
+
+\usepackage{siunitx}
+\usepackage{tablefootnote}
+\usepackage{multirow}
+\usepackage{colortbl}
+\usepackage{footmisc}
+\newenvironment{longlisting}{\captionsetup{type=listing}}{}
+
+% Inline code fragments can run over the page boundary without ragged right.
+\AtBeginDocument{\raggedright}
+
+\begin{document}
+
+\title{ORE Compute Framework Interface}
+\author{Acadia}
+\date{19 June 2023}
+\maketitle
+
+\newpage
+
+%-------------------------------------------------------------------------------
+\section*{Document History}
+
+\begin{flushleft}
+\begin{supertabular}{|l|l|p{9cm}|}
+\hline
+Date & Author & Comment \\
+\hline
+19 June 2023 & Acadia & initial release\\
+\hline
+\end{supertabular}
+\end{flushleft}
+
+\newpage
+
+\tableofcontents
+\newpage
+
+\section{Overview}
+
+This paper describes how to implement the ORE compute framework interface. An implementation of this interface can be
+used to do calculations on external devices like GPUs from ORE engines. For example, the scripted trade module supports
+this interface to speed up sensitivity or backtest calculations.
+
+The interface is defined in \verb+QuantExt/qle/math/computeenvironment.hpp+. A reference implementation is given in
+\verb+QuantExt/qle/math/openclenvironment.hpp/cpp+. The latter can can also serve as a template for new framework
+implementations.
+
+The file \verb+QuantExt/qle/math/computeenvironment.hpp+ contains three class declarations:
+
+\begin{itemize}
+\item \verb+ComputeFramework+: This is one of two interfaces that needs to be implemented to add a new compute
+  framework. See \ref{implComputeFramework} for more details.
+\item \verb+ComputeContext+: This is the second interface that needs to be implemented to add a new compute
+  framework. See \ref{implComputeContext} for more details.
+\item \verb+ComputeEnvironment+: This is a singleton exposing the compute frameworks to ORE . See
+  \ref{ComputeEnvironment} for more details.
+\end{itemize}
+
+The typical usage of these interfaces from ORE engines is described in \ref{usageFromORE}.
+
+\section{CMake setting to enable a compute framework}\label{cmakeSetting}
+
+We recommend to introduce a cmake setting that allows to enable / disable the build of each compute framework. The
+reason is that not every framework is supported on each machine.
+
+For example, the build of the OpenCL framework requires the installation of an open cl driver and header files for
+development. The OpenCL framework is enabled with \verb+-D ORE_ENABLE_OPENCL+ in the cmake configure step.
+
+The following section in \verb+QuantExt/qle/CMakeLists.txt+ takes care of the linking against the open cl driver on
+apple, linux and windows platforms:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+if(ORE_ENABLE_OPENCL)
+  if(APPLE)
+    target_link_libraries(${QLE_LIB_NAME} "-framework OpenCL")
+  else()
+    find_package(OpenCL REQUIRED)
+    target_link_libraries(${QLE_LIB_NAME} OpenCL::OpenCL)
+  endif()
+endif()
+\end{minted}
+
+Furthermore we define a compiler macro in \verb+cmake/commonSettings.cmake+ whenever we enable OpenCL in the cmake
+build:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+# set compiler macro if open cl is enabled
+if (ORE_ENABLE_OPENCL)
+  add_compile_definitions(ORE_ENABLE_OPENCL)
+endif()
+\end{minted}
+
+The latter flag is used in \verb+QuantExt/qle/openclenvironment.cpp+ to include the OpenCL headers
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+#ifdef ORE_ENABLE_OPENCL
+#ifdef __APPLE__
+#include <OpenCL/cl.h>
+#else
+#include <CL/cl.h>
+#endif
+#endif
+\end{minted}
+
+and also to distinguish a build with and without support for OpenCL. Notice that a minimal implementation of the compute
+framework interface is required even when the framework is disabled in the build. See \ref{implComputeFramework} for more
+details on this.
+
+\section{The ComputeEnvironment singleton}\label{ComputeEnvironment}
+
+The \verb+ComputeEnvironment+ is a thread local singleton that exposes external compute frameworks to ORE code. A new
+compute framework has to be registered to this singleton by instantiating a raw pointer to the framework and adding it
+to the frameworks container:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+void ComputeEnvironment::reset() {
+    // ...
+    frameworks_.push_back(new OpenClFramework());
+}
+\end{minted}
+
+The \verb+ComputeEnvironment+ singleton provides the following methods:
+
+\begin{itemize}
+\item \verb+getAvailableDevices()+: returns a set of descriptions of available devices for all registered frameworks. A
+  description is a triplet like e.g. \verb+OpenCL/Apple/AMD Radeon Pro 5500M Compute Engine+ where the first component
+  identifies the framework, and the second and third component the concrete compute device exposed by that
+  framework. The second component is the name of the platform and the third the name of the device itself.
+\item \verb+selectContext()+: selects a context to work with. A context corresponds one to one to a device within a
+  framework.
+\item \verb+context()+: returns a reference to the currently selected context
+\item \verb+hasContext()+: returns true if a context was selected previously and can be accessed via \verb+context()+
+\end{itemize}
+
+The fact that \verb+ComputeEnvironment+ is thread local means that each thread will access different instances of
+\verb+ComputeFramework+ and the \verb+ComputeContext+ instances within that framework. This means that the
+implementation of the methods in the latter two interfaces do not need to be thread-safe. However notice that calls into
+a lower level library (like OpenCL) have to be made thread-safe dependent on the specification of that lower level
+library.
+
+\section{Implementation of the required interfaces}
+
+\subsection{Implementation of the ComputeFramework interface}\label{implComputeFramework}
+
+The \verb+ComputeFramework+ interface requires the implementation of the following methods:
+
+\begin{itemize}
+\item \verb+getAvailableDevices()+ should return the set of names of supported devices in that framework. By convention
+  a device name is a triplet of the form \verb+OpenCL/Apple/AMD Radeon Pro 5500M Compute Engine+ where each component
+  has the following meaning:
+  \begin{itemize}
+    \item \verb+OpenCL+ the name of the framework. This name should be unique across all implementations of the
+      \verb+ComputeFramework+ interface within ORE. If there are several implementations for the same framework, they
+      should be distinguished by an additional description separated with an underscore,
+      e.g. \verb+OpenCL_OptimizedKernels+.
+    \item \verb+Apple+ the name of the platform.
+    \item \verb+AMD Radeon Pro 5500M Compute Engine+ the name of the actual device.
+  \end{itemize}
+  Notice that the same device can appear under several frameworks, e.g. a GPU could be accessed both via an OpenCL
+  driver or via a CUDA driver.
+\item \verb+getContext()+ should return a raw pointer to a \verb+ComputeContext+ implementation for a given device label
+  or throw an erro if the device label is not valid. See \ref{implComputeContext} for more details.
+\item \verb+Destructor+ The destructor of \verb+ComputeFramework+ is virtual and has an empty default implementation. It
+  can be override in implementations to free ressources. For example, the \verb+OpenClFramework+ implementation stores
+  raw pointers for each compute contexts that need to be deleted on destruction of the \verb+OpenClFramework+ instance.
+\end{itemize}
+
+If the build of a framework is {\em disabled} as described in \ref{cmakeSetting}, \verb+getAvailableDevices()+ should
+return an empty set. A call to \verb+getContext()+ should always throw a runtime exception in this case.
+
+\subsection{Implementation of the ComputeContext interface}\label{implComputeContext}
+
+The \verb+ComputeContext+ interface represents a context in which calculations can be performed. The relation to
+\verb+ComputeFramework+ is that \verb+ComputeFramework+ provides a pointer to \verb+ComputeContext+ for each device
+within the framework. There is a one to one relationship between contexts and devices. The \verb+ComputeContext+
+interface requires the implementation of the following methods:
+
+\begin{itemize}
+\item \verb+init()+ initialize the context. This method is called every time \verb+selectContext()+ is called in
+  \verb+ComputeEnvironment+ and should be used to do one-off set up tasks. For example \verb+OpenClContext+ will create
+  an OpenCL context and command queue for a device if this was not done before. If \verb+init()+ was already called,
+  subsequent calls do nothing in that implementation.
+\item \verb+initiateCalculation()+: start a new calculation. The input parameters are:
+  \begin{itemize}
+  \item \verb+n+: The size of the vectors on which the calculations will be performed.
+  \item \verb+id+: The id of the calculation. If \verb+id+ is not \verb+0+ the steps from a previous calculation
+    identified by \verb+id+ will be replayed in the current calculation if the version of the calculation matches the
+    previous calculation. In this case only the input variables and random variates (see below) need to be set to
+    retrieve the results of the calculation calling \verb+finalizeCalculation()+. If \verb+id+ is \verb+0+ on the other
+    hand, a new calculation \verb+id+ will be generated and returned.
+  \item \verb+version+: The version of a calculation.
+  \item \verb+debug+: A flag indicating whether debug information on the number of performed operations and timings for
+    data copying, kernel building and calculations should be collected.
+  \end{itemize}
+  The output parameter is a pair consisting of
+  \begin{itemize}
+  \item \verb+id+: the calculation id of the new calculation.
+  \item \verb+newCalc+: a bool indicating whether the calculation matches a previously recorded calculation and will be
+    replayed as described above.
+  \end{itemize}
+  See \ref{usageFromORE} for more context on ids and versions of calculations.
+\item \verb+createInputVariable()+: create and input variable (scalar or vector, the latter given as a raw pointer) and
+  return the identifier of the variable.
+\item \verb+createInputVariates()+: create input variates (normally distributed random variates), the parameters are
+  \begin{itemize}
+  \item \verb+dim+ the dimension (typically the number of assets in a MC simulation)
+  \item \verb+steps+ the number of steps (typically the number of time steps in a MC simulation)
+  \item \verb+seed+ the seed of the random number generation, equal seeds must generate identical variates, different
+    seeds might or might not generate different variates
+  \end{itemize}
+  The output parameter is a vector of a vector of ids for the generated variates. The inner vector loops of the steps,
+  the outer vector over the dimensions.
+\item \verb+applyOperation()+: apply an operation to a list of arguments and return the id of the result. The list of
+  operations is described in \ref{randomVariableOpCodes}
+\item \verb+freeVariable()+: indicate that the variable with the given id will no longer be referenced in subsequent
+  calculations. The variable id can be reused as a new variable.
+\item \verb+declareOutputVariable()+: declare a variable with given id as part of the output vector
+\item \verb+finalizeCalculation()+: execute the calculation and populate the given vector of vector of floats with the
+  result. The inner vector is given as a raw pointer and must have the size of the calculation. The outer vector matches
+  the output variables in the order they were declared before.
+\item \verb+debugInfo()+: provide info on the number of elementary operations and timings on data copying, program build
+  and calculations. This info is collected if a new calculation is started with flag debug set to true
+\end{itemize}
+
+The following order of calls to a \verb+ComputeContext+ from top to bottom is guaranteed:
+
+\begin{enumerate}
+\item \verb+initiateCalculation()+: once
+\item \verb+createInputVariable()+: never, once, or several times
+\item \verb+createInputVariates()+: never, once, or several times
+\item \verb+applyOperation()+: only called if the current calculation is not replayed from a previous calculation, then can be called never, once, or several times
+\item \verb+freeVariable()+: only called if the current calculation is not replayed, then can be called never, once, or several times
+\item \verb+declareOutputVariable()+: only called if the current calculation is not replayed, then can be called never, once, or several times
+\item \verb+finalizeCalculation()+: never or once
+\end{enumerate}
+
+\subsection{Random Variable Op Codes}\label{randomVariableOpCodes}
+
+Table \ref{tab_opcodes} summarizes the random variable operations that are defined in
+\verb+QuantExt/qle/math/randomvariable_opcodes.hpp+. Each op code needs to be implemented in
+\verb+ComputeContext::applyOperation()+.
+
+\begin{table}[ht]
+  \begin{flushleft}
+    \begin{tabular}{|l|l|l|}
+      \hline
+      OpCode & \#args & description \\ \hline
+      Add & 2 & sum of two variables \\ \hline
+      Subtract & 2 & difference of two variables \\ \hline
+      Negative & 1 & negative of a variable \\ \hline
+      Mult & 2 & product of two variables \\ \hline
+      Div & 2 & quotient of two variables \\ \hline
+      ConditionalExpectation & n & conditional expectation of first argument\\ & & given the rest of the arguments as regressors \\ \hline
+      IndicatorEq & 2 & indicator function for equality of two variables \\ \hline
+      IndicatorGt & 2 & indicator function for greater-than relation of\\ & & two variables \\ \hline
+      IndicatorGeq & 2 & indicator function for greater-than-or-equal\\ & & relation of two variables \\ \hline
+      Min & 2 & minimum of two variables \\ \hline
+      Max & 2 & maximum of two variables \\ \hline
+      Abs & 1 & absolute value of a variable \\ \hline
+      Exp & 1 & exponential of a variable \\ \hline
+      Sqrt & 1 & square root of a variable \\ \hline
+      Log & 1 & natural logarithm of a variable \\ \hline
+      Pow & 2 & power of basis, exponent \\ \hline
+      NormalCdf & 1 & normal cumulative distribuion \\ \hline
+      NormalPdf & 1 & normal distribution density\\ \hline
+    \end{tabular}
+  \end{flushleft}
+\caption{Random Variable Op Codes}
+\label{tab_opcodes}
+\end{table}
+
+\section{Unit tests}\label{unitTests}
+
+There are some unit tests testing all available external frameworks. The tests are located in
+\verb+QuantExtTestSuite/ComputeEnvironmentTest+:
+
+\begin{itemize}
+  \item \verb+testEnvironmentInit+: test to initialize each framework
+  \item \verb+testSimpleCalc+: test a simple calculation
+  \item \verb+testLargeCalc+: test a larger scale calculation
+  \item \verb+testRngGeneration+: test random variate generation
+  \item \verb+test_ScriptedTrade_FX_TaRF_XAUUSD_sensi_ops+: test a (simulated) sensi calculation for an FX TaRF
+\end{itemize}
+
+The unit test also provide examples how an external calculation is orchestrated.
+
+\section{The typical usage of am external compute framework within ORE}\label{usageFromORE}
+
+This section describes how a compute framework is typically used from an ORE engine. We use
+\verb+ScriptedInstrumentPricingEngineCG+ as an example.
+
+
+\subsection{Context selection}
+
+If an external device is configured for a computation the first step is to make sure that there is a context for the
+device as in
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+ if (!ComputeEnvironment::instance().hasContext()) {
+     ComputeEnvironment::instance().selectContext(externalComputeDevice_);
+ }
+\end{minted}
+
+where \verb+externalComputeDevice_+ is a string identifying the device.
+
+\subsection{Initiation of a calculation}
+
+Whenever a new computation i.e. the (re)pricing of a trade is requested a calculation is initiated
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+ std::tie(externalCalculationId_, newExternalCalc) =
+   ComputeEnvironment::instance().context()
+       .initiateCalculation(model_->size(), externalCalculationId_, cgVersion_);
+\end{minted}
+
+providing
+
+\begin{itemize}
+\item \verb+model_->size()+: the size of the vectors participating in the calculation
+\item \verb+externalCalculationId_+: an external calculation id tied to the specific calculation, this is initially zero
+  to get a new id and for subsequent calculations of the same trade this id is reused
+\item \verb+cgVersion_+: a version number (initially zero). The version is incremented whenever a repricing requires a
+  different sequence of operations to be performed, which is the case when the evaluation date changes
+\end{itemize}
+
+and retrieving the external calc id and a flag indicating whether the calculation requires a resubmission of an
+operation sequence (\verb+newExternalCalc+ = \verb+true+) or not (\verb+newExternalCalc+ = \verb+false+)
+
+\subsection{Populating the input variables}
+
+The next step is to initialize the input variables. For scripted trades this is done using \verb+ExternalRandomVariable+
+as a proxy class (replacing the usual \verb+RandomVariable+ class for ``ordinary'' calculations). The code snipped
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+valuesExternal[index] = ExternalRandomVariable((float)v);
+\end{minted}
+
+creates an input variable with value \verb+v+ and stores the variable instance in a vector \verb+values+ at a specific
+position \verb+index+. Notice that the latter \verb+index+ is independent of the variable id within the compute
+context\footnote{having said this, the idea of using an integer id to identify variables is very similar in the scripted
+trade pricing engine and the compute context}.
+
+The former is done via the constructor
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+ExternalRandomVariable::ExternalRandomVariable(float v)
+    : initialized_(true), v_(v) {
+      id_ = ComputeEnvironment::instance().context().createInputVariable(v);
+    }
+\end{minted}
+
+calling the appropriate method in the current compute context and storing the provided \verb+id+ as a member of the
+external random variable.
+
+\subsection{Populating the input variates}
+
+The next step is the creating of random variates
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+auto gen = ComputeEnvironment::instance().context()
+                                  .createInputVariates(rv.size(),
+                                                       rv.front().size(),
+                                                       42);
+for (Size k = 0; k < rv.size(); ++k) {
+  for (Size j = 0; j < rv.front().size(); ++j)
+      valuesExternal[rv[k][j]] = ExternalRandomVariable(gen[k][j]);
+}
+\end{minted}
+
+where \verb+k+ loops over the dimensions (e.g. number of assets) and \verb+j+ loops over the time steps and \verb+rv+ is
+a vector of vectors storing the indices of the required random variates by dimensions and time steps. The external
+random variable contructor used in this case is
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+ExternalRandomVariable::ExternalRandomVariable(std::size_t id)
+    : initialized_(true), id_(id) {}
+\end{minted}
+
+simply storing the provided \verb+id+ that was previously generated by the call to \verb+createInputVariates()+ within
+the external random variable instance.
+
+\subsection{Apply the operations (for new calculation only)}
+
+The next step is to run the calculation if required, i.e. if the flag \verb+newExternalCalc+ is \verb+true+ (see
+above). This is done using the \verb+forwardEvaluation()+ algorithm on a computation graph \verb+g+.
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+if (newExternalCalc) {
+    forwardEvaluation(*g, valuesExternal, opsExternal_,
+                      ExternalRandomVariable::deleter, useCachedSensis_,
+                      opNodeRequirements_, keepNodes);
+    ...
+\end{minted}
+
+The provided operations \verb+opsExternal+ are implemented via yet another constructor, e.g. the addition of two
+external random variates is represented by the lambda
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+ops.push_back([](const std::vector<const ExternalRandomVariable*>& args) {
+    return ExternalRandomVariable(RandomVariableOpCode::Add, args);
+});
+\end{minted}
+
+using the external random variable constructor
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+ExternalRandomVariable::ExternalRandomVariable(
+               const std::size_t randomVariableOpCode,
+               const std::vector<const ExternalRandomVariable*>& args) {
+    std::vector<std::size_t> argIds(args.size());
+    std::transform(args.begin(), args.end(), argIds.begin(),
+                   [](const ExternalRandomVariable* v) { return v->id(); });
+    id_ = ComputeEnvironment::instance().context()
+                   .applyOperation(randomVariableOpCode, argIds);
+    initialized_ = true;
+}
+\end{minted}
+
+which calls into \verb+applyOperation()+ of the current compute context providing the appropriate op code and argument
+ids. The deleter of the ExternalRandomVariable is implemented as
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+std::function<void(ExternalRandomVariable&)> ExternalRandomVariable::deleter =
+  std::function<void(ExternalRandomVariable&)>(
+                                 [](ExternalRandomVariable& x) { x.clear(); });
+\end{minted}
+
+which calls into \verb+freeVariable()+ in the compute context
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+void ExternalRandomVariable::clear() {
+    ComputeEnvironment::instance().context().freeVariable(id_);
+    initialized_ = false;
+}
+\end{minted}
+
+\subsection{Declare the output (for new calculation only)}
+
+The next step is to declare the output by calling
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+valuesExternal[baseNpvNode].declareAsOutput();
+\end{minted}
+
+which propagates the declaration to the compute context
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+void ExternalRandomVariable::declareAsOutput() const {
+    ComputeEnvironment::instance().context().declareOutputVariable(id_);
+}
+\end{minted}
+
+and initializing a buffer storing the result of the computation
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+externalOutput_ = std::vector<std::vector<float>>(1,
+                               std::vector<float>(model_->size()));
+externalOutputPtr_ = std::vector<float*>(1, &externalOutput_.front()[0]);
+\end{minted}
+
+\subsection{Finalize the calculation}
+
+The final step which is the first one that is again independent of the \verb+newExternalCalc+ flag is to retrieve the result
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+ComputeEnvironment::instance().context().finalizeCalculation(externalOutputPtr_);
+baseNpv_ = results_.value = externalAverage(externalOutput_[0]);
+\end{minted}
+
+Here, \verb+externalAverage()+ computes the average of the retrieved output vector.
+
+%% \begin{thebibliography}{*}
+%% \end{thebibliography}
+
+\end{document}

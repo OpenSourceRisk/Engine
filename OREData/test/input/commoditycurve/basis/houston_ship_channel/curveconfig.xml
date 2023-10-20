@@ -1,0 +1,32 @@
+<CurveConfiguration>
+  <CommodityCurves>
+    <CommodityCurve>
+      <CurveId>NYMEX:NG</CurveId>
+      <CurveDescription>NYMEX Henry Hub natural gas</CurveDescription>
+      <Currency>USD</Currency>
+      <Quotes>
+        <Quote>COMMODITY_FWD/PRICE/NYMEX:NG/*</Quote>
+      </Quotes>
+      <DayCounter>A365</DayCounter>
+      <InterpolationMethod>LinearFlat</InterpolationMethod>
+      <Extrapolation>true</Extrapolation>
+    </CommodityCurve>
+    <CommodityCurve>
+      <CurveId>ICE:HXS</CurveId>
+      <CurveDescription>ICE Houston Ship Channel</CurveDescription>
+      <Currency>USD</Currency>
+      <BasisConfiguration>
+        <BasePriceCurve>NYMEX:NG</BasePriceCurve>
+        <BasePriceConventions>NYMEX:NG</BasePriceConventions>
+        <BasisQuotes>
+          <Quote>COMMODITY_FWD/PRICE/ICE:HXS/*</Quote>
+        </BasisQuotes>
+        <BasisConventions>ICE:HXS</BasisConventions> 
+        <DayCounter>A365</DayCounter>
+        <InterpolationMethod>LinearFlat</InterpolationMethod>
+        <AddBasis>true</AddBasis>
+      </BasisConfiguration>
+      <Extrapolation>true</Extrapolation>
+    </CommodityCurve>
+  </CommodityCurves>
+</CurveConfiguration>

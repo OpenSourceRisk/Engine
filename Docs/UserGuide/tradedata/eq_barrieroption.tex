@@ -1,0 +1,75 @@
+\subsubsection{Equity Barrier Option}
+
+European exercise, American barrier.
+
+The \lstinline!EquityBarrierOptionData!  node is the trade data container for the \emph{EquityBarrierOption} trade type. The barrier level of an Equity Barrier Option should be quoted in the currency of 
+the underlying Equity spot price. The \lstinline!EquityBarrierOptionData!  node includes one  \lstinline!OptionData! trade component sub-node and one \lstinline!BarrierData! trade component sub-node plus elements
+specific to the Equity Barrier Option. 
+
+An Equity Barrier Option is a path-dependent option whose existence depends upon an Equity underlying
+spot price reaching a pre-set barrier level. Exercise is European.
+
+This product has a continuously monitored single barrier (American Barrier style) with a Vanilla European Equity
+Option Underlying.
+
+The structure of an example \lstinline!EquityBarrierOptionData! node for an Equity Barrier Option is shown in Listing
+\ref{lst:eqbarrieroption_data}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+        <EquityBarrierOptionData>
+            <OptionData>
+                ...
+            </OptionData>
+            <BarrierData>
+                ...
+            </BarrierData>
+            <StartDate>2019-01-25</StartDate>
+            <Calendar>TARGET</Calendar>
+            <EQIndex>EQ-RIC:.SPX</EQIndex>            
+            <Name>RIC:.SPX</Name>
+            <StrikeData>
+				<StrikePrice>
+					<Value>3200.00</Value>
+					<Currency>USD</Currency>
+				</StrikePrice>
+            </StrikeData>
+            <Quantity>1000</Quantity>
+        </EquityBarrierOptionData>
+\end{minted}
+\caption{Equity Barrier Option data}
+\label{lst:eqbarrieroption_data}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!EquityBarrierOptionData!  node follow below.
+
+\begin{itemize}
+\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data}. Note that the Equity Barrier Option type allows for \emph{European} option style only. 
+
+\item BarrierData: This is a trade component sub-node outlined in section \ref{ss:barrier_data}.
+Level specified in BarrierData should be quoted in the same currency with the underlying Equity spot price.
+Changing the option from Call to Put or vice versa does not require switching the barrier level.
+
+\item StartDate[Optional]: The start date for checking if a barrier has been breached prior to today's date. If omitted or left blank no check is made and it is assumed no barrier has been breached in the past. Has no impact if set to today's date or a date in the future.
+
+Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item Calendar[Optional]: The calendar associated with the Equity Index. Required if StartDate is set to a date prior to today's date, otherwise optional.
+
+Allowable values: See Table \ref{tab:calendar} Calendar.
+
+\item EQIndex[Optional]: A reference to an Equity Index source to check if the barrier has been breached. Required if StartDate is set to a date prior to today's date, otherwise optional and can be omitted but not left blank.
+
+Allowable values:  The format of the Equity Index is``EQ-RIC:Code''. 
+
+\item Underlying:  This node may be used as an alternative to the \lstinline!Name! node to specify the underlying equity. This in turn defines the equity curve used for pricing. The \lstinline!Underlying! node is described in further detail in Section \ref{ss:underlying}.
+
+\item StrikeData: A node containing the strike in \lstinline!Value! and the currency in which both the underlying and the strike are quoted in \lstinline!Currency!.
+Allowable values: Only supports \lstinline!StrikePrice! as described in Section \ref{ss:strikedata}.
+	    
+\item Quantity: The number of units of the underlying covered by the transaction.
+    
+Allowable values:  Any positive real number.
+
+\end{itemize}

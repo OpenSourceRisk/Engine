@@ -1,0 +1,74 @@
+\subsubsection{Bond Repo}
+
+A bond repo trade is set up using the trade type \verb+BondRepo+ and a \verb+BondRepoData+ block as shown in listing
+\ref{lst:bondrepodata}. The block contains two nodes
+
+\begin{itemize}
+\item \verb+BondData+, which specifies the underlying bond and its quantity, and
+\item \verb+RepoData+, which specifies the cash leg of the repo
+\end{itemize}
+
+The \verb+BondData+ block contains the following fields
+
+\begin{itemize}
+\item SecurityId: The identified of the underlying security.\\
+  Allowable values: A valid key, usually of the form ``ISIN::XY012345679''
+\item BondNotional: The notional of the underlying bond. This is the effective notional used as collateral, i.e. it
+  should include hair cuts. Usually the number Bond Notional x Bond Dirty Price x (1 - Haircut) will correspond to the
+  nominal on the cash leg at trade inception.\\
+  Allowable values: Any positive real number.
+    \item CreditRisk [Optional] Boolean flag indicating whether to show Credit Risk on the Bond product. \\
+      Allowable Values: \emph{true} or \emph{false} Defaults to \emph{true} if left blank or omitted.    
+\end{itemize}
+
+In this case the details of the underlying bond is read from the reference data. It is also possible to inline the
+details in the trade, see \ref{ss:bond} for more details on this.
+
+The \verb+RepoData+ block contains exactly one \verb+LegData+ subnode that describes the payments on the cash leg of the
+repo, see \ref{ss:leg_data} for details on how to set this up. The \verb+Payer+ leg determines whether interest is paid
+(regular repo) or received (reversed repo).
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<BondRepoData>
+  <BondData>
+    <SecurityId>ISIN:US912828X703</SecurityId>
+    <BondNotional>27807597.777444</BondNotional>
+  </BondData>
+  <RepoData>
+    <LegData>
+      <LegType>Fixed</LegType>
+      <Payer>true</Payer>
+      <Currency>USD</Currency>
+      <Notionals>
+        <Notional>28371510.00</Notional>
+      </Notionals>
+      <ScheduleData>
+        <Rules>
+          <StartDate>2020-01-06</StartDate>
+          <EndDate>2020-04-07</EndDate>
+          <Tenor>1Y</Tenor>
+          <Calendar>US</Calendar>
+          <Convention>MF</Convention>
+          <TermConvention>MF</TermConvention>
+          <Rule>Forward</Rule>
+          <EndOfMonth/>
+          <FirstDate/>
+          <LastDate/>
+        </Rules>
+      </ScheduleData>
+      <DayCounter>A360</DayCounter>
+      <PaymentConvention>F</PaymentConvention>
+      <FixedLegData>
+        <Rates>
+          <Rate>0.0178</Rate>
+        </Rates>
+      </FixedLegData>
+    </LegData>
+  </RepoData>
+</BondRepoData>
+\end{minted}
+\caption{Bond Repo Data}
+\label{lst:bondrepodata}
+\end{listing}

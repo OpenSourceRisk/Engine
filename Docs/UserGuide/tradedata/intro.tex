@@ -1,0 +1,68 @@
+%========================================================
+\section{Trade Data}\label{sec:portfolio_data}
+%========================================================
+
+The trades that make up the portfolio are specified in an XML file where the portfolio data is specified in a hierarchy
+of nodes and sub-nodes.  The nodes containing individual trade data are referred to as elements or XML elements. These
+are generally the lowest level nodes.
+
+\medskip
+
+The top level portfolio node is delimited by an opening {\tt <Portfolio>} and a closing {\tt </Portfolio>} tag. Within
+the portfolio node, each trade is defined by a starting {\tt <Trade id="[Tradeid]">} and a closing {\tt </Trade>} tag.
+Further, the trade type is set by the TradeType XML element. Each trade has an Envelope node that includes the same XML
+elements for all trade types (Id, Type, Counterparty, Rating, NettingSetId) plus the Additional fields node, and after
+that, a node containing trade specific data.
+
+\vspace{1em}
+An example of a {\tt portfolio.xml} file with one Swap trade including the full envelope node is shown in Listing \ref{lst:portfolio}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Portfolio>
+  <Trade id="Swap#1">
+    <TradeType> Swap </TradeType>
+    <Envelope>
+      <CounterParty> Counterparty#1 </CounterParty>
+      <NettingSetId> NettingSet#2 </NettingSetId>
+      <PortfolioIds>
+          <PortfoliodId> PF#1 </PortfolioId>
+          <PortfoliodId> PF#2 </PortfolioId>
+      </PortfolioIds>
+      <AdditionalFields>
+        <Sector> SectorA </Sector>
+        <Book> BookB </Book>
+        <Rating> A1 </Rating>
+      </AdditionalFields>
+    </Envelope>
+    <SwapData>
+        ...
+        [Trade specific data for a Swap]
+        ...
+    </SwapData>
+  </Trade>
+</Portfolio>
+\end{minted}
+\caption{Portfolio}
+\label{lst:portfolio}
+\end{listing}
+
+A description of all portfolio data, i.e. of each node and XML element in the portfolio file, with examples and
+allowable values follows below. There is only one XML elements directly under the top level {\tt Portfolio} node:
+
+\begin{itemize}
+%\item {\tt Trade id}: The first element of each trade is the {\tt Trade id} and it is used to identify trades within a
+%  portfolio. Trade ids should be unique within a portfolio.  The {\tt
+%   Trade id} element is entered as an attribute to the XML element {\tt <Trade>}, such as {\tt <Trade id="ExampleTrade">}
+%  in the beginning closed by {\tt </Trade>} at the end of the trade data.
+%
+%Allowable values:  Any alphanumeric string. The underscore (\_) sign may be used as well. 
+\item {\tt TradeType}: %The Trade type is set with the {\tt TradeType} element, as well as with the {\tt Type} element in  the envelope. The two Trade type entries should be identical. 
+ORE currently supports 14 trade types.
+
+%Allowable values:  \emph{Swap, CapFloor, Swaption, FxForward, FxOption, Bond, CreditDefaultSwap}
+Allowable values: \emph{ForwardRateAgreement, Swap, CapFloor, Swaption, FxForward, FxSwap, FxOption,
+EquityForward, EquityOption, VarianceSwap, CommodityForward, CommodityOption, CreditDefaultSwap, Bond}
+
+\end{itemize}

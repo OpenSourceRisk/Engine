@@ -1,0 +1,117 @@
+\subsubsection{Bond Option (using bond reference data)}
+\label{ss:bondoption_refdata}
+
+The structure of a trade node representing a \emph{BondOption}  is shown in
+listing \ref{lst:bondoption_data_refdata}:
+\begin{itemize}
+\item The \lstinline!BondOptionData!  node is the trade data container for
+the option part of a bond option trade type. Vanilla bond
+options are supported, the exercise style must be \emph{European}.
+The \lstinline!BondOptionData!  node includes one and
+only one \lstinline!OptionData! trade component sub-node plus elements
+specific to the bond option.
+\item The latter also includes the underlying Bond description in the \lstinline!BondData!
+  node, see below for details
+\end{itemize}
+
+Note that only par redemption vanilla bonds are supported.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Trade id="...">
+    <TradeType>BondOption</TradeType>
+    <Envelope>
+        ...
+    </Envelope>
+    <BondOptionData>
+      <OptionData>
+       <LongShort>Long</LongShort>
+       <OptionType>Call</OptionType>
+       <Style>European</Style>
+       <ExerciseDates>
+        <ExerciseDate>20210203</ExerciseDate>
+       </ExerciseDates>
+          ...
+      </OptionData>
+      <StrikeData>
+        <StrikePrice>
+	  <Value>1.23</Value>
+	</StrikePrice>
+      </StrikeData>
+      <PriceType>Dirty</PriceType>
+      <KnocksOut>false</KnocksOut>
+      <BondData>
+         <SecurityId>ISIN:XS1234567890</SecurityId>
+         <BondNotional>100000</BondNotional>
+      <BondData>
+    </BondOptionData>
+  </Trade>
+\end{minted}
+\caption{Bond Option data using bond reference data}
+\label{lst:bondoption_data_refdata}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!BondOptionData!  node follow below.
+
+\begin{itemize}
+    \item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data} Option Data. 
+    
+The relevant fields in the \lstinline!OptionData! node for a BondOption are:
+
+\begin{itemize}
+\item \lstinline!LongShort! The allowable values are \emph{Long} or \emph{Short}.
+
+\item \lstinline!OptionType! The allowable values are \emph{Call} or \emph{Put}. For option type \emph{Call}, the Bond Option holder has the right to buy the underlying Bond at the strike price. For option type \emph{Put}, the Bond Option holder has the right to sell the underlying Bond at the strike price. 
+\item  \lstinline!Style! The allowable value is \emph{European} only.
+
+\item  \lstinline!Settlement! [Optional] The allowable values are \emph{Cash} or \emph{Physical}, but this field is currently ignored.
+
+\item An \lstinline!ExerciseDates! node where exactly one ExerciseDate date element must be given. \\
+
+\item Premiums [Optional]: Option premium amounts paid by the option buyer to the option seller.
+
+Allowable values:  See section \ref{ss:premiums}
+
+\end{itemize}
+    
+%    \item Strike: The option strike price (per unit notional).
+    
+%    Allowable values:  Any positive real number.
+    
+    \item \lstinline!StrikeData!: A \lstinline!StrikeData! node is used as described in Section \ref{ss:strikedata} to represent the Bond Option strike price or strike yield. If StrikePrice is used, the strike price (\lstinline!Value! field) is expressed per unit notional.  If StrikeYield is used, the \lstinline!Yield! is quoted in decimal form, e.g. 5\% should be entered as 0.05.   
+    
+%  \item Redemption [Optional]: Redemption ratio in percent, e.g. \emph{100} means the bond is redeemed at par.
+  
+ %     Allowable values:  Any positive real number. Defaults to \emph{100} if left blank or omitted.
+  
+    \item PriceType [Mandatory for StrikePrice, no impact for StrikeYield]: \\
+    The payoff for a bond option is
+  
+	max(B - X, 0) 
+
+    where B is always the dirty NPV of the underlying bond on the exercise settlement date. \\
+    If \lstinline!PriceType!  is \emph{Clean}, X is  (Strike + Underlying Bond Accruals) x BondNotional 
+    If \lstinline!PriceType!  is \emph{Dirty}, X is Strike x BondNotional 
+    
+    Allowable values: \emph{Dirty} or \emph{Clean}. If the \lstinline!StrikeData! node uses StrikeYield, \lstinline!PriceType! can be omitted as it is not relevant in the yield case.
+  \item KnocksOut: If \emph{true} the option knocks out if the underlying defaults before the option expiry, if \emph{false} the
+    option is written on the recovery value in case of a default of the bond before the option expiry.
+    
+Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}.    
+    
+\end{itemize}
+
+The meanings and allowable values of the elements in the \lstinline!BondData! are:
+
+\begin{itemize}
+  \item SecurityId: The underlying security identifier
+
+      Allowable values:  Typically the ISIN of the underlying bond, with the ISIN: prefix. 
+  \item BondNotional: The notional of the underlying bond on which the option is written expressed in the currency of the bond.
+
+      Allowable values:  Any positive real number.
+    \item CreditRisk [Optional] Boolean flag indicating whether to show Credit Risk on the Bond product.
+    
+      Allowable Values: \emph{true} or \emph{false} Defaults to \emph{true} if left blank or omitted.          
+\end{itemize}

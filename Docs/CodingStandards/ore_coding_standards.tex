@@ -1,0 +1,256 @@
+\documentclass[12pt, a4paper]{article}
+
+\usepackage{supertabular}
+\usepackage{hyperref}
+\usepackage{minted}
+
+\addtolength{\textwidth}{0.8in}
+\addtolength{\oddsidemargin}{-.4in}
+\addtolength{\evensidemargin}{-.4in}
+\addtolength{\textheight}{1.6in}
+\addtolength{\topmargin}{-.8in}
+
+
+\begin{document}
+
+\title{ORE Coding Standards}
+\date{\today}
+\maketitle
+
+\newpage
+
+%-------------------------------------------------------------------------------
+\section*{Document History}
+
+\begin{center} 
+\begin{supertabular}{|l|l|l|p{7cm}|}
+\hline
+Version & Date & Author & Comment \\ 
+\hline 
+0.1 & 27 December 2015 & Niall O'Sullivan& initial version\\
+\hline
+0.2 & 3 June 2016 & Niall O'Sullivan& pull requests\\
+\hline
+0.3 & 4 November 2016 & Niall O'Sullivan& multiple repos and comments from RL\\
+\hline
+0.4 & 5 Janurary 2017 & Niall O'Sullivan& clarification on line endings and formatting\\
+\hline
+0.5 & 30 October 2020 & Roland Lichters & clarification on using namespaces\\
+\hline
+\end{supertabular}
+\end{center}
+
+\vspace{3cm}
+
+\newpage
+%\tableofcontents
+%\newpage
+
+
+%-------------------------------------------------------------------------------
+\section*{Introduction}
+
+This document outlines the coding standards to be employed in all ORE development.
+
+\subsection*{C++ Version}
+ORE is written using C++11, C++14 features are not permitted. The most commonly used feature in C++11 is auto boxing and foreach loops, e.g.
+\begin{verbatim}
+vector<int> v = { 1, 2, 3 };
+for (const auto& a : v)
+  cout << a << endl;
+\end{verbatim}
+and also the ability to define nested templates without conflicting with the right shift operator.
+\begin{verbatim}
+vector<vector<int>> v;
+\end{verbatim}
+Note that the use of QuantLib means we must use  \textbf{boost::shared\_ptr} for the majority of objects. For simplicity we will use
+\textbf{boost::shared\_ptr} everywhere and there will be no \textbf{\#define PTR or Ptr} macros.
+ORE
+QuantExt development must be comparable with the QuantLib coding standards and so must be C++98 compliant.
+
+\subsection*{Platform Support}
+ORE should be able to build on any platform that supports QuantLib and has a C++11 compliant compiler. Development files will be maintained for MSVC 2013 and 2015 on Windows and a QL style automake for Unix and MacOS.
+
+All development will be done on 64-bit architecture.
+
+\subsection*{Third Party Libraries}
+ORE is written using the following libraries
+\begin{enumerate}
+\item Boost - Any version of Boost greater than 1.57, this environment variable \$BOOST must be defined on Unix and should point to the root Boost folder.
+\item QuantLib - strictly 1.8 or higher, source code is stored in the QuantLib git repository and cannot be modified.
+\item RapidXML - 1.13, source code is stored in the ORE git repository and cannot be modified.
+\end{enumerate}
+Other libraries may be included in the future, including:
+\begin{enumerate}
+\item zlib
+\item muparser
+\item hdf5
+\item log4cxx
+\end{enumerate}
+
+\subsection*{Environment variables}
+ORE will not depend or use any environment variables or windows registry files. The only environment variable ever used will be \$BOOST as defined above for development purposes.
+
+\subsection*{Threading and singletons}
+ORE is a single threaded application, the use of singletons is to be avoided where possible. If a developer feels that a singleton must be employed than this must be justified in detail.
+
+\subsection*{Code Layout and indention}
+\begin{itemize}
+\item All code is to be indented with four spaces, tabs are not to be included in any source file.
+\item Redundant whitespace is not to be inserted into files. 
+\item There are two clang-format files that define the exact coding formatting rules, QuantExt has it's own one (which is C++98 compatable) while the other top level one is to be used for all other coding. Clang-format can be run on windows and Mac.
+\item All C++ files should use unix style line endings (\textbackslash n or LF). All MSVC files (vcxpoj and sln files) should be Dos style (\textbackslash r\textbackslash n or CRLF). There are many ways, using git configuration or otherwise, to ensure this. No commits should be made that violate this (check with git diff before commiting)
+\end{itemize}
+
+\subsection*{Namespace}
+All code in QuantExt will be in namespace \textbf{QuantExt}, code in in OREData and OREAnalytics in nested namespaces \textbf{ore::data} and \textbf{ore::analytics}, respectively. 
+
+\subsection*{QuantLib namespace}
+When making use of the \textbf{using namespace QuantLib;} statement in header files, this must follow and not precede the QuantExt/OREData/OREAnalytics namespace declaration. For example
+
+\begin{minted}{c} 
+using namespace QuantLib;
+namespace QuantExt {
+  // ...
+}
+\end{minted}
+
+\noindent
+is forbidden, whereas
+
+\begin{minted}{c} 
+namespace QuantExt {
+using namespace QuantLib;
+  // ...
+}
+\end{minted}
+
+\noindent
+is allowed. This is necessary, in particular, to avoid conflicts in the ORE SWIG module build.
+
+\subsection*{Comments}
+All code should be commented, all comments are to be in (British) English, no swear words are to be included.
+
+\subsection*{Doxygen}
+All header files should include Doxygen style comments and description, the building of doxygen html reference documentation will be included into both build systems and should be run along side unit tests before code is committed.
+
+\subsection*{Include Guards}
+All header files should have a \textbf{\#pragma once} statement instead of \textbf{\#define} statements
+
+\subsection*{Copyright}
+All ORE source files should be copyright \textbf{Quaternion Risk Management Ltd.} and contains the ORE licence.
+All ORE+ source files should simply be copyright \textbf{Quaternion Risk Management Ltd.}.
+
+%-------------------------------------------------------------------------------
+\section*{git usage - pull requests}
+Code will be integrated by using git pull requests. All ORE and ORE+ development is done on codebase (see below) and this section describes how pull requests should be performed on that platform.
+
+Pull requests are branch specific and should be done on new branches that each developer creates. Once these have been merged the branch will be deleted. This is slightly different on codebasehq.com and github.com, on codebase we are only able to issue pull requests on the same repo, thus every developer must push their new branches and pull requests to origin.
+
+The git workflow for a developer (bob) is as follows.
+\begin{enumerate}
+\item Developer must maintain a local, clean copy of origin/master, this can be their own master branch or some other label (official - which we will use herein).
+\item To create a new official branch \\
+ \texttt{\% git checkout -b official origin/master} \\
+ If you are worried that your official has gotten out of sync, simple delete it and repeat the above.\\
+ \texttt{\% git branch -D official} \\
+ \texttt{\% git checkout -b official origin/master}
+\item Alternatively, if official already exists, the developer must merge origin master to ensure that they are up to date\\
+ \texttt{\% git checkout offical} \\
+ \texttt{\% git fetch origin} \\
+ \texttt{\% git merge origin/master} \\
+\item Developer creates a new branch, the branch name should be the developers name or initials, an underscore and then a description of the branch. This is purely to keep the branch names unique and not create conflict.\\
+ \texttt{\% git checkout -b bob\_widget}
+\item Developer codes as normal, pushing to their public repo (bob) if they so wish.\\
+\textbf{Optional:} \texttt{\% git push bob bob\_widget}
+\item Once the coding task in complete, developer pushes the branch to the origin repo. Care should be taken not to push to origin/master.\\
+ \texttt{\% git push origin bob\_widget}
+ \item Then go to codebasehq.com \url{https://qrm.codebasehq.com/projects/openxva/repositories/openxva/tree/master} and click on "Merge Request" and then "New Merge Request" with the following details:
+ \begin{itemize}
+ \item \textbf{Subject} A short description
+ \item \textbf{User} The merge manager (currently Niall O'Sullivan)
+ \item \textbf{Source Branch} the branch to be merged (bob\_widget)
+ \item \textbf{Target Branch} master
+ \end{itemize}
+\item The Developer may add comments to the request.
+\end{enumerate}
+
+At this point the developers work is complete, the appropriate ticket can be closed.
+
+All developers are free to comment on pull requests on codebasehq. The majority will be integrated quickly, some of them may generate a debate or discussion which is normal. There is no time limit on merging.
+
+
+The git workflow for the merge manager is as follows
+\begin{enumerate}
+\item Note that everyone who has a codebase account can preform these tasks, currently there is one designated manager who may delegate.
+\item go to merge requests in codebase
+\item if there are no conflicts, click on "merge request"
+\item if there are conflicts, send it back to the developer
+\item Once the request has been merged, the temporary branch should be deleted. This is not strictly necessary but means origin is kept cleaner and avoids conflicts.\\
+ \texttt{\% git push --delete origin bob\_widget}
+\end{enumerate}
+
+\break
+%-------------------------------------------------------------------------------
+\section*{ORE and ORE+ repositories}
+Since the release of ORE on github, we have two separate code repos. github (accessible to the public) and codebase (privately owned by Quaternion). This section describes our usage of both repos.
+
+\textbf{All Quaternion development, ORE and ORE+, will be done on codebase}. The merge manager will be responsible for keeping ORE on codebase in sync with github. The use of codebase (tickets, merge requests, public repos) will be unchanged, this will make it simple for developers to continue to use the tools, accounts and systems they already have. There is no requirement for Quaternion developers to create public github accounts.
+
+\subsection*{repo synchronisation}
+The merge manager is responsible for keeping ORE on the two repos in sync, this is a two way merge (changes made on github by members of the public will need to go to codebase and vice-versea). It is envisioned that this will be performed on a regular enough basis, e.g. every two weeks. It is also thought that the number of public merges in github will be small so it will in effect by a one way merge. In time when github becomes more and more active this will not be feasible.
+
+When code is being moved from codebase to github it will be done under the generic QuaternionRisk account, the individual developers name will not appear in the commit. This merge will be done manually, so any commit messages made on codebase will remain on codebase. The actual commit hashes will not be compatible between the two repos.
+This policy will be in effect for the second ORE release (Q1 2017) and will be reviewed following that release.
+
+\subsection*{Justification for two repos}
+Maintaining two repos creates an administrative overhead, however the reason for this policy is as follows
+\begin{enumerate}
+\item \textbf{Corporate confidentiality}. While Quaternion is releasing IP to the public, the firm does not wish to share internal details of our development team and practices, as such individual developer names, emails and commit timestamps will not be made public.
+\item \textbf{Personal confidentiality}. Developers are able to continue to work for Quaternion in private.
+\item \textbf{IP transfer}. Much of the code that is being released is from QRE which has been in codebase for over 5 years as QRE, it is not the work or responsibility of one developer so committing it to github from QuaternionRisk is clearer and reasonable.
+\item \textbf{Code review}. We wish to be able to do code reviews in private before we release anything to github, this is especially important for new and inexperienced C++ developers and we do not wish to discourage people from committing to codebase.
+\end{enumerate}
+
+
+\subsection*{Policy on personal github accounts}
+Quaternion developers are permitted and encouraged to create personal github accounts and to fork ORE, QuantLib or any other project. They are permitted to make small changes on github if they so wish. However this cannot include taking code form codebase (either ORE, QRE or ORE+) and copying it over. Large changes performed on github to any project would be subject to the IP clause of employment contracts and thus would require the sign off from a director. The definition of a large or small change is subjective, if in doubt please consult with a director. 
+
+This policy statement does not supersede your employment contract.
+
+\subsection*{Policy on opensourcerisk.org forum accounts}
+Quaternion developers are permitted and encouraged to create a forum account and engage with the community. As we are representing Quaternion on the forum you should indicate this in your profile somehow, one example of this is to use the Quaternion "Q" logo as an avatar. There are no strict posting rules on the forum however if your account is associated with Quaternion it is expected that all posts and messages are formal and polite.
+
+%-------------------------------------------------------------------------------
+\section*{ORE and ORE+ code layout}
+
+\subsection*{What is ORE and ORE+?}
+ORE is a set of three libraries and one executable, ORE+ is an extension of this, consisting of another three libraries and a second executable. The ORE+ executable ("oreplus.exe") is built by linking against all six libraries.
+
+The libraries are:
+\begin{enumerate}
+\item QuantExt - the ORE QuantLib extension library, available on github and codebase
+\item OREData - the ORE data library, available on github and codebase
+\item OREAnalytics - the ORE analytics library, available on github and codebase
+\item QuantExtPlus - the ORE+ QuantLib extension library, available only on codebase
+\item OREDataPlus - the ORE+ data library, available only on codebase
+\item OREAnalyticsPlus - the ORE+ analytics library, available only on codebase
+\end{enumerate}
+
+It is important to note that there is only one version of the ORE libraries (e.g.OREData),  there is not a separate ORE+ version or branch. When one is developing an ORE+ feature then it is likely that changes will have to be made to ORE, and these changes will be rolled out onto github. It is important that these changes in ORE make sense on a standalone basis and that there are no comments or references to ORE+.
+
+None of the three ORE libraries can include any ORE+ headers. The ORE core library should be modular enough to allow ORE+ features to be plugged in.
+
+\subsection*{ORE+ features}
+ORE+ is a single application, with many separate features (e.g. AMC, parrallelisation), these features, although developed separately, must be integrated and all new features must add to this existing codebase. We do not have separate branches or versions of ORE+ for each of these features.
+
+Parrallelisation has a large impact on what is and is not possible in ORE+ and it must be considered on all new ORE+ development designs.
+
+\subsection*{Client specific features}
+ORE+ will not have any client specific features, if a client requires a new feature then it will be added to ORE+ and available to all ORE+ users. We will not have client specific branches or versions.
+
+%-------------------------------------------------------------------------------
+\section*{Other non ORE/ORE+ development}
+All other development should be done in a new project on codebase.
+
+\end{document}

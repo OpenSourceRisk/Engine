@@ -1,0 +1,6 @@
+<Conventions>
+  <Future>
+    <Id>USD-SOFR-3M-FUTURES</Id>
+    <Index>USD-SOFR</Index>
+  </Future>
+</Conventions>

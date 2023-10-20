@@ -1,0 +1,81 @@
+%--------------------------------------------------------
+\subsection{Stress Scenario Analysis: {\tt stressconfig.xml}}\label{sec:stress}
+%--------------------------------------------------------
+
+Stress tests can be applied in ORE to the same market segments and with same granularity as described in the sensitivity section \ref{sec:sensitivity}.
+
+\medskip
+This file {\tt stressconfig.xml} specifies how stress tests can be configured. The general structure is shown in listing
+\ref{lst:stress_config}.
+
+In this example, two stress scenarios ``parallel\_rates'' and ``twist'' are defined. Each scenario definition contains
+the market components to be shifted in this scenario in a similar syntax that is also used for the sensitivity
+configuration, see \ref{sec:sensitivity}. Components that should not be shifted, can just be omitted in the definition
+of the scenario.
+
+However, instead of specifying one shift size per market component, here a whole vector of shifts can be given, with
+different shift sizes applied to each point of the curve (or surface / cube).
+
+In case of the swaption volatility shifts, the single value given as {\tt Shift} (without the attributes {\tt expiry}
+and {\tt term}) represents a default value that is used whenever no explicit value is given for a expiry / term pair.
+
+\begin{longlisting}
+%\hrule\medskip
+  \begin{minted}[fontsize=\scriptsize]{xml}
+<StressTesting>
+  <StressTest id="parallel_rates">
+    <DiscountCurves>
+      <DiscountCurve ccy="EUR">
+        <ShiftType>Absolute</ShiftType>
+        <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+        <Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
+      </DiscountCurve>
+      ...
+    </DiscountCurves>
+    <IndexCurves>
+      ...
+    </IndexCurves>
+    <YieldCurves>
+      ...
+    </YieldCurves>
+    <FxSpots>
+      <FxSpot ccypair="USDEUR">
+        <ShiftType>Relative</ShiftType>
+        <ShiftSize>0.01</ShiftSize>
+      </FxSpot>
+    </FxSpots>
+    <FxVolatilities>
+      ...
+    </FxVolatilities>
+    <SwaptionVolatilities>
+      <SwaptionVolatility ccy="EUR">
+        <ShiftType>Absolute</ShiftType>
+        <ShiftExpiries>1Y,10Y</ShiftExpiries>
+        <ShiftTerms>5Y</ShiftTerms>
+        <Shifts>
+          <Shift>0.0010</Shift>
+          <Shift expiry="1Y" term="5Y">0.0010</Shift>
+          <Shift expiry="1Y" term="5Y">0.0010</Shift>
+          <Shift expiry="1Y" term="5Y">0.0010</Shift>
+          <Shift expiry="10Y" term="5Y">0.0010</Shift>
+          <Shift expiry="10Y" term="5Y">0.0010</Shift>
+          <Shift expiry="10Y" term="5Y">0.0010</Shift>
+        </Shifts>
+      </SwaptionVolatility>
+    </SwaptionVolatilities>
+    <CapFloorVolatilities>
+      <CapFloorVolatility ccy="EUR">
+        <ShiftType>Absolute</ShiftType>
+        <ShiftExpiries>6M,1Y,2Y,3Y,5Y,10Y</ShiftExpiries>
+        <Shifts>0.001,0.001,0.001,0.001,0.001,0.001</Shifts>
+      </CapFloorVolatility>
+    </CapFloorVolatilities>
+  </StressTest>
+  <StressTest id="twist">
+    ...
+  </StressTest>
+</StressTesting>
+  \end{minted}
+\caption{Stress configuration}
+\label{lst:stress_config}
+\end{longlisting}

@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<NettingSetDefinitions>
+  <NettingSet>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <ActiveCSAFlag>false</ActiveCSAFlag>
+    <CSADetails>
+      <Bilateral>Bilateral</Bilateral>
+      <CSACurrency>USD</CSACurrency>
+      <Index>USD-FedFunds</Index>
+      <ThresholdPay>0</ThresholdPay>
+      <ThresholdReceive>0</ThresholdReceive>
+      <MinimumTransferAmountPay>0</MinimumTransferAmountPay>
+      <MinimumTransferAmountReceive>0</MinimumTransferAmountReceive>
+      <IndependentAmount>
+        <IndependentAmountHeld>0</IndependentAmountHeld>
+        <IndependentAmountType>FIXED</IndependentAmountType>
+      </IndependentAmount>
+      <MarginingFrequency>
+        <CallFrequency>1D</CallFrequency>
+        <PostFrequency>1D</PostFrequency>
+      </MarginingFrequency>
+      <MarginPeriodOfRisk>2W</MarginPeriodOfRisk>
+      <CollateralCompoundingSpreadReceive>0.00</CollateralCompoundingSpreadReceive>
+      <CollateralCompoundingSpreadPay>0.00</CollateralCompoundingSpreadPay>
+      <EligibleCollaterals>
+        <Currencies>
+          <Currency>USD</Currency>
+        </Currencies>
+      </EligibleCollaterals>
+    </CSADetails>
+  </NettingSet>
+</NettingSetDefinitions>

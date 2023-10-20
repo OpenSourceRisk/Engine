@@ -1,0 +1,395 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element type="todaysmarket" name="TodaysMarket"/>
+
+  <xs:complexType name="todaysmarket">
+    <xs:sequence>
+      <xs:element type="configurationType" name="Configuration" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="yieldCurvesType"  name= "YieldCurves" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element type="discountCurvesType" name="DiscountingCurves" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="indexForwardingCurvesType" name="IndexForwardingCurves" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="swapIndexCurvesType" name="SwapIndexCurves" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="zeroInflationIndexCurvesType" name="ZeroInflationIndexCurves" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="yyInflationIndexCurvesType" name="YYInflationIndexCurves" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="fxSpotsType" name="FxSpots" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="fxVolatilitiesType" name="FxVolatilities" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="swaptionVolatilitiesType" name="SwaptionVolatilities" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="yieldVolatilitiesType" name="YieldVolatilities" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="capFloorVolatilitiesType" name="CapFloorVolatilities" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="cdsVolatilitiesType" name="CDSVolatilities" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="defaultCurvesType" name="DefaultCurves" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="yyInflationCapFloorVolatilitiesType" name="YYInflationCapFloorVolatilities" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="zeroInflationCapFloorVolatilitiesType" name="ZeroInflationCapFloorVolatilities" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="equityCurvesType" name="EquityCurves" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="equityVolatilitiesType" name="EquityVolatilities" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="securitiesType" name="Securities" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="baseCorrelationsType" name="BaseCorrelations" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="commodityCurvesType" name="CommodityCurves" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="commodityVolatilitiesType" name="CommodityVolatilities" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="correlationsType" name="Correlations" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="configurationType">
+    <xs:all>
+      <xs:element type="xs:string" name="YieldCurvesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="DiscountingCurvesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="IndexForwardingCurvesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="SwapIndexCurvesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="ZeroInflationIndexCurvesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="ZeroInflationCapFloorVolatilitiesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="YYInflationIndexCurvesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="FxSpotsId" minOccurs="0"/>
+      <xs:element type="xs:string" name="BaseCorrelationsId" minOccurs="0"/>
+      <xs:element type="xs:string" name="FxVolatilitiesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="SwaptionVolatilitiesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="YieldVolatilitiesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="CapFloorVolatilitiesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="CDSVolatilitiesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="DefaultCurvesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="YYInflationCapFloorVolatilitiesId" minOccurs="0"/>
+      <!--<xs:element type="xs:string" name="ZeroInflationCapFloorVolatilitiesId" minOccurs="0"/>-->
+      <xs:element type="xs:string" name="EquityCurvesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="EquityVolatilitiesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="SecuritiesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="CommodityCurvesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="CommodityVolatilitiesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="CorrelationsId" minOccurs="0"/>
+    </xs:all>
+    <xs:attribute type="xs:string" name="id" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="yieldCurvesType">
+    <xs:sequence>
+      <xs:element name="YieldCurve" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="xs:string" name="name" use="required"/>
+              <!-- FIXME: should be currencyCode -->
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="discountCurvesType">
+    <xs:sequence>
+      <xs:element name="DiscountingCurve" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="xs:string" name="currency" use="required"/>
+              <!-- FIXME: should be currencyCode -->
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="indexForwardingCurvesType">
+    <xs:sequence>
+      <xs:element name="Index" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="indexNameType" name="name" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="swapIndexCurvesType">
+    <xs:sequence>
+      <xs:element name="SwapIndex" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="indexNameType" name="Discounting"/>
+          </xs:all>
+          <xs:attribute type="indexNameType" name="name" use="required"/>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="zeroInflationIndexCurvesType">
+    <xs:sequence>
+      <xs:element name="ZeroInflationIndexCurve" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="xs:string" name="name" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="yyInflationIndexCurvesType">
+    <xs:sequence>
+      <xs:element name="YYInflationIndexCurve" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="xs:string" name="name" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="fxSpotsType">
+    <xs:sequence>
+      <xs:element name="FxSpot" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="currencyPair" name="pair" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="fxVolatilitiesType">
+    <xs:sequence>
+      <xs:element name="FxVolatility" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="currencyPair" name="pair" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="swaptionVolatilitiesType">
+    <xs:sequence>
+      <xs:element name="SwaptionVolatility" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="xs:string" name="key"/>
+              <xs:attribute type="currencyCode" name="currency"/> <!-- deprecated -->
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="yieldVolatilitiesType">
+    <xs:sequence>
+      <xs:element name="YieldVolatility" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="xs:string" name="name" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="capFloorVolatilitiesType">
+    <xs:sequence>
+      <xs:element name="CapFloorVolatility" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="xs:string" name="key"/>
+              <xs:attribute type="currencyCode" name="currency"/> <!-- deprecated -->
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="cdsVolatilitiesType">
+    <xs:sequence>
+      <xs:element name="CDSVolatility" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="xs:string" name="name" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="defaultCurvesType">
+    <xs:sequence>
+      <xs:element name="DefaultCurve" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="xs:string" name="name" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="yyInflationCapFloorVolatilitiesType">
+    <xs:sequence>
+      <xs:element name="YYInflationCapFloorVolatility" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="xs:string" name="name" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="zeroInflationCapFloorVolatilitiesType">
+    <xs:sequence>
+      <xs:element name="ZeroInflationCapFloorVolatility" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="xs:string" name="name" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="equityCurvesType">
+    <xs:sequence>
+      <xs:element name="EquityCurve" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="xs:string" name="name" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="equityVolatilitiesType">
+    <xs:sequence>
+      <xs:element name="EquityVolatility" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="xs:string" name="name" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="securitiesType">
+    <xs:sequence>
+      <xs:element name="Security" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="xs:string" name="name" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="baseCorrelationsType">
+    <xs:sequence>
+      <xs:element name="BaseCorrelation" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="xs:string" name="name" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="commodityCurvesType">
+    <xs:sequence>
+      <xs:element name="CommodityCurve" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="xs:string" name="name" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="commodityVolatilitiesType">
+    <xs:sequence>
+      <xs:element name="CommodityVolatility" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="xs:string" name="name" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="correlationsType">
+    <xs:sequence>
+      <xs:element name="Correlation" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="xs:string" name="name" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+</xs:schema>

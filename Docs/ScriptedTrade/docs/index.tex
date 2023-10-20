@@ -1,0 +1,114 @@
+Indices are defined as
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <Index>
+        <Name>Underlying</Name>
+        <Value>EQ-RIC:.SPX</Value>
+      </Index>
+\end{minted}
+
+in case of a scalar and
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <Index>
+        <Name>Underlyings</Name>
+        <Values>
+          <Value>EQ-UND1</Value>
+          <Value>EQ-UND2</Value>
+          <Value>EQ-UND3</Value>
+          <Value>EQ-UND4</Value>
+          <Value>EQ-UND5</Value>
+        </Values>
+      </Index>
+\end{minted}
+
+in case of a vector. Currently, Equity, FX, Commodity, Interest Rate and Inflation indices as well as generic indices are
+supported, the naming convention follows the standard ORE conventions, i.e.
+
+\begin{itemize}
+\item Equity: These are declared based on identifier type \begin{itemize}
+    \item \verb+EQ-ISIN:{Name}:{Currency}:{Exchange}+ for ISIN equities,\\e.g.\ \verb+EQ-ISIN:NL0000852580:EUR:XAMS+,
+    \item \verb+EQ-RIC:{Name}+ for RIC equities, e.g.\ \verb+EQ-RIC:.SPX+,
+    \item \verb+EQ-FIGI:{Name}+ for FIGI equities, e.g.\ \verb+EQ-FIGI:BBG000BLNNV0+,
+    \item \verb+EQ-BBG:{Name}+ for BBG equities, e.g.\ \verb+EQ-BBG:BARC LN Equity+.
+  \end{itemize}
+\item FX: \verb+FX-SOURCE-CCY1-CCY2+ with foreign currency \verb+CCY1+ and domestic currency \verb+CCY2+\ifdefined\STModuleDoc\else, as in Table \ref{tab:fxindex_data}\fi.
+  The order of the currencies here is important as they will have different meanings. For a natural payoff, \verb+CCY2+ must correspond
+  to the instrument's payment currency. Otherwise, we have a quanto payoff. See section \ref{sss:payccy_st} for more information.
+\item Commodity: These are declared as \verb+COMM-{Name}+, with possible extensions as follows (see below also for
+  more information on the meanings of the extensions to the commodity indices): \begin{itemize}
+    \item \verb+COMM-NYMEX:CL+ (spot),
+    \item \verb+COMM-NYMEX:CL-2020-09+ (future with expiry 01 Sep 2020),
+    \item \verb+COMM-NYMEX:CL-2020-09-15+ (future with expiry 15 Sep 2020).
+  \end{itemize}
+\item Interest Rate: These are declared as \verb+CCY-INDEX-TENOR+, e.g.\ \verb+EUR-EURIBOR-6M+, \verb+EUR-CMS-10Y+.
+  \ifdefined\STModuleDoc\else See Table \ref{tab:indices} for a list of allowable IR indices. \fi
+\item Inflation: These are declared as \verb+{Name}+, with possible extensions as follows(see below also for more
+  information on the meanings of the extensions to the inflation indices): \begin{itemize}
+    \item \verb+EUHICPXT+ (constant/non-interpolated),
+    \item \verb+EUHICPXT#F+ (flat interpolation),
+    \item \verb+EUHICPXT#L+ (linear interpolation).
+  \end{itemize}
+\item Generic: These are declared as \verb+GENERIC-{Name}+.
+\end{itemize}
+
+Notice that generic indices only provide historical fixings.
+
+\ifdefined\STModuleDoc
+\else
+% additional information on index name conventions
+For additional information on the equity name conventions see \ref{tab:equity_credit_data} and \ref{ss:underlying}. In
+general the equity name can be represented using the string representation {IdentifierType}:{Name}:{Currency}:{Exchange}
+for the underlying. \\
+For additional information on the fx index format see \ref{tab:fxindex_data}. \\
+For additional information on the commondity names see \ref{tab:commodity_data}.
+\fi
+
+Within the scripting framework there are additional ways to reference commodity indices in a more dynamical fashion:
+When evaluating a commodity index using the index evaluation operator (see \ref{index_evalop}) as in
+
+\begin{minted}[fontsize=\footnotesize]{text}
+ CommodityUnderlying(ObservationDate)
+\end{minted}
+
+for
+
+\begin{itemize}
+\item a variable of the form \verb+COMM-{Name}#N+, the index will be resolved to the $N+1$th future with expiry greater than
+  ObservationDate for the given commodity underlying, $N\geq0$. The parameter $N$ corresponds to the field
+  \verb+FutureMonthOffset+ commonly used in coomodity trade xml schemas
+\item the above form can take one or two additional parameters \verb+COMM-{Name}#N#D+ or \verb+COMM-{Name}#N#D#{Cal}+ where
+  $D$ corresponds to \verb+DeliveryRollDays+ and \verb+Cal+ is the calendar used to roll the observation date forward
+  before the next future expiry is looked up. If \verb+Cal+ is not given, it defaults to the null calendar (no
+  holidays).
+\item a variable of the form \verb+COMM-{Name}!N+, the index will be resolved to the $N$th future relative to the month and
+  year of the ObservationDate.
+\end{itemize}
+
+In general, if a commodity future is referenced, the observation date should be be less or equal to the expiry date of
+the future, since no historical fixing will in general be available after the future expiry date. In the future-looking
+simulation the observation of an expired future is possible, in this case the (model) value of the future is kept
+constant at its value at the expiry date for observation dates after the expiry date.
+
+When evaluating an inflation index as in
+
+\begin{minted}[fontsize=\footnotesize]{text}
+ CPIIndex(FixingDate)
+\end{minted}
+
+the variable \verb+CPIIndex+ can be given in the following ways:
+
+\begin{itemize}
+\item a variable of the form \verb+EUHICPXT+ will evaluate the standard ORE inflation index, which is
+  non-interpolated. This means the result will be constant for all FixingDates in an inflation period (i.e.\ usually
+  constant for a calendar month)
+\item a variable of the form \verb+EUHICPXT#F+, i.e.\ an ORE inflation index name followed by \verb+#F+ indicating a flat
+  interpolation of the index, this form is equivalent to the previous form making the interpolation mode explicit as
+  ``flat''
+\item a variable of the form \verb+EUHICPXT#L+ where the suffix \verb+#L+ indicates linear interpolation of the index,
+  i.e.\ the result will be the interpolated fixing between the usually monthly inflation index fixings
+\end{itemize}
+
+The use of the interpolation extensions is deprecated. 
+Interpolation of fixings should be handled in the payoff script. The CPI indices are forecasting a flat fixing for given the inflation period.
+The use of interpolation is still supported but will be eventually removed in a later release.

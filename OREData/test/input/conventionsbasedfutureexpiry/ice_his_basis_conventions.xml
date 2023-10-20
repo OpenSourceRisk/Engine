@@ -1,0 +1,16 @@
+<Conventions>
+  <CommodityFuture>
+    <Id>ice_his_basis</Id>
+    <AnchorDay>
+      <DayOfMonth>1</DayOfMonth>
+    </AnchorDay>
+    <ContractFrequency>Monthly</ContractFrequency>
+    <Calendar>ICE_FuturesUS</Calendar>
+    <ExpiryCalendar>ICE_FuturesUS_1</ExpiryCalendar>
+    <ExpiryMonthLag>-1</ExpiryMonthLag>
+    <OffsetDays>-1</OffsetDays>
+    <BusinessDayConvention>Following</BusinessDayConvention>
+    <AdjustBeforeOffset>true</AdjustBeforeOffset>
+    <IsAveraging>false</IsAveraging>
+  </CommodityFuture>
+</Conventions>

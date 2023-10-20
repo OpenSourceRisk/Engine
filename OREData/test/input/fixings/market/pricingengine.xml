@@ -1,0 +1,38 @@
+<PricingEngines>
+  <Product type="Swap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingSwapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CrossCurrencySwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingCrossCurrencySwapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CMS">
+    <Model>LinearTSR</Model>
+    <ModelParameters/>
+    <Engine>LinearTSRPricer</Engine>
+    <EngineParameters>
+      <Parameter name="MeanReversion">0.0</Parameter>
+      <Parameter name="Policy">RateBound</Parameter>
+      <Parameter name="LowerRateBoundLogNormal">0.0001</Parameter>
+      <Parameter name="UpperRateBoundLogNormal">2.0000</Parameter>
+      <Parameter name="LowerRateBoundNormal">-2.0000</Parameter>
+      <Parameter name="UpperRateBoundNormal">2.0000</Parameter>
+      <Parameter name="VegaRatio">0.01</Parameter>
+      <Parameter name="PriceThreshold">0.0000001</Parameter>
+      <Parameter name="BsStdDev">3.0</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CMSSpread">
+    <Model>BrigoMercurio</Model>
+    <ModelParameters/>
+    <Engine>Analytic</Engine>
+    <EngineParameters>
+      <Parameter name="IntegrationPoints">16</Parameter>
+    </EngineParameters>
+  </Product>
+</PricingEngines>

@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<SensitivityAnalysis>
+  <!-- Discount curve shifts -->
+  <DiscountCurves>
+    <DiscountCurve ccy="USD">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </DiscountCurve>
+  </DiscountCurves>
+  <!-- Index curve shifts -->
+  <IndexCurves>
+    <IndexCurve index="USD-LIBOR-3M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </IndexCurve>
+  </IndexCurves>
+  <YieldCurves/>
+  <!-- FX spot shifts -->
+  <FxSpots/>
+  <!-- FX ATM vol shifts -->
+  <FxVolatilities/>
+  <!-- Swaption ATM vol shifts -->
+  <SwaptionVolatilities/>
+  <!-- Cap/Floor (Optionlet or Flat) vol surface shifts -->
+  <CapFloorVolatilities/>
+  <CDSVolatilities>
+  </CDSVolatilities>
+  <!-- Credit Curve shifts -->
+  <CreditCurves/>
+  <!-- Equity spot shifts -->
+  <EquitySpots>
+    <EquitySpot equity="SP5">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+    </EquitySpot>
+  </EquitySpots>
+  <!-- Equity ATM vol shifts -->
+  <EquityVolatilities/>
+  <ZeroInflationIndexCurves/>
+  <YYInflationIndexCurves/>
+  <BaseCorrelations/>
+  <SecuritySpreads/>
+  <!-- Cross Gamma filter: Pairs of factor sub-strings -->
+  <CrossGammaFilter/>
+</SensitivityAnalysis>

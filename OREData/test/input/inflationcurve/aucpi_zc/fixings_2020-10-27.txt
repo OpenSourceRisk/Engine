@@ -1,0 +1,4 @@
+# QuantLib expects the fixing to be on the 1st day of the period to which it relates
+# Here 114.4 is the AU CPI fixing released on 29 Jul 2020 for Q2 period i.e. the period 
+# from 1 Apr 2020 to 30 Jun 2020
+2020-04-01 AUCPI 114.4

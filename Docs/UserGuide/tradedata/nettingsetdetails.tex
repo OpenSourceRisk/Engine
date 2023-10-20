@@ -1,0 +1,32 @@
+\ifdefined\RiskCatalogue\newcommand{\customsection}[1]{\section{#1}}
+                   % Product Catalogue
+                   \else\newcommand{\customsection}[1]{\subsubsection{#1}}\fi
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\customsection{Netting Set Details}\label{sec:nettingsetdetails}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Instead of a single netting set ID, defined by a \lstinline!NettingSetId! node,
+an alternative \lstinline!NettingSetDetails! node can be provided, which itself
+contains a \lstinline!NettingSetId! sub-node, and four other optional sub-nodes,
+which altogether allow for extending the uniqueness of netting sets beyond the
+netting set ID. The allowable values for each sub-node are any alphanumeric
+string. The underscore (`\_') sign may be used as well.
+
+\vspace{1em}
+
+The \lstinline!NettingSetDetails! node is given in the following XML format:
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <NettingSetDetails>
+        <NettingSetId> </NettingSetId>
+        <AgreementType> </AgreementType>
+        <CallType> </CallType>
+        <InitialMarginType> </InitialMarginType>
+        <LegalEntityId> </LegalEntityId>
+    </NettingSetDetails>
+\end{minted}
+\caption{Netting set details}
+\label{lst:nettingsetdetails}
+\end{listing}

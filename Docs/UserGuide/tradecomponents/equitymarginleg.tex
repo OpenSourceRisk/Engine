@@ -1,0 +1,81 @@
+\subsubsection{Equity Margin Leg}
+\label{ss:equitymarginleg}
+
+An equity margin leg is specified in a \lstinline!LegData! node with \lstinline!LegType! set to \lstinline!EquityMargin!. It is used to define a sequence of cashflows that are linked to an equity price and it's associated margin factor. Each cashflow has an associated \textit{Calculation Period}. This leg is typically used to represent a part of a Total Return Swap (TRS) on an Equity Index Future. The full TRS on the Equity Index Future uses TradeType \emph{Swap}, and one leg of type \emph{Equity}, and the other leg of type \emph{EquityMargin}. Note that the equity identifier on both legs (the Name field) should be for the Equity Index, and not the Future. \\
+\medskip
+The outline of a equity margin leg is given in listing \ref{lst:equitymarginleg}. It has the usual \lstinline!LegData! elements described in section \ref{ss:leg_data} and a \lstinline!EquityMarginLegData! node that is described in section \ref{ss:equity_margin_leg_data} below.
+
+\begin{listing}[h!]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<LegData>
+  <LegType>EquityMargin</LegType>
+  <Payer>true</Payer>
+  <Currency>EUR</Currency>
+  <PaymentConvention>Following</PaymentConvention>
+  <PaymentLag>2D</PaymentLag>
+  <PaymentCalendar>TARGET</PaymentCalendar>
+  <ScheduleData>
+       <Dates>
+        <Dates>
+         <Date>2019-12-31</Date>
+         <Date>2020-03-30</Date>
+         <Date>2020-06-30</Date>
+         <Date>2020-09-30</Date>
+         <Date>2020-12-30</Date>
+         <Date>2021-03-30</Date>
+       </Dates>
+     </Dates>
+  </ScheduleData>
+  <PaymentDates>
+    <PaymentDate>...</PaymentDate>
+  </PaymentDates>
+  <EquityMarginLegData>
+    ...
+  </EquityMarginLegData>
+</LegData>
+\end{minted}
+\caption{Equity Margin leg outline.}
+\label{lst:equitymarginleg}
+\end{listing}
+
+\subsubsection{Equity Margin Leg Data}
+\label{ss:equity_margin_leg_data}
+The \lstinline!EquityMarginLegData! node outline is shown in listing \ref{lst:equitymarginleg}. The meaning and allowable values for each node are as follows:
+
+\begin{itemize}
+
+\item
+\lstinline!Rates!: The fixed real rate(s) of the leg. While this can be a single value, a vector of values or a dated vector of
+  values. Allowable values: Each rate element can take any  real number. The rate is expressed in decimal form, e.g. \emph{0.05} is a rate of 5\%..
+
+\item
+\lstinline!InitialMarginFactor!: this node is used to specify the equity margin factor for the first period of the trade. It's a percentage that reflecting the current applicable official Exchange initial margin requirement. It is expressed in decimal form, e.g. \emph{0.05} is a rate of 5\%..
+
+\item
+\lstinline!EquityLegData!: this node is used to specify the underlying equity details. It's values are as outlined in section \ref{ss:equitylegdata}.
+
+\item
+\lstinline!Multiplier! [Optional]: in some cases, the cashflow amounts are multiplied by a fixed amount. Defaults to 1.
+
+\end{itemize}
+
+\begin{listing}[h!]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<EquityMarginLegData>
+  <Rates>
+    <Rate>0.003</Rate>
+  </Rates>
+  <InitialMarginFactor>0.12</InitialMarginFactor>
+  <Multiplier>10</Multiplier>
+  <EquityLegData>
+     <ReturnType>Total</ReturnType>
+     <Name>RIC:.STOXX50E</Name>
+     <InitialPrice>2946</InitialPrice>
+     <NotionalReset>false</NotionalReset>
+     <FixingDays>2</FixingDays>
+  </EquityLegData>
+</EquityMarginLegData>
+\end{minted}
+\caption{Equity margin leg data outline.}
+\label{lst:equity_margin_leg_data}
+\end{listing}

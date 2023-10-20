@@ -1,0 +1,59 @@
+{
+  "csv_settings": {
+    "files": {
+      ".*(flow|flows|cashflow).*\\.csv": {
+        "keys": [
+          "TradeId",
+          "Type",
+          "CashflowNo",
+          "LegNo"
+        ],
+        "use_cols": [
+          "Amount",
+          "Coupon",
+          "fixingValue",
+          "PayDate",
+          "FlowType",
+          "Currency",
+          "AccrualStartDate",
+          "AccrualEndDate",
+          "AccruedAmount",
+          "fixingDate",
+          "Notional",
+          "FloorStrike",
+          "CapStrike",
+          "FloorVolatility",
+          "CapVolatility"
+        ],
+        "optional_cols": [
+          "PresentValue",
+          "DiscountFactor",
+          "fxRateBase",
+          "BaseCurrency",
+          "PresentValueBase"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Amount",
+              "Coupon",
+              "fixingValue",
+              "AccruedAmount",
+              "Notional",
+              "FloorStrike",
+              "CapStrike",
+              "FloorVolatility",
+              "CapVolatility",
+              "PresentValue",
+              "DiscountFactor",
+              "fxRateBase",
+              "PresentValueBase"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-8
+          }
+        ]
+      }
+    }
+  }
+}
