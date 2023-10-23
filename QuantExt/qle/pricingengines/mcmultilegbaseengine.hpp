@@ -122,19 +122,25 @@ private:
     public:
         RegressionModel() = default;
         RegressionModel(const Real observationTime, const std::vector<CashflowInfo>& cashflowInfo,
-                        const std::function<bool(std::size_t)>& cashflowRelevant);
+                        const std::function<bool(std::size_t)>& cashflowRelevant, const Size numberOfModelIndices);
         // pathTimes must contain the observation time and the relevant cashflow simulation times
         void train(const Size polynomOrder, const LsmBasisSystem::PolynomialType polynomType,
                    const RandomVariable& regressand, const std::vector<std::vector<const RandomVariable*>>& paths,
                    const std::set<Real>& pathTimes, const Filter& filter = Filter());
         // pathTimes do not need to contain the observation time or the relevant cashflow simulation times
-        RandomVariable apply(const std::vector<std::vector<const RandomVariable*>>& paths,
+        RandomVariable apply(const Array& initialState, const std::vector<std::vector<const RandomVariable*>>& paths,
                              const std::set<Real>& pathTimes) const;
 
     private:
-        Real observationTime_;
+        Real observationTime_ = Null<Real>();
+        Size numberOfModelIndices_ = Null<Size>();
+        bool isTrained_ = false;
+        std::set<std::pair<Real, Size>> regressorTimesModelIndices_;
+        std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>> basisFns_;
+        Array regressionCoeffs_;
     };
 
+    // the implementation of the amc calculator interface used by the amc valuation engine
     class MultiLegBaseAmcCalculator : public AmcCalculator {
     public:
         MultiLegBaseAmcCalculator(
