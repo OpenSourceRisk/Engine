@@ -52,6 +52,9 @@ struct McEngineStats : public QuantLib::Singleton<McEngineStats> {
 };
 
 class McMultiLegBaseEngine {
+public:
+    enum RegressorModel { Simple, LaggedFX };
+
 protected:
     /*! The npv is computed in the model's base currency, discounting curves are taken from the model. simulationDates
         are additional simulation dates. The cross asset model here must be consistent with the multi path that is the
@@ -69,7 +72,8 @@ protected:
         const SobolRsg::DirectionIntegers directionIntegers,
         const std::vector<Handle<YieldTermStructure>>& discountCurves = std::vector<Handle<YieldTermStructure>>(),
         const std::vector<Date>& simulationDates = std::vector<Date>(),
-        const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true);
+        const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true,
+        const RegressorModel regressorModel = RegressorModel::Simple);
 
     // run calibration and pricing (called from derived engines)
     void calculate() const;
@@ -96,6 +100,7 @@ protected:
     std::vector<Date> simulationDates_;
     std::vector<Size> externalModelIndices_;
     bool minimalObsDate_;
+    RegressorModel regressorModel_;
 
     // the generated amc calculator
     mutable boost::shared_ptr<AmcCalculator> amcCalculator_;
@@ -122,7 +127,8 @@ private:
     public:
         RegressionModel() = default;
         RegressionModel(const Real observationTime, const std::vector<CashflowInfo>& cashflowInfo,
-                        const std::function<bool(std::size_t)>& cashflowRelevant, const Size numberOfModelIndices);
+                        const std::function<bool(std::size_t)>& cashflowRelevant, const CrossAssetModel& model,
+                        const RegressorModel regressorModel);
         // pathTimes must contain the observation time and the relevant cashflow simulation times
         void train(const Size polynomOrder, const LsmBasisSystem::PolynomialType polynomType,
                    const RandomVariable& regressand, const std::vector<std::vector<const RandomVariable*>>& paths,
@@ -133,7 +139,6 @@ private:
 
     private:
         Real observationTime_ = Null<Real>();
-        Size numberOfModelIndices_ = Null<Size>();
         bool isTrained_ = false;
         std::set<std::pair<Real, Size>> regressorTimesModelIndices_;
         std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>> basisFns_;

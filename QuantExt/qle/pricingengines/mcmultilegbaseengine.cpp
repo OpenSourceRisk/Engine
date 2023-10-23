@@ -46,12 +46,13 @@ McMultiLegBaseEngine::McMultiLegBaseEngine(
     const Size calibrationSeed, const Size pricingSeed, const Size polynomOrder,
     const LsmBasisSystem::PolynomialType polynomType, const SobolBrownianGenerator::Ordering ordering,
     SobolRsg::DirectionIntegers directionIntegers, const std::vector<Handle<YieldTermStructure>>& discountCurves,
-    const std::vector<Date>& simulationDates, const std::vector<Size>& externalModelIndices, const bool minimalObsDate)
+    const std::vector<Date>& simulationDates, const std::vector<Size>& externalModelIndices, const bool minimalObsDate,
+    const RegressorModel regressorModel)
     : model_(model), calibrationPathGenerator_(calibrationPathGenerator), pricingPathGenerator_(pricingPathGenerator),
       calibrationSamples_(calibrationSamples), pricingSamples_(pricingSamples), calibrationSeed_(calibrationSeed),
       pricingSeed_(pricingSeed), polynomOrder_(polynomOrder), polynomType_(polynomType), ordering_(ordering),
       directionIntegers_(directionIntegers), discountCurves_(discountCurves), simulationDates_(simulationDates),
-      externalModelIndices_(externalModelIndices), minimalObsDate_(minimalObsDate) {
+      externalModelIndices_(externalModelIndices), minimalObsDate_(minimalObsDate), regressorModel_(regressorModel) {
 
     if (discountCurves_.empty())
         discountCurves_.resize(model_->components(CrossAssetModel::AssetType::IR));
@@ -828,8 +829,8 @@ void McMultiLegBaseEngine::calculate() const {
 
         if (exercise_ != nullptr) {
             regModelUndExInto[counter] = RegressionModel(
-                *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; },
-                model_->stateProcess()->size());
+                *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
+                regressorModel_);
             regModelUndExInto[counter].train(polynomOrder_, polynomType_, pathValueUndExInto, pathValuesRef,
                                              simulationTimes);
         }
@@ -838,8 +839,8 @@ void McMultiLegBaseEngine::calculate() const {
             auto exerciseValue = regModelUndExInto[counter].apply(model_->stateProcess()->initialValues(),
                                                                   pathValuesRef, simulationTimes);
             regModelContinuationValue[counter] = RegressionModel(
-                *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; },
-                model_->stateProcess()->size());
+                *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
+                regressorModel_);
             regModelContinuationValue[counter].train(polynomOrder_, polynomType_, pathValueOption, pathValuesRef,
                                                      simulationTimes,
                                                      exerciseValue > RandomVariable(calibrationSamples_, 0));
@@ -849,23 +850,23 @@ void McMultiLegBaseEngine::calculate() const {
                                                     exerciseValue > RandomVariable(calibrationSamples_, 0),
                                                 pathValueUndExInto, pathValueOption);
             regModelOption[counter] = RegressionModel(
-                *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; },
-                model_->stateProcess()->size());
+                *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
+                regressorModel_);
             regModelOption[counter].train(polynomOrder_, polynomType_, pathValueOption, pathValuesRef, simulationTimes);
         }
 
         if (isXvaTime) {
             regModelUndDirty[counter] = RegressionModel(
-                *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] != CfStatus::open; },
-                model_->stateProcess()->size());
+                *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] != CfStatus::open; }, **model_,
+                regressorModel_);
             regModelUndDirty[counter].train(polynomOrder_, polynomType_, pathValueUndDirty, pathValuesRef,
                                             simulationTimes);
         }
 
         if (exercise_ != nullptr) {
             regModelOption[counter] = RegressionModel(
-                *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; },
-                model_->stateProcess()->size());
+                *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
+                regressorModel_);
             regModelOption[counter].train(polynomOrder_, polynomType_, pathValueOption, pathValuesRef, simulationTimes);
         }
 
@@ -1048,28 +1049,42 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
 McMultiLegBaseEngine::RegressionModel::RegressionModel(const Real observationTime,
                                                        const std::vector<CashflowInfo>& cashflowInfo,
                                                        const std::function<bool(std::size_t)>& cashflowRelevant,
-                                                       const Size numberOfModelIndices)
-    : observationTime_(observationTime), numberOfModelIndices_(numberOfModelIndices) {
-
-    // determine (time, modelIndex) pairs to be included in the regressor
-
-    if (false) { // switch off for the moment
-        for (Size i = 0; i < cashflowInfo.size(); ++i) {
-            if (!cashflowRelevant(i))
-                continue;
-            for (Size j = 0; j < cashflowInfo[i].simulationTimes.size(); ++j) {
-                Real t = std::min(observationTime_, cashflowInfo[i].simulationTimes[j]);
-                for (auto& m : cashflowInfo[i].modelIndices[j]) {
-                    regressorTimesModelIndices_.insert(std::make_pair(t, m));
-                }
-            }
-        }
-    }
+                                                       const CrossAssetModel& model,
+                                                       const McMultiLegBaseEngine::RegressorModel regressorModel)
+    : observationTime_(observationTime) {
 
     // we always include the full model state as of the observation time
 
-    for (Size m = 0; m < numberOfModelIndices_; ++m) {
+    for (Size m = 0; m < model.dimension(); ++m) {
         regressorTimesModelIndices_.insert(std::make_pair(observationTime, m));
+    }
+
+    // for LaggedFX we add past fx states
+
+    if (regressorModel == McMultiLegBaseEngine::RegressorModel::LaggedFX) {
+
+        std::set<Size> modelFxIndices;
+        for (Size i = 1; i < model.components(CrossAssetModel::AssetType::IR); ++i) {
+            for (Size j = 0; j < model.stateVariables(CrossAssetModel::AssetType::FX, i - 1); ++j)
+                modelFxIndices.insert(model.pIdx(CrossAssetModel::AssetType::FX, i - 1, j));
+        }
+
+        for (Size i = 0; i < cashflowInfo.size(); ++i) {
+            if (!cashflowRelevant(i))
+                continue;
+            // add the cashflow simulation indices
+            for (Size j = 0; j < cashflowInfo[i].simulationTimes.size(); ++j) {
+                Real t = std::min(observationTime_, cashflowInfo[i].simulationTimes[j]);
+                // the simulation time might be zero, but then we want to skip the factors
+                if (QuantLib::close_enough(t, 0.0))
+                    continue;
+                for (auto& m : cashflowInfo[i].modelIndices[j]) {
+                    // add FX factors
+                    if (modelFxIndices.find(m) != modelFxIndices.end())
+                        regressorTimesModelIndices_.insert(std::make_pair(t, m));
+                }
+            }
+        }
     }
 }
 
@@ -1095,13 +1110,25 @@ void McMultiLegBaseEngine::RegressionModel::train(const Size polynomOrder,
         regressor.push_back(paths[std::distance(pathTimes.begin(), pt)][modelIdx]);
     }
 
-    // get the basis functions
+    if (!regressor.empty()) {
 
-    basisFns_ = RandomVariableLsmBasisSystem::multiPathBasisSystem(regressor.size(), polynomOrder, polynomType);
+        // get the basis functions
 
-    // compute the regression coefficients
+        basisFns_ = RandomVariableLsmBasisSystem::multiPathBasisSystem(regressor.size(), polynomOrder, polynomType);
 
-    regressionCoeffs_ = regressionCoefficients(regressand, regressor, basisFns_, filter);
+        // compute the regression coefficients
+
+        regressionCoeffs_ =
+            regressionCoefficients(regressand, regressor, basisFns_, filter, RandomVariableRegressionMethod::QR);
+
+    } else {
+
+        // an empty regressor is possible if there are no relevant cashflows, but then the regressand has to be zero too
+
+        QL_REQUIRE(close_enough_all(regressand, RandomVariable(regressand.size(), 0.0)),
+                   "McMultiLegBaseEngine::RegressionModel::train(): internal error: regressand is not identically "
+                   "zero, but no regressor was built.");
+    }
 
     // update state of model
 
@@ -1117,31 +1144,39 @@ McMultiLegBaseEngine::RegressionModel::apply(const Array& initialState,
 
     QL_REQUIRE(isTrained_, "McMultiLegBaseEngine::RegressionMdeol::apply(): internal error: model is not trained.");
 
-    // build initial state pointer
+    // determine sample size
 
     QL_REQUIRE(!paths.empty() && !paths.front().empty(),
                "McMultiLegBaseEngine::RegressionMdeol::apply(): paths are empty or have empty first component");
     Size samples = paths.front().front()->size();
 
-    std::vector<RandomVariable> initialStateValues;
-    std::vector<const RandomVariable*> initialStatePointer;
+    // if we do not have regression coefficients, the regressand was zero
+
+    if (regressionCoeffs_.empty())
+        return RandomVariable(samples, 0.0);
+
+    // build initial state pointer
+
+    std::vector<RandomVariable> initialStateValues(initialState.size());
+    std::vector<const RandomVariable*> initialStatePointer(initialState.size());
     for (Size j = 0; j < initialState.size(); ++j) {
-        initialStateValues.push_back(RandomVariable(samples, initialState[j]));
-        initialStatePointer.push_back(&initialStateValues.back());
+        initialStateValues[j] = RandomVariable(samples, initialState[j]);
+        initialStatePointer[j] = &initialStateValues[j];
     }
 
     // build the regressor
 
-    std::vector<const RandomVariable*> regressor;
-    std::vector<RandomVariable> tmp;
+    std::vector<const RandomVariable*> regressor(regressorTimesModelIndices_.size());
+    std::vector<RandomVariable> tmp(regressorTimesModelIndices_.size());
 
+    Size i = 0;
     for (auto const& [t, modelIdx] : regressorTimesModelIndices_) {
         auto pt = pathTimes.find(t);
         if (pt != pathTimes.end()) {
 
             // the time is a path time, no need to interpolate the path
 
-            regressor.push_back(paths[std::distance(pathTimes.begin(), pt)][modelIdx]);
+            regressor[i] = paths[std::distance(pathTimes.begin(), pt)][modelIdx];
 
         } else {
 
@@ -1153,32 +1188,33 @@ McMultiLegBaseEngine::RegressionModel::apply(const Array& initialState,
             // t is after last path time => flat extrapolation
 
             if (t2 == pathTimes.end()) {
-                regressor.push_back(paths[pathTimes.size() - 1][modelIdx]);
+                regressor[i] = paths[pathTimes.size() - 1][modelIdx];
                 continue;
             }
 
             // t is before last path time
 
             Real time2 = *t2;
-            std::vector<const RandomVariable*> s2 = paths[std::distance(pathTimes.begin(), t2)];
+            const RandomVariable* s2 = paths[std::distance(pathTimes.begin(), t2)][modelIdx];
 
             Real time1;
-            std::vector<const RandomVariable*> s1;
+            const RandomVariable* s1;
             if (t2 == pathTimes.begin()) {
                 time1 = 0.0;
-                s1 = initialStatePointer;
+                s1 = initialStatePointer[modelIdx];
             } else {
                 time1 = *std::next(t2, -1);
-                s1 = paths[std::distance(pathTimes.begin(), std::next(t2, -1))];
+                s1 = paths[std::distance(pathTimes.begin(), std::next(t2, -1))][modelIdx];
             }
 
             // compute the interpolated state
 
             RandomVariable alpha1(samples, (time2 - t) / (time2 - time1));
             RandomVariable alpha2(samples, (t - time1) / (time2 - time1));
-            tmp.push_back(alpha1 * *s1[modelIdx] + alpha2 * *s2[modelIdx]);
-            regressor.push_back(&tmp.back());
+            tmp[i] = alpha1 * *s1 + alpha2 * *s2;
+            regressor[i] = &tmp[i];
         }
+        ++i;
     }
 
     // compute result and return it
