@@ -22,6 +22,7 @@ commodityspreadoption.cpp
 computeenvironment.cpp
 correlationtermstructure.cpp
 cpicapfloor.cpp
+cpileg.cpp
 crcirpp.cpp
 crossassetmodel.cpp
 crossassetmodel2.cpp
