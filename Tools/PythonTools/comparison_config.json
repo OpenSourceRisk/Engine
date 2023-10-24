@@ -1284,11 +1284,7 @@
           }
         ]
       },
-      "log_structured.*\\.json": {
-        "ignore_keys": [
-          
-        ]
-      },
+      "log_structured.*\\.json": {},
       "marketdata\\.json": {
         "settings": [
           {
@@ -1356,7 +1352,7 @@
         ]
       },
       "flownpv\\.json": {
-        "column_settings": [
+        "settings": [
           {
             "names": [
               "presentValue"
