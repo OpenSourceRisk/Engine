@@ -56,6 +56,7 @@ BOOST_AUTO_TEST_CASE(testCpiLegPaymentLag) {
     auto ukrpi = ext::make_shared<UKRPI>();
     Leg cpiLeg = QuantExt::CPILeg(fixedSchedule, ukrpi, yTS, 100, Period(3, Months))
                      .withNotionals(1e6)
+                     .withFixedRates(0.01)
                      .withPaymentCalendar(calendar)
                      .withPaymentLag(2);
 
