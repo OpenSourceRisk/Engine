@@ -1192,6 +1192,13 @@
           </xs:all>
         </xs:complexType>
       </xs:element>
+      <xs:element name="CommodityVolatilities" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
       <xs:element name="IRSwaptionVolatilities" minOccurs="0">
         <xs:complexType>
           <xs:all>
@@ -1213,9 +1220,14 @@
     <xs:all>
       <xs:element type="bool" name="ReportOnDeltaGrid" minOccurs="0"/>
       <xs:element type="bool" name="ReportOnMoneynessGrid" minOccurs="0"/>
+      <xs:element type="bool" name="ReportOnStrikeGrid" minOccurs="0"/>
+      <xs:element type="bool" name="ReportOnStrikeSpreadGrid" minOccurs="0"/>
       <xs:element type="xs:string" name="Deltas" minOccurs="0"/>
       <xs:element type="xs:string" name="Moneyness" minOccurs="0"/>
+      <xs:element type="xs:string" name="Strikes" minOccurs="0"/>
+      <xs:element type="xs:string" name="StrikeSpreads" minOccurs="0"/>
       <xs:element type="xs:string" name="Expiries" minOccurs="0"/>
+      <xs:element type="xs:string" name="UnderlyingTenors" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
   

@@ -1007,8 +1007,8 @@
         </xs:element>
         <xs:element type="xs:boolean" name="IsAveraged" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="IsInArrears" minOccurs="0" maxOccurs="1"/>
-        <xs:element type="xs:integer" name="FutureMonthOffset" minOccurs="0" maxOccurs="1"/>
-        <xs:element type="xs:integer" name="DeliveryRollDays" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:nonNegativeInteger" name="FutureMonthOffset" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:nonNegativeInteger" name="DeliveryRollDays" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:nonNegativeInteger" name="DailyExpiryOffset" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="IncludePeriodEnd" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="ExcludePeriodStart" minOccurs="0" maxOccurs="1"/>
@@ -1073,8 +1073,8 @@
       <xs:element type="xs:float" name="Spread" minOccurs="0" maxOccurs="1"/>
       <xs:element type="commodityQuantityFrequencyType" name="CommodityQuantityFrequency" minOccurs="0" maxOccurs="1"/>
       <xs:element type="commodityPayRelativeToType" name="CommodityPayRelativeTo" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:integer" name="FutureMonthOffset" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:integer" name="DeliveryRollDays" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="FutureMonthOffset" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="DeliveryRollDays" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:boolean" name="IncludePeriodEnd" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="FXIndex" minOccurs="0"/>
     </xs:all>
@@ -1100,8 +1100,8 @@
       <xs:element type="xs:float" name="Spread" minOccurs="0" maxOccurs="1"/>
       <xs:element type="commodityQuantityFrequencyType" name="CommodityQuantityFrequency" minOccurs="0" maxOccurs="1"/>
       <xs:element type="commodityPayRelativeToType" name="CommodityPayRelativeTo" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:integer" name="FutureMonthOffset" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:integer" name="DeliveryRollDays" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="FutureMonthOffset" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="DeliveryRollDays" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:boolean" name="IncludePeriodEnd" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="FXIndex" minOccurs="0"/>
     </xs:all>
@@ -1794,8 +1794,8 @@
       <xs:element type="xs:string" name="Exchange" minOccurs="0"/>	  
       <xs:element type="xs:float" name="Weight" minOccurs="0"/>
       <xs:element type="xs:string" name="PriceType" minOccurs="0"/>
-      <xs:element type="xs:int" name="FutureMonthOffset" minOccurs="0"/>
-      <xs:element type="xs:int" name="DeliveryRollDays" minOccurs="0"/>
+      <xs:element type="xs:nonNegativeInteger" name="FutureMonthOffset" minOccurs="0"/>
+      <xs:element type="xs:nonNegativeInteger" name="DeliveryRollDays" minOccurs="0"/>
       <xs:element type="xs:string" name="DeliveryRollCalendar" minOccurs="0"/>
       <xs:element type="xs:string" name="Interpolation" minOccurs="0"/>
       <xs:element type="xs:float" name="BidAskAdjustment" minOccurs="0"/>
