@@ -277,6 +277,11 @@ CPILeg& CPILeg::withPaymentCalendar(const Calendar& cal) {
     return *this;
 }
 
+CPILeg& CPILeg::withPaymentLag(Natural lag) {
+    paymentLag_ = lag;
+    return *this;
+}
+
 CPILeg& CPILeg::withFixingDays(Natural fixingDays) {
     fixingDays_ = std::vector<Natural>(1, fixingDays);
     return *this;
@@ -356,7 +361,7 @@ CPILeg::operator Leg() const {
         for (Size i = 0; i < n; ++i) {
             refStart = start = schedule_.date(i);
             refEnd = end = schedule_.date(i + 1);
-            Date paymentDate = paymentCalendar_.adjust(end, paymentAdjustment_);
+            Date paymentDate = paymentCalendar_.advance(end, paymentLag_, Days, paymentAdjustment_);
 
             Date exCouponDate;
             if (exCouponPeriod_ != Period()) {
@@ -395,10 +400,13 @@ CPILeg::operator Leg() const {
     }
 
     // in CPI legs you always have a notional flow of some sort
-    Date paymentDate = paymentCalendar_.adjust(schedule_.date(n), paymentAdjustment_);
     
+    // Previous implementations didn't differentiate the observation and payment dates
+    Date observationDate = paymentCalendar_.adjust(schedule_.date(n), paymentAdjustment_);
+    Date paymentDate = paymentCalendar_.advance(schedule_.date(n), paymentLag_, Days, paymentAdjustment_);
+
     ext::shared_ptr<CPICashFlow> xnl = ext::make_shared<CPICashFlow>(
-        detail::get(notionals_, n, 0.0), index_, baseDate, baseCPI_, paymentDate, observationLag_,
+        detail::get(notionals_, n, 0.0), index_, baseDate, baseCPI_, observationDate, observationLag_,
         observationInterpolation_, paymentDate, subtractInflationNominal_);
 
     if (finalFlowCap_ == Null<Real>() && finalFlowFloor_ == Null<Real>()) {
