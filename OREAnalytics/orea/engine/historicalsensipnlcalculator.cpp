@@ -222,19 +222,27 @@ void HistoricalSensiPnlCalculator::calculateSensiPnl(
     bool runTradeLevel = tradeLevel && sensitivityStream_;
 
     // Local P&L vectors to hold _all_ historical P&Ls
-    auto nScenarios = hisScenGen_->numScenarios();
+    Size nScenarios = hisScenGen_->numScenarios();
+    Size nCalculators = pnlCalculators.size();
     vector<Real> allPnls(hisScenGen_->numScenarios(), 0.0);
     vector<Real> allFoPnls(hisScenGen_->numScenarios(), 0.0);
-
+    
+    //                    calculators,scenarios,  trades
     using TradePnLStore = std::vector<std::vector<QuantLib::Real>>;
-    TradePnLStore tradePnls, foTradePnls;
+    std::vector<TradePnLStore> tradePnls, foTradePnls;
 
     // We may need to store trade level P&Ls.
     if (runTradeLevel) {
         tradePnls.clear();
-        tradePnls.reserve(nScenarios);
+        tradePnls.reserve(nCalculators);
         foTradePnls.clear();
-        foTradePnls.reserve(nScenarios);
+        foTradePnls.reserve(nCalculators);
+        for (Size i = 0; i < nCalculators; i++) {
+            tradePnls.push_back(std::vector<std::vector<QuantLib::Real>>());
+            tradePnls.at(i).reserve(nScenarios);
+            foTradePnls.push_back(std::vector<std::vector<QuantLib::Real>>());
+            foTradePnls.at(i).reserve(nScenarios);
+        }
     }
 
     hisScenGen_->reset();
@@ -252,14 +260,13 @@ void HistoricalSensiPnlCalculator::calculateSensiPnl(
 
         // Add trade level P&L vector if needed.
         if (runTradeLevel) {
-            bool inPeriod = false;
-            for (const auto& c : pnlCalculators) {
-                if (c->isInTimePeriod(hisScenGen_->startDates()[i], hisScenGen_->endDates()[i]))
-                    inPeriod = true;
-            }
-            if (inPeriod) {
-                tradePnls.push_back(vector<Real>(tradeIds.size(), 0.0));
-                foTradePnls.push_back(vector<Real>(tradeIds.size(), 0.0));
+            for (Size j = 0; j < pnlCalculators.size(); j++) {
+                bool inPeriod =
+                    pnlCalculators.at(j)->isInTimePeriod(hisScenGen_->startDates()[i], hisScenGen_->endDates()[i]);
+                if (inPeriod) {
+                    tradePnls.at(j).push_back(vector<Real>(tradeIds.size(), 0.0));
+                    foTradePnls.at(j).push_back(vector<Real>(tradeIds.size(), 0.0));
+                }
             }
         }
 
@@ -282,9 +289,11 @@ void HistoricalSensiPnlCalculator::calculateSensiPnl(
                 if (includeGammaMargin)
                     allPnls[i] += gammaPnl;
 
-                for (const auto& c : pnlCalculators) {
-                    if (c->isInTimePeriod(hisScenGen_->startDates()[i], hisScenGen_->endDates()[i])) {
-                        c->writePNL(i, true, sr.key_1, shift, sr.delta, sr.gamma, deltaPnl, gammaPnl);
+                for (Size k = 0; k < pnlCalculators.size(); k++) {
+                    if (pnlCalculators.at(k)->isInTimePeriod(hisScenGen_->startDates()[i],
+                                                             hisScenGen_->endDates()[i])) {
+                        pnlCalculators.at(k)->writePNL(i, true, sr.key_1, shift, sr.delta, sr.gamma, deltaPnl,
+                                                       gammaPnl);
                         if (!tradeSensiCache.empty()) {
                             auto itSr = tradeSensiCache.find(j);
                             if (itSr != tradeSensiCache.end()) {
@@ -295,15 +304,16 @@ void HistoricalSensiPnlCalculator::calculateSensiPnl(
                                     Real tradeGamma = kv.second.second;
                                     Real tradeGammaPnl = 0.5 * shift * shift * tradeGamma;
                                     // Attempt to write trade level P&L contribution row.
-                                    c->writePNL(i, true, sr.key_1, shift, tradeDelta, tradeGamma, tradeDeltaPnl,
-                                                  tradeGammaPnl, RiskFactorKey(), 0.0, tradeId);
+                                    pnlCalculators.at(k)->writePNL(i, true, sr.key_1, shift, tradeDelta, tradeGamma,
+                                                                   tradeDeltaPnl, tradeGammaPnl, RiskFactorKey(), 0.0,
+                                                                   tradeId);
                                     // Update the sensitivity based trade level P&Ls
                                     if (runTradeLevel) {
-                                        foTradePnls.back()[kv.first] += tradeDeltaPnl;
+                                        foTradePnls.at(k).back()[kv.first] += tradeDeltaPnl;
                                         if (includeDeltaMargin)
-                                            tradePnls.back()[kv.first] += tradeDeltaPnl;
+                                            tradePnls.at(k).back()[kv.first] += tradeDeltaPnl;
                                         if (includeGammaMargin)
-                                            tradePnls.back()[kv.first] += tradeGammaPnl;
+                                            tradePnls.at(k).back()[kv.first] += tradeGammaPnl;
                                     }
                                 }
                             }
@@ -319,7 +329,8 @@ void HistoricalSensiPnlCalculator::calculateSensiPnl(
                 if (includeGammaMargin)
                     allPnls[i] += gammaPnl;
                                 
-                for (const auto& c : pnlCalculators) {
+                for (Size j = 0; j < pnlCalculators.size(); j++) {
+                    const auto& c = pnlCalculators[j];
                     if (c->isInTimePeriod(hisScenGen_->startDates()[i], hisScenGen_->endDates()[i])) {
                         c->writePNL(i, true, sr.key_1, shift_1, sr.delta, sr.gamma, 0.0, gammaPnl, sr.key_2, shift_2);
                         if (!tradeSensiCache.empty()) {
@@ -334,7 +345,7 @@ void HistoricalSensiPnlCalculator::calculateSensiPnl(
                                                   sr.key_2, shift_2, tradeId);
                                     // Update the sensitivity based trade level P&Ls
                                     if (runTradeLevel && includeGammaMargin) {
-                                        tradePnls.back()[kv.first] += tradeGammaPnl;
+                                        tradePnls.at(j).back()[kv.first] += tradeGammaPnl;
                                     }
                                 }
                             }
@@ -351,10 +362,10 @@ void HistoricalSensiPnlCalculator::calculateSensiPnl(
         covarianceCalculator->populateCovariance(keys);
 
     LOG("Populate the sensitivity backtesting P&L vectors");
-    for (const auto& c : pnlCalculators) {
-        c->populatePNLs(allPnls, allFoPnls, hisScenGen_->startDates(), hisScenGen_->endDates());
+    for (Size j = 0; j < pnlCalculators.size(); j++) {
+        pnlCalculators.at(j)->populatePNLs(allPnls, allFoPnls, hisScenGen_->startDates(), hisScenGen_->endDates());
         if (runTradeLevel)
-            c->populateTradePNLs(tradePnls, foTradePnls);
+            pnlCalculators.at(j)->populateTradePNLs(tradePnls.at(j), foTradePnls.at(j));
     }
 }
 
