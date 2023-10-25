@@ -56,6 +56,20 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // Build the trade using the shared functionality in the base class.
     VanillaOptionTrade::build(engineFactory);
+
+    if (option_.settlement() == "Physical") {
+        const boost::optional<OptionPaymentData>& opd = option_.paymentData();
+        Date paymentDate = expiryDate_;
+        if (opd) {
+            if (opd->rulesBased()) {
+                const Calendar& cal = opd->calendar();
+                QL_REQUIRE(cal != Calendar(), "Need a non-empty calendar for rules based payment date.");
+                paymentDate = cal.advance(expiryDate_, opd->lag(), Days, opd->convention());
+            }
+            QL_REQUIRE(paymentDate >= expiryDate_, "Payment date must be greater than or equal to expiry date.");
+        }
+        maturity_ = paymentDate;
+    }
     
     additionalData_["boughtCurrency"] = assetName_; 
     additionalData_["boughtAmount"] = quantity_;
