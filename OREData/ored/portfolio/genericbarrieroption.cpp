@@ -30,7 +30,7 @@ namespace data {
 
     static const std::string mcscript =
       "        REQUIRE PayoffType == 0 OR PayoffType == 1;\n"
-      "        REQUIRE TransatlanticBarrierType >= 0 AND TransatlanticBarrierType <= 4;\n"
+      "        REQUIRE SIZE(Underlyings) == SIZE(TransatlanticBarrierType);\n"
       "        REQUIRE SIZE(BarrierTypes) == SIZE(BarrierLevels) / SIZE(Underlyings);\n"
       "        REQUIRE SIZE(BarrierTypes) == SIZE(BarrierRebates);\n"
       "        REQUIRE SIZE(BarrierTypes) == SIZE(BarrierRebateCurrencies);\n"
@@ -90,10 +90,11 @@ namespace data {
       "\n"
       "	       TransatlanticActive = 1;\n"
       "        FOR k IN (1, SIZE(Underlyings), 1) DO\n"
-      "          IF { TransatlanticBarrierType == 1 AND Underlyings[k](ExpiryDate) >= TransatlanticBarrierLevel[k]  } OR\n"
-      "             { TransatlanticBarrierType == 2 AND Underlyings[k](ExpiryDate) <= TransatlanticBarrierLevel[k]  } OR\n"
-      "             { TransatlanticBarrierType == 3 AND Underlyings[k](ExpiryDate) < TransatlanticBarrierLevel[k] } OR\n"
-      "             { TransatlanticBarrierType == 4 AND Underlyings[k](ExpiryDate) > TransatlanticBarrierLevel[k] } THEN\n"
+      "          REQUIRE TransatlanticBarrierType[k] >= 0  AND TransatlanticBarrierType[k] <= 4;\n"
+      "          IF { TransatlanticBarrierType[k] == 1 AND Underlyings[k](ExpiryDate) >= TransatlanticBarrierLevel[k]  } OR\n"
+      "             { TransatlanticBarrierType[k] == 2 AND Underlyings[k](ExpiryDate) <= TransatlanticBarrierLevel[k]  } OR\n"
+      "             { TransatlanticBarrierType[k] == 3 AND Underlyings[k](ExpiryDate) < TransatlanticBarrierLevel[k] } OR\n"
+      "             { TransatlanticBarrierType[k] == 4 AND Underlyings[k](ExpiryDate) > TransatlanticBarrierLevel[k] } THEN\n"
       "            TransatlanticActive = 0;\n"
       "          END;\n"
       "        END;\n"
@@ -116,7 +117,7 @@ namespace data {
 
     static const std::string fdscript =
       "        REQUIRE PayoffType == 0 OR PayoffType == 1;\n"
-      "        REQUIRE TransatlanticBarrierType >= 0 AND TransatlanticBarrierType <= 4;\n"
+      "        REQUIRE SIZE(Underlyings) == SIZE(TransatlanticBarrierType);\n"
       "        REQUIRE SIZE(BarrierTypes) == SIZE(BarrierLevels) / SIZE(Underlyings);\n"
       "        REQUIRE SIZE(BarrierTypes) == SIZE(BarrierRebates);\n"
       "        REQUIRE SIZE(BarrierTypes) == SIZE(BarrierRebateCurrencies);\n"
@@ -135,10 +136,11 @@ namespace data {
       "\n"
       "        TransatlanticActive = 1;\n"
       "        FOR k IN (1, SIZE(Underlyings), 1) DO\n"
-      "          IF { TransatlanticBarrierType == 1 AND Underlyings[k](ExpiryDate) >= TransatlanticBarrierLevel[k]  } OR\n"
-      "             { TransatlanticBarrierType == 2 AND Underlyings[k](ExpiryDate) <= TransatlanticBarrierLevel[k]  } OR\n"
-      "             { TransatlanticBarrierType == 3 AND Underlyings[k](ExpiryDate) < TransatlanticBarrierLevel[k] } OR\n"
-      "             { TransatlanticBarrierType == 4 AND Underlyings[k](ExpiryDate) > TransatlanticBarrierLevel[k] } THEN\n"
+      "          REQUIRE TransatlanticBarrierType[k] >= 0  AND TransatlanticBarrierType[k] <= 4;\n"
+      "          IF { TransatlanticBarrierType[k] == 1 AND Underlyings[k](ExpiryDate) >= TransatlanticBarrierLevel[k]  } OR\n"
+      "             { TransatlanticBarrierType[k] == 2 AND Underlyings[k](ExpiryDate) <= TransatlanticBarrierLevel[k]  } OR\n"
+      "             { TransatlanticBarrierType[k] == 3 AND Underlyings[k](ExpiryDate) < TransatlanticBarrierLevel[k] } OR\n"
+      "             { TransatlanticBarrierType[k] == 4 AND Underlyings[k](ExpiryDate) > TransatlanticBarrierLevel[k] } THEN\n"
       "            TransatlanticActive = 0;\n"
       "          END;\n"
       "        END;\n"
@@ -297,31 +299,62 @@ void GenericBarrierOption::build(const boost::shared_ptr<EngineFactory>& factory
                    (quantity_.empty() && strike_.empty() && !amount_.empty()),
                "Need no Quantity, no Strike, Amount for PayoffType = CashOrNothing");
 
-    std::string transatlanticBarrierType = "0";
+    std::vector<std::string> transatlanticBarrierType(underlyings_.size(), "0");
     std::vector<std::string> transatlanticBarrierLevel(underlyings_.size(), "0");
     std::string transatlanticBarrierRebate = "0.0";
     std::string transatlanticBarrierRebateCurrency = payCurrency_;
-    if (!transatlanticBarrier_.type().empty()) {
-        if (transatlanticBarrier_.type() == "DownAndIn")
-            transatlanticBarrierType = "1";
-        else if (transatlanticBarrier_.type() == "UpAndIn")
-            transatlanticBarrierType = "2";
-        else if (transatlanticBarrier_.type() == "DownAndOut")
-            transatlanticBarrierType = "3";
-        else if (transatlanticBarrier_.type() == "UpAndOut")
-            transatlanticBarrierType = "4";
-        else {
-            QL_FAIL("Transatlantic BarrierType (" << transatlanticBarrier_.type()
-                                                  << ") must be DownAndIn, UpAndIn, DownAndOut, UpAndOut");
+    if (!transatlanticBarrier_[0].type().empty()) {
+        transatlanticBarrierType.clear();
+        for (auto const& n : transatlanticBarrier_) {
+            if (n.type() == "DownAndIn")
+                transatlanticBarrierType.push_back("1");
+            else if (n.type() == "UpAndIn")
+                transatlanticBarrierType.push_back("2");
+            else if (n.type() == "DownAndOut")
+                transatlanticBarrierType.push_back("3");
+            else if (n.type() == "UpAndOut")
+                transatlanticBarrierType.push_back("4");
+            else {
+                QL_FAIL("Transatlantic BarrierType (" << n.type()
+                                                      << ") must be DownAndIn, UpAndIn, DownAndOut, UpAndOut");
+            }
         }
-        QL_REQUIRE(transatlanticBarrier_.levels().size() == underlyings_.size(),
-                   "Transatlantic Barrier must have exactly 1 level for each underlying, got " << transatlanticBarrier_.levels().size());
+        QL_REQUIRE(transatlanticBarrierType.size() == 1 || transatlanticBarrierType.size() == underlyings_.size(),
+                   "Transatlantic Barrier must have only 1 Barrier block or 1 block for each underlyings, got "
+                       << transatlanticBarrierType.size());
+        if (transatlanticBarrierType.size() == 1 && underlyings_.size() > 1) {
+            transatlanticBarrierType.assign(underlyings_.size(), transatlanticBarrierType[0]);
+            for (Size i = 0; i < transatlanticBarrierType.size(); i++) {
+                std::cout << i << ": " << transatlanticBarrierType[i] << std::endl;
+            }
+        }
+        for (Size i = 0; i < transatlanticBarrierType.size(); i++) {
+            std::cout << i << ": " << transatlanticBarrierType[i] << std::endl;
+        }
         transatlanticBarrierLevel.clear();
-        for (const auto& l : transatlanticBarrier_.levels())
-            transatlanticBarrierLevel.push_back(boost::lexical_cast<std::string>(l.value()));
-        transatlanticBarrierRebate = boost::lexical_cast<std::string>(transatlanticBarrier_.rebate());
-        if (!transatlanticBarrier_.rebateCurrency().empty())
-            transatlanticBarrierRebateCurrency = transatlanticBarrier_.rebateCurrency();
+        if (transatlanticBarrier_.size() == 1) {
+            QL_REQUIRE(transatlanticBarrier_[0].levels().size() == underlyings_.size(),
+                       "Transatlantic Barrier must have exactly 1 level for each underlying, got "
+                           << transatlanticBarrier_[0].levels().size());
+            for (const auto& l : transatlanticBarrier_[0].levels())
+                transatlanticBarrierLevel.push_back(boost::lexical_cast<std::string>(l.value()));
+        } else {
+            QL_REQUIRE(transatlanticBarrierType.size() == underlyings_.size(),
+                       "Transatlantic Barrier must have exactly 1 level for each underlying, got "
+                           << transatlanticBarrier_.size());
+            for (auto const& n : transatlanticBarrier_) {
+                QL_REQUIRE(n.levels().size() == 1, "Number of level in each barrier block in transatlantic barriers "
+                                                   "must be exactly 1 if more than 1 barrier blocks are provided, got "
+                                                       << transatlanticBarrier_.size());
+                transatlanticBarrierLevel.push_back(boost::lexical_cast<std::string>(n.levels()[0].value()));
+            }
+        }
+        if (transatlanticBarrier_.size() > 1) {
+            std::cout << "transatlanticBarrier_[1].rebate() = " << transatlanticBarrier_[1].rebate() << std::endl;
+        }
+        transatlanticBarrierRebate = boost::lexical_cast<std::string>(transatlanticBarrier_[0].rebate());
+        if (!transatlanticBarrier_[0].rebateCurrency().empty())
+            transatlanticBarrierRebateCurrency = transatlanticBarrier_[0].rebateCurrency();
     }
     numbers_.emplace_back("Number", "TransatlanticBarrierType", transatlanticBarrierType);
     numbers_.emplace_back("Number", "TransatlanticBarrierLevel", transatlanticBarrierLevel);
@@ -553,9 +586,11 @@ void GenericBarrierOption::fromXML(XMLNode* node) {
 
     auto transatlanticBarrierNode = XMLUtils::getChildNode(dataNode, "TransatlanticBarrier");
     if (transatlanticBarrierNode) {
-        auto b = XMLUtils::getChildNode(transatlanticBarrierNode, "BarrierData");
-        if (b)
-            transatlanticBarrier_.fromXML(b);
+        auto b = XMLUtils::getChildrenNodes(transatlanticBarrierNode, "BarrierData");
+        for (auto const& n : b) {
+            transatlanticBarrier_.push_back(BarrierData());
+            transatlanticBarrier_.back().fromXML(n);
+        }
     }
 
     payCurrency_ = XMLUtils::getChildValue(dataNode, "PayCurrency", true);
@@ -597,9 +632,11 @@ XMLNode* GenericBarrierOption::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, barriers, "KikoType", kikoType_);
     XMLUtils::appendNode(dataNode, barriers);
 
-    if (!transatlanticBarrier_.type().empty()) {
+    if (!transatlanticBarrier_[0].type().empty()) {
         XMLNode* transatlanticBarrierNode = doc.allocNode("TransatlanticBarrier");
-        XMLUtils::appendNode(transatlanticBarrierNode, transatlanticBarrier_.toXML(doc));
+        for (auto& n : transatlanticBarrier_) {
+            XMLUtils::appendNode(transatlanticBarrierNode, n.toXML(doc));
+        }
         XMLUtils::appendNode(dataNode, transatlanticBarrierNode);
     }
 
