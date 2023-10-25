@@ -41,14 +41,14 @@ public:
                     const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
                     const std::vector<Date> simulationDates = std::vector<Date>(),
                     const std::vector<Size> externalModelIndices = std::vector<Size>(),
-                    const bool minimalObsDate = true)
+                    const bool minimalObsDate = true, const RegressorModel regressorModel = RegressorModel::Simple)
         : GenericEngine<QuantLib::Swap::arguments, QuantLib::Swap::results>(),
           McMultiLegBaseEngine(Handle<CrossAssetModel>(boost::make_shared<CrossAssetModel>(
                                    std::vector<boost::shared_ptr<IrModel>>(1, model),
                                    std::vector<boost::shared_ptr<FxBsParametrization>>())),
                                calibrationPathGenerator, pricingPathGenerator, calibrationSamples, pricingSamples,
                                calibrationSeed, pricingSeed, polynomOrder, polynomType, ordering, directionIntegers,
-                               {discountCurve}, simulationDates, externalModelIndices, minimalObsDate) {
+                               {discountCurve}, simulationDates, externalModelIndices, minimalObsDate, regressorModel) {
         registerWith(model);
     }
 

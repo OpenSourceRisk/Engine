@@ -146,6 +146,7 @@ public:
     CPILeg& withPaymentDayCounter(const DayCounter&);
     CPILeg& withPaymentAdjustment(BusinessDayConvention);
     CPILeg& withPaymentCalendar(const Calendar&);
+    CPILeg& withPaymentLag(Natural lag);
     CPILeg& withFixingDays(Natural fixingDays);
     CPILeg& withFixingDays(const std::vector<Natural>& fixingDays);
     CPILeg& withObservationInterpolation(CPI::InterpolationType);
@@ -174,6 +175,7 @@ private:
     DayCounter paymentDayCounter_;
     BusinessDayConvention paymentAdjustment_;
     Calendar paymentCalendar_;
+    Natural paymentLag_;
     std::vector<Natural> fixingDays_;
     CPI::InterpolationType observationInterpolation_;
     bool subtractInflationNominal_;

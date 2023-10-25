@@ -52,7 +52,7 @@ Allowable values:  \emph{true, false}
 
 Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!. When \lstinline!LegType! is \emph{Equity}, Minor Currencies in Table \ref{tab:currency} are also allowable.
 
-\item PaymentCalendar [Optional]: The payment calendar of the leg coupons. The \lstinline!PaymentCalendar! is used in conjuction with the \lstinline!PaymentConvention! and the \lstinline!PaymentLag! to determine the payments dates, unless the \lstinline!PaymentDates! node is used which defines the payment dates explicitly.
+\item PaymentCalendar [Optional]: The payment calendar of the leg coupons. The \lstinline!PaymentCalendar! is used in conjunction with the \lstinline!PaymentConvention! and the \lstinline!PaymentLag! to determine the payments dates, unless the \lstinline!PaymentDates! node is used which defines the payment dates explicitly.
 
 Allowable values: See Table \ref{tab:calendar} \lstinline!Calendar!. If left blank or omitted, defaults to the calendar in the \lstinline!ScheduleData! node, unless \lstinline!LegType! is \emph{Floating} and \lstinline!Index! is OIS, in which case this defaults to the index calendar. 
 
@@ -62,7 +62,7 @@ The \lstinline!PaymentCalendar! calendar field is currently only supported for \
 
 Allowable values: See Table \ref{tab:convention}.
 
-\item PaymentLag [optional]: The payment lag applies to Fixed legs, Equity legs, and Floating legs with Ibor and OIS indices (but not to BMA/SIFMA indices). \\
+\item PaymentLag [optional]: The payment lag applies to Fixed legs, Equity legs, and Floating legs with Ibor and OIS indices (but not to BMA/SIFMA indices), as well as CPI legs and Zero Coupon Fixed legs. \\
 PaymentLag is also not supported for CapFloor Floating legs that have Ibor coupons with sub periods (HasSubPeriods = \emph{true}), nor for CapFloor Floating legs with averaged ON coupons (IsAveraged = \emph{true}).
 
 Allowable values: Any valid period, i.e. a non-negative whole number, optionally followed by \emph{D} (days), \emph{W} (weeks), \emph{M} (months),
