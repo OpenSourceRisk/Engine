@@ -81,12 +81,26 @@ class FixingDateGetter;
 class RequiredFixings {
 public:    
     // FixingEntry = indexName, fixingDate, payDate, alwaysAddIfPaysOnSettlement
-    using FixingEntry = std::tuple<std::string, QuantLib::Date, QuantLib::Date, bool>;
-    // InflationFixingEntry = FixingEntry, indexInterpolated, indexFrequency, indexAvailabilityLag
-    using InflationFixingEntry = std::tuple<FixingEntry, bool, Frequency, Period>;
-    // ZeroInflationFixingEntry = InflationFixingEntry, couponInterpolation, couponFrequency
-    using ZeroInflationFixingEntry = std::tuple<InflationFixingEntry, CPI::InterpolationType, Frequency>;
+    struct FixingEntry {
+        std::string indexName;
+        QuantLib::Date fixingDate;
+        QuantLib::Date payDate;
+        bool alwaysAddIfPaysOnSettlement;
+        bool mandatory = true;
+    };
 
+    struct InflationFixingEntry {
+        FixingEntry fixingEntry;
+        bool indexInterpolated;
+        QuantLib::Frequency indexFreq;
+        QuantLib::Period availabilityLeg;
+    };
+
+    struct ZeroInflationFixingEntry {
+        InflationFixingEntry inflationFixingEntry;
+        CPI::InterpolationType couponInterpolation;
+        QuantLib::Frequency couponFrequency;
+    };
     /*! Gives back the dates for which fixings will be required to price the trade assuming a given \p settlementDate.
         If the \p settlementDate is not provided or is set equal to \c QuantLib::Date(), the settlement date in the
         implementation is assumed to be the \c Settings::instance().evaluationDate().
@@ -108,12 +122,14 @@ public:
        hasOccured() and ask for the fixing regardless. If the payDate is not given, it defaults to Date::maxDate()
        meaning that the added fixing is relevant unconditional on a pay date */
     void addFixingDate(const QuantLib::Date& fixingDate, const std::string& indexName,
-                       const QuantLib::Date& payDate = Date::maxDate(), const bool alwaysAddIfPaysOnSettlement = false);
+                       const QuantLib::Date& payDate = Date::maxDate(), const bool alwaysAddIfPaysOnSettlement = false,
+                       const bool mandatoryFixing = true);
+    
     void addFixingDate(const FixingEntry& fixingEntry);
 
     /*! adds a vector of fixings dates \p fixingDates for an index given by is ORE index name \p indexName arising from
        a coupon with payment date \p payDate */
-    void addFixingDates(const std::vector<QuantLib::Date>& fixingDates, const std::string& indexName,
+    void addFixingDates(const std::vector<std::pair<QuantLib::Date, bool>>& fixingDates, const std::string& indexName,
                         const QuantLib::Date& payDate = Date::maxDate(),
                         const bool alwaysAddIfPaysOnSettlement = false);
 
@@ -124,7 +140,8 @@ public:
                                     const Period& indexAvailabilityLag,
                                     const CPI::InterpolationType coupopnInterpolation, const Frequency couponFrequency,
                                     const QuantLib::Date& payDate = Date::maxDate(),
-                                    const bool alwaysAddIfPaysOnSettlement = false);
+                                    const bool alwaysAddIfPaysOnSettlement = false,
+                                    const bool mandatoryFixing = true);
     void addZeroInflationFixingDate(const ZeroInflationFixingEntry& fixingEntry);
 
     /*! add a single fixing date \p fixingDate for a coupon based on a yoy inflation index given by its ORE index name
@@ -132,7 +149,8 @@ public:
     void addYoYInflationFixingDate(const QuantLib::Date& fixingDate, const std::string& indexName,
                                    const bool indexInterpolated, const Frequency indexFrequency,
                                    const Period& indexAvailabilityLag, const QuantLib::Date& payDate = Date::maxDate(),
-                                   const bool alwaysAddIfPaysOnSettlement = false);
+                                   const bool alwaysAddIfPaysOnSettlement = false,
+                                   const bool mandatoryFixing = true);
     void addYoYInflationFixingDate(const InflationFixingEntry& fixingEntry);
 
     /*! clear all data */

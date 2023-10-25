@@ -164,18 +164,18 @@ void RequiredFixings::unsetPayDates() {
     std::set<ZeroInflationFixingEntry> newZeroInflationFixingDates;
     std::set<InflationFixingEntry> newYoYInflationFixingDates;
     for (auto f : fixingDates_) {
-        std::get<2>(f) = Date::maxDate();
-        std::get<3>(f) = true;
+        f.payDate = Date::maxDate();
+        f.alwaysAddIfPaysOnSettlement = true;
         newFixingDates.insert(f);
     }
     for (auto f : zeroInflationFixingDates_) {
-        std::get<2>(std::get<0>(std::get<0>(f))) = Date::maxDate();
-        std::get<3>(std::get<0>(std::get<0>(f))) = true;
+        f.inflationFixingEntry.fixingEntry.payDate = Date::maxDate();
+        f.inflationFixingEntry.fixingEntry.alwaysAddIfPaysOnSettlement = true;
         newZeroInflationFixingDates.insert(f);
     }
     for (auto f : yoyInflationFixingDates_) {
-        std::get<2>(std::get<0>(f)) = Date::maxDate();
-        std::get<3>(std::get<0>(f)) = true;
+        f.fixingEntry.payDate = Date::maxDate();
+        f.fixingEntry.alwaysAddIfPaysOnSettlement = true;
         newYoYInflationFixingDates.insert(f);
     }
     fixingDates_ = newFixingDates;
@@ -190,17 +190,17 @@ RequiredFixings RequiredFixings::filteredFixingDates(const Date& settlementDate)
     // handle the general case
     for (auto f : fixingDates_) {
         // get the data
-        std::string indexName = std::get<0>(f);
-        Date fixingDate = std::get<1>(f);
-        Date payDate = std::get<2>(f);
-        bool alwaysAddIfPaysOnSettlement = std::get<3>(f);
+        std::string indexName = f.indexName;
+        Date fixingDate = f.fixingDate;
+        Date payDate = f.payDate;
+        bool alwaysAddIfPaysOnSettlement = f.alwaysAddIfPaysOnSettlement;
         // add to result
         if (fixingDate > d)
             continue;
         SimpleCashFlow dummyCf(0.0, payDate);
         if (!dummyCf.hasOccurred(d) || (alwaysAddIfPaysOnSettlement && dummyCf.date() == d)) {
-            std::get<2>(f) = Date::maxDate();
-            std::get<3>(f) = true;
+            f.payDate = Date::maxDate();
+            f.alwaysAddIfPaysOnSettlement = true;
             rf.addFixingDate(f);
         }
     }
