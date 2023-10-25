@@ -79,7 +79,8 @@ boost::shared_ptr<PricingEngine> CamAmcFxForwardEngineBuilder::engineImpl(const 
         parsePolynomType(engineParameter("Training.BasisFunction")),
         parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering")),
         parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")), discountCurves, simulationDates_,
-        externalModelIndices, parseBool(engineParameter("MinObsDate")));
+        externalModelIndices, parseBool(engineParameter("MinObsDate")),
+        parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")));
 
     return engine;
 }

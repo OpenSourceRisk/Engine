@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2023 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -207,6 +208,15 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
         }
     }
 
+    QuantExt::InterpolatedSmileSection::InterpolationMethod interp;
+    if (config->smileInterpolation() == FXVolatilityCurveConfig::SmileInterpolation::Linear)
+        interp = QuantExt::InterpolatedSmileSection::InterpolationMethod::Linear;
+    else if (config->smileInterpolation() == FXVolatilityCurveConfig::SmileInterpolation::Cubic)
+        interp = QuantExt::InterpolatedSmileSection::InterpolationMethod::CubicSpline;
+    else {
+        QL_FAIL("Delta FX vol surface: invalid interpolation, expected Linear, Cubic");
+    }
+
     // daycounter used for interpolation in time.
     // TODO: push into conventions or config
     DayCounter dc = config->dayCounter();
@@ -217,7 +227,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
                    [](const std::pair<Real, string>& x) { return x.first; });
     vol_ = boost::make_shared<QuantExt::BlackVolatilitySurfaceDelta>(
         asof, dates, putDeltasNum, callDeltasNum, hasATM, blackVolMatrix, dc, cal, fxSpot_, domYts_, forYts_,
-        deltaType_, atmType_, boost::none, switchTenor_, longTermDeltaType_, longTermAtmType_);
+        deltaType_, atmType_, boost::none, switchTenor_, longTermDeltaType_, longTermAtmType_, boost::none, interp);
 
     vol_->enableExtrapolation();
 }

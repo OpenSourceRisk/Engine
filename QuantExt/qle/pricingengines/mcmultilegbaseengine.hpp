@@ -52,6 +52,8 @@ struct McEngineStats : public QuantLib::Singleton<McEngineStats> {
 };
 
 class McMultiLegBaseEngine {
+public:
+    enum RegressorModel { Simple, LaggedFX };
 
 protected:
     /*! The npv is computed in the model's base currency, discounting curves are taken from the model. simulationDates
@@ -70,7 +72,8 @@ protected:
         const SobolRsg::DirectionIntegers directionIntegers,
         const std::vector<Handle<YieldTermStructure>>& discountCurves = std::vector<Handle<YieldTermStructure>>(),
         const std::vector<Date>& simulationDates = std::vector<Date>(),
-        const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true);
+        const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true,
+        const RegressorModel regressorModel = RegressorModel::Simple);
 
     // run calibration and pricing (called from derived engines)
     void calculate() const;
@@ -97,6 +100,7 @@ protected:
     std::vector<Date> simulationDates_;
     std::vector<Size> externalModelIndices_;
     bool minimalObsDate_;
+    RegressorModel regressorModel_;
 
     // the generated amc calculator
     mutable boost::shared_ptr<AmcCalculator> amcCalculator_;
@@ -118,6 +122,66 @@ private:
             amountCalculator;
     };
 
+    // class representing a regression model for a certain observation (= xva, exercise) time
+    class RegressionModel {
+    public:
+        RegressionModel() = default;
+        RegressionModel(const Real observationTime, const std::vector<CashflowInfo>& cashflowInfo,
+                        const std::function<bool(std::size_t)>& cashflowRelevant, const CrossAssetModel& model,
+                        const RegressorModel regressorModel);
+        // pathTimes must contain the observation time and the relevant cashflow simulation times
+        void train(const Size polynomOrder, const LsmBasisSystem::PolynomialType polynomType,
+                   const RandomVariable& regressand, const std::vector<std::vector<const RandomVariable*>>& paths,
+                   const std::set<Real>& pathTimes, const Filter& filter = Filter());
+        // pathTimes do not need to contain the observation time or the relevant cashflow simulation times
+        RandomVariable apply(const Array& initialState, const std::vector<std::vector<const RandomVariable*>>& paths,
+                             const std::set<Real>& pathTimes) const;
+
+    private:
+        Real observationTime_ = Null<Real>();
+        bool isTrained_ = false;
+        std::set<std::pair<Real, Size>> regressorTimesModelIndices_;
+        std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>> basisFns_;
+        Array regressionCoeffs_;
+    };
+
+    // the implementation of the amc calculator interface used by the amc valuation engine
+    class MultiLegBaseAmcCalculator : public AmcCalculator {
+    public:
+        MultiLegBaseAmcCalculator(
+            const std::vector<Size>& externalModelIndices, const Settlement::Type settlement,
+            const std::set<Real>& exerciseXvaTimes, const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
+            const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelUndDirty,
+            const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelUndExInto,
+            const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelContinuationValue,
+            const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelOption,
+            const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>& basisFns,
+            const Real resultValue, const Array& initialState, const Currency& baseCurrency);
+
+        Currency npvCurrency() override { return baseCurrency_; }
+        std::vector<QuantExt::RandomVariable> simulatePath(const std::vector<QuantLib::Real>& pathTimes,
+                                                           std::vector<std::vector<QuantExt::RandomVariable>>& paths,
+                                                           const std::vector<bool>& isRelevantTime,
+                                                           const bool stickyCloseOutRun) override;
+
+    private:
+        std::vector<Size> externalModelIndices_;
+        Settlement::Type settlement_;
+        std::set<Real> exerciseXvaTimes_;
+        std::set<Real> exerciseTimes_;
+        std::set<Real> xvaTimes_;
+        std::vector<McMultiLegBaseEngine::RegressionModel> regModelUndDirty_;
+        std::vector<McMultiLegBaseEngine::RegressionModel> regModelUndExInto_;
+        std::vector<McMultiLegBaseEngine::RegressionModel> regModelContinuationValue_;
+        std::vector<McMultiLegBaseEngine::RegressionModel> regModelOption_;
+        std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>> basisFns_;
+        Real resultValue_;
+        Array initialState_;
+        Currency baseCurrency_;
+
+        std::vector<Filter> exercised_;
+    };
+
     // convert a date to a time w.r.t. the valuation date
     Real time(const Date& d) const;
 
@@ -137,40 +201,6 @@ private:
 
     // lgm vectorised instances for each ccy
     mutable std::vector<LgmVectorised> lgmVectorised_;
-};
-
-class MultiLegBaseAmcCalculator : public AmcCalculator {
-public:
-    MultiLegBaseAmcCalculator(
-        const std::vector<Size>& externalModelIndices, const Settlement::Type settlement,
-        const std::set<Real>& exerciseXvaTimes, const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
-        const std::vector<Array>& coeffsUndDirty, const std::vector<Array>& coeffsUndExInto,
-        const std::vector<Array>& coeffsContinuationValue, const std::vector<Array>& coeffsOption,
-        const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>& basisFns,
-        const Real resultValue, const Array& initialState, const Currency& baseCurrency);
-
-    Currency npvCurrency() override { return baseCurrency_; }
-    std::vector<QuantExt::RandomVariable> simulatePath(const std::vector<QuantLib::Real>& pathTimes,
-                                                       std::vector<std::vector<QuantExt::RandomVariable>>& paths,
-                                                       const std::vector<bool>& isRelevantTime,
-                                                       const bool stickyCloseOutRun) override;
-
-private:
-    std::vector<Size> externalModelIndices_;
-    Settlement::Type settlement_;
-    std::set<Real> exerciseXvaTimes_;
-    std::set<Real> exerciseTimes_;
-    std::set<Real> xvaTimes_;
-    std::vector<Array> coeffsUndDirty_;
-    std::vector<Array> coeffsUndExInto_;
-    std::vector<Array> coeffsContinuationValue_;
-    std::vector<Array> coeffsOption_;
-    std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>> basisFns_;
-    Real resultValue_;
-    Array initialState_;
-    Currency baseCurrency_;
-
-    std::vector<Filter> exercised_;
 };
 
 } // namespace QuantExt
