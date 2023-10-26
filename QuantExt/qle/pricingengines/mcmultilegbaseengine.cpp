@@ -783,9 +783,6 @@ void McMultiLegBaseEngine::calculate() const {
     std::vector<RegressionModel> regModelContinuationValue(exerciseXvaTimes.size()); // available on ex times
     std::vector<RegressionModel> regModelOption(exerciseXvaTimes.size());            // available on xva and ex times
 
-    auto basisFns =
-        RandomVariableLsmBasisSystem::multiPathBasisSystem(model_->stateProcess()->size(), polynomOrder_, polynomType_);
-
     enum class CfStatus { open, cached, done };
     std::vector<CfStatus> cfStatus(cashflowInfo.size(), CfStatus::open);
 
@@ -894,7 +891,7 @@ void McMultiLegBaseEngine::calculate() const {
 
     amcCalculator_ = boost::make_shared<MultiLegBaseAmcCalculator>(
         externalModelIndices_, optionSettlement_, exerciseXvaTimes, exerciseTimes, xvaTimes, regModelUndDirty,
-        regModelUndExInto, regModelContinuationValue, regModelOption, basisFns, resultValue_,
+        regModelUndExInto, regModelContinuationValue, regModelOption, resultValue_,
         model_->stateProcess()->initialValues(), model_->irlgm1f(0)->currency());
 }
 
@@ -906,13 +903,12 @@ McMultiLegBaseEngine::MultiLegBaseAmcCalculator::MultiLegBaseAmcCalculator(
     const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelUndDirty,
     const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelUndExInto,
     const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelContinuationValue,
-    const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelOption,
-    const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>& basisFns,
-    const Real resultValue, const Array& initialState, const Currency& baseCurrency)
+    const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelOption, const Real resultValue,
+    const Array& initialState, const Currency& baseCurrency)
     : externalModelIndices_(externalModelIndices), settlement_(settlement), exerciseXvaTimes_(exerciseXvaTimes),
       exerciseTimes_(exerciseTimes), xvaTimes_(xvaTimes), regModelUndDirty_(regModelUndDirty),
       regModelUndExInto_(regModelUndExInto), regModelContinuationValue_(regModelContinuationValue),
-      regModelOption_(regModelOption), basisFns_(basisFns), resultValue_(resultValue), initialState_(initialState),
+      regModelOption_(regModelOption), resultValue_(resultValue), initialState_(initialState),
       baseCurrency_(baseCurrency) {}
 
 std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalculator::simulatePath(
@@ -1115,7 +1111,7 @@ void McMultiLegBaseEngine::RegressionModel::train(const Size polynomOrder,
 
         // get the basis functions
 
-        basisFns_ = RandomVariableLsmBasisSystem::multiPathBasisSystem(regressor.size(), polynomOrder, polynomType);
+        basisFns_ = multiPathBasisSystem(regressor.size(), polynomOrder, polynomType, Null<Size>());
 
         // compute the regression coefficients
 
