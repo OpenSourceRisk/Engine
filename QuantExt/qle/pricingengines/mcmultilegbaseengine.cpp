@@ -566,8 +566,8 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
         info.amountCalculator = [this, indexCcyIdx, sub, simTime, isFxLinked, fxLinkedForeignNominal,
                                  fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate](
                                     const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
-            RandomVariable effectiveRate = lgmVectorised_[indexCcyIdx].subPeriodsRate(sub->index(), sub->fixingDates(),
-                                                                                      simTime, *states.at(0).at(0));
+            RandomVariable fixing = lgmVectorised_[indexCcyIdx].subPeriodsRate(sub->index(), sub->fixingDates(),
+                                                                               simTime, *states.at(0).at(0));
             RandomVariable fxFixing(n, 1.0);
             if (isFxLinked) {
                 if (fxLinkedFixedFxRate != Null<Real>()) {
@@ -582,6 +582,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
                     fxFixing = fxSource / fxTarget;
                 }
             }
+            RandomVariable effectiveRate = RandomVariable(n, sub->gearing()) * fixing + RandomVariable(n, sub->spread());
             return RandomVariable(n, (isFxLinked ? fxLinkedForeignNominal : sub->nominal()) * sub->accrualPeriod()) *
                    effectiveRate * fxFixing;
         };
