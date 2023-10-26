@@ -749,7 +749,7 @@ void McMultiLegBaseEngine::calculate() const {
 
     TimeGrid timeGrid(simulationTimes.begin(), simulationTimes.end());
 
-    auto process = model_->stateProcess();
+    boost::shared_ptr<StochasticProcess> process = model_->stateProcess();
     if (model_->dimension() == 1) {
         // use lgm process if possible for better performance
         auto tmp = boost::make_shared<IrLgm1fStateProcess>(model_->irlgm1f(0));

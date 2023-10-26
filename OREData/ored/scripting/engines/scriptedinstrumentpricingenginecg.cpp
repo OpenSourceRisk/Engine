@@ -73,8 +73,8 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
     QL_REQUIRE(!useExternalComputeFramework_ || !useCachedSensis_,
                "ScriptedInstrumentPricingEngineCG: when using external compute framework, usage of cached sensis is "
                "not supported yet");
-    QL_REQUIRE(model_->trainingPaths() == Null<Size>(), "ScriptedInstrumentPricingEngineCG: separate training phase "
-                                                        "not supported, trainingSamples can not be specified.");
+    QL_REQUIRE(model_->trainingSamples() == Null<Size>(), "ScriptedInstrumentPricingEngineCG: separate training phase "
+                                                          "not supported, trainingSamples can not be specified.");
 
     lastCalculationWasValid_ = false;
 
@@ -131,8 +131,8 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
             opsExternal_ = getExternalRandomVariableOps();
             gradsExternal_ = getExternalRandomVariableGradients();
         } else {
-            ops_ = getRandomVariableOps(model_->size());
-            grads_ = getRandomVariableGradients(model_->size());
+            ops_ = getRandomVariableOps(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType);
+            grads_ = getRandomVariableGradients(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType);
         }
 
         // build graph
@@ -272,7 +272,8 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
         // extract npv result and set it
 
         if (useExternalComputeFramework_) {
-            ComputeEnvironment::instance().context().finalizeCalculation(externalOutputPtr_);
+            ComputeEnvironment::instance().context().finalizeCalculation(externalOutputPtr_,
+                                                                         {mcParams_.regressionOrder});
             baseNpv_ = results_.value = externalAverage(externalOutput_[0]);
         } else {
             baseNpv_ = results_.value = model_->extractT0Result(values[baseNpvNode]);
