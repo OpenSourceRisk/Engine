@@ -141,8 +141,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                 calc->calculateT0(trade, i, simMarket_, outputCube, outputCubeNettingSet);
         } catch (const std::exception& e) {
             string expMsg = string("T0 valuation error: ") + e.what();
-            ALOG(StructuredTradeErrorMessage(tradeId, trade->tradeType(), "ScenarioValuation",
-                                             expMsg.c_str()));
+            StructuredTradeErrorMessage(tradeId, trade->tradeType(), "ScenarioValuation", expMsg.c_str()).log();
             tradeHasError[i] = true;
         }
 
@@ -324,7 +323,7 @@ void ValuationEngine::runCalculators(bool isCloseOutDate, const std::map<std::st
         } catch (const std::exception& e) {
             string expMsg = "date = " + ore::data::to_string(io::iso_date(d)) +
                             ", sample = " + ore::data::to_string(sample) + ", label = " + label + ": " + e.what();
-            ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "ScenarioValuation", expMsg.c_str()));
+            StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "ScenarioValuation", expMsg.c_str()).log();
             tradeHasError[j] = true;
         }
     }
