@@ -93,8 +93,9 @@ void populateFromBondReferenceData(std::string& subType,
 	    DLOG("Modified start date " << oldStart << " -> " << newStart);
 	}
 	else {
-	  ALOG(StructuredTradeErrorMessage(bondRefData->bondData().issuerId, "Bond-linked", "update reference data",
-					   "modifified start date cannot be applied to multiple legs/schedules"));
+	  StructuredTradeErrorMessage(bondRefData->bondData().issuerId, "Bond-linked", "update reference data",
+                                        "modifified start date cannot be applied to multiple legs/schedules")
+                .log();
 	}
     }
     if (!endDate.empty()) {
@@ -105,8 +106,9 @@ void populateFromBondReferenceData(std::string& subType,
 	    DLOG("Modified end date " << oldEnd << " -> " << newEnd);
 	}
 	else {
-	  ALOG(StructuredTradeErrorMessage(bondRefData->bondData().issuerId, "Bond-linked", "update reference data",
-					   "modifified end date cannot be applied to multiple legs/schedules"));
+	  StructuredTradeErrorMessage(bondRefData->bondData().issuerId, "Bond-linked", "update reference data",
+                                        "modifified end date cannot be applied to multiple legs/schedules")
+                .log();
 	}
     }
       

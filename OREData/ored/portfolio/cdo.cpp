@@ -168,10 +168,11 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
                     basketNotionals.push_back(ntl);
                     totalRemainingNtl += ntl;
                 } else {
-                    ALOG(StructuredTradeErrorMessage(id(), "Synthetic CDO", "Error building trade",
+                    StructuredTradeErrorMessage(id(), "Synthetic CDO", "Error building trade",
                                                      ("Invalid Basket: found a duplicate credit curve " + creditCurve +
                                                       ", skip it. Check the basket data for possible errors.")
-                                                         .c_str()));
+                                                    .c_str())
+                        .log();
                 }
             } else {
                 DLOG("Underlying " << creditCurve << " notional is " << ntl << " so assuming a credit event occured.");
@@ -214,22 +215,23 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
         }
 
         if (!close(totalRemainingNtl, origTotalNtl) && totalRemainingNtl > origTotalNtl) {
-            ALOG(StructuredTradeErrorMessage(id(), "Synthetic CDO", "Error building trade",
+            StructuredTradeErrorMessage(id(), "Synthetic CDO", "Error building trade",
                                              ("Total remaining notional (" + std::to_string(totalRemainingNtl) +
                                               ") is greater than total original notional (" +
                                               std::to_string(origTotalNtl) +
                                               "),  check the basket data for possible errors.")
-                                                 .c_str()));
+                                            .c_str())
+                .log();
         }
 
         if (!close(totalNtl, origTotalNtl)) {
-            ALOG(
-                StructuredTradeErrorMessage(id(), "Synthetic CDO", "Error building trade",
+            StructuredTradeErrorMessage(id(), "Synthetic CDO", "Error building trade",
                                             ("Expected the total notional (" + std::to_string(totalNtl) + " = " +
                                              std::to_string(totalRemainingNtl) + " + " + std::to_string(totalPriorNtl) +
                                              ") to equal the total original notional (" + std::to_string(origTotalNtl) +
                                              "),  check the basket data for possible errors.")
-                                                .c_str()));
+                                            .c_str())
+                .log();
         }
 
         DLOG("Finished building constituents using basket data.");
