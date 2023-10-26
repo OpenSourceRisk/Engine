@@ -107,16 +107,16 @@ map<tuple<string, Date>, Fixing> dummyFixings() {
 }
 
 // Load the requested fixings
-void loadFixings(const map<string, set<Date>>& requestedFixings) {
+void loadFixings(const map<string, RequiredFixings::FixingDates>& requestedFixings) {
 
     // Get the dummy fixings that we have provided in the input directory
     auto fixingValues = dummyFixings();
 
     // Fetch the relevant fixings using the requestedFixings argument
     set<Fixing> relevantFixings;
-    for (const auto& kv : requestedFixings) {
-        for (const auto& d : kv.second) {
-            relevantFixings.insert(fixingValues.at(make_pair(kv.first, d)));
+    for (const auto& [indexName, fixingDates] : requestedFixings) {
+        for (const auto& [d, mandatory] : fixingDates.getAllDates()) {
+            relevantFixings.insert(fixingValues.at(make_pair(indexName, d)));
         }
     }
 
