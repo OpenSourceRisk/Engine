@@ -338,7 +338,6 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
 }
 
 Matrix CrossAssetStateProcess::diffusion(Time t, const Array& x) const {
-    std::cout << "getting diffusion at time " << t << " sqrt corr = " << sqrtCorrelation_ << std::endl;
     return diffusionOnCorrelatedBrownians(t, x) * sqrtCorrelation_;
 }
 
