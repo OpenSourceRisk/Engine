@@ -65,7 +65,10 @@ map<RiskFactorKey, Real> ZeroToParCube::parDeltas(QuantLib::Size tradeIdx) const
             if (it == factorToIndex_.end()) {
                 if (ParSensitivityAnalysis::isParType(factor.keytype) && typesDisabled_.count(factor.keytype) != 1) {
                     if (continueOnError_) {
-                        ALOG(StructuredAnalyticsErrorMessage("Par conversion", "", "Par factor " + ore::data::to_string(factor) + " not found in factorToIndex map"));
+                        StructuredAnalyticsErrorMessage("Par conversion", "",
+                                                        "Par factor " + ore::data::to_string(factor) +
+                                                            " not found in factorToIndex map")
+                            .log();
                     } else {
                         QL_REQUIRE(!ParSensitivityAnalysis::isParType(factor.keytype) ||
                                 typesDisabled_.count(factor.keytype) == 1,
