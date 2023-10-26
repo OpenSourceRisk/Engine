@@ -215,18 +215,19 @@ void GaussianCamCG::performCalculations() const {
 
     // evolve the stochastic process, for now we only evolve IR LGM process #0 as a PoC (!)
 
-    auto p = cam_->stateProcess();
+    auto cam(cam_);
 
     for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
         std::string id = "__diffusion_0_" + std::to_string(i);
         Real t = timeGrid_[i];
         Real dt = timeGrid_.dt(i);
-        addModelParameter(id, [p, t, dt] { return p->diffusion(t, Array())(0, 0) * std::sqrt(dt); });
+        addModelParameter(id,
+                          [cam, t, dt] { return cam->stateProcess()->diffusion(t, Array())(0, 0) * std::sqrt(dt); });
     }
 
     std::string id = "__z_0";
     std::size_t irState;
-    irState = addModelParameter(id, [p] { return p->initialValues()[0]; });
+    irState = addModelParameter(id, [cam] { return cam->stateProcess()->initialValues()[0]; });
     irStates_[*effectiveSimulationDates_.begin()][0] = irState;
 
     std::size_t dateIndex = 1;
