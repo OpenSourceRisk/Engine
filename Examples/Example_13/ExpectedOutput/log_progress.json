@@ -1,0 +1,10 @@
+{ "@timestamp": "2023-10-20T23:32:29.821699", "key": "Running XVA Analytic", "progress": 0, "total": 1 }
+{ "@timestamp": "2023-10-20T23:32:29.823698", "key": "XVA: Build Today's Market", "progress": 0, "total": 1 }
+{ "@timestamp": "2023-10-20T23:32:30.638707", "key": "XVA: Build Today's Market", "progress": 1, "total": 1 }
+{ "@timestamp": "2023-10-20T23:32:31.323714", "key": "XVA: Load Cubes", "progress": 0, "total": 1 }
+{ "@timestamp": "2023-10-20T23:32:31.325714", "key": "XVA: Load Cubes", "progress": 1, "total": 1 }
+{ "@timestamp": "2023-10-20T23:32:31.426718", "key": "XVA: Aggregation", "progress": 0, "total": 1 }
+{ "@timestamp": "2023-10-20T23:32:31.921721", "key": "XVA: Aggregation", "progress": 1, "total": 1 }
+{ "@timestamp": "2023-10-20T23:32:31.922721", "key": "XVA: Reports", "progress": 0, "total": 1 }
+{ "@timestamp": "2023-10-20T23:32:31.991721", "key": "XVA: Reports", "progress": 1, "total": 1 }
+{ "@timestamp": "2023-10-20T23:32:31.991721", "key": "Running XVA Analytic", "progress": 1, "total": 1 }
