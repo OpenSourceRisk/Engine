@@ -525,8 +525,8 @@ string JSONMessage::jsonify(const boost::any& obj) {
             StructuredLoggingErrorMessage("JSON Message Logging", "JSONMessage::jsonify() : Unrecognised value type")
                 .log();
         } catch (...) {
-            return string();
         }
+        return string();
     }
 }
 
