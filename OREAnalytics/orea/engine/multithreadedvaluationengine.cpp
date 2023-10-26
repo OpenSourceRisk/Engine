@@ -341,7 +341,7 @@ void MultiThreadedValuationEngine::buildCube(
 
                 // log error and return code 1 = not ok
 
-                ALOG(ore::analytics::StructuredAnalyticsErrorMessage("Multithreaded Valuation Engine", "", e.what()));
+                ore::analytics::StructuredAnalyticsErrorMessage("Multithreaded Valuation Engine", "", e.what()).log();
                 rc = 1;
             }
 

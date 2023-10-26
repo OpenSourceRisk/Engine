@@ -2854,10 +2854,11 @@ getCmbLegCreditQualifierMapping(const CMBLegData& ld, const boost::shared_ptr<Re
         target.creditGroup = bondRefData->bondData().creditGroup;
     }
     if (source.empty() || target.targetQualifier.empty()) {
-        ALOG(ore::data::StructuredTradeErrorMessage(tradeId, tradeType, "getCmbLegCreditQualifierMapping()",
+        ore::data::StructuredTradeErrorMessage(tradeId, tradeType, "getCmbLegCreditQualifierMapping()",
                                                     "Could not set mapping for CMB Leg security '" +
                                                         security +
-                                                        "'. Check security name and reference data."));
+                                                   "'. Check security name and reference data.")
+            .log();
     }
     return std::make_pair(source, target);
 }

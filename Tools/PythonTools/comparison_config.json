@@ -1267,5 +1267,108 @@
       }
 
     }
+  },
+  "json_settings": {
+    "files": {
+      "log_progress.*\\.json": {
+        "ignore_keys": [
+          "@timestamp"
+        ],
+        "settings": [
+          {
+            "names": [
+              "progress",
+              "total"
+            ],
+            "abs_tol": 0
+          }
+        ]
+      },
+      "log_structured.*\\.json": {},
+      "marketdata\\.json": {
+        "settings": [
+          {
+            "names": [
+              "curves/data/discountFactor",
+              "curves/data/time",
+              "curves/data/zeroRate"
+            ],
+            "abs_tol": 1e-15,
+            "rel_tol": 1e-8
+          }
+        ]
+      },
+      "curves\\.json": {
+        "settings": [
+          {
+            "names": [
+              "data/discountFactor",
+              "data/time",
+              "data/zeroRate"
+            ],
+            "abs_tol": 1e-15,
+            "rel_tol": 1e-9
+          }
+        ]
+      },
+      "simm\\.json": {
+        "ignore_keys": [
+          "simmResultsPath"
+        ],
+        "settings": [
+          {
+            "names": [
+              "initial_margin"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "total_im\\.json": {
+        "settings": [
+          {
+            "names": [
+              "initial_margin"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "response\\.json": {
+        "ignore_keys": [
+          "simmResultsPath"
+        ],
+        "settings": [
+          {
+            "names": [
+              "simmReport/initial_margin",
+              "totalIMReport/initial_margin"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "flownpv\\.json": {
+        "settings": [
+          {
+            "names": [
+              "presentValue"
+            ],
+            "abs_tol": 1e-6,
+            "rel_tol": 1e-12
+          },
+          {
+            "names": [
+              "jobId"
+            ],
+            "abs_tol": 0,
+            "rel_tol": null
+          }
+        ]
+      }
+    }
   }
 }
