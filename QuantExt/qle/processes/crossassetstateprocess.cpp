@@ -360,9 +360,7 @@ Matrix CrossAssetStateProcess::diffusionOnCorrelatedBrownians(Time t, const Arra
 }
 
 Matrix CrossAssetStateProcess::diffusionOnCorrelatedBrowniansImpl(Time t, const Array&) const {
-    std::cout << "diffusionOnCorrelatedBrownianImpl " << t << std::endl;
     Matrix res(model_->dimension(), model_->brownians(), 0.0);
-    std::cout << "diffusionOnCorrelatedBrownianImpl " << t << " check" << std::endl;
     Size n = model_->components(CrossAssetModel::AssetType::IR);
     Size m = model_->components(CrossAssetModel::AssetType::FX);
     Size d = model_->components(CrossAssetModel::AssetType::INF);
