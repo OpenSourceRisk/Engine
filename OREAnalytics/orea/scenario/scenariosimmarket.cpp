@@ -135,7 +135,7 @@ void processException(bool continueOnError, const std::exception& e, const std::
         if (boost::starts_with(exceptionMessage, "did not find object ")) {
             ALOG("CurveID: " << curve << ": " << message << ": " << exceptionMessage);
         } else {
-            ALOG(StructuredCurveErrorMessage(curve, message, exceptionMessage));
+            StructuredCurveErrorMessage(curve, message, exceptionMessage).log();
         }
     } else {
         QL_FAIL("Object with CurveID '" << curve << "' failed to build in scenario sim market: " << e.what());
@@ -2695,10 +2695,11 @@ ScenarioSimMarket::ScenarioSimMarket(
             }
 
         } catch (const std::exception& e) {
-            ALOG(StructuredMessage(ore::data::StructuredMessage::Category::Error,
+            StructuredMessage(ore::data::StructuredMessage::Category::Error,
                                    ore::data::StructuredMessage::Group::Curve, e.what(),
                                    {{"exceptionType", "ScenarioSimMarket top level catch - this should never happen, "
-                                                      "contact dev. Results are likely wrong or incomplete."}}));
+                                                 "contact dev. Results are likely wrong or incomplete."}})
+                .log();
             processException(continueOnError, e);
         }
     }
