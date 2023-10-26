@@ -97,10 +97,10 @@ void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engin
                     basketNotionals.push_back(ntl);
                     totalNtl += ntl;
                 } else {
-                    ALOG(StructuredTradeErrorMessage(id(), "IndexCDS", "Error building trade",
+                    StructuredTradeErrorMessage(id(), "IndexCDS", "Error building trade",
                                                      ("Invalid Basket: found a duplicate credit curve " + creditCurve +
                                                       ", skip it. Check the basket data for possible errors.")
-                                                         .c_str()));
+                                                         .c_str()).log();
                 }
 
             } else {
@@ -114,11 +114,12 @@ void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engin
         DLOG("All underlyings added, total notional = " << totalNtl);
 
         if (totalNtl > notional_ * (1.0 + 1.0E-4)) {
-            ALOG(StructuredTradeErrorMessage(id(), "IndexCDS", "Error building trade",
+            StructuredTradeErrorMessage(id(), "IndexCDS", "Error building trade",
                                              ("Sum of basket notionals (" + std::to_string(totalNtl) +
                                               ") is greater than trade notional (" + std::to_string(notional_) +
                                               "). Check the basket data for possible errors.")
-                                                 .c_str()));
+                                            .c_str())
+                .log();
         }
 
         indexFactor = totalNtl / notional_;
@@ -189,10 +190,10 @@ void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engin
     std::string curveIdWithTerm = swap_.creditCurveIdWithTerm();
     // warn if the term can not be implied, except when a  custom baskets is defined
     if (swap_.basket().constituents().empty() && splitCurveIdWithTenor(curveIdWithTerm).second == 0 * Days) {
-        ALOG(StructuredTradeWarningMessage(
+        StructuredTradeWarningMessage(
             id(), tradeType(), "Could not imply Index CDS term.",
             "Index CDS term could not be derived from start, end date, are these dates correct (credit curve id is '" +
-                swap_.creditCurveId() + "')"));
+                swap_.creditCurveId() + "')").log();
     }
 
     cds->setPricingEngine(cdsBuilder->engine(parseCurrency(npvCurrency_), swap_.creditCurveIdWithTerm(),
