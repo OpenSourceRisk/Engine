@@ -359,8 +359,9 @@ void ValueAdjustmentCalculator::build() {
             nettingSetSumCva_[nid] += tradeCva_[tid];
             nettingSetSumDva_[nid] += tradeDva_[tid];
         } catch (const std::exception& e) {
-            ALOG(StructuredAnalyticsErrorMessage("ValueAdjustmentCalculator", "Error processing trade.", e.what(),
-                                                 {{"tradeId", tid}}));
+            StructuredAnalyticsErrorMessage("ValueAdjustmentCalculator", "Error processing trade.", e.what(),
+                                            {{"tradeId", tid}})
+                .log();
         }
     }
 
@@ -442,8 +443,9 @@ void ValueAdjustmentCalculator::build() {
                 }
             }
         } catch (const std::exception& e) {
-            ALOG(StructuredAnalyticsErrorMessage("ValueAdjustmentCalculator", "Error processing netting set.", e.what(),
-                                                 {{"nettingSetId", nid}}));
+            StructuredAnalyticsErrorMessage("ValueAdjustmentCalculator", "Error processing netting set.", e.what(),
+                                            {{"nettingSetId", nid}})
+                .log();
         }
     }
 }

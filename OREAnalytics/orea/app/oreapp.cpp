@@ -308,9 +308,9 @@ OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console,
     }
 
     string progressLogFile, structuredLogFile;
-    Size progressLogRotationSize = 100 * 1024 * 1024;
+    Size progressLogRotationSize = 0;
     bool progressLogToConsole = false;
-    Size structuredLogRotationSize = 100 * 1024 * 1024;
+    Size structuredLogRotationSize = 0;
     
     if (params_->hasGroup("logging")) {
         string logFileOverride = params_->get("logging", "logFile", false);
@@ -385,7 +385,7 @@ void OREApp::run() {
     try {
         analytics();
     } catch (std::exception& e) {
-        ALOG(StructuredAnalyticsWarningMessage("OREApp::run()", "Error", e.what()));
+        StructuredAnalyticsWarningMessage("OREApp::run()", "Error", e.what()).log();
         CONSOLE("Error: " << e.what());
         return;
     }
@@ -443,7 +443,7 @@ void OREApp::run(const std::vector<std::string>& marketData,
     catch (std::exception& e) {
         ostringstream oss;
         oss << "Error in ORE analytics: " << e.what();
-        ALOG(StructuredAnalyticsWarningMessage("OREApp::run()", oss.str(), e.what()));
+        StructuredAnalyticsWarningMessage("OREApp::run()", oss.str(), e.what()).log();
         MEM_LOG_USING_LEVEL(ORE_WARNING)
         CONSOLE(oss.str());
         QL_FAIL(oss.str());
@@ -1422,16 +1422,21 @@ void OREApp::setupLog(const std::string& path, const std::string& file, Size mas
 
     // Progress logger
     auto progressLogger = boost::make_shared<ProgressLogger>();
-    string progressLogFilePath = progressLogFile.empty() ? path + '/' + "log_progress_%N.json" : progressLogFile;
+    string progressLogFilePath = progressLogFile.empty() ? path + "/log_progress.json" : progressLogFile;
     progressLogger->setFileLog(progressLogFilePath, path, progressLogRotationSize);
     progressLogger->setCoutLog(progressLogToConsole);
     Log::instance().registerIndependentLogger(progressLogger);
 
     // Structured message logger
     auto structuredLogger = boost::make_shared<StructuredLogger>();
-    string structuredLogFilePath = structuredLogFile.empty() ? path + '/' + "log_structured_%N.json" : structuredLogFile;
+    string structuredLogFilePath = structuredLogFile.empty() ? path + "/log_structured.json" : structuredLogFile;
     structuredLogger->setFileLog(structuredLogFilePath, path, structuredLogRotationSize);
     Log::instance().registerIndependentLogger(structuredLogger);
+
+    // Event message logger
+    auto eventLogger = boost::make_shared<EventLogger>();
+    eventLogger->setFileLog(path + "/log_event_");
+    ore::data::Log::instance().registerIndependentLogger(eventLogger);
 }
 
 void OREApp::closeLog() { Log::instance().removeAllLoggers(); }
