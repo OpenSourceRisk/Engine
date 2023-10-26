@@ -118,7 +118,7 @@ namespace ore {
 namespace data {
 
 typedef boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend> file_sink;
-typedef boost::log::sinks::synchronous_sink<boost::log::sinks::text_ostream_backend> cout_sink;
+typedef boost::log::sinks::synchronous_sink<boost::log::sinks::text_ostream_backend> text_sink;
 
 //! The Base Custom Log Handler class
 /*!
@@ -266,9 +266,11 @@ public:
     //! Destructor
     virtual ~IndependentLogger() {}
     virtual void removeSinks() = 0;
+    std::vector<std::string>& messages() { return messages_; }
+    void clear();
 
     //! Returns the Logger name
-    const std::string& name() { return name_; }
+    const std::string& name() const { return name_; }
 
 protected:
     //! Constructor
@@ -277,6 +279,7 @@ protected:
       \param name the logger name
      */
     IndependentLogger(const std::string& name) : name_(name) {}
+    std::vector<std::string> messages_;
 
 private:
     std::string name_;
@@ -290,18 +293,20 @@ public:
     //! the name "ProgressLogger"
     static const std::string name;
     //! Constructors
-    ProgressLogger() : IndependentLogger(name) {}
-    ProgressLogger(const bool coutLog) : IndependentLogger(name) { setCoutLog(coutLog); }
+    ProgressLogger();
+    ProgressLogger(const bool coutLog) : ProgressLogger() { setCoutLog(coutLog); }
     const boost::shared_ptr<file_sink>& fileSink() { return fileSink_; }
-    const boost::shared_ptr<cout_sink>& coutSink() { return coutSink_; }
+    const boost::shared_ptr<text_sink>& coutSink() { return coutSink_; }
+    const boost::shared_ptr<text_sink>& cacheSink() { return cacheSink_; }
     //! Destructor
     virtual void removeSinks() override;
     void setCoutLog(bool flag);
-    void setFileLog(const std::string& filepath, const boost::filesystem::path& dir, QuantLib::Size rotationSize);
+    void setFileLog(const std::string& filepath, const boost::filesystem::path& dir, QuantLib::Size rotationSize = 0);
 
 private:
     boost::shared_ptr<file_sink> fileSink_;
-    boost::shared_ptr<cout_sink> coutSink_;
+    boost::shared_ptr<text_sink> coutSink_;
+    boost::shared_ptr<text_sink> cacheSink_;
 };
 
 //! StructuredLogger
@@ -312,11 +317,36 @@ public:
     //! the name "StructuredLogger"
     static const std::string name;
     //! Constructors
-    StructuredLogger() : IndependentLogger(name) {}
+    StructuredLogger();
+    const boost::shared_ptr<file_sink>& fileSink() { return fileSink_; }
+    const boost::shared_ptr<text_sink>& cacheSink() { return cacheSink_; }
+    //! Destructor
+    virtual void removeSinks() override;
+    void setFileLog(const std::string& filepath, const boost::filesystem::path& dir, QuantLib::Size rotationSize = 0);
+
+private:
+    boost::shared_ptr<file_sink> fileSink_;
+    boost::shared_ptr<text_sink> cacheSink_;
+};
+
+//! EventLogger
+/*!
+This logger listens for EventMessage logs from within ORE to support event logging for ORE components
+*/
+class EventLogger : public ore::data::IndependentLogger {
+public:
+    //! the name "EventLogger"
+    static const std::string name;
+
+    //! Constructor
+    //! This logger will only write event logs. All other logs will be ignored.
+    EventLogger() : IndependentLogger(name) {}
+
+    void setFormatter(const std::function<void(const boost::log::record_view&, boost::log::formatting_ostream&)>&);
     const boost::shared_ptr<file_sink>& fileSink() { return fileSink_; }
     //! Destructor
     virtual void removeSinks() override;
-    void setFileLog(const std::string& filepath, const boost::filesystem::path& dir, QuantLib::Size rotationSize);
+    void setFileLog(const std::string& filepath);
 
 private:
     boost::shared_ptr<file_sink> fileSink_;
@@ -369,6 +399,11 @@ public:
      */
     void registerLogger(const boost::shared_ptr<Logger>& logger);
     void registerIndependentLogger(const boost::shared_ptr<IndependentLogger>& logger);
+
+    //! Check if logger exists
+    const bool hasLogger(const std::string& name) const;
+    const bool hasIndependentLogger(const std::string& name) const;
+
     //! Retrieve a Logger.
     /*!
       Retrieve a Logger by it's name, for example to retrieve the StderrLogger (assuming it is registered)
@@ -377,12 +412,16 @@ public:
       </pre>
       */
     boost::shared_ptr<Logger>& logger(const std::string& name);
+    boost::shared_ptr<IndependentLogger>& independentLogger(const std::string& name);
+
     //! Remove a Logger
     /*!
       Remove a logger by name
       \param name the logger name
      */
     void removeLogger(const std::string& name);
+    void removeIndependentLogger(const std::string& name);
+    
     //! Remove all loggers
     /*!
       Removes all loggers. If called, all subsequent log messages will be ignored.
@@ -448,6 +487,11 @@ public:
     void switchOff() {
         boost::unique_lock<boost::shared_mutex> lock(mutex());
         enabled_ = false;
+    }
+
+    bool writeSuppressedMessagesHint() {
+        boost::shared_lock<boost::shared_mutex> lock(mutex());
+        return writeSuppressedMessagesHint_;
     }
 
     //! if a PID is set for the logger, messages are tagged with [1234] if pid = 1234
@@ -656,8 +700,6 @@ std::ostream& operator<<(std::ostream& out, const StructuredMessage::Category&);
 
 std::ostream& operator<<(std::ostream& out, const StructuredMessage::Group&);
 
-inline std::ostream& operator<<(std::ostream& out, const StructuredMessage& sm) { return out << sm.msg(); }
-
 class StructuredLoggingErrorMessage : public StructuredMessage {
 public:
     StructuredLoggingErrorMessage(const std::string& exceptionType, const std::string& exceptionWhat = "")
@@ -683,8 +725,6 @@ private:
     std::string message_;
 };
 
-inline std::ostream& operator<<(std::ostream& out, const EventMessage& em) { return out << em.msg(); }
-
 class ProgressMessage : public JSONMessage {
 public:
     ProgressMessage(const std::string&, const QuantLib::Size, const QuantLib::Size);
@@ -696,8 +736,6 @@ public:
     //! generate Boost log record to pass to corresponding sinks
     void log() const;
 };
-
-inline std::ostream& operator<<(std::ostream& out, const ProgressMessage& pm) { return out << pm.msg(); }
 
 //! Singleton to control console logging
 //
