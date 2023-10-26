@@ -526,7 +526,7 @@ void CrossAssetModelBuilder::buildModel() const {
                                                    std::to_string(fxOptionCalibrationErrors_[i]) +
                                                    " exceeds tolerance " +
                                                    std::to_string(config_->bootstrapTolerance());
-                    WLOG(StructuredModelErrorMessage("Failed to calibrate FX BS Model", exceptionMessage, id_));
+                    StructuredModelErrorMessage("Failed to calibrate FX BS Model", exceptionMessage, id_).log();
                     WLOGGERSTREAM("Calibration details:");
                     WLOGGERSTREAM(
                         getCalibrationDetails(fxOptionBaskets_[i], fxParametrizations[i], irParametrizations[0]));
@@ -588,7 +588,7 @@ void CrossAssetModelBuilder::buildModel() const {
                                                    std::to_string(eqOptionCalibrationErrors_[i]) +
                                                    " exceeds tolerance " +
                                                    std::to_string(config_->bootstrapTolerance());
-                    WLOG(StructuredModelErrorMessage("Failed to calibrate EQ BS Model", exceptionMessage, id_));
+                    StructuredModelErrorMessage("Failed to calibrate EQ BS Model", exceptionMessage, id_).log();
                     WLOGGERSTREAM("Calibration details:");
                     WLOGGERSTREAM(
                         getCalibrationDetails(eqOptionBaskets_[i], eqParametrizations[i], irParametrizations[0]));
@@ -711,7 +711,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size mode
             string exceptionMessage = "INF (DK) " + std::to_string(modelIdx) + " calibration error " +
                                       std::to_string(inflationCalibrationErrors_[modelIdx]) + " exceeds tolerance " +
                                       std::to_string(config_->bootstrapTolerance());
-            WLOG(StructuredModelErrorMessage("Failed to calibrate INF DK Model", exceptionMessage, id_));
+            StructuredModelErrorMessage("Failed to calibrate INF DK Model", exceptionMessage, id_).log();
             WLOGGERSTREAM("Calibration details:");
             WLOGGERSTREAM(getCalibrationDetails(cb, inflationParam, false));
             WLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
@@ -853,7 +853,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
             ss << "INF (JY) " << modelIdx << " calibration error " << std::scientific
                << inflationCalibrationErrors_[modelIdx] << " exceeds tolerance " << cc.rmseTolerance();
             string exceptionMessage = ss.str();
-            WLOG(StructuredModelErrorMessage("Failed to calibrate INF JY Model", exceptionMessage, id_));
+            StructuredModelErrorMessage("Failed to calibrate INF JY Model", exceptionMessage, id_).log();
             WLOGGERSTREAM("Calibration details:");
             WLOGGERSTREAM(getCalibrationDetails(rrBasket, idxBasket, inflationParam, rrVol.calibrate()));
             WLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
