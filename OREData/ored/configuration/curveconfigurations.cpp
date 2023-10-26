@@ -136,7 +136,7 @@ void CurveConfigurations::parseNode(const CurveSpec::CurveType& type, const stri
                 unparsed_.at(type).erase(curveId);
             } catch (std::exception& ex) {
                 string err = "Curve config under node '" + to_string(type) + " was requested, but could not be parsed.";
-                ALOG(StructuredCurveErrorMessage(curveId, err, ex.what()));
+                StructuredCurveErrorMessage(curveId, err, ex.what()).log();
                 QL_FAIL(err);
             }
         } else
