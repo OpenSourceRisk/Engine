@@ -378,7 +378,7 @@ void LgmBuilder::performCalculations() const {
         error_ = getCalibrationError(swaptionBasket_);
     } catch (const std::exception& e) {
         // just log a warning, we check below if we meet the bootstrap tolerance and handle the result there
-        WLOG(StructuredModelErrorMessage(errorTemplate, e.what(), id_));
+        StructuredModelErrorMessage(errorTemplate, e.what(), id_).log();
     }
     calibrationInfo.rmse = error_;
     if (fabs(error_) < bootstrapTolerance_ ||
@@ -407,7 +407,7 @@ void LgmBuilder::performCalculations() const {
     } else {
         std::string exceptionMessage = "LGM (" + data_->qualifier() + ") calibration error " + std::to_string(error_) +
                                        " exceeds tolerance " + std::to_string(bootstrapTolerance_);
-        WLOG(StructuredModelErrorMessage(errorTemplate, exceptionMessage, id_));
+        StructuredModelErrorMessage(errorTemplate, exceptionMessage, id_).log();
         WLOGGERSTREAM("Basket details:");
         try {
 	    auto d = getBasketDetails(calibrationInfo);
