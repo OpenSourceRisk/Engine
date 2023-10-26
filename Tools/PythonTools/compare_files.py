@@ -10,16 +10,29 @@ import numpy as np
 import pandas as pd
 from datacompy.core import Compare
 import re
+import jsondiff
 
 
-def has_csv_config(config, filename_1, filename_2):
+def is_float(num: str):
+    if isinstance(num, (int, float)):
+        return True
+    else:
+        return num.replace(".", "").replace("-", "").isnumeric()
+
+
+def get_config(config, filename) -> dict or None:
     # Check if config has a configuration for filename_1 or filename_2
+    stem, ext = os.path.splitext(filename)
+    config_type = ext.replace('.', '')
 
-    for filename in [filename_1, filename_2]:
-
-        for key in config['csv_settings']['files']:
+    config_type_settings = f'{config_type}_settings'
+    if config_type_settings in config and 'files' in config[config_type_settings]:
+        for key in config[config_type_settings]['files']:
             if re.match(key, filename):
-                return config['csv_settings']['files'][key]
+                return {
+                    'config': config[f'{config_type}_settings']['files'][key],
+                    'type': config_type
+                }
 
     return None
 
@@ -37,146 +50,146 @@ def create_df(file, col_types=None):
     if file_extension == '.csv' or file_extension == '.txt':
         logger.debug('Creating DataFrame from csv file %s.', file)
         return pd.read_csv(file, dtype=col_types, quotechar='"', quoting=2)
-    elif file_extension == '.json':
-        if filename == 'simm.json':
-            with open(file, 'r') as json_file:
-                simm_json = json.load(json_file)
-                if 'simmReport' in simm_json:
+    # elif file_extension == '.json':
+    #     if filename == 'simm.json':
+    #         with open(file, 'r') as json_file:
+    #             simm_json = json.load(json_file)
+    #             if 'simmReport' in simm_json:
 
-                    logger.debug('Creating DataFrame from simm json file %s.', file)
-                    simm_df = pd.DataFrame(simm_json['simmReport'])
+    #                 logger.debug('Creating DataFrame from simm json file %s.', file)
+    #                 simm_df = pd.DataFrame(simm_json['simmReport'])
 
-                    # In a lot of regression tests, the NettingSetId field was left blank which in the simm JSON
-                    # response is an empty string. This empty string is then in the portfolio column in the DataFrame
-                    # created from the simm JSON. When the simm csv file is read in to a DataFrame, the empty field
-                    # under Portfolio is read in to a DataFrame as Nan. We replace the empty string here with Nan in
-                    # portfolio column so that everything works downstream.
-                    simm_df['portfolio'].replace('', np.nan, inplace=True)
+    #                 # In a lot of regression tests, the NettingSetId field was left blank which in the simm JSON
+    #                 # response is an empty string. This empty string is then in the portfolio column in the DataFrame
+    #                 # created from the simm JSON. When the simm csv file is read in to a DataFrame, the empty field
+    #                 # under Portfolio is read in to a DataFrame as Nan. We replace the empty string here with Nan in
+    #                 # portfolio column so that everything works downstream.
+    #                 simm_df['portfolio'].replace('', np.nan, inplace=True)
 
-                    return simm_df
+    #                 return simm_df
 
-                else:
-                    logger.warning('Expected simm json file %s to contain the field simmReport.', file)
-                    return None
-        if filename == 'npv.json':
-            with open(file, 'r') as json_file:
-                npv_json = json.load(json_file)
-                if 'npv' in npv_json:
+    #             else:
+    #                 logger.warning('Expected simm json file %s to contain the field simmReport.', file)
+    #                 return None
+    #     if filename == 'npv.json':
+    #         with open(file, 'r') as json_file:
+    #             npv_json = json.load(json_file)
+    #             if 'npv' in npv_json:
 
-                    logger.debug('Creating DataFrame from npv json file %s.', file)
-                    npv_df = pd.DataFrame(npv_json['npv'])
+    #                 logger.debug('Creating DataFrame from npv json file %s.', file)
+    #                 npv_df = pd.DataFrame(npv_json['npv'])
 
-                    # In a lot of regression tests, the NettingSetId field was left blank which in the simm JSON
-                    # response is an empty string. This empty string is then in the portfolio column in the DataFrame
-                    # created from the simm JSON. When the simm csv file is read in to a DataFrame, the empty field
-                    # under Portfolio is read in to a DataFrame as Nan. We replace the empty string here with Nan in
-                    # portfolio column so that everything works downstream.
-                    npv_df['nettingSetId'].replace('', np.nan, inplace=True)
+    #                 # In a lot of regression tests, the NettingSetId field was left blank which in the simm JSON
+    #                 # response is an empty string. This empty string is then in the portfolio column in the DataFrame
+    #                 # created from the simm JSON. When the simm csv file is read in to a DataFrame, the empty field
+    #                 # under Portfolio is read in to a DataFrame as Nan. We replace the empty string here with Nan in
+    #                 # portfolio column so that everything works downstream.
+    #                 npv_df['nettingSetId'].replace('', np.nan, inplace=True)
 
-                    return npv_df
+    #                 return npv_df
 
-                else:
-                    logger.warning('Expected npv json file %s to contain the field npv.', file)
-                    return None
-        if filename == 'flownpv.json':
-            with open(file, 'r') as json_file:
-                flownpv_json = json.load(json_file)
-                if 'cashflowNpv' in flownpv_json:
-                    logger.debug('Creating DataFrame from flownpv json file %s.', file)
-                    flownpv_df = pd.DataFrame(flownpv_json['cashflowNpv'])
-                    flownpv_df.rename(columns={"baseCurrency" : "BaseCurrency", "horizon" : "Horizon", "presentValue" : "PresentValue", "tradeId" : "TradeId"}, inplace=True)
-                    flownpv_df.drop(columns='jobId', inplace=True)
-                    return flownpv_df
+    #             else:
+    #                 logger.warning('Expected npv json file %s to contain the field npv.', file)
+    #                 return None
+    #     if filename == 'flownpv.json':
+    #         with open(file, 'r') as json_file:
+    #             flownpv_json = json.load(json_file)
+    #             if 'cashflowNpv' in flownpv_json:
+    #                 logger.debug('Creating DataFrame from flownpv json file %s.', file)
+    #                 flownpv_df = pd.DataFrame(flownpv_json['cashflowNpv'])
+    #                 flownpv_df.rename(columns={"baseCurrency" : "BaseCurrency", "horizon" : "Horizon", "presentValue" : "PresentValue", "tradeId" : "TradeId"}, inplace=True)
+    #                 flownpv_df.drop(columns='jobId', inplace=True)
+    #                 return flownpv_df
 
-                else:
-                    logger.warning('Expected flownpv json file %s to contain the field cashflowNpv.', file)
-                    return None
-        if filename == 'saccr.json':
-            with open(file, 'r') as json_file:
-                saccr_json = json.load(json_file)
-                if 'saccr' in saccr_json:
-                    logger.debug('Creating DataFrame from saccr json file %s.', file)
-                    saccr_df = pd.DataFrame(saccr_json['saccr'])
+    #             else:
+    #                 logger.warning('Expected flownpv json file %s to contain the field cashflowNpv.', file)
+    #                 return None
+    #     if filename == 'saccr.json':
+    #         with open(file, 'r') as json_file:
+    #             saccr_json = json.load(json_file)
+    #             if 'saccr' in saccr_json:
+    #                 logger.debug('Creating DataFrame from saccr json file %s.', file)
+    #                 saccr_df = pd.DataFrame(saccr_json['saccr'])
 
-                    saccr_cols = {
-                        'assetClass': 'AssetClass',
-                        'hedgingSet': 'HedgingSet',
-                        'nettingSetId': 'NettingSet',
-                        'addOn': 'AddOn',
-                        'cC': 'CC',
-                        'eAD': 'EAD',
-                        'multiplier': 'Multiplier',
-                        'npv': 'NPV',
-                        'pfe': 'PFE',
-                        'rC': 'RC',
-                        'rW': 'RW'
-                    }
+    #                 saccr_cols = {
+    #                     'assetClass': 'AssetClass',
+    #                     'hedgingSet': 'HedgingSet',
+    #                     'nettingSetId': 'NettingSet',
+    #                     'addOn': 'AddOn',
+    #                     'cC': 'CC',
+    #                     'eAD': 'EAD',
+    #                     'multiplier': 'Multiplier',
+    #                     'npv': 'NPV',
+    #                     'pfe': 'PFE',
+    #                     'rC': 'RC',
+    #                     'rW': 'RW'
+    #                 }
 
-                    for col in ['addOn', 'cC', 'eAD', 'multiplier', 'npv', 'pfe', 'rC', 'assetClass', 'hedgingSet', 'nettingSetId']:
-                        saccr_df[col].replace('', np.nan, inplace=True)
+    #                 for col in ['addOn', 'cC', 'eAD', 'multiplier', 'npv', 'pfe', 'rC', 'assetClass', 'hedgingSet', 'nettingSetId']:
+    #                     saccr_df[col].replace('', np.nan, inplace=True)
 
-                    for col in ['rW']:
-                        saccr_df[col].replace(0.0, np.nan, inplace=True)
+    #                 for col in ['rW']:
+    #                     saccr_df[col].replace(0.0, np.nan, inplace=True)
 
-                    saccr_df.rename(columns=saccr_cols, inplace=True)
-                    return saccr_df
-                else:
-                    logger.warning('Expected saccr json file %s to contain the field saccr', file)
-                    return None
-        if filename == 'frtb.json':
-            with open(file, 'r') as json_file:
-                frtb_json = json.load(json_file)
-                if 'frtb' in frtb_json:
-                    logger.debug('Creating DataFrame from frtb json file %s.', file)
-                    frtb_df = pd.DataFrame(frtb_json['frtb'])
+    #                 saccr_df.rename(columns=saccr_cols, inplace=True)
+    #                 return saccr_df
+    #             else:
+    #                 logger.warning('Expected saccr json file %s to contain the field saccr', file)
+    #                 return None
+    #     if filename == 'frtb.json':
+    #         with open(file, 'r') as json_file:
+    #             frtb_json = json.load(json_file)
+    #             if 'frtb' in frtb_json:
+    #                 logger.debug('Creating DataFrame from frtb json file %s.', file)
+    #                 frtb_df = pd.DataFrame(frtb_json['frtb'])
 
-                    # In a lot of regression tests, the NettingSetId field was left blank which in the simm JSON
-                    # response is an empty string. This empty string is then in the portfolio column in the DataFrame
-                    # created from the simm JSON. When the simm csv file is read in to a DataFrame, the empty field
-                    # under Portfolio is read in to a DataFrame as Nan. We replace the empty string here with Nan in
-                    # portfolio column so that everything works downstream.
-                    # npv_df['nettingSetId'].replace('', np.nan, inplace=True)
+    #                 # In a lot of regression tests, the NettingSetId field was left blank which in the simm JSON
+    #                 # response is an empty string. This empty string is then in the portfolio column in the DataFrame
+    #                 # created from the simm JSON. When the simm csv file is read in to a DataFrame, the empty field
+    #                 # under Portfolio is read in to a DataFrame as Nan. We replace the empty string here with Nan in
+    #                 # portfolio column so that everything works downstream.
+    #                 # npv_df['nettingSetId'].replace('', np.nan, inplace=True)
 
-                    frtb_cols = {
-                        'bucket': 'Bucket',
-                        'capitalRequirement': 'CapitalRequirement',
-                        'correlationScenario': 'CorrelationScenario',
-                        'frtbCharge': 'FrtbCharge',
-                        'risk_class': 'RiskClass'
-                    }
-                    for col in frtb_cols.keys():
-                        frtb_df[col].replace('', np.nan, inplace=True)
-                    frtb_df.rename(columns=frtb_cols, inplace=True)
-                    frtb_df.drop(columns='jobId', inplace=True)
-                    return frtb_df
-                else:
-                    logger.warning('Expected frtb json file %s to contain the field frtb', file)
-                    return None
-        if filename == 'bacva.json':
-            with open(file, 'r') as json_file:
-                bacva_json = json.load(json_file)
-                if 'bacva' in bacva_json:
-                    logger.debug('Creating DataFrame from bacva json file %s.', file)
-                    bacva_df = pd.DataFrame(bacva_json['bacva'])
+    #                 frtb_cols = {
+    #                     'bucket': 'Bucket',
+    #                     'capitalRequirement': 'CapitalRequirement',
+    #                     'correlationScenario': 'CorrelationScenario',
+    #                     'frtbCharge': 'FrtbCharge',
+    #                     'risk_class': 'RiskClass'
+    #                 }
+    #                 for col in frtb_cols.keys():
+    #                     frtb_df[col].replace('', np.nan, inplace=True)
+    #                 frtb_df.rename(columns=frtb_cols, inplace=True)
+    #                 frtb_df.drop(columns='jobId', inplace=True)
+    #                 return frtb_df
+    #             else:
+    #                 logger.warning('Expected frtb json file %s to contain the field frtb', file)
+    #                 return None
+    #     if filename == 'bacva.json':
+    #         with open(file, 'r') as json_file:
+    #             bacva_json = json.load(json_file)
+    #             if 'bacva' in bacva_json:
+    #                 logger.debug('Creating DataFrame from bacva json file %s.', file)
+    #                 bacva_df = pd.DataFrame(bacva_json['bacva'])
 
-                    bacva_cols = {
-                        'analytic': 'Analytic',
-                        'counterparty': 'Counterparty',
-                        'nettingSetId': 'NettingSet',
-                        'value': 'Value',
-                    }
+    #                 bacva_cols = {
+    #                     'analytic': 'Analytic',
+    #                     'counterparty': 'Counterparty',
+    #                     'nettingSetId': 'NettingSet',
+    #                     'value': 'Value',
+    #                 }
 
-                    for col in ['analytic', 'counterparty', 'nettingSetId']:
-                        bacva_df[col].replace('', np.nan, inplace=True)
+    #                 for col in ['analytic', 'counterparty', 'nettingSetId']:
+    #                     bacva_df[col].replace('', np.nan, inplace=True)
 
-                    for col in ['value']:
-                        bacva_df[col].replace(0.0, np.nan, inplace=True)
+    #                 for col in ['value']:
+    #                     bacva_df[col].replace(0.0, np.nan, inplace=True)
 
-                    bacva_df.rename(columns=bacva_cols, inplace=True)
-                    return bacva_df
-                else:
-                    logger.warning('Expected bacva json file %s to contain the field bacva', file)
-                    return None   
+    #                 bacva_df.rename(columns=bacva_cols, inplace=True)
+    #                 return bacva_df
+    #             else:
+    #                 logger.warning('Expected bacva json file %s to contain the field bacva', file)
+    #                 # return None   
     else:
         logger.warning('File %s is neither a csv nor a json file so cannot create DataFrame.', file)
         return None
@@ -184,7 +197,33 @@ def create_df(file, col_types=None):
     logger.debug('Finished creating DataFrame from file %s.', file)
 
 
-def compare_files(file_1, file_2, name, config=None):
+def create_json(file: str) -> dict:
+    # Read json file into a dict.
+
+    logger = logging.getLogger(__name__)
+
+    logger.debug('Start creating dict from file %s.', file)
+
+    obj = None
+    with open(file, 'r') as json_file:
+        try:
+            obj = json.load(json_file)
+            if isinstance(obj, dict):
+                obj = [obj]
+        except:
+            pass
+
+    if obj is None:
+        with open(file, 'r') as json_file:
+            try:
+                obj = [json.loads(l) for l in json_file.readlines()]
+            except:
+                logger.warning('JSON file %s could not be loaded into dict.', file)
+
+    return obj
+
+
+def compare_files(file_1, file_2, name, config: dict = None) -> bool:
     logger = logging.getLogger(__name__)
 
     logger.info('%s: Start comparing file %s against %s', name, file_1, file_2)
@@ -195,30 +234,36 @@ def compare_files(file_1, file_2, name, config=None):
             logger.warning('The file path %s does not exist.', file)
             return False
 
+
     # Attempt to get the csv comparison configuration to use for the given filenames.
-    csv_comp_config = None
-    if config is not None:
+    comp_config = None
+    if config:
         _, filename_1 = os.path.split(file_1)
         _, filename_2 = os.path.split(file_2)
-        csv_comp_config = has_csv_config(config, filename_1, filename_2)
+        base_filename = os.path.split
+        comp_config = get_config(config, filename_1)
 
-    # If the file extension is csv or json, enforce the use of a comparison configuration.
-    # If the file is a txt file, attempt to find a comparison config. If none, proceed with direct comparison.
+    # If the file extension is csv, enforce the use of a comparison configuration.
+    # Otherwise, proceed with direct comparison.
     _, ext_1 = os.path.splitext(file_1)
     _, ext_2 = os.path.splitext(file_2)
 
-    if csv_comp_config is None:
+    if comp_config is None:
         if ext_1 == '.csv':
             raise ValueError('File, ' + file_1 + ', requires a comparison configuration but none given.')
         if ext_2 == '.csv':
             raise ValueError('File, ' + file_2 + ', requires a comparison configuration but none given.')
 
-    if csv_comp_config is None:
+    if comp_config is None:
         # If there was no configuration then fall back to a straight file comparison.
         result = compare_files_direct(name, file_1, file_2)
     else:
-        # If there was a configuration, use it for the comparison.
-        result = compare_files_df(name, file_1, file_2, csv_comp_config)
+        config_type = comp_config.get('type')
+        if config_type == 'csv':
+            # If there was a configuration, use it for the comparison.
+            result = compare_files_df(name, file_1, file_2, comp_config.get('config'))
+        elif config_type == 'json':
+            result = compare_files_json(name, file_1, file_2, comp_config.get('config'))
 
     logger.info('%s: Finished comparing file %s against %s: %s.', name, file_1, file_2, result)
 
@@ -492,6 +537,124 @@ def compare_files_direct(name, file_1, file_2):
             logger.warning(line.rstrip('\n'))
 
     return match
+
+
+def compare_files_json(name, file_1, file_2, config) -> bool:
+    # Compare JSON files using configuration.
+    logger = logging.getLogger(__name__)
+
+    logger.debug('%s: Start comparing JSON file %s against %s using configuration.', name, file_1, file_2)
+
+    # Read the files in to dataframes
+    json_1 = create_json(file_1)
+    json_2 = create_json(file_2)
+
+    # Check that a dict could be created for each.
+    if json_1 is None:
+        logger.warning('A dict could not be created from the JSON file %s.', file_1)
+        return False
+
+    if json_2 is None:
+        logger.warning('A dict could not be created from the JSON file %s.', file_2)
+        return False
+
+    # Now compare the two files
+    json_diff = jsondiff.diff(json_1, json_2, syntax='symmetric', marshal=True)
+
+    # Filter out differences that can be ignored, or are within tolerances
+    validate_json_diff(json_diff, config, '')
+
+    if json_diff:
+        if isinstance(json_diff, dict):
+            for key, value in json_diff.items():
+                logger.warning(f"JSON diff '{key}': {value}")
+        else:
+            logger.warning(f"JSON diff: {json_diff}")
+        return False
+    else:
+        return True
+
+# Modifies jsondif.diff output so that 'ignoreable' diffs and diffs within tolerance/s are removed
+def validate_json_diff(json_diff: dict, config: dict, path: str) -> None:
+    logger = logging.getLogger(__name__)
+
+    if not json_diff:
+        return
+
+    if not isinstance(json_diff, dict):
+        logger.warning("json_diff must be a dict")
+        return
+
+    # If the diff obj is a set of diffs between two arrays (denoted by dict with int keys)
+    if all([isinstance(k, int) for k in json_diff.keys()]):
+        for diff in json_diff.values():
+            validate_json_diff(diff, config, path)
+
+    # If the diff obj is a dict of diffs between two objects
+    else:
+        # Remove diffs on keys that are set to be ignored
+        ignore_keys = config.get('ignore_keys', [])
+        for k in ignore_keys:
+            if not k.startswith(path):
+                continue
+            key_to_check = k.replace(path, '')
+            if key_to_check in json_diff:
+                del json_diff[key_to_check]
+
+        for key, diff in json_diff.items():
+            if isinstance(diff, dict):
+                new_path = ((path + str(key)) if path else str(key)) + '/'
+                validate_json_diff(diff, config, new_path)
+
+            else:
+                # Insertions (key="$insert") and deletions (key="$delete") should count as a test failure
+                if "$" in key:
+                    continue
+
+                # At this point, we expect diff to be a list
+                if not isinstance(diff, list):
+                    logger.warning(f"diff has invalid type: {type(diff)=}")
+                    continue
+                # with 2 elements
+                if not (len(diff) == 2):
+                    logger.warning(f"diff has invalid length: {len(diff)=}")
+
+                settings = config.get('settings')
+                if settings:
+                    for s in settings:
+                        names = s.get('names')
+                        abs_tol = s.get('abs_tol')
+                        rel_tol = s.get('rel_tol')
+
+                        # Number diffs
+                        for n in names:
+                            if not n.startswith(path):
+                                continue
+
+                            name_to_check = n.replace(path, '')
+                            if key == name_to_check:
+                                val_1 = diff[0]
+                                val_2 = diff[1]
+                                if type(val_1) != type(val_2):
+                                    break
+                                elif is_float(val_1) or isinstance(val_1, (float, int)):
+                                    # Apply both abs_tol and rel_tol -> Pass if one of these passes
+                                    val_1 = float(val_1)
+                                    val_2 = float(val_2)
+                                    abs_diff = abs(val_1 - val_2)
+                                    abs_check = abs_diff <= abs_tol
+                                    rel_check = abs_diff <= min(abs(val_1 * rel_tol), abs(val_2 * rel_tol))
+
+                                    if abs_check or rel_check:
+                                        diff.clear()
+
+    # For the diffs that are now empty, we can remove them from the dict
+    diffs_to_ignore = []
+    for key, diff in json_diff.items():
+        if not diff:
+            diffs_to_ignore.append(key)
+    for idx in diffs_to_ignore:
+        del json_diff[idx]
 
 
 if __name__ == "__main__":
