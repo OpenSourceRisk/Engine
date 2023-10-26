@@ -78,9 +78,10 @@ void  XvaAnalyticImpl::checkConfigurations(const boost::shared_ptr<Portfolio>& p
                 Period mpor_simulation = analytic()->configurations().scenarioGeneratorData->closeOutLag();                   
                 Period mpor_netting = inputs_->nettingSetManager()->get(key)->csaDetails()->marginPeriodOfRisk();
                 if (mpor_simulation != mpor_netting)
-                    WLOG(StructuredAnalyticsWarningMessage(
+                    StructuredAnalyticsWarningMessage(
                         "XvaAnalytic", "Inconsistent MPoR period",
-                        "For netting set " + key +", close-out lag is not consistent with the netting-set's mpor "));
+                        "For netting set " + key + ", close-out lag is not consistent with the netting-set's mpor ")
+                        .log();
             }
         }
     }
@@ -425,7 +426,7 @@ void XvaAnalyticImpl::buildAmcPortfolio() {
                 amcPortfolio_->add(trade);
                 DLOG("trade " << tradeId << " is added to amc portfolio");
             } catch (const std::exception& e) {
-                ALOG(StructuredTradeErrorMessage(trade, "Error building trade for AMC simulation", e.what()));
+                StructuredTradeErrorMessage(trade, "Error building trade for AMC simulation", e.what()).log();
             }
         }
     }
@@ -773,8 +774,9 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
                     ReportWriter(inputs_->reportNaString()).writeTradeExposures(*report, postProcess_, tradeId);
                     analytic()->reports()["XVA"]["exposure_trade_" + tradeId] = report;
                 } catch (const std::exception& e) {
-                    ALOG(StructuredAnalyticsErrorMessage("Trade Exposure Report", "Error processing trade.", e.what(),
-                                                         {{"tradeId", tradeId}}));
+                    StructuredAnalyticsErrorMessage("Trade Exposure Report", "Error processing trade.", e.what(),
+                                                    {{"tradeId", tradeId}})
+                        .log();
                 }
             }
         }
@@ -787,8 +789,9 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
                         .writeNettingSetExposures(*exposureReport, postProcess_, nettingSet);
                     analytic()->reports()["XVA"]["exposure_nettingset_" + nettingSet] = exposureReport;
                 } catch (const std::exception& e) {
-                    ALOG(StructuredAnalyticsErrorMessage("Netting Set Exposure Report", "Error processing netting set.",
-                                                         e.what(), {{"nettingSetId", nettingSet}}));
+                    StructuredAnalyticsErrorMessage("Netting Set Exposure Report", "Error processing netting set.",
+                                                    e.what(), {{"nettingSetId", nettingSet}})
+                        .log();
                 }
 
                 auto colvaReport = boost::make_shared<InMemoryReport>();
@@ -797,8 +800,9 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
                         .writeNettingSetColva(*colvaReport, postProcess_, nettingSet);
                     analytic()->reports()["XVA"]["colva_nettingset_" + nettingSet] = colvaReport;
                 } catch (const std::exception& e) {
-                    ALOG(StructuredAnalyticsErrorMessage("Netting Set Colva Report", "Error processing netting set.",
-                                                         e.what(), {{"nettingSetId", nettingSet}}));
+                    StructuredAnalyticsErrorMessage("Netting Set Colva Report", "Error processing netting set.",
+                                                    e.what(), {{"nettingSetId", nettingSet}})
+                        .log();
                 }
 
                 auto cvaSensiReport = boost::make_shared<InMemoryReport>();
@@ -807,8 +811,9 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
                         .writeNettingSetCvaSensitivities(*cvaSensiReport, postProcess_, nettingSet);
                     analytic()->reports()["XVA"]["cva_sensitivity_nettingset_" + nettingSet] = cvaSensiReport;
                 } catch (const std::exception& e) {
-                    ALOG(StructuredAnalyticsErrorMessage("Cva Sensi Report", "Error processing netting set.", e.what(),
-                                                         {{"nettingSetId", nettingSet}}));
+                    StructuredAnalyticsErrorMessage("Cva Sensi Report", "Error processing netting set.", e.what(),
+                                                    {{"nettingSetId", nettingSet}})
+                        .log();
                 }
             }
         }
