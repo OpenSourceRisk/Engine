@@ -137,11 +137,12 @@ bool SingleBarrierOptionWrapper::exercise() const {
                 while (d < today && !trigger) {
                     Real fixing = eqfxIndex->pastFixing(d);
                     if (fixing == Null<Real>()) {
-                        ALOG(StructuredMessage(
+                        StructuredMessage(
                             StructuredMessage::Category::Error, StructuredMessage::Group::Fixing,
                             "Missing fixing for index " + index_->name() + " on " + ore::data::to_string(d) +
                                 ", Skipping this date, assuming no trigger",
-                            std::map<string, string>({{"exceptionType", "Invalid or missing fixings"}})));
+                                          std::map<string, string>({{"exceptionType", "Invalid or missing fixings"}}))
+                            .log();
                     } else {
                         // This is so we can use pastIndex and not fail on a missing fixing to be
                         // consistent with previous implemention, however maybe we should use fixing
@@ -197,11 +198,12 @@ bool DoubleBarrierOptionWrapper::exercise() const {
                 while (d < today && !trigger) {
                     Real fixing = eqfxIndex->pastFixing(d);
                     if (fixing == Null<Real>()) {
-                        ALOG(StructuredMessage(
+                        StructuredMessage(
                             StructuredMessage::Category::Error, StructuredMessage::Group::Fixing,
                             "Missing fixing for index " + index_->name() + " on " + ore::data::to_string(d) +
                                 ", Skipping this date, assuming no trigger",
-                            std::map<string, string>({{"exceptionType", "Invalid or missing fixings"}})));
+                                          std::map<string, string>({{"exceptionType", "Invalid or missing fixings"}}))
+                            .log();
                     } else {
                         const bool isTouchingOnly = false;
                         trigger = checkBarrier(fixing, isTouchingOnly);
