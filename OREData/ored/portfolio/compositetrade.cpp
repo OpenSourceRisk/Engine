@@ -53,10 +53,11 @@ void CompositeTrade::build(const boost::shared_ptr<EngineFactory>& engineFactory
         if (trade->notionalCurrency().empty()) {
             // trade is not guaranteed to provide a non-null notional, but if it does we require a notional currency
             if (trade->notional() != Null<Real>()) {
-                ALOG(StructuredTradeErrorMessage(
+                StructuredTradeErrorMessage(
                     trade, "Error building composite trade '" + id() + "'",
                     "Component trade '" + trade->id() + "' does not provide notional currency for notional " +
-                        std::to_string(trade->notional()) + ". Assuming " + npvCurrency_ + "."));
+                                                std::to_string(trade->notional()) + ". Assuming " + npvCurrency_ + ".")
+                    .log();
             }
         } else if (trade->notionalCurrency() != npvCurrency_)
             fxNotional = engineFactory->market()->fxRate(trade->notionalCurrency() + npvCurrency_);
