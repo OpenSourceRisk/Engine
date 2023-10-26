@@ -27,8 +27,8 @@ def read_comparison_config(path):
     with open(path, 'r') as f:
         config = json.load(f, object_pairs_hook=OrderedDict)
 
-    if 'csv_settings' not in config or 'files' not in config['csv_settings']:
-        raise ValueError('Expected csv_settings or csv_settings...files keys in comparison configuration.')
+    # if ('csv_settings' not in config and 'json_settings' not in config) or ('files' not in config['csv_settings'] and 'files' not in config['json_settings']):
+    #     raise ValueError('Expected csv_settings or csv_settings...files keys in comparison configuration.')
 
     return config
 
@@ -42,16 +42,24 @@ def merge_configurations(default_config_path, specific_config_path=None, output_
     # If a path to the specific configuration is not provided, just return the default configuration.
     if not specific_config_path:
         return default_config
-    default_files_config = default_config['csv_settings']['files']
 
-    # Read in the specific configuration as the starting merged config.
-    merged_config = read_comparison_config(specific_config_path)
-    merged_files_config = merged_config['csv_settings']['files']
+    full_merged_config = {}
+    for settings_type in ['csv_settings', 'json_settings']:
+        default_files_config = default_config[settings_type]['files'] \
+            if default_config and settings_type in default_config and 'files' in default_config[settings_type] \
+            else {}
+            
+        # Read in the specific configuration as the starting merged config.
+        merged_config = read_comparison_config(specific_config_path)
+        merged_files_config = merged_config[settings_type]['files'] \
+            if merged_config and settings_type in merged_config and 'files' in merged_config[settings_type] \
+            else {}
 
-    # Add any configurations in the default not in the merged to the end of the merged.
-    for key, value in default_files_config.items():
-        if key not in merged_files_config:
-            merged_files_config[key] = value
+        for key, value in default_files_config.items():
+            if key not in merged_files_config:
+                merged_files_config[key] = value
+
+        full_merged_config[settings_type] = { "files": merged_files_config }
 
     # Write out merged config if path provided.
     if output_path:
@@ -59,7 +67,7 @@ def merge_configurations(default_config_path, specific_config_path=None, output_
         with open(output_file, 'w') as f:
             json.dump(merged_config, f)
 
-    return merged_config
+    return full_merged_config
 
 
 if __name__ == "__main__":

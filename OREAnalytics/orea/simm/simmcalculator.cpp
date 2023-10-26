@@ -83,7 +83,7 @@ SimmCalculator::SimmCalculator(const SimmNetSensitivities& simmNetSensitivities,
         const bool isSchedule = cr.imModel == "Schedule";
         if (isSchedule) {
             if (!quiet_ && determineWinningRegulations) {
-                WLOG(ore::data::StructuredTradeWarningMessage(cr.tradeId, cr.tradeType, "SIMM calculator", "Skipping over Schedule CRIF record"));
+                ore::data::StructuredTradeWarningMessage(cr.tradeId, cr.tradeType, "SIMM calculator", "Skipping over Schedule CRIF record").log();
             } 
             continue;
         }
