@@ -120,9 +120,10 @@ void ParConversionAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::I
                     if (it == factorToIndex.end()) {
                         if (ParSensitivityAnalysis::isParType(rf.keytype) && typesDisabled.count(rf.keytype) != 1) {
 
-                            ALOG(StructuredAnalyticsErrorMessage("Par conversion", "",
-                                                                 "Par factor " + ore::data::to_string(rf) +
-                                                                     " not found in factorToIndex map"));
+                            StructuredAnalyticsErrorMessage("Par conversion", "",
+                                                            "Par factor " + ore::data::to_string(rf) +
+                                                                " not found in factorToIndex map")
+                                .log();
                         } else {
                             SensitivityRecord sr;
                             sr.tradeId = id;
