@@ -122,7 +122,7 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 .add(trade->envelope().nettingSetId())
                 .add(trade->envelope().counterparty());
         } catch (std::exception& e) {
-            ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error during trade pricing", e.what()));
+            StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error during trade pricing", e.what()).log();
             Date maturity = trade->maturity();
             report.next()
                 .add(trade->id())
@@ -588,8 +588,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
             }
 
         } catch (std::exception& e) {
-            ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error during cashflow report generation",
-                                             e.what()));
+            StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error during cashflow report generation",
+                                        e.what())
+                .log();
         }
     }
     report.end();
@@ -629,9 +630,10 @@ void ReportWriter::writeCashflowNpv(ore::data::Report& report, const ore::data::
         Real fx = 1.0;
 	// There shouldn't be entries in the cf report without ccy. We assume ccy = baseCcy in this case and log an error.
         if (ccy.empty()) {
-            ALOG(StructuredTradeErrorMessage(tradeId, tradeType, "Error during CashflowNpv calculation.",
-                                             "Cashflow in row " + std::to_string(i) +
-                                                 " has no ccy. Assuming ccy = baseCcy = " + baseCcy + "."));
+            StructuredTradeErrorMessage(tradeId, tradeType, "Error during CashflowNpv calculation.",
+                                        "Cashflow in row " + std::to_string(i) +
+                                            " has no ccy. Assuming ccy = baseCcy = " + baseCcy + ".")
+                .log();
         }
         if (!ccy.empty() && ccy != baseCcy)
             fx = market->fxRate(ccy + baseCcy, configuration)->value();
@@ -952,8 +954,9 @@ void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationM
                 .add(postProcess->netEPE_B(n))
                 .add(postProcess->netEEPE_B(n));
         } catch (const std::exception& e) {
-            ALOG(StructuredAnalyticsErrorMessage("XVA Report", "Error during writing xva for netting set.", e.what(),
-                                                 {{"nettingSetId", n}}));
+            StructuredAnalyticsErrorMessage("XVA Report", "Error during writing xva for netting set.", e.what(),
+                                            {{"nettingSetId", n}})
+                .log();
         }
 
         for (auto& [tid, trade] : portfolio->trades()) {
@@ -987,8 +990,9 @@ void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationM
                     .add(postProcess->tradeEPE_B(tid))
                     .add(postProcess->tradeEEPE_B(tid));
             } catch (const std::exception& e) {
-                ALOG(StructuredAnalyticsErrorMessage("XVA Report", "Error during writing xva for trade.", e.what(),
-                                                     {{"tradeId", n}}));
+                StructuredAnalyticsErrorMessage("XVA Report", "Error during writing xva for trade.", e.what(),
+                                                {{"tradeId", n}})
+                    .log();
             }
         }
     }
@@ -1303,8 +1307,9 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
                 }
             }
         } catch (const std::exception& e) {
-            ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(),
-                                             "Error during trade pricing (additional results)", e.what()));
+            StructuredTradeErrorMessage(trade->id(), trade->tradeType(),
+                                        "Error during trade pricing (additional results)", e.what())
+                .log();
         }
     }
 
