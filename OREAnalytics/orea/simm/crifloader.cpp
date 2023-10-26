@@ -189,12 +189,14 @@ void CrifLoader::add(CrifRecord cr, const bool onDiffAmountCcy) {
                                     ". Please check the SIMM parameters input. If enforceIMRegulations=False, then it "
                                     "is possible that multiple entries for different regulations now belong under the same "
                                     "'Unspecified' regulation.";
-                    WLOG(ore::analytics::StructuredAnalyticsWarningMessage("SIMM", "Aggregating SIMM parameters", errMsg));
+                    ore::analytics::StructuredAnalyticsWarningMessage("SIMM", "Aggregating SIMM parameters", errMsg)
+                        .log();
                 }
             } else {
                 // Handling in case new SIMM parameters are added in the future
-                WLOG(ore::analytics::StructuredAnalyticsWarningMessage("SIMM", "Aggregating SIMM parameters",
-                                                              "Unknown risk type: " + to_string(it->riskType)));
+                ore::analytics::StructuredAnalyticsWarningMessage("SIMM", "Aggregating SIMM parameters",
+                                                                  "Unknown risk type: " + to_string(it->riskType))
+                    .log();
             }
         } else {
             // If there is no CrifRecord for it already, insert it
@@ -530,9 +532,10 @@ bool CrifLoader::process(const vector<string>& entries, Size maxIndex, Size curr
         add(cr);
 
     } catch (const exception& e) {
-        WLOG(ore::data::StructuredTradeErrorMessage(tradeId, tradeType, "CRIF loading",
+        ore::data::StructuredTradeErrorMessage(tradeId, tradeType, "CRIF loading",
             "Line number: " + to_string(currentLine) +
-                ". Error processing CRIF line, so skipping it. Error: " + to_string(e.what())));
+                ". Error processing CRIF line, so skipping it. Error: " + to_string(e.what()))
+            .log();
         return false;
     }
 
@@ -565,11 +568,11 @@ void CrifLoader::fillAmountUsd(const boost::shared_ptr<ore::data::Market> market
             // currency, and risk type is neither AddOnNotionalFactor or ProductClassMultiplier)
             if (cr.requiresAmountUsd() && !cr.hasAmountUsd()) {
                 if (!cr.hasAmount() || !cr.hasAmountCcy()) {
-                    WLOG(ore::data::StructuredTradeWarningMessage(
+                    ore::data::StructuredTradeWarningMessage(
                         cr.tradeId, cr.tradeType, "Populating CRIF amount USD",
                         "CRIF record is missing one of Amount and AmountCurrency, and there is no amountUsd value to "
                         "fall back to: " +
-                            to_string(cr)));
+                            to_string(cr)).log();
                 } else {
                     Real usdSpot = market->fxRate(cr.amountCurrency + "USD")->value();
                     cr.amountUsd = cr.amount * usdSpot;
