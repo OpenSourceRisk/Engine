@@ -62,8 +62,9 @@ void BarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
             payDate = payCalendar.advance(expiryDate, opd->lag(), Days, opd->convention());
         } else {
             if (opd->dates().size() > 1)
-                WLOG(ore::data::StructuredTradeWarningMessage(
-                    id(), tradeType(), "Trade build", "Found more than 1 payment date. The first one will be used."));
+                ore::data::StructuredTradeWarningMessage(id(), tradeType(), "Trade build",
+                                                         "Found more than 1 payment date. The first one will be used.")
+                    .log();
             payDate = opd->dates().front();
         }
     }
