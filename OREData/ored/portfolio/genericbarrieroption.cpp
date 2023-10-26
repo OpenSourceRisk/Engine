@@ -324,12 +324,6 @@ void GenericBarrierOption::build(const boost::shared_ptr<EngineFactory>& factory
                        << transatlanticBarrierType.size());
         if (transatlanticBarrierType.size() == 1 && underlyings_.size() > 1) {
             transatlanticBarrierType.assign(underlyings_.size(), transatlanticBarrierType[0]);
-            for (Size i = 0; i < transatlanticBarrierType.size(); i++) {
-                std::cout << i << ": " << transatlanticBarrierType[i] << std::endl;
-            }
-        }
-        for (Size i = 0; i < transatlanticBarrierType.size(); i++) {
-            std::cout << i << ": " << transatlanticBarrierType[i] << std::endl;
         }
         transatlanticBarrierLevel.clear();
         if (transatlanticBarrier_.size() == 1) {
@@ -350,7 +344,12 @@ void GenericBarrierOption::build(const boost::shared_ptr<EngineFactory>& factory
             }
         }
         if (transatlanticBarrier_.size() > 1) {
-            std::cout << "transatlanticBarrier_[1].rebate() = " << transatlanticBarrier_[1].rebate() << std::endl;
+            for (Size i = 1; i < transatlanticBarrier_.size(); i++) {
+                QL_REQUIRE(transatlanticBarrier_[i].rebateCurrency().empty() ||
+                               transatlanticBarrier_[i].rebateCurrency() == transatlanticBarrier_[0].rebateCurrency(),
+                           "Rebate currency for transatlantic barriers must be identical or only given in the first "
+                           "transatlantic barrier.");
+            }       
         }
         transatlanticBarrierRebate = boost::lexical_cast<std::string>(transatlanticBarrier_[0].rebate());
         if (!transatlanticBarrier_[0].rebateCurrency().empty())
@@ -364,7 +363,14 @@ void GenericBarrierOption::build(const boost::shared_ptr<EngineFactory>& factory
     auto positionType = parsePositionType(optionData_.longShort());
     numbers_.emplace_back("Number", "LongShort", positionType == Position::Long ? "1" : "-1");
 
-    numbers_.emplace_back("Number", "PutCall", parseOptionType(optionData_.callPut()) == Option::Call ? "1.0" : "-1.0");
+    if (optionData_.callPut().empty()) {
+        QL_REQUIRE(optionData_.payoffType() == "CashOrNothing" || optionData_.payoffType() == "AssetOrNothing",
+                   "Payoff type must be vanilla if option type is not givien.");
+        numbers_.emplace_back("Number", "PutCall", "1.0");
+    } else {
+        numbers_.emplace_back("Number", "PutCall",
+                              parseOptionType(optionData_.callPut()) == Option::Call ? "1.0" : "-1.0");
+    }
     numbers_.emplace_back("Number", "Quantity", quantity_.empty() ? "0.0" : quantity_);
     if (!strike_.empty())
         numbers_.emplace_back("Number", "Strike", strike_);
