@@ -68,7 +68,7 @@ void Portfolio::fromXML(XMLNode* node) {
                                 << " type:" << tradeType);
             failedToLoad = false;
         } catch (std::exception& ex) {
-            ALOG(StructuredTradeErrorMessage(id, tradeType, "Error parsing Trade XML", ex.what()));
+            StructuredTradeErrorMessage(id, tradeType, "Error parsing Trade XML", ex.what()).log();
         }
 
         // If trade loading failed, then insert a dummy trade with same id and envelope
@@ -88,7 +88,7 @@ void Portfolio::fromXML(XMLNode* node) {
                 WLOG("Added trade id " << failedTrade->id() << " type " << failedTrade->tradeType()
                                        << " for original trade type " << trade->tradeType());
             } catch (std::exception& ex) {
-                ALOG(StructuredTradeErrorMessage(id, tradeType, "Error parsing type and envelope", ex.what()));
+                StructuredTradeErrorMessage(id, tradeType, "Error parsing type and envelope", ex.what()).log();
             }
         }
     }
@@ -110,7 +110,7 @@ bool Portfolio::remove(const std::string& tradeID) {
 void Portfolio::removeMatured(const Date& asof) {
     for (auto it = trades_.begin(); it != trades_.end(); /* manual */) {
         if ((*it).second->maturity() <= asof) {
-            ALOG(StructuredTradeErrorMessage((*it).second, "", "Trade is Matured"));
+            StructuredTradeErrorMessage((*it).second, "", "Trade is Matured").log();
             it=trades_.erase(it);
         } else {
             ++it;
@@ -245,8 +245,9 @@ Portfolio::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& refe
                 result[kv.first].insert(kv.second.begin(), kv.second.end());
             }
         } catch (const std::exception& e) {
-            ALOG(StructuredTradeErrorMessage(t.second->id(), t.second->tradeType(),
-                                             "Error retrieving underlying indices", e.what()));
+            StructuredTradeErrorMessage(t.second->id(), t.second->tradeType(), "Error retrieving underlying indices",
+                                        e.what())
+                .log();
         }
     }
     underlyingIndicesCache_ = result;
@@ -277,7 +278,7 @@ std::pair<boost::shared_ptr<Trade>, bool> buildTrade(boost::shared_ptr<Trade>& t
         return std::make_pair(nullptr, true);
     } catch (std::exception& e) {
         if (emitStructuredError) {
-            ALOG(StructuredTradeErrorMessage(trade, "Error building trade for context '" + context + "'", e.what()));
+            StructuredTradeErrorMessage(trade, "Error building trade for context '" + context + "'", e.what()).log();
         } else {
             ALOG("Error building trade '" << trade->id() << "' for context '" + context + "': " + e.what());
         }
