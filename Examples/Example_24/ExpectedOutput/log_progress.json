@@ -1,0 +1,61 @@
+{ "@timestamp": "2023-10-20T23:29:58.752894", "key": "Running XVA Analytic", "progress": 0, "total": 1 }
+{ "@timestamp": "2023-10-20T23:29:58.770896", "key": "XVA: Build Today's Market", "progress": 0, "total": 1 }
+{ "@timestamp": "2023-10-20T23:29:59.716906", "key": "XVA: Build Today's Market", "progress": 1, "total": 1 }
+{ "@timestamp": "2023-10-20T23:30:03.401951", "key": "XVA: Build Portfolio", "progress": 0, "total": 1 }
+{ "@timestamp": "2023-10-20T23:30:03.872956", "key": "XVA: Build Portfolio", "progress": 1, "total": 1 }
+{ "@timestamp": "2023-10-20T23:30:04.151959", "key": "XVA: Building cube", "progress": 0, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:04.777968", "key": "XVA: Building cube", "progress": 1, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:05.327975", "key": "XVA: Building cube", "progress": 2, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:05.903982", "key": "XVA: Building cube", "progress": 3, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:06.479989", "key": "XVA: Building cube", "progress": 4, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:06.963995", "key": "XVA: Building cube", "progress": 5, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:07.488000", "key": "XVA: Building cube", "progress": 6, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:08.032008", "key": "XVA: Building cube", "progress": 7, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:08.525014", "key": "XVA: Building cube", "progress": 8, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:09.112022", "key": "XVA: Building cube", "progress": 9, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:09.662027", "key": "XVA: Building cube", "progress": 10, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:10.197035", "key": "XVA: Building cube", "progress": 11, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:10.692041", "key": "XVA: Building cube", "progress": 12, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:11.195047", "key": "XVA: Building cube", "progress": 13, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:11.745054", "key": "XVA: Building cube", "progress": 14, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:12.268059", "key": "XVA: Building cube", "progress": 15, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:12.810066", "key": "XVA: Building cube", "progress": 16, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:13.394075", "key": "XVA: Building cube", "progress": 17, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:13.901079", "key": "XVA: Building cube", "progress": 18, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:14.382085", "key": "XVA: Building cube", "progress": 19, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:14.870092", "key": "XVA: Building cube", "progress": 20, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:15.387099", "key": "XVA: Building cube", "progress": 21, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:15.842104", "key": "XVA: Building cube", "progress": 22, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:16.306110", "key": "XVA: Building cube", "progress": 23, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:16.801115", "key": "XVA: Building cube", "progress": 24, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:17.300121", "key": "XVA: Building cube", "progress": 25, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:17.832128", "key": "XVA: Building cube", "progress": 26, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:18.317133", "key": "XVA: Building cube", "progress": 27, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:18.806139", "key": "XVA: Building cube", "progress": 28, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:19.284145", "key": "XVA: Building cube", "progress": 29, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:20.035156", "key": "XVA: Building cube", "progress": 30, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:20.580162", "key": "XVA: Building cube", "progress": 31, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:21.081167", "key": "XVA: Building cube", "progress": 32, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:21.586174", "key": "XVA: Building cube", "progress": 33, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:22.125180", "key": "XVA: Building cube", "progress": 34, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:22.617188", "key": "XVA: Building cube", "progress": 35, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:23.073192", "key": "XVA: Building cube", "progress": 36, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:23.537198", "key": "XVA: Building cube", "progress": 37, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:24.013204", "key": "XVA: Building cube", "progress": 38, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:24.483210", "key": "XVA: Building cube", "progress": 39, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:24.973216", "key": "XVA: Building cube", "progress": 40, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:25.454222", "key": "XVA: Building cube", "progress": 41, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:25.950228", "key": "XVA: Building cube", "progress": 42, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:26.426233", "key": "XVA: Building cube", "progress": 43, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:26.975240", "key": "XVA: Building cube", "progress": 44, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:27.473248", "key": "XVA: Building cube", "progress": 45, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:27.998252", "key": "XVA: Building cube", "progress": 46, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:28.509260", "key": "XVA: Building cube", "progress": 47, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:29.024266", "key": "XVA: Building cube", "progress": 48, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:29.493272", "key": "XVA: Building cube", "progress": 49, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:30.001278", "key": "XVA: Building cube", "progress": 50, "total": 50 }
+{ "@timestamp": "2023-10-20T23:30:30.060279", "key": "XVA: Aggregation", "progress": 0, "total": 1 }
+{ "@timestamp": "2023-10-20T23:30:53.388452", "key": "XVA: Aggregation", "progress": 1, "total": 1 }
+{ "@timestamp": "2023-10-20T23:30:53.393452", "key": "XVA: Reports", "progress": 0, "total": 1 }
+{ "@timestamp": "2023-10-20T23:30:53.414453", "key": "XVA: Reports", "progress": 1, "total": 1 }
+{ "@timestamp": "2023-10-20T23:30:53.417452", "key": "Running XVA Analytic", "progress": 1, "total": 1 }

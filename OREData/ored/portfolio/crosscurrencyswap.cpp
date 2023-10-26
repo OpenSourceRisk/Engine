@@ -36,10 +36,11 @@ void CrossCurrencySwap::checkCrossCurrencySwap() {
         if (!indexings.empty() && indexings.front().hasData()) {
             Indexing indexing = indexings.front();
             if (!boost::starts_with(indexing.index(), "FX-")) {
-                WLOG(StructuredTradeWarningMessage(
+                StructuredTradeWarningMessage(
                     tradeType(), id(), "Trade validation (checkCrossCurrencySwap)",
                     "Could not set fixed leg currency to Indexing currency for trade validation. Index (" +
-                        indexing.index() + ") should start with 'FX-'"));
+                        indexing.index() + ") should start with 'FX-'")
+                    .log();
                 return;
             }
 
@@ -48,12 +49,13 @@ void CrossCurrencySwap::checkCrossCurrencySwap() {
             Currency tgtCurrency = index->targetCurrency();
 
             if (legCcy != srcCurrency && legCcy != tgtCurrency) {
-                WLOG(StructuredTradeWarningMessage(tradeType(), id(), "Trade validation (checkCrossCurrencySwap)",
+                StructuredTradeWarningMessage(tradeType(), id(), "Trade validation (checkCrossCurrencySwap)",
                                                    "Could not set fixed leg currency to Indexing currency for trade "
                                                    "validation. Expected the leg currency (" +
                                                        legCcy.code() +
                                                        ") be equal to either of the currencies in the index (" +
-                                                       indexing.index() + ")"));
+                                                  indexing.index() + ")")
+                    .log();
                 return;
             }
 
