@@ -148,15 +148,14 @@ private:
     // the implementation of the amc calculator interface used by the amc valuation engine
     class MultiLegBaseAmcCalculator : public AmcCalculator {
     public:
-        MultiLegBaseAmcCalculator(
-            const std::vector<Size>& externalModelIndices, const Settlement::Type settlement,
-            const std::set<Real>& exerciseXvaTimes, const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
-            const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelUndDirty,
-            const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelUndExInto,
-            const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelContinuationValue,
-            const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelOption,
-            const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>& basisFns,
-            const Real resultValue, const Array& initialState, const Currency& baseCurrency);
+        MultiLegBaseAmcCalculator(const std::vector<Size>& externalModelIndices, const Settlement::Type settlement,
+                                  const std::set<Real>& exerciseXvaTimes, const std::set<Real>& exerciseTimes,
+                                  const std::set<Real>& xvaTimes,
+                                  const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelUndDirty,
+                                  const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelUndExInto,
+                                  const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelContinuationValue,
+                                  const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelOption,
+                                  const Real resultValue, const Array& initialState, const Currency& baseCurrency);
 
         Currency npvCurrency() override { return baseCurrency_; }
         std::vector<QuantExt::RandomVariable> simulatePath(const std::vector<QuantLib::Real>& pathTimes,
@@ -174,7 +173,6 @@ private:
         std::vector<McMultiLegBaseEngine::RegressionModel> regModelUndExInto_;
         std::vector<McMultiLegBaseEngine::RegressionModel> regModelContinuationValue_;
         std::vector<McMultiLegBaseEngine::RegressionModel> regModelOption_;
-        std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>> basisFns_;
         Real resultValue_;
         Array initialState_;
         Currency baseCurrency_;
