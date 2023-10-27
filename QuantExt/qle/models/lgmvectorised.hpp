@@ -33,7 +33,6 @@
 namespace QuantExt {
 
 using namespace QuantLib;
-using namespace QuantExt;
 
 class LgmVectorised {
 public:
