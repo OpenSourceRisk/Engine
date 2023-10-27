@@ -22,6 +22,7 @@
 #include <ql/math/array.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/math/matrix.hpp>
+#include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/patterns/singleton.hpp>
 #include <ql/types.hpp>
 
@@ -334,5 +335,11 @@ inline Real RandomVariable::at(const Size i) const {
 }
 
 inline double* RandomVariable::data() { return data_; }
+
+/*! helper function that returns a LSM basis system with size restriction: the order is reduced until
+  the size of the basis system is not greater than the given bound (if this is not null) or the order is 1 */
+std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>
+multiPathBasisSystem(Size dim, Size order, QuantLib::LsmBasisSystem::PolynomialType type,
+                     Size basisSystemSizeBound = Null<Size>());
 
 } // namespace QuantExt

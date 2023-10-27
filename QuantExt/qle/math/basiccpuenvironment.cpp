@@ -50,7 +50,7 @@ public:
                                const std::vector<std::size_t>& args) override final;
     void freeVariable(const std::size_t id) override final;
     void declareOutputVariable(const std::size_t id) override final;
-    void finalizeCalculation(std::vector<double*>& output) override final;
+    void finalizeCalculation(std::vector<double*>& output, const Settings& settings = Settings()) override final;
 
     const DebugInfo& debugInfo() const override final;
 
@@ -302,7 +302,7 @@ void BasicCpuContext::declareOutputVariable(const std::size_t id) {
     outputVars_[currentId_ - 1].push_back(id);
 }
 
-void BasicCpuContext::finalizeCalculation(std::vector<double*>& output) {
+void BasicCpuContext::finalizeCalculation(std::vector<double*>& output, const Settings& settings) {
     struct exitGuard {
         exitGuard() {}
         ~exitGuard() { *currentState = ComputeState::idle; }
@@ -319,7 +319,7 @@ void BasicCpuContext::finalizeCalculation(std::vector<double*>& output) {
 
     const auto& p = program_[currentId_ - 1];
 
-    auto ops = getRandomVariableOps(size_[currentId_ - 1]);
+    auto ops = getRandomVariableOps(size_[currentId_ - 1], settings.regressionOrder);
 
     // resize values vector to required size
 
