@@ -92,8 +92,20 @@ public:
         }
 
         void addDates(const FixingDates& dates) {
-            for (const auto& [d, man] : dates.data_) {
+            for (const auto& [d, man] : dates) {
                 addDate(d, man);
+            }
+        }
+
+        void addDates(const FixingDates& dates, bool mandatory) {
+            for (const auto& [d, _] : dates) {
+                addDate(d, mandatory);
+            }
+        }
+
+        void addDates(const std::set<QuantLib::Date>& dates, bool mandatory) {
+            for (const QuantLib::Date& d : dates) {
+                addDate(d, mandatory);
             }
         }
 
@@ -114,7 +126,11 @@ public:
             }
             return results;
         }
-
+        
+        //! Iterrator for range-base forloop
+        std::map<QuantLib::Date, bool>::const_iterator begin() const {return data_.begin();}
+        std::map<QuantLib::Date, bool>::const_iterator end() const {return data_.end();}
+       
         size_t size() const { return data_.size(); }
 
         bool empty() const { return data_.empty(); }
@@ -340,7 +356,7 @@ void addToRequiredFixings(const QuantLib::Leg& leg, const boost::shared_ptr<Fixi
     If inflation indices have been set up via ZeroInflationIndex entries in the Conventions, the \p conventions 
     should be passed here. If not, the default \c nullptr parameter will be sufficient.
 */
-void amendInflationFixingDates(std::map<std::string, std::set<QuantLib::Date>>& fixings);
+void amendInflationFixingDates(std::map<std::string, RequiredFixings::FixingDates>& fixings);
 
 /*! Add index and fixing date pairs to \p fixings that will be potentially needed to build a TodaysMarket.
 
@@ -362,7 +378,7 @@ void amendInflationFixingDates(std::map<std::string, std::set<QuantLib::Date>>& 
 
     The original \p fixings map may be empty.
 */
-void addMarketFixingDates(const QuantLib::Date& asof, std::map<std::string, std::set<QuantLib::Date>>& fixings,
+void addMarketFixingDates(const QuantLib::Date& asof, std::map<std::string, RequiredFixings::FixingDates>& fixings,
                           const TodaysMarketParameters& mktParams,
                           const QuantLib::Period& iborLookback = 5 * QuantLib::Days,
                           const QuantLib::Period& oisLookback = 4 * QuantLib::Months,

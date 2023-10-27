@@ -31,15 +31,15 @@ namespace analytics {
 
 // Additional quotes for fx fixings, add fixing quotes with USD and EUR to the list of fixings
 // requested in order to triangulate missing fixings
-void additional_fx_fixings(const string& fixingId, const set<Date>& fixingDates, FixingMap& relevantFixings) {
+void additional_fx_fixings(const string& fixingId, const RequiredFixings::FixingDates& fixingDates,
+                           FixingMap& relevantFixings) {
     std::vector<std::string> tokens;
     boost::split(tokens, fixingId, boost::is_any_of("-"));
     QL_REQUIRE(tokens.size() == 4, "MarketDataLoader::additional_fx_fixings: Invalid fixing id, "
                                        << "must be of form FX-TYPE-CCY1-CCY, e.g FX-ECB-EUR-GBP");
 
     // add fixings on inverted ccy pair
-    relevantFixings[tokens[0] + "-" + tokens[1] + "-" + tokens[3] + "-" + tokens[2]].insert(fixingDates.begin(),
-                                                                                            fixingDates.end());
+    relevantFixings[tokens[0] + "-" + tokens[1] + "-" + tokens[3] + "-" + tokens[2]].addDates(fixingDates, false);
 
     vector<string> baseCcys = {"USD", "EUR"};
 
@@ -48,28 +48,28 @@ void additional_fx_fixings(const string& fixingId, const set<Date>& fixingDates,
         string fixingType = tokens[0] + "-" + tokens[1] + "-";
         if (tokens[2] != ccy) {
             string fix = fixingType + ccy + "-" + tokens[2];
-            relevantFixings[fix].insert(fixingDates.begin(), fixingDates.end());
+            relevantFixings[fix].addDates(fixingDates, false);
 
             if (tokens[3] != ccy) {
                 fix = fixingType + tokens[2] + "-" + ccy;
-                relevantFixings[fix].insert(fixingDates.begin(), fixingDates.end());
+                relevantFixings[fix].addDates(fixingDates, false);
             }
         }
 
         if (tokens[3] != ccy) {
             string fix = fixingType + ccy + "-" + tokens[3];
-            relevantFixings[fix].insert(fixingDates.begin(), fixingDates.end());
+            relevantFixings[fix].addDates(fixingDates, false);
 
             if (tokens[2] != ccy) {
                 fix = fixingType + tokens[3] + "-" + ccy;
-                relevantFixings[fix].insert(fixingDates.begin(), fixingDates.end());
+                relevantFixings[fix].addDates(fixingDates, false);
             }
         }
     }
 }
 
 // Additional quotes for commodity fixings
-void additional_commodity_fixings(const string& fixingId, const set<Date>& fixingDates, FixingMap& fixings,
+void additional_commodity_fixings(const string& fixingId, const RequiredFixings::FixingDates& fixingDates, FixingMap& fixings,
     map<pair<string, Date>, set<Date>>& commodityMap) {
     
     boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
@@ -86,7 +86,7 @@ void additional_commodity_fixings(const string& fixingId, const set<Date>& fixin
         // Add historical fixings for daily and monthly expiring contracts
         // TODO: potentially need to add for OffPeakPowerIndex commodities too.
         if (cfc->contractFrequency() == Daily) {
-            for (const auto& fd : fixingDates) {
+            for (const auto& [fd, _]: fixingDates) {
                 // Add 1 week lookback for each date for daily expiry
                 set<Date> dates;
                 Date wLookback = fd - Period(1, Weeks);
@@ -97,12 +97,12 @@ void additional_commodity_fixings(const string& fixingId, const set<Date>& fixin
                 TLOG("Adding (date, id) = (" << io::iso_date(fd) << "," << fixingId << ")");
                 // Add to the fixings so a fixing is requested for all dates, and also to the commodityMap
                 // so we can map a fixing to the correct date required
-                fixings[fixingId].insert(dates.begin(), dates.end());
+                fixings[fixingId].addDates(dates, false);
                 commodityMap[pair(fixingId, fd)].insert(dates.begin(), dates.end());
             }
         } else {
             // for monthly expiries add fixings for the last 45 days
-            for (const auto& fd : fixingDates) {
+            for (const auto& [fd,_] : fixingDates) {
                 set<Date> dates;
                 Date wLookback = fd - Period(45, Days);
                 do {
@@ -112,7 +112,7 @@ void additional_commodity_fixings(const string& fixingId, const set<Date>& fixin
                 TLOG("Adding (date, id) = (" << io::iso_date(fd) << "," << fixingId << ")");
                 // Add to the fixings so a fixing is requested for all dates, and also to the commodityMap
                 // so we can map a fixing to the correct date required
-                fixings[fixingId].insert(dates.begin(), dates.end());
+                fixings[fixingId].addDates(dates, false);
                 commodityMap[pair(fixingId, fd)].insert(dates.begin(), dates.end());
             }
         }
@@ -120,7 +120,7 @@ void additional_commodity_fixings(const string& fixingId, const set<Date>& fixin
 }
 
 // Additional fixings for equity index decomposition
-void additional_equity_fixings(map<string, set<Date>>& fixings, const TodaysMarketParameters& mktParams,
+void additional_equity_fixings(map<string, RequiredFixings::FixingDates>& fixings, const TodaysMarketParameters& mktParams,
                                const boost::shared_ptr<ReferenceDataManager> refData,
                                const boost::shared_ptr<CurveConfigurations>& curveConfigs) {
     std::string configuration = Market::defaultConfiguration;
@@ -146,7 +146,7 @@ const boost::shared_ptr<MarketDataLoaderImpl>& MarketDataLoader::impl() const {
 }
 
 void MarketDataLoader::addRelevantFixings(
-    const std::pair<std::string, std::set<QuantLib::Date>>& fixing,
+    const std::pair<std::string, RequiredFixings::FixingDates>& fixing,
     std::map<std::pair<std::string, QuantLib::Date>, std::set<QuantLib::Date>>& lastAvailableFixingLookupMap) {
     if (isFxIndex(fixing.first)) {
         // for FX fixings we want to add additional fixings to allow triangulation in case of missing
@@ -156,9 +156,7 @@ void MarketDataLoader::addRelevantFixings(
     if (isCommodityIndex(fixing.first)) {
         additional_commodity_fixings(fixing.first, fixing.second, fixings_, lastAvailableFixingLookupMap);
     }
-    fixings_[fixing.first].insert(fixing.second.begin(), fixing.second.end());
-    // also add to portfolioFixings_, used for alerting missing required fixings
-    portfolioFixings_[fixing.first].insert(fixing.second.begin(), fixing.second.end());
+    fixings_[fixing.first].addDates(fixing.second);
 }
 
 void MarketDataLoader::populateFixings(
@@ -191,7 +189,6 @@ void MarketDataLoader::populateFixings(
         if (inputs_->eomInflationFixings()) {
             LOG("Adjust inflation fixing dates to the end of the month before the request");
             amendInflationFixingDates(fixings_);
-            amendInflationFixingDates(portfolioFixings_);
         }
 
         if (fixings_.size() > 0)
@@ -201,12 +198,12 @@ void MarketDataLoader::populateFixings(
         applyFixings(loader_->loadFixings());
 
         // check and warn any missing fixings - only warn for portfolio fixings
-        for (const auto& f : portfolioFixings_) {
-            for (const auto& d : f.second) {
-                if (!loader_->hasFixing(f.first, d)) {
+        for (const auto& [indexName, fixingDates] : fixings_) {
+            for (const auto& [d, mandatory] :fixingDates) {
+                if (mandatory && !loader_->hasFixing(indexName, d)) {
                     string fixingErr = "";
-                    if (isFxIndex(f.first)) {
-                        auto fxInd = parseFxIndex(f.first);
+                    if (isFxIndex(indexName)) {
+                        auto fxInd = parseFxIndex(indexName);
                         try { 
                             if(fxInd->fixingCalendar().isBusinessDay(d))
                                 fxInd->fixing(d);
@@ -215,7 +212,7 @@ void MarketDataLoader::populateFixings(
                             fixingErr = ", error: " + ore::data::to_string(e.what());
                         }
                     }
-                    WLOG(StructuredFixingWarningMessage(f.first, d, "Missing fixing",
+                    WLOG(StructuredFixingWarningMessage(indexName, d, "Missing fixing",
                                                         "Could not find required fixing ID."));
                 }
             }

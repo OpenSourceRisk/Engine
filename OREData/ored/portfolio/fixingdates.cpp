@@ -747,31 +747,31 @@ void addToRequiredFixings(const QuantLib::Leg& leg, const boost::shared_ptr<Fixi
     }
 }
 
-void amendInflationFixingDates(map<string, set<Date>>& fixings) {
+void amendInflationFixingDates(std::map<std::string, RequiredFixings::FixingDates>& fixings) {
     // Loop over indices and amend any that are of type InflationIndex
-    for (auto& kv : fixings) {
-        auto p = isInflationIndex(kv.first);
-        if (p.first) {
+    for (auto& [indexName, fixingDates] : fixings) {
+        auto [isInfIndex, infIndex] = isInflationIndex(indexName);
+        if (isInfIndex) {
             // We have an inflation index
-            set<Date> newDates;
-            Frequency f = p.second->frequency();
-            for (const Date& d : kv.second) {
+            RequiredFixings::FixingDates amendedFixingDates;
+            Frequency f = infIndex->frequency();
+            for (const auto& [d, mandatory] : fixingDates.getAllDates()) {
                 auto period = inflationPeriod(d, f);
                 if (d == period.first) {
                     // If the fixing date is the start of the inflation period, move it to the end.
-                    newDates.insert(period.second);
+                    amendedFixingDates.addDate(period.second, mandatory);
                 } else {
                     // If the fixing date is not the start of the inflation period, leave it as it is.
-                    newDates.insert(d);
+                    amendedFixingDates.addDate(d, mandatory);
                 }
             }
             // Update the fixings map that was passed in with the new set of dates
-            kv.second = newDates;
+            fixings[indexName] = amendedFixingDates;
         }
     }
 }
 
-void addMarketFixingDates(const Date& asof, map<string, set<Date>>& fixings, const TodaysMarketParameters& mktParams,
+void addMarketFixingDates(const Date& asof, map<string, RequiredFixings::FixingDates>& fixings, const TodaysMarketParameters& mktParams,
                           const Period& iborLookback, const Period& oisLookback, const Period& bmaLookback,
                           const Period& inflationLookback) {
 
@@ -818,13 +818,14 @@ void addMarketFixingDates(const Date& asof, map<string, set<Date>>& fixings, con
                         oisDates = generateLookbackDates(asof, oisLookback, calendar);
                     }
                     TLOG("Adding extra fixing dates for overnight index " << i);
-                    fixings[i].insert(oisDates.begin(), oisDates.end());
+                    fixings[i].addDates(oisDates, false);
+                    
                 } else if (isBmaIndex(i)) {
                     if (bmaDates.empty()) {
                         TLOG("Generating fixing dates for bma/sifma indices.");
                         bmaDates = generateLookbackDates(asof, bmaLookback, calendar);
                     }
-                    fixings[i].insert(bmaDates.begin(), bmaDates.end());
+                    fixings[i].addDates(bmaDates, false);
                     if (iborDates.empty()) {
                         TLOG("Generating fixing dates for ibor indices.");
                         iborDates = generateLookbackDates(asof, iborLookback, calendar);
@@ -840,7 +841,7 @@ void addMarketFixingDates(const Date& asof, map<string, set<Date>>& fixings, con
                     }
                     for (auto const& l : liborNames) {
                         TLOG("Adding extra fixing dates for libor index " << l << " from bma/sifma index " << i);
-                        fixings[l].insert(iborDates.begin(), iborDates.end());
+                        fixings[l].addDates(iborDates, false);
                     }
                 } else {
                     if (iborDates.empty()) {
@@ -848,7 +849,7 @@ void addMarketFixingDates(const Date& asof, map<string, set<Date>>& fixings, con
                         iborDates = generateLookbackDates(asof, iborLookback, calendar);
                     }
                     TLOG("Adding extra fixing dates for ibor index " << i);
-                    fixings[i].insert(iborDates.begin(), iborDates.end());
+                    fixings[i].addDates(iborDates, false);
                 }
             }
 
@@ -875,14 +876,14 @@ void addMarketFixingDates(const Date& asof, map<string, set<Date>>& fixings, con
             if (mktParams.hasMarketObject(MarketObject::ZeroInflationCurve)) {
                 for (const auto& kv : mktParams.mapping(MarketObject::ZeroInflationCurve, configuration)) {
                     TLOG("Adding extra fixing dates for (zero) inflation index " << kv.first);
-                    fixings[kv.first].insert(dates.begin(), dates.end());
+                    fixings[kv.first].addDates(dates, false);
                 }
             }
 
             if (mktParams.hasMarketObject(MarketObject::YoYInflationCurve)) {
                 for (const auto& kv : mktParams.mapping(MarketObject::YoYInflationCurve, configuration)) {
                     TLOG("Adding extra fixing dates for (yoy) inflation index " << kv.first);
-                    fixings[kv.first].insert(dates.begin(), dates.end());
+                    fixings[kv.first].addDates(dates, false);
                 }
             }
         }
@@ -935,24 +936,24 @@ void addMarketFixingDates(const Date& asof, map<string, set<Date>>& fixings, con
                             auto tmpIdx = oppIdx->clone(expiry);
                             auto opName = opIndex->clone(expiry)->name();
                             TLOG("Adding (date, id) = (" << io::iso_date(expiry) << "," << opName << ")");
-                            fixings[opName].insert(expiry);
+                            fixings[opName].addDate(expiry, false);
                             auto pName = pIndex->clone(expiry)->name();
                             TLOG("Adding (date, id) = (" << io::iso_date(expiry) << "," << pName << ")");
-                            fixings[pName].insert(expiry);
+                            fixings[pName].addDate(expiry, false);
                         }
                     } else if (cfc->contractFrequency() == Daily) {
                         DLOG("Commodity " << kv.first << " has daily frequency so adding daily contracts.");
                         for (const Date& expiry : dates) {
                             auto indexName = commIdx->clone(expiry)->name();
                             TLOG("Adding (date, id) = (" << io::iso_date(expiry) << "," << indexName << ")");
-                            fixings[indexName].insert(expiry);
+                            fixings[indexName].addDate(expiry, false);
                         }
                     } else {
                         DLOG("Commodity " << kv.first << " is not daily so adding the monthly contracts.");
                         for (const Date& expiry : contractExpiries) {
                             auto indexName = commIdx->clone(expiry)->name();
                             TLOG("Adding extra fixing dates for commodity future " << indexName);
-                            fixings[indexName].insert(dates.begin(), dates.end());
+                            fixings[indexName].addDates(dates, false);
                         }
                     }
                 } else {
@@ -960,7 +961,7 @@ void addMarketFixingDates(const Date& asof, map<string, set<Date>>& fixings, con
                     DLOG("Commodity " << kv.first << " does not have future conventions so adding daily fixings.");
                     auto indexName = commIdx->name();
                     TLOG("Adding extra fixing dates for commodity spot " << indexName);
-                    fixings[indexName].insert(dates.begin(), dates.end());
+                    fixings[indexName].addDates(dates, false);
                 }
             }
         }
