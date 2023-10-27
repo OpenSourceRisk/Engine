@@ -58,7 +58,8 @@ getProjectedCrossAssetModel(const boost::shared_ptr<CrossAssetModel>& model,
 
     // build projected cam and return it
 
-    return boost::make_shared<CrossAssetModel>(parametrizations, correlation, model->salvagingAlgorithm());
+    return boost::make_shared<CrossAssetModel>(parametrizations, correlation, model->salvagingAlgorithm(),
+                                               model->measure(), model->discretization());
 }
 
 std::vector<Size> getStateProcessProjection(const boost::shared_ptr<CrossAssetModel>& model,
