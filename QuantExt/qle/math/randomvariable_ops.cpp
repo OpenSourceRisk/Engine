@@ -24,10 +24,8 @@
 
 namespace QuantExt {
 
-std::vector<RandomVariableOp> getRandomVariableOps(
-    const Size size,
-    const std::map<Size, std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>>&
-        basisFn) {
+std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size regressionOrder,
+                                                   QuantLib::LsmBasisSystem::PolynomialType polynomType) {
     std::vector<RandomVariableOp> ops;
 
     // None = 0
@@ -49,7 +47,7 @@ std::vector<RandomVariableOp> getRandomVariableOps(
     ops.push_back([](const std::vector<const RandomVariable*>& args) { return *args[0] / (*args[1]); });
 
     // ConditionalExpectation = 6
-    ops.push_back([&basisFn, size](const std::vector<const RandomVariable*>& args) {
+    ops.push_back([size, regressionOrder, polynomType](const std::vector<const RandomVariable*>& args) {
         std::vector<const RandomVariable*> regressor;
         for (auto r = std::next(args.begin(), 2); r != args.end(); ++r) {
             if ((*r)->initialised() && !(*r)->deterministic())
@@ -58,12 +56,8 @@ std::vector<RandomVariableOp> getRandomVariableOps(
         if (regressor.empty())
             return expectation(*args[0]);
         else {
-            auto it = basisFn.find(regressor.size());
-            QL_REQUIRE(it != basisFn.end(),
-                       "RandomVariableOp::ConditionalExpectation: did not find basis functions for state size "
-                           << regressor.size());
-            return conditionalExpectation(*args[0], regressor, it->second,
-                                          !close_enough(*args[1], RandomVariable(size, 0.0)));
+            auto tmp = multiPathBasisSystem(regressor.size(), regressionOrder, polynomType, size);
+            return conditionalExpectation(*args[0], regressor, tmp, !close_enough(*args[1], RandomVariable(size, 0.0)));
         }
     });
 
@@ -106,9 +100,9 @@ std::vector<RandomVariableOp> getRandomVariableOps(
     return ops;
 }
 
-std::vector<RandomVariableGrad> getRandomVariableGradients(
-    const Size size, const double eps,
-    const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>& basisFn) {
+std::vector<RandomVariableGrad> getRandomVariableGradients(const Size size, const Size regressionOrder,
+                                                           const QuantLib::LsmBasisSystem::PolynomialType polynomType,
+                                                           const double eps) {
 
     std::vector<RandomVariableGrad> grads;
 
