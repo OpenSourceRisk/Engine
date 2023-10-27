@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(testSimpleCalc) {
         auto w = c.applyOperation(RandomVariableOpCode::Mult, {z, z});
         c.declareOutputVariable(w);
         std::vector<std::vector<double>> output(1, std::vector<double>(n));
-        c.finalizeCalculation(output);
+        c.finalizeCalculation(output, {});
         for (auto const& v : output.front()) {
             BOOST_CHECK_CLOSE(v, 49.0, 1.0E-8);
         }
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(testSimpleCalc) {
         c.createInputVariable(&rx2[0]);
         c.createInputVariable(1.0);
         std::vector<std::vector<double>> output2(1, std::vector<double>(n));
-        c.finalizeCalculation(output2);
+        c.finalizeCalculation(output2, {});
         for (auto const& v : output2.front()) {
             BOOST_CHECK_CLOSE(v, 36.0, 1.0E-8);
         }
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(testLargeCalc) {
             val = val3;
         }
         c.declareOutputVariable(val);
-        c.finalizeCalculation(output);
+        c.finalizeCalculation(output, {});
         BOOST_TEST_MESSAGE("  first calculation result = " << output.front()[0]);
         results.push_back(output.front()[0]);
 
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(testLargeCalc) {
 
         c.initiateCalculation(n, id, 0, true);
         values[0] = c.createInputVariable(&data[0]);
-        c.finalizeCalculation(output);
+        c.finalizeCalculation(output, {});
         BOOST_TEST_MESSAGE("  second calculation result = " << output.front()[0]);
         results.push_back(output.front()[0]);
 
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(testRngGeneration) {
             }
         }
         std::vector<std::vector<double>> output(6, std::vector<double>(n));
-        c.finalizeCalculation(output);
+        c.finalizeCalculation(output, {});
         outputTimings(c);
         for (auto const& o : output) {
             boost::accumulators::accumulator_set<
