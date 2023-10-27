@@ -545,9 +545,9 @@ BOOST_AUTO_TEST_CASE(testCcyLgm3fForeignPayouts) {
     Size usdIdx = ccLgm->ccyIndex(USDCurrency());
     Size eurUsdIdx = usdIdx - 1;
 
-    ccLgm->correlation(CrossAssetModel::AssetType::IR, eurIdx, CrossAssetModel::AssetType::IR, usdIdx, -0.2);
-    ccLgm->correlation(CrossAssetModel::AssetType::IR, eurIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, 0.8);
-    ccLgm->correlation(CrossAssetModel::AssetType::IR, usdIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, -0.5);
+    ccLgm->setCorrelation(CrossAssetModel::AssetType::IR, eurIdx, CrossAssetModel::AssetType::IR, usdIdx, -0.2);
+    ccLgm->setCorrelation(CrossAssetModel::AssetType::IR, eurIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, 0.8);
+    ccLgm->setCorrelation(CrossAssetModel::AssetType::IR, usdIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, -0.5);
 
     boost::shared_ptr<LinearGaussMarkovModel> eurLgm = boost::make_shared<LinearGaussMarkovModel>(eurLgmParam);
     boost::shared_ptr<LinearGaussMarkovModel> usdLgm = boost::make_shared<LinearGaussMarkovModel>(usdLgmParam);
@@ -3425,21 +3425,21 @@ struct IrFxEqModelTestData {
         eqSpIdx = ccLgmEuler->eqIndex("SP");
         eqLhIdx = ccLgmEuler->eqIndex("LH");
 
-        ccLgmEuler->correlation(CrossAssetModel::AssetType::IR, eurIdx, CrossAssetModel::AssetType::IR, usdIdx, -0.2);
-        ccLgmEuler->correlation(CrossAssetModel::AssetType::IR, eurIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, 0.8);
-        ccLgmEuler->correlation(CrossAssetModel::AssetType::IR, usdIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, -0.5);
-        ccLgmEuler->correlation(CrossAssetModel::AssetType::EQ, eqSpIdx, CrossAssetModel::AssetType::EQ, eqLhIdx, 0.6);
-        ccLgmEuler->correlation(CrossAssetModel::AssetType::EQ, eqSpIdx, CrossAssetModel::AssetType::IR, usdIdx, -0.1);
-        ccLgmEuler->correlation(CrossAssetModel::AssetType::EQ, eqLhIdx, CrossAssetModel::AssetType::IR, eurIdx, -0.05);
-        ccLgmEuler->correlation(CrossAssetModel::AssetType::EQ, eqSpIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, 0.1);
+        ccLgmEuler->setCorrelation(CrossAssetModel::AssetType::IR, eurIdx, CrossAssetModel::AssetType::IR, usdIdx, -0.2);
+        ccLgmEuler->setCorrelation(CrossAssetModel::AssetType::IR, eurIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, 0.8);
+        ccLgmEuler->setCorrelation(CrossAssetModel::AssetType::IR, usdIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, -0.5);
+        ccLgmEuler->setCorrelation(CrossAssetModel::AssetType::EQ, eqSpIdx, CrossAssetModel::AssetType::EQ, eqLhIdx, 0.6);
+        ccLgmEuler->setCorrelation(CrossAssetModel::AssetType::EQ, eqSpIdx, CrossAssetModel::AssetType::IR, usdIdx, -0.1);
+        ccLgmEuler->setCorrelation(CrossAssetModel::AssetType::EQ, eqLhIdx, CrossAssetModel::AssetType::IR, eurIdx, -0.05);
+        ccLgmEuler->setCorrelation(CrossAssetModel::AssetType::EQ, eqSpIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, 0.1);
 
-        ccLgmExact->correlation(CrossAssetModel::AssetType::IR, eurIdx, CrossAssetModel::AssetType::IR, usdIdx, -0.2);
-        ccLgmExact->correlation(CrossAssetModel::AssetType::IR, eurIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, 0.8);
-        ccLgmExact->correlation(CrossAssetModel::AssetType::IR, usdIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, -0.5);
-        ccLgmExact->correlation(CrossAssetModel::AssetType::EQ, eqSpIdx, CrossAssetModel::AssetType::EQ, eqLhIdx, 0.6);
-        ccLgmExact->correlation(CrossAssetModel::AssetType::EQ, eqSpIdx, CrossAssetModel::AssetType::IR, usdIdx, -0.1);
-        ccLgmExact->correlation(CrossAssetModel::AssetType::EQ, eqLhIdx, CrossAssetModel::AssetType::IR, eurIdx, -0.05);
-        ccLgmExact->correlation(CrossAssetModel::AssetType::EQ, eqSpIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, 0.1);
+        ccLgmExact->setCorrelation(CrossAssetModel::AssetType::IR, eurIdx, CrossAssetModel::AssetType::IR, usdIdx, -0.2);
+        ccLgmExact->setCorrelation(CrossAssetModel::AssetType::IR, eurIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, 0.8);
+        ccLgmExact->setCorrelation(CrossAssetModel::AssetType::IR, usdIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, -0.5);
+        ccLgmExact->setCorrelation(CrossAssetModel::AssetType::EQ, eqSpIdx, CrossAssetModel::AssetType::EQ, eqLhIdx, 0.6);
+        ccLgmExact->setCorrelation(CrossAssetModel::AssetType::EQ, eqSpIdx, CrossAssetModel::AssetType::IR, usdIdx, -0.1);
+        ccLgmExact->setCorrelation(CrossAssetModel::AssetType::EQ, eqLhIdx, CrossAssetModel::AssetType::IR, eurIdx, -0.05);
+        ccLgmExact->setCorrelation(CrossAssetModel::AssetType::EQ, eqSpIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, 0.1);
     }
 
     SavedSettings backup;
@@ -4420,7 +4420,7 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByAlpha) {
     boost::shared_ptr<CrossAssetModel> model =
         boost::make_shared<CrossAssetModel>(parametrizations, Matrix(), SalvagingAlgorithm::None);
 
-    model->correlation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::INF, 0, 0.33);
+    model->setCorrelation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::INF, 0, 0.33);
 
     // pricing engine
     boost::shared_ptr<AnalyticDkCpiCapFloorEngine> engine =
@@ -4555,7 +4555,7 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByH) {
     boost::shared_ptr<CrossAssetModel> model =
         boost::make_shared<CrossAssetModel>(parametrizations, Matrix(), SalvagingAlgorithm::None);
 
-    model->correlation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::INF, 0, 0.33);
+    model->setCorrelation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::INF, 0, 0.33);
 
     // pricing engine
     boost::shared_ptr<AnalyticDkCpiCapFloorEngine> engine =
@@ -4689,7 +4689,7 @@ BOOST_AUTO_TEST_CASE(testCrCalibration) {
     boost::shared_ptr<CrossAssetModel> model =
         boost::make_shared<CrossAssetModel>(parametrizations, Matrix(), SalvagingAlgorithm::None);
 
-    model->correlation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::CR, 0, 0.33);
+    model->setCorrelation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::CR, 0, 0.33);
 
     // pricing engine
     boost::shared_ptr<AnalyticLgmCdsOptionEngine> engine =

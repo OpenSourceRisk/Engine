@@ -41,7 +41,7 @@ class CrossAssetModel;
  */
 class CrossAssetStateProcess : public StochasticProcess {
 public:
-    CrossAssetStateProcess(const CrossAssetModel* const model);
+    CrossAssetStateProcess(boost::shared_ptr<const CrossAssetModel> model);
 
     /*! StochasticProcess interface */
     Size size() const override;
@@ -59,7 +59,7 @@ protected:
     virtual Matrix diffusionOnCorrelatedBrowniansImpl(Time t, const Array& x) const;
     void updateSqrtCorrelation() const;
 
-    const CrossAssetModel* const model_;
+    boost::shared_ptr<const CrossAssetModel> model_;
 
     std::vector<boost::shared_ptr<StochasticProcess>> crCirpp_;
     Size cirppCount_;
@@ -68,7 +68,7 @@ protected:
 
     class ExactDiscretization : public StochasticProcess::discretization {
     public:
-        ExactDiscretization(const CrossAssetModel* const model,
+        ExactDiscretization(boost::shared_ptr<const CrossAssetModel> model,
                             SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::Spectral);
         virtual Array drift(const StochasticProcess&, Time t0, const Array& x0, Time dt) const override;
         virtual Matrix diffusion(const StochasticProcess&, Time t0, const Array& x0, Time dt) const override;
@@ -80,7 +80,7 @@ protected:
         virtual Array driftImpl2(const StochasticProcess&, Time t0, const Array& x0, Time dt) const;
         virtual Matrix covarianceImpl(const StochasticProcess&, Time t0, const Array& x0, Time dt) const;
 
-        const CrossAssetModel* const model_;
+        boost::shared_ptr<const CrossAssetModel> model_;
         SalvagingAlgorithm::Type salvaging_;
 
         mutable bool cacheNotReady_m_ = true;
