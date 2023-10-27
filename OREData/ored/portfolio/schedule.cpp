@@ -28,15 +28,15 @@ namespace ore {
 namespace data {
 
 namespace {
-std::vector<Date> everyThursdayDates(const Date& startDate, const Date& endDate, const Date& firstDate) {
+std::vector<Date> everyWeekDayDates(const Date& startDate, const Date& endDate, const Date& firstDate, const QuantLib::Weekday weekday) {
     std::vector<Date> result;
     if (firstDate != Date())
         result.push_back(firstDate);
     Date d = startDate;
-    while (d <= endDate && (d.weekday() != QuantLib::Thursday || d < firstDate)) {
+    while (d <= endDate && (d.weekday() != weekday || d < firstDate)) {
         ++d;
     }
-    if (d.weekday() == QuantLib::Thursday && (result.empty() || result.back() != d))
+    if (d.weekday() == weekday && (result.empty() || result.back() != d))
         result.push_back(d);
     while (d + 7 <= endDate) {
         d += 7;
@@ -44,6 +44,32 @@ std::vector<Date> everyThursdayDates(const Date& startDate, const Date& endDate,
     }
     return result;
 }
+
+std::vector<Date> weeklyDates(const Date& startDate, const Date& endDate, const Date& firstDate,
+                                       bool includeWeekend = false) {
+    QuantLib::Weekday weekday = includeWeekend ? QuantLib::Sunday : QuantLib::Friday;
+    // We want the first period to span from
+    //  [startDate, first Friday/SunDay following startDate]
+    // or
+    //  [firstDate, first Friday/SunDay following firstDate]
+    Date effectiveFirstDate = firstDate == Date() ? startDate : firstDate;
+    auto dates = everyWeekDayDates(startDate, endDate, effectiveFirstDate, weekday);
+    // Handle broken period
+    if (!dates.empty()) {
+        // If startDate/first Date falls on end of week,
+        // the first period is consist of only one day, so first periods should be
+        // [startDate, startDate], [startDate+1, next end of the week], ...
+        if (effectiveFirstDate.weekday() == weekday) {
+            dates.insert(dates.begin(), effectiveFirstDate);
+        }
+        // add the enddate if the enddate doesnt fall on friday, last broken period
+        if (dates.back() < endDate) {
+            dates.push_back(endDate);
+        }
+    }
+    return dates;
+}
+
 } // namespace
 
 void ScheduleRules::fromXML(XMLNode* node) {
@@ -334,7 +360,12 @@ Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacem
         // handle special rules outside the QuantLib date generation rules
 
         if (data.rule() == "EveryThursday") {
-            auto dates = everyThursdayDates(startDate, endDate, firstDate);
+            auto dates = everyWeekDayDates(startDate, endDate, firstDate, QuantLib::Thursday);
+            for (auto& d : dates)
+                d = calendar.adjust(d, bdc);
+            return Schedule(dates, calendar, bdc, bdcEnd, tenor, rule, endOfMonth);
+        } else if (data.rule() == "BusinessWeek" || data.rule() == "CalendarWeek") {
+            auto dates = weeklyDates(startDate, endDate, firstDate, data.rule() == "CalendarWeek");
             for (auto& d : dates)
                 d = calendar.adjust(d, bdc);
             return Schedule(dates, calendar, bdc, bdcEnd, tenor, rule, endOfMonth);
