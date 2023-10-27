@@ -153,12 +153,6 @@ private:
 
 std::ostream& operator<<(std::ostream& o, const IndexInfo& i);
 
-/*! helper function that returns a LSM basis system with size restriction: the order is reduced until
-  the size of the basis system is not greater than the given bound (if this is not null) or the order is 1 */
-std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>
-multiPathBasisSystem(Size dim, Size order, QuantLib::LsmBasisSystem::PolynomialType type,
-                     Size basisSystemSizeBound = Null<Size>());
-
 /*! This method tries to parse an commodity index name used in the scripting context
 
     0) COMM-name
