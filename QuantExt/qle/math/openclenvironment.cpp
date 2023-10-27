@@ -187,7 +187,7 @@ public:
                                const std::vector<std::size_t>& args) override final;
     void freeVariable(const std::size_t id) override final;
     void declareOutputVariable(const std::size_t id) override final;
-    void finalizeCalculation(std::vector<double*>& output) override final;
+    void finalizeCalculation(std::vector<double*>& output, const Settings& settings = Settings()) override final;
 
     const DebugInfo& debugInfo() const override final;
 
@@ -644,7 +644,7 @@ void OpenClContext::declareOutputVariable(const std::size_t id) {
     nOutputVars_[currentId_ - 1]++;
 }
 
-void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
+void OpenClContext::finalizeCalculation(std::vector<double*>& output, const Settings& settings) {
     struct exitGuard {
         exitGuard() {}
         ~exitGuard() {
