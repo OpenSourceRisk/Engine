@@ -39,7 +39,7 @@ namespace data {
 /* This class is the basis for the BlackScholes and LocalVol model implementations */
 class BlackScholesCGBase : public ModelCGImpl {
 public:
-    /* For the constructor arguments see ModelImpl, plus:
+    /* For the constructor arguments see ModelCGImpl, plus:
        - eq, com processes are given with arbitrary riskFreeRate() and dividendYield(), these two curves only define
          the forward curve drift for each asset
        - the base ccy is the first ccy in the currency vector, the fx spots are given as for-base, the ccy curves define
