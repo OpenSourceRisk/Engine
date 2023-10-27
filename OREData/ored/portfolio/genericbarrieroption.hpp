@@ -38,7 +38,7 @@ public:
     explicit GenericBarrierOption(const std::string& tradeType = "GenericBarrierOption") : ScriptedTrade(tradeType) {}
     GenericBarrierOption(std::vector<boost::shared_ptr<Underlying>> underlyings, const OptionData& optionData,
                          const std::vector<BarrierData>& barriers, const ScheduleData& barrierMonitoringDates,
-                         const BarrierData& transatlanticBarrier, const std::string& payCurrency,
+                         const std::vector<BarrierData>& transatlanticBarrier, const std::string& payCurrency,
                          const std::string& settlementDate, const std::string& quantity, const std::string& strike,
                          const std::string& amount, const std::string& kikoType)
         : underlyings_(underlyings), optionData_(optionData), barriers_(barriers),
@@ -54,10 +54,11 @@ public:
                          const std::string& settlementDate, const std::string& quantity, const std::string& strike,
                          const std::string& amount, const std::string& kikoType)
         : optionData_(optionData), barriers_(barriers),
-          barrierMonitoringDates_(barrierMonitoringDates), transatlanticBarrier_(transatlanticBarrier),
+          barrierMonitoringDates_(barrierMonitoringDates), 
           payCurrency_(payCurrency), settlementDate_(settlementDate), quantity_(quantity), strike_(strike),
           amount_(amount), kikoType_(kikoType) {
-        underlyings_.push_back(underlying); 
+        underlyings_.push_back(underlying);
+        transatlanticBarrier_.push_back(transatlanticBarrier);
         initIndices();
     }
     void build(const boost::shared_ptr<EngineFactory>&) override;
@@ -81,8 +82,8 @@ private:
     OptionData optionData_;
     std::vector<BarrierData> barriers_;
     ScheduleData barrierMonitoringDates_;
+    std::vector<BarrierData> transatlanticBarrier_;
     std::string barrierMonitoringStartDate_, barrierMonitoringEndDate_;
-    BarrierData transatlanticBarrier_;
     std::string payCurrency_, settlementDate_, quantity_, strike_, amount_, kikoType_;
     std::string settlementLag_, settlementCalendar_, settlementConvention_;
 };
