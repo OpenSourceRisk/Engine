@@ -60,6 +60,8 @@ GaussianCam::GaussianCam(const Handle<CrossAssetModel>& cam, const Size paths,
       cam_(cam), curves_(curves), fxSpots_(fxSpots), mcParams_(mcParams), timeStepsPerYear_(timeStepsPerYear),
       projectedStateProcessIndices_(projectedStateProcessIndices) {
 
+    // check inputs
+
     QL_REQUIRE(!cam_.empty(), "model is empty");
 
     // register with observables
@@ -147,8 +149,10 @@ void GaussianCam::performCalculations() const {
 
     underlyingPaths_.clear();
     underlyingPathsTraining_.clear();
+    irStates_.clear();
+    infStates_.clear();
 
-    // init times vector and underlying path where we map a date to a randomvariable representing the path values
+    // init underlying path where we map a date to a randomvariable representing the path values
 
     for (auto const& d : effectiveSimulationDates_) {
         underlyingPaths_[d] = std::vector<RandomVariable>(indices_.size(), RandomVariable(size(), 0.0));
@@ -442,9 +446,10 @@ RandomVariable GaussianCam::getIrIndexValue(const Size indexNo, const Date& d, c
     // ensure a valid fixing date
     fixingDate = irIndices_[indexNo].second->fixingCalendar().adjust(fixingDate);
     // look up required fixing in cache and return it if found
-    auto cacheValue = irIndexValueCache_.find(std::make_tuple(indexNo, d, fixingDate));
-    if (cacheValue != irIndexValueCache_.end())
+    if (auto cacheValue = irIndexValueCache_.find(std::make_tuple(indexNo, d, fixingDate));
+        cacheValue != irIndexValueCache_.end()) {
         return cacheValue->second;
+    }
     // compute value, add to cache and return it
     Size currencyIdx = irIndexPositionInCam_[indexNo];
     LgmVectorised lgmv(cam_->irlgm1f(currencyIdx));
