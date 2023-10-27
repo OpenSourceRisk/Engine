@@ -247,7 +247,7 @@ void BlackScholesCG::performCalculations() const {
     if (indices_.empty() || !underlyingPaths_.empty())
         return;
 
-    // exit if only one simulation date in the future
+    // exit if there are no future simulation dates (i.e. only the reference date)
 
     if (effectiveSimulationDates_.size() == 1)
         return;
@@ -302,11 +302,10 @@ void BlackScholesCG::performCalculations() const {
         for (Size j = 0; j < indices_.size(); ++j) {
             for (Size k = 0; k < indices_.size(); ++k) {
                 std::string id = "__sqrtCov_" + std::to_string(j) + "_" + std::to_string(k) + "_" + std::to_string(i);
-                addModelParameter(id, [sqrtCovCalc, i, j, k] { return sqrtCovCalc->sqrtCov(i, j, k); });
-                sqrtCov[i][j][k] = cg_var(*g_, id);
+                sqrtCov[i][j][k] =
+                    addModelParameter(id, [sqrtCovCalc, i, j, k] { return sqrtCovCalc->sqrtCov(i, j, k); });
                 id = "__cov_" + std::to_string(j) + "_" + std::to_string(k) + "_" + std::to_string(i);
-                addModelParameter(id, [sqrtCovCalc, i, j, k] { return sqrtCovCalc->cov(i, j, k); });
-                cov[i][j][k] = cg_var(*g_, id);
+                cov[i][j][k] = addModelParameter(id, [sqrtCovCalc, i, j, k] { return sqrtCovCalc->cov(i, j, k); });
             }
         }
     }
@@ -333,9 +332,9 @@ void BlackScholesCG::performCalculations() const {
         for (Size j = 0; j < indices_.size(); ++j) {
             auto p = model_->processes().at(j);
             std::string id = std::to_string(j) + "_" + ore::data::to_string(d);
-            addModelParameter("__div_" + id, [p, d]() { return p->dividendYield()->discount(d); });
-            addModelParameter("__rfr_" + id, [p, d]() { return p->riskFreeRate()->discount(d); });
-            std::size_t tmp = cg_div(*g_, cg_var(*g_, "__rfr_" + id), cg_var(*g_, "__div_" + id));
+            std::size_t div= addModelParameter("__div_" + id, [p, d]() { return p->dividendYield()->discount(d); });
+            std::size_t rfr = addModelParameter("__rfr_" + id, [p, d]() { return p->riskFreeRate()->discount(d); });
+            std::size_t tmp = cg_div(*g_, rfr, div);
             drift[i][j] = cg_subtract(*g_, cg_negative(*g_, cg_log(*g_, cg_div(*g_, tmp, discountRatio[j]))),
                                       cg_mult(*g_, cg_const(*g_, 0.5), cov[i][j][j]));
             discountRatio[j] = tmp;
@@ -353,7 +352,8 @@ void BlackScholesCG::performCalculations() const {
 
     for (Size j = 0; j < indices_.size(); ++j) {
         for (Size i = 0; i < effectiveSimulationDates_.size() - 1; ++i) {
-            randomVariates_[j][i] = cg_var(*g_, "__rv_" + std::to_string(j) + "_" + std::to_string(i), true);
+            randomVariates_[j][i] = cg_var(*g_, "__rv_" + std::to_string(j) + "_" + std::to_string(i),
+                                           ComputationGraph::VarDoesntExist::Create);
         }
     }
 
@@ -363,8 +363,7 @@ void BlackScholesCG::performCalculations() const {
     for (Size j = 0; j < indices_.size(); ++j) {
         std::string id = "__x0_" + std::to_string(j);
         auto p = model_->processes().at(j);
-        addModelParameter(id, [p] { return std::log(p->x0()); });
-        logState[j] = cg_var(*g_, id);
+        logState[j] = addModelParameter(id, [p] { return std::log(p->x0()); });
         underlyingPaths_[*effectiveSimulationDates_.begin()][j] = cg_exp(*g_, logState[j]);
     }
 
