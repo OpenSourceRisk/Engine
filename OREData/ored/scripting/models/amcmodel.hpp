@@ -23,22 +23,10 @@
 
 #pragma once
 
-#include <ored/scripting/value.hpp>
-
-#include <qle/models/modelbuilder.hpp>
-
-#include <qle/processes/crossassetstateprocess.hpp>
-
-#include <ql/patterns/lazyobject.hpp>
-#include <ql/settings.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
-
-#include <boost/enable_shared_from_this.hpp>
+#include <qle/math/randomvariable.hpp>
 
 namespace ore {
 namespace data {
-
-using QuantLib::Date;
 
 class AmcModel {
 public:

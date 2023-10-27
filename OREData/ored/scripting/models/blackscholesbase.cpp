@@ -264,11 +264,10 @@ RandomVariable BlackScholesBase::npv(const RandomVariable& amount, const Date& o
         return expectation(amount);
     }
 
-    // generate basis if not yet done
+    // get basis fns
 
-    if (basisFns_.find(state.size()) == basisFns_.end())
-        basisFns_[state.size()] = multiPathBasisSystem(state.size(), mcParams_.regressionOrder, mcParams_.polynomType,
-                                                       std::min(size(), trainingSamples()));
+    auto basisFns = multiPathBasisSystem(state.size(), mcParams_.regressionOrder, mcParams_.polynomType,
+                                         std::min(trainingSamples(), Model::size()));
 
     // if a memSlot is given and coefficients are stored, we use them
 
@@ -288,8 +287,7 @@ RandomVariable BlackScholesBase::npv(const RandomVariable& amount, const Date& o
     // otherwise compute coefficients and store them if a memSlot is given
 
     if (coeff.size() == 0) {
-        coeff = regressionCoefficients(amount, state, basisFns_.at(state.size()), filter,
-                                       RandomVariableRegressionMethod::QR);
+        coeff = regressionCoefficients(amount, state, basisFns, filter, RandomVariableRegressionMethod::QR);
         DLOG("BlackScholesBase::npv(" << ore::data::to_string(obsdate) << "): regression coefficients are " << coeff
                                       << " (got model state size " << nModelStates << " and " << nAddReg
                                       << " additional regressors)");
@@ -299,7 +297,7 @@ RandomVariable BlackScholesBase::npv(const RandomVariable& amount, const Date& o
 
     // compute conditional expectation and return the result
 
-    return conditionalExpectation(state, basisFns_.at(state.size()), coeff);
+    return conditionalExpectation(state, basisFns, coeff);
 }
 
 void BlackScholesBase::releaseMemory() {
