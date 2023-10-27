@@ -21,6 +21,7 @@
 #include <ored/scripting/models/blackscholescg.hpp>
 #include <ored/scripting/models/fdblackscholesbase.hpp>
 #include <ored/scripting/models/gaussiancam.hpp>
+#include <ored/scripting/models/gaussiancamcg.hpp>
 #include <ored/scripting/models/localvol.hpp>
 #include <ored/scripting/engines/scriptedinstrumentpricingengine.hpp>
 #include <ored/scripting/engines/scriptedinstrumentpricingenginecg.hpp>
@@ -1278,7 +1279,7 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
     std::vector<boost::shared_ptr<EqBsData>> eqConfigs;
     std::vector<boost::shared_ptr<CommoditySchwartzData>> comConfigs;
     // TODO: populate comConfigs
-    
+
     // calibration expiries and terms for IR, INF, FX, EQ parametrisations (this will only work for a fixed reference
     // date, due to the way the cam builder and nested builders work, see ticket #940)
     Date referenceDate = modelCurves_.front()->referenceDate();
@@ -1473,19 +1474,30 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
 
     std::string configurationInCcy = configuration(MarketContext::irCalibration);
     std::string configurationXois = configuration(MarketContext::pricing);
+    auto discretization = useCg_ ? CrossAssetModel::Discretization::Euler : CrossAssetModel::Discretization::Exact;
     auto camBuilder = boost::make_shared<CrossAssetModelBuilder>(
         market_,
         boost::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, infConfigs, crLgmConfigs, crCirConfigs,
-                                                comConfigs, 0, camCorrelations, bootstrapTolerance_),
+                                                comConfigs, 0, camCorrelations, bootstrapTolerance_, "LGM",
+                                                discretization),
         configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
         configurationXois, !calibrate_ || zeroVolatility_, continueOnCalibrationError_, referenceCalibrationGrid_,
         SalvagingAlgorithm::Spectral, id);
 
-    // TODO hardcode timeStepsPerYear to 0 and exact discretisation (we might want Euler for AD...)
-    model_ = boost::make_shared<GaussianCam>(camBuilder->model(), modelSize_, modelCcys_, modelCurves_, modelFxSpots_,
-                                             modelIrIndices_, modelInfIndices_, modelIndices_, modelIndicesCurrencies_,
-                                             simulationDates_, mcParams_, 0, iborFallbackConfig, std::vector<Size>(),
-                                             conditionalExpectationModelStates);
+    // effective time steps per year: zero for exact evolution, otherwise the pricing engine parameter
+    if (useCg_) {
+        modelCG_ = boost::make_shared<GaussianCamCG>(
+            camBuilder->model(), modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+            modelIndices_, modelIndicesCurrencies_, simulationDates_,
+            camBuilder->model()->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_,
+            iborFallbackConfig, std::vector<Size>(), conditionalExpectationModelStates);
+    } else {
+        model_ = boost::make_shared<GaussianCam>(
+            camBuilder->model(), modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+            modelIndices_, modelIndicesCurrencies_, simulationDates_, mcParams_,
+            camBuilder->model()->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_,
+            iborFallbackConfig, std::vector<Size>(), conditionalExpectationModelStates);
+    }
 
     modelBuilders_.insert(std::make_pair(id, camBuilder));
 }
@@ -1526,11 +1538,20 @@ void ScriptedTradeEngineBuilder::buildGaussianCamAMC(
     Handle<CrossAssetModel> projectedModel(
         getProjectedCrossAssetModel(amcCam_, selectedComponents, projectedStateProcessIndices));
 
-    // TODO hardcode timeStepsPerYear to 1 and exact discretisation (we might want Euler for AD...)
-    model_ = boost::make_shared<GaussianCam>(projectedModel, modelSize_, modelCcys_, modelCurves_, modelFxSpots_,
-                                             modelIrIndices_, modelInfIndices_, modelIndices_, modelIndicesCurrencies_,
-                                             simulationDates_, mcParams_, 1, iborFallbackConfig,
-                                             projectedStateProcessIndices, conditionalExpectationModelStates);
+    // effective time steps per year: zero for exact evolution, otherwise the pricing engine parameter
+    if (useCg_) {
+        modelCG_ = boost::make_shared<GaussianCamCG>(
+            projectedModel, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+            modelIndices_, modelIndicesCurrencies_, simulationDates_,
+            projectedModel->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_,
+            iborFallbackConfig, projectedStateProcessIndices, conditionalExpectationModelStates);
+    } else {
+        model_ = boost::make_shared<GaussianCam>(
+            projectedModel, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+            modelIndices_, modelIndicesCurrencies_, simulationDates_, mcParams_,
+            projectedModel->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_,
+            iborFallbackConfig, projectedStateProcessIndices, conditionalExpectationModelStates);
+    }
 
     DLOG("built GuassianCam model as projection of xva evolution model");
     for (auto const& p : projectedStateProcessIndices)
