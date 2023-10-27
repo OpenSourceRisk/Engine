@@ -35,20 +35,19 @@ Real AnalyticXAssetLgmEquityOptionEngine::value(const Time t0, const Time t,
 
     const Size& k = eqIdx_;
     const Size& i = ccyIdx_;
-    const CrossAssetModel* x = model_.get();
 
-    Real Hi_t = Hz(i).eval(x, t);
+    Real Hi_t = Hz(i).eval(*model_, t);
 
     // calculate the full variance. This is the equity analogy to eqn: 12.18 in Lichters,Stamm,Gallagher
     Real variance = 0;
-    variance += (vs(k).eval(x, t) - vs(k).eval(x, t0));
+    variance += (vs(k).eval(*model_, t) - vs(k).eval(*model_, t0));
 
-    variance += Hi_t * Hi_t * (zetaz(i).eval(x, t) - zetaz(i).eval(x, t0));
-    variance -= 2.0 * Hi_t * integral(x, P(Hz(i), az(i), az(i)), t0, t);
-    variance += integral(x, P(Hz(i), Hz(i), az(i), az(i)), t0, t);
+    variance += Hi_t * Hi_t * (zetaz(i).eval(*model_, t) - zetaz(i).eval(*model_, t0));
+    variance -= 2.0 * Hi_t * integral(*model_, P(Hz(i), az(i), az(i)), t0, t);
+    variance += integral(*model_, P(Hz(i), Hz(i), az(i), az(i)), t0, t);
 
-    variance += 2.0 * Hi_t * integral(x, P(rzs(i, k), ss(k), az(i)), t0, t);
-    variance -= 2.0 * integral(x, P(Hz(i), rzs(i, k), ss(k), az(i)), t0, t);
+    variance += 2.0 * Hi_t * integral(*model_, P(rzs(i, k), ss(k), az(i)), t0, t);
+    variance -= 2.0 * integral(*model_, P(Hz(i), rzs(i, k), ss(k), az(i)), t0, t);
 
     Real stdev = sqrt(variance);
     BlackCalculator black(payoff, eqForward, stdev, discount);
