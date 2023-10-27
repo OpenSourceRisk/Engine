@@ -34,6 +34,7 @@ namespace QuantExt {
 /*! - opId = 0 should refer to "no operation" */
 class ComputationGraph {
 public:
+    enum class VarDoesntExist { Nan, Create, Throw };
     static std::size_t nan;
 
     void clear();
@@ -52,7 +53,7 @@ public:
     bool isConstant(const std::size_t node) const;
     double constantValue(const std::size_t node) const;
 
-    std::size_t variable(const std::string& name, const bool createIfNotExists = false);
+    std::size_t variable(const std::string& name, const VarDoesntExist v = VarDoesntExist::Throw);
     const std::map<std::string, std::size_t>& variables() const;
     void setVariable(const std::string& name, const std::size_t node);
 
@@ -76,7 +77,8 @@ private:
 // methods to construct cg
 
 std::size_t cg_const(ComputationGraph& g, const double value);
-std::size_t cg_var(ComputationGraph& g, const std::string& name, const bool createIfNotExists = false);
+std::size_t cg_var(ComputationGraph& g, const std::string& name,
+                   ComputationGraph::VarDoesntExist = ComputationGraph::VarDoesntExist::Throw);
 std::size_t cg_add(ComputationGraph& g, const std::size_t a, const std::size_t b, const std::string& label = "");
 std::size_t cg_subtract(ComputationGraph& g, const std::size_t a, const std::size_t b, const std::string& label = "");
 std::size_t cg_negative(ComputationGraph& g, const std::size_t a, const std::string& label = "");
