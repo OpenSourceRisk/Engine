@@ -566,8 +566,8 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
         info.amountCalculator = [this, indexCcyIdx, sub, simTime, isFxLinked, fxLinkedForeignNominal,
                                  fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate](
                                     const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
-            RandomVariable effectiveRate = lgmVectorised_[indexCcyIdx].subPeriodsRate(sub->index(), sub->fixingDates(),
-                                                                                      simTime, *states.at(0).at(0));
+            RandomVariable fixing = lgmVectorised_[indexCcyIdx].subPeriodsRate(sub->index(), sub->fixingDates(),
+                                                                               simTime, *states.at(0).at(0));
             RandomVariable fxFixing(n, 1.0);
             if (isFxLinked) {
                 if (fxLinkedFixedFxRate != Null<Real>()) {
@@ -582,6 +582,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
                     fxFixing = fxSource / fxTarget;
                 }
             }
+            RandomVariable effectiveRate = RandomVariable(n, sub->gearing()) * fixing + RandomVariable(n, sub->spread());
             return RandomVariable(n, (isFxLinked ? fxLinkedForeignNominal : sub->nominal()) * sub->accrualPeriod()) *
                    effectiveRate * fxFixing;
         };
@@ -748,7 +749,7 @@ void McMultiLegBaseEngine::calculate() const {
 
     TimeGrid timeGrid(simulationTimes.begin(), simulationTimes.end());
 
-    auto process = model_->stateProcess();
+    boost::shared_ptr<StochasticProcess> process = model_->stateProcess();
     if (model_->dimension() == 1) {
         // use lgm process if possible for better performance
         auto tmp = boost::make_shared<IrLgm1fStateProcess>(model_->irlgm1f(0));
@@ -781,9 +782,6 @@ void McMultiLegBaseEngine::calculate() const {
     std::vector<RegressionModel> regModelUndExInto(exerciseXvaTimes.size());         // available on xva and ex times
     std::vector<RegressionModel> regModelContinuationValue(exerciseXvaTimes.size()); // available on ex times
     std::vector<RegressionModel> regModelOption(exerciseXvaTimes.size());            // available on xva and ex times
-
-    auto basisFns =
-        RandomVariableLsmBasisSystem::multiPathBasisSystem(model_->stateProcess()->size(), polynomOrder_, polynomType_);
 
     enum class CfStatus { open, cached, done };
     std::vector<CfStatus> cfStatus(cashflowInfo.size(), CfStatus::open);
@@ -893,7 +891,7 @@ void McMultiLegBaseEngine::calculate() const {
 
     amcCalculator_ = boost::make_shared<MultiLegBaseAmcCalculator>(
         externalModelIndices_, optionSettlement_, exerciseXvaTimes, exerciseTimes, xvaTimes, regModelUndDirty,
-        regModelUndExInto, regModelContinuationValue, regModelOption, basisFns, resultValue_,
+        regModelUndExInto, regModelContinuationValue, regModelOption, resultValue_,
         model_->stateProcess()->initialValues(), model_->irlgm1f(0)->currency());
 }
 
@@ -905,13 +903,12 @@ McMultiLegBaseEngine::MultiLegBaseAmcCalculator::MultiLegBaseAmcCalculator(
     const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelUndDirty,
     const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelUndExInto,
     const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelContinuationValue,
-    const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelOption,
-    const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>& basisFns,
-    const Real resultValue, const Array& initialState, const Currency& baseCurrency)
+    const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelOption, const Real resultValue,
+    const Array& initialState, const Currency& baseCurrency)
     : externalModelIndices_(externalModelIndices), settlement_(settlement), exerciseXvaTimes_(exerciseXvaTimes),
       exerciseTimes_(exerciseTimes), xvaTimes_(xvaTimes), regModelUndDirty_(regModelUndDirty),
       regModelUndExInto_(regModelUndExInto), regModelContinuationValue_(regModelContinuationValue),
-      regModelOption_(regModelOption), basisFns_(basisFns), resultValue_(resultValue), initialState_(initialState),
+      regModelOption_(regModelOption), resultValue_(resultValue), initialState_(initialState),
       baseCurrency_(baseCurrency) {}
 
 std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalculator::simulatePath(
@@ -1114,7 +1111,7 @@ void McMultiLegBaseEngine::RegressionModel::train(const Size polynomOrder,
 
         // get the basis functions
 
-        basisFns_ = RandomVariableLsmBasisSystem::multiPathBasisSystem(regressor.size(), polynomOrder, polynomType);
+        basisFns_ = multiPathBasisSystem(regressor.size(), polynomOrder, polynomType, Null<Size>());
 
         // compute the regression coefficients
 

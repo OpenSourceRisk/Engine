@@ -95,8 +95,8 @@ simulatePathInterface2(const boost::shared_ptr<AmcCalculator>& amcCalc, const st
     try {
         return amcCalc->simulatePath(pathTimes, paths, isRelevantTime, moveStateToPreviousTime);
     } catch (const std::exception& e) {
-        ALOG(StructuredTradeErrorMessage(tradeLabel, tradeType, "error during amc path simulation for trade.",
-                                         e.what()));
+        StructuredTradeErrorMessage(tradeLabel, tradeType, "error during amc path simulation for trade.", e.what())
+            .log();
         return std::vector<QuantExt::RandomVariable>(std::count(isRelevantTime.begin(), isRelevantTime.end(), true) + 1,
                                                      RandomVariable(paths.front().front().size()));
     }
@@ -247,8 +247,9 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                     tradeFees.back().push_back(std::make_tuple(model->ccyIndex(p->currency()), p->cashFlow()->amount(),
                                                                p->cashFlow()->date()));
                 } else {
-                    ALOG(StructuredTradeErrorMessage(trade.second, "Additional instrument is ignored in AMC simulation",
-                                                     "only QuantExt::Payment is handled as additional instrument."));
+                    StructuredTradeErrorMessage(trade.second, "Additional instrument is ignored in AMC simulation",
+                                                "only QuantExt::Payment is handled as additional instrument.")
+                        .log();
                 }
             }
         }
@@ -295,7 +296,7 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
             extractAmcCalculator(trade, amcCalc, multiplier, true);
 
         } catch (const std::exception& e) {
-            ALOG(StructuredTradeErrorMessage(trade.second, "Error building trade for AMC simulation", e.what()));
+            StructuredTradeErrorMessage(trade.second, "Error building trade for AMC simulation", e.what()).log();
         }
         progressIndicator->updateProgress(++progressCounter, portfolio->size() + 1);
     }
@@ -805,9 +806,9 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<ore::data::Portfolio>
 
                 // log error and return code 1 = not ok
 
-                ALOG(ore::analytics::StructuredAnalyticsErrorMessage("AMC Valuation Engine (multithreaded mode)",
-                                                                     "",
-                                                                     e.what()));
+                ore::analytics::StructuredAnalyticsErrorMessage("AMC Valuation Engine (multithreaded mode)", "",
+                                                                e.what())
+                    .log();
                 rc = 1;
             }
 
