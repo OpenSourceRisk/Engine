@@ -460,7 +460,7 @@ public:
         mask_ = mask;
     }
     const boost::filesystem::path& rootPath() {
-        boost::unique_lock<boost::shared_mutex> lock(mutex());
+        boost::shared_lock<boost::shared_mutex> lock(mutex());
         return rootPath_;
     }
     void setRootPath(const boost::filesystem::path& pth) {
@@ -468,7 +468,7 @@ public:
         rootPath_ = pth;
     }
     int maxLen() {
-        boost::unique_lock<boost::shared_mutex> lock(mutex());
+        boost::shared_lock<boost::shared_mutex> lock(mutex());
         return maxLen_;
     }
     void setMaxLen(const int n) {
