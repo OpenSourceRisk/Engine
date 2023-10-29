@@ -286,7 +286,10 @@ void Log::registerIndependentLogger(const boost::shared_ptr<IndependentLogger>& 
     independentLoggers_[logger->name()] = logger;
 }
 
-const bool Log::hasLogger(const string& name) const { return loggers_.find(name) != loggers_.end(); }
+const bool Log::hasLogger(const string& name) const {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    return loggers_.find(name) != loggers_.end();
+}
 
 boost::shared_ptr<Logger>& Log::logger(const string& name) {
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
@@ -295,6 +298,7 @@ boost::shared_ptr<Logger>& Log::logger(const string& name) {
 }
 
 const bool Log::hasIndependentLogger(const string& name) const {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     return independentLoggers_.find(name) != independentLoggers_.end();
 }
 
@@ -333,6 +337,7 @@ void Log::removeAllLoggers() {
 }
 
 string Log::source(const char* filename, int lineNo) {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     string filepath;
     if (rootPath_.empty()) {
         filepath = filename;
@@ -357,17 +362,21 @@ string Log::source(const char* filename, int lineNo) {
 }
 
 void Log::addExcludeFilter(const string& key, const std::function<bool(const std::string&)> func) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     excludeFilters_[key] = func;
 }
 
-void Log::removeExcludeFilter(const string& key) { excludeFilters_.erase(key); }
+void Log::removeExcludeFilter(const string& key) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    excludeFilters_.erase(key);
+}
 
 bool Log::checkExcludeFilters(const std::string& msg) {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     for (const auto& f : excludeFilters_) {
         if (f.second(msg))
             return true;
     }
-
     return false;
 }
 
