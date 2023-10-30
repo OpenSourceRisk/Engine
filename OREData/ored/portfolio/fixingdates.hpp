@@ -192,7 +192,7 @@ public:
     
     void addFixingDate(const FixingEntry& fixingEntry);
 
-    /*! adds a vector of fixings dates \p fixingDates for an index given by is ORE index name \p indexName arising from
+    /*! adds a vector of fixings dates \p fixingDates and mandatory flags for an index given by is ORE index name \p indexName arising from
        a coupon with payment date \p payDate */
     void addFixingDates(const std::vector<std::pair<QuantLib::Date, bool>>& fixingDates, const std::string& indexName,
                         const QuantLib::Date& payDate = Date::maxDate(),
@@ -200,9 +200,9 @@ public:
 
     /*! adds a vector of fixings dates \p fixingDates for an index given by is ORE index name \p indexName arising from
        a coupon with payment date \p payDate */
-    void RequiredFixings::addFixingDates(const std::vector<QuantLib::Date>& fixingDates, const std::string& indexName,
-                                         const QuantLib::Date& payDate = Date::maxDate(),
-                                         const bool alwaysAddIfPaysOnSettlement = false, const bool mandatory = true);
+    void addFixingDates(const std::vector<QuantLib::Date>& fixingDates, const std::string& indexName,
+                        const QuantLib::Date& payDate = Date::maxDate(), const bool alwaysAddIfPaysOnSettlement = false,
+                        const bool mandatory = true);
 
     /*! add a single fixing date \p fixingDate for a coupon based on a zero inflation index given by its ORE index name
         \p indexName with payment date \p payDate */
