@@ -82,6 +82,10 @@ class RequiredFixings {
 public:    
     class FixingDates {
     public:
+        FixingDates() = default;
+
+        FixingDates(const std::set<QuantLib::Date>& dates, const bool mandatory) { addDates(dates, mandatory); }
+
         void clear() { data_.clear(); }
 
         void addDate(const QuantLib::Date& date, const bool mandatory) {
