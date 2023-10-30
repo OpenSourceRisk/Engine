@@ -229,10 +229,14 @@ BOOST_DATA_TEST_CASE_F(F, testTradeTypes,
         // Check the retrieved fixings against the expected fixings
         auto expMap = exp.at(key);
         BOOST_CHECK_EQUAL(expMap.size(), m.size());
-        for (const auto& kv : expMap) {
-            BOOST_CHECK_MESSAGE(m.count(kv.first), "Could not find index " << kv.first << " in retrieved fixings");
-            BOOST_CHECK_EQUAL_COLLECTIONS(kv.second.begin(), kv.second.end(), m.at(kv.first).begin(),
-                                          m.at(kv.first).end());
+        for (const auto& [indexName, expectedDates] : expMap) {
+            BOOST_CHECK_MESSAGE(m.count(indexName), "Could not find index " <<indexName << " in retrieved fixings");
+            std::set<QuantLib::Date> actualDates;
+            for (const auto& [d, _] : m.at(indexName)) {
+                actualDates.insert(d);
+            }
+            BOOST_CHECK_EQUAL_COLLECTIONS(expectedDates.begin(), expectedDates.end(), actualDates.begin(),
+                                          actualDates.end());
         }
 
         // Trade should throw if we ask for NPV and have not added the fixings
@@ -254,9 +258,10 @@ BOOST_AUTO_TEST_CASE(testModifyInflationFixings) {
     // Original fixings
     map<string, RequiredFixings::FixingDates> fixings = {
         {"EUHICP", RequiredFixings::FixingDates({Date(1, Jan, 2019), Date(1, Dec, 2018), Date(1, Nov, 2018)}, true)},
-        {"USCPI",
-        RequiredFixings::FixingDates( {Date(1, Dec, 2018), Date(1, Nov, 2018), Date(22, Oct, 2018), Date(1, Feb, 2018), Date(1, Feb, 2016)},true)},
-        {"EUR-EURIBOR-3M", RequiredFixings::FixingDates(({Date(18, Dec, 2018), Date(13, Feb, 2019)}, true)}};
+        {"USCPI", RequiredFixings::FixingDates({Date(1, Dec, 2018), Date(1, Nov, 2018), Date(22, Oct, 2018),
+                                                Date(1, Feb, 2018), Date(1, Feb, 2016)},
+                                               true)},
+        {"EUR-EURIBOR-3M", RequiredFixings::FixingDates({Date(18, Dec, 2018), Date(13, Feb, 2019)}, true)}};
 
     // Expected fixings after inflation modification
     map<string, RequiredFixings::FixingDates> expectedFixings = {
@@ -271,10 +276,19 @@ BOOST_AUTO_TEST_CASE(testModifyInflationFixings) {
 
     // Compare contents of the output files
     BOOST_CHECK_EQUAL(expectedFixings.size(), fixings.size());
-    for (const auto& kv : expectedFixings) {
-        BOOST_CHECK_MESSAGE(fixings.count(kv.first), "Could not find index " << kv.first << " in retrieved fixings");
-        BOOST_CHECK_EQUAL_COLLECTIONS(kv.second.begin(), kv.second.end(), fixings.at(kv.first).begin(),
-                                      fixings.at(kv.first).end());
+    for (const auto& [indexname, expectedFixingDates] : expectedFixings) {
+        BOOST_CHECK_MESSAGE(fixings.count(indexname), "Could not find index " << indexname << " in retrieved fixings");
+        std::set<QuantLib::Date> expectedDates;
+        for (const auto& [d, _] : expectedFixingDates) {
+            expectedDates.insert(d);
+        }
+
+        std::set<QuantLib::Date> actualDates;
+        for (const auto& [d, _] : fixings[indexname]) {
+            actualDates.insert(d);
+        }
+        BOOST_CHECK_EQUAL_COLLECTIONS(expectedDates.begin(), expectedDates.end(), actualDates.begin(),
+                                      actualDates.end());
     }
 }
 
@@ -339,10 +353,19 @@ BOOST_AUTO_TEST_CASE(testAddMarketFixings) {
 
     // Check the results
     BOOST_CHECK_EQUAL(expectedFixings.size(), fixings.size());
-    for (const auto& [indexName, fixingDates] : expectedFixings) {
+    for (const auto& [indexName, expectedFixingDates] : expectedFixings) {
         BOOST_CHECK_MESSAGE(fixings.count(indexName), "Could not find index " << indexName << " in retrieved fixings");
-        BOOST_CHECK_EQUAL_COLLECTIONS(fixingDates.begin(), fixingDates.end(), fixings.at(indexName).begin(),
-                                      fixings.at(indexName).end());
+        std::set<QuantLib::Date> expectedDates;
+        for (const auto& [d, _] : expectedFixingDates) {
+            expectedDates.insert(d);
+        }
+
+        std::set<QuantLib::Date> actualDates;
+        for (const auto& [d, _] : fixings[indexName]) {
+            actualDates.insert(d);
+        }
+        BOOST_CHECK_EQUAL_COLLECTIONS(expectedDates.begin(), expectedDates.end(), actualDates.begin(),
+                                      actualDates.end());
     }
 }
 
@@ -377,7 +400,7 @@ BOOST_FIXTURE_TEST_CASE(testFxNotionalResettingSwapFirstCoupon, F) {
         BOOST_CHECK_MESSAGE(m.count(kv.first) == 1, "Could not find index " << kv.first << " in retrieved fixings");
         if (m.count(kv.first) == 1) {
             BOOST_CHECK_EQUAL(m.at(kv.first).size(), 1);
-            BOOST_CHECK_EQUAL(kv.second, *m.at(kv.first).begin());
+            BOOST_CHECK_EQUAL(kv.second, m.at(kv.first).begin()->first);
         }
     }
 
