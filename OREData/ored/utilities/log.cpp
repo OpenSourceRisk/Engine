@@ -336,8 +336,7 @@ void Log::removeAllLoggers() {
     independentLoggers_.clear();
 }
 
-string Log::source(const char* filename, int lineNo) {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+string Log::source(const char* filename, int lineNo) const {
     string filepath;
     if (rootPath_.empty()) {
         filepath = filename;
