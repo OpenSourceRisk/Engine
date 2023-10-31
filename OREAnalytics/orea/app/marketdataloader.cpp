@@ -212,8 +212,8 @@ void MarketDataLoader::populateFixings(
                             fixingErr = ", error: " + ore::data::to_string(e.what());
                         }
                     }
-                    WLOG(StructuredFixingWarningMessage(indexName, d, "Missing fixing",
-                                                        "Could not find required fixing ID."));
+                    StructuredFixingWarningMessage(indexName, d, "Missing fixing", "Could not find required fixing ID.")
+                        .log();
                 }
             }
         }
