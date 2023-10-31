@@ -115,7 +115,7 @@ void loadFixings(const map<string, RequiredFixings::FixingDates>& requestedFixin
     // Fetch the relevant fixings using the requestedFixings argument
     set<Fixing> relevantFixings;
     for (const auto& [indexName, fixingDates] : requestedFixings) {
-        for (const auto& [d, mandatory] : fixingDates.getAllDates()) {
+        for (const auto& [d, mandatory] : fixingDates) {
             relevantFixings.insert(fixingValues.at(make_pair(indexName, d)));
         }
     }

@@ -86,6 +86,8 @@ public:
 
         FixingDates(const std::set<QuantLib::Date>& dates, const bool mandatory) { addDates(dates, mandatory); }
 
+        FixingDates(const std::map<QuantLib::Date, bool>& dates) : data_(dates){}
+
         void clear() { data_.clear(); }
 
         void addDate(const QuantLib::Date& date, const bool mandatory) {
@@ -113,18 +115,20 @@ public:
             }
         }
 
-        std::set<std::pair<QuantLib::Date, bool>> getAllDates() const {
-            std::set<std::pair<QuantLib::Date, bool>> results;
+        FixingDates filterByDate(const QuantLib::Date& before) const {
+            std::map<QuantLib::Date, bool> results;
             for (const auto& [d, mandatory] : data_) {
-                results.insert({d,mandatory});
+                if (d < before) {
+                    results.insert({d,mandatory});
+                }
             }
-            return results;
+            return FixingDates(results);
         }
 
-        std::set<QuantLib::Date> getMandatoryDates() const {
+        std::set<QuantLib::Date> allDates(const QuantLib::Date before = QuantLib::Date::maxDate()) const {
             std::set<QuantLib::Date> results;
             for (const auto& [d, mandatory] : data_) {
-                if (mandatory) {
+                if (d < before) {
                     results.insert(d);
                 }
             }

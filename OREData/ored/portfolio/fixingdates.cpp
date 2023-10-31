@@ -325,7 +325,7 @@ RequiredFixings::fixingDatesIndices(const Date& settlementDate) const {
                 needsForecast(fixingDate, d, indexInterpolated, indexFrequency, indexAvailabilityLag, f.mandatory);
             result[indexName].addDates(fixingDates);
             // Add the previous year's date(s) also if any.
-            for (const auto& [d, mandatory] : fixingDates.getAllDates()) {
+            for (const auto& [d, mandatory] : fixingDates) {
                 Date previousYear = d - 1 * Years;
                 result[indexName].addDate(previousYear, mandatory);
             }
@@ -755,7 +755,7 @@ void amendInflationFixingDates(std::map<std::string, RequiredFixings::FixingDate
             // We have an inflation index
             RequiredFixings::FixingDates amendedFixingDates;
             Frequency f = infIndex->frequency();
-            for (const auto& [d, mandatory] : fixingDates.getAllDates()) {
+            for (const auto& [d, mandatory] : fixingDates) {
                 auto period = inflationPeriod(d, f);
                 if (d == period.first) {
                     // If the fixing date is the start of the inflation period, move it to the end.

@@ -126,7 +126,7 @@ void BondIndexBuilder::addRequiredFixings(RequiredFixings& requiredFixings, Leg 
         if (fixingMap.size() > 0) {
             std::map<std::string, std::set<Date>> indexFixings;
             for (const auto& [_, dates] : fixingMap) {
-                for (const auto& [d, mandatory] : dates.getAllDates()) {
+                for (const auto& [d, mandatory] : dates) {
                     auto tmp = fixings_.filteredFixingDates(d);
                     requiredFixings.addData(tmp);
                 }
