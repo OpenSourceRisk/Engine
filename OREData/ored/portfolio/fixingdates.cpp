@@ -304,7 +304,8 @@ RequiredFixings::fixingDatesIndices(const Date& settlementDate) const {
             RequiredFixings::FixingDates tmp;
             addZeroInflationDates(tmp, fixingDate, d, indexInterpolated, indexFrequency, indexAvailabilityLag,
                                   couponInterpolation, couponFrequency, f.mandatory);
-            result[indexName].addDates(tmp);
+            if (!tmp.empty())
+                result[indexName].addDates(tmp);
         }
     }
 
@@ -323,7 +324,8 @@ RequiredFixings::fixingDatesIndices(const Date& settlementDate) const {
         if (!dummyCf.hasOccurred(d) || (alwaysAddIfPaysOnSettlement && dummyCf.date() == d)) {
             auto fixingDates =
                 needsForecast(fixingDate, d, indexInterpolated, indexFrequency, indexAvailabilityLag, f.mandatory);
-            result[indexName].addDates(fixingDates);
+            if (!fixingDates.empty())
+                result[indexName].addDates(fixingDates);
             // Add the previous year's date(s) also if any.
             for (const auto& [d, mandatory] : fixingDates) {
                 Date previousYear = d - 1 * Years;
