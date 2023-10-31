@@ -221,7 +221,9 @@ map<string, RequiredFixings::FixingDates> Portfolio::fixings(const Date& settlem
     for (const auto& t : trades_) {
         auto fixings = t.second->fixings(settlementDate);
         for (const auto& [index, fixingDates] : fixings) {
-            result[index].addDates(fixingDates);
+            if (!fixingDates.empty()) {
+                result[index].addDates(fixingDates);
+            }
         }
     }
     return result;
