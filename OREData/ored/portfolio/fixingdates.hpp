@@ -124,16 +124,6 @@ public:
             }
             return FixingDates(results);
         }
-
-        std::set<QuantLib::Date> allDates(const QuantLib::Date before = QuantLib::Date::maxDate()) const {
-            std::set<QuantLib::Date> results;
-            for (const auto& [d, mandatory] : data_) {
-                if (d < before) {
-                    results.insert(d);
-                }
-            }
-            return results;
-        }
         
         //! Iterrator for range-base forloop
         std::map<QuantLib::Date, bool>::const_iterator begin() const {return data_.begin();}
