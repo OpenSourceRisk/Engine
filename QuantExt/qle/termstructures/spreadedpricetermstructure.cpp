@@ -65,7 +65,7 @@ void SpreadedPriceTermStructure::performCalculations() const {
         QL_REQUIRE(!priceSpreads_[i].empty(), "SpreadedPriceTermStructure: quote at index " << i << " is empty");
         data_[i] = priceSpreads_[i]->value();
     }
-     interpolation_->update();
+    interpolation_->update();
 }
 
 QuantLib::Real SpreadedPriceTermStructure::priceImpl(QuantLib::Time t) const {
