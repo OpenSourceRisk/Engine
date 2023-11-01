@@ -369,7 +369,6 @@
 #include <ored/utilities/currencyparser.hpp>
 #include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/fileio.hpp>
-#include <ored/utilities/filteredbufferedlogger.hpp>
 #include <ored/utilities/flowanalysis.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/indexparser.hpp>
