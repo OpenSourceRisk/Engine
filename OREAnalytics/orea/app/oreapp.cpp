@@ -156,10 +156,7 @@ boost::shared_ptr<AggregationScenarioData> OREApp::getMarketCube(std::string cub
 }
 
 std::vector<std::string> OREApp::getErrors() {
-    std::vector<std::string> errors;
-    while (fbLogger_ && fbLogger_->logger->hasNext())
-        errors.push_back(fbLogger_->logger->next());
-    return errors;
+    return structuredLogger_->messages();
 }
 
 Real OREApp::getRunTime() {
@@ -383,6 +380,7 @@ void OREApp::run() {
     runTimer_.start();
     
     try {
+        structuredLogger_->clear();
         analytics();
     } catch (std::exception& e) {
         StructuredAnalyticsWarningMessage("OREApp::run()", "Error", e.what()).log();
@@ -403,6 +401,7 @@ void OREApp::run(const std::vector<std::string>& marketData,
 
     try {
         LOG("ORE analytics starting");
+        structuredLogger_->clear();
         MEM_LOG_USING_LEVEL(ORE_WARNING)
 
         QL_REQUIRE(inputs_, "ORE input parameters not set");
@@ -1411,8 +1410,6 @@ void OREApp::setupLog(const std::string& path, const std::string& file, Size mas
     QL_REQUIRE(boost::filesystem::is_directory(p), "output path '" << path << "' is not a directory.");
 
     Log::instance().registerLogger(boost::make_shared<FileLogger>(file));
-    // Report StructuredErrorMessages with level WARNING, ERROR, CRITICAL, ALERT
-    fbLogger_ = boost::make_shared<FilteredBufferedLoggerGuard>();
     boost::filesystem::path oreRootPath =
         logRootPath.empty() ? boost::filesystem::path(__FILE__).parent_path().parent_path().parent_path().parent_path()
                             : logRootPath;
@@ -1428,10 +1425,10 @@ void OREApp::setupLog(const std::string& path, const std::string& file, Size mas
     Log::instance().registerIndependentLogger(progressLogger);
 
     // Structured message logger
-    auto structuredLogger = boost::make_shared<StructuredLogger>();
+    structuredLogger_ = boost::make_shared<StructuredLogger>();
     string structuredLogFilePath = structuredLogFile.empty() ? path + "/log_structured.json" : structuredLogFile;
-    structuredLogger->setFileLog(structuredLogFilePath, path, structuredLogRotationSize);
-    Log::instance().registerIndependentLogger(structuredLogger);
+    structuredLogger_->setFileLog(structuredLogFilePath, path, structuredLogRotationSize);
+    Log::instance().registerIndependentLogger(structuredLogger_);
 
     // Event message logger
     auto eventLogger = boost::make_shared<EventLogger>();
