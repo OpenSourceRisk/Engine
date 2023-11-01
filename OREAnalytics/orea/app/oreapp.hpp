@@ -27,8 +27,6 @@
 #include <orea/app/parameters.hpp>
 #include <orea/app/analyticsmanager.hpp>
 
-#include <ored/utilities/filteredbufferedlogger.hpp>
-
 #include <boost/make_shared.hpp>
 #include <boost/timer/timer.hpp>
 
@@ -102,7 +100,7 @@ protected:
     boost::shared_ptr<OutputParameters> outputs_;
 
     boost::shared_ptr<AnalyticsManager> analyticsManager_;
-    boost::shared_ptr<FilteredBufferedLoggerGuard> fbLogger_;
+    boost::shared_ptr<StructuredLogger> structuredLogger_;
     boost::timer::cpu_timer runTimer_;
 };
 
