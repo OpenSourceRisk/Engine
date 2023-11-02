@@ -657,8 +657,10 @@ void FixingDateGetter::visit(EquityMarginCoupon& c) {
 void FixingDateGetter::visit(CommodityCashFlow& c) {
     auto indices = c.indices();
     for (const auto& kv : indices) {
+        // todays fixing is not mandatory, we will fallback to estimate it if its not there.
+        bool isTodaysFixing = Settings::instance().evaluationDate() == kv.first;
         // see above, the ql and ORE index names are identical
-        requiredFixings_.addFixingDate(kv.first, kv.second->name(), c.date());
+        requiredFixings_.addFixingDate(kv.first, kv.second->name(), c.date(), false, !isTodaysFixing);
         // if the pricing date is > future expiry, add the future expiry itself as well
         if (auto d = kv.second->expiryDate(); d != Date() && d < kv.first) {
             requiredFixings_.addFixingDate(d, kv.second->name(), d);
