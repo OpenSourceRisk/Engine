@@ -18,6 +18,7 @@
         "QL_ENABLE_SESSIONS": true,
         "ORE_BUILD_DOC": false
       },
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "architecture": {
         "value": "x64",
         "strategy": "external"
@@ -46,8 +47,10 @@
         "MSVC_LINK_DYNAMIC_RUNTIME": true,
         "MSVC_WHOLE_PROGRAM_OPTIMIZATION": true,
         "QL_ENABLE_SESSIONS": true,
-        "ORE_BUILD_DOC": false
+        "ORE_BUILD_DOC": false,
+        "BOOST_USE_WINAPI_VERSION": "0x0601"
       },
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "architecture": {
         "value": "x64",
         "strategy": "external"
@@ -109,7 +112,9 @@
       "architecture": {
         "value": "x64",
         "strategy": "set"
+
       },
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "vendor": {
         "microsoft.com/VisualStudioSettings/CMake/1.0": {
           "intelliSenseMode": "windows-msvc-x64",
@@ -134,6 +139,7 @@
         "QL_ENABLE_SESSIONS": true,
         "ORE_BUILD_DOC": false
       },
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "architecture": {
         "value": "x64",
         "strategy": "set"
