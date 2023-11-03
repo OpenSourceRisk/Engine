@@ -64,15 +64,24 @@ void CommodityPosition::build(const boost::shared_ptr<ore::data::EngineFactory>&
             auto convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(p.second);
             ConventionsBasedFutureExpiry feCalc(*convention);
             Date expiry = Settings::instance().evaluationDate();
-            if (u.deliveryRollDays() != Null<Size>()) {
-                auto cal = u.deliveryRollCalendar().empty() ? convention->calendar() : parseCalendar(u.deliveryRollCalendar());
-                expiry = cal.advance(expiry, u.deliveryRollDays() * Days, convention->businessDayConvention());
-            }
-            
             Size nOffset = u.futureMonthOffset() == Null<Size>() ? 0 : u.futureMonthOffset();
-
-            expiry = feCalc.nextExpiry(true, expiry, nOffset);
-            
+            if (u.futureExpiryDate().empty()) {
+                if (u.deliveryRollDays() != Null<Size>()) {
+                    auto cal = u.deliveryRollCalendar().empty() ? convention->calendar() : parseCalendar(u.deliveryRollCalendar());
+                    expiry = cal.advance(expiry, u.deliveryRollDays() * Days, convention->businessDayConvention());
+                }
+                
+                expiry = feCalc.nextExpiry(true, expiry, nOffset);
+            } else if (u.futureExpiryDate().size() == 7) {
+                // parse MONTHYYYY (e.g. NOV2023) format into date
+                auto month = parseMonth(u.futureExpiryDate().substr(0, 3));
+                auto year = parseInteger(u.futureExpiryDate().substr(3, 4));
+                Date contractDate(1, month, year);
+                expiry = feCalc.expiryDate(contractDate, nOffset, false);
+            } else {
+                Date contractDate = parseDate(u.futureExpiryDate());
+                expiry = feCalc.expiryDate(contractDate, nOffset, false);
+            }
             index = index->clone(expiry, pts);
         }
         indices_.push_back(index);
