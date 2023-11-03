@@ -313,6 +313,8 @@ scripting/models/blackscholescg.cpp
 scripting/models/blackscholescgbase.cpp
 scripting/models/fdblackscholesbase.cpp
 scripting/models/gaussiancam.cpp
+scripting/models/gaussiancamcg.cpp
+scripting/models/lgmcg.cpp
 scripting/models/localvol.cpp
 scripting/models/modelcgimpl.cpp
 scripting/models/modelimpl.cpp
@@ -335,7 +337,6 @@ utilities/currencyhedgedequityindexdecomposition.cpp
 utilities/currencyparser.cpp
 utilities/dategrid.cpp
 utilities/fileio.cpp
-utilities/filteredbufferedlogger.cpp
 utilities/flowanalysis.cpp
 utilities/indexnametranslator.cpp
 utilities/indexparser.cpp
@@ -684,6 +685,7 @@ scripting/engines/scriptedinstrumentpricingengine.hpp
 scripting/engines/scriptedinstrumentpricingenginecg.hpp
 scripting/grammar.hpp
 scripting/models/amcmodel.hpp
+scripting/models/amcmodelcg.hpp
 scripting/models/blackscholes.hpp
 scripting/models/blackscholesbase.hpp
 scripting/models/blackscholescg.hpp
@@ -691,6 +693,8 @@ scripting/models/blackscholescgbase.hpp
 scripting/models/dummymodel.hpp
 scripting/models/fdblackscholesbase.hpp
 scripting/models/gaussiancam.hpp
+scripting/models/gaussiancamcg.hpp
+scripting/models/lgmcg.hpp
 scripting/models/localvol.hpp
 scripting/models/model.hpp
 scripting/models/modelcg.hpp
@@ -716,7 +720,6 @@ utilities/currencyhedgedequityindexdecomposition.hpp
 utilities/currencyparser.hpp
 utilities/dategrid.hpp
 utilities/fileio.hpp
-utilities/filteredbufferedlogger.hpp
 utilities/flowanalysis.hpp
 utilities/indexnametranslator.hpp
 utilities/indexparser.hpp

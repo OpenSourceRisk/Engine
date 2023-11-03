@@ -47,13 +47,15 @@
 #include <ql/math/matrix.hpp>
 #include <ql/models/model.hpp>
 
+#include <boost/enable_shared_from_this.hpp>
+
 namespace QuantExt {
 using namespace QuantLib;
 
 //! Cross Asset Model
 /*! \ingroup crossassetmodel
  */
-class CrossAssetModel : public LinkableCalibratedModel {
+class CrossAssetModel : public LinkableCalibratedModel, public boost::enable_shared_from_this<CrossAssetModel> {
 public:
     enum class AssetType : Size { IR = 0, FX = 1, INF = 2, CR = 3, EQ = 4, COM = 5, CrState = 6 };
     enum class ModelType { LGM1F, HW, BS, DK, CIRPP, JY, GAB, GENERIC };
@@ -87,7 +89,7 @@ public:
                     const Discretization discretization = Discretization::Exact);
 
     /*! returns the state process with a given discretization */
-    const boost::shared_ptr<StochasticProcess> stateProcess() const;
+    boost::shared_ptr<CrossAssetStateProcess> stateProcess() const;
 
     /*! total dimension of model (sum of number of state variables) */
     Size dimension() const;
@@ -252,10 +254,10 @@ public:
     Size pIdx(const AssetType t, const Size i, const Size offset = 0) const;
 
     /*! correlation between two components */
-    const Real& correlation(const AssetType s, const Size i, const AssetType t, const Size j, const Size iOffset = 0,
-                            const Size jOffset = 0) const;
+    Real correlation(const AssetType s, const Size i, const AssetType t, const Size j, const Size iOffset = 0,
+                     const Size jOffset = 0) const;
     /*! set correlation */
-    void correlation(const AssetType s, const Size i, const AssetType t, const Size j, const Real value,
+    void setCorrelation(const AssetType s, const Size i, const AssetType t, const Size j, const Real value,
                      const Size iOffset = 0, const Size jOffset = 0);
 
     /*! get discretization */
@@ -442,7 +444,6 @@ protected:
     virtual void finalizeArguments();
     virtual void checkModelConsistency() const;
     virtual void initDefaultIntegrator();
-    virtual void initStateProcess();
 
     /* helper function for infdkI, crlgm1fS */
     Real infV(const Size idx, const Size ccy, const Time t, const Time T) const;
@@ -490,7 +491,7 @@ protected:
     IrModel::Measure measure_;
     Discretization discretization_;
     mutable boost::shared_ptr<Integrator> integrator_;
-    boost::shared_ptr<CrossAssetStateProcess> stateProcess_;
+    mutable boost::shared_ptr<CrossAssetStateProcess> stateProcess_;
 
     /* calibration constraints */
 
@@ -507,8 +508,6 @@ QuantLib::Handle<QuantLib::ZeroInflationTermStructure>
 inflationTermStructure(const boost::shared_ptr<CrossAssetModel>& model, QuantLib::Size index);
 
 // inline
-
-inline const boost::shared_ptr<StochasticProcess> CrossAssetModel::stateProcess() const { return stateProcess_; }
 
 inline Size CrossAssetModel::dimension() const { return totalDimension_; }
 
