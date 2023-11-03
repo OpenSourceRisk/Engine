@@ -684,7 +684,7 @@ void FixingDateGetter::visit(CommodityCashFlow& c) {
         // todays fixing is not mandatory, we will fallback to estimate it if its not there.
         bool isTodaysFixing = Settings::instance().evaluationDate() == pricingDate;
         if (auto powerIndex = boost::dynamic_pointer_cast<OffPeakPowerIndex>(index)) {
-            // see above, the ql and ORE index names are identical
+            // if powerindex, we need the offpeak index fixing and the peak index fixings
             requiredFixings_.addFixingDate(pricingDate, powerIndex->offPeakIndex()->name(), c.date(), false,
                                            !isTodaysFixing);
             bool isOffPeakDay = powerIndex->peakCalendar().isHoliday(pricingDate);
