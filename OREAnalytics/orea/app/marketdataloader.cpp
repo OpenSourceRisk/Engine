@@ -197,7 +197,7 @@ void MarketDataLoader::populateFixings(
         // apply all fixings now
         applyFixings(loader_->loadFixings());
 
-        // check and warn any missing fixings - only warn for portfolio fixings
+        // check and warn any missing fixings - only warn for mandatory fixings
         for (const auto& [indexName, fixingDates] : fixings_) {
             for (const auto& [d, mandatory] :fixingDates) {
                 if (mandatory && !loader_->hasFixing(indexName, d)) {

@@ -160,6 +160,7 @@ public:
         QuantLib::Frequency couponFrequency;
         friend bool operator<(const ZeroInflationFixingEntry& lhs, const ZeroInflationFixingEntry& rhs);
     };
+
     /*! Gives back the dates for which fixings will be required to price the trade assuming a given \p settlementDate.
         If the \p settlementDate is not provided or is set equal to \c QuantLib::Date(), the settlement date in the
         implementation is assumed to be the \c Settings::instance().evaluationDate().
@@ -228,6 +229,10 @@ public:
       given settlement date any more. Needed by total return swaps on bonds for example, where a cashflow in a bond with
       past payment date can still be relevant for the payment of the current return period. */
     void unsetPayDates();
+
+
+    /*! Create a copy and set mandatory flag to mandatory for all fixing entries */
+    RequiredFixings makeCopyWithMandatoryOverride(bool mandatory);
 
     RequiredFixings filteredFixingDates(const QuantLib::Date& settlementDate = QuantLib::Date());
 

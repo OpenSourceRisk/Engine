@@ -208,6 +208,30 @@ void RequiredFixings::unsetPayDates() {
     yoyInflationFixingDates_ = newYoYInflationFixingDates;
 }
 
+RequiredFixings RequiredFixings::makeCopyWithMandatoryOverride(bool mandatory) {
+    RequiredFixings result(*this);
+    // we can't modify the elements of a set directly, need to make a copy and reassign
+    std::set<FixingEntry> newFixingDates;
+    std::set<ZeroInflationFixingEntry> newZeroInflationFixingDates;
+    std::set<InflationFixingEntry> newYoYInflationFixingDates;
+    for (auto f : result.fixingDates_) {
+        f.mandatory = mandatory;
+        newFixingDates.insert(f);
+    }
+    for (auto f : result.zeroInflationFixingDates_) {
+        f.mandatory = mandatory;
+        newZeroInflationFixingDates.insert(f);
+    }
+    for (auto f : yoyInflationFixingDates_) {
+        f.mandatory = mandatory;
+        newYoYInflationFixingDates.insert(f);
+    }
+    result.fixingDates_ = newFixingDates;
+    result.zeroInflationFixingDates_ = newZeroInflationFixingDates;
+    result.yoyInflationFixingDates_ = newYoYInflationFixingDates;
+    return result;
+}
+
 RequiredFixings RequiredFixings::filteredFixingDates(const Date& settlementDate) {
     RequiredFixings rf;
     // If settlement date is an empty date, update to evaluation date.
@@ -656,17 +680,35 @@ void FixingDateGetter::visit(EquityMarginCoupon& c) {
 
 void FixingDateGetter::visit(CommodityCashFlow& c) {
     auto indices = c.indices();
-    for (const auto& kv : indices) {
+    for (const auto& [pricingDate, index] : indices) {
         // todays fixing is not mandatory, we will fallback to estimate it if its not there.
-        bool isTodaysFixing = Settings::instance().evaluationDate() == kv.first;
-        // see above, the ql and ORE index names are identical
-        requiredFixings_.addFixingDate(kv.first, kv.second->name(), c.date(), false, !isTodaysFixing);
-        // if the pricing date is > future expiry, add the future expiry itself as well
-        if (auto d = kv.second->expiryDate(); d != Date() && d < kv.first) {
-            requiredFixings_.addFixingDate(d, kv.second->name(), d);
-        }
-        if (auto baseFutureIndex = boost::dynamic_pointer_cast<CommodityBasisFutureIndex>(kv.second)) {
-            baseFutureIndex->baseCashflow(c.date())->accept(*this);
+        bool isTodaysFixing = Settings::instance().evaluationDate() == pricingDate;
+        if (auto powerIndex = boost::dynamic_pointer_cast<OffPeakPowerIndex>(index)) {
+            // see above, the ql and ORE index names are identical
+            requiredFixings_.addFixingDate(pricingDate, powerIndex->offPeakIndex()->name(), c.date(), false,
+                                           !isTodaysFixing);
+            bool isOffPeakDay = powerIndex->peakCalendar().isHoliday(pricingDate);
+            requiredFixings_.addFixingDate(pricingDate, powerIndex->peakIndex()->name(), c.date(), false,
+                                           isOffPeakDay && !isTodaysFixing);
+            // if the pricing date is > future expiry, add the future expiry itself as well
+            if (auto d = index->expiryDate(); d != Date() && d < pricingDate) {
+                requiredFixings_.addFixingDate(d, powerIndex->offPeakIndex()->name(), c.date(), false, !isTodaysFixing);
+                requiredFixings_.addFixingDate(d, powerIndex->peakIndex()->name(), c.date(), false,
+                                               isOffPeakDay && !isTodaysFixing);
+            }
+        } else {
+            requiredFixings_.addFixingDate(pricingDate, index->name(), c.date(), false, !isTodaysFixing);
+            // if the pricing date is > future expiry, add the future expiry itself as well
+            if (auto d = index->expiryDate(); d != Date() && d < pricingDate) {
+                requiredFixings_.addFixingDate(d, index->name(), c.date(), false, !isTodaysFixing);
+            }
+        } 
+        if (auto baseFutureIndex = boost::dynamic_pointer_cast<CommodityBasisFutureIndex>(index)) {
+            RequiredFixings tmpFixings;
+            FixingDateGetter baseCashflowGetter(tmpFixings);
+            baseFutureIndex->baseCashflow(c.date())->accept(baseCashflowGetter);
+            auto optionalFixings = tmpFixings.makeCopyWithMandatoryOverride(false);
+            requiredFixings_.addData(optionalFixings);
         }
     }
 }
