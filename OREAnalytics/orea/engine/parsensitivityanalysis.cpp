@@ -63,6 +63,7 @@
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
 #include <ql/pricingengines/credit/midpointcdsengine.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
+#include <ql/quotes/derivedquote.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/termstructures/yield/oisratehelper.hpp>
 #include <qle/instruments/fixedbmaswap.hpp>
@@ -1695,6 +1696,10 @@ ParSensitivityAnalysis::makeCrossCcyBasisSwap(const boost::shared_ptr<Market>& m
     boost::shared_ptr<FxIndex> fxIndex =
         boost::make_shared<FxIndex>("dummy", conv->settlementDays(), currency, baseCurrency, conv->settlementCalendar(),
                                     fxSpot, discountCurve, baseDiscountCurve);
+    auto m = [](Real x) { return 1.0 / x; };
+    boost::shared_ptr<FxIndex> reversedFxIndex = boost::make_shared<FxIndex>(
+        "dummyRev", conv->settlementDays(), baseCurrency, currency, conv->settlementCalendar(),
+        Handle<Quote>(boost::make_shared<DerivedQuote<decltype(m)>>(fxSpot, m)), baseDiscountCurve, discountCurve);
 
     // LOG("Make Cross Ccy Swap for base ccy " << baseCcy << " currency " << ccy);
     // Set up first leg as spread leg, second as flat leg
@@ -1708,7 +1713,7 @@ ParSensitivityAnalysis::makeCrossCcyBasisSwap(const boost::shared_ptr<Market>& m
 	    DLOG("create resettable xccy par instrument (1), convention " << conv->id());
 	    helper = boost::make_shared<CrossCcyBasisMtMResetSwap>(
 		baseNotional, baseCurrency, baseSchedule, *baseIndex, 0.0, // spread index leg => use fairForeignSpread
-		currency, schedule, *index, 0.0, fxIndex, true,            // resettable flat index leg
+		currency, schedule, *index, 0.0, reversedFxIndex, true,    // resettable flat index leg
 		conv->paymentLag(), conv->flatPaymentLag(),
 		conv->includeSpread(), conv->lookback(), conv->fixingDays(), conv->rateCutoff(), conv->isAveraged(),
 		conv->flatIncludeSpread(), conv->flatLookback(), conv->flatFixingDays(), conv->flatRateCutoff(), conv->flatIsAveraged(),
@@ -1752,7 +1757,7 @@ ParSensitivityAnalysis::makeCrossCcyBasisSwap(const boost::shared_ptr<Market>& m
 	    // second leg is resettable, so the second leg is the non-base non-flat spread leg  
 	    helper = boost::make_shared<CrossCcyBasisMtMResetSwap>(
 		baseNotional, baseCurrency, baseSchedule, *baseIndex, 0.0, // flat index leg
-		currency, schedule, *index, 0.0, fxIndex, true,            // resettable spread index leg => use fairDomesticSpread
+		currency, schedule, *index, 0.0, reversedFxIndex, true,    // resettable spread index leg => use fairDomesticSpread
 		conv->flatPaymentLag(), conv->paymentLag(), 
 		conv->flatIncludeSpread(), conv->flatLookback(), conv->flatFixingDays(), conv->flatRateCutoff(), conv->flatIsAveraged(),
 		conv->includeSpread(), conv->lookback(), conv->fixingDays(), conv->rateCutoff(), conv->isAveraged(),
