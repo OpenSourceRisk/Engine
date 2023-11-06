@@ -140,8 +140,8 @@ public:
     QuantLib::Size futureMonthOffset() const { return futureMonthOffset_; }
     QuantLib::Size deliveryRollDays() const { return deliveryRollDays_; }
     const std::string& deliveryRollCalendar() const { return deliveryRollCalendar_; }
-    const std::string& futureExpiryDate() const { return futureExpiryDate_; }
-
+    const std::string& futureContractMonth() const { return futureContractMonth_; }
+    const std::string& futureExpiryDate() const { return futureExpiryDate_;  }
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
@@ -153,6 +153,7 @@ private:
     QuantLib::Size futureMonthOffset_ = QuantLib::Null<QuantLib::Size>();
     QuantLib::Size deliveryRollDays_ = QuantLib::Null<QuantLib::Size>();
     std::string deliveryRollCalendar_;
+    std::string futureContractMonth_;
     std::string futureExpiryDate_;
 };
 

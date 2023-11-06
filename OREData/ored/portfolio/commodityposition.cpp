@@ -65,22 +65,24 @@ void CommodityPosition::build(const boost::shared_ptr<ore::data::EngineFactory>&
             ConventionsBasedFutureExpiry feCalc(*convention);
             Date expiry = Settings::instance().evaluationDate();
             Size nOffset = u.futureMonthOffset() == Null<Size>() ? 0 : u.futureMonthOffset();
-            if (u.futureExpiryDate().empty()) {
-                if (u.deliveryRollDays() != Null<Size>()) {
-                    auto cal = u.deliveryRollCalendar().empty() ? convention->calendar() : parseCalendar(u.deliveryRollCalendar());
-                    expiry = cal.advance(expiry, u.deliveryRollDays() * Days, convention->businessDayConvention());
-                }
-                
-                expiry = feCalc.nextExpiry(true, expiry, nOffset);
-            } else if (u.futureExpiryDate().size() == 7) {
-                // parse MONTHYYYY (e.g. NOV2023) format into date
-                auto month = parseMonth(u.futureExpiryDate().substr(0, 3));
-                auto year = parseInteger(u.futureExpiryDate().substr(3, 4));
+            if (!u.futureContractMonth().empty()) {
+                QL_REQUIRE(u.futureContractMonth().size() == 7,
+                           "FutureContractMonth has invalid format, please use Mon-YYYY, where 'Mon' is a 3 letter "
+                           "month abbreviation.");
+                auto month = parseMonth(u.futureContractMonth().substr(0, 3));
+                auto year = parseInteger(u.futureContractMonth().substr(3, 4));
                 Date contractDate(1, month, year);
                 expiry = feCalc.expiryDate(contractDate, nOffset, false);
+            } else if (!u.futureExpiryDate().empty()) {
+                expiry = parseDate(u.futureExpiryDate());
+                expiry = feCalc.nextExpiry(true,expiry, nOffset, false);
             } else {
-                Date contractDate = parseDate(u.futureExpiryDate());
-                expiry = feCalc.expiryDate(contractDate, nOffset, false);
+                if (u.deliveryRollDays() != Null<Size>()) {
+                    auto cal = u.deliveryRollCalendar().empty() ? convention->calendar()
+                                                                : parseCalendar(u.deliveryRollCalendar());
+                    expiry = cal.advance(expiry, u.deliveryRollDays() * Days, convention->businessDayConvention());
+                }
+                expiry = feCalc.nextExpiry(true, expiry, nOffset);
             }
             index = index->clone(expiry, pts);
         }
