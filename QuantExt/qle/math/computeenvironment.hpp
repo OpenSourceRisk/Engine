@@ -23,7 +23,7 @@
 #pragma once
 
 #include <ql/patterns/singleton.hpp>
-
+#include <boost/thread/shared_mutex.hpp>
 #include <cstdint>
 #include <set>
 
