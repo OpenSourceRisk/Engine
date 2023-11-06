@@ -948,8 +948,14 @@ void YieldCurve::buildDiscountCurve() {
         }
     }
 
+    // Some logging and checks
     QL_REQUIRE(data.size() > 0, "No market data found for curve spec " << curveSpec_.name() << " with as of date "
                                                                        << io::iso_date(asofDate_));
+    if (!wildcard) {
+        QL_REQUIRE(data.size() == quotes.size(), "Found " << data.size() << " quotes, but "
+                                                          << quotes.size()
+                                                          << " quotes given in config " << curveConfig_->curveID());
+    }
 
     if (data.begin()->first > asofDate_) {
         DLOG("Insert discount curve point at time zero for " << curveSpec_.name());
