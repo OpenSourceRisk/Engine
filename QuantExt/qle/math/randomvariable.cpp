@@ -30,6 +30,7 @@
 #include <boost/accumulators/statistics/variance.hpp>
 
 #include <iostream>
+#include <map>
 
 // if defined, RandomVariableStats are updated (this might impact perfomance!), default is undefined
 //#define ENABLE_RANDOMVARIABLE_STATS
