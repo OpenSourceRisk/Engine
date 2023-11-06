@@ -892,34 +892,63 @@ void YieldCurve::buildDiscountCurve() {
     boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
     boost::shared_ptr<Convention> convention;
 
-    for (Size i = 0; i < discountQuoteIDs.size(); ++i) {
-        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(discountQuoteIDs[i], asofDate_);
+    vector<string> quotes;
+    quotes.reserve(discountQuoteIDs.size()); // Reserve space for efficiency
+
+    std::transform(discountQuoteIDs.begin(), discountQuoteIDs.end(), std::back_inserter(quotes),
+                   [](const std::pair<string, bool>& pair) {
+                       return pair.first; // Extract only the quote part
+                   });
+
+    auto wildcard = getUniqueWildcard(quotes);
+
+    std::set<boost::shared_ptr<MarketDatum>> marketData;
+    if (wildcard) {
+        marketData = loader_.get(*wildcard, asofDate_);
+    } else {
+        std::ostringstream ss;
+        ss << MarketDatum::InstrumentType::DISCOUNT << "/" << MarketDatum::QuoteType::RATE << "/" << currency_ << "/*";
+        // valuta / curve namn
+        Wildcard w(ss.str());
+        marketData = loader_.get(w, asofDate_);
+    }
+
+    for (const auto& marketQuote : marketData) {
         if (marketQuote) {
             QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::DISCOUNT,
                        "Market quote not of type Discount.");
             boost::shared_ptr<DiscountQuote> discountQuote = boost::dynamic_pointer_cast<DiscountQuote>(marketQuote);
 
-            if(discountQuote->date() != Date()){
+            // filtering
+            if (!wildcard) {
+                vector<string>::const_iterator it = find(quotes.begin(), quotes.end(), discountQuote->name());
+                if (it == quotes.end())
+                    continue;
+            }
+
+
+            if (discountQuote->date() != Date()) {
 
                 data[discountQuote->date()] = discountQuote->quote()->value();
 
-            } else if (discountQuote->tenor() != Period()){
+            } else if (discountQuote->tenor() != Period()) {
 
-                if(!convention)
+                if (!convention)
                     convention = conventions->get(discountCurveSegment->conventionsID());
-                boost::shared_ptr<ZeroRateConvention> zeroConvention = boost::dynamic_pointer_cast<ZeroRateConvention>(convention);
+                boost::shared_ptr<ZeroRateConvention> zeroConvention =
+                    boost::dynamic_pointer_cast<ZeroRateConvention>(convention);
                 QL_REQUIRE(zeroConvention, "could not cast to ZeroRateConvention");
 
                 Calendar cal = zeroConvention->tenorCalendar();
                 BusinessDayConvention rollConvention = zeroConvention->rollConvention();
                 Date date = cal.adjust(cal.adjust(asofDate_, rollConvention) + discountQuote->tenor(), rollConvention);
-                DLOG("YieldCurve::buildDiscountCurve - tenor " << discountQuote->tenor() << " to date " << io::iso_date(date));
+                DLOG("YieldCurve::buildDiscountCurve - tenor " << discountQuote->tenor() << " to date "
+                                                               << io::iso_date(date));
                 data[date] = discountQuote->quote()->value();
 
             } else {
                 QL_FAIL("YieldCurve::buildDiscountCurve - neither date nor tenor recognised");
             }
-
         }
     }
 

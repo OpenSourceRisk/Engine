@@ -246,6 +246,70 @@ BOOST_AUTO_TEST_CASE(testBootstrapAndFixings) {
     BOOST_CHECK_NO_THROW(YieldCurve jpyYieldCurve(asof, spec, curveConfigs, loader));
 }
 
+BOOST_AUTO_TEST_CASE(testBootstrapAndFixingsDirectYc) {
+
+    Date asof(13, October, 2023);
+    Settings::instance().evaluationDate() = asof;
+
+    YieldCurveSpec spec("EUR", "EUR-CURVE");
+
+    CurveConfigurations curveConfigs;
+
+    vector<string> quotes;
+    quotes.emplace_back("DISCOUNT/RATE/EUR/EUR-CURVE_2023-10-13/2023-10-14");
+    quotes.emplace_back("DISCOUNT/RATE/EUR/EUR-CURVE_2023-10-13/2023-10-15");
+
+    vector<boost::shared_ptr<YieldCurveSegment>> segments{boost::make_shared<DirectYieldCurveSegment>(
+        "Discount", "", quotes)};
+
+    boost::shared_ptr<YieldCurveConfig> yCConfig =
+        boost::make_shared<YieldCurveConfig>("EUR-CURVE", "ORE YieldCurve built from EUR-CURVE_2023-10-13", "EUR", "", segments);
+    curveConfigs.add(CurveSpec::CurveType::Yield, "EUR-CURVE", yCConfig);
+
+    vector<string> data{"2023-10-12 DISCOUNT/RATE/EUR/STINA-CURVE_2023-10-12/2023-10-13 0.77",
+                        "2023-10-12 DISCOUNT/RATE/EUR/EUR-CURVE_2023-10-12/2023-10-12 0.88",
+                        "2023-10-13 DISCOUNT/RATE/EUR/EUR-CURVE_2023-10-13/2023-10-13 1.0",
+                        "2023-10-13 DISCOUNT/RATE/EUR/EUR-CURVE_2023-10-13/2023-10-14 0.99",
+                        "2023-10-13 DISCOUNT/RATE/EUR/EUR-CURVE_2023-10-13/2023-10-15 0.98",
+                        "2023-10-13 COMMODITY_FWD/PRICE/GOLD/USD/2023-10-31 1158.8",
+                        "2023-10-13 COMMODITY_FWD/PRICE/GOLD/USD/2023-11-01 1160.9",
+                        "2023-10-13 COMMODITY_FWD/PRICE/GOLD/USD/2023-11-02 1163.4"};
+    MarketDataLoader loader(data);
+
+    BOOST_CHECK_NO_THROW(YieldCurve yieldCurve(asof, spec, curveConfigs, loader));
+}
+
+BOOST_AUTO_TEST_CASE(testBootstrapAndFixingsDirectYcWildChar) {
+
+    Date asof(13, October, 2023);
+    Settings::instance().evaluationDate() = asof;
+
+    YieldCurveSpec spec("EUR", "EUR-CURVE");
+
+    CurveConfigurations curveConfigs;
+
+    vector<string> quotes;
+    quotes.emplace_back("DISCOUNT/RATE/EUR/EUR-CURVE_2023-10-13/*");
+
+    vector<boost::shared_ptr<YieldCurveSegment>> segments{
+        boost::make_shared<DirectYieldCurveSegment>("Discount", "", quotes)};
+
+    boost::shared_ptr<YieldCurveConfig> yCConfig = boost::make_shared<YieldCurveConfig>(
+        "EUR-CURVE", "ORE YieldCurve built from EUR-CURVE_2023-10-13", "EUR", "", segments);
+    curveConfigs.add(CurveSpec::CurveType::Yield, "EUR-CURVE", yCConfig);
+
+    vector<string> data{"2023-10-13 DISCOUNT/RATE/EUR/EUR-CURVE_2023-10-13/2023-10-13 1.0",
+                        "2023-10-13 DISCOUNT/RATE/EUR/EUR-CURVE_2023-10-13/2023-10-14 0.99",
+                        "2023-10-13 DISCOUNT/RATE/EUR/EUR-CURVE_2023-10-13/2023-10-15 0.98",
+                        "2023-10-13 EQUITY_FWD/PRICE/SP5/USD/1Y 1500.00",
+                        "2023-10-13 EQUITY_FWD/PRICE/SP5/USD/20231014 1500.00",
+                        "2023-10-13 EQUITY_DIVIDEND/RATE/SP5/USD/20231015 0.00",
+                        "2023-10-13 EQUITY_DIVIDEND/RATE/SP5/USD/2Y 0.00"};
+    MarketDataLoader loader(data);
+
+    BOOST_CHECK_NO_THROW(YieldCurve yieldCurve(asof, spec, curveConfigs, loader));
+}
+
 // Test ARS-IN-USD failures using the old QuantLib::IterativeBootstrap parameters
 BOOST_DATA_TEST_CASE(testBootstrapARSinUSDFailures, bdata::make(curveConfigFiles), curveConfigFile) {
 
