@@ -267,6 +267,8 @@ BOOST_AUTO_TEST_CASE(testBuildDiscountCurveDirectSegment) {
     curveConfigs.add(CurveSpec::CurveType::Yield, "EUR-CURVE", yCConfig);
 
     vector<string> data{"2023-10-12 DISCOUNT/RATE/EUR/STINA-CURVE/2023-10-13 0.77",
+                        "2023-10-12 DISCOUNT/RATE/EUR/EUR-ANOTHER-CURVE/2023-10-13 0.95",
+                        "2023-10-13 DISCOUNT/RATE/EUR/EUR-ANOTHER-CURVE/2023-10-14 0.95",
                         "2023-10-12 DISCOUNT/RATE/EUR/EUR-CURVE/2023-10-12 0.88",
                         "2023-10-13 DISCOUNT/RATE/EUR/EUR-CURVE/2023-10-13 1.0",
                         "2023-10-13 DISCOUNT/RATE/EUR/EUR-CURVE/2023-10-14 0.99",
@@ -298,7 +300,10 @@ BOOST_AUTO_TEST_CASE(testBuildDiscountCurveDirectSegmentWildcard) {
         "EUR-CURVE", "ORE YieldCurve built from EUR-CURVE_2023-10-13", "EUR", "", segments);
     curveConfigs.add(CurveSpec::CurveType::Yield, "EUR-CURVE", yCConfig);
 
-    vector<string> data{"2023-10-13 DISCOUNT/RATE/EUR/EUR-CURVE/2023-10-13 1.0",
+    vector<string> data{"2023-10-12 DISCOUNT/RATE/EUR/STINA-CURVE/2023-10-13 0.77",
+                        "2023-10-12 DISCOUNT/RATE/EUR/EUR-ANOTHER-CURVE/2023-10-13 0.95",
+                        "2023-10-13 DISCOUNT/RATE/EUR/EUR-ANOTHER-CURVE/2023-10-14 0.95",
+                        "2023-10-13 DISCOUNT/RATE/EUR/EUR-CURVE/2023-10-13 1.0",
                         "2023-10-13 DISCOUNT/RATE/EUR/EUR-CURVE/2023-10-14 0.99",
                         "2023-10-13 DISCOUNT/RATE/EUR/EUR-CURVE/2023-10-15 0.98",
                         "2023-10-13 EQUITY_FWD/PRICE/SP5/USD/1Y 1500.00",
