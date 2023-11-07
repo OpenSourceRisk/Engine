@@ -121,6 +121,11 @@ contains an ID pointing to a line in the {\tt market.txt} file, i.e.\ in this ca
 or discount factor. The \lstinline!Conventions! node contains the ID of a node in the {\tt conventions.xml} file
 described in section \ref{sec:conventions}. The \lstinline!Conventions! node associates conventions with the quotes.
 
+For \emph{Discount} type segments, the quotes can be given using a wildcard. Any valid and matching quotes will then be loaded from the provided market data. An example wildcard is:
+\begin{itemize}
+  \item {DISCOUNT/RATE/EUR/EUR3M/*}
+\end{itemize}
+
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
