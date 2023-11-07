@@ -65,9 +65,15 @@ void CommodityPosition::build(const boost::shared_ptr<ore::data::EngineFactory>&
             ConventionsBasedFutureExpiry feCalc(*convention);
             Date expiry = Settings::instance().evaluationDate();
             Size nOffset = u.futureMonthOffset() == Null<Size>() ? 0 : u.futureMonthOffset();
+            if (u.deliveryRollDays() != Null<Size>()) {
+                auto cal =
+                    u.deliveryRollCalendar().empty() ? convention->calendar() : parseCalendar(u.deliveryRollCalendar());
+                expiry = cal.advance(expiry, u.deliveryRollDays() * Days, convention->businessDayConvention());
+            }
+            expiry = feCalc.nextExpiry(true, expiry, nOffset);
             if (!u.futureContractMonth().empty()) {
                 QL_REQUIRE(u.futureContractMonth().size() == 7,
-                           "FutureContractMonth has invalid format, please use Mon-YYYY, where 'Mon' is a 3 letter "
+                           "FutureContractMonth has invalid format, please use MonYYYY, where 'Mon' is a 3 letter "
                            "month abbreviation.");
                 auto month = parseMonth(u.futureContractMonth().substr(0, 3));
                 auto year = parseInteger(u.futureContractMonth().substr(3, 4));
@@ -75,14 +81,7 @@ void CommodityPosition::build(const boost::shared_ptr<ore::data::EngineFactory>&
                 expiry = feCalc.expiryDate(contractDate, nOffset, false);
             } else if (!u.futureExpiryDate().empty()) {
                 expiry = parseDate(u.futureExpiryDate());
-                expiry = feCalc.nextExpiry(true,expiry, nOffset, false);
-            } else {
-                if (u.deliveryRollDays() != Null<Size>()) {
-                    auto cal = u.deliveryRollCalendar().empty() ? convention->calendar()
-                                                                : parseCalendar(u.deliveryRollCalendar());
-                    expiry = cal.advance(expiry, u.deliveryRollDays() * Days, convention->businessDayConvention());
-                }
-                expiry = feCalc.nextExpiry(true, expiry, nOffset);
+                expiry = feCalc.nextExpiry(true, expiry, nOffset, false);
             }
             index = index->clone(expiry, pts);
         }
