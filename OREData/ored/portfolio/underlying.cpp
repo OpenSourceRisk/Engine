@@ -133,6 +133,10 @@ void CommodityUnderlying::fromXML(XMLNode* node) {
             deliveryRollDays_ = Null<Size>();
         deliveryRollCalendar_ = XMLUtils::getChildValue(node, "DeliveryRollCalendar", false);
         isBasic_ = false;
+        futureExpiryDate_ = XMLUtils::getChildValue(node, "FutureExpiryDate", false);
+        futureContractMonth_ = XMLUtils::getChildValue(node, "FutureContractMonth", false);
+        QL_REQUIRE(futureExpiryDate_.empty() || futureContractMonth_.empty(),
+                   "Only futureExpiryDate or futureContractMonth are allowed not both");
     } else {
         QL_FAIL("Need either a Name or Underlying node for CommodityUnderlying.");
     }
@@ -153,6 +157,10 @@ XMLNode* CommodityUnderlying::toXML(XMLDocument& doc) {
             XMLUtils::addChild(doc, node, "DeliveryRollDays", (int)deliveryRollDays_);
         if (!deliveryRollCalendar_.empty())
             XMLUtils::addChild(doc, node, "DeliveryRollCalendar", deliveryRollCalendar_);
+        if (!futureExpiryDate_.empty()) 
+            XMLUtils::addChild(doc, node, "FutureExpiryDate", futureExpiryDate_);
+        if (!futureContractMonth_.empty())
+            XMLUtils::addChild(doc, node, "FutureContractMonth", futureContractMonth_);
     }
     return node;
 }
