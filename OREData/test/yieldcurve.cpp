@@ -263,10 +263,10 @@ BOOST_AUTO_TEST_CASE(testBuildDiscountCurveDirectSegment) {
         "Discount", "", quotes)};
 
     boost::shared_ptr<YieldCurveConfig> yCConfig =
-        boost::make_shared<YieldCurveConfig>("EUR-CURVE", "ORE YieldCurve built from EUR-CURVE_2023-10-13", "EUR", "", segments);
+        boost::make_shared<YieldCurveConfig>("EUR-CURVE", "ORE YieldCurve built from EUR-CURVE", "EUR", "", segments);
     curveConfigs.add(CurveSpec::CurveType::Yield, "EUR-CURVE", yCConfig);
 
-    vector<string> data{"2023-10-12 DISCOUNT/RATE/EUR/STINA-CURVE/2023-10-13 0.77",
+    vector<string> data{"2023-10-12 DISCOUNT/RATE/SEK/STINA-CURVE/2023-10-13 0.77",
                         "2023-10-12 DISCOUNT/RATE/EUR/EUR-ANOTHER-CURVE/2023-10-13 0.95",
                         "2023-10-13 DISCOUNT/RATE/EUR/EUR-ANOTHER-CURVE/2023-10-14 0.95",
                         "2023-10-12 DISCOUNT/RATE/EUR/EUR-CURVE/2023-10-12 0.88",
@@ -297,10 +297,10 @@ BOOST_AUTO_TEST_CASE(testBuildDiscountCurveDirectSegmentWildcard) {
         boost::make_shared<DirectYieldCurveSegment>("Discount", "", quotes)};
 
     boost::shared_ptr<YieldCurveConfig> yCConfig = boost::make_shared<YieldCurveConfig>(
-        "EUR-CURVE", "ORE YieldCurve built from EUR-CURVE_2023-10-13", "EUR", "", segments);
+        "EUR-CURVE", "ORE YieldCurve built from EUR-CURVE", "EUR", "", segments);
     curveConfigs.add(CurveSpec::CurveType::Yield, "EUR-CURVE", yCConfig);
 
-    vector<string> data{"2023-10-12 DISCOUNT/RATE/EUR/STINA-CURVE/2023-10-13 0.77",
+    vector<string> data{"2023-10-12 DISCOUNT/RATE/SEK/STINA-CURVE/2023-10-13 0.77",
                         "2023-10-12 DISCOUNT/RATE/EUR/EUR-ANOTHER-CURVE/2023-10-13 0.95",
                         "2023-10-13 DISCOUNT/RATE/EUR/EUR-ANOTHER-CURVE/2023-10-14 0.95",
                         "2023-10-13 DISCOUNT/RATE/EUR/EUR-CURVE/2023-10-13 1.0",
