@@ -128,7 +128,9 @@ Sample<std::vector<Array>> MultiPathVariateGeneratorSobolBrownianBridgeBase::nex
 MultiPathVariateGeneratorSobolBrownianBridge::MultiPathVariateGeneratorSobolBrownianBridge(
     const Size dimension, const Size timeSteps, SobolBrownianGenerator::Ordering ordering, BigNatural seed,
     SobolRsg::DirectionIntegers directionIntegers)
-    : MultiPathVariateGeneratorSobolBrownianBridgeBase(dimension, timeSteps, ordering, seed, directionIntegers) {}
+    : MultiPathVariateGeneratorSobolBrownianBridgeBase(dimension, timeSteps, ordering, seed, directionIntegers) {
+    MultiPathVariateGeneratorSobolBrownianBridge::reset();
+}
 
 void MultiPathVariateGeneratorSobolBrownianBridge::reset() {
     gen_ = boost::make_shared<SobolBrownianGenerator>(dimension_, timeSteps_, ordering_, seed_, directionIntegers_);
@@ -138,7 +140,9 @@ MultiPathVariateGeneratorBurley2020SobolBrownianBridge::MultiPathVariateGenerato
     const Size dimension, const Size timeSteps, SobolBrownianGenerator::Ordering ordering, BigNatural seed,
     SobolRsg::DirectionIntegers directionIntegers, BigNatural scrambleSeed)
     : MultiPathVariateGeneratorSobolBrownianBridgeBase(dimension, timeSteps, ordering, seed, directionIntegers),
-      scrambleSeed_(scrambleSeed) {}
+      scrambleSeed_(scrambleSeed) {
+    MultiPathVariateGeneratorBurley2020SobolBrownianBridge::reset();
+}
 
 void MultiPathVariateGeneratorBurley2020SobolBrownianBridge::reset() {
     gen_ = boost::make_shared<Burley2020SobolBrownianGenerator>(dimension_, timeSteps_, ordering_, seed_,
