@@ -1797,6 +1797,8 @@
       <xs:element type="xs:nonNegativeInteger" name="FutureMonthOffset" minOccurs="0"/>
       <xs:element type="xs:nonNegativeInteger" name="DeliveryRollDays" minOccurs="0"/>
       <xs:element type="xs:string" name="DeliveryRollCalendar" minOccurs="0"/>
+      <xs:element type="xs:string" name="FutureExpiryDate" minOccurs="0"/>
+      <xs:element type="xs:string" name="FutureContractMonth" minOccurs="0"/>
       <xs:element type="xs:string" name="Interpolation" minOccurs="0"/>
       <xs:element type="xs:float" name="BidAskAdjustment" minOccurs="0"/>
     </xs:all>
