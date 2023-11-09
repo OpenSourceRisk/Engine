@@ -32,7 +32,8 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
     XMLNode* node = XMLUtils::locateNode(root, "StressTesting");
     XMLUtils::checkNode(node, "StressTesting");
 
-    useSpreadedTermStructures_ = parseBool(XMLUtils::getChildValue(node, "UseSpreadedTermStructures", false, "false"));
+    useSpreadedTermStructures_ =
+        ore::data::parseBool(XMLUtils::getChildValue(node, "UseSpreadedTermStructures", false, "false"));
 
     for (XMLNode* testCase = XMLUtils::getChildNode(node, "StressTest"); testCase;
          testCase = XMLUtils::getNextSibling(testCase)) {
