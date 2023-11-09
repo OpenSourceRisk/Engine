@@ -56,18 +56,18 @@ required because the simulation must step over 'good' dates on which index fixin
 %\item {\tt Scenario: } Choose between {\em Simple } and {\em Complex } implementations, the latter optimized for
 % more efficient memory usage. \todo[inline]{Remove Scenario choice}
 \item {\tt DayCounter:} Day count convention used to translate dates to times. Optional, defaults to ActualActual ISDA.
-\item {\tt Sequence:} Choose random sequence generator ({\em MersenneTwister, MersenneTwisterAntithetic, Sobol,
-SobolBrownianBridge}).
+\item {\tt Sequence:} Choose random sequence generator ({\em MersenneTwister, MersenneTwisterAntithetic,
+  Sobol,Burley2020Sobol, SobolBrownianBridge, Burley2020SobolBrownianBridge}).
 \item {\tt Seed:} Random number generator seed
 \item {\tt Samples:} Number of Monte Carlo paths to be produced
 %\item {\tt Fixings: } Choose whether fixings should be simulated or not, and if so which fixing simulation method to
 use ({\em Backward, Forward, BestOfForwardBackward, InterpolatedForwardBackward}), which number of forward horizon days
 to use if one of the {\em Forward } related methods is chosen.
-\item {\tt Ordering:} If the sequence type {\em SobolBrownianBridge} is used, ordering of variates ({\em Factors, Steps,
-    Diagonal})
-\item {\tt DirectionIntegers:} If the sequence type {\em SobolBrownianBridge} or {\em Sobol} is used, type of direction
-  integers in Sobol generator ({\em Unit, Jaeckel, SobolLevitan, SobolLevitanLemieux, JoeKuoD5, JoeKuoD6, JoeKuoD7, Kuo,
-    Kuo2, Kuo3})
+\item {\tt Ordering:} If the sequence type {\em SobolBrownianBridge} or {\em Burley2020SobolBrownianBridge} is used,
+  ordering of variates ({\em Factors, Steps, Diagonal})
+\item {\tt DirectionIntegers:} If the sequence type {\em SobolBrownianBridge}, {\em Burley2020SobolBrownianBridge}, {\em
+  Sobol} or {\em Burley2020Sobol} is used, type of direction integers in Sobol generator ({\em Unit, Jaeckel,
+  SobolLevitan, SobolLevitanLemieux, JoeKuoD5, JoeKuoD6, JoeKuoD7, Kuo, Kuo2, Kuo3})
 \item {\tt CloseOutLag}: If this tag is present, this specifies the close-out period length (e.g. 2W) used; otherwise no close-out grid is built. The close-out grid is an auxiliary time grid that is offset from the main default date grid by the close-out period, typically set to the applicable margin period of risk. If present, it is used to evolve the portfolio value and determine close-out values associated with the preceding default date valuation.
 \item {\tt MporMode}: This tag is expected if the previous one is present, permissible values are then {\tt StickyDate} and {\tt ActualDate}. {\tt StickyDate} means that only market data is evolved from the default date to close-out date for close-out date valuation, the valuation as of date remains unchanged and trades do not ``age'' over the period. As a consequence, exposure evolutions will not show spikes caused by cash flows within the close-out period. {\tt ActualDate} means that trades will also age over the close-out period so that one can experience exposure evolution spikes due to cash flows. 
 \end{itemize}
