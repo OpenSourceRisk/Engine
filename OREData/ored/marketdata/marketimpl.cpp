@@ -199,7 +199,7 @@ Handle<QuantLib::SwaptionVolatilityStructure> MarketImpl::yieldVol(const string&
 Handle<QuantExt::FxIndex> MarketImpl::fxIndexImpl(const string& fxIndex, const string& configuration) const {
     QL_REQUIRE(fx_ != nullptr,
                "MarketImpl::fxIndex(" << fxIndex << "): fx_ is null. This is an internal error. Contact dev.");
-    return fx_->getIndex(fxIndex, this);
+    return fx_->getIndex(fxIndex, this, configuration);
 }
 
 Handle<Quote> MarketImpl::fxRateImpl(const string& ccypair, const string& configuration) const {
