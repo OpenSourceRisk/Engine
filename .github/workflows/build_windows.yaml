@@ -19,6 +19,10 @@ jobs:
         (New-Object System.Net.WebClient).DownloadFile($Url, "$env:TEMP\boost.exe")
         Start-Process -Wait -FilePath "$env:TEMP\boost.exe" "/SILENT","/SP-","/SUPPRESSMSGBOXES","/DIR=C:\local\boost"
         choco install -y ninja
+    - name: apply patch
+      run: |
+        cd OREAnalytics/test
+        Add-Content -Path .\CMakeLists.txt -Value "target_compile_definitions(orea-test-suite PUBLIC BOOST_USE_WINAPI_VERSION=0x0600)"
     - name: cmake configure and build
       env:
         BOOST_ROOT: C:\local\boost
@@ -27,5 +31,5 @@ jobs:
         mkdir build
         cd build
         call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Vc\Auxiliary\Build\vcvarsall.bat" amd64 -vcvars_ver=14.3 || exit 1
-        cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DQL_BUILD_EXAMPLES=false -DQL_BUILD_TEST_SUITE=false -DQL_BUILD_BENCHMARK=false -DQL_ENABLE_SESSIONS=true -DORE_BUILD_DOC=false -DBOOST_INCLUDEDIR=C:\local\boost -DBOOST_LIBRARYDIR=C:\local\boost\lib64-msvc-14.3 -D_WIN32_WINNT=0x0600 -L
+        cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DQL_BUILD_EXAMPLES=false -DQL_BUILD_TEST_SUITE=false -DQL_BUILD_BENCHMARK=false -DQL_ENABLE_SESSIONS=true -DORE_BUILD_DOC=false -DBOOST_INCLUDEDIR=C:\local\boost -DBOOST_LIBRARYDIR=C:\local\boost\lib64-msvc-14.3 -L
         cmake --build . -j 2 --verbose
