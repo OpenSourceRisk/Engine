@@ -4,6 +4,7 @@
 
   <xs:complexType name="stresstesting">
     <xs:sequence>
+      <xs:element type="bool" name="UseSpreadedTermStructures" minOccurs="0"/>
       <xs:element type="stresstest" name="StressTest" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:complexType>
