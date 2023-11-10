@@ -1797,6 +1797,8 @@
       <xs:element type="xs:nonNegativeInteger" name="FutureMonthOffset" minOccurs="0"/>
       <xs:element type="xs:nonNegativeInteger" name="DeliveryRollDays" minOccurs="0"/>
       <xs:element type="xs:string" name="DeliveryRollCalendar" minOccurs="0"/>
+      <xs:element type="xs:string" name="FutureExpiryDate" minOccurs="0"/>
+      <xs:element type="xs:string" name="FutureContractMonth" minOccurs="0"/>
       <xs:element type="xs:string" name="Interpolation" minOccurs="0"/>
       <xs:element type="xs:float" name="BidAskAdjustment" minOccurs="0"/>
     </xs:all>
@@ -4467,9 +4469,9 @@
       </xs:element>
       <xs:element name="TransatlanticBarrier" minOccurs="0">
         <xs:complexType>
-          <xs:all>
-            <xs:element type="barrierData" name="BarrierData"/>
-          </xs:all>
+          <xs:sequence>
+            <xs:element type="barrierData" name="BarrierData" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
         </xs:complexType>
       </xs:element>
     </xs:all>

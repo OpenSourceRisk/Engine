@@ -17,6 +17,7 @@
 */
 
 #include <qle/math/randomvariable.hpp>
+#include <qle/math/randomvariablelsmbasissystem.hpp>
 
 #include <ql/math/comparison.hpp>
 #include <ql/math/generallinearleastsquares.hpp>
@@ -29,6 +30,7 @@
 #include <boost/accumulators/statistics/variance.hpp>
 
 #include <iostream>
+#include <map>
 
 // if defined, RandomVariableStats are updated (this might impact perfomance!), default is undefined
 //#define ENABLE_RANDOMVARIABLE_STATS
@@ -1240,5 +1242,23 @@ RandomVariable indicatorDerivative(const RandomVariable& x, const double eps) {
 
 std::function<void(RandomVariable&)> RandomVariable::deleter =
     std::function<void(RandomVariable&)>([](RandomVariable& x) { x.clear(); });
+
+std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>
+multiPathBasisSystem(Size dim, Size order, QuantLib::LsmBasisSystem::PolynomialType type, Size basisSystemSizeBound) {
+    thread_local static std::map<std::pair<Size, Size>,
+                                 std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>>
+        cache;
+    QL_REQUIRE(order > 0, "multiPathBasisSystem: order must be > 0");
+    if (basisSystemSizeBound != Null<Size>()) {
+        while (RandomVariableLsmBasisSystem::size(dim, order) > static_cast<Real>(basisSystemSizeBound) && order > 1) {
+            --order;
+        }
+    }
+    if (auto c = cache.find(std::make_pair(dim, order)); c != cache.end())
+        return c->second;
+    auto tmp = RandomVariableLsmBasisSystem::multiPathBasisSystem(dim, order, type);
+    cache[std::make_pair(dim, order)] = tmp;
+    return tmp;
+}
 
 } // namespace QuantExt

@@ -63,6 +63,7 @@
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
 #include <ql/pricingengines/credit/midpointcdsengine.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
+#include <ql/quotes/derivedquote.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/termstructures/yield/oisratehelper.hpp>
 #include <qle/instruments/fixedbmaswap.hpp>
@@ -227,9 +228,9 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                 } catch (const std::exception& e) {
                     skipped = true;
                     if (continueOnError_) {
-                        ALOG(StructuredAnalyticsErrorMessage("Par sensitivity conversion",
-                                                             "Skipping par instrument for discount curve " + ccy,
-                                                             e.what()));
+                        StructuredAnalyticsErrorMessage("Par sensitivity conversion",
+                                                        "Skipping par instrument for discount curve " + ccy, e.what())
+                            .log();
                     } else {
                         QL_FAIL(e.what());
                     }
@@ -308,8 +309,9 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                 } catch (const std::exception& e) {
                     skipped = true;
                     if (continueOnError_) {
-                        ALOG(StructuredAnalyticsErrorMessage("Par sensitivity conversion",
-                                                             "Skipping par instrument for " + curveName, e.what()));
+                        StructuredAnalyticsErrorMessage("Par sensitivity conversion",
+                                                        "Skipping par instrument for " + curveName, e.what())
+                            .log();
                     } else {
                         QL_FAIL(e.what());
                     }
@@ -381,9 +383,10 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                 } catch (const std::exception& e) {
                     skipped = true;
                     if (continueOnError_) {
-                        ALOG(StructuredAnalyticsErrorMessage("Par sensitivity conversion",
-                                                             "Skipping par instrument for index curve " + indexName,
-                                                             e.what()));
+                        StructuredAnalyticsErrorMessage("Par sensitivity conversion",
+                                                        "Skipping par instrument for index curve " + indexName,
+                                                        e.what())
+                            .log();
                     } else {
                         QL_FAIL(e.what());
                     }
@@ -446,8 +449,9 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                         DLOG("Par cap/floor for key " << rfkey << " strike " << j << " tenor " << k << " built.");
                     } catch (const std::exception& e) {
                         if (continueOnError_) {
-                            ALOG(StructuredAnalyticsErrorMessage("Par sensitivity conversion",
-                                                                 "Skipping par cap/floor for key " + key, e.what()));
+                            StructuredAnalyticsErrorMessage("Par sensitivity conversion",
+                                                            "Skipping par cap/floor for key " + key, e.what())
+                                .log();
                         } else {
                             QL_FAIL(e.what());
                         }
@@ -488,8 +492,9 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                 } catch (const std::exception& e) {
                     skipped = true;
                     if (continueOnError_) {
-                        ALOG(StructuredAnalyticsErrorMessage("Par sensitivity conversion",
-                                                             "Skipping par instrument for cds " + name, e.what()));
+                        StructuredAnalyticsErrorMessage("Par sensitivity conversion",
+                                                        "Skipping par instrument for cds " + name, e.what())
+                            .log();
                     } else {
                         QL_FAIL(e.what());
                     }
@@ -534,9 +539,10 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                     DLOG("Par instrument for zero inflation index " << indexName << " tenor " << j << " built.");
                 } catch (const std::exception& e) {
                     if (continueOnError_) {
-                        ALOG(StructuredAnalyticsErrorMessage(
-                            "Par sensitivity conversion",
-                            "Skipping par instrument for zero inflation index " + indexName, e.what()));
+                        StructuredAnalyticsErrorMessage("Par sensitivity conversion",
+                                                        "Skipping par instrument for zero inflation index " + indexName,
+                                                        e.what())
+                            .log();
                     } else {
                         QL_FAIL(e.what());
                     }
@@ -578,9 +584,9 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                         recognised = false;
                 } catch (const std::exception& e) {
                     if (continueOnError_) {
-                        ALOG(StructuredAnalyticsErrorMessage("Par sensitivity conversion",
-                                                             "Skipping par instrument for yoy index " + indexName,
-                                                             e.what()));
+                        StructuredAnalyticsErrorMessage("Par sensitivity conversion",
+                                                        "Skipping par instrument for yoy index " + indexName, e.what())
+                            .log();
                     } else {
                         QL_FAIL(e.what());
                     }
@@ -631,9 +637,10 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                             yoyCapFloorPillars_[indexName].push_back(term);
                     } catch (const std::exception& e) {
                         if (continueOnError_) {
-                            ALOG(StructuredAnalyticsErrorMessage(
+                            StructuredAnalyticsErrorMessage(
                                 "Par sensitivity conversion",
-                                "Skipping par instrument for yoy cap floor index " + indexName, e.what()));
+                                "Skipping par instrument for yoy cap floor index " + indexName, e.what())
+                                .log();
                         } else {
                             QL_FAIL(e.what());
                         }
@@ -1695,6 +1702,10 @@ ParSensitivityAnalysis::makeCrossCcyBasisSwap(const boost::shared_ptr<Market>& m
     boost::shared_ptr<FxIndex> fxIndex =
         boost::make_shared<FxIndex>("dummy", conv->settlementDays(), currency, baseCurrency, conv->settlementCalendar(),
                                     fxSpot, discountCurve, baseDiscountCurve);
+    auto m = [](Real x) { return 1.0 / x; };
+    boost::shared_ptr<FxIndex> reversedFxIndex = boost::make_shared<FxIndex>(
+        "dummyRev", conv->settlementDays(), baseCurrency, currency, conv->settlementCalendar(),
+        Handle<Quote>(boost::make_shared<DerivedQuote<decltype(m)>>(fxSpot, m)), baseDiscountCurve, discountCurve);
 
     // LOG("Make Cross Ccy Swap for base ccy " << baseCcy << " currency " << ccy);
     // Set up first leg as spread leg, second as flat leg
@@ -1708,7 +1719,7 @@ ParSensitivityAnalysis::makeCrossCcyBasisSwap(const boost::shared_ptr<Market>& m
 	    DLOG("create resettable xccy par instrument (1), convention " << conv->id());
 	    helper = boost::make_shared<CrossCcyBasisMtMResetSwap>(
 		baseNotional, baseCurrency, baseSchedule, *baseIndex, 0.0, // spread index leg => use fairForeignSpread
-		currency, schedule, *index, 0.0, fxIndex, true,            // resettable flat index leg
+		currency, schedule, *index, 0.0, reversedFxIndex, true,    // resettable flat index leg
 		conv->paymentLag(), conv->flatPaymentLag(),
 		conv->includeSpread(), conv->lookback(), conv->fixingDays(), conv->rateCutoff(), conv->isAveraged(),
 		conv->flatIncludeSpread(), conv->flatLookback(), conv->flatFixingDays(), conv->flatRateCutoff(), conv->flatIsAveraged(),
@@ -1752,7 +1763,7 @@ ParSensitivityAnalysis::makeCrossCcyBasisSwap(const boost::shared_ptr<Market>& m
 	    // second leg is resettable, so the second leg is the non-base non-flat spread leg  
 	    helper = boost::make_shared<CrossCcyBasisMtMResetSwap>(
 		baseNotional, baseCurrency, baseSchedule, *baseIndex, 0.0, // flat index leg
-		currency, schedule, *index, 0.0, fxIndex, true,            // resettable spread index leg => use fairDomesticSpread
+		currency, schedule, *index, 0.0, reversedFxIndex, true,    // resettable spread index leg => use fairDomesticSpread
 		conv->flatPaymentLag(), conv->paymentLag(), 
 		conv->flatIncludeSpread(), conv->flatLookback(), conv->flatFixingDays(), conv->flatRateCutoff(), conv->flatIsAveraged(),
 		conv->includeSpread(), conv->lookback(), conv->fixingDays(), conv->rateCutoff(), conv->isAveraged(),
@@ -2248,8 +2259,9 @@ ParSensitivityConverter::ParSensitivityConverter(const ParSensitivityAnalysis::P
     } catch (const std::exception& e) {
         // something went wrong during the matrix inversion, so we run an extended analysis on the original matrix
         // to see whether there are zero or linearly dependent rows / columns
-        ALOG(StructuredAnalyticsErrorMessage("Par sensitivity conversion", "Transposed Jacobi matrix inversion failed",
-                                             e.what()));
+        StructuredAnalyticsErrorMessage("Par sensitivity conversion", "Transposed Jacobi matrix inversion failed",
+                                        e.what())
+            .log();
         LOG("Running extended matrix diagnostics (looking for zero or linearly dependent rows / columns...)");
         constexpr Size nOp = 1000; // number of operations for close_enough comparisons below
         LOG("Checking for zero rows...");

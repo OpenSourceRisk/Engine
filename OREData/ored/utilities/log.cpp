@@ -59,6 +59,7 @@ const string BufferLogger::name = "BufferLogger";
 const string FileLogger::name = "FileLogger";
 const string StructuredLogger::name = "StructuredLogger";
 const string ProgressLogger::name = "ProgressLogger";
+const string EventLogger::name = "EventLogger";
 
 // -- Buffer Logger
 
@@ -95,58 +96,173 @@ void FileLogger::log(unsigned, const string& msg) {
         fout_ << msg << endl;
 }
 
+void IndependentLogger::clear() { messages_.clear(); }
+
+ProgressLogger::ProgressLogger() : IndependentLogger(name) {
+    // Create backend and initialize it with a stream
+    boost::shared_ptr<lsinks::text_ostream_backend> backend = boost::make_shared<lsinks::text_ostream_backend>();
+
+    // Wrap it into the frontend and register in the core
+    boost::shared_ptr<text_sink> sink(new text_sink(backend));
+
+    // This logger should only receive/process logs that were emitted by a ProgressMessage
+    sink->set_filter(messageType == ProgressMessage::name);
+
+    // Use formatter to intercept and store the message.
+    auto formatter = [this](const logging::record_view& rec, logging::formatting_ostream& strm) {
+        this->messages().push_back(rec[lexpr::smessage]->c_str());
+
+        // If a file sink exists, then send the log record to it.
+        if (this->fileSink()) {
+            // Send to progress log file
+            lsrc::severity_logger_mt<oreSeverity> lg;
+            lg.add_attribute(messageType.get_name(), lattr::constant<string>(name));
+            BOOST_LOG_SEV(lg, oreSeverity::notice) << rec[lexpr::smessage];
+        }
+
+        // Also send to full log file
+        LOG(ProgressMessage::name << " " << rec[lexpr::smessage]);
+    };
+    sink->set_formatter(formatter);
+    logging::core::get()->add_sink(sink);
+    cacheSink_ = sink;
+}
+
 void ProgressLogger::removeSinks() { 
-    auto core = logging::core::get();
-    if (fileSink_)
-        core->remove_sink(fileSink_);
-    if (coutSink_)
-        core->remove_sink(coutSink_);
-}
-
-void ProgressLogger::setFileLog(const string& filepath, const path& dir, Size rotationSize) {
-    fileSink_ = logging::add_file_log(
-        lkeywords::target = dir,
-        lkeywords::file_name = filepath,
-        lkeywords::filter = messageType == ProgressMessage::name,
-        lkeywords::scan_method = lsinks::file::scan_matching,
-        lkeywords::rotation_size = rotationSize,
-        lkeywords::auto_flush = true
-    );
-}
-
-void ProgressLogger::setCoutLog(const bool flag) {
-    auto core = logging::core::get();
-    if (flag && !coutSink_) {
-        // Create backend and initialize it with a stream
-        boost::shared_ptr<lsinks::text_ostream_backend> backend = boost::make_shared<lsinks::text_ostream_backend>();
-        backend->add_stream(boost::shared_ptr<std::ostream>(&std::clog, boost::null_deleter()));
-
-        // Wrap it into the frontend and register in the core
-        boost::shared_ptr<cout_sink> sink(new cout_sink(backend));
-        core->add_sink(sink);
-
-        // Store the sink for removal/retrieval later
-        coutSink_ = sink;
-    } else if (coutSink_) {
-        core->remove_sink(coutSink_);
+    if (fileSink_) {
+        logging::core::get()->remove_sink(fileSink_);
+        fileSink_ = nullptr;
+    }
+    if (coutSink_) {
+        logging::core::get()->remove_sink(coutSink_);
         coutSink_ = nullptr;
     }
 }
 
-void StructuredLogger::removeSinks() {
-    if (fileSink_)
-        logging::core::get()->remove_sink(fileSink_);
+void ProgressLogger::setFileLog(const string& filepath, const path& dir, Size rotationSize) {
+    if (rotationSize == 0) {
+        fileSink_ = logging::add_file_log(
+            lkeywords::target = dir,
+            lkeywords::file_name = filepath,
+            lkeywords::filter = messageType == ProgressLogger::name,
+            lkeywords::auto_flush = true
+        );
+    } else {
+        fileSink_ = logging::add_file_log(
+            lkeywords::target = dir,
+            lkeywords::file_name = filepath,
+            lkeywords::filter = messageType == ProgressLogger::name,
+            lkeywords::scan_method = lsinks::file::scan_matching,
+            lkeywords::rotation_size = rotationSize,
+            lkeywords::auto_flush = true
+        );
+    }
 }
 
-void StructuredLogger::setFileLog(const string& filepath, const path& dir, Size rotationSize = 100 * 1024 * 1024) {
+void ProgressLogger::setCoutLog(const bool flag) {
+    if (flag) {
+        if (!coutSink_) {
+            // Create backend and initialize it with a stream
+            boost::shared_ptr<lsinks::text_ostream_backend> backend = boost::make_shared<lsinks::text_ostream_backend>();
+            backend->add_stream(boost::shared_ptr<std::ostream>(&std::clog, boost::null_deleter()));
+
+            // Wrap it into the frontend and register in the core
+            boost::shared_ptr<text_sink> sink(new text_sink(backend));
+            sink->set_filter(messageType == ProgressMessage::name);
+            logging::core::get()->add_sink(sink);
+
+            // Store the sink for removal/retrieval later
+            coutSink_ = sink;
+        }
+    } else if (coutSink_) {
+        logging::core::get()->remove_sink(coutSink_);
+        coutSink_ = nullptr;
+    }
+}
+
+StructuredLogger::StructuredLogger() : IndependentLogger(name) {
+    // Create backend and initialize it with a stream
+    boost::shared_ptr<lsinks::text_ostream_backend> backend = boost::make_shared<lsinks::text_ostream_backend>();
+
+    // Wrap it into the frontend and register in the core
+    boost::shared_ptr<text_sink> sink(new text_sink(backend));
+    sink->set_filter(messageType == StructuredMessage::name);
+
+    // Use formatter to intercept and store the message.
+    auto formatter = [this](const logging::record_view& rec, logging::formatting_ostream& strm) {
+        const string& msg = rec[lexpr::smessage]->c_str();
+
+        // Emit log record if it has not been logged before
+        if (this->messages().empty() ||
+            std::find(this->messages().begin(), this->messages().end(), msg) == this->messages().end()) {
+            // Store the message
+            this->messages().push_back(msg);
+
+            // If a file sink has been defined, then send the log record to it.
+            if (this->fileSink()) {
+                // Send to structured log file
+                lsrc::severity_logger_mt<oreSeverity> lg;
+                lg.add_attribute(messageType.get_name(), lattr::constant<string>(name));
+                BOOST_LOG_SEV(lg, oreSeverity::warning) << rec[lexpr::smessage];
+            }
+
+            // Also send to full log file
+            MLOG(oreSeverity::warning, StructuredMessage::name << " " << rec[lexpr::smessage]);
+        }
+    };
+    sink->set_formatter(formatter);
+    logging::core::get()->add_sink(sink);
+    cacheSink_ = sink;
+}
+
+void StructuredLogger::removeSinks() {
+    if (fileSink_) {
+        logging::core::get()->remove_sink(fileSink_);
+        fileSink_ = nullptr;
+    }
+}
+
+void StructuredLogger::setFileLog(const string& filepath, const path& dir, Size rotationSize) {
+    if (rotationSize == 0) {
+        fileSink_ = logging::add_file_log(
+            lkeywords::target = dir,
+            lkeywords::file_name = filepath,
+            lkeywords::filter = messageType == StructuredLogger::name,
+            lkeywords::auto_flush = true
+        );
+    } else {
+        fileSink_ = logging::add_file_log(
+            lkeywords::target = dir,
+            lkeywords::file_name = filepath,
+            lkeywords::filter = messageType == StructuredLogger::name,
+            lkeywords::scan_method = lsinks::file::scan_matching,
+            lkeywords::rotation_size = rotationSize,
+            lkeywords::auto_flush = true
+        );
+    }
+}
+
+void EventLogger::removeSinks() {
+    if (fileSink_) {
+        logging::core::get()->remove_sink(fileSink_);
+        fileSink_ = nullptr;
+    }
+}
+
+void EventLogger::setFileLog(const std::string& filepath) {
     fileSink_ = logging::add_file_log(
-        lkeywords::target = dir,
-        lkeywords::file_name = filepath,
-        lkeywords::filter = messageType == StructuredMessage::name,
+        lkeywords::file_name = filepath + "%Y-%m-%d" + ".json",
+        lkeywords::time_based_rotation = lsinks::file::rotation_at_time_point(0, 0, 0), /*< at midnight >*/
+        lkeywords::filter = messageType == EventMessage::name,
         lkeywords::scan_method = lsinks::file::scan_matching,
-        lkeywords::rotation_size = rotationSize,
         lkeywords::auto_flush = true
     );
+}
+
+void EventLogger::setFormatter(
+    const std::function<void(const boost::log::record_view&, boost::log::formatting_ostream&)>& formatter) {
+    if (fileSink_)
+        fileSink_->set_formatter(formatter);
 }
 
 // The Log itself
@@ -164,28 +280,52 @@ void Log::registerLogger(const boost::shared_ptr<Logger>& logger) {
 }
 
 void Log::registerIndependentLogger(const boost::shared_ptr<IndependentLogger>& logger) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     QL_REQUIRE(independentLoggers_.find(logger->name()) == independentLoggers_.end(),
                "Logger with name " << logger->name() << " already registered as independent logger");
     independentLoggers_[logger->name()] = logger;
 }
 
+const bool Log::hasLogger(const string& name) const {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    return loggers_.find(name) != loggers_.end();
+}
+
 boost::shared_ptr<Logger>& Log::logger(const string& name) {
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
-    QL_REQUIRE(loggers_.find(name) != loggers_.end(), "No logger found with name " << name);
+    QL_REQUIRE(hasLogger(name), "No logger found with name " << name);
     return loggers_[name];
+}
+
+const bool Log::hasIndependentLogger(const string& name) const {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    return independentLoggers_.find(name) != independentLoggers_.end();
+}
+
+boost::shared_ptr<IndependentLogger>& Log::independentLogger(const string& name) {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    QL_REQUIRE(hasIndependentLogger(name), "No independent logger found with name " << name);
+    return independentLoggers_[name];
 }
 
 void Log::removeLogger(const string& name) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
     map<string, boost::shared_ptr<Logger>>::iterator it = loggers_.find(name);
-    map<string, boost::shared_ptr<IndependentLogger>>::iterator iit = independentLoggers_.find(name);
     if (it != loggers_.end()) {
         loggers_.erase(it);
-    } else if (iit != independentLoggers_.end()) {
-        iit->second->removeSinks();
-        independentLoggers_.erase(iit);
     } else {
         QL_FAIL("No logger found with name " << name);
+    }
+}
+
+void Log::removeIndependentLogger(const string& name) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    map<string, boost::shared_ptr<IndependentLogger>>::iterator it = independentLoggers_.find(name);
+    if (it != independentLoggers_.end()) {
+        it->second->removeSinks();
+        independentLoggers_.erase(it);
+    } else {
+        QL_FAIL("No independdent logger found with name " << name);
     }
 }
 
@@ -196,7 +336,7 @@ void Log::removeAllLoggers() {
     independentLoggers_.clear();
 }
 
-string Log::source(const char* filename, int lineNo) {
+string Log::source(const char* filename, int lineNo) const {
     string filepath;
     if (rootPath_.empty()) {
         filepath = filename;
@@ -221,17 +361,21 @@ string Log::source(const char* filename, int lineNo) {
 }
 
 void Log::addExcludeFilter(const string& key, const std::function<bool(const std::string&)> func) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     excludeFilters_[key] = func;
 }
 
-void Log::removeExcludeFilter(const string& key) { excludeFilters_.erase(key); }
+void Log::removeExcludeFilter(const string& key) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    excludeFilters_.erase(key);
+}
 
 bool Log::checkExcludeFilters(const std::string& msg) {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     for (const auto& f : excludeFilters_) {
         if (f.second(msg))
             return true;
     }
-
     return false;
 }
 
@@ -384,7 +528,12 @@ string JSONMessage::jsonify(const boost::any& obj) {
     } else if (obj.type() == typeid(float)) {
         return to_string(boost::any_cast<float>(obj));
     } else {
-        WLOG(StructuredLoggingErrorMessage("JSON Message Logging", "JSONMessage::jsonify() : Unrecognised value type"));
+        try {
+            // It is possible that this line is the one causing the unknown value error.
+            StructuredLoggingErrorMessage("JSON Message Logging", "JSONMessage::jsonify() : Unrecognised value type")
+                .log();
+        } catch (...) {
+        }
         return string();
     }
 }
@@ -448,6 +597,7 @@ void EventMessage::log() const {
     lsrc::severity_logger_mt<oreSeverity> lg;
     lg.add_attribute(messageType.get_name(), lattr::constant<string>(name));
     BOOST_LOG_SEV(lg, oreSeverity::alert) << json();
+    MLOG(oreSeverity::alert, msg());
 }
 
 ProgressMessage::ProgressMessage(const string& key, const Size progressCurrent, const Size progressTotal) {
@@ -461,7 +611,7 @@ ProgressMessage::ProgressMessage(const string& key, const Size progressCurrent, 
 void ProgressMessage::log() const {
     lsrc::severity_logger_mt<oreSeverity> lg;
     lg.add_attribute(messageType.get_name(), lattr::constant<string>(name));
-    BOOST_LOG_SEV(lg, oreSeverity::alert) << json();
+    BOOST_LOG_SEV(lg, oreSeverity::notice) << json();
 }
 
 std::ostream& operator<<(std::ostream& out, const StructuredMessage::Category& category) {

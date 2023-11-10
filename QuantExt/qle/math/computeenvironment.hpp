@@ -23,7 +23,7 @@
 #pragma once
 
 #include <ql/patterns/singleton.hpp>
-
+#include <boost/thread/shared_mutex.hpp>
 #include <cstdint>
 #include <set>
 
@@ -59,6 +59,10 @@ public:
 
 class ComputeContext {
 public:
+    struct Settings {
+        std::size_t regressionOrder = 4;
+    };
+
     struct DebugInfo {
         unsigned long numberOfOperations = 0;
         unsigned long nanoSecondsDataCopy = 0;
@@ -83,7 +87,7 @@ public:
     virtual void freeVariable(const std::size_t id) = 0;
     virtual void declareOutputVariable(const std::size_t id) = 0;
 
-    virtual void finalizeCalculation(std::vector<double*>& output) = 0;
+    virtual void finalizeCalculation(std::vector<double*>& output, const Settings& settings) = 0;
 
     // debug info
 
@@ -91,7 +95,7 @@ public:
 
     // convenience methods
 
-    void finalizeCalculation(std::vector<std::vector<double>>& output);
+    void finalizeCalculation(std::vector<std::vector<double>>& output, const Settings& settings);
 };
 
 template <class T> T* createComputeFrameworkCreator() { return new T; }

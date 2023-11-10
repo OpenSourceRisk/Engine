@@ -71,7 +71,7 @@ FILE* FileIO::fopen(const char* filename, const char* mode) {
             em.set("retry_count", i);
             Real backoffMillis = currentBackoff * 1000;
             em.set("retry_interval", backoffMillis);
-            WLOG(em);
+            em.log();
             std::this_thread::sleep_for(std::chrono::duration<Real>(currentBackoff));
             Real nextBackoff = currentBackoff * 2;
             currentBackoff = (nextBackoff >= maxBackoff()) ? maxBackoff() : nextBackoff;
@@ -95,7 +95,7 @@ bool FileIO::create_directories(const path& p) {
             em.set("retry_count", i);
             Real backoffMillis = currentBackoff * 1000;
             em.set("retry_interval", backoffMillis);
-            WLOG(em);
+            em.log();
             std::this_thread::sleep_for(std::chrono::duration<Real>(currentBackoff));
             Real nextBackoff = currentBackoff * 2;
             currentBackoff = (nextBackoff >= maxBackoff()) ? maxBackoff() : nextBackoff;
@@ -122,7 +122,7 @@ bool FileIO::remove_all(const path& p) {
             em.set("retry_count", i);
             Real backoffMillis = currentBackoff * 1000;
             em.set("retry_interval", backoffMillis);
-            WLOG(em);
+            em.log();
             std::this_thread::sleep_for(std::chrono::duration<Real>(currentBackoff));
             Real nextBackoff = currentBackoff * 2;
             currentBackoff = (nextBackoff >= maxBackoff()) ? maxBackoff() : nextBackoff;
