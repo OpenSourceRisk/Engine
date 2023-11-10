@@ -49,8 +49,8 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     LOG("Run Stress Test");
     DLOG("Build Simulation Market");
     boost::shared_ptr<ScenarioSimMarket> simMarket = boost::make_shared<ScenarioSimMarket>(
-        market, simMarketData, Market::defaultConfiguration, curveConfigs, todaysMarketParams,
-        continueOnError, false, false, false, iborFallbackConfig);
+        market, simMarketData, marketConfiguration, curveConfigs, todaysMarketParams, continueOnError,
+        stressData->useSpreadedTermStructures(), false, false, iborFallbackConfig, true);
 
     DLOG("Build Stress Scenario Generator");
     Date asof = market->asofDate();
