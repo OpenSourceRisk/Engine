@@ -178,8 +178,14 @@ void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::Str
 
         // store shifted discount curve in the scenario
         for (Size k = 0; k < n_ten; ++k) {
+            RiskFactorKey key(RiskFactorKey::KeyType::DiscountCurve, ccy, k);
             Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
-            scenario->add(RiskFactorKey(RiskFactorKey::KeyType::DiscountCurve, ccy, k), shiftedDiscount);
+            if (stressData_->useSpreadedTermStructures()) {
+                Real discount = exp(-zeros[k] * times[k]);
+                scenario->add(key, shiftedDiscount / discount);
+            } else {
+                scenario->add(key, shiftedDiscount);
+            }
         }
     }
     DLOG("Discount curve stress scenarios done");
@@ -232,9 +238,14 @@ void StressScenarioGenerator::addSurvivalProbabilityShifts(StressTestScenarioDat
 
         // store shifted discount curve in the scenario
         for (Size k = 0; k < n_ten; ++k) {
+            RiskFactorKey key(RiskFactorKey::KeyType::SurvivalProbability, name, k);
             Real shiftedSurvivalProbability = exp(-shiftedZeros[k] * times[k]);
-            scenario->add(RiskFactorKey(RiskFactorKey::KeyType::SurvivalProbability, name, k),
-                          shiftedSurvivalProbability);
+            if (stressData_->useSpreadedTermStructures()) {
+                Real survivalProbability = exp(-zeros[k] * times[k]);
+                scenario->add(key, shiftedSurvivalProbability / survivalProbability);
+            } else {
+                scenario->add(key, shiftedSurvivalProbability);
+            }
         }
     }
     DLOG("Default Curve stress scenarios done");
@@ -288,8 +299,14 @@ void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::Stress
 
         // store shifted discount curve for this index in the scenario
         for (Size k = 0; k < n_ten; ++k) {
+            RiskFactorKey key(RiskFactorKey::KeyType::IndexCurve, indexName, k);
             Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
-            scenario->add(RiskFactorKey(RiskFactorKey::KeyType::IndexCurve, indexName, k), shiftedDiscount);
+            if (stressData_->useSpreadedTermStructures()) {
+                Real discount = exp(-zeros[k] * times[k]);
+                scenario->add(key, shiftedDiscount / discount);
+            } else {
+                scenario->add(key, shiftedDiscount);
+            }
         }
     }
     DLOG("Index curve scenarios done");
@@ -347,10 +364,14 @@ void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::Stress
 
         // store shifted discount curve in the scenario
         for (Size k = 0; k < n_ten; ++k) {
+            RiskFactorKey key(RiskFactorKey::KeyType::YieldCurve, name, k);
             Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
-            scenario->add(RiskFactorKey(RiskFactorKey::KeyType::YieldCurve, name, k), shiftedDiscount);
-            // DLOG("yield scenario " << name << ", " << k << ", " << shiftedZeros[k] << " " << zeros[k] << " "
-            //                        << shiftedZeros[k] - zeros[k]);
+            if (stressData_->useSpreadedTermStructures()) {
+                Real discount = exp(-zeros[k] * times[k]);
+                scenario->add(key, shiftedDiscount / discount);
+            } else {
+                scenario->add(key, shiftedDiscount);
+            }
         }
     } // end of shift curve tenors
     DLOG("Yield curve scenarios done");
@@ -406,8 +427,14 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
             applyShift(j, shifts[j], true, shiftType, shiftTimes, values, times, shiftedValues, j == 0 ? true : false);
         }
 
-        for (Size k = 0; k < n_fxvol_exp; ++k)
-            scenario->add(RiskFactorKey(RiskFactorKey::KeyType::FXVolatility, ccypair, k), shiftedValues[k]);
+        for (Size k = 0; k < n_fxvol_exp; ++k) {
+            RiskFactorKey key(RiskFactorKey::KeyType::FXVolatility, ccypair, k);
+            if (stressData_->useSpreadedTermStructures()) {
+                scenario->add(key, shiftedValues[k] - values[k]);
+            } else {
+                scenario->add(key, shiftedValues[k]);
+            }
+        }
     }
     DLOG("FX vol scenarios done");
 }
@@ -461,8 +488,14 @@ void StressScenarioGenerator::addEquityVolShifts(StressTestScenarioData::StressT
             applyShift(j, shifts[j], true, shiftType, shiftTimes, values, times, shiftedValues, j == 0 ? true : false);
         }
 
-        for (Size k = 0; k < n_eqvol_exp; ++k)
-            scenario->add(RiskFactorKey(RiskFactorKey::KeyType::EquityVolatility, equity, k), shiftedValues[k]);
+        for (Size k = 0; k < n_eqvol_exp; ++k) {
+            RiskFactorKey key(RiskFactorKey::KeyType::EquityVolatility, equity, k);
+            if (stressData_->useSpreadedTermStructures()) {
+                scenario->add(key, shiftedValues[k] - values[k]);
+            } else {
+                scenario->add(key, shiftedValues[k]);
+            }
+        }
     }
     DLOG("Equity vol scenarios done");
 }
@@ -545,8 +578,12 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
         for (Size jj = 0; jj < n_swvol_exp; ++jj) {
             for (Size kk = 0; kk < n_swvol_term; ++kk) {
                 Size idx = jj * n_swvol_term + kk;
-                scenario->add(RiskFactorKey(RiskFactorKey::KeyType::SwaptionVolatility, key, idx),
-                              shiftedVolData[jj][kk]);
+                RiskFactorKey rfkey(RiskFactorKey::KeyType::SwaptionVolatility, key, idx);
+                if (stressData_->useSpreadedTermStructures()) {
+                    scenario->add(rfkey, shiftedVolData[jj][kk] - volData[jj][kk]);
+                } else {
+                    scenario->add(rfkey, shiftedVolData[jj][kk]);
+                }
             }
         }
     }
@@ -615,8 +652,12 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
         for (Size jj = 0; jj < n_cfvol_exp; ++jj) {
             for (Size kk = 0; kk < n_cfvol_strikes; ++kk) {
                 Size idx = jj * n_cfvol_strikes + kk;
-                scenario->add(RiskFactorKey(RiskFactorKey::KeyType::OptionletVolatility, key, idx),
-                              shiftedVolData[jj][kk]);
+                RiskFactorKey rfkey(RiskFactorKey::KeyType::OptionletVolatility, key, idx);
+                if (stressData_->useSpreadedTermStructures()) {
+                    scenario->add(rfkey, shiftedVolData[jj][kk] - volData[jj][kk]);
+                } else {
+                    scenario->add(rfkey, shiftedVolData[jj][kk]);
+                }
             }
         }
     }
