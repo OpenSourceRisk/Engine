@@ -2,6 +2,21 @@ name: C/C++ CI Windows
 
 on:
   push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+    types: [ready_for_review, opened, synchronize, reopened]
+    paths:
+      - .github/workflows/linux_build.yaml
+      - ./App/**
+      - ./OREAnalytics/**
+      - '!./OREAnalytics/doc/**'
+      - ./OREData/**
+      - '!./OREData/doc/**'
+      - ./ORETest/**
+      - ./QuantExt/**
+      - '!./QuantExt/doc/**'
+      - CMakeLists.txt
   workflow_dispatch:
 
 jobs:
@@ -19,7 +34,7 @@ jobs:
         (New-Object System.Net.WebClient).DownloadFile($Url, "$env:TEMP\boost.exe")
         Start-Process -Wait -FilePath "$env:TEMP\boost.exe" "/SILENT","/SP-","/SUPPRESSMSGBOXES","/DIR=C:\local\boost"
         choco install -y ninja
-    - name: apply patch
+    - name: apply patch (temp fix for issue #160)
       run: |
         cd OREAnalytics/test
         Add-Content -Path .\CMakeLists.txt -Value "target_compile_definitions(orea-test-suite PUBLIC BOOST_USE_WINAPI_VERSION=0x0600)"
