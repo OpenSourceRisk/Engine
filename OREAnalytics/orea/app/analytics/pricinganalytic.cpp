@@ -89,7 +89,7 @@ void PricingAnalyticImpl::runAnalytic(
         if (type == "NPV") {
             CONSOLEW("Pricing: NPV Report");
             ReportWriter(inputs_->reportNaString())
-                .writeNpv(*report, effectiveResultCurrency, analytic()->market(), "",
+                .writeNpv(*report, effectiveResultCurrency, analytic()->market(), inputs_->marketConfig("pricing"),
                           analytic()->portfolio());
             analytic()->reports()[type]["npv"] = report;
             CONSOLE("OK");
