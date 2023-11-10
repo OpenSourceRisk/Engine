@@ -45,13 +45,14 @@ std::pair<std::string, std::string> splitPair(const std::string& pair) {
     return std::make_pair(pair.substr(0, 3), pair.substr(3));
 }
 
-Handle<YieldTermStructure> getMarketDiscountCurve(const Market* market, const std::string& ccy) {
+Handle<YieldTermStructure> getMarketDiscountCurve(const Market* market, const std::string& ccy,
+                                                  const std::string& configuration) {
     try {
-        return market->discountCurve(ccy);
+        return market->discountCurve(ccy, configuration);
     } catch (const std::exception&) {
         WLOG("FXTriangulation: could not get market discount curve '"
-             << ccy
-             << "' - discounted fx spot rates will be replaced by non-discounted rates in future calculations, which "
+             << ccy << "' (requested for configuration '" << configuration
+             << "') - discounted fx spot rates will be replaced by non-discounted rates in future calculations, which "
                 "might lead to inaccuracies");
         return Handle<YieldTermStructure>();
     }
@@ -164,11 +165,12 @@ Handle<Quote> FXTriangulation::getQuote(const std::string& pair) const {
     return result;
 }
 
-Handle<FxIndex> FXTriangulation::getIndex(const std::string& indexOrPair, const Market* market) const {
+Handle<FxIndex> FXTriangulation::getIndex(const std::string& indexOrPair, const Market* market,
+                                          const std::string& configuration) const {
 
     // do we have a cached result?
 
-    if (auto it = indexCache_.find(indexOrPair); it != indexCache_.end()) {
+    if (auto it = indexCache_.find(std::make_pair(indexOrPair, configuration)); it != indexCache_.end()) {
         return it->second;
     }
 
@@ -196,8 +198,8 @@ Handle<FxIndex> FXTriangulation::getIndex(const std::string& indexOrPair, const 
 
     // get the discount curves for the result index
 
-    auto sourceYts = getMarketDiscountCurve(market, forCcy);
-    auto targetYts = getMarketDiscountCurve(market, domCcy);
+    auto sourceYts = getMarketDiscountCurve(market, forCcy, configuration);
+    auto targetYts = getMarketDiscountCurve(market, domCcy, configuration);
 
     // get the path from ccy1 to ccy2
 
@@ -227,8 +229,8 @@ Handle<FxIndex> FXTriangulation::getIndex(const std::string& indexOrPair, const 
             // we store a quote "as of today" to account for possible spot lag differences
 
             auto [fd, fc, bdc] = getFxIndexConventions(path[i] + path[i + 1]);
-            auto s_yts = getMarketDiscountCurve(market, path[i]);
-            auto t_yts = getMarketDiscountCurve(market, path[i + 1]);
+            auto s_yts = getMarketDiscountCurve(market, path[i], configuration);
+            auto t_yts = getMarketDiscountCurve(market, path[i + 1], configuration);
             quotes.push_back(Handle<Quote>(boost::make_shared<FxRateQuote>(q, s_yts, t_yts, fd, fc)));
         }
 
@@ -253,7 +255,7 @@ Handle<FxIndex> FXTriangulation::getIndex(const std::string& indexOrPair, const 
 
     // add the result to the lookup cache and return it
 
-    indexCache_[indexOrPair] = result;
+    indexCache_[std::make_pair(indexOrPair, configuration)] = result;
     return result;
 }
 
