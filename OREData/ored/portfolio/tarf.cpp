@@ -121,8 +121,8 @@ using namespace QuantExt;
         "  d = DATEINDEX(FixingAndSimDates[a], FixingDates, GT);\n"
         "  IF s > 0 THEN\n"
         "    IF d > 1 THEN\n"
-        // including Hits[d-1] in the regression is not stable
-        "      _AMC_NPV[s] = LongShort * NPVMEM( bwdPayoff, _AMC_SimDates[s], a, 1 == 1, AccProfit[d-1]);\n"
+        // including Hits[d-1] or AccProfit[d-1] in the regression is not stable
+        "      _AMC_NPV[s] = LongShort * NPVMEM( bwdPayoff, _AMC_SimDates[s], a);\n"
         "    ELSE\n"
         "      _AMC_NPV[s] = LongShort * NPVMEM( bwdPayoff, _AMC_SimDates[s], a);\n"
         "    END;\n"
@@ -229,7 +229,7 @@ using namespace QuantExt;
         "  d = DATEINDEX(FixingAndSimDates[a], FixingDates, GT);\n"
         "  IF s > 0 THEN\n"
         "    IF d > 1 THEN\n"
-        "      _AMC_NPV[s] = LongShort * NPVMEM( bwdPayoff, _AMC_SimDates[s], a, 1 == 1, AccProfitPoints[d-1]);\n"
+        "      _AMC_NPV[s] = LongShort * NPVMEM( bwdPayoff, _AMC_SimDates[s], a);\n"
         "    ELSE\n"
         "      _AMC_NPV[s] = LongShort * NPVMEM( bwdPayoff, _AMC_SimDates[s], a);\n"
         "    END;\n"
