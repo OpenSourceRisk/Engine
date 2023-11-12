@@ -79,23 +79,59 @@ private:
     boost::shared_ptr<LowDiscrepancy::rsg_type> rsg_;
 };
 
-class MultiPathVariateGeneratorSobolBrownianBridge : public MultiPathVariateGeneratorBase {
+class MultiPathVariateGeneratorBurley2020Sobol : public MultiPathVariateGeneratorBase {
 public:
-    MultiPathVariateGeneratorSobolBrownianBridge(
+    MultiPathVariateGeneratorBurley2020Sobol(const Size dimension, const Size timeSteps, BigNatural seed = 42,
+                                             SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7, BigNatural scrambleSeed = 43);
+    void reset() override;
+
+private:
+    Sample<std::vector<Real>> nextSequence() const override;
+
+    BigNatural seed_;
+    SobolRsg::DirectionIntegers directionIntegers_;
+    BigNatural scrambleSeed_;
+
+    boost::shared_ptr<InverseCumulativeRsg<Burley2020SobolRsg, InverseCumulativeNormal>> rsg_;
+};
+
+class MultiPathVariateGeneratorSobolBrownianBridgeBase : public MultiPathVariateGeneratorBase {
+public:
+    MultiPathVariateGeneratorSobolBrownianBridgeBase(
         const Size dimension, const Size timeSteps,
         SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps, BigNatural seed = 0,
         SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7);
     Sample<std::vector<Array>> next() const override;
-    void reset() override;
 
-private:
+protected:
     Sample<std::vector<Real>> nextSequence() const override;
 
     SobolBrownianGenerator::Ordering ordering_;
     BigNatural seed_;
     SobolRsg::DirectionIntegers directionIntegers_;
 
-    boost::shared_ptr<SobolBrownianGenerator> gen_;
+    boost::shared_ptr<SobolBrownianGeneratorBase> gen_;
+};
+
+class MultiPathVariateGeneratorSobolBrownianBridge : public MultiPathVariateGeneratorSobolBrownianBridgeBase {
+public:
+    MultiPathVariateGeneratorSobolBrownianBridge(
+        const Size dimension, const Size timeSteps,
+        SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps, BigNatural seed = 42,
+        SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7);
+    void reset() override final;
+};
+
+class MultiPathVariateGeneratorBurley2020SobolBrownianBridge : public MultiPathVariateGeneratorSobolBrownianBridgeBase {
+public:
+    MultiPathVariateGeneratorBurley2020SobolBrownianBridge(
+        const Size dimension, const Size timeSteps,
+        SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps, BigNatural seed = 42,
+        SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7, BigNatural scrambleSeed = 43);
+    void reset() override final;
+
+protected:
+    BigNatural scrambleSeed_;
 };
 
 boost::shared_ptr<MultiPathVariateGeneratorBase>
