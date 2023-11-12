@@ -645,10 +645,12 @@ AmortizationType parseAmortizationType(const std::string& s) {
 }
 
 SequenceType parseSequenceType(const std::string& s) {
-    static map<string, SequenceType> seq = {{"MersenneTwister", SequenceType::MersenneTwister},
-                                            {"MersenneTwisterAntithetic", SequenceType::MersenneTwisterAntithetic},
-                                            {"Sobol", SequenceType::Sobol},
-                                            {"SobolBrownianBridge", SequenceType::SobolBrownianBridge}};
+    static map<string, SequenceType> seq = {
+        {"MersenneTwister", SequenceType::MersenneTwister},
+        {"MersenneTwisterAntithetic", SequenceType::MersenneTwisterAntithetic},
+        {"Sobol", SequenceType::Sobol},
+        {"SobolBrownianBridge", SequenceType::SobolBrownianBridge},
+        {"Burley2020SobolBrownianBridge", SequenceType::Burley2020SobolBrownianBridge}};
     auto it = seq.find(s);
     if (it != seq.end())
         return it->second;
