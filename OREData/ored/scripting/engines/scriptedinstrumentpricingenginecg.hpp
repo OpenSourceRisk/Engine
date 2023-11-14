@@ -46,15 +46,11 @@ public:
                                       const bool amcEnabled = false,
                                       const std::set<std::string>& amcStickyCloseOutStates = {},
                                       const bool generateAdditionalResults = false, const bool useCachedSensis = false,
-                                      const bool useExternalComputeFramework = false)
-        : npv_(npv), additionalResults_(additionalResults), model_(model), ast_(ast), context_(context),
-          mcParams_(mcParams), script_(script), interactive_(interactive), amcEnabled_(amcEnabled),
-          amcStickyCloseOutStates_(amcStickyCloseOutStates), generateAdditionalResults_(generateAdditionalResults),
-          useCachedSensis_(useCachedSensis), useExternalComputeFramework_(useExternalComputeFramework) {
-        registerWith(model_);
-    }
+                                      const bool useExternalComputeFramework = false);
 
     bool lastCalculationWasValid() const { return lastCalculationWasValid_; }
+
+    void buildComputationGraph() const;
 
 private:
     void calculate() const override;
@@ -81,7 +77,6 @@ private:
 
     // computation graph associated ops
 
-    mutable std::vector<std::string> opLabels_;
     mutable std::vector<RandomVariableOpNodeRequirements> opNodeRequirements_;
 
     // if no external compute framework used
