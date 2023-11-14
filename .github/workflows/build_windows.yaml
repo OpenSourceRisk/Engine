@@ -2,21 +2,21 @@ name: C/C++ CI Windows
 
 on:
   push:
-    branches: [master]
-  pull_request:
-    branches: [master]
-    types: [ready_for_review, opened, synchronize, reopened]
-    paths:
-      - .github/workflows/linux_build.yaml
-      - ./App/**
-      - ./OREAnalytics/**
-      - '!./OREAnalytics/doc/**'
-      - ./OREData/**
-      - '!./OREData/doc/**'
-      - ./ORETest/**
-      - ./QuantExt/**
-      - '!./QuantExt/doc/**'
-      - CMakeLists.txt
+#    branches: [master]
+#  pull_request:
+#    branches: [master]
+#    types: [ready_for_review, opened, synchronize, reopened]
+#    paths:
+#      - .github/workflows/linux_build.yaml
+#      - ./App/**
+#      - ./OREAnalytics/**
+#      - '!./OREAnalytics/doc/**'
+#      - ./OREData/**
+#      - '!./OREData/doc/**'
+#      - ./ORETest/**
+#      - ./QuantExt/**
+#      - '!./QuantExt/doc/**'
+#      - CMakeLists.txt
   workflow_dispatch:
 
 jobs:
