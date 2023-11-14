@@ -23,10 +23,10 @@
 
 #pragma once
 
-#include <ored/utilities/progressbar.hpp>
+#include <ored/marketdata/loader.hpp>
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/scripting/models/gaussiancamcg.hpp>
-#include <ored/marketdata/loader.hpp>
+#include <ored/utilities/progressbar.hpp>
 
 #include <ql/types.hpp>
 

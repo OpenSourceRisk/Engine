@@ -18,9 +18,15 @@
 
 #include <orea/engine/xvaenginecg.hpp>
 
+#include <orea/scenario/scenariosimmarketparameters.hpp>
+#include <orea/scenario/scenariogeneratordata.hpp>
+#include <orea/scenario/sensitivityscenariodata.hpp>
+
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/scripting/engines/scriptedinstrumentpricingenginecg.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/configuration/curveconfigurations.hpp>
+#include <ored/portfolio/portfolio.hpp>
 
 #include <qle/methods/multipathvariategenerator.hpp>
 #include <qle/ad/forwardevaluation.hpp>
