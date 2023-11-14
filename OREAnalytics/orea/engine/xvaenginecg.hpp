@@ -26,9 +26,15 @@
 #include <ored/utilities/progressbar.hpp>
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/scripting/models/gaussiancamcg.hpp>
+#include <ored/marketdata/loader.hpp>
+
+#include <ql/types.hpp>
 
 namespace ore {
 namespace analytics {
+
+using namespace QuantLib;
+using namespace ore::data;
 
 class XvaEngineCG : public ore::data::ProgressReporter {
 public:
