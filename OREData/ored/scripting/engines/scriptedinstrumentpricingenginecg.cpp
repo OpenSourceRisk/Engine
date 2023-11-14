@@ -64,15 +64,12 @@ double externalAverage(const std::vector<double>& v) {
 
 } // namespace
 
-ScriptedInstrumentPricingEngineCG(const std::string& npv,
-                                  const std::vector<std::pair<std::string, std::string>>& additionalResults,
-                                  const boost::shared_ptr<ModelCG>& model, const ASTNodePtr ast,
-                                  const boost::shared_ptr<Context>& context, const Model::McParams& mcParams,
-                                  const std::string& script = "", const bool interactive = false,
-                                  const bool amcEnabled = false,
-                                  const std::set<std::string>& amcStickyCloseOutStates = {},
-                                  const bool generateAdditionalResults = false, const bool useCachedSensis = false,
-                                  const bool useExternalComputeFramework = false)
+ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
+    const std::string& npv, const std::vector<std::pair<std::string, std::string>>& additionalResults,
+    const boost::shared_ptr<ModelCG>& model, const ASTNodePtr ast, const boost::shared_ptr<Context>& context,
+    const Model::McParams& mcParams, const std::string& script, const bool interactive, const bool amcEnabled,
+    const std::set<std::string>& amcStickyCloseOutStates, const bool generateAdditionalResults,
+    const bool useCachedSensis, const bool useExternalComputeFramework)
     : npv_(npv), additionalResults_(additionalResults), model_(model), ast_(ast), context_(context),
       mcParams_(mcParams), script_(script), interactive_(interactive), amcEnabled_(amcEnabled),
       amcStickyCloseOutStates_(amcStickyCloseOutStates), generateAdditionalResults_(generateAdditionalResults),
@@ -145,7 +142,7 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph() const {
         cgBuilder.run(generateAdditionalResults_, script_, interactive_);
         cgVersion_ = model_->cgVersion();
         DLOG("Built computation graph version " << cgVersion_ << " size is " << g->size());
-        TLOGGERSTREAM(ssaForm(*g, opLabels_));
+        TLOGGERSTREAM(ssaForm(*g, getRandomVariableOpLabels()));
         keepNodes_ = cgBuilder.keepNodes();
         payLogEntries_ = cgBuilder.payLogEntries();
 

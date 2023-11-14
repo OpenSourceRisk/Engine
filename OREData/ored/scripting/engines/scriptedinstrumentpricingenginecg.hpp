@@ -24,10 +24,11 @@
 
 #include <qle/ad/external_randomvariable_ops.hpp>
 
-#include <ored/scripting/models/modelcg.hpp>
 #include <ored/scripting/ast.hpp>
 #include <ored/scripting/computationgraphbuilder.hpp>
 #include <ored/scripting/context.hpp>
+#include <ored/scripting/models/model.hpp>
+#include <ored/scripting/models/modelcg.hpp>
 #include <ored/scripting/paylog.hpp>
 #include <ored/scripting/scriptedinstrument.hpp>
 
@@ -49,6 +50,7 @@ public:
                                       const bool useExternalComputeFramework = false);
 
     bool lastCalculationWasValid() const { return lastCalculationWasValid_; }
+    const std::string& npvName() const { return npv_; }
 
     void buildComputationGraph() const;
 
