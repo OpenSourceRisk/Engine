@@ -23,10 +23,18 @@
 
 #pragma once
 
+#include <orea/scenario/scenariogeneratordata.hpp>
+#include <orea/scenario/scenariosimmarketparameters.hpp>
+#include <orea/scenario/sensitivityscenariodata.hpp>
+
+#include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/model/crossassetmodelbuilder.hpp>
+#include <ored/portfolio/portfolio.hpp>
 #include <ored/scripting/models/gaussiancamcg.hpp>
 #include <ored/utilities/progressbar.hpp>
+
+#include <ored/marketdata/todaysmarket.hpp>
 
 #include <ql/types.hpp>
 
