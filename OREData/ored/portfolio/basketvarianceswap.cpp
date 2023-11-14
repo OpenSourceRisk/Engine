@@ -228,8 +228,12 @@ XMLNode* BasketVarianceSwap::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(tradeNode, valuationSchedule);
     
     XMLUtils::addChild(doc, tradeNode, "SettlementDate", settlementDate_);
-    XMLUtils::addChild(doc, tradeNode, "Cap", cap_);
-    XMLUtils::addChild(doc, tradeNode, "Floor", floor_);
+    if (!cap_.empty()) {
+        XMLUtils::addChild(doc, node, "Cap", cap_);
+    }
+    if (!floor_.empty()) {
+        XMLUtils::addChild(doc, node, "Floor", floor_);
+    }
     XMLUtils::addChild(doc, tradeNode, "SquaredPayoff", squaredPayoff_);
 
     return node;
