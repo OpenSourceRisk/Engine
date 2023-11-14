@@ -59,6 +59,8 @@ public:
 
     const std::map<std::size_t, std::set<std::string>>& labels() const;
 
+    void setPrefix(const std::string& prefix);
+
 private:
     std::vector<std::vector<std::size_t>> predecessors_;
     std::vector<std::size_t> opId_;
@@ -72,6 +74,8 @@ private:
     std::map<std::string, std::size_t> variableVersion_;
 
     std::map<std::size_t, std::set<std::string>> labels_;
+
+    std::string prefix_;
 };
 
 // methods to construct cg
