@@ -44,8 +44,6 @@ public:
                                       const boost::shared_ptr<ModelCG>& model, const ASTNodePtr ast,
                                       const boost::shared_ptr<Context>& context, const Model::McParams& mcParams,
                                       const std::string& script = "", const bool interactive = false,
-                                      const bool amcEnabled = false,
-                                      const std::set<std::string>& amcStickyCloseOutStates = {},
                                       const bool generateAdditionalResults = false, const bool useCachedSensis = false,
                                       const bool useExternalComputeFramework = false);
 
@@ -107,8 +105,6 @@ private:
     const Model::McParams mcParams_;
     const std::string script_;
     const bool interactive_;
-    const bool amcEnabled_;
-    const std::set<std::string> amcStickyCloseOutStates_;
     const bool generateAdditionalResults_;
     const bool useCachedSensis_;
     const bool useExternalComputeFramework_;

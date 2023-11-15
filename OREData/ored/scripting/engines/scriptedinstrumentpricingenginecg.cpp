@@ -67,13 +67,12 @@ double externalAverage(const std::vector<double>& v) {
 ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
     const std::string& npv, const std::vector<std::pair<std::string, std::string>>& additionalResults,
     const boost::shared_ptr<ModelCG>& model, const ASTNodePtr ast, const boost::shared_ptr<Context>& context,
-    const Model::McParams& mcParams, const std::string& script, const bool interactive, const bool amcEnabled,
-    const std::set<std::string>& amcStickyCloseOutStates, const bool generateAdditionalResults,
-    const bool useCachedSensis, const bool useExternalComputeFramework)
+    const Model::McParams& mcParams, const std::string& script, const bool interactive,
+    const bool generateAdditionalResults, const bool useCachedSensis, const bool useExternalComputeFramework)
     : npv_(npv), additionalResults_(additionalResults), model_(model), ast_(ast), context_(context),
-      mcParams_(mcParams), script_(script), interactive_(interactive), amcEnabled_(amcEnabled),
-      amcStickyCloseOutStates_(amcStickyCloseOutStates), generateAdditionalResults_(generateAdditionalResults),
-      useCachedSensis_(useCachedSensis), useExternalComputeFramework_(useExternalComputeFramework) {
+      mcParams_(mcParams), script_(script), interactive_(interactive),
+      generateAdditionalResults_(generateAdditionalResults), useCachedSensis_(useCachedSensis),
+      useExternalComputeFramework_(useExternalComputeFramework) {
 
     // register with model
 
@@ -402,16 +401,6 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
             instrumentAdditionalResults_.insert(model_->additionalResults().begin(), model_->additionalResults().end());
 
         } // if generate additional results
-
-        // if the engine is amc enabled, add an amc calculator to the additional results
-
-        if (amcEnabled_) {
-            QL_FAIL("AMC not supported by scripted instrument pricing engine CG");
-            // DLOG("add amc calculator to results");
-            // results_.additionalResults["amcCalculator"] =
-            //     boost::static_pointer_cast<AmcCalculator>(boost::make_shared<ScriptedInstrumentAmcCalculator>(
-            //         npv_, model_, ast_, context_, script_, interactive_, amcStickyCloseOutStates_));
-        }
 
         if (useCachedSensis_) {
 
