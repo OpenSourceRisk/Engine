@@ -198,13 +198,13 @@ Real CompositeTrade::calculateNotional(const vector<Real>& notionals) const {
         QL_FAIL("Unsupported notional calculation type.");
 }
 
-map<string, set<Date>> CompositeTrade::fixings(const Date& settlementDate) const {
+map<string, RequiredFixings::FixingDates> CompositeTrade::fixings(const Date& settlementDate) const {
 
-    map<string, set<Date>> result;
+    map<string, RequiredFixings::FixingDates>  result;
     for (const auto& t : trades_) {
         auto fixings = t->fixings(settlementDate);
-        for (const auto& kv : fixings) {
-            result[kv.first].insert(kv.second.begin(), kv.second.end());
+        for (const auto& [indexName, fixingDates] : fixings) {
+            result[indexName].addDates(fixingDates);
         }
     }
     return result;
