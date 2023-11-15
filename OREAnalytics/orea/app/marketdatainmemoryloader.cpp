@@ -43,7 +43,7 @@ void MarketDataInMemoryLoaderImpl::retrieveMarketData(
 }
 
 void MarketDataInMemoryLoaderImpl::retrieveFixings(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
-        map<string, set<Date>> fixings,
+        map<string, RequiredFixings::FixingDates> fixings,
         map<pair<string, Date>, set<Date>> lastAvailableFixingLookupMap) {
     
     if (inputs_->allFixings()) {
