@@ -43,12 +43,14 @@ public:
     //! constructor that builds an AMC - enabled pricing engine
     ScriptedTradeEngineBuilder(const boost::shared_ptr<QuantExt::CrossAssetModel>& amcCam,
                                const std::vector<Date>& amcGrid)
-        : EngineBuilder("Generic", "Generic", {"ScriptedTrade"}), amcCam_(amcCam), amcGrid_(amcGrid) {}
+        : EngineBuilder("Generic", "Generic", {"ScriptedTrade"}), buildingAmc_(true), amcCam_(amcCam),
+          amcGrid_(amcGrid) {}
 
     //! constructor that builds an AMCCG pricing engine
     ScriptedTradeEngineBuilder(const boost::shared_ptr<ore::data::ModelCG>& amcCgModel,
                                const std::vector<Date>& amcGrid)
-        : EngineBuilder("Generic", "Generic", {"ScriptedTrade"}), amcCgModel_(amcCgModel), amcGrid_(amcGrid) {}
+        : EngineBuilder("Generic", "Generic", {"ScriptedTrade"}), buildingAmc_(true), amcCgModel_(amcCgModel),
+          amcGrid_(amcGrid) {}
 
     boost::shared_ptr<QuantExt::ScriptedInstrument::engine>
     engine(const std::string& id, const ScriptedTrade& scriptedTrade,
@@ -90,6 +92,8 @@ protected:
                           const std::vector<std::string>& conditionalExpectationModelStates);
     void buildGaussianCamAMC(const std::string& id, const IborFallbackConfig& iborFallbackConfig,
                              const std::vector<std::string>& conditionalExpectationModelStates);
+    void buildAMCCGModel(const std::string& id, const IborFallbackConfig& iborFallbackConfig,
+                         const std::vector<std::string>& conditionalExpectationModelStates);
     void addAmcGridToContext(boost::shared_ptr<Context>& context) const;
     void setupCalibrationStrikes(const ScriptedTradeScriptData& script, const boost::shared_ptr<Context>& context);
 
@@ -100,6 +104,7 @@ protected:
     std::string getCommCcy(const IndexInfo& e);
 
     // input data (for amc, amcCam_, amcCgModel_ are mutually exclusive)
+    bool buildingAmc_ = false;
     const boost::shared_ptr<QuantExt::CrossAssetModel> amcCam_;
     const boost::shared_ptr<ore::data::ModelCG> amcCgModel_;
     const std::vector<Date> amcGrid_;

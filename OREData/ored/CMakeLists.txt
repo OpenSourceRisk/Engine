@@ -685,7 +685,6 @@ scripting/engines/scriptedinstrumentpricingengine.hpp
 scripting/engines/scriptedinstrumentpricingenginecg.hpp
 scripting/grammar.hpp
 scripting/models/amcmodel.hpp
-scripting/models/amcmodelcg.hpp
 scripting/models/blackscholes.hpp
 scripting/models/blackscholesbase.hpp
 scripting/models/blackscholescg.hpp
