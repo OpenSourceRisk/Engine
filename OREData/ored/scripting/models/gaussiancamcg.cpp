@@ -354,11 +354,5 @@ std::size_t GaussianCamCG::npv(const std::size_t amount, const Date& obsdate, co
     return cg_conditionalExpectation(*g_, amount, state, filter);
 }
 
-void GaussianCamCG::injectPaths(const std::vector<QuantLib::Real>* pathTimes,
-                                const std::vector<std::vector<std::size_t>>* variates,
-                                const std::vector<bool>* isRelevantTime, const bool stickyCloseOutRun) {
-    QL_FAIL("GaussianCamCG::injectPaths(): not implemented");
-}
-
 } // namespace data
 } // namespace ore
