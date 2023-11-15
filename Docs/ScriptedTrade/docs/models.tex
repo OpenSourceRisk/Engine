@@ -111,7 +111,8 @@ The engine parameters have the following meaning:
 \item RegressionOrder: The order of the polynomial basis to compute conditional expectations via regression
   analysis. Applies to MC only.
 \item SequenceType: The sequence type used for pricing. Defaults to SobolBrownianBridge. Possible values
-  SobolBrownianBridge, MersenneTwister, MersenneTwisterAnithetic, Sobol. Applies to MC only.
+  SobolBrownianBridge, Burley2020SobolBrownianBridge, MersenneTwister, MersenneTwisterAnithetic, Sobol,
+  Burley2020Sobol. Applies to MC only.
 \item PolynomType: The polynom type used for regression analysis. Defaults to Monomial. Possible values Monomial,
   Laguerre, Hermite, Hyperbolic, Legendre, Chebyshev, Chebychev2nd. Applies to MC only.
 \item TrainingSamples: If given, pricing and training are separate phases and traning phase is using this number of
