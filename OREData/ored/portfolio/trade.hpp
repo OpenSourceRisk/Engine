@@ -81,7 +81,7 @@ public:
 
         \warning This method will return an empty map if the Trade has not been built.
     */
-    virtual std::map<std::string, std::set<QuantLib::Date>>
+    virtual std::map<std::string,  RequiredFixings::FixingDates>
     fixings(const QuantLib::Date& settlementDate = QuantLib::Date()) const {
         return requiredFixings_.fixingDatesIndices(settlementDate);
     }
