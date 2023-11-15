@@ -11,7 +11,6 @@
 #pragma once
 
 #include <ored/model/crossassetmodelbuilder.hpp>
-#include <ored/scripting/models/amcmodelcg.hpp>
 #include <ored/scripting/models/modelcgimpl.hpp>
 
 #include <qle/processes/crossassetstateprocess.hpp>
@@ -21,7 +20,7 @@
 namespace ore {
 namespace data {
 
-class GaussianCamCG : public ModelCGImpl, public AmcModelCG {
+class GaussianCamCG : public ModelCGImpl {
 public:
     /* For the constructor arguments see ModelCGImpl, plus the notes in GaussianCam */
     GaussianCamCG(const Handle<CrossAssetModel>& cam, const Size paths, const std::vector<std::string>& currencies,
@@ -49,12 +48,6 @@ public:
     // t0 market data functions from the ModelCG interface
     Real getDirectFxSpotT0(const std::string& forCcy, const std::string& domCcy) const override;
     Real getDirectDiscountT0(const Date& paydate, const std::string& currency) const override;
-
-    // TODO ....
-    void resetNPVMem() override {}
-    void injectPaths(const std::vector<QuantLib::Real>* pathTimes,
-                     const std::vector<std::vector<std::size_t>>* variates, const std::vector<bool>* isRelevantTime,
-                     const bool stickyCloseOutRun) override;
 
 protected:
     // ModelCGImpl interface implementation
