@@ -76,7 +76,7 @@ public:
 
     void
     addAdditionalFixingsForEquityIndexDecomposition(const QuantLib::Date& asof,
-                                                    std::map<std::string, std::set<QuantLib::Date>>& fixings) const;
+                                                    std::map<std::string, RequiredFixings::FixingDates>& fixings) const;
 
 private:
     std::string name_;
