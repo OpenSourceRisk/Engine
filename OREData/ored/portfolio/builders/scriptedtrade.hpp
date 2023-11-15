@@ -45,6 +45,11 @@ public:
                                const std::vector<Date>& amcGrid)
         : EngineBuilder("Generic", "Generic", {"ScriptedTrade"}), amcCam_(amcCam), amcGrid_(amcGrid) {}
 
+    //! constructor that builds an AMCCG pricing engine
+    ScriptedTradeEngineBuilder(const boost::shared_ptr<ore::data::ModelCG>& amcCgModel,
+                               const std::vector<Date>& amcGrid)
+        : EngineBuilder("Generic", "Generic", {"ScriptedTrade"}), amcCgModel_(amcCgModel), amcGrid_(amcGrid) {}
+
     boost::shared_ptr<QuantExt::ScriptedInstrument::engine>
     engine(const std::string& id, const ScriptedTrade& scriptedTrade,
            const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
@@ -94,8 +99,9 @@ protected:
     // gets comm ccy from market
     std::string getCommCcy(const IndexInfo& e);
 
-    // input data
+    // input data (for amc, amcCam_, amcCgModel_ are mutually exclusive)
     const boost::shared_ptr<QuantExt::CrossAssetModel> amcCam_;
+    const boost::shared_ptr<ore::data::ModelCG> amcCgModel_;
     const std::vector<Date> amcGrid_;
 
     // cache for parsed asts
