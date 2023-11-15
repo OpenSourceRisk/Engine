@@ -428,19 +428,17 @@ public:
      */
     void removeAllLoggers();
 
-    std::string source(const char* filename, int lineNo);
-
     void addExcludeFilter(const std::string&, const std::function<bool(const std::string&)>);
 
     void removeExcludeFilter(const std::string&);
 
     bool checkExcludeFilters(const std::string&);
 
-    //! macro utility function - do not use directly
+    //! macro utility function - do not use directly, not thread safe
     void header(unsigned m, const char* filename, int lineNo);
-    //! macro utility function - do not use directly
+    //! macro utility function - do not use directly, not thread safe
     std::ostream& logStream() { return ls_; }
-    //! macro utility function - do not use directly
+    //! macro utility function - do not use directly, not thread safe
     void log(unsigned m);
 
     //! mutex to acquire locks
@@ -460,7 +458,7 @@ public:
         mask_ = mask;
     }
     const boost::filesystem::path& rootPath() {
-        boost::unique_lock<boost::shared_mutex> lock(mutex());
+        boost::shared_lock<boost::shared_mutex> lock(mutex());
         return rootPath_;
     }
     void setRootPath(const boost::filesystem::path& pth) {
@@ -468,7 +466,7 @@ public:
         rootPath_ = pth;
     }
     int maxLen() {
-        boost::unique_lock<boost::shared_mutex> lock(mutex());
+        boost::shared_lock<boost::shared_mutex> lock(mutex());
         return maxLen_;
     }
     void setMaxLen(const int n) {
@@ -499,6 +497,9 @@ public:
 
 private:
     Log();
+
+    // not thread safe
+    std::string source(const char* filename, int lineNo) const;
 
     std::map<std::string, boost::shared_ptr<Logger>> loggers_;
     std::map<std::string, boost::shared_ptr<IndependentLogger>> independentLoggers_;
