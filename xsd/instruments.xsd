@@ -4383,8 +4383,8 @@
       <xs:element type="underlyings" name="Underlyings"/>
       <xs:element type="scheduleData" name="ValuationSchedule"/>
       <xs:element type="xs:boolean" name="SquaredPayoff"/>
-      <xs:element type="xs:float" name="Cap"/>
-      <xs:element type="xs:float" name="Floor"/>
+      <xs:element type="xs:float" name="Cap" minOccurs="0"/>
+      <xs:element type="xs:float" name="Floor" minOccurs="0"/>
       <xs:element type="date" name="SettlementDate"/>
       <xs:element type="currencyCode" name="Currency"/>
     </xs:all>
