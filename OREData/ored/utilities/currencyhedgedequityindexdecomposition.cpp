@@ -204,23 +204,23 @@ CurrencyHedgedEquityIndexDecomposition::unhedgedDelta(double hedgedDelta, const 
 }
 
 void CurrencyHedgedEquityIndexDecomposition::addAdditionalFixingsForEquityIndexDecomposition(
-    const QuantLib::Date& asof, std::map<std::string, std::set<QuantLib::Date>>& fixings) const {
+    const QuantLib::Date& asof, std::map<std::string, RequiredFixings::FixingDates>& fixings) const {
     if (isValid()) {
         QuantLib::Date rebalancingDt = rebalancingDate(asof);
         QuantLib::Date referenceDt = referenceDate(asof);
-        fixings[IndexNameTranslator::instance().oreName(indexName())].insert(rebalancingDt);
-        fixings[IndexNameTranslator::instance().oreName(indexName())].insert(referenceDt);
+        fixings[IndexNameTranslator::instance().oreName(indexName())].addDate(rebalancingDt, false);
+        fixings[IndexNameTranslator::instance().oreName(indexName())].addDate(referenceDt, false);
 
         IndexNameTranslator::instance().add(underlyingIndexName(), "EQ-" + underlyingIndexName());
-        fixings[IndexNameTranslator::instance().oreName(underlyingIndexName())].insert(rebalancingDt);
-        fixings[IndexNameTranslator::instance().oreName(underlyingIndexName())].insert(referenceDt);
+        fixings[IndexNameTranslator::instance().oreName(underlyingIndexName())].addDate(rebalancingDt, false);
+        fixings[IndexNameTranslator::instance().oreName(underlyingIndexName())].addDate(referenceDt, false);
 
-        fixings[fxIndexName()].insert(referenceDt);
-        fixings[fxIndexName()].insert(rebalancingDt);
+        fixings[fxIndexName()].addDate(referenceDt, false);
+        fixings[fxIndexName()].addDate(rebalancingDt, false);
 
         for (const auto& [currency, name] : currencyWeightsAndFxIndexNames()) {
-            fixings[name.second].insert(referenceDt);
-            fixings[name.second].insert(rebalancingDt);
+            fixings[name.second].addDate(referenceDt, false);
+            fixings[name.second].addDate(rebalancingDt, false);
         }
     }
 }
