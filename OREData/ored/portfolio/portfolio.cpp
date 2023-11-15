@@ -216,17 +216,16 @@ bool Portfolio::hasNettingSetDetails() const {
     return hasNettingSetDetails;
 }
 
-map<string, set<Date>> Portfolio::fixings(const Date& settlementDate) const {
-
-    map<string, set<Date>> result;
-
+map<string, RequiredFixings::FixingDates> Portfolio::fixings(const Date& settlementDate) const {
+    map<string, RequiredFixings::FixingDates> result;
     for (const auto& t : trades_) {
         auto fixings = t.second->fixings(settlementDate);
-        for (const auto& kv : fixings) {
-            result[kv.first].insert(kv.second.begin(), kv.second.end());
+        for (const auto& [index, fixingDates] : fixings) {
+            if (!fixingDates.empty()) {
+                result[index].addDates(fixingDates);
+            }
         }
     }
-
     return result;
 }
 
