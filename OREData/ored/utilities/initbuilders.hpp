@@ -50,6 +50,13 @@
         },                                                                                                             \
         OVERWRITE);
 
+#define ORE_REGISTER_AMCCG_ENGINE_BUILDER(CLASS, OVERWRITE)                                                            \
+    ore::data::EngineBuilderFactory::instance().addAmcCgEngineBuilder(                                                 \
+        [](const boost::shared_ptr<ore::data::ModelCG>& model, const std::vector<ore::data::Date>& grid) {             \
+            return boost::make_shared<CLASS>(model, grid);                                                             \
+        },                                                                                                             \
+        OVERWRITE);
+
 #define ORE_REGISTER_ENGINE_BUILDER(CLASS, OVERWRITE)                                                                  \
     ore::data::EngineBuilderFactory::instance().addEngineBuilder([]() { return boost::make_shared<CLASS>(); },         \
                                                                  OVERWRITE);
