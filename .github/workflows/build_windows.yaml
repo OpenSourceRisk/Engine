@@ -34,10 +34,10 @@ jobs:
         (New-Object System.Net.WebClient).DownloadFile($Url, "$env:TEMP\boost.exe")
         Start-Process -Wait -FilePath "$env:TEMP\boost.exe" "/SILENT","/SP-","/SUPPRESSMSGBOXES","/DIR=C:\local\boost"
         choco install -y ninja
-    - name: apply patch (temp fix for issue #160)
-      run: |
-        cd OREAnalytics/test
-        Add-Content -Path .\CMakeLists.txt -Value "target_compile_definitions(orea-test-suite PUBLIC BOOST_USE_WINAPI_VERSION=0x0600)"
+#    - name: apply patch (temp fix for issue #160)
+#      run: |
+#        cd OREAnalytics/test
+#        Add-Content -Path .\CMakeLists.txt -Value "target_compile_definitions(orea-test-suite PUBLIC BOOST_USE_WINAPI_VERSION=0x0600)"
     - name: cmake configure and build
       env:
         BOOST_ROOT: C:\local\boost
