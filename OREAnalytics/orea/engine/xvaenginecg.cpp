@@ -21,7 +21,9 @@
 #include <ored/scripting/engines/scriptedinstrumentpricingenginecg.hpp>
 #include <ored/utilities/to_string.hpp>
 
+#include <qle/ad/backwardderivatives.hpp>
 #include <qle/ad/forwardevaluation.hpp>
+#include <qle/ad/ssaform.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
 
 namespace ore {
@@ -107,7 +109,13 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     // note: projectedStateProcessIndices can be removed from GaussianCamCG constructor most probably
     model_ = boost::make_shared<GaussianCamCG>(camBuilder_->model(), scenarioGeneratorData_->samples(), currencies,
                                                curves, fxSpots, irIndices, infIndices, indices, indexCurrencies,
-                                               simulationDates, timeStepsPerYear, iborFallbackConfig_);
+                                               simulationDates, timeStepsPerYear, iborFallbackConfig,
+                                               std::vector<Size>(), std::vector<std::string>(), true);
+    model_->calculate();
+    auto g = model_->computationGraph();
+
+    DLOG("Built computation graph for model, size is " << g->size());
+    TLOGGERSTREAM(ssaForm(*g, getRandomVariableOpLabels()));
 
     // 4c build trades with global cg cam model
 
@@ -132,8 +140,6 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     DLOG("XvaEngineCG: add to computation graph for all trades");
 
-    auto g = model_->computationGraph();
-
     std::map<std::string, std::vector<std::size_t>> amcNpvNodes; // including time zero npv
     std::map<std::string, std::pair<std::size_t, std::size_t>> tradeNodeRanges;
 
@@ -151,16 +157,19 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
         std::vector<std::size_t> tmp;
         tmp.push_back(g->variable(engine->npvName() + "_0"));
         for (std::size_t i = 0; i < simulationDates.size(); ++i) {
-            tmp.push_back(g->variable("__AMC_NPV_" + std::to_string(i)));
+            tmp.push_back(g->variable("_AMC_NPV_" + std::to_string(i)));
         }
         amcNpvNodes[id] = tmp;
     }
+
+    DLOG("Extended computation graph for trades, size is " << g->size());
+    TLOGGERSTREAM(ssaForm(*g, getRandomVariableOpLabels()));
 
     // 6 populate random variates
 
     DLOG("XvaEngineCG: populate random variates");
 
-    std::vector<RandomVariable> values(g->size());
+    std::vector<RandomVariable> values(g->size(), RandomVariable(model_->size(), 0.0));
 
     auto const& rv = model_->randomVariates();
     if (!rv.empty()) {
@@ -175,6 +184,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
                 }
             }
         }
+        DLOG("generated rvs for " << rv.size() << " time steps and " << rv.front().size() << " underlyings.");
     }
 
     // 7 populate constants and model parameters
@@ -190,7 +200,11 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
         values[p.first] = RandomVariable(model_->size(), p.second);
     }
 
+    DLOG("set " << g->constants().size() << " constants and " << baseModelParams_.size() << " model parameters.");
+
     // 8 do forward evaluation for all trades, keep npv and amc npv nodes
+
+    DLOG("XvaEngineCG: run forward evaluation");
 
     std::vector<bool> keepNodes(g->size(), false);
     for (auto const& [_, amcNpvNode] : amcNpvNodes) {
@@ -205,6 +219,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     forwardEvaluation(*g, values, ops_, RandomVariable::deleter, false, opNodeRequirements_, keepNodes);
 
+    DLOG("ran forward evaluation.");
+
     // 8b dump epe profile out
 
     for (auto const& [id, npvs] : amcNpvNodes) {
@@ -212,9 +228,10 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
             std::cout << id << ","
                       << ore::data::to_string(i == 0 ? model_->referenceDate()
                                                      : *std::next(simulationDates.begin(), i - 1))
-                      << "," << expectation(max(values[npvs[i]], RandomVariable(model_->size(), 0.0)));
+                      << "," << expectation(max(values[npvs[i]], RandomVariable(model_->size(), 0.0))) << "\n";
         }
     }
+    std::cout << std::flush;
 
     // 9 build the postprocessing computation graph
 
