@@ -31,7 +31,8 @@ public:
                   const std::set<Date>& simulationDates, const Size timeStepsPerYear = 1,
                   const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
                   const std::vector<Size>& projectedStateProcessIndices = {},
-                  const std::vector<std::string>& conditionalExpectationModelStates = {});
+                  const std::vector<std::string>& conditionalExpectationModelStates = {},
+                  const bool sloppySimDates = false);
 
     // Model interface implementation
     Type type() const override { return Type::MC; }
@@ -70,6 +71,7 @@ protected:
     const std::vector<Handle<Quote>> fxSpots_;
     const Size timeStepsPerYear_;
     const std::vector<Size> projectedStateProcessIndices_;
+    const bool sloppySimDates_;
 
     // updated in performCalculations()
     mutable Date referenceDate_;                      // the model reference date
