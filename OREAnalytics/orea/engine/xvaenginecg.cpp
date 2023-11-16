@@ -26,6 +26,8 @@
 #include <qle/ad/ssaform.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
 
+#include <boost/timer/timer.hpp>
+
 namespace ore {
 namespace analytics {
 
@@ -49,6 +51,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
       sensitivityData_(sensitivityData), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
       continueOnCalibrationError_(continueOnCalibrationError), continueOnError_(continueOnError), context_(context) {
 
+    boost::timer::cpu_timer timer;
+
     LOG("XvaEngineCG started");
 
     // 1 build T0 market
@@ -59,6 +63,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
                                                               continueOnError_, true, true, referenceData_, false,
                                                               iborFallbackConfig_, false, true);
 
+    std::cout << "T0 market building: " << timer.elapsed().wall / 1E6 << " ms" << std::endl;
+
     // 2 build sim market
 
     DLOG("XvaEngineCG: build sim market");
@@ -67,6 +73,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     simMarket_ = boost::make_shared<ore::analytics::ScenarioSimMarket>(
         initMarket_, simMarketData_, marketConfiguration_, *curveConfigs_, *todaysMarketParams_, continueOnError_, true,
         false, false, iborFallbackConfig_, true);
+
+    std::cout << "Sim market building: " << timer.elapsed().wall / 1E6 << " ms" << std::endl;
 
     // 3 set up cam builder against sim market
 
@@ -117,6 +125,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     DLOG("Built computation graph for model, size is " << g->size());
     TLOGGERSTREAM(ssaForm(*g, getRandomVariableOpLabels()));
 
+    std::cout << "Cam CG building: " << timer.elapsed().wall / 1E6 << " ms" << std::endl;
+
     // 4c build trades with global cg cam model
 
     DLOG("XvaEngineCG: build trades using global cam cg model");
@@ -165,6 +175,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     DLOG("Extended computation graph for trades, size is " << g->size());
     TLOGGERSTREAM(ssaForm(*g, getRandomVariableOpLabels()));
 
+    std::cout << "Trade building: " << timer.elapsed().wall / 1E6 << " ms" << std::endl;
+
     // 6 populate random variates
 
     DLOG("XvaEngineCG: populate random variates");
@@ -184,8 +196,10 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
                 }
             }
         }
-        DLOG("generated rvs for " << rv.size() << " time steps and " << rv.front().size() << " underlyings.");
+        DLOG("generated rvs for " << rv.size() << " underlyings and " << rv.front().size() << " time steps.");
     }
+
+    std::cout << "Randomvariable init: " << timer.elapsed().wall / 1E6 << " ms" << std::endl;
 
     // 7 populate constants and model parameters
 
@@ -201,6 +215,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     }
 
     DLOG("set " << g->constants().size() << " constants and " << baseModelParams_.size() << " model parameters.");
+
+    std::cout << "constants / model params: " << timer.elapsed().wall / 1E6 << " ms" << std::endl;
 
     // 8 do forward evaluation for all trades, keep npv and amc npv nodes
 
@@ -221,6 +237,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     DLOG("ran forward evaluation.");
 
+    std::cout << "forward eval: " << timer.elapsed().wall / 1E6 << " ms" << std::endl;
+
     // 8b dump epe profile out
 
     for (auto const& [id, npvs] : amcNpvNodes) {
@@ -228,7 +246,9 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
             std::cout << id << ","
                       << ore::data::to_string(i == 0 ? model_->referenceDate()
                                                      : *std::next(simulationDates.begin(), i - 1))
-                      << "," << expectation(max(values[npvs[i]], RandomVariable(model_->size(), 0.0))) << "\n";
+                      << "," << expectation(values[npvs[i]]) << ","
+                      << expectation(max(values[npvs[i]], RandomVariable(model_->size(), 0.0))) << ","
+                      << expectation(max(-values[npvs[i]], RandomVariable(model_->size(), 0.0))) << "\n";
         }
     }
     std::cout << std::flush;
