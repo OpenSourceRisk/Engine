@@ -29,7 +29,7 @@
       FOR i IN (1, SIZE(_AMC_SimDates), 1) DO
         _AMC_NPV[i] = NPV( UnderlyingNpv[i], _AMC_SimDates[i]);
       END;
-      value = UnderlyingNpv[1];
+      value = NPV(UnderlyingNpv[1], TODAY);
       FOR j IN (lastFixedLegIndex, 2, -1) DO
         value = value + PAY( Notional * FixedRate * dcf( FixedDayCounter, FixedLegSchedule[j-1], FixedLegSchedule[j] ),
                                                  FixedLegSchedule[j], FixedLegSchedule[j], PayCurrency );

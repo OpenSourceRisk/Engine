@@ -34,7 +34,7 @@
           <Name>FixedLegSchedule</Name>
           <ScheduleData>
             <Rules>
-              <StartDate>2026-03-01</StartDate>
+              <StartDate>2016-03-01</StartDate>
               <EndDate>2036-03-01</EndDate>
               <Tenor>1Y</Tenor>
               <Calendar>TARGET</Calendar>
@@ -63,7 +63,7 @@
           <Name>FloatLegSchedule</Name>
           <ScheduleData>
             <Rules>
-              <StartDate>2026-03-01</StartDate>
+              <StartDate>2016-03-01</StartDate>
               <EndDate>2036-03-01</EndDate>
               <Tenor>6M</Tenor>
               <Calendar>TARGET</Calendar>
