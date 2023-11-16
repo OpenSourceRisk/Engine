@@ -63,7 +63,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
                                                               continueOnError_, true, true, referenceData_, false,
                                                               iborFallbackConfig_, false, true);
 
-    std::cout << "T0 market building: " << timer.elapsed().wall / 1E6 << " ms" << std::endl;
+    boost::timer::nanosecond_type timing1 = timer.elapsed().wall;
 
     // 2 build sim market
 
@@ -74,7 +74,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
         initMarket_, simMarketData_, marketConfiguration_, *curveConfigs_, *todaysMarketParams_, continueOnError_, true,
         false, false, iborFallbackConfig_, true);
 
-    std::cout << "Sim market building: " << timer.elapsed().wall / 1E6 << " ms" << std::endl;
+    boost::timer::nanosecond_type timing2 = timer.elapsed().wall;
 
     // 3 set up cam builder against sim market
 
@@ -125,7 +125,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     DLOG("Built computation graph for model, size is " << g->size());
     TLOGGERSTREAM(ssaForm(*g, getRandomVariableOpLabels()));
 
-    std::cout << "Cam CG building: " << timer.elapsed().wall / 1E6 << " ms" << std::endl;
+    boost::timer::nanosecond_type timing3 = timer.elapsed().wall;
 
     // 4c build trades with global cg cam model
 
@@ -145,6 +145,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
                                           true);
 
     portfolio_->build(factory, "xva engine cg", true);
+
+    boost::timer::nanosecond_type timing4 = timer.elapsed().wall;
 
     // 5 add to computation graph for all trades and store npv, amc npv nodes, node range for each trade
 
@@ -175,7 +177,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     DLOG("Extended computation graph for trades, size is " << g->size());
     TLOGGERSTREAM(ssaForm(*g, getRandomVariableOpLabels()));
 
-    std::cout << "Trade building: " << timer.elapsed().wall / 1E6 << " ms" << std::endl;
+    boost::timer::nanosecond_type timing5 = timer.elapsed().wall;
 
     // 6 populate random variates
 
@@ -199,7 +201,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
         DLOG("generated rvs for " << rv.size() << " underlyings and " << rv.front().size() << " time steps.");
     }
 
-    std::cout << "Randomvariable init: " << timer.elapsed().wall / 1E6 << " ms" << std::endl;
+    boost::timer::nanosecond_type timing6 = timer.elapsed().wall;
 
     // 7 populate constants and model parameters
 
@@ -216,7 +218,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     DLOG("set " << g->constants().size() << " constants and " << baseModelParams_.size() << " model parameters.");
 
-    std::cout << "constants / model params: " << timer.elapsed().wall / 1E6 << " ms" << std::endl;
+    boost::timer::nanosecond_type timing7 = timer.elapsed().wall;
 
     // 8 do forward evaluation for all trades, keep npv and amc npv nodes
 
@@ -237,7 +239,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     DLOG("ran forward evaluation.");
 
-    std::cout << "forward eval: " << timer.elapsed().wall / 1E6 << " ms" << std::endl;
+    boost::timer::nanosecond_type timing8 = timer.elapsed().wall;
 
     // 8b dump epe profile out
 
@@ -260,6 +262,17 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     // 11 do backward derivatives run on postprocessing graph
 
     // 12 for all trades, do single forward evaluation runs and roll back derivatives from postprocessing graph
+
+    std::cout << "Timings:" << std::endl;
+    std::cout << "T0 market build:          " << timing1 / 1E6 << " ms" << std::endl;
+    std::cout << "Sim market build:         " << (timing2 - timing1) / 1E6 << " ms" << std::endl;
+    std::cout << "Model CG build:           " << (timing3 - timing2) / 1E6 << " ms" << std::endl;
+    std::cout << "Portfolio build:          " << (timing4 - timing3) / 1E6 << " ms" << std::endl;
+    std::cout << "Trade CG build:           " << (timing5 - timing4) / 1E6 << " ms" << std::endl;
+    std::cout << "RV gen:                   " << (timing6 - timing5) / 1E6 << " ms" << std::endl;
+    std::cout << "model params / const set  " << (timing7 - timing6) / 1E6 << " ms" << std::endl;
+    std::cout << "forward eval              " << (timing8 - timing7) / 1E6 << " ms" << std::endl;
+    std::cout << "total                     " << timing8 / 1E6 << " ms" << std::endl;
 }
 
 } // namespace analytics
