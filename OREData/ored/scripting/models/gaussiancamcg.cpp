@@ -22,6 +22,16 @@ namespace data {
 using namespace QuantLib;
 using namespace QuantExt;
 
+namespace {
+template <typename T> T getDateValue(const std::map<Date, T>& m, const Date& d, const bool sloppySimDates) {
+    auto it = std::lower_bound(m.begin(), m.end(), d,
+                               [](const std::pair<Date, T>& d1, const Date& d2) { return d1.first < d2; });
+    QL_REQUIRE(sloppySimDates || (it != m.end() && it->first == d),
+               "GaussianCamCG::getDateValue(): date " << d << " not found. Exact match required.");
+    return it != m.end() ? it->second : std::next(it, -1)->second;
+}
+} // namespace
+
 GaussianCamCG::GaussianCamCG(
     const Handle<CrossAssetModel>& cam, const Size paths, const std::vector<std::string>& currencies,
     const std::vector<Handle<YieldTermStructure>>& curves, const std::vector<Handle<Quote>>& fxSpots,
@@ -30,11 +40,11 @@ GaussianCamCG::GaussianCamCG(
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
     const std::set<Date>& simulationDates, const Size timeStepsPerYear, const IborFallbackConfig& iborFallbackConfig,
     const std::vector<Size>& projectedStateProcessIndices,
-    const std::vector<std::string>& conditionalExpectationModelStates)
+    const std::vector<std::string>& conditionalExpectationModelStates, const bool sloppySimDates)
     : ModelCGImpl(curves.front()->dayCounter(), paths, currencies, irIndices, infIndices, indices, indexCurrencies,
                   simulationDates, iborFallbackConfig),
       cam_(cam), curves_(curves), fxSpots_(fxSpots), timeStepsPerYear_(timeStepsPerYear),
-      projectedStateProcessIndices_(projectedStateProcessIndices) {
+      projectedStateProcessIndices_(projectedStateProcessIndices), sloppySimDates_(sloppySimDates) {
 
     // check inputs
 
@@ -258,7 +268,8 @@ std::size_t GaussianCamCG::getIrIndexValue(const Size indexNo, const Date& d, co
     fixingDate = irIndices_[indexNo].second->fixingCalendar().adjust(fixingDate);
     Size currencyIdx = irIndexPositionInCam_[indexNo];
     LgmCG lgmcg(currencies_[currencyIdx], *g_, cam_->irlgm1f(currencyIdx), modelParameters_);
-    return lgmcg.fixing(irIndices_[indexNo].second, fixingDate, d, irStates_.at(d).at(currencyIdx));
+    return lgmcg.fixing(irIndices_[indexNo].second, fixingDate, d,
+                        getDateValue(irStates_, d, sloppySimDates_).at(currencyIdx));
 }
 
 std::size_t GaussianCamCG::getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
@@ -276,12 +287,12 @@ std::size_t GaussianCamCG::fwdCompAvg(const bool isAvg, const std::string& index
 
 std::size_t GaussianCamCG::getDiscount(const Size idx, const Date& s, const Date& t) const {
     LgmCG lgmcg(currencies_[idx], *g_, cam_->irlgm1f(currencyPositionInCam_[idx]), modelParameters_);
-    return lgmcg.discountBond(s, t, irStates_.at(s)[idx]);
+    return lgmcg.discountBond(s, t, getDateValue(irStates_, s, sloppySimDates_)[idx]);
 }
 
 std::size_t GaussianCamCG::getNumeraire(const Date& s) const {
     LgmCG lgmcg(currencies_[0], *g_, cam_->irlgm1f(currencyPositionInCam_[0]), modelParameters_);
-    return lgmcg.numeraire(s, irStates_.at(s)[0]);
+    return lgmcg.numeraire(s, getDateValue(irStates_, s, sloppySimDates_)[0]);
 }
 
 std::size_t GaussianCamCG::getFxSpot(const Size idx) const {
@@ -330,7 +341,7 @@ std::size_t GaussianCamCG::npv(const std::size_t amount, const Date& obsdate, co
 
     std::vector<std::size_t> state;
 
-    state.push_back(irStates_.at(obsdate).at(0));
+    state.push_back(getDateValue(irStates_, obsdate, sloppySimDates_).at(0));
 
     if (addRegressor1 != ComputationGraph::nan)
         state.push_back(addRegressor1);

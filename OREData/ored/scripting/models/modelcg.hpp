@@ -137,6 +137,9 @@ public:
     // get discount as of today directly, i.e. bypassing the cg
     virtual Real getDirectDiscountT0(const Date& paydate, const std::string& currency) const = 0;
 
+    // calculate the model
+    void calculate() const { LazyObject::calculate(); }
+
 protected:
     // map with additional results provided by this model instance
     mutable std::map<std::string, boost::any> additionalResults_;
