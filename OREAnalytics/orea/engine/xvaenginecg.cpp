@@ -53,7 +53,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     DLOG("XvaEngineCG: build init market");
 
-    initMarket_ = boost::make_shared<ore::data::TodaysMarket>(asof_, todaysMarketParams_, loader, curveConfigs_,
+    initMarket_ = boost::make_shared<ore::data::TodaysMarket>(asof_, todaysMarketParams_, loader_, curveConfigs_,
                                                               continueOnError_, true, true, referenceData_, false,
                                                               iborFallbackConfig_, false, true);
 
@@ -80,8 +80,9 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     DLOG("XvaEngineCG: build cam cg model");
 
-    QL_REQUIRE(crossAssetModelData_->discretization() == CrossAssetModel::Discretization::Euler,
-               "XvaEngineCG: cam is required to use discretization 'Euler'");
+    QL_REQUIRE(
+        crossAssetModelData_->discretization() == CrossAssetModel::Discretization::Euler,
+        "XvaEngineCG: cam is required to use discretization 'Euler', please update simulation parameters accordingly.");
 
     std::vector<std::string> currencies;                                                   // from cam
     std::vector<Handle<YieldTermStructure>> curves;                                        // from cam
@@ -112,7 +113,20 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     DLOG("XvaEngineCG: build trades using global cam cg model");
 
-    /* ... */
+    auto edCopy = boost::make_shared<EngineData>(*engineData_);
+    edCopy->globalParameters()["GenerateAdditionalResults"] = "false";
+    edCopy->globalParameters()["RunType"] = "NPV";
+    map<MarketContext, string> configurations;
+    configurations[MarketContext::irCalibration] = marketConfigurationInCcy_;
+    configurations[MarketContext::fxCalibration] = marketConfiguration_;
+    configurations[MarketContext::pricing] = marketConfiguration_;
+    auto factory =
+        boost::make_shared<EngineFactory>(edCopy, simMarket_, configurations, referenceData_, iborFallbackConfig_,
+                                          EngineBuilderFactory::instance().generateAmcCgEngineBuilders(
+                                              model_, scenarioGeneratorData_->getGrid()->dates()),
+                                          true);
+
+    portfolio_->build(factory, "xva engine cg", true);
 
     // 5 add to computation graph for all trades and store npv, amc npv nodes, node range for each trade
 
@@ -184,7 +198,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
             keepNodes[n] = true;
     }
 
-    // note. regression order and polynom type should ultimately come from xvacg analytic configuration
+    // note. regression order and polynom type should ultimately come from st pe config or xva analytics config (?)
     ops_ = getRandomVariableOps(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial);
     grads_ = getRandomVariableGradients(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial);
     opNodeRequirements_ = getRandomVariableOpNodeRequirements();
