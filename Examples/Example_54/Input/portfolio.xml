@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <Portfolio>
-  <Trade id="BermSwp">
+  <Trade id="Swp">
     <TradeType>ScriptedTrade</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -8,7 +8,7 @@
       <AdditionalFields/>
     </Envelope>
     <ScriptedTradeData>
-      <ScriptName>BermudanSwaption</ScriptName>
+      <ScriptName>Swap</ScriptName>
       <Data>
         <Number>
           <Name>Notional</Name>
@@ -16,10 +16,6 @@
         </Number>
         <Number>
           <Name>FixedRatePayer</Name>
-          <Value>1</Value>
-        </Number>
-        <Number>
-          <Name>OptionLongShort</Name>
           <Value>1</Value>
         </Number>
         <Currency>
@@ -89,30 +85,6 @@
             <Convention>F</Convention>
           </DerivedSchedule>
         </Event>
-        <Event>
-          <Name>ExerciseDates</Name>
-          <ScheduleData>
-            <Dates>
-              <Dates>
-                <Date>2026-02-25</Date>
-                <Date>2027-02-25</Date>
-                <Date>2028-02-25</Date>
-                <Date>2029-02-25</Date>
-                <Date>2030-02-25</Date>
-                <Date>2031-02-25</Date>
-                <Date>2032-02-25</Date>
-                <Date>2033-02-25</Date>
-                <Date>2034-02-25</Date>
-                <Date>2035-02-25</Date>
-              </Dates>
-            </Dates>
-          </ScheduleData>
-        </Event>
-        <Number>
-          <Name>ExerciseSettlement</Name>
-          <!-- 0 = cash, 1 = physcial -->
-          <Value>1</Value>
-        </Number>
       </Data>
     </ScriptedTradeData>
   </Trade>
