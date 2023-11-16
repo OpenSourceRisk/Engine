@@ -51,6 +51,19 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
       sensitivityData_(sensitivityData), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
       continueOnCalibrationError_(continueOnCalibrationError), continueOnError_(continueOnError), context_(context) {
 
+    // for testing, duplicate trade in porfolio for performance testing
+    portfolio_ = boost::make_shared<Portfolio>();
+    std::string pfxml = portfolio->toXMLString();
+    for (Size i = 0; i < atoi(getenv("N")); ++i) {
+        auto p = boost::make_shared<Portfolio>();
+        p->fromXMLString(pfxml);
+        for (auto const& [id, t] : p->trades()) {
+            t->id() += "_" + std::to_string(i + 1);
+            portfolio_->add(t);
+        }
+    }
+    // end portfolio duplication
+
     boost::timer::cpu_timer timer;
 
     LOG("XvaEngineCG started");
@@ -155,7 +168,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     std::map<std::string, std::vector<std::size_t>> amcNpvNodes; // including time zero npv
     std::map<std::string, std::pair<std::size_t, std::size_t>> tradeNodeRanges;
 
-    for (auto const& [id, trade] : portfolio->trades()) {
+    for (auto const& [id, trade] : portfolio_->trades()) {
         auto qlInstr = boost::dynamic_pointer_cast<ScriptedInstrument>(trade->instrument()->qlInstrument());
         QL_REQUIRE(qlInstr, "XvaEngineCG: expeced trade to provide ScriptedInstrument, trade '" << id << "' does not.");
         auto engine = boost::dynamic_pointer_cast<ScriptedInstrumentPricingEngineCG>(qlInstr->pricingEngine());
@@ -243,17 +256,17 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     // 8b dump epe profile out
 
-    for (auto const& [id, npvs] : amcNpvNodes) {
-        for (Size i = 0; i < simulationDates.size() + 1; ++i) {
-            std::cout << id << ","
-                      << ore::data::to_string(i == 0 ? model_->referenceDate()
-                                                     : *std::next(simulationDates.begin(), i - 1))
-                      << "," << expectation(values[npvs[i]]) << ","
-                      << expectation(max(values[npvs[i]], RandomVariable(model_->size(), 0.0))) << ","
-                      << expectation(max(-values[npvs[i]], RandomVariable(model_->size(), 0.0))) << "\n";
-        }
-    }
-    std::cout << std::flush;
+    // for (auto const& [id, npvs] : amcNpvNodes) {
+    //     for (Size i = 0; i < simulationDates.size() + 1; ++i) {
+    //         std::cout << id << ","
+    //                   << ore::data::to_string(i == 0 ? model_->referenceDate()
+    //                                                  : *std::next(simulationDates.begin(), i - 1))
+    //                   << "," << expectation(values[npvs[i]]) << ","
+    //                   << expectation(max(values[npvs[i]], RandomVariable(model_->size(), 0.0))) << ","
+    //                   << expectation(max(-values[npvs[i]], RandomVariable(model_->size(), 0.0))) << "\n";
+    //     }
+    // }
+    // std::cout << std::flush;
 
     // 9 build the postprocessing computation graph
 
@@ -263,7 +276,9 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     // 12 for all trades, do single forward evaluation runs and roll back derivatives from postprocessing graph
 
-    std::cout << "Timings:" << std::endl;
+    std::cout << "Computation graph size:   " << g->size() << std::endl;
+    std::cout << "Peak mem usage:           " << ore::data::os::getPeakMemoryUsageBytes() / 1024 / 1024 << " MB"
+              << std::endl;
     std::cout << "T0 market build:          " << timing1 / 1E6 << " ms" << std::endl;
     std::cout << "Sim market build:         " << (timing2 - timing1) / 1E6 << " ms" << std::endl;
     std::cout << "Model CG build:           " << (timing3 - timing2) / 1E6 << " ms" << std::endl;
