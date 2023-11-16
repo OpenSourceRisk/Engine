@@ -28,6 +28,7 @@
 #include <orea/engine/multistatenpvcalculator.hpp>
 #include <orea/engine/multithreadedvaluationengine.hpp>
 #include <orea/engine/observationmode.hpp>
+#include <orea/engine/xvaenginecg.hpp>
 #include <orea/scenario/scenariowriter.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
 
@@ -585,7 +586,19 @@ void XvaAnalyticImpl::runPostProcessor() {
 
 void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
                               const std::set<std::string>& runTypes) {
-    
+
+    if(inputs_->amcCg()) {
+        LOG("XVA analytic is running with amc cg engine (experimental).");
+        // note: market configs both set to simulation, see note in xvaenginecg, we'd need inccy config in sim market there...
+        XvaEngineCG engine(
+            inputs_->nThreads(), inputs_->asof(), analytic()->loader(), inputs_->curveConfigs().get(),
+            analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
+            inputs_->amcPricingEngine(), inputs_->crossAssetModelData(), inputs_->scenarioGeneratorData(),
+            inputs_->portfolio(), inputs_->marketConfig("simulation"), inputs_->marketConfig("simulation"),
+            inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig());
+        return;
+    }
+
     LOG("XVA analytic called with asof " << io::iso_date(inputs_->asof()));
     ProgressMessage("Running XVA Analytic", 0, 1).log();
 
