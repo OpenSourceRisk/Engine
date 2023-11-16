@@ -3,7 +3,7 @@
   <Parameters>
     <Grid>88,3M</Grid>
     <Calendar>EUR,USD,GBP,CHF</Calendar>
-    <Sequence>SobolBrownianBridge</Sequence>
+    <Sequence>Burley2020SobolBrownianBridge</Sequence>
     <Scenario>Simple</Scenario>
     <Seed>42</Seed>
     <Samples>10000</Samples>
