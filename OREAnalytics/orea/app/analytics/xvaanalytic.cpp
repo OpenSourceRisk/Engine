@@ -386,7 +386,7 @@ XvaAnalyticImpl::amcEngineFactory(const boost::shared_ptr<QuantExt::CrossAssetMo
                                                                const std::vector<Date>& grid) {
     LOG("XvaAnalytic::engineFactory() called");
     boost::shared_ptr<EngineData> edCopy = boost::make_shared<EngineData>(*inputs_->amcPricingEngine());
-    edCopy->globalParameters()["GenerateAdditionalResults"] = inputs_->outputAdditionalResults() ? "true" : "false";
+    edCopy->globalParameters()["GenerateAdditionalResults"] = "false";
     edCopy->globalParameters()["RunType"] = "NPV";
     map<MarketContext, string> configurations;
     configurations[MarketContext::irCalibration] = inputs_->marketConfig("lgmcalibration");    
@@ -853,7 +853,7 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
             for (Size i = 0; i < inputs_->dimOutputGridPoints().size(); ++i) {
                 auto rep = boost::make_shared<InMemoryReport>();
                 dimRegReports.push_back(rep);
-                analytic()->reports()["XVA"]["dim_regression_" + to_string(i)] = rep;
+                analytic()->reports()["XVA"]["dim_regression_" + std::to_string(i)] = rep;
             }
             postProcess_->exportDimRegression(inputs_->dimOutputNettingSet(), inputs_->dimOutputGridPoints(),
                                               dimRegReports);
@@ -867,7 +867,8 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
                     << inputs_->creditMigrationTimeSteps().size() << ")");
             for (Size i = 0; i < postProcess_->creditMigrationPdf().size(); ++i) {
                 auto rep = boost::make_shared<InMemoryReport>();
-                analytic()->reports()["XVA"]["credit_migration_" + to_string(inputs_->creditMigrationTimeSteps()[i])] =
+                analytic()
+                    ->reports()["XVA"]["credit_migration_" + std::to_string(inputs_->creditMigrationTimeSteps()[i])] =
                     rep;
                 (*rep)
                     .addColumn("upperBucketBound", double(), 6)
