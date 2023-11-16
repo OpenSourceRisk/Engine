@@ -897,6 +897,17 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     if (tmp != "")
         inputs->setAmc(parseBool(tmp));
 
+    tmp = params_->get("simulation", "amcCg", false);
+    if (tmp != "")
+        inputs->setAmcCg(parseBool(tmp));
+
+    tmp = params_->get("simulation", "xvaCgSensitivityConfigFile", false);
+    if (tmp != "") {
+        string file = inputPath + "/" + tmp;
+        LOG("Load xva cg sensitivity scenario data from file" << file);
+        inputs->setXvaCgSensiScenarioDataFromFile(file);
+    }
+
     tmp = params_->get("simulation", "amcTradeTypes", false);
     if (tmp != "")
         inputs->setAmcTradeTypes(tmp);
