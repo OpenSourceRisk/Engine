@@ -148,6 +148,12 @@ public:
     //! Give back a set containing the ProductClass values optionally excluding 'All'
     static std::set<ProductClass> productClasses(bool includeAll = false);
 
+    //! For a given risk class, return the corresponding risk types
+    static std::pair<RiskType, RiskType> riskClassToRiskType(const RiskClass& rc);
+
+    //! For a given rirsk type, return the corresponding risk class
+    static RiskClass riskTypeToRiskClass(const RiskType& rt);
+
     //! Define ordering for ProductClass according to a waterfall:
     // Empty < RatesFX < Equity < Commodity < Credit
     // All is unhandled

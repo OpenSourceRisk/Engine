@@ -16,11 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/simm/simmconfigurationisdav2_6.hpp
-    \brief SIMM configuration for SIMM version 2.6
+/*! \file orea/simm/simmconfigurationcalibration.hpp
+    \brief SIMM configuration built for SIMM calibration
 */
 
 #pragma once
+
 
 #include <orea/simm/simmconfigurationbase.hpp>
 
@@ -31,12 +32,12 @@ namespace analytics {
     <em>ISDA SIMM Methodology, version 2.6.
         Effective Date: December 2, 2023.</em>
 */
-class SimmConfiguration_ISDA_V2_6 : public SimmConfigurationBase {
+class SimmConfigurationCalibration : public SimmConfigurationBase {
 public:
-    SimmConfiguration_ISDA_V2_6(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
-                                const QuantLib::Size& mporDays = 10,
-                                const std::string& name = "SIMM ISDA 2.6 (16 August 2023)",
-                                const std::string version = "2.6");
+    SimmConfigurationCalibration(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+                                 const boost::shared_ptr<SimmCalibration>& simmCalibration,
+                                 const QuantLib::Size& mporDays = 10,
+                                 const std::string& name = "SIMM Calibration");
 
     //! Return the SIMM <em>Label2</em> value for the given interest rate index
     std::string labels2(const boost::shared_ptr<QuantLib::InterestRateIndex>& irIndex) const override;
@@ -58,22 +59,12 @@ public:
 
 private:
     //! Find the group of the \p qualifier
-    QuantLib::Size group(const std::string& qualifier,
-                         const std::map<QuantLib::Size, std::set<std::string>>& groups) const;
+    std::string group(const std::string& qualifier, const std::map<std::string, std::set<std::string>>& groups) const;
 
     /*! Map giving a currency's FX Volatility group (High or Regular). This concept
         was introduced in ISDA Simm 2.2
      */
-    std::map<QuantLib::Size, std::set<std::string>> ccyGroups_;
-
-    //! FX risk weight matrix
-    QuantLib::Matrix rwFX_;
-
-    //! FX Correlations when the calculation ccy is in the Regular Volatility group
-    QuantLib::Matrix fxRegVolCorrelation_;
-
-    //! FX Correlations when the calculation ccy is in the High Volatility group
-    QuantLib::Matrix fxHighVolCorrelation_;
+    std::map<std::string, std::set<std::string>> ccyGroups_;
 
     //! IR Historical volatility ratio
     QuantLib::Real hvr_ir_;
