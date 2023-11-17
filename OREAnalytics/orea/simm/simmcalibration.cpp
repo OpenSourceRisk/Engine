@@ -515,7 +515,7 @@ void SimmCalibration::RiskClassData::fromXML(XMLNode* node) {
     }
 }
 
-const string& SimmCalibration::version() const {
+const string SimmCalibration::version() const {
     if (versionNames_.empty()) {
         return "";
     } else {
@@ -655,7 +655,7 @@ const boost::shared_ptr<SimmCalibration>& SimmCalibrationData::getById(const str
     return data_.at(id);
 }
 
-const boost::shared_ptr<SimmCalibration>& SimmCalibrationData::getBySimmVersion(const string& version) const {
+const boost::shared_ptr<SimmCalibration> SimmCalibrationData::getBySimmVersion(const string& version) const {
     for (const auto& kv : data_) {
         const auto& simmCalibrationData = kv.second;
         for (const string& scVersion : simmCalibrationData->versionNames()) {
