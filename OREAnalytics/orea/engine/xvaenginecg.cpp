@@ -139,6 +139,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     TLOGGERSTREAM(ssaForm(*g, getRandomVariableOpLabels()));
 
     boost::timer::nanosecond_type timing3 = timer.elapsed().wall;
+    
+    std::cout << "Computation Graph size after model build: " << g->size() << std::endl;
 
     // 4c build trades with global cg cam model
 
@@ -185,10 +187,27 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
             tmp.push_back(g->variable("_AMC_NPV_" + std::to_string(i)));
         }
         amcNpvNodes[id] = tmp;
+        std::cout << "trade " << id << " node range: " << firstNode << " - " << lastNode << std::endl;
+    }
+
+    // 5b add exposure sum-over-trades nodes (pathwise and conditional expectations)
+
+    std::vector<std::size_t> pfPathExposureNodes, pfExposureNodes;
+    for (Size i = 0; i < simulationDates.size() + 1; ++i) {
+        std::size_t sumNode = cg_const(*g, 0.0);
+        for (auto const& [_, v] : amcNpvNodes) {
+            sumNode = cg_add(*g, sumNode, v[i]);
+        }
+        pfPathExposureNodes.push_back(sumNode);
+        pfExposureNodes.push_back(
+            model_->npv(sumNode, i == 0 ? model_->referenceDate() : *std::next(simulationDates.begin(), i - 1),
+                        cg_const(*g, 1.0), boost::none, ComputationGraph::nan, ComputationGraph::nan));
     }
 
     DLOG("Extended computation graph for trades, size is " << g->size());
     TLOGGERSTREAM(ssaForm(*g, getRandomVariableOpLabels()));
+
+    std::cout << "graph size after adding sum-over-trade nodes (pathwise and conditional expectation): " << g->size() << std::endl;
 
     boost::timer::nanosecond_type timing5 = timer.elapsed().wall;
 
@@ -233,14 +252,13 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     boost::timer::nanosecond_type timing7 = timer.elapsed().wall;
 
-    // 8 do forward evaluation for all trades, keep npv and amc npv nodes
+    // 8 do forward evaluation for all trades, keep pf exposure nodes only
 
     DLOG("XvaEngineCG: run forward evaluation");
 
     std::vector<bool> keepNodes(g->size(), false);
-    for (auto const& [_, amcNpvNode] : amcNpvNodes) {
-        for (auto const& n : amcNpvNode)
-            keepNodes[n] = true;
+    for (auto const& n : pfExposureNodes) {
+        keepNodes[n] = true;
     }
 
     // note. regression order and polynom type should ultimately come from st pe config or xva analytics config (?)
@@ -254,23 +272,30 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     boost::timer::nanosecond_type timing8 = timer.elapsed().wall;
 
-    // 8b dump epe profile out
+    // 8b dump epe / ene profile out
 
-    // for (auto const& [id, npvs] : amcNpvNodes) {
-    //     for (Size i = 0; i < simulationDates.size() + 1; ++i) {
-    //         std::cout << id << ","
-    //                   << ore::data::to_string(i == 0 ? model_->referenceDate()
-    //                                                  : *std::next(simulationDates.begin(), i - 1))
-    //                   << "," << expectation(values[npvs[i]]) << ","
-    //                   << expectation(max(values[npvs[i]], RandomVariable(model_->size(), 0.0))) << ","
-    //                   << expectation(max(-values[npvs[i]], RandomVariable(model_->size(), 0.0))) << "\n";
-    //     }
-    // }
-    // std::cout << std::flush;
+    for (Size i = 0; i < simulationDates.size() + 1; ++i) {
+        std::cout << ore::data::to_string(i == 0 ? model_->referenceDate() : *std::next(simulationDates.begin(), i - 1))
+                  << "," << expectation(values[pfExposureNodes[i]]) << ","
+                  << expectation(max(values[pfExposureNodes[i]], RandomVariable(model_->size(), 0.0))) << ","
+                  << expectation(max(-values[pfExposureNodes[i]], RandomVariable(model_->size(), 0.0))) << "\n";
+    }
+    std::cout << std::flush;
 
     // 9 build the postprocessing computation graph
 
+    // note: very simplified calculation, for testing, just multiply the EPE on each date by fixed default prob
+    const double defaultProbSlice = 0.01 / 25; // P( t_i < tau  < t_i+1 )
+    Size cvaNode = cg_const(*g, 0.0);
+    for (Size i = 0; i < simulationDates.size() + 1; ++i) {
+        cvaNode =
+            cg_add(*g, cvaNode,
+                   cg_mult(*g, cg_const(*g, defaultProbSlice), cg_max(*g, pfExposureNodes[i], cg_const(*g, 0.0))));
+    }
+
     // 10 do forward evaluation on postprocessing graph
+
+    
 
     // 11 do backward derivatives run on postprocessing graph
 
