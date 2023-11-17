@@ -62,38 +62,11 @@ const bm<SimmConfiguration::RiskClass> riskClassMap =
         SimmConfiguration::RiskClass::Equity, "Equity")(SimmConfiguration::RiskClass::Commodity, "Commodity")(
         SimmConfiguration::RiskClass::FX, "FX")(SimmConfiguration::RiskClass::All, "All");
 
-const bm<SimmConfiguration::RiskType> riskTypeMap = list_of<bm<SimmConfiguration::RiskType>::value_type>(
-    SimmConfiguration::RiskType::Commodity, "Risk_Commodity")(SimmConfiguration::RiskType::CommodityVol,
-                                                              "Risk_CommodityVol")(
-    SimmConfiguration::RiskType::CreditNonQ, "Risk_CreditNonQ")(SimmConfiguration::RiskType::CreditQ, "Risk_CreditQ")(
-    SimmConfiguration::RiskType::CreditVol, "Risk_CreditVol")(SimmConfiguration::RiskType::CreditVolNonQ,
-                                                              "Risk_CreditVolNonQ")(
-    SimmConfiguration::RiskType::Equity, "Risk_Equity")(SimmConfiguration::RiskType::EquityVol, "Risk_EquityVol")(
-    SimmConfiguration::RiskType::FX, "Risk_FX")(SimmConfiguration::RiskType::FXVol, "Risk_FXVol")(
-    SimmConfiguration::RiskType::Inflation, "Risk_Inflation")(SimmConfiguration::RiskType::IRCurve, "Risk_IRCurve")(
-    SimmConfiguration::RiskType::IRVol, "Risk_IRVol")(SimmConfiguration::RiskType::InflationVol, "Risk_InflationVol")(
-    SimmConfiguration::RiskType::BaseCorr, "Risk_BaseCorr")(SimmConfiguration::RiskType::XCcyBasis, "Risk_XCcyBasis")(
-    SimmConfiguration::RiskType::ProductClassMultiplier,
-    "Param_ProductClassMultiplier")(SimmConfiguration::RiskType::AddOnNotionalFactor, "Param_AddOnNotionalFactor")(
-    SimmConfiguration::RiskType::Notional, "Notional")(SimmConfiguration::RiskType::AddOnFixedAmount,
-                                                       "Param_AddOnFixedAmount")(SimmConfiguration::RiskType::PV,
-                                                                                 "PV") // IM Schedule
-    (SimmConfiguration::RiskType::All, "All");
-
 const bm<SimmConfiguration::MarginType> marginTypeMap =
     list_of<bm<SimmConfiguration::MarginType>::value_type>(SimmConfiguration::MarginType::Delta, "Delta")(
         SimmConfiguration::MarginType::Vega, "Vega")(SimmConfiguration::MarginType::Curvature, "Curvature")(
         SimmConfiguration::MarginType::BaseCorr, "BaseCorr")(SimmConfiguration::MarginType::AdditionalIM, "AdditionalIM")(
         SimmConfiguration::MarginType::All, "All");
-
-const bm<SimmConfiguration::ProductClass> productClassMap =
-    list_of<bm<SimmConfiguration::ProductClass>::value_type>(SimmConfiguration::ProductClass::RatesFX, "RatesFX")(
-        SimmConfiguration::ProductClass::Rates, "Rates")(SimmConfiguration::ProductClass::FX, "FX")(
-        SimmConfiguration::ProductClass::Credit, "Credit")(SimmConfiguration::ProductClass::Equity, "Equity")(
-        SimmConfiguration::ProductClass::Commodity, "Commodity")(SimmConfiguration::ProductClass::Other, "Other")(
-        SimmConfiguration::ProductClass::Empty, "")(SimmConfiguration::ProductClass::All, "All")(
-        SimmConfiguration::ProductClass::AddOnNotionalFactor, "AddOnNotionalFactor")(
-        SimmConfiguration::ProductClass::AddOnFixedAmount, "AddOnFixedAmount");
 
 const bm<SimmConfiguration::IMModel> imModelMap =
     list_of<bm<SimmConfiguration::IMModel>::value_type>(SimmConfiguration::IMModel::Schedule, "Schedule")(
@@ -179,23 +152,12 @@ ostream& operator<<(ostream& out, const SimmConfiguration::RiskClass& rc) {
     return out << riskClassMap.left.at(rc);
 }
 
-ostream& operator<<(ostream& out, const SimmConfiguration::RiskType& rt) {
-    QL_REQUIRE(riskTypeMap.left.count(rt) > 0,
-               "Risk type (" << static_cast<int>(rt) << ") not a valid SimmConfiguration::RiskType");
-    return out << riskTypeMap.left.at(rt);
-}
-
 ostream& operator<<(ostream& out, const SimmConfiguration::MarginType& mt) {
     QL_REQUIRE(marginTypeMap.left.count(mt) > 0,
                "Margin type (" << static_cast<int>(mt) << ") not a valid SimmConfiguration::MarginType");
     return out << marginTypeMap.left.at(mt);
 }
 
-ostream& operator<<(ostream& out, const SimmConfiguration::ProductClass& pc) {
-    QL_REQUIRE(productClassMap.left.count(pc) > 0,
-               "Product class (" << static_cast<int>(pc) << ") not a valid SimmConfiguration::ProductClass");
-    return out << productClassMap.left.at(pc);
-}
 
 ostream& operator<<(ostream& out, const SimmConfiguration::IMModel& model) {
     QL_REQUIRE(imModelMap.left.count(model) > 0, "Product class not a valid SimmConfiguration::IMModel");
@@ -226,31 +188,13 @@ SimmConfiguration::RiskClass parseSimmRiskClass(const string& rc) {
     return riskClassMap.right.at(rc);
 }
 
-SimmConfiguration::RiskType parseSimmRiskType(const string& rt) {
-    for (auto it = riskTypeMap.right.begin(); it != riskTypeMap.right.end(); it++) {
-        if (boost::to_lower_copy(rt) == boost::to_lower_copy(it->first))
-            return it->second;
-    }
-
-    // If we reach this point, then the risk type provided was not found
-    QL_FAIL("Risk type string " << rt << " does not correspond to a valid SimmConfiguration::RiskType");
-}
-
 SimmConfiguration::MarginType parseSimmMarginType(const string& mt) {
     QL_REQUIRE(marginTypeMap.right.count(mt) > 0,
                "Margin type string " << mt << " does not correspond to a valid SimmConfiguration::MarginType");
     return marginTypeMap.right.at(mt);
 }
 
-SimmConfiguration::ProductClass parseSimmProductClass(const string& pc) {
-    for (auto it = productClassMap.right.begin(); it != productClassMap.right.end(); it++) {
-        if (boost::to_lower_copy(pc) == boost::to_lower_copy(it->first))
-            return it->second;
-    }
 
-    // If we reach this point, then the product class provided was not found
-    QL_FAIL("Product class string " << pc << " does not correspond to a valid SimmConfiguration::ProductClass");
-}
 
 SimmConfiguration::IMModel parseIMModel(const string& model) {
     for (auto it = imModelMap.right.begin(); it != imModelMap.right.end(); it++) {

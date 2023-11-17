@@ -36,6 +36,12 @@ using ore::data::NettingSetDetails;
 */
 struct CrifRecord {
 
+    enum class RecordType {
+        SIMM,
+        FRTB,
+        Generic
+    };
+
      /*! Risk types plus an All type for convenience
         Internal methods rely on the last element being 'All'
         Note that the risk type inflation has to be treated as an additional, single
@@ -182,6 +188,8 @@ struct CrifRecord {
                      bucket, label1, label2, amountCurrency, amount, amountUsd, imModel,
                      collectRegulations, postRegulations, endDate, additionalFields) {}
 
+    RecordType type() const;
+
     bool hasAmountCcy() const { return !amountCurrency.empty(); }
     bool hasAmount() const { return amount != QuantLib::Null<QuantLib::Real>(); }
     bool hasAmountUsd() const { return amountUsd != QuantLib::Null<QuantLib::Real>(); }
@@ -199,6 +207,35 @@ struct CrifRecord {
         return riskType == RiskType::AddOnFixedAmount ||
                riskType == RiskType::AddOnNotionalFactor ||
                riskType == RiskType::ProductClassMultiplier;
+    }
+
+    bool isEmpty() const { return riskType == RiskType::Empty; }
+
+    
+    bool isFrtbCurvatureRisk() const {
+        switch (riskType) {
+        case RiskType::GIRR_CURV:
+        case RiskType::CSR_NS_CURV:
+        case RiskType::CSR_SNC_CURV:
+        case RiskType::CSR_SC_CURV:
+        case RiskType::EQ_CURV:
+        case RiskType::COMM_CURV:
+        case RiskType::FX_CURV:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    CurvatureScenario frtbCurveatureScenario() const {
+        double shift = 0.0;
+        if (isFrtbCurvatureRisk() && tryParseReal(label1, shift) && shift < 0.0) {
+            return CurvatureScenario::Down;
+        } else if (isFrtbCurvatureRisk()) {
+            return CurvatureScenario::Up;
+        } else {
+            return CurvatureScenario::Empty;
+        }
     }
 
     //! Define how CRIF records are compared
