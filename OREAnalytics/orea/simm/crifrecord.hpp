@@ -22,22 +22,13 @@
 
 #pragma once
 
-#include <orea/simm/simmconfiguration.hpp>
 #include <ored/portfolio/nettingsetdetails.hpp>
-
-#include <boost/multi_index/composite_key.hpp>
-#include <boost/multi_index/identity.hpp>
-#include <boost/multi_index/member.hpp>
-#include <boost/multi_index/ordered_index.hpp>
-#include <boost/multi_index_container.hpp>
-
 #include <string>
 
 namespace ore {
 namespace analytics {
 
 using ore::data::NettingSetDetails;
-
 /*! A container for holding single CRIF records or aggregated CRIF records.
     A CRIF record is a row of the CRIF file outlined in the document:
     <em>ISDA SIMM Methodology, Risk Data Standards. Version 1.36: 1 February 2017.</em>
@@ -45,11 +36,91 @@ using ore::data::NettingSetDetails;
 */
 struct CrifRecord {
 
+     /*! Risk types plus an All type for convenience
+        Internal methods rely on the last element being 'All'
+        Note that the risk type inflation has to be treated as an additional, single
+        tenor bucket in IRCurve
+    */
+    enum class RiskType {
+        // Empty for null, misisng field
+        Empty,
+        // SIMM Risk Types
+        Commodity,
+        CommodityVol,
+        CreditNonQ,
+        CreditQ,
+        CreditVol,
+        CreditVolNonQ,
+        Equity,
+        EquityVol,
+        FX,
+        FXVol,
+        Inflation,
+        IRCurve,
+        IRVol,
+        InflationVol,
+        BaseCorr,
+        XCcyBasis,
+        ProductClassMultiplier,
+        AddOnNotionalFactor,
+        Notional,
+        AddOnFixedAmount,
+        PV, // IM Schedule
+        // FRTB Risk Types
+        GIRR_DELTA,
+        GIRR_VEGA,
+        GIRR_CURV,
+        CSR_NS_DELTA,
+        CSR_NS_VEGA,
+        CSR_NS_CURV,
+        CSR_SNC_DELTA,
+        CSR_SNC_VEGA,
+        CSR_SNC_CURV,
+        CSR_SC_DELTA,
+        CSR_SC_VEGA,
+        CSR_SC_CURV,
+        EQ_DELTA,
+        EQ_VEGA,
+        EQ_CURV,
+        COMM_DELTA,
+        COMM_VEGA,
+        COMM_CURV,
+        FX_DELTA,
+        FX_VEGA,
+        FX_CURV,
+        DRC_NS,
+        DRC_SNC,
+        DRC_SC,
+        RRAO_1_PERCENT,
+        RRAO_01_PERCENT,
+        // All type for aggreggation purposes
+        All
+    };
+    
+    //! Product class types in SIMM plus an All type for convenience
+    //! Internal methods rely on the last element being 'All'
+    enum class ProductClass {
+        RatesFX,
+        Rates, // extension for IM Schedule
+        FX,    // extension for IM Schedule
+        Credit,
+        Equity,
+        Commodity,
+        Empty,
+        Other, // extension for IM Schedule
+        AddOnNotionalFactor, // extension for additional IM
+        AddOnFixedAmount,    // extension for additional IM
+        All
+    };
+
+    //! There are two entries for curvature risk in frtb, a up and down shift
+    enum class CurvatureScenario { Empty, Up, Down };
+
     // required data
     std::string tradeId;
     std::string portfolioId;
-    SimmConfiguration::ProductClass productClass = SimmConfiguration::ProductClass::Empty;
-    SimmConfiguration::RiskType riskType = SimmConfiguration::RiskType::Notional;
+    ProductClass productClass = ProductClass::Empty;
+    RiskType riskType = RiskType::Notional;
     std::string qualifier;
     std::string bucket;
     std::string label1;
@@ -74,6 +145,14 @@ struct CrifRecord {
     mutable std::string postRegulations;
     std::string endDate;
 
+    // frtb fields
+    std::string label3;
+    std::string creditQuality;
+    std::string longShortInd;
+    std::string coveredBondInd;
+    std::string trancheThickness;
+    std::string bb_rw;
+
     // additional data
     std::map<std::string, std::string> additionalFields;
 
@@ -81,7 +160,7 @@ struct CrifRecord {
     CrifRecord() {}
 
     CrifRecord(std::string tradeId, std::string tradeType, NettingSetDetails nettingSetDetails,
-               SimmConfiguration::ProductClass productClass, SimmConfiguration::RiskType riskType,
+               ProductClass productClass, RiskType riskType,
                std::string qualifier, std::string bucket, std::string label1, std::string label2,
                std::string amountCurrency, QuantLib::Real amount, QuantLib::Real amountUsd, std::string imModel = "",
                std::string collectRegulations = "", std::string postRegulations = "", std::string endDate = "",
@@ -94,7 +173,7 @@ struct CrifRecord {
           additionalFields(additionalFields) {}
 
     CrifRecord(std::string tradeId, std::string tradeType, std::string portfolioId,
-               SimmConfiguration::ProductClass productClass, SimmConfiguration::RiskType riskType,
+               ProductClass productClass, RiskType riskType,
                std::string qualifier, std::string bucket, std::string label1, std::string label2,
                std::string amountCurrency, QuantLib::Real amount, QuantLib::Real amountUsd, std::string imModel = "",
                std::string collectRegulations = "", std::string postRegulations = "", std::string endDate = "",
@@ -112,14 +191,14 @@ struct CrifRecord {
     // We use (and require) amountUsd for all risk types except for SIMM parameters AddOnNotionalFactor and
     // ProductClassMultiplier as these are multipliers and not amounts denominated in the amountCurrency
     bool requiresAmountUsd() const {
-        return riskType != SimmConfiguration::RiskType::AddOnNotionalFactor &&
-               riskType != SimmConfiguration::RiskType::ProductClassMultiplier;
+        return riskType != RiskType::AddOnNotionalFactor &&
+               riskType != RiskType::ProductClassMultiplier;
     }
 
     bool isSimmParameter() const {
-        return riskType == SimmConfiguration::RiskType::AddOnFixedAmount ||
-               riskType == SimmConfiguration::RiskType::AddOnNotionalFactor ||
-               riskType == SimmConfiguration::RiskType::ProductClassMultiplier;
+        return riskType == RiskType::AddOnFixedAmount ||
+               riskType == RiskType::AddOnNotionalFactor ||
+               riskType == RiskType::ProductClassMultiplier;
     }
 
     //! Define how CRIF records are compared
@@ -155,6 +234,13 @@ struct CrifRecord {
 //! Enable writing of a CrifRecord
 std::ostream& operator<<(std::ostream& out, const CrifRecord& cr);
 
+std::ostream& operator<<(std::ostream& out, const CrifRecord::RiskType& rt);
+
+std::ostream& operator<<(std::ostream& out, const CrifRecord::ProductClass& pc);
+
+CrifRecord::RiskType parseRiskType(const std::string& rt);
+
+CrifRecord::ProductClass parseProductClass(const std::string& pc);
 
 
 } // namespace analytics
