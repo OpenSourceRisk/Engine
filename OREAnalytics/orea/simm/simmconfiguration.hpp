@@ -53,55 +53,11 @@ public:
     */
     enum class RiskClass { InterestRate, CreditQualifying, CreditNonQualifying, Equity, Commodity, FX, All };
 
-    /*! Risk types plus an All type for convenience
-        Internal methods rely on the last element being 'All'
-        Note that the risk type inflation has to be treated as an additional, single
-        tenor bucket in IRCurve
-    */
-    enum class RiskType {
-        Commodity,
-        CommodityVol,
-        CreditNonQ,
-        CreditQ,
-        CreditVol,
-        CreditVolNonQ,
-        Equity,
-        EquityVol,
-        FX,
-        FXVol,
-        Inflation,
-        IRCurve,
-        IRVol,
-        InflationVol,
-        BaseCorr,
-        XCcyBasis,
-        ProductClassMultiplier,
-        AddOnNotionalFactor,
-        Notional,
-        AddOnFixedAmount,
-        PV, // IM Schedule
-        All
-    };
+    
 
     //! Margin types in SIMM plus an All type for convenience
     //! Internal methods rely on the last element being 'All'
-    enum class MarginType { Delta, Vega, Curvature, BaseCorr, AdditionalIM, All };
-
-    //! Product class types in SIMM plus an All type for convenience
-    //! Internal methods rely on the last element being 'All'
-    enum class ProductClass {
-        RatesFX,
-        Rates, // extension for IM Schedule
-        FX,    // extension for IM Schedule
-        Credit,
-        Equity,
-        Commodity,
-        Empty,
-        Other, // extension for IM Schedule
-        AddOnNotionalFactor, // extension for additional IM
-        AddOnFixedAmount,    // extension for additional IM
-        All
-    };
+    enum class MarginType { Delta, Vega, Curvature, BaseCorr, AdditionalIM, All }; 
 
     enum class IMModel {
         Schedule,
@@ -305,11 +261,7 @@ std::ostream& operator<<(std::ostream& out, const SimmConfiguration::SimmSide& s
 
 std::ostream& operator<<(std::ostream& out, const SimmConfiguration::RiskClass& rc);
 
-std::ostream& operator<<(std::ostream& out, const SimmConfiguration::RiskType& rt);
-
 std::ostream& operator<<(std::ostream& out, const SimmConfiguration::MarginType& mt);
-
-std::ostream& operator<<(std::ostream& out, const SimmConfiguration::ProductClass& pc);
 
 std::ostream& operator<<(std::ostream& out, const SimmConfiguration::IMModel& model);
 
@@ -319,11 +271,7 @@ SimmConfiguration::SimmSide parseSimmSide(const std::string& side);
 
 SimmConfiguration::RiskClass parseSimmRiskClass(const std::string& rc);
 
-SimmConfiguration::RiskType parseSimmRiskType(const std::string& rt);
-
 SimmConfiguration::MarginType parseSimmMarginType(const std::string& mt);
-
-SimmConfiguration::ProductClass parseSimmProductClass(const std::string& pc);
 
 SimmConfiguration::IMModel parseIMModel(const std::string& pc);
 

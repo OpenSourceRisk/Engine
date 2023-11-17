@@ -1743,14 +1743,14 @@ void ReportWriter::writeSIMMData(const SimmNetSensitivities& simmData, const boo
     LOG("SIMM data report written.");
 }
 
-void ReportWriter::writeCrifReport(const boost::shared_ptr<Report>& report, const SimmNetSensitivities& crifRecords) {
+void ReportWriter::writeCrifReport(const boost::shared_ptr<Report>& report, const Crif& crif) {
 
     // If we have SIMM parameters, check if at least one of them uses netting set details optional field/s
     // It is easier to check here than to pass the flag from other places, since otherwise we'd have to handle certain edge cases
     // e.g. SIMM parameters use optional NSDs, but trades don't. So SIMM report should not display NSDs, but CRIF report still should.
     bool hasNettingSetDetails = false;
-    for (const CrifRecord& cr : crifRecords) {
-        if (!cr.nettingSetDetails.emptyOptionalFields())
+    for (const auto& cr : crif) {
+        if (!cr->nettingSetDetails.emptyOptionalFields())
             hasNettingSetDetails = true;
     }
 
@@ -1758,7 +1758,7 @@ void ReportWriter::writeCrifReport(const boost::shared_ptr<Report>& report, cons
     bool hasCollectRegulations = false;
     bool hasPostRegulations = false;
     bool hasScheduleTrades = false;
-    for (const auto& cr : crifRecords) {
+    for (const auto& cr : crif) {
         // Check which additional fields are being used/populated
         for (const auto& af : cr.additionalFields) {
             if (std::find(addFields.begin(), addFields.end(), af.first) == addFields.end()) {
