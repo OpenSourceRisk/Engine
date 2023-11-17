@@ -267,7 +267,7 @@ public:
     SimmCalibration() {}
     SimmCalibration(ore::data::XMLNode* node) { fromXML(node); }
 
-    const std::string& version() const;
+    const std::string version() const;
     const std::vector<std::string>& versionNames() const { return versionNames_; }
     const std::vector<std::pair<std::string, std::string>>& additionalFields() const { return additionalFields_; }
 
@@ -308,7 +308,7 @@ public:
     void add(const boost::shared_ptr<SimmCalibration>&);
     bool hasId(const std::string& id) const { return data_.find(id) != data_.end(); }
     const boost::shared_ptr<SimmCalibration>& getById(const std::string& id) const;
-    const boost::shared_ptr<SimmCalibration>& getBySimmVersion(const std::string& id) const;
+    const boost::shared_ptr<SimmCalibration> getBySimmVersion(const std::string& id) const;
 
 private:
     std::map<std::string, boost::shared_ptr<SimmCalibration>> data_;

@@ -62,9 +62,8 @@ vector<string> lookup(const RiskType& rt, const map<RiskType, vector<string>>& m
 }
 
 std::ostream& operator<<(std::ostream& out, const tuple<string, string, string>& tup) {
-    string res =
-        "[Bucket: '" + std::get<0>(tup) + "', Label1: '" + std::get<1>(tup) + "', Label2: '" + std::get<2>(tup) + "']";
-    out << res;
+    return out << "[Bucket: '" << std::get<0>(tup) << "', Label1: '" << std::get<1>(tup) << "', Label2: '"
+               << std::get<2>(tup) << "']";
 }
 
 string periodToLabels2(const QuantLib::Period& p) {
