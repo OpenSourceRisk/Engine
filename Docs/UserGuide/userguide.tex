@@ -4348,6 +4348,7 @@ The parameters have the following interpretation:
       <Parameter name="resultCurrency">USD</Parameter>
       <Parameter name="enforceIMRegulations">true</Parameter>
       <Parameter name="mporDays">1</Parameter>
+      <Parameter name="simmCalibration">simmcalibration.xml</Parameter>
     </Analytic>
 <Analytics>
 \end{minted}
@@ -4359,7 +4360,7 @@ The parameters have the following interpretation:
 
 \begin{itemize}
 \item {\tt version:} SIMM model version string \\
-Allowable values: 1.0, 1.1, 1.2, 1.3, 1.3.38, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.5A  \\
+Allowable values: 1.0, 1.1, 1.2, 1.3, 1.3.38, 2.0, 2.1, 2.2, 2.3, 2.4 (or 2.3.8), 2.5, 2.5A, 2.6 (or 2.5.6) \\
 Note that any new SIMM model versions are integrated into ORE with each release, tested against the official ISDA SIMM unit tests.
 \item {\tt crif:} Name of the CRIF file to be loaded
 \item {\tt calculationCurrency:} Determines the {\tt Risk\_FX} CRIF entry that is ignored in ISDA SIMM calculation \\
@@ -4370,6 +4371,7 @@ Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
 Allowable values: Allowable boolean values are given in Table \ref{tab:boolean_allowable}. Defaults to \emph{False} if omitted.
 \item {\tt mporDays} (optional): Currency for expressing the amounts in the resulting SIMM report, by default set to the calculationCurrency. \\
 Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+\item {\tt simmCalibration} (optional): Name of the SIMM calibration configuration file. See Section \ref{sec:simmcalibration} \lstinline!SIMM Calibration!.
 \end{itemize}
 
 The SIMM analytic requires minimal market data input and today's market configuration - FX rates for conversions calculation currency, USD and result currency.
@@ -6253,6 +6255,8 @@ If a new calendar is added in this way and the schema is being used to validate 
 
 \include{iborfallbackconfig}
 
+\include{simmcalibration}
+
 %--------------------------------------------------------
 %\subsection{Conventions: {\tt conventions.xml}}
 %\label{sec:conventions}
@@ -7843,6 +7847,9 @@ implementation of the inverse cumulative normal distribution to transform $U[0,1
 
 \bibitem{Andersen2016} Leif B. G. Andersen, Michael Pykhtin, Alexander Sokol, {\em Rethinking Margin Period of Risk},
   http://papers.ssrn.com/sol3/papers.cfm?abstract\_id=2719964, 2016
+
+\bibitem{SIMM2.6} ISDA SIMM Methodology, version 2.6, (based on v2.5.6: 16 Aug 2023) \\
+  \url{https://www.isda.org/a/b4ugE/ISDA-SIMM\_v2.6\_PUBLIC.pdf}
 
   % \bibitem{SIMM}{SIMM Methodology\\ \tiny
   %   http://www2.isda.org/attachment/ODM1Mw==/ISDA\%20SIMM\%20Methodology\_7\%20April\%202016\_v3.15\%20(PUBLIC).pdf}
