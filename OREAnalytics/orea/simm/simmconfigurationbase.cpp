@@ -22,6 +22,7 @@
 #include <boost/math/distributions/normal.hpp>
 #include <boost/optional/optional_io.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/math/matrix.hpp>
@@ -37,6 +38,7 @@ using ore::data::parseInteger;
 using QuantLib::Integer;
 using std::map;
 using std::pair;
+using std::tuple;
 using std::set;
 using std::string;
 using std::vector;
@@ -57,6 +59,12 @@ vector<string> lookup(const RiskType& rt, const map<RiskType, vector<string>>& m
     } else {
         return {};
     }
+}
+
+std::ostream& operator<<(std::ostream& out, const tuple<string, string, string>& tup) {
+    string res =
+        "[Bucket: '" + std::get<0>(tup) + "', Label1: '" + std::get<1>(tup) + "', Label2: '" + std::get<2>(tup) + "']";
+    out << res;
 }
 
 string periodToLabels2(const QuantLib::Period& p) {
@@ -84,6 +92,11 @@ string periodToLabels2(const QuantLib::Period& p) {
 
 } // anonymous namespace
 
+const tuple<string, string, string> SimmConfigurationBase::makeKey(const string& bucket, const string& label1,
+                                                                         const string& label2) const {
+    return std::make_tuple(bucket, label1, label2);
+}
+
 SimmConfigurationBase::SimmConfigurationBase(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
                                              const std::string& name, const std::string version, Size mporDays)
     : name_(name), version_(version), simmBucketMapper_(simmBucketMapper), mporDays_(mporDays) {}
@@ -93,6 +106,10 @@ bool SimmConfigurationBase::hasBuckets(const RiskType& rt) const { return simmBu
 string SimmConfigurationBase::bucket(const RiskType& rt, const string& qualifier) const {
     QL_REQUIRE(hasBuckets(rt), "The SIMM risk type " << rt << " does not have buckets");
     return simmBucketMapper_->bucket(rt, qualifier);
+}
+
+const bool SimmConfigurationBase::checkValue(const string& value, const vector<string>& container) const {
+    return std::find(container.begin(), container.end(), value) != container.end();
 }
 
 vector<string> SimmConfigurationBase::buckets(const RiskType& rt) const {
@@ -156,20 +173,26 @@ QuantLib::Real SimmConfigurationBase::weight(const RiskType& rt, boost::optional
     string bucket = simmBucketMapper_->bucket(rt, *qualifier);
 
     // If risk weight for this risk type is bucket-dependent
-    if (rwBucket_.count(rt) > 0) {
-        auto idx = labelIndex(bucket, buckets(rt));
-
-        return rwBucket_.at(rt)[idx];
+    if (rwBucket_.find(rt) != rwBucket_.end()) {
+        auto bucketKey = makeKey(bucket, "", "");
+        if (rwBucket_.at(rt).find(bucketKey) != rwBucket_.at(rt).end())
+            return rwBucket_.at(rt).at(bucketKey);
+        else
+            QL_FAIL("Could not find risk weight for risk type " << rt << " and key " << bucketKey);
     }
 
     // If we get to here, risk weight must depend on risk type, bucket and Label1
-    if (rwLabel_1_.count({rt, bucket}) > 0) {
+    if (rwLabel_1_.find(rt) != rwLabel_1_.end()) {
+
         QL_REQUIRE(label_1, "Need a valid Label1 value to return a risk weight because the risk type "
                                 << rt << " has bucket and Label1 dependent risk weights");
         QL_REQUIRE(!labels1(rt).empty(), "Could not find any Label1 values for risk type " << rt);
-        auto idx = labelIndex(*label_1, labels1(rt));
+        auto label1Key = makeKey(bucket, *label_1, "");
 
-        return rwLabel_1_.at({rt, bucket})[idx];
+        if (rwLabel_1_.at(rt).find(label1Key) != rwLabel_1_.at(rt).end())
+            return rwLabel_1_.at(rt).at(label1Key);
+        else
+            QL_FAIL("Could not find risk weight for risk type " << rt << " and key " << label1Key);
     }
 
     // If we get to here, we have failed to get a risk weight
@@ -294,9 +317,12 @@ QuantLib::Real SimmConfigurationBase::correlation(const RiskType& firstRt, const
             }
 
             // Label1 level, i.e. tenor, correlations
-            auto idx_1 = labelIndex(firstLabel_1, labels1(firstRt));
-            auto idx_2 = labelIndex(secondLabel_1, labels1(secondRt));
-            return irTenorCorrelation_[idx_1][idx_2];
+            RiskType rt = RiskType::IRCurve;
+            auto label12Key = makeKey("", firstLabel_1, secondLabel_1);
+            if (intraBucketCorrelation_.at(rt).find(label12Key) != intraBucketCorrelation_.at(rt).end())
+                return intraBucketCorrelation_.at(rt).at(label12Key);
+            else
+                QL_FAIL("Could not find correlation for risk type " << rt << " and key " << label12Key);
         } else {
             // If the qualifiers, i.e. currencies, are not the same
             return irInterCurrencyCorr_;
@@ -339,10 +365,12 @@ QuantLib::Real SimmConfigurationBase::correlation(const RiskType& firstRt, const
             }
         } else {
             // Get the bucket indices of each qualifier for reading the matrix
-            Integer b_1 = parseInteger(bucket_1) - 1;
-            Integer b_2 = parseInteger(bucket_2) - 1;
-            // If different buckets, return the non-residual inter-bucket correlation
-            return interBucketCorrelation_.at(RiskType::CreditQ)[b_1][b_2];
+            RiskType rt = RiskType::CreditQ;
+            auto label12Key = makeKey("", bucket_1, bucket_2);
+            if (interBucketCorrelation_.at(rt).find(label12Key) != interBucketCorrelation_.at(rt).end())
+                return interBucketCorrelation_.at(rt).at(label12Key);
+            else
+                QL_FAIL("Could not find correlation for risk type " << rt << " and key " << label12Key);
         }
     }
 
@@ -402,15 +430,14 @@ QuantLib::Real SimmConfigurationBase::correlation(const RiskType& firstRt, const
 
         // Non-residual
         // Get the bucket index of each qualifier
-        Integer b_1 = parseInteger(bucket_1) - 1;
-        Integer b_2 = parseInteger(bucket_2) - 1;
-
-        if (b_1 == b_2) {
+        if (bucket_1 == bucket_2) {
+            auto bucketKey = makeKey(bucket_1, "", "");
             // If same bucket, return the intra-bucket correlation
-            return firstQualifier == secondQualifier ? 1.0 : intraBucketCorrelation_.at(RiskType::Equity)[b_1];
+            return firstQualifier == secondQualifier ? 1.0 : intraBucketCorrelation_.at(RiskType::Equity).at(bucketKey);
         } else {
             // If different buckets, return the inter-bucket correlation
-            return interBucketCorrelation_.at(RiskType::Equity)[b_1][b_2];
+            auto label12Key = makeKey("", bucket_1, bucket_2);
+            return interBucketCorrelation_.at(RiskType::Equity).at(label12Key);
         }
     }
 
@@ -419,15 +446,17 @@ QuantLib::Real SimmConfigurationBase::correlation(const RiskType& firstRt, const
         (firstRt == RiskType::CommodityVol && secondRt == RiskType::CommodityVol)) {
 
         // Get the bucket index of each qualifier
-        Integer b_1 = parseInteger(simmBucketMapper_->bucket(firstRt, firstQualifier)) - 1;
-        Integer b_2 = parseInteger(simmBucketMapper_->bucket(secondRt, secondQualifier)) - 1;
+        const string& bucket_1 = simmBucketMapper_->bucket(firstRt, firstQualifier);
+        const string& bucket_2 = simmBucketMapper_->bucket(secondRt, secondQualifier);
 
-        if (b_1 == b_2) {
+        if (bucket_1 == bucket_2) {
+            auto bucketKey = makeKey(bucket_1, "", "");
             // If same bucket, return the intra-bucket correlation
-            return firstQualifier == secondQualifier ? 1.0 : intraBucketCorrelation_.at(RiskType::Commodity)[b_1];
+            return firstQualifier == secondQualifier ? 1.0 : intraBucketCorrelation_.at(RiskType::Commodity).at(bucketKey);
         } else {
             // If different buckets, return the inter-bucket correlation
-            return interBucketCorrelation_.at(RiskType::Commodity)[b_1][b_2];
+            auto label12Key = makeKey("", bucket_1, bucket_2);
+            return interBucketCorrelation_.at(RiskType::Commodity).at(label12Key);
         }
     }
 
@@ -463,19 +492,15 @@ Real SimmConfigurationBase::sigmaMultiplier() const {
 
 QuantLib::Real SimmConfigurationBase::correlationRiskClasses(const RiskClass& rc_1, const RiskClass& rc_2) const {
 
-    // Get the row and column index in the matrix of the risk classes
-    Size index_1 = static_cast<Size>(rc_1);
-    QL_REQUIRE(index_1 < riskClassCorrelation_.rows(),
-               "The risk class " << rc_1 << "(" << index_1
-                                 << ") is not consistent with the number of rows in the correlation matrix ("
-                                 << riskClassCorrelation_.rows() << ")");
-    Size index_2 = static_cast<Size>(rc_2);
-    QL_REQUIRE(index_2 < riskClassCorrelation_.columns(),
-               "The risk class " << rc_2 << "(" << index_2
-                                 << ") is not consistent with the number of columns in the correlation matrix ("
-                                 << riskClassCorrelation_.columns() << ")");
+    if (rc_1 == rc_2)
+        return 1.0;
 
-    return riskClassCorrelation_(index_1, index_2);
+    auto rcLabel12Key = makeKey("", ore::data::to_string(rc_1), ore::data::to_string(rc_2));
+
+    QL_REQUIRE(riskClassCorrelation_.find(rcLabel12Key) != riskClassCorrelation_.end(),
+               "Could not find risk class correlation between " << rc_1 << " and " << rc_2 << ".");
+
+    return riskClassCorrelation_.at(rcLabel12Key);
 }
 
 Size SimmConfigurationBase::labelIndex(const string& label, const vector<string>& labels) const {
