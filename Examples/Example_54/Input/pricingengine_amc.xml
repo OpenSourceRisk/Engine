@@ -17,7 +17,7 @@
     <Engine>Generic</Engine>
     <EngineParameters>
       <Parameter name="Engine">MC</Parameter>
-      <Parameter name="Samples">10000</Parameter>
+      <Parameter name="Samples">1024</Parameter>
       <Parameter name="RegressionOrder">4</Parameter>
       <Parameter name="TimeStepsPerYear">24</Parameter>
       <Parameter name="Interactive">false</Parameter>
