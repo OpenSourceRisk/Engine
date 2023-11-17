@@ -1,14 +1,14 @@
 <?xml version="1.0"?>
 <Simulation>
   <Parameters>
-    <Grid>88,3M</Grid>
+    <Grid>528,2W</Grid>
     <Calendar>EUR,USD,GBP,CHF</Calendar>
     <Sequence>Burley2020SobolBrownianBridge</Sequence>
     <Scenario>Simple</Scenario>
     <Seed>42</Seed>
-    <Samples>10000</Samples>
-    <CloseOutLag>2W</CloseOutLag>
-    <MporMode>StickyDate</MporMode>
+    <Samples>1024</Samples>
+    <!-- <CloseOutLag>2W</CloseOutLag> -->
+    <!-- <MporMode>StickyDate</MporMode> -->
     <DayCounter>A365F</DayCounter>
   </Parameters>
   <CrossAssetModel>
