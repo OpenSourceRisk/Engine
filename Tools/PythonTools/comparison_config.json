@@ -1326,6 +1326,17 @@
           }
         ]
       },
+      "frtb\\.json": {
+        "settings": [
+          {
+            "names": [
+              "frtbCharge"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
       "total_im\\.json": {
         "settings": [
           {
@@ -1345,7 +1356,8 @@
           {
             "names": [
               "simmReport/initial_margin",
-              "totalIMReport/initial_margin"
+              "totalIMReport/initial_margin",
+              "frtb/frtbCharge"
             ],
             "abs_tol": 0.1,
             "rel_tol": 1e-12
