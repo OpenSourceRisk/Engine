@@ -515,13 +515,7 @@ void SimmCalibration::RiskClassData::fromXML(XMLNode* node) {
     }
 }
 
-const string SimmCalibration::version() const {
-    if (versionNames_.empty()) {
-        return "";
-    } else {
-        return versionNames_.front();
-    }
-}
+const string& SimmCalibration::version() const { return versionNames_.front(); }
 
 XMLNode* SimmCalibration::toXML(XMLDocument& doc) {
     XMLNode* simmCalibrationNode = doc.allocNode("SIMMCalibration");
@@ -569,6 +563,7 @@ void SimmCalibration::fromXML(XMLNode* node) {
     XMLNode* versionNamesNode = XMLUtils::getChildNode(node, "VersionNames");
     for (XMLNode* name : XMLUtils::getChildrenNodes(versionNamesNode, "Name"))
         versionNames_.push_back(XMLUtils::getNodeValue(name));
+    QL_REQUIRE(!versionNames_.empty(), "Must provide at least one version name for SIMM calibration");
 
     // Additional fields
     XMLNode* addFieldsNode = XMLUtils::getChildNode(node, "AdditionalFields");
@@ -619,30 +614,50 @@ void SimmCalibrationData::fromXML(XMLNode* node) {
 
 void SimmCalibrationData::add(const boost::shared_ptr<SimmCalibration>& simmCalibration) {
 
+    const string configurationType = "SIMM calibration data";
+    const string exceptionType = "Adding SIMM calibration";
+
     // Check for SIMM calibration ID duplicates
     if (data_.find(simmCalibration->id()) != data_.end()) {
         ore::data::StructuredConfigurationErrorMessage(
-            "SIMM calibration data", simmCalibration->id(), "Adding SIMM calibration",
+            configurationType, simmCalibration->id(), exceptionType,
             "Cannot add SIMM calibration data since data with the same ID already exists.")
             .log();
+        return;
     }
 
     // Check for SIMM version name clashes
     const auto& incVersionNames = simmCalibration->versionNames();
+    Size duplicateVersionNames = 0;
     for (const auto& [id, sc] : data_) {
         for (const string& incName : incVersionNames) {
+            bool isUnique = true;
             for (const string& currName : sc->versionNames()) {
                 if (incName == currName) {
-                    const string msg = "SIMM calibration being added with alias '" + incName +
-                                       "' which already exists. The calibration data will still be added, but only the "
+                    const string msg = "SIMM calibration being added with version name '" + incName +
+                                       "' which already exists. The calibration data may still be added if it has "
+                                       "unique version names, but only the "
                                        "first instance for the given alias (i.e. SIMM calibration ID '" +
-                                       simmCalibration->id() + "') will be used for any SIMM calculations.";
-                    ore::data::StructuredConfigurationWarningMessage("SIMM calibration data", id,
-                                                                     "Adding SIMM calibration", msg)
+                                       id + "') will be used for SIMM calculations using SIMM version '" + incName +
+                                       "'.";
+                    ore::data::StructuredConfigurationWarningMessage(configurationType, simmCalibration->id(),
+                                                                     exceptionType, msg)
                         .log();
+                    isUnique = false;
+                    break;
                 }
             }
+            if (!isUnique)
+                duplicateVersionNames++;
         }
+    }
+
+    // Only add SIMM calibratoin if it has at least one unique version name
+    if (duplicateVersionNames == simmCalibration->versionNames().size()) {
+        const string msg = "SIMM calibration will not be added since all its version names are duplicates and have "
+                           "already been added.";
+        ore::data::StructuredConfigurationErrorMessage(configurationType, simmCalibration->id(), exceptionType, msg).log();
+        return;
     }
 
     data_[simmCalibration->id()] = simmCalibration;

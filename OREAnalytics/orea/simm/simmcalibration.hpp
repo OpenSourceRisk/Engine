@@ -267,7 +267,7 @@ public:
     SimmCalibration() {}
     SimmCalibration(ore::data::XMLNode* node) { fromXML(node); }
 
-    const std::string version() const;
+    const std::string& version() const;
     const std::vector<std::string>& versionNames() const { return versionNames_; }
     const std::vector<std::pair<std::string, std::string>>& additionalFields() const { return additionalFields_; }
 

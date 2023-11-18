@@ -4,7 +4,7 @@
 
 The SIMM Calibration can be used to add or override SIMM versions by specifying the risk weights, correlations,
 concentration thresholds along with associated buckets/labels and currency groups (for risk class FX and IR).
-See Example\_44 for a full SIMM calibration file for SIMM 2.6 \cite{SIMM2.6}.
+See Example\_44 for a full SIMM calibration file for SIMM 2.5A \cite{SIMM2.5A}.
 
 The file consists of a {\tt <SIMMCalibrationData>} node, with {\tt <SIMMCalibration>} subnodes that each define a given
 SIMM version, as in Listing \ref{lst:simmcalibration_data} below.
@@ -67,9 +67,9 @@ A SIMM Calibration is defined by a {\tt <SIMMCalibration>} node that defines a p
   \item Version names - {\tt <VersionNames>} \\
     This may contain any number of {\tt <Name>} sub-nodes, where each value will be associated with the given SIMM
     calibration. In order to use a given calibration, one of its names must be specified in the "version" parameter of the
-    SIMM analytic (see Listing \ref{lst:ore_simm}). In the example lsting \ref{lst:simmcalibration_data} above, the SIMM
+    SIMM analytic (see Listing \ref{lst:ore_simm}). In the example listing \ref{lst:simmcalibration_data} above, the SIMM
     calibration will override the original SIMM 2.5.6/2.6 defined in the source code.
-  \item Additional fields - {\tt <AdditionalFields>}
+  \item Additional fields - {\tt <AdditionalFields>} \\
     This node is used for purely descriptive purposes and can contain any subnode.
   \item Risk-class-specific sub-nodes:
     \begin{itemize}
@@ -83,25 +83,24 @@ A SIMM Calibration is defined by a {\tt <SIMMCalibration>} node that defines a p
   \item Risk class correlations - {\tt <RiskClassCorrelations>}
 \end{enumerate}
 
-The risk class correlations and its subcomponents are given as follows:
+The risk class correlations and its subcomponents are given in Listing \ref{lst:simmcalibration_risk_class_correlations}:
 
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
-<!-- General Sub-nodes for each risk class -->
-  <RiskClassCorrelations>
-    <Correlation label1="InterestRate" label2="FX">0.14</Correlation>
-    <Correlation label1="InterestRate" label2="Equity">0.29</Correlation>
-    <Correlation label1="InterestRate" label2="CreditQualifying">0.27</Correlation>
-    <Correlation label1="InterestRate" label2="CreditNonQualifying">0.26</Correlation>
-    <Correlation label1="InterestRate" label2="Commodity">0.31</Correlation>
-    <Correlation label1="FX" label2="InterestRate">0.14</Correlation>
-    <Correlation label1="FX" label2="Equity">0.25</Correlation>
-    <Correlation label1="FX" label2="CreditQualifying">0.25</Correlation>
-    <Correlation label1="FX" label2="CreditNonQualifying">0.14</Correlation>
-    <Correlation label1="FX" label2="Commodity">0.3</Correlation>
-    <Correlation label1="Equity" label2="InterestRate">0.29</Correlation>
-      .......
-  </RiskClassCorrelations>
+<RiskClassCorrelations>
+  <Correlation label1="InterestRate" label2="FX">0.14</Correlation>
+  <Correlation label1="InterestRate" label2="Equity">0.29</Correlation>
+  <Correlation label1="InterestRate" label2="CreditQualifying">0.27</Correlation>
+  <Correlation label1="InterestRate" label2="CreditNonQualifying">0.26</Correlation>
+  <Correlation label1="InterestRate" label2="Commodity">0.31</Correlation>
+  <Correlation label1="FX" label2="InterestRate">0.14</Correlation>
+  <Correlation label1="FX" label2="Equity">0.25</Correlation>
+  <Correlation label1="FX" label2="CreditQualifying">0.25</Correlation>
+  <Correlation label1="FX" label2="CreditNonQualifying">0.14</Correlation>
+  <Correlation label1="FX" label2="Commodity">0.3</Correlation>
+  <Correlation label1="Equity" label2="InterestRate">0.29</Correlation>
+    .......
+</RiskClassCorrelations>
 \end{minted}
 \caption{SIMM Calibration: risk class correlations}
 \label{lst:simmcalibration_risk_class_correlations}
@@ -113,11 +112,11 @@ specify the risk classes to which it applies.
 Since the risk-class-specific components have many sub-nodes in common, the following section will be a description of the
 general `base' structure, and then a section will be given for each risk class to explain its specific XML structure along
 with any components unique to that risk class. We will also make reference to the corresponding sections in the ISDA
-SIMM Methodology \cite{SIMM2.6}.
+SIMM Methodology \cite{SIMM2.5A}.
 
 \subsubsection{General Structure}
 
-All risk class subnodes in the SIMM calibration will contain the following three components:
+All risk class subnodes (i.e.\ {\tt InterestRate}, {\tt CreditQualifying}, etc.) in the SIMM calibration will contain the following three components:
 
 \begin{enumerate}
   \item {\tt <RiskWeights>}
@@ -126,74 +125,74 @@ All risk class subnodes in the SIMM calibration will contain the following three
 \end{enumerate}
 
 The general stucture is given by Listing \ref{lst:simmcalibration_general_structure}. Note that
-{\tt <HistoricalVolatilityRatio>} only applies to IR, Equity, Commodity and FX, and
-{\tt <CurrencyLists>} only applies to IR and FX.
+{\tt <HistoricalVolatilityRatio>} only applies to InterestRate, Equity, Commodity and FX, and
+{\tt <CurrencyLists>} only applies to InterestRate and FX.
 
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
-  <RiskWeights>
-    <Delta mporDays="10">
-        ....
-    </Delta>
-    <Vega mporDays="10">
-        ....
-    </Vega>
-    <HistoricalVolatilityRatio mporDays="10">...</HistoricalVolatilityRatio>
-  </RiskWeights>
-  <Correlations>
-    <IntraBucketCorrelation>
-        ....
-    </IntraBucketCorrelation>
-    <InterBucketCorrelation>
-        ....
-    </InterBucketCorrelation>
-  </Correlations>
-  <ConcentrationThresholds>
-    <Delta>
-        ....
-    </Delta>
-    <Vega>
-        ....
-    </Vega>
-    <CurrencyLists>
-        ....
-    </CurrencyLists>
-  </ConcentrationThresholds>
+<RiskWeights>
+  <Delta mporDays="10">
+      ....
+  </Delta>
+  <Vega mporDays="10">
+      ....
+  </Vega>
+  <HistoricalVolatilityRatio mporDays="10">...</HistoricalVolatilityRatio>
+</RiskWeights>
+<Correlations>
+  <IntraBucketCorrelation>
+      ....
+  </IntraBucketCorrelation>
+  <InterBucketCorrelation>
+      ....
+  </InterBucketCorrelation>
+</Correlations>
+<ConcentrationThresholds>
+  <Delta>
+      ....
+  </Delta>
+  <Vega>
+      ....
+  </Vega>
+  <CurrencyLists>
+      ....
+  </CurrencyLists>
+</ConcentrationThresholds>
 \end{minted}
 \caption{SIMM Calibration - General XML Structure}
 \label{lst:simmcalibration_general_structure}
 \end{listing}
 
 The structure of the {\tt <RiskWeights>} node is given by Listing \ref{lst:simmcalibration_risk_weights}.
-Every top-level node in {\tt <RiskWeights>} should have an {\tt <mporDays>} attribute which defaults to
-\emph{``10''} when omitted.
+Every top-level node in {\tt <RiskWeights>} should have an {\tt <mporDays>} attribute (which defaults to
+\emph{``10''} when omitted).
 
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
-  <RiskWeights>
-    <Delta mporDays="10">
-      <!-- e.g. for IR -->
-      <Weight bucket="1" label1="2w">109</Weight>
-      <Weight bucket="1" label1="1m">105</Weight>
+<RiskWeights>
+  <Delta mporDays="10">
+    <!-- e.g. for IR -->
+    <Weight bucket="1" label1="2w">109</Weight>
+    <Weight bucket="1" label1="1m">105</Weight>
 
-      <!-- e.g. for CreditQualifying/CreditNonQualifying/Equity/Commodity -->
-      <Weight bucket="1">75</Weight>
-      <Weight bucket="2">90</Weight>
+    <!-- e.g. for CreditQualifying/CreditNonQualifying/Equity/Commodity -->
+    <Weight bucket="1">75</Weight>
+    <Weight bucket="2">90</Weight>
 
-      <!-- e.g. for FX -->
-      <Weight label1="2" label2="2">7.4</Weight>
-      <Weight label1="2" label2="1">14.7</Weight>
-    </Delta>
-    <HistoricalVolatilityRatio mporDays="10">0.47</HistoricalVolatilityRatio>
-    <Vega mporDays="10">
-      <!-- e.g. for IR/CreditQualifying/Commodity/FX -->
-      <Weight>0.76</Weight>
+    <!-- e.g. for FX -->
+    <Weight label1="2" label2="2">7.4</Weight>
+    <Weight label1="2" label2="1">14.7</Weight>
+  </Delta>
+  <HistoricalVolatilityRatio mporDays="10">0.47</HistoricalVolatilityRatio>
+  <Vega mporDays="10">
+    <!-- e.g. for IR/CreditQualifying/Commodity/FX -->
+    <Weight>0.76</Weight>
 
-      <!-- e.g. for CreditNonQualifying/Equity -->
-      <Weight bucket="1">280</Weight>
-      <Weight bucket="2">1300</Weight>
-    </Vega>
-  </RiskWeights>
+    <!-- e.g. for CreditNonQualifying/Equity -->
+    <Weight bucket="1">280</Weight>
+    <Weight bucket="2">1300</Weight>
+  </Vega>
+</RiskWeights>
 \end{minted}
 \caption{SIMM Calibration - Risk Weights}
 \label{lst:simmcalibration_risk_weights}
@@ -203,30 +202,30 @@ The structure of the {\tt <Correlations>} node is given by Listing \ref{lst:simm
 
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
-  <Correlations>
-    <IntraBucketCorrelation>
-      <!-- e.g. for IR -->
-      <Correlation label1="2w" label2="1m">0.77</Correlation>
-      <Correlation label1="2w" label2="3m">0.67</Correlation>
+<Correlations>
+  <IntraBucketCorrelation>
+    <!-- e.g. for IR -->
+    <Correlation label1="2w" label2="1m">0.77</Correlation>
+    <Correlation label1="2w" label2="3m">0.67</Correlation>
 
-      <!-- e.g. for CreditQualifying/CreditNonQualifying -->
-      <Correlation label1="aggregate" label2="same">0.93</Correlation>
-      <Correlation label1="aggregate" label2="different">0.46</Correlation>
+    <!-- e.g. for CreditQualifying/CreditNonQualifying -->
+    <Correlation label1="aggregate" label2="same">0.93</Correlation>
+    <Correlation label1="aggregate" label2="different">0.46</Correlation>
 
-      <!-- e.g. for Equity/Commodity -->
-      <Correlation bucket="1">0.18</Correlation>
-      <Correlation bucket="2">0.2</Correlation>
+    <!-- e.g. for Equity/Commodity -->
+    <Correlation bucket="1">0.18</Correlation>
+    <Correlation bucket="2">0.2</Correlation>
 
-      <!-- e.g. for FX -->
-      <Correlation bucket="2" label1="2" label2="2">0.5</Correlation>
-      <Correlation bucket="2" label1="2" label2="1">0.25</Correlation>
-    </IntraBucketCorrelation>
-    <InterBucketCorrelation>
-      <!-- e.g. for CreditQualifying/CreditNonQualifying/Equity/Commodity -->
-      <Correlation label1="1" label2="2">0.38</Correlation>
-      <Correlation label1="1" label2="3">0.38</Correlation>
-    </InterBucketCorrelation>
-  </Correlations>
+    <!-- e.g. for FX -->
+    <Correlation bucket="2" label1="2" label2="2">0.5</Correlation>
+    <Correlation bucket="2" label1="2" label2="1">0.25</Correlation>
+  </IntraBucketCorrelation>
+  <InterBucketCorrelation>
+    <!-- e.g. for CreditQualifying/CreditNonQualifying/Equity/Commodity -->
+    <Correlation label1="1" label2="2">0.38</Correlation>
+    <Correlation label1="1" label2="3">0.38</Correlation>
+  </InterBucketCorrelation>
+</Correlations>
 \end{minted}
 \caption{SIMM Calibration - Correlations}
 \label{lst:simmcalibration_correlations}
@@ -236,21 +235,21 @@ The structure of the {\tt <ConcentrationThresholds>} node is given by Listing \r
 
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
-  <ConcentrationThresholds>
-    <Delta>
-      <!-- e.g. for IR/CreditQualifying/CreditNonQualifying/Equity/Commodity/FX -->
-      <Threshold bucket="1">30</Threshold>
-      <Threshold bucket="2">330</Threshold>
-    </Delta>
-    <Vega>
-      <!-- e.g. for IR -->
-      <Threshold bucket="1">74</Threshold>
-      <Threshold bucket="2">4900</Threshold>
+<ConcentrationThresholds>
+  <Delta>
+    <!-- e.g. for IR/CreditQualifying/CreditNonQualifying/Equity/Commodity/FX -->
+    <Threshold bucket="1">30</Threshold>
+    <Threshold bucket="2">330</Threshold>
+  </Delta>
+  <Vega>
+    <!-- e.g. for IR -->
+    <Threshold bucket="1">74</Threshold>
+    <Threshold bucket="2">4900</Threshold>
 
-      <!-- e.g. for CreditQualifying/CreditNonQualifying/Equity/Commodity/FX -->
-      <Threshold>360</Threshold>
-    </Vega>
-  </ConcentrationThresholds>
+    <!-- e.g. for CreditQualifying/CreditNonQualifying/Equity/Commodity/FX -->
+    <Threshold>360</Threshold>
+  </Vega>
+</ConcentrationThresholds>
 \end{minted}
 \caption{SIMM Calibration - Concentration Thresholds}
 \label{lst:simmcalibration_concentration_thresholds}
@@ -270,7 +269,6 @@ The structure for the {\tt <InterestRate>} node is given by Listing \ref{lst:sim
     <XCcyBasis mporDays="10">21</XCcyBasis>
     <CurrencyLists>
       <Currency bucket="1">USD</Currency>
-      <Currency bucket="1">EUR</Currency>
         ....
       <Currency bucket="3">Other</Currency>
     </CurrencyLists>
@@ -297,7 +295,7 @@ The structure for the {\tt <InterestRate>} node is given by Listing \ref{lst:sim
 \label{lst:simmcalibration_ir}
 \end{listing}
 
-The above values are found in the following sections of the ISDA SIMM Methodology \cite{SIMM2.6}:
+The above values are found in the following sections of the ISDA SIMM Methodology \cite{SIMM2.5A}:
 \begin{itemize}
   \item Delta risk weights: Section D.1, 33. \\
     Each {\tt <Weight>} node must have a {\tt bucket} (defining the currency group) and {\tt label1} (defining the tenor) attribute.\\
@@ -360,7 +358,7 @@ The structure for the {\tt <CreditQualifying>} node is given by Listing \ref{lst
 \label{lst:simmcalibration_creditq}
 \end{listing}
 
-The above values are found in the following sections of the ISDA SIMM Methodology \cite{SIMM2.6}:
+The above values are found in the following sections of the ISDA SIMM Methodology \cite{SIMM2.5A}:
 \begin{itemize}
   \item Delta risk weights: Section E.1, 39. \\
     Each {\tt <Weight>} node must have a {\tt bucket} attribute.\\
@@ -374,8 +372,7 @@ The above values are found in the following sections of the ISDA SIMM Methodolog
     Allowable {\tt label2} values: \emph{same} or \emph{different}.
   \item Inter-bucket correlations: Section E.2, 43. \\
     Each {\tt <Correlation>} must have a {\tt label1} and {\tt label2} attribute. Note that although the correlations
-    are symmetric (i.e.\ label1 -> label2 is equal to label2 -> label1), the correlation value for both directions must be
-    provided. \\
+    are symmetric, the correlation value for both directions must be provided. \\
     Allowable {\tt label1}/{\tt label2} values: \emph{``1'', ``2'', ``3'', ``4'', ``5'', ``6'', ``7'', ``8'', ``9'', ``10'', ``11'', ``12''}, as defined in Section E.1, 38.
   \item Correlation for Base correlation risks: Section E.2, 42.
   \item Delta concentration thresholds: Section J.2, 76 \\
@@ -409,7 +406,7 @@ The structure for the {\tt <CreditNonQualifying>} node is given by Listing \ref{
 \label{lst:simmcalibration_creditnonq}
 \end{listing}
 
-The above values are found in the following sections of the ISDA SIMM Methodology \cite{SIMM2.6}:
+The above values are found in the following sections of the ISDA SIMM Methodology \cite{SIMM2.5A}:
 \begin{itemize}
   \item Delta risk weights: Section F.1, 46. \\
     Each {\tt <Weight>} node must have a {\tt bucket} attribute.\\
@@ -422,8 +419,7 @@ The above values are found in the following sections of the ISDA SIMM Methodolog
     Allowable {\tt label2} values: \emph{same} or \emph{different}.
   \item Inter-bucket correlations: Section F.2, 49. \\
     Each {\tt <Correlation>} must have a {\tt label1} and {\tt label2} attribute. Note that although the correlations
-    are symmetric (i.e.\ label1 -> label2 is equal to label2 -> label1), the correlation value for both directions must be
-    provided. \\
+    are symmetric, the correlation value for both directions must be provided. \\
     Allowable {\tt label1}/{\tt label2} values: \emph{``1'', ``2''}, as defined in Section F.1, 45.
   \item Delta concentration thresholds: Section J.2, 76 \\
     Each {\tt <Threshold>} must have a {\tt bucket} attribute. \\
@@ -457,7 +453,7 @@ The structure for the {\tt <Equity>} node is given by Listing \ref{lst:simmcalib
 \label{lst:simmcalibration_equity}
 \end{listing}
 
-The above values are found in the following sections of the ISDA SIMM Methodology \cite{SIMM2.6}:
+The above values are found in the following sections of the ISDA SIMM Methodology \cite{SIMM2.5A}:
 \begin{itemize}
   \item Delta risk weights: Section G.1, 56. \\
     Each {\tt <Weight>} node must have a {\tt bucket} attribute.\\
@@ -472,8 +468,7 @@ The above values are found in the following sections of the ISDA SIMM Methodolog
     Allowable {\tt bucket} values: \emph{``1'', ``2'', ``3'', ``4'', ``5'', ``6'', ``7'', ``8'', ``9'', ``10'', ``11'', ``12'', ``Residual''}, as defined in Section G.1, 50.
   \item Inter-bucket correlations: Section G.2, 60. \\
     Each {\tt <Correlation>} must have a {\tt label1} and {\tt label2} attribute. Note that although the correlations
-    are symmetric (i.e.\ label1 -> label2 is equal to label2 -> label1), the correlation value for both directions must be
-    provided. \\
+    are symmetric, the correlation value for both directions must be provided. \\
     Allowable {\tt label1}/{\tt label2} values: \emph{``1'', ``2'', ``3'', ``4'', ``5'', ``6'', ``7'', ``8'', ``9'', ``10'', ``11'', ``12''}, as defined in Section G.1, 50.
   \item Delta concentration thresholds: Section J.3, 77 \\
     Each {\tt <Threshold>} must have a {\tt bucket} attribute. \\
@@ -508,7 +503,7 @@ The structure for the {\tt <Commodity>} node is given by Listing \ref{lst:simmca
 \label{lst:simmcalibration_commodity}
 \end{listing}
 
-The above values are found in the following sections of the ISDA SIMM Methodology \cite{SIMM2.6}:
+The above values are found in the following sections of the ISDA SIMM Methodology \cite{SIMM2.5A}:
 \begin{itemize}
   \item Delta risk weights: Section H.1, 61. \\
     Each {\tt <Weight>} node must have a {\tt bucket} attribute.\\
@@ -522,8 +517,7 @@ The above values are found in the following sections of the ISDA SIMM Methodolog
     Allowable {\tt bucket} values: \emph{``1'', ``2'', ``3'', ``4'', ``5'', ``6'', ``7'', ``8'', ``9'', ``10'', ``11'', ``12'', ``13'', ``14'', ``15'', ``16'', ``17''}, as defined in Section H.1, 61.
   \item Inter-bucket correlations: Section H.2, 65. \\
     Each {\tt <Correlation>} must have a {\tt label1} and {\tt label2} attribute. Note that although the correlations
-    are symmetric (i.e.\ label1 -> label2 is equal to label2 -> label1), the correlation value for both directions must be
-    provided. \\
+    are symmetric, the correlation value for both directions must be provided. \\
     Allowable {\tt label1}/{\tt label2} values: \emph{``1'', ``2'', ``3'', ``4'', ``5'', ``6'', ``7'', ``8'', ``9'', ``10'', ``11'', ``12'', ``13'', ``14'', ``15'', ``16'', ``17''}, as defined in Section H.1, 61.
   \item Delta concentration thresholds: Section J.4, 78. \\
     Each {\tt <Threshold>} must have a {\tt bucket} attribute. \\
@@ -570,7 +564,7 @@ The structure for the {\tt <FX>} node is given by Listing \ref{lst:simmcalibrati
 \label{lst:simmcalibration_fx}
 \end{listing}
 
-The above values are found in the following sections of the ISDA SIMM Methodology \cite{SIMM2.6}:
+The above values are found in the following sections of the ISDA SIMM Methodology \cite{SIMM2.5A}:
 \begin{itemize}
   \item Delta risk weights: Section I.1, 69. \\
     Each {\tt <Weight>} node must have a {\tt label1} (defining the first currency's volatility group) and {\tt label2}
@@ -587,9 +581,8 @@ The above values are found in the following sections of the ISDA SIMM Methodolog
     Allowable {\tt bucket} values: Allowable {\tt label1}/{\tt label2} values: \emph{``1''} for high FX volatility
     currencies and \emph{``2''} for regular FX volatility currencies.
   \item Intra-bucket correlations: Section I.2, 72. \\
-    Each {\tt <Correlation>} must have a {\tt bucket}, {\tt label1} and {\tt label2} attribute. Note that although the
-    correlations are symmetric (i.e.\ label1 -> label2 is equal to label2 -> label1), the correlation value for
-    directions must be provided. \\
+    Each {\tt <Correlation>} must have a {\tt label1} and {\tt label2} attribute. Note that although the correlations
+    are symmetric, the correlation value for both directions must be provided. \\
     Allowable {\tt bucket} values: \emph{``1''} if the SIMM calculation currency is in the regular FX volatility group, and \emph{``2''} if it is in the high FX volatility group. \\
     Allowable {\tt label1}/{\tt label2} values: \emph{``1''} for high FX volatility currencies and \emph{``2''}
     for regular FX volatility currencies.
