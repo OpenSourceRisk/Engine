@@ -31,13 +31,17 @@ namespace QuantExt {
 template <class T>
 void backwardDerivatives(const ComputationGraph& g, const std::vector<T>& values, std::vector<T>& derivatives,
                          const std::vector<std::function<std::vector<T>(const std::vector<const T*>&, const T*)>>& grad,
-                         std::function<void(T&)> deleter = {}, const std::vector<bool>& keepNodes = {}) {
+                         std::function<void(T&)> deleter = {}, const std::vector<bool>& keepNodes = {},
+                         const std::vector<bool>& activeNodes = {}) {
     if (g.size() == 0)
         return;
 
     // loop over the nodes in the graph in reverse order
 
     for (std::size_t node = g.size() - 1; node > 0; --node) {
+
+        if (!activeNodes.empty() && !activeNodes[node])
+            continue;
 
         if (!g.predecessors(node).empty()) {
 
@@ -51,25 +55,27 @@ void backwardDerivatives(const ComputationGraph& g, const std::vector<T>& values
             auto gr = grad[g.opId(node)](args, &values[node]);
 
             for (std::size_t p = 0; p < g.predecessors(node).size(); ++p) {
+                if (!activeNodes.empty() && !activeNodes[g.predecessors(node)[p]])
+                    continue;
                 derivatives[g.predecessors(node)[p]] += derivatives[node] * gr[p];
             }
+        }
 
-            // then check if we can delete the node
+        // then check if we can delete the node
 
-            if (deleter) {
+        if (deleter) {
 
-                // is the node marked as to be kept?
+            // is the node marked as to be kept?
 
-                if (!keepNodes.empty() && keepNodes[node])
-                    continue;
+            if (!keepNodes.empty() && keepNodes[node])
+                continue;
 
-                // apply the deleter
+            // apply the deleter
 
-                deleter(derivatives[node]);
-            }
+            deleter(derivatives[node]);
+        }
 
-        } // if !g.predecessors empty
-    }     // for node
+    } // for node
 }
 
 } // namespace QuantExt
