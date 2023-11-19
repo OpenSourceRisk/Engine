@@ -358,7 +358,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     std::fill(std::next(activeNodes.begin(), lastExposureNode), activeNodes.end(), true);
 
     derivatives[cvaNode] = RandomVariable(model_->size(), 1.0);
-    backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodesDerivatives, activeNodes);
+    backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodesDerivatives, activeNodes,
+                        ops_[RandomVariableOpCode::ConditionalExpectation]);
 
     boost::timer::nanosecond_type timing11 = timer.elapsed().wall;
 
@@ -389,7 +390,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
         std::fill(std::next(activeNodes.begin(), range.second), activeNodes.end(), false);
         for (auto const& n : pfPathExposureNodes)
             activeNodes[n] = true;
-        backwardDerivatives(*g, values, derivatives, grads_, setToZeroDeleter, keepNodesDerivatives, activeNodes);
+        backwardDerivatives(*g, values, derivatives, grads_, setToZeroDeleter, keepNodesDerivatives, activeNodes,
+                            ops_[RandomVariableOpCode::ConditionalExpectation]);
 
         for (auto const& [n, v] : baseModelParams_) {
             tradeModelParamDerivatives[id][n] = expectation(derivatives[n]).at(0);

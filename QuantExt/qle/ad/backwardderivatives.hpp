@@ -29,10 +29,13 @@
 namespace QuantExt {
 
 template <class T>
-void backwardDerivatives(const ComputationGraph& g, const std::vector<T>& values, std::vector<T>& derivatives,
-                         const std::vector<std::function<std::vector<T>(const std::vector<const T*>&, const T*)>>& grad,
-                         std::function<void(T&)> deleter = {}, const std::vector<bool>& keepNodes = {},
-                         const std::vector<bool>& activeNodes = {}) {
+void backwardDerivatives(
+    const ComputationGraph& g, const std::vector<T>& values, std::vector<T>& derivatives,
+    const std::vector<std::function<std::vector<T>(const std::vector<const T*>&, const T*)>>& grad,
+    std::function<void(T&)> deleter = {}, const std::vector<bool>& keepNodes = {},
+    const std::vector<bool>& activeNodes = {},
+    const std::function<RandomVariable(const std::vector<const RandomVariable*>&)>& conditionalExpectation = {}) {
+
     if (g.size() == 0)
         return;
 
@@ -52,12 +55,31 @@ void backwardDerivatives(const ComputationGraph& g, const std::vector<T>& values
                 args[arg] = &values[g.predecessors(node)[arg]];
             }
 
-            auto gr = grad[g.opId(node)](args, &values[node]);
+            QL_REQUIRE(derivatives[node].initialised(),
+                       "backwardDerivatives(): derivative at node " << node << " is not initialized.");
 
-            for (std::size_t p = 0; p < g.predecessors(node).size(); ++p) {
-                if (!activeNodes.empty() && !activeNodes[g.predecessors(node)[p]])
-                    continue;
-                derivatives[g.predecessors(node)[p]] += derivatives[node] * gr[p];
+            if (g.opId(node) == RandomVariableOpCode::ConditionalExpectation && conditionalExpectation) {
+
+                // expected stochastic automatic differentiaion, Fries, 2017
+                args[0] = &derivatives[node];
+                if (activeNodes.empty() || activeNodes[g.predecessors(node)[0]])
+                    derivatives[g.predecessors(node)[0]] += conditionalExpectation(args);
+
+            } else {
+
+                auto gr = grad[g.opId(node)](args, &values[node]);
+
+                for (std::size_t p = 0; p < g.predecessors(node).size(); ++p) {
+                    if (!activeNodes.empty() && !activeNodes[g.predecessors(node)[p]])
+                        continue;
+                    QL_REQUIRE(derivatives[g.predecessors(node)[p]].initialised(),
+                               "backwardDerivatives: derivative at node " << g.predecessors(node)[p]
+                                                                          << " is not initialized.");
+                    QL_REQUIRE(gr[p].initialised(), "backwardDerivatives: gradient at node "
+                                                        << node << " (opId " << g.opId(node)
+                                                        << ") not initialized at component " << p);
+                    derivatives[g.predecessors(node)[p]] += derivatives[node] * gr[p];
+                }
             }
         }
 
