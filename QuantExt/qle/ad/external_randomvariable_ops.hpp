@@ -34,6 +34,7 @@ public:
     ExternalRandomVariable(const std::size_t randomVariableOpCode,
                            const std::vector<const ExternalRandomVariable*>& args);
     void clear();
+    bool initialised() const { return initialized_; }
     void declareAsOutput() const;
     std::size_t id() const;
 
