@@ -628,36 +628,20 @@ void SimmCalibrationData::add(const boost::shared_ptr<SimmCalibration>& simmCali
 
     // Check for SIMM version name clashes
     const auto& incVersionNames = simmCalibration->versionNames();
-    Size duplicateVersionNames = 0;
     for (const auto& [id, sc] : data_) {
         for (const string& incName : incVersionNames) {
-            bool isUnique = true;
             for (const string& currName : sc->versionNames()) {
                 if (incName == currName) {
-                    const string msg = "SIMM calibration being added with version name '" + incName +
-                                       "' which already exists. The calibration data may still be added if it has "
-                                       "unique version names, but only the "
-                                       "first instance for the given alias (i.e. SIMM calibration ID '" +
-                                       id + "') will be used for SIMM calculations using SIMM version '" + incName +
-                                       "'.";
+                    const string msg = "SIMM calibration has duplicate version name '" + incName +
+                                       "' (added under calibration id='" + id +
+                                       "'). SIMM calibration will not be added.";
                     ore::data::StructuredConfigurationWarningMessage(configurationType, simmCalibration->id(),
                                                                      exceptionType, msg)
                         .log();
-                    isUnique = false;
-                    break;
+                    return;
                 }
             }
-            if (!isUnique)
-                duplicateVersionNames++;
         }
-    }
-
-    // Only add SIMM calibratoin if it has at least one unique version name
-    if (duplicateVersionNames == simmCalibration->versionNames().size()) {
-        const string msg = "SIMM calibration will not be added since all its version names are duplicates and have "
-                           "already been added.";
-        ore::data::StructuredConfigurationErrorMessage(configurationType, simmCalibration->id(), exceptionType, msg).log();
-        return;
     }
 
     data_[simmCalibration->id()] = simmCalibration;
