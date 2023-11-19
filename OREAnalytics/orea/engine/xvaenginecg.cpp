@@ -277,6 +277,12 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     for (auto const& n : pfExposureNodes) {
         keepNodes[n] = true;
     }
+    for (auto const& c : g->constants()) {
+        keepNodes[c.second] = true;
+    }
+    for (auto const& [n, v] : baseModelParams_) {
+        keepNodes[n] = true;
+    }
 
     // note. regression order and polynom type should ultimately come from st pe config or xva analytics config (?)
     ops_ = getRandomVariableOps(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial);
