@@ -59,6 +59,8 @@ void forwardEvaluation(const ComputationGraph& g, std::vector<T>& values,
                 args[arg] = &values[g.predecessors(node)[arg]];
             }
             values[node] = ops[g.opId(node)](args);
+            QL_REQUIRE(values[node].initialised(),
+                       "forwardEvaluation(): value at node " << node << " is not initialized.");
 
             // then check if we can delete the predecessors
 
