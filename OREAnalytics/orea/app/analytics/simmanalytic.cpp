@@ -69,7 +69,7 @@ void SimmAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLo
 
     // Save SIMM calibration data to output
     if (inputs_->simmCalibrationData())
-        inputs_->simmCalibrationData()->toFile((inputs_->resultsPath() / "simm_calibration.xml").string());
+        inputs_->simmCalibrationData()->toFile((inputs_->resultsPath() / "simmcalibration.xml").string());
 
     // Calculate SIMM
     auto simm = boost::make_shared<SimmCalculator>(*simmAnalytic->crifRecords(),
