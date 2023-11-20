@@ -150,7 +150,7 @@ double ComputationGraph::constantValue(const std::size_t node) const { return co
 
 void ComputationGraph::setPrefix(const std::string& prefix) { prefix_ = prefix; }
 
-void ComputatinoGraph::recordPredecessors(std::set<std::size>* nodes = nullptr) const { recordPredecessors_ = nodes; }
+void ComputationGraph::recordPredecessors(std::set<std::size_t>* nodes) const { recordPredecessors_ = nodes; }
 
 std::size_t cg_const(ComputationGraph& g, const double value) { return g.constant(value); }
 
