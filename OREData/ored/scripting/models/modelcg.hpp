@@ -23,15 +23,19 @@
 
 #pragma once
 
-#include <qle/ad/computationgraph.hpp>
 #include <qle/math/randomvariable.hpp>
 #include <qle/math/randomvariable_ops.hpp>
+#include <qle/ad/computationgraph.hpp>
 
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/settings.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 
 #include <boost/any.hpp>
+
+namespace QuantExt {
+class ComputationGraph;
+}
 
 namespace ore {
 namespace data {
@@ -46,7 +50,7 @@ class ModelCG : public QuantLib::LazyObject {
 public:
     enum class Type { MC, FD };
 
-    explicit ModelCG(const QuantLib::Size n) : n_(n) { g_ = boost::make_shared<QuantExt::ComputationGraph>(); }
+    explicit ModelCG(const QuantLib::Size n);
     virtual ~ModelCG() {}
 
     // computation graph
@@ -72,9 +76,7 @@ public:
     virtual const std::string& baseCcy() const = 0;
 
     // time between two dates d1 <= d2, default actact should be overriden in derived claases if appropriate
-    virtual std::size_t dt(const Date& d1, const Date& d2) const {
-        return cg_const(*g_, QuantLib::ActualActual(QuantLib::ActualActual::ISDA).yearFraction(d1, d2));
-    }
+    virtual std::size_t dt(const Date& d1, const Date& d2) const;
 
     // result must be as of max(refdate, obsdate); refdate < paydate and obsdate <= paydate required
     virtual std::size_t pay(const std::size_t amount, const Date& obsdate, const Date& paydate,
