@@ -403,25 +403,23 @@ void InputParameters::setCreditSimulationParametersFromBuffer(const std::string&
     creditSimulationParameters_->fromXMLString(xml);
 } 
 
-void InputParameters::setCrifLoader() {
+boost::shared_ptr<CrifLoader> InputParameters::crifLoader() const {
     boost::shared_ptr<SimmConfiguration> configuration =
         buildSimmConfiguration(simmVersion_, boost::make_shared<SimmBucketMapperBase>(), mporDays());
     bool updateMappings = true;
     bool aggregateTrades = false;
-    crifLoader_ =
+    return 
         boost::make_shared<CrifLoader>(configuration, CrifRecord::additionalHeaders, updateMappings, aggregateTrades);
 }
     
 void InputParameters::setCrifFromFile(const std::string& fileName, char eol, char delim, char quoteChar, char escapeChar) {
-    if (!crifLoader_)
-        setCrifLoader();
-    crifLoader_->loadFromFile(fileName, eol, delim, quoteChar, escapeChar);
+    auto crifLoader = crifLoader();
+    inputSimmCrif_ = crifLoader->loadFromFile(fileName, eol, delim, quoteChar, escapeChar);
 }
 
 void InputParameters::setCrifFromBuffer(const std::string& csvBuffer, char eol, char delim, char quoteChar, char escapeChar) {
-    if (!crifLoader_)
-        setCrifLoader();
-    crifLoader_->loadFromString(csvBuffer, eol, delim, quoteChar, escapeChar);
+    auto crifLoader = crifLoader();
+    inputSimmCrif_ = crifLoader->loadFromString(csvBuffer, eol, delim, quoteChar, escapeChar);
 }
 
 void InputParameters::setSimmNameMapper(const std::string& xml) {

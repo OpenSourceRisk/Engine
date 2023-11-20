@@ -270,7 +270,7 @@ public:
 
     // Setters for SIMM
     void setSimmVersion(const std::string& s) { simmVersion_ = s; }
-    void setCrifLoader();
+    
     void setCrifFromFile(const std::string& fileName,
                          char eol = '\n', char delim = ',', char quoteChar = '\0', char escapeChar = '\\');
     void setCrifFromBuffer(const std::string& csvBuffer,
@@ -527,7 +527,7 @@ public:
      * Getters for SIMM
      ******************/
     const std::string& simmVersion() { return simmVersion_; }
-    const boost::shared_ptr<ore::analytics::CrifLoader>& crifLoader() { return crifLoader_; }
+    const boost::shared_ptr<ore::analytics::Crif>& inputSimmCrif() { return inputSimmCrif_; }
     const boost::shared_ptr<ore::analytics::SimmBasicNameMapper>& simmNameMapper() { return simmNameMapper_; }
     const boost::shared_ptr<ore::analytics::SimmBucketMapper>& simmBucketMapper() { return simmBucketMapper_; }
     const std::string& simmCalculationCurrency() { return simmCalculationCurrency_; }
@@ -768,7 +768,7 @@ protected:
      * SIMM analytic
      ***************/
     std::string simmVersion_;
-    boost::shared_ptr<ore::analytics::CrifLoader> crifLoader_;
+    boost::shared_ptr<ore::analytics::Crif> inputSimmCrif_;
     boost::shared_ptr<ore::analytics::SimmBasicNameMapper> simmNameMapper_;
     boost::shared_ptr<ore::analytics::SimmBucketMapper> simmBucketMapper_;
     std::string simmCalculationCurrency_ = "";
@@ -800,6 +800,8 @@ protected:
      ***************/
     Size scenarioDistributionSteps_ = 20;
     bool scenarioOutputZeroRate_ = false;
+
+    boost::shared_ptr<ore::analytics::CrifLoader> crifLoader() const;
 };
 
 inline const std::string& InputParameters::marketConfig(const std::string& context) {
