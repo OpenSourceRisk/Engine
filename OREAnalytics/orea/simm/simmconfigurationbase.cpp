@@ -394,9 +394,8 @@ QuantLib::Real SimmConfigurationBase::correlation(const RiskType& firstRt, const
 
         // Non-residual
         if (bucket_1 == bucket_2) {
-            SimmVersion version = parseSimmVersion(version_);
             SimmVersion thresholdVersion = SimmVersion::V2_2;
-            if (version >= thresholdVersion) {
+            if (isSimmConfigCalibration() || parseSimmVersion(version_) >= thresholdVersion) {
                 // In ISDA SIMM version 2.2 or greater, the CRNQ correlations differ depending on whether or not
                 // the entities have the same group name i.e. CMBX.
                 return firstLabel_2 == secondLabel_2 ? crnqSameIntraCorr_ : crnqDiffIntraCorr_;

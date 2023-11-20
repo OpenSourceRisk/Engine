@@ -56,6 +56,8 @@ public:
                                const RiskType& secondRt, const std::string& secondQualifier,
                                const std::string& secondLabel_1, const std::string& secondLabel_2,
                                const std::string& calculationCurrency = "") const override;
+    
+    virtual bool isSimmConfigCalibration() const override { return true; }
 
 private:
     //! Find the group of the \p qualifier
