@@ -74,6 +74,7 @@ public:
     const string& style() const { return style_; }
     const bool& payoffAtExpiry() const { return payoffAtExpiry_; }
     const vector<string>& exerciseDates() const { return exerciseDates_; }
+    const ScheduleData& exerciseDatesSchedule() const { return exerciseDatesSchedule_; }
     const string& noticePeriod() const { return noticePeriod_; }
     const string& noticeCalendar() const { return noticeCalendar_; }
     const string& noticeConvention() const { return noticeConvention_; }
@@ -95,6 +96,7 @@ public:
     //! \name Setters
     //@{
     void setExerciseDates(const std::vector<std::string>& exerciseDates) { exerciseDates_ = exerciseDates; }
+    void setExerciseDates(const ScheduleData& exerciseDatesSchedule) { exerciseDatesSchedule_ = exerciseDatesSchedule; }
     void setAutomaticExercise(bool automaticExercise) { automaticExercise_ = automaticExercise; }
     void setPaymentData(const OptionPaymentData& paymentData) { paymentData_ = paymentData; }
     void setCallPut(const string& callPut) { callPut_ = callPut; }
@@ -121,6 +123,7 @@ private:
     string payoffType2_;  // Geometric, Arithmetic
     string style_;        // European, Bermudan, American
     bool payoffAtExpiry_; // Y or N
+    ScheduleData exerciseDatesSchedule_;
     vector<string> exerciseDates_;
     string noticePeriod_;
     string noticeCalendar_;
