@@ -60,6 +60,7 @@ public:
     const std::map<std::size_t, std::set<std::string>>& labels() const;
 
     void setPrefix(const std::string& prefix);
+    void recordPredecessors(std::set<std::size>* nodes = nullptr) const;
 
 private:
     std::vector<std::vector<std::size_t>> predecessors_;
@@ -76,6 +77,7 @@ private:
     std::map<std::size_t, std::set<std::string>> labels_;
 
     std::string prefix_;
+    std::set<std::size>* recordPredecessors_;
 };
 
 // methods to construct cg
