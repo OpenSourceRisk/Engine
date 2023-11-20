@@ -34,7 +34,7 @@ template <class T>
 void backwardDerivatives(const ComputationGraph& g, const std::vector<T>& values, std::vector<T>& derivatives,
                          const std::vector<std::function<std::vector<T>(const std::vector<const T*>&, const T*)>>& grad,
                          std::function<void(T&)> deleter = {}, const std::vector<bool>& keepNodes = {},
-                         const std::vector<bool>& activeNodes = {},
+                         const std::vector<bool>& activeNodes = {}, const std::size_t conditionalExpectationOpId = 0,
                          const std::function<T(const std::vector<const T*>&)>& conditionalExpectation = {}) {
 
     if (g.size() == 0)
@@ -59,7 +59,7 @@ void backwardDerivatives(const ComputationGraph& g, const std::vector<T>& values
             QL_REQUIRE(derivatives[node].initialised(),
                        "backwardDerivatives(): derivative at node " << node << " is not initialized.");
 
-            if (g.opId(node) == RandomVariableOpCode::ConditionalExpectation && conditionalExpectation) {
+            if (g.opId(node) == conditionalExpectationOpId && conditionalExpectation) {
 
                 // expected stochastic automatic differentiaion, Fries, 2017
                 args[0] = &derivatives[node];

@@ -390,7 +390,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
         nodesDPlusExposure[n] = true;
     }
 
-    backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodesDerivatives, nodesDPlusExposure,
+    backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodesDerivatives,
+                        nodesDPlusExposure, RandomVariableOpCode::ConditionalExpectation,
                         ops_[RandomVariableOpCode::ConditionalExpectation]);
 
     boost::timer::nanosecond_type timing11 = timer.elapsed().wall;
@@ -413,7 +414,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
         for (auto const& n : pfPathExposureNodes)
             tradeActiveNodes[n] = true;
         backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodesDerivatives,
-                            tradeActiveNodes, ops_[RandomVariableOpCode::ConditionalExpectation]);
+                            tradeActiveNodes, RandomVariableOpCode::ConditionalExpectation,
+                            ops_[RandomVariableOpCode::ConditionalExpectation]);
 
         for (Size i = range.first; i < range.second; ++i) {
             if (!keepNodes[i])
