@@ -23,11 +23,11 @@
 #pragma once
 
 #include <map>
-#include <tuple>
-
-#include <orea/simm/crifrecord.hpp>
+#include <orea/simm/crif.hpp>
+#include <orea/simm/simmconfiguration.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/report/report.hpp>
+#include <tuple>
 
 #include <ql/types.hpp>
 
@@ -44,68 +44,25 @@ public:
         This is the default. To override this the flag \p keepTradeId may be set to true.
     */
     CrifLoader(const boost::shared_ptr<SimmConfiguration>& configuration,
-               std::map<QuantLib::Size, std::set<std::string>> additionalHeaders = std::map<QuantLib::Size, std::set<std::string>>(),
+               std::map<QuantLib::Size, std::set<std::string>> additionalHeaders =
+                   std::map<QuantLib::Size, std::set<std::string>>(),
                bool updateMapper = false, bool aggregateTrades = true)
-        : configuration_(configuration), additionalHeaders_(additionalHeaders),
-          updateMapper_(updateMapper), aggregateTrades_(aggregateTrades) {}
+        : configuration_(configuration), additionalHeaders_(additionalHeaders), updateMapper_(updateMapper),
+          aggregateTrades_(aggregateTrades) {}
+
+    virtual ~CrifLoader() {}
+
+    //! Check if the record is a valid Simm Crif Record
+    void validateSimmRecord(const CrifRecord& cr) const;
+    //! Override currency codes 
+    void currencyOverrides(CrifRecord& crifRecord) const;
+    //! update bucket mappings
+    void updateMapping(const CrifRecord& cr) const;
 
     /*! Destructor */
     virtual ~CrifLoader() {}
 
-    //! Add a single CRIF record
-    virtual void add(CrifRecord crifRecord, const bool onDiffAmountCcy = false);
-
-    /*! Load CRIF records from a CRIF file.
-
-        The Risk Data Standards document outlines what character should be used to separate columns,
-        \p delim, and end lines, \p eol. These parameters have the correct defaults here but can be changed.
-
-        The \p quoteChar allows one specify a character that can be used to enclose strings in the CRIF file.
-        If this character is not `\0`, then an attempt is made to strip this character from the each column.
-    */
-    void loadFromFile(const std::string& fileName, char eol = '\n', char delim = '\t', char quoteChar = '\0',
-                      char escapeChar = '\\');
-    //! Load CRIF records in string format
-    void loadFromString(const std::string& csvBuffer, char eol = '\n', char delim = '\t', char quoteChar = '\0',
-                        char escapeChar = '\\');
-    //! Core CRIF loader from generic istream
-    void loadFromStream(std::istream& stream, char eol = '\n', char delim = '\t', char quoteChar = '\0',
-                        char escapeChar = '\\');
-
-    //! Return the netted CRIF records for use in a SIMM calculation
-    const SimmNetSensitivities netRecords(const bool includeSimmParams = false) const;
-
-    //! Return the SIMM parameters for use in calculating additional margin in SIMM
-    const SimmNetSensitivities& simmParameters() const { return simmParameters_; }
-
-    const bool hasCrifRecords() const { return !crifRecords_.empty(); }
-    const bool hasSimmParameters() const { return !simmParameters_.empty(); }
-
-    void setCrifRecords(const SimmNetSensitivities& crifRecords) { crifRecords_ = crifRecords; }
-    void setSimmParameters(const SimmNetSensitivities& simmParameters) { simmParameters_ = simmParameters; }
-
-    //! Give back the set of portfolio IDs that have been loaded
-    const std::set<std::string>& portfolioIds() const;
-    const std::set<ore::data::NettingSetDetails>& nettingSetDetails() const;
-
-    //! Reset loader to initial state
-    void clear();
-
-    //! Map giving required CRIF file headers and their allowable alternatives
-    static std::map<QuantLib::Size, std::set<std::string>> requiredHeaders;
-
-    //! Map giving optional CRIF file headers and their allowable alternatives
-    static std::map<QuantLib::Size, std::set<std::string>> optionalHeaders;
-    
-    //! Check if netting set details are used anywhere, instead of just the netting set ID
-    bool hasNettingSetDetails() const;
-
-    //! Aggregate all existing records
-    void aggregate();
-
-    //! For each CRIF record in netRecords_, checks if amountCurrency and amount are 
-    //! defined and uses these to populate the record's amountUsd
-    void fillAmountUsd(const boost::shared_ptr<ore::data::Market> market);
+    virtual boost::shared_ptr<Crif> loadCrif() = 0;
 
     //! SIMM configuration getter
     const boost::shared_ptr<SimmConfiguration>& simmConfiguration() { return configuration_; }
@@ -116,7 +73,7 @@ protected:
 
     //! Defines accepted column headers, beyond required and optional headers, see crifloader.cpp
     std::map<QuantLib::Size, std::set<std::string>> additionalHeaders_;
-    
+
     /*! If true, the SIMM configuration's bucket mapper is updated during the
         CRIF loading with the mapping from SIMM qualifier to SIMM bucket. This is
         useful when consuming CRIF files from elsewhere in that it allows for
@@ -127,15 +84,32 @@ protected:
     /*! If true, aggregate over trade ids */
     bool aggregateTrades_;
 
-    //! Netted CRIF records that can subsequently be used in a SIMM calculation
-    SimmNetSensitivities crifRecords_;
+    //! Map giving required CRIF file headers and their allowable alternatives
+    static std::map<QuantLib::Size, std::set<std::string>> requiredHeaders;
 
-    //! SIMM parameters for additional margin, provided in the same format as CRIF records
-    SimmNetSensitivities simmParameters_;
+    //! Map giving optional CRIF file headers and their allowable alternatives
+    static std::map<QuantLib::Size, std::set<std::string>> optionalHeaders;
+};
 
-    //! Set of portfolio IDs that have been loaded
-    std::set<std::string> portfolioIds_;
-    std::set<ore::data::NettingSetDetails> nettingSetDetails_;
+class StringStreamCrifLoader : public CrifLoader {
+public:
+    StringStreamCrifLoader(const boost::shared_ptr<SimmConfiguration>& configuration,
+                           std::map<QuantLib::Size, std::set<std::string>> additionalHeaders =
+                               std::map<QuantLib::Size, std::set<std::string>>(),
+                           bool updateMapper = false, bool aggregateTrades = true, char eol = '\n', char delim = '\t',
+                           char quoteChar = '\0', char escapeChar = '\\')
+        : CrifLoader(configuration, additionalHeaders, updateMapper, aggregateTrades), eol_(eol), delim_(delim),
+          quoteChar_(quoteChar), escapeChar_(escapeChar) {}
+
+    boost::shared_ptr<Crif> loadCrif() override { return loadFromStream(stream()); }
+
+protected:
+    //! Core CRIF loader from generic istream
+    boost::shared_ptr<Crif> loadFromStream(std::stringstream& stream);
+
+    virtual std::stringstream stream() const = 0;
+
+    
 
     /*! Internal map from known index of CRIF record member to file column
         For example, give trade ID an index of 0 and find the column index of
@@ -144,12 +118,48 @@ protected:
     std::map<QuantLib::Size, QuantLib::Size> columnIndex_;
 
     //! Process the elements of a header line of a CRIF file
-    virtual void processHeader(const std::vector<std::string>& headers);
+    void processHeader(const std::vector<std::string>& headers);
 
     /*! Process a line of a CRIF file and return true if valid line
         or false if an invalid line
     */
-    virtual bool process(const std::vector<std::string>& entries, QuantLib::Size maxIndex, QuantLib::Size currentLine);
+    bool process(const std::vector<std::string>& entries, QuantLib::Size maxIndex, QuantLib::Size currentLine, CrifRecord& record);
+    char eol_;
+    char delim_;
+    char quoteChar_;
+    char escapeChar_;
+};
+
+class CsvFileCrifLoader : public StringStreamCrifLoader {
+public:
+    CsvFileCrifLoader(const std::string& filename, const boost::shared_ptr<SimmConfiguration>& configuration,
+                      std::map<QuantLib::Size, std::set<std::string>> additionalHeaders =
+                          std::map<QuantLib::Size, std::set<std::string>>(),
+                      bool updateMapper = false, bool aggregateTrades = true, char eol = '\n', char delim = '\t',
+                      char quoteChar = '\0', char escapeChar = '\\')
+        : StringStreamCrifLoader(configuration, additionalHeaders, updateMapper, aggregateTrades, eol, delim, quoteChar,
+                                 escapeChar),
+          filename_(filename) {}
+
+protected:
+    std::string filename_;
+    std::stringstream stream() const override;
+};
+
+class CsvBufferCrifLoader : public StringStreamCrifLoader {
+public:
+    CsvBufferCrifLoader(const std::string& buffer, const boost::shared_ptr<SimmConfiguration>& configuration,
+                        std::map<QuantLib::Size, std::set<std::string>> additionalHeaders =
+                            std::map<QuantLib::Size, std::set<std::string>>(),
+                        bool updateMapper = false, bool aggregateTrades = true, char eol = '\n', char delim = '\t',
+                        char quoteChar = '\0', char escapeChar = '\\')
+        : StringStreamCrifLoader(configuration, additionalHeaders, updateMapper, aggregateTrades, eol, delim, quoteChar,
+                                 escapeChar),
+          buffer_(buffer) {}
+
+protected:
+    std::string buffer_;
+    std::stringstream stream() const override;
 };
 
 } // namespace analytics
