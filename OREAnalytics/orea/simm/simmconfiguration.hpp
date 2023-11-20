@@ -294,6 +294,8 @@ public:
                                        const std::string& secondLabel_1, const std::string& secondLabel_2,
                                        const std::string& calculationCurrency = "") const = 0;
 
+    virtual bool isSimmConfigCalibration() const { return false; }
+
 protected:
     //! Number of risk classes including RiskClass::All
     static const QuantLib::Size numberOfRiskClasses;
