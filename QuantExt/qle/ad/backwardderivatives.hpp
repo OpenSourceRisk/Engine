@@ -24,6 +24,8 @@
 
 #include <qle/ad/computationgraph.hpp>
 
+#include <ql/errors.hpp>
+
 #include <boost/shared_ptr.hpp>
 
 namespace QuantExt {
