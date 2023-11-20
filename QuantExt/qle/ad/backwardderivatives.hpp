@@ -29,12 +29,11 @@
 namespace QuantExt {
 
 template <class T>
-void backwardDerivatives(
-    const ComputationGraph& g, const std::vector<T>& values, std::vector<T>& derivatives,
-    const std::vector<std::function<std::vector<T>(const std::vector<const T*>&, const T*)>>& grad,
-    std::function<void(T&)> deleter = {}, const std::vector<bool>& keepNodes = {},
-    const std::vector<bool>& activeNodes = {},
-    const std::function<RandomVariable(const std::vector<const RandomVariable*>&)>& conditionalExpectation = {}) {
+void backwardDerivatives(const ComputationGraph& g, const std::vector<T>& values, std::vector<T>& derivatives,
+                         const std::vector<std::function<std::vector<T>(const std::vector<const T*>&, const T*)>>& grad,
+                         std::function<void(T&)> deleter = {}, const std::vector<bool>& keepNodes = {},
+                         const std::vector<bool>& activeNodes = {},
+                         const std::function<T(const std::vector<const T*>&)>& conditionalExpectation = {}) {
 
     if (g.size() == 0)
         return;
