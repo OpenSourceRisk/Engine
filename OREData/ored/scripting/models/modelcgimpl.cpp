@@ -98,7 +98,7 @@ ModelCGImpl::ModelCGImpl(const DayCounter& dayCounter, const Size size, const st
 
 } // ModelCGImpl ctor
 
-std::size_t ModelCGImpl::dt(const Date& d1, const Date& d2) const override {
+std::size_t ModelCGImpl::dt(const Date& d1, const Date& d2) const {
     return cg_const(*g_, dayCounter_.yearFraction(d1, d2));
 }
 
