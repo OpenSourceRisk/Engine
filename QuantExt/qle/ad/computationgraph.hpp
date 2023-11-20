@@ -77,7 +77,7 @@ private:
     std::map<std::size_t, std::set<std::string>> labels_;
 
     std::string prefix_;
-    mutable std::set<std::size_t>* recordPredecessors_;
+    mutable std::set<std::size_t>* recordPredecessors_ = nullptr;
 };
 
 // methods to construct cg
