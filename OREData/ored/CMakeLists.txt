@@ -316,6 +316,7 @@ scripting/models/gaussiancam.cpp
 scripting/models/gaussiancamcg.cpp
 scripting/models/lgmcg.cpp
 scripting/models/localvol.cpp
+scripting/models/modelcg.cpp
 scripting/models/modelcgimpl.cpp
 scripting/models/modelimpl.cpp
 scripting/paylog.cpp
