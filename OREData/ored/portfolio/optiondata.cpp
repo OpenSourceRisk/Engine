@@ -56,7 +56,7 @@ void OptionData::fromXML(XMLNode* node) {
     exercisePrices_ = XMLUtils::getChildrenValuesAsDoubles(node, "ExercisePrices", "ExercisePrice", false);
     
     if (XMLNode* n = XMLUtils::getChildNode(node, "ExerciseDates")) {
-        if (XMLNode* ed = XMLUtils::getChildNode(n, "ExerciseDate")) {
+        if (XMLUtils::getChildNode(n, "ExerciseDate")) {
             // For backward compatibility
             exerciseDates_ = XMLUtils::getChildrenValues(node, "ExerciseDates", "ExerciseDate");
         } else {
