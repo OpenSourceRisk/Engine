@@ -68,6 +68,8 @@ std::size_t ComputationGraph::insert(const std::vector<std::size_t>& predecessor
     constantValue_.push_back(0.0);
     if (!label.empty())
         labels_[node].insert(prefix_ + label);
+    if (recordPredecessors_)
+        recordPredecessors_->insert(predecessors.begin(), predecessors.end());
     return node;
 }
 
@@ -147,6 +149,8 @@ bool ComputationGraph::isConstant(const std::size_t node) const { return isConst
 double ComputationGraph::constantValue(const std::size_t node) const { return constantValue_[node]; }
 
 void ComputationGraph::setPrefix(const std::string& prefix) { prefix_ = prefix; }
+
+void ComputatinoGraph::recordPredecessors(std::set<std::size>* nodes = nullptr) const { recordPredecessors_ = nodes; }
 
 std::size_t cg_const(ComputationGraph& g, const double value) { return g.constant(value); }
 
