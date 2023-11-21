@@ -449,7 +449,7 @@ string XMLUtils::getAttribute(XMLNode* node, const string& attrName) {
 }
 
 vector<XMLNode*> XMLUtils::getChildrenNodes(XMLNode* node, const string& name) {
-    QL_REQUIRE(node, "XMLUtils::getChildredNodes(" << name << ") node is NULL");
+    QL_REQUIRE(node, "XMLUtils::getChildrenNodes(" << name << ") node is NULL");
     vector<XMLNode*> res;
     const char* p = name.empty() ? nullptr : name.c_str();
     for (xml_node<>* c = node->first_node(p); c; c = c->next_sibling(p))
