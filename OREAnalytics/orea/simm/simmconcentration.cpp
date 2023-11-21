@@ -33,6 +33,8 @@ namespace analytics {
 
 // Ease syntax
 using RiskType = SimmConfiguration::RiskType;
+using RiskClass = SimmConfiguration::RiskClass;
+using IRFXConcentrationThresholds = SimmCalibration::RiskClassData::IRFXConcentrationThresholds;
 
 Real SimmConcentrationBase::thresholdImpl(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
                                           const RiskType& riskType, const string& qualifier) const {
