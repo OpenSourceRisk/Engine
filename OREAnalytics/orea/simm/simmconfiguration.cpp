@@ -35,6 +35,7 @@ using boost::assign::list_of;
 using std::map;
 using std::ostream;
 using std::set;
+using std::pair;
 using std::string;
 using std::vector;
 
@@ -166,6 +167,70 @@ set<SimmConfiguration::ProductClass> SimmConfiguration::productClasses(bool incl
         result.insert(ProductClass(i));
     }
     return result;
+}
+
+pair<SimmConfiguration::RiskType, SimmConfiguration::RiskType>
+SimmConfiguration::riskClassToRiskType(const RiskClass& rc) {
+    RiskType deltaRiskType, vegaRiskType;
+    switch (rc) {
+    case RiskClass::InterestRate:
+        deltaRiskType = RiskType::IRCurve;
+        vegaRiskType = RiskType::IRVol;
+        break;
+    case RiskClass::CreditQualifying:
+        deltaRiskType = RiskType::CreditQ;
+        vegaRiskType = RiskType::CreditVol;
+        break;
+    case RiskClass::CreditNonQualifying:
+        deltaRiskType = RiskType::CreditNonQ;
+        vegaRiskType = RiskType::CreditVolNonQ;
+        break;
+    case RiskClass::Equity:
+        deltaRiskType = RiskType::Equity;
+        vegaRiskType = RiskType::EquityVol;
+        break;
+    case RiskClass::Commodity:
+        deltaRiskType = RiskType::Commodity;
+        vegaRiskType = RiskType::CommodityVol;
+        break;
+    case RiskClass::FX:
+        deltaRiskType = RiskType::FX;
+        vegaRiskType = RiskType::FXVol;
+        break;
+    default:
+        QL_FAIL("riskClassToRiskType: Unexpected risk class");
+    }
+
+    return std::make_pair(deltaRiskType, vegaRiskType);
+}
+
+SimmConfiguration::RiskClass SimmConfiguration::riskTypeToRiskClass(const RiskType& rt) {
+    switch (rt) {
+    case RiskType::Commodity:
+    case RiskType::CommodityVol:
+        return RiskClass::Commodity;
+    case RiskType::CreditQ:
+    case RiskType::CreditVol:
+    case RiskType::BaseCorr:
+        return RiskClass::CreditQualifying;
+    case RiskType::CreditNonQ:
+    case RiskType::CreditVolNonQ:
+        return RiskClass::CreditNonQualifying;
+    case RiskType::Equity:
+    case RiskType::EquityVol:
+        return RiskClass::Equity;
+    case RiskType::FX:
+    case RiskType::FXVol:
+        return RiskClass::FX;
+    case RiskType::Inflation:
+    case RiskType::InflationVol:
+    case RiskType::IRCurve:
+    case RiskType::IRVol:
+    case RiskType::XCcyBasis:
+        return RiskClass::InterestRate;
+    default:
+        QL_FAIL("riskTypeToRiskClass: Invalid risk type");
+    }
 }
 
 ostream& operator<<(ostream& out, const SimmConfiguration::SimmSide& s) {
