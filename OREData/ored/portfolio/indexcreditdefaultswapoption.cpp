@@ -312,8 +312,8 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
     vector<Real> additionalMultipliers;
     string configuration = iCdsOptionEngineBuilder->configuration(MarketContext::pricing);
     maturity_ =
-        std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, 1.0, option_.premiumData(),
-                                        -indicatorLongShort, ccy, engineFactory, configuration));
+        std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, indicatorLongShort,
+                                        option_.premiumData(), -indicatorLongShort, ccy, engineFactory, configuration));
 
     // Instrument wrapper depends on the settlement type.
     // The instrument build should be indpednent of the evaluation date. However, the general behavior
