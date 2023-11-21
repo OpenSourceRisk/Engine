@@ -23,6 +23,7 @@
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/math/randomvariable_ops.hpp>
+#include <qle/ad/computationgraph.hpp>
 
 #include <ql/math/comparison.hpp>
 #include <ql/quotes/simplequote.hpp>
