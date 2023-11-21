@@ -96,11 +96,13 @@
       <Tenors>6M,1Y,2Y</Tenors>
     </DefaultCurves>
     <SwaptionVolatilities>
-      <Simulate>false</Simulate>
+      <Simulate>true</Simulate>
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <Currencies>
         <Currency>EUR</Currency>
       </Currencies>
+      <SimulateATMOnly>true</SimulateATMOnly>
+      <SmileDynamics key="">StickyStrike</SmileDynamics>
       <Expiries>6M,1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Expiries>
       <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
     </SwaptionVolatilities>
