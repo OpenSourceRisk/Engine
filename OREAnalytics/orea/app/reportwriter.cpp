@@ -196,7 +196,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
             auto addResults = trade->instrument()->additionalResults();
             auto cashFlowResults = addResults.find("cashFlowResults");
 
-            const Real multiplier = trade->instrument()->multiplier();
+            const Real multiplier = trade->instrument()->multiplier() * trade->instrument()->multiplier2();
 
             if (cashFlowResults == addResults.end()) {
 

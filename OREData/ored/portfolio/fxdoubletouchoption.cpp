@@ -156,9 +156,10 @@ void FxDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFa
 
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, payoffAmount_,
-                                       option_.premiumData(), isLong ? -1.0 : 1.0, parseCurrency(payoffCurrency_),
-                                       engineFactory, builder->configuration(MarketContext::pricing));
+    Date lastPremiumDate =
+        addPremiums(additionalInstruments, additionalMultipliers, (isLong ? 1.0 : -1.0) * payoffAmount_,
+                    option_.premiumData(), isLong ? -1.0 : 1.0, parseCurrency(payoffCurrency_), engineFactory,
+                    builder->configuration(MarketContext::pricing));
 
     Handle<Quote> spot = market->fxSpot(fgnCcy.code() + domCcy.code());
     instrument_ = boost::make_shared<DoubleBarrierOptionWrapper>(

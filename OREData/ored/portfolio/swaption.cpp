@@ -227,9 +227,10 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
         std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
         std::vector<Real> additionalMultipliers;
-        Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, 1.0, optionData_.premiumData(),
-                                           positionType_ == Position::Long ? -1.0 : 1.0, parseCurrency(npvCurrency_),
-                                           engineFactory, engineFactory->configuration(MarketContext::pricing));
+        Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, Position::Long ? 1.0 : -1.0,
+                                           optionData_.premiumData(), positionType_ == Position::Long ? -1.0 : 1.0,
+                                           parseCurrency(npvCurrency_), engineFactory,
+                                           engineFactory->configuration(MarketContext::pricing));
         auto builder = boost::dynamic_pointer_cast<SwapEngineBuilderBase>(engineFactory->builder("Swap"));
         QL_REQUIRE(builder, "could not get swap builder to build exercised swaption instrument.");
         auto swap = boost::make_shared<QuantLib::Swap>(legs_, legPayers_);
@@ -251,9 +252,10 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         maturity_ = today;
         std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
         std::vector<Real> additionalMultipliers;
-        Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, 1.0, optionData_.premiumData(),
-                                           positionType_ == Position::Long ? -1.0 : 1.0, parseCurrency(npvCurrency_),
-                                           engineFactory, engineFactory->configuration(MarketContext::pricing));
+        Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, Position::Long ? 1.0 : -1.0,
+                                           optionData_.premiumData(), positionType_ == Position::Long ? -1.0 : 1.0,
+                                           parseCurrency(npvCurrency_), engineFactory,
+                                           engineFactory->configuration(MarketContext::pricing));
         auto builder = boost::dynamic_pointer_cast<SwapEngineBuilderBase>(engineFactory->builder("Swap"));
         QL_REQUIRE(builder, "could not get swap builder to build expired swaption instrument.");
         auto swap = boost::make_shared<QuantLib::Swap>(legs_, legPayers_);
@@ -317,9 +319,9 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
 
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, 1.0, optionData_.premiumData(),
-                                       positionType_ == Position::Long ? -1.0 : 1.0, ccy, engineFactory,
-                                       swaptionBuilder->configuration(MarketContext::pricing));
+    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, Position::Long ? 1.0 : -1.0,
+                                       optionData_.premiumData(), positionType_ == Position::Long ? -1.0 : 1.0, ccy,
+                                       engineFactory, swaptionBuilder->configuration(MarketContext::pricing));
 
     swaption->setPricingEngine(
         swaptionBuilder->engine(IndexNameTranslator::instance().oreName(swap->iborIndex()->name())));
@@ -434,9 +436,9 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
     Real multiplier = positionType_ == Position::Long ? 1.0 : -1.0;
-    Date lastPremiumDate =
-        addPremiums(additionalInstruments, additionalMultipliers, 1.0, optionData_.premiumData(), -multiplier,
-                    parseCurrency(npvCurrency_), engineFactory, swaptionBuilder->configuration(MarketContext::pricing));
+    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, Position::Long ? 1.0 : -1.0,
+                                       optionData_.premiumData(), -multiplier, parseCurrency(npvCurrency_),
+                                       engineFactory, swaptionBuilder->configuration(MarketContext::pricing));
 
     // instrument_ = boost::shared_ptr<InstrumentWrapper> (new VanillaInstrument (swaption, multiplier));
     instrument_ = boost::make_shared<BermudanOptionWrapper>(

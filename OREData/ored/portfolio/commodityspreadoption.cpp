@@ -284,7 +284,7 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
 
     // Add premium
     auto configuration = engineBuilder->configuration(MarketContext::pricing);
-    maturity_ = std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, bsInd,
+    maturity_ = std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, bsInd * firstMultiplier,
                                                 optionData_.premiumData(), -bsInd, ccy, engineFactory, configuration));
 
     instrument_ = boost::make_shared<VanillaInstrument>(firstInstrument, firstMultiplier, additionalInstruments,
