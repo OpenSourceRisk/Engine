@@ -9,6 +9,8 @@ oreex = OreExample(sys.argv[1] if len(sys.argv)>1 else False)
 orexmls = [
 	("Input/ore_SIMM2.4_10D.xml", "2.4", "10"),
 	("Input/ore_SIMM2.4_1D.xml", "2.4", "1"),
+	("Input/ore_SIMM2.5A_10D_calibration.xml", "2.5A", "10"),
+	("Input/ore_SIMM2.5A_1D_calibration.xml", "2.5A", "1"),
 	("Input/ore_SIMM2.6_10D.xml", "2.6", "10"),
 	("Input/ore_SIMM2.6_1D.xml", "2.6", "1")
 ]
