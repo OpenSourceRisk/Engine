@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <orea/app/reportwriter.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/cube/npvsensicube.hpp>
 #include <orea/cube/sensicube.hpp>
@@ -23,7 +24,6 @@
 #include <orea/engine/sensitivitycubestream.hpp>
 #include <orea/engine/xvaenginecg.hpp>
 #include <orea/scenario/deltascenariofactory.hpp>
-#include <orea/app/reportwriter.hpp>
 
 #include <ored/report/inmemoryreport.hpp>
 #include <ored/scripting/engines/scriptedinstrumentpricingenginecg.hpp>
@@ -58,6 +58,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
       marketConfiguration_(marketConfiguration), marketConfigurationInCcy_(marketConfigurationInCcy),
       sensitivityData_(sensitivityData), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
       continueOnCalibrationError_(continueOnCalibrationError), continueOnError_(continueOnError), context_(context) {
+
+    bool bumpCvaSensis = atoi(getenv("BUMP")) > 0;
 
     // Just for performance testing, duplicate the trades in input portfolio as specified by env var N
 
@@ -264,43 +266,14 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     // Populate random variates
 
-    DLOG("XvaEngineCG: populate random variates");
-
-    auto const& rv = model_->randomVariates();
-    if (!rv.empty()) {
-        auto gen = makeMultiPathVariateGenerator(scenarioGeneratorData_->sequenceType(), rv.size(), rv.front().size(),
-                                                 scenarioGeneratorData_->seed(), scenarioGeneratorData_->ordering(),
-                                                 scenarioGeneratorData_->directionIntegers());
-        for (Size path = 0; path < model_->size(); ++path) {
-            auto p = gen->next();
-            for (Size j = 0; j < rv.front().size(); ++j) {
-                for (Size k = 0; k < rv.size(); ++k) {
-                    values[rv[k][j]].set(path, p.value[j][k]);
-                }
-            }
-        }
-        DLOG("XvaEngineCG: generated rvs for " << rv.size() << " underlyings and " << rv.front().size()
-                                               << " time steps.");
-    }
-
+    populateRandomVariates(values);
     boost::timer::nanosecond_type timing8 = timer.elapsed().wall;
 
     // Populate constants and model parameters
 
-    DLOG("XvaEngineCG: populate constants and model parameters");
-
-    for (auto const& c : g->constants()) {
-        values[c.second] = RandomVariable(model_->size(), c.first);
-    }
-
     baseModelParams_ = model_->modelParameters();
-    for (auto const& [n, v] : baseModelParams_) {
-        values[n] = RandomVariable(model_->size(), v);
-    }
-
-    DLOG("XvaEngineCG: set " << g->constants().size() << " constants and " << baseModelParams_.size()
-                             << " model parameters.");
-
+    populateConstants(values);
+    populateModelParameters(values, baseModelParams_);
     boost::timer::nanosecond_type timing9 = timer.elapsed().wall;
 
     // Do a forward evaluation, keep the following values nodes
@@ -310,13 +283,26 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     // - all nodes in part C needed for derivatives and pf exposure nodes
     // - all nodes in part D needed for derivatives and cva node
 
-    DLOG("XvaEngineCG: run forward evaluation");
-
     ops_ = getRandomVariableOps(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial);
     grads_ = getRandomVariableGradients(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial);
     opNodeRequirements_ = getRandomVariableOpNodeRequirements();
 
+    nodesA_ = std::vector<bool>(g->size(), false);
+    nodesB_ = std::vector<bool>(g->size(), false);
+    nodesC_ = std::vector<bool>(g->size(), false);
+    nodesD_ = std::vector<bool>(g->size(), false);
+    std::fill(nodesA_.begin(), std::next(nodesA_.begin(), lastModelNode), true);
+    std::fill(std::next(nodesB_.begin(), lastModelNode), std::next(nodesB_.begin(), lastTradeNode), true);
+    std::fill(std::next(nodesC_.begin(), lastTradeNode), std::next(nodesC_.begin(), lastExposureNode), true);
+    std::fill(std::next(nodesD_.begin(), lastExposureNode), nodesD_.end(), true);
+
     std::vector<bool> keepNodes(g->size(), false);
+
+    if (bumpCvaSensis) {
+        for (auto const& rv : model_->randomVariates())
+            for (auto const& v : rv)
+                keepNodes[v] = true;
+    }
 
     for (auto const& c : g->constants()) {
         keepNodes[c.second] = true;
@@ -336,29 +322,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     keepNodes[cvaNode] = true;
 
-    std::vector<bool> nodesA(g->size(), false);
-    std::vector<bool> nodesB(g->size(), false);
-    std::vector<bool> nodesC(g->size(), false);
-    std::vector<bool> nodesD(g->size(), false);
-
-    std::fill(nodesA.begin(), std::next(nodesA.begin(), lastModelNode), true);
-    std::fill(std::next(nodesB.begin(), lastModelNode), std::next(nodesB.begin(), lastTradeNode), true);
-    std::fill(std::next(nodesC.begin(), lastTradeNode), std::next(nodesC.begin(), lastExposureNode), true);
-    std::fill(std::next(nodesD.begin(), lastExposureNode), nodesD.end(), true);
-
-    // part A
-    forwardEvaluation(*g, values, ops_, RandomVariable::deleter, true, opNodeRequirements_, keepNodes, nodesA);
-
-    // part B
-    forwardEvaluation(*g, values, ops_, RandomVariable::deleter, false, opNodeRequirements_, keepNodes, nodesB);
-
-    // part C
-    forwardEvaluation(*g, values, ops_, RandomVariable::deleter, true, opNodeRequirements_, keepNodes, nodesC);
-
-    // part D
-    forwardEvaluation(*g, values, ops_, RandomVariable::deleter, true, opNodeRequirements_, keepNodes, nodesD);
-
-    DLOG("XvaEngineCG: forward evaluation finished.");
+    runFullForwardEvaluation(values, keepNodes);
 
     boost::timer::nanosecond_type timing10 = timer.elapsed().wall;
 
@@ -378,82 +342,91 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     // Do backward derivatives run from CVA node on pp graph D up to path exposure nodes in C
 
-    DLOG("XvaEngineCG: run backward derivatives");
-
-    derivatives[cvaNode] = RandomVariable(model_->size(), 1.0);
-
-    std::vector<bool> keepNodesDerivatives(g->size(), false);
-    std::vector<bool> nodesDPlusExposure(nodesD);
-
-    for (auto const& [n, _] : baseModelParams_)
-        keepNodesDerivatives[n] = true;
-
-    for (auto const& n : tradeModelDependencies)
-        keepNodesDerivatives[n] = true;
-
-    for (auto const& n : pfPathExposureNodes) {
-        keepNodesDerivatives[n] = true;
-        nodesDPlusExposure[n] = true;
-    }
-
-    for (auto const& n : pfExposureNodes) {
-        nodesDPlusExposure[n] = true;
-    }
-
-    backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodesDerivatives,
-                        nodesDPlusExposure, RandomVariableOpCode::ConditionalExpectation,
-                        ops_[RandomVariableOpCode::ConditionalExpectation]);
-
     boost::timer::nanosecond_type timing11 = timer.elapsed().wall;
-
-    // Roll back the derivatives for each trade, starting from the derivatives calc'ed in the previous step
-    // This requires a forward eval for each trade on its graph Bj
-
-    std::vector<bool> tradeActiveNodes(g->size(), false);
-    for (auto const& [id, trade] : portfolio_->trades()) {
-        auto range = tradeNodeRanges[id];
-
-        std::fill(tradeActiveNodes.begin(), tradeActiveNodes.end(), false);
-        std::fill(std::next(tradeActiveNodes.begin(), range.first), std::next(tradeActiveNodes.begin(), range.second),
-                  true);
-        forwardEvaluation(*g, values, ops_, RandomVariable::deleter, true, opNodeRequirements_, keepNodes,
-                          tradeActiveNodes);
-
-        for (auto const& n : tradeModelDependencies)
-            tradeActiveNodes[n] = true;
-        for (auto const& n : pfPathExposureNodes)
-            tradeActiveNodes[n] = true;
-        backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodesDerivatives,
-                            tradeActiveNodes, RandomVariableOpCode::ConditionalExpectation,
-                            ops_[RandomVariableOpCode::ConditionalExpectation]);
-
-        for (Size i = range.first; i < range.second; ++i) {
-            if (!keepNodes[i])
-                RandomVariable::deleter(values[i]);
-        }
-    }
-
     boost::timer::nanosecond_type timing12 = timer.elapsed().wall;
-
-    // Roll back derivatives on model part A
-
-    backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodesDerivatives, nodesA);
-
-    Size i = 0;
-    std::vector<double> modelParamDerivatives(baseModelParams_.size());
-    for (auto const& [n, v] : baseModelParams_) {
-        modelParamDerivatives[i++] = expectation(derivatives[n]).at(0);
-    }
-
-    DLOG("XvaEngineCG: got " << modelParamDerivatives.size()
-                             << " model parameter derivatives from run backward derivatives");
-
     boost::timer::nanosecond_type timing13 = timer.elapsed().wall;
 
-    // Delete values and derivatives vectors, they are not needed from this point on
+    std::vector<double> modelParamDerivatives(baseModelParams_.size());
 
-    values.clear();
-    derivatives.clear();
+    if (!bumpCvaSensis) {
+
+        DLOG("XvaEngineCG: run backward derivatives");
+
+        derivatives[cvaNode] = RandomVariable(model_->size(), 1.0);
+
+        std::vector<bool> keepNodesDerivatives(g->size(), false);
+        std::vector<bool> nodesDPlusExposure(nodesD_);
+
+        for (auto const& [n, _] : baseModelParams_)
+            keepNodesDerivatives[n] = true;
+
+        for (auto const& n : tradeModelDependencies)
+            keepNodesDerivatives[n] = true;
+
+        for (auto const& n : pfPathExposureNodes) {
+            keepNodesDerivatives[n] = true;
+            nodesDPlusExposure[n] = true;
+        }
+
+        for (auto const& n : pfExposureNodes) {
+            nodesDPlusExposure[n] = true;
+        }
+
+        backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodesDerivatives,
+                            nodesDPlusExposure, RandomVariableOpCode::ConditionalExpectation,
+                            ops_[RandomVariableOpCode::ConditionalExpectation]);
+
+        timing11 = timer.elapsed().wall;
+
+        // Roll back the derivatives for each trade, starting from the derivatives calc'ed in the previous step
+        // This requires a forward eval for each trade on its graph Bj
+
+        std::vector<bool> tradeActiveNodes(g->size(), false);
+        for (auto const& [id, trade] : portfolio_->trades()) {
+            auto range = tradeNodeRanges[id];
+
+            std::fill(tradeActiveNodes.begin(), tradeActiveNodes.end(), false);
+            std::fill(std::next(tradeActiveNodes.begin(), range.first),
+                      std::next(tradeActiveNodes.begin(), range.second), true);
+            forwardEvaluation(*g, values, ops_, RandomVariable::deleter, true, opNodeRequirements_, keepNodes,
+                              tradeActiveNodes);
+
+            for (auto const& n : tradeModelDependencies)
+                tradeActiveNodes[n] = true;
+            for (auto const& n : pfPathExposureNodes)
+                tradeActiveNodes[n] = true;
+            backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodesDerivatives,
+                                tradeActiveNodes, RandomVariableOpCode::ConditionalExpectation,
+                                ops_[RandomVariableOpCode::ConditionalExpectation]);
+
+            for (Size i = range.first; i < range.second; ++i) {
+                if (!keepNodes[i])
+                    RandomVariable::deleter(values[i]);
+            }
+        }
+
+        timing12 = timer.elapsed().wall;
+
+        // Roll back derivatives on model part A
+
+        backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodesDerivatives, nodesA_);
+
+        Size i = 0;
+        for (auto const& [n, v] : baseModelParams_) {
+            modelParamDerivatives[i++] = expectation(derivatives[n]).at(0);
+        }
+
+        DLOG("XvaEngineCG: got " << modelParamDerivatives.size()
+                                 << " model parameter derivatives from run backward derivatives");
+
+        timing13 = timer.elapsed().wall;
+
+        // Delete values and derivatives vectors, they are not needed from this point on
+        // except we are doing a full revaluation!
+
+        values.clear();
+        derivatives.clear();
+    }
 
     // 13 generate sensitivity scenarios
 
@@ -482,16 +455,27 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
         camBuilder_->recalibrate();
 
-        // calcuate CVA sensi
-
         Real sensi = 0.0;
 
-        auto modelParameters = model_->modelParameters();
-        Size i = 0;
-        for (auto const& [n, v0] : baseModelParams_) {
-            Real v1 = modelParameters[i].second;
-            sensi += modelParamDerivatives[i] * (v1 - v0);
-            ++i;
+        if (!bumpCvaSensis) {
+
+            // calcuate CVA sensi using ad derivatives
+
+            auto modelParameters = model_->modelParameters();
+            Size i = 0;
+            for (auto const& [n, v0] : baseModelParams_) {
+                Real v1 = modelParameters[i].second;
+                sensi += modelParamDerivatives[i] * (v1 - v0);
+                ++i;
+            }
+
+        } else {
+
+            // calcuate CVA sensi doing full recalc of CVA
+
+            populateModelParameters(values, model_->modelParameters());
+            runFullForwardEvaluation(values, keepNodes);
+            sensi = expectation(values[cvaNode]).at(0) - cva;
         }
 
         // set result in cube
@@ -503,7 +487,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     DLOG("XvaEngineCG: finished running " << resultCube->samples() << " sensi scenarios.");
 
-    // 14 write out sensi report
+    // write out sensi report
 
     boost::shared_ptr<InMemoryReport> scenarioReport = boost::make_shared<InMemoryReport>();
     auto sensiCube =
@@ -513,7 +497,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     ReportWriter().writeScenarioReport(*scenarioReport, sensiCube, 0.0);
     scenarioReport->toFile("cva-sensi-scenario.csv");
 
-    // 15 Output statistics
+    // Output statistics
 
     std::cout << "Computation graph size   : " << g->size() << std::endl;
     std::cout << "Peak mem usage           : " << ore::data::os::getPeakMemoryUsageBytes() / 1024 / 1024 << " MB"
@@ -533,8 +517,73 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     std::cout << "Backward A               : " << (timing13 - timing12) / 1E6 << " ms" << std::endl;
     std::cout << "Sensi Cube Gen           : " << (timing14 - timing13) / 1E6 << " ms" << std::endl;
     std::cout << "total                    : " << timing14 / 1E6 << " ms" << std::endl;
+}
 
+void XvaEngineCG::populateRandomVariates(std::vector<RandomVariable>& values) const {
 
+    DLOG("XvaEngineCG: populate random variates");
+
+    auto const& rv = model_->randomVariates();
+    if (!rv.empty()) {
+        auto gen = makeMultiPathVariateGenerator(scenarioGeneratorData_->sequenceType(), rv.size(), rv.front().size(),
+                                                 scenarioGeneratorData_->seed(), scenarioGeneratorData_->ordering(),
+                                                 scenarioGeneratorData_->directionIntegers());
+        for (Size path = 0; path < model_->size(); ++path) {
+            auto p = gen->next();
+            for (Size j = 0; j < rv.front().size(); ++j) {
+                for (Size k = 0; k < rv.size(); ++k) {
+                    values[rv[k][j]].set(path, p.value[j][k]);
+                }
+            }
+        }
+        DLOG("XvaEngineCG: generated rvs for " << rv.size() << " underlyings and " << rv.front().size()
+                                               << " time steps.");
+    }
+}
+
+void XvaEngineCG::populateConstants(std::vector<RandomVariable>& values) const {
+
+    DLOG("XvaEngineCG: populate constants");
+
+    auto g = model_->computationGraph();
+    for (auto const& c : g->constants()) {
+        values[c.second] = RandomVariable(model_->size(), c.first);
+    }
+
+    DLOG("XvaEngineCG: set " << g->constants().size() << " constants");
+}
+
+void XvaEngineCG::populateModelParameters(std::vector<RandomVariable>& values,
+                                          const std::vector<std::pair<std::size_t, double>>& modelParameters) const {
+
+    DLOG("XvaEngineCG: populate model parameters");
+
+    for (auto const& [n, v] : modelParameters) {
+        values[n] = RandomVariable(model_->size(), v);
+    }
+
+    DLOG("XvaEngineCG: set " << modelParameters.size() << " model parameters.");
+}
+
+void XvaEngineCG::runFullForwardEvaluation(std::vector<RandomVariable>& values, std::vector<bool>& keepNodes) const {
+
+    DLOG("XvaEngineCG: run forward evaluation");
+
+    auto g = model_->computationGraph();
+
+    // part A
+    forwardEvaluation(*g, values, ops_, RandomVariable::deleter, true, opNodeRequirements_, keepNodes, nodesA_);
+
+    // part B
+    forwardEvaluation(*g, values, ops_, RandomVariable::deleter, false, opNodeRequirements_, keepNodes, nodesB_);
+
+    // part C
+    forwardEvaluation(*g, values, ops_, RandomVariable::deleter, true, opNodeRequirements_, keepNodes, nodesC_);
+
+    // part D
+    forwardEvaluation(*g, values, ops_, RandomVariable::deleter, true, opNodeRequirements_, keepNodes, nodesD_);
+
+    DLOG("XvaEngineCG: forward evaluation finished.");
 }
 
 } // namespace analytics

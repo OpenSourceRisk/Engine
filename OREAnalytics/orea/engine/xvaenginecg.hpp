@@ -64,6 +64,12 @@ public:
                 const std::string& context = "xva engine cg");
 
 private:
+    void populateRandomVariates(std::vector<RandomVariable>& values) const;
+    void populateConstants(std::vector<RandomVariable>& values) const;
+    void populateModelParameters(std::vector<RandomVariable>& values,
+                                 const std::vector<std::pair<std::size_t, double>>& modelParameters) const;
+    void runFullForwardEvaluation(std::vector<RandomVariable>& values, std::vector<bool>& keepNodes) const;
+
     // input parameters
     Size nThreads_;
     Date asof_;
@@ -83,6 +89,11 @@ private:
     bool continueOnCalibrationError_;
     bool continueOnError_;
     std::string context_;
+
+    std::vector<bool> nodesA_;
+    std::vector<bool> nodesB_;
+    std::vector<bool> nodesC_;
+    std::vector<bool> nodesD_;
 
     // artefacts produced during run
     boost::shared_ptr<ore::data::Market> initMarket_;
