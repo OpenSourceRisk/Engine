@@ -4,9 +4,9 @@ project(QuantExt CXX)
 
 enable_testing()
 
-include("../cmake/writeAll.cmake")
-include("../cmake/writeTestSuiteMain.cmake")
-include("../cmake/commonSettings.cmake")
+include(writeAll)
+include(writeTestSuiteMain)
+include(commonSettings)
 
 get_library_name("QuantExt" QLE_LIB_NAME)
 set_ql_library_name()
