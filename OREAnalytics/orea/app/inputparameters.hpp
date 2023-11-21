@@ -31,7 +31,6 @@
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/engine/sensitivitystream.hpp>
-#include <orea/simm/crifloader.hpp>
 #include <orea/simm/simmbasicnamemapper.hpp>
 #include <orea/simm/simmbucketmapper.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
@@ -800,8 +799,6 @@ protected:
      ***************/
     Size scenarioDistributionSteps_ = 20;
     bool scenarioOutputZeroRate_ = false;
-
-    boost::shared_ptr<ore::analytics::CrifLoader> crifLoader() const;
 };
 
 inline const std::string& InputParameters::marketConfig(const std::string& context) {

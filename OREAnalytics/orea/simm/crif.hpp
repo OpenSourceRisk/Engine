@@ -47,22 +47,15 @@ public:
     const std::set<std::string>& portfolioIds() const;
     const std::set<ore::data::NettingSetDetails>& nettingSetDetails() const;
 
-    Crif simmParameters() const {
-        Crif simmParam;
-        for (const auto& r : records_) {
-            if (r.isSimmParameter()) {
-                simmParam.addRecord(r);
-            }
-        }
-        return simmParam;
-    }
+    const std::set<CrifRecord>& simmParameters() const { return simmParameters_; }
+    bool hasSimmParameters() const { return !simmParameters_.empty(); }
+    void setSimmParameters(std::set<CrifRecord>& parameter) { simmParameters_ = parameter; }
 
-    Crif exlcudeSimmParameters() const {
+    Crif includingSimmParameters() const {
         Crif simmParam;
-        for (const auto& r : records_) {
-            if (!r.isSimmParameter()) {
-                simmParam.addRecord(r);
-            }
+        simmParam.addRecords(*this);
+        for (const auto& r : simmParameters_) {
+            simmParam.addRecord(r);
         }
         return simmParam;
     }
@@ -77,6 +70,7 @@ public:
 
 private:
     std::set<CrifRecord> records_;
+    std::set<CrifRecord> simmParameters_;
 
     //SIMM members
     //! Set of portfolio IDs that have been loaded

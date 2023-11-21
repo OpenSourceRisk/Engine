@@ -81,6 +81,14 @@ map<Size, set<string>> CrifLoader::optionalHeaders = {
 using RiskType = CrifRecord::RiskType;
 using ProductClass = CrifRecord::ProductClass;
 
+void CrifLoader::addRecordToCrif(boost::shared_ptr<Crif>& crif, CrifRecord&& recordToAdd) const {
+    if (recordToAdd.type() == CrifRecord::RecordType::SIMM) {
+        validateSimmRecord(recordToAdd);
+        currencyOverrides(recordToAdd);
+        updateMapping(recordToAdd);
+    }
+    crif->addRecord(recordToAdd);
+}
 
 void CrifLoader::validateSimmRecord(const CrifRecord& cr) const {
     // Skip the CRIF record if its risk type is not valid under the configuration
@@ -220,10 +228,7 @@ std::stringstream CsvBufferCrifLoader::stream() const {
             CrifRecord record;
             // Process a regular line of the CRIF file
             if (process(entries, maxIndex, currentLine, record)) {
-                validateSimmRecord(record);
-                currencyOverrides(record);
-                updateMapping(record);
-                result->addRecord(record);
+                addRecordToCrif(result, std::move(record));
                 ++validLines;
             } else {
                 ++invalidLines;

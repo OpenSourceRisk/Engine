@@ -52,13 +52,6 @@ public:
 
     virtual ~CrifLoader() {}
 
-    //! Check if the record is a valid Simm Crif Record
-    void validateSimmRecord(const CrifRecord& cr) const;
-    //! Override currency codes 
-    void currencyOverrides(CrifRecord& crifRecord) const;
-    //! update bucket mappings
-    void updateMapping(const CrifRecord& cr) const;
-
     /*! Destructor */
     virtual ~CrifLoader() {}
 
@@ -68,6 +61,15 @@ public:
     const boost::shared_ptr<SimmConfiguration>& simmConfiguration() { return configuration_; }
 
 protected:
+    void addRecordToCrif(boost::shared_ptr<Crif>& crif, CrifRecord&& recordToAdd) const;
+
+    //! Check if the record is a valid Simm Crif Record
+    void validateSimmRecord(const CrifRecord& cr) const;
+    //! Override currency codes 
+    void currencyOverrides(CrifRecord& crifRecord) const;
+    //! update bucket mappings
+    void updateMapping(const CrifRecord& cr) const;
+
     //! Simm configuration that is used during loading of CRIF records
     boost::shared_ptr<SimmConfiguration> configuration_;
 
@@ -108,9 +110,6 @@ protected:
     boost::shared_ptr<Crif> loadFromStream(std::stringstream& stream);
 
     virtual std::stringstream stream() const = 0;
-
-    
-
     /*! Internal map from known index of CRIF record member to file column
         For example, give trade ID an index of 0 and find the column index of
         trade ID in the CRIF file e.g. n. The map entry would be [0, n]
