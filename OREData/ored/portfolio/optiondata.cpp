@@ -55,13 +55,15 @@ void OptionData::fromXML(XMLNode* node) {
     exerciseFeeSettlementConvention_ = XMLUtils::getChildValue(node, "ExerciseFeeSettlementConvention", false);
     exercisePrices_ = XMLUtils::getChildrenValuesAsDoubles(node, "ExercisePrices", "ExercisePrice", false);
     
-    if (XMLNode* n = XMLUtils::getChildNode(node, "ExerciseDates")) {
-        if (XMLUtils::getChildNode(n, "ExerciseDate")) {
-            // For backward compatibility
-            exerciseDates_ = XMLUtils::getChildrenValues(node, "ExerciseDates", "ExerciseDate");
-        } else {
-            exerciseDatesSchedule_.fromXML(n);
-        }
+    XMLNode* exDatesNode = XMLUtils::getChildNode(node, "ExerciseDates");
+    XMLNode* exScheduleNode = XMLUtils::getChildNode(node, "ExerciseSchedule");
+    QL_REQUIRE(!(exDatesNode && exScheduleNode),
+               "Cannot specify both ExerciseDates and ExerciseSchedule. Only one must be used.");
+    if (exDatesNode) {
+        exerciseDates_ = XMLUtils::getChildrenValues(node, "ExerciseDates", "ExerciseDate");
+    }
+    if (exScheduleNode) {
+        exerciseDatesSchedule_.fromXML(exScheduleNode);
     }
 
     automaticExercise_ = boost::none;
@@ -112,7 +114,14 @@ XMLNode* OptionData::toXML(XMLDocument& doc) {
     if (exerciseFeeSettlementConvention_ != "")
         XMLUtils::addChild(doc, node, "ExerciseFeeSettlementConvention", exerciseFeeSettlementConvention_);
     XMLUtils::addChildren(doc, node, "ExercisePrices", "ExercisePrice", exercisePrices_);
-    XMLUtils::addChildren(doc, node, "ExerciseDates", "ExerciseDate", exerciseDates_);
+
+    if (exerciseDatesSchedule_.hasData()) {
+        XMLNode* scheduleDataNode = exerciseDatesSchedule_.toXML(doc);
+        XMLUtils::setNodeName(doc, scheduleDataNode, "ExerciseSchedule");
+        XMLUtils::appendNode(node, scheduleDataNode);
+    } else {
+        XMLUtils::addChildren(doc, node, "ExerciseDates", "ExerciseDate", exerciseDates_);
+    }
 
     if (automaticExercise_)
         XMLUtils::addChild(doc, node, "AutomaticExercise", *automaticExercise_);
