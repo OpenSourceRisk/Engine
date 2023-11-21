@@ -23,6 +23,7 @@
 #pragma once
 
 #include <orea/simm/simmbucketmapper.hpp>
+#include <orea/simm/simmcalibration.hpp>
 #include <orea/simm/simmconcentration.hpp>
 #include <orea/simm/simmconfiguration.hpp>
 
@@ -35,6 +36,8 @@ namespace analytics {
 
 class SimmConfigurationBase : public SimmConfiguration {
 public:
+    typedef std::map<std::tuple<std::string, std::string, std::string>, QuantLib::Real> Amounts;
+
     //! Returns the SIMM configuration name
     const std::string& name() const override { return name_; }
 
@@ -51,6 +54,8 @@ public:
         and \p qualifier
     */
     std::string bucket(const RiskType& rt, const std::string& qualifier) const override;
+
+    const bool checkValue(const std::string&, const std::vector<std::string>&) const;
 
     //! Return the SIMM <em>bucket</em> names for the given risk type \p rt
     //! An empty vector is returned if the risk type has no buckets
@@ -159,8 +164,6 @@ public:
 private:
     //! Name of the SIMM configuration
     std::string name_;
-    //! SIMM configuration version
-    std::string version_;
     //! Calculate variable for use in sigma method
     QuantLib::Real sigmaMultiplier() const;
 
@@ -169,11 +172,17 @@ protected:
     SimmConfigurationBase(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper, const std::string& name,
                           const std::string version, QuantLib::Size mporDays = 10);
 
+    //! SIMM configuration version
+    std::string version_;
+
     //! Used to map SIMM <em>Qualifier</em> names to SIMM <em>bucket</em> values
     boost::shared_ptr<SimmBucketMapper> simmBucketMapper_;
 
     //! Used to get the concentration thresholds for a given risk type and qualifier
     boost::shared_ptr<SimmConcentration> simmConcentration_;
+
+    const std::tuple<std::string, std::string, std::string> makeKey(const std::string&, const std::string&,
+                                                                    const std::string&) const;
 
     //! Helper method to find the index of the \p label in \p labels
     QuantLib::Size labelIndex(const std::string& label, const std::vector<std::string>& labels) const;
@@ -204,8 +213,8 @@ protected:
         -# risk type, bucket and label1 dependent
     */
     std::map<RiskType, QuantLib::Real> rwRiskType_;
-    std::map<RiskType, std::vector<QuantLib::Real>> rwBucket_;
-    std::map<std::pair<RiskType, std::string>, std::vector<QuantLib::Real>> rwLabel_1_;
+    std::map<RiskType, Amounts> rwBucket_;
+    std::map<RiskType, Amounts> rwLabel_1_;
 
     /*! Map from risk type to a vector of curvature weights. The size of the vector of
         weights for a given risk type must equal the size of the vector of Label1 values
@@ -220,22 +229,19 @@ protected:
     std::set<RiskType> validRiskTypes_;
 
     //! Risk class correlation matrix
-    QuantLib::Matrix riskClassCorrelation_;
-
-    //! Correlation matrix giving correlation between interest rate tenors
-    QuantLib::Matrix irTenorCorrelation_;
+    Amounts riskClassCorrelation_;
 
     /*! Map from risk type to a matrix of inter-bucket correlations for that
         risk type i.e. correlation between qualifiers of the risk type that fall
         in different buckets
     */
-    std::map<RiskType, QuantLib::Matrix> interBucketCorrelation_;
+    std::map<RiskType, Amounts> interBucketCorrelation_;
 
     /*! Map from risk type to an intra-bucket correlation for that
         risk type i.e. correlation between qualifiers of the risk type that fall
         in the same bucket
     */
-    std::map<RiskType, std::vector<QuantLib::Real>> intraBucketCorrelation_;
+    std::map<RiskType, Amounts> intraBucketCorrelation_;
 
     /*! @name Single Correlations
         Single correlation numbers that don't fit in to a structure. They can be
