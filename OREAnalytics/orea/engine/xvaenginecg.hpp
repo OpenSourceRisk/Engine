@@ -26,6 +26,7 @@
 #include <orea/scenario/scenariogeneratordata.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
+#include <orea/scenario/sensitivityscenariogenerator.hpp>
 
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/loader.hpp>
@@ -86,6 +87,7 @@ private:
     // artefacts produced during run
     boost::shared_ptr<ore::data::Market> initMarket_;
     boost::shared_ptr<ore::analytics::ScenarioSimMarket> simMarket_;
+    boost::shared_ptr<SensitivityScenarioGenerator> sensiScenarioGenerator_;
     boost::shared_ptr<CrossAssetModelBuilder> camBuilder_;
     boost::shared_ptr<GaussianCamCG> model_;
     std::vector<std::pair<std::size_t, double>> baseModelParams_;

@@ -16,8 +16,16 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <orea/cube/npvcube.hpp>
+#include <orea/cube/npvsensicube.hpp>
+#include <orea/cube/sensicube.hpp>
+#include <orea/cube/sensitivitycube.hpp>
+#include <orea/engine/sensitivitycubestream.hpp>
 #include <orea/engine/xvaenginecg.hpp>
+#include <orea/scenario/deltascenariofactory.hpp>
+#include <orea/app/reportwriter.hpp>
 
+#include <ored/report/inmemoryreport.hpp>
 #include <ored/scripting/engines/scriptedinstrumentpricingenginecg.hpp>
 #include <ored/utilities/to_string.hpp>
 
@@ -318,7 +326,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
         keepNodes[n] = true;
     }
 
-    for(auto const& n: tradeModelDependencies) {
+    for (auto const& n : tradeModelDependencies) {
         keepNodes[n] = true;
     }
 
@@ -356,15 +364,17 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     // Dump epe / ene profile out
 
-    for (Size i = 0; i < simulationDates.size() + 1; ++i) {
-        std::cout << ore::data::to_string(i == 0 ? model_->referenceDate() : *std::next(simulationDates.begin(), i - 1))
-                  << "," << expectation(values[pfExposureNodes[i]]) << ","
-                  << expectation(max(values[pfExposureNodes[i]], RandomVariable(model_->size(), 0.0))) << ","
-                  << expectation(max(-values[pfExposureNodes[i]], RandomVariable(model_->size(), 0.0))) << "\n";
-    }
-    std::cout << std::flush;
+    // for (Size i = 0; i < simulationDates.size() + 1; ++i) {
+    //     std::cout << ore::data::to_string(i == 0 ? model_->referenceDate() : *std::next(simulationDates.begin(), i -
+    //     1))
+    //               << "," << expectation(values[pfExposureNodes[i]]) << ","
+    //               << expectation(max(values[pfExposureNodes[i]], RandomVariable(model_->size(), 0.0))) << ","
+    //               << expectation(max(-values[pfExposureNodes[i]], RandomVariable(model_->size(), 0.0))) << "\n";
+    // }
+    // std::cout << std::flush;
 
-    DLOG("XvaEngineCG: Calcuated CVA = " << values[cvaNode]);
+    Real cva = expectation(values[cvaNode]).at(0);
+    DLOG("XvaEngineCG: Calcuated CVA = " << cva);
 
     // Do backward derivatives run from CVA node on pp graph D up to path exposure nodes in C
 
@@ -429,12 +439,14 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodesDerivatives, nodesA);
 
-    std::map<std::size_t, double> modelParamDerivatives;
+    Size i = 0;
+    std::vector<double> modelParamDerivatives(baseModelParams_.size());
     for (auto const& [n, v] : baseModelParams_) {
-        modelParamDerivatives[n] = expectation(derivatives[n]).at(0);
+        modelParamDerivatives[i++] = expectation(derivatives[n]).at(0);
     }
 
-    DLOG("XvaEngineCG: got " << modelParamDerivatives.size() << " model parameter derivatives from run backward derivatives");
+    DLOG("XvaEngineCG: got " << modelParamDerivatives.size()
+                             << " model parameter derivatives from run backward derivatives");
 
     boost::timer::nanosecond_type timing13 = timer.elapsed().wall;
 
@@ -443,7 +455,65 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     values.clear();
     derivatives.clear();
 
-    // 13 Output statistics
+    // 13 generate sensitivity scenarios
+
+    DLOG("XvaEngineCG: running sensi scenarios");
+
+    sensiScenarioGenerator_ = boost::make_shared<SensitivityScenarioGenerator>(
+        sensitivityData_, simMarket_->baseScenario(), simMarketData_, simMarket_,
+        boost::make_shared<DeltaScenarioFactory>(simMarket_->baseScenario()), false, continueOnError,
+        simMarket_->baseScenarioAbsolute());
+
+    simMarket_->scenarioGenerator() = sensiScenarioGenerator_;
+
+    auto resultCube = boost::make_shared<DoublePrecisionSensiCube>(std::set<std::string>{"CVA"}, asof_,
+                                                                   sensiScenarioGenerator_->samples());
+    resultCube->setT0(cva, 0, 0);
+
+    for (Size sample = 0; sample < resultCube->samples(); ++sample) {
+
+        // update sim market to next scenario
+
+        simMarket_->preUpdate();
+        simMarket_->updateScenario(asof_);
+        simMarket_->postUpdate(asof_, false);
+
+        // recalibrate the model
+
+        camBuilder_->recalibrate();
+
+        // calcuate CVA sensi
+
+        Real sensi = 0.0;
+
+        auto modelParameters = model_->modelParameters();
+        Size i = 0;
+        for (auto const& [n, v0] : baseModelParams_) {
+            Real v1 = modelParameters[i].second;
+            sensi += modelParamDerivatives[i] * (v1 - v0);
+            ++i;
+        }
+
+        // set result in cube
+
+        resultCube->set(cva + sensi, 0, 0, sample, 0);
+    }
+
+    boost::timer::nanosecond_type timing14 = timer.elapsed().wall;
+
+    DLOG("XvaEngineCG: finished running " << resultCube->samples() << " sensi scenarios.");
+
+    // 14 write out sensi report
+
+    boost::shared_ptr<InMemoryReport> scenarioReport = boost::make_shared<InMemoryReport>();
+    auto sensiCube =
+        boost::make_shared<SensitivityCube>(resultCube, sensiScenarioGenerator_->scenarioDescriptions(),
+                                            sensiScenarioGenerator_->shiftSizes(), sensitivityData_->twoSidedDeltas());
+    auto sensiStream = boost::make_shared<SensitivityCubeStream>(sensiCube, simMarketData_->baseCcy());
+    ReportWriter().writeScenarioReport(*scenarioReport, sensiCube, 0.0);
+    scenarioReport->toFile("cva-sensi-scenario.csv");
+
+    // 15 Output statistics
 
     std::cout << "Computation graph size   : " << g->size() << std::endl;
     std::cout << "Peak mem usage           : " << ore::data::os::getPeakMemoryUsageBytes() / 1024 / 1024 << " MB"
@@ -457,11 +527,14 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     std::cout << "Part D CG build          : " << (timing7 - timing6) / 1E6 << " ms" << std::endl;
     std::cout << "RV gen                   : " << (timing8 - timing7) / 1E6 << " ms" << std::endl;
     std::cout << "Const and Model params   : " << (timing9 - timing8) / 1E6 << " ms" << std::endl;
-    std::cout << "Forward eval             : " << (timing10- timing9) / 1E6 << " ms" << std::endl;
-    std::cout << "Backward deriv D         : " << (timing11- timing10) / 1E6 << " ms" << std::endl;
-    std::cout << "Forward Backward B       : " << (timing12- timing11) / 1E6 << " ms" << std::endl;
+    std::cout << "Forward eval             : " << (timing10 - timing9) / 1E6 << " ms" << std::endl;
+    std::cout << "Backward deriv D         : " << (timing11 - timing10) / 1E6 << " ms" << std::endl;
+    std::cout << "Forward Backward B       : " << (timing12 - timing11) / 1E6 << " ms" << std::endl;
     std::cout << "Backward A               : " << (timing13 - timing12) / 1E6 << " ms" << std::endl;
-    std::cout << "total                    : " << timing12 / 1E6 << " ms" << std::endl;
+    std::cout << "Sensi Cube Gen           : " << (timing14 - timing13) / 1E6 << " ms" << std::endl;
+    std::cout << "total                    : " << timing14 / 1E6 << " ms" << std::endl;
+
+
 }
 
 } // namespace analytics
