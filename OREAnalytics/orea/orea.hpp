@@ -118,7 +118,9 @@
 #include <orea/simm/simmbucketmapper.hpp>
 #include <orea/simm/simmbucketmapperbase.hpp>
 #include <orea/simm/simmcalculator.hpp>
+#include <orea/simm/simmcalibration.hpp>
 #include <orea/simm/simmconcentration.hpp>
+#include <orea/simm/simmconcentrationcalibration.hpp>
 #include <orea/simm/simmconcentrationisdav1_3.hpp>
 #include <orea/simm/simmconcentrationisdav1_3_38.hpp>
 #include <orea/simm/simmconcentrationisdav2_0.hpp>
@@ -131,6 +133,7 @@
 #include <orea/simm/simmconcentrationisdav2_6.hpp>
 #include <orea/simm/simmconfiguration.hpp>
 #include <orea/simm/simmconfigurationbase.hpp>
+#include <orea/simm/simmconfigurationcalibration.hpp>
 #include <orea/simm/simmconfigurationisdav1_0.hpp>
 #include <orea/simm/simmconfigurationisdav1_3.hpp>
 #include <orea/simm/simmconfigurationisdav1_3_38.hpp>
