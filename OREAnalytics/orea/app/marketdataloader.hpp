@@ -30,7 +30,7 @@ namespace ore {
 namespace analytics {
 
 typedef std::map<QuantLib::Date, std::set<std::string>> QuoteMap;
-typedef std::map<std::string, std::set<QuantLib::Date>> FixingMap;
+typedef std::map<std::string, RequiredFixings::FixingDates> FixingMap;
 
 //! Utility class for Structured Fixing warnings
 class StructuredFixingWarningMessage : public StructuredMessage {
@@ -80,7 +80,7 @@ public:
     populateFixings(const std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
                     const std::set<QuantLib::Date>& loaderDates = {});
 
-    virtual void addRelevantFixings(const std::pair<std::string, std::set<QuantLib::Date>>& fixing,
+    virtual void addRelevantFixings(const std::pair<std::string, RequiredFixings::FixingDates>& fixing,
         std::map<std::pair<std::string, QuantLib::Date>, std::set<QuantLib::Date>>& lastAvailableFixingLookupMap);
 
     //! clear the loader
@@ -94,7 +94,7 @@ protected:
     boost::shared_ptr<InputParameters> inputs_;
     boost::shared_ptr<ore::data::InMemoryLoader> loader_;
     QuoteMap quotes_;
-    FixingMap portfolioFixings_, fixings_;
+    FixingMap fixings_;
 
     const boost::shared_ptr<MarketDataLoaderImpl>& impl() const;
 

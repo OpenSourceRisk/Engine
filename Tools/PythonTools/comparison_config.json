@@ -1318,7 +1318,8 @@
         "settings": [
           {
             "names": [
-              "initial_margin"
+              "initial_margin",
+              "simmReport/initial_margin"
             ],
             "abs_tol": 0.1,
             "rel_tol": 1e-12

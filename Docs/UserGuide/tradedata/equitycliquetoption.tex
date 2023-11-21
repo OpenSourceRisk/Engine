@@ -40,8 +40,8 @@ The structure of an example \lstinline!EquityCliquetOptionData! node for an equi
     <OptionType>Call</OptionType>
     <Moneyness>1.0</Moneyness>
     <LocalCap>0.07</LocalCap>
-    <LocalFloor></LocalFloor>
-    <GlobalCap></GlobalCap>
+    <LocalFloor>-0.06</LocalFloor>
+    <GlobalCap>0.07</GlobalCap>
     <GlobalFloor>-0.07</GlobalFloor>
     <ScheduleData>
         <Dates>
@@ -84,13 +84,13 @@ The meanings and allowable values of the elements in the \lstinline!CliquetOptio
 	\item Moneyness: Adjustment of option return. The moneyness M each forward starting option is being struck at.\\
 	Allowable values: Any real number. Expressed in decimal form where 1.0 is at-the-money, 1.1 is 110\% of the at-the-money strike, 0.9  is 90\% of the at-the-money strike, etc.
 	\item LocalCap[Optional]: The local cap, $cap_{l}$, in each of the option return. \\
-	Allowable values: Any real number. If left blank or omitted, no local cap is applied.
+	Allowable values: Any real number. If omitted, no local cap is applied. Can't be left blank.
 	\item LocalFloor[Optional]: The local floor, $floor_{l}$, in each of the option return. \\
-	Allowable values: Any real number. If left blank or omitted, no local floor is applied.
+	Allowable values: Any real number. If omitted, no local floor is applied.  Can't be left blank.
 	\item GlobalCap[Optional]: The global cap, $cap_{g}$, for the option return. \\
-	Allowable values: Any real number. If left blank or omitted, no global cap is applied.
+	Allowable values: Any real number. If omitted, no global cap is applied.  Can't be left blank.
 	\item GlobalFloor[Optional]: The global floor,$floor_{g}$, for the option return. \\
-	Allowable values: Any real number. If left blank or omitted, no global floor is applied.
+	Allowable values: Any real number. If omitted, no global floor is applied.  Can't be left blank.
 	\item ScheduleData: A schedule of dates that define the valuation dates of the consecutive forward starting options forming the Equity Cliquet Option. The first date in the schedule is the start date of the first consecutive option, the second date in the schedule is the end/valuation date of the first consecutive option, and also the start date of the second consecutive option, etc.  The last date is the final valuation date, with payoff of the whole Cliquet option at this date plus \lstinline!SettlementDays!. \\
 	 Allowable values: A node on the same form as \lstinline!ScheduleData!, (see \ref{ss:schedule_data}). 
 	\item SettlementDays[Optional]: Number of days from the last valuation date to the payoff being paid or received. The payoff date is determined with regards to calendar and

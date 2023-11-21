@@ -828,7 +828,7 @@ void TodaysMarket::require(const MarketObject o, const string& name, const strin
             StructuredCurveWarningMessage(
                 ore::data::to_string(o) + "(" + name + ")", "Unknown market configuration.",
                 "Configuration '" + configuration +
-                    "' not known - check wyh this is used. Will retry with default configuration.")
+                    "' not known - check why this is used. Will retry with default configuration.")
                 .log();
             require(o, name, Market::defaultConfiguration);
             return;

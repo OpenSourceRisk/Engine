@@ -2,8 +2,23 @@
 \label{ss:convertible_bond}
 
 A convertible bond is set up using a {\tt ConvertibleBondData} block as shown in listing
-\ref{lst:convertiblebonddata1}. The bond details are read from reference data in this case. The meanings and allowable
-values of the elements in the block are as follows:
+\ref{lst:convertiblebonddata1}. The bond details are read from reference data in this case. 
+
+A convertible bond is a bond, that can be converted into a prespecified number of shares, given by:
+$$
+NumberOfShares = \frac{BondNotional}{ConversionRatio}
+$$
+
+Where the Conversion Ratio is specified in the underlying bond reference data.
+
+The shares are usually from the bond issuer, but it is also possible that the shares arefrom a different issuer (exchangeables). In addition, the share currency can be differentfrom the bond currency in both cases (cross-currency convertibles).
+
+
+The bond might be callable by the issuer (typically in American style) and / or puttableby the investor (typically in Bermudan style). The issuer calls can be “hard calls”,which are call rights in the traditional sense, as opposed to “soft calls” which can onlythe exercised if the equity price observed on the exercise date is above a prespecifiedthreshold given by TriggerRatios. If a soft call is exercised, the investor has the right to convert the bond intoshares instead of accepting the payment from the issuer call (“forced conversion”).
+
+
+The meanings and allowable
+values of the elements in the {\tt ConvertibleBondData} block are as follows:
 
 \begin{itemize}
   \item SecurityId: The underlying security identifier\\
@@ -124,8 +139,21 @@ Allowable values: American, Bermudan
   Allowable values: true, false
 
 \item TriggerRatios: A list of trigger ratios $T$ for soft calls. A soft call can be executed only if the equity price
-  on the exercise date is above the conversion price times the trigger ratio, i.e. $S_t > C^P_tT$. Only applicable to
+  on the exercise date is above the Conversion Price (defined below) times the trigger ratio, i.e. $S_t > C^P_tT$. Only applicable to
   Calls, not to Puts. Required for soft calls, can be omitted otherwise.\\
+  
+$$
+Conversion Price, C^P_t = \frac{1}{ConversionRatio}
+$$
+  
+For cross-currency trades the conversion price is usually quoted in equity ccy, i.e.  
+  
+$$
+Conversion Price, C^P_t = \frac{1}{ConversionRatio \cdot X_t}
+$$  
+  
+where $X_t$ converts one equity ccy unit to bond ccy  
+  
   Allowable values: Any positive real number.
 
 \item NofMTriggers: A list of n-of-m trigger specifications for calls, i.e. the soft-call trigger defined by
