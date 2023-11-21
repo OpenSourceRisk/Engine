@@ -282,8 +282,10 @@ Schedule makeSchedule(const ScheduleDerived& data, const Schedule& baseSchedule)
     const std::vector<QuantLib::Date>& baseDates = baseSchedule.dates();
     std::vector<QuantLib::Date> derivedDates;
     QuantLib::Date derivedDate;
-    for (const Date& d : baseDates) {
-        derivedDate = calendar.advance(d, shift, convention);
+    Size i = data.removeFirstDate() ? 1 : 0;
+    Size end = data.removeLastDate() ? baseDates.size() - 1 : baseDates.size();
+    for (i; i < end; i++) {
+        derivedDate = calendar.advance(baseDates[i], shift, convention);
         derivedDates.push_back(derivedDate);
     }
     return Schedule(vector<Date>(derivedDates.begin(), derivedDates.end()), calendar, convention, boost::none,
