@@ -27,6 +27,7 @@
 #include <ored/utilities/currencyconfig.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/portfolio/scriptedtrade.hpp>
+#include <orea/simm/crifloader.hpp>
 
 namespace ore {
 namespace analytics {
@@ -402,24 +403,23 @@ void InputParameters::setCreditSimulationParametersFromBuffer(const std::string&
     creditSimulationParameters_ = boost::make_shared<CreditSimulationParameters>();
     creditSimulationParameters_->fromXMLString(xml);
 } 
-
-boost::shared_ptr<CrifLoader> InputParameters::crifLoader() const {
+    
+void InputParameters::setCrifFromFile(const std::string& fileName, char eol, char delim, char quoteChar, char escapeChar) {
     boost::shared_ptr<SimmConfiguration> configuration =
         buildSimmConfiguration(simmVersion_, boost::make_shared<SimmBucketMapperBase>(), mporDays());
     bool updateMappings = true;
     bool aggregateTrades = false;
-    return 
-        boost::make_shared<CrifLoader>(configuration, CrifRecord::additionalHeaders, updateMappings, aggregateTrades);
-}
-    
-void InputParameters::setCrifFromFile(const std::string& fileName, char eol, char delim, char quoteChar, char escapeChar) {
-    auto crifLoader = crifLoader();
-    inputSimmCrif_ = crifLoader->loadFromFile(fileName, eol, delim, quoteChar, escapeChar);
+    auto crifLoader = CsvFileCrifLoader(fileName, configuration, CrifRecord::additionalHeaders, updateMappings, aggregateTrades, eol, delim, quoteChar, escapeChar);
+    inputSimmCrif_ = crifLoader.loadCrif();
 }
 
 void InputParameters::setCrifFromBuffer(const std::string& csvBuffer, char eol, char delim, char quoteChar, char escapeChar) {
-    auto crifLoader = crifLoader();
-    inputSimmCrif_ = crifLoader->loadFromString(csvBuffer, eol, delim, quoteChar, escapeChar);
+    boost::shared_ptr<SimmConfiguration> configuration =
+        buildSimmConfiguration(simmVersion_, boost::make_shared<SimmBucketMapperBase>(), mporDays());
+    bool updateMappings = true;
+    bool aggregateTrades = false;
+    auto crifLoader = CsvBufferCrifLoader(csvBuffer, configuration, CrifRecord::additionalHeaders, updateMappings, aggregateTrades, eol, delim, quoteChar, escapeChar);
+    inputSimmCrif_ = crifLoader.loadCrif();
 }
 
 void InputParameters::setSimmNameMapper(const std::string& xml) {
