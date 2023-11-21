@@ -130,7 +130,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     // note: for the PoC we populate the containers with hardcoded values ... temp hack ...
     currencies.push_back("EUR");
     curves.push_back(camBuilder_->model()->irModel(0)->termStructure());
-    irIndices.push_back(std::make_pair("EUR-EURIBOR-6M", *initMarket_->iborIndex("EUR-EURIBOR-6M")));
+    irIndices.push_back(std::make_pair("EUR-EURIBOR-6M", *simMarket_->iborIndex("EUR-EURIBOR-6M")));
 
     // note: these must be fine enough for Euler, e.g. weekly over the whole simulation period
     std::set<Date> simulationDates(scenarioGeneratorData_->getGrid()->dates().begin(),
@@ -372,6 +372,15 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
             nodesDPlusExposure[n] = true;
         }
 
+        // full bwds run for validation ...
+
+        // derivatives[cvaNode] = RandomVariable(model_->size(), 1.0);
+        // backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodesDerivatives, {},
+        //                     RandomVariableOpCode::ConditionalExpectation,
+        //                     ops_[RandomVariableOpCode::ConditionalExpectation]);
+
+        // partial derivatives on PP
+
         backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodesDerivatives,
                             nodesDPlusExposure, RandomVariableOpCode::ConditionalExpectation,
                             ops_[RandomVariableOpCode::ConditionalExpectation]);
@@ -410,6 +419,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
         // Roll back derivatives on model part A
 
         backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodesDerivatives, nodesA_);
+
+        // read model param derivatives
 
         Size i = 0;
         for (auto const& [n, v] : baseModelParams_) {
