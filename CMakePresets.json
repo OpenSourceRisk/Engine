@@ -167,6 +167,25 @@
       }
     },
     {
+      "name": "linux-clang-base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++",
+        "BOOST_ROOT": "$env{BOOST}",
+        "QL_BUILD_EXAMPLES": false,
+        "QL_BUILD_TEST_SUITE": false,
+        "QL_BUILD_BENCHMARK": false,
+        "QL_ENABLE_SESSIONS": true,
+        "ORE_BUILD_DOC": false
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
       "name": "_release",
       "hidden": true,
       "cacheVariables": {
@@ -193,6 +212,11 @@
       "generator": "Ninja"
     },
     {
+      "name": "_make",
+      "hidden": true,
+      "generator": "Unix Makefiles"
+    },
+    {
       "name": "linux-gcc-ninja-debug",
       "inherits": [
         "linux-gcc-base",
@@ -212,6 +236,54 @@
       "name": "linux-gcc-ninja-relwithdebinfo",
       "inherits": [
         "linux-gcc-base",
+        "_ninja",
+        "_relwithdebinfo"
+      ]
+    },
+    {
+      "name": "linux-clang-debug",
+      "inherits": [
+        "linux-clang-base",
+        "_make",
+        "_debug"
+      ]
+    },
+    {
+      "name": "linux-clang-release",
+      "inherits": [
+        "linux-clang-base",
+        "_make",
+        "_release"
+      ]
+    },
+    {
+      "name": "linux-clang-relwithdebinfo",
+      "inherits": [
+        "linux-clang-base",
+        "_make",
+        "_relwithdebinfo"
+      ]
+    },
+    {
+      "name": "linux-clang-ninja-debug",
+      "inherits": [
+        "linux-clang-base",
+        "_ninja",
+        "_debug"
+      ]
+    },
+    {
+      "name": "linux-clang-ninja-release",
+      "inherits": [
+        "linux-clang-base",
+        "_ninja",
+        "_release"
+      ]
+    },
+    {
+      "name": "linux-clang-ninja-relwithdebinfo",
+      "inherits": [
+        "linux-clang-base",
         "_ninja",
         "_relwithdebinfo"
       ]
