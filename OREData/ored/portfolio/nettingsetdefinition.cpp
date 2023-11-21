@@ -124,13 +124,15 @@ NettingSetDefinition::NettingSetDefinition(const NettingSetDetails& nettingSetDe
                                            const string& marginPostFreq, const string& mpr, const Real& collatSpreadPay,
                                            const Real& collatSpreadRcv, const vector<string>& eligCollatCcys,
                                            bool applyInitialMargin, const string& initialMarginType,
-                                           const bool calculateIMAmount, const bool calculateVMAmount)
+                                           const bool calculateIMAmount, const bool calculateVMAmount,
+                                           const string& nonExemptIMRegulations)
     : nettingSetDetails_(nettingSetDetails), activeCsaFlag_(true) {
 
     csa_ = boost::make_shared<CSA>(
         parseCsaType(bilateral), csaCurrency, index, thresholdPay, thresholdRcv, mtaPay, mtaRcv, iaHeld, iaType,
         parsePeriod(marginCallFreq), parsePeriod(marginPostFreq), parsePeriod(mpr), collatSpreadPay, collatSpreadRcv,
-        eligCollatCcys, applyInitialMargin, parseCsaType(initialMarginType), calculateIMAmount, calculateVMAmount);
+        eligCollatCcys, applyInitialMargin, parseCsaType(initialMarginType), calculateIMAmount, calculateVMAmount,
+        nonExemptIMRegulations);
 
     validate();
     DLOG(nettingSetDetails_ << ": collateralised NettingSetDefinition built. ");
@@ -204,11 +206,14 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
         bool calculateIMAmount = XMLUtils::getChildValueAsBool(csaChild, "CalculateIMAmount", false, false);
         bool calculateVMAmount = XMLUtils::getChildValueAsBool(csaChild, "CalculateVMAmount", false, false);
 
+        string nonExemptIMRegulations = XMLUtils::getChildValue(csaChild, "NonExemptIMRegulations", false);
+
         csa_ = boost::make_shared<CSA>(parseCsaType(csaTypeStr), csaCurrency, index, thresholdPay, thresholdRcv, mtaPay,
                                        mtaRcv, iaHeld, iaType, parsePeriod(marginCallFreqStr),
                                        parsePeriod(marginPostFreqStr), parsePeriod(mprStr), collatSpreadPay,
                                        collatSpreadRcv, eligCollatCcys, applyInitialMargin,
-                                       parseCsaType(initialMarginType), calculateIMAmount, calculateVMAmount);
+                                       parseCsaType(initialMarginType), calculateIMAmount, calculateVMAmount,
+                                       nonExemptIMRegulations);
     }
 
     validate();
@@ -260,6 +265,7 @@ XMLNode* NettingSetDefinition::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, csaSubNode, "InitialMarginType", to_string(csa_->initialMarginType()));
         XMLUtils::addChild(doc, csaSubNode, "CalculateIMAmount", csa_->calculateIMAmount());
         XMLUtils::addChild(doc, csaSubNode, "CalculateVMAmount", csa_->calculateVMAmount());
+        XMLUtils::addChild(doc, csaSubNode, "NonExemptIMRegulations", csa_->nonExemptIMRegulations());
     }
 
     return node;
