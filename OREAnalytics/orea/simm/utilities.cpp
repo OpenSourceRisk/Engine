@@ -28,6 +28,7 @@
 #include <orea/simm/simmconfigurationisdav2_5.hpp>
 #include <orea/simm/simmconfigurationisdav2_5a.hpp>
 #include <orea/simm/simmconfigurationisdav2_6.hpp>
+#include <orea/simm/simmconfigurationcalibration.hpp>
 
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -189,7 +190,17 @@ SimmVersion parseSimmVersion(const string& version) {
 
 boost::shared_ptr<SimmConfiguration> buildSimmConfiguration(const string& simmVersion,
                                                             const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+                                                            const boost::shared_ptr<SimmCalibrationData>& simmCalibrationData,
                                                             const Size& mporDays) {
+
+    // Check first if the SIMM calibration has the requested simmVersion
+    if (simmCalibrationData) {
+        const auto& simmCalibration = simmCalibrationData->getBySimmVersion(simmVersion);
+        if (simmCalibration) {
+            auto simmConfiguration = boost::make_shared<SimmConfigurationCalibration>(simmBucketMapper, simmCalibration, mporDays);
+            return simmConfiguration;
+        }
+    }
 
     auto version = parseSimmVersion(simmVersion);
 
