@@ -36,16 +36,16 @@ std::size_t LgmCG::numeraire(const Date& d, const std::size_t x, const Handle<Yi
     std::string id = "__lgm_" + qualifier_ + "_N_" + ore::data::to_string(d);
     std::size_t n;
     if (n = cg_var(g_, id, ComputationGraph::VarDoesntExist::Nan); n == ComputationGraph::nan) {
-        auto p = p_;
-        Real t = p->termStructure()->timeFromReference(d);
-        auto effDscCurve = discountCurve.empty() ? p->termStructure() : discountCurve;
+        auto p(p_);
+        Real t = p()->termStructure()->timeFromReference(d);
         std::string id_P0t = "__dsc_" + ore::data::to_string(d) + "_" + discountCurveId;
         std::string id_H = "__lgm_" + qualifier_ + "_H_" + ore::data::to_string(d);
         std::string id_zeta = "__lgm_" + qualifier_ + "_zeta_" + ore::data::to_string(d);
-        std::size_t H = addModelParameter(g_, modelParameters_, id_H, [p, t] { return p->H(t); });
-        std::size_t zeta = addModelParameter(g_, modelParameters_, id_zeta, [p, t] { return p->zeta(t); });
-        std::size_t P0t =
-            addModelParameter(g_, modelParameters_, id_P0t, [effDscCurve, t] { return effDscCurve->discount(t); });
+        std::size_t H = addModelParameter(g_, modelParameters_, id_H, [p, t] { return p()->H(t); });
+        std::size_t zeta = addModelParameter(g_, modelParameters_, id_zeta, [p, t] { return p()->zeta(t); });
+        std::size_t P0t = addModelParameter(g_, modelParameters_, id_P0t, [p, discountCurve, t] {
+            return (discountCurve.empty() ? p()->termStructure() : discountCurve)->discount(t);
+        });
         n = cg_div(g_,
                    cg_exp(g_, cg_add(g_, cg_mult(g_, H, x),
                                      cg_mult(g_, cg_mult(g_, cg_const(g_, 0.5), zeta), cg_mult(g_, H, H)))),
@@ -78,16 +78,16 @@ std::size_t LgmCG::reducedDiscountBond(const Date& d, const Date& e, const std::
     std::size_t n;
     if (n = cg_var(g_, id, ComputationGraph::VarDoesntExist::Nan), n == ComputationGraph::nan) {
         auto p = p_;
-        Real t = p->termStructure()->timeFromReference(d);
-        Real T = p->termStructure()->timeFromReference(e);
-        auto effDscCurve = discountCurve.empty() ? p->termStructure() : discountCurve;
+        Real t = p()->termStructure()->timeFromReference(d);
+        Real T = p()->termStructure()->timeFromReference(e);
         std::string id_P0T = "__dsc_" + ore::data::to_string(e) + "_" + discountCurveId;
         std::string id_H = "__lgm_" + qualifier_ + "_H_" + ore::data::to_string(e);
         std::string id_zeta = "__lgm_" + qualifier_ + "_zeta_" + ore::data::to_string(d);
-        std::size_t H = addModelParameter(g_, modelParameters_, id_H, [p, T] { return p->H(T); });
-        std::size_t zeta = addModelParameter(g_, modelParameters_, id_zeta, [p, t] { return p->zeta(t); });
-        std::size_t P0T =
-            addModelParameter(g_, modelParameters_, id_P0T, [effDscCurve, T] { return effDscCurve->discount(T); });
+        std::size_t H = addModelParameter(g_, modelParameters_, id_H, [p, T] { return p()->H(T); });
+        std::size_t zeta = addModelParameter(g_, modelParameters_, id_zeta, [p, t] { return p()->zeta(t); });
+        std::size_t P0T = addModelParameter(g_, modelParameters_, id_P0T, [p, discountCurve, T] {
+            return (discountCurve.empty() ? p()->termStructure() : discountCurve)->discount(T);
+        });
         n = cg_mult(
             g_, P0T,
             cg_exp(g_, cg_negative(g_, cg_add(g_, cg_mult(g_, H, x),

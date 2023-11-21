@@ -267,7 +267,9 @@ std::size_t GaussianCamCG::getIrIndexValue(const Size indexNo, const Date& d, co
     // ensure a valid fixing date
     fixingDate = irIndices_[indexNo].second->fixingCalendar().adjust(fixingDate);
     Size currencyIdx = irIndexPositionInCam_[indexNo];
-    LgmCG lgmcg(currencies_[currencyIdx], *g_, cam_->irlgm1f(currencyIdx), modelParameters_);
+    auto cam(cam_);
+    LgmCG lgmcg(
+        currencies_[currencyIdx], *g_, [cam, currencyIdx] { return cam->irlgm1f(currencyIdx); }, modelParameters_);
     return lgmcg.fixing(irIndices_[indexNo].second, fixingDate, d,
                         getDateValue(irStates_, d, sloppySimDates_).at(currencyIdx));
 }
@@ -286,12 +288,18 @@ std::size_t GaussianCamCG::fwdCompAvg(const bool isAvg, const std::string& index
 }
 
 std::size_t GaussianCamCG::getDiscount(const Size idx, const Date& s, const Date& t) const {
-    LgmCG lgmcg(currencies_[idx], *g_, cam_->irlgm1f(currencyPositionInCam_[idx]), modelParameters_);
+    auto cam(cam_);
+    Size cpidx = currencyPositionInCam_[idx];
+    LgmCG lgmcg(
+        currencies_[idx], *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_);
     return lgmcg.discountBond(s, t, getDateValue(irStates_, s, sloppySimDates_)[idx]);
 }
 
 std::size_t GaussianCamCG::getNumeraire(const Date& s) const {
-    LgmCG lgmcg(currencies_[0], *g_, cam_->irlgm1f(currencyPositionInCam_[0]), modelParameters_);
+    auto cam(cam_);
+    Size cpidx = currencyPositionInCam_[0];
+    LgmCG lgmcg(
+        currencies_[0], *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_);
     return lgmcg.numeraire(s, getDateValue(irStates_, s, sloppySimDates_)[0]);
 }
 

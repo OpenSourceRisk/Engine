@@ -36,11 +36,11 @@ using namespace QuantExt;
 class LgmCG {
 public:
     LgmCG(const std::string& qualifier, QuantExt::ComputationGraph& g,
-          const boost::shared_ptr<IrLgm1fParametrization>& p,
+          const std::function<boost::shared_ptr<IrLgm1fParametrization>()>& p,
           std::vector<std::pair<std::size_t, std::function<double(void)>>>& modelParameters)
         : qualifier_(qualifier), g_(g), p_(p), modelParameters_(modelParameters) {}
 
-    boost::shared_ptr<IrLgm1fParametrization> parametrization() const { return p_; }
+    boost::shared_ptr<IrLgm1fParametrization> parametrization() const { return p_(); }
 
     std::size_t numeraire(const Date& d, const std::size_t x,
                           const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
@@ -61,7 +61,7 @@ public:
 private:
     std::string qualifier_;
     QuantExt::ComputationGraph& g_;
-    boost::shared_ptr<IrLgm1fParametrization> p_;
+    std::function<boost::shared_ptr<IrLgm1fParametrization>()> p_;
     std::vector<std::pair<std::size_t, std::function<double(void)>>>& modelParameters_;
 };
 
