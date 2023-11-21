@@ -20,6 +20,7 @@
 #include <orea/simm/crifloader.hpp>
 #include <orea/simm/simmcalculator.hpp>
 #include <orea/simm/utilities.hpp>
+#include <orea/simm/simmconfigurationbase.hpp>
 
 #include <boost/math/distributions/normal.hpp>
 #include <numeric>
@@ -887,9 +888,9 @@ pair<map<string, Real>, bool> SimmCalculator::irCurvatureMargin(const NettingSet
         }
 
         // Now deal with inflation component
-        SimmVersion version = parseSimmVersion(simmConfiguration_->version());
+        const string simmVersion = simmConfiguration_->version();
         SimmVersion thresholdVersion = SimmVersion::V1_0;
-        if (version > thresholdVersion) {
+        if (simmConfiguration_->isSimmConfigCalibration() || parseSimmVersion(simmVersion) > thresholdVersion) {
             // Weighted sensitivity i.e. $WS_{k,i}$ from SIMM docs
             Real infWs = 0.0;
             for (auto infIt = pInfQualifier.first; infIt != pInfQualifier.second; ++infIt) {
@@ -1206,9 +1207,10 @@ SimmCalculator::curvatureMargin(const NettingSetDetails& nettingSetDetails, cons
             //          example you use sfOuter * (itOuter->amountResultCcy * multiplier) * sigmaOuter;
             Real wsOuter = sfOuter * ((itOuter->amountResultCcy * multiplier) * sigmaOuter);
             // for ISDA SIMM 2.2 or higher, this $CVR_{ik}$ for EQ bucket 12 is zero
-            SimmVersion version = parseSimmVersion(simmConfiguration_->version());
+            const string simmVersion = simmConfiguration_->version();
             SimmVersion thresholdVersion = SimmVersion::V2_2;
-            if (version >= thresholdVersion && bucket == "12" && rt == RiskType::EquityVol) {
+            if ((simmConfiguration_->isSimmConfigCalibration() || parseSimmVersion(simmVersion) >= thresholdVersion) &&
+                bucket == "12" && rt == RiskType::EquityVol) {
                 wsOuter = 0.0;
             }
             // Update weighted sensitivity sum

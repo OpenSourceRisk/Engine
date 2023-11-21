@@ -148,6 +148,12 @@ public:
     //! Give back a set containing the ProductClass values optionally excluding 'All'
     static std::set<ProductClass> productClasses(bool includeAll = false);
 
+    //! For a given risk class, return the corresponding risk types
+    static std::pair<RiskType, RiskType> riskClassToRiskType(const RiskClass& rc);
+
+    //! For a given rirsk type, return the corresponding risk class
+    static RiskClass riskTypeToRiskClass(const RiskType& rt);
+
     //! Define ordering for ProductClass according to a waterfall:
     // Empty < RatesFX < Equity < Commodity < Credit
     // All is unhandled
@@ -287,6 +293,8 @@ public:
                                        const RiskType& secondRt, const std::string& secondQualifier,
                                        const std::string& secondLabel_1, const std::string& secondLabel_2,
                                        const std::string& calculationCurrency = "") const = 0;
+
+    virtual bool isSimmConfigCalibration() const { return false; }
 
 protected:
     //! Number of risk classes including RiskClass::All
