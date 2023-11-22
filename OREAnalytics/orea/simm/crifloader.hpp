@@ -44,8 +44,7 @@ public:
         This is the default. To override this the flag \p keepTradeId may be set to true.
     */
     CrifLoader(const boost::shared_ptr<SimmConfiguration>& configuration,
-               std::map<QuantLib::Size, std::set<std::string>> additionalHeaders =
-                   std::map<QuantLib::Size, std::set<std::string>>(),
+               const std::vector<std::set<std::string>>& additionalHeaders = {},
                bool updateMapper = false, bool aggregateTrades = true)
         : configuration_(configuration), additionalHeaders_(additionalHeaders), updateMapper_(updateMapper),
           aggregateTrades_(aggregateTrades) {}
@@ -74,7 +73,7 @@ protected:
     boost::shared_ptr<SimmConfiguration> configuration_;
 
     //! Defines accepted column headers, beyond required and optional headers, see crifloader.cpp
-    std::map<QuantLib::Size, std::set<std::string>> additionalHeaders_;
+    std::vector<std::set<std::string>> additionalHeaders_;
 
     /*! If true, the SIMM configuration's bucket mapper is updated during the
         CRIF loading with the mapping from SIMM qualifier to SIMM bucket. This is
@@ -96,12 +95,11 @@ protected:
 class StringStreamCrifLoader : public CrifLoader {
 public:
     StringStreamCrifLoader(const boost::shared_ptr<SimmConfiguration>& configuration,
-                           std::map<QuantLib::Size, std::set<std::string>> additionalHeaders =
-                               std::map<QuantLib::Size, std::set<std::string>>(),
-                           bool updateMapper = false, bool aggregateTrades = true, char eol = '\n', char delim = '\t',
-                           char quoteChar = '\0', char escapeChar = '\\')
+                           const std::vector<std::set<std::string>>& additionalHeaders = {}, bool updateMapper = false,
+                           bool aggregateTrades = true, char eol = '\n', char delim = '\t', char quoteChar = '\0',
+                           char escapeChar = '\\')
         : CrifLoader(configuration, additionalHeaders, updateMapper, aggregateTrades), eol_(eol), delim_(delim),
-          quoteChar_(quoteChar), escapeChar_(escapeChar) {}
+          quoteChar_(quoteChar), escapeChar_(escapeChar);
 
     boost::shared_ptr<Crif> loadCrif() override { return loadFromStream(stream()); }
 
@@ -115,6 +113,9 @@ protected:
         trade ID in the CRIF file e.g. n. The map entry would be [0, n]
     */
     std::map<QuantLib::Size, QuantLib::Size> columnIndex_;
+
+
+    std::map<QuantLib::Size, std::set<std::string>> additionalHeadersIndexMap_;
 
     //! Process the elements of a header line of a CRIF file
     void processHeader(const std::vector<std::string>& headers);
@@ -132,8 +133,7 @@ protected:
 class CsvFileCrifLoader : public StringStreamCrifLoader {
 public:
     CsvFileCrifLoader(const std::string& filename, const boost::shared_ptr<SimmConfiguration>& configuration,
-                      std::map<QuantLib::Size, std::set<std::string>> additionalHeaders =
-                          std::map<QuantLib::Size, std::set<std::string>>(),
+                      const std::vector<std::set<std::string>>& additionalHeaders = {},
                       bool updateMapper = false, bool aggregateTrades = true, char eol = '\n', char delim = '\t',
                       char quoteChar = '\0', char escapeChar = '\\')
         : StringStreamCrifLoader(configuration, additionalHeaders, updateMapper, aggregateTrades, eol, delim, quoteChar,
@@ -148,8 +148,7 @@ protected:
 class CsvBufferCrifLoader : public StringStreamCrifLoader {
 public:
     CsvBufferCrifLoader(const std::string& buffer, const boost::shared_ptr<SimmConfiguration>& configuration,
-                        std::map<QuantLib::Size, std::set<std::string>> additionalHeaders =
-                            std::map<QuantLib::Size, std::set<std::string>>(),
+                        const std::vector<std::set<std::string>>& additionalHeaders = {},
                         bool updateMapper = false, bool aggregateTrades = true, char eol = '\n', char delim = '\t',
                         char quoteChar = '\0', char escapeChar = '\\')
         : StringStreamCrifLoader(configuration, additionalHeaders, updateMapper, aggregateTrades, eol, delim, quoteChar,

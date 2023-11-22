@@ -22,11 +22,16 @@
 
 #pragma once
 
+#include <boost/range/adaptor/filtered.hpp>
 #include <orea/simm/crifrecord.hpp>
 #include <ored/report/report.hpp>
 
 namespace ore {
 namespace analytics {
+
+struct crifRecordIsSimmParameter {
+    bool operator()(const CrifRecord& x) { return x.isSimmParameter(); }
+};
 
 class Crif {
 public:
@@ -41,6 +46,9 @@ public:
     std::set<CrifRecord>::const_iterator begin() { return records_.cbegin(); }
     std::set<CrifRecord>::const_iterator end() { return records_.cend(); }
 
+    bool empty() const { return records_.empty(); }
+
+    const bool hasCrifRecords() const { return !empty(); }
     //! Simm methods
     //! Give back the set of portfolio IDs that have been loaded
     
@@ -48,8 +56,14 @@ public:
     const std::set<ore::data::NettingSetDetails>& nettingSetDetails() const;
 
     const std::set<CrifRecord>& simmParameters() const { return simmParameters_; }
-    bool hasSimmParameters() const { return !simmParameters_.empty(); }
-    void setSimmParameters(std::set<CrifRecord>& parameter) { simmParameters_ = parameter; }
+
+    bool hasSimmParameters() const {
+        return !simmParameters_.empty();
+    }
+    
+    void setSimmParameters(const std::set<CrifRecord>& parameters) { 
+        simmParameters_ = parameters;
+    }
 
     Crif includingSimmParameters() const {
         Crif simmParam;
@@ -69,6 +83,14 @@ public:
     Crif aggregate() const;
 
 private:
+    void insertCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false);
+    void addFrtbCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false);
+    void addSimmCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false);
+    void addSimmParameterRecord(const CrifRecord& record);
+    void updateAmountExistingRecord(std::set<CrifRecord>::iterator& it, const CrifRecord& record);
+
+
+    CrifType type_ = CrifType::Empty;
     std::set<CrifRecord> records_;
     std::set<CrifRecord> simmParameters_;
 
