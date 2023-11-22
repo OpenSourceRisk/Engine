@@ -142,7 +142,8 @@ void FxDigitalBarrierOption::build(const boost::shared_ptr<EngineFactory>& engin
     // 2) add fee payment as additional trade leg for cash flow reporting
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, 1.0, option_.premiumData(), -bsInd,
+    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers,
+                                       positionType == Position::Long ? 1.0 : -1.0, option_.premiumData(), -bsInd,
                                        soldCcy, engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
 
     Settlement::Type settleType = parseSettlementType(option_.settlement());
