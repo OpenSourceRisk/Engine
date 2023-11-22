@@ -31,9 +31,38 @@
 namespace ore {
 namespace analytics {
 
-void Crif::addRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false) {
+void Crif::addRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies) {
+    if (record.type() == CrifRecord::RecordType::FRTB) {
+        addFrtbCrifRecord(record, aggregateDifferentAmountCurrencies);
+    } else if (record.type() == CrifRecord::RecordType::SIMM && !record.isSimmParameter()) {
+        addSimmCrifRecord(record, aggregateDifferentAmountCurrencies);
+    } else {
+        addSimmParameterRecord(record);
+    }
+}
+
+void Crif::addFrtbCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies) {
+    QL_REQUIRE(type_ == CrifType::Empty || type_ == CrifType::Frtb,
+                   "Can not add a FRTB crif record to a SIMM Crif");
+    if (type_ == CrifType::Empty) {
+        type_ = CrifType::Frtb;
+    }
+    insertCrifRecord(record, aggregateDifferentAmountCurrencies);
+}
+
+void Crif::addSimmCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies) {
+    QL_REQUIRE(type_ == CrifType::Empty || type_ == CrifType::Simm,
+                   "Can not add a Simm crif record to a Frtb Crif");
+    if (type_ == CrifType::Empty) {
+        type_ = CrifType::Simm;
+    }
+    insertCrifRecord(record, aggregateDifferentAmountCurrencies);
+}
+
+void Crif::insertCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies) {
+
     auto it = records_.find(record);
-    if (!record.isSimmParameter() && aggregateDifferentAmountCurrencies) {
+    if (aggregateDifferentAmountCurrencies) {
         it = std::find_if(records_.begin(), records_.end(),
                           [&record](const auto& x) { return CrifRecord::amountCcyEQCompare(x, record); });
     }
@@ -41,6 +70,17 @@ void Crif::addRecord(const CrifRecord& record, bool aggregateDifferentAmountCurr
         records_.insert(record);
         portfolioIds_.insert(record.portfolioId);
         nettingSetDetails_.insert(record.nettingSetDetails);
+    } else {
+        updateAmountExistingRecord(it, record);
+    }
+}
+
+void Crif::addSimmParameterRecord(const CrifRecord& record) {
+    auto it = simmParameters_.find(record);
+    if (it == simmParameters_.end()) {
+        simmParameters_.insert(record);
+    } else if (it->riskType == CrifRecord::RiskType::AddOnFixedAmount) {
+        updateAmountExistingRecord(it, record);
     } else if (it->riskType == CrifRecord::RiskType::AddOnNotionalFactor &&
                it->riskType == CrifRecord::RiskType::ProductClassMultiplier) {
         // Only log warning if the values are not the same. If they are, then there is no material discrepancy.
@@ -51,9 +91,11 @@ void Crif::addRecord(const CrifRecord& record, bool aggregateDifferentAmountCurr
                             "'Unspecified' regulation.";
             ore::analytics::StructuredAnalyticsWarningMessage("SIMM", "Aggregating SIMM parameters", errMsg).log();
         }
-    } else {
+    }
+}
 
-        bool updated = false;
+void Crif::updateAmountExistingRecord(std::set<CrifRecord>::iterator& it, const CrifRecord& record) {
+    bool updated = false;
         if (record.hasAmountUsd()) {
             it->amountUsd += record.amountUsd;
             updated = true;
@@ -67,17 +109,17 @@ void Crif::addRecord(const CrifRecord& record, bool aggregateDifferentAmountCurr
             updated = true;
         }
         if (updated)
-            DLOG("Updated net CRIF records: " << cr);
-    }
+            DLOG("Updated net CRIF records: " << cr)
 }
 
-
 void Crif::addRecords(const Crif& crif, bool aggregateDifferentAmountCurrencies = false) {
-    for (const auto& r : crif) {
+    for (const auto& r : crif.records_) {
+        addRecord(r, aggregateDifferentAmountCurrencies);
+    }
+    for (const auto& r : crif.simmParameters_) {
         addRecord(r, aggregateDifferentAmountCurrencies);
     }
 }
-
 
 Crif Crif::aggregate() const {
     Crif result;
@@ -108,14 +150,5 @@ bool Crif::hasNettingSetDetails() const {
     return hasNettingSetDetails;
 }
 
-void writeCrifReport(const boost::shared_ptr<Crif>& crif, ore::data::Report& crifReport,
-                     const bool writeUseCounterpartyTrade = false, const bool applyThreshold = true) const;
-
-//! Initialise the CRIF report headers
-void writeCrifReportHeaders(ore::data::Report& report, bool writeUseCounterpartyTrade) const;
-
-//! Write a CRIF record to the report
-void writeCrifRecord(const CrifPlusRecord& crifRecord, ore::data::Report& report, bool writeUseCounterpartyTrade,
-                     const bool applyThreshold = true);
 } // namespace analytics
 } // namespace ore

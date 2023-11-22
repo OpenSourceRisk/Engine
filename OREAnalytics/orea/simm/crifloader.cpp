@@ -26,6 +26,9 @@
 
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
+#include <boost/range/adaptor/map.hpp>
+#include <boost/range/adaptor/indexed.hpp>
+#include <boost/range/algorithm/max_element.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -75,7 +78,14 @@ map<Size, set<string>> CrifLoader::optionalHeaders = {
     {16, {"immodel", "im_model"}},
     {17, {"post_regulations"}},
     {18, {"collect_regulations"}},
-    {19, {"end_date"}}};
+    {19, {"end_date"}},
+    {20, {"label_3"}},
+    {21, {"creditquality"}},
+    {22, {"longshortind"}},
+    {23, {"coveredbonind"}},
+    {24, {"tranchethickness"}},
+    {25, {"bb_rw"}}};
+
 
 // Ease syntax
 using RiskType = CrifRecord::RiskType;
@@ -179,6 +189,25 @@ void CrifLoader::updateMapping(const CrifRecord& cr) const {
         }
     }
 }
+
+StringStreamCrifLoader::StringStreamCrifLoader(const boost::shared_ptr<SimmConfiguration>& configuration,
+    const std::vector<std::set<std::string>>& additionalHeaders, bool updateMapper,
+    bool aggregateTrades, char eol, char delim, char quoteChar, char escapeChar)
+    : CrifLoader(configuration, additionalHeaders, updateMapper, aggregateTrades), eol_(eol), delim_(delim),
+    quoteChar_(quoteChar), escapeChar_(escapeChar) {
+    
+    size_t maxIndexRequired = *boost::max_element(requiredHeaders | boost::adaptors::map_keys);
+    size_t maxIndexOptional = *boost::max_element(optionalHeaders | boost::adaptors::map_keys);
+    size_t maxIndex = std::max(maxIndexRequired, maxIndexOptional);
+
+    size_t i = 1;
+    for (const auto& addHeader : additionalHeaders_) {
+        additionalHeadersIndexMap_[maxIndex + i] = addHeader;
+        i++;
+    }
+
+}
+
 
 std::stringstream CsvFileCrifLoader::stream() const {
     // Try to open the file
@@ -290,13 +319,13 @@ void StringStreamCrifLoader::processHeader(const vector<string>& headers) {
                 columnIndex_[kv.first] = i;
             }
         }
-    }
+    }    
 
-    for (const auto& kv : additionalHeaders_) {
-        for (Size i = 0; i < headers.size(); ++i) {
-            header = boost::to_lower_copy(headers[i]);
+    for (const auto& kv: additionalHeadersIndexMap_) {
+        for (Size columnPos = 0; columnPos < headers.size(); ++columnPos) {
+            header = boost::to_lower_copy(headers[columnPos]);
             if (kv.second.count(header) > 0) {
-                columnIndex_[kv.first] = i;
+                columnIndex_[kv.first] = columnPos;
             }
         }
     }
@@ -415,7 +444,7 @@ bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxInde
         }
 
         // Store additional data that matches the defined additional headers in the additional fields map
-        for (auto& additionalField : additionalHeaders_) {
+        for (auto& additionalField : additionalHeadersIndexMap_) {
             std::string value = loadOptionalString(additionalField.first);
             if (!value.empty())
                 cr.additionalFields[*additionalField.second.begin()] = value;
