@@ -68,7 +68,6 @@ private:
     void populateConstants(std::vector<RandomVariable>& values) const;
     void populateModelParameters(std::vector<RandomVariable>& values,
                                  const std::vector<std::pair<std::size_t, double>>& modelParameters) const;
-    void runFullForwardEvaluation(std::vector<RandomVariable>& values, std::vector<bool>& keepNodes) const;
 
     // input parameters
     Size nThreads_;

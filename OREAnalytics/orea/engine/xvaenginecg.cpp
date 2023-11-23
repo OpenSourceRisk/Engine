@@ -111,7 +111,6 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
         std::string(), SalvagingAlgorithm::Spectral, "xva engine cg - cam builder");
 
     // Set up gaussian cam cg model
-    // This constitues part A of the computation graph 0 ... lastModelNode
 
     DLOG("XvaEngineCG: build cam cg model");
 
@@ -143,21 +142,10 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
                                                curves, fxSpots, irIndices, infIndices, indices, indexCurrencies,
                                                simulationDates, timeStepsPerYear, iborFallbackConfig,
                                                std::vector<Size>(), std::vector<std::string>(), true);
-    model_->calculate(); // trigger model build
-
-    auto g = model_->computationGraph();
-    Size lastModelNode = g->size();
-
-    DLOG("XvaEngineCG: Built computation graph part A (model), size is now " << g->size());
-
+    model_->calculate();
     boost::timer::nanosecond_type timing3 = timer.elapsed().wall;
 
     // Build trades against global cg cam model
-    // This constitutes part B of the computation graph, B = Union of Bi where
-    // lastModelNode       ... trade 1 range end = B1
-    // trade 2 range start ... trade 2 range end = B2
-    // ...
-    // trade m range start ... trade n range end = Bm
 
     DLOG("XvaEngineCG: build trades against global cam cg model");
 
@@ -179,17 +167,13 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     boost::timer::nanosecond_type timing4 = timer.elapsed().wall;
 
     // Build computation graph for all trades ("part B") and
-    // - store npv, amc npv nodes,
-    // - node range for each trade
-    // - predecessors in part A on which trades depend
+    // - store npv, amc npv nodes
 
     DLOG("XvaEngineCG: build computation graph for all trades");
 
-    std::map<std::string, std::vector<std::size_t>> amcNpvNodes; // includes time zero npv
-    std::map<std::string, std::pair<std::size_t, std::size_t>> tradeNodeRanges;
+    std::vector<std::vector<std::size_t>> amcNpvNodes; // includes time zero npv
 
-    std::set<std::size_t> tradeModelDependencies;
-    g->recordPredecessors(&tradeModelDependencies);
+    auto g = model_->computationGraph();
 
     for (auto const& [id, trade] : portfolio_->trades()) {
         auto qlInstr = boost::dynamic_pointer_cast<ScriptedInstrument>(trade->instrument()->qlInstrument());
@@ -197,28 +181,16 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
         auto engine = boost::dynamic_pointer_cast<ScriptedInstrumentPricingEngineCG>(qlInstr->pricingEngine());
         QL_REQUIRE(engine, "XvaEngineCG: expected to get ScriptedInstrumentPricingEngineCG, trade '"
                                << id << "' has a different engine.");
-        g->setPrefix(id + "_");
-        std::size_t firstNode = g->size();
+        g->startRedBlock();
         engine->buildComputationGraph();
-        std::size_t lastNode = g->size();
-        tradeNodeRanges[id] = std::make_pair(firstNode, lastNode);
         std::vector<std::size_t> tmp;
-        tmp.push_back(g->variable(engine->npvName() + "_0"));
+        tmp.push_back(cg_add(*g, cg_const(*g, 0.0), g->variable(engine->npvName() + "_0")));
         for (std::size_t i = 0; i < simulationDates.size(); ++i) {
-            tmp.push_back(g->variable("_AMC_NPV_" + std::to_string(i)));
+            tmp.push_back(cg_add(*g, cg_const(*g, 0.0), g->variable("_AMC_NPV_" + std::to_string(i))));
         }
-        amcNpvNodes[id] = tmp;
-        DLOG("XvaEngineCG: node range for trade " << id << ": " << firstNode << " ... " << lastNode);
+        amcNpvNodes.push_back(tmp);
+        g->endRedBlock();
     }
-
-    g->recordPredecessors();
-
-    // remove dependencies which are not in A
-    tradeModelDependencies.erase(
-        std::lower_bound(tradeModelDependencies.begin(), tradeModelDependencies.end(), lastModelNode),
-        tradeModelDependencies.end());
-
-    std::size_t lastTradeNode = g->size();
 
     boost::timer::nanosecond_type timing5 = timer.elapsed().wall;
 
@@ -230,7 +202,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     std::vector<std::size_t> pfPathExposureNodes, pfExposureNodes;
     for (Size i = 0; i < simulationDates.size() + 1; ++i) {
         std::size_t sumNode = cg_const(*g, 0.0);
-        for (auto const& [_, v] : amcNpvNodes) {
+        for (auto const& v : amcNpvNodes) {
             sumNode = cg_add(*g, sumNode, v[i]);
         }
         pfPathExposureNodes.push_back(sumNode);
@@ -238,11 +210,6 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
             model_->npv(sumNode, i == 0 ? model_->referenceDate() : *std::next(simulationDates.begin(), i - 1),
                         cg_const(*g, 1.0), boost::none, ComputationGraph::nan, ComputationGraph::nan));
     }
-
-    Size lastExposureNode = g->size();
-
-    DLOG("XvaEngineCG: added aggregation over trade expsosure nodes and conditional expectation, size is "
-         << g->size());
 
     boost::timer::nanosecond_type timing6 = timer.elapsed().wall;
 
@@ -258,6 +225,12 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     }
 
     boost::timer::nanosecond_type timing7 = timer.elapsed().wall;
+
+    DLOG("XvaEngineCG: graph building complete, size is " << g->size());
+    DLOG("XvaEngineCG: got " << g->redBlockDependencies().size() << " red block dependencies.");
+    for (auto const& r : g->redBlockRanges()) {
+        DLOG("XvaEngineCG: red block range " << r.first << " ... " << r.second);
+    }
 
     // Create values and derivatives containers
 
@@ -279,30 +252,18 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     // Do a forward evaluation, keep the following values nodes
     // - constants
     // - model parameters
-    // - all nodes in part A needed for derivatives and trade model dependencies
-    // - all nodes in part C needed for derivatives and pf exposure nodes
-    // - all nodes in part D needed for derivatives and cva node
+    // - values needed for derivatives (except in red blocks, by their definition)
+    // - red block dependencies
+    // - the random variates for bump sensis
+    // - the pfExposureNodes to dump out the epe profile
+
+    DLOG("XvaEngineCG: do forward evaluation");
 
     ops_ = getRandomVariableOps(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial);
     grads_ = getRandomVariableGradients(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial);
     opNodeRequirements_ = getRandomVariableOpNodeRequirements();
 
-    nodesA_ = std::vector<bool>(g->size(), false);
-    nodesB_ = std::vector<bool>(g->size(), false);
-    nodesC_ = std::vector<bool>(g->size(), false);
-    nodesD_ = std::vector<bool>(g->size(), false);
-    std::fill(nodesA_.begin(), std::next(nodesA_.begin(), lastModelNode), true);
-    std::fill(std::next(nodesB_.begin(), lastModelNode), std::next(nodesB_.begin(), lastTradeNode), true);
-    std::fill(std::next(nodesC_.begin(), lastTradeNode), std::next(nodesC_.begin(), lastExposureNode), true);
-    std::fill(std::next(nodesD_.begin(), lastExposureNode), nodesD_.end(), true);
-
     std::vector<bool> keepNodes(g->size(), false);
-
-    if (bumpCvaSensis) {
-        for (auto const& rv : model_->randomVariates())
-            for (auto const& v : rv)
-                keepNodes[v] = true;
-    }
 
     for (auto const& c : g->constants()) {
         keepNodes[c.second] = true;
@@ -312,17 +273,21 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
         keepNodes[n] = true;
     }
 
-    for (auto const& n : tradeModelDependencies) {
+    for(auto const n: g->redBlockDependencies()) {
         keepNodes[n] = true;
     }
 
-    for (auto const& n : pfExposureNodes) {
+    if (bumpCvaSensis) {
+        for (auto const& rv : model_->randomVariates())
+            for (auto const& v : rv)
+                keepNodes[v] = true;
+    }
+
+    for(auto const& n: pfExposureNodes) {
         keepNodes[n] = true;
     }
 
-    keepNodes[cvaNode] = true;
-
-    runFullForwardEvaluation(values, keepNodes);
+    forwardEvaluation(*g, values, ops_, RandomVariable::deleter, true, opNodeRequirements_, keepNodes);
 
     boost::timer::nanosecond_type timing10 = timer.elapsed().wall;
 
@@ -338,13 +303,11 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     // std::cout << std::flush;
 
     Real cva = expectation(values[cvaNode]).at(0);
-    DLOG("XvaEngineCG: Calcuated CVA = " << cva);
+    DLOG("XvaEngineCG: Calcuated CVA (node " << cvaNode << ") = " << cva);
 
-    // Do backward derivatives run from CVA node on pp graph D up to path exposure nodes in C
+    // Do backward derivatives run
 
     boost::timer::nanosecond_type timing11 = timer.elapsed().wall;
-    boost::timer::nanosecond_type timing12 = timer.elapsed().wall;
-    boost::timer::nanosecond_type timing13 = timer.elapsed().wall;
 
     std::vector<double> modelParamDerivatives(baseModelParams_.size());
 
@@ -355,70 +318,15 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
         derivatives[cvaNode] = RandomVariable(model_->size(), 1.0);
 
         std::vector<bool> keepNodesDerivatives(g->size(), false);
-        std::vector<bool> nodesDPlusExposure(nodesD_);
 
         for (auto const& [n, _] : baseModelParams_)
             keepNodesDerivatives[n] = true;
 
-        for (auto const& n : tradeModelDependencies)
-            keepNodesDerivatives[n] = true;
-
-        for (auto const& n : pfPathExposureNodes) {
-            keepNodesDerivatives[n] = true;
-            nodesDPlusExposure[n] = true;
-        }
-
-        for (auto const& n : pfExposureNodes) {
-            nodesDPlusExposure[n] = true;
-        }
-
         // full bwds run for validation ...
 
-        // derivatives[cvaNode] = RandomVariable(model_->size(), 1.0);
-        // backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodesDerivatives, {},
-        //                     RandomVariableOpCode::ConditionalExpectation,
-        //                     ops_[RandomVariableOpCode::ConditionalExpectation]);
-
-        // partial derivatives on PP
-
-        backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodesDerivatives,
-                            nodesDPlusExposure, RandomVariableOpCode::ConditionalExpectation,
+        backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodesDerivatives, ops_,
+                            opNodeRequirements_, keepNodes, RandomVariableOpCode::ConditionalExpectation,
                             ops_[RandomVariableOpCode::ConditionalExpectation]);
-
-        timing11 = timer.elapsed().wall;
-
-        // Roll back the derivatives for each trade, starting from the derivatives calc'ed in the previous step
-        // This requires a forward eval for each trade on its graph Bj
-
-        std::vector<bool> tradeActiveNodes(g->size(), false);
-        for (auto const& [id, trade] : portfolio_->trades()) {
-            auto range = tradeNodeRanges[id];
-
-            std::fill(tradeActiveNodes.begin(), tradeActiveNodes.end(), false);
-            std::fill(std::next(tradeActiveNodes.begin(), range.first),
-                      std::next(tradeActiveNodes.begin(), range.second), true);
-            forwardEvaluation(*g, values, ops_, RandomVariable::deleter, true, opNodeRequirements_, keepNodes,
-                              tradeActiveNodes);
-
-            for (auto const& n : tradeModelDependencies)
-                tradeActiveNodes[n] = true;
-            for (auto const& n : pfPathExposureNodes)
-                tradeActiveNodes[n] = true;
-            backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodesDerivatives,
-                                tradeActiveNodes, RandomVariableOpCode::ConditionalExpectation,
-                                ops_[RandomVariableOpCode::ConditionalExpectation]);
-
-            for (Size i = range.first; i < range.second; ++i) {
-                if (!keepNodes[i])
-                    RandomVariable::deleter(values[i]);
-            }
-        }
-
-        timing12 = timer.elapsed().wall;
-
-        // Roll back derivatives on model part A
-
-        backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodesDerivatives, nodesA_);
 
         // read model param derivatives
 
@@ -430,7 +338,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
         DLOG("XvaEngineCG: got " << modelParamDerivatives.size()
                                  << " model parameter derivatives from run backward derivatives");
 
-        timing13 = timer.elapsed().wall;
+        timing11 = timer.elapsed().wall;
 
         // Delete values and derivatives vectors, they are not needed from this point on
         // except we are doing a full revaluation!
@@ -485,7 +393,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
             // calcuate CVA sensi doing full recalc of CVA
 
             populateModelParameters(values, model_->modelParameters());
-            runFullForwardEvaluation(values, keepNodes);
+            forwardEvaluation(*g, values, ops_, RandomVariable::deleter, true, opNodeRequirements_, keepNodes);
             sensi = expectation(values[cvaNode]).at(0) - cva;
         }
 
@@ -494,7 +402,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
         resultCube->set(cva + sensi, 0, 0, sample, 0);
     }
 
-    boost::timer::nanosecond_type timing14 = timer.elapsed().wall;
+    boost::timer::nanosecond_type timing12 = timer.elapsed().wall;
 
     DLOG("XvaEngineCG: finished running " << resultCube->samples() << " sensi scenarios.");
 
@@ -524,10 +432,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     std::cout << "Const and Model params   : " << (timing9 - timing8) / 1E6 << " ms" << std::endl;
     std::cout << "Forward eval             : " << (timing10 - timing9) / 1E6 << " ms" << std::endl;
     std::cout << "Backward deriv D         : " << (timing11 - timing10) / 1E6 << " ms" << std::endl;
-    std::cout << "Forward Backward B       : " << (timing12 - timing11) / 1E6 << " ms" << std::endl;
-    std::cout << "Backward A               : " << (timing13 - timing12) / 1E6 << " ms" << std::endl;
-    std::cout << "Sensi Cube Gen           : " << (timing14 - timing13) / 1E6 << " ms" << std::endl;
-    std::cout << "total                    : " << timing14 / 1E6 << " ms" << std::endl;
+    std::cout << "Sensi Cube Gen           : " << (timing12 - timing11) / 1E6 << " ms" << std::endl;
+    std::cout << "total                    : " << timing12 / 1E6 << " ms" << std::endl;
 }
 
 void XvaEngineCG::populateRandomVariates(std::vector<RandomVariable>& values) const {
@@ -574,27 +480,6 @@ void XvaEngineCG::populateModelParameters(std::vector<RandomVariable>& values,
     }
 
     DLOG("XvaEngineCG: set " << modelParameters.size() << " model parameters.");
-}
-
-void XvaEngineCG::runFullForwardEvaluation(std::vector<RandomVariable>& values, std::vector<bool>& keepNodes) const {
-
-    DLOG("XvaEngineCG: run forward evaluation");
-
-    auto g = model_->computationGraph();
-
-    // part A
-    forwardEvaluation(*g, values, ops_, RandomVariable::deleter, true, opNodeRequirements_, keepNodes, nodesA_);
-
-    // part B
-    forwardEvaluation(*g, values, ops_, RandomVariable::deleter, false, opNodeRequirements_, keepNodes, nodesB_);
-
-    // part C
-    forwardEvaluation(*g, values, ops_, RandomVariable::deleter, true, opNodeRequirements_, keepNodes, nodesC_);
-
-    // part D
-    forwardEvaluation(*g, values, ops_, RandomVariable::deleter, true, opNodeRequirements_, keepNodes, nodesD_);
-
-    DLOG("XvaEngineCG: forward evaluation finished.");
 }
 
 } // namespace analytics
