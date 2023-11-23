@@ -27,6 +27,11 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <boost/range/algorithm_ext/erase.hpp>
+
+
+auto isSimmParameter = [](const ore::analytics::CrifRecord& x) { return x.isSimmParameter(); };
+auto isNotSimmParameter = std::not_fn(isSimmParameter);
 
 namespace ore {
 namespace analytics {
@@ -76,9 +81,9 @@ void Crif::insertCrifRecord(const CrifRecord& record, bool aggregateDifferentAmo
 }
 
 void Crif::addSimmParameterRecord(const CrifRecord& record) {
-    auto it = simmParameters_.find(record);
-    if (it == simmParameters_.end()) {
-        simmParameters_.insert(record);
+    auto it = records_.find(record);
+    if (it == records_.end()) {
+        records_.insert(record);
     } else if (it->riskType == CrifRecord::RiskType::AddOnFixedAmount) {
         updateAmountExistingRecord(it, record);
     } else if (it->riskType == CrifRecord::RiskType::AddOnNotionalFactor &&
@@ -116,13 +121,10 @@ void Crif::addRecords(const Crif& crif, bool aggregateDifferentAmountCurrencies 
     for (const auto& r : crif.records_) {
         addRecord(r, aggregateDifferentAmountCurrencies);
     }
-    for (const auto& r : crif.simmParameters_) {
-        addRecord(r, aggregateDifferentAmountCurrencies);
-    }
 }
 
-Crif Crif::aggregate() const {
-    Crif result;
+boost::shared_ptr<Crif> Crif::aggregate() const {
+    boost::shared_ptr<Crif> result = boost::make_shared<Crif>();
     for (auto cr : records_) {
         // We set the trade ID to an empty string because we are netting at portfolio level
         // The only exception here is schedule trades that are denoted by two rows,
@@ -130,11 +132,43 @@ Crif Crif::aggregate() const {
         if (cr.imModel != "Schedule") {
             cr.tradeId = "";
         }
-        result.addRecord(cr);
+        result->addRecord(cr);
     }
     return result;
 }
 
+
+const bool Crif::hasCrifRecords() const { 
+    auto it= std::find_if(records_.begin(), records_.end(), isNotSimmParameter);
+    return it != records_.end();
+}
+
+//! check if the Crif contains simmParameters
+const bool Crif::hasSimmParameter() const {
+    auto it= std::find_if(records_.begin(), records_.end(), isSimmParameter);
+    return it != records_.end();
+}
+
+    //! returns a Crif containing only simmParameter entries
+boost::shared_ptr<Crif> Crif::simmParameters() const {
+    auto results = boost::make_shared<Crif>();
+    for (const auto& record : records_) {
+        if (record.isSimmParameter()) {
+            results->addSimmParameterRecord(record);
+        }
+    }
+    return results;
+}
+    
+//! deletes all existing simmParameter and replaces them with the new one
+void Crif::setSimmParameters(const boost::shared_ptr<Crif>& crif) {
+    boost::range::remove_erase_if(records_, isSimmParameter);
+    for (const auto& r : *crif) {
+        if (r.isSimmParameter()) {
+            addSimmParameterRecord(r);
+        }
+    }
+}
 
 
 //! Give back the set of portfolio IDs that have been loaded
