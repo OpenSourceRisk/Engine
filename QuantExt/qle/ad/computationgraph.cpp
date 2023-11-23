@@ -33,6 +33,7 @@ void ComputationGraph::clear() {
     predecessors_.clear();
     opId_.clear();
     maxNodeRequiringArg_.clear();
+    redBlockId_.clear();
     isConstant_.clear();
     constantValue_.clear();
     constants_.clear();
@@ -48,6 +49,7 @@ std::size_t ComputationGraph::insert(const std::string& label) {
     predecessors_.push_back(std::vector<std::size_t>());
     opId_.push_back(0);
     maxNodeRequiringArg_.push_back(0);
+    redBlockId_.push_back(currentRedBlockId_);
     isConstant_.push_back(false);
     constantValue_.push_back(0.0);
     if (!label.empty())
@@ -64,12 +66,15 @@ std::size_t ComputationGraph::insert(const std::vector<std::size_t>& predecessor
         maxNodeRequiringArg_[p] = node;
     }
     maxNodeRequiringArg_.push_back(0);
+    redBlockId_.push_back(currentRedBlockId_);
+    for (auto const& p : predecessors) {
+        if (redBlockId(p) != currentRedBlockId_)
+            redBlockDependencies_.insert(p);
+    }
     isConstant_.push_back(false);
     constantValue_.push_back(0.0);
     if (!label.empty())
-        labels_[node].insert(prefix_ + label);
-    if (recordPredecessors_)
-        recordPredecessors_->insert(predecessors.begin(), predecessors.end());
+        labels_[node].insert(label);
     return node;
 }
 
@@ -91,6 +96,7 @@ std::size_t ComputationGraph::constant(const double x) {
         predecessors_.push_back(std::vector<std::size_t>());
         opId_.push_back(0);
         maxNodeRequiringArg_.push_back(0);
+        redBlockId_.push_back(currentRedBlockId_);
         isConstant_.push_back(true);
         constantValue_.push_back(x);
         labels_[node].insert(std::to_string(x));
@@ -101,25 +107,25 @@ std::size_t ComputationGraph::constant(const double x) {
 const std::map<double, std::size_t>& ComputationGraph::constants() const { return constants_; }
 
 std::size_t ComputationGraph::variable(const std::string& name, const VarDoesntExist v) {
-    auto c = variables_.find(prefix_ + name);
+    auto c = variables_.find(name);
     if (c != variables_.end())
         return c->second;
     else if (v == VarDoesntExist::Create) {
         std::size_t node = predecessors_.size();
-        variables_.insert(std::make_pair(prefix_ + name, node));
-        variableVersion_[prefix_ + name] = 0;
-        labels_[node].insert(prefix_ + name + "(v" + std::to_string(++variableVersion_[prefix_ + name]) +
-                             ")");
+        variables_.insert(std::make_pair(name, node));
+        variableVersion_[name] = 0;
+        labels_[node].insert(name + "(v" + std::to_string(++variableVersion_[name]) + ")");
         predecessors_.push_back(std::vector<std::size_t>());
         opId_.push_back(0);
         maxNodeRequiringArg_.push_back(0);
+        redBlockId_.push_back(currentRedBlockId_);
         isConstant_.push_back(false);
         constantValue_.push_back(0.0);
         return node;
     } else if (v == VarDoesntExist::Nan) {
         return nan;
     } else if (v == VarDoesntExist::Throw) {
-        QL_FAIL("ComputationGraph::variable(" << prefix_ + name << ") not found.");
+        QL_FAIL("ComputationGraph::variable(" << name << ") not found.");
     } else {
         QL_FAIL("ComputationGraph::variable(): internal error, VarDoesntExist enum '" << static_cast<int>(v)
                                                                                       << "' not covered.");
@@ -129,28 +135,45 @@ std::size_t ComputationGraph::variable(const std::string& name, const VarDoesntE
 const std::map<std::string, std::size_t>& ComputationGraph::variables() const { return variables_; }
 
 void ComputationGraph::setVariable(const std::string& name, const std::size_t node) {
-    auto v = variables_.find(prefix_ + name);
+    auto v = variables_.find(name);
     if (v != variables_.end()) {
         if (v->second != node) {
-            labels_[node].insert(prefix_ + name + "(v" + std::to_string(++variableVersion_[prefix_ + name]) + ")");
+            labels_[node].insert(name + "(v" + std::to_string(++variableVersion_[name]) + ")");
             v->second = node;
         }
     } else {
-        variableVersion_[prefix_ + name] = 0;
-        labels_[node].insert(prefix_ + name + "(v" + std::to_string(++variableVersion_[prefix_ + name]) + ")");
-        variables_[prefix_ + name] = node;
+        variableVersion_[name] = 0;
+        labels_[node].insert(name + "(v" + std::to_string(++variableVersion_[name]) + ")");
+        variables_[name] = node;
     }
 }
 
 const std::map<std::size_t, std::set<std::string>>& ComputationGraph::labels() const { return labels_; }
 
+void ComputationGraph::startRedBlock() {
+    currentRedBlockId_ = ++nextRedBlockId_;
+    if (!redBlockRange_.empty())
+        redBlockRange_.back().second = size() + 1;
+    redBlockRange_.push_back(std::make_pair(size(), nan));
+}
+
+void ComputationGraph::endRedBlock() {
+    QL_REQUIRE(currentRedBlockId_ > 0, "ComputationGraph::endRedBlock(): not in an active red block.");
+    currentRedBlockId_ = 0;
+    redBlockRange_.back().second = size() + 1;
+}
+
+const std::vector<std::pair<std::size_t, std::size_t>>& ComputationGraph::redBlockRanges() const {
+    return redBlockRange_;
+}
+
+const std::set<std::size_t>& ComputationGraph::redBlockDependencies() const { return redBlockDependencies_; }
+
+std::size_t ComputationGraph::redBlockId(const std::size_t node) const { return redBlockId_[node]; }
+
 bool ComputationGraph::isConstant(const std::size_t node) const { return isConstant_[node]; }
 
 double ComputationGraph::constantValue(const std::size_t node) const { return constantValue_[node]; }
-
-void ComputationGraph::setPrefix(const std::string& prefix) { prefix_ = prefix; }
-
-void ComputationGraph::recordPredecessors(std::set<std::size_t>* nodes) const { recordPredecessors_ = nodes; }
 
 std::size_t cg_const(ComputationGraph& g, const double value) { return g.constant(value); }
 
