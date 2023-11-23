@@ -43,44 +43,38 @@ public:
 
     void clear() { records_.clear(); }
 
-    std::set<CrifRecord>::const_iterator begin() { return records_.cbegin(); }
-    std::set<CrifRecord>::const_iterator end() { return records_.cend(); }
+    std::set<CrifRecord>::const_iterator begin() const { return records_.cbegin(); }
+    std::set<CrifRecord>::const_iterator end() const { return records_.cend(); }
 
+    //! 
     bool empty() const { return records_.empty(); }
 
-    const bool hasCrifRecords() const { return !empty(); }
+    //! check if there are crif records beside simmParameters
+    const bool hasCrifRecords() const;
+    
     //! Simm methods
     //! Give back the set of portfolio IDs that have been loaded
-    
     const std::set<std::string>& portfolioIds() const;
     const std::set<ore::data::NettingSetDetails>& nettingSetDetails() const;
 
-    const std::set<CrifRecord>& simmParameters() const { return simmParameters_; }
+    //! check if the Crif contains simmParameters
+    const bool hasSimmParameter() const;
 
-    bool hasSimmParameters() const {
-        return !simmParameters_.empty();
-    }
+    //! returns a Crif containing only simmParameter entries
+    boost::shared_ptr<Crif> simmParameters() const;
     
-    void setSimmParameters(const std::set<CrifRecord>& parameters) { 
-        simmParameters_ = parameters;
-    }
+    //! deletes all existing simmParameter and replaces them with the new one
+    void setSimmParameters(const boost::shared_ptr<Crif>& crif);
 
-    Crif includingSimmParameters() const {
-        Crif simmParam;
-        simmParam.addRecords(*this);
-        for (const auto& r : simmParameters_) {
-            simmParam.addRecord(r);
-        }
-        return simmParam;
-    }
     //! For each CRIF record checks if amountCurrency and amount are 
     //! defined and uses these to populate the record's amountUsd
     void fillAmountUsd(const boost::shared_ptr<ore::data::Market> market);
+    
     //! Check if netting set details are used anywhere, instead of just the netting set ID
     bool hasNettingSetDetails() const;
 
     //! Aggregate all existing records
-    Crif aggregate() const;
+    boost::shared_ptr<Crif> aggregate() const;
 
 private:
     void insertCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false);
@@ -92,7 +86,6 @@ private:
 
     CrifType type_ = CrifType::Empty;
     std::set<CrifRecord> records_;
-    std::set<CrifRecord> simmParameters_;
 
     //SIMM members
     //! Set of portfolio IDs that have been loaded
