@@ -31,21 +31,52 @@
 namespace QuantExt {
 
 template <class T>
-void backwardDerivatives(const ComputationGraph& g, const std::vector<T>& values, std::vector<T>& derivatives,
+void backwardDerivatives(const ComputationGraph& g, std::vector<T>& values, std::vector<T>& derivatives,
                          const std::vector<std::function<std::vector<T>(const std::vector<const T*>&, const T*)>>& grad,
                          std::function<void(T&)> deleter = {}, const std::vector<bool>& keepNodes = {},
-                         const std::vector<bool>& activeNodes = {}, const std::size_t conditionalExpectationOpId = 0,
+                         const std::vector<std::function<T(const std::vector<const T*>&)>>& fwdOps = {},
+                         const std::vector<std::function<std::pair<std::vector<bool>, bool>(const std::size_t)>>&
+                             fwdOpRequiresNodesForDerivatives = {},
+                         const std::vector<bool>& fwdKeepNodes = {}, const std::size_t conditionalExpectationOpId = 0,
                          const std::function<T(const std::vector<const T*>&)>& conditionalExpectation = {}) {
 
     if (g.size() == 0)
         return;
 
+    std::size_t redBlockId = 0;
+
     // loop over the nodes in the graph in reverse order
 
     for (std::size_t node = g.size() - 1; node > 0; --node) {
 
-        if (!activeNodes.empty() && !activeNodes[node])
-            continue;
+        if (g.redBlockId(node) != redBlockId) {
+
+            // delete the values in the previous red block
+
+            if (deleter && redBlockId > 0) {
+                auto range = g.redBlockRanges()[redBlockId - 1];
+                QL_REQUIRE(range.second != ComputationGraph::nan,
+                           "backwardDerivatives(): red block " << redBlockId << " was not closed.");
+                for (std::size_t n = range.first; n < range.second; ++n) {
+                    if (g.redBlockId(n) == redBlockId && !fwdKeepNodes[n])
+                        deleter(values[n]);
+                }
+            }
+
+            // populate the values in the current red block
+
+            if (g.redBlockId(node) > 0) {
+                auto range = g.redBlockRanges()[g.redBlockId(node) - 1];
+                QL_REQUIRE(range.second != ComputationGraph::nan,
+                           "backwardDerivatives(): red block " << g.redBlockId(node) << " was not closed.");
+                forwardEvaluation(g, values, fwdOps, deleter, true, fwdOpRequiresNodesForDerivatives, fwdKeepNodes,
+                                  range.first, range.second, true);
+            }
+
+            // update the red block id
+
+            redBlockId = g.redBlockId(node);
+        }
 
         if (!g.predecessors(node).empty()) {
 
@@ -57,28 +88,27 @@ void backwardDerivatives(const ComputationGraph& g, const std::vector<T>& values
             }
 
             QL_REQUIRE(derivatives[node].initialised(),
-                       "backwardDerivatives(): derivative at node " << node << " is not initialized.");
+                       "backwardDerivatives(): derivative at active node " << node << " is not initialized.");
 
             if (g.opId(node) == conditionalExpectationOpId && conditionalExpectation) {
 
                 // expected stochastic automatic differentiaion, Fries, 2017
                 args[0] = &derivatives[node];
-                if (activeNodes.empty() || activeNodes[g.predecessors(node)[0]])
-                    derivatives[g.predecessors(node)[0]] += conditionalExpectation(args);
+                derivatives[g.predecessors(node)[0]] += conditionalExpectation(args);
 
             } else {
 
                 auto gr = grad[g.opId(node)](args, &values[node]);
 
                 for (std::size_t p = 0; p < g.predecessors(node).size(); ++p) {
-                    if (!activeNodes.empty() && !activeNodes[g.predecessors(node)[p]])
-                        continue;
                     QL_REQUIRE(derivatives[g.predecessors(node)[p]].initialised(),
-                               "backwardDerivatives: derivative at node " << g.predecessors(node)[p]
-                                                                          << " is not initialized.");
-                    QL_REQUIRE(gr[p].initialised(), "backwardDerivatives: gradient at node "
-                                                        << node << " (opId " << g.opId(node)
-                                                        << ") not initialized at component " << p);
+                               "backwardDerivatives: derivative at node "
+                                   << g.predecessors(node)[p] << " not initialized, which is an active predecessor of "
+                                   << node);
+                    QL_REQUIRE(gr[p].initialised(),
+                               "backwardDerivatives: gradient at node "
+                                   << node << " (opId " << g.opId(node) << ") not initialized at component " << p
+                                   << " but required to push to predecessor " << g.predecessors(node)[p]);
                     derivatives[g.predecessors(node)[p]] += derivatives[node] * gr[p];
                 }
             }

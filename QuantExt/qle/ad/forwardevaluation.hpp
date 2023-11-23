@@ -34,19 +34,16 @@ void forwardEvaluation(const ComputationGraph& g, std::vector<T>& values,
                        std::function<void(T&)> deleter = {}, bool keepValuesForDerivatives = true,
                        const std::vector<std::function<std::pair<std::vector<bool>, bool>(const std::size_t)>>&
                            opRequiresNodesForDerivatives = {},
-                       const std::vector<bool>& keepNodes = {}, const std::vector<bool>& activeNodes = {}) {
+                       const std::vector<bool>& keepNodes = {}, const std::size_t startNode = 0,
+                       const std::size_t endNode = ComputationGraph::nan, const bool redBlockReconstruction = false) {
 
-    std::vector<bool> keepNodesInternal =
-        !keepNodes.empty()
-            ? keepNodes
-            : (deleter && keepValuesForDerivatives ? std::vector<bool>(g.size(), false) : std::vector<bool>());
+    std::vector<bool> keepNodesDerivatives;
+    if (deleter && keepValuesForDerivatives)
+        keepNodesDerivatives = std::vector<bool>(g.size(), false);
 
     // loop over the nodes in the graph in ascending order
 
-    for (std::size_t node = 0; node < g.size(); ++node) {
-
-        if (!activeNodes.empty() && !activeNodes[node])
-            continue;
+    for (std::size_t node = startNode; node < (endNode == ComputationGraph::nan ? g.size() : endNode); ++node) {
 
         // if a node is computed by an op applied to predecessors ...
 
@@ -59,8 +56,9 @@ void forwardEvaluation(const ComputationGraph& g, std::vector<T>& values,
                 args[arg] = &values[g.predecessors(node)[arg]];
             }
             values[node] = ops[g.opId(node)](args);
-            QL_REQUIRE(values[node].initialised(),
-                       "forwardEvaluation(): value at node " << node << " is not initialized.");
+
+            QL_REQUIRE(values[node].initialised(), "forwardEvaluation(): value at active node "
+                                                       << node << " is not initialized, opId = " << g.opId(node));
 
             // then check if we can delete the predecessors
 
@@ -68,16 +66,13 @@ void forwardEvaluation(const ComputationGraph& g, std::vector<T>& values,
                 for (std::size_t arg = 0; arg < g.predecessors(node).size(); ++arg) {
                     std::size_t p = g.predecessors(node)[arg];
 
-                    if (!activeNodes.empty() && !activeNodes[p])
-                        continue;
-
-                    if (keepValuesForDerivatives) {
+                    if (!keepNodesDerivatives.empty()) {
 
                         // is the node required to compute derivatives, then add it to the keep nodes vector
 
                         if (opRequiresNodesForDerivatives[g.opId(p)](args.size()).second ||
                             opRequiresNodesForDerivatives[g.opId(node)](args.size()).first[arg])
-                            keepNodesInternal[p] = true;
+                            keepNodesDerivatives[p] = true;
                     }
 
                     // is the node no longer needed for the forward evaluation?
@@ -87,7 +82,9 @@ void forwardEvaluation(const ComputationGraph& g, std::vector<T>& values,
 
                     // is the node marked as to be kept ?
 
-                    if (!keepNodesInternal.empty() && keepNodesInternal[p])
+                    if ((!keepNodes.empty() && keepNodes[p]) ||
+                        (!keepNodesDerivatives.empty() && keepNodesDerivatives[p] &&
+                         (g.redBlockId(p) == 0 || redBlockReconstruction)))
                         continue;
 
                     // apply the deleter
