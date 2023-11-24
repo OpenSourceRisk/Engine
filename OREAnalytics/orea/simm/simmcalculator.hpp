@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <orea/simm/crifrecord.hpp>
+#include <orea/simm/crif.hpp>
 #include <orea/simm/crifloader.hpp>
 #include <orea/simm/simmresults.hpp>
 #include <ored/marketdata/market.hpp>
@@ -45,7 +45,7 @@ public:
         give the FX spot rate between USD and the \p calculationCcy. This spot rate is
         interpreted as the number of USD per unit of \p calculationCcy.
     */
-    SimmCalculator(const SimmNetSensitivities& simmNetSensitivities,
+    SimmCalculator(const ore::analytics::Crif& crif,
                    const boost::shared_ptr<SimmConfiguration>& simmConfiguration,
                    const std::string& calculationCcy = "USD", const std::string& resultCcy = "",
                    const boost::shared_ptr<ore::data::Market> market = nullptr,
@@ -57,7 +57,7 @@ public:
                        std::map<SimmSide, std::set<NettingSetDetails>>());
 
     //! Calculates SIMM for a given regulation under a given netting set
-    const void calculateRegulationSimm(const SimmNetSensitivities& netRecords, const ore::data::NettingSetDetails& nsd,
+    const void calculateRegulationSimm(const ore::analytics::Crif& crif, const ore::data::NettingSetDetails& nsd,
                                        const string& regulation, const SimmSide& side);
 
     //! Return the winning regulation for each netting set
@@ -103,10 +103,10 @@ public:
 
 private:
     //! All the net sensitivities passed in for the calculation
-    SimmNetSensitivities simmNetSensitivities_;
+    ore::analytics::Crif crif_;
 
     //! Net sentivities at the regulation level within each netting set
-    std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::map<std::string, boost::shared_ptr<CrifLoader>>>> regSensitivities_;
+    std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::map<std::string, Crif>>> regSensitivities_;
 
     //! The SIMM configuration governing the calculation
     boost::shared_ptr<SimmConfiguration> simmConfiguration_;
@@ -155,38 +155,38 @@ private:
 
     //! Calculate the Interest Rate delta margin component for the given portfolio and product class
     std::pair<std::map<std::string, QuantLib::Real>, bool>
-    irDeltaMargin(const ore::data::NettingSetDetails& nettingSetDetails, const SimmConfiguration::ProductClass& pc,
-                  const SimmNetSensitivities& netRecords) const;
+    irDeltaMargin(const ore::data::NettingSetDetails& nettingSetDetails, const CrifRecord::ProductClass& pc,
+                  const ore::analytics::Crif& netRecords) const;
 
     //! Calculate the Interest Rate vega margin component for the given portfolio and product class
     std::pair<std::map<std::string, QuantLib::Real>, bool>
-    irVegaMargin(const ore::data::NettingSetDetails& nettingSetDetails, const SimmConfiguration::ProductClass& pc,
-                 const SimmNetSensitivities& netRecords) const;
+    irVegaMargin(const ore::data::NettingSetDetails& nettingSetDetails, const CrifRecord::ProductClass& pc,
+                 const ore::analytics::Crif& netRecords) const;
 
     //! Calculate the Interest Rate curvature margin component for the given portfolio and product class
     std::pair<std::map<std::string, QuantLib::Real>, bool>
-    irCurvatureMargin(const ore::data::NettingSetDetails& nettingSetDetails, const SimmConfiguration::ProductClass& pc,
-                      const SimmSide& side, const SimmNetSensitivities& netRecords) const;
+    irCurvatureMargin(const ore::data::NettingSetDetails& nettingSetDetails, const CrifRecord::ProductClass& pc,
+                      const SimmSide& side, const ore::analytics::Crif& netRecords) const;
 
     /*! Calculate the (delta or vega) margin component for the given portfolio, product class and risk type
         Used to calculate delta or vega or base correlation margin for all risk types except IR, IRVol
         (and by association, Inflation, XccyBasis and InflationVol)
     */
     std::pair<std::map<std::string, QuantLib::Real>, bool> margin(const ore::data::NettingSetDetails& nettingSetDetails,
-                                                                  const SimmConfiguration::ProductClass& pc,
-                                                                  const SimmConfiguration::RiskType& rt,
-                                                                  const SimmNetSensitivities& netRecords) const;
+                                                                  const CrifRecord::ProductClass& pc,
+                                                                  const CrifRecord::RiskType& rt,
+                                                                  const ore::analytics::Crif& netRecords) const;
 
     /*! Calculate the curvature margin component for the given portfolio, product class and risk type
         Used to calculate curvature margin for all risk types except IR
     */
     std::pair<std::map<std::string, QuantLib::Real>, bool>
-    curvatureMargin(const ore::data::NettingSetDetails& nettingSetDetails, const SimmConfiguration::ProductClass& pc,
-                    const SimmConfiguration::RiskType& rt, const SimmSide& side, const SimmNetSensitivities& netRecords,
+    curvatureMargin(const ore::data::NettingSetDetails& nettingSetDetails, const CrifRecord::ProductClass& pc,
+                    const CrifRecord::RiskType& rt, const SimmSide& side, const ore::analytics::Crif& netRecords,
                     bool rfLabels = true) const;
 
     //! Calculate the additional initial margin for the portfolio ID and regulation
-    void calcAddMargin(const SimmSide& side, const ore::data::NettingSetDetails& nsd, const string& regulation, const SimmNetSensitivities& netRecords);
+    void calcAddMargin(const SimmSide& side, const ore::data::NettingSetDetails& nsd, const string& regulation, const ore::analytics::Crif& netRecords);
 
     /*! Populate the results structure with the higher level results after the IMs have been
         calculated at the (product class, risk class, margin type) level for the given
@@ -205,17 +205,17 @@ private:
         \remark all additions to the results containers should happen in this method
     */
     void add(const ore::data::NettingSetDetails& nettingSetDetails, const string& regulation,
-             const SimmConfiguration::ProductClass& pc, const SimmConfiguration::RiskClass& rc,
+             const CrifRecord::ProductClass& pc, const SimmConfiguration::RiskClass& rc,
              const SimmConfiguration::MarginType& mt, const std::string& b, QuantLib::Real margin, SimmSide side,
              const bool overwrite = true);
 
     void add(const ore::data::NettingSetDetails& nettingSetDetails, const string& regulation,
-             const SimmConfiguration::ProductClass& pc, const SimmConfiguration::RiskClass& rc,
+             const CrifRecord::ProductClass& pc, const SimmConfiguration::RiskClass& rc,
              const SimmConfiguration::MarginType& mt, const std::map<std::string, QuantLib::Real>& margins, SimmSide side,
              const bool overwrite = true);
 
     //! Add CRIF record to the CRIF records container that correspondsd to the given regulation/s and portfolio ID
-    void addCrifRecord(const CrifRecord& crifRecord, const bool enforceIMRegulations);
+    void splitCrifByRegulationsAndPortfolios(const Crif& crif, const bool enforceIMRegulations);
 
     //! Give the \f$\lambda\f$ used in the curvature margin calculation
     QuantLib::Real lambda(QuantLib::Real theta) const;

@@ -28,6 +28,9 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
+#include <boost/range/adaptor/filtered.hpp>
+#include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/algorithm_ext.hpp>
 
 namespace ore {
 namespace analytics {
@@ -174,6 +177,19 @@ void Crif::setSimmParameters(const Crif& crif) {
 const std::set<std::string>& Crif::portfolioIds() const { return portfolioIds_; }
 const std::set<NettingSetDetails>& Crif::nettingSetDetails() const { return nettingSetDetails_; }
 
+std::set<CrifRecord::ProductClass> Crif::ProductClassesByNettingSetDetails(const NettingSetDetails nsd) const {
+    std::set<CrifRecord::ProductClass> keys;
+    for (const auto& record : records_) {
+        if (record.nettingSetDetails == nsd) {
+            keys.insert(record.productClass);
+        }
+    }
+    return keys;
+}
+
+
+
+
 bool Crif::hasNettingSetDetails() const {
     bool hasNettingSetDetails = false;
     for (const auto& nsd : nettingSetDetails_) {
@@ -182,6 +198,5 @@ bool Crif::hasNettingSetDetails() const {
     }
     return hasNettingSetDetails;
 }
-
 } // namespace analytics
 } // namespace ore

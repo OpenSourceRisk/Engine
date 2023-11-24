@@ -410,7 +410,7 @@ void InputParameters::setCrifFromFile(const std::string& fileName, char eol, cha
     bool updateMappings = true;
     bool aggregateTrades = false;
     auto crifLoader = CsvFileCrifLoader(fileName, configuration, CrifRecord::additionalHeaders, updateMappings, aggregateTrades, eol, delim, quoteChar, escapeChar);
-    inputSimmCrif_ = crifLoader.loadCrif();
+    crif_ = crifLoader.loadCrif();
 }
 
 void InputParameters::setCrifFromBuffer(const std::string& csvBuffer, char eol, char delim, char quoteChar, char escapeChar) {
@@ -419,7 +419,7 @@ void InputParameters::setCrifFromBuffer(const std::string& csvBuffer, char eol, 
     bool updateMappings = true;
     bool aggregateTrades = false;
     auto crifLoader = CsvBufferCrifLoader(csvBuffer, configuration, CrifRecord::additionalHeaders, updateMappings, aggregateTrades, eol, delim, quoteChar, escapeChar);
-    inputSimmCrif_ = crifLoader.loadCrif();
+    crif_ = crifLoader.loadCrif();
 }
 
 void InputParameters::setSimmNameMapper(const std::string& xml) {
