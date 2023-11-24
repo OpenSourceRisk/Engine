@@ -29,12 +29,11 @@
 #include <ored/utilities/to_string.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
 
+namespace ore {
+namespace analytics {
 
 auto isSimmParameter = [](const ore::analytics::CrifRecord& x) { return x.isSimmParameter(); };
 auto isNotSimmParameter = std::not_fn(isSimmParameter);
-
-namespace ore {
-namespace analytics {
 
 void Crif::addRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies) {
     if (record.type() == CrifRecord::RecordType::FRTB) {
@@ -114,7 +113,7 @@ void Crif::updateAmountExistingRecord(std::set<CrifRecord>::iterator& it, const 
             updated = true;
         }
         if (updated)
-            DLOG("Updated net CRIF records: " << cr)
+            DLOG("Updated net CRIF records: " << *it)
 }
 
 void Crif::addRecords(const Crif& crif, bool aggregateDifferentAmountCurrencies = false) {
@@ -123,8 +122,8 @@ void Crif::addRecords(const Crif& crif, bool aggregateDifferentAmountCurrencies 
     }
 }
 
-boost::shared_ptr<Crif> Crif::aggregate() const {
-    boost::shared_ptr<Crif> result = boost::make_shared<Crif>();
+Crif Crif::aggregate() const {
+    Crif result;
     for (auto cr : records_) {
         // We set the trade ID to an empty string because we are netting at portfolio level
         // The only exception here is schedule trades that are denoted by two rows,
@@ -132,7 +131,7 @@ boost::shared_ptr<Crif> Crif::aggregate() const {
         if (cr.imModel != "Schedule") {
             cr.tradeId = "";
         }
-        result->addRecord(cr);
+        result.addRecord(cr);
     }
     return result;
 }
@@ -150,20 +149,20 @@ const bool Crif::hasSimmParameter() const {
 }
 
     //! returns a Crif containing only simmParameter entries
-boost::shared_ptr<Crif> Crif::simmParameters() const {
-    auto results = boost::make_shared<Crif>();
+Crif Crif::simmParameters() const {
+    Crif results;
     for (const auto& record : records_) {
         if (record.isSimmParameter()) {
-            results->addSimmParameterRecord(record);
+            results.addSimmParameterRecord(record);
         }
     }
     return results;
 }
     
 //! deletes all existing simmParameter and replaces them with the new one
-void Crif::setSimmParameters(const boost::shared_ptr<Crif>& crif) {
+void Crif::setSimmParameters(const Crif& crif) {
     boost::range::remove_erase_if(records_, isSimmParameter);
-    for (const auto& r : *crif) {
+    for (const auto& r : crif) {
         if (r.isSimmParameter()) {
             addSimmParameterRecord(r);
         }

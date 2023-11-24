@@ -45,7 +45,7 @@ public:
 
     std::set<CrifRecord>::const_iterator begin() const { return records_.cbegin(); }
     std::set<CrifRecord>::const_iterator end() const { return records_.cend(); }
-
+    std::set<CrifRecord>::const_iterator find(const CrifRecord& r) const { return records_.find(r); }
     //! 
     bool empty() const { return records_.empty(); }
 
@@ -61,10 +61,10 @@ public:
     const bool hasSimmParameter() const;
 
     //! returns a Crif containing only simmParameter entries
-    boost::shared_ptr<Crif> simmParameters() const;
+    Crif simmParameters() const;
     
     //! deletes all existing simmParameter and replaces them with the new one
-    void setSimmParameters(const boost::shared_ptr<Crif>& crif);
+    void setSimmParameters(const Crif& crif);
 
     //! For each CRIF record checks if amountCurrency and amount are 
     //! defined and uses these to populate the record's amountUsd
@@ -74,7 +74,7 @@ public:
     bool hasNettingSetDetails() const;
 
     //! Aggregate all existing records
-    boost::shared_ptr<Crif> aggregate() const;
+    Crif aggregate() const;
 
 private:
     void insertCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false);
