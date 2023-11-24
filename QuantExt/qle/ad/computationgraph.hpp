@@ -57,6 +57,7 @@ public:
     const std::map<std::string, std::size_t>& variables() const;
     void setVariable(const std::string& name, const std::size_t node);
 
+    void enableLabels(const bool b = true);
     const std::map<std::size_t, std::set<std::string>>& labels() const;
 
     void startRedBlock();
@@ -78,6 +79,7 @@ private:
     std::map<std::string, std::size_t> variables_;
     std::map<std::string, std::size_t> variableVersion_;
 
+    bool enableLabels_ = false;
     std::map<std::size_t, std::set<std::string>> labels_;
 
     std::size_t currentRedBlockId_ = 0;
