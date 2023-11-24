@@ -54,13 +54,13 @@ public:
     /*! Destructor */
     virtual ~CrifLoader() {}
 
-    virtual boost::shared_ptr<Crif> loadCrif() = 0;
+    virtual Crif loadCrif() = 0;
 
     //! SIMM configuration getter
     const boost::shared_ptr<SimmConfiguration>& simmConfiguration() { return configuration_; }
 
 protected:
-    void addRecordToCrif(boost::shared_ptr<Crif>& crif, CrifRecord&& recordToAdd) const;
+    void addRecordToCrif(Crif& crif, CrifRecord&& recordToAdd) const;
 
     //! Check if the record is a valid Simm Crif Record
     void validateSimmRecord(const CrifRecord& cr) const;
@@ -99,13 +99,13 @@ public:
                            bool aggregateTrades = true, char eol = '\n', char delim = '\t', char quoteChar = '\0',
                            char escapeChar = '\\')
         : CrifLoader(configuration, additionalHeaders, updateMapper, aggregateTrades), eol_(eol), delim_(delim),
-          quoteChar_(quoteChar), escapeChar_(escapeChar);
+          quoteChar_(quoteChar), escapeChar_(escapeChar){};
 
-    boost::shared_ptr<Crif> loadCrif() override { return loadFromStream(stream()); }
+    Crif loadCrif() override { return loadFromStream(stream()); }
 
 protected:
     //! Core CRIF loader from generic istream
-    boost::shared_ptr<Crif> loadFromStream(std::stringstream& stream);
+    Crif loadFromStream(std::stringstream& stream);
 
     virtual std::stringstream stream() const = 0;
     /*! Internal map from known index of CRIF record member to file column
