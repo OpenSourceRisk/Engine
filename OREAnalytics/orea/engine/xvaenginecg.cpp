@@ -494,26 +494,26 @@ void XvaEngineCG::populateRandomVariates(std::vector<RandomVariable>& values) co
 
 void XvaEngineCG::populateConstants(std::vector<RandomVariable>& values) const {
 
-    CLOG("XvaEngineCG: populate constants");
+    DLOG("XvaEngineCG: populate constants");
 
     auto g = model_->computationGraph();
     for (auto const& c : g->constants()) {
         values[c.second] = RandomVariable(model_->size(), c.first);
     }
 
-    CLOG("XvaEngineCG: set " << g->constants().size() << " constants");
+    DLOG("XvaEngineCG: set " << g->constants().size() << " constants");
 }
 
 void XvaEngineCG::populateModelParameters(std::vector<RandomVariable>& values,
                                           const std::vector<std::pair<std::size_t, double>>& modelParameters) const {
 
-    CLOG("XvaEngineCG: populate model parameters");
+    DLOG("XvaEngineCG: populate model parameters");
 
     for (auto const& [n, v] : modelParameters) {
         values[n] = RandomVariable(model_->size(), v);
     }
 
-    CLOG("XvaEngineCG: set " << modelParameters.size() << " model parameters.");
+    DLOG("XvaEngineCG: set " << modelParameters.size() << " model parameters.");
 }
 
 } // namespace analytics
