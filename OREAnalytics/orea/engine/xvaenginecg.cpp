@@ -40,8 +40,8 @@ namespace ore {
 namespace analytics {
 
 namespace {
-Size theoreticalMemory(const std::vector<RandomVariable>& v) {
-    return std::accumulate(v.begin(), v.end(), 0, [](const Size n, const RandomVariable& r) {
+std::size_t theoreticalMemory(const std::vector<RandomVariable>& v) {
+    return std::accumulate(v.begin(), v.end(), 0, [](const std::size_t n, const RandomVariable& r) {
         return n + sizeof(double) * (r.initialised() && !r.deterministic() ? r.size() : 1);
     });
 }
@@ -257,7 +257,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     populateModelParameters(values, baseModelParams_);
     boost::timer::nanosecond_type timing9 = timer.elapsed().wall;
 
-    Size rvMemMax = theoreticalMemory(values) + theoreticalMemory(derivatives);
+    std::size_t rvMemMax = theoreticalMemory(values) + theoreticalMemory(derivatives);
 
     // Do a forward evaluation, keep the following values nodes
     // - constants
@@ -378,6 +378,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     model_->alwaysForwardNotifications();
 
+    Size activeScenarios = 0;
     for (Size sample = 0; sample < resultCube->samples(); ++sample) {
 
         // update sim market to next scenario
@@ -397,6 +398,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
         if (!model_->isCalculated()) {
 
             model_->calculate();
+            ++activeScenarios;
 
             if (!bumpCvaSensis) {
 
@@ -427,7 +429,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     boost::timer::nanosecond_type timing12 = timer.elapsed().wall;
 
-    LOG("XvaEngineCG: finished running " << resultCube->samples() << " sensi scenarios.");
+    LOG("XvaEngineCG: finished running " << resultCube->samples() << " sensi scenarios, thereof " << activeScenarios
+                                         << " active.");
 
     // write out sensi report
 
@@ -443,7 +446,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     LOG("XvaEngineCG: graph size               : " << g->size());
     LOG("XvaEngineCG: Peak mem usage           : " << ore::data::os::getPeakMemoryUsageBytes() / 1024 / 1024 << " MB");
-    LOG("XvaEngineCG: Peak theoretical rv mem  : " << rvMemMax / 1024 / 1024 << " MB");
+    LOG("XvaEngineCG: Peak theoretical rv mem  : " << static_cast<double>(rvMemMax) / 1024 / 1024 << " MB");
     LOG("XvaEngineCG: T0 market build          : " << std::fixed << std::setprecision(1) << timing1 / 1E6 << " ms");
     LOG("XvaEngineCG: Sim market build         : " << std::fixed << std::setprecision(1) << (timing2 - timing1) / 1E6
                                                    << " ms");
