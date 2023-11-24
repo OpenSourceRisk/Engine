@@ -264,7 +264,7 @@ struct CrifRecord {
                         cr2.label1, cr2.label2, cr2.collectRegulations, cr2.postRegulations);
     }
 
-    static std::map<QuantLib::Size, std::set<std::string>> additionalHeaders;
+    static std::vector<std::set<std::string>> additionalHeaders;
 
 };
 

@@ -91,13 +91,16 @@ map<Size, set<string>> CrifLoader::optionalHeaders = {
 using RiskType = CrifRecord::RiskType;
 using ProductClass = CrifRecord::ProductClass;
 
-void CrifLoader::addRecordToCrif(boost::shared_ptr<Crif>& crif, CrifRecord&& recordToAdd) const {
+void CrifLoader::addRecordToCrif(Crif& crif, CrifRecord&& recordToAdd) const {
     if (recordToAdd.type() == CrifRecord::RecordType::SIMM) {
         validateSimmRecord(recordToAdd);
         currencyOverrides(recordToAdd);
         updateMapping(recordToAdd);
     }
-    crif->addRecord(recordToAdd);
+    if (aggregateTrades_) {
+        recordToAdd.tradeId = "";
+    }
+    crif.addRecord(recordToAdd);
 }
 
 void CrifLoader::validateSimmRecord(const CrifRecord& cr) const {
@@ -226,7 +229,7 @@ std::stringstream CsvBufferCrifLoader::stream() const {
     return csvStream;
 }
 
- boost::shared_ptr<Crif> StringStreamCrifLoader::loadFromStream(std::stringstream& stream) {
+Crif StringStreamCrifLoader::loadFromStream(std::stringstream& stream) {
     string line;
     vector<string> entries;
     bool headerProcessed = false;
@@ -235,7 +238,7 @@ std::stringstream CsvBufferCrifLoader::stream() const {
     Size invalidLines = 0;
     Size maxIndex = 0;
     Size currentLine = 0;
-    boost::shared_ptr<Crif> result = boost::make_shared<Crif>();
+    Crif result;
     while (getline(stream, line, eol_)) {
 
         // Keep track of current line number for messages
