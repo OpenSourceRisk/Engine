@@ -39,6 +39,14 @@
 namespace ore {
 namespace analytics {
 
+namespace {
+Size theoreticalMemory(const std::vector<RandomVariable>& v) {
+    return std::accumulate(v.begin(), v.end(), 0, [](const Size n, const RandomVariable& r) {
+        return n + sizeof(double) * (r.initialised() && !r.deterministic() ? r.size() : 1);
+    });
+}
+} // namespace
+
 XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::shared_ptr<ore::data::Loader>& loader,
                          const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
                          const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
@@ -76,12 +84,12 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     // Start Engine
 
-    LOG("XvaEngineCG started");
+    LOG("XvaEngineCG: started");
     boost::timer::cpu_timer timer;
 
     // Build T0 market
 
-    DLOG("XvaEngineCG: build init market");
+    LOG("XvaEngineCG: build init market");
 
     initMarket_ = boost::make_shared<ore::data::TodaysMarket>(asof_, todaysMarketParams_, loader_, curveConfigs_,
                                                               continueOnError_, true, true, referenceData_, false,
@@ -91,7 +99,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     // Build sim market
 
-    DLOG("XvaEngineCG: build sim market");
+    LOG("XvaEngineCG: build sim market");
 
     // note: take "use spreaded term structures" from sensitivity config instead of hardcoding to true here?
     simMarket_ = boost::make_shared<ore::analytics::ScenarioSimMarket>(
@@ -102,7 +110,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     // Set up cam builder against sim market
 
-    DLOG("XvaEngineCG: build cam model builder");
+    LOG("XvaEngineCG: build cam model builder");
 
     // note: sim market has one config only, no in-ccy config to calibrate IR components
     camBuilder_ = boost::make_shared<CrossAssetModelBuilder>(
@@ -112,7 +120,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     // Set up gaussian cam cg model
 
-    DLOG("XvaEngineCG: build cam cg model");
+    LOG("XvaEngineCG: build cam cg model");
 
     QL_REQUIRE(
         crossAssetModelData_->discretization() == CrossAssetModel::Discretization::Euler,
@@ -147,7 +155,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     // Build trades against global cg cam model
 
-    DLOG("XvaEngineCG: build trades against global cam cg model");
+    LOG("XvaEngineCG: build trades against global cam cg model");
 
     auto edCopy = boost::make_shared<EngineData>(*engineData_);
     edCopy->globalParameters()["GenerateAdditionalResults"] = "false";
@@ -169,7 +177,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     // Build computation graph for all trades ("part B") and
     // - store npv, amc npv nodes
 
-    DLOG("XvaEngineCG: build computation graph for all trades");
+    LOG("XvaEngineCG: build computation graph for all trades");
 
     std::vector<std::vector<std::size_t>> amcNpvNodes; // includes time zero npv
 
@@ -226,8 +234,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     boost::timer::nanosecond_type timing7 = timer.elapsed().wall;
 
-    DLOG("XvaEngineCG: graph building complete, size is " << g->size());
-    DLOG("XvaEngineCG: got " << g->redBlockDependencies().size() << " red block dependencies.");
+    LOG("XvaEngineCG: graph building complete, size is " << g->size());
+    LOG("XvaEngineCG: got " << g->redBlockDependencies().size() << " red block dependencies.");
     for (auto const& r : g->redBlockRanges()) {
         DLOG("XvaEngineCG: red block range " << r.first << " ... " << r.second);
     }
@@ -249,6 +257,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     populateModelParameters(values, baseModelParams_);
     boost::timer::nanosecond_type timing9 = timer.elapsed().wall;
 
+    Size rvMemMax = theoreticalMemory(values) + theoreticalMemory(derivatives);
+
     // Do a forward evaluation, keep the following values nodes
     // - constants
     // - model parameters
@@ -257,7 +267,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     // - the random variates for bump sensis
     // - the pfExposureNodes to dump out the epe profile
 
-    DLOG("XvaEngineCG: do forward evaluation");
+    LOG("XvaEngineCG: do forward evaluation");
 
     ops_ = getRandomVariableOps(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial);
     grads_ = getRandomVariableGradients(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial);
@@ -273,7 +283,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
         keepNodes[n] = true;
     }
 
-    for(auto const n: g->redBlockDependencies()) {
+    for (auto const n : g->redBlockDependencies()) {
         keepNodes[n] = true;
     }
 
@@ -283,7 +293,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
                 keepNodes[v] = true;
     }
 
-    for(auto const& n: pfExposureNodes) {
+    for (auto const& n : pfExposureNodes) {
         keepNodes[n] = true;
     }
 
@@ -303,7 +313,9 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     // std::cout << std::flush;
 
     Real cva = expectation(values[cvaNode]).at(0);
-    DLOG("XvaEngineCG: Calcuated CVA (node " << cvaNode << ") = " << cva);
+    LOG("XvaEngineCG: Calcuated CVA (node " << cvaNode << ") = " << cva);
+
+    rvMemMax = std::max(rvMemMax, theoreticalMemory(values) + theoreticalMemory(derivatives));
 
     // Do backward derivatives run
 
@@ -313,7 +325,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     if (!bumpCvaSensis) {
 
-        DLOG("XvaEngineCG: run backward derivatives");
+        LOG("XvaEngineCG: run backward derivatives");
 
         derivatives[cvaNode] = RandomVariable(model_->size(), 1.0);
 
@@ -328,6 +340,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
                             opNodeRequirements_, keepNodes, RandomVariableOpCode::ConditionalExpectation,
                             ops_[RandomVariableOpCode::ConditionalExpectation]);
 
+        rvMemMax = std::max(rvMemMax, theoreticalMemory(values) + theoreticalMemory(derivatives));
+
         // read model param derivatives
 
         Size i = 0;
@@ -335,8 +349,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
             modelParamDerivatives[i++] = expectation(derivatives[n]).at(0);
         }
 
-        DLOG("XvaEngineCG: got " << modelParamDerivatives.size()
-                                 << " model parameter derivatives from run backward derivatives");
+        LOG("XvaEngineCG: got " << modelParamDerivatives.size()
+                                << " model parameter derivatives from run backward derivatives");
 
         timing11 = timer.elapsed().wall;
 
@@ -349,7 +363,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     // 13 generate sensitivity scenarios
 
-    DLOG("XvaEngineCG: running sensi scenarios");
+    LOG("XvaEngineCG: running sensi scenarios");
 
     sensiScenarioGenerator_ = boost::make_shared<SensitivityScenarioGenerator>(
         sensitivityData_, simMarket_->baseScenario(), simMarketData_, simMarket_,
@@ -361,6 +375,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     auto resultCube = boost::make_shared<DoublePrecisionSensiCube>(std::set<std::string>{"CVA"}, asof_,
                                                                    sensiScenarioGenerator_->samples());
     resultCube->setT0(cva, 0, 0);
+
+    model_->alwaysForwardNotifications();
 
     for (Size sample = 0; sample < resultCube->samples(); ++sample) {
 
@@ -376,25 +392,32 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
         Real sensi = 0.0;
 
-        if (!bumpCvaSensis) {
+        // calculate sensi if model was notified of a change
 
-            // calcuate CVA sensi using ad derivatives
+        if (!model_->isCalculated()) {
 
-            auto modelParameters = model_->modelParameters();
-            Size i = 0;
-            for (auto const& [n, v0] : baseModelParams_) {
-                Real v1 = modelParameters[i].second;
-                sensi += modelParamDerivatives[i] * (v1 - v0);
-                ++i;
+            model_->calculate();
+
+            if (!bumpCvaSensis) {
+
+                // calcuate CVA sensi using ad derivatives
+
+                auto modelParameters = model_->modelParameters();
+                Size i = 0;
+                for (auto const& [n, v0] : baseModelParams_) {
+                    Real v1 = modelParameters[i].second;
+                    sensi += modelParamDerivatives[i] * (v1 - v0);
+                    ++i;
+                }
+
+            } else {
+
+                // calcuate CVA sensi doing full recalc of CVA
+
+                populateModelParameters(values, model_->modelParameters());
+                forwardEvaluation(*g, values, ops_, RandomVariable::deleter, true, opNodeRequirements_, keepNodes);
+                sensi = expectation(values[cvaNode]).at(0) - cva;
             }
-
-        } else {
-
-            // calcuate CVA sensi doing full recalc of CVA
-
-            populateModelParameters(values, model_->modelParameters());
-            forwardEvaluation(*g, values, ops_, RandomVariable::deleter, true, opNodeRequirements_, keepNodes);
-            sensi = expectation(values[cvaNode]).at(0) - cva;
         }
 
         // set result in cube
@@ -404,7 +427,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     boost::timer::nanosecond_type timing12 = timer.elapsed().wall;
 
-    DLOG("XvaEngineCG: finished running " << resultCube->samples() << " sensi scenarios.");
+    LOG("XvaEngineCG: finished running " << resultCube->samples() << " sensi scenarios.");
 
     // write out sensi report
 
@@ -418,22 +441,33 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     // Output statistics
 
-    std::cout << "Computation graph size   : " << g->size() << std::endl;
-    std::cout << "Peak mem usage           : " << ore::data::os::getPeakMemoryUsageBytes() / 1024 / 1024 << " MB"
-              << std::endl;
-    std::cout << "T0 market build          : " << timing1 / 1E6 << " ms" << std::endl;
-    std::cout << "Sim market build         : " << (timing2 - timing1) / 1E6 << " ms" << std::endl;
-    std::cout << "Part A CG build          : " << (timing3 - timing2) / 1E6 << " ms" << std::endl;
-    std::cout << "Portfolio build          : " << (timing4 - timing3) / 1E6 << " ms" << std::endl;
-    std::cout << "Part B CG build          : " << (timing5 - timing4) / 1E6 << " ms" << std::endl;
-    std::cout << "Part C CG build          : " << (timing6 - timing5) / 1E6 << " ms" << std::endl;
-    std::cout << "Part D CG build          : " << (timing7 - timing6) / 1E6 << " ms" << std::endl;
-    std::cout << "RV gen                   : " << (timing8 - timing7) / 1E6 << " ms" << std::endl;
-    std::cout << "Const and Model params   : " << (timing9 - timing8) / 1E6 << " ms" << std::endl;
-    std::cout << "Forward eval             : " << (timing10 - timing9) / 1E6 << " ms" << std::endl;
-    std::cout << "Backward deriv D         : " << (timing11 - timing10) / 1E6 << " ms" << std::endl;
-    std::cout << "Sensi Cube Gen           : " << (timing12 - timing11) / 1E6 << " ms" << std::endl;
-    std::cout << "total                    : " << timing12 / 1E6 << " ms" << std::endl;
+    LOG("XvaEngineCG: graph size               : " << g->size());
+    LOG("XvaEngineCG: Peak mem usage           : " << ore::data::os::getPeakMemoryUsageBytes() / 1024 / 1024 << " MB");
+    LOG("XvaEngineCG: Peak theoretical rv mem  : " << rvMemMax / 1024 / 1024 << " MB");
+    LOG("XvaEngineCG: T0 market build          : " << std::fixed << std::setprecision(1) << timing1 / 1E6 << " ms");
+    LOG("XvaEngineCG: Sim market build         : " << std::fixed << std::setprecision(1) << (timing2 - timing1) / 1E6
+                                                   << " ms");
+    LOG("XvaEngineCG: Part A CG build          : " << std::fixed << std::setprecision(1) << (timing3 - timing2) / 1E6
+                                                   << " ms");
+    LOG("XvaEngineCG: Portfolio build          : " << std::fixed << std::setprecision(1) << (timing4 - timing3) / 1E6
+                                                   << " ms");
+    LOG("XvaEngineCG: Part B CG build          : " << std::fixed << std::setprecision(1) << (timing5 - timing4) / 1E6
+                                                   << " ms");
+    LOG("XvaEngineCG: Part C CG build          : " << std::fixed << std::setprecision(1) << (timing6 - timing5) / 1E6
+                                                   << " ms");
+    LOG("XvaEngineCG: Part D CG build          : " << std::fixed << std::setprecision(1) << (timing7 - timing6) / 1E6
+                                                   << " ms");
+    LOG("XvaEngineCG: RV gen                   : " << std::fixed << std::setprecision(1) << (timing8 - timing7) / 1E6
+                                                   << " ms");
+    LOG("XvaEngineCG: Const and Model params   : " << std::fixed << std::setprecision(1) << (timing9 - timing8) / 1E6
+                                                   << " ms");
+    LOG("XvaEngineCG: Forward eval             : " << std::fixed << std::setprecision(1) << (timing10 - timing9) / 1E6
+                                                   << " ms");
+    LOG("XvaEngineCG: Backward deriv D         : " << std::fixed << std::setprecision(1) << (timing11 - timing10) / 1E6
+                                                   << " ms");
+    LOG("XvaEngineCG: Sensi Cube Gen           : " << std::fixed << std::setprecision(1) << (timing12 - timing11) / 1E6
+                                                   << " ms");
+    LOG("XvaEngineCG: total                    : " << std::fixed << std::setprecision(1) << timing12 / 1E6 << " ms");
 }
 
 void XvaEngineCG::populateRandomVariates(std::vector<RandomVariable>& values) const {
@@ -460,26 +494,26 @@ void XvaEngineCG::populateRandomVariates(std::vector<RandomVariable>& values) co
 
 void XvaEngineCG::populateConstants(std::vector<RandomVariable>& values) const {
 
-    DLOG("XvaEngineCG: populate constants");
+    CLOG("XvaEngineCG: populate constants");
 
     auto g = model_->computationGraph();
     for (auto const& c : g->constants()) {
         values[c.second] = RandomVariable(model_->size(), c.first);
     }
 
-    DLOG("XvaEngineCG: set " << g->constants().size() << " constants");
+    CLOG("XvaEngineCG: set " << g->constants().size() << " constants");
 }
 
 void XvaEngineCG::populateModelParameters(std::vector<RandomVariable>& values,
                                           const std::vector<std::pair<std::size_t, double>>& modelParameters) const {
 
-    DLOG("XvaEngineCG: populate model parameters");
+    CLOG("XvaEngineCG: populate model parameters");
 
     for (auto const& [n, v] : modelParameters) {
         values[n] = RandomVariable(model_->size(), v);
     }
 
-    DLOG("XvaEngineCG: set " << modelParameters.size() << " model parameters.");
+    CLOG("XvaEngineCG: set " << modelParameters.size() << " model parameters.");
 }
 
 } // namespace analytics
