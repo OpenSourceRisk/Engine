@@ -22,27 +22,28 @@
 
 #pragma once
 
+#include <boost/filesystem/path.hpp>
+#include <orea/aggregation/creditsimulationparameters.hpp>
 #include <orea/app/parameters.hpp>
 #include <orea/cube/npvcube.hpp>
-#include <orea/aggregation/creditsimulationparameters.hpp>
+#include <orea/engine/sensitivitystream.hpp>
+#include <orea/scenario/scenariogenerator.hpp>
+#include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/stressscenariodata.hpp>
-#include <orea/scenario/scenariogenerator.hpp>
-#include <orea/scenario/scenariogeneratorbuilder.hpp>
-#include <orea/engine/sensitivitystream.hpp>
+#include <orea/simm/crif.hpp>
 #include <orea/simm/simmbasicnamemapper.hpp>
 #include <orea/simm/simmbucketmapper.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/iborfallbackconfig.hpp>
-#include <ored/model/crossassetmodeldata.hpp>
+#include <ored/marketdata/csvloader.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
+#include <ored/model/crossassetmodeldata.hpp>
 #include <ored/portfolio/nettingsetmanager.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/referencedata.hpp>
-#include <ored/marketdata/csvloader.hpp>
 #include <ored/utilities/csvfilereader.hpp>
-#include <boost/filesystem/path.hpp>
 
 namespace ore {
 namespace analytics {
@@ -526,7 +527,7 @@ public:
      * Getters for SIMM
      ******************/
     const std::string& simmVersion() { return simmVersion_; }
-    const boost::shared_ptr<ore::analytics::Crif>& inputSimmCrif() { return inputSimmCrif_; }
+    const ore::analytics::Crif& crif() { return crif_; }
     const boost::shared_ptr<ore::analytics::SimmBasicNameMapper>& simmNameMapper() { return simmNameMapper_; }
     const boost::shared_ptr<ore::analytics::SimmBucketMapper>& simmBucketMapper() { return simmBucketMapper_; }
     const std::string& simmCalculationCurrency() { return simmCalculationCurrency_; }
@@ -767,7 +768,7 @@ protected:
      * SIMM analytic
      ***************/
     std::string simmVersion_;
-    boost::shared_ptr<ore::analytics::Crif> inputSimmCrif_;
+    ore::analytics::Crif crif_;
     boost::shared_ptr<ore::analytics::SimmBasicNameMapper> simmNameMapper_;
     boost::shared_ptr<ore::analytics::SimmBucketMapper> simmBucketMapper_;
     std::string simmCalculationCurrency_ = "";

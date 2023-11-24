@@ -76,6 +76,18 @@ public:
     //! Aggregate all existing records
     Crif aggregate() const;
 
+    std::set<CrifRecord::ProductClass> ProductClassesByNettingSetDetails(const NettingSetDetails nsd) const;
+    std::set<std::string> qualifiersBy(const NettingSetDetails nsd, CrifRecord::ProductClass pc,
+                                       const CrifRecord::RiskType rt) const;
+
+    auto filterBy(const NettingSetDetails& nsd, const CrifRecord::ProductClass pc, const CrifRecord::RiskType rt,
+                  const std::string& qualifier) const {
+        return records_ | boost::adaptors::filtered([&nsd, &pc, &rt, &qualifier](const CrifRecord& record) {
+                   return record.nettingSetDetails == nsd && record.productClass == pc && record.riskType == rt &&
+                          record.qualifier == qualifier;
+               });
+    }
+
 private:
     void insertCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false);
     void addFrtbCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false);
