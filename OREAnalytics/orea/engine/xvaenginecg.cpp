@@ -40,10 +40,9 @@ namespace ore {
 namespace analytics {
 
 namespace {
-std::size_t theoreticalMemory(const std::vector<RandomVariable>& v) {
-    return std::accumulate(v.begin(), v.end(), 0, [](const std::size_t n, const RandomVariable& r) {
-        return n + sizeof(double) * (r.initialised() && !r.deterministic() ? r.size() : 1);
-    });
+std::size_t numberOfStochasticRvs(const std::vector<RandomVariable>& v) {
+    return std::count_if(v.begin(), v.end(),
+                         [](const RandomVariable& r) { return r.initialised() && !r.deterministic(); });
 }
 } // namespace
 
@@ -236,8 +235,10 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     LOG("XvaEngineCG: graph building complete, size is " << g->size());
     LOG("XvaEngineCG: got " << g->redBlockDependencies().size() << " red block dependencies.");
+    std::size_t sumRedNodes = 0;
     for (auto const& r : g->redBlockRanges()) {
         DLOG("XvaEngineCG: red block range " << r.first << " ... " << r.second);
+        sumRedNodes += r.second - r.first;
     }
 
     // Create values and derivatives containers
@@ -257,7 +258,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     populateModelParameters(values, baseModelParams_);
     boost::timer::nanosecond_type timing9 = timer.elapsed().wall;
 
-    std::size_t rvMemMax = theoreticalMemory(values) + theoreticalMemory(derivatives);
+    std::size_t rvMemMax = numberOfStochasticRvs(values) + numberOfStochasticRvs(derivatives);
 
     // Do a forward evaluation, keep the following values nodes
     // - constants
@@ -315,7 +316,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     Real cva = expectation(values[cvaNode]).at(0);
     LOG("XvaEngineCG: Calcuated CVA (node " << cvaNode << ") = " << cva);
 
-    rvMemMax = std::max(rvMemMax, theoreticalMemory(values) + theoreticalMemory(derivatives));
+    rvMemMax = std::max(rvMemMax, numberOfStochasticRvs(values) + numberOfStochasticRvs(derivatives));
 
     // Do backward derivatives run
 
@@ -340,7 +341,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
                             opNodeRequirements_, keepNodes, RandomVariableOpCode::ConditionalExpectation,
                             ops_[RandomVariableOpCode::ConditionalExpectation]);
 
-        rvMemMax = std::max(rvMemMax, theoreticalMemory(values) + theoreticalMemory(derivatives));
+        rvMemMax = std::max(rvMemMax, numberOfStochasticRvs(values) + numberOfStochasticRvs(derivatives));
 
         // read model param derivatives
 
@@ -445,8 +446,11 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     // Output statistics
 
     LOG("XvaEngineCG: graph size               : " << g->size());
+    LOG("XvaEngineCG: red nodes                : " << sumRedNodes);
+    LOG("XvaEngineCG: red node dependendices   : " << g->redBlockDependencies().size());
     LOG("XvaEngineCG: Peak mem usage           : " << ore::data::os::getPeakMemoryUsageBytes() / 1024 / 1024 << " MB");
-    LOG("XvaEngineCG: Peak theoretical rv mem  : " << static_cast<double>(rvMemMax) / 1024 / 1024 << " MB");
+    LOG("XvaEngineCG: Peak theoretical rv mem  : " << static_cast<double>(rvMemMax) / 1024 / 1024 * 8 * model_->size()
+                                                   << " MB");
     LOG("XvaEngineCG: T0 market build          : " << std::fixed << std::setprecision(1) << timing1 / 1E6 << " ms");
     LOG("XvaEngineCG: Sim market build         : " << std::fixed << std::setprecision(1) << (timing2 - timing1) / 1E6
                                                    << " ms");
