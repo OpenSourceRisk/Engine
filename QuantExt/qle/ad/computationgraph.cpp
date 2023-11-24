@@ -67,9 +67,12 @@ std::size_t ComputationGraph::insert(const std::vector<std::size_t>& predecessor
     }
     maxNodeRequiringArg_.push_back(0);
     redBlockId_.push_back(currentRedBlockId_);
-    for (auto const& p : predecessors) {
-        if (redBlockId(p) != currentRedBlockId_)
-            redBlockDependencies_.insert(p);
+    if (currentRedBlockId_ != 0) {
+        for (auto const& p : predecessors) {
+            if (redBlockId(p) != currentRedBlockId_) {
+                redBlockDependencies_.insert(p);
+            }
+        }
     }
     isConstant_.push_back(false);
     constantValue_.push_back(0.0);
@@ -159,14 +162,14 @@ const std::map<std::size_t, std::set<std::string>>& ComputationGraph::labels() c
 void ComputationGraph::startRedBlock() {
     currentRedBlockId_ = ++nextRedBlockId_;
     if (!redBlockRange_.empty())
-        redBlockRange_.back().second = size() + 1;
+        redBlockRange_.back().second = size();
     redBlockRange_.push_back(std::make_pair(size(), nan));
 }
 
 void ComputationGraph::endRedBlock() {
     QL_REQUIRE(currentRedBlockId_ > 0, "ComputationGraph::endRedBlock(): not in an active red block.");
     currentRedBlockId_ = 0;
-    redBlockRange_.back().second = size() + 1;
+    redBlockRange_.back().second = size();
 }
 
 const std::vector<std::pair<std::size_t, std::size_t>>& ComputationGraph::redBlockRanges() const {
