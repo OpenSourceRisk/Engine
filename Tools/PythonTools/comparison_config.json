@@ -227,7 +227,24 @@
           "TradeType"
         ],
         "optional_cols": [
-          "BaseCurrency"
+          "BaseCurrency",
+          "end_date",
+          "trade_date",
+          "notional",
+          "trade_currency",
+          "notional2",
+          "trade_currency2",
+          "underlying",
+          "mtm_curr",
+          "mtm_value",
+          "settlement_type",
+          "strike",
+          "call_put",
+          "long_short",
+          "asset_class",
+          "base_product",
+          "sub_product",
+          "xccy_resettable"
         ],
         "optional_keys": [
           "collect_regulations",
