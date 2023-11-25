@@ -33,7 +33,7 @@ namespace ore::data {
 
 std::size_t LgmCG::numeraire(const Date& d, const std::size_t x, const Handle<YieldTermStructure>& discountCurve,
                              const std::string& discountCurveId) const {
-    std::string id = "__lgm_" + qualifier_ + "_N_" + ore::data::to_string(d);
+    std::string id = "__lgm_" + qualifier_ + "_N_" + ore::data::to_string(d) + "_" + discountCurveId;
     std::size_t n;
     if (n = cg_var(g_, id, ComputationGraph::VarDoesntExist::Nan); n == ComputationGraph::nan) {
         auto p(p_);
@@ -60,7 +60,8 @@ std::size_t LgmCG::discountBond(const Date& d, const Date& e, const std::size_t 
                                 const std::string& discountCurveId) const {
     if (d == e)
         return cg_const(g_, 1.0);
-    std::string id = "__lgm_" + qualifier_ + "_P_" + ore::data::to_string(d) + "_" + ore::data::to_string(e);
+    std::string id =
+        "__lgm_" + qualifier_ + "_P_" + ore::data::to_string(d) + "_" + ore::data::to_string(e) + "_" + discountCurveId;
     std::size_t n;
     if (n = cg_var(g_, id, ComputationGraph::VarDoesntExist::Nan), n == ComputationGraph::nan) {
         n = cg_mult(g_, numeraire(d, x, discountCurve, discountCurveId),
@@ -74,7 +75,8 @@ std::size_t LgmCG::reducedDiscountBond(const Date& d, const Date& e, const std::
                                        const std::string& discountCurveId) const {
     if (d == e)
         return cg_const(g_, 1.0);
-    std::string id = "__lgm_" + qualifier_ + "_Pr_" + ore::data::to_string(d) + "_" + ore::data::to_string(e);
+    std::string id = "__lgm_" + qualifier_ + "_Pr_" + ore::data::to_string(d) + "_" + ore::data::to_string(e) + "_" +
+                     discountCurveId;
     std::size_t n;
     if (n = cg_var(g_, id, ComputationGraph::VarDoesntExist::Nan), n == ComputationGraph::nan) {
         auto p = p_;
