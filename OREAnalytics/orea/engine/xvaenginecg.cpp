@@ -226,10 +226,16 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     // The cvaNode is the ultimate result w.r.t. which we want to compute sensitivities
 
     // note: very simplified calculation, for testing, just multiply the EPE on each date by fixed default prob
-    Size defaultProbNode = cg_const(*g, 0.0004);
+    auto defaultCurve = simMarket_->defaultCurve("BANK")->curve();
+    model_->registerWith(defaultCurve);
     Size cvaNode = cg_const(*g, 0.0);
-    for (Size i = 0; i < simulationDates.size() + 1; ++i) {
-        cvaNode = cg_add(*g, cvaNode, cg_mult(*g, defaultProbNode, cg_max(*g, pfExposureNodes[i], cg_const(*g, 0.0))));
+    for (Size i = 0; i < simulationDates.size(); ++i) {
+        Date d = i == 0 ? model_->referenceDate() : *std::next(simulationDates.begin(), i - 1);
+        Date e = *std::next(simulationDates.begin(), i);
+        std::size_t defaultProb =
+            addModelParameter(*g, model_->modelParameterFunctors(), "__defaultprob_" + std::to_string(i),
+                              [defaultCurve, d, e]() { return defaultCurve->defaultProbability(d, e); });
+        cvaNode = cg_add(*g, cvaNode, cg_mult(*g, defaultProb, cg_max(*g, pfExposureNodes[i], cg_const(*g, 0.0))));
     }
 
     boost::timer::nanosecond_type timing7 = timer.elapsed().wall;
