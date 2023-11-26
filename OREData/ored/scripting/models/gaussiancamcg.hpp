@@ -65,6 +65,9 @@ protected:
     std::size_t getNumeraire(const Date& s) const override;
     std::size_t getFxSpot(const Size idx) const override;
 
+    // utillity functions
+    Date getSloppyDate(const Date& d) const;
+
     // input parameters
     const Handle<CrossAssetModel> cam_;
     const std::vector<Handle<YieldTermStructure>> curves_;
@@ -81,13 +84,13 @@ protected:
     mutable std::map<Date, std::vector<std::size_t>> underlyingPaths_; // per simulation date index states
     mutable std::map<Date, std::vector<std::size_t>> irStates_;        // per simulation date ir states for currencies_
     mutable std::map<Date, std::vector<std::pair<std::size_t, std::size_t>>>
-        infStates_;                                                    // per simulation date dk (x,y) or jy (x,y)
-    mutable std::vector<Size> indexPositionInProcess_;                 // maps index no to position in state process
-    mutable std::vector<Size> infIndexPositionInProcess_;              // maps inf index no to position in state process
-    mutable std::vector<Size> currencyPositionInProcess_;              // maps currency no to position in state process
-    mutable std::vector<Size> irIndexPositionInCam_;                   // maps ir index no to currency idx in cam
-    mutable std::vector<Size> infIndexPositionInCam_;                  // maps inf index no to inf idx in cam
-    mutable std::vector<Size> currencyPositionInCam_; // maps currency no to position in cam parametrizations
+        infStates_;                                       // per simulation date dk (x,y) or jy (x,y)
+    mutable std::vector<Size> indexPositionInProcess_;    // maps index no to position in state process
+    mutable std::vector<Size> infIndexPositionInProcess_; // maps inf index no to position in state process
+    mutable std::vector<Size> currencyPositionInProcess_; // maps currency no to position in state process
+    mutable std::vector<Size> irIndexPositionInCam_;      // maps ir index no to currency idx in cam
+    mutable std::vector<Size> infIndexPositionInCam_;     // maps inf index no to inf idx in cam
+    mutable std::vector<Size> currencyPositionInCam_;     // maps currency no to position in cam parametrizations
     mutable std::vector<Size> eqIndexInCam_;      // maps index no to eq position in cam (or null, if not an eq index)
     mutable bool conditionalExpectationUseIr_;    // derived from input conditionalExpectationModelState
     mutable bool conditionalExpectationUseInf_;   // derived from input conditionalExpectationModelState
