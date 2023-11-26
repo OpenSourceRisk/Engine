@@ -58,8 +58,6 @@ std::size_t LgmCG::numeraire(const Date& d, const std::size_t x, const Handle<Yi
 std::size_t LgmCG::discountBond(const Date& d, const Date& e, const std::size_t x,
                                 const Handle<YieldTermStructure>& discountCurve,
                                 const std::string& discountCurveId) const {
-    if (d == e)
-        return cg_const(g_, 1.0);
     std::string id =
         "__lgm_" + qualifier_ + "_P_" + ore::data::to_string(d) + "_" + ore::data::to_string(e) + "_" + discountCurveId;
     std::size_t n;
@@ -70,11 +68,10 @@ std::size_t LgmCG::discountBond(const Date& d, const Date& e, const std::size_t 
     return n;
 }
 
-std::size_t LgmCG::reducedDiscountBond(const Date& d, const Date& e, const std::size_t x,
+std::size_t LgmCG::reducedDiscountBond(const Date& d, Date e, const std::size_t x,
                                        const Handle<YieldTermStructure>& discountCurve,
                                        const std::string& discountCurveId) const {
-    if (d == e)
-        return cg_const(g_, 1.0);
+    e = std::max(d, e);
     std::string id = "__lgm_" + qualifier_ + "_Pr_" + ore::data::to_string(d) + "_" + ore::data::to_string(e) + "_" +
                      discountCurveId;
     std::size_t n;
@@ -121,7 +118,7 @@ std::size_t LgmCG::fixing(const boost::shared_ptr<InterestRateIndex>& index, con
 
             // Ibor Index
 
-            Date d1 = ibor->valueDate(fixingDate);
+            Date d1 = std::max(t, ibor->valueDate(fixingDate));
             Date d2 = ibor->maturityDate(d1);
 
             Time dt = ibor->dayCounter().yearFraction(d1, d2);

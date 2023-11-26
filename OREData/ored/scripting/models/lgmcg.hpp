@@ -50,7 +50,7 @@ public:
                              const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
                              const std::string& discountCurveId = "default") const;
 
-    std::size_t reducedDiscountBond(const Date& d, const Date& e, const std::size_t x,
+    std::size_t reducedDiscountBond(const Date& d, Date e, const std::size_t x,
                                     const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
                                     const std::string& discountCurveId = "default") const;
 
