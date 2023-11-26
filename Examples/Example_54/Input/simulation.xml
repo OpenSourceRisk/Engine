@@ -74,6 +74,13 @@
         <Extrapolation>Y</Extrapolation>
       </Configuration>
     </YieldCurves>
+    <DefaultCurves>
+      <Names>
+        <Name>BANK</Name>
+      </Names>
+      <Tenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</Tenors>
+      <SimulateSurvivalProbabilities>true</SimulateSurvivalProbabilities>
+    </DefaultCurves>
     <Indices>
       <Index>EUR-EURIBOR-6M</Index>
       <Index>EUR-EURIBOR-3M</Index>
