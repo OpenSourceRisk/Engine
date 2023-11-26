@@ -56,6 +56,14 @@
       </ParConversion>
     </IndexCurve>
   </IndexCurves>
+  <CreditCurves>
+    <CreditCurve name="BANK">
+      <Currency>EUR</Currency>
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftTenors>
+    </CreditCurve>
+  </CreditCurves>
   <SwaptionVolatilities>
     <SwaptionVolatility ccy="EUR">
       <ShiftType>Absolute</ShiftType>
