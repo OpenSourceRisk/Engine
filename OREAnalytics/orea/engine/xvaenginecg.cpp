@@ -30,6 +30,7 @@
 #include <ored/utilities/to_string.hpp>
 
 #include <qle/ad/backwardderivatives.hpp>
+#include <qle/ad/forwardderivatives.hpp>
 #include <qle/ad/forwardevaluation.hpp>
 #include <qle/ad/ssaform.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
@@ -305,8 +306,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     // Dump epe / ene profile out
 
     // for (Size i = 0; i < simulationDates.size() + 1; ++i) {
-    //     std::cout << ore::data::to_string(i == 0 ? model_->referenceDate() : *std::next(simulationDates.begin(), i -
-    //     1))
+    //     std::cout << ore::data::to_string(i == 0 ? model_->referenceDate() : *std::next(simulationDates.begin(), i - 1))
     //               << "," << expectation(values[pfExposureNodes[i]]) << ","
     //               << expectation(max(values[pfExposureNodes[i]], RandomVariable(model_->size(), 0.0))) << ","
     //               << expectation(max(-values[pfExposureNodes[i]], RandomVariable(model_->size(), 0.0))) << "\n";
@@ -335,13 +335,11 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
         for (auto const& [n, _] : baseModelParams_)
             keepNodesDerivatives[n] = true;
 
-        // full bwds run for validation ...
+        // backward derivatives run
 
         backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodesDerivatives, ops_,
                             opNodeRequirements_, keepNodes, RandomVariableOpCode::ConditionalExpectation,
                             ops_[RandomVariableOpCode::ConditionalExpectation]);
-
-        rvMemMax = std::max(rvMemMax, numberOfStochasticRvs(values) + numberOfStochasticRvs(derivatives));
 
         // read model param derivatives
 
@@ -349,6 +347,10 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
         for (auto const& [n, v] : baseModelParams_) {
             modelParamDerivatives[i++] = expectation(derivatives[n]).at(0);
         }
+
+        // get mem consumption
+
+        rvMemMax = std::max(rvMemMax, numberOfStochasticRvs(values) + numberOfStochasticRvs(derivatives));
 
         LOG("XvaEngineCG: got " << modelParamDerivatives.size()
                                 << " model parameter derivatives from run backward derivatives");
