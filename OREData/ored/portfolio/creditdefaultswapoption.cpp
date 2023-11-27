@@ -325,13 +325,16 @@ void CreditDefaultSwapOption::buildDefaulted(const boost::shared_ptr<EngineFacto
             amount *= -1.0;
     }
 
+    Position::Type positionType = parsePositionType(option_.longShort());
+    Real indicatorLongShort = positionType == Position::Long ? 1.0 : -1.0;
+
     // Use the add premiums method to add the payment.
     string marketConfig = Market::defaultConfiguration;
     auto ccy = parseCurrency(notionalCurrency_);
     vector<boost::shared_ptr<Instrument>> additionalInstruments;
     vector<Real> additionalMultipliers;
     Date premiumPayDate =
-        addPremiums(additionalInstruments, additionalMultipliers, 1.0,
+        addPremiums(additionalInstruments, additionalMultipliers, indicatorLongShort,
                     PremiumData(amount, notionalCurrency_, paymentDate), 1.0, ccy, engineFactory, marketConfig);
     DLOG("FEP payment (date = " << paymentDate << ", amount = " << amount << ") added for CDS option " << id() << ".");
 
@@ -346,8 +349,6 @@ void CreditDefaultSwapOption::buildDefaulted(const boost::shared_ptr<EngineFacto
     addPremium(engineFactory, ccy, marketConfig, additionalInstruments, additionalMultipliers);
 
     // Instrument wrapper.
-    Position::Type positionType = parsePositionType(option_.longShort());
-    Real indicatorLongShort = positionType == Position::Long ? 1.0 : -1.0;
     instrument_ = boost::make_shared<VanillaInstrument>(qlInst, indicatorLongShort,
         additionalInstruments, additionalMultipliers);
 }
@@ -361,8 +362,8 @@ Date CreditDefaultSwapOption::addPremium(const boost::shared_ptr<EngineFactory>&
         // pay the premium if long the option and receive the premium if short the option.
         Position::Type positionType = parsePositionType(option_.longShort());
         Real indicatorLongShort = positionType == Position::Long ? 1.0 : -1.0;
-        return addPremiums(additionalInstruments, additionalMultipliers, 1.0, option_.premiumData(), indicatorLongShort,
-                           tradeCurrency, ef, marketConfig);
+        return addPremiums(additionalInstruments, additionalMultipliers, indicatorLongShort, option_.premiumData(),
+                           indicatorLongShort, tradeCurrency, ef, marketConfig);
 }
 
 }
