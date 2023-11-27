@@ -248,12 +248,8 @@ public:
 protected:
     //! Number of risk classes including RiskClass::All
     static const QuantLib::Size numberOfRiskClasses;
-    //! Number of risk types including RiskType::All
-    static const QuantLib::Size numberOfRiskTypes;
     //! Number of margin types including MarginType::All
     static const QuantLib::Size numberOfMarginTypes;
-    //! Number of product classes including ProductClass::All
-    static const QuantLib::Size numberOfProductClasses;
     //! Number of regulations
     static const QuantLib::Size numberOfRegulations;
 };

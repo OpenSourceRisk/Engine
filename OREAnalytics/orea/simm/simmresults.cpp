@@ -32,7 +32,7 @@ using std::string;
 namespace ore {
 namespace analytics {
 
-void SimmResults::add(const SimmConfiguration::ProductClass& pc, const SimmConfiguration::RiskClass& rc,
+void SimmResults::add(const CrifRecord::ProductClass& pc, const SimmConfiguration::RiskClass& rc,
                       const SimmConfiguration::MarginType& mt, const string& b, Real im, const string& resultCurrency,
                       const string& calculationCurrency, const bool overwrite) {
 
@@ -86,7 +86,7 @@ void SimmResults::convert(Real fxSpot, const string& currency) {
     resultCcy_ = currency;
 }
 
-Real SimmResults::get(const SimmConfiguration::ProductClass& pc, const SimmConfiguration::RiskClass& rc,
+Real SimmResults::get(const CrifRecord::ProductClass& pc, const SimmConfiguration::RiskClass& rc,
                       const SimmConfiguration::MarginType& mt, const string b) const {
     if (has(pc, rc, mt, b)) {
         return data_.at(make_tuple(pc, rc, mt, b));
@@ -95,7 +95,7 @@ Real SimmResults::get(const SimmConfiguration::ProductClass& pc, const SimmConfi
     }
 }
 
-bool SimmResults::has(const SimmConfiguration::ProductClass& pc, const SimmConfiguration::RiskClass& rc,
+bool SimmResults::has(const CrifRecord::ProductClass& pc, const SimmConfiguration::RiskClass& rc,
                       const SimmConfiguration::MarginType& mt, const string b) const {
     return data_.count(make_tuple(pc, rc, mt, b)) > 0;
 }

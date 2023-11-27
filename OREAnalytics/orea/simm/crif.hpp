@@ -93,19 +93,20 @@ public:
                    const std::string& qualifier) const;
 
     std::set<CrifRecord::ProductClass> ProductClassesByNettingSetDetails(const NettingSetDetails nsd) const;
+    
     std::set<std::string> qualifiersBy(const NettingSetDetails nsd, CrifRecord::ProductClass pc,
                                        const CrifRecord::RiskType rt) const;
 
-    vector<CrifRecord> filterByQualifierAndBucket(const NettingSetDetails& nsd, const CrifRecord::ProductClass pc,
+    std::vector<CrifRecord> filterByQualifierAndBucket(const NettingSetDetails& nsd, const CrifRecord::ProductClass pc,
                                     const CrifRecord::RiskType rt, const std::string& qualifier,
                                     const std::string& bucket) const {
-        vector<CrifRecord> results;
-        results = boost::copy_range<std::vector<CrifRecord>>(
+        
+        return boost::copy_range<std::vector<CrifRecord>>(
             records_ | boost::adaptors::filtered([&nsd, &pc, &rt, &qualifier, &bucket](const CrifRecord& record) {
                 return record.nettingSetDetails == nsd && record.productClass == pc && record.riskType == rt &&
                        record.qualifier == qualifier && record.bucket == bucket;
             }));
-        return results;
+        
     }
     
     std::vector<CrifRecord> filterByQualifier(const NettingSetDetails& nsd, const CrifRecord::ProductClass pc, const CrifRecord::RiskType rt,
