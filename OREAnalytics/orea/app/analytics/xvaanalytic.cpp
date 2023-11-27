@@ -28,6 +28,7 @@
 #include <orea/engine/multistatenpvcalculator.hpp>
 #include <orea/engine/multithreadedvaluationengine.hpp>
 #include <orea/engine/observationmode.hpp>
+#include <orea/engine/xvaenginecg.hpp>
 #include <orea/scenario/scenariowriter.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
 
@@ -385,14 +386,12 @@ XvaAnalyticImpl::amcEngineFactory(const boost::shared_ptr<QuantExt::CrossAssetMo
                                                                const std::vector<Date>& grid) {
     LOG("XvaAnalytic::engineFactory() called");
     boost::shared_ptr<EngineData> edCopy = boost::make_shared<EngineData>(*inputs_->amcPricingEngine());
-    edCopy->globalParameters()["GenerateAdditionalResults"] = inputs_->outputAdditionalResults() ? "true" : "false";
+    edCopy->globalParameters()["GenerateAdditionalResults"] = "false";
     edCopy->globalParameters()["RunType"] = "NPV";
     map<MarketContext, string> configurations;
     configurations[MarketContext::irCalibration] = inputs_->marketConfig("lgmcalibration");    
     configurations[MarketContext::fxCalibration] = inputs_->marketConfig("fxcalibration");
     configurations[MarketContext::pricing] = inputs_->marketConfig("pricing");
-    std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders; 
-    std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders;
     auto factory = boost::make_shared<EngineFactory>(
         edCopy, analytic()->market(), configurations, inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
         EngineBuilderFactory::instance().generateAmcEngineBuilders(cam, grid), true);
@@ -585,7 +584,19 @@ void XvaAnalyticImpl::runPostProcessor() {
 
 void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
                               const std::set<std::string>& runTypes) {
-    
+
+    if(inputs_->amcCg()) {
+        LOG("XVA analytic is running with amc cg engine (experimental).");
+        // note: market configs both set to simulation, see note in xvaenginecg, we'd need inccy config in sim market there...
+        XvaEngineCG engine(
+            inputs_->nThreads(), inputs_->asof(), loader, inputs_->curveConfigs().get(),
+            analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
+            inputs_->amcPricingEngine(), inputs_->crossAssetModelData(), inputs_->scenarioGeneratorData(),
+            inputs_->portfolio(), inputs_->marketConfig("simulation"), inputs_->marketConfig("simulation"),
+            inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig());
+        return;
+    }
+
     LOG("XVA analytic called with asof " << io::iso_date(inputs_->asof()));
     ProgressMessage("Running XVA Analytic", 0, 1).log();
 
@@ -840,7 +851,7 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
             for (Size i = 0; i < inputs_->dimOutputGridPoints().size(); ++i) {
                 auto rep = boost::make_shared<InMemoryReport>();
                 dimRegReports.push_back(rep);
-                analytic()->reports()["XVA"]["dim_regression_" + to_string(i)] = rep;
+                analytic()->reports()["XVA"]["dim_regression_" + std::to_string(i)] = rep;
             }
             postProcess_->exportDimRegression(inputs_->dimOutputNettingSet(), inputs_->dimOutputGridPoints(),
                                               dimRegReports);
@@ -854,7 +865,8 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
                     << inputs_->creditMigrationTimeSteps().size() << ")");
             for (Size i = 0; i < postProcess_->creditMigrationPdf().size(); ++i) {
                 auto rep = boost::make_shared<InMemoryReport>();
-                analytic()->reports()["XVA"]["credit_migration_" + to_string(inputs_->creditMigrationTimeSteps()[i])] =
+                analytic()
+                    ->reports()["XVA"]["credit_migration_" + std::to_string(inputs_->creditMigrationTimeSteps()[i])] =
                     rep;
                 (*rep)
                     .addColumn("upperBucketBound", double(), 6)
