@@ -1,6 +1,7 @@
 # cpp files, this list is maintained manually
 
-set(QuantExt-Test_SRC analyticcashsettledeuropeanengine.cpp
+set(QuantExt-Test_SRC ad.cpp
+analyticcashsettledeuropeanengine.cpp
 analyticlgmswaptionengine.cpp
 basecorrelationcurve.cpp
 bfrrvolsurface.cpp
