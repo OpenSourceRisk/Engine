@@ -39,6 +39,7 @@ public:
     bool isExpired() const override;
     void setupArguments(QuantLib::PricingEngine::arguments*) const override {}
     bool lastCalculationWasValid() const;
+    boost::shared_ptr<PricingEngine> pricingEngine() const { return engine_; }
 
 private:
     const QuantLib::Date lastRelevantDate_;
