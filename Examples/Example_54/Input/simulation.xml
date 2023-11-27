@@ -96,10 +96,6 @@
         <DiscountingIndex>EUR-EONIA</DiscountingIndex>
       </SwapIndex>
     </SwapIndices>
-    <DefaultCurves>
-      <Names/>
-      <Tenors>6M,1Y,2Y</Tenors>
-    </DefaultCurves>
     <SwaptionVolatilities>
       <Simulate>true</Simulate>
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
