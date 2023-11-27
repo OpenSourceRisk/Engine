@@ -217,8 +217,7 @@ void GaussianCamCG::performCalculations() const {
                                                             std::vector<std::size_t>(timeGrid_.size() - 1));
     for (Size j = 0; j < cam_->brownians() + cam_->auxBrownians(); ++j) {
         for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
-            randomVariates_[j][i] = cg_var(*g_, "__rv_" + std::to_string(j) + "_" + std::to_string(i),
-                                           ComputationGraph::VarDoesntExist::Create);
+            randomVariates_[j][i] = cg_insert(*g_);
         }
     }
 
@@ -251,7 +250,7 @@ void GaussianCamCG::performCalculations() const {
 
     std::size_t dateIndex = 1;
     for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
-        irState = cg_add(*g_, irState, cg_mult(*g_, diffusion[i], cg_var(*g_, "__rv_0_" + std::to_string(i))));
+        irState = cg_add(*g_, irState, cg_mult(*g_, diffusion[i], randomVariates_[0][i]));
         if (positionInTimeGrid_[dateIndex] == i + 1) {
             irStates_[*std::next(effectiveSimulationDates_.begin(), dateIndex)][0] = irState;
             ++dateIndex;

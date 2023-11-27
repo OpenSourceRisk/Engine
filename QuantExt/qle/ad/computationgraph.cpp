@@ -186,6 +186,8 @@ double ComputationGraph::constantValue(const std::size_t node) const { return co
 
 std::size_t cg_const(ComputationGraph& g, const double value) { return g.constant(value); }
 
+std::size_t cg_insert(ComputationGraph& g, const std::string& label) { return g.insert(label); }
+
 std::size_t cg_var(ComputationGraph& g, const std::string& name, const ComputationGraph::VarDoesntExist v) {
     return g.variable(name, v);
 }
