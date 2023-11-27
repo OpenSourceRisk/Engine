@@ -166,7 +166,7 @@ private:
     //! Calculate the Interest Rate curvature margin component for the given portfolio and product class
     std::pair<std::map<std::string, QuantLib::Real>, bool>
     irCurvatureMargin(const ore::data::NettingSetDetails& nettingSetDetails, const CrifRecord::ProductClass& pc,
-                      const SimmSide& side, const ore::analytics::Crif& netRecords) const;
+                      const SimmSide& side, const ore::analytics::Crif& crif) const;
 
     /*! Calculate the (delta or vega) margin component for the given portfolio, product class and risk type
         Used to calculate delta or vega or base correlation margin for all risk types except IR, IRVol
@@ -219,6 +219,10 @@ private:
 
     //! Give the \f$\lambda\f$ used in the curvature margin calculation
     QuantLib::Real lambda(QuantLib::Real theta) const;
+
+    std::set<std::string> getQualifiers(const Crif& crif, const ore::data::NettingSetDetails& nettingSetDetails,
+                                        const CrifRecord::ProductClass& pc,
+                                        const std::vector<CrifRecord::RiskType>& riskTypes) const;
 
 };
 
