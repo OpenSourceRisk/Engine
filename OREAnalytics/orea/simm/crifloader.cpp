@@ -117,7 +117,8 @@ void CrifLoader::validateSimmRecord(const CrifRecord& cr) const {
         QL_REQUIRE(cr.productClass == ProductClass::Empty,
                    "Expected product class " << ProductClass::Empty << " for risk type " << cr.riskType);
         break;
-    case RiskType::ProductClassMultiplier:
+    case RiskType::ProductClassMultiplier: {
+
         QL_REQUIRE(cr.productClass == ProductClass::Empty,
                    "Expected product class " << ProductClass::Empty << " for risk type " << cr.riskType);
         // Check that the qualifier is a valid Product class
@@ -130,6 +131,7 @@ void CrifLoader::validateSimmRecord(const CrifRecord& cr) const {
                                          << "for risk type " << cr.riskType << " and qualifier " << cr.qualifier
                                          << " but got " << cr.amount);
         break;
+    }
     case RiskType::Notional:
     case RiskType::PV:
         if (cr.imModel == "Schedule")

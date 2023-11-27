@@ -95,9 +95,7 @@ public:
     StringStreamCrifLoader(const boost::shared_ptr<SimmConfiguration>& configuration,
                            const std::vector<std::set<std::string>>& additionalHeaders = {}, bool updateMapper = false,
                            bool aggregateTrades = true, char eol = '\n', char delim = '\t', char quoteChar = '\0',
-                           char escapeChar = '\\')
-        : CrifLoader(configuration, additionalHeaders, updateMapper, aggregateTrades), eol_(eol), delim_(delim),
-          quoteChar_(quoteChar), escapeChar_(escapeChar){};
+                           char escapeChar = '\\');
 
     Crif loadCrif() override { return loadFromStream(stream()); }
 
