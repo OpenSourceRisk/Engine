@@ -258,6 +258,16 @@ void InputParameters::setAmcPricingEngine(const std::string& xml) {
     amcPricingEngine_->fromXMLString(xml);
 }
 
+void InputParameters::setXvaCgSensiScenarioData(const std::string& xml) {
+    xvaCgSensiScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    xvaCgSensiScenarioData_->fromXMLString(xml);
+}
+
+void InputParameters::setXvaCgSensiScenarioDataFromFile(const std::string& fileName) {
+    xvaCgSensiScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    xvaCgSensiScenarioData_->fromFile(fileName);
+}
+
 void InputParameters::setAmcPricingEngineFromFile(const std::string& fileName) {
     amcPricingEngine_ = boost::make_shared<EngineData>();
     amcPricingEngine_->fromFile(fileName);
