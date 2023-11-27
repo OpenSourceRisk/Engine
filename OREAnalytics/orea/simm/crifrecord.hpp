@@ -23,6 +23,7 @@
 #pragma once
 
 #include <ored/portfolio/nettingsetdetails.hpp>
+#include <ored/utilities/parsers.hpp>
 #include <string>
 
 namespace ore {
@@ -229,7 +230,7 @@ struct CrifRecord {
 
     CurvatureScenario frtbCurveatureScenario() const {
         double shift = 0.0;
-        if (isFrtbCurvatureRisk() && tryParseReal(label1, shift) && shift < 0.0) {
+        if (isFrtbCurvatureRisk() && ore::data::tryParseReal(label1, shift) && shift < 0.0) {
             return CurvatureScenario::Down;
         } else if (isFrtbCurvatureRisk()) {
             return CurvatureScenario::Up;

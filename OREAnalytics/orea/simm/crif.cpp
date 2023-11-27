@@ -119,7 +119,7 @@ void Crif::updateAmountExistingRecord(std::set<CrifRecord>::iterator& it, const 
             DLOG("Updated net CRIF records: " << *it)
 }
 
-void Crif::addRecords(const Crif& crif, bool aggregateDifferentAmountCurrencies = false) {
+void Crif::addRecords(const Crif& crif, bool aggregateDifferentAmountCurrencies) {
     for (const auto& r : crif.records_) {
         addRecord(r, aggregateDifferentAmountCurrencies);
     }
@@ -164,7 +164,11 @@ Crif Crif::simmParameters() const {
     
 //! deletes all existing simmParameter and replaces them with the new one
 void Crif::setSimmParameters(const Crif& crif) {
-    boost::range::remove_erase_if(records_, isSimmParameter);
+    for (auto& r : records_) {
+        if (r.isSimmParameter()) {
+            records_.erase(r);
+        }
+    }
     for (const auto& r : crif) {
         if (r.isSimmParameter()) {
             addSimmParameterRecord(r);
