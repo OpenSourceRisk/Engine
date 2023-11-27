@@ -91,6 +91,7 @@ private:
 // methods to construct cg
 
 std::size_t cg_const(ComputationGraph& g, const double value);
+std::size_t cg_insert(ComputationGraph& g, const std::string& label = std::string());
 std::size_t cg_var(ComputationGraph& g, const std::string& name,
                    ComputationGraph::VarDoesntExist = ComputationGraph::VarDoesntExist::Throw);
 std::size_t cg_add(ComputationGraph& g, const std::size_t a, const std::size_t b,
