@@ -258,6 +258,16 @@ void InputParameters::setAmcPricingEngine(const std::string& xml) {
     amcPricingEngine_->fromXMLString(xml);
 }
 
+void InputParameters::setXvaCgSensiScenarioData(const std::string& xml) {
+    xvaCgSensiScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    xvaCgSensiScenarioData_->fromXMLString(xml);
+}
+
+void InputParameters::setXvaCgSensiScenarioDataFromFile(const std::string& fileName) {
+    xvaCgSensiScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    xvaCgSensiScenarioData_->fromFile(fileName);
+}
+
 void InputParameters::setAmcPricingEngineFromFile(const std::string& fileName) {
     amcPricingEngine_ = boost::make_shared<EngineData>();
     amcPricingEngine_->fromFile(fileName);
@@ -404,8 +414,8 @@ void InputParameters::setCreditSimulationParametersFromBuffer(const std::string&
 } 
 
 void InputParameters::setCrifLoader() {
-    boost::shared_ptr<SimmConfiguration> configuration =
-        buildSimmConfiguration(simmVersion_, boost::make_shared<SimmBucketMapperBase>(), mporDays());
+    boost::shared_ptr<SimmConfiguration> configuration = buildSimmConfiguration(
+        simmVersion_, boost::make_shared<SimmBucketMapperBase>(), simmCalibrationData(), mporDays());
     bool updateMappings = true;
     bool aggregateTrades = false;
     crifLoader_ =
@@ -449,16 +459,21 @@ void InputParameters::setSimmBucketMapperFromFile(const std::string& fileName) {
     sbm->fromFile(fileName);    
 }
 
+void InputParameters::setSimmCalibrationDataFromFile(const std::string& fileName) {
+    simmCalibrationData_ = boost::make_shared<SimmCalibrationData>();
+    simmCalibrationData_->fromFile(fileName);
+}
+
 void InputParameters::setAnalytics(const std::string& s) {
     // parse to set<string>
     auto v = parseListOfValues(s);
     analytics_ = std::set<std::string>(v.begin(), v.end());
 }
-    
+
 void InputParameters::insertAnalytic(const std::string& s) {
     analytics_.insert(s);
 }
-    
+
 OutputParameters::OutputParameters(const boost::shared_ptr<Parameters>& params) {
     LOG("OutputFileNameMap called");
     npvOutputFileName_ = params->get("npv", "outputFileName", false);

@@ -32,6 +32,7 @@
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/engine/sensitivitystream.hpp>
 #include <orea/simm/crifloader.hpp>
+#include <orea/simm/simmcalibration.hpp>
 #include <orea/simm/simmbasicnamemapper.hpp>
 #include <orea/simm/simmbucketmapper.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
@@ -159,6 +160,9 @@ public:
     // Setters for exposure simulation
     void setSalvageCorrelationMatrix(bool b) { salvageCorrelationMatrix_ = b; }
     void setAmc(bool b) { amc_ = b; }
+    void setAmcCg(bool b) { amcCg_ = b; }
+    void setXvaCgSensiScenarioData(const std::string& xml);
+    void setXvaCgSensiScenarioDataFromFile(const std::string& fileName);
     void setAmcTradeTypes(const std::string& s); // parse to set<string>
     void setExposureBaseCurrency(const std::string& s) { exposureBaseCurrency_ = s; } 
     void setExposureObservationModel(const std::string& s) { exposureObservationModel_ = s; }
@@ -281,6 +285,10 @@ public:
     void setSimmBucketMapper(const boost::shared_ptr<ore::analytics::SimmBucketMapper>& p) { simmBucketMapper_ = p; }
     void setSimmBucketMapper(const std::string& xml);
     void setSimmBucketMapperFromFile(const std::string& fileName);
+    void setSimmCalibrationData(const boost::shared_ptr<ore::analytics::SimmCalibrationData>& s) {
+        simmCalibrationData_ = s;
+    }
+    void setSimmCalibrationDataFromFile(const std::string& fileName);
     void setSimmCalculationCurrency(const std::string& s) { simmCalculationCurrency_ = s; }
     void setSimmResultCurrency(const std::string& s) { simmResultCurrency_ = s; }
     void setSimmReportingCurrency(const std::string& s) { simmReportingCurrency_ = s; }
@@ -425,6 +433,8 @@ public:
      *********************************/
     bool salvageCorrelationMatrix() { return salvageCorrelationMatrix_; }
     bool amc() { return amc_; }
+    bool amcCg() { return amcCg_; }
+    const boost::shared_ptr<ore::analytics::SensitivityScenarioData>& xvaCgSensiScenarioData() { return xvaCgSensiScenarioData_; }
     const std::set<std::string>& amcTradeTypes() { return amcTradeTypes_; }
     const std::string& exposureBaseCurrency() { return exposureBaseCurrency_; }
     const std::string& exposureObservationModel() { return exposureObservationModel_; }
@@ -530,6 +540,7 @@ public:
     const boost::shared_ptr<ore::analytics::CrifLoader>& crifLoader() { return crifLoader_; }
     const boost::shared_ptr<ore::analytics::SimmBasicNameMapper>& simmNameMapper() { return simmNameMapper_; }
     const boost::shared_ptr<ore::analytics::SimmBucketMapper>& simmBucketMapper() { return simmBucketMapper_; }
+    const boost::shared_ptr<ore::analytics::SimmCalibrationData>& simmCalibrationData() { return simmCalibrationData_; }
     const std::string& simmCalculationCurrency() { return simmCalculationCurrency_; }
     const std::string& simmResultCurrency() { return simmResultCurrency_; }
     const std::string& simmReportingCurrency() { return simmReportingCurrency_; }
@@ -681,6 +692,8 @@ protected:
      *******************/
     bool salvageCorrelationMatrix_ = false;
     bool amc_ = false;
+    bool amcCg_ = false;
+    boost::shared_ptr<ore::analytics::SensitivityScenarioData> xvaCgSensiScenarioData_;
     std::set<std::string> amcTradeTypes_;
     std::string exposureBaseCurrency_ = "";
     std::string exposureObservationModel_ = "Disable";
@@ -771,6 +784,7 @@ protected:
     boost::shared_ptr<ore::analytics::CrifLoader> crifLoader_;
     boost::shared_ptr<ore::analytics::SimmBasicNameMapper> simmNameMapper_;
     boost::shared_ptr<ore::analytics::SimmBucketMapper> simmBucketMapper_;
+    boost::shared_ptr<ore::analytics::SimmCalibrationData> simmCalibrationData_;
     std::string simmCalculationCurrency_ = "";
     std::string simmResultCurrency_ = "";
     std::string simmReportingCurrency_ = "";

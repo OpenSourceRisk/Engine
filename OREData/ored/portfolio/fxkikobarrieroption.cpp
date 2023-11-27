@@ -170,9 +170,9 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
 
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    Date lastPremiumDate =
-        addPremiums(additionalInstruments, additionalMultipliers, boughtAmount_, option_.premiumData(), -bsInd, soldCcy,
-                    engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
+    Date lastPremiumDate = addPremiums(
+        additionalInstruments, additionalMultipliers, (positionType == Position::Long ? 1.0 : -1.0) * boughtAmount_,
+        option_.premiumData(), -bsInd, soldCcy, engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
 
     // we build a knock out option
     boost::shared_ptr<Instrument> barrier =

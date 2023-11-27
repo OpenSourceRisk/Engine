@@ -21,6 +21,7 @@
 #include <ored/utilities/to_string.hpp>
 #include <ored/model/utilities.hpp>
 
+#include <qle/ad/computationgraph.hpp>
 #include <qle/math/randomvariable_ops.hpp>
 
 #include <ql/math/comparison.hpp>
