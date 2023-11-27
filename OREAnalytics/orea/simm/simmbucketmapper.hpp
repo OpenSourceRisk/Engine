@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <orea/simm/crifrecord.hpp>
 #include <orea/simm/simmconfiguration.hpp>
 #include <ql/time/date.hpp>
 
@@ -34,7 +35,7 @@ class SimmBucketMapper {
 public:
     struct FailedMapping {
         std::string name, lookupName;
-        SimmConfiguration::RiskType riskType, lookupRiskType;
+        CrifRecord::RiskType riskType, lookupRiskType;
     };
 
     //! Destructor
@@ -46,20 +47,20 @@ public:
         \warning An error is thrown if there is no <em>bucket</em>
                  for the combination.
      */
-    virtual std::string bucket(const SimmConfiguration::RiskType& riskType, const std::string& qualifier) const = 0;
+    virtual std::string bucket(const CrifRecord::RiskType& riskType, const std::string& qualifier) const = 0;
 
     //! Check if the given SIMM <em>RiskType</em> has a bucket structure.
-    virtual bool hasBuckets(const SimmConfiguration::RiskType& riskType) const = 0;
+    virtual bool hasBuckets(const CrifRecord::RiskType& riskType) const = 0;
 
     //! Check if the given \p riskType and \p qualifier has a mapping (which is valid, and matches the fallback flag if given)
-    virtual bool has(const SimmConfiguration::RiskType& riskType, const std::string& qualifier, boost::optional<bool> fallback = boost::none) const = 0;
+    virtual bool has(const CrifRecord::RiskType& riskType, const std::string& qualifier, boost::optional<bool> fallback = boost::none) const = 0;
 
     //! Add a single \p bucket mapping for \p qualifier with risk type \p riskType
     /*! \todo Not very convenient. If deemed useful, add more methods for adding
               mappings e.g. <code>addMappingRange</code> that adds a range of
               mappings at once
     */
-    virtual void addMapping(const SimmConfiguration::RiskType& riskType, const std::string& qualifier,
+    virtual void addMapping(const CrifRecord::RiskType& riskType, const std::string& qualifier,
                             const std::string& bucket, const std::string& validFrom = "", const std::string& validTo = "", bool fallback = false) = 0;
 
     virtual const std::set<FailedMapping>& failedMappings() const = 0;

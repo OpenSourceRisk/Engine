@@ -25,6 +25,7 @@
 #include <boost/range/adaptor/filtered.hpp>
 #include <orea/simm/crifrecord.hpp>
 #include <ored/report/report.hpp>
+#include <ored/marketdata/market.hpp>
 
 namespace ore {
 namespace analytics {
@@ -67,13 +68,16 @@ public:
     const std::set<ore::data::NettingSetDetails>& nettingSetDetails() const;
 
     //! check if the Crif contains simmParameters
-    const bool hasSimmParameter() const;
+    const bool hasSimmParameters() const;
 
     //! returns a Crif containing only simmParameter entries
     Crif simmParameters() const;
     
     //! deletes all existing simmParameter and replaces them with the new one
     void setSimmParameters(const Crif& crif);
+
+    //! deletes all existing simmParameter and replaces them with the new one
+    void setCrifRecords(const Crif& crif);
 
     //! For each CRIF record checks if amountCurrency and amount are 
     //! defined and uses these to populate the record's amountUsd

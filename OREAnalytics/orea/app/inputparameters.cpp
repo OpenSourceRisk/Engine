@@ -575,5 +575,11 @@ Date InputParameters::mporDate() {
     }
     return mporDate_;
 }
+
+boost::shared_ptr<SimmConfiguration> InputParameters::getSimmConfiguration() {
+    return buildSimmConfiguration(simmVersion_, boost::make_shared<SimmBucketMapperBase>(), mporDays());
+}
+
+
 } // namespace analytics
 } // namespace ore

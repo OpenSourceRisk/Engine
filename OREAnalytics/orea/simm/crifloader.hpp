@@ -49,8 +49,6 @@ public:
         : configuration_(configuration), additionalHeaders_(additionalHeaders), updateMapper_(updateMapper),
           aggregateTrades_(aggregateTrades) {}
 
-    virtual ~CrifLoader() {}
-
     /*! Destructor */
     virtual ~CrifLoader() {}
 

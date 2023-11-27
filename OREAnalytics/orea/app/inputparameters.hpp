@@ -534,6 +534,7 @@ public:
     const std::string& simmResultCurrency() { return simmResultCurrency_; }
     const std::string& simmReportingCurrency() { return simmReportingCurrency_; }
     bool enforceIMRegulations() { return enforceIMRegulations_; }
+    boost::shared_ptr<SimmConfiguration> getSimmConfiguration();
 
     /**************************************************
      * Getters for Zero to Par Sensi conversion

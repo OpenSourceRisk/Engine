@@ -146,7 +146,7 @@ const bool Crif::hasCrifRecords() const {
 }
 
 //! check if the Crif contains simmParameters
-const bool Crif::hasSimmParameter() const {
+const bool Crif::hasSimmParameters() const {
     auto it= std::find_if(records_.begin(), records_.end(), isSimmParameter);
     return it != records_.end();
 }
@@ -172,6 +172,15 @@ void Crif::setSimmParameters(const Crif& crif) {
     }
 }
 
+
+void Crif::setCrifRecords(const Crif& crif) {
+    clear();
+    for (const auto& r : crif) {
+        if (r.isSimmParameter()) {
+            addRecord(r);
+        }
+    }
+}
 
 //! Give back the set of portfolio IDs that have been loaded
 const std::set<std::string>& Crif::portfolioIds() const { return portfolioIds_; }

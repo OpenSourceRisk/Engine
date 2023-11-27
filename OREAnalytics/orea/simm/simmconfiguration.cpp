@@ -83,8 +83,6 @@ const bm<SimmConfiguration::Regulation> regulationsMap = list_of<bm<SimmConfigur
         (SimmConfiguration::Regulation::Included, "Included")(SimmConfiguration::Regulation::Unspecified, "Unspecified")(SimmConfiguration::Regulation::Invalid, "Invalid");
 
 // Initialise the counts
-const Size SimmConfiguration::numberOfRiskClasses = riskClassMap.size();
-const Size SimmConfiguration::numberOfRiskTypes = riskTypeMap.size();
 const Size SimmConfiguration::numberOfMarginTypes = marginTypeMap.size();
 const Size SimmConfiguration::numberOfProductClasses = productClassMap.size();
 const Size SimmConfiguration::numberOfRegulations = regulationsMap.size();
@@ -102,17 +100,38 @@ set<SimmConfiguration::RiskClass> SimmConfiguration::riskClasses(bool includeAll
     return result;
 }
 
-set<SimmConfiguration::RiskType> SimmConfiguration::riskTypes(bool includeAll) {
+set<CrifRecord::RiskType> SimmConfiguration::riskTypes(bool includeAll) {
+
+    static std::set<CrifRecord::RiskType> simmRiskTypes = {
+        // SIMM Risk Types
+        CrifRecord::RiskType::Commodity,
+        CrifRecord::RiskType::CommodityVol,
+        CrifRecord::RiskType::CreditNonQ,
+        CrifRecord::RiskType::CreditQ,
+        CrifRecord::RiskType::CreditVol,
+        CrifRecord::RiskType::CreditVolNonQ,
+        CrifRecord::RiskType::Equity,
+        CrifRecord::RiskType::EquityVol,
+        CrifRecord::RiskType::FX,
+        CrifRecord::RiskType::FXVol,
+        CrifRecord::RiskType::Inflation,
+        CrifRecord::RiskType::IRCurve,
+        CrifRecord::RiskType::IRVol,
+        CrifRecord::RiskType::InflationVol,
+        CrifRecord::RiskType::BaseCorr,
+        CrifRecord::RiskType::XCcyBasis,
+        CrifRecord::RiskType::ProductClassMultiplier,
+        CrifRecord::RiskType::AddOnNotionalFactor,
+        CrifRecord::RiskType::Notional,
+        CrifRecord::RiskType::AddOnFixedAmount,
+        CrifRecord::RiskType::PV, // IM Schedule
+    };
 
     // This only works if 'All' is the last enum value
-    Size bound = includeAll ? numberOfRiskTypes : numberOfRiskTypes - 1;
-
-    // Return the set of values
-    set<RiskType> result;
-    for (Size i = 0; i < bound; ++i) {
-        result.insert(RiskType(i));
+    if (includeAll) {
+        simmRiskTypes.insert(CrifRecord::RiskType::All);
     }
-    return result;
+    return simmRiskTypes;
 }
 
 set<SimmConfiguration::MarginType> SimmConfiguration::marginTypes(bool includeAll) {
@@ -128,17 +147,25 @@ set<SimmConfiguration::MarginType> SimmConfiguration::marginTypes(bool includeAl
     return result;
 }
 
-set<SimmConfiguration::ProductClass> SimmConfiguration::productClasses(bool includeAll) {
+set<CrifRecord::ProductClass> SimmConfiguration::productClasses(bool includeAll) {
 
-    // This only works if 'All' is the last enum value
-    Size bound = includeAll ? numberOfProductClasses : numberOfProductClasses - 1;
-
-    // Return the set of values
-    set<ProductClass> result;
-    for (Size i = 0; i < bound; ++i) {
-        result.insert(ProductClass(i));
+    
+    static std::set<CrifRecord::ProductClass> simmProductClasses = {
+        CrifRecord::ProductClass::RatesFX,
+        CrifRecord::ProductClass::Rates, // extension for IM Schedule
+        CrifRecord::ProductClass::FX,    // extension for IM Schedule
+        CrifRecord::ProductClass::Credit,
+        CrifRecord::ProductClass::Equity,
+        CrifRecord::ProductClass::Commodity,
+        CrifRecord::ProductClass::Empty,
+        CrifRecord::ProductClass::Other,               // extension for IM Schedule
+        CrifRecord::ProductClass::AddOnNotionalFactor, // extension for additional IM
+        CrifRecord::ProductClass::AddOnFixedAmount};
+    
+    if (includeAll) {
+        simmProductClasses.insert(CrifRecord::ProductClass::All);
     }
-    return result;
+    return simmProductClasses;
 }
 
 ostream& operator<<(ostream& out, const SimmConfiguration::SimmSide& s) {
@@ -310,78 +337,78 @@ SimmConfiguration::Regulation getWinningRegulation(const std::vector<string>& wi
 }
 
 //! Define ordering for ProductClass
-bool SimmConfiguration::less_than(const SimmConfiguration::ProductClass& lhs,
-                                  const SimmConfiguration::ProductClass& rhs) {
-    QL_REQUIRE(lhs != SimmConfiguration::ProductClass::All && rhs != SimmConfiguration::ProductClass::All,
+bool SimmConfiguration::less_than(const CrifRecord::ProductClass& lhs,
+                                  const CrifRecord::ProductClass& rhs) {
+    QL_REQUIRE(lhs != CrifRecord::ProductClass::All && rhs != CrifRecord::ProductClass::All,
                "Cannot compare the \"All\" ProductClass.");
-    QL_REQUIRE(static_cast<int>(SimmConfiguration::ProductClass::All) == 10,
+    QL_REQUIRE(static_cast<int>(CrifRecord::ProductClass::All) == 10,
                "Number of SIMM Product classes is not 11. Some order comparisons are not handled.");
 
     // all branches end in returns so no breaks are included.
     switch (lhs) {
-    case SimmConfiguration::ProductClass::AddOnFixedAmount:
-    case SimmConfiguration::ProductClass::AddOnNotionalFactor:
-    case SimmConfiguration::ProductClass::Empty:
-    case SimmConfiguration::ProductClass::Other:
+    case CrifRecord::ProductClass::AddOnFixedAmount:
+    case CrifRecord::ProductClass::AddOnNotionalFactor:
+    case CrifRecord::ProductClass::Empty:
+    case CrifRecord::ProductClass::Other:
         switch (rhs) {
-        case SimmConfiguration::ProductClass::AddOnFixedAmount:
-        case SimmConfiguration::ProductClass::AddOnNotionalFactor:
-        case SimmConfiguration::ProductClass::Empty:
-        case SimmConfiguration::ProductClass::Other:
+        case CrifRecord::ProductClass::AddOnFixedAmount:
+        case CrifRecord::ProductClass::AddOnNotionalFactor:
+        case CrifRecord::ProductClass::Empty:
+        case CrifRecord::ProductClass::Other:
             return false;
         default:
             return true;
         }
-    case SimmConfiguration::ProductClass::RatesFX:
-    case SimmConfiguration::ProductClass::Rates:
-    case SimmConfiguration::ProductClass::FX:
+    case CrifRecord::ProductClass::RatesFX:
+    case CrifRecord::ProductClass::Rates:
+    case CrifRecord::ProductClass::FX:
         switch (rhs) {
-        case SimmConfiguration::ProductClass::Empty:
-        case SimmConfiguration::ProductClass::Other:
-        case SimmConfiguration::ProductClass::RatesFX:
-        case SimmConfiguration::ProductClass::Rates:
-        case SimmConfiguration::ProductClass::FX:
+        case CrifRecord::ProductClass::Empty:
+        case CrifRecord::ProductClass::Other:
+        case CrifRecord::ProductClass::RatesFX:
+        case CrifRecord::ProductClass::Rates:
+        case CrifRecord::ProductClass::FX:
             return false;
         default:
             return true;
         }
-    case SimmConfiguration::ProductClass::Equity:
+    case CrifRecord::ProductClass::Equity:
         switch (rhs) {
-        case SimmConfiguration::ProductClass::Empty:
-        case SimmConfiguration::ProductClass::Other:
-        case SimmConfiguration::ProductClass::RatesFX:
-        case SimmConfiguration::ProductClass::Rates:
-        case SimmConfiguration::ProductClass::FX:
-        case SimmConfiguration::ProductClass::Equity:
+        case CrifRecord::ProductClass::Empty:
+        case CrifRecord::ProductClass::Other:
+        case CrifRecord::ProductClass::RatesFX:
+        case CrifRecord::ProductClass::Rates:
+        case CrifRecord::ProductClass::FX:
+        case CrifRecord::ProductClass::Equity:
             return false;
         default:
             return true;
         }
-    case SimmConfiguration::ProductClass::Commodity:
-        if (rhs != SimmConfiguration::ProductClass::Credit) {
+    case CrifRecord::ProductClass::Commodity:
+        if (rhs != CrifRecord::ProductClass::Credit) {
             return false;
         } else {
             return true;
         }
-    case SimmConfiguration::ProductClass::Credit:
+    case CrifRecord::ProductClass::Credit:
         return false;
-    case SimmConfiguration::ProductClass::All:
+    case CrifRecord::ProductClass::All:
         // not handled, fall through to failure
         break;
     }
     QL_FAIL("Unhandled SIMM Product class in waterfall logic.");
 }
 
-bool SimmConfiguration::greater_than(const SimmConfiguration::ProductClass& lhs,
-                                     const SimmConfiguration::ProductClass& rhs) {
+bool SimmConfiguration::greater_than(const CrifRecord::ProductClass& lhs,
+                                     const CrifRecord::ProductClass& rhs) {
     return SimmConfiguration::less_than(rhs, lhs);
 }
-bool SimmConfiguration::less_than_or_equal_to(const SimmConfiguration::ProductClass& lhs,
-                                              const SimmConfiguration::ProductClass& rhs) {
+bool SimmConfiguration::less_than_or_equal_to(const CrifRecord::ProductClass& lhs,
+                                              const CrifRecord::ProductClass& rhs) {
     return !SimmConfiguration::greater_than(lhs, rhs);
 }
-bool SimmConfiguration::greater_than_or_equal_to(const SimmConfiguration::ProductClass& lhs,
-                                                 const SimmConfiguration::ProductClass& rhs) {
+bool SimmConfiguration::greater_than_or_equal_to(const CrifRecord::ProductClass& lhs,
+                                                 const CrifRecord::ProductClass& rhs) {
     return !SimmConfiguration::less_than(lhs, rhs);
 }
 } // namespace analytics
