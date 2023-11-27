@@ -70,9 +70,7 @@ public:
 
     // Model interface implementation (partial)
     const std::string& baseCcy() const override { return currencies_.front(); }
-    std::size_t dt(const Date& d1, const Date& d2) const override {
-        return cg_const(*g_, dayCounter_.yearFraction(d1, d2));
-    }
+    std::size_t dt(const Date& d1, const Date& d2) const override;
     std::size_t pay(const std::size_t amount, const Date& obsdate, const Date& paydate,
                     const std::string& currency) const override;
     std::size_t discount(const Date& obsdate, const Date& paydate, const std::string& currency) const override;
