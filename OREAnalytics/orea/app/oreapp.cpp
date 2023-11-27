@@ -850,6 +850,13 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
             string file = inputPath + "/" + tmp;
             inputs->setCrifFromFile(file, inputs->csvEolChar(), inputs->csvSeparator(), '\"', inputs->csvEscapeChar());
         }
+
+        tmp = params_->get("simm", "simmCalibration", false);
+        if (tmp != "") {
+            string file = inputPath + "/" + tmp;
+            if (boost::filesystem::exists(file))
+                inputs->setSimmCalibrationDataFromFile(file);
+        }
         
         tmp = params_->get("simm", "calculationCurrency", false);
         if (tmp != "")

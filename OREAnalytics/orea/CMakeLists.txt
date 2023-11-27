@@ -97,6 +97,7 @@ simm/crifrecord.cpp
 simm/simmbasicnamemapper.cpp
 simm/simmbucketmapperbase.cpp
 simm/simmcalculator.cpp
+simm/simmcalibration.cpp
 simm/simmconcentration.cpp
 simm/simmconcentrationisdav1_3.cpp
 simm/simmconcentrationisdav1_3_38.cpp
@@ -108,6 +109,7 @@ simm/simmconcentrationisdav2_3_8.cpp
 simm/simmconcentrationisdav2_5.cpp
 simm/simmconcentrationisdav2_5a.cpp
 simm/simmconcentrationisdav2_6.cpp
+simm/simmconcentrationcalibration.cpp
 simm/simmconfiguration.cpp
 simm/simmconfigurationbase.cpp
 simm/simmconfigurationisdav1_0.cpp
@@ -121,6 +123,7 @@ simm/simmconfigurationisdav2_3_8.cpp
 simm/simmconfigurationisdav2_5.cpp
 simm/simmconfigurationisdav2_5a.cpp
 simm/simmconfigurationisdav2_6.cpp
+simm/simmconfigurationcalibration.cpp
 simm/simmresults.cpp
 simm/utilities.cpp
 simulation/fixingmanager.cpp
@@ -243,6 +246,7 @@ simm/simmbasicnamemapper.hpp
 simm/simmbucketmapper.hpp
 simm/simmbucketmapperbase.hpp
 simm/simmcalculator.hpp
+simm/simmcalibration.hpp
 simm/simmconcentration.hpp
 simm/simmconcentrationisdav1_3.hpp
 simm/simmconcentrationisdav1_3_38.hpp
@@ -254,6 +258,7 @@ simm/simmconcentrationisdav2_3_8.hpp
 simm/simmconcentrationisdav2_5.hpp
 simm/simmconcentrationisdav2_5a.hpp
 simm/simmconcentrationisdav2_6.hpp
+simm/simmconcentrationcalibration.hpp
 simm/simmconfiguration.hpp
 simm/simmconfigurationbase.hpp
 simm/simmconfigurationisdav1_0.hpp
@@ -267,6 +272,7 @@ simm/simmconfigurationisdav2_3_8.hpp
 simm/simmconfigurationisdav2_5.hpp
 simm/simmconfigurationisdav2_5a.hpp
 simm/simmconfigurationisdav2_6.hpp
+simm/simmconfigurationcalibration.hpp
 simm/simmnamemapper.hpp
 simm/simmresults.hpp
 simm/utilities.hpp

@@ -107,16 +107,16 @@ map<tuple<string, Date>, Fixing> dummyFixings() {
 }
 
 // Load the requested fixings
-void loadFixings(const map<string, set<Date>>& requestedFixings) {
+void loadFixings(const map<string, RequiredFixings::FixingDates>& requestedFixings) {
 
     // Get the dummy fixings that we have provided in the input directory
     auto fixingValues = dummyFixings();
 
     // Fetch the relevant fixings using the requestedFixings argument
     set<Fixing> relevantFixings;
-    for (const auto& kv : requestedFixings) {
-        for (const auto& d : kv.second) {
-            relevantFixings.insert(fixingValues.at(make_pair(kv.first, d)));
+    for (const auto& [indexName, fixingDates] : requestedFixings) {
+        for (const auto& [d, mandatory] : fixingDates) {
+            relevantFixings.insert(fixingValues.at(make_pair(indexName, d)));
         }
     }
 
@@ -229,10 +229,14 @@ BOOST_DATA_TEST_CASE_F(F, testTradeTypes,
         // Check the retrieved fixings against the expected fixings
         auto expMap = exp.at(key);
         BOOST_CHECK_EQUAL(expMap.size(), m.size());
-        for (const auto& kv : expMap) {
-            BOOST_CHECK_MESSAGE(m.count(kv.first), "Could not find index " << kv.first << " in retrieved fixings");
-            BOOST_CHECK_EQUAL_COLLECTIONS(kv.second.begin(), kv.second.end(), m.at(kv.first).begin(),
-                                          m.at(kv.first).end());
+        for (const auto& [indexName, expectedDates] : expMap) {
+            BOOST_CHECK_MESSAGE(m.count(indexName), "Could not find index " <<indexName << " in retrieved fixings");
+            std::set<QuantLib::Date> actualDates;
+            for (const auto& [d, _] : m.at(indexName)) {
+                actualDates.insert(d);
+            }
+            BOOST_CHECK_EQUAL_COLLECTIONS(expectedDates.begin(), expectedDates.end(), actualDates.begin(),
+                                          actualDates.end());
         }
 
         // Trade should throw if we ask for NPV and have not added the fixings
@@ -252,28 +256,39 @@ BOOST_DATA_TEST_CASE_F(F, testTradeTypes,
 BOOST_AUTO_TEST_CASE(testModifyInflationFixings) {
 
     // Original fixings
-    map<string, set<Date>> fixings = {
-        {"EUHICP", {Date(1, Jan, 2019), Date(1, Dec, 2018), Date(1, Nov, 2018)}},
-        {"USCPI",
-         {Date(1, Dec, 2018), Date(1, Nov, 2018), Date(22, Oct, 2018), Date(1, Feb, 2018), Date(1, Feb, 2016)}},
-        {"EUR-EURIBOR-3M", {Date(18, Dec, 2018), Date(13, Feb, 2019)}}};
+    map<string, RequiredFixings::FixingDates> fixings = {
+        {"EUHICP", RequiredFixings::FixingDates({Date(1, Jan, 2019), Date(1, Dec, 2018), Date(1, Nov, 2018)}, true)},
+        {"USCPI", RequiredFixings::FixingDates({Date(1, Dec, 2018), Date(1, Nov, 2018), Date(22, Oct, 2018),
+                                                Date(1, Feb, 2018), Date(1, Feb, 2016)},
+                                               true)},
+        {"EUR-EURIBOR-3M", RequiredFixings::FixingDates({Date(18, Dec, 2018), Date(13, Feb, 2019)}, true)}};
 
     // Expected fixings after inflation modification
-    map<string, set<Date>> expectedFixings = {
-        {"EUHICP", {Date(31, Jan, 2019), Date(31, Dec, 2018), Date(30, Nov, 2018)}},
-        {"USCPI",
-         {Date(31, Dec, 2018), Date(30, Nov, 2018), Date(22, Oct, 2018), Date(28, Feb, 2018), Date(29, Feb, 2016)}},
-        {"EUR-EURIBOR-3M", {Date(18, Dec, 2018), Date(13, Feb, 2019)}}};
+    map<string, RequiredFixings::FixingDates> expectedFixings = {
+        {"EUHICP", RequiredFixings::FixingDates({Date(31, Jan, 2019), Date(31, Dec, 2018), Date(30, Nov, 2018)}, true)},
+        {"USCPI", RequiredFixings::FixingDates({Date(31, Dec, 2018), Date(30, Nov, 2018), Date(22, Oct, 2018),
+                                                Date(28, Feb, 2018), Date(29, Feb, 2016)},
+                                               true)},
+        {"EUR-EURIBOR-3M", RequiredFixings::FixingDates({Date(18, Dec, 2018), Date(13, Feb, 2019)}, true)}};
 
     // Amend the inflation portion of the fixings
     amendInflationFixingDates(fixings);
 
     // Compare contents of the output files
     BOOST_CHECK_EQUAL(expectedFixings.size(), fixings.size());
-    for (const auto& kv : expectedFixings) {
-        BOOST_CHECK_MESSAGE(fixings.count(kv.first), "Could not find index " << kv.first << " in retrieved fixings");
-        BOOST_CHECK_EQUAL_COLLECTIONS(kv.second.begin(), kv.second.end(), fixings.at(kv.first).begin(),
-                                      fixings.at(kv.first).end());
+    for (const auto& [indexname, expectedFixingDates] : expectedFixings) {
+        BOOST_CHECK_MESSAGE(fixings.count(indexname), "Could not find index " << indexname << " in retrieved fixings");
+        std::set<QuantLib::Date> expectedDates;
+        for (const auto& [d, _] : expectedFixingDates) {
+            expectedDates.insert(d);
+        }
+
+        std::set<QuantLib::Date> actualDates;
+        for (const auto& [d, _] : fixings[indexname]) {
+            actualDates.insert(d);
+        }
+        BOOST_CHECK_EQUAL_COLLECTIONS(expectedDates.begin(), expectedDates.end(), actualDates.begin(),
+                                      actualDates.end());
     }
 }
 
@@ -323,21 +338,34 @@ BOOST_AUTO_TEST_CASE(testAddMarketFixings) {
         oisDate = cal.advance(oisDate, 1 * Days);
     }
 
-    map<string, set<Date>> expectedFixings = {{"EUHICPXT", inflationDates}, {"USCPI", inflationDates},
-                                              {"UKRPI", inflationDates},    {"EUR-EURIBOR-3M", iborDates},
-                                              {"USD-FedFunds", oisDates},   {"USD-LIBOR-3M", iborDates},
-                                              {"EUR-EONIA", oisDates}};
+    map<string, RequiredFixings::FixingDates> expectedFixings = {
+        {"EUHICPXT", RequiredFixings::FixingDates(inflationDates, false)},
+        {"USCPI", RequiredFixings::FixingDates(inflationDates, false)},
+        {"UKRPI", RequiredFixings::FixingDates(inflationDates, false)},
+        {"EUR-EURIBOR-3M", RequiredFixings::FixingDates(iborDates, false)},
+        {"USD-FedFunds", RequiredFixings::FixingDates(oisDates, false)},
+        {"USD-LIBOR-3M", RequiredFixings::FixingDates(iborDates, false)},
+        {"EUR-EONIA", RequiredFixings::FixingDates(oisDates, false)}};
 
     // Populate empty fixings map using the function to be tested
-    map<string, set<Date>> fixings;
+    map<string, RequiredFixings::FixingDates> fixings;
     addMarketFixingDates(asof, fixings, mktParams);
 
     // Check the results
     BOOST_CHECK_EQUAL(expectedFixings.size(), fixings.size());
-    for (const auto& kv : expectedFixings) {
-        BOOST_CHECK_MESSAGE(fixings.count(kv.first), "Could not find index " << kv.first << " in retrieved fixings");
-        BOOST_CHECK_EQUAL_COLLECTIONS(kv.second.begin(), kv.second.end(), fixings.at(kv.first).begin(),
-                                      fixings.at(kv.first).end());
+    for (const auto& [indexName, expectedFixingDates] : expectedFixings) {
+        BOOST_CHECK_MESSAGE(fixings.count(indexName), "Could not find index " << indexName << " in retrieved fixings");
+        std::set<QuantLib::Date> expectedDates;
+        for (const auto& [d, _] : expectedFixingDates) {
+            expectedDates.insert(d);
+        }
+
+        std::set<QuantLib::Date> actualDates;
+        for (const auto& [d, _] : fixings[indexName]) {
+            actualDates.insert(d);
+        }
+        BOOST_CHECK_EQUAL_COLLECTIONS(expectedDates.begin(), expectedDates.end(), actualDates.begin(),
+                                      actualDates.end());
     }
 }
 
@@ -372,7 +400,7 @@ BOOST_FIXTURE_TEST_CASE(testFxNotionalResettingSwapFirstCoupon, F) {
         BOOST_CHECK_MESSAGE(m.count(kv.first) == 1, "Could not find index " << kv.first << " in retrieved fixings");
         if (m.count(kv.first) == 1) {
             BOOST_CHECK_EQUAL(m.at(kv.first).size(), 1);
-            BOOST_CHECK_EQUAL(kv.second, *m.at(kv.first).begin());
+            BOOST_CHECK_EQUAL(kv.second, m.at(kv.first).begin()->first);
         }
     }
 
