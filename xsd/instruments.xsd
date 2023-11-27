@@ -317,13 +317,7 @@
       <xs:element type="xs:string" name="ExerciseFeeSettlementPeriod" minOccurs="0"/>
       <xs:element type="xs:string" name="ExerciseFeeSettlementCalendar" minOccurs="0"/>
       <xs:element type="xs:string" name="ExerciseFeeSettlementConvention" minOccurs="0"/>
-      <xs:element name="ExerciseDates" minOccurs="0">
-        <xs:complexType>
-          <xs:sequence>
-            <xs:element type="date" name="ExerciseDate" minOccurs="0" maxOccurs="unbounded"/>
-          </xs:sequence>
-        </xs:complexType>
-      </xs:element>
+      <xs:element ref="exerciseDatesGroup" minOccurs="0" />
       <xs:element type="bool" name="AutomaticExercise" minOccurs="0"/>
       <xs:element type="optionExerciseData" name="ExerciseData" minOccurs="0"/>
       <xs:element type="optionPaymentData" name="PaymentData" minOccurs="0"/>
@@ -415,6 +409,16 @@
       <xs:element type="xs:string" name="SettlementDirty" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
+
+  <xs:element name="exerciseDatesGroup" abstract="true" />
+  <xs:element name="ExerciseDates" substitutionGroup="exerciseDatesGroup">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element type="date" name="ExerciseDate" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ExerciseSchedule" type="scheduleData" substitutionGroup="exerciseDatesGroup" />
 
   <xs:element name="legDataType" abstract="true"/>
   <xs:element name="CashflowData" substitutionGroup="legDataType">
