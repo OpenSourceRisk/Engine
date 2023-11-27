@@ -32,6 +32,7 @@
 #include <boost/assign/list_of.hpp>
 #include <boost/bimap.hpp>
 #include <boost/optional.hpp>
+#include <boost/range/adaptor/map.hpp>
 
 namespace ore {
 namespace data {
@@ -652,6 +653,23 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         fxIndexAdditionalCashflows, fxIndices);
     wrapper->setPricingEngine(boost::make_shared<TRSWrapperAccrualEngine>());
     instrument_ = boost::make_shared<VanillaInstrument>(wrapper);
+
+    // if the first valuation date is > today, we potentially need fixings for fx conversion as of "today"
+
+    if (Date today = Settings::instance().evaluationDate(); !valuationDates.empty() && valuationDates.front() > today) {
+        std::set<boost::shared_ptr<QuantExt::FxIndex>> tmp;
+        auto fxIndicesVal = fxIndices | boost::adaptors::map_values;
+        tmp.insert(fxIndicesVal.begin(), fxIndicesVal.end());
+        tmp.insert(fxIndexAsset.begin(), fxIndexAsset.end());
+        tmp.insert(fxIndexReturn);
+        tmp.insert(fxIndexAdditionalCashflows);
+        for (auto const& fx : tmp) {
+            if (fx != nullptr) {
+                requiredFixings_.addFixingDate(fx->fixingCalendar().adjust(today, Preceding),
+                                               IndexNameTranslator::instance().oreName(fx->name()));
+            }
+        }
+    }
 
     // set trade member variables (leave legs empty for the time being, we just have the funding leg really)
 

@@ -845,7 +845,15 @@
       <xs:element name="Notionals">
         <xs:complexType>
           <xs:sequence>
-            <xs:element type="xs:float" name="Notional" maxOccurs="unbounded"/>
+            <xs:element name="Notional" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:float">
+                    <xs:attribute name="startDate" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
             <xs:element type="fxreset" name="FXReset" minOccurs="0" maxOccurs="unbounded"/>
             <xs:element type="exchanges" name="Exchanges" minOccurs="0" maxOccurs="1"/>
           </xs:sequence>
@@ -4383,8 +4391,8 @@
       <xs:element type="underlyings" name="Underlyings"/>
       <xs:element type="scheduleData" name="ValuationSchedule"/>
       <xs:element type="xs:boolean" name="SquaredPayoff"/>
-      <xs:element type="xs:float" name="Cap"/>
-      <xs:element type="xs:float" name="Floor"/>
+      <xs:element type="xs:float" name="Cap" minOccurs="0"/>
+      <xs:element type="xs:float" name="Floor" minOccurs="0"/>
       <xs:element type="date" name="SettlementDate"/>
       <xs:element type="currencyCode" name="Currency"/>
     </xs:all>
