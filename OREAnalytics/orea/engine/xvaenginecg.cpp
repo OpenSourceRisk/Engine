@@ -35,6 +35,9 @@
 #include <qle/ad/ssaform.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
 
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/weighted_sum.hpp>
 #include <boost/timer/timer.hpp>
 
 namespace ore {
@@ -67,20 +70,20 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
       sensitivityData_(sensitivityData), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
       continueOnCalibrationError_(continueOnCalibrationError), continueOnError_(continueOnError), context_(context) {
 
-    bool bumpCvaSensis = atoi(getenv("BUMP")) > 0;
+    bool bumpCvaSensis = false;
 
     // Just for performance testing, duplicate the trades in input portfolio as specified by env var N
 
-    portfolio_ = boost::make_shared<Portfolio>();
-    std::string pfxml = portfolio->toXMLString();
-    for (Size i = 0; i < atoi(getenv("N")); ++i) {
-        auto p = boost::make_shared<Portfolio>();
-        p->fromXMLString(pfxml);
-        for (auto const& [id, t] : p->trades()) {
-            t->id() += "_" + std::to_string(i + 1);
-            portfolio_->add(t);
-        }
-    }
+    // portfolio_ = boost::make_shared<Portfolio>();
+    // std::string pfxml = portfolio->toXMLString();
+    // for (Size i = 0; i < atoi(getenv("N")); ++i) {
+    //     auto p = boost::make_shared<Portfolio>();
+    //     p->fromXMLString(pfxml);
+    //     for (auto const& [id, t] : p->trades()) {
+    //         t->id() += "_" + std::to_string(i + 1);
+    //         portfolio_->add(t);
+    //     }
+    // }
 
     // Start Engine
 
@@ -309,15 +312,21 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     boost::timer::nanosecond_type timing10 = timer.elapsed().wall;
 
-    // Dump epe / ene profile out
+    // Write epe / ene profile out
 
-    // for (Size i = 0; i < simulationDates.size() + 1; ++i) {
-    //     std::cout << ore::data::to_string(i == 0 ? model_->referenceDate() : *std::next(simulationDates.begin(), i - 1))
-    //               << "," << expectation(values[pfExposureNodes[i]]) << ","
-    //               << expectation(max(values[pfExposureNodes[i]], RandomVariable(model_->size(), 0.0))) << ","
-    //               << expectation(max(-values[pfExposureNodes[i]], RandomVariable(model_->size(), 0.0))) << "\n";
-    // }
-    // std::cout << std::flush;
+    {
+        InMemoryReport epeReport;
+        epeReport.addColumn("Date", Date()).addColumn("EPE", double(), 4).addColumn("ENE", double(), 4);
+
+        for (Size i = 0; i < simulationDates.size() + 1; ++i) {
+            epeReport.next();
+            epeReport.add(i == 0 ? model_->referenceDate() : *std::next(simulationDates.begin(), i - 1))
+                .add(expectation(max(values[pfExposureNodes[i]], RandomVariable(model_->size(), 0.0))).at(0))
+                .add(expectation(max(-values[pfExposureNodes[i]], RandomVariable(model_->size(), 0.0))).at(0));
+        }
+        epeReport.end();
+        epeReport.toFile("Output/xvacg-exposure.csv");
+    }
 
     Real cva = expectation(values[cvaNode]).at(0);
     LOG("XvaEngineCG: Calcuated CVA (node " << cvaNode << ") = " << cva);
@@ -415,11 +424,15 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
                 auto modelParameters = model_->modelParameters();
                 Size i = 0;
+                boost::accumulators::accumulator_set<
+                    double, boost::accumulators::stats<boost::accumulators::tag::weighted_sum>, double>
+                    acc;
                 for (auto const& [n, v0] : baseModelParams_) {
                     Real v1 = modelParameters[i].second;
-                    sensi += modelParamDerivatives[i] * (v1 - v0);
+                    acc(modelParamDerivatives[i], boost::accumulators::weight = (v1 - v0));
                     ++i;
                 }
+                sensi = boost::accumulators::weighted_sum(acc);
 
             } else {
 
@@ -428,6 +441,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
                 populateModelParameters(values, model_->modelParameters());
                 forwardEvaluation(*g, values, ops_, RandomVariable::deleter, true, opNodeRequirements_, keepNodes);
                 sensi = expectation(values[cvaNode]).at(0) - cva;
+
+                auto modelParameters = model_->modelParameters();
             }
         }
 
@@ -443,13 +458,15 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     // write out sensi report
 
-    boost::shared_ptr<InMemoryReport> scenarioReport = boost::make_shared<InMemoryReport>();
-    auto sensiCube =
-        boost::make_shared<SensitivityCube>(resultCube, sensiScenarioGenerator_->scenarioDescriptions(),
-                                            sensiScenarioGenerator_->shiftSizes(), sensitivityData_->twoSidedDeltas());
-    auto sensiStream = boost::make_shared<SensitivityCubeStream>(sensiCube, simMarketData_->baseCcy());
-    ReportWriter().writeScenarioReport(*scenarioReport, sensiCube, 0.0);
-    scenarioReport->toFile("cva-sensi-scenario.csv");
+    {
+        boost::shared_ptr<InMemoryReport> scenarioReport = boost::make_shared<InMemoryReport>();
+        auto sensiCube = boost::make_shared<SensitivityCube>(
+            resultCube, sensiScenarioGenerator_->scenarioDescriptions(), sensiScenarioGenerator_->shiftSizes(),
+            sensitivityData_->twoSidedDeltas());
+        auto sensiStream = boost::make_shared<SensitivityCubeStream>(sensiCube, simMarketData_->baseCcy());
+        ReportWriter().writeScenarioReport(*scenarioReport, sensiCube, 0.0);
+        scenarioReport->toFile("Output/xvacg-cva-sensi-scenario.csv");
+    }
 
     // Output statistics
 
@@ -478,7 +495,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
                                                    << " ms");
     LOG("XvaEngineCG: Forward eval             : " << std::fixed << std::setprecision(1) << (timing10 - timing9) / 1E6
                                                    << " ms");
-    LOG("XvaEngineCG: Backward deriv D         : " << std::fixed << std::setprecision(1) << (timing11 - timing10) / 1E6
+    LOG("XvaEngineCG: Backward deriv           : " << std::fixed << std::setprecision(1) << (timing11 - timing10) / 1E6
                                                    << " ms");
     LOG("XvaEngineCG: Sensi Cube Gen           : " << std::fixed << std::setprecision(1) << (timing12 - timing11) / 1E6
                                                    << " ms");
