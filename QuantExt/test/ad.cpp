@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <oret/toplevelfixture.hpp>
+#include "toplevelfixture.hpp"
 
 #include <qle/ad/backwardderivatives.hpp>
 #include <qle/ad/forwardderivatives.hpp>
