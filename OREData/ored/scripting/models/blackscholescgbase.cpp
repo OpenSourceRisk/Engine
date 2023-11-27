@@ -26,6 +26,7 @@
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/math/randomvariablelsmbasissystem.hpp>
 #include <qle/math/randomvariable_ops.hpp>
+#include <qle/ad/computationgraph.hpp>
 
 #include <ql/math/comparison.hpp>
 #include <ql/math/matrixutilities/pseudosqrt.hpp>

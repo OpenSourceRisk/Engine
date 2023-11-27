@@ -104,14 +104,16 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
     // 3 define purpose, get suitable script and build ast (i.e. parse it or retrieve it from cache)
 
     std::string purpose = "";
-    if (amcCam_)
+    if (buildingAmc_)
         purpose = "AMC";
     else if (engineParam_ == "FD")
         purpose = "FD";
 
     ScriptedTradeScriptData script =
         getScript(scriptedTrade, ScriptLibraryStorage::instance().get(), purpose, true).second;
+
     auto f = astCache_.find(script.code());
+
     if (f != astCache_.end()) {
         ast_ = f->second;
         DLOG("retrieved ast from cache");
@@ -133,7 +135,8 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
 
     // 4b set up calibration strike information
 
-    setupCalibrationStrikes(script, context);
+    if (!buildingAmc_)
+        setupCalibrationStrikes(script, context);
 
     // 5 run static analyser
 
@@ -209,7 +212,7 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
 
     // 20 build the model adapter
 
-    QL_REQUIRE(amcCam_ == nullptr || modelParam_ == "GaussianCam",
+    QL_REQUIRE(!buildingAmc_ || modelParam_ == "GaussianCam",
                "model/engine = GaussianCam/MC required to build an amc model, got " << modelParam_ << "/"
                                                                                     << engineParam_);
 
@@ -223,10 +226,13 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
     } else if ((modelParam_ == "LocalVolDupire" || modelParam_ == "LocalVolAndreasenHuge") && engineParam_ == "MC") {
         buildLocalVol(id, iborFallbackConfig);
     } else if (modelParam_ == "GaussianCam" && engineParam_ == "MC") {
-        if (amcCam_ == nullptr)
-            buildGaussianCam(id, iborFallbackConfig, script.conditionalExpectationModelStates());
-        else
+        if (amcCam_) {
             buildGaussianCamAMC(id, iborFallbackConfig, script.conditionalExpectationModelStates());
+        } else if (amcCgModel_) {
+            buildAMCCGModel(id, iborFallbackConfig, script.conditionalExpectationModelStates());
+        } else {
+            buildGaussianCam(id, iborFallbackConfig, script.conditionalExpectationModelStates());
+        }
     } else {
         QL_FAIL("model '" << modelParam_ << "' / engine '" << engineParam_
                           << "' not recognised, expected BlackScholes/[MC|FD], LocalVolDupire/MC, "
@@ -304,8 +310,6 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
         bool useExternalDev = useExternalComputeDevice_ && !generateAdditionalResults && !useCachedSensis;
         engine = boost::make_shared<ScriptedInstrumentPricingEngineCG>(
             script.npv(), script.results(), modelCG_, ast_, context, mcParams_, script.code(), interactive_,
-            amcCam_ != nullptr,
-            std::set<std::string>(script.stickyCloseOutStates().begin(), script.stickyCloseOutStates().end()),
             generateAdditionalResults, useCachedSensis, useExternalDev);
         if (useExternalDev) {
             ComputeEnvironment::instance().selectContext(externalComputeDevice_);
@@ -313,7 +317,7 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
     }
 
     LOG("engine built for model " << modelParam_ << " / " << engineParam_ << ", modelSize = " << modelSize_
-                                  << ", interactive = " << interactive_ << ", amcEnabled = " << (amcCam_ != nullptr)
+                                  << ", interactive = " << interactive_ << ", amcEnabled = " << buildingAmc_
                                   << ", generateAdditionalResults = " << generateAdditionalResults);
     return engine;
 }
@@ -1502,9 +1506,18 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
     modelBuilders_.insert(std::make_pair(id, camBuilder));
 }
 
+void ScriptedTradeEngineBuilder::buildAMCCGModel(const std::string& id, const IborFallbackConfig& iborFallbackConfig,
+                                                 const std::vector<std::string>& conditionalExpectationModelStates) {
+    // nothing to build really, the resulting model is exactly the input model
+    QL_REQUIRE(useCg_, "building gaussian cam from external amc cg model, useCg must be set to true in this case.");
+    modelCG_ = amcCgModel_;
+}
+
 void ScriptedTradeEngineBuilder::buildGaussianCamAMC(
     const std::string& id, const IborFallbackConfig& iborFallbackConfig,
     const std::vector<std::string>& conditionalExpectationModelStates) {
+
+    QL_REQUIRE(!useCg_, "building gaussian cam from external amc cam, useCg must be set to false in this case.");
 
     std::vector<std::pair<CrossAssetModel::AssetType, Size>> selectedComponents;
 

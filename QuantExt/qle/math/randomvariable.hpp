@@ -305,6 +305,11 @@ RandomVariable black(const RandomVariable& omega, const RandomVariable& t, const
 // derivative of indicator function 1_{x>0}
 RandomVariable indicatorDerivative(const RandomVariable& x, const double eps);
 
+// is the given random variable deterministic and zero?
+inline bool isDeterministicAndZero(const RandomVariable& x) {
+    return x.deterministic() && QuantLib::close_enough(x[0], 0.0);
+}
+
 // inline element-wise access operators
 
 inline void RandomVariable::set(const Size i, const Real v) {

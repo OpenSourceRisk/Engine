@@ -904,6 +904,17 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     if (tmp != "")
         inputs->setAmc(parseBool(tmp));
 
+    tmp = params_->get("simulation", "amcCg", false);
+    if (tmp != "")
+        inputs->setAmcCg(parseBool(tmp));
+
+    tmp = params_->get("simulation", "xvaCgSensitivityConfigFile", false);
+    if (tmp != "") {
+        string file = inputPath + "/" + tmp;
+        LOG("Load xva cg sensitivity scenario data from file" << file);
+        inputs->setXvaCgSensiScenarioDataFromFile(file);
+    }
+
     tmp = params_->get("simulation", "amcTradeTypes", false);
     if (tmp != "")
         inputs->setAmcTradeTypes(tmp);
@@ -1011,15 +1022,14 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         }
     }
 
-    if (inputs->analytics().find("XVA") != inputs->analytics().end() ||
-        inputs->analytics().find("EXPOSURE") != inputs->analytics().end()) {
+    if (inputs->analytics().find("XVA") != inputs->analytics().end()) {
         tmp = params_->get("xva", "csaFile", false);
         QL_REQUIRE(tmp != "", "Netting set manager is required for XVA");
         string csaFile = inputPath + "/" + tmp;
         LOG("Loading netting and csa data from file" << csaFile);
         inputs->setNettingSetManagerFromFile(csaFile);
     }
-    
+
     tmp = params_->get("xva", "nettingSetCubeFile", false);
     if (inputs->loadCube() && tmp != "") {
         string cubeFile = inputs->resultsPath().string() + "/" + tmp;

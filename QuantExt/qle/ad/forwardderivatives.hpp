@@ -31,7 +31,9 @@ namespace QuantExt {
 template <class T>
 void forwardDerivatives(const ComputationGraph& g, const std::vector<T>& values, std::vector<T>& derivatives,
                         const std::vector<std::function<std::vector<T>(const std::vector<const T*>&, const T*)>>& grad,
-                        std::function<void(T&)> deleter = {}, const std::vector<bool>& keepNodes = {}) {
+                        std::function<void(T&)> deleter = {}, const std::vector<bool>& keepNodes = {},
+                        const std::size_t conditionalExpectationOpId = 0,
+                        const std::function<T(const std::vector<const T*>&)>& conditionalExpectation = {}) {
 
     if (g.size() == 0)
         return;
@@ -48,10 +50,18 @@ void forwardDerivatives(const ComputationGraph& g, const std::vector<T>& values,
                 args[arg] = &values[g.predecessors(node)[arg]];
             }
 
-            auto gr = grad[g.opId(node)](args, &values[node]);
+            if (g.opId(node) == conditionalExpectationOpId && conditionalExpectation) {
 
-            for (std::size_t p = 0; p < g.predecessors(node).size(); ++p) {
-                derivatives[node] += derivatives[g.predecessors(node)[p]] * gr[p];
+                args[0] = &derivatives[g.predecessors(node)[0]];
+                derivatives[node] = conditionalExpectation(args);
+
+            } else {
+
+                auto gr = grad[g.opId(node)](args, &values[node]);
+
+                for (std::size_t p = 0; p < g.predecessors(node).size(); ++p) {
+                    derivatives[node] += derivatives[g.predecessors(node)[p]] * gr[p];
+                }
             }
 
             // the check if we can delete the predecessors

@@ -28,8 +28,8 @@
 #include <ored/utilities/log.hpp>
 
 #include <qle/instruments/cashflowresults.hpp>
-#include <qle/math/randomvariable.hpp>
 #include <qle/math/computeenvironment.hpp>
+#include <qle/math/randomvariable.hpp>
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
@@ -64,25 +64,37 @@ double externalAverage(const std::vector<double>& v) {
 
 } // namespace
 
-void ScriptedInstrumentPricingEngineCG::calculate() const {
+ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
+    const std::string& npv, const std::vector<std::pair<std::string, std::string>>& additionalResults,
+    const boost::shared_ptr<ModelCG>& model, const ASTNodePtr ast, const boost::shared_ptr<Context>& context,
+    const Model::McParams& mcParams, const std::string& script, const bool interactive,
+    const bool generateAdditionalResults, const bool useCachedSensis, const bool useExternalComputeFramework)
+    : npv_(npv), additionalResults_(additionalResults), model_(model), ast_(ast), context_(context),
+      mcParams_(mcParams), script_(script), interactive_(interactive),
+      generateAdditionalResults_(generateAdditionalResults), useCachedSensis_(useCachedSensis),
+      useExternalComputeFramework_(useExternalComputeFramework) {
 
-    // TODOs
-    QL_REQUIRE(!useExternalComputeFramework_ || !generateAdditionalResults_,
-               "ScriptedInstrumentPricingEngineCG: when using external compute framework, generation of additional "
-               "results is not supported yet.");
-    QL_REQUIRE(!useExternalComputeFramework_ || !useCachedSensis_,
-               "ScriptedInstrumentPricingEngineCG: when using external compute framework, usage of cached sensis is "
-               "not supported yet");
-    QL_REQUIRE(model_->trainingSamples() == Null<Size>(), "ScriptedInstrumentPricingEngineCG: separate training phase "
-                                                          "not supported, trainingSamples can not be specified.");
+    // register with model
 
-    lastCalculationWasValid_ = false;
+    registerWith(model_);
 
-    // build cg, if necessary
+    // get ops + labels, grads and op node requirements
 
-    auto g = model_->computationGraph();
+    opNodeRequirements_ = getRandomVariableOpNodeRequirements();
+    if (useExternalComputeFramework_) {
+        opsExternal_ = getExternalRandomVariableOps();
+        gradsExternal_ = getExternalRandomVariableGradients();
+    } else {
+        ops_ = getRandomVariableOps(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType);
+        grads_ = getRandomVariableGradients(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType);
+    }
+}
+
+void ScriptedInstrumentPricingEngineCG::buildComputationGraph() const {
 
     if (cgVersion_ != model_->cgVersion()) {
+
+        auto g = model_->computationGraph();
 
         // clear NPVMem() regression coefficients
 
@@ -123,25 +135,13 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
             }
         }
 
-        // get ops + labels, grads and op node requirements
-
-        opLabels_ = getRandomVariableOpLabels();
-        opNodeRequirements_ = getRandomVariableOpNodeRequirements();
-        if (useExternalComputeFramework_) {
-            opsExternal_ = getExternalRandomVariableOps();
-            gradsExternal_ = getExternalRandomVariableGradients();
-        } else {
-            ops_ = getRandomVariableOps(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType);
-            grads_ = getRandomVariableGradients(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType);
-        }
-
         // build graph
 
-        ComputationGraphBuilder cgBuilder(*g, opLabels_, ast_, workingContext_, model_);
+        ComputationGraphBuilder cgBuilder(*g, getRandomVariableOpLabels(), ast_, workingContext_, model_);
         cgBuilder.run(generateAdditionalResults_, script_, interactive_);
         cgVersion_ = model_->cgVersion();
         DLOG("Built computation graph version " << cgVersion_ << " size is " << g->size());
-        TLOGGERSTREAM(ssaForm(*g, opLabels_));
+        TLOGGERSTREAM(ssaForm(*g, getRandomVariableOpLabels()));
         keepNodes_ = cgBuilder.keepNodes();
         payLogEntries_ = cgBuilder.payLogEntries();
 
@@ -149,10 +149,29 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
 
         haveBaseValues_ = false;
     }
+}
+
+void ScriptedInstrumentPricingEngineCG::calculate() const {
+
+    // TODOs
+    QL_REQUIRE(!useExternalComputeFramework_ || !generateAdditionalResults_,
+               "ScriptedInstrumentPricingEngineCG: when using external compute framework, generation of additional "
+               "results is not supported yet.");
+    QL_REQUIRE(!useExternalComputeFramework_ || !useCachedSensis_,
+               "ScriptedInstrumentPricingEngineCG: when using external compute framework, usage of cached sensis is "
+               "not supported yet");
+    QL_REQUIRE(model_->trainingSamples() == Null<Size>(), "ScriptedInstrumentPricingEngineCG: separate training phase "
+                                                          "not supported, trainingSamples can not be specified.");
+
+    lastCalculationWasValid_ = false;
+
+    buildComputationGraph();
 
     if (!haveBaseValues_ || !useCachedSensis_) {
 
         // calculate NPV and Sensis ("base scenario"), store base npv + sensis + base model params
+
+        auto g = model_->computationGraph();
 
         bool newExternalCalc = false;
         if (useExternalComputeFramework_) {
@@ -267,7 +286,7 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
             DLOG("ran forward evaluation");
         }
 
-        TLOGGERSTREAM(ssaForm(*g, opLabels_, values));
+        TLOGGERSTREAM(ssaForm(*g, getRandomVariableOpLabels(), values));
 
         // extract npv result and set it
 
@@ -382,16 +401,6 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
             instrumentAdditionalResults_.insert(model_->additionalResults().begin(), model_->additionalResults().end());
 
         } // if generate additional results
-
-        // if the engine is amc enabled, add an amc calculator to the additional results
-
-        if (amcEnabled_) {
-            QL_FAIL("AMC not supported by scripted instrument pricing engine CG");
-            // DLOG("add amc calculator to results");
-            // results_.additionalResults["amcCalculator"] =
-            //     boost::static_pointer_cast<AmcCalculator>(boost::make_shared<ScriptedInstrumentAmcCalculator>(
-            //         npv_, model_, ast_, context_, script_, interactive_, amcStickyCloseOutStates_));
-        }
 
         if (useCachedSensis_) {
 

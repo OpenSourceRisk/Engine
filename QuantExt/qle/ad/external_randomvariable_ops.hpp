@@ -34,6 +34,7 @@ public:
     ExternalRandomVariable(const std::size_t randomVariableOpCode,
                            const std::vector<const ExternalRandomVariable*>& args);
     void clear();
+    bool initialised() const { return initialized_; }
     void declareAsOutput() const;
     std::size_t id() const;
 
@@ -45,6 +46,11 @@ private:
     std::size_t id_;
 };
 
+// is the given random variable deterministic and zero?
+inline bool isDeterministicAndZero(const ExternalRandomVariable& x) {
+    return false;
+}
+
 using ExternalRandomVariableOp =
     std::function<ExternalRandomVariable(const std::vector<const ExternalRandomVariable*>&)>;
 
@@ -54,5 +60,6 @@ using ExternalRandomVariableGrad = std::function<std::vector<ExternalRandomVaria
     const std::vector<const ExternalRandomVariable*>&, const ExternalRandomVariable*)>;
 
 std::vector<ExternalRandomVariableGrad> getExternalRandomVariableGradients();
+
 
 } // namespace QuantExt

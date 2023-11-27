@@ -83,6 +83,7 @@
       <xs:enumeration value="MersenneTwisterAntithetic"/>
       <xs:enumeration value="Sobol"/>
       <xs:enumeration value="SobolBrownianBridge"/>
+      <xs:enumeration value="Burley2020SobolBrownianBridge"/>
     </xs:restriction>
   </xs:simpleType>
 

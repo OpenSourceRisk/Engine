@@ -30,11 +30,11 @@ GaussianCamCG::GaussianCamCG(
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
     const std::set<Date>& simulationDates, const Size timeStepsPerYear, const IborFallbackConfig& iborFallbackConfig,
     const std::vector<Size>& projectedStateProcessIndices,
-    const std::vector<std::string>& conditionalExpectationModelStates)
+    const std::vector<std::string>& conditionalExpectationModelStates, const bool sloppySimDates)
     : ModelCGImpl(curves.front()->dayCounter(), paths, currencies, irIndices, infIndices, indices, indexCurrencies,
                   simulationDates, iborFallbackConfig),
       cam_(cam), curves_(curves), fxSpots_(fxSpots), timeStepsPerYear_(timeStepsPerYear),
-      projectedStateProcessIndices_(projectedStateProcessIndices) {
+      projectedStateProcessIndices_(projectedStateProcessIndices), sloppySimDates_(sloppySimDates) {
 
     // check inputs
 
@@ -97,6 +97,15 @@ Size GaussianCamCG::size() const {
     else {
         return overwriteModelSize_;
     }
+}
+
+Date GaussianCamCG::getSloppyDate(const Date& d) const {
+    if (!sloppySimDates_)
+        return d;
+    auto s = std::lower_bound(effectiveSimulationDates_.begin(), effectiveSimulationDates_.end(), d);
+    if (s == effectiveSimulationDates_.end())
+        return *effectiveSimulationDates_.rbegin();
+    return *s;
 }
 
 void GaussianCamCG::performCalculations() const {
@@ -208,8 +217,7 @@ void GaussianCamCG::performCalculations() const {
                                                             std::vector<std::size_t>(timeGrid_.size() - 1));
     for (Size j = 0; j < cam_->brownians() + cam_->auxBrownians(); ++j) {
         for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
-            randomVariates_[j][i] = cg_var(*g_, "__rv_" + std::to_string(j) + "_" + std::to_string(i),
-                                           ComputationGraph::VarDoesntExist::Create);
+            randomVariates_[j][i] = cg_insert(*g_);
         }
     }
 
@@ -217,12 +225,22 @@ void GaussianCamCG::performCalculations() const {
 
     auto cam(cam_);
 
+    QL_REQUIRE(timeGrid_.size() == effectiveSimulationDates_.size(),
+               "GaussianCamCG: time grid size ("
+                   << timeGrid_.size() << ") does not match effective simulation dates size ("
+                   << effectiveSimulationDates_.size()
+                   << "), this is currently not supported. The parameter timeStepsPerYear (" << timeStepsPerYear_
+                   << ") shoudl be 1");
+
+    std::size_t lastZeta = cg_const(*g_, 0.0);
+    std::vector<std::size_t> diffusion(timeGrid_.size() - 1);
     for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
-        std::string id = "__diffusion_0_" + std::to_string(i);
+        std::string id = "__lgm_" + currencies_[0] + "_zeta_" +
+                         ore::data::to_string(*std::next(effectiveSimulationDates_.begin(), i + 1));
         Real t = timeGrid_[i];
-        Real dt = timeGrid_.dt(i);
-        addModelParameter(id,
-                          [cam, t, dt] { return cam->stateProcess()->diffusion(t, Array())(0, 0) * std::sqrt(dt); });
+        std::size_t zeta = addModelParameter(id, [cam, t] { return cam->irlgm1f(0)->zeta(t); });
+        diffusion[i] = cg_sqrt(*g_, cg_subtract(*g_, zeta, lastZeta));
+        lastZeta = zeta;
     }
 
     std::string id = "__z_0";
@@ -232,9 +250,7 @@ void GaussianCamCG::performCalculations() const {
 
     std::size_t dateIndex = 1;
     for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
-        irState = cg_add(*g_, irState,
-                         cg_mult(*g_, cg_var(*g_, "__diffusion_0_" + std::to_string(i)),
-                                 cg_var(*g_, "__rv_0_" + std::to_string(i))));
+        irState = cg_add(*g_, irState, cg_mult(*g_, diffusion[i], randomVariates_[0][i]));
         if (positionInTimeGrid_[dateIndex] == i + 1) {
             irStates_[*std::next(effectiveSimulationDates_.begin(), dateIndex)][0] = irState;
             ++dateIndex;
@@ -257,8 +273,11 @@ std::size_t GaussianCamCG::getIrIndexValue(const Size indexNo, const Date& d, co
     // ensure a valid fixing date
     fixingDate = irIndices_[indexNo].second->fixingCalendar().adjust(fixingDate);
     Size currencyIdx = irIndexPositionInCam_[indexNo];
-    LgmCG lgmcg(currencies_[currencyIdx], *g_, cam_->irlgm1f(currencyIdx), modelParameters_);
-    return lgmcg.fixing(irIndices_[indexNo].second, fixingDate, d, irStates_.at(d).at(currencyIdx));
+    auto cam(cam_);
+    LgmCG lgmcg(
+        currencies_[currencyIdx], *g_, [cam, currencyIdx] { return cam->irlgm1f(currencyIdx); }, modelParameters_);
+    Date sd = getSloppyDate(d);
+    return lgmcg.fixing(irIndices_[indexNo].second, fixingDate, sd, irStates_.at(sd).at(currencyIdx));
 }
 
 std::size_t GaussianCamCG::getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
@@ -275,13 +294,21 @@ std::size_t GaussianCamCG::fwdCompAvg(const bool isAvg, const std::string& index
 }
 
 std::size_t GaussianCamCG::getDiscount(const Size idx, const Date& s, const Date& t) const {
-    LgmCG lgmcg(currencies_[idx], *g_, cam_->irlgm1f(currencyPositionInCam_[idx]), modelParameters_);
-    return lgmcg.discountBond(s, t, irStates_.at(s)[idx]);
+    auto cam(cam_);
+    Size cpidx = currencyPositionInCam_[idx];
+    LgmCG lgmcg(
+        currencies_[idx], *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_);
+    Date sd = getSloppyDate(s);
+    return lgmcg.discountBond(sd, t, irStates_.at(sd)[idx]);
 }
 
 std::size_t GaussianCamCG::getNumeraire(const Date& s) const {
-    LgmCG lgmcg(currencies_[0], *g_, cam_->irlgm1f(currencyPositionInCam_[0]), modelParameters_);
-    return lgmcg.numeraire(s, irStates_.at(s)[0]);
+    auto cam(cam_);
+    Size cpidx = currencyPositionInCam_[0];
+    LgmCG lgmcg(
+        currencies_[0], *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_);
+    Date sd = getSloppyDate(s);
+    return lgmcg.numeraire(sd, irStates_.at(sd)[0]);
 }
 
 std::size_t GaussianCamCG::getFxSpot(const Size idx) const {
@@ -330,7 +357,8 @@ std::size_t GaussianCamCG::npv(const std::size_t amount, const Date& obsdate, co
 
     std::vector<std::size_t> state;
 
-    state.push_back(irStates_.at(obsdate).at(0));
+    Date sd = getSloppyDate(obsdate);
+    state.push_back(irStates_.at(sd).at(0));
 
     if (addRegressor1 != ComputationGraph::nan)
         state.push_back(addRegressor1);
@@ -352,12 +380,6 @@ std::size_t GaussianCamCG::npv(const std::size_t amount, const Date& obsdate, co
     // compute conditional expectation and return the result
 
     return cg_conditionalExpectation(*g_, amount, state, filter);
-}
-
-void GaussianCamCG::injectPaths(const std::vector<QuantLib::Real>* pathTimes,
-                                const std::vector<std::vector<std::size_t>>* variates,
-                                const std::vector<bool>* isRelevantTime, const bool stickyCloseOutRun) {
-    QL_FAIL("GaussianCamCG::injectPaths(): not implemented");
 }
 
 } // namespace data

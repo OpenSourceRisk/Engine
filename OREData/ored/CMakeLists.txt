@@ -316,6 +316,7 @@ scripting/models/gaussiancam.cpp
 scripting/models/gaussiancamcg.cpp
 scripting/models/lgmcg.cpp
 scripting/models/localvol.cpp
+scripting/models/modelcg.cpp
 scripting/models/modelcgimpl.cpp
 scripting/models/modelimpl.cpp
 scripting/paylog.cpp
@@ -685,7 +686,6 @@ scripting/engines/scriptedinstrumentpricingengine.hpp
 scripting/engines/scriptedinstrumentpricingenginecg.hpp
 scripting/grammar.hpp
 scripting/models/amcmodel.hpp
-scripting/models/amcmodelcg.hpp
 scripting/models/blackscholes.hpp
 scripting/models/blackscholesbase.hpp
 scripting/models/blackscholescg.hpp

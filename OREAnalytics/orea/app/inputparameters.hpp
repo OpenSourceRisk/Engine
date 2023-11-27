@@ -160,6 +160,9 @@ public:
     // Setters for exposure simulation
     void setSalvageCorrelationMatrix(bool b) { salvageCorrelationMatrix_ = b; }
     void setAmc(bool b) { amc_ = b; }
+    void setAmcCg(bool b) { amcCg_ = b; }
+    void setXvaCgSensiScenarioData(const std::string& xml);
+    void setXvaCgSensiScenarioDataFromFile(const std::string& fileName);
     void setAmcTradeTypes(const std::string& s); // parse to set<string>
     void setExposureBaseCurrency(const std::string& s) { exposureBaseCurrency_ = s; } 
     void setExposureObservationModel(const std::string& s) { exposureObservationModel_ = s; }
@@ -430,6 +433,8 @@ public:
      *********************************/
     bool salvageCorrelationMatrix() { return salvageCorrelationMatrix_; }
     bool amc() { return amc_; }
+    bool amcCg() { return amcCg_; }
+    const boost::shared_ptr<ore::analytics::SensitivityScenarioData>& xvaCgSensiScenarioData() { return xvaCgSensiScenarioData_; }
     const std::set<std::string>& amcTradeTypes() { return amcTradeTypes_; }
     const std::string& exposureBaseCurrency() { return exposureBaseCurrency_; }
     const std::string& exposureObservationModel() { return exposureObservationModel_; }
@@ -687,6 +692,8 @@ protected:
      *******************/
     bool salvageCorrelationMatrix_ = false;
     bool amc_ = false;
+    bool amcCg_ = false;
+    boost::shared_ptr<ore::analytics::SensitivityScenarioData> xvaCgSensiScenarioData_;
     std::set<std::string> amcTradeTypes_;
     std::string exposureBaseCurrency_ = "";
     std::string exposureObservationModel_ = "Disable";

@@ -11,7 +11,6 @@
 #pragma once
 
 #include <ored/model/crossassetmodelbuilder.hpp>
-#include <ored/scripting/models/amcmodelcg.hpp>
 #include <ored/scripting/models/modelcgimpl.hpp>
 
 #include <qle/processes/crossassetstateprocess.hpp>
@@ -21,7 +20,7 @@
 namespace ore {
 namespace data {
 
-class GaussianCamCG : public ModelCGImpl, public AmcModelCG {
+class GaussianCamCG : public ModelCGImpl {
 public:
     /* For the constructor arguments see ModelCGImpl, plus the notes in GaussianCam */
     GaussianCamCG(const Handle<CrossAssetModel>& cam, const Size paths, const std::vector<std::string>& currencies,
@@ -32,7 +31,8 @@ public:
                   const std::set<Date>& simulationDates, const Size timeStepsPerYear = 1,
                   const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
                   const std::vector<Size>& projectedStateProcessIndices = {},
-                  const std::vector<std::string>& conditionalExpectationModelStates = {});
+                  const std::vector<std::string>& conditionalExpectationModelStates = {},
+                  const bool sloppySimDates = false);
 
     // Model interface implementation
     Type type() const override { return Type::MC; }
@@ -50,12 +50,6 @@ public:
     Real getDirectFxSpotT0(const std::string& forCcy, const std::string& domCcy) const override;
     Real getDirectDiscountT0(const Date& paydate, const std::string& currency) const override;
 
-    // TODO ....
-    void resetNPVMem() override {}
-    void injectPaths(const std::vector<QuantLib::Real>* pathTimes,
-                     const std::vector<std::vector<std::size_t>>* variates, const std::vector<bool>* isRelevantTime,
-                     const bool stickyCloseOutRun) override;
-
 protected:
     // ModelCGImpl interface implementation
     virtual std::size_t getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
@@ -71,12 +65,16 @@ protected:
     std::size_t getNumeraire(const Date& s) const override;
     std::size_t getFxSpot(const Size idx) const override;
 
+    // utillity functions
+    Date getSloppyDate(const Date& d) const;
+
     // input parameters
     const Handle<CrossAssetModel> cam_;
     const std::vector<Handle<YieldTermStructure>> curves_;
     const std::vector<Handle<Quote>> fxSpots_;
     const Size timeStepsPerYear_;
     const std::vector<Size> projectedStateProcessIndices_;
+    const bool sloppySimDates_;
 
     // updated in performCalculations()
     mutable Date referenceDate_;                      // the model reference date
@@ -86,13 +84,13 @@ protected:
     mutable std::map<Date, std::vector<std::size_t>> underlyingPaths_; // per simulation date index states
     mutable std::map<Date, std::vector<std::size_t>> irStates_;        // per simulation date ir states for currencies_
     mutable std::map<Date, std::vector<std::pair<std::size_t, std::size_t>>>
-        infStates_;                                                    // per simulation date dk (x,y) or jy (x,y)
-    mutable std::vector<Size> indexPositionInProcess_;                 // maps index no to position in state process
-    mutable std::vector<Size> infIndexPositionInProcess_;              // maps inf index no to position in state process
-    mutable std::vector<Size> currencyPositionInProcess_;              // maps currency no to position in state process
-    mutable std::vector<Size> irIndexPositionInCam_;                   // maps ir index no to currency idx in cam
-    mutable std::vector<Size> infIndexPositionInCam_;                  // maps inf index no to inf idx in cam
-    mutable std::vector<Size> currencyPositionInCam_; // maps currency no to position in cam parametrizations
+        infStates_;                                       // per simulation date dk (x,y) or jy (x,y)
+    mutable std::vector<Size> indexPositionInProcess_;    // maps index no to position in state process
+    mutable std::vector<Size> infIndexPositionInProcess_; // maps inf index no to position in state process
+    mutable std::vector<Size> currencyPositionInProcess_; // maps currency no to position in state process
+    mutable std::vector<Size> irIndexPositionInCam_;      // maps ir index no to currency idx in cam
+    mutable std::vector<Size> infIndexPositionInCam_;     // maps inf index no to inf idx in cam
+    mutable std::vector<Size> currencyPositionInCam_;     // maps currency no to position in cam parametrizations
     mutable std::vector<Size> eqIndexInCam_;      // maps index no to eq position in cam (or null, if not an eq index)
     mutable bool conditionalExpectationUseIr_;    // derived from input conditionalExpectationModelState
     mutable bool conditionalExpectationUseInf_;   // derived from input conditionalExpectationModelState
