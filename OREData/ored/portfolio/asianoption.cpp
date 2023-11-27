@@ -171,7 +171,7 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     std::vector<Real> additionalMultipliers;
     maturity_ = expiryDate;
     maturity_ =
-        std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, 1.0, option_.premiumData(),
+        std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(),
                                         positionType == QuantLib::Position::Long ? -1.0 : 1.0, payCcy, engineFactory,
                                         configuration));
 
