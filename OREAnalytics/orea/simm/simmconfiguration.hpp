@@ -28,6 +28,7 @@
 
 #include <boost/optional.hpp>
 
+#include <orea/simm/crifrecord.hpp>
 #include <ql/indexes/interestrateindex.hpp>
 #include <ql/types.hpp>
 
@@ -96,27 +97,27 @@ public:
     static std::set<RiskClass> riskClasses(bool includeAll = false);
 
     //! Give back a set containing the RiskType values optionally excluding 'All'
-    static std::set<RiskType> riskTypes(bool includeAll = false);
+    static std::set<CrifRecord::RiskType> riskTypes(bool includeAll = false);
 
     //! Give back a set containing the MarginType values optionally excluding 'All'
     static std::set<MarginType> marginTypes(bool includeAll = false);
 
     //! Give back a set containing the ProductClass values optionally excluding 'All'
-    static std::set<ProductClass> productClasses(bool includeAll = false);
+    static std::set<CrifRecord::ProductClass> productClasses(bool includeAll = false);
 
     //! Define ordering for ProductClass according to a waterfall:
     // Empty < RatesFX < Equity < Commodity < Credit
     // All is unhandled
     // Would use operator< but there is a bug in the visual studio compiler.
-    static bool less_than(const ProductClass& lhs, const ProductClass& rhs);
-    static bool greater_than(const ProductClass& lhs, const ProductClass& rhs);
-    static bool less_than_or_equal_to(const ProductClass& lhs, const ProductClass& rhs);
-    static bool greater_than_or_equal_to(const ProductClass& lhs, const ProductClass& rhs);
+    static bool less_than(const CrifRecord::ProductClass& lhs, const CrifRecord::ProductClass& rhs);
+    static bool greater_than(const CrifRecord::ProductClass& lhs, const CrifRecord::ProductClass& rhs);
+    static bool less_than_or_equal_to(const CrifRecord::ProductClass& lhs, const CrifRecord::ProductClass& rhs);
+    static bool greater_than_or_equal_to(const CrifRecord::ProductClass& lhs, const CrifRecord::ProductClass& rhs);
 
     //! Return the "worse" ProductClass using a waterfall logic:
     // RatesFX <
-    static ProductClass maxProductClass(ProductClass pc1, ProductClass pc2) {
-        QL_REQUIRE(pc1 != ProductClass::All && pc2 != ProductClass::All,
+    static CrifRecord::ProductClass maxProductClass(CrifRecord::ProductClass pc1, CrifRecord::ProductClass pc2) {
+        QL_REQUIRE(pc1 != CrifRecord::ProductClass::All && pc2 != CrifRecord::ProductClass::All,
                    "Cannot define worse product type if even one of the product classes is indeterminate.");
         return (less_than(pc1, pc2) ? pc2 : pc1);
     }
@@ -132,25 +133,25 @@ public:
 
     //! Return the SIMM <em>bucket</em> names for the given risk type \p rt
     //! An empty vector is returned if the risk type has no buckets
-    virtual std::vector<std::string> buckets(const RiskType& rt) const = 0;
+    virtual std::vector<std::string> buckets(const CrifRecord::RiskType& rt) const = 0;
 
     //! Return true if the SIMM risk type \p rt has buckets
-    virtual bool hasBuckets(const RiskType& rt) const = 0;
+    virtual bool hasBuckets(const CrifRecord::RiskType& rt) const = 0;
 
     /*! Return the SIMM <em>bucket</em> name for the given risk type \p rt
         and \p qualifier
 
         \warning Throws an error if there are no buckets for the risk type \p rt
     */
-    virtual std::string bucket(const RiskType& rt, const std::string& qualifier) const = 0;
+    virtual std::string bucket(const CrifRecord::RiskType& rt, const std::string& qualifier) const = 0;
 
     //! Return the list of SIMM <em>Label1</em> values for risk type \p rt
     //! An empty vector is returned if the risk type does not use <em>Label1</em>
-    virtual std::vector<std::string> labels1(const RiskType& rt) const = 0;
+    virtual std::vector<std::string> labels1(const CrifRecord::RiskType& rt) const = 0;
 
     //! Return the list of SIMM <em>Label2</em> values for risk type \p rt
     //! An empty vector is returned if the risk type does not use <em>Label2</em>
-    virtual std::vector<std::string> labels2(const RiskType& rt) const = 0;
+    virtual std::vector<std::string> labels2(const CrifRecord::RiskType& rt) const = 0;
 
     /*! Return the SIMM <em>Label2</em> value for the given interest rate index
         \p irIndex. For interest rate indices, this is the SIMM sub curve name
@@ -171,7 +172,7 @@ public:
         Adding to label2 in the configuration means you do not have to have an
         exhaustive list up front.
     */
-    virtual void addLabels2(const RiskType& rt, const std::string& label_2) = 0;
+    virtual void addLabels2(const CrifRecord::RiskType& rt, const std::string& label_2) = 0;
 
     /*! Return the SIMM <em>risk weight</em> for the given risk type \p rt with
         the given \p qualifier and the given \p label_1. Three possibilities:
@@ -181,7 +182,7 @@ public:
         -# there is a qualifier-dependent and label1-dependent risk weight for the risk
            factor's RiskType so need all three parameters
     */
-    virtual QuantLib::Real weight(const RiskType& rt, boost::optional<std::string> qualifier = boost::none,
+    virtual QuantLib::Real weight(const CrifRecord::RiskType& rt, boost::optional<std::string> qualifier = boost::none,
                                   boost::optional<std::string> label_1 = boost::none,
                                   const std::string& calculationCurrency = "") const = 0;
 
@@ -192,11 +193,11 @@ public:
         \f]
         where \f$t\f$ is given in days.
     */
-    virtual QuantLib::Real curvatureWeight(const RiskType& rt, const std::string& label_1) const = 0;
+    virtual QuantLib::Real curvatureWeight(const CrifRecord::RiskType& rt, const std::string& label_1) const = 0;
 
     /*! Give back the SIMM <em>historical volatility ratio</em> for the risk type \p rt
      */
-    virtual QuantLib::Real historicalVolatilityRatio(const RiskType& rt) const = 0;
+    virtual QuantLib::Real historicalVolatilityRatio(const CrifRecord::RiskType& rt) const = 0;
 
     /*! Give back the value of \f$\sigma_{kj}\f$ from the SIMM docs for risk type \p rt.
         In general, \p rt is a volatility risk type and the method returns:
@@ -208,7 +209,7 @@ public:
 
         \remark For convenience, returns 1.0 if not applicable for risk type \p rt
     */
-    virtual QuantLib::Real sigma(const RiskType& rt, boost::optional<std::string> qualifier = boost::none,
+    virtual QuantLib::Real sigma(const CrifRecord::RiskType& rt, boost::optional<std::string> qualifier = boost::none,
                                  boost::optional<std::string> label_1 = boost::none,
                                  const std::string& calculationCurrency = "") const = 0;
 
@@ -219,12 +220,12 @@ public:
     /*! Give back the SIMM <em>concentration threshold</em> for the risk type \p rt and the
         SIMM \p qualifier
     */
-    virtual QuantLib::Real concentrationThreshold(const RiskType& rt, const std::string& qualifier) const = 0;
+    virtual QuantLib::Real concentrationThreshold(const CrifRecord::RiskType& rt, const std::string& qualifier) const = 0;
 
     /*! Return true if \p rt is a valid SIMM <em>RiskType</em> under the current configuration.
         Otherwise, return false.
     */
-    virtual bool isValidRiskType(const RiskType& rt) const = 0;
+    virtual bool isValidRiskType(const CrifRecord::RiskType& rt) const = 0;
 
     //! Return the correlation between SIMM risk classes \p rc_1 and \p rc_2
     virtual QuantLib::Real correlationRiskClasses(const RiskClass& rc_1, const RiskClass& rc_2) const = 0;
@@ -238,9 +239,9 @@ public:
 
         \todo test if the default return value of 0 makes sense
     */
-    virtual QuantLib::Real correlation(const RiskType& firstRt, const std::string& firstQualifier,
+    virtual QuantLib::Real correlation(const CrifRecord::RiskType& firstRt, const std::string& firstQualifier,
                                        const std::string& firstLabel_1, const std::string& firstLabel_2,
-                                       const RiskType& secondRt, const std::string& secondQualifier,
+                                       const CrifRecord::RiskType& secondRt, const std::string& secondQualifier,
                                        const std::string& secondLabel_1, const std::string& secondLabel_2,
                                        const std::string& calculationCurrency = "") const = 0;
 

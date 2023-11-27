@@ -1491,7 +1491,7 @@ void ReportWriter::writeCube(ore::data::Report& report, const boost::shared_ptr<
 }
 
 // Ease notation again
-typedef SimmConfiguration::ProductClass ProductClass;
+typedef CrifRecord::ProductClass ProductClass;
 typedef SimmConfiguration::RiskClass RiskClass;
 typedef SimmConfiguration::MarginType MarginType;
 typedef SimmConfiguration::SimmSide SimmSide;
@@ -1660,7 +1660,7 @@ void ReportWriter::writeSIMMReport(
     }
 }
 
-void ReportWriter::writeSIMMData(const SimmNetSensitivities& simmData, const boost::shared_ptr<Report>& dataReport,
+void ReportWriter::writeSIMMData(const ore::analytics::Crif& simmData, const boost::shared_ptr<Report>& dataReport,
                                  const bool hasNettingSetDetails) {
 
     LOG("Writing SIMM data report.");
@@ -1708,7 +1708,7 @@ void ReportWriter::writeSIMMData(const SimmNetSensitivities& simmData, const boo
         // Same check as above, but for backwards compatibility, if im_model is not used
         // but Risk::Type is PV or Notional
         if (cr.imModel.empty() &&
-            (cr.riskType == SimmConfiguration::RiskType::Notional || cr.riskType == SimmConfiguration::RiskType::PV))
+            (cr.riskType == CrifRecord::RiskType::Notional || cr.riskType == CrifRecord::RiskType::PV))
             continue;
 
         // Write current netted CRIF record
@@ -1750,7 +1750,7 @@ void ReportWriter::writeCrifReport(const boost::shared_ptr<Report>& report, cons
     // e.g. SIMM parameters use optional NSDs, but trades don't. So SIMM report should not display NSDs, but CRIF report still should.
     bool hasNettingSetDetails = false;
     for (const auto& cr : crif) {
-        if (!cr->nettingSetDetails.emptyOptionalFields())
+        if (!cr.nettingSetDetails.emptyOptionalFields())
             hasNettingSetDetails = true;
     }
 
@@ -1818,7 +1818,7 @@ void ReportWriter::writeCrifReport(const boost::shared_ptr<Report>& report, cons
     }
 
     // Write individual CRIF records
-    for (const auto& cr : crifRecords) {
+    for (const auto& cr : crif) {
         
         report->next().add(cr.tradeId).add(cr.portfolioId);
 
