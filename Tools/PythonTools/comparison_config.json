@@ -1059,6 +1059,21 @@
           }
         ]
       },
+      "xvacg-exposure.csv": {
+        "keys": [
+          "Date"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "EPE",
+              "ENE"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 0.0001
+          }
+        ]
+      },
       ".*xva.*\\.csv": {
         "keys": [
           "TradeId",
@@ -1265,7 +1280,6 @@
           }
         ]
       }
-
     }
   },
   "json_settings": {

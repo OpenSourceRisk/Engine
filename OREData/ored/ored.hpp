@@ -334,7 +334,6 @@
 #include <ored/scripting/engines/scriptedinstrumentpricingenginecg.hpp>
 #include <ored/scripting/grammar.hpp>
 #include <ored/scripting/models/amcmodel.hpp>
-#include <ored/scripting/models/amcmodelcg.hpp>
 #include <ored/scripting/models/blackscholes.hpp>
 #include <ored/scripting/models/blackscholesbase.hpp>
 #include <ored/scripting/models/blackscholescg.hpp>
