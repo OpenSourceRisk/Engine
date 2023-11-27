@@ -187,7 +187,13 @@ std::set<CrifRecord::ProductClass> Crif::ProductClassesByNettingSetDetails(const
     return keys;
 }
 
-
+size_t Crif::countMatching(const NettingSetDetails& nsd, const CrifRecord::ProductClass pc, const CrifRecord::RiskType rt,
+    const std::string& qualifier) const {
+    return std::count_if(records_.begin(), records_.end(), [&nsd, &pc, &rt, &qualifier](const CrifRecord& record) {
+        return record.nettingSetDetails == nsd && record.productClass == pc && record.riskType == rt &&
+               record.qualifier == qualifier;
+    });
+}
 
 
 bool Crif::hasNettingSetDetails() const {

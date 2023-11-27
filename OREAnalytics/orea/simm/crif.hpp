@@ -46,6 +46,15 @@ public:
     std::set<CrifRecord>::const_iterator begin() const { return records_.cbegin(); }
     std::set<CrifRecord>::const_iterator end() const { return records_.cend(); }
     std::set<CrifRecord>::const_iterator find(const CrifRecord& r) const { return records_.find(r); }
+    //! Find first element
+    std::set<CrifRecord>::const_iterator findBy(const NettingSetDetails nsd, CrifRecord::ProductClass pc,
+                                                const CrifRecord::RiskType rt, const std::string& qualifier) const {
+        return std::find_if(records_.begin(), records_.end(), [&nsd, &pc, &rt, &qualifier](const CrifRecord& record) {
+            return record.nettingSetDetails == nsd && record.productClass == pc && record.riskType == rt &&
+                   record.qualifier == qualifier;
+        });
+    };
+
     //! 
     bool empty() const { return records_.empty(); }
 
@@ -76,16 +85,49 @@ public:
     //! Aggregate all existing records
     Crif aggregate() const;
 
+    size_t countMatching(const NettingSetDetails& nsd, const CrifRecord::ProductClass pc, const CrifRecord::RiskType rt,
+                   const std::string& qualifier) const;
+
     std::set<CrifRecord::ProductClass> ProductClassesByNettingSetDetails(const NettingSetDetails nsd) const;
     std::set<std::string> qualifiersBy(const NettingSetDetails nsd, CrifRecord::ProductClass pc,
                                        const CrifRecord::RiskType rt) const;
 
-    auto filterBy(const NettingSetDetails& nsd, const CrifRecord::ProductClass pc, const CrifRecord::RiskType rt,
+    vector<CrifRecord> filterByQualifierAndBucket(const NettingSetDetails& nsd, const CrifRecord::ProductClass pc,
+                                    const CrifRecord::RiskType rt, const std::string& qualifier,
+                                    const std::string& bucket) const {
+        vector<CrifRecord> results;
+        results = boost::copy_range<std::vector<CrifRecord>>(
+            records_ | boost::adaptors::filtered([&nsd, &pc, &rt, &qualifier, &bucket](const CrifRecord& record) {
+                return record.nettingSetDetails == nsd && record.productClass == pc && record.riskType == rt &&
+                       record.qualifier == qualifier && record.bucket == bucket;
+            }));
+        return results;
+    }
+    
+    std::vector<CrifRecord> filterByQualifier(const NettingSetDetails& nsd, const CrifRecord::ProductClass pc, const CrifRecord::RiskType rt,
                   const std::string& qualifier) const {
-        return records_ | boost::adaptors::filtered([&nsd, &pc, &rt, &qualifier](const CrifRecord& record) {
-                   return record.nettingSetDetails == nsd && record.productClass == pc && record.riskType == rt &&
-                          record.qualifier == qualifier;
-               });
+        
+        return boost::copy_range<std::vector<CrifRecord>>(records_ | boost::adaptors::filtered([&nsd, &pc, &rt, &qualifier](const CrifRecord& record) {
+            return record.nettingSetDetails == nsd && record.productClass == pc && record.riskType == rt &&
+                   record.qualifier == qualifier;
+        }));
+        
+    }
+
+    std::vector<CrifRecord> filterByBucket(const NettingSetDetails& nsd, const CrifRecord::ProductClass pc, const CrifRecord::RiskType rt,
+                  const std::string& qualifier) const {
+        return boost::copy_range<std::vector<CrifRecord>>(records_ | boost::adaptors::filtered([&nsd, &pc, &rt, &qualifier](const CrifRecord& record) {
+            return record.nettingSetDetails == nsd && record.productClass == pc && record.riskType == rt &&
+                   record.qualifier == qualifier;
+        }));
+    }
+
+    std::vector<CrifRecord> filterBy(const NettingSetDetails& nsd, const CrifRecord::ProductClass pc,
+                                     const CrifRecord::RiskType rt) const {
+        return boost::copy_range<std::vector<CrifRecord>>(
+            records_ | boost::adaptors::filtered([&nsd, &pc, &rt](const CrifRecord& record) {
+                return record.nettingSetDetails == nsd && record.productClass == pc && record.riskType == rt;
+            }));
     }
 
 private:
