@@ -124,9 +124,9 @@ std::size_t LgmCG::fixing(const boost::shared_ptr<InterestRateIndex>& index, con
             Time dt = ibor->dayCounter().yearFraction(d1, d2);
 
             std::size_t disc1 =
-                reducedDiscountBond(t, d1, x, ibor->forwardingTermStructure(), "__fwd_" + index->name());
+                reducedDiscountBond(t, d1, x, ibor->forwardingTermStructure(), "fwd_" + index->name());
             std::size_t disc2 =
-                reducedDiscountBond(t, d2, x, ibor->forwardingTermStructure(), "__fwd_" + index->name());
+                reducedDiscountBond(t, d2, x, ibor->forwardingTermStructure(), "fwd_" + index->name());
 
             n = cg_div(g_, cg_subtract(g_, cg_div(g_, disc1, disc2), cg_const(g_, 1.0)), cg_const(g_, dt));
 
