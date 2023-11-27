@@ -1264,8 +1264,22 @@
             "rel_tol": 1e-6
           }
         ]
+      },
+      "xvacg-exposure.csv": {
+        "keys": [
+          "Date"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "EPE",
+              "ENE"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 0.0001
+          }
+        ]
       }
-
     }
   },
   "json_settings": {
