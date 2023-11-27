@@ -39,7 +39,7 @@ public:
     /*! Return the SIMM <em>concentration threshold</em> for a given SIMM
         <em>RiskType</em> and SIMM <em>Qualifier</em>.
      */
-    virtual QuantLib::Real threshold(const SimmConfiguration::RiskType& riskType,
+    virtual QuantLib::Real threshold(const CrifRecord::RiskType& riskType,
                                      const std::string& qualifier) const = 0;
 };
 
@@ -54,7 +54,7 @@ public:
         This base class just returns the maximum real number i.e. effectively
         no concentration threshold
      */
-    QuantLib::Real threshold(const SimmConfiguration::RiskType& riskType, const std::string& qualifier) const override {
+    QuantLib::Real threshold(const CrifRecord::RiskType& riskType, const std::string& qualifier) const override {
         return QL_MAX_REAL;
     }
 
@@ -65,12 +65,12 @@ protected:
     /*! Map from SIMM <em>RiskType</em> to another map that holds the
         SIMM concentration threshold <em>bucket</em> to threshold value mappings
     */
-    std::map<SimmConfiguration::RiskType, QuantLib::Real> flatThresholds_;
+    std::map<CrifRecord::RiskType, QuantLib::Real> flatThresholds_;
 
     /*! Map from SIMM <em>RiskType</em> to another map that holds the
         SIMM concentration threshold <em>bucket</em> to threshold value mappings
     */
-    std::map<SimmConfiguration::RiskType, std::map<std::string, QuantLib::Real>> bucketedThresholds_;
+    std::map<CrifRecord::RiskType, std::map<std::string, QuantLib::Real>> bucketedThresholds_;
 
     /*! Map defining the currency groupings for IR concentration thresholds i.e. key is the
         category and value is the set of currencies in that category.
@@ -85,7 +85,7 @@ protected:
     /*! Shared threshold implementation for derived classes to call
      */
     QuantLib::Real thresholdImpl(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
-                                 const SimmConfiguration::RiskType& riskType, const std::string& qualifier) const;
+                                 const CrifRecord::RiskType& riskType, const std::string& qualifier) const;
 
     //! Return concentration threshold for <em>Risk_FXVol</em> given the \p fxPair
     QuantLib::Real fxVolThreshold(const std::string& fxPair) const;

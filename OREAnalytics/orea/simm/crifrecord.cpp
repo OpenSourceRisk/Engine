@@ -135,7 +135,7 @@ CrifRecord::ProductClass parseSimmProductClass(const string& pc) {
     QL_FAIL("Product class string " << pc << " does not correspond to a valid CrifRecord::ProductClass");
 }
 
-std::map<QuantLib::Size, std::set<std::string>> CrifRecord::additionalHeaders = {};
+std::vector<std::set<std::string>> CrifRecord::additionalHeaders = {};
     
 ostream& operator<<(ostream& out, const CrifRecord& cr) {
     const NettingSetDetails& n = cr.nettingSetDetails;
