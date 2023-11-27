@@ -78,7 +78,7 @@ void backwardDerivatives(const ComputationGraph& g, std::vector<T>& values, std:
             redBlockId = g.redBlockId(node);
         }
 
-        if (!g.predecessors(node).empty()) {
+        if (!g.predecessors(node).empty() && !isDeterministicAndZero(derivatives[node])) {
 
             // propagate the derivative at a node to its predecessors
 
