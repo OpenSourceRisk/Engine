@@ -167,7 +167,7 @@ public:
         //! If set to true, cash flows in the margin period of risk are ignored in the collateral modelling
         bool withMporStickyDate = false,
         //! Treatment of cash flows over the margin period of risk
-        const MporCashFlowMode mporCashFlowMode = MporCashFlowMode::NonePay);
+        const MporCashFlowMode mporCashFlowMode = MporCashFlowMode::Unspecified);
 
     void setDimCalculator(boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator) {
         dimCalculator_ = dimCalculator;
