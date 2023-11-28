@@ -52,12 +52,20 @@ public:
     /*! Destructor */
     virtual ~CrifLoader() {}
 
-    virtual Crif loadCrif() = 0;
+    Crif loadCrif() {
+        auto crif = loadCrifImpl();
+        if (updateMapper_ && configuration_->bucketMapper() != nullptr) {
+            configuration_->bucketMapper()->updateFromCrif(crif);
+        }
+        return crif;
+    }
 
     //! SIMM configuration getter
     const boost::shared_ptr<SimmConfiguration>& simmConfiguration() { return configuration_; }
 
 protected:
+    virtual Crif loadCrifImpl() = 0;
+
     void addRecordToCrif(Crif& crif, CrifRecord&& recordToAdd) const;
 
     //! Check if the record is a valid Simm Crif Record
@@ -97,9 +105,9 @@ public:
                            bool aggregateTrades = true, char eol = '\n', char delim = '\t', char quoteChar = '\0',
                            char escapeChar = '\\');
 
-    Crif loadCrif() override { return loadFromStream(stream()); }
-
 protected:
+    Crif loadCrifImpl() override { return loadFromStream(stream()); }
+
     //! Core CRIF loader from generic istream
     Crif loadFromStream(std::stringstream& stream);
 

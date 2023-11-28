@@ -217,5 +217,35 @@ bool Crif::hasNettingSetDetails() const {
     }
     return hasNettingSetDetails;
 }
+
+void Crif::fillAmountUsd(const boost::shared_ptr<ore::data::Market> market) {
+    if (!market) {
+        WLOG("CrifLoader::fillAmountUsd() was called, but market object is empty.")
+        return;
+    }
+    std::set<CrifRecord> results;
+
+    for (const CrifRecord& r : records_) {
+        auto cr = r;
+        // Fill in amount USD if it is missing and if CRIF record requires it (i.e. if it has amount and amount
+        // currency, and risk type is neither AddOnNotionalFactor or ProductClassMultiplier)
+        if (cr.requiresAmountUsd() && !cr.hasAmountUsd()) {
+            if (!cr.hasAmount() || !cr.hasAmountCcy()) {
+                ore::data::StructuredTradeWarningMessage(
+                    cr.tradeId, cr.tradeType, "Populating CRIF amount USD",
+                    "CRIF record is missing one of Amount and AmountCurrency, and there is no amountUsd value to "
+                    "fall back to: " +
+                        ore::data::to_string(cr))
+                    .log();
+            } else {
+                double usdSpot = market->fxRate(cr.amountCurrency + "USD")->value();
+                cr.amountUsd = cr.amount * usdSpot;
+            }
+        }
+        results.insert(cr);
+    }
+    records_ = results;
+}
+
 } // namespace analytics
 } // namespace ore
