@@ -29,13 +29,12 @@
 #include <boost/optional.hpp>
 
 #include <orea/simm/crifrecord.hpp>
+#include <orea/simm/simmbucketmapper.hpp>
 #include <ql/indexes/interestrateindex.hpp>
 #include <ql/types.hpp>
 
 namespace ore {
 namespace analytics {
-
-class SimmBucketMapper;
 
 //! Abstract base class defining the interface for a SIMM configuration
 class SimmConfiguration {
