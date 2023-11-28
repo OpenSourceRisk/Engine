@@ -25,6 +25,7 @@
 
 #include <orea/cube/npvcube.hpp>
 #include <orea/scenario/aggregationscenariodata.hpp>
+#include <orea/scenario/scenariogeneratordata.hpp>
 
 namespace ore {
 namespace analytics {
