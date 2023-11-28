@@ -35,7 +35,7 @@ void FxDigitalOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
 
     // Only European Vanilla supported for now
     QL_REQUIRE(option_.style() == "European", "Option Style unknown: " << option_.style());
-    QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of excercise dates");
+    QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of exercise dates");
     QL_REQUIRE(option_.payoffAtExpiry() == true, "PayoffAtExpiry must be True for FxDigitalOption");
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for FxDigitalOption");
     QL_REQUIRE(strike_ > 0.0 && strike_ != Null<Real>(), "Invalid strike " << strike_);

@@ -103,7 +103,7 @@ protected:
         const string& id,
         //! the key (index or ccy)
         const string& key,
-        //! Excercise dates
+        //! Exercise dates
         const std::vector<Date>& dates,
         //! maturity of the underlying
         const Date& maturity,
@@ -124,7 +124,7 @@ protected:
         const string& id,
         //! the currency
         const string& key,
-        //! Excercise dates
+        //! Exercise dates
         const std::vector<Date>& dates,
         //! maturity of the underlying
         const Date& maturity,
@@ -150,7 +150,7 @@ protected:
         const string& id,
         //! the currency
         const string& key,
-        //! Excercise dates
+        //! Exercise dates
         const std::vector<Date>& dates,
         //! maturity of the underlying
         const Date& maturity,

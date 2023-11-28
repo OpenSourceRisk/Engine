@@ -41,7 +41,7 @@ void EquityEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& 
 
     // Only European Single Barrier supported for now
     QL_REQUIRE(option_.style() == "European", "Option Style unknown: " << option_.style());
-    QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of excercise dates");
+    QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of exercise dates");
     QL_REQUIRE(barrier_.levels().size() == 1, "Invalid number of barrier levels");
     QL_REQUIRE(barrier_.style().empty() || barrier_.style() == "European", "Only european barrier style suppported");
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for FxEuropeanBarrierOption");
