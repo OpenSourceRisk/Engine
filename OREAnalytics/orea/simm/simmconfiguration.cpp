@@ -83,6 +83,7 @@ const bm<SimmConfiguration::Regulation> regulationsMap = list_of<bm<SimmConfigur
         (SimmConfiguration::Regulation::Included, "Included")(SimmConfiguration::Regulation::Unspecified, "Unspecified")(SimmConfiguration::Regulation::Invalid, "Invalid");
 
 // Initialise the counts
+const Size SimmConfiguration::numberOfRiskClasses = riskClassMap.size();
 const Size SimmConfiguration::numberOfMarginTypes = marginTypeMap.size();
 const Size SimmConfiguration::numberOfRegulations = regulationsMap.size();
 

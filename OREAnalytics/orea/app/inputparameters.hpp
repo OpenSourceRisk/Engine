@@ -35,6 +35,7 @@
 #include <orea/simm/crif.hpp>
 #include <orea/simm/simmbasicnamemapper.hpp>
 #include <orea/simm/simmbucketmapper.hpp>
+#include <orea/simm/simmconfiguration.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/iborfallbackconfig.hpp>
 #include <ored/marketdata/csvloader.hpp>

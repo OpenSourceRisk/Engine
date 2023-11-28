@@ -114,7 +114,7 @@ ostream& operator<<(ostream& out, const CrifRecord::ProductClass& pc) {
 }
 
 
-CrifRecord::RiskType parseCrifRiskType(const string& rt) {
+CrifRecord::RiskType parseRiskType(const string& rt) {
     for (auto it = riskTypeMap.right.begin(); it != riskTypeMap.right.end(); it++) {
         if (boost::to_lower_copy(rt) == boost::to_lower_copy(it->first))
             return it->second;
@@ -124,8 +124,7 @@ CrifRecord::RiskType parseCrifRiskType(const string& rt) {
     QL_FAIL("Risk type string " << rt << " does not correspond to a valid CrifRecord::RiskType");
 }
 
-
-CrifRecord::ProductClass parseSimmProductClass(const string& pc) {
+CrifRecord::ProductClass parseProductClass(const string& pc) {
     for (auto it = productClassMap.right.begin(); it != productClassMap.right.end(); it++) {
         if (boost::to_lower_copy(pc) == boost::to_lower_copy(it->first))
             return it->second;

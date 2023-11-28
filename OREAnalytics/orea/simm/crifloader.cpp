@@ -95,7 +95,6 @@ void CrifLoader::addRecordToCrif(Crif& crif, CrifRecord&& recordToAdd) const {
     if (recordToAdd.type() == CrifRecord::RecordType::SIMM) {
         validateSimmRecord(recordToAdd);
         currencyOverrides(recordToAdd);
-        updateMapping(recordToAdd);
     }
     if (aggregateTrades_) {
         recordToAdd.tradeId = "";

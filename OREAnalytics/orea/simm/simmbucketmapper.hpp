@@ -22,8 +22,7 @@
 
 #pragma once
 
-#include <orea/simm/crifrecord.hpp>
-#include <orea/simm/simmconfiguration.hpp>
+#include <orea/simm/crif.hpp>
 #include <ql/time/date.hpp>
 
 #include <string>
@@ -64,6 +63,14 @@ public:
                             const std::string& bucket, const std::string& validFrom = "", const std::string& validTo = "", bool fallback = false) = 0;
 
     virtual const std::set<FailedMapping>& failedMappings() const = 0;
+
+    void updateFromCrif(const ore::analytics::Crif& crif) {
+        for (const auto& cr : crif) {
+            if (!cr.isSimmParameter() && hasBuckets(cr.riskType)) {
+                addMapping(cr.riskType, cr.qualifier, cr.bucket);
+            }
+        }
+    }
 };
 
 inline bool operator<(const SimmBucketMapper::FailedMapping& a, const SimmBucketMapper::FailedMapping& b) {

@@ -23,6 +23,7 @@
 #pragma once
 
 #include <boost/range/adaptor/filtered.hpp>
+#include <boost/range/adaptor/transformed.hpp>
 #include <orea/simm/crifrecord.hpp>
 #include <ored/report/report.hpp>
 #include <ored/marketdata/market.hpp>
@@ -58,6 +59,8 @@ public:
 
     //! 
     bool empty() const { return records_.empty(); }
+
+    size_t size() const { return records_.size(); }
 
     //! check if there are crif records beside simmParameters
     const bool hasCrifRecords() const;
@@ -95,18 +98,22 @@ public:
     std::set<CrifRecord::ProductClass> ProductClassesByNettingSetDetails(const NettingSetDetails nsd) const;
     
     std::set<std::string> qualifiersBy(const NettingSetDetails nsd, CrifRecord::ProductClass pc,
-                                       const CrifRecord::RiskType rt) const;
+                                       const CrifRecord::RiskType rt) const {
+        auto res =  records_ | boost::adaptors::filtered([&nsd, &pc, &rt](const CrifRecord& record) {
+                   return record.nettingSetDetails == nsd && record.productClass == pc && record.riskType == rt;
+               }) |
+               boost::adaptors::transformed([](const CrifRecord& record) { return record.qualifier; });
+        return boost::copy_range<std::set<std::string>>(res);
+    }
 
     std::vector<CrifRecord> filterByQualifierAndBucket(const NettingSetDetails& nsd, const CrifRecord::ProductClass pc,
                                     const CrifRecord::RiskType rt, const std::string& qualifier,
                                     const std::string& bucket) const {
-        
         return boost::copy_range<std::vector<CrifRecord>>(
             records_ | boost::adaptors::filtered([&nsd, &pc, &rt, &qualifier, &bucket](const CrifRecord& record) {
                 return record.nettingSetDetails == nsd && record.productClass == pc && record.riskType == rt &&
                        record.qualifier == qualifier && record.bucket == bucket;
             }));
-        
     }
     
     std::vector<CrifRecord> filterByQualifier(const NettingSetDetails& nsd, const CrifRecord::ProductClass pc, const CrifRecord::RiskType rt,
@@ -135,6 +142,11 @@ public:
             }));
     }
 
+    std::vector<CrifRecord> filterBy(const CrifRecord::RiskType rt) const {
+        return boost::copy_range<std::vector<CrifRecord>>(
+            records_ | boost::adaptors::filtered([&rt](const CrifRecord& record) { return record.riskType == rt; }));
+    }
+
 private:
     void insertCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false);
     void addFrtbCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false);
@@ -152,5 +164,9 @@ private:
     std::set<ore::data::NettingSetDetails> nettingSetDetails_;
     
 };
+
+
+
+
 } // namespace analytics
 } // namespace ore
