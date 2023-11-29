@@ -144,5 +144,8 @@ private:
 std::size_t addModelParameter(ComputationGraph& g, std::vector<std::pair<std::size_t, std::function<double(void)>>>& m,
                               const std::string& id, std::function<double(void)> f);
 
+// map date to a coarser grid if sloppyDates = true, otherwise just return d
+Date getSloppyDate(const Date& d, const bool sloppyDates, const std::set<Date>& dates);
+
 } // namespace data
 } // namespace ore
