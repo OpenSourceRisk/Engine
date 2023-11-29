@@ -99,15 +99,6 @@ Size GaussianCamCG::size() const {
     }
 }
 
-Date GaussianCamCG::getSloppyDate(const Date& d) const {
-    if (!sloppySimDates_)
-        return d;
-    auto s = std::lower_bound(effectiveSimulationDates_.begin(), effectiveSimulationDates_.end(), d);
-    if (s == effectiveSimulationDates_.end())
-        return *effectiveSimulationDates_.rbegin();
-    return *s;
-}
-
 void GaussianCamCG::performCalculations() const {
 
     // needed for base class performCalculations()
@@ -258,8 +249,6 @@ void GaussianCamCG::performCalculations() const {
     }
     QL_REQUIRE(dateIndex == effectiveSimulationDates_.size(),
                "GaussianCamCG:internal error, did not populate all irState time steps.");
-
-    // populate path values
 }
 
 std::size_t GaussianCamCG::getIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
@@ -275,8 +264,9 @@ std::size_t GaussianCamCG::getIrIndexValue(const Size indexNo, const Date& d, co
     Size currencyIdx = irIndexPositionInCam_[indexNo];
     auto cam(cam_);
     LgmCG lgmcg(
-        currencies_[currencyIdx], *g_, [cam, currencyIdx] { return cam->irlgm1f(currencyIdx); }, modelParameters_);
-    Date sd = getSloppyDate(d);
+        currencies_[currencyIdx], *g_, [cam, currencyIdx] { return cam->irlgm1f(currencyIdx); }, modelParameters_,
+        sloppySimDates_, effectiveSimulationDates_);
+    Date sd = getSloppyDate(d, sloppySimDates_, effectiveSimulationDates_);
     return lgmcg.fixing(irIndices_[indexNo].second, fixingDate, sd, irStates_.at(sd).at(currencyIdx));
 }
 
@@ -297,8 +287,9 @@ std::size_t GaussianCamCG::getDiscount(const Size idx, const Date& s, const Date
     auto cam(cam_);
     Size cpidx = currencyPositionInCam_[idx];
     LgmCG lgmcg(
-        currencies_[idx], *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_);
-    Date sd = getSloppyDate(s);
+        currencies_[idx], *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_, sloppySimDates_,
+        effectiveSimulationDates_);
+    Date sd = getSloppyDate(s, sloppySimDates_, effectiveSimulationDates_);
     return lgmcg.discountBond(sd, t, irStates_.at(sd)[idx]);
 }
 
@@ -306,8 +297,9 @@ std::size_t GaussianCamCG::getNumeraire(const Date& s) const {
     auto cam(cam_);
     Size cpidx = currencyPositionInCam_[0];
     LgmCG lgmcg(
-        currencies_[0], *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_);
-    Date sd = getSloppyDate(s);
+        currencies_[0], *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_, sloppySimDates_,
+        effectiveSimulationDates_);
+    Date sd = getSloppyDate(s, sloppySimDates_, effectiveSimulationDates_);
     return lgmcg.numeraire(sd, irStates_.at(sd)[0]);
 }
 
@@ -357,7 +349,7 @@ std::size_t GaussianCamCG::npv(const std::size_t amount, const Date& obsdate, co
 
     std::vector<std::size_t> state;
 
-    Date sd = getSloppyDate(obsdate);
+    Date sd = getSloppyDate(obsdate, sloppySimDates_, effectiveSimulationDates_);
     state.push_back(irStates_.at(sd).at(0));
 
     if (addRegressor1 != ComputationGraph::nan)
