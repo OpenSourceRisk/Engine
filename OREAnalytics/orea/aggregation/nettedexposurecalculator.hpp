@@ -46,28 +46,20 @@ class NettedExposureCalculator {
 public:
     NettedExposureCalculator(
         const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<Market>& market,
-        const boost::shared_ptr<NPVCube>& cube,
-        const string& baseCurrency, const string& configuration, const Real quantile,
-        const CollateralExposureHelper::CalculationType calcType, const bool multiPath,
+        const boost::shared_ptr<NPVCube>& cube, const string& baseCurrency, const string& configuration,
+        const Real quantile, const CollateralExposureHelper::CalculationType calcType, const bool multiPath,
         const boost::shared_ptr<NettingSetManager>& nettingSetManager,
         const map<string, vector<vector<Real>>>& nettingSetDefaultValue,
         const map<string, vector<vector<Real>>>& nettingSetCloseOutValue,
         const map<string, vector<vector<Real>>>& nettingSetMporPositiveFlow,
         const map<string, vector<vector<Real>>>& nettingSetMporNegativeFlow,
         const boost::shared_ptr<AggregationScenarioData>& scenarioData,
-        const boost::shared_ptr<CubeInterpretation> cubeInterpretation,
-        const bool applyInitialMargin,
-        const boost::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator,
-        const bool fullInitialCollateralisation,
+        const boost::shared_ptr<CubeInterpretation> cubeInterpretation, const bool applyInitialMargin,
+        const boost::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator, const bool fullInitialCollateralisation,
         // Marginal Allocation
-        const bool marginalAllocation,
-        const Real marginalAllocationLimit,
-        const boost::shared_ptr<NPVCube>& tradeExposureCube,
-        const Size allocatedEpeIndex,
-        const Size allocatedEneIndex,
-        const bool flipViewXVA,
-        const bool withMporStickyDate,
-        const ScenarioGeneratorData::MporCashFlowMode& mporCashFlowMode);
+        const bool marginalAllocation, const Real marginalAllocationLimit,
+        const boost::shared_ptr<NPVCube>& tradeExposureCube, const Size allocatedEpeIndex, const Size allocatedEneIndex,
+        const bool flipViewXVA, const bool withMporStickyDate, const MporCashFlowMode mporCashFlowMode);
 
     virtual ~NettedExposureCalculator() {}
     const boost::shared_ptr<NPVCube>& exposureCube() { return exposureCube_; }
@@ -150,7 +142,7 @@ protected:
         const Date& nettingSetMaturity);
 
     bool withMporStickyDate_;
-    ScenarioGeneratorData::MporCashFlowMode mporCashFlowMode_;
+    MporCashFlowMode mporCashFlowMode_;
 };
 
 } // namespace analytics

@@ -4037,6 +4037,7 @@ to txt or csv in which case an uncompressed version of the file is written to di
     <Parameter name="flipViewXVA">N</Parameter>
     <Parameter name="flipViewBorrowingCurvePostfix">_BORROW</Parameter>
     <Parameter name="flipViewLendingCurvePostfix">_LEND</Parameter>
+    <Parameter name="mporCashFlowMode">NonePay</Parameter>
   </Analytic>
 </Analytics>
 \end{minted}
@@ -4148,6 +4149,9 @@ date, sample) {\em after} taking collateral into account. Leave empty to skip ge
 \item {\tt flipViewXVA:} If set to {\tt Y}, the perspective in XVA calculations is switched to the cpty view, the npvs and the netting sets being reverted during calculation. In order to get the lending/borrowing curve, the calculation assumes these curves being set up with the cptyname + the postfix given in the next two settings.
 \item {\tt flipViewBorrowingCurvePostfix:} postfix for the borrowing curve, the calculation assumes this is curves being set up with cptyname + postfix given.
 \item {\tt flipViewLendingCurvePostfix:} postfix for the lending curve, the calculation assumes this is curve being set up with cptyname + postfix given.
+\item {\tt mporCashFlowMode:} Assumption about payment of cashflows within mpor period. One of NonePay, BothPay, WePay,
+  TheyPay, Unspecified. Defaults to Unspecified, in this case PP will assume NonePay if mpor sticky date is used,
+  otherwise to BothPay.
 \end{itemize}
 
 The two cube file outputs {\tt rawCubeOutputFile} and {\tt netCubeOutputFile} are provided for interactive analysis and visualisation purposes, see section
