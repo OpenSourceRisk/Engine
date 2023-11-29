@@ -80,12 +80,12 @@ std::size_t LgmCG::reducedDiscountBond(const Date& d, Date e, const std::size_t 
     if (n = cg_var(g_, id, ComputationGraph::VarDoesntExist::Nan), n == ComputationGraph::nan) {
         auto p = p_;
         // Date ds = getSloppyDate(d, sloppySimDates_, effSimDates_);
-        Date es = getSloppyDate(e, sloppySimDates_, effSimDates_);
+        // Date es = getSloppyDate(e, sloppySimDates_, effSimDates_);
         Real t = p()->termStructure()->timeFromReference(d);
         Real T = p()->termStructure()->timeFromReference(e);
         // Real ts = p()->termStructure()->timeFromReference(ds);
         // Real Ts = p()->termStructure()->timeFromReference(es);
-        std::string id_P0T = "__dsc_" + ore::data::to_string(es) + "_" + discountCurveId;
+        std::string id_P0T = "__dsc_" + ore::data::to_string(e) + "_" + discountCurveId;
         std::string id_H = "__lgm_" + qualifier_ + "_H_" + ore::data::to_string(e);
         std::string id_zeta = "__lgm_" + qualifier_ + "_zeta_" + ore::data::to_string(d);
         std::size_t H = addModelParameter(g_, modelParameters_, id_H, [p, T] { return p()->H(T); });
