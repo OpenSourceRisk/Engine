@@ -442,7 +442,6 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
                 forwardEvaluation(*g, values, ops_, RandomVariable::deleter, true, opNodeRequirements_, keepNodes);
                 sensi = expectation(values[cvaNode]).at(0) - cva;
 
-                auto modelParameters = model_->modelParameters();
             }
         }
 
