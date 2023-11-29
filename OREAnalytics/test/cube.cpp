@@ -113,28 +113,29 @@ void testCube(NPVCube& cube, const std::string& cubeName, Real tolerance) {
 }
 
 template <class T>
-void testCubeFileIO(NPVCube& cube, const std::string& cubeName, Real tolerance, bool doublePrecision) {
+void testCubeFileIO(boost::shared_ptr<NPVCube> cube, const std::string& cubeName, Real tolerance,
+                    bool doublePrecision) {
 
-    initCube(cube);
+    initCube(*cube);
 
     // get a random filename
     string filename = boost::filesystem::unique_path().string();
     BOOST_TEST_MESSAGE("Saving cube " << cubeName << " to file " << filename);
-    saveCube(filename, cube, doublePrecision);
+    saveCube(filename, NPVCubeWithMetaData{cube, nullptr, boost::none, boost::none}, doublePrecision);
 
     // Create a new Cube and load it
     BOOST_TEST_MESSAGE("Loading from file " << filename);
-    auto cube2 = loadCube(filename, doublePrecision);
+    auto cube2 = loadCube(filename, doublePrecision).cube;
     BOOST_TEST_MESSAGE("Cube " << cubeName << " loaded from file.");
 
     // Delete the file to make sure all reads are from memory
     boost::filesystem::remove(filename);
 
     // Check dimensions match
-    BOOST_CHECK_EQUAL(cube.numIds(), cube2->numIds());
-    BOOST_CHECK_EQUAL(cube.numDates(), cube2->numDates());
-    BOOST_CHECK_EQUAL(cube.samples(), cube2->samples());
-    BOOST_CHECK_EQUAL(cube.depth(), cube2->depth());
+    BOOST_CHECK_EQUAL(cube->numIds(), cube->numIds());
+    BOOST_CHECK_EQUAL(cube->numDates(), cube->numDates());
+    BOOST_CHECK_EQUAL(cube->samples(), cube->samples());
+    BOOST_CHECK_EQUAL(cube->depth(), cube->depth());
 
     // check all values
     checkCube(*cube2, tolerance);
@@ -219,35 +220,33 @@ void testCube(NPVCube& cube, const std::string& cubeName, Real tolerance, boost:
 }
 
 template <class T>
-void testCubeFileIO(NPVCube& cube, const std::string& cubeName, Real tolerance, boost::shared_ptr<Portfolio>& portfolio,
-                    boost::shared_ptr<DateGrid>& d, bool doublePrecision) {
+void testCubeFileIO(boost::shared_ptr<NPVCube> cube, const std::string& cubeName, Real tolerance,
+                    boost::shared_ptr<Portfolio>& portfolio, boost::shared_ptr<DateGrid>& d, bool doublePrecision) {
 
-    initCube(cube, portfolio, d);
+    initCube(*cube, portfolio, d);
 
     // get a random filename
     string filename = boost::filesystem::unique_path().string();
     BOOST_TEST_MESSAGE("Saving cube " << cubeName << " to file " << filename);
-    saveCube(filename, cube, doublePrecision);
+    saveCube(filename, NPVCubeWithMetaData{cube, nullptr, boost::none, boost::none}, doublePrecision);
 
     // Create a new Cube and load it
-    T* cube2 = new T();
+    auto cube2 = boost::make_shared<T>();
     BOOST_TEST_MESSAGE("Loading from file " << filename);
-    cube2 = loadCube(filename, doublePrecision);
+    cube2 = loadCube(filename, doublePrecision).cube;
     BOOST_TEST_MESSAGE("Cube " << cubeName << " loaded from file.");
 
     // Delete the file to make sure all reads are from memory
     boost::filesystem::remove(filename);
 
     // Check dimensions match
-    BOOST_CHECK_EQUAL(cube.numIds(), cube2->numIds());
-    BOOST_CHECK_EQUAL(cube.numDates(), cube2->numDates());
-    BOOST_CHECK_EQUAL(cube.samples(), cube2->samples());
-    BOOST_CHECK_EQUAL(cube.depth(), cube2->depth());
+    BOOST_CHECK_EQUAL(cube->numIds(), cube2->numIds());
+    BOOST_CHECK_EQUAL(cube->numDates(), cube2->numDates());
+    BOOST_CHECK_EQUAL(cube->samples(), cube2->samples());
+    BOOST_CHECK_EQUAL(cube->depth(), cube2->depth());
 
     // check all values
     checkCube(*cube2, tolerance, portfolio, d);
-    // All done
-    delete cube2;
 }
 
 } // namespace
@@ -446,7 +445,7 @@ BOOST_AUTO_TEST_CASE(testDoublePrecisionInMemoryCubeFileIO) {
     Date d(1, QuantLib::Jan, 2016);        // need a real date here
     vector<Date> dates(100, d);
     Size samples = 1000;
-    DoublePrecisionInMemoryCube c(d, ids, dates, samples);
+    auto c = boost::make_shared<DoublePrecisionInMemoryCube>(d, ids, dates, samples);
     testCubeFileIO<DoublePrecisionInMemoryCube>(c, "DoublePrecisionInMemoryCube", 1e-14, true);
 }
 
@@ -456,7 +455,7 @@ BOOST_AUTO_TEST_CASE(testDoublePrecisionInMemoryCubeFileNIO) {
     vector<Date> dates(50, d);
     Size samples = 200;
     Size depth = 6;
-    DoublePrecisionInMemoryCubeN c(d, ids, dates, samples, depth);
+    auto c = boost::make_shared<DoublePrecisionInMemoryCubeN>(d, ids, dates, samples, depth);
     testCubeFileIO<DoublePrecisionInMemoryCubeN>(c, "DoublePrecisionInMemoryCubeN", 1e-14, true);
 }
 
