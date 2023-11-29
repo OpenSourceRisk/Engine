@@ -65,9 +65,6 @@ protected:
     std::size_t getNumeraire(const Date& s) const override;
     std::size_t getFxSpot(const Size idx) const override;
 
-    // utillity functions
-    Date getSloppyDate(const Date& d) const;
-
     // input parameters
     const Handle<CrossAssetModel> cam_;
     const std::vector<Handle<YieldTermStructure>> curves_;
