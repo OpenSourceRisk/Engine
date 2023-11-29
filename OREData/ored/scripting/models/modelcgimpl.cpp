@@ -487,5 +487,14 @@ std::size_t addModelParameter(ComputationGraph& g, std::vector<std::pair<std::si
     return n;
 }
 
+Date getSloppyDate(const Date& d, const bool sloppyDates, const std::set<Date>& dates) {
+    if (!sloppyDates)
+        return d;
+    auto s = std::lower_bound(dates.begin(), dates.end(), d);
+    if (s == dates.end())
+        return *dates.rbegin();
+    return *s;
+}
+
 } // namespace data
 } // namespace ore
