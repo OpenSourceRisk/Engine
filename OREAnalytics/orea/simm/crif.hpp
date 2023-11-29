@@ -147,6 +147,17 @@ public:
             records_ | boost::adaptors::filtered([&rt](const CrifRecord& record) { return record.riskType == rt; }));
     }
 
+    std::vector<CrifRecord> filterByTradeId(const std::string& id) const {
+        return boost::copy_range<std::vector<CrifRecord>>(
+            records_ | boost::adaptors::filtered([&id](const CrifRecord& record) { return record.tradeId == id; }));
+    }
+
+
+    std::set<std::string> tradeIds() const {
+        return boost::copy_range<std::set<std::string>>(
+        records_ | boost::adaptors::transformed([](const CrifRecord& r) { return r.tradeId; }));
+    }
+
 private:
     void insertCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false);
     void addFrtbCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false);

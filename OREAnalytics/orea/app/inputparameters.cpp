@@ -577,7 +577,9 @@ Date InputParameters::mporDate() {
 }
 
 boost::shared_ptr<SimmConfiguration> InputParameters::getSimmConfiguration() {
-    return buildSimmConfiguration(simmVersion_, boost::make_shared<SimmBucketMapperBase>(), mporDays());
+    QL_REQUIRE(simmBucketMapper() != nullptr,
+               "Internal error, load simm bucket mapper before retrieving simmconfiguration");
+    return buildSimmConfiguration(simmVersion(), simmBucketMapper(), mporDays());
 }
 
 
