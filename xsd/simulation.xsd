@@ -27,7 +27,6 @@
       <xs:element type="SobolRsgDirectionIntegers" name="DirectionIntegers" minOccurs="0"/>
       <xs:element type="xs:string" name="CloseOutLag" minOccurs="0"/>
       <xs:element type="mporMode" name="MporMode" minOccurs="0"/>
-       <xs:element type="mporCashFlowMode" name="MporCashFlowMode" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
@@ -35,15 +34,6 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="ActualDate"/>
       <xs:enumeration value="StickyDate"/>
-    </xs:restriction>
-  </xs:simpleType>
-
-  <xs:simpleType name="mporCashFlowMode">
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="NonePay"/>
-      <xs:enumeration value="BothPay"/>
-      <xs:enumeration value="WePay"/>
-      <xs:enumeration value="TheyPay"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -83,6 +73,7 @@
       <xs:enumeration value="MersenneTwisterAntithetic"/>
       <xs:enumeration value="Sobol"/>
       <xs:enumeration value="SobolBrownianBridge"/>
+      <xs:enumeration value="Burley2020SobolBrownianBridge"/>
     </xs:restriction>
   </xs:simpleType>
 

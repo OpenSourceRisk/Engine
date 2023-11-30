@@ -66,6 +66,7 @@ engine/sensitivityrecord.cpp
 engine/stresstest.cpp
 engine/valuationcalculator.cpp
 engine/valuationengine.cpp
+engine/xvaenginecg.cpp
 engine/zerotoparcube.cpp
 scenario/clonedscenariogenerator.cpp
 scenario/clonescenariofactory.cpp
@@ -98,6 +99,7 @@ simm/simmbucketmapperbase.cpp
 simm/simmcalculator.cpp
 simm/simmcalibration.cpp
 simm/simmconcentration.cpp
+simm/simmconcentrationcalibration.cpp
 simm/simmconcentrationisdav1_3.cpp
 simm/simmconcentrationisdav1_3_38.cpp
 simm/simmconcentrationisdav2_0.cpp
@@ -108,9 +110,9 @@ simm/simmconcentrationisdav2_3_8.cpp
 simm/simmconcentrationisdav2_5.cpp
 simm/simmconcentrationisdav2_5a.cpp
 simm/simmconcentrationisdav2_6.cpp
-simm/simmconcentrationcalibration.cpp
 simm/simmconfiguration.cpp
 simm/simmconfigurationbase.cpp
+simm/simmconfigurationcalibration.cpp
 simm/simmconfigurationisdav1_0.cpp
 simm/simmconfigurationisdav1_3.cpp
 simm/simmconfigurationisdav1_3_38.cpp
@@ -122,7 +124,6 @@ simm/simmconfigurationisdav2_3_8.cpp
 simm/simmconfigurationisdav2_5.cpp
 simm/simmconfigurationisdav2_5a.cpp
 simm/simmconfigurationisdav2_6.cpp
-simm/simmconfigurationcalibration.cpp
 simm/simmresults.cpp
 simm/utilities.cpp
 simulation/fixingmanager.cpp
@@ -207,6 +208,7 @@ engine/stresstest.hpp
 engine/valuationcalculator.hpp
 engine/valuationengine.hpp
 engine/varcalculator.hpp
+engine/xvaenginecg.hpp
 engine/zerotoparcube.hpp
 scenario/aggregationscenariodata.hpp
 scenario/clonedscenariogenerator.hpp
@@ -246,6 +248,7 @@ simm/simmbucketmapperbase.hpp
 simm/simmcalculator.hpp
 simm/simmcalibration.hpp
 simm/simmconcentration.hpp
+simm/simmconcentrationcalibration.hpp
 simm/simmconcentrationisdav1_3.hpp
 simm/simmconcentrationisdav1_3_38.hpp
 simm/simmconcentrationisdav2_0.hpp
@@ -256,9 +259,9 @@ simm/simmconcentrationisdav2_3_8.hpp
 simm/simmconcentrationisdav2_5.hpp
 simm/simmconcentrationisdav2_5a.hpp
 simm/simmconcentrationisdav2_6.hpp
-simm/simmconcentrationcalibration.hpp
 simm/simmconfiguration.hpp
 simm/simmconfigurationbase.hpp
+simm/simmconfigurationcalibration.hpp
 simm/simmconfigurationisdav1_0.hpp
 simm/simmconfigurationisdav1_3.hpp
 simm/simmconfigurationisdav1_3_38.hpp
@@ -270,7 +273,6 @@ simm/simmconfigurationisdav2_3_8.hpp
 simm/simmconfigurationisdav2_5.hpp
 simm/simmconfigurationisdav2_5a.hpp
 simm/simmconfigurationisdav2_6.hpp
-simm/simmconfigurationcalibration.hpp
 simm/simmnamemapper.hpp
 simm/simmresults.hpp
 simm/utilities.hpp
