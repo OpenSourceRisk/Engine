@@ -40,6 +40,8 @@ public:
     enum class CrifType { Empty, Frtb, Simm };
     Crif() = default;
 
+    CrifType type() const { return type_; }
+
     void addRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false);
     void addRecords(const Crif& crif, bool aggregateDifferentAmountCurrencies = false);
 
@@ -175,8 +177,6 @@ private:
     std::set<ore::data::NettingSetDetails> nettingSetDetails_;
     
 };
-
-
 
 
 } // namespace analytics
