@@ -26,9 +26,9 @@
 #include <boost/math/distributions/normal.hpp>
 
 #include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
-#include <boost/accumulators/statistics/mean.hpp>
 
 #include <iostream>
 #include <map>
@@ -74,6 +74,16 @@ inline void resumeCalcStats() {}
 inline void stopCalcStats(const std::size_t n) {}
 
 #endif
+
+double getDelta(const RandomVariable& x, const Real eps) {
+    Real sum = 0.0;
+    for (Size i = 0; i < x.size(); ++i) {
+        sum += x[i] * x[i];
+    }
+    Real delta = std::sqrt(sum / static_cast<Real>(x.size())) * eps / 2.0;
+    // std::cout << "delta = " << delta << std::endl;
+    return delta;
+}
 
 } // namespace
 
@@ -891,7 +901,8 @@ RandomVariable indicatorEq(RandomVariable x, const RandomVariable& y, const Real
     return x;
 }
 
-RandomVariable indicatorGt(RandomVariable x, const RandomVariable& y, const Real trueVal, const Real falseVal) {
+RandomVariable indicatorGt(RandomVariable x, const RandomVariable& y, const Real trueVal, const Real falseVal,
+                           const Real eps) {
     if (!x.initialised() || !y.initialised())
         return RandomVariable();
     QL_REQUIRE(x.size() == y.size(), "RandomVariable: indicatorEq(x,y): x size ("
@@ -899,6 +910,21 @@ RandomVariable indicatorGt(RandomVariable x, const RandomVariable& y, const Real
     x.checkTimeConsistencyAndUpdate(y.time());
     if (!y.deterministic_)
         x.expand();
+    if (eps != 0.0) {
+        Real delta = getDelta(x - y, eps);
+        if (!QuantLib::close_enough(delta, 0.0)) {
+            // logistic function
+            x.expand();
+            Real delta = getDelta(x - y, eps);
+            resumeCalcStats();
+            for (Size i = 0; i < x.n_; ++i) {
+                x.data_[i] = falseVal + (trueVal - falseVal) * 1.0 / (1.0 + std::exp(-x.data_[i] / delta));
+            }
+            stopCalcStats(x.n_);
+            return x;
+        }
+    }
+    // eps == 0.0 or delta == 0.0
     if (x.deterministic()) {
         x.constantData_ =
             (x.constantData_ > y.constantData_ && !QuantLib::close_enough(x.constantData_, y.constantData_)) ? trueVal
@@ -913,7 +939,8 @@ RandomVariable indicatorGt(RandomVariable x, const RandomVariable& y, const Real
     return x;
 }
 
-RandomVariable indicatorGeq(RandomVariable x, const RandomVariable& y, const Real trueVal, const Real falseVal) {
+RandomVariable indicatorGeq(RandomVariable x, const RandomVariable& y, const Real trueVal, const Real falseVal,
+                            const Real eps) {
     if (!x.initialised() || !y.initialised())
         return RandomVariable();
     QL_REQUIRE(x.size() == y.size(), "RandomVariable: indicatorEq(x,y): x size ("
@@ -921,6 +948,21 @@ RandomVariable indicatorGeq(RandomVariable x, const RandomVariable& y, const Rea
     x.checkTimeConsistencyAndUpdate(y.time());
     if (!y.deterministic_)
         x.expand();
+    if (eps != 0.0) {
+        Real delta = getDelta(x - y, eps);
+        if (!QuantLib::close_enough(delta, 0.0)) {
+            // logistic function
+            x.expand();
+            Real delta = getDelta(x - y, eps);
+            resumeCalcStats();
+            for (Size i = 0; i < x.n_; ++i) {
+                x.data_[i] = falseVal + (trueVal - falseVal) * 1.0 / (1.0 + std::exp(-x.data_[i] / delta));
+            }
+            stopCalcStats(x.n_);
+            return x;
+        }
+    }
+    // eps == 0.0 or delta == 0.0
     if (x.deterministic()) {
         x.constantData_ =
             (x.constantData_ > y.constantData_ || QuantLib::close_enough(x.constantData_, y.constantData_)) ? trueVal
@@ -1206,17 +1248,9 @@ RandomVariable indicatorDerivative(const RandomVariable& x, const double eps) {
     // Fries, 2017: Automatic Backward Differentiation for American Monte-Carlo Algorithms -
     //              ADD for Conditional Expectations and Indicator Functions
 
-    if (QuantLib::close_enough(eps, 0.0) || x.deterministic())
-        return tmp;
-
     resumeCalcStats();
 
-    Real sum = 0.0;
-    for (Size i = 0; i < x.size(); ++i) {
-        sum += x[i] * x[i];
-    }
-
-    Real delta = std::sqrt(sum / static_cast<Real>(x.size())) * eps / 2.0;
+    Real delta = getDelta(x, eps);
 
     if (QuantLib::close_enough(delta, 0.0))
         return tmp;
@@ -1224,15 +1258,17 @@ RandomVariable indicatorDerivative(const RandomVariable& x, const double eps) {
     // compute derivative
 
     for (Size i = 0; i < tmp.size(); ++i) {
-        Real ax = std::abs(x[i]);
 
         // linear approximation of step
+        // Real ax = std::abs(x[i]);
         // if (ax < delta) {
         //     tmp.set(i, 1.0 / (2.0 * delta));
         // }
 
         // logistic function
-        tmp.set(i, std::exp(-1.0 / delta * ax) / (delta * std::pow(1.0 + std::exp(-1.0 / delta * ax), 2.0)));
+        // f(x)  = 1 / (1 + exp(-x / delta))
+        // f'(x) = exp(-x/delta) / (delta * (1 + exp(-x / delta))^2), this is an even function
+        tmp.set(i, std::exp(-1.0 / delta * x[i]) / (delta * std::pow(1.0 + std::exp(-1.0 / delta * x[i]), 2.0)));
     }
 
     stopCalcStats(x.size() * 8);
