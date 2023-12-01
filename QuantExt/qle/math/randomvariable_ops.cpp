@@ -242,99 +242,61 @@ std::vector<RandomVariableOpNodeRequirements> getRandomVariableOpNodeRequirement
     std::vector<RandomVariableOpNodeRequirements> res;
 
     // None = 0
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, false), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, false), false); });
 
     // Add = 1
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, false), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, false), false); });
 
     // Subtract = 1
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, false), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, false), false); });
 
     // Negative = 3
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, false), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, false), false); });
 
     // Mult = 4
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, true), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), false); });
 
     // Div = 5
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, true), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), false); });
 
     // ConditionalExpectation = 6
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, true), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), false); });
 
     // IndicatorEq = 7
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, false), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, false), false); });
 
     // IndicatorGt = 8
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, true), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), false); });
 
     // IndicatorGeq = 9
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, true), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), false); });
 
     // Min = 10
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, true), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), false); });
 
     // Max = 11
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, true), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), false); });
 
     // Abs = 12
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, true), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), false); });
 
     // Exp = 13
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, false), true);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, false), true); });
 
     // Sqrt = 14
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, false), true);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, false), true); });
 
     // Log = 15
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, true), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), false); });
 
     // Pow = 16
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, true), true);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), true); });
 
     // NormalCdf = 17
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, true), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), false); });
 
     // NormalCdf = 18
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, true), true);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), true); });
 
     return res;
 }
