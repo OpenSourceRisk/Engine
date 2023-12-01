@@ -204,8 +204,10 @@ struct RandomVariable {
     friend RandomVariable applyInverseFilter(RandomVariable, const Filter&);
     friend RandomVariable conditionalResult(const Filter&, RandomVariable, const RandomVariable&);
     friend RandomVariable indicatorEq(RandomVariable, const RandomVariable&, const Real trueVal, const Real falseVal);
-    friend RandomVariable indicatorGt(RandomVariable, const RandomVariable&, const Real trueVal, const Real falseVal);
-    friend RandomVariable indicatorGeq(RandomVariable, const RandomVariable&, const Real trueVal, const Real falseVal);
+    friend RandomVariable indicatorGt(RandomVariable, const RandomVariable&, const Real trueVal, const Real falseVal,
+                                      const Real eps);
+    friend RandomVariable indicatorGeq(RandomVariable, const RandomVariable&, const Real trueVal, const Real falseVal,
+                                       const Real eps);
 
     void expand();
     // pointer to raw data, this is null for deterministic variables
@@ -257,8 +259,10 @@ RandomVariable cos(RandomVariable);
 RandomVariable normalCdf(RandomVariable);
 RandomVariable normalPdf(RandomVariable);
 RandomVariable indicatorEq(RandomVariable, const RandomVariable&, const Real trueVal = 1.0, const Real falseVal = 0.0);
-RandomVariable indicatorGt(RandomVariable, const RandomVariable&, const Real trueVal = 1.0, const Real falseVal = 0.0);
-RandomVariable indicatorGeq(RandomVariable, const RandomVariable&, const Real trueVal = 1.0, const Real falseVal = 0.0);
+RandomVariable indicatorGt(RandomVariable, const RandomVariable&, const Real trueVal = 1.0, const Real falseVal = 0.0,
+                           const Real eps = 0.0);
+RandomVariable indicatorGeq(RandomVariable, const RandomVariable&, const Real trueVal = 1.0, const Real falseVal = 0.0,
+                            const Real eps = 0.0);
 
 Filter close_enough(const RandomVariable&, const RandomVariable&);
 bool close_enough_all(const RandomVariable&, const RandomVariable&);
