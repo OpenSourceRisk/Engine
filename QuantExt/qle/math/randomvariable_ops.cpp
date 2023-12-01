@@ -25,7 +25,8 @@
 namespace QuantExt {
 
 std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size regressionOrder,
-                                                   QuantLib::LsmBasisSystem::PolynomialType polynomType) {
+                                                   QuantLib::LsmBasisSystem::PolynomialType polynomType,
+                                                   const double eps) {
     std::vector<RandomVariableOp> ops;
 
     // None = 0
@@ -65,16 +66,34 @@ std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size r
     ops.push_back([](const std::vector<const RandomVariable*>& args) { return indicatorEq(*args[0], *args[1]); });
 
     // IndicatorGt = 8
-    ops.push_back([](const std::vector<const RandomVariable*>& args) { return indicatorGt(*args[0], *args[1]); });
+    ops.push_back([eps](const std::vector<const RandomVariable*>& args) {
+        return indicatorGt(*args[0], *args[1], 1.0, 0.0, eps);
+    });
 
     // IndicatorGeq = 9
-    ops.push_back([](const std::vector<const RandomVariable*>& args) { return indicatorGeq(*args[0], *args[1]); });
+    ops.push_back([eps](const std::vector<const RandomVariable*>& args) {
+        return indicatorGeq(*args[0], *args[1], 1.0, 0.0, eps);
+    });
 
     // Min = 10
-    ops.push_back([](const std::vector<const RandomVariable*>& args) { return QuantExt::min(*args[0], *args[1]); });
+    if (eps == 0.0) {
+        ops.push_back(
+            [](const std::vector<const RandomVariable*>& args) { return QuantExt::min(*args[0], *args[1]); });
+    } else {
+        ops.push_back([eps](const std::vector<const RandomVariable*>& args) {
+            return indicatorGt(*args[0], *args[1], 1.0, 0.0, eps) * (*args[1] - *args[0]) + *args[0];
+        });
+    }
 
     // Max = 11
-    ops.push_back([](const std::vector<const RandomVariable*>& args) { return QuantExt::max(*args[0], *args[1]); });
+    if (eps == 0.0) {
+        ops.push_back(
+            [](const std::vector<const RandomVariable*>& args) { return QuantExt::max(*args[0], *args[1]); });
+    } else {
+        ops.push_back([eps](const std::vector<const RandomVariable*>& args) {
+            return indicatorGt(*args[0], *args[1], 1.0, 0.0, eps) * (*args[0] - *args[1]) + *args[1];
+        });
+    }
 
     // Abs = 12
     ops.push_back([](const std::vector<const RandomVariable*>& args) { return QuantExt::abs(*args[0]); });
