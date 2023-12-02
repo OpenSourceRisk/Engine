@@ -260,7 +260,7 @@ std::vector<RandomVariableOpNodeRequirements> getRandomVariableOpNodeRequirement
     res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), false); });
 
     // ConditionalExpectation = 6
-    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), false); });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), true); });
 
     // IndicatorEq = 7
     res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, false), false); });
