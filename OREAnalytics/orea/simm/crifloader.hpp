@@ -52,7 +52,7 @@ public:
     /*! Destructor */
     virtual ~CrifLoader() {}
 
-    Crif loadCrif() {
+    virtual Crif loadCrif() {
         auto crif = loadCrifImpl();
         if (updateMapper_ && configuration_->bucketMapper() != nullptr) {
             configuration_->bucketMapper()->updateFromCrif(crif);
