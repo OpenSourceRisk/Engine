@@ -74,8 +74,8 @@ CommodityOptionStrip::CommodityOptionStrip(const Envelope& envelope, const LegDa
       callBarrierData_(callBarrierData), putBarrierData_(putBarrierData), fxIndex_(fxIndex), isDigital_(isDigital),
       unaryPayoff_(payoffPerUnit) {
     if (!QuantLib::close_enough(premium, 0.0)) {
-        QL_REQUIRE(premiumPayDate != Date(), "");
-        QL_REQUIRE(!premiumCurrency.empty(), "");
+        QL_REQUIRE(premiumPayDate != Date(), "The premium is non-zero so its payment date needs to be provided");
+        QL_REQUIRE(!premiumCurrency.empty(), "The premium is non-zero so its currency needs to be provided");
         premiumData_ = PremiumData(premium, premiumCurrency, premiumPayDate);
     }
 }
@@ -338,8 +338,7 @@ void CommodityOptionStrip::buildAPOs(const Leg& leg, const boost::shared_ptr<Eng
     additionalMultipliers.pop_back();
 
     // Possibly add a premium to the additional instruments and multipliers
-    // We expect here that the fee alrea minimal
-    // dy has the correct sign
+    // We expect here that the fee already has the correct sign
 
     maturity_ = std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, qlInstMult, premiumData_,
                                                 1.0, parseCurrency(legData_.currency()), engineFactory, ""));
