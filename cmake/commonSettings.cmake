@@ -154,9 +154,17 @@ else()
     endif()
 
     # Use Boost Release
-    set(Boost_USE_DEBUG_LIBS        OFF)
-    set(Boost_USE_RELEASE_LIBS       ON)
-    set(Boost_NO_BOOST_CMAKE         ON)
+    if(CMAKE_BUILD_TYPE MATCHES Release)
+        set(Boost_USE_DEBUG_LIBS        OFF)
+        set(Boost_USE_RELEASE_LIBS       ON)
+    elseif(CMAKE_BUILD_TYPE MATCHES Debug)
+        set(Boost_USE_DEBUG_LIBS         ON)
+        set(Boost_USE_RELEASE_LIBS      OFF)
+    endif()
+    # Issue with Boost CMake finder introduced in version 1.70
+    if(Boost_VERSION VERSION_GREATER_EQUAL "1.70.0")
+        set(Boost_NO_BOOST_CMAKE         ON)
+    endif()
 
     if(NOT Boost_USE_STATIC_LIBS)
         # link against dynamic boost libraries
