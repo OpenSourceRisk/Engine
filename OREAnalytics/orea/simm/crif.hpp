@@ -129,10 +129,10 @@ public:
     }
 
     std::vector<CrifRecord> filterByBucket(const NettingSetDetails& nsd, const CrifRecord::ProductClass pc, const CrifRecord::RiskType rt,
-                  const std::string& qualifier) const {
-        return boost::copy_range<std::vector<CrifRecord>>(records_ | boost::adaptors::filtered([&nsd, &pc, &rt, &qualifier](const CrifRecord& record) {
+                  const std::string& bucket) const {
+        return boost::copy_range<std::vector<CrifRecord>>(records_ | boost::adaptors::filtered([&nsd, &pc, &rt, &bucket](const CrifRecord& record) {
             return record.nettingSetDetails == nsd && record.productClass == pc && record.riskType == rt &&
-                   record.qualifier == qualifier;
+                   record.bucket == bucket;
         }));
     }
 
