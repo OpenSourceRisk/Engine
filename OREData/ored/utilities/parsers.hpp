@@ -572,5 +572,19 @@ QuantLib::Pillar::Choice parsePillarChoice(const std::string& s);
 */
 QuantExt::McMultiLegBaseEngine::RegressorModel parseRegressorModel(const std::string& s);
 
+enum MporCashFlowMode { Unspecified, NonePay, BothPay, WePay, TheyPay };
+
+//! Convert text to MporCashFlowMode
+/*!
+\ingroup utilities
+*/
+MporCashFlowMode parseMporCashFlowMode(const std::string& s);
+
+//! Write MporCashFlowMode to stream
+/*!
+\ingroup utilities
+*/
+std::ostream& operator<<(std::ostream& os, MporCashFlowMode t);
+
 } // namespace data
 } // namespace ore

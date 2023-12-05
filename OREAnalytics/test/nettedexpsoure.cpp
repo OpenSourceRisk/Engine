@@ -372,12 +372,12 @@ boost::shared_ptr<NPVCube> buildNPVCube(boost::shared_ptr<DateGrid> dateGrid,
         std::string fileName = "scenarioData_closeout.csv";
         saveAggregationScenarioData(fileName, *simMarket->aggregationScenarioData());
         fileName = "cube_closeout.csv";
-        saveCube(fileName, *cube);
+        saveCube(fileName, NPVCubeWithMetaData{cube, nullptr, boost::none, boost::none});
     }else{
         std::string fileName = "scenarioData.csv";
         saveAggregationScenarioData(fileName, *simMarket->aggregationScenarioData());
         fileName = "cube.csv";
-        saveCube(fileName, *cube);
+        saveCube(fileName, NPVCubeWithMetaData{cube, nullptr, boost::none, boost::none});
     }
 
     BOOST_TEST_MESSAGE("Cube generated in " << elapsed << " seconds");
@@ -655,12 +655,12 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
             nettingSetCloseOutValue = exposureCalculator->nettingSetCloseOutValue();
             nettingSetMporPositiveFlow = exposureCalculator->nettingSetMporPositiveFlow();
             nettingSetMporNegativeFlow = exposureCalculator->nettingSetMporNegativeFlow();
-            boost::shared_ptr<NettedExposureCalculator> nettedExposureCalculator = boost::make_shared<NettedExposureCalculator>(portfolio, initMarket, cube, "EUR", "Market",
-                                                                                                                    0.99, calcType, false, nettingSetManager, nettingSetDefaultValue,
-                                                                                                                    nettingSetCloseOutValue, nettingSetMporPositiveFlow,
-                                                                                                                    nettingSetMporNegativeFlow, *asd, cubeInterpreter,
-                                                                                                                    false, dimCalculator, false, false, 0.1, exposureCalculator->exposureCube(),
-                                                                                                                    0, 0, false, mporStickyDate, ScenarioGeneratorData::MporCashFlowMode::BothPay);
+            boost::shared_ptr<NettedExposureCalculator> nettedExposureCalculator =
+                boost::make_shared<NettedExposureCalculator>(
+                    portfolio, initMarket, cube, "EUR", "Market", 0.99, calcType, false, nettingSetManager,
+                    nettingSetDefaultValue, nettingSetCloseOutValue, nettingSetMporPositiveFlow,
+                    nettingSetMporNegativeFlow, *asd, cubeInterpreter, false, dimCalculator, false, false, 0.1,
+                    exposureCalculator->exposureCube(), 0, 0, false, mporStickyDate, MporCashFlowMode::Unspecified);
             nettedExposureCalculator->build();
             nettingSetValue = (calcType == CollateralExposureHelper::CalculationType::NoLag
                                 ? nettedExposureCalculator->nettingSetCloseOutValue()
