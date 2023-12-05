@@ -144,7 +144,7 @@ else()
         endif()
     endif()
 
-    # Boost static runtime ON for MSVC
+    # Boost static runtime
     if(NOT DEFINED Boost_USE_STATIC_RUNTIME)
         if(BUILD_SHARED_LIBS)
             set(Boost_USE_STATIC_RUNTIME OFF)
@@ -153,7 +153,7 @@ else()
         endif()
     endif()
 
-    # Use Boost Release
+    # Use Boost Release/Debug
     if(CMAKE_BUILD_TYPE MATCHES Release)
         set(Boost_USE_DEBUG_LIBS        OFF)
         set(Boost_USE_RELEASE_LIBS       ON)
