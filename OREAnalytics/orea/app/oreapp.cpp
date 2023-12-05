@@ -261,7 +261,15 @@ void OREApp::analytics() {
                 string reportName = b.first;
                 std::string fileName = inputs_->resultsPath().string() + "/" + outputs_->outputFileName(reportName, "csv.gz");
                 LOG("write npv cube " << reportName << " to file " << fileName);
-                saveCube(fileName, *b.second);
+                NPVCubeWithMetaData r;
+                r.cube = b.second;
+                if (b.first == "cube") {
+                    // store meta data together with npv cube
+                    r.scenarioGeneratorData = inputs_->scenarioGeneratorData();
+                    r.storeFlows = inputs_->storeFlows();
+                    r.storeCreditStateNPVs = inputs_->storeCreditStateNPVs();
+                }
+                saveCube(fileName, r);
             }
         }
         
@@ -904,6 +912,17 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     if (tmp != "")
         inputs->setAmc(parseBool(tmp));
 
+    tmp = params_->get("simulation", "amcCg", false);
+    if (tmp != "")
+        inputs->setAmcCg(parseBool(tmp));
+
+    tmp = params_->get("simulation", "xvaCgSensitivityConfigFile", false);
+    if (tmp != "") {
+        string file = inputPath + "/" + tmp;
+        LOG("Load xva cg sensitivity scenario data from file" << file);
+        inputs->setXvaCgSensiScenarioDataFromFile(file);
+    }
+
     tmp = params_->get("simulation", "amcTradeTypes", false);
     if (tmp != "")
         inputs->setAmcTradeTypes(tmp);
@@ -1011,15 +1030,14 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         }
     }
 
-    if (inputs->analytics().find("XVA") != inputs->analytics().end() ||
-        inputs->analytics().find("EXPOSURE") != inputs->analytics().end()) {
+    if (inputs->analytics().find("XVA") != inputs->analytics().end()) {
         tmp = params_->get("xva", "csaFile", false);
         QL_REQUIRE(tmp != "", "Netting set manager is required for XVA");
         string csaFile = inputPath + "/" + tmp;
         LOG("Loading netting and csa data from file" << csaFile);
         inputs->setNettingSetManagerFromFile(csaFile);
     }
-    
+
     tmp = params_->get("xva", "nettingSetCubeFile", false);
     if (inputs->loadCube() && tmp != "") {
         string cubeFile = inputs->resultsPath().string() + "/" + tmp;
@@ -1053,6 +1071,10 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     tmp = params_->get("xva", "flipViewXVA", false);
     if (tmp != "")
         inputs->setFlipViewXVA(parseBool(tmp));
+
+    tmp = params_->get("xva", "mporCashFlowMode", false);
+    if (tmp != "")
+        inputs->setMporCashFlowMode(parseMporCashFlowMode(tmp));
 
     tmp = params_->get("xva", "fullInitialCollateralisation", false);
     if (tmp != "")
