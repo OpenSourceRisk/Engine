@@ -138,20 +138,24 @@ else()
     # link against static boost libraries
     if(NOT DEFINED Boost_USE_STATIC_LIBS)
         if(BUILD_SHARED_LIBS)
-            set(Boost_USE_STATIC_LIBS 0)
+            set(Boost_USE_STATIC_LIBS OFF)
         else()
-            set(Boost_USE_STATIC_LIBS 1)
+            set(Boost_USE_STATIC_LIBS ON)
         endif()
     endif()
 
     # Boost static runtime ON for MSVC
     if(NOT DEFINED Boost_USE_STATIC_RUNTIME)
         if(BUILD_SHARED_LIBS)
-            set(Boost_USE_STATIC_RUNTIME 0)
+            set(Boost_USE_STATIC_RUNTIME OFF)
         else()
-            set(Boost_USE_STATIC_RUNTIME 1)
+            set(Boost_USE_STATIC_RUNTIME ON)
         endif()
     endif()
+
+    # Use Boost Release
+    set(Boost_USE_DEBUG_LIBS        OFF)
+    set(Boost_USE_RELEASE_LIBS       ON)
 
     if(NOT Boost_USE_STATIC_LIBS)
         # link against dynamic boost libraries
