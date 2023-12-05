@@ -156,6 +156,7 @@ else()
     # Use Boost Release
     set(Boost_USE_DEBUG_LIBS        OFF)
     set(Boost_USE_RELEASE_LIBS       ON)
+    set(Boost_NO_BOOST_CMAKE         ON)
 
     if(NOT Boost_USE_STATIC_LIBS)
         # link against dynamic boost libraries
