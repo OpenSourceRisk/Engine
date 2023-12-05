@@ -47,9 +47,9 @@ using namespace QuantLib;
  */
 class LgmBuilder : public QuantExt::ModelBuilder {
 public:
-    /*! The configuration should refer to the calibration configuration here,
-      alternative discounting curves are then usually set in the pricing
-      engines for swaptions etc. */
+    /*! The configuration refers to the configuration to read swaption vol and swap index from the market.
+        The discounting curve to price calibrating swaptions is derived from the swap index directly though,
+        i.e. it is not read as a discount curve from the market. */
     LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<IrLgmData>& data,
                const std::string& configuration = Market::defaultConfiguration, Real bootstrapTolerance = 0.001,
                const bool continueOnError = false, const std::string& referenceCalibrationGrid = "",
@@ -62,8 +62,11 @@ public:
     std::string qualifier() { return data_->qualifier(); }
     std::string ccy() { return currency_; }
     boost::shared_ptr<QuantExt::LGM> model() const;
-    boost::shared_ptr<QuantExt::IrLgm1fParametrization> parametrization() const;
+    /* the curve used to build the lgm parametrization, this can be relinked later outside this builder to e.g.
+       calibrate fx processes using an xccy curve instead of the in currency curve that we use for the calibration of
+       the LGM model in this builder */
     RelinkableHandle<YieldTermStructure> discountCurve() { return modelDiscountCurve_; }
+    boost::shared_ptr<QuantExt::IrLgm1fParametrization> parametrization() const;
     std::vector<boost::shared_ptr<BlackCalibrationHelper>> swaptionBasket() const;
     //@}
 
@@ -111,10 +114,9 @@ private:
     mutable Array swaptionMaturities_;
     mutable Date swaptionBasketRefDate_;
 
-    RelinkableHandle<YieldTermStructure> modelDiscountCurve_;
-    Handle<YieldTermStructure> calibrationDiscountCurve_;
     Handle<QuantLib::SwaptionVolatilityStructure> svts_;
     Handle<SwapIndex> swapIndex_, shortSwapIndex_;
+    RelinkableHandle<YieldTermStructure> modelDiscountCurve_;
 
     // TODO: Move CalibrationErrorType, optimizer and end criteria parameters to data
     boost::shared_ptr<OptimizationMethod> optimizationMethod_;
