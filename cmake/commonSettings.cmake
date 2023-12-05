@@ -135,9 +135,29 @@ else()
         set(BUILD_SHARED_LIBS ON)
     endif()
 
-    # link against dynamic boost libraries
-    add_definitions(-DBOOST_ALL_DYN_LINK)
-    add_definitions(-DBOOST_TEST_DYN_LINK)
+    # link against static boost libraries
+    if(NOT DEFINED Boost_USE_STATIC_LIBS)
+        if(BUILD_SHARED_LIBS)
+            set(Boost_USE_STATIC_LIBS 0)
+        else()
+            set(Boost_USE_STATIC_LIBS 1)
+        endif()
+    endif()
+
+    # Boost static runtime ON for MSVC
+    if(NOT DEFINED Boost_USE_STATIC_RUNTIME)
+        if(BUILD_SHARED_LIBS)
+            set(Boost_USE_STATIC_RUNTIME 0)
+        else()
+            set(Boost_USE_STATIC_RUNTIME 1)
+        endif()
+    endif()
+
+    if(NOT Boost_USE_STATIC_LIBS)
+        # link against dynamic boost libraries
+        add_definitions(-DBOOST_ALL_DYN_LINK)
+        add_definitions(-DBOOST_TEST_DYN_LINK)
+    endif()
 
     # avoid a crash in valgrind that sometimes occurs if this flag is not defined
     add_definitions(-DBOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS)
