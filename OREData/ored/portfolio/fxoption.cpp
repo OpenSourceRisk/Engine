@@ -109,6 +109,8 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         
 
         maturity_ = paymentDate;
+    } else {
+        VanillaOptionTrade::build(engineFactory);
     }
     
     additionalData_["boughtCurrency"] = assetName_; 
