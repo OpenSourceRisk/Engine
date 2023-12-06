@@ -105,6 +105,42 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
         return info;
     }
 
+    if (auto indexCpn = boost::dynamic_pointer_cast<IndexedCoupon>(flow)) {
+        if (boost::dynamic_pointer_cast<FxIndex>(indexCpn->index()) &&
+            boost::dynamic_pointer_cast<FixedRateCoupon>(indexCpn->underlying())) {
+            auto fxIndex = boost::dynamic_pointer_cast<FxIndex>(indexCpn->index());
+            Date fxLinkedFixingDate = indexCpn->fixingDate();
+            Size fxLinkedSourceCcyIdx = model_->ccyIndex(fxIndex->sourceCurrency());
+            Size fxLinkedTargetCcyIdx = model_->ccyIndex(fxIndex->targetCurrency());
+            if (fxLinkedFixingDate > today_) {
+                Real fxSimTime = time(fxLinkedFixingDate);
+                info.simulationTimes.push_back(fxSimTime);
+                info.modelIndices.push_back({});
+                if (fxLinkedSourceCcyIdx > 0) {
+                    info.modelIndices.front().push_back(
+                        model_->pIdx(CrossAssetModel::AssetType::FX, fxLinkedSourceCcyIdx - 1));
+                }
+                if (fxLinkedTargetCcyIdx > 0) {
+                    info.modelIndices.front().push_back(
+                        model_->pIdx(CrossAssetModel::AssetType::FX, fxLinkedTargetCcyIdx - 1));
+                }
+            }
+            info.amountCalculator = [this, fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixingDate,
+                                     indexCpn](const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
+                if (fxLinkedFixingDate <= today_)
+                    return RandomVariable(n, indexCpn->amount());
+                RandomVariable fxSource(n, 1.0), fxTarget(n, 1.0);
+                Size fxIdx = 0;
+                if (fxLinkedSourceCcyIdx > 0)
+                    fxSource = exp(*states.at(0).at(fxIdx++));
+                if (fxLinkedTargetCcyIdx > 0)
+                    fxTarget = exp(*states.at(0).at(fxIdx));
+                return RandomVariable(n, indexCpn->underlying()->amount()) * fxSource / fxTarget;
+            };
+            return info;
+        }
+    }
+
     // handle fx linked fixed cashflow
 
     if (auto fxl = boost::dynamic_pointer_cast<FXLinkedCashFlow>(flow)) {
