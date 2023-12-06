@@ -42,6 +42,9 @@ using std::make_pair;
 namespace ore {
 namespace data {
 
+
+
+
 void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Swap::build() called for trade " << id());
     
@@ -55,6 +58,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Size numLegs = legData_.size();
     legPayers_ = vector<bool>(numLegs);
     std::vector<QuantLib::Currency> currencies(numLegs);
+    std::vector<QuantLib::Currency> underlyingCurrencies(numLegs);
     legs_.resize(numLegs);
 
     isXCCY_ = false;
@@ -67,9 +71,29 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             currencies[i] = parseCurrencyWithMinors(legData_[i].currency());
         else
             currencies[i] = parseCurrency(legData_[i].currency());
+
         if (currencies[i] != currency)
             isXCCY_ = true;
         isResetting_ = isResetting_ || (!legData_[i].isNotResetXCCY());
+    }
+
+    
+    // Check if there is indexing is used for NDF, needed for AMC
+    for (Size i = 0; i < numLegs; ++i) {
+        underlyingCurrencies[i] = currencies[i];
+        if (tradeType_ == "CrossCurrencySwap" && !isXCCY_) {
+            vector<Indexing> indexings = legData_[i].indexing();
+            if (!indexings.empty() && indexings.front().hasData()) {
+                Indexing indexing = indexings.front();
+                if (boost::starts_with(indexing.index(), "FX-")) {
+                    auto index = parseFxIndex(indexing.index());
+                    Currency srcCurrency = index->sourceCurrency();
+                    Currency tgtCurrency = index->targetCurrency();
+                    underlyingCurrencies[i] = currency == srcCurrency ? tgtCurrency : srcCurrency;
+                    isXCCY_ = true;
+                }
+            }
+        }
     }
 
     static std::set<std::string> eligibleForXbs = {"Fixed", "Floating"};
@@ -151,7 +175,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         boost::shared_ptr<CrossCurrencySwapEngineBuilderBase> swapBuilder =
             boost::dynamic_pointer_cast<CrossCurrencySwapEngineBuilderBase>(builder);
         QL_REQUIRE(swapBuilder, "No Builder found for CrossCurrencySwap " << id());
-        swap->setPricingEngine(swapBuilder->engine(currencies, npvCcy));
+        swap->setPricingEngine(swapBuilder->engine(underlyingCurrencies, npvCcy));
         // take the first legs currency as the npv currency (arbitrary choice)
         instrument_.reset(new VanillaInstrument(swap));
     } else {
