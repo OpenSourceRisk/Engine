@@ -187,9 +187,18 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
     requiresCalibration_ =
         (data_->calibrateA() || data_->calibrateH()) && data_->calibrationType() != CalibrationType::None;
 
-    swapIndex_ = market_->swapIndex(market_->swapIndexBase(data_->qualifier(), configuration_), configuration_);
-    // see the comment for dinscountCurve() in the interface
-    modelDiscountCurve_ = RelinkableHandle<YieldTermStructure>(*swapIndex_->discountingTermStructure());
+    try {
+        swapIndex_ = market_->swapIndex(market_->swapIndexBase(data_->qualifier(), configuration_), configuration_);
+        // see the comment for dinscountCurve() in the interface
+        modelDiscountCurve_ = RelinkableHandle<YieldTermStructure>(*swapIndex_->discountingTermStructure());
+    } catch (const std::exception& e) {
+        StructuredModelErrorMessage(
+            "Error when retrieving swap index base for qualifier '" + data_->qualifier() +
+                "'. Use market discount curve instead of swap index discount curve as a fallback.",
+            e.what(), id_)
+            .log();
+        modelDiscountCurve_ = RelinkableHandle<YieldTermStructure>(*market_->discountCurve(currency_, configuration_));
+    }
 
     if (requiresCalibration_) {
         svts_ = market_->swaptionVol(data_->qualifier(), configuration_);
@@ -200,7 +209,7 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
         marketObserver_->addObservable(shortSwapIndex_->forwardingTermStructure());
         marketObserver_->addObservable(shortSwapIndex_->discountingTermStructure());
     }
-    marketObserver_->addObservable(swapIndex_->discountingTermStructure());
+    marketObserver_->addObservable(modelDiscountCurve_);
     registerWith(marketObserver_);
     // notify observers of all market data changes, not only when not calculated
     alwaysForwardNotifications();
@@ -320,7 +329,7 @@ void LgmBuilder::performCalculations() const {
     // reset lgm observer's updated flag
     marketObserver_->hasUpdated(true);
 
-    if (swaptionBasketRefDate_ != swapIndex_->discountingTermStructure()->referenceDate()) {
+    if (swaptionBasketRefDate_ != modelDiscountCurve_->referenceDate()) {
         // build swaption basket if required, i.e. if reference date has changed since last build
         buildSwaptionBasket();
         volSurfaceChanged(true);
@@ -333,7 +342,7 @@ void LgmBuilder::performCalculations() const {
 
     for (Size j = 0; j < swaptionBasket_.size(); j++) {
         auto engine =
-            boost::make_shared<QuantExt::AnalyticLgmSwaptionEngine>(model_, swapIndex_->discountingTermStructure());
+            boost::make_shared<QuantExt::AnalyticLgmSwaptionEngine>(model_, modelDiscountCurve_);
         engine->enableCache(!data_->calibrateH(), !data_->calibrateA());
         swaptionBasket_[j]->setPricingEngine(engine);
         // necessary if notifications are disabled (observation mode = Disable)
@@ -597,14 +606,14 @@ void LgmBuilder::buildSwaptionBasket() const {
             Real shift = svts_->volatilityType() == ShiftedLognormal ? svts_->shift(expiryDb, termT) : 0.0;
             std::tie(helper, updatedStrike) =
                 createSwaptionHelper(expiryDb, termDb, svts_, vol, iborIndex, fixedLegTenor, fixedDayCounter,
-                                     floatDayCounter, swapIndex_->discountingTermStructure(), calibrationErrorType_,
+                                     floatDayCounter, modelDiscountCurve_, calibrationErrorType_,
                                      strikeValue, shift, settlementDays, averagingMethod);
         }
         if (expiryDateBased && !termDateBased) {
             Real shift = svts_->volatilityType() == ShiftedLognormal ? svts_->shift(expiryDb, termPb) : 0.0;
             std::tie(helper, updatedStrike) =
                 createSwaptionHelper(expiryDb, termPb, svts_, vol, iborIndex, fixedLegTenor, fixedDayCounter,
-                                     floatDayCounter, swapIndex_->discountingTermStructure(), calibrationErrorType_,
+                                     floatDayCounter, modelDiscountCurve_, calibrationErrorType_,
                                      strikeValue, shift, settlementDays, averagingMethod);
         }
         if (!expiryDateBased && termDateBased) {
@@ -612,14 +621,14 @@ void LgmBuilder::buildSwaptionBasket() const {
             Real shift = svts_->volatilityType() == ShiftedLognormal ? svts_->shift(expiryPb, termT) : 0.0;
             std::tie(helper, updatedStrike) =
                 createSwaptionHelper(expiry, termDb, svts_, vol, iborIndex, fixedLegTenor, fixedDayCounter,
-                                     floatDayCounter, swapIndex_->discountingTermStructure(), calibrationErrorType_,
+                                     floatDayCounter, modelDiscountCurve_, calibrationErrorType_,
                                      strikeValue, shift, settlementDays, averagingMethod);
         }
         if (!expiryDateBased && !termDateBased) {
             Real shift = svts_->volatilityType() == ShiftedLognormal ? svts_->shift(expiryPb, termPb) : 0.0;
             std::tie(helper, updatedStrike) =
                 createSwaptionHelper(expiryPb, termPb, svts_, vol, iborIndex, fixedLegTenor, fixedDayCounter,
-                                     floatDayCounter, swapIndex_->discountingTermStructure(), calibrationErrorType_,
+                                     floatDayCounter, modelDiscountCurve_, calibrationErrorType_,
                                      strikeValue, shift, settlementDays, averagingMethod);
         }
 
@@ -632,10 +641,10 @@ void LgmBuilder::buildSwaptionBasket() const {
             swaptionBasketVols_.push_back(volQuote);
             swaptionBasket_.push_back(helper);
             swaptionStrike_.push_back(updatedStrike);
-            expiryTimes.push_back(swapIndex_->discountingTermStructure()->timeFromReference(expiryDate));
+            expiryTimes.push_back(modelDiscountCurve_->timeFromReference(expiryDate));
             Date matDate = helper->underlyingSwap() ? helper->underlyingSwap()->maturityDate()
                                                     : helper->underlyingOvernightIndexedSwap()->maturityDate();
-            maturityTimes.push_back(swapIndex_->discountingTermStructure()->timeFromReference(matDate));
+            maturityTimes.push_back(modelDiscountCurve_->timeFromReference(matDate));
             if (refCalDate != referenceCalibrationDates.end())
                 lastRefCalDate = *refCalDate;
         }
@@ -657,7 +666,7 @@ void LgmBuilder::buildSwaptionBasket() const {
     for (Size j = 0; j < maturityTimes.size(); j++)
         swaptionMaturities_[j] = maturityTimes[j];
 
-    swaptionBasketRefDate_ = swapIndex_->discountingTermStructure()->referenceDate();
+    swaptionBasketRefDate_ = modelDiscountCurve_->referenceDate();
 }
 
 std::string LgmBuilder::getBasketDetails(LgmCalibrationInfo& info) const {
@@ -668,7 +677,7 @@ std::string LgmBuilder::getBasketDetails(LgmCalibrationInfo& info) const {
     info.swaptionData.clear();
     for (Size j = 0; j < swaptionBasket_.size(); ++j) {
         auto swp = boost::static_pointer_cast<SwaptionHelper>(swaptionBasket_[j])->swaption();
-        auto sd = swaptionData(swp, swapIndex_->discountingTermStructure(), svts_);
+        auto sd = swaptionData(swp, modelDiscountCurve_, svts_);
         log << std::right << std::setw(3) << j << std::setw(16) << sd.timeToExpiry << std::setw(16) << sd.swapLength
             << std::setw(16) << sd.strike << std::setw(16) << sd.atmForward << std::setw(16) << sd.annuity
             << std::setw(16) << sd.vega << std::setw(16) << std::setw(16) << sd.stdDev / std::sqrt(sd.timeToExpiry)
