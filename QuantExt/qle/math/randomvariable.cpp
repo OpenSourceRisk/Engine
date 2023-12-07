@@ -28,6 +28,7 @@
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
 
 #include <iostream>
 #include <map>
@@ -146,7 +147,7 @@ Filter& Filter::operator=(Filter&& r) {
     return *this;
 }
 
-Filter::Filter(const Size n, const bool value) : n_(n), constantData_(value), data_(nullptr), deterministic_(true) {}
+Filter::Filter(const Size n, const bool value) : n_(n), constantData_(value), data_(nullptr), deterministic_(n != 0) {}
 
 void Filter::clear() {
     n_ = 0;
@@ -370,7 +371,7 @@ RandomVariable& RandomVariable::operator=(RandomVariable&& r) {
 }
 
 RandomVariable::RandomVariable(const Size n, const Real value, const Real time)
-    : n_(n), constantData_(value), data_(nullptr), deterministic_(true), time_(time) {}
+    : n_(n), constantData_(value), data_(nullptr), deterministic_(n != 0), time_(time) {}
 
 RandomVariable::RandomVariable(const Filter& f, const Real valueTrue, const Real valueFalse, const Real time) {
     if (!f.initialised()) {
@@ -1169,11 +1170,10 @@ RandomVariable expectation(const RandomVariable& r) {
     if (r.deterministic())
         return r;
     resumeCalcStats();
-    Real sum = 0.0;
+    boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::mean>> acc;
     for (Size i = 0; i < r.size(); ++i)
-        sum += r[i];
-    stopCalcStats(r.size());
-    return RandomVariable(r.size(), sum / static_cast<Real>(r.size()));
+        acc(r[i]);
+    return RandomVariable(r.size(), boost::accumulators::mean(acc));
 }
 
 RandomVariable variance(const RandomVariable& r) {
