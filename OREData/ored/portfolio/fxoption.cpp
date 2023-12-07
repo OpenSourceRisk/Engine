@@ -59,42 +59,42 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         indexName_ = fxIndex_;
     }
 
-    if (option_.settlement() == "Physical") {
-        const ext::optional<OptionPaymentData>& opd = option_.paymentData();
-        Date paymentDate = expiryDate_;
-        if (opd) {
-            if (opd->rulesBased()) {
-                const Calendar& cal = opd->calendar();
-                QL_REQUIRE(cal != Calendar(), "Need a non-empty calendar for rules based payment date.");
-                paymentDate = cal.advance(expiryDate_, opd->lag(), Days, opd->convention());
-            } else {
+    const ext::optional<OptionPaymentData>& opd = option_.paymentData();
+    Date paymentDate = expiryDate_;
+    if (option_.settlement() == "Physical" && opd) {
+        if (opd->rulesBased()) {
+            const Calendar& cal = opd->calendar();
+            QL_REQUIRE(cal != Calendar(), "Need a non-empty calendar for rules based payment date.");
+            paymentDate = cal.advance(expiryDate_, opd->lag(), Days, opd->convention());
+        } else {
             if (opd->dates().size() > 1)
-                ore::data::StructuredTradeWarningMessage(id(), tradeType(), "Trade build",
-                                                         "Found more than 1 payment date. The first one will be used.")
+                ore::data::StructuredTradeWarningMessage(
+                    id(), tradeType(), "Trade build", "Found more than 1 payment date. The first one will be used.")
                     .log();
             paymentDate = opd->dates().front();
-            }
-            QL_REQUIRE(paymentDate >= expiryDate_, "Settlement date must be greater than or equal to expiry date.");
         }
 
+        QL_REQUIRE(paymentDate >= expiryDate_, "Settlement date must be greater than or equal to expiry date.");
+
         if (expiryDate_ <= today) {
-        // building an fx forward instrument instead of the option
+            // building an fx forward instrument instead of the option
             Date fixingDate;
             Currency boughtCcy = parseCurrency(assetName_);
             Currency soldCcy = parseCurrency(currency_);
             boost::shared_ptr<QuantExt::FxIndex> fxIndex;
             ext::shared_ptr<QuantLib::Instrument> instrument =
                 ext::make_shared<QuantExt::FxForward>(quantity_, boughtCcy, soldAmount(), soldCcy, maturity_, false,
-                                                    true, paymentDate, soldCcy, fixingDate, fxIndex);
+                                                        true, paymentDate, soldCcy, fixingDate, fxIndex);
             if (option_.exerciseData()) {
-                if (option_.exerciseData()->date() == paymentDate || option_.exerciseData()->date() <= expiryDate_) {
+                if (option_.exerciseData()->date() == paymentDate ||
+                    option_.exerciseData()->date() <= expiryDate_) {
                     // option is exercised
                     // fxforward flow are flows from trade data
                     legs_ = {{boost::make_shared<SimpleCashFlow>(quantity_, paymentDate)},
-                         {boost::make_shared<SimpleCashFlow>(soldAmount(), paymentDate)}};
-                } else 
+                                {boost::make_shared<SimpleCashFlow>(soldAmount(), paymentDate)}};
+                } else
                     QL_REQUIRE(option_.exerciseData()->date() <= expiryDate_,
-                           "Trade build error, exercise after option expiry is not allowed");
+                                "Trade build error, exercise after option expiry is not allowed");
             } else {
                 // option not exercised
                 // set flows = 0
@@ -106,12 +106,11 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             paymentDate_ = paymentDate;
             VanillaOptionTrade::build(engineFactory);
         }
-        
-
         maturity_ = paymentDate;
     } else {
         VanillaOptionTrade::build(engineFactory);
     }
+    
     
     additionalData_["boughtCurrency"] = assetName_; 
     additionalData_["boughtAmount"] = quantity_;
