@@ -661,9 +661,9 @@ C++ support under the Programming Languages features (disabled by default).
 
 Set environment variables, e.g.:
 \begin{itemize}
-  	\item  {\tt \%BOOST\%} pointing to your directory, e.g, {\tt C:{\bs}boost\_1\_72\_0} 
-  	\item {\tt \%BOOST\_LIB32\%} pointing to your Win32 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib32\-msvc\-14.2} 
-	\item  {\tt \%BOOST\_LIB64\%} pointing to your x64 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib64\-msvc\-14.2} 
+  	\item  {\tt \%BOOST\%} pointing to your directory, e.g, {\tt C:{\bs}boost\_1\_78\_0} 
+  	\item {\tt \%BOOST\_LIB32\%} pointing to your Win32 lib directory, e.g, {\tt C:{\bs}boost\_1\_78\_0{\bs}lib32\-msvc\-14.2} 
+	\item  {\tt \%BOOST\_LIB64\%} pointing to your x64 lib directory, e.g, {\tt C:{\bs}boost\_1\_78\_0{\bs}lib64\-msvc\-14.2} 
  \end{itemize}
  
 \item Download and install CMake for Windows (https://cmake.org/download/). Visual Studio Community Edition 2019 or later supports CMake and you can install the feature 'C++ CMake Tools for Windows' instead of installing CMake as standalone program.
@@ -5871,15 +5871,15 @@ StickyStrike.
     </Pairs>
     <Expiries>1Y,2Y</Expiries>
   </Correlations>
-  <AdditionalScenarioDataCurrencies>
+  <AggregationScenarioDataCurrencies>
     <Currency>EUR</Currency>
     <Currency>USD</Currency>
-  </AdditionalScenarioDataCurrencies>
-  <AdditionalScenarioDataIndices>
+  </AggregationScenarioDataCurrencies>
+  <AggregationScenarioDataIndices>
     <Index>EUR-EURIBOR-3M</Index>
     <Index>EUR-EONIA</Index>
     <Index>USD-LIBOR-3M</Index>
-  </AdditionalScenarioDataIndices>
+  </AggregationScenarioDataIndices>
 </Market>
 \end{minted}
 \caption{Simulation market configuration}
