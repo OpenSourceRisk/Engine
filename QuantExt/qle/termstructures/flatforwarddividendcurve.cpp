@@ -21,8 +21,7 @@
 namespace QuantExt {
 
 Date FlatForwardDividendCurve::maxDate() const { 
-	return dividendCurve_->maxDate(); 
-}
+	return Date::maxDate(); }
 
 DiscountFactor FlatForwardDividendCurve::discountImpl(Time t) const {
     Time maxTime = dividendCurve_->maxTime();

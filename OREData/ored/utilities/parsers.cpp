@@ -1396,5 +1396,35 @@ QuantExt::McMultiLegBaseEngine::RegressorModel parseRegressorModel(const std::st
     }
 }
 
+MporCashFlowMode parseMporCashFlowMode(const string& s){
+    static map<string, MporCashFlowMode> m = {{"Unspecified", MporCashFlowMode::Unspecified},
+                                              {"NonePay", MporCashFlowMode::NonePay},
+                                              {"BothPay", MporCashFlowMode::BothPay},
+                                              {"WePay", MporCashFlowMode::WePay},
+                                              {"TheyPay", MporCashFlowMode::TheyPay}};
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Mpor cash flow mode \"" << s << "\" not recognized");
+    }
+}
+std::ostream& operator<<(std::ostream& out, MporCashFlowMode t) {
+    if (t == MporCashFlowMode::Unspecified)
+        out << "Unspecified";
+    else if (t == MporCashFlowMode::NonePay)
+        out << "NonePay";
+    else if (t == MporCashFlowMode::BothPay)
+        out << "BothPay";
+    else if (t == MporCashFlowMode::WePay)
+        out << "WePay";
+    else if (t == MporCashFlowMode::TheyPay)
+        out << "TheyPay";
+    else
+        QL_FAIL("Mpor cash flow mode not covered, expected one of 'Unspecified', 'NonePay', 'BothPay', 'WePay', "
+                "'TheyPay'.");
+    return out;
+}
+
 } // namespace data
 } // namespace ore
