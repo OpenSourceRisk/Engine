@@ -80,9 +80,7 @@ double getDelta(const RandomVariable& x, const Real eps) {
     for (Size i = 0; i < x.size(); ++i) {
         sum += x[i] * x[i];
     }
-    Real delta = std::sqrt(sum / static_cast<Real>(x.size())) * eps / 2.0;
-    // std::cout << "delta = " << delta << std::endl;
-    return delta;
+    return std::sqrt(sum / static_cast<Real>(x.size())) * eps / 2.0;
 }
 
 } // namespace
