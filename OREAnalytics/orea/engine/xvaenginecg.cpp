@@ -280,8 +280,9 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     LOG("XvaEngineCG: do forward evaluation");
 
-    ops_ = getRandomVariableOps(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial);
-    grads_ = getRandomVariableGradients(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial);
+    Real eps = 0.0; // smoothing parameter for indicator functions
+    ops_ = getRandomVariableOps(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial, bumpCvaSensis ? eps : 0.0);
+    grads_ = getRandomVariableGradients(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial, eps);
     opNodeRequirements_ = getRandomVariableOpNodeRequirements();
 
     std::vector<bool> keepNodes(g->size(), false);
