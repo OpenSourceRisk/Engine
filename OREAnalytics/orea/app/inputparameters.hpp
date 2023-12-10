@@ -200,12 +200,16 @@ public:
     void setXvaBaseCurrency(const std::string& s) { xvaBaseCurrency_ = s; }
     void setLoadCube(bool b) { loadCube_ = b; }
     // TODO: API for setting NPV and market cubes
+    /* This overwrites scenarioGeneratorData, storeFlows, storeCreditStateNpvs to the values stored together with the
+       cube. Therefore this method should be called after setScenarioGeneratorData(), setStoreFlows(),
+       setStoreCreditStateNPVs() to ensure that the overwrite takes place. */
     void setCubeFromFile(const std::string& file);
     void setNettingSetCubeFromFile(const std::string& file);
     void setCptyCubeFromFile(const std::string& file);
     void setMarketCubeFromFile(const std::string& file);
     // boost::shared_ptr<AggregationScenarioData> mktCube();
     void setFlipViewXVA(bool b) { flipViewXVA_ = b; }
+    void setMporCashFlowMode(const MporCashFlowMode m) { mporCashFlowMode_ = m; }
     void setFullInitialCollateralisation(bool b) { fullInitialCollateralisation_ = b; }
     void setExposureProfiles(bool b) { exposureProfiles_ = b; }
     void setExposureProfilesByTrade(bool b) { exposureProfilesByTrade_ = b; }
@@ -464,6 +468,7 @@ public:
     const boost::shared_ptr<NPVCube>& cptyCube() { return cptyCube_; }
     const boost::shared_ptr<AggregationScenarioData>& mktCube() { return mktCube_; }
     bool flipViewXVA() { return flipViewXVA_; }
+    MporCashFlowMode mporCashFlowMode() { return mporCashFlowMode_; }
     bool fullInitialCollateralisation() { return fullInitialCollateralisation_; }
     bool exposureProfiles() { return exposureProfiles_; }
     bool exposureProfilesByTrade() { return exposureProfilesByTrade_; }
@@ -727,6 +732,7 @@ protected:
     std::string xvaBaseCurrency_ = "";
     bool loadCube_ = false;
     bool flipViewXVA_ = false;
+    MporCashFlowMode mporCashFlowMode_ = MporCashFlowMode::Unspecified;
     bool exerciseNextBreak_ = false;
     bool cvaAnalytic_ = true;
     bool dvaAnalytic_ = false;
