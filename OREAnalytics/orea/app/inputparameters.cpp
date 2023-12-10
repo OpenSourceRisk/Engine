@@ -284,20 +284,25 @@ void InputParameters::setNettingSetManagerFromFile(const std::string& fileName) 
 }
 
 void InputParameters::setCubeFromFile(const std::string& file) {
-    cube_ = ore::analytics::loadCube(file);
+    auto r = ore::analytics::loadCube(file);
+    cube_ = r.cube;
+    if(r.scenarioGeneratorData)
+        scenarioGeneratorData_ = r.scenarioGeneratorData;
+    if(r.storeFlows)
+        storeFlows_ = *r.storeFlows;
+    if(r.storeCreditStateNPVs)
+        storeCreditStateNPVs_ = *r.storeCreditStateNPVs;
 }
 
 void InputParameters::setNettingSetCubeFromFile(const std::string& file) {
-    nettingSetCube_ = ore::analytics::loadCube(file);
+    nettingSetCube_ = ore::analytics::loadCube(file).cube;
 }
 
 void InputParameters::setCptyCubeFromFile(const std::string& file) {
-    cptyCube_ = ore::analytics::loadCube(file);
+    cptyCube_ = ore::analytics::loadCube(file).cube;
 }
 
-void InputParameters::setMarketCubeFromFile(const std::string& file) {
-    mktCube_ = loadAggregationScenarioData(file);
-}
+void InputParameters::setMarketCubeFromFile(const std::string& file) { mktCube_ = loadAggregationScenarioData(file); }
 
 void InputParameters::setVarQuantiles(const std::string& s) {
     // parse to vector<Real>
