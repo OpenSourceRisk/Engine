@@ -12,7 +12,7 @@
       <Data>
         <Number>
           <Name>Notional</Name>
-          <Value>1000000</Value>
+          <Value>100000000</Value>
         </Number>
         <Number>
           <Name>FixedRatePayer</Name>
