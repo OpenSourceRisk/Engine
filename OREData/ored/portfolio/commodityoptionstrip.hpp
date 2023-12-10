@@ -52,7 +52,6 @@ public:
                          const bool isDigital = false, 
                          Real payoffPerUnit = 0.0);
 
-
     //! Implement the build method
     void build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) override;
 
@@ -67,9 +66,7 @@ public:
     const std::vector<QuantLib::Real>& callStrikes() const { return callStrikes_; }
     const std::vector<QuantLib::Position::Type>& putPositions() const { return putPositions_; }
     const std::vector<QuantLib::Real>& putStrikes() const { return putStrikes_; }
-    QuantLib::Real premium() const { return premium_; }
-    const std::string& premiumCurrency() const { return premiumCurrency_; }
-    const QuantLib::Date& premiumPayDate() const { return premiumPayDate_; }
+    const PremiumData& premiumDate() const { return premiumData_; }
     const std::string& style() const { return style_; }
     const std::string& settlement() const { return settlement_; }
     const std::string& fxIndex() const { return fxIndex_; }
@@ -96,9 +93,7 @@ private:
     std::vector<QuantLib::Real> callStrikes_;
     std::vector<QuantLib::Position::Type> putPositions_;
     std::vector<QuantLib::Real> putStrikes_;
-    QuantLib::Real premium_;
-    std::string premiumCurrency_;
-    QuantLib::Date premiumPayDate_;
+    PremiumData premiumData_;
     std::string style_;
     std::string settlement_;
     BarrierData callBarrierData_;
