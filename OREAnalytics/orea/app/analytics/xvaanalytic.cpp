@@ -354,11 +354,12 @@ void XvaAnalyticImpl::buildClassicCube(const boost::shared_ptr<Portfolio>& portf
         }
 
         MultiThreadedValuationEngine engine(
-            inputs_->nThreads(), inputs_->asof(), grid_, samples_,  analytic()->loader(), scenarioGenerator_,
-            inputs_->simulationPricingEngine(), inputs_->curveConfigs().get(), analytic()->configurations().todaysMarketParams,
-            inputs_->marketConfig("simulation"), analytic()->configurations().simMarketParams, false, false,
-            boost::make_shared<ScenarioFilter>(), inputs_->refDataManager(),
-            *inputs_->iborFallbackConfig(), true, false, cubeFactory, {}, cptyCubeFactory, "xva-simulation");
+            inputs_->nThreads(), inputs_->asof(), grid_, samples_, analytic()->loader(), scenarioGenerator_,
+            inputs_->simulationPricingEngine(), inputs_->curveConfigs().get(),
+            analytic()->configurations().todaysMarketParams, inputs_->marketConfig("simulation"),
+            analytic()->configurations().simMarketParams, false, false, boost::make_shared<ScenarioFilter>(),
+            inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, false, false, cubeFactory, {},
+            cptyCubeFactory, "xva-simulation");
 
         engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
@@ -564,13 +565,6 @@ void XvaAnalyticImpl::runPostProcessor() {
 
     LOG("baseCurrency " << baseCurrency);
     
-    bool withMporStickyDate = analytic()->configurations().scenarioGeneratorData->withMporStickyDate();
-    ScenarioGeneratorData::MporCashFlowMode mporCashFlowMode = analytic()->configurations().scenarioGeneratorData->mporCashFlowMode();
-    if (withMporStickyDate)
-        QL_REQUIRE(mporCashFlowMode == ScenarioGeneratorData::MporCashFlowMode::NonePay, "MporMode StickyDate supports only MporCashFlowMode NonePay");
-    if (!inputs_->storeFlows() && !withMporStickyDate)
-        QL_REQUIRE(mporCashFlowMode == ScenarioGeneratorData::MporCashFlowMode::BothPay, "If cube does not hold any mpor flows and MporMode is set to ActualDate, then MporCashFlowMode must be set to BothPay");
-    
     postProcess_ = boost::make_shared<PostProcess>(
         analytic()->portfolio(), netting, analytic()->market(), marketConfiguration, cube_, *scenarioData_, analytics,
         baseCurrency, allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
@@ -578,7 +572,8 @@ void XvaAnalyticImpl::runPostProcessor() {
         cvaSensiShiftSize, kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle, kvaOurPdFloor,
         kvaTheirPdFloor, kvaOurCvaRiskWeight, kvaTheirCvaRiskWeight, cptyCube_, flipViewBorrowingCurvePostfix,
         flipViewLendingCurvePostfix, inputs_->creditSimulationParameters(), inputs_->creditMigrationDistributionGrid(),
-        inputs_->creditMigrationTimeSteps(), creditStateCorrelationMatrix(), withMporStickyDate, mporCashFlowMode);
+        inputs_->creditMigrationTimeSteps(), creditStateCorrelationMatrix(),
+        analytic()->configurations().scenarioGeneratorData->withMporStickyDate(), inputs_->mporCashFlowMode());
     LOG("post done");
 }
 
