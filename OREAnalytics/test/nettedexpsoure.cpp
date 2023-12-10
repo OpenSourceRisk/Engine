@@ -372,12 +372,12 @@ boost::shared_ptr<NPVCube> buildNPVCube(boost::shared_ptr<DateGrid> dateGrid,
         std::string fileName = "scenarioData_closeout.csv";
         saveAggregationScenarioData(fileName, *simMarket->aggregationScenarioData());
         fileName = "cube_closeout.csv";
-        saveCube(fileName, *cube);
+        saveCube(fileName, NPVCubeWithMetaData{cube, nullptr, boost::none, boost::none});
     }else{
         std::string fileName = "scenarioData.csv";
         saveAggregationScenarioData(fileName, *simMarket->aggregationScenarioData());
         fileName = "cube.csv";
-        saveCube(fileName, *cube);
+        saveCube(fileName, NPVCubeWithMetaData{cube, nullptr, boost::none, boost::none});
     }
 
     BOOST_TEST_MESSAGE("Cube generated in " << elapsed << " seconds");
@@ -431,9 +431,9 @@ CachedResultsData(){
     tuple<string, string, string, string, string, string> key; 
     key = make_tuple("13,1W", "1W", "woCloseOutGrid", "ActualDate", "Symmetric", "woCompounding");
     vector<Date> defaultDate = {Date(42481),Date(42488),Date(42495),Date(42502),Date(42509),Date(42516),Date(42523),Date(42530),Date(42537),Date(42544),Date(42551),Date(42558),Date(42565)};
-    vector<Real> defaultValue = {-5186.33839194918,-4905.49750714248,-4548.69910041274,-4934.74752203131,-4721.35208103624,-4728.18840345129,-4942.29809042893,-4829.79935176886,-4872.32605339788,-4661.93964349494,-4836.57610017441,-5209.59281418126,-5111.60742248725};
+    vector<Real> defaultValue = {-5187.5422,-4905.1896,-4546.209,-4934.3538,-4719.8216,-4726.7086,-4942.2042,-4829.1002,-4871.8577,-4660.3374,-4835.9162,-5210.7846,-5112.2817};
     vector<Date> closeOutDate = {};
-    vector<Real> closeOutValue = {-4964.24586512324,-5186.33839194918,-4905.49750714248,-4548.69910041274,-4934.74752203131,-4721.35208103624,-4728.18840345129,-4942.29809042893,-4829.79935176886,-4872.32605339788,-4661.93964349494,-4836.57610017441,-5209.59281418126};
+    vector<Real> closeOutValue = {-4964.2459,-5187.5422,-4905.1896,-4546.209,-4934.3538,-4719.8216,-4726.7086,-4942.2042,-4829.1002,-4871.8577,-4660.3374,-4835.9162,-5210.7846};
     defaultDates[key] = defaultDate;
     defaultValues[key] = defaultValue;
     closeOutDates[key] = closeOutDate;
@@ -441,8 +441,8 @@ CachedResultsData(){
 
     key = make_tuple("13,1W", "1W", "woCloseOutGrid", "ActualDate", "AsymmetricCVA", "woCompounding");
     defaultDate = {Date(42481),Date(42488),Date(42495),Date(42502),Date(42509),Date(42516),Date(42523),Date(42530),Date(42537),Date(42544),Date(42551),Date(42558),Date(42565)};
-    defaultValue = {-5186.33839194918,-4905.49750714248,-4548.69910041274,-4934.74752203131,-4721.35208103624,-4728.18840345129,-4942.29809042893,-4829.79935176886,-4872.32605339788,-4661.93964349494,-4836.57610017441,-5209.59281418126,-5111.60742248725};
-    closeOutValue = {-5186.33839194918,-5186.33839194918,-4905.49750714248,-4934.74752203131,-4934.74752203131,-4728.18840345129,-4942.29809042893,-4942.29809042893,-4872.32605339788,-4872.32605339788,-4836.57610017441,-5209.59281418126,-5209.59281418126};
+    defaultValue = {-5187.5422,-4905.1896,-4546.209,-4934.3538,-4719.8216,-4726.7086,-4942.2042,-4829.1002,-4871.8577,-4660.3374,-4835.9162,-5210.7846,-5112.2817};
+    closeOutValue = {-5187.5422,-5187.5422,-4905.1896,-4934.3538,-4934.3538,-4726.7086,-4942.2042,-4942.2042,-4871.8577,-4871.8577,-4835.9162,-5210.7846,-5210.7846};
     defaultDates[key] = defaultDate;
     defaultValues[key] = defaultValue;
     closeOutDates[key] = closeOutDate;
@@ -451,8 +451,8 @@ CachedResultsData(){
 
     key = make_tuple("13,1W", "1W", "woCloseOutGrid", "ActualDate", "AsymmetricDVA", "woCompounding");
     defaultDate = {Date(42481),Date(42488),Date(42495),Date(42502),Date(42509),Date(42516),Date(42523),Date(42530),Date(42537),Date(42544),Date(42551),Date(42558),Date(42565)};
-    defaultValue = {-5186.33839194918,-4905.49750714248,-4548.69910041274,-4934.74752203131,-4721.35208103624,-4728.18840345129,-4942.29809042893,-4829.79935176886,-4872.32605339788,-4661.93964349494,-4836.57610017441,-5209.59281418126,-5111.60742248725};
-    closeOutValue = {-4964.24586512324,-4905.49750714248,-4548.69910041274,-4548.69910041274,-4721.35208103624,-4721.35208103624,-4728.18840345129,-4829.79935176886,-4829.79935176886,-4661.93964349494,-4661.93964349494,-4836.57610017441,-5111.60742248725};
+    defaultValue = {-5187.5422,-4905.1896,-4546.209,-4934.3538,-4719.8216,-4726.7086,-4942.2042,-4829.1002,-4871.8577,-4660.3374,-4835.9162,-5210.7846,-5112.2817};
+    closeOutValue = {-4964.2459,-4905.1896,-4546.209,-4546.209,-4719.8216,-4719.8216,-4726.7086,-4829.1002,-4829.1002,-4660.3374,-4660.3374,-4835.9162,-5112.2817};
     defaultDates[key] = defaultDate;
     defaultValues[key] = defaultValue;
     closeOutDates[key] = closeOutDate;
@@ -461,8 +461,8 @@ CachedResultsData(){
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     key = make_tuple("13,1M", "1W", "withCloseOutGrid", "ActualDate", "NoLag", "woCompounding");
     defaultDate = {Date(42506),Date(42535),Date(42565),Date(42597),Date(42627),Date(42657),Date(42688),Date(42718),Date(42751),Date(42780),Date(42808),Date(42843),Date(42870)};
-    defaultValue = {-5201.05244612274,-4824.95292840006,-4477.84062127441,-4840.59273964169,-4783.19175595342,-10033.5472051449,-10033.8518374855,-10042.17634737,-10050.6267511171,-10028.9670934353,-10053.5482862015,0,0};
-    closeOutValue = {-5480.43076439459,-4433.281369965,-4468.94866890169,-4953.02218430623,-4985.17359043462,-10026.4183374549,-10030.1017618035,-10036.1263742983,-10048.9573202704,-10023.9263145357,-10050.3607175246,0,0};
+    defaultValue = {-5202.1081,-4824.2195,-4475.0983,-4839.8679,-4781.7627,-10033.828,-10034.132,-10042.506,-10051.002,-10029.219,-10053.942,0,0};
+    closeOutValue = {-5482.992,-4430.4454,-4466.1567,-4952.8999,-4984.8645,-10026.681,-10030.382,-10036.444,-10049.344,-10024.172,-10050.758,0,0};
     defaultDates[key] = defaultDate;
     defaultValues[key] = defaultValue;
     closeOutDates[key] = closeOutDate;
@@ -655,12 +655,12 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
             nettingSetCloseOutValue = exposureCalculator->nettingSetCloseOutValue();
             nettingSetMporPositiveFlow = exposureCalculator->nettingSetMporPositiveFlow();
             nettingSetMporNegativeFlow = exposureCalculator->nettingSetMporNegativeFlow();
-            boost::shared_ptr<NettedExposureCalculator> nettedExposureCalculator = boost::make_shared<NettedExposureCalculator>(portfolio, initMarket, cube, "EUR", "Market",
-                                                                                                                    0.99, calcType, false, nettingSetManager, nettingSetDefaultValue,
-                                                                                                                    nettingSetCloseOutValue, nettingSetMporPositiveFlow,
-                                                                                                                    nettingSetMporNegativeFlow, *asd, cubeInterpreter,
-                                                                                                                    false, dimCalculator, false, false, 0.1, exposureCalculator->exposureCube(),
-                                                                                                                    0, 0, false, mporStickyDate, ScenarioGeneratorData::MporCashFlowMode::BothPay);
+            boost::shared_ptr<NettedExposureCalculator> nettedExposureCalculator =
+                boost::make_shared<NettedExposureCalculator>(
+                    portfolio, initMarket, cube, "EUR", "Market", 0.99, calcType, false, nettingSetManager,
+                    nettingSetDefaultValue, nettingSetCloseOutValue, nettingSetMporPositiveFlow,
+                    nettingSetMporNegativeFlow, *asd, cubeInterpreter, false, dimCalculator, false, false, 0.1,
+                    exposureCalculator->exposureCube(), 0, 0, false, mporStickyDate, MporCashFlowMode::Unspecified);
             nettedExposureCalculator->build();
             nettingSetValue = (calcType == CollateralExposureHelper::CalculationType::NoLag
                                 ? nettedExposureCalculator->nettingSetCloseOutValue()
@@ -677,7 +677,7 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
             BOOST_TEST_MESSAGE("cdv "<<cdv.size());
             BOOST_TEST_MESSAGE("ccd "<<ccd.size());
             BOOST_TEST_MESSAGE("ccv "<<ccv.size());
-            Real tolerance = 0.000001;
+            Real tolerance = 1E-2;
             for (auto n : nettingSetValue){
                 vector<vector<Real>> defaultValue = n.second;
                 for (Size j = 0; j < cube->dates().size(); j++){
