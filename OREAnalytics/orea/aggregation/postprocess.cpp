@@ -67,8 +67,7 @@ PostProcess::PostProcess(
     const string& flipViewLendingCurvePostfix,
     const boost::shared_ptr<CreditSimulationParameters>& creditSimulationParameters,
     const std::vector<Real>& creditMigrationDistributionGrid, const std::vector<Size>& creditMigrationTimeSteps,
-    const Matrix& creditStateCorrelationMatrix,
-    bool withMporStickyDate, ScenarioGeneratorData::MporCashFlowMode mporCashFlowMode)
+    const Matrix& creditStateCorrelationMatrix, bool withMporStickyDate, MporCashFlowMode mporCashFlowMode)
     : portfolio_(portfolio), nettingSetManager_(nettingSetManager), market_(market), configuration_(configuration),
       cube_(cube), cptyCube_(cptyCube), scenarioData_(scenarioData), analytics_(analytics), baseCurrency_(baseCurrency),
       quantile_(quantile), calcType_(parseCollateralCalculationType(calculationType)), dvaName_(dvaName),
@@ -84,6 +83,18 @@ PostProcess::PostProcess(
       withMporStickyDate_(withMporStickyDate), mporCashFlowMode_(mporCashFlowMode) {
 
     QL_REQUIRE(cubeInterpretation_ != nullptr, "PostProcess: cubeInterpretation is not given.");
+
+    if (mporCashFlowMode_ == MporCashFlowMode::Unspecified) {
+        mporCashFlowMode_ = withMporStickyDate_ ? MporCashFlowMode::NonePay : MporCashFlowMode::BothPay;
+    }
+
+    QL_REQUIRE(!withMporStickyDate_ || mporCashFlowMode_ == MporCashFlowMode::NonePay,
+               "PostProcess: MporMode StickyDate supports only MporCashFlowMode NonePay");
+    QL_REQUIRE(cubeInterpretation_->storeFlows() || withMporStickyDate || mporCashFlowMode_ == MporCashFlowMode::BothPay,
+               "PostProcess: If cube does not hold any mpor flows and MporMode is set to ActualDate, then "
+               "MporCashFlowMode must "
+               "be set to BothPay");
+
     bool isRegularCubeStorage = !cubeInterpretation_->withCloseOutLag();
 
     LOG("cube storage is regular: " << isRegularCubeStorage);
@@ -180,20 +191,15 @@ PostProcess::PostProcess(
      *    Michael Pykhtin & Dan Rosen, Pricing Counterparty Risk
      *    at the Trade Level and CVA Allocations, October 2010
      */
-    nettedExposureCalculator_ =
-        boost::make_shared<NettedExposureCalculator>(
-            portfolio_, market_, cube_, baseCurrency, configuration_, quantile_,
-            calcType_, analytics_["dynamicCredit"], nettingSetManager_,
-	        exposureCalculator_->nettingSetDefaultValue(),
-	        exposureCalculator_->nettingSetCloseOutValue(),
-            exposureCalculator_->nettingSetMporPositiveFlow(),
-	        exposureCalculator_->nettingSetMporNegativeFlow(),
-            scenarioData_, cubeInterpretation_, analytics_["dim"],
-            dimCalculator_, fullInitialCollateralisation_,
-            allocationMethod == ExposureAllocator::AllocationMethod::Marginal, marginalAllocationLimit,
-            exposureCalculator_->exposureCube(), ExposureCalculator::allocatedEPE, ExposureCalculator::allocatedENE,
-            analytics_["flipViewXVA"], withMporStickyDate_, mporCashFlowMode_
-        );
+    nettedExposureCalculator_ = boost::make_shared<NettedExposureCalculator>(
+        portfolio_, market_, cube_, baseCurrency, configuration_, quantile_, calcType_, analytics_["dynamicCredit"],
+        nettingSetManager_, exposureCalculator_->nettingSetDefaultValue(),
+        exposureCalculator_->nettingSetCloseOutValue(), exposureCalculator_->nettingSetMporPositiveFlow(),
+        exposureCalculator_->nettingSetMporNegativeFlow(), scenarioData_, cubeInterpretation_, analytics_["dim"],
+        dimCalculator_, fullInitialCollateralisation_,
+        allocationMethod == ExposureAllocator::AllocationMethod::Marginal, marginalAllocationLimit,
+        exposureCalculator_->exposureCube(), ExposureCalculator::allocatedEPE, ExposureCalculator::allocatedENE,
+        analytics_["flipViewXVA"], withMporStickyDate_, mporCashFlowMode_);
     nettedExposureCalculator_->build();
 
     /********************************************************

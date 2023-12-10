@@ -329,12 +329,12 @@ void simulation(string dateGridString, bool checkFixings) {
 
     map<string, vector<Real>> referenceFixings;
     // First 10 EUR-EURIBOR-6M fixings at dateIndex 5, date grid 11,1Y
-    referenceFixings["11,1Y"] = {0.00745427, 0.028119, 0.0343574, 0.0335416, 0.0324554, 0.0305116,
-                                 0.00901458, 0.016573, 0.0194405, 0.0113262, 0.0238971};
+    referenceFixings["11,1Y"] = {0.00739033, 0.0281673, 0.0344399, 0.03362,   0.0325276, 0.030573,
+                                 0.00895957, 0.0165584, 0.0194418, 0.0112834, 0.0239227};
 
     // First 10 EUR-EURIBOR-6M fixings at dateIndex 5, date grid 10,1Y
-    referenceFixings["10,1Y"] = {0.00745427, 0.0296431, 0.0338739, 0.012485,  0.0135247, 0.0148336,
-                                 0.018856,   0.0276796, 0.0349766, 0.0105696, 0.0103713};
+    referenceFixings["10,1Y"] = {0.00739033, 0.0296998, 0.0339535, 0.012449,  0.0134939, 0.0148095,
+                                 0.0188541,  0.0277254, 0.035063,  0.0105228, 0.0103237};
 
     if (simMarket->aggregationScenarioData()) {
         QL_REQUIRE(dateGridString == "10,1Y" || dateGridString == "11,1Y",

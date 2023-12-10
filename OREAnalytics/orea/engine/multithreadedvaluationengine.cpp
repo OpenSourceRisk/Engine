@@ -51,7 +51,7 @@ MultiThreadedValuationEngine::MultiThreadedValuationEngine(
     const boost::shared_ptr<ore::analytics::ScenarioFilter>& scenarioFilter,
     const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData,
     const ore::data::IborFallbackConfig& iborFallbackConfig, const bool handlePseudoCurrenciesTodaysMarket,
-    const bool handlePseudoCurrenciesSimMarket,
+    const bool handlePseudoCurrenciesSimMarket, const bool recalibrateModels,
     const std::function<boost::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
                                                                    const std::vector<QuantLib::Date>&,
                                                                    const QuantLib::Size)>& cubeFactory,
@@ -67,8 +67,9 @@ MultiThreadedValuationEngine::MultiThreadedValuationEngine(
       useSpreadedTermStructures_(useSpreadedTermStructures), cacheSimData_(cacheSimData),
       scenarioFilter_(scenarioFilter), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
       handlePseudoCurrenciesTodaysMarket_(handlePseudoCurrenciesTodaysMarket),
-      handlePseudoCurrenciesSimMarket_(handlePseudoCurrenciesSimMarket), cubeFactory_(cubeFactory),
-      nettingSetCubeFactory_(nettingSetCubeFactory), cptyCubeFactory_(cptyCubeFactory), context_(context) {
+      handlePseudoCurrenciesSimMarket_(handlePseudoCurrenciesSimMarket), recalibrateModels_(recalibrateModels),
+      cubeFactory_(cubeFactory), nettingSetCubeFactory_(nettingSetCubeFactory), cptyCubeFactory_(cptyCubeFactory),
+      context_(context) {
 
     QL_REQUIRE(nThreads_ != 0, "MultiThreadedValuationEngine: nThreads must be > 0");
 
@@ -313,8 +314,10 @@ void MultiThreadedValuationEngine::buildCube(
 
                 // build valuation engine
 
-                auto valEngine = boost::make_shared<ore::analytics::ValuationEngine>(today_, dateGrid_, simMarket,
-                                                                                     engineFactory->modelBuilders());
+                auto valEngine = boost::make_shared<ore::analytics::ValuationEngine>(
+                    today_, dateGrid_, simMarket,
+                    recalibrateModels_ ? engineFactory->modelBuilders()
+                                       : std::set<std::pair<std::string, boost::shared_ptr<QuantExt::ModelBuilder>>>());
                 valEngine->registerProgressIndicator(progressIndicator);
 
                 // build mini-cube
