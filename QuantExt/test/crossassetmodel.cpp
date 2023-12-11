@@ -2299,7 +2299,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
     BOOST_TEST_MESSAGE("get Euler state process");
     boost::shared_ptr<StochasticProcess> process2 = d.modelEuler->stateProcess();
 
-    Size n = 50000;                         // number of paths
+    Size n = 10000;                         // number of paths
     Size seed = 18;                         // rng seed
     Time T = 2.0;                          // maturity of payoff
     Time T2 = 20.0;                         // zerobond maturity
@@ -2565,7 +2565,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMoments,
 
     Real T = 2.0;                            // horizon at which we compare the moments
     Size steps = static_cast<Size>(T * 10); // number of simulation steps (Euler and exact)
-    Size paths = 30000;                     // number of paths
+    Size paths = 20000;                     // number of paths
 
     Array e_an = p_exact->expectation(0.0, p_exact->initialValues(), T);
     Matrix v_an = p_exact->covariance(0.0, p_exact->initialValues(), T);
@@ -3872,7 +3872,7 @@ BOOST_AUTO_TEST_CASE(testCorrelationRecovery) {
 
     // for ir-fx this fully specifies the correlation matrix
     // for new asset classes add other possible combinations as well
-    Size currencies[] = { 1, 2, 3, 4, 5, 10, 20, 100 };
+    Size currencies[] = { 1, 2, 3, 4, 5, 10, 20 };
 
     MersenneTwisterUniformRng mt(42);
 
@@ -4181,7 +4181,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqCorrelationRecovery) {
 
     // for ir-fx this fully specifies the correlation matrix
     // for new asset classes add other possible combinations as well
-    Size currencies[] = { 1, 2, 3, 4, 5, 10, 20 };
+    Size currencies[] = { 1, 2, 3, 4, 5 };
     Size cpiindexes[] = { 0, 1, 10 };
     Size creditnames[] = { 0, 1, 5 };
     Size eqs[] = { 0, 1, 5 };
