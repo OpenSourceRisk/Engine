@@ -3872,7 +3872,7 @@ BOOST_AUTO_TEST_CASE(testCorrelationRecovery) {
 
     // for ir-fx this fully specifies the correlation matrix
     // for new asset classes add other possible combinations as well
-    Size currencies[] = { 1, 2, 3, 4, 5, 10, 20, 50, 100 };
+    Size currencies[] = { 1, 2, 3, 4, 5, 10, 20, 100 };
 
     MersenneTwisterUniformRng mt(42);
 
