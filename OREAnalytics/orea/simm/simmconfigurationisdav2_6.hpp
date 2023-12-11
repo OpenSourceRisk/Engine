@@ -35,7 +35,7 @@ class SimmConfiguration_ISDA_V2_6 : public SimmConfigurationBase {
 public:
     SimmConfiguration_ISDA_V2_6(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
                                 const QuantLib::Size& mporDays = 10,
-                                const std::string& name = "SIMM ISDA 2.6 (<INSERT PUBLISHING DATE HERE>)",
+                                const std::string& name = "SIMM ISDA 2.6 (16 August 2023)",
                                 const std::string version = "2.6");
 
     //! Return the SIMM <em>Label2</em> value for the given interest rate index

@@ -96,7 +96,7 @@ public:
     //! \name Inspectors
     //@{
     const vector<StressTestData>& data() const { return data_; }
-
+    bool useSpreadedTermStructures() const { return useSpreadedTermStructures_; }
     //@}
 
     //! \name Setters
@@ -118,6 +118,7 @@ public:
 
 private:
     vector<StressTestData> data_;
+    bool useSpreadedTermStructures_ = false;
 };
 } // namespace analytics
 } // namespace ore

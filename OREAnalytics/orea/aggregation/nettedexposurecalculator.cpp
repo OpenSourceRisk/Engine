@@ -31,42 +31,29 @@ namespace analytics {
 
 NettedExposureCalculator::NettedExposureCalculator(
     const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<Market>& market,
-    const boost::shared_ptr<NPVCube>& cube,
-    const string& baseCurrency, const string& configuration, const Real quantile,
-    const CollateralExposureHelper::CalculationType calcType, const bool multiPath,
+    const boost::shared_ptr<NPVCube>& cube, const string& baseCurrency, const string& configuration,
+    const Real quantile, const CollateralExposureHelper::CalculationType calcType, const bool multiPath,
     const boost::shared_ptr<NettingSetManager>& nettingSetManager,
     const map<string, vector<vector<Real>>>& nettingSetDefaultValue,
     const map<string, vector<vector<Real>>>& nettingSetCloseOutValue,
     const map<string, vector<vector<Real>>>& nettingSetMporPositiveFlow,
     const map<string, vector<vector<Real>>>& nettingSetMporNegativeFlow,
     const boost::shared_ptr<AggregationScenarioData>& scenarioData,
-    const boost::shared_ptr<CubeInterpretation> cubeInterpretation,
-    const bool applyInitialMargin,
-    const boost::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator,
-    const bool fullInitialCollateralisation,
-    const bool marginalAllocation,
-    const Real marginalAllocationLimit,
-    const boost::shared_ptr<NPVCube>& tradeExposureCube,
-    const Size allocatedEpeIndex,
-    const Size allocatedEneIndex, 
-    const bool flipViewXVA,
-    const bool withMporStickyDate,
-    const ScenarioGeneratorData::MporCashFlowMode& mporCashFlowMode)
-    : portfolio_(portfolio), market_(market), cube_(cube),
-      baseCurrency_(baseCurrency), configuration_(configuration),
-      quantile_(quantile), calcType_(calcType),
-      multiPath_(multiPath), nettingSetManager_(nettingSetManager),
-      nettingSetDefaultValue_(nettingSetDefaultValue),
-      nettingSetCloseOutValue_(nettingSetCloseOutValue),
-      nettingSetMporPositiveFlow_(nettingSetMporPositiveFlow),
-      nettingSetMporNegativeFlow_(nettingSetMporNegativeFlow),
-      scenarioData_(scenarioData), cubeInterpretation_(cubeInterpretation),
-      applyInitialMargin_(applyInitialMargin), dimCalculator_(dimCalculator),
-      fullInitialCollateralisation_(fullInitialCollateralisation),
-      marginalAllocation_(marginalAllocation),
-      marginalAllocationLimit_(marginalAllocationLimit),
+    const boost::shared_ptr<CubeInterpretation> cubeInterpretation, const bool applyInitialMargin,
+    const boost::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator, const bool fullInitialCollateralisation,
+    const bool marginalAllocation, const Real marginalAllocationLimit,
+    const boost::shared_ptr<NPVCube>& tradeExposureCube, const Size allocatedEpeIndex, const Size allocatedEneIndex,
+    const bool flipViewXVA, const bool withMporStickyDate, const MporCashFlowMode mporCashFlowMode)
+    : portfolio_(portfolio), market_(market), cube_(cube), baseCurrency_(baseCurrency), configuration_(configuration),
+      quantile_(quantile), calcType_(calcType), multiPath_(multiPath), nettingSetManager_(nettingSetManager),
+      nettingSetDefaultValue_(nettingSetDefaultValue), nettingSetCloseOutValue_(nettingSetCloseOutValue),
+      nettingSetMporPositiveFlow_(nettingSetMporPositiveFlow), nettingSetMporNegativeFlow_(nettingSetMporNegativeFlow),
+      scenarioData_(scenarioData), cubeInterpretation_(cubeInterpretation), applyInitialMargin_(applyInitialMargin),
+      dimCalculator_(dimCalculator), fullInitialCollateralisation_(fullInitialCollateralisation),
+      marginalAllocation_(marginalAllocation), marginalAllocationLimit_(marginalAllocationLimit),
       tradeExposureCube_(tradeExposureCube), allocatedEpeIndex_(allocatedEpeIndex),
-      allocatedEneIndex_(allocatedEneIndex), flipViewXVA_(flipViewXVA), withMporStickyDate_(withMporStickyDate), mporCashFlowMode_(mporCashFlowMode) {
+      allocatedEneIndex_(allocatedEneIndex), flipViewXVA_(flipViewXVA), withMporStickyDate_(withMporStickyDate),
+      mporCashFlowMode_(mporCashFlowMode) {
 
     set<string> nettingSetIds;
     for (auto nettingSet : nettingSetDefaultValue) {
@@ -242,15 +229,26 @@ void NettedExposureCalculator::build() {
                 Real mporCashFlow = 0;
                 // If ActualDate is active, then the cash flows over mpor can be configured.
                 // Otherwise (StickyDate is active), it is assumed that no cash flow over mpor is paid out.
-                if (!withMporStickyDate_){
-                    if (mporCashFlowMode_ == ScenarioGeneratorData::MporCashFlowMode::BothPay) // in cube generation -actual date- the (+/-) cashflows over mpor are payed out, i.e. are not part of the exposure . 
-                        mporCashFlow = 0; 
-                    else if (mporCashFlowMode_ == ScenarioGeneratorData::MporCashFlowMode::NonePay) // +/- cashflows is to be incorporated in the exposure
+                if (!withMporStickyDate_) {
+                    if (mporCashFlowMode_ == MporCashFlowMode::BothPay) {
+                        // in cube generation -actual date- the (+/-) cashflows over mpor are
+                        // payed out, i.e. are not part of the exposure .
+                        mporCashFlow = 0;
+                    } else if (mporCashFlowMode_ == MporCashFlowMode::NonePay) {
+                        // +/- cashflows is to be incorporated in the exposure
                         mporCashFlow = (nettingSetMporPositiveFlow[j][k] + nettingSetMporNegativeFlow[j][k]);
-                    else if (mporCashFlowMode_ == ScenarioGeneratorData::MporCashFlowMode::WePay) // only positive cash flows (i.e. cp's cashflows) is to be incorporated in the exposure, since cp does not pay out cash flows
+                    } else if (mporCashFlowMode_ ==
+                               MporCashFlowMode::WePay) { 
+                        // only positive cash flows (i.e. cp's cashflows) is to be
+                        // incorporated in the exposure, since cp does not pay out cash
+                        // flows
                         mporCashFlow = nettingSetMporPositiveFlow[j][k];
-                    else if (mporCashFlowMode_ == ScenarioGeneratorData::MporCashFlowMode::TheyPay) // onyl negative cash flows (i.e. our cashflows)  is to be incorporated in the exposure,  ince we do not pay out cash flows
+                    } else if (mporCashFlowMode_ ==
+                               MporCashFlowMode::TheyPay) { // onyl negative cash flows (i.e. our cashflows)  is to be
+                        // incorporated in the exposure,  ince we do not pay out cash
+                        // flows
                         mporCashFlow = nettingSetMporNegativeFlow[j][k];
+                    }
                 }
                 Real exposure = data[j][k] - balance + mporCashFlow;
                 Real dim = 0.0;

@@ -35,6 +35,7 @@ using boost::assign::list_of;
 using std::map;
 using std::ostream;
 using std::set;
+using std::pair;
 using std::string;
 using std::vector;
 
@@ -166,6 +167,70 @@ set<CrifRecord::ProductClass> SimmConfiguration::productClasses(bool includeAll)
         simmProductClasses.insert(CrifRecord::ProductClass::All);
     }
     return simmProductClasses;
+}
+
+pair<CrifRecord::RiskType, CrifRecord::RiskType>
+SimmConfiguration::riskClassToRiskType(const RiskClass& rc) {
+    CrifRecord::RiskType deltaRiskType, vegaRiskType;
+    switch (rc) {
+    case RiskClass::InterestRate:
+        deltaRiskType = CrifRecord::RiskType::IRCurve;
+        vegaRiskType = CrifRecord::RiskType::IRVol;
+        break;
+    case RiskClass::CreditQualifying:
+        deltaRiskType = CrifRecord::RiskType::CreditQ;
+        vegaRiskType = CrifRecord::RiskType::CreditVol;
+        break;
+    case RiskClass::CreditNonQualifying:
+        deltaRiskType = CrifRecord::RiskType::CreditNonQ;
+        vegaRiskType = CrifRecord::RiskType::CreditVolNonQ;
+        break;
+    case RiskClass::Equity:
+        deltaRiskType = CrifRecord::RiskType::Equity;
+        vegaRiskType = CrifRecord::RiskType::EquityVol;
+        break;
+    case RiskClass::Commodity:
+        deltaRiskType = CrifRecord::RiskType::Commodity;
+        vegaRiskType = CrifRecord::RiskType::CommodityVol;
+        break;
+    case RiskClass::FX:
+        deltaRiskType = CrifRecord::RiskType::FX;
+        vegaRiskType = CrifRecord::RiskType::FXVol;
+        break;
+    default:
+        QL_FAIL("riskClassToRiskType: Unexpected risk class");
+    }
+
+    return std::make_pair(deltaRiskType, vegaRiskType);
+}
+
+SimmConfiguration::RiskClass SimmConfiguration::riskTypeToRiskClass(const CrifRecord::RiskType& rt) {
+    switch (rt) {
+    case CrifRecord::RiskType::Commodity:
+    case CrifRecord::RiskType::CommodityVol:
+        return SimmConfiguration::RiskClass::Commodity;
+    case CrifRecord::RiskType::CreditQ:
+    case CrifRecord::RiskType::CreditVol:
+    case CrifRecord::RiskType::BaseCorr:
+        return SimmConfiguration::RiskClass::CreditQualifying;
+    case CrifRecord::RiskType::CreditNonQ:
+    case CrifRecord::RiskType::CreditVolNonQ:
+        return SimmConfiguration::RiskClass::CreditNonQualifying;
+    case CrifRecord::RiskType::Equity:
+    case CrifRecord::RiskType::EquityVol:
+        return SimmConfiguration::RiskClass::Equity;
+    case CrifRecord::RiskType::FX:
+    case CrifRecord::RiskType::FXVol:
+        return SimmConfiguration::RiskClass::FX;
+    case CrifRecord::RiskType::Inflation:
+    case CrifRecord::RiskType::InflationVol:
+    case CrifRecord::RiskType::IRCurve:
+    case CrifRecord::RiskType::IRVol:
+    case CrifRecord::RiskType::XCcyBasis:
+        return SimmConfiguration::RiskClass::InterestRate;
+    default:
+        QL_FAIL("riskTypeToRiskClass: Invalid risk type");
+    }
 }
 
 ostream& operator<<(ostream& out, const SimmConfiguration::SimmSide& s) {

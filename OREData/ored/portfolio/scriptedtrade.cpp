@@ -111,14 +111,14 @@ void ScriptedTrade::build(const boost::shared_ptr<EngineFactory>& engineFactory,
                 QL_DEPRECATED_DISABLE_WARNING
                 requiredFixings_.addZeroInflationFixingDate(d, info.infName(), info.inf()->interpolated(),
                                                             info.inf()->frequency(), info.inf()->availabilityLag(),
-                                                            CPI::AsIndex, info.inf()->frequency());
+                                                            CPI::AsIndex, info.inf()->frequency(), Date::maxDate(), false, false);
                 QL_DEPRECATED_ENABLE_WARNING
             } else if (info.isFx()) {
                 // for FX we do not know if FX-TAG-CCY1-CCY2 or FX-TAG-CCY2-CCY1 is in the history, require both
-                requiredFixings_.addFixingDate(d, f.first);
-                requiredFixings_.addFixingDate(d, inverseFxIndex(f.first));
+                requiredFixings_.addFixingDate(d, f.first, Date::maxDate(), false, false);
+                requiredFixings_.addFixingDate(d, inverseFxIndex(f.first), Date::maxDate(), false, false);
             } else {
-                requiredFixings_.addFixingDate(d, f.first);
+                requiredFixings_.addFixingDate(d, f.first, Date::maxDate(), false, false);
             }
         }
     }

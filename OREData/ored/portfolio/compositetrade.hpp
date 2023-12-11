@@ -91,7 +91,7 @@ public:
 
     //! \name trade overrides
     //@{
-    std::map<std::string, std::set<QuantLib::Date>> fixings(const QuantLib::Date& settlementDate) const override;
+    std::map<std::string, RequiredFixings::FixingDates> fixings(const QuantLib::Date& settlementDate) const override;
     std::map<AssetClass, std::set<std::string>> underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const override;;
     const std::map<std::string,boost::any>& additionalData() const override;
     //@}

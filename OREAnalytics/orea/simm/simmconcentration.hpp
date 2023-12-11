@@ -23,6 +23,7 @@
 #pragma once
 
 #include <orea/simm/simmconfiguration.hpp>
+#include <orea/simm/simmcalibration.hpp>
 #include <ql/qldefines.hpp>
 #include <ql/types.hpp>
 
@@ -45,6 +46,9 @@ public:
 
 class SimmConcentrationBase : public SimmConcentration {
 public:
+    //SimmConcentrationBase(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+    //                      const boost::shared_ptr<SimmCalibration>& simmCalibration = nullptr);
+
     /*! Default ctor. May need to generalise if units of threshold quotation
         change significantly
     */
@@ -81,6 +85,9 @@ protected:
         category and value is the set of currencies in that category.
     */
     std::map<std::string, std::set<std::string>> fxCategories_;
+
+    //! Maps SIMM qualifiers to SIMM buckets
+    boost::shared_ptr<SimmBucketMapper> simmBucketMapper_;
 
     /*! Shared threshold implementation for derived classes to call
      */

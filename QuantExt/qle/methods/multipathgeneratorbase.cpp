@@ -28,7 +28,7 @@ MultiPathGeneratorMersenneTwister::MultiPathGeneratorMersenneTwister(
     const boost::shared_ptr<StochasticProcess>& process, const TimeGrid& grid, BigNatural seed, bool antitheticSampling)
     : process_(process), grid_(grid), seed_(seed), antitheticSampling_(antitheticSampling), antitheticVariate_(true),
       next_(MultiPath(process->size(), grid), 1.0) {
-    reset();
+    MultiPathGeneratorMersenneTwister::reset();
 }
 
 void MultiPathGeneratorMersenneTwister::reset() {
@@ -65,7 +65,7 @@ MultiPathGeneratorSobol::MultiPathGeneratorSobol(const boost::shared_ptr<Stochas
                                                  SobolRsg::DirectionIntegers directionIntegers)
     : process_(process), grid_(grid), seed_(seed), directionIntegers_(directionIntegers),
       next_(MultiPath(process->size(), grid), 1.0) {
-    reset();
+    MultiPathGeneratorSobol::reset();
 }
 
 void MultiPathGeneratorSobol::reset() {
@@ -93,21 +93,49 @@ const Sample<MultiPath>& MultiPathGeneratorSobol::next() const {
     }
 }
 
-MultiPathGeneratorSobolBrownianBridge::MultiPathGeneratorSobolBrownianBridge(
+MultiPathGeneratorBurley2020Sobol::MultiPathGeneratorBurley2020Sobol(const boost::shared_ptr<StochasticProcess>& process,
+                                                           const TimeGrid& grid, BigNatural seed,
+                                                           SobolRsg::DirectionIntegers directionIntegers,
+                                                           BigNatural scrambleSeed)
+    : process_(process), grid_(grid), seed_(seed), directionIntegers_(directionIntegers), scrambleSeed_(scrambleSeed),
+      next_(MultiPath(process->size(), grid), 1.0) {
+    MultiPathGeneratorBurley2020Sobol::reset();
+}
+
+void MultiPathGeneratorBurley2020Sobol::reset() {
+    if (auto tmp = boost::dynamic_pointer_cast<StochasticProcess1D>(process_)) {
+        pg1D_ = boost::make_shared<PathGenerator<InverseCumulativeRsg<Burley2020SobolRsg, InverseCumulativeNormal>>>(
+            tmp, grid_,
+            InverseCumulativeRsg<Burley2020SobolRsg, InverseCumulativeNormal>(
+                Burley2020SobolRsg(process_->factors() * (grid_.size() - 1), seed_, directionIntegers_, scrambleSeed_)),
+            false);
+
+    } else {
+        pg_ = boost::make_shared<MultiPathGenerator<InverseCumulativeRsg<Burley2020SobolRsg, InverseCumulativeNormal>>>(
+            process_, grid_,
+            InverseCumulativeRsg<Burley2020SobolRsg, InverseCumulativeNormal>(Burley2020SobolRsg(
+                process_->factors() * (grid_.size() - 1), seed_, directionIntegers_, scrambleSeed_)));
+    }
+}
+
+const Sample<MultiPath>& MultiPathGeneratorBurley2020Sobol::next() const {
+    if (pg_)
+        return pg_->next();
+    else {
+        next_.value.at(0) = pg1D_->next().value;
+        return next_;
+    }
+}
+
+MultiPathGeneratorSobolBrownianBridgeBase::MultiPathGeneratorSobolBrownianBridgeBase(
     const boost::shared_ptr<StochasticProcess>& process, const TimeGrid& grid,
     SobolBrownianGenerator::Ordering ordering, BigNatural seed, SobolRsg::DirectionIntegers directionIntegers)
     : process_(process), grid_(grid), ordering_(ordering), seed_(seed), directionIntegers_(directionIntegers),
       next_(MultiPath(process->size(), grid), 1.0) {
-    reset();
     process1D_ = boost::dynamic_pointer_cast<StochasticProcess1D>(process);
 }
 
-void MultiPathGeneratorSobolBrownianBridge::reset() {
-    gen_ = boost::make_shared<SobolBrownianGenerator>(process_->factors(), grid_.size() - 1, ordering_, seed_,
-                                                      directionIntegers_);
-}
-
-const Sample<MultiPath>& MultiPathGeneratorSobolBrownianBridge::next() const {
+const Sample<MultiPath>& MultiPathGeneratorSobolBrownianBridgeBase::next() const {
     Array asset = process_->initialValues();
     MultiPath& path = next_.value;
     for (Size j = 0; j < asset.size(); ++j) {
@@ -132,11 +160,36 @@ const Sample<MultiPath>& MultiPathGeneratorSobolBrownianBridge::next() const {
     return next_;
 }
 
-boost::shared_ptr<MultiPathGeneratorBase> makeMultiPathGenerator(const SequenceType s,
-                                                                 const boost::shared_ptr<StochasticProcess>& process,
-                                                                 const TimeGrid& timeGrid, const BigNatural seed,
-                                                                 const SobolBrownianGenerator::Ordering ordering,
-                                                                 const SobolRsg::DirectionIntegers directionIntegers) {
+MultiPathGeneratorSobolBrownianBridge::MultiPathGeneratorSobolBrownianBridge(
+    const boost::shared_ptr<StochasticProcess>& process, const TimeGrid& grid,
+    SobolBrownianGenerator::Ordering ordering, BigNatural seed, SobolRsg::DirectionIntegers directionIntegers)
+    : MultiPathGeneratorSobolBrownianBridgeBase(process, grid, ordering, seed, directionIntegers) {
+    MultiPathGeneratorSobolBrownianBridge::reset();
+}
+
+void MultiPathGeneratorSobolBrownianBridge::reset() {
+    gen_ = boost::make_shared<SobolBrownianGenerator>(process_->factors(), grid_.size() - 1, ordering_, seed_,
+                                                      directionIntegers_);
+}
+
+MultiPathGeneratorBurley2020SobolBrownianBridge::MultiPathGeneratorBurley2020SobolBrownianBridge(
+    const boost::shared_ptr<StochasticProcess>& process, const TimeGrid& grid,
+    Burley2020SobolBrownianGenerator::Ordering ordering, BigNatural seed, SobolRsg::DirectionIntegers directionIntegers,
+    BigNatural scrambleSeed)
+    : MultiPathGeneratorSobolBrownianBridgeBase(process, grid, ordering, seed, directionIntegers),
+      scrambleSeed_(scrambleSeed) {
+    MultiPathGeneratorBurley2020SobolBrownianBridge::reset();
+}
+
+void MultiPathGeneratorBurley2020SobolBrownianBridge::reset() {
+    gen_ = boost::make_shared<Burley2020SobolBrownianGenerator>(process_->factors(), grid_.size() - 1, ordering_, seed_,
+                                                                directionIntegers_, scrambleSeed_);
+}
+
+boost::shared_ptr<MultiPathGeneratorBase>
+makeMultiPathGenerator(const SequenceType s, const boost::shared_ptr<StochasticProcess>& process,
+                       const TimeGrid& timeGrid, const BigNatural seed, const SobolBrownianGenerator::Ordering ordering,
+                       const SobolRsg::DirectionIntegers directionIntegers) {
     switch (s) {
     case MersenneTwister:
         return boost::make_shared<QuantExt::MultiPathGeneratorMersenneTwister>(process, timeGrid, seed, false);
@@ -144,9 +197,15 @@ boost::shared_ptr<MultiPathGeneratorBase> makeMultiPathGenerator(const SequenceT
         return boost::make_shared<QuantExt::MultiPathGeneratorMersenneTwister>(process, timeGrid, seed, true);
     case Sobol:
         return boost::make_shared<QuantExt::MultiPathGeneratorSobol>(process, timeGrid, seed, directionIntegers);
+    case Burley2020Sobol:
+        return boost::make_shared<QuantExt::MultiPathGeneratorBurley2020Sobol>(
+            process, timeGrid, seed, directionIntegers, seed == 0 ? 0 : seed + 1);
     case SobolBrownianBridge:
         return boost::make_shared<QuantExt::MultiPathGeneratorSobolBrownianBridge>(process, timeGrid, ordering, seed,
                                                                                    directionIntegers);
+    case Burley2020SobolBrownianBridge:
+        return boost::make_shared<QuantExt::MultiPathGeneratorBurley2020SobolBrownianBridge>(
+            process, timeGrid, ordering, seed, directionIntegers, seed == 0 ? 0 : seed + 1);
     default:
         QL_FAIL("Unknown sequence type");
     }
@@ -160,8 +219,12 @@ std::ostream& operator<<(std::ostream& out, const SequenceType s) {
         return out << "MersenneTwisterAntithetic";
     case Sobol:
         return out << "Sobol";
+    case Burley2020Sobol:
+        return out << "Burley2020Sobol";
     case SobolBrownianBridge:
         return out << "SobolBrownianBridge";
+    case Burley2020SobolBrownianBridge:
+        return out << "Burley2020SobolBrownianBridge";
     default:
         return out << "Unknown sequence type";
     }
