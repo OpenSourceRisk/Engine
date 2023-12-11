@@ -38,17 +38,17 @@ namespace analytics {
 auto isSimmParameter = [](const ore::analytics::CrifRecord& x) { return x.isSimmParameter(); };
 auto isNotSimmParameter = std::not_fn(isSimmParameter);
 
-void Crif::addRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies) {
+void Crif::addRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies, bool sortFxVolQualifer) {
     if (record.type() == CrifRecord::RecordType::FRTB) {
-        addFrtbCrifRecord(record, aggregateDifferentAmountCurrencies);
+        addFrtbCrifRecord(record, aggregateDifferentAmountCurrencies, sortFxVolQualifer);
     } else if (record.type() == CrifRecord::RecordType::SIMM && !record.isSimmParameter()) {
-        addSimmCrifRecord(record, aggregateDifferentAmountCurrencies);
+        addSimmCrifRecord(record, aggregateDifferentAmountCurrencies, sortFxVolQualifer);
     } else {
         addSimmParameterRecord(record);
     }
 }
 
-void Crif::addFrtbCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies) {
+void Crif::addFrtbCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies, bool sortFxVolQualifer) {
     QL_REQUIRE(type_ == CrifType::Empty || type_ == CrifType::Frtb,
                    "Can not add a FRTB crif record to a SIMM Crif");
     if (type_ == CrifType::Empty) {
@@ -57,13 +57,21 @@ void Crif::addFrtbCrifRecord(const CrifRecord& record, bool aggregateDifferentAm
     insertCrifRecord(record, aggregateDifferentAmountCurrencies);
 }
 
-void Crif::addSimmCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies) {
+void Crif::addSimmCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies, bool sortFxVolQualifer) {
     QL_REQUIRE(type_ == CrifType::Empty || type_ == CrifType::Simm,
                    "Can not add a Simm crif record to a Frtb Crif");
     if (type_ == CrifType::Empty) {
         type_ = CrifType::Simm;
     }
-    insertCrifRecord(record, aggregateDifferentAmountCurrencies);
+    auto recordToAdd = record;
+    if (sortFxVolQualifer && recordToAdd.riskType == CrifRecord::RiskType::FXVol) {
+        auto ccy_1 = recordToAdd.qualifier.substr(0, 3);
+        auto ccy_2 = recordToAdd.qualifier.substr(3);
+        if (ccy_1 > ccy_2)
+            ccy_1.swap(ccy_2);
+        recordToAdd.qualifier = ccy_1 + ccy_2;
+    }
+    insertCrifRecord(recordToAdd, aggregateDifferentAmountCurrencies);
 }
 
 void Crif::insertCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies) {
@@ -119,9 +127,9 @@ void Crif::updateAmountExistingRecord(std::set<CrifRecord>::iterator& it, const 
             DLOG("Updated net CRIF records: " << *it)
 }
 
-void Crif::addRecords(const Crif& crif, bool aggregateDifferentAmountCurrencies) {
+void Crif::addRecords(const Crif& crif, bool aggregateDifferentAmountCurrencies, bool sortFxVolQualifer) {
     for (const auto& r : crif.records_) {
-        addRecord(r, aggregateDifferentAmountCurrencies);
+        addRecord(r, aggregateDifferentAmountCurrencies, sortFxVolQualifer);
     }
 }
 
