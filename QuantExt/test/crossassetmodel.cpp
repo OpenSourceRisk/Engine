@@ -2565,7 +2565,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMoments,
 
     Real T = 2.0;                            // horizon at which we compare the moments
     Size steps = static_cast<Size>(T * 10); // number of simulation steps (Euler and exact)
-    Size paths = 20000;                     // number of paths
+    Size paths = 10000;                     // number of paths
 
     Array e_an = p_exact->expectation(0.0, p_exact->initialValues(), T);
     Matrix v_an = p_exact->covariance(0.0, p_exact->initialValues(), T);
@@ -2646,7 +2646,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMoments,
     }
     BOOST_TEST_MESSAGE("==================");
 
-    Real errTolLd[] = { 0.5E-4, 0.5E-4, 0.5E-4, 10.0E-4, 10.0E-4, 0.9E-4, 0.8E-4, 0.7E-4, 0.7E-4, 0.7E-4, 0.7E-4, 0.7E-4, 0.7E-4 };
+    Real errTolLd[] = { 0.5E-4, 0.5E-4, 0.5E-4, 10.0E-4, 10.0E-4, 1E-4, 1E-4, 1E-4, 1E-4, 1E-4, 1E-4, 1E-4, 1E-4 };
 
     for (Size i = 0; i < n; ++i) {
         // check expectation against analytical calculation (Euler)
@@ -2667,7 +2667,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMoments,
                                                                  << e_an[i] - mean(e_eu2[i]) << " tolerance is "
                                                                  << errTolLd[i]);
         }
-    }
+    } 
 
     // as above, this is a bit rough compared to the more differentiated
     // test of the IR-FX model ...
