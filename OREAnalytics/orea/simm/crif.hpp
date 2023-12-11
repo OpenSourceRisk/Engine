@@ -42,8 +42,8 @@ public:
 
     CrifType type() const { return type_; }
 
-    void addRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false);
-    void addRecords(const Crif& crif, bool aggregateDifferentAmountCurrencies = false);
+    void addRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false, bool sortFxVolQualifer = true);
+    void addRecords(const Crif& crif, bool aggregateDifferentAmountCurrencies = false, bool sortFxVolQualfier = true);
 
     void clear() { records_.clear(); }
 
@@ -162,8 +162,8 @@ public:
 
 private:
     void insertCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false);
-    void addFrtbCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false);
-    void addSimmCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false);
+    void addFrtbCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false, bool sortFxVolQualifer =true);
+    void addSimmCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false, bool sortFxVolQualifer =true);
     void addSimmParameterRecord(const CrifRecord& record);
     void updateAmountExistingRecord(std::set<CrifRecord>::iterator& it, const CrifRecord& record);
 
