@@ -25,7 +25,8 @@
 namespace QuantExt {
 
 std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size regressionOrder,
-                                                   QuantLib::LsmBasisSystem::PolynomialType polynomType) {
+                                                   QuantLib::LsmBasisSystem::PolynomialType polynomType,
+                                                   const double eps) {
     std::vector<RandomVariableOp> ops;
 
     // None = 0
@@ -65,16 +66,34 @@ std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size r
     ops.push_back([](const std::vector<const RandomVariable*>& args) { return indicatorEq(*args[0], *args[1]); });
 
     // IndicatorGt = 8
-    ops.push_back([](const std::vector<const RandomVariable*>& args) { return indicatorGt(*args[0], *args[1]); });
+    ops.push_back([eps](const std::vector<const RandomVariable*>& args) {
+        return indicatorGt(*args[0], *args[1], 1.0, 0.0, eps);
+    });
 
     // IndicatorGeq = 9
-    ops.push_back([](const std::vector<const RandomVariable*>& args) { return indicatorGeq(*args[0], *args[1]); });
+    ops.push_back([eps](const std::vector<const RandomVariable*>& args) {
+        return indicatorGeq(*args[0], *args[1], 1.0, 0.0, eps);
+    });
 
     // Min = 10
-    ops.push_back([](const std::vector<const RandomVariable*>& args) { return QuantExt::min(*args[0], *args[1]); });
+    if (eps == 0.0) {
+        ops.push_back(
+            [](const std::vector<const RandomVariable*>& args) { return QuantExt::min(*args[0], *args[1]); });
+    } else {
+        ops.push_back([eps](const std::vector<const RandomVariable*>& args) {
+            return indicatorGt(*args[0], *args[1], 1.0, 0.0, eps) * (*args[1] - *args[0]) + *args[0];
+        });
+    }
 
     // Max = 11
-    ops.push_back([](const std::vector<const RandomVariable*>& args) { return QuantExt::max(*args[0], *args[1]); });
+    if (eps == 0.0) {
+        ops.push_back(
+            [](const std::vector<const RandomVariable*>& args) { return QuantExt::max(*args[0], *args[1]); });
+    } else {
+        ops.push_back([eps](const std::vector<const RandomVariable*>& args) {
+            return indicatorGt(*args[0], *args[1], 1.0, 0.0, eps) * (*args[0] - *args[1]) + *args[1];
+        });
+    }
 
     // Abs = 12
     ops.push_back([](const std::vector<const RandomVariable*>& args) { return QuantExt::abs(*args[0]); });
@@ -223,99 +242,61 @@ std::vector<RandomVariableOpNodeRequirements> getRandomVariableOpNodeRequirement
     std::vector<RandomVariableOpNodeRequirements> res;
 
     // None = 0
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, false), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, false), false); });
 
     // Add = 1
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, false), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, false), false); });
 
     // Subtract = 1
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, false), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, false), false); });
 
     // Negative = 3
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, false), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, false), false); });
 
     // Mult = 4
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, true), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), false); });
 
     // Div = 5
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, true), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), false); });
 
     // ConditionalExpectation = 6
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, true), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), true); });
 
     // IndicatorEq = 7
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, false), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, false), false); });
 
     // IndicatorGt = 8
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, true), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), false); });
 
     // IndicatorGeq = 9
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, true), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), false); });
 
     // Min = 10
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, true), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), false); });
 
     // Max = 11
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, true), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), false); });
 
     // Abs = 12
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, true), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), false); });
 
     // Exp = 13
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, false), true);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, false), true); });
 
     // Sqrt = 14
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, false), true);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, false), true); });
 
     // Log = 15
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, true), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), false); });
 
     // Pow = 16
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, true), true);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), true); });
 
     // NormalCdf = 17
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, true), false);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), false); });
 
     // NormalCdf = 18
-    res.push_back([](const std::size_t nArgs) {
-        return std::make_pair(std::vector<bool>(nArgs, true), true);
-    });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), true); });
 
     return res;
 }
