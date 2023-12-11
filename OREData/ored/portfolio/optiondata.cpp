@@ -54,7 +54,17 @@ void OptionData::fromXML(XMLNode* node) {
     exerciseFeeSettlementCalendar_ = XMLUtils::getChildValue(node, "ExerciseFeeSettlementCalendar", false);
     exerciseFeeSettlementConvention_ = XMLUtils::getChildValue(node, "ExerciseFeeSettlementConvention", false);
     exercisePrices_ = XMLUtils::getChildrenValuesAsDoubles(node, "ExercisePrices", "ExercisePrice", false);
-    exerciseDates_ = XMLUtils::getChildrenValues(node, "ExerciseDates", "ExerciseDate", false);
+    
+    XMLNode* exDatesNode = XMLUtils::getChildNode(node, "ExerciseDates");
+    XMLNode* exScheduleNode = XMLUtils::getChildNode(node, "ExerciseSchedule");
+    QL_REQUIRE(!(exDatesNode && exScheduleNode),
+               "Cannot specify both ExerciseDates and ExerciseSchedule. Only one must be used.");
+    if (exDatesNode) {
+        exerciseDates_ = XMLUtils::getChildrenValues(node, "ExerciseDates", "ExerciseDate");
+    }
+    if (exScheduleNode) {
+        exerciseDatesSchedule_.fromXML(exScheduleNode);
+    }
 
     automaticExercise_ = boost::none;
     if (XMLNode* n = XMLUtils::getChildNode(node, "AutomaticExercise"))
@@ -104,7 +114,14 @@ XMLNode* OptionData::toXML(XMLDocument& doc) {
     if (exerciseFeeSettlementConvention_ != "")
         XMLUtils::addChild(doc, node, "ExerciseFeeSettlementConvention", exerciseFeeSettlementConvention_);
     XMLUtils::addChildren(doc, node, "ExercisePrices", "ExercisePrice", exercisePrices_);
-    XMLUtils::addChildren(doc, node, "ExerciseDates", "ExerciseDate", exerciseDates_);
+
+    if (exerciseDatesSchedule_.hasData()) {
+        XMLNode* scheduleDataNode = exerciseDatesSchedule_.toXML(doc);
+        XMLUtils::setNodeName(doc, scheduleDataNode, "ExerciseSchedule");
+        XMLUtils::appendNode(node, scheduleDataNode);
+    } else {
+        XMLUtils::addChildren(doc, node, "ExerciseDates", "ExerciseDate", exerciseDates_);
+    }
 
     if (automaticExercise_)
         XMLUtils::addChild(doc, node, "AutomaticExercise", *automaticExercise_);
@@ -146,8 +163,14 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
     // build vector of sorted exercise dates
 
     std::vector<QuantLib::Date> sortedExerciseDates;
-    for (auto const& d : optionData.exerciseDates())
-        sortedExerciseDates.push_back(parseDate(d));
+    if (optionData.exerciseDatesSchedule().hasData()) {
+        Schedule schedule = makeSchedule(optionData.exerciseDatesSchedule());
+        sortedExerciseDates = schedule.dates();
+    } else {
+        // For backward compatibility
+        for (auto const& d : optionData.exerciseDates())
+            sortedExerciseDates.push_back(parseDate(d));
+    }
     std::sort(sortedExerciseDates.begin(), sortedExerciseDates.end());
 
     // build vector of alive exercise dates and corresponding native dates

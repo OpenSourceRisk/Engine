@@ -66,6 +66,7 @@ engine/sensitivityrecord.cpp
 engine/stresstest.cpp
 engine/valuationcalculator.cpp
 engine/valuationengine.cpp
+engine/xvaenginecg.cpp
 engine/zerotoparcube.cpp
 scenario/clonedscenariogenerator.cpp
 scenario/clonescenariofactory.cpp
@@ -97,7 +98,9 @@ simm/crifrecord.cpp
 simm/simmbasicnamemapper.cpp
 simm/simmbucketmapperbase.cpp
 simm/simmcalculator.cpp
+simm/simmcalibration.cpp
 simm/simmconcentration.cpp
+simm/simmconcentrationcalibration.cpp
 simm/simmconcentrationisdav1_3.cpp
 simm/simmconcentrationisdav1_3_38.cpp
 simm/simmconcentrationisdav2_0.cpp
@@ -110,6 +113,7 @@ simm/simmconcentrationisdav2_5a.cpp
 simm/simmconcentrationisdav2_6.cpp
 simm/simmconfiguration.cpp
 simm/simmconfigurationbase.cpp
+simm/simmconfigurationcalibration.cpp
 simm/simmconfigurationisdav1_0.cpp
 simm/simmconfigurationisdav1_3.cpp
 simm/simmconfigurationisdav1_3_38.cpp
@@ -205,6 +209,7 @@ engine/stresstest.hpp
 engine/valuationcalculator.hpp
 engine/valuationengine.hpp
 engine/varcalculator.hpp
+engine/xvaenginecg.hpp
 engine/zerotoparcube.hpp
 scenario/aggregationscenariodata.hpp
 scenario/clonedscenariogenerator.hpp
@@ -243,7 +248,9 @@ simm/simmbasicnamemapper.hpp
 simm/simmbucketmapper.hpp
 simm/simmbucketmapperbase.hpp
 simm/simmcalculator.hpp
+simm/simmcalibration.hpp
 simm/simmconcentration.hpp
+simm/simmconcentrationcalibration.hpp
 simm/simmconcentrationisdav1_3.hpp
 simm/simmconcentrationisdav1_3_38.hpp
 simm/simmconcentrationisdav2_0.hpp
@@ -256,6 +263,7 @@ simm/simmconcentrationisdav2_5a.hpp
 simm/simmconcentrationisdav2_6.hpp
 simm/simmconfiguration.hpp
 simm/simmconfigurationbase.hpp
+simm/simmconfigurationcalibration.hpp
 simm/simmconfigurationisdav1_0.hpp
 simm/simmconfigurationisdav1_3.hpp
 simm/simmconfigurationisdav1_3_38.hpp

@@ -165,9 +165,9 @@ void BarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     // Add additional premium payments
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
     Date lastPremiumDate =
-        addPremiums(additionalInstruments, additionalMultipliers, tradeMultiplier(), option_.premiumData(), -bsInd,
-                    tradeCurrency(), engineFactory, engineFactory->configuration(MarketContext::pricing));
-    
+        addPremiums(additionalInstruments, additionalMultipliers, bsInd * tradeMultiplier(), option_.premiumData(),
+                    -bsInd, tradeCurrency(), engineFactory, engineFactory->configuration(MarketContext::pricing));
+
     // set the maturity
     maturity_ = std::max(lastPremiumDate, payDate);
 }

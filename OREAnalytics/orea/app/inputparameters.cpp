@@ -259,6 +259,16 @@ void InputParameters::setAmcPricingEngine(const std::string& xml) {
     amcPricingEngine_->fromXMLString(xml);
 }
 
+void InputParameters::setXvaCgSensiScenarioData(const std::string& xml) {
+    xvaCgSensiScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    xvaCgSensiScenarioData_->fromXMLString(xml);
+}
+
+void InputParameters::setXvaCgSensiScenarioDataFromFile(const std::string& fileName) {
+    xvaCgSensiScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    xvaCgSensiScenarioData_->fromFile(fileName);
+}
+
 void InputParameters::setAmcPricingEngineFromFile(const std::string& fileName) {
     amcPricingEngine_ = boost::make_shared<EngineData>();
     amcPricingEngine_->fromFile(fileName);
@@ -275,20 +285,25 @@ void InputParameters::setNettingSetManagerFromFile(const std::string& fileName) 
 }
 
 void InputParameters::setCubeFromFile(const std::string& file) {
-    cube_ = ore::analytics::loadCube(file);
+    auto r = ore::analytics::loadCube(file);
+    cube_ = r.cube;
+    if(r.scenarioGeneratorData)
+        scenarioGeneratorData_ = r.scenarioGeneratorData;
+    if(r.storeFlows)
+        storeFlows_ = *r.storeFlows;
+    if(r.storeCreditStateNPVs)
+        storeCreditStateNPVs_ = *r.storeCreditStateNPVs;
 }
 
 void InputParameters::setNettingSetCubeFromFile(const std::string& file) {
-    nettingSetCube_ = ore::analytics::loadCube(file);
+    nettingSetCube_ = ore::analytics::loadCube(file).cube;
 }
 
 void InputParameters::setCptyCubeFromFile(const std::string& file) {
-    cptyCube_ = ore::analytics::loadCube(file);
+    cptyCube_ = ore::analytics::loadCube(file).cube;
 }
 
-void InputParameters::setMarketCubeFromFile(const std::string& file) {
-    mktCube_ = loadAggregationScenarioData(file);
-}
+void InputParameters::setMarketCubeFromFile(const std::string& file) { mktCube_ = loadAggregationScenarioData(file); }
 
 void InputParameters::setVarQuantiles(const std::string& s) {
     // parse to vector<Real>
@@ -406,7 +421,7 @@ void InputParameters::setCreditSimulationParametersFromBuffer(const std::string&
     
 void InputParameters::setCrifFromFile(const std::string& fileName, char eol, char delim, char quoteChar, char escapeChar) {
     boost::shared_ptr<SimmConfiguration> configuration =
-        buildSimmConfiguration(simmVersion_, boost::make_shared<SimmBucketMapperBase>(), mporDays());
+        buildSimmConfiguration(simmVersion_, boost::make_shared<SimmBucketMapperBase>(),simmCalibrationData(), mporDays());
     bool updateMappings = true;
     bool aggregateTrades = false;
     auto crifLoader = CsvFileCrifLoader(fileName, configuration, CrifRecord::additionalHeaders, updateMappings, aggregateTrades, eol, delim, quoteChar, escapeChar);
@@ -415,7 +430,7 @@ void InputParameters::setCrifFromFile(const std::string& fileName, char eol, cha
 
 void InputParameters::setCrifFromBuffer(const std::string& csvBuffer, char eol, char delim, char quoteChar, char escapeChar) {
     boost::shared_ptr<SimmConfiguration> configuration =
-        buildSimmConfiguration(simmVersion_, boost::make_shared<SimmBucketMapperBase>(), mporDays());
+        buildSimmConfiguration(simmVersion_, boost::make_shared<SimmBucketMapperBase>(), simmCalibrationData(), mporDays());
     bool updateMappings = true;
     bool aggregateTrades = false;
     auto crifLoader = CsvBufferCrifLoader(csvBuffer, configuration, CrifRecord::additionalHeaders, updateMappings, aggregateTrades, eol, delim, quoteChar, escapeChar);
@@ -447,16 +462,21 @@ void InputParameters::setSimmBucketMapperFromFile(const std::string& fileName) {
     sbm->fromFile(fileName);    
 }
 
+void InputParameters::setSimmCalibrationDataFromFile(const std::string& fileName) {
+    simmCalibrationData_ = boost::make_shared<SimmCalibrationData>();
+    simmCalibrationData_->fromFile(fileName);
+}
+
 void InputParameters::setAnalytics(const std::string& s) {
     // parse to set<string>
     auto v = parseListOfValues(s);
     analytics_ = std::set<std::string>(v.begin(), v.end());
 }
-    
+
 void InputParameters::insertAnalytic(const std::string& s) {
     analytics_.insert(s);
 }
-    
+
 OutputParameters::OutputParameters(const boost::shared_ptr<Parameters>& params) {
     LOG("OutputFileNameMap called");
     npvOutputFileName_ = params->get("npv", "outputFileName", false);
@@ -579,7 +599,7 @@ Date InputParameters::mporDate() {
 boost::shared_ptr<SimmConfiguration> InputParameters::getSimmConfiguration() {
     QL_REQUIRE(simmBucketMapper() != nullptr,
                "Internal error, load simm bucket mapper before retrieving simmconfiguration");
-    return buildSimmConfiguration(simmVersion(), simmBucketMapper(), mporDays());
+    return buildSimmConfiguration(simmVersion(), simmBucketMapper(), simmCalibrationData(), mporDays());
 }
 
 
