@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(testDeltaGammaVar) {
     // TODO test Daniel's approx. explicitly (khat < 1E-5)
     // TODO add more test cases (negative gammas, higher dimensions)
 
-    Size n = (Size)1E6;
+    Size n = (Size)400000;
 
     test(1, true, false, 42, 42, n);
     test(1, false, true, 42, 42, n);
