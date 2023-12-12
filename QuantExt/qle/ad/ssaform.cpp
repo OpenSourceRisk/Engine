@@ -32,7 +32,7 @@ std::string getLabel(const ComputationGraph& g, const std::size_t i, const bool 
     if (l != g.labels().end() && includeLabels) {
         for (auto tmp = l->second.begin(); tmp != l->second.end(); ++tmp) {
             label = label + (tmp == l->second.begin() ? "[" : "") + *tmp +
-                    (tmp != std::next(l->second.end(), -1) ? "," : "]");
+                    (tmp != std::next(l->second.end(), -1) ? ";" : "]");
         }
     }
     return label;
@@ -41,26 +41,30 @@ std::string getLabel(const ComputationGraph& g, const std::size_t i, const bool 
 
 template <class T>
 std::string ssaForm(const ComputationGraph& g, const std::vector<std::string>& opCodeLabels,
-                    const std::vector<T>& values) {
+                    const std::vector<T>& values, const std::vector<T>& values2) {
 
     std::ostringstream os;
 
     for (std::size_t i = 0; i < g.size(); ++i) {
 
-        os << i << ": " << getLabel(g, i);
+        os << i << "," << getLabel(g, i);
 
+        os << ",";
         if (!g.predecessors(i).empty()) {
-            os << " = ";
             os << (opCodeLabels.size() > g.opId(i) ? opCodeLabels[g.opId(i)] : "???") << "(";
             for (std::size_t j = 0; j < g.predecessors(i).size(); ++j) {
                 auto p = g.predecessors(i)[j];
-                os << getLabel(g, p, false) << (j < g.predecessors(i).size() - 1 ? ", " : "");
+                os << getLabel(g, p, false) << (j < g.predecessors(i).size() - 1 ? ";" : "");
             }
             os << ")";
         }
 
         if (values.size() > i) {
-            os << "  ->  " << values[i];
+            os << "," << values[i];
+        }
+
+        if (values2.size() > i) {
+            os << "," << values2[i];
         }
 
         os << "\n";
@@ -70,8 +74,8 @@ std::string ssaForm(const ComputationGraph& g, const std::vector<std::string>& o
 }
 
 template std::string ssaForm(const ComputationGraph& g, const std::vector<std::string>& opCodeLabels,
-                             const std::vector<double>& values);
+                             const std::vector<double>& values, const std::vector<double>& values2);
 template std::string ssaForm(const ComputationGraph& g, const std::vector<std::string>& opCodeLabels,
-                             const std::vector<RandomVariable>& values);
+                             const std::vector<RandomVariable>& values, const std::vector<RandomVariable>& values2);
 
 } // namespace QuantExt

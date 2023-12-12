@@ -94,19 +94,15 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
         info.exIntoCriterionTime = info.payTime;
     }
 
-    // handle fixed amount cashflows that we immediately recognize as such
-
-    if (boost::dynamic_pointer_cast<FixedRateCoupon>(flow) != nullptr ||
-        boost::dynamic_pointer_cast<SimpleCashFlow>(flow) != nullptr) {
+    // Handle SimpleCashflow
+    if (boost::dynamic_pointer_cast<SimpleCashFlow>(flow) != nullptr) {
         info.amountCalculator = [flow](const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
             return RandomVariable(n, flow->amount());
         };
-
         return info;
     }
 
     // handle fx linked fixed cashflow
-
     if (auto fxl = boost::dynamic_pointer_cast<FXLinkedCashFlow>(flow)) {
         Date fxLinkedFixingDate = fxl->fxFixingDate();
         Size fxLinkedSourceCcyIdx = model_->ccyIndex(fxl->fxIndex()->sourceCurrency());
@@ -141,28 +137,46 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
     }
 
     // handle some wrapped coupon types: extract the wrapper info and continue with underlying flow
-
-    bool isCapFloored = false;
-    bool isNakedOption = false;
-    Real effCap = Null<Real>(), effFloor = Null<Real>();
-
     bool isFxLinked = false;
-    Date fxLinkedFixingDate;
-    Real fxLinkedForeignNominal = Null<Real>();
-    Size fxLinkedSourceCcyIdx = Null<Size>(), fxLinkedTargetCcyIdx = Null<Size>();
-    Real fxLinkedFixedFxRate = Null<Real>(); // if fx fixing date <= today
+    bool isFxIndexed = false;
+    Size fxLinkedSourceCcyIdx = Null<Size>();
+    Size fxLinkedTargetCcyIdx = Null<Size>();
+    Real fxLinkedFixedFxRate = Null<Real>();
     Real fxLinkedSimTime = Null<Real>();     // if fx fixing date > today
-    std::vector<Size> fxLinkedModelIndices;  // if fx fixing date > today
+    Real fxLinkedForeignNominal = Null<Real>();
+    std::vector<Size> fxLinkedModelIndices;
 
-    if (auto fxl = boost::dynamic_pointer_cast<FloatingRateFXLinkedNotionalCoupon>(flow)) {
+    // A Coupon could be wrapped in a FxLinkedCoupon or IndexedCoupon but not both at the same time
+    if (auto indexCpn = boost::dynamic_pointer_cast<IndexedCoupon>(flow)) {
+        if (auto fxIndex = boost::dynamic_pointer_cast<FxIndex>(indexCpn->index())) {
+            isFxIndexed = true;
+            auto fixingDate = indexCpn->fixingDate();
+            fxLinkedSourceCcyIdx = model_->ccyIndex(fxIndex->sourceCurrency());
+            fxLinkedTargetCcyIdx = model_->ccyIndex(fxIndex->targetCurrency());
+            if (fixingDate <= today_) {
+                fxLinkedFixedFxRate = fxIndex->fixing(fixingDate);
+            } else {
+                fxLinkedSimTime = time(fixingDate);
+                if (fxLinkedSourceCcyIdx > 0) {
+                    fxLinkedModelIndices.push_back(
+                        model_->pIdx(CrossAssetModel::AssetType::FX, fxLinkedSourceCcyIdx - 1));
+                }
+                if (fxLinkedTargetCcyIdx > 0) {
+                    fxLinkedModelIndices.push_back(
+                        model_->pIdx(CrossAssetModel::AssetType::FX, fxLinkedTargetCcyIdx - 1));
+                }
+            }
+            flow = indexCpn->underlying();
+        }
+    } else if (auto fxl = boost::dynamic_pointer_cast<FloatingRateFXLinkedNotionalCoupon>(flow)) {
         isFxLinked = true;
-        fxLinkedFixingDate = fxl->fxFixingDate();
+        auto fixingDate = fxl->fxFixingDate();
         fxLinkedSourceCcyIdx = model_->ccyIndex(fxl->fxIndex()->sourceCurrency());
         fxLinkedTargetCcyIdx = model_->ccyIndex(fxl->fxIndex()->targetCurrency());
-        if (fxLinkedFixingDate <= today_) {
-            fxLinkedFixedFxRate = fxl->fxIndex()->fixing(fxLinkedFixingDate);
+        if (fixingDate <= today_) {
+            fxLinkedFixedFxRate = fxl->fxIndex()->fixing(fixingDate);
         } else {
-            fxLinkedSimTime = time(fxLinkedFixingDate);
+            fxLinkedSimTime = time(fixingDate);
             if (fxLinkedSourceCcyIdx > 0) {
                 fxLinkedModelIndices.push_back(model_->pIdx(CrossAssetModel::AssetType::FX, fxLinkedSourceCcyIdx - 1));
             }
@@ -174,6 +188,9 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
         fxLinkedForeignNominal = fxl->foreignAmount();
     }
 
+    bool isCapFloored = false;
+    bool isNakedOption = false;
+    Real effCap = Null<Real>(), effFloor = Null<Real>();
     if (auto stripped = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(flow)) {
         isNakedOption = true;
         flow = stripped->underlying(); // this is a CappedFlooredCoupon, handled below
@@ -187,6 +204,34 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
     }
 
     // handle the coupon types
+    
+    if (boost::dynamic_pointer_cast<FixedRateCoupon>(flow) != nullptr) {
+        
+        if (fxLinkedSimTime != Null<Real>()) {
+            info.simulationTimes.push_back(fxLinkedSimTime);
+            info.modelIndices.push_back(fxLinkedModelIndices);
+        }
+        
+        info.amountCalculator = [flow, isFxLinked, isFxIndexed, fxLinkedFixedFxRate,
+                                 fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx](const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
+            RandomVariable fxFixing(n, 1.0);
+            if (isFxLinked || isFxIndexed) {
+                if (fxLinkedFixedFxRate != Null<Real>()) {
+                    fxFixing = RandomVariable(n, fxLinkedFixedFxRate);
+                } else {
+                    RandomVariable fxSource(n, 1.0), fxTarget(n, 1.0);
+                    Size fxIdx = 0;
+                    if (fxLinkedSourceCcyIdx > 0)
+                        fxSource = exp(*states.at(0).at(fxIdx++));
+                    if (fxLinkedTargetCcyIdx > 0)
+                        fxTarget = exp(*states.at(0).at(fxIdx));
+                    fxFixing = fxSource / fxTarget;
+                }
+            } 
+            return fxFixing * RandomVariable(n, flow->amount());
+        };
+        return info;
+    }
 
     if (auto ibor = boost::dynamic_pointer_cast<IborCoupon>(flow)) {
         Real fixedRate =
@@ -201,18 +246,17 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
         if (fxLinkedSimTime != Null<Real>()) {
             info.simulationTimes.push_back(fxLinkedSimTime);
             info.modelIndices.push_back(fxLinkedModelIndices);
-        }
+        } 
 
         info.amountCalculator = [this, indexCcyIdx, ibor, simTime, fixedRate, isFxLinked, fxLinkedForeignNominal,
                                  fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isCapFloored,
-                                 isNakedOption, effFloor,
-                                 effCap](const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
+                                 isNakedOption, effFloor, effCap, isFxIndexed](const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
             RandomVariable fixing = fixedRate != Null<Real>()
                                         ? RandomVariable(n, fixedRate)
                                         : lgmVectorised_[indexCcyIdx].fixing(ibor->index(), ibor->fixingDate(), simTime,
                                                                              *states.at(0).at(0));
             RandomVariable fxFixing(n, 1.0);
-            if (isFxLinked) {
+            if (isFxLinked || isFxIndexed) {
                 if (fxLinkedFixedFxRate != Null<Real>()) {
                     fxFixing = RandomVariable(n, fxLinkedFixedFxRate);
                 } else {
@@ -224,7 +268,8 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
                         fxTarget = exp(*states.at(1).at(fxIdx));
                     fxFixing = fxSource / fxTarget;
                 }
-            }
+            } 
+
             RandomVariable effectiveRate;
             if (isCapFloored) {
                 RandomVariable swapletRate(n, 0.0);
@@ -263,17 +308,17 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
             info.simulationTimes.push_back(fxLinkedSimTime);
             info.modelIndices.push_back(fxLinkedModelIndices);
         }
-
+      
         info.amountCalculator = [this, indexCcyIdx, cms, simTime, fixedRate, isFxLinked, fxLinkedForeignNominal,
                                  fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isCapFloored,
                                  isNakedOption, effFloor,
-                                 effCap](const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
+                                 effCap, isFxIndexed](const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
             RandomVariable fixing =
                 fixedRate != Null<Real>()
                     ? RandomVariable(n, fixedRate)
                     : lgmVectorised_[indexCcyIdx].fixing(cms->index(), cms->fixingDate(), simTime, *states.at(0).at(0));
             RandomVariable fxFixing(n, 1.0);
-            if (isFxLinked) {
+            if (isFxLinked || isFxIndexed) {
                 if (fxLinkedFixedFxRate != Null<Real>()) {
                     fxFixing = RandomVariable(n, fxLinkedFixedFxRate);
                 } else {
@@ -286,6 +331,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
                     fxFixing = fxSource / fxTarget;
                 }
             }
+
             RandomVariable effectiveRate;
             if (isCapFloored) {
                 RandomVariable swapletRate(n, 0.0);
@@ -324,14 +370,14 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
         }
 
         info.amountCalculator = [this, indexCcyIdx, on, simTime, isFxLinked, fxLinkedForeignNominal,
-                                 fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate](
+                                 fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isFxIndexed](
                                     const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
             RandomVariable effectiveRate = lgmVectorised_[indexCcyIdx].compoundedOnRate(
                 on->overnightIndex(), on->fixingDates(), on->valueDates(), on->dt(), on->rateCutoff(),
                 on->includeSpread(), on->spread(), on->gearing(), on->lookback(), Null<Real>(), Null<Real>(), false,
                 false, simTime, *states.at(0).at(0));
             RandomVariable fxFixing(n, 1.0);
-            if (isFxLinked) {
+            if (isFxLinked || isFxIndexed) {
                 if (fxLinkedFixedFxRate != Null<Real>()) {
                     fxFixing = RandomVariable(n, fxLinkedFixedFxRate);
                 } else {
@@ -344,6 +390,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
                     fxFixing = fxSource / fxTarget;
                 }
             }
+
             return RandomVariable(n, (isFxLinked ? fxLinkedForeignNominal : on->nominal()) * on->accrualPeriod()) *
                    effectiveRate * fxFixing;
         };
@@ -361,9 +408,9 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
             info.simulationTimes.push_back(fxLinkedSimTime);
             info.modelIndices.push_back(fxLinkedModelIndices);
         }
-
+        
         info.amountCalculator = [this, indexCcyIdx, cfon, simTime, isFxLinked, fxLinkedForeignNominal,
-                                 fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate](
+                                 fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isFxIndexed](
                                     const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
             RandomVariable effectiveRate = lgmVectorised_[indexCcyIdx].compoundedOnRate(
                 cfon->underlying()->overnightIndex(), cfon->underlying()->fixingDates(),
@@ -372,7 +419,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
                 cfon->underlying()->lookback(), cfon->cap(), cfon->floor(), cfon->localCapFloor(), cfon->nakedOption(),
                 simTime, *states.at(0).at(0));
             RandomVariable fxFixing(n, 1.0);
-            if (isFxLinked) {
+            if (isFxLinked || isFxIndexed) {
                 if (fxLinkedFixedFxRate != Null<Real>()) {
                     fxFixing = RandomVariable(n, fxLinkedFixedFxRate);
                 } else {
@@ -402,16 +449,16 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
             info.simulationTimes.push_back(fxLinkedSimTime);
             info.modelIndices.push_back(fxLinkedModelIndices);
         }
-
+        
         info.amountCalculator = [this, indexCcyIdx, av, simTime, isFxLinked, fxLinkedForeignNominal,
-                                 fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate](
+                                 fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isFxIndexed](
                                     const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
             RandomVariable effectiveRate = lgmVectorised_[indexCcyIdx].averagedOnRate(
                 av->overnightIndex(), av->fixingDates(), av->valueDates(), av->dt(), av->rateCutoff(), false,
                 av->spread(), av->gearing(), av->lookback(), Null<Real>(), Null<Real>(), false, false, simTime,
                 *states.at(0).at(0));
             RandomVariable fxFixing(n, 1.0);
-            if (isFxLinked) {
+            if (isFxLinked || isFxIndexed) {
                 if (fxLinkedFixedFxRate != Null<Real>()) {
                     fxFixing = RandomVariable(n, fxLinkedFixedFxRate);
                 } else {
@@ -441,9 +488,9 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
             info.simulationTimes.push_back(fxLinkedSimTime);
             info.modelIndices.push_back(fxLinkedModelIndices);
         }
-
+      
         info.amountCalculator = [this, indexCcyIdx, cfav, simTime, isFxLinked, fxLinkedForeignNominal,
-                                 fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate](
+                                 fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isFxIndexed](
                                     const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
             RandomVariable effectiveRate = lgmVectorised_[indexCcyIdx].averagedOnRate(
                 cfav->underlying()->overnightIndex(), cfav->underlying()->fixingDates(),
@@ -452,7 +499,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
                 cfav->underlying()->lookback(), cfav->cap(), cfav->floor(), cfav->localCapFloor(), cfav->nakedOption(),
                 simTime, *states.at(0).at(0));
             RandomVariable fxFixing(n, 1.0);
-            if (isFxLinked) {
+            if (isFxLinked || isFxIndexed) {
                 if (fxLinkedFixedFxRate != Null<Real>()) {
                     fxFixing = RandomVariable(n, fxLinkedFixedFxRate);
                 } else {
@@ -482,16 +529,15 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
             info.simulationTimes.push_back(fxLinkedSimTime);
             info.modelIndices.push_back(fxLinkedModelIndices);
         }
-
         info.amountCalculator = [this, indexCcyIdx, bma, simTime, isFxLinked, fxLinkedForeignNominal,
-                                 fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate](
+                                 fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isFxIndexed](
                                     const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
             RandomVariable effectiveRate = lgmVectorised_[indexCcyIdx].averagedBmaRate(
                 boost::dynamic_pointer_cast<BMAIndex>(bma->index()), bma->fixingDates(), bma->accrualStartDate(),
                 bma->accrualEndDate(), false, bma->spread(), bma->gearing(), Null<Real>(), Null<Real>(), false, simTime,
                 *states.at(0).at(0));
             RandomVariable fxFixing(n, 1.0);
-            if (isFxLinked) {
+            if (isFxLinked || isFxIndexed) {
                 if (fxLinkedFixedFxRate != Null<Real>()) {
                     fxFixing = RandomVariable(n, fxLinkedFixedFxRate);
                 } else {
@@ -521,9 +567,8 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
             info.simulationTimes.push_back(fxLinkedSimTime);
             info.modelIndices.push_back(fxLinkedModelIndices);
         }
-
         info.amountCalculator = [this, indexCcyIdx, cfbma, simTime, isFxLinked, fxLinkedForeignNominal,
-                                 fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate](
+                                 fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isFxIndexed](
                                     const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
             RandomVariable effectiveRate = lgmVectorised_[indexCcyIdx].averagedBmaRate(
                 boost::dynamic_pointer_cast<BMAIndex>(cfbma->underlying()->index()), cfbma->underlying()->fixingDates(),
@@ -531,7 +576,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
                 cfbma->underlying()->spread(), cfbma->underlying()->gearing(), cfbma->cap(), cfbma->floor(),
                 cfbma->nakedOption(), simTime, *states.at(0).at(0));
             RandomVariable fxFixing(n, 1.0);
-            if (isFxLinked) {
+            if (isFxLinked || isFxIndexed) {
                 if (fxLinkedFixedFxRate != Null<Real>()) {
                     fxFixing = RandomVariable(n, fxLinkedFixedFxRate);
                 } else {
@@ -562,14 +607,14 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
             info.simulationTimes.push_back(fxLinkedSimTime);
             info.modelIndices.push_back(fxLinkedModelIndices);
         }
-
+       
         info.amountCalculator = [this, indexCcyIdx, sub, simTime, isFxLinked, fxLinkedForeignNominal,
-                                 fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate](
+                                 fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isFxIndexed](
                                     const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
             RandomVariable fixing = lgmVectorised_[indexCcyIdx].subPeriodsRate(sub->index(), sub->fixingDates(),
                                                                                simTime, *states.at(0).at(0));
             RandomVariable fxFixing(n, 1.0);
-            if (isFxLinked) {
+            if (isFxLinked || isFxIndexed) {
                 if (fxLinkedFixedFxRate != Null<Real>()) {
                     fxFixing = RandomVariable(n, fxLinkedFixedFxRate);
                 } else {
