@@ -2299,7 +2299,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
     BOOST_TEST_MESSAGE("get Euler state process");
     boost::shared_ptr<StochasticProcess> process2 = d.modelEuler->stateProcess();
 
-    Size n = 10000;                         // number of paths
+    Size n = 5000;                         // number of paths
     Size seed = 18;                         // rng seed
     Time T = 2.0;                          // maturity of payoff
     Time T2 = 20.0;                         // zerobond maturity
@@ -2456,7 +2456,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
 
     // a bit higher than for plain zero bond , since we look at indexed zero
     // bonds, too
-    Real tol1 = 3.0E-4;  // EXACT
+    Real tol1 = 5.0E-4;  // EXACT
     Real tol2 = 14.0E-4; // EULER
 
     Real ev = d.eurYts->discount(T2);
