@@ -24,7 +24,9 @@
 
 #include <ored/portfolio/nettingsetdetails.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <string>
+#include <variant>
 
 namespace ore {
 namespace analytics {
@@ -161,7 +163,7 @@ struct CrifRecord {
     std::string bb_rw;
 
     // additional data
-    std::map<std::string, std::string> additionalFields;
+    std::map<std::string, std::variant<std::string, double, bool>> additionalFields;
 
     // Default Constructor
     CrifRecord() {}
@@ -171,13 +173,16 @@ struct CrifRecord {
                std::string qualifier, std::string bucket, std::string label1, std::string label2,
                std::string amountCurrency, QuantLib::Real amount, QuantLib::Real amountUsd, std::string imModel = "",
                std::string collectRegulations = "", std::string postRegulations = "", std::string endDate = "",
-               std::map<std::string, std::string> additionalFields = {})
+               std::map<std::string, std::string> extraFields = {})
         : tradeId(tradeId), portfolioId(nettingSetDetails.nettingSetId()),
           productClass(productClass), riskType(riskType), qualifier(qualifier),
           bucket(bucket), label1(label1), label2(label2), amountCurrency(amountCurrency), amount(amount),
           amountUsd(amountUsd), tradeType(tradeType), nettingSetDetails(nettingSetDetails), imModel(imModel),
-          collectRegulations(collectRegulations), postRegulations(postRegulations), endDate(endDate),
-          additionalFields(additionalFields) {}
+          collectRegulations(collectRegulations), postRegulations(postRegulations), endDate(endDate) {
+        for (const auto& [key, value] : extraFields) {
+            additionalFields[key] = value;
+        }
+    }
 
     CrifRecord(std::string tradeId, std::string tradeType, std::string portfolioId,
                ProductClass productClass, RiskType riskType,
@@ -239,6 +244,48 @@ struct CrifRecord {
         }
     }
 
+    std::string getAdditionalFieldAsStr(const std::string& fieldName) const {
+        auto it = additionalFields.find(fieldName);
+        std::string value;
+        if (it != additionalFields.end()) {
+            if (const std::string* vstr = std::get_if<std::string>(&it->second)) {
+                value = *vstr;
+            } else if (const double* vdouble = std::get_if<double>(&it->second)) {
+                value = ore::data::to_string(*vdouble);
+            } else {
+                const bool* vbool = std::get_if<bool>(&it->second);
+                value = ore::data::to_string(*vbool);
+            }
+        }
+        return value;
+    }
+
+    double getAdditionalFieldAsDouble(const std::string& fieldName) const {
+        auto it = additionalFields.find(fieldName);
+        double value = QuantLib::Null<double>();
+        if (it != additionalFields.end()) {
+            if (const double* vdouble = std::get_if<double>(&it->second)) {
+                value = *vdouble;
+            } else if (const std::string* vstr = std::get_if<std::string>(&it->second)) {
+                value = ore::data::parseReal(*vstr);
+            }
+        }
+        return value;
+    }
+
+    bool getAdditionalFieldAsBool(const std::string& fieldName) const {
+        auto it = additionalFields.find(fieldName);
+        bool value = false;
+        if (it != additionalFields.end()) {
+            if (const bool* vbool = std::get_if<bool>(&it->second)) {
+                value = *vbool;
+            } else if (const std::string* vstr = std::get_if<std::string>(&it->second)) {
+                value = ore::data::parseBool(*vstr);
+            }
+        }
+        return value;
+    }
+
     //! Define how CRIF records are compared
     bool operator<(const CrifRecord& cr) const {
         return std::tie(tradeId, nettingSetDetails, productClass, riskType, qualifier, bucket, label1, label2,
@@ -267,6 +314,7 @@ struct CrifRecord {
 
     static std::vector<std::set<std::string>> additionalHeaders;
 
+    
 };
 
 //! Enable writing of a CrifRecord
