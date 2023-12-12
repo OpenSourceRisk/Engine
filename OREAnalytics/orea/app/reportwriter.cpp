@@ -1857,7 +1857,7 @@ void ReportWriter::writeCrifReport(const boost::shared_ptr<Report>& report, cons
             if (cr.additionalFields.find(af) == cr.additionalFields.end())
                 report->add("");
             else
-                report->add(cr.additionalFields.at(af));
+                report->add(cr.getAdditionalFieldAsStr(af));
         }
     }
 
