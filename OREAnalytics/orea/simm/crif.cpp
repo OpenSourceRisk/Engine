@@ -172,9 +172,11 @@ Crif Crif::simmParameters() const {
     
 //! deletes all existing simmParameter and replaces them with the new one
 void Crif::setSimmParameters(const Crif& crif) {
-    for (auto& r : records_) {
-        if (r.isSimmParameter()) {
-            records_.erase(r);
+    auto backup = records_;
+    records_.clear();
+    for (auto& r : backup) {
+        if (!r.isSimmParameter()) {
+            addRecord(r);
         }
     }
     for (const auto& r : crif) {
@@ -186,9 +188,15 @@ void Crif::setSimmParameters(const Crif& crif) {
 
 
 void Crif::setCrifRecords(const Crif& crif) {
-    clear();
-    for (const auto& r : crif) {
+    auto backup = records_;
+    records_.clear();
+    for (auto& r : backup) {
         if (r.isSimmParameter()) {
+            addRecord(r);
+        }
+    }
+    for (const auto& r : crif) {
+        if (!r.isSimmParameter()) {
             addRecord(r);
         }
     }

@@ -70,6 +70,7 @@ map<Size, set<string>> CrifLoader::requiredHeaders = {
 
 // Optional headers
 map<Size, set<string>> CrifLoader::optionalHeaders = {
+    
     {11, {"agreementtype", "agreement_type"}},
     {12, {"calltype", "call_type"}},
     {13, {"initialmargintype", "initial_margin_type"}},
@@ -295,11 +296,11 @@ void StringStreamCrifLoader::processHeader(const vector<string>& headers) {
                 columnIndex_[kv.first] = i;
             }
         }
-
         // Some headers are allowed to be missing (under certain circumstances)
-        if (kv.first == 1) {
+        // trade_id, portfolioid and productclass arent required for frtb crif
+        if (kv.first == 0 || kv.first == 1 || kv.first == 2) {
             // Portfolio ID header is allowed to be missing
-            if (columnIndex_.count(1) == 0) {
+            if (columnIndex_.count(kv.first) == 0) {
                 WLOG("Did not find a header for portfolioid in the CRIF file so using a default value");
             }
         } else if (kv.first == 10) {
@@ -359,7 +360,7 @@ bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxInde
 
     string tradeId, tradeType, imModel;
     try {
-        tradeId = entries[columnIndex_.at(0)];
+        tradeId = loadOptionalString(0);
         tradeType = loadOptionalString(15);
         imModel = loadOptionalString(16);
 
@@ -367,7 +368,7 @@ bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxInde
         cr.tradeType = tradeType;
         cr.imModel = imModel;
         cr.portfolioId = columnIndex_.count(1) == 0 ? "DummyPortfolio" : entries[columnIndex_.at(1)];
-        cr.productClass = parseProductClass(entries[columnIndex_.at(2)]);
+        cr.productClass = parseProductClass(loadOptionalString(2));
         cr.riskType = parseRiskType(entries[columnIndex_.at(3)]);
         
         // Qualifier - There are many other possible qualifier values, but we only do case-insensitive checks
@@ -438,6 +439,12 @@ bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxInde
         cr.postRegulations = loadOptionalString(17);
         cr.collectRegulations = loadOptionalString(18);
         cr.endDate = loadOptionalString(19);
+        cr.label3 = loadOptionalString(20);
+        cr.creditQuality = loadOptionalString(21);
+        cr.longShortInd = loadOptionalString(22);
+        cr.coveredBondInd = loadOptionalString(23);
+        cr.trancheThickness = loadOptionalString(24);
+        cr.bb_rw = loadOptionalString(25);
 
         // Check the IM model
         try {
