@@ -288,33 +288,75 @@ struct CrifRecord {
 
     //! Define how CRIF records are compared
     bool operator<(const CrifRecord& cr) const {
-        return std::tie(tradeId, nettingSetDetails, productClass, riskType, qualifier, bucket, label1, label2,
-                        amountCurrency, collectRegulations, postRegulations) <
-               std::tie(cr.tradeId, cr.nettingSetDetails, cr.productClass, cr.riskType, cr.qualifier, cr.bucket,
-                        cr.label1, cr.label2, cr.amountCurrency, cr.collectRegulations, cr.postRegulations);
+        if (type() == RecordType::FRTB || cr.type() == RecordType::FRTB) {
+            return std::tie(tradeId, nettingSetDetails, productClass, riskType, qualifier, bucket, label1, label2,
+                            label3, endDate, creditQuality, longShortInd, coveredBondInd, trancheThickness, bb_rw,
+                            amountCurrency, collectRegulations, postRegulations) <
+                   std::tie(cr.tradeId, cr.nettingSetDetails, cr.productClass, cr.riskType, cr.qualifier, cr.bucket,
+                            cr.label1, cr.label2, cr.label3, cr.endDate, cr.creditQuality, cr.longShortInd,
+                            cr.coveredBondInd, cr.trancheThickness, cr.bb_rw, cr.amountCurrency, cr.collectRegulations,
+                            cr.postRegulations);
+        } else {
+            return std::tie(tradeId, nettingSetDetails, productClass, riskType, qualifier, bucket, label1, label2,
+                            amountCurrency, collectRegulations, postRegulations) <
+                   std::tie(cr.tradeId, cr.nettingSetDetails, cr.productClass, cr.riskType, cr.qualifier, cr.bucket,
+                            cr.label1, cr.label2, cr.amountCurrency, cr.collectRegulations, cr.postRegulations);
+        }
     }
+
     static bool amountCcyLTCompare(const CrifRecord& cr1, const CrifRecord& cr2) {
-        return std::tie(cr1.tradeId, cr1.nettingSetDetails, cr1.productClass, cr1.riskType, cr1.qualifier, cr1.bucket,
-                        cr1.label1, cr1.label2, cr1.collectRegulations, cr1.postRegulations) <
-               std::tie(cr2.tradeId, cr2.nettingSetDetails, cr2.productClass, cr2.riskType, cr2.qualifier, cr2.bucket,
-                        cr2.label1, cr2.label2, cr2.collectRegulations, cr2.postRegulations);
+        if (cr1.type() == RecordType::FRTB || cr2.type() == RecordType::FRTB) {
+            return std::tie(cr1.tradeId, cr1.nettingSetDetails, cr1.productClass, cr1.riskType, cr1.qualifier,
+                            cr1.bucket, cr1.label1, cr1.label2, cr1.label3, cr1.endDate, cr1.creditQuality,
+                            cr1.longShortInd, cr1.coveredBondInd, cr1.trancheThickness, cr1.bb_rw,
+                            cr1.collectRegulations, cr1.postRegulations) <
+                   std::tie(cr2.tradeId, cr2.nettingSetDetails, cr2.productClass, cr2.riskType, cr2.qualifier,
+                            cr2.bucket, cr2.label1, cr2.label2, cr2.label3, cr2.endDate, cr2.creditQuality,
+                            cr2.longShortInd, cr2.coveredBondInd, cr2.trancheThickness, cr2.bb_rw,
+                            cr2.collectRegulations, cr2.postRegulations);
+        } else {
+            return std::tie(cr1.tradeId, cr1.nettingSetDetails, cr1.productClass, cr1.riskType, cr1.qualifier,
+                            cr1.bucket, cr1.label1, cr1.label2, cr1.collectRegulations, cr1.postRegulations) <
+                   std::tie(cr2.tradeId, cr2.nettingSetDetails, cr2.productClass, cr2.riskType, cr2.qualifier,
+                            cr2.bucket, cr2.label1, cr2.label2, cr2.collectRegulations, cr2.postRegulations);
+        }
     }
+
     bool operator==(const CrifRecord& cr) const {
-        return std::tie(tradeId, nettingSetDetails, productClass, riskType, qualifier, bucket, label1, label2,
-                        amountCurrency, collectRegulations, postRegulations) ==
-               std::tie(cr.tradeId, cr.nettingSetDetails, cr.productClass, cr.riskType, cr.qualifier, cr.bucket,
-                        cr.label1, cr.label2, cr.amountCurrency, cr.collectRegulations, cr.postRegulations);
+        if (type() == RecordType::FRTB || cr.type() == RecordType::FRTB) {
+            return std::tie(tradeId, nettingSetDetails, productClass, riskType, qualifier, bucket, label1, label2,
+                            label3, endDate, creditQuality, longShortInd, coveredBondInd, trancheThickness, bb_rw,
+                            amountCurrency, collectRegulations, postRegulations) ==
+                   std::tie(cr.tradeId, cr.nettingSetDetails, cr.productClass, cr.riskType, cr.qualifier, cr.bucket,
+                            cr.label1, cr.label2, cr.label3, cr.endDate, cr.creditQuality, cr.longShortInd,
+                            cr.coveredBondInd, cr.trancheThickness, cr.bb_rw, cr.amountCurrency, cr.collectRegulations,
+                            cr.postRegulations);
+        } else {
+            return std::tie(tradeId, nettingSetDetails, productClass, riskType, qualifier, bucket, label1, label2,
+                            amountCurrency, collectRegulations, postRegulations) ==
+                   std::tie(cr.tradeId, cr.nettingSetDetails, cr.productClass, cr.riskType, cr.qualifier, cr.bucket,
+                            cr.label1, cr.label2, cr.amountCurrency, cr.collectRegulations, cr.postRegulations);
+        }
     }
     static bool amountCcyEQCompare(const CrifRecord& cr1, const CrifRecord& cr2) {
-        return std::tie(cr1.tradeId, cr1.nettingSetDetails, cr1.productClass, cr1.riskType, cr1.qualifier, cr1.bucket,
-                        cr1.label1, cr1.label2, cr1.collectRegulations, cr1.postRegulations) ==
-               std::tie(cr2.tradeId, cr2.nettingSetDetails, cr2.productClass, cr2.riskType, cr2.qualifier, cr2.bucket,
-                        cr2.label1, cr2.label2, cr2.collectRegulations, cr2.postRegulations);
+        if (cr1.type() == RecordType::FRTB || cr2.type() == RecordType::FRTB) {
+            return std::tie(cr1.tradeId, cr1.nettingSetDetails, cr1.productClass, cr1.riskType, cr1.qualifier,
+                            cr1.bucket, cr1.label1, cr1.label2, cr1.label3, cr1.endDate, cr1.creditQuality,
+                            cr1.longShortInd, cr1.coveredBondInd, cr1.trancheThickness, cr1.bb_rw,
+                            cr1.collectRegulations, cr1.postRegulations) ==
+                   std::tie(cr2.tradeId, cr2.nettingSetDetails, cr2.productClass, cr2.riskType, cr2.qualifier,
+                            cr2.bucket, cr2.label1, cr2.label2, cr2.label3, cr2.endDate, cr2.creditQuality,
+                            cr2.longShortInd, cr2.coveredBondInd, cr2.trancheThickness, cr2.bb_rw,
+                            cr2.collectRegulations, cr2.postRegulations);
+        } else {
+            return std::tie(cr1.tradeId, cr1.nettingSetDetails, cr1.productClass, cr1.riskType, cr1.qualifier,
+                            cr1.bucket, cr1.label1, cr1.label2, cr1.collectRegulations, cr1.postRegulations) ==
+                   std::tie(cr2.tradeId, cr2.nettingSetDetails, cr2.productClass, cr2.riskType, cr2.qualifier,
+                            cr2.bucket, cr2.label1, cr2.label2, cr2.collectRegulations, cr2.postRegulations);
+        }
     }
 
     static std::vector<std::set<std::string>> additionalHeaders;
-
-    
 };
 
 //! Enable writing of a CrifRecord
