@@ -31,12 +31,12 @@
 namespace ore {
 namespace analytics {
 
-vector<string> getFileNames(const string& fileString, const string& path) {
+vector<string> getFileNames(const string& fileString, const std::filesystem::path& path) {
     vector<string> fileNames;
     boost::split(fileNames, fileString, boost::is_any_of(",;"), boost::token_compress_on);
     for (auto it = fileNames.begin(); it < fileNames.end(); it++) {
         boost::trim(*it);
-        *it = path + "/" + *it;
+        *it = (path / *it).generic_string();
     }
     return fileNames;
 }
@@ -136,7 +136,7 @@ void InputParameters::setPortfolio(const std::string& xml) {
     portfolio_->fromXMLString(xml);
 }
 
-void InputParameters::setPortfolioFromFile(const std::string& fileNameString, const std::string& inputPath) {
+void InputParameters::setPortfolioFromFile(const std::string& fileNameString, const std::filesystem::path& inputPath) {
     vector<string> files = getFileNames(fileNameString, inputPath);
     portfolio_ = boost::make_shared<Portfolio>(buildFailedTrades_);
     for (auto file : files) {
