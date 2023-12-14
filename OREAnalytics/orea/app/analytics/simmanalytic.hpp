@@ -46,7 +46,9 @@ public:
                  const bool determineWinningRegulations = true)
         : Analytic(std::make_unique<SimmAnalyticImpl>(inputs), {"SIMM"}, inputs, false, false, false, false),
           hasNettingSetDetails_(hasNettingSetDetails),
-          determineWinningRegulations_(determineWinningRegulations) {}
+          determineWinningRegulations_(determineWinningRegulations) {
+        setWriteIntermediateReports(inputs->writeSimmIntermediateReports());
+    }
 
     const boost::shared_ptr<SimmNetSensitivities>& crifRecords() const { return crifRecords_; }
     bool hasNettingSetDetails() { return hasNettingSetDetails_; }

@@ -285,6 +285,7 @@ public:
     void setSimmResultCurrency(const std::string& s) { simmResultCurrency_ = s; }
     void setSimmReportingCurrency(const std::string& s) { simmReportingCurrency_ = s; }
     void setEnforceIMRegulations(bool b) { enforceIMRegulations_= b; }
+    void setWriteSimmIntermediateReports(bool b) { writeSimmIntermediateReports_ = b; }
 
     // Setters for ZeroToParSensiConversion
     void setParConversionXbsParConversion(bool b) { parConversionXbsParConversion_ = b; }
@@ -534,6 +535,7 @@ public:
     const std::string& simmResultCurrency() { return simmResultCurrency_; }
     const std::string& simmReportingCurrency() { return simmReportingCurrency_; }
     bool enforceIMRegulations() { return enforceIMRegulations_; }
+    bool writeSimmIntermediateReports() { return writeSimmIntermediateReports_; }
 
     /**************************************************
      * Getters for Zero to Par Sensi conversion
@@ -776,6 +778,7 @@ protected:
     std::string simmReportingCurrency_ = "";
     bool enforceIMRegulations_ = false;
     bool useSimmParameters_ = true;
+    bool writeSimmIntermediateReports_ = true;
 
     /***************
      * Zero to Par Conversion analytic
