@@ -72,8 +72,9 @@ public:
     StressScenarioGenerator(const boost::shared_ptr<StressTestScenarioData>& stressData,
                             const boost::shared_ptr<Scenario>& baseScenario,
                             const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-			    const boost::shared_ptr<ScenarioSimMarket>& simMarket,
-                            const boost::shared_ptr<ScenarioFactory>& stressScenarioFactory);
+                            const boost::shared_ptr<ScenarioSimMarket>& simMarket,
+                            const boost::shared_ptr<ScenarioFactory>& stressScenarioFactory,
+                            const boost::shared_ptr<Scenario>& baseScenarioAbsolute = nullptr);
     //! Default destructor
     ~StressScenarioGenerator() {}
 
@@ -96,6 +97,7 @@ private:
 
     boost::shared_ptr<StressTestScenarioData> stressData_;
     boost::shared_ptr<ScenarioFactory> stressScenarioFactory_;
+    boost::shared_ptr<Scenario> baseScenarioAbsolute_;
 };
 } // namespace analytics
 } // namespace ore
