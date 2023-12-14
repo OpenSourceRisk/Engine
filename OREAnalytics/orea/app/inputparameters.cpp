@@ -424,7 +424,7 @@ void InputParameters::setCrifFromFile(const std::string& fileName, char eol, cha
         buildSimmConfiguration(simmVersion_, boost::make_shared<SimmBucketMapperBase>(),simmCalibrationData(), mporDays());
     bool updateMappings = true;
     bool aggregateTrades = false;
-    auto crifLoader = CsvFileCrifLoader(fileName, configuration, CrifRecord::additionalHeaders, updateMappings, aggregateTrades, eol, delim, quoteChar, escapeChar);
+    auto crifLoader = CsvFileCrifLoader(fileName, configuration, CrifRecord::additionalHeaders, updateMappings, aggregateTrades, eol, delim, quoteChar, escapeChar, reportNaString());
     crif_ = crifLoader.loadCrif();
 }
 
@@ -433,7 +433,7 @@ void InputParameters::setCrifFromBuffer(const std::string& csvBuffer, char eol, 
         buildSimmConfiguration(simmVersion_, boost::make_shared<SimmBucketMapperBase>(), simmCalibrationData(), mporDays());
     bool updateMappings = true;
     bool aggregateTrades = false;
-    auto crifLoader = CsvBufferCrifLoader(csvBuffer, configuration, CrifRecord::additionalHeaders, updateMappings, aggregateTrades, eol, delim, quoteChar, escapeChar);
+    auto crifLoader = CsvBufferCrifLoader(csvBuffer, configuration, CrifRecord::additionalHeaders, updateMappings, aggregateTrades, eol, delim, quoteChar, escapeChar, reportNaString());
     crif_ = crifLoader.loadCrif();
 }
 
