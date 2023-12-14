@@ -231,7 +231,7 @@ std::stringstream CsvBufferCrifLoader::stream() const {
     return csvStream;
 }
 
-Crif StringStreamCrifLoader::loadFromStream(std::stringstream& stream) {
+Crif StringStreamCrifLoader::loadFromStream(std::stringstream&& stream) {
     string line;
     vector<string> entries;
     bool headerProcessed = false;
