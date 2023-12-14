@@ -1803,8 +1803,17 @@ void ReportWriter::writeCrifReport(const boost::shared_ptr<Report>& report, cons
         .addColumn("IMModel", string())
         .addColumn("TradeType", string());
 
-    if (hasScheduleTrades)
+    if (hasScheduleTrades || crif.type() == Crif::CrifType::Frtb)
         report->addColumn("end_date", string());
+
+    if (crif.type() == Crif::CrifType::Frtb) {
+        report->addColumn("Label3", string())
+            .addColumn("CreditQuality", string())
+            .addColumn("LongShortInd", string())
+            .addColumn("CoveredBondInd", string())
+            .addColumn("TrancheThickness", string())
+            .addColumn("BB_RW", string());
+    }
 
     if (hasCollectRegulations)
         report->addColumn("collect_regulations", string());
@@ -1840,8 +1849,17 @@ void ReportWriter::writeCrifReport(const boost::shared_ptr<Report>& report, cons
             .add(cr.imModel)
             .add(cr.tradeType);
 
-        if (hasScheduleTrades)
+        if (hasScheduleTrades || crif.type() == Crif::CrifType::Frtb)
             report->add(cr.endDate);
+
+        if (crif.type() == Crif::CrifType::Frtb) {
+            report->add(cr.label3)
+                .add(cr.creditQuality)
+                .add(cr.longShortInd)
+                .add(cr.coveredBondInd)
+                .add(cr.trancheThickness)
+                .add(cr.bb_rw);
+        }
 
         if (hasCollectRegulations) {
             string regString = escapeCommaSeparatedList(cr.collectRegulations, '\0');
