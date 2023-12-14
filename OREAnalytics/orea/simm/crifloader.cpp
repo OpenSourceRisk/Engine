@@ -93,24 +93,24 @@ using RiskType = CrifRecord::RiskType;
 using ProductClass = CrifRecord::ProductClass;
 
 void CrifLoader::addRecordToCrif(Crif& crif, CrifRecord&& recordToAdd) const {
+    bool add = recordToAdd.type() != CrifRecord::RecordType::Generic;
     if (recordToAdd.type() == CrifRecord::RecordType::SIMM) {
         validateSimmRecord(recordToAdd);
         currencyOverrides(recordToAdd);
+        add = configuration_->isValidRiskType(recordToAdd.riskType);
     }
     if (aggregateTrades_) {
         recordToAdd.tradeId = "";
     }
-    crif.addRecord(recordToAdd);
+    if (add) {
+        crif.addRecord(recordToAdd);
+    } else {
+        WLOG("Skipped loading CRIF record " << recordToAdd << " because its risk type " << recordToAdd.riskType
+                                            << " is not valid under SIMM configuration " << configuration_->name());
+    }
 }
 
-void CrifLoader::validateSimmRecord(const CrifRecord& cr) const {
-    // Skip the CRIF record if its risk type is not valid under the configuration
-    if (!configuration_->isValidRiskType(cr.riskType)) {
-        WLOG("Skipped loading CRIF record " << cr << " because its risk type " << cr.riskType
-                                            << " is not valid under SIMM configuration " << configuration_->name());
-        return;
-    }
-    
+void CrifLoader::validateSimmRecord(const CrifRecord& cr) const {   
     switch (cr.riskType) {
     case RiskType::AddOnFixedAmount:
     case RiskType::AddOnNotionalFactor:
