@@ -31,9 +31,11 @@ StressScenarioGenerator::StressScenarioGenerator(const boost::shared_ptr<StressT
                                                  const boost::shared_ptr<Scenario>& baseScenario,
                                                  const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                                                  const boost::shared_ptr<ScenarioSimMarket>& simMarket,
-						 const boost::shared_ptr<ScenarioFactory>& stressScenarioFactory)
+                                                 const boost::shared_ptr<ScenarioFactory>& stressScenarioFactory,
+                                                 const boost::shared_ptr<Scenario>& baseScenarioAbsolute)
     : ShiftScenarioGenerator(baseScenario, simMarketData, simMarket), stressData_(stressData),
-      stressScenarioFactory_(stressScenarioFactory) {
+      stressScenarioFactory_(stressScenarioFactory),
+      baseScenarioAbsolute_(baseScenarioAbsolute == nullptr ? baseScenario : baseScenarioAbsolute) {
 
     QL_REQUIRE(stressData_, "StressScenarioGenerator: stressData is null");
 
@@ -123,7 +125,7 @@ void StressScenarioGenerator::addEquityShifts(StressTestScenarioData::StressTest
         Real size = data.shiftSize;
 
         RiskFactorKey key(RiskFactorKey::KeyType::EquitySpot, equity);
-        Real rate = baseScenario_->get(key);
+        Real rate = baseScenarioAbsolute_->get(key);
 
         Real newRate = relShift ? rate * (1.0 + size) : (rate + size);
         scenario->add(RiskFactorKey(RiskFactorKey::KeyType::EquitySpot, equity), newRate);
@@ -160,7 +162,7 @@ void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::Str
             Date d = asof + simMarketData_->yieldCurveTenors(ccy)[j];
             times[j] = dc.yearFraction(asof, d);
             RiskFactorKey key(RiskFactorKey::KeyType::DiscountCurve, ccy, j);
-            Real quote = baseScenario_->get(key);
+            Real quote = baseScenarioAbsolute_->get(key);
             zeros[j] = -std::log(quote) / times[j];
         }
 
@@ -220,7 +222,7 @@ void StressScenarioGenerator::addSurvivalProbabilityShifts(StressTestScenarioDat
             Date d = asof + simMarketData_->defaultTenors(name)[j];
             times[j] = dc.yearFraction(asof, d);
             RiskFactorKey key(RiskFactorKey::KeyType::SurvivalProbability, name, j);
-            Real quote = baseScenario_->get(key);
+            Real quote = baseScenarioAbsolute_->get(key);
             zeros[j] = -std::log(quote) / times[j];
         }
 
@@ -282,7 +284,7 @@ void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::Stress
             Date d = asof + simMarketData_->yieldCurveTenors(indexName)[j];
             times[j] = dc.yearFraction(asof, d);
             RiskFactorKey key(RiskFactorKey::KeyType::IndexCurve, indexName, j);
-            Real quote = baseScenario_->get(key);
+            Real quote = baseScenarioAbsolute_->get(key);
             zeros[j] = -std::log(quote) / times[j];
         }
 
@@ -343,7 +345,7 @@ void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::Stress
             Date d = asof + simMarketData_->yieldCurveTenors(name)[j];
             times[j] = dc.yearFraction(asof, d);
             RiskFactorKey key(RiskFactorKey::KeyType::YieldCurve, name, j);
-            Real quote = baseScenario_->get(key);
+            Real quote = baseScenarioAbsolute_->get(key);
             zeros[j] = -std::log(quote) / times[j];
         }
 
@@ -406,7 +408,7 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
             Date d = asof + simMarketData_->fxVolExpiries(ccypair)[j];
 
             RiskFactorKey key(RiskFactorKey::KeyType::FXVolatility, ccypair, j);
-            values[j] = baseScenario_->get(key);
+            values[j] = baseScenarioAbsolute_->get(key);
 
             times[j] = dc.yearFraction(asof, d);
         }
@@ -467,7 +469,7 @@ void StressScenarioGenerator::addEquityVolShifts(StressTestScenarioData::StressT
             Date d = asof + simMarketData_->equityVolExpiries(equity)[j];
 
             RiskFactorKey key(RiskFactorKey::KeyType::EquityVolatility, equity, j);
-            values[j] = baseScenario_->get(key);
+            values[j] = baseScenarioAbsolute_->get(key);
 
             times[j] = dc.yearFraction(asof, d);
         }
@@ -544,7 +546,7 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
                 Size idx = j * n_swvol_term + k;
 
                 RiskFactorKey rf(RiskFactorKey::KeyType::SwaptionVolatility, key, idx);
-                volData[j][k] = baseScenario_->get(rf);
+                volData[j][k] = baseScenarioAbsolute_->get(rf);
             }
         }
 
@@ -633,7 +635,7 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
             for (Size k = 0; k < n_cfvol_strikes; ++k) {
                 Size idx = j * n_cfvol_strikes + k;
                 volData[j][k] =
-                    baseScenario_->get(RiskFactorKey(RiskFactorKey::KeyType::OptionletVolatility, key, idx));
+                    baseScenarioAbsolute_->get(RiskFactorKey(RiskFactorKey::KeyType::OptionletVolatility, key, idx));
             }
         }
 
@@ -675,7 +677,7 @@ void StressScenarioGenerator::addSecuritySpreadShifts(StressTestScenarioData::St
         Real size = data.shiftSize;
 
         RiskFactorKey key(RiskFactorKey::KeyType::SecuritySpread, bond);
-        Real base_spread = baseScenario_->get(key);
+        Real base_spread = baseScenarioAbsolute_->get(key);
 
         Real newSpread = relShift ? base_spread * (1.0 + size) : (base_spread + size);
         scenario->add(RiskFactorKey(RiskFactorKey::KeyType::SecuritySpread, bond), newSpread);
@@ -694,7 +696,7 @@ void StressScenarioGenerator::addRecoveryRateShifts(StressTestScenarioData::Stre
         Real size = data.shiftSize;
 
         RiskFactorKey key(RiskFactorKey::KeyType::RecoveryRate, isin);
-        Real base_recoveryRate = baseScenario_->get(key);
+        Real base_recoveryRate = baseScenarioAbsolute_->get(key);
         Real new_recoveryRate = relShift ? base_recoveryRate * (1.0 + size) : (base_recoveryRate + size);
         scenario->add(RiskFactorKey(RiskFactorKey::KeyType::RecoveryRate, isin), new_recoveryRate);
     }
