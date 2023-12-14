@@ -103,7 +103,7 @@ public:
     StringStreamCrifLoader(const boost::shared_ptr<SimmConfiguration>& configuration,
                            const std::vector<std::set<std::string>>& additionalHeaders = {}, bool updateMapper = false,
                            bool aggregateTrades = true, char eol = '\n', char delim = '\t', char quoteChar = '\0',
-                           char escapeChar = '\\');
+                           char escapeChar = '\\', const std::string& nullString = "#N/A");
 
 protected:
     Crif loadCrifImpl() override { return loadFromStream(stream()); }
@@ -132,6 +132,7 @@ protected:
     char delim_;
     char quoteChar_;
     char escapeChar_;
+    std::string nullString_;
 };
 
 class CsvFileCrifLoader : public StringStreamCrifLoader {
@@ -139,9 +140,9 @@ public:
     CsvFileCrifLoader(const std::string& filename, const boost::shared_ptr<SimmConfiguration>& configuration,
                       const std::vector<std::set<std::string>>& additionalHeaders = {},
                       bool updateMapper = false, bool aggregateTrades = true, char eol = '\n', char delim = '\t',
-                      char quoteChar = '\0', char escapeChar = '\\')
+                      char quoteChar = '\0', char escapeChar = '\\', const std::string& nullString = "#N/A")
         : StringStreamCrifLoader(configuration, additionalHeaders, updateMapper, aggregateTrades, eol, delim, quoteChar,
-                                 escapeChar),
+                                 escapeChar, nullString),
           filename_(filename) {}
 
 protected:
@@ -154,9 +155,9 @@ public:
     CsvBufferCrifLoader(const std::string& buffer, const boost::shared_ptr<SimmConfiguration>& configuration,
                         const std::vector<std::set<std::string>>& additionalHeaders = {},
                         bool updateMapper = false, bool aggregateTrades = true, char eol = '\n', char delim = '\t',
-                        char quoteChar = '\0', char escapeChar = '\\')
+                        char quoteChar = '\0', char escapeChar = '\\', const std::string& nullString = "#N/A")
         : StringStreamCrifLoader(configuration, additionalHeaders, updateMapper, aggregateTrades, eol, delim, quoteChar,
-                                 escapeChar),
+                                 escapeChar, nullString),
           buffer_(buffer) {}
 
 protected:

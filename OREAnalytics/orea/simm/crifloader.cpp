@@ -197,9 +197,9 @@ void CrifLoader::updateMapping(const CrifRecord& cr) const {
 
 StringStreamCrifLoader::StringStreamCrifLoader(const boost::shared_ptr<SimmConfiguration>& configuration,
     const std::vector<std::set<std::string>>& additionalHeaders, bool updateMapper,
-    bool aggregateTrades, char eol, char delim, char quoteChar, char escapeChar)
+    bool aggregateTrades, char eol, char delim, char quoteChar, char escapeChar, const std::string& nullString)
     : CrifLoader(configuration, additionalHeaders, updateMapper, aggregateTrades), eol_(eol), delim_(delim),
-    quoteChar_(quoteChar), escapeChar_(escapeChar) {
+    quoteChar_(quoteChar), escapeChar_(escapeChar), nullString_(nullString) {
     
     size_t maxIndexRequired = *boost::max_element(requiredHeaders | boost::adaptors::map_keys);
     size_t maxIndexOptional = *boost::max_element(optionalHeaders | boost::adaptors::map_keys);
@@ -353,8 +353,10 @@ bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxInde
         if (columnIndex_.count(column) == 0) {
             return QuantLib::Null<QuantLib::Real>();
         } else{
-            return entries[columnIndex_[column]].empty() ? QuantLib::Null<QuantLib::Real>()
-                                                         : parseReal(entries[columnIndex_[column]]);
+            const std::string& value = entries[columnIndex_[column]];
+
+            return value.empty() || value == nullString_ ? QuantLib::Null<QuantLib::Real>()
+                                                         : parseReal(value);
         } 
     };
 
