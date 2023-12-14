@@ -109,7 +109,7 @@ protected:
     Crif loadCrifImpl() override { return loadFromStream(stream()); }
 
     //! Core CRIF loader from generic istream
-    Crif loadFromStream(std::stringstream& stream);
+    Crif loadFromStream(std::stringstream&& stream);
 
     virtual std::stringstream stream() const = 0;
     /*! Internal map from known index of CRIF record member to file column
