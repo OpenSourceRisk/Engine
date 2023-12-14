@@ -135,7 +135,7 @@ void CrifLoader::validateSimmRecord(const CrifRecord& cr) const {
     case RiskType::Notional:
     case RiskType::PV:
         if (cr.imModel == "Schedule")
-            QL_REQUIRE(cr.endDate.empty(),
+            QL_REQUIRE(!cr.endDate.empty(),
                        "Expected end date for risk type " << cr.riskType << " and im_model=\'Schedule\'");
         break;
     default:
