@@ -75,6 +75,23 @@ public:
     //! check if the Crif contains simmParameters
     const bool hasSimmParameters() const;
 
+    Crif filterNonZeroAmountUsd(double threshold = 0.0, std::string alwaysIncludeFxRiskCcy = "") const {
+        Crif results;
+        for (auto record : records_) {
+            QL_REQUIRE(record.amountUsd != QuantLib::Null<QuantLib::Real>(),
+                       "Internal Error, don't apply filter before calling fillAmountUsd");
+            auto absAmountUsd = std::fabs(record.amountUsd);
+            bool add = (absAmountUsd > threshold && !QuantLib::close_enough(absAmountUsd, threshold));
+            if (!alwaysIncludeFxRiskCcy.empty())
+                add =
+                    add || (record.riskType == CrifRecord::RiskType::FX && record.qualifier == alwaysIncludeFxRiskCcy);
+            if (add) {
+                results.addRecord(record);
+            }
+        }
+        return results;
+    }
+
     //! returns a Crif containing only simmParameter entries
     Crif simmParameters() const;
     

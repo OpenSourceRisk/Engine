@@ -105,7 +105,7 @@ void CrifLoader::addRecordToCrif(Crif& crif, CrifRecord&& recordToAdd) const {
     if (add) {
         crif.addRecord(recordToAdd);
     } else {
-        WLOG("Skipped loading CRIF record " << recordToAdd << " because its risk type " << recordToAdd.riskType
+        QL_FAIL("Skipped loading CRIF record " << recordToAdd << " because its risk type " << recordToAdd.riskType
                                             << " is not valid under SIMM configuration " << configuration_->name());
     }
 }
@@ -259,10 +259,8 @@ Crif StringStreamCrifLoader::loadFromStream(std::stringstream&& stream) {
         entries = parseListOfValues(line, escapeChar_, delim_, quoteChar_);
 
         if (headerProcessed) {
-            CrifRecord record;
             // Process a regular line of the CRIF file
-            if (process(entries, maxIndex, currentLine, record)) {
-                addRecordToCrif(result, std::move(record));
+            if (process(entries, maxIndex, currentLine, result)) {
                 ++validLines;
             } else {
                 ++invalidLines;
@@ -336,7 +334,8 @@ void StringStreamCrifLoader::processHeader(const vector<string>& headers) {
     }
 }
 
-bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxIndex, Size currentLine, CrifRecord& cr) {
+bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxIndex, Size currentLine, Crif& result) {
+    CrifRecord cr;
     // Return early if there are not enough entries in the line
     if (entries.size() <= maxIndex) {
         WLOG("Line number: " << currentLine << ". Expected at least " << maxIndex + 1 << " entries but got only "
@@ -464,8 +463,7 @@ bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxInde
         }
 
         // Add the CRIF record to the net records
-        
-
+        addRecordToCrif(result, std::move(cr));
     } catch (const exception& e) {
         ore::data::StructuredTradeErrorMessage(tradeId, tradeType, "CRIF loading",
             "Line number: " + to_string(currentLine) +
