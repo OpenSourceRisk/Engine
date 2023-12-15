@@ -75,13 +75,20 @@ public:
     //! check if the Crif contains simmParameters
     const bool hasSimmParameters() const;
 
-    Crif filterNonZeroAmountUsd(double threshold = 0.0, std::string alwaysIncludeFxRiskCcy = "") const {
+    Crif filterNonZeroAmount(double threshold = 0.0, std::string alwaysIncludeFxRiskCcy = "") const {
         Crif results;
         for (auto record : records_) {
-            QL_REQUIRE(record.amountUsd != QuantLib::Null<QuantLib::Real>(),
-                       "Internal Error, don't apply filter before calling fillAmountUsd");
-            auto absAmountUsd = std::fabs(record.amountUsd);
-            bool add = (absAmountUsd > threshold && !QuantLib::close_enough(absAmountUsd, threshold));
+            QL_REQUIRE(record.amount != QuantLib::Null<QuantLib::Real>() || record.amountUsd != QuantLib::Null<double>(),
+                       "Internal Error, amount and amountUsd are empty");
+            double absAmount = 0.0;
+            if ((record.amount != QuantLib::Null<double>()) && (record.amountUsd != QuantLib::Null<double>())) {
+                absAmount = std::max(std::fabs(record.amount), std::fabs(record.amountUsd));
+            } else if (record.amount != QuantLib::Null<double>()) {
+                absAmount = std::fabs(record.amount);
+            } else if (record.amountUsd != QuantLib::Null<double>()) {
+                absAmount = std::fabs(record.amountUsd);
+            }            
+            bool add = (absAmount > threshold && !QuantLib::close_enough(absAmount, threshold));
             if (!alwaysIncludeFxRiskCcy.empty())
                 add =
                     add || (record.riskType == CrifRecord::RiskType::FX && record.qualifier == alwaysIncludeFxRiskCcy);
