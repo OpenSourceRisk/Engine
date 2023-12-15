@@ -127,7 +127,7 @@ protected:
     /*! Process a line of a CRIF file and return true if valid line
         or false if an invalid line
     */
-    bool process(const std::vector<std::string>& entries, QuantLib::Size maxIndex, QuantLib::Size currentLine, CrifRecord& record);
+    bool process(const std::vector<std::string>& entries, QuantLib::Size maxIndex, QuantLib::Size currentLine, Crif& result);
     char eol_;
     char delim_;
     char quoteChar_;
