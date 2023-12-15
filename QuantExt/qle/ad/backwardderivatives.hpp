@@ -30,6 +30,10 @@
 
 namespace QuantExt {
 
+/* A possible future optimization: while building the graph mark nodes as "independent variables" and all nodes that
+ * depend on them directly or indirectly as "active". Derivatives are only guaranteed to be computed for independent
+ * variables. When pushing derivatives backwards we do not need to push from or to non-active variables. */
+
 template <class T>
 void backwardDerivatives(const ComputationGraph& g, std::vector<T>& values, std::vector<T>& derivatives,
                          const std::vector<std::function<std::vector<T>(const std::vector<const T*>&, const T*)>>& grad,
