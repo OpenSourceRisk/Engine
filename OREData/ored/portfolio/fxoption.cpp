@@ -18,6 +18,7 @@
 
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
+#include <ored/portfolio/builders/fxforward.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/fxforward.hpp>
@@ -39,7 +40,7 @@ namespace data {
 
 void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
-    Date today = Settings::instance().evaluationDate();
+    QuantLib::Date today = Settings::instance().evaluationDate();
     const boost::shared_ptr<Market>& market = engineFactory->market();
 
     // If automatic exercise, check that we have a non-empty FX index string, parse it and attach curves from market.
@@ -60,7 +61,8 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     }
 
     const ext::optional<OptionPaymentData>& opd = option_.paymentData();
-    Date paymentDate = expiryDate_;
+    expiryDate_ = parseDate(option_.exerciseDates().front());
+    QuantLib::Date paymentDate = expiryDate_;
     if (option_.settlement() == "Physical" && opd) {
         if (opd->rulesBased()) {
             const Calendar& cal = opd->calendar();
@@ -81,17 +83,18 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             Date fixingDate;
             Currency boughtCcy = parseCurrency(assetName_);
             Currency soldCcy = parseCurrency(currency_);
-            boost::shared_ptr<QuantExt::FxIndex> fxIndex;
             ext::shared_ptr<QuantLib::Instrument> instrument =
                 ext::make_shared<QuantExt::FxForward>(quantity_, boughtCcy, soldAmount(), soldCcy, maturity_, false,
-                                                        true, paymentDate, soldCcy, fixingDate, fxIndex);
+                                                        true, paymentDate, soldCcy, fixingDate);
+            instrument_.reset(new VanillaInstrument(instrument));
             if (option_.exerciseData()) {
-                if (option_.exerciseData()->date() == paymentDate ||
-                    option_.exerciseData()->date() <= expiryDate_) {
+                if (option_.exerciseData()->date() <= expiryDate_) {
                     // option is exercised
                     // fxforward flow are flows from trade data
-                    legs_ = {{boost::make_shared<SimpleCashFlow>(quantity_, paymentDate)},
-                                {boost::make_shared<SimpleCashFlow>(soldAmount(), paymentDate)}};
+                    legs_ = {{ext::make_shared<SimpleCashFlow>(quantity_, paymentDate)},
+                                {ext::make_shared<SimpleCashFlow>(soldAmount(), paymentDate)}};
+                    legCurrencies_ = {assetName_, currency_};
+                    legPayers_ = {false, true};
                 } else
                     QL_REQUIRE(option_.exerciseData()->date() <= expiryDate_,
                                 "Trade build error, exercise after option expiry is not allowed");
@@ -100,10 +103,12 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 // set flows = 0
                 legs_ = {};
             }
-        } else {
-            // Build the trade using the shared functionality in the base class.
             forwardDate_ = paymentDate;
             paymentDate_ = paymentDate;
+            VanillaOptionTrade::build(engineFactory);
+
+        } else {
+            // Build the trade using the shared functionality in the base class.
             VanillaOptionTrade::build(engineFactory);
         }
         maturity_ = paymentDate;
