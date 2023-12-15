@@ -354,11 +354,12 @@ void XvaAnalyticImpl::buildClassicCube(const boost::shared_ptr<Portfolio>& portf
         }
 
         MultiThreadedValuationEngine engine(
-            inputs_->nThreads(), inputs_->asof(), grid_, samples_,  analytic()->loader(), scenarioGenerator_,
-            inputs_->simulationPricingEngine(), inputs_->curveConfigs().get(), analytic()->configurations().todaysMarketParams,
-            inputs_->marketConfig("simulation"), analytic()->configurations().simMarketParams, false, false,
-            boost::make_shared<ScenarioFilter>(), inputs_->refDataManager(),
-            *inputs_->iborFallbackConfig(), true, false, cubeFactory, {}, cptyCubeFactory, "xva-simulation");
+            inputs_->nThreads(), inputs_->asof(), grid_, samples_, analytic()->loader(), scenarioGenerator_,
+            inputs_->simulationPricingEngine(), inputs_->curveConfigs().get(),
+            analytic()->configurations().todaysMarketParams, inputs_->marketConfig("simulation"),
+            analytic()->configurations().simMarketParams, false, false, boost::make_shared<ScenarioFilter>(),
+            inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, false, false, cubeFactory, {},
+            cptyCubeFactory, "xva-simulation");
 
         engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);

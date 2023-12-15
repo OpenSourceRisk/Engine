@@ -30,6 +30,5 @@ namespace QuantExt {
 
 template <class T = double>
 std::string ssaForm(const ComputationGraph& g, const std::vector<std::string>& opCodeLabels,
-                    const std::vector<T>& values = {});
-
+                    const std::vector<T>& values = {}, const std::vector<T>& values2 = {});
 }

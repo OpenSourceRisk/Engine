@@ -33,12 +33,12 @@ namespace ore::data {
 using namespace QuantLib;
 using namespace QuantExt;
 
-class LgmCG {
+class HwCG {
 public:
-    LgmCG(const std::string& qualifier, QuantExt::ComputationGraph& g,
-          const std::function<boost::shared_ptr<IrLgm1fParametrization>()>& p,
-          std::vector<std::pair<std::size_t, std::function<double(void)>>>& modelParameters,
-          const bool sloppySimDates = false, const std::set<Date>& effSimDates = {})
+    HwCG(const std::string& qualifier, QuantExt::ComputationGraph& g,
+         const std::function<boost::shared_ptr<IrLgm1fParametrization>()>& p,
+         std::vector<std::pair<std::size_t, std::function<double(void)>>>& modelParameters,
+         const bool sloppySimDates = false, const std::set<Date>& effSimDates = {})
         : qualifier_(qualifier), g_(g), p_(p), modelParameters_(modelParameters), sloppySimDates_(sloppySimDates),
           effSimDates_(effSimDates) {}
 
@@ -48,11 +48,11 @@ public:
                           const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
                           const std::string& discountCurveId = "default") const;
 
-    std::size_t discountBond(const Date& d, const Date& e, const std::size_t x,
+    std::size_t discountBond(const Date& d, Date e, const std::size_t x,
                              const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
                              const std::string& discountCurveId = "default") const;
 
-    std::size_t reducedDiscountBond(const Date& d, Date e, const std::size_t x,
+    std::size_t reducedDiscountBond(const Date& d, const Date& e, const std::size_t x,
                                     const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
                                     const std::string& discountCurveId = "default") const;
 

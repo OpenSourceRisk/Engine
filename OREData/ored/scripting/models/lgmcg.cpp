@@ -37,7 +37,9 @@ std::size_t LgmCG::numeraire(const Date& d, const std::size_t x, const Handle<Yi
     std::size_t n;
     if (n = cg_var(g_, id, ComputationGraph::VarDoesntExist::Nan); n == ComputationGraph::nan) {
         auto p(p_);
+        // Date ds = getSloppyDate(d, sloppySimDates_, effSimDates_);
         Real t = p()->termStructure()->timeFromReference(d);
+        // Real ts = p()->termStructure()->timeFromReference(ds);
         std::string id_P0t = "__dsc_" + ore::data::to_string(d) + "_" + discountCurveId;
         std::string id_H = "__lgm_" + qualifier_ + "_H_" + ore::data::to_string(d);
         std::string id_zeta = "__lgm_" + qualifier_ + "_zeta_" + ore::data::to_string(d);
@@ -77,8 +79,12 @@ std::size_t LgmCG::reducedDiscountBond(const Date& d, Date e, const std::size_t 
     std::size_t n;
     if (n = cg_var(g_, id, ComputationGraph::VarDoesntExist::Nan), n == ComputationGraph::nan) {
         auto p = p_;
+        // Date ds = getSloppyDate(d, sloppySimDates_, effSimDates_);
+        // Date es = getSloppyDate(e, sloppySimDates_, effSimDates_);
         Real t = p()->termStructure()->timeFromReference(d);
         Real T = p()->termStructure()->timeFromReference(e);
+        // Real ts = p()->termStructure()->timeFromReference(ds);
+        // Real Ts = p()->termStructure()->timeFromReference(es);
         std::string id_P0T = "__dsc_" + ore::data::to_string(e) + "_" + discountCurveId;
         std::string id_H = "__lgm_" + qualifier_ + "_H_" + ore::data::to_string(e);
         std::string id_zeta = "__lgm_" + qualifier_ + "_zeta_" + ore::data::to_string(d);
@@ -123,10 +129,8 @@ std::size_t LgmCG::fixing(const boost::shared_ptr<InterestRateIndex>& index, con
 
             Time dt = ibor->dayCounter().yearFraction(d1, d2);
 
-            std::size_t disc1 =
-                reducedDiscountBond(t, d1, x, ibor->forwardingTermStructure(), "fwd_" + index->name());
-            std::size_t disc2 =
-                reducedDiscountBond(t, d2, x, ibor->forwardingTermStructure(), "fwd_" + index->name());
+            std::size_t disc1 = reducedDiscountBond(t, d1, x, ibor->forwardingTermStructure(), "fwd_" + index->name());
+            std::size_t disc2 = reducedDiscountBond(t, d2, x, ibor->forwardingTermStructure(), "fwd_" + index->name());
 
             n = cg_div(g_, cg_subtract(g_, cg_div(g_, disc1, disc2), cg_const(g_, 1.0)), cg_const(g_, dt));
 
