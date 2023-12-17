@@ -38,6 +38,7 @@
 
 #include <ql/indexes/ibor/all.hpp>
 #include <ql/math/interpolations/convexmonotoneinterpolation.hpp>
+#include <ql/math/interpolations/mixedinterpolation.hpp>
 #include <qle/indexes/ibor/brlcdi.hpp>
 #include <qle/math/logquadraticinterpolation.hpp>
 #include <qle/math/quadraticinterpolation.hpp>
@@ -100,7 +101,7 @@ namespace data {
 template <template <class> class CurveType>
 boost::shared_ptr<YieldTermStructure> buildYieldCurve(const vector<Date>& dates, const vector<QuantLib::Real>& rates,
                                                       const DayCounter& dayCounter,
-                                                      YieldCurve::InterpolationMethod interpolationMethod) {
+                                                      YieldCurve::InterpolationMethod interpolationMethod, Size n) {
 
     boost::shared_ptr<YieldTermStructure> yieldts;
     switch (interpolationMethod) {
@@ -140,28 +141,45 @@ boost::shared_ptr<YieldTermStructure> buildYieldCurve(const vector<Date>& dates,
                                                             CubicInterpolation::SecondDerivative, 0.0,
                                                             CubicInterpolation::SecondDerivative, 0.0)));
          break;
-    default:
-        QL_FAIL("Interpolation method not recognised.");
+     case YieldCurve::InterpolationMethod::DefaultLogMixedLinearCubic:
+         yieldts.reset(
+             new CurveType<DefaultLogMixedLinearCubic>(dates, rates, dayCounter, DefaultLogMixedLinearCubic(n)));
+         break;
+     case YieldCurve::InterpolationMethod::MonotonicLogMixedLinearCubic:
+         yieldts.reset(
+             new CurveType<MonotonicLogMixedLinearCubic>(dates, rates, dayCounter, MonotonicLogMixedLinearCubic(n)));
+         break;
+     case YieldCurve::InterpolationMethod::KrugerLogMixedLinearCubic:
+         yieldts.reset(
+             new CurveType<KrugerLogMixedLinearCubic>(dates, rates, dayCounter, KrugerLogMixedLinearCubic(n)));
+         break;
+     case YieldCurve::InterpolationMethod::LogMixedLinearCubicNaturalSpline:
+         yieldts.reset(new CurveType<LogMixedLinearCubicNaturalSpline>(dates, rates, dayCounter,
+                                                                       LogMixedLinearCubicNaturalSpline(n)));
+         break;
+
+     default:
+         QL_FAIL("Interpolation method '" << interpolationMethod_ << "' not recognised.");
     }
     return yieldts;
 }
 
 boost::shared_ptr<YieldTermStructure> zerocurve(const vector<Date>& dates, const vector<Rate>& yields,
                                                 const DayCounter& dayCounter,
-                                                YieldCurve::InterpolationMethod interpolationMethod) {
-    return buildYieldCurve<InterpolatedZeroCurve>(dates, yields, dayCounter, interpolationMethod);
+                                                YieldCurve::InterpolationMethod interpolationMethod, Size n) {
+    return buildYieldCurve<InterpolatedZeroCurve>(dates, yields, dayCounter, interpolationMethod, n);
 }
 
 boost::shared_ptr<YieldTermStructure> discountcurve(const vector<Date>& dates, const vector<DiscountFactor>& dfs,
                                                     const DayCounter& dayCounter,
-                                                    YieldCurve::InterpolationMethod interpolationMethod) {
-    return buildYieldCurve<InterpolatedDiscountCurve>(dates, dfs, dayCounter, interpolationMethod);
+                                                    YieldCurve::InterpolationMethod interpolationMethod, Size n) {
+    return buildYieldCurve<InterpolatedDiscountCurve>(dates, dfs, dayCounter, interpolationMethod, n);
 }
 
 boost::shared_ptr<YieldTermStructure> forwardcurve(const vector<Date>& dates, const vector<Rate>& forwards,
                                                    const DayCounter& dayCounter,
-                                                   YieldCurve::InterpolationMethod interpolationMethod) {
-    return buildYieldCurve<InterpolatedForwardCurve>(dates, forwards, dayCounter, interpolationMethod);
+                                                   YieldCurve::InterpolationMethod interpolationMethod, Size n) {
+    return buildYieldCurve<InterpolatedForwardCurve>(dates, forwards, dayCounter, interpolationMethod, n);
 }
 
 /* Helper functions
@@ -187,6 +205,14 @@ YieldCurve::InterpolationMethod parseYieldCurveInterpolationMethod(const string&
         return YieldCurve::InterpolationMethod::Hermite;
     else if (s == "CubicSpline")
         return YieldCurve::InterpolationMethod::CubicSpline;
+    else if (s == "DefaultLogMixedLinearCubic")
+        return YieldCurve::InterpolationMethod::DefaultLogMixedLinearCubic;
+    else if (s == "MonotonicLogMixedLinearCubic")
+        return YieldCurve::InterpolationMethod::MonotonicLogMixedLinearCubic;
+    else if (s == "KrugerLogMixedLinearCubic")
+        return YieldCurve::InterpolationMethod::KrugerLogMixedLinearCubic;
+    else if (s == "LogMixedLinearCubicNaturalSpline")
+        return YieldCurve::InterpolationMethod::LogMixedLinearCubicNaturalSpline;
     else if (s == "NelsonSiegel")
         return YieldCurve::InterpolationMethod::NelsonSiegel;
     else if (s == "Svensson")
@@ -205,6 +231,43 @@ YieldCurve::InterpolationVariable parseYieldCurveInterpolationVariable(const str
     else
         QL_FAIL("Yield curve interpolation variable " << s << " not recognized");
 };
+
+std::ostream& operator<<(std::ostream& out, const YieldCurve::InterpolationMethod m) {
+    if (m == YieldCurve::InterpolationMethod::Linear)
+        return out << "Linear";
+    else if (m == YieldCurve::InterpolationMethod::LogLinear)
+        return out << "LogLinear";
+    else if (m == YieldCurve::InterpolationMethod::NaturalCubic)
+        return out << "NaturalCubic";
+    else if (m == YieldCurve::InterpolationMethod::FinancialCubic)
+        return out << "FinancialCubic";
+    else if (m == YieldCurve::InterpolationMethod::ConvexMonotone)
+        return out << "ConvexMonotone";
+    else if (m == YieldCurve::InterpolationMethod::ExponentialSplines)
+        return out << "ExponentialSplines";
+    else if (m == YieldCurve::InterpolationMethod::Quadratic)
+        return out << "Quadratic";
+    else if (m == YieldCurve::InterpolationMethod::LogQuadratic)
+        return out << "LogQuadratic";
+    else if (m == YieldCurve::InterpolationMethod::Hermite)
+        return out << "Hermite";
+    else if (m == YieldCurve::InterpolationMethod::CubicSpline)
+        return out << "CubicSpline";
+    else if (m == YieldCurve::InterpolationMethod::DefaultLogMixedLinearCubic)
+        return out << "DefaultLogMixedLinearCubic";
+    else if (m == YieldCurve::InterpolationMethod::MonotonicLogMixedLinearCubic)
+        return out << "MonotonicLogMixedLinearCubic";
+    else if (m == YieldCurve::InterpolationMethod::KrugerLogMixedLinearCubic)
+        return out << "KrugerLogMixedLinearCubic";
+    else if (m == YieldCurve::InterpolationMethod::LogMixedLinearCubicNaturalSpline)
+        return out << "LogMixedLinearCubicNaturalSpline";
+    else if (m == YieldCurve::InterpolationMethod::NelsonSiegel)
+        return out << "NelsonSiegel";
+    else if (m == YieldCurve::InterpolationMethod::Svensson)
+        return out << "Svensson";
+    else
+        QL_FAIL("Yield curve interpolation method " << static_cast<int>(m) << " not recognized");
+}
 
 YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigurations& curveConfigs,
                        const Loader& loader, const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves,
@@ -416,8 +479,40 @@ YieldCurve::piecewisecurve(vector<boost::shared_ptr<RateHelper>> instruments) {
                  QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
          } break;
+         case InterpolationMethod::DefaultLogMixedLinearCubic: {
+             typedef PiecewiseYieldCurve<ZeroYield, DefaultLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, DefaultLogMixedLinearCubic(n),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::MonotonicLogMixedLinearCubic: {
+             typedef PiecewiseYieldCurve<ZeroYield, MonotonicLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, MonotonicLogMixedLinearCubic(n),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::KrugerLogMixedLinearCubic: {
+             typedef PiecewiseYieldCurve<ZeroYield, KrugerLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, KrugerLogMixedLinearCubic(n),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::LogMixedLinearCubicNaturalSpline: {
+             typedef PiecewiseYieldCurve<ZeroYield, LogMixedLinearCubicNaturalSpline, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, LogMixedLinearCubicNaturalSpline(n),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
         default:
-            QL_FAIL("Interpolation method not recognised.");
+            QL_FAIL("Interpolation method '" << interpolationMethod_ << "' not recognised.");
         }
         break;
     case InterpolationVariable::Discount:
@@ -499,8 +594,40 @@ YieldCurve::piecewisecurve(vector<boost::shared_ptr<RateHelper>> instruments) {
                  QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
          } break;
+         case InterpolationMethod::DefaultLogMixedLinearCubic: {
+             typedef PiecewiseYieldCurve<Discount, DefaultLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, DefaultLogMixedLinearCubic(n),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::MonotonicLogMixedLinearCubic: {
+             typedef PiecewiseYieldCurve<Discount, MonotonicLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, MonotonicLogMixedLinearCubic(n),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::KrugerLogMixedLinearCubic: {
+             typedef PiecewiseYieldCurve<Discount, KrugerLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, KrugerLogMixedLinearCubic(n),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::LogMixedLinearCubicNaturalSpline: {
+             typedef PiecewiseYieldCurve<Discount, LogMixedLinearCubicNaturalSpline, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, LogMixedLinearCubicNaturalSpline(n),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
         default:
-            QL_FAIL("Interpolation method not recognised.");
+            QL_FAIL("Interpolation method '" << interpolationMethod_ << "' not recognised.");
         }
         break;
     case InterpolationVariable::Forward:
@@ -581,8 +708,40 @@ YieldCurve::piecewisecurve(vector<boost::shared_ptr<RateHelper>> instruments) {
                  QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
          } break;
+         case InterpolationMethod::DefaultLogMixedLinearCubic: {
+             typedef PiecewiseYieldCurve<ForwardRate, DefaultLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, DefaultLogMixedLinearCubic(n),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::MonotonicLogMixedLinearCubic: {
+             typedef PiecewiseYieldCurve<ForwardRate, MonotonicLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, MonotonicLogMixedLinearCubic(n),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::KrugerLogMixedLinearCubic: {
+             typedef PiecewiseYieldCurve<ForwardRate, KrugerLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, KrugerLogMixedLinearCubic(n),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::LogMixedLinearCubicNaturalSpline: {
+             typedef PiecewiseYieldCurve<ForwardRate, LogMixedLinearCubicNaturalSpline, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, LogMixedLinearCubicNaturalSpline(n),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
         default:
-            QL_FAIL("Interpolation method not recognised.");
+            QL_FAIL("Interpolation method '" << interpolationMethod_ << "' not recognised.");
         }
         break;
     default:
@@ -615,11 +774,11 @@ YieldCurve::piecewisecurve(vector<boost::shared_ptr<RateHelper>> instruments) {
         zeros[0] = zeros[1];
         forwards[0] = forwards[1];
         if (interpolationVariable_ == InterpolationVariable::Zero)
-            p_ = zerocurve(dates, zeros, zeroDayCounter_, interpolationMethod_);
+            p_ = zerocurve(dates, zeros, zeroDayCounter_, interpolationMethod_, mixedInterpolationSize_);
         else if (interpolationVariable_ == InterpolationVariable::Discount)
-            p_ = discountcurve(dates, discounts, zeroDayCounter_, interpolationMethod_);
+            p_ = discountcurve(dates, discounts, zeroDayCounter_, interpolationMethod_, mixedInterpolationSize_);
         else if (interpolationVariable_ == InterpolationVariable::Forward)
-            p_ = forwardcurve(dates, forwards, zeroDayCounter_, interpolationMethod_);
+            p_ = forwardcurve(dates, forwards, zeroDayCounter_, interpolationMethod_, mixedInterpolationSize_);
         else
             QL_FAIL("Interpolation variable not recognised.");
     }
