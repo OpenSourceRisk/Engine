@@ -1126,45 +1126,51 @@ void YieldCurve::buildDiscountCurve() {
 
 void YieldCurve::buildBootstrappedCurve() {
 
-    /* Loop over segments and add helpers. */
-    vector<boost::shared_ptr<RateHelper>> instruments;
-    for (Size i = 0; i < curveSegments_.size(); i++) {
+    QL_REQUIRE(!curveSegments_.empty(), "no curve segments defined.");
+
+    /* Loop over segments and add helpers for each segment. */
+
+    DLOG("Building instrument sets for yield curve segments 0..." << curveSegments_.size() - 1);
+
+    std::vector<vector<boost::shared_ptr<RateHelper>>> instrumentsPerSegment(curveSegments_.size());
+
+    for (Size i = 0; i < curveSegments_.size(); ++i) {
         switch (curveSegments_[i]->type()) {
         case YieldCurveSegment::Type::Deposit:
-            addDeposits(curveSegments_[i], instruments);
+            addDeposits(curveSegments_[i], instrumentsPerSegment[i]);
             break;
         case YieldCurveSegment::Type::FRA:
-            addFras(curveSegments_[i], instruments);
+            addFras(curveSegments_[i], instrumentsPerSegment[i]);
             break;
         case YieldCurveSegment::Type::Future:
-            addFutures(curveSegments_[i], instruments);
+            addFutures(curveSegments_[i], instrumentsPerSegment[i]);
             break;
         case YieldCurveSegment::Type::OIS:
-            addOISs(curveSegments_[i], instruments);
+            addOISs(curveSegments_[i], instrumentsPerSegment[i]);
             break;
         case YieldCurveSegment::Type::Swap:
-            addSwaps(curveSegments_[i], instruments);
+            addSwaps(curveSegments_[i], instrumentsPerSegment[i]);
             break;
         case YieldCurveSegment::Type::AverageOIS:
-            addAverageOISs(curveSegments_[i], instruments);
+            addAverageOISs(curveSegments_[i], instrumentsPerSegment[i]);
             break;
         case YieldCurveSegment::Type::TenorBasis:
-            addTenorBasisSwaps(curveSegments_[i], instruments);
+            addTenorBasisSwaps(curveSegments_[i], instrumentsPerSegment[i]);
             break;
         case YieldCurveSegment::Type::TenorBasisTwo:
-            addTenorBasisTwoSwaps(curveSegments_[i], instruments);
+            addTenorBasisTwoSwaps(curveSegments_[i], instrumentsPerSegment[i]);
             break;
         case YieldCurveSegment::Type::BMABasis:
-            addBMABasisSwaps(curveSegments_[i], instruments);
+            addBMABasisSwaps(curveSegments_[i], instrumentsPerSegment[i]);
             break;
         case YieldCurveSegment::Type::FXForward:
-            addFXForwards(curveSegments_[i], instruments);
+            addFXForwards(curveSegments_[i], instrumentsPerSegment[i]);
             break;
         case YieldCurveSegment::Type::CrossCcyBasis:
-            addCrossCcyBasisSwaps(curveSegments_[i], instruments);
+            addCrossCcyBasisSwaps(curveSegments_[i], instrumentsPerSegment[i]);
             break;
         case YieldCurveSegment::Type::CrossCcyFixFloat:
-            addCrossCcyFixFloatSwaps(curveSegments_[i], instruments);
+            addCrossCcyFixFloatSwaps(curveSegments_[i], instrumentsPerSegment[i]);
             break;
         default:
             QL_FAIL("Yield curve segment type not recognized.");
@@ -1172,9 +1178,76 @@ void YieldCurve::buildBootstrappedCurve() {
         }
     }
 
-    DLOG("Bootstrapping with " << instruments.size() << " instruments");
+    /* If we have two instruments with identical pillar dates wthin a segment, remove the earlier one */
+
+    for (Size i = 0; i < curveSegments_.size(); ++i) {
+        for (auto it = instrumentsPerSegment[i].begin(); it != instrumentsPerSegment[i].end(); ++it) {
+            if (std::next(it, 1) != instrumentsPerSegment[i].end() && (*it)->pillarDate() == (*std::next(it, 1))->pillarDate()) {
+                it = instrumentsPerSegment[i].erase(it);
+                DLOG("Removing instrument with pillar date "
+                     << (*it)->pillarDate() << " in segment #" << i
+                     << " because the next instrument in the same segment has the same pillar date");
+            } else
+                ++it;
+        }
+    }
+
+    /* Determine min and max pillar date in each segment */
+
+    std::vector<std::pair<Date, Date>> minMaxDatePerSegment(curveSegments_.size(),
+                                                            std::make_pair(Date::maxDate(), Date::minDate()));
+    for (Size i = 0; i < curveSegments_.size(); ++i) {
+        if (!instrumentsPerSegment[i].empty()) {
+            auto [minIt, maxIt] =
+                std::minmax_element(instrumentsPerSegment[i].begin(), instrumentsPerSegment[i].end(),
+                                    [](const boost::shared_ptr<RateHelper>& h, const boost::shared_ptr<RateHelper>& j) {
+                                        return h->pillarDate() < h->pillarDate();
+                                    });
+            minMaxDatePerSegment[i] = std::make_pair((*minIt)->pillarDate(), (*maxIt)->pillarDate());
+        }
+    }
+
+    /* If there are two segments with different priorities and overlapping instruments, remove instruments as
+     * appropriate */
+
+    for (Size i = 0; i < curveSegments_.size(); ++i) {
+        for (Size j = 0; j < curveSegments_.size(); ++j) {
+            if (curveSegments_[i]->priority() > curveSegments_[j]->priority()) {
+                for (auto it = instrumentsPerSegment[i].begin(); it != instrumentsPerSegment[i].end();) {
+                    if ((*it)->pillarDate() > minMaxDatePerSegment[j].first - curveSegments_[i]->minDistance() &&
+                        (*it)->pillarDate() + curveSegments_[i]->minDistance() < minMaxDatePerSegment[j].second) {
+                        DLOG("Removing instrument with pillar date "
+                             << (*it)->pillarDate() << " in segment #" << i << " (priority "
+                             << curveSegments_[i]->priority() << ") because it overlaps with segment #" << j
+                             << " (priority " << curveSegments_[j]->priority() << ") spanning ["
+                             << minMaxDatePerSegment[j].first << ", " << minMaxDatePerSegment[j].second
+                             << "], where we take a min distance of " << curveSegments_[i]->minDistance()
+                             << " calendar days defined for segment #" << i << " into account.");
+                        it = instrumentsPerSegment[i].erase(it);
+                    } else
+                        ++it;
+                }
+            }
+        }
+    }
+
+    /* Set mixed interpolation size using the specified cutoff for the number of segments */
+
+    mixedInterpolationSize_ = 0;
+    for (Size i = 0; i < curveConfig_->mixedInterpolationCutoff(); ++i)
+        mixedInterpolationSize_ += instrumentsPerSegment[i].size();
+
+    /* Now put all remaining instruments into a single vector. */
+
+    vector<boost::shared_ptr<RateHelper>> instruments;
+    for (Size i = 0; i < curveSegments_.size(); ++i) {
+        instruments.insert(instruments.end(), instrumentsPerSegment[i].begin(), instrumentsPerSegment[i].end());
+        DLOG("Adding " << instrumentsPerSegment[i].size() << " instruments for segment #" << i);
+    }
 
     /* Build the bootstrapped curve from the instruments. */
+
+    DLOG("Bootstrapping with " << instruments.size() << " instruments");
     QL_REQUIRE(instruments.size() > 0,
                "Empty instrument list for date = " << io::iso_date(asofDate_) << " and curve = " << curveSpec_.name());
     p_ = piecewisecurve(instruments);
