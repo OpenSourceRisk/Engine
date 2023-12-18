@@ -1281,7 +1281,7 @@ void SimmCalculator::calcAddMargin(const SimmSide& side, const NettingSetDetails
         // If we have found a corresponding notional, update the additional margin
         if (count == 1) {
             Real notional = pQualifierIt.front().amountResultCcy;
-            Real factor = pQualifierIt.front().amount;
+            Real factor = it.amount;
             Real notionalFactorMargin = notional * factor / 100.0;
 
             add(nettingSetDetails, regulation, ProductClass::AddOnNotionalFactor, RiskClass::All,
