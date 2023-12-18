@@ -44,6 +44,7 @@ vector<string> getFileNames(const string& fileString, const string& path) {
 
 InputParameters::InputParameters() {
     iborFallbackConfig_ = boost::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig());
+    simmBucketMapper_ = boost::make_shared<SimmBucketMapperBase>();
     loadParameters();
 }
 
