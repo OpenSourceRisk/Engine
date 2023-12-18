@@ -1192,12 +1192,13 @@ void YieldCurve::buildBootstrappedCurve() {
     /* If we have two instruments with identical pillar dates wthin a segment, remove the earlier one */
 
     for (Size i = 0; i < curveSegments_.size(); ++i) {
-        for (auto it = instrumentsPerSegment[i].begin(); it != instrumentsPerSegment[i].end(); ++it) {
-            if (std::next(it, 1) != instrumentsPerSegment[i].end() && (*it)->pillarDate() == (*std::next(it, 1))->pillarDate()) {
-                it = instrumentsPerSegment[i].erase(it);
+        for (auto it = instrumentsPerSegment[i].begin(); it != instrumentsPerSegment[i].end();) {
+            if (std::next(it, 1) != instrumentsPerSegment[i].end() &&
+                (*it)->pillarDate() == (*std::next(it, 1))->pillarDate()) {
                 DLOG("Removing instrument with pillar date "
                      << (*it)->pillarDate() << " in segment #" << i
                      << " because the next instrument in the same segment has the same pillar date");
+                it = instrumentsPerSegment[i].erase(it);
             } else
                 ++it;
         }
@@ -1222,22 +1223,32 @@ void YieldCurve::buildBootstrappedCurve() {
      * appropriate */
 
     for (Size i = 0; i < curveSegments_.size(); ++i) {
-        for (Size j = 0; j < curveSegments_.size(); ++j) {
-            if (curveSegments_[i]->priority() > curveSegments_[j]->priority()) {
-                for (auto it = instrumentsPerSegment[i].begin(); it != instrumentsPerSegment[i].end();) {
-                    if ((*it)->pillarDate() > minMaxDatePerSegment[j].first - curveSegments_[i]->minDistance() &&
-                        (*it)->pillarDate() + curveSegments_[i]->minDistance() < minMaxDatePerSegment[j].second) {
-                        DLOG("Removing instrument with pillar date "
-                             << (*it)->pillarDate() << " in segment #" << i << " (priority "
-                             << curveSegments_[i]->priority() << ") because it overlaps with segment #" << j
-                             << " (priority " << curveSegments_[j]->priority() << ") spanning ["
-                             << minMaxDatePerSegment[j].first << ", " << minMaxDatePerSegment[j].second
-                             << "], where we take a min distance of " << curveSegments_[i]->minDistance()
-                             << " calendar days defined for segment #" << i << " into account.");
-                        it = instrumentsPerSegment[i].erase(it);
-                    } else
-                        ++it;
-                }
+        if (i < curveSegments_.size() - 1 && curveSegments_[i]->priority() > curveSegments_[i + 1]->priority()) {
+            for (auto it = instrumentsPerSegment[i].begin(); it != instrumentsPerSegment[i].end();) {
+                if ((*it)->pillarDate() > minMaxDatePerSegment[i + 1].first - curveSegments_[i]->minDistance()) {
+                    DLOG("Removing instrument in segment #"
+                         << i << " (priority " << curveSegments_[i]->priority() << ") because its pillar date "
+                         << (*it)->pillarDate() << " > " << minMaxDatePerSegment[i + 1].first
+                         << " (min pillar date in segment #" << (i + 1) << ", priority "
+                         << curveSegments_[i + 1]->priority() << ") minus " << curveSegments_[i]->minDistance()
+                         << " (min distance in segment #" << i << ")");
+                    it = instrumentsPerSegment[i].erase(it);
+                } else
+                    ++it;
+            }
+        }
+        if (i > 0 && curveSegments_[i - 1]->priority() < curveSegments_[i]->priority()) {
+            for (auto it = instrumentsPerSegment[i].begin(); it != instrumentsPerSegment[i].end();) {
+                if ((*it)->pillarDate() < minMaxDatePerSegment[i - 1].second + curveSegments_[i - 1]->minDistance()) {
+                    DLOG("Removing instrument in segment #"
+                         << i << " (priority " << curveSegments_[i]->priority() << ") because its pillar date "
+                         << (*it)->pillarDate() << " < " << minMaxDatePerSegment[i - 1].second
+                         << " (max pillar date in segment #" << (i - 1) << ", priority "
+                         << curveSegments_[i - 1]->priority() << ") plus " << curveSegments_[i - 1]->minDistance()
+                         << " (min distance in segment #" << (i - 1) << ")");
+                    it = instrumentsPerSegment[i].erase(it);
+                } else
+                    ++it;
             }
         }
     }
@@ -1778,7 +1789,7 @@ void YieldCurve::addFutures(const boost::shared_ptr<YieldCurveSegment>& segment,
                 }
 
                 if (endDate <= asofDate_) {
-                    WLOG("Skipping the " << io::ordinal(i + 1) << " overnight index future instrument because its "
+                    DLOG("Skipping the " << io::ordinal(i + 1) << " overnight index future instrument because its "
                                          << "end date, " << io::iso_date(endDate)
                                          << ", is on or before the valuation date, " << io::iso_date(asofDate_) << ".");
                     continue;
@@ -1809,7 +1820,7 @@ void YieldCurve::addFutures(const boost::shared_ptr<YieldCurveSegment>& segment,
                 Date immDate = IMM::nextDate(refDate, false);
 
                 if (immDate < asofDate_) {
-                    WLOG("Skipping the " << io::ordinal(i + 1) << " money market future instrument because its "
+                    DLOG("Skipping the " << io::ordinal(i + 1) << " money market future instrument because its "
                                          << "start date, " << io::iso_date(immDate)
                                          << ", is before the valuation date, " << io::iso_date(asofDate_) << ".");
                     continue;
