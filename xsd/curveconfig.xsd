@@ -637,6 +637,7 @@
       <xs:element type="segmentsType" name="Segments"/>
       <xs:element type="interpolationVariableType" name="InterpolationVariable" minOccurs="0" maxOccurs="1"/>
       <xs:element type="interpolationMethodType" name="InterpolationMethod" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="MixedInterpolationCutoff" minOccurs="0" maxOccurs="1"/>
       <xs:element type="dayCounter" name="YieldCurveDayCounter" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:decimal" name="Tolerance" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
