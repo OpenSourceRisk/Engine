@@ -79,6 +79,10 @@ SimmCalculator::SimmCalculator(const ore::analytics::Crif& crif,
                "SIMM Calculator: The result currency (" << resultCcy_ << ") must be a valid ISO currency code");
 
     for (const CrifRecord& cr : crif) {
+        // Remove empty
+        if (cr.riskType == CrifRecord::RiskType::Empty) {
+            continue;
+        }
         // Remove Schedule-only CRIF records
         const bool isSchedule = cr.imModel == "Schedule";
         if (isSchedule) {
@@ -87,6 +91,8 @@ SimmCalculator::SimmCalculator(const ore::analytics::Crif& crif,
             } 
             continue;
         }
+
+
 
         // Check for each netting set whether post/collect regs are populated at all
         if (collectRegsIsEmpty_.find(cr.nettingSetDetails) == collectRegsIsEmpty_.end()) {
