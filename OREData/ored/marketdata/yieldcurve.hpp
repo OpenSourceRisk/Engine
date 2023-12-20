@@ -74,6 +74,10 @@ public:
         LogQuadratic,
         Hermite,
         CubicSpline,
+        DefaultLogMixedLinearCubic,
+        MonotonicLogMixedLinearCubic,
+        KrugerLogMixedLinearCubic,
+        LogMixedLinearCubicNaturalSpline,
         ExponentialSplines, // fitted bond curves only
         NelsonSiegel,       // fitted bond curves only
         Svensson            // fitted bond curves only
@@ -156,6 +160,7 @@ private:
     vector<boost::shared_ptr<YieldCurveSegment>> curveSegments_;
     InterpolationVariable interpolationVariable_;
     InterpolationMethod interpolationMethod_;
+    Size mixedInterpolationSize_ = 0;
     map<string, boost::shared_ptr<YieldCurve>> requiredYieldCurves_;
     map<string, boost::shared_ptr<DefaultCurve>> requiredDefaultCurves_;
     const FXTriangulation& fxTriangulation_;
@@ -202,26 +207,29 @@ YieldCurve::InterpolationMethod parseYieldCurveInterpolationMethod(const string&
 //! Helper function for parsing interpolation variable
 YieldCurve::InterpolationVariable parseYieldCurveInterpolationVariable(const string& s);
 
+//! Output operator for interpolation method
+std::ostream& operator<<(std::ostream& out, const YieldCurve::InterpolationMethod m);
+
 //! Templated function to build a YieldTermStructure and apply interpolation methods to it
 template <template <class> class CurveType>
 boost::shared_ptr<YieldTermStructure> buildYieldCurve(const vector<Date>& dates, const vector<QuantLib::Real>& rates,
                                                       const DayCounter& dayCounter,
-                                                      YieldCurve::InterpolationMethod interpolationMethod);
+                                                      YieldCurve::InterpolationMethod interpolationMethod, Size n = 0);
 
 //! Create a Interpolated Zero Curve and apply interpolators
 boost::shared_ptr<YieldTermStructure> zerocurve(const vector<Date>& dates, const vector<Rate>& yields,
                                                 const DayCounter& dayCounter,
-                                                YieldCurve::InterpolationMethod interpolationMethod);
+                                                YieldCurve::InterpolationMethod interpolationMethod, Size n = 0);
 
 //! Create a Interpolated Discount Curve and apply interpolators
 boost::shared_ptr<YieldTermStructure> discountcurve(const vector<Date>& dates, const vector<DiscountFactor>& dfs,
                                                     const DayCounter& dayCounter,
-                                                    YieldCurve::InterpolationMethod interpolationMethod);
+                                                    YieldCurve::InterpolationMethod interpolationMethod, Size n = 0);
 
 //! Create a Interpolated Forward Curve and apply interpolators
 boost::shared_ptr<YieldTermStructure> forwardcurve(const vector<Date>& dates, const vector<Rate>& forwards,
                                                    const DayCounter& dayCounter,
-                                                   YieldCurve::InterpolationMethod interpolationMethod);
+                                                   YieldCurve::InterpolationMethod interpolationMethod, Size n = 0);
 
 } // namespace data
 } // namespace ore
