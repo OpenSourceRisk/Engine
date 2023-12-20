@@ -38,7 +38,7 @@
     <Analytic type="curves">
       <Parameter name="active">Y</Parameter>
       <Parameter name="configuration">default</Parameter>
-      <Parameter name="grid">240,1M</Parameter>
+      <Parameter name="grid">750,1D</Parameter>
       <Parameter name="outputFileName">curves.csv</Parameter>
       <Parameter name="outputTodaysMarketCalibration">Y</Parameter>
     </Analytic>
