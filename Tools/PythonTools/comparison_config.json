@@ -1375,6 +1375,24 @@
           }
         ]
       },
+      "im_impact\\.json": {
+        "settings": [
+          {
+            "names": [
+              "impact/simm_impact_report/initial_margin_after",
+              "impact/simm_impact_report/initial_margin_before",
+              "impact/total_impact_report/initial_margin_after",
+              "impact/total_impact_report/initial_margin_before",
+              "impact/simm_impact_report/initial_margin_after_in_report_ccy",
+              "impact/simm_impact_report/initial_margin_before_in_report_ccy",
+              "impact/total_impact_report/initial_margin_after_in_report_ccy",
+              "impact/total_impact_report/initial_margin_before_in_report_ccy"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
       "frtb\\.json": {
         "settings": [
           {
@@ -1406,7 +1424,15 @@
             "names": [
               "simmReport/initial_margin",
               "totalIMReport/initial_margin",
-              "frtb/frtbCharge"
+              "frtb/frtbCharge",
+              "impact/simm_impact_report/initial_margin_after",
+              "impact/simm_impact_report/initial_margin_before",
+              "impact/total_impact_report/initial_margin_after",
+              "impact/total_impact_report/initial_margin_before",
+              "impact/simm_impact_report/initial_margin_after_in_report_ccy",
+              "impact/simm_impact_report/initial_margin_before_in_report_ccy",
+              "impact/total_impact_report/initial_margin_after_in_report_ccy",
+              "impact/total_impact_report/initial_margin_before_in_report_ccy"
             ],
             "abs_tol": 0.1,
             "rel_tol": 1e-12
