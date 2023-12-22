@@ -105,8 +105,7 @@ void CrifLoader::addRecordToCrif(Crif& crif, CrifRecord&& recordToAdd) const {
     if (add) {
         crif.addRecord(recordToAdd);
     } else {
-        QL_FAIL("Skipped loading CRIF record " << recordToAdd << " because its risk type " << recordToAdd.riskType
-                                            << " is not valid under SIMM configuration " << configuration_->name());
+        QL_FAIL("Risk type string " << recordToAdd.riskType << " does not correspond to a valid SimmConfiguration::RiskType");
     }
 }
 
