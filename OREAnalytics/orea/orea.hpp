@@ -57,6 +57,7 @@
 #include <orea/engine/amcvaluationengine.hpp>
 #include <orea/engine/bufferedsensitivitystream.hpp>
 #include <orea/engine/cptycalculator.hpp>
+#include <orea/engine/decomposedsensitivitystream.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
 #include <orea/engine/historicalpnlgenerator.hpp>
 #include <orea/engine/historicalsensipnlcalculator.hpp>
