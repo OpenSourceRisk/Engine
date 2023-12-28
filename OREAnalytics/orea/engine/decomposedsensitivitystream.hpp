@@ -23,8 +23,9 @@
 #pragma once
 
 #include <orea/engine/sensitivitystream.hpp>
-#include <ored/portfolio/referencedata.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
+#include <ored/marketdata/market.hpp>
+#include <ored/portfolio/referencedata.hpp>
 
 #include <fstream>
 #include <set>
@@ -36,11 +37,16 @@ namespace analytics {
 //! Class that wraps a sensitivity stream and decompose default, equity and commodity risk records given weights
 class DecomposedSensitivityStream : public SensitivityStream {
 public:
-    /*! Constructor providing the weights for the credit index decomposition and the ids and reference data used for 
-    */
-    DecomposedSensitivityStream(const boost::shared_ptr<SensitivityStream>& ss, std::map<std::string, std::map<std::string, double>> defaultRiskDecompositionWeights = {},
-                                const std::set<std::string>& eqComDecompositionTradeIds = {}, const std::map<std::string, double>& currencyHedgedIndexQuantities = {},
-                                const boost::shared_ptr<ore::data::ReferenceDataManager>& refDataManager = nullptr, const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr);
+    /*! Constructor providing the weights for the credit index decomposition and the ids and reference data used for
+     */
+    DecomposedSensitivityStream(
+        const boost::shared_ptr<SensitivityStream>& ss,
+        std::map<std::string, std::map<std::string, double>> defaultRiskDecompositionWeights = {},
+        const std::set<std::string>& eqComDecompositionTradeIds = {},
+        const std::map<std::string, std::map<std::string, double>>& currencyHedgedIndexQuantities = {},
+        const boost::shared_ptr<ore::data::ReferenceDataManager>& refDataManager = nullptr,
+        const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
+        const boost::shared_ptr<ore::data::Market>& todaysMarket = nullptr);
     //! Returns the next SensitivityRecord in the stream after filtering
     SensitivityRecord next() override;
     //! Resets the stream so that SensitivityRecord objects can be streamed again
@@ -56,7 +62,8 @@ private:
     //! Decompose the record and add it to the internal storage;
     std::vector<SensitivityRecord> decompose(const SensitivityRecord& record) const;
     std::vector<SensitivityRecord> decomposeSurvivalProbability(const SensitivityRecord& record) const;
-    std::vector<SensitivityRecord> decomposeEquityRisk(const SensitivityRecord& record) const ;
+    std::vector<SensitivityRecord> decomposeEquityRisk(const SensitivityRecord& record) const;
+    std::vector<SensitivityRecord> decomposeCurrencyHedgedIndexRisk(const SensitivityRecord& record) const;
     std::vector<SensitivityRecord> decomposeCommodityRisk(const SensitivityRecord& record) const;
 
     EqComIndexDecompositionResults decomposeEqComIndexRisk(double delta,
@@ -65,7 +72,6 @@ private:
 
     std::vector<SensitivityRecord>
     createDecompositionRecords(const SensitivityRecord& sr, const EqComIndexDecompositionResults& decompResults) const;
-
 
     std::vector<SensitivityRecord> decomposedRecords_;
     std::vector<SensitivityRecord>::iterator itCurrent_;
@@ -77,10 +83,12 @@ private:
     //! list of trade id, for which a equity index decomposition should be applied
     std::set<std::string> eqComDecompositionTradeIds_;
     //! list of trade id, for which a commodity index decomposition should be applied
-    std::map<std::string, double> currencyHedgedIndexQuantities_;
+    std::map<std::string, std::map<std::string, double>> currencyHedgedIndexQuantities_;
     //! refDataManager holding the equity and commodity index decomposition weights
     boost::shared_ptr<ore::data::ReferenceDataManager> refDataManager_;
     boost::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
+    // needed for currency hedged index decomposition
+    boost::shared_ptr<ore::data::Market> todaysMarket_;
 
     bool decompose_;
 };
