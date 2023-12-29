@@ -500,11 +500,13 @@ void ConvertibleBond::build(const boost::shared_ptr<ore::data::EngineFactory>& e
         Date d1 = qlUnderlyingBond->maturityDate();
 
         // FIXME, the following only works, if we have the dividends loaded at this point...
-        auto div = equity->dividendFixings();
-        for (auto const& d : div) {
-            if (d.exDate >= d0) {
-                requiredFixings_.addFixingDate(fx->fixingCalendar().adjust(d.exDate, Preceding),
-                                               data_.conversionData().fxIndex());
+        if (equity != nullptr) {
+            auto div = equity->dividendFixings();
+            for (auto const& d : div) {
+                if (d.exDate >= d0) {
+                    requiredFixings_.addFixingDate(fx->fixingCalendar().adjust(d.exDate, Preceding),
+                                                   data_.conversionData().fxIndex());
+                }
             }
         }
 
