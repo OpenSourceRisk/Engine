@@ -492,9 +492,9 @@ void ConvertibleBond::build(const boost::shared_ptr<ore::data::EngineFactory>& e
         }
     }
 
-    // for cross currency, add required FX fixings for dividend history
+    // for cross currency, add required FX fixings for conversion and dividend history
 
-    if (fx != nullptr && equity != nullptr) {
+    if (fx != nullptr) {
 
         Date d0 = qlUnderlyingBond->startDate();
         Date d1 = qlUnderlyingBond->maturityDate();
@@ -512,8 +512,10 @@ void ConvertibleBond::build(const boost::shared_ptr<ore::data::EngineFactory>& e
         d0 = std::min(d0, today);
 
         // ...as a workaround, we add all fx fixings from min(today, bond start date) to maturity
+        // -> this also covers the required fx fixings for conversion, so we don't have to add them separately
         for (Date d = d0; d <= d1; ++d) {
-            requiredFixings_.addFixingDate(fx->fixingCalendar().adjust(d, Preceding), data_.conversionData().fxIndex());
+            requiredFixings_.addFixingDate(fx->fixingCalendar().adjust(d, Preceding), data_.conversionData().fxIndex(),
+                                           Date::maxDate(), false, false);
         }
     }
 
