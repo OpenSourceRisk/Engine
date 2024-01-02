@@ -16,12 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/algorithm/string/join.hpp>
-#include <boost/algorithm/string.hpp>
 #include <orea/simm/simmcalibration.hpp>
+
 #include <ored/portfolio/structuredconfigurationerror.hpp>
 #include <ored/portfolio/structuredconfigurationwarning.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/parsers.hpp>
+
+#include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string.hpp>
 
 using QuantLib::Size;
 using QuantLib::Real;
