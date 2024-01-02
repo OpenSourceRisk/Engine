@@ -177,7 +177,7 @@ std::set<CrifRecord>::const_iterator Crif::findBy(const NettingSetDetails nsd, C
     });
 };
 
-Crif Crif::filterNonZeroAmount(double threshold = 0.0, std::string alwaysIncludeFxRiskCcy) const {
+Crif Crif::filterNonZeroAmount(double threshold, std::string alwaysIncludeFxRiskCcy) const {
     Crif results;
     for (auto record : records_) {
         QL_REQUIRE(record.amount != QuantLib::Null<QuantLib::Real>() || record.amountUsd != QuantLib::Null<double>(),
