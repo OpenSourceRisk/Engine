@@ -150,7 +150,7 @@ Report& CSVFileReport::addColumn(const string& name, const ReportType& rt, Size 
 
 Report& CSVFileReport::next() {
     // check the filesize every for every 1000 rows, and roll if necessary
-    if (rolloverSize_ != Null<Size>()) {     
+    if (rolloverSize_ != QuantLib::Null<Size>()) {
         if (j_ >= 10000) {
             auto fileSize = boost::filesystem::file_size(filename_);
             TLOG("CSV size of " << filename_ << " is " << fileSize);
