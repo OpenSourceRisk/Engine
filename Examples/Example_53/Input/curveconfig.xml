@@ -17,6 +17,18 @@
             <Quote optional="false">IR_SWAP/RATE/GBP/20240321/1D/20240509</Quote>
             <Quote optional="false">IR_SWAP/RATE/GBP/20240509/1D/20240620</Quote>
             <Quote optional="false">IR_SWAP/RATE/GBP/20240620/1D/20240801</Quote>
+          </Quotes>
+          <Conventions>GBP-OIS</Conventions>
+          <Priority>0</Priority>
+          <MinDistance>5</MinDistance>
+        </Simple>
+        <Simple>
+          <Type>OIS</Type>
+          <Quotes>
+            <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/1M</Quote>
+            <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/2M</Quote>
+            <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/3M</Quote>
+            <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/6M</Quote>
             <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/1Y</Quote>
             <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/2Y</Quote>
             <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/3Y</Quote>
@@ -37,10 +49,12 @@
             <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/50Y</Quote>
           </Quotes>
           <Conventions>GBP-OIS</Conventions>
+          <Priority>1</Priority>
         </Simple>
       </Segments>
       <InterpolationVariable>Discount</InterpolationVariable>
-      <InterpolationMethod>CubicSpline</InterpolationMethod>
+      <InterpolationMethod>DefaultLogMixedLinearCubic</InterpolationMethod>
+      <MixedInterpolationCutoff>1</MixedInterpolationCutoff>
       <YieldCurveDayCounter>A365</YieldCurveDayCounter>
       <Tolerance>0.000000000001</Tolerance>
     </YieldCurve>
