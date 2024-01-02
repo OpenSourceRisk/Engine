@@ -69,8 +69,9 @@ std::vector<SensitivityRecord> DecomposedSensitivityStream::decompose(const Sens
     bool hasEquityIndexRefData =
         refDataManager_ != nullptr && refDataManager_->hasData("EquityIndex", record.key_1.name);
     bool hasCurrencyHedgedIndexRefData =
-        refDataManager_ != nullptr && refDataManager_->hasData("EquityIndex", record.key_1.name);
-    bool hasCommodityRefData = refDataManager_ != nullptr && refDataManager_->hasData("EquityIndex", record.key_1.name);
+        refDataManager_ != nullptr && refDataManager_->hasData("CurrencyHedgedEquityIndex", record.key_1.name);
+    bool hasCommodityRefData = refDataManager_ != nullptr && refDataManager_->hasData("CommodityIndex", record.key_1.name);
+
     try {
         if (isSurvivalProbSensi && tradeIdValidSurvival && isNotCrossGamma) {
             return decomposeSurvivalProbability(record);
@@ -81,6 +82,7 @@ std::vector<SensitivityRecord> DecomposedSensitivityStream::decompose(const Sens
         } else if ((isEquitySpotSensi || isCommoditySpotSensi) && tradeIdValid && hasCommodityRefData && isNotCrossGamma) {
             return decomposeCommodityRisk(record);
         } else if ((isEquitySpotSensi || isCommoditySpotSensi) && tradeIdValid && isNotCrossGamma) {
+            // Error no ref data
         }
     } catch (const std::exception& e) {
         
@@ -104,76 +106,15 @@ DecomposedSensitivityStream::decomposeSurvivalProbability(const SensitivityRecor
 }
 
 std::vector<SensitivityRecord> DecomposedSensitivityStream::decomposeEquityRisk(const SensitivityRecord& sr) const {
-
-    boost::shared_ptr<ore::data::EquityIndexReferenceDatum> decomposeEquityIndexData;
-    boost::shared_ptr<ore::data::CurrencyHedgedEquityIndexDecomposition> decomposeCurrencyHedgedIndexHelper;
-
-    try {
-        auto eqRefData = refDataManager_->getData("EquityIndex", sr.key_1.name);
-        decomposeEquityIndexData = boost::dynamic_pointer_cast<ore::data::EquityIndexReferenceDatum>(eqRefData);
-    } catch (std::exception& e) {
-        WLOG("Error getting Equity Index constituents for " << sr.key_1.name << ": " << e.what());
+    auto eqRefData = refDataManager_->getData("EquityIndex", sr.key_1.name);
+    auto decomposeEquityIndexData = boost::dynamic_pointer_cast<ore::data::EquityIndexReferenceDatum>(eqRefData);
+    if (decomposeEquityIndexData != nullptr) {
+        auto decompResults =
+            decomposeEqComIndexRisk(sr.delta, decomposeEquityIndexData, ore::data::CurveSpec::CurveType::Equity);
+        return createDecompositionRecords(sr, decompResults);
+    } else {
+        return {sr};
     }
-
-    try {
-        decomposeCurrencyHedgedIndexHelper =
-            loadCurrencyHedgedIndexDecomposition(sr.key_1.name, refDataManager_, curveConfigs_);
-    } catch (const std::exception& e) {
-        WLOG("Error getting Currency Equity Index constituents for " << sr.key_1.name << ": " << e.what());
-        decomposeCurrencyHedgedIndexHelper = nullptr;
-    }
-
-    try {
-        if (decomposeEquityIndexData != nullptr) {
-            auto decompResults =
-                decomposeEqComIndexRisk(sr.delta, decomposeEquityIndexData, ore::data::CurveSpec::CurveType::Equity);
-            return createDecompositionRecords(sr, decompResults);
-        } else if (decomposeCurrencyHedgedIndexHelper != nullptr) {
-            QL_REQUIRE(currencyHedgedIndexQuantities_.count(sr.tradeId) > 0,
-                       "CurrencyHedgedIndexDecomposition failed, there is no index quantity for trade "
-                           << sr.tradeId << " and equity index EQ-" << sr.key_1.name);
-            QL_REQUIRE(currencyHedgedIndexQuantities_.at(sr.tradeId).count("EQ-" + sr.key_1.name) > 0,
-                       "CurrencyHedgedIndexDecomposition failed, there is no index quantity for trade "
-                           << sr.tradeId << " and equity index EQ-" << sr.key_1.name);
-            QL_REQUIRE(todaysMarket_ != nullptr,
-                       "CurrencyHedgedIndexDecomposition failed, there is no market given quantity for trade "
-                           << sr.tradeId);
-
-            Date today = QuantLib::Settings::instance().evaluationDate();
-
-            auto quantity = currencyHedgedIndexQuantities_.at(sr.tradeId).find("EQ-" + sr.key_1.name)->second;
-
-            QL_REQUIRE(quantity != QuantLib::Null<double>(), "CurrencyHedgedIndexDecomposition failed, index quantity cannot be NULL.");
-
-            double unhedgedDelta =
-                decomposeCurrencyHedgedIndexHelper->unhedgedDelta(sr.delta, quantity, today, todaysMarket_);
-
-            auto decompResults =
-                decomposeEqComIndexRisk(unhedgedDelta, decomposeCurrencyHedgedIndexHelper->underlyingRefData(),
-                                        ore::data::CurveSpec::CurveType::Equity);
-
-            // Correct FX Delta from FxForwards
-            for (const auto& [ccy, fxRisk] :
-                 decomposeCurrencyHedgedIndexHelper->fxSpotRiskFromForwards(quantity, today, todaysMarket_)) {
-                decompResults.fxRisk[ccy] = decompResults.fxRisk[ccy] - fxRisk;
-            }
-            return createDecompositionRecords(sr, decompResults);        
-        } 
-        else {
-            auto subFields = std::map<std::string, std::string>({{"tradeId", sr.tradeId}});
-            StructuredAnalyticsErrorMessage(
-                "CRIF Generation", "Equity index decomposition failed",
-                "Cannot decompose equity index delta (" + sr.key_1.name +
-                    ") for trade: no reference data found. Continuing without decomposition.",
-                subFields)
-                .log();
-        }
-    } catch (const std::exception& e) {
-        string msg =
-            "Continuing without equity decomposition of " + sr.key_1.name + ": " + ore::data::to_string(e.what());
-        StructuredAnalyticsErrorMessage("CRIF Generation", "Equity index decomposition failed", msg).log();
-    }
-    return {sr};
 }
 
 std::vector<SensitivityRecord> DecomposedSensitivityStream::decomposeCurrencyHedgedIndexRisk(const SensitivityRecord& sr) const {
