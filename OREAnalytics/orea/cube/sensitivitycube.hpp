@@ -23,14 +23,17 @@
 
 #pragma once
 
-#include <boost/bimap.hpp>
-#include <boost/shared_ptr.hpp>
 #include <orea/cube/npvsensicube.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
+
 #include <ql/errors.hpp>
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
+
 #include <vector>
+
+#include <boost/bimap.hpp>
+#include <boost/shared_ptr.hpp>
 
 namespace ore {
 namespace analytics {
