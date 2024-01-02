@@ -22,7 +22,10 @@
 */
 
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/log.hpp>
+
 #include <ql/errors.hpp>
+
 #include <iostream>
 #include <stdio.h>
 
