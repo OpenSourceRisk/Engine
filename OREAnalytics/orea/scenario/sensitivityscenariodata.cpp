@@ -47,19 +47,19 @@ void SensitivityScenarioData::shiftDataFromXML(XMLNode* child, ShiftData& data) 
 
     auto shiftTypes = XMLUtils::getChildrenValuesWithAttributes(child, std::string(), "ShiftType", "key", shiftTypeKeys);
     auto shiftSizes = XMLUtils::getChildrenValuesWithAttributes<Real>(child, std::string(), "ShiftSize", "key",
-                                                                      shiftSizeKeys, &parseReal);
+                                                                      shiftSizeKeys, &ore::data::parseReal);
     auto shiftSchemes =
         XMLUtils::getChildrenValuesWithAttributes(child, std::string(), "ShiftScheme", "key", shiftSchemeKeys);
 
     // check that attributes are unique
 
-    QL_REQUIRE(shiftTypeKeys.size() == set<string>(shiftTypeKeys.begin(), shiftTypeKeys.end()).size(),
+    QL_REQUIRE(shiftTypeKeys.size() == std::set<string>(shiftTypeKeys.begin(), shiftTypeKeys.end()).size(),
                "SensitivityScenarioData::shiftDataFromXML(): non-unique attributes for ShiftType in node '"
                    << XMLUtils::getNodeName(child) << "'");
-    QL_REQUIRE(shiftSizeKeys.size() == set<string>(shiftSizeKeys.begin(), shiftSizeKeys.end()).size(),
+    QL_REQUIRE(shiftSizeKeys.size() == std::set<string>(shiftSizeKeys.begin(), shiftSizeKeys.end()).size(),
                "SensitivityScenarioData::shiftDataFromXML(): non-unique attributes for ShiftSize in node '"
                    << XMLUtils::getNodeName(child) << "'");
-    QL_REQUIRE(shiftSchemeKeys.size() == set<string>(shiftSchemeKeys.begin(), shiftSchemeKeys.end()).size(),
+    QL_REQUIRE(shiftSchemeKeys.size() == std::set<string>(shiftSchemeKeys.begin(), shiftSchemeKeys.end()).size(),
                "SensitivityScenarioData::shiftDataFromXML(): non-unique attributes for ShiftScheme in node '"
                    << XMLUtils::getNodeName(child) << "'");
 
