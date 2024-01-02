@@ -21,9 +21,6 @@
 */
 
 #pragma once
-
-#include <boost/range/adaptor/filtered.hpp>
-#include <boost/range/adaptor/transformed.hpp>
 #include <orea/simm/crifrecord.hpp>
 #include <ored/report/report.hpp>
 #include <ored/marketdata/market.hpp>
@@ -50,16 +47,11 @@ public:
     std::set<CrifRecord>::const_iterator begin() const { return records_.cbegin(); }
     std::set<CrifRecord>::const_iterator end() const { return records_.cend(); }
     std::set<CrifRecord>::const_iterator find(const CrifRecord& r) const { return records_.find(r); }
+    
     //! Find first element
     std::set<CrifRecord>::const_iterator findBy(const NettingSetDetails nsd, CrifRecord::ProductClass pc,
-                                                const CrifRecord::RiskType rt, const std::string& qualifier) const {
-        return std::find_if(records_.begin(), records_.end(), [&nsd, &pc, &rt, &qualifier](const CrifRecord& record) {
-            return record.nettingSetDetails == nsd && record.productClass == pc && record.riskType == rt &&
-                   record.qualifier == qualifier;
-        });
-    };
-
-    //! 
+                                                const CrifRecord::RiskType rt, const std::string& qualifier) const;
+   
     bool empty() const { return records_.empty(); }
 
     size_t size() const { return records_.size(); }
@@ -75,29 +67,8 @@ public:
     //! check if the Crif contains simmParameters
     const bool hasSimmParameters() const;
 
-    Crif filterNonZeroAmount(double threshold = 0.0, std::string alwaysIncludeFxRiskCcy = "") const {
-        Crif results;
-        for (auto record : records_) {
-            QL_REQUIRE(record.amount != QuantLib::Null<QuantLib::Real>() || record.amountUsd != QuantLib::Null<double>(),
-                       "Internal Error, amount and amountUsd are empty");
-            double absAmount = 0.0;
-            if ((record.amount != QuantLib::Null<double>()) && (record.amountUsd != QuantLib::Null<double>())) {
-                absAmount = std::max(std::fabs(record.amount), std::fabs(record.amountUsd));
-            } else if (record.amount != QuantLib::Null<double>()) {
-                absAmount = std::fabs(record.amount);
-            } else if (record.amountUsd != QuantLib::Null<double>()) {
-                absAmount = std::fabs(record.amountUsd);
-            }            
-            bool add = (absAmount > threshold && !QuantLib::close_enough(absAmount, threshold));
-            if (!alwaysIncludeFxRiskCcy.empty())
-                add =
-                    add || (record.riskType == CrifRecord::RiskType::FX && record.qualifier == alwaysIncludeFxRiskCcy);
-            if (add) {
-                results.addRecord(record);
-            }
-        }
-        return results;
-    }
+    //! returns a crif without zero amount records, FXRisk entries in currency *alwaysIncludeFxRiskCcy* are always included
+    Crif filterNonZeroAmount(double threshold = 0.0, std::string alwaysIncludeFxRiskCcy = "") const;
 
     //! returns a Crif containing only simmParameter entries
     Crif simmParameters() const;
@@ -124,65 +95,23 @@ public:
     std::set<CrifRecord::ProductClass> ProductClassesByNettingSetDetails(const NettingSetDetails nsd) const;
     
     std::set<std::string> qualifiersBy(const NettingSetDetails nsd, CrifRecord::ProductClass pc,
-                                       const CrifRecord::RiskType rt) const {
-        auto res =  records_ | boost::adaptors::filtered([&nsd, &pc, &rt](const CrifRecord& record) {
-                   return record.nettingSetDetails == nsd && record.productClass == pc && record.riskType == rt;
-               }) |
-               boost::adaptors::transformed([](const CrifRecord& record) { return record.qualifier; });
-        return boost::copy_range<std::set<std::string>>(res);
-    }
+                                       const CrifRecord::RiskType rt) const;
 
     std::vector<CrifRecord> filterByQualifierAndBucket(const NettingSetDetails& nsd, const CrifRecord::ProductClass pc,
-                                    const CrifRecord::RiskType rt, const std::string& qualifier,
-                                    const std::string& bucket) const {
-        return boost::copy_range<std::vector<CrifRecord>>(
-            records_ | boost::adaptors::filtered([&nsd, &pc, &rt, &qualifier, &bucket](const CrifRecord& record) {
-                return record.nettingSetDetails == nsd && record.productClass == pc && record.riskType == rt &&
-                       record.qualifier == qualifier && record.bucket == bucket;
-            }));
-    }
+                                                       const CrifRecord::RiskType rt, const std::string& qualifier,
+                                                       const std::string& bucket) const;
     
-    std::vector<CrifRecord> filterByQualifier(const NettingSetDetails& nsd, const CrifRecord::ProductClass pc, const CrifRecord::RiskType rt,
-                  const std::string& qualifier) const {
-        
-        return boost::copy_range<std::vector<CrifRecord>>(records_ | boost::adaptors::filtered([&nsd, &pc, &rt, &qualifier](const CrifRecord& record) {
-            return record.nettingSetDetails == nsd && record.productClass == pc && record.riskType == rt &&
-                   record.qualifier == qualifier;
-        }));
-        
-    }
+    std::vector<CrifRecord> filterByQualifier(const NettingSetDetails& nsd, const CrifRecord::ProductClass pc,
+                                              const CrifRecord::RiskType rt, const std::string& qualifier) const;
 
-    std::vector<CrifRecord> filterByBucket(const NettingSetDetails& nsd, const CrifRecord::ProductClass pc, const CrifRecord::RiskType rt,
-                  const std::string& bucket) const {
-        return boost::copy_range<std::vector<CrifRecord>>(records_ | boost::adaptors::filtered([&nsd, &pc, &rt, &bucket](const CrifRecord& record) {
-            return record.nettingSetDetails == nsd && record.productClass == pc && record.riskType == rt &&
-                   record.bucket == bucket;
-        }));
-    }
+    std::vector<CrifRecord> filterByBucket(const NettingSetDetails& nsd, const CrifRecord::ProductClass pc,
+                                           const CrifRecord::RiskType rt, const std::string& bucket) const;
 
     std::vector<CrifRecord> filterBy(const NettingSetDetails& nsd, const CrifRecord::ProductClass pc,
-                                     const CrifRecord::RiskType rt) const {
-        return boost::copy_range<std::vector<CrifRecord>>(
-            records_ | boost::adaptors::filtered([&nsd, &pc, &rt](const CrifRecord& record) {
-                return record.nettingSetDetails == nsd && record.productClass == pc && record.riskType == rt;
-            }));
-    }
-
-    std::vector<CrifRecord> filterBy(const CrifRecord::RiskType rt) const {
-        return boost::copy_range<std::vector<CrifRecord>>(
-            records_ | boost::adaptors::filtered([&rt](const CrifRecord& record) { return record.riskType == rt; }));
-    }
-
-    std::vector<CrifRecord> filterByTradeId(const std::string& id) const {
-        return boost::copy_range<std::vector<CrifRecord>>(
-            records_ | boost::adaptors::filtered([&id](const CrifRecord& record) { return record.tradeId == id; }));
-    }
-
-
-    std::set<std::string> tradeIds() const {
-        return boost::copy_range<std::set<std::string>>(
-        records_ | boost::adaptors::transformed([](const CrifRecord& r) { return r.tradeId; }));
-    }
+                                     const CrifRecord::RiskType rt) const;
+    std::vector<CrifRecord> filterBy(const CrifRecord::RiskType rt) const;
+    std::vector<CrifRecord> filterByTradeId(const std::string& id) const;
+    std::set<std::string> tradeIds() const;
 
 private:
     void insertCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false);

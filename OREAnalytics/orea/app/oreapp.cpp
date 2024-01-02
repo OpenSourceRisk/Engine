@@ -713,6 +713,8 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         tmp = params_->get("sensitivity", "alignPillars", false);
         if (tmp != "")
             inputs->setAlignPillars(parseBool(tmp));
+        else
+            inputs->setAlignPillars(inputs->parSensi());
 
         tmp = params_->get("sensitivity", "marketConfigFile", false);
         if (tmp != "") {
