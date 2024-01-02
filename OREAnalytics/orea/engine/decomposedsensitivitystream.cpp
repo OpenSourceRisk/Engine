@@ -82,7 +82,13 @@ std::vector<SensitivityRecord> DecomposedSensitivityStream::decompose(const Sens
         } else if ((isEquitySpotSensi || isCommoditySpotSensi) && tradeIdValid && hasCommodityRefData && isNotCrossGamma) {
             return decomposeCommodityRisk(record);
         } else if ((isEquitySpotSensi || isCommoditySpotSensi) && tradeIdValid && isNotCrossGamma) {
-            // Error no ref data
+            auto subFields = std::map<std::string, std::string>({{"tradeId", record.tradeId}});
+            StructuredAnalyticsErrorMessage(
+                "CRIF Generation", "Index decomposition failed",
+                "Cannot decompose equity index delta (" + record.key_1.name +
+                    ") for trade: no reference data found. Continuing without decomposition.",
+                subFields)
+                .log();
         }
     } catch (const std::exception& e) {
         
@@ -171,9 +177,24 @@ DecomposedSensitivityStream::decomposeCurrencyHedgedIndexRisk(const SensitivityR
     }
 }
 
-std::vector<SensitivityRecord>
-DecomposedSensitivityStream::decomposeCommodityRisk(const SensitivityRecord& record) const {}
-
+std::vector<SensitivityRecord> DecomposedSensitivityStream::decomposeCommodityRisk(const SensitivityRecord& sr) const {
+    if (refDataManager_->hasData("CommodityIndex", sr.key_1.name)) {
+        auto refDatum = refDataManager_->getData("CommodityIndex", sr.key_1.name);
+        auto indexRefDatum = boost::dynamic_pointer_cast<ore::data::IndexReferenceDatum>(refDatum);
+        auto decompResults =
+            decomposeEqComIndexRisk(sr.delta, indexRefDatum, ore::data::CurveSpec::CurveType::Commodity);
+        return createDecompositionRecords(sr, decompResults);
+    } else if (refDataManager_->hasData("EquityIndex", sr.key_1.name)) {
+        auto refDatum = refDataManager_->getData("EquityIndex", sr.key_1.name);
+        auto indexRefDatum = boost::dynamic_pointer_cast<ore::data::IndexReferenceDatum>(refDatum);
+        auto decompResults =
+            decomposeEqComIndexRisk(sr.delta, indexRefDatum, ore::data::CurveSpec::CurveType::Commodity);
+        return createDecompositionRecords(sr, decompResults);
+    } else {
+        return {sr};
+    }
+}
+ 
 void DecomposedSensitivityStream::reset() {
     ss_.reset();
     decomposedRecords_.clear();
