@@ -48,8 +48,16 @@ public:
     struct ShiftData {
         virtual ~ShiftData() {}
         ShiftData() : shiftSize(0.0) {}
-        string shiftType;
-        Real shiftSize;
+
+        // default shift size, type (Absolute, Relative) and scheme (Forward, Backward, Central)
+        string shiftType;   // mandatory
+        Real shiftSize;     // mandatory
+        string shiftScheme; // might be empty (= Forward)
+
+        // product specific shift size, type, scheme
+        map<string, string> keyedShiftType;
+        map<string, Real> keyedShiftSize;
+        map<string, string> keyedShiftScheme;
     };
 
     struct CurveShiftData : ShiftData {
