@@ -54,6 +54,8 @@ BOOST_LOG_ATTRIBUTE_KEYWORD(messageType, "MessageType", std::string);
 namespace ore {
 namespace data {
 
+using namespace QuantLib;
+
 const string StderrLogger::name = "StderrLogger";
 const string BufferLogger::name = "BufferLogger";
 const string FileLogger::name = "FileLogger";
