@@ -90,9 +90,6 @@ void SensitivityAnalysis::generateSensitivities() {
 
         // handle single threaded sensi analysis
 
-        boost::shared_ptr<NPVSensiCube> cube =
-            boost::make_shared<DoublePrecisionSensiCube>(portfolio_->ids(), asof_, scenarioGenerator_->samples());
-
         simMarket_ = boost::make_shared<ScenarioSimMarket>(
             market_, simMarketData_, marketConfiguration_,
             curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
@@ -103,6 +100,9 @@ void SensitivityAnalysis::generateSensitivities() {
             sensitivityData_, simMarket_->baseScenario(), simMarketData_, simMarket_,
             boost::make_shared<DeltaScenarioFactory>(simMarket_->baseScenario()), overrideTenors_, continueOnError_,
             simMarket_->baseScenarioAbsolute());
+
+        boost::shared_ptr<NPVSensiCube> cube =
+            boost::make_shared<DoublePrecisionSensiCube>(portfolio_->ids(), asof_, scenarioGenerator_->samples());
 
         simMarket_->scenarioGenerator() = scenarioGenerator_;
 
