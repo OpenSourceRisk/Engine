@@ -604,7 +604,8 @@ vector<T> XMLUtils::getChildrenValuesWithAttributes(XMLNode* parent, const strin
     QL_REQUIRE(attrNames.size() == attrs.size(),
                "attrNames size (" << attrNames.size() << ") must match attrs size (" << attrs.size() << ")");
     vector<T> vec;
-    rapidxml::xml_node<>* node = parent->first_node(names.c_str());
+    // if 'names' is not given, use the parent node directly
+    rapidxml::xml_node<>* node = names.empty() ? parent : parent->first_node(names.c_str());
     if (mandatory) {
         QL_REQUIRE(node, "Error: No XML Node " << names << " found.");
     }
