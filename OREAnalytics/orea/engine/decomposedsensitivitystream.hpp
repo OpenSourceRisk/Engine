@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/engine/sensitivitystream.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/market.hpp>
@@ -40,12 +41,13 @@ public:
     /*! Constructor providing the weights for the credit index decomposition and the ids and reference data used for
      */
     DecomposedSensitivityStream(
-        const boost::shared_ptr<SensitivityStream>& ss,
+        const boost::shared_ptr<SensitivityStream>& ss,const std::string& baseCurrency,
         std::map<std::string, std::map<std::string, double>> defaultRiskDecompositionWeights = {},
         const std::set<std::string>& eqComDecompositionTradeIds = {},
         const std::map<std::string, std::map<std::string, double>>& currencyHedgedIndexQuantities = {},
         const boost::shared_ptr<ore::data::ReferenceDataManager>& refDataManager = nullptr,
         const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
+        const boost::shared_ptr<SensitivityScenarioData>& scenarioData = nullptr,
         const boost::shared_ptr<ore::data::Market>& todaysMarket = nullptr);
     //! Returns the next SensitivityRecord in the stream after filtering
     SensitivityRecord next() override;
@@ -70,14 +72,20 @@ private:
                                                            const boost::shared_ptr<ore::data::IndexReferenceDatum>& ird,
                                                            ore::data::CurveSpec::CurveType curveType) const;
 
-    std::vector<SensitivityRecord>
-    createDecompositionRecords(const SensitivityRecord& sr, const EqComIndexDecompositionResults& decompResults) const;
+    std::vector<SensitivityRecord> createDecompositionRecords(const std::map<std::string, double>& eqDeltas,
+                                                              const std::map<std::string, double>& fxDeltas,
+                                                              const std::string indexCurrency,
+                                                              const SensitivityRecord& sr) const;
+
+    // Scale the fx risk entries from the index decomposition
+    void scaleFxRisk(std::map<std::string, double>& fxRisk, const std::string& equityName) const;
 
     std::vector<SensitivityRecord> decomposedRecords_;
     std::vector<SensitivityRecord>::iterator itCurrent_;
 
     //! The underlying sensitivity stream that has been wrapped
     boost::shared_ptr<SensitivityStream> ss_;
+    std::string baseCurrency_;
     //! map of trade ids to the basket consituents with their resp. weights
     std::map<std::string, std::map<std::string, double>> defaultRiskDecompositionWeights_;
     //! list of trade id, for which a equity index decomposition should be applied
@@ -87,9 +95,10 @@ private:
     //! refDataManager holding the equity and commodity index decomposition weights
     boost::shared_ptr<ore::data::ReferenceDataManager> refDataManager_;
     boost::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
+    boost::shared_ptr<SensitivityScenarioData> ssd_;
     // needed for currency hedged index decomposition
     boost::shared_ptr<ore::data::Market> todaysMarket_;
-
+    // flag if decompose is possible
     bool decompose_;
 };
 
