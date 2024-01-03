@@ -56,7 +56,7 @@ SensitivityAnalysis::SensitivityAnalysis(
       curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams), overrideTenors_(false),
       nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion), referenceData_(referenceData),
       iborFallbackConfig_(iborFallbackConfig), continueOnError_(continueOnError), engineData_(engineData),
-      portfolio_(portfolio), dryRun_(dryRun), initialized_(false), useSingleThreadedEngine_(true) {}
+      portfolio_(portfolio), dryRun_(dryRun), useSingleThreadedEngine_(true) {}
 
 SensitivityAnalysis::SensitivityAnalysis(
     const Size nThreads, const Date& asof, const boost::shared_ptr<ore::data::Loader>& loader,
@@ -73,47 +73,10 @@ SensitivityAnalysis::SensitivityAnalysis(
       todaysMarketParams_(todaysMarketParams), overrideTenors_(false),
       nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion), referenceData_(referenceData),
       iborFallbackConfig_(iborFallbackConfig), continueOnError_(continueOnError), engineData_(engineData),
-      portfolio_(portfolio), dryRun_(dryRun), initialized_(false), useSingleThreadedEngine_(false), nThreads_(nThreads),
-      loader_(loader), context_(context) {}
+      portfolio_(portfolio), dryRun_(dryRun), useSingleThreadedEngine_(false), nThreads_(nThreads), loader_(loader),
+      context_(context) {}
 
-std::vector<boost::shared_ptr<ValuationCalculator>> SensitivityAnalysis::buildValuationCalculators() const {
-    vector<boost::shared_ptr<ValuationCalculator>> calculators;
-    if (nonShiftedBaseCurrencyConversion_) // use "original" FX rates to convert sensi to base currency
-        calculators.push_back(boost::make_shared<NPVCalculatorFXT0>(simMarketData_->baseCcy(), market_));
-    else // use the scenario FX rate when converting sensi to base currency
-        calculators.push_back(boost::make_shared<NPVCalculator>(simMarketData_->baseCcy()));
-    return calculators;
-}
-
-void SensitivityAnalysis::initialize(boost::shared_ptr<NPVSensiCube>& cube) {
-    LOG("Build Sensitivity Scenario Generator and Simulation Market");
-    initializeSimMarket();
-
-    LOG("Build Engine Factory and rebuild portfolio");
-    boost::shared_ptr<EngineFactory> factory = buildFactory();
-    resetPortfolio(factory);
-    if (recalibrateModels_)
-        modelBuilders_ = factory->modelBuilders();
-    else
-        modelBuilders_.clear();
-
-    if (!cube) {
-        LOG("Build the cube object to store sensitivities");
-        initializeCube(cube);
-    }
-
-    sensiCube_ =
-        boost::make_shared<SensitivityCube>(cube, scenarioGenerator_->scenarioDescriptions(),
-                                            scenarioGenerator_->shiftSizes(), sensitivityData_->twoSidedDeltas());
-
-    initialized_ = true;
-}
-
-void SensitivityAnalysis::generateSensitivities(boost::shared_ptr<NPVSensiCube> cube) {
-
-    QL_REQUIRE(useSingleThreadedEngine_ || cube == nullptr,
-               "SensitivityAnalysis::generateSensitivities(): when using multi-threaded engine no NPVSensiCube should "
-               "be specified, it is built automatically");
+void SensitivityAnalysis::generateSensitivities() {
 
     QL_REQUIRE(useSingleThreadedEngine_ || !nonShiftedBaseCurrencyConversion_,
                "SensitivityAnalysis::generateSensitivities(): multi-threaded engine does not support non-shifted base "
@@ -127,16 +90,56 @@ void SensitivityAnalysis::generateSensitivities(boost::shared_ptr<NPVSensiCube> 
 
         // handle single threaded sensi analysis
 
-        QL_REQUIRE(!initialized_, "unexpected state of SensitivitiesAnalysis object (it is already initialized)");
-        initialize(cube);
-        QL_REQUIRE(initialized_, "SensitivitiesAnalysis member objects not correctly initialized");
+        boost::shared_ptr<NPVSensiCube> cube =
+            boost::make_shared<DoublePrecisionSensiCube>(portfolio_->ids(), asof_, scenarioGenerator_->samples());
+
+        simMarket_ = boost::make_shared<ScenarioSimMarket>(
+            market_, simMarketData_, marketConfiguration_,
+            curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
+            todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(), continueOnError_,
+            sensitivityData_->useSpreadedTermStructures(), continueOnError_, overrideTenors_, iborFallbackConfig_);
+
+        scenarioGenerator_ = boost::make_shared<SensitivityScenarioGenerator>(
+            sensitivityData_, simMarket_->baseScenario(), simMarketData_, simMarket_,
+            boost::make_shared<DeltaScenarioFactory>(simMarket_->baseScenario()), overrideTenors_, continueOnError_,
+            simMarket_->baseScenarioAbsolute());
+
+        simMarket_->scenarioGenerator() = scenarioGenerator_;
+
+        map<MarketContext, string> configurations;
+        configurations[MarketContext::pricing] = marketConfiguration_;
+        auto ed = boost::make_shared<EngineData>(*engineData_);
+        ed->globalParameters()["RunType"] =
+            std::string("Sensitivity") + (sensitivityData_->computeGamma() ? "DeltaGamma" : "Delta");
+        boost::shared_ptr<EngineFactory> factory =
+            boost::make_shared<EngineFactory>(ed, simMarket_, configurations, referenceData_, iborFallbackConfig_);
+        if (recalibrateModels_)
+            modelBuilders_ = factory->modelBuilders();
+        else
+            modelBuilders_.clear();
+
+        portfolio_->reset();
+        portfolio_->build(factory, "sensi analysis");
+
         boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>("1,0W", NullCalendar());
-        vector<boost::shared_ptr<ValuationCalculator>> calculators = buildValuationCalculators();
+        vector<boost::shared_ptr<ValuationCalculator>> calculators;
+        if (nonShiftedBaseCurrencyConversion_)
+            // use "original" FX rates to convert sensi to base currency
+            calculators.push_back(boost::make_shared<NPVCalculatorFXT0>(simMarketData_->baseCcy(), market_));
+        else
+            // use the scenario FX rate when converting sensi to base currency
+            calculators.push_back(boost::make_shared<NPVCalculator>(simMarketData_->baseCcy()));
+
         ValuationEngine engine(asof_, dg, simMarket_, modelBuilders_);
         for (auto const& i : this->progressIndicators())
             engine.registerProgressIndicator(i);
+
         LOG("Run Sensitivity Scenarios");
         engine.buildCube(portfolio_, cube, calculators, true, nullptr, nullptr, {}, dryRun_);
+
+        sensiCubes_ = {boost::make_shared<SensitivityCube>(cube, scenarioGenerator_->scenarioDescriptions(),
+                                                           scenarioGenerator_->shiftSizes(),
+                                                           sensitivityData_->twoSidedDeltas())};
 
     } else {
 
@@ -171,7 +174,7 @@ void SensitivityAnalysis::generateSensitivities(boost::shared_ptr<NPVSensiCube> 
             nThreads_, asof_, boost::make_shared<ore::analytics::DateGrid>(), scenarioGenerator_->numScenarios(),
             loader_, scenarioGenerator_, ed, curveConfigs_, todaysMarketParams_, marketConfiguration_, simMarketData_,
             sensitivityData_->useSpreadedTermStructures(), false, boost::make_shared<ore::analytics::ScenarioFilter>(),
-            referenceData_, iborFallbackConfig_, true, true, true,
+            referenceData_, iborFallbackConfig_, true, true, recalibrateModels_,
             [](const QuantLib::Date& asof, const std::set<std::string>& ids, const std::vector<QuantLib::Date>&,
                const QuantLib::Size samples) {
                 return boost::make_shared<ore::analytics::DoublePrecisionSensiCube>(ids, asof, samples);
@@ -193,43 +196,14 @@ void SensitivityAnalysis::generateSensitivities(boost::shared_ptr<NPVSensiCube> 
             QL_REQUIRE(miniCubes.back() != nullptr,
                        "SensitivityAnalysis::generateSensitivities(): internal error, could not cast to NPVSensiCube.");
         }
-        cube = boost::make_shared<JointNPVSensiCube>(miniCubes, portfolio_->ids());
+        auto cube = boost::make_shared<JointNPVSensiCube>(miniCubes, portfolio_->ids());
 
-        sensiCube_ =
-            boost::make_shared<SensitivityCube>(cube, scenarioGenerator_->scenarioDescriptions(),
-                                                scenarioGenerator_->shiftSizes(), sensitivityData_->twoSidedDeltas());
-
-        initialized_ = true;
+        sensiCubes_ = {boost::make_shared<SensitivityCube>(cube, scenarioGenerator_->scenarioDescriptions(),
+                                                           scenarioGenerator_->shiftSizes(),
+                                                           sensitivityData_->twoSidedDeltas())};
     }
 
     LOG("Sensitivity analysis completed");
-}
-
-void SensitivityAnalysis::initializeSimMarket(boost::shared_ptr<ScenarioFactory> scenFact) {
-    simMarket_ = buildScenarioSimMarketForSensitivityAnalysis(market_, simMarketData_, sensitivityData_, curveConfigs_,
-                                                              todaysMarketParams_, scenFact, marketConfiguration_,
-                                                              continueOnError_, overrideTenors_, iborFallbackConfig_);
-    scenarioGenerator_ = boost::dynamic_pointer_cast<SensitivityScenarioGenerator>(simMarket_->scenarioGenerator());
-}
-
-boost::shared_ptr<EngineFactory> SensitivityAnalysis::buildFactory() const {
-    map<MarketContext, string> configurations;
-    configurations[MarketContext::pricing] = marketConfiguration_;
-    auto ed = boost::make_shared<EngineData>(*engineData_);
-    ed->globalParameters()["RunType"] =
-        std::string("Sensitivity") + (sensitivityData_->computeGamma() ? "DeltaGamma" : "Delta");
-    boost::shared_ptr<EngineFactory> factory =
-        boost::make_shared<EngineFactory>(ed, simMarket_, configurations, referenceData_, iborFallbackConfig_);
-    return factory;
-}
-
-void SensitivityAnalysis::resetPortfolio(const boost::shared_ptr<EngineFactory>& factory) {
-    portfolio_->reset();
-    portfolio_->build(factory, "sensi analysis");
-}
-
-void SensitivityAnalysis::initializeCube(boost::shared_ptr<NPVSensiCube>& cube) const {
-    cube = boost::make_shared<DoublePrecisionSensiCube>(portfolio_->ids(), asof_, scenarioGenerator_->samples());
 }
 
 Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensiParams,
@@ -564,42 +538,6 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
     }
     Real realShift = shiftSize * shiftMult;
     return realShift;
-}
-
-boost::shared_ptr<ScenarioSimMarket> buildScenarioSimMarketForSensitivityAnalysis(
-    const boost::shared_ptr<ore::data::Market>& market,
-    const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-    const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
-    const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
-    const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
-    const boost::shared_ptr<ScenarioFactory>& scenFactory, const std::string& marketConfiguration, bool continueOnError,
-    bool overrideTenors, IborFallbackConfig& iborFallback) {
-    LOG("Initialise sim market for sensitivity analysis (continueOnError=" << std::boolalpha << continueOnError << ")");
-    auto simMarket = boost::make_shared<ScenarioSimMarket>(
-        market, simMarketData, marketConfiguration, curveConfigs ? *curveConfigs : ore::data::CurveConfigurations(),
-        todaysMarketParams ? *todaysMarketParams : ore::data::TodaysMarketParameters(), continueOnError,
-        sensitivityData->useSpreadedTermStructures(), false, false, iborFallback);
-    LOG("Sim market initialised for sensitivity analysis");
-
-    LOG("Create scenario factory for sensitivity analysis");
-    boost::shared_ptr<ScenarioFactory> scenarioFactory;
-    if (scenFactory == nullptr) {
-        scenarioFactory = boost::make_shared<DeltaScenarioFactory>(simMarket->baseScenario());
-        LOG("DeltaScenario factory created for sensitivity analysis");
-    } else {
-        scenarioFactory = scenFactory;
-    }
-
-    LOG("Create scenario generator for sensitivity analysis (continueOnError=" << std::boolalpha << continueOnError
-                                                                               << ")");
-    auto scenarioGenerator = boost::make_shared<SensitivityScenarioGenerator>(
-        sensitivityData, simMarket->baseScenario(), simMarketData, simMarket, scenarioFactory, overrideTenors,
-        continueOnError, simMarket->baseScenarioAbsolute());
-    LOG("Scenario generator created for sensitivity analysis");
-
-    // Set simulation market's scenario generator
-    simMarket->scenarioGenerator() = scenarioGenerator;
-    return simMarket;
 }
 
 } // namespace analytics
