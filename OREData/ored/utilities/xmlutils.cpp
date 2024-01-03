@@ -244,7 +244,7 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, Real v
 }
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, int value) {
-    addChild(doc, n, name, convertToString(value));
+    addChild(doc, n, name, std::to_string(value));
 }
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, bool value) {
