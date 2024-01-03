@@ -90,9 +90,13 @@ void SensitivityScenarioData::shiftDataFromXML(XMLNode* child, ShiftData& data) 
         if (!shiftTypeKeys[i].empty()) {
             data.keyedShiftType[shiftTypeKeys[i]] = shiftTypes[i];
         }
+    }
+    for (Size i = 0; i < shiftSizeKeys.size(); ++i) {
         if (!shiftSizeKeys[i].empty()) {
             data.keyedShiftSize[shiftSizeKeys[i]] = shiftSizes[i];
         }
+    }
+    for (Size i = 0; i < shiftSchemeKeys.size(); ++i) {
         if(!shiftSchemeKeys[i].empty()) {
             data.keyedShiftScheme[shiftSchemeKeys[i]] = shiftSchemes[i];
         }
