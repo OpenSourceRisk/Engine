@@ -150,7 +150,6 @@ std::vector<SensitivityRecord> DecomposedSensitivityStream::decomposeEquityRisk(
         auto indexRefDatum = boost::dynamic_pointer_cast<ore::data::IndexReferenceDatum>(refDatum);
         auto decompResults = decomposeIndex(sr.delta, indexRefDatum, ore::data::CurveSpec::CurveType::Equity);
         scaleFxRisk(decompResults.fxRisk, indexName);
-        convertFxRiskToBaseCurrency(decompResults.fxRisk, indexCurrency);
         return createDecompositionRecords(
             decompResults.equityDelta, decompResults.fxRisk, decompResults.indexCurrency, sr);
     } else {
@@ -207,7 +206,6 @@ DecomposedSensitivityStream::decomposeCurrencyHedgedIndexRisk(const SensitivityR
             decompResults.fxRisk[ccy] = decompResults.fxRisk[ccy] - fxRisk * fxRiskShiftSize(ccy, baseCurrency_, ssd_);
         }
         // Convert into the correct currency
-        convertFxRiskToBaseCurrency(decompResults.fxRisk, indexCurrency);
         return createDecompositionRecords(decompResults.equityDelta, decompResults.fxRisk,
                                           indexCurrency, sr);
     } else {
@@ -229,7 +227,6 @@ std::vector<SensitivityRecord> DecomposedSensitivityStream::decomposeCommodityRi
         auto decompResults = decomposeIndex(sr.delta, indexRefDatum, ore::data::CurveSpec::CurveType::Commodity);
         scaleFxRisk(decompResults.fxRisk, indexName);
         auto indexCurrency = curveCurrency(indexName, ore::data::CurveSpec::CurveType::Commodity);
-        convertFxRiskToBaseCurrency(decompResults.fxRisk, indexCurrency);
         return createDecompositionRecords(
             decompResults.equityDelta, decompResults.fxRisk, decompResults.indexCurrency, sr);
     } else {
@@ -293,7 +290,7 @@ std::vector<SensitivityRecord> DecomposedSensitivityStream::createDecompositionR
     }
     // Add aggregated FX Deltas
     for (auto [ccy, delta] : fxDeltas) {
-        if (ccy != indexCurrency) {
+        if (ccy != indexCurrency && ccy != baseCurrency_) {
             RiskFactorKey underlyingKey(RiskFactorKey::KeyType::FXSpot, ccy + baseCurrency_, 0);
             records.push_back(SensitivityRecord(sr.tradeId, sr.isPar, underlyingKey, sr.desc_1, sr.shift_1,
                                                 RiskFactorKey(), "", sr.shift_2, sr.currency, sr.baseNpv, delta, 0.0));
@@ -308,15 +305,6 @@ void DecomposedSensitivityStream::scaleFxRisk(std::map<std::string, double>& fxR
     auto eqShift = eqRiskShiftSize(equityName, ssd_);
     for (auto& [ccy, fxdelta] : fxRisk) {
         fxdelta = fxdelta * fxRiskShiftSize(ccy, baseCurrency_, ssd_) / eqShift;
-    }
-}
-
-void DecomposedSensitivityStream::convertFxRiskToBaseCurrency(std::map<std::string, double>& fxRisk,
-                                                              const std::string& indexCurrency) const {
-    // Eq/Comm Shift to FX Shift Conversion
-    auto fxSpot = todaysMarket_->fxSpot(indexCurrency + baseCurrency_)->value();
-    for (auto& [ccy, fxdelta] : fxRisk) {
-        fxdelta *= fxSpot;
     }
 }
 
