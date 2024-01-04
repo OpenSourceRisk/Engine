@@ -82,8 +82,6 @@ private:
     std::string curveCurrency(const std::string& name, ore::data::CurveSpec::CurveType curveType) const;
     // Scale the fx risk entries from the index decomposition
     void scaleFxRisk(std::map<std::string, double>& fxRisk, const std::string& equityName) const;
-    void convertFxRiskToBaseCurrency(std::map<std::string, double>& fxRisk, const std::string& indexCurrency) const;
-
     std::vector<SensitivityRecord> decomposedRecords_;
     std::vector<SensitivityRecord>::iterator itCurrent_;
 
