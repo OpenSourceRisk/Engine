@@ -55,8 +55,9 @@ public:
     void reset() override;
 
 private:
-    struct EqComIndexDecompositionResults {
+    struct DecompositionResults {
         std::map<std::string, double> equityDelta;
+        //! Fx Delta in IndexCurrency
         std::map<std::string, double> fxRisk;
         std::string indexCurrency;
     };
@@ -68,7 +69,7 @@ private:
     std::vector<SensitivityRecord> decomposeCurrencyHedgedIndexRisk(const SensitivityRecord& record) const;
     std::vector<SensitivityRecord> decomposeCommodityRisk(const SensitivityRecord& record) const;
 
-    EqComIndexDecompositionResults decomposeEqComIndexRisk(double delta,
+    DecompositionResults decomposeIndex(double delta,
                                                            const boost::shared_ptr<ore::data::IndexReferenceDatum>& ird,
                                                            ore::data::CurveSpec::CurveType curveType) const;
 
@@ -77,8 +78,11 @@ private:
                                                               const std::string indexCurrency,
                                                               const SensitivityRecord& sr) const;
 
+    // get the curve currency for name, fallback to check equity curves
+    std::string curveCurrency(const std::string& name, ore::data::CurveSpec::CurveType curveType) const;
     // Scale the fx risk entries from the index decomposition
     void scaleFxRisk(std::map<std::string, double>& fxRisk, const std::string& equityName) const;
+    void convertFxRiskToBaseCurrency(std::map<std::string, double>& fxRisk, const std::string& indexCurrency) const;
 
     std::vector<SensitivityRecord> decomposedRecords_;
     std::vector<SensitivityRecord>::iterator itCurrent_;

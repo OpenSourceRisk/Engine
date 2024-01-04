@@ -143,14 +143,16 @@ DecomposedSensitivityStream::decomposeSurvivalProbability(const SensitivityRecor
 }
 
 std::vector<SensitivityRecord> DecomposedSensitivityStream::decomposeEquityRisk(const SensitivityRecord& sr) const {
-    auto eqRefData = refDataManager_->getData("EquityIndex", sr.key_1.name);
-    auto decomposeEquityIndexData = boost::dynamic_pointer_cast<ore::data::EquityIndexReferenceDatum>(eqRefData);
-    if (decomposeEquityIndexData != nullptr) {
-        auto decompResults =
-            decomposeEqComIndexRisk(sr.delta, decomposeEquityIndexData, ore::data::CurveSpec::CurveType::Equity);
-        scaleFxRisk(decompResults.fxRisk, decomposeEquityIndexData->id());
-        return createDecompositionRecords(decompResults.equityDelta, decompResults.fxRisk, decompResults.indexCurrency,
-                                          sr);
+    std::string indexName = sr.key_1.name;
+    auto indexCurrency = curveCurrency(indexName, ore::data::CurveSpec::CurveType::Equity);
+    if (refDataManager_->hasData("EquityIndex", indexName)) {
+        auto refDatum = refDataManager_->getData("EquityIndex", indexName);
+        auto indexRefDatum = boost::dynamic_pointer_cast<ore::data::IndexReferenceDatum>(refDatum);
+        auto decompResults = decomposeIndex(sr.delta, indexRefDatum, ore::data::CurveSpec::CurveType::Equity);
+        scaleFxRisk(decompResults.fxRisk, indexName);
+        convertFxRiskToBaseCurrency(decompResults.fxRisk, indexCurrency);
+        return createDecompositionRecords(
+            decompResults.equityDelta, decompResults.fxRisk, decompResults.indexCurrency, sr);
     } else {
         auto subFields = std::map<std::string, std::string>({{"tradeId", sr.tradeId}});
         StructuredAnalyticsErrorMessage("CRIF Generation", "Equity index decomposition failed",
@@ -164,53 +166,54 @@ std::vector<SensitivityRecord> DecomposedSensitivityStream::decomposeEquityRisk(
 
 std::vector<SensitivityRecord>
 DecomposedSensitivityStream::decomposeCurrencyHedgedIndexRisk(const SensitivityRecord& sr) const {
+    
+    auto indexName = sr.key_1.name;
+    auto indexCurrency = curveCurrency(indexName, ore::data::CurveSpec::CurveType::Equity);
 
     boost::shared_ptr<ore::data::CurrencyHedgedEquityIndexDecomposition> decomposeCurrencyHedgedIndexHelper;
     decomposeCurrencyHedgedIndexHelper =
-        loadCurrencyHedgedIndexDecomposition(sr.key_1.name, refDataManager_, curveConfigs_);
+        loadCurrencyHedgedIndexDecomposition(indexName, refDataManager_, curveConfigs_);
     if (decomposeCurrencyHedgedIndexHelper != nullptr) {
         QL_REQUIRE(currencyHedgedIndexQuantities_.count(sr.tradeId) > 0,
                    "CurrencyHedgedIndexDecomposition failed, there is no index quantity for trade "
-                       << sr.tradeId << " and equity index EQ-" << sr.key_1.name);
-        QL_REQUIRE(currencyHedgedIndexQuantities_.at(sr.tradeId).count("EQ-" + sr.key_1.name) > 0,
+                       << sr.tradeId << " and equity index EQ-" << indexName);
+        QL_REQUIRE(currencyHedgedIndexQuantities_.at(sr.tradeId).count("EQ-" + indexName) > 0,
                    "CurrencyHedgedIndexDecomposition failed, there is no index quantity for trade "
-                       << sr.tradeId << " and equity index EQ-" << sr.key_1.name);
+                       << sr.tradeId << " and equity index EQ-" << indexName);
         QL_REQUIRE(todaysMarket_ != nullptr,
                    "CurrencyHedgedIndexDecomposition failed, there is no market given quantity for trade "
                        << sr.tradeId);
 
         Date today = QuantLib::Settings::instance().evaluationDate();
 
-        auto quantity = currencyHedgedIndexQuantities_.at(sr.tradeId).find("EQ-" + sr.key_1.name)->second;
+        auto quantity = currencyHedgedIndexQuantities_.at(sr.tradeId).find("EQ-" + indexName)->second;
 
         QL_REQUIRE(quantity != QuantLib::Null<double>(),
                    "CurrencyHedgedIndexDecomposition failed, index quantity cannot be NULL.");
 
-        double hedgedExposure = sr.delta / eqRiskShiftSize(sr.key_1.name, ssd_);
+        double hedgedExposure = sr.delta / eqRiskShiftSize(indexName, ssd_);
 
         double unhedgedExposure =
             decomposeCurrencyHedgedIndexHelper->unhedgedSpotExposure(hedgedExposure, quantity, today, todaysMarket_);
 
-        double unhedgedDelta = unhedgedExposure * eqRiskShiftSize(sr.key_1.name, ssd_);
+        double unhedgedDelta = unhedgedExposure * eqRiskShiftSize(indexName, ssd_);
 
-        auto decompResults =
-            decomposeEqComIndexRisk(unhedgedDelta, decomposeCurrencyHedgedIndexHelper->underlyingRefData(),
-                                    ore::data::CurveSpec::CurveType::Equity);
+        auto decompResults = decomposeIndex(unhedgedDelta, decomposeCurrencyHedgedIndexHelper->underlyingRefData(),
+                                            ore::data::CurveSpec::CurveType::Equity);
         scaleFxRisk(decompResults.fxRisk, decomposeCurrencyHedgedIndexHelper->indexName());
         // Correct FX Delta from FxForwards
         for (const auto& [ccy, fxRisk] :
              decomposeCurrencyHedgedIndexHelper->fxSpotRiskFromForwards(quantity, today, todaysMarket_, 1.0)) {
-            decompResults.fxRisk[ccy] =
-                decompResults.fxRisk[ccy] -
-                fxRisk *
-                    fxRiskShiftSize(ccy, baseCurrency_, ssd_); //*todaysMarket_->fxSpot(ccy + baseCurrency_)->value();
+            decompResults.fxRisk[ccy] = decompResults.fxRisk[ccy] - fxRisk * fxRiskShiftSize(ccy, baseCurrency_, ssd_);
         }
+        // Convert into the correct currency
+        convertFxRiskToBaseCurrency(decompResults.fxRisk, indexCurrency);
         return createDecompositionRecords(decompResults.equityDelta, decompResults.fxRisk,
-                                          decomposeCurrencyHedgedIndexHelper->indexCurrency(), sr);
+                                          indexCurrency, sr);
     } else {
         auto subFields = std::map<std::string, std::string>({{"tradeId", sr.tradeId}});
         StructuredAnalyticsErrorMessage("CRIF Generation", "Equity index decomposition failed",
-                                        "Cannot decompose equity index delta (" + sr.key_1.name +
+                                        "Cannot decompose equity index delta (" + indexName +
                                             ") for trade: no reference data found. Continuing without decomposition.",
                                         subFields)
             .log();
@@ -219,14 +222,16 @@ DecomposedSensitivityStream::decomposeCurrencyHedgedIndexRisk(const SensitivityR
 }
 
 std::vector<SensitivityRecord> DecomposedSensitivityStream::decomposeCommodityRisk(const SensitivityRecord& sr) const {
-    if (refDataManager_->hasData("CommodityIndex", sr.key_1.name)) {
-        auto refDatum = refDataManager_->getData("CommodityIndex", sr.key_1.name);
+    std::string indexName = sr.key_1.name;
+    if (refDataManager_->hasData("CommodityIndex", indexName)) {
+        auto refDatum = refDataManager_->getData("CommodityIndex", indexName);
         auto indexRefDatum = boost::dynamic_pointer_cast<ore::data::IndexReferenceDatum>(refDatum);
-        auto decompResults =
-            decomposeEqComIndexRisk(sr.delta, indexRefDatum, ore::data::CurveSpec::CurveType::Commodity);
-        scaleFxRisk(decompResults.fxRisk, indexRefDatum->id());
-        return createDecompositionRecords(decompResults.equityDelta, decompResults.fxRisk, decompResults.indexCurrency,
-                                          sr);
+        auto decompResults = decomposeIndex(sr.delta, indexRefDatum, ore::data::CurveSpec::CurveType::Commodity);
+        scaleFxRisk(decompResults.fxRisk, indexName);
+        auto indexCurrency = curveCurrency(indexName, ore::data::CurveSpec::CurveType::Commodity);
+        convertFxRiskToBaseCurrency(decompResults.fxRisk, indexCurrency);
+        return createDecompositionRecords(
+            decompResults.equityDelta, decompResults.fxRisk, decompResults.indexCurrency, sr);
     } else {
         auto subFields = std::map<std::string, std::string>({{"tradeId", sr.tradeId}});
         StructuredAnalyticsErrorMessage("CRIF Generation", "Equity index decomposition failed",
@@ -244,48 +249,34 @@ void DecomposedSensitivityStream::reset() {
     itCurrent_ = decomposedRecords_.begin();
 }
 
-DecomposedSensitivityStream::EqComIndexDecompositionResults
-DecomposedSensitivityStream::decomposeEqComIndexRisk(double delta,
-                                                     const boost::shared_ptr<ore::data::IndexReferenceDatum>& ird,
-                                                     ore::data::CurveSpec::CurveType curveType) const {
+DecomposedSensitivityStream::DecompositionResults
+DecomposedSensitivityStream::decomposeIndex(double delta, const boost::shared_ptr<ore::data::IndexReferenceDatum>& ird,
+                                            ore::data::CurveSpec::CurveType curveType) const {
     QL_REQUIRE(ird, "Can not decompose equity risk, no EquityIndexReferenceData giving");
     QL_REQUIRE(curveConfigs_, "Can not decompose equity risk, no CurveConfig giving");
     QL_REQUIRE(curveType == ore::data::CurveSpec::CurveType::Equity ||
                    curveType == ore::data::CurveSpec::CurveType::Commodity,
                "internal error decomposeEquityRisk supports only Equity and Commodity curves");
 
-    EqComIndexDecompositionResults results;
+    DecompositionResults results;
+    results.indexCurrency = curveCurrency(ird->id(), curveType);
+    QL_REQUIRE(!results.indexCurrency.empty(),
+               "Cannot perform equity risk decomposition find currency index " + ird->id() + " from curve configs.");
 
-    if (curveConfigs_->has(curveType, ird->id())) {
-        results.indexCurrency = curveType == ore::data::CurveSpec::CurveType::Equity
-                                    ? curveConfigs_->equityCurveConfig(ird->id())->currency()
-                                    : curveConfigs_->commodityCurveConfig(ird->id())->currency();
-    } else if (curveConfigs_->hasEquityCurveConfig(ird->id())) {
-        // if we use a equity curve as proxy  fall back to lookup the currency from the proxy config
-        results.indexCurrency = curveConfigs_->equityCurveConfig(ird->id())->currency();
-    } else {
-        QL_FAIL("Cannot perform equity risk decomposition find currency index " + ird->id() + " from curve configs.");
-    }
-
-    for (auto c : ird->underlyings()) {
-        results.equityDelta[c.first] += delta * c.second;
+    for (const auto& [constituent, weight] : ird->underlyings()) {
+        results.equityDelta[constituent] += delta * weight;
         // try look up currency in reference data and add if FX delta risk if necessary
-        std::string constituentCcy = results.indexCurrency;
-        if (curveConfigs_->has(curveType, c.first)) {
-            auto constituentCcy = curveType == ore::data::CurveSpec::CurveType::Equity
-                                      ? curveConfigs_->equityCurveConfig(c.first)->currency()
-                                      : curveConfigs_->commodityCurveConfig(c.first)->currency();
-
-        } else {
+        std::string constituentCcy = curveCurrency(constituent, curveType);
+        if (constituentCcy.empty()) {
+            constituentCcy = results.indexCurrency;
             StructuredAnalyticsErrorMessage("CRIF Generation", "Equity index decomposition",
-                                            "Cannot find currency for equity " + c.first +
+                                            "Cannot find currency for equity " + constituent +
                                                 " from curve configs, fallback to use index currency (" +
                                                 results.indexCurrency + ")")
                 .log();
         }
         if (constituentCcy != baseCurrency_) {
-            results.fxRisk[constituentCcy] +=
-                delta * c.second; //* todaysMarket_->fxSpot(constituentCcy+baseCurrency_)->value();
+            results.fxRisk[constituentCcy] += delta * weight;
         }
     }
     return results;
@@ -320,5 +311,27 @@ void DecomposedSensitivityStream::scaleFxRisk(std::map<std::string, double>& fxR
     }
 }
 
+void DecomposedSensitivityStream::convertFxRiskToBaseCurrency(std::map<std::string, double>& fxRisk,
+                                                              const std::string& indexCurrency) const {
+    // Eq/Comm Shift to FX Shift Conversion
+    auto fxSpot = todaysMarket_->fxSpot(indexCurrency + baseCurrency_)->value();
+    for (auto& [ccy, fxdelta] : fxRisk) {
+        fxdelta *= fxSpot;
+    }
+}
+
+std::string DecomposedSensitivityStream::curveCurrency(const std::string& name,
+                                                       ore::data::CurveSpec::CurveType curveType) const {
+    std::string curveCurrency;
+    if (curveConfigs_->has(curveType, name)) {
+        curveCurrency = curveType == ore::data::CurveSpec::CurveType::Equity
+                            ? curveConfigs_->equityCurveConfig(name)->currency()
+                            : curveConfigs_->commodityCurveConfig(name)->currency();
+    } else if (curveConfigs_->hasEquityCurveConfig(name)) {
+        // if we use a equity curve as proxy  fall back to lookup the currency from the proxy config
+        curveCurrency = curveConfigs_->equityCurveConfig(name)->currency();
+    }
+    return curveCurrency;
+}
 } // namespace analytics
 } // namespace ore
