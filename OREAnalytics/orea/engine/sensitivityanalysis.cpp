@@ -82,6 +82,8 @@ void SensitivityAnalysis::generateSensitivities() {
                "SensitivityAnalysis::generateSensitivities(): multi-threaded engine does not support non-shifted base "
                "ccy conversion currently. This requires a a small code extension. Contact Dev.");
 
+    std::string pricingEngineId;
+
     if (useSingleThreadedEngine_) {
 
         // handle single threaded sensi analysis
@@ -94,8 +96,8 @@ void SensitivityAnalysis::generateSensitivities() {
 
         scenarioGenerator_ = boost::make_shared<SensitivityScenarioGenerator>(
             sensitivityData_, simMarket_->baseScenario(), simMarketData_, simMarket_,
-            boost::make_shared<DeltaScenarioFactory>(simMarket_->baseScenario()), overrideTenors_, continueOnError_,
-            simMarket_->baseScenarioAbsolute());
+            boost::make_shared<DeltaScenarioFactory>(simMarket_->baseScenario()), overrideTenors_, pricingEngineId,
+            continueOnError_, simMarket_->baseScenarioAbsolute());
 
         boost::shared_ptr<NPVSensiCube> cube =
             boost::make_shared<DoublePrecisionSensiCube>(portfolio_->ids(), asof_, scenarioGenerator_->samples());
@@ -136,7 +138,7 @@ void SensitivityAnalysis::generateSensitivities() {
 
         sensiCubes_ = {boost::make_shared<SensitivityCube>(cube, scenarioGenerator_->scenarioDescriptions(),
                                                            scenarioGenerator_->shiftSizes(),
-                                                           sensitivityData_->twoSidedDeltas())};
+                                                           scenarioGenerator_->shiftSchemes())};
 
     } else {
 
@@ -158,8 +160,8 @@ void SensitivityAnalysis::generateSensitivities() {
 
         scenarioGenerator_ = boost::make_shared<SensitivityScenarioGenerator>(
             sensitivityData_, simMarket_->baseScenario(), simMarketData_, simMarket_,
-            boost::make_shared<DeltaScenarioFactory>(simMarket_->baseScenario()), overrideTenors_, continueOnError_,
-            simMarket_->baseScenarioAbsolute());
+            boost::make_shared<DeltaScenarioFactory>(simMarket_->baseScenario()), overrideTenors_, pricingEngineId,
+            continueOnError_, simMarket_->baseScenarioAbsolute());
 
         simMarket_->scenarioGenerator() = scenarioGenerator_;
 
@@ -197,7 +199,7 @@ void SensitivityAnalysis::generateSensitivities() {
 
         sensiCubes_ = {boost::make_shared<SensitivityCube>(cube, scenarioGenerator_->scenarioDescriptions(),
                                                            scenarioGenerator_->shiftSizes(),
-                                                           sensitivityData_->twoSidedDeltas())};
+                                                           scenarioGenerator_->shiftSchemes())};
     }
 
     LOG("Sensitivity analysis completed");

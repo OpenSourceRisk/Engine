@@ -197,10 +197,6 @@ const ShiftData& SensitivityScenarioData::shiftData(const RiskFactorKey::KeyType
     }
 }
 
-bool SensitivityScenarioData::twoSidedDelta(const RiskFactorKey::KeyType& keyType) const {
-    return twoSidedDeltas_.count(keyType) == 1;
-}
-
 void SensitivityScenarioData::fromXML(XMLNode* root) {
     XMLNode* node = XMLUtils::locateNode(root, "SensitivityAnalysis");
     XMLUtils::checkNode(node, "SensitivityAnalysis");
@@ -531,15 +527,6 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         useSpreadedTermStructures_ = parseBool(XMLUtils::getNodeValue(n));
     else
         useSpreadedTermStructures_ = false;
-
-    DLOG("Get TwoSidedDeltaKeyTypes.");
-    if (auto n = XMLUtils::getChildNode(node, "TwoSidedDeltaKeyTypes")) {
-        for (XMLNode* c = XMLUtils::getChildNode(n, "RiskFactorKeyType"); c; c = XMLUtils::getNextSibling(c)) {
-            auto keyType = parseRiskFactorKeyType(XMLUtils::getNodeValue(c));
-            twoSidedDeltas_.insert(keyType);
-            TLOG("Added key type " << keyType << " from TwoSidedDeltaKeyTypes.");
-        }
-    }
 
     if (!parConversion_)
         return;
@@ -910,14 +897,6 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
 
     XMLUtils::addChild(doc, root, "ComputeGamma", computeGamma_);
     XMLUtils::addChild(doc, root, "UseSpreadedTermStructures", useSpreadedTermStructures_);
-
-    if (!twoSidedDeltas_.empty()) {
-        DLOG("toXML for TwoSidedDeltaKeyTypes");
-        XMLNode* parent = XMLUtils::addChild(doc, root, "TwoSidedDeltaKeyTypes");
-        for (const auto& keyType : twoSidedDeltas_) {
-            XMLUtils::addChild(doc, parent, "RiskFactorKeyType", to_string(keyType));
-        }
-    }
 
     // If not par, no more to do
     if (!parConversion_)

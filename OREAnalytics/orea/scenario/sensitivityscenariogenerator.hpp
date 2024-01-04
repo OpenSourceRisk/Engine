@@ -107,7 +107,8 @@ public:
                                  const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                                  const boost::shared_ptr<ScenarioSimMarket>& simMarket,
                                  const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory,
-                                 const bool overrideTenors, const bool continueOnError = false,
+                                 const bool overrideTenors, const std::string& pricingEngineId = std::string(),
+                                 const bool continueOnError = false,
                                  const boost::shared_ptr<Scenario>& baseScenarioAbsolute = nullptr);
     //! Default destructor
     ~SensitivityScenarioGenerator(){};
@@ -122,6 +123,9 @@ public:
     */
     const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes() const { return shiftSizes_; }
 
+    /* Return the map of (delta) shift schemes */
+    const std::map<RiskFactorKey, std::string>& shiftSchemes() const { return shiftSchemes_; }
+
     /*! Similarly, reeturn the base values for each risk factor */
     const std::map<RiskFactorKey, QuantLib::Real>& baseValues() const { return baseValues_; }
 
@@ -130,6 +134,12 @@ public:
     boost::shared_ptr<Scenario> baseScenarioAbsolute() const { return baseScenarioAbsolute_; }
 
 private:
+    string getShiftType(SensitivityScenarioData::ShiftData& data) const;
+    Real getShiftSize(SensitivityScenarioData::ShiftData& data) const;
+    string getShiftScheme(SensitivityScenarioData::ShiftData& data) const;
+    bool isScenarioRelevant(bool up, SensitivityScenarioData::ShiftData& data) const;
+    void storeShiftData(const RiskFactorKey& key, const Real rate, const Real newRate, const std::string& shiftScheme);
+
     void generateScenarios();
     void generateYieldCurveScenarios(bool up);
     void generateDiscountCurveScenarios(bool up);
@@ -189,10 +199,13 @@ private:
 
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
     boost::shared_ptr<ScenarioFactory> sensiScenarioFactory_;
+    std::string pricingEngineId_;
     const bool overrideTenors_, continueOnError_;
 
     //! Holds the shift sizes for each risk factor key
     std::map<RiskFactorKey, QuantLib::Real> shiftSizes_;
+    //! Holds the delta shift schemes for each risk factor key
+    std::map<RiskFactorKey, std::string> shiftSchemes_;
     //! Holds the base valuesfor each risk factor key
     std::map<RiskFactorKey, QuantLib::Real> baseValues_;
 

@@ -90,7 +90,7 @@ void ParConversionAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::I
 
         auto scenarioGenerator = boost::make_shared<SensitivityScenarioGenerator>(
             configs.sensiScenarioData, simMarket->baseScenario(), configs.simMarketParams, simMarket,
-            boost::make_shared<DeltaScenarioFactory>(simMarket->baseScenario()), true, true,
+            boost::make_shared<DeltaScenarioFactory>(simMarket->baseScenario()), true, std::string(), true,
             simMarket->baseScenarioAbsolute());
 
         simMarket->scenarioGenerator() = scenarioGenerator;
