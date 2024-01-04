@@ -82,10 +82,6 @@ void SensitivityAnalysis::generateSensitivities() {
                "SensitivityAnalysis::generateSensitivities(): multi-threaded engine does not support non-shifted base "
                "ccy conversion currently. This requires a a small code extension. Contact Dev.");
 
-    QL_REQUIRE(useSingleThreadedEngine_ || recalibrateModels_,
-               "SensitivityAnalysis::generateSensitivities(): multi-threaded engine does not support recalibrateModels "
-               "= false. This requires a small code extension. Contact Dev.");
-
     if (useSingleThreadedEngine_) {
 
         // handle single threaded sensi analysis
@@ -113,13 +109,14 @@ void SensitivityAnalysis::generateSensitivities() {
             std::string("Sensitivity") + (sensitivityData_->computeGamma() ? "DeltaGamma" : "Delta");
         boost::shared_ptr<EngineFactory> factory =
             boost::make_shared<EngineFactory>(ed, simMarket_, configurations, referenceData_, iborFallbackConfig_);
+
+        portfolio_->reset();
+        portfolio_->build(factory, "sensi analysis");
+
         if (recalibrateModels_)
             modelBuilders_ = factory->modelBuilders();
         else
             modelBuilders_.clear();
-
-        portfolio_->reset();
-        portfolio_->build(factory, "sensi analysis");
 
         boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>("1,0W", NullCalendar());
         vector<boost::shared_ptr<ValuationCalculator>> calculators;
