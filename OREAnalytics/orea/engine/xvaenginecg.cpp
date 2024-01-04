@@ -386,7 +386,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     sensiScenarioGenerator_ = boost::make_shared<SensitivityScenarioGenerator>(
         sensitivityData_, simMarket_->baseScenario(), simMarketData_, simMarket_,
-        boost::make_shared<DeltaScenarioFactory>(simMarket_->baseScenario()), false, continueOnError,
+        boost::make_shared<DeltaScenarioFactory>(simMarket_->baseScenario()), false, std::string(), continueOnError,
         simMarket_->baseScenarioAbsolute());
 
     simMarket_->scenarioGenerator() = sensiScenarioGenerator_;
@@ -462,7 +462,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
         boost::shared_ptr<InMemoryReport> scenarioReport = boost::make_shared<InMemoryReport>();
         auto sensiCube = boost::make_shared<SensitivityCube>(
             resultCube, sensiScenarioGenerator_->scenarioDescriptions(), sensiScenarioGenerator_->shiftSizes(),
-            sensitivityData_->twoSidedDeltas());
+            sensiScenarioGenerator_->shiftSchemes());
         auto sensiStream = boost::make_shared<SensitivityCubeStream>(sensiCube, simMarketData_->baseCcy());
         ReportWriter().writeScenarioReport(*scenarioReport, sensiCube, 0.0);
         scenarioReport->toFile("Output/xvacg-cva-sensi-scenario.csv");
