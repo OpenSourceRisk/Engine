@@ -124,7 +124,7 @@ public:
     const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes() const { return shiftSizes_; }
 
     /* Return the map of (delta) shift schemes */
-    const std::map<RiskFactorKey, std::string>& shiftSchemes() const { return shiftSchemes_; }
+    const std::map<RiskFactorKey, ShiftScheme>& shiftSchemes() const { return shiftSchemes_; }
 
     /*! Similarly, reeturn the base values for each risk factor */
     const std::map<RiskFactorKey, QuantLib::Real>& baseValues() const { return baseValues_; }
@@ -134,9 +134,9 @@ public:
     boost::shared_ptr<Scenario> baseScenarioAbsolute() const { return baseScenarioAbsolute_; }
 
 private:
-    string getShiftType(SensitivityScenarioData::ShiftData& data) const;
+    ShiftType getShiftType(SensitivityScenarioData::ShiftData& data) const;
     Real getShiftSize(SensitivityScenarioData::ShiftData& data) const;
-    string getShiftScheme(SensitivityScenarioData::ShiftData& data) const;
+    ShiftScheme getShiftScheme(SensitivityScenarioData::ShiftData& data) const;
     bool isScenarioRelevant(bool up, SensitivityScenarioData::ShiftData& data) const;
     void storeShiftData(const RiskFactorKey& key, const Real rate, const Real newRate);
 
@@ -167,40 +167,41 @@ private:
     // common helper for generateSwaptionVolScenarios(), generateYieldVolScenarios()
     void generateGenericYieldVolScenarios(bool up, RiskFactorKey::KeyType rfType);
 
-    ScenarioDescription discountScenarioDescription(string ccy, Size bucket, bool up, string shiftScheme);
-    ScenarioDescription indexScenarioDescription(string index, Size bucket, bool up, string shiftScheme);
-    ScenarioDescription yieldScenarioDescription(string name, Size bucket, bool up, string shiftScheme);
-    ScenarioDescription fxScenarioDescription(string ccypair, bool up, string shiftScheme);
+    ScenarioDescription discountScenarioDescription(string ccy, Size bucket, bool up, ShiftScheme shiftScheme);
+    ScenarioDescription indexScenarioDescription(string index, Size bucket, bool up, ShiftScheme shiftScheme);
+    ScenarioDescription yieldScenarioDescription(string name, Size bucket, bool up, ShiftScheme shiftScheme);
+    ScenarioDescription fxScenarioDescription(string ccypair, bool up, ShiftScheme shiftScheme);
     ScenarioDescription fxVolScenarioDescription(string ccypair, Size expiryBucket, Size strikeBucket, bool up,
-                                                 string shiftScheme);
-    ScenarioDescription equityScenarioDescription(string equity, bool up, string shiftScheme);
-    ScenarioDescription dividendYieldScenarioDescription(string equity, Size bucket, bool up, string shiftScheme);
+                                                 ShiftScheme shiftScheme);
+    ScenarioDescription equityScenarioDescription(string equity, bool up, ShiftScheme shiftScheme);
+    ScenarioDescription dividendYieldScenarioDescription(string equity, Size bucket, bool up, ShiftScheme shiftScheme);
     ScenarioDescription equityVolScenarioDescription(string equity, Size expiryBucket, Size strikeBucket, bool up,
-                                                     string shiftScheme);
+                                                     ShiftScheme shiftScheme);
     ScenarioDescription swaptionVolScenarioDescription(string ccy, Size expiryBucket, Size termBucket,
-                                                       Size strikeBucket, bool up, string shiftScheme);
+                                                       Size strikeBucket, bool up, ShiftScheme shiftScheme);
     ScenarioDescription yieldVolScenarioDescription(string securityId, Size expiryBucket, Size termBucket, bool up,
-                                                    string shiftScheme);
+                                                    ShiftScheme shiftScheme);
     ScenarioDescription capFloorVolScenarioDescription(string ccy, Size expiryBucket, Size strikeBucket, bool up,
-                                                       bool isAtm, string shiftScheme);
-    ScenarioDescription survivalProbabilityScenarioDescription(string name, Size bucket, bool up, string shiftScheme);
+                                                       bool isAtm, ShiftScheme shiftScheme);
+    ScenarioDescription survivalProbabilityScenarioDescription(string name, Size bucket, bool up,
+                                                               ShiftScheme shiftScheme);
     ScenarioDescription CdsVolScenarioDescription(string name, Size expiryBucket, Size strikeBucket, bool up,
-                                                  string shiftScheme);
-    ScenarioDescription zeroInflationScenarioDescription(string index, Size bucket, bool up, string shiftScheme);
-    ScenarioDescription yoyInflationScenarioDescription(string index, Size bucket, bool up, string shiftScheme);
+                                                  ShiftScheme shiftScheme);
+    ScenarioDescription zeroInflationScenarioDescription(string index, Size bucket, bool up, ShiftScheme shiftScheme);
+    ScenarioDescription yoyInflationScenarioDescription(string index, Size bucket, bool up, ShiftScheme shiftScheme);
     ScenarioDescription zeroInflationCapFloorVolScenarioDescription(string name, Size expiryBucket, Size strikeBucket,
-                                                                    bool up, string shiftScheme);
+                                                                    bool up, ShiftScheme shiftScheme);
     ScenarioDescription yoyInflationCapFloorVolScenarioDescription(string name, Size expiryBucket, Size strikeBucket,
-                                                                   bool up, string shiftScheme);
+                                                                   bool up, ShiftScheme shiftScheme);
     ScenarioDescription baseCorrelationScenarioDescription(string indexName, Size lossLevelBucket, Size termBucket,
-                                                           bool up, string shiftScheme);
+                                                           bool up, ShiftScheme shiftScheme);
     ScenarioDescription commodityCurveScenarioDescription(const std::string& commodityName, QuantLib::Size bucket,
-                                                          bool up, string shiftScheme);
+                                                          bool up, ShiftScheme shiftScheme);
     ScenarioDescription commodityVolScenarioDescription(const std::string& commodityName, QuantLib::Size expiryBucket,
-                                                        QuantLib::Size strikeBucket, bool up, string shiftScheme);
-    ScenarioDescription securitySpreadScenarioDescription(string bond, bool up, string shiftScheme);
+                                                        QuantLib::Size strikeBucket, bool up, ShiftScheme shiftScheme);
+    ScenarioDescription securitySpreadScenarioDescription(string bond, bool up, ShiftScheme shiftScheme);
     ScenarioDescription correlationScenarioDescription(string pair, Size expiryBucket, Size strikeBucket, bool up,
-                                                       string shiftScheme);
+                                                       ShiftScheme shiftScheme);
 
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
     boost::shared_ptr<ScenarioFactory> sensiScenarioFactory_;
@@ -210,7 +211,7 @@ private:
     //! Holds the shift sizes for each risk factor key
     std::map<RiskFactorKey, QuantLib::Real> shiftSizes_;
     //! Holds the delta shift schemes for each risk factor key
-    std::map<RiskFactorKey, std::string> shiftSchemes_;
+    std::map<RiskFactorKey, ShiftScheme> shiftSchemes_;
     //! Holds the base valuesfor each risk factor key
     std::map<RiskFactorKey, QuantLib::Real> baseValues_;
 

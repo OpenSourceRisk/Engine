@@ -40,7 +40,6 @@ namespace analytics {
 
 using RFType = RiskFactorKey::KeyType;
 using ShiftData = SensitivityScenarioData::ShiftData;
-using ShiftType = ShiftScenarioGenerator::ShiftType;
 
 ScenarioShiftCalculator::ScenarioShiftCalculator(const boost::shared_ptr<SensitivityScenarioData>& sensitivityConfig,
                                                  const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketConfig,
@@ -66,7 +65,7 @@ Real ScenarioShiftCalculator::shift(const RiskFactorKey& key, const Scenario& s_
     // Get the shift size and type from the sensitivity configuration
     const ShiftData& shiftData = sensitivityConfig_->shiftData(key.keytype, key.name);
     Real shiftSize = shiftData.shiftSize;
-    ShiftType shiftType = parseShiftType(shiftData.shiftType);
+    ShiftType shiftType = shiftData.shiftType;
 
     // If shiftSize is zero, log an alert and return 0 early
     if (close(shiftSize, 0.0)) {
