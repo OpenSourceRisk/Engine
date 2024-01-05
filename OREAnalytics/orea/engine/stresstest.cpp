@@ -56,8 +56,8 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     Date asof = market->asofDate();
     boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
     scenarioFactory = scenarioFactory ? scenarioFactory : boost::make_shared<CloneScenarioFactory>(baseScenario);
-    boost::shared_ptr<StressScenarioGenerator> scenarioGenerator =
-        boost::make_shared<StressScenarioGenerator>(stressData, baseScenario, simMarketData, simMarket, scenarioFactory);
+    boost::shared_ptr<StressScenarioGenerator> scenarioGenerator = boost::make_shared<StressScenarioGenerator>(
+        stressData, baseScenario, simMarketData, simMarket, scenarioFactory, simMarket->baseScenarioAbsolute());
     simMarket->scenarioGenerator() = scenarioGenerator;
 
     DLOG("Build Engine Factory");
