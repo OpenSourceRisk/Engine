@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <orea/scenario/stressscenariodata.hpp>
+#include <orea/scenario/scenario.hpp>
 
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/xmlutils.hpp>
