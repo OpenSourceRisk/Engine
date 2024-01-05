@@ -123,13 +123,13 @@ void SensitivityScenarioData::volShiftDataFromXML(XMLNode* child, VolShiftData& 
 
 void SensitivityScenarioData::shiftDataToXML(XMLDocument& doc, XMLNode* node, const ShiftData& data) const {
     XMLUtils::addChild(doc, node, "ShiftType", data.shiftType);
-    XMLUtils::addChild(doc, node, "ShiftSize", data.shiftSize);
-    if (!data.shiftScheme.empty())
-        XMLUtils::addChild(doc, node, "ShiftScheme", data.shiftScheme);
     for (auto const& [k, v] : data.keyedShiftType)
         XMLUtils::addChild(doc, node, "ShiftType", v, "key", k);
+    XMLUtils::addChild(doc, node, "ShiftSize", data.shiftSize);
     for (auto const& [k, v] : data.keyedShiftSize)
         XMLUtils::addChild(doc, node, "ShiftSize", XMLUtils::convertToString(v), "key", k);
+    if (!data.shiftScheme.empty())
+        XMLUtils::addChild(doc, node, "ShiftScheme", data.shiftScheme);
     for (auto const& [k, v] : data.keyedShiftScheme)
         XMLUtils::addChild(doc, node, "ShiftScheme", v, "key", k);
 }
