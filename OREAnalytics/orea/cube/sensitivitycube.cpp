@@ -57,7 +57,7 @@ std::ostream& operator<<(std::ostream& out, const SensitivityCube::crossPair& cp
 SensitivityCube::SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube,
                                  const vector<ShiftScenarioDescription>& scenarioDescriptions,
                                  const map<RiskFactorKey, QuantLib::Real>& shiftsizes,
-                                 const std::map<RiskFactorKey, std::string>& shiftSchemes)
+                                 const std::map<RiskFactorKey, ShiftScheme>& shiftSchemes)
     : cube_(cube), scenarioDescriptions_(scenarioDescriptions), shiftSizes_(shiftsizes), shiftSchemes_(shiftSchemes) {
     initialise();
 }
@@ -65,7 +65,7 @@ SensitivityCube::SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube,
 SensitivityCube::SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube,
                                  const vector<string>& scenarioDescriptions,
                                  const map<RiskFactorKey, QuantLib::Real>& shiftsizes,
-                                 const std::map<RiskFactorKey, std::string>& shiftSchemes)
+                                 const std::map<RiskFactorKey, ShiftScheme>& shiftSchemes)
     : cube_(cube), shiftSizes_(shiftsizes), shiftSchemes_(shiftSchemes) {
 
     // Populate scenarioDescriptions_ from string descriptions
@@ -192,7 +192,7 @@ Real SensitivityCube::shiftSize(const RiskFactorKey& riskFactorKey) const {
     return it->second;
 }
 
-std::string SensitivityCube::shiftScheme(const RiskFactorKey& riskFactorKey) const {
+ShiftScheme SensitivityCube::shiftScheme(const RiskFactorKey& riskFactorKey) const {
     auto it = shiftSchemes_.find(riskFactorKey);
     QL_REQUIRE(it != shiftSchemes_.end(), "Risk factor, " << riskFactorKey << ", was not found in the shift schemes.");
     return it->second;
@@ -214,13 +214,13 @@ Real SensitivityCube::delta(const Size tradeIdx, const RiskFactorKey& riskFactor
     auto s = shiftSchemes_.find(riskFactorKey);
     QL_REQUIRE(s != shiftSchemes_.end(),
                "SensitivityCube::delta(" << tradeIdx << ", " << riskFactorKey << "): no shift scheme stored.");
-    if (s->second == "Forward" || s->second.empty()) {
+    if (s->second == ShiftScheme::Forward) {
         Size scenarioIdx = index(riskFactorKey, upFactors_).index;
         return cube_->get(tradeIdx, scenarioIdx) - cube_->getT0(tradeIdx, 0);
-    } else if (s->second == "Backward") {
+    } else if (s->second == ShiftScheme::Backward) {
         Size scenarioIdx = index(riskFactorKey, downFactors_).index;
         return cube_->getT0(tradeIdx, 0) - cube_->get(tradeIdx, scenarioIdx);
-    } else if (s->second == "Central") {
+    } else if (s->second == ShiftScheme::Central) {
         Size upIdx = index(riskFactorKey, upFactors_).index;
         Size downIdx = index(riskFactorKey, downFactors_).index;
         return (cube_->get(tradeIdx, upIdx) - cube_->get(tradeIdx, downIdx)) / 2.0;

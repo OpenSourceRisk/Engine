@@ -57,12 +57,12 @@ public:
     SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube,
                     const std::vector<ShiftScenarioDescription>& scenarioDescriptions,
                     const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes,
-                    const std::map<RiskFactorKey, std::string>& shiftSchemes);
+                    const std::map<RiskFactorKey, ShiftScheme>& shiftSchemes);
 
     //! Constructor using a vector of scenario description strings
     SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube, const std::vector<std::string>& scenarioDescriptions,
                     const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes,
-                    const std::map<RiskFactorKey, std::string>& shiftSchemes);
+                    const std::map<RiskFactorKey, ShiftScheme>& shiftSchemes);
 
     //! \name Inspectors
     //@{
@@ -106,7 +106,7 @@ public:
     QuantLib::Real shiftSize(const RiskFactorKey& riskFactorKey) const;
 
     //! Returns the shift scheme for given risk factor \p key
-    std::string shiftScheme(const RiskFactorKey& riskFactorKey) const;
+    ShiftScheme shiftScheme(const RiskFactorKey& riskFactorKey) const;
 
     //! Get the base NPV for trade with ID \p tradeId
     QuantLib::Real npv(const std::string& tradeId) const;
@@ -154,7 +154,7 @@ private:
     boost::shared_ptr<NPVSensiCube> cube_;
     std::vector<ShiftScenarioDescription> scenarioDescriptions_;
     std::map<RiskFactorKey, QuantLib::Real> shiftSizes_;
-    std::map<RiskFactorKey, std::string> shiftSchemes_;
+    std::map<RiskFactorKey, ShiftScheme> shiftSchemes_;
 
     // Duplication between map keys below and these sets but trade-off
     // Means that we can return by reference in public inspector methods

@@ -42,8 +42,6 @@ using namespace data;
  */
 class ShiftScenarioGenerator : public ScenarioGenerator {
 public:
-    enum class ShiftType { Absolute, Relative };
-
     class ScenarioDescription {
     public:
         enum class Type { Base, Up, Down, Cross };
@@ -194,9 +192,6 @@ protected:
     std::map<std::string, RiskFactorKey> factorToKey_;
 };
 
-ShiftScenarioGenerator::ShiftType parseShiftType(const std::string& s);
-
-std::ostream& operator<<(std::ostream& out, const ShiftScenarioGenerator::ShiftType& shiftType);
 std::ostream& operator<<(std::ostream& out, const ShiftScenarioGenerator::ScenarioDescription& scenarioDescription);
 
 //! Retrieve the RiskFactorKey and index description from the result of ScenarioDescription::factor1() or

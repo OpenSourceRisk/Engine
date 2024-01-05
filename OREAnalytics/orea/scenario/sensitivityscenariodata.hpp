@@ -47,17 +47,16 @@ class SensitivityScenarioData : public XMLSerializable {
 public:
     struct ShiftData {
         virtual ~ShiftData() {}
-        ShiftData() : shiftSize(0.0) {}
 
         // default shift size, type (Absolute, Relative) and scheme (Forward, Backward, Central)
-        string shiftType;   // mandatory
-        Real shiftSize;     // mandatory
-        string shiftScheme; // might be empty (= Forward)
+        ShiftType shiftType = ShiftType::Absolute;
+        Real shiftSize = 0.0;
+        ShiftScheme shiftScheme = ShiftScheme::Forward;
 
         // product specific shift size, type, scheme
-        map<string, string> keyedShiftType;
+        map<string, ShiftType> keyedShiftType;
         map<string, Real> keyedShiftSize;
-        map<string, string> keyedShiftScheme;
+        map<string, ShiftScheme> keyedShiftScheme;
     };
 
     struct CurveShiftData : ShiftData {
@@ -297,5 +296,6 @@ private:
     //! toXML helper method
     XMLNode* parDataToXML(ore::data::XMLDocument& doc, const boost::shared_ptr<CurveShiftData>& csd) const;
 };
+
 } // namespace analytics
 } // namespace ore

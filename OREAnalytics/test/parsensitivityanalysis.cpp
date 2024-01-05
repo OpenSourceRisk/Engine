@@ -216,7 +216,7 @@ SensitivityScenarioData::CurveShiftParData createCurveShiftData() {
     SensitivityScenarioData::CurveShiftParData cvsData;
     cvsData.shiftTenors = {6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
                            7 * Years,  10 * Years, 15 * Years, 20 * Years}; // multiple tenors: triangular shifts
-    cvsData.shiftType = "Absolute";
+    cvsData.shiftType = ShiftType::Absolute;
     cvsData.shiftSize = 0.0001;
     cvsData.parInstruments = {"DEP", "IRS", "IRS", "IRS", "IRS", "IRS", "IRS", "IRS", "IRS"};
 
@@ -226,22 +226,22 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData2() {
     boost::shared_ptr<SensitivityScenarioData> sensiData = boost::make_shared<SensitivityScenarioData>(false);
 
     SensitivityScenarioData::SpotShiftData fxsData;
-    fxsData.shiftType = "Relative";
+    fxsData.shiftType = ShiftType::Relative;
     fxsData.shiftSize = 0.01;
 
     SensitivityScenarioData::VolShiftData fxvsData;
-    fxvsData.shiftType = "Relative";
+    fxvsData.shiftType = ShiftType::Relative;
     fxvsData.shiftSize = 1.0;
     fxvsData.shiftExpiries = {2 * Years, 5 * Years};
 
     SensitivityScenarioData::CapFloorVolShiftData cfvsData;
-    cfvsData.shiftType = "Absolute";
+    cfvsData.shiftType = ShiftType::Absolute;
     cfvsData.shiftSize = 0.0001;
     cfvsData.shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     cfvsData.shiftStrikes = {0.05};
 
     SensitivityScenarioData::GenericYieldVolShiftData swvsData;
-    swvsData.shiftType = "Relative";
+    swvsData.shiftType = ShiftType::Relative;
     swvsData.shiftSize = 0.01;
     swvsData.shiftExpiries = {3 * Years, 5 * Years, 10 * Years};
     swvsData.shiftTerms = {2 * Years, 5 * Years, 10 * Years};
@@ -290,17 +290,17 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData2() {
         boost::make_shared<SensitivityScenarioData::CurveShiftParData>(bondData);
 
     ore::analytics::SensitivityScenarioData::SpotShiftData eqsData;
-    eqsData.shiftType = "Relative";
+    eqsData.shiftType = ShiftType::Relative;
     eqsData.shiftSize = 0.01;
 
     ore::analytics::SensitivityScenarioData::VolShiftData eqvsData;
-    eqvsData.shiftType = "Relative";
+    eqvsData.shiftType = ShiftType::Relative;
     eqvsData.shiftSize = 0.01;
     eqvsData.shiftExpiries = {2 * Weeks, 1 * Months, 3 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,
                               5 * Years, 7 * Years,  10 * Years, 13 * Years, 15 * Years, 20 * Years, 30 * Years};
 
     ore::analytics::SensitivityScenarioData::CurveShiftData eqdivData;
-    eqdivData.shiftType = "Absolute";
+    eqdivData.shiftType = ShiftType::Absolute;
     eqdivData.shiftSize = 0.00001;
     eqdivData.shiftTenors = {6 * Months, 1 * Years, 2 * Years};
 
@@ -312,7 +312,7 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData2() {
 
     boost::shared_ptr<ore::analytics::SensitivityScenarioData::CurveShiftParData> yinfData =
         boost::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftParData>();
-    yinfData->shiftType = "Absolute";
+    yinfData->shiftType = ShiftType::Absolute;
     yinfData->shiftSize = 0.0001;
     yinfData->shiftTenors = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years};
     yinfData->parInstruments = {"YYS", "YYS", "YYS", "YYS", "YYS", "YYS", "YYS", "YYS"};
@@ -321,7 +321,7 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData2() {
     sensiData->yoyInflationCurveShiftData()["UKRP1"] = yinfData;
 
     auto yinfCfData = boost::make_shared<ore::analytics::SensitivityScenarioData::CapFloorVolShiftParData>();
-    yinfCfData->shiftType = "Absolute";
+    yinfCfData->shiftType = ShiftType::Absolute;
     yinfCfData->shiftSize = 0.00001;
     yinfCfData->shiftExpiries = {1 * Years, 2 * Years,  3 * Years,  5 * Years,
                                  7 * Years, 10 * Years, 15 * Years, 20 * Years};
@@ -341,28 +341,28 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5(bool pa
 
     SensitivityScenarioData::SpotShiftData fxsData;
 
-    fxsData.shiftType = "Relative";
+    fxsData.shiftType = ShiftType::Relative;
     fxsData.shiftSize = 0.01;
 
     SensitivityScenarioData::VolShiftData fxvsData;
-    fxvsData.shiftType = "Relative";
+    fxvsData.shiftType = ShiftType::Relative;
     fxvsData.shiftSize = 1.0;
     fxvsData.shiftExpiries = {5 * Years};
 
     SensitivityScenarioData::CapFloorVolShiftData cfvsData;
-    cfvsData.shiftType = "Absolute";
+    cfvsData.shiftType = ShiftType::Absolute;
     cfvsData.shiftSize = 0.0001;
     cfvsData.shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     cfvsData.shiftStrikes = {0.01, 0.02, 0.03, 0.04, 0.05};
 
     SensitivityScenarioData::GenericYieldVolShiftData swvsData;
-    swvsData.shiftType = "Relative";
+    swvsData.shiftType = ShiftType::Relative;
     swvsData.shiftSize = 0.01;
     swvsData.shiftExpiries = {2 * Years, 5 * Years, 10 * Years};
     swvsData.shiftTerms = {5 * Years, 10 * Years};
 
     SensitivityScenarioData::CdsVolShiftData cdsvsData;
-    cdsvsData.shiftType = "Relative";
+    cdsvsData.shiftType = ShiftType::Relative;
     cdsvsData.shiftSize = 0.01;
     cdsvsData.shiftExpiries = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
 
@@ -487,17 +487,17 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5(bool pa
     sensiData->cdsVolShiftData()["dc"] = cdsvsData;
 
     ore::analytics::SensitivityScenarioData::SpotShiftData eqsData;
-    eqsData.shiftType = "Relative";
+    eqsData.shiftType = ShiftType::Relative;
     eqsData.shiftSize = 0.01;
 
     ore::analytics::SensitivityScenarioData::VolShiftData eqvsData;
-    eqvsData.shiftType = "Relative";
+    eqvsData.shiftType = ShiftType::Relative;
     eqvsData.shiftSize = 0.01;
     eqvsData.shiftExpiries = {2 * Weeks, 1 * Months, 3 * Months, 6 * Months, 1 * Years,  2 * Years, 3 * Years,
                               5 * Years, 10 * Years, 13 * Years, 15 * Years, 20 * Years, 30 * Years};
 
     ore::analytics::SensitivityScenarioData::CurveShiftData eqdivData;
-    eqdivData.shiftType = "Absolute";
+    eqdivData.shiftType = ShiftType::Absolute;
     eqdivData.shiftSize = 0.00001;
     eqdivData.shiftTenors = {6 * Months, 1 * Years, 2 * Years};
 
@@ -509,7 +509,7 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5(bool pa
 
     boost::shared_ptr<ore::analytics::SensitivityScenarioData::CurveShiftParData> yinfData =
         boost::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftParData>();
-    yinfData->shiftType = "Absolute";
+    yinfData->shiftType = ShiftType::Absolute;
     yinfData->shiftSize = 0.0001;
     yinfData->shiftTenors = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years};
     yinfData->parInstruments = {"YYS", "YYS", "YYS", "YYS", "YYS", "YYS", "YYS", "YYS"};
@@ -518,7 +518,7 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5(bool pa
     sensiData->yoyInflationCurveShiftData()["UKRP1"] = yinfData;
 
     auto yinfCfData = boost::make_shared<ore::analytics::SensitivityScenarioData::CapFloorVolShiftParData>();
-    yinfCfData->shiftType = "Absolute";
+    yinfCfData->shiftType = ShiftType::Absolute;
     yinfCfData->shiftSize = 0.00001;
     yinfCfData->shiftExpiries = {1 * Years, 2 * Years,  3 * Years,  5 * Years,
                                  7 * Years, 10 * Years, 15 * Years, 20 * Years};
@@ -1429,8 +1429,8 @@ void ParSensitivityAnalysisTest::test1dZeroShifts() {
     vector<Real> diffAbsolute(tenors.size(), 0.0);
     vector<Real> diffRelative(tenors.size(), 0.0);
     Real shiftSize = 0.01;
-    SensitivityScenarioGenerator::ShiftType shiftTypeAbsolute = SensitivityScenarioGenerator::ShiftType::Absolute;
-    SensitivityScenarioGenerator::ShiftType shiftTypeRelative = SensitivityScenarioGenerator::ShiftType::Relative;
+    ShiftType shiftTypeAbsolute = ShiftType::Absolute;
+    ShiftType shiftTypeRelative = ShiftType::Relative;
     for (Size i = 0; i < shiftTenors.size(); ++i) {
         scenarioGenerator->applyShift(i, shiftSize, true, shiftTypeAbsolute, shiftTimes, initialZeros, times,
                                       shiftedZeros, true);
@@ -1531,8 +1531,8 @@ void ParSensitivityAnalysisTest::test2dZeroShifts() {
     vector<vector<Real>> diffAbsolute(expiries.size(), vector<Real>(terms.size(), 0.0));
     vector<vector<Real>> diffRelative(expiries.size(), vector<Real>(terms.size(), 0.0));
     Real shiftSize = 0.01; // arbitrary
-    SensitivityScenarioGenerator::ShiftType shiftTypeAbsolute = SensitivityScenarioGenerator::ShiftType::Absolute;
-    SensitivityScenarioGenerator::ShiftType shiftTypeRelative = SensitivityScenarioGenerator::ShiftType::Relative;
+    ShiftType shiftTypeAbsolute = ShiftType::Absolute;
+    ShiftType shiftTypeRelative = ShiftType::Relative;
     for (Size i = 0; i < expiryShiftTenors.size(); ++i) {
         for (Size j = 0; j < termShiftTenors.size(); ++j) {
             scenarioGenerator->applyShift(i, j, shiftSize, true, shiftTypeAbsolute, shiftExpiryTimes, shiftTermTimes,

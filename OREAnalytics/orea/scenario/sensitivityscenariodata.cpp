@@ -76,19 +76,19 @@ void SensitivityScenarioData::shiftDataFromXML(XMLNode* child, ShiftData& data) 
                "SensitivityScenarioData::shiftDataFromXML(): no ShiftSize without attribute defined in node '"
                    << XMLUtils::getNodeName(child) << "'");
 
-    data.shiftType = shiftTypes.at(std::distance(shiftTypeKeys.begin(),shiftTypeEmptyKey));
+    data.shiftType = parseShiftType(shiftTypes.at(std::distance(shiftTypeKeys.begin(),shiftTypeEmptyKey)));
     data.shiftSize = shiftSizes.at(std::distance(shiftSizeKeys.begin(),shiftSizeEmptyKey));
 
     if(shiftSchemeEmptyKey == shiftSchemeKeys.end())
-        data.shiftScheme = "Forward";
+        data.shiftScheme = ShiftScheme::Forward;
     else
-        data.shiftScheme = shiftSchemes.at(std::distance(shiftSchemeKeys.begin(), shiftSchemeEmptyKey));
+        data.shiftScheme = parseShiftScheme(shiftSchemes.at(std::distance(shiftSchemeKeys.begin(), shiftSchemeEmptyKey)));
 
     // extract the parameters with attribute
 
     for (Size i = 0; i < shiftTypeKeys.size(); ++i) {
         if (!shiftTypeKeys[i].empty()) {
-            data.keyedShiftType[shiftTypeKeys[i]] = shiftTypes[i];
+            data.keyedShiftType[shiftTypeKeys[i]] = parseShiftType(shiftTypes[i]);
         }
     }
     for (Size i = 0; i < shiftSizeKeys.size(); ++i) {
@@ -98,7 +98,7 @@ void SensitivityScenarioData::shiftDataFromXML(XMLNode* child, ShiftData& data) 
     }
     for (Size i = 0; i < shiftSchemeKeys.size(); ++i) {
         if(!shiftSchemeKeys[i].empty()) {
-            data.keyedShiftScheme[shiftSchemeKeys[i]] = shiftSchemes[i];
+            data.keyedShiftScheme[shiftSchemeKeys[i]] = parseShiftScheme(shiftSchemes[i]);
         }
     }
 }
@@ -122,16 +122,15 @@ void SensitivityScenarioData::volShiftDataFromXML(XMLNode* child, VolShiftData& 
 }
 
 void SensitivityScenarioData::shiftDataToXML(XMLDocument& doc, XMLNode* node, const ShiftData& data) const {
-    XMLUtils::addChild(doc, node, "ShiftType", data.shiftType);
+    XMLUtils::addChild(doc, node, "ShiftType", ore::data::to_string(data.shiftType));
     for (auto const& [k, v] : data.keyedShiftType)
-        XMLUtils::addChild(doc, node, "ShiftType", v, "key", k);
+        XMLUtils::addChild(doc, node, "ShiftType", ore::data::to_string(v), "key", k);
     XMLUtils::addChild(doc, node, "ShiftSize", data.shiftSize);
     for (auto const& [k, v] : data.keyedShiftSize)
         XMLUtils::addChild(doc, node, "ShiftSize", XMLUtils::convertToString(v), "key", k);
-    if (!data.shiftScheme.empty())
-        XMLUtils::addChild(doc, node, "ShiftScheme", data.shiftScheme);
+    XMLUtils::addChild(doc, node, "ShiftScheme", ore::data::to_string(data.shiftScheme));
     for (auto const& [k, v] : data.keyedShiftScheme)
-        XMLUtils::addChild(doc, node, "ShiftScheme", v, "key", k);
+        XMLUtils::addChild(doc, node, "ShiftScheme", ore::data::to_string(v), "key", k);
 }
 
 void SensitivityScenarioData::curveShiftDataToXML(XMLDocument& doc, XMLNode* node, const CurveShiftData& data) const {
