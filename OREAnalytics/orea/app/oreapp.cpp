@@ -509,7 +509,11 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     
     inputs->setResultsPath(outputPath);
 
-    if (params_->hasGroup("npv"))
+    // first look for baseCurrency in setUp, and then in NPV node
+    tmp = params_->get("setup", "baseCurrency", false);
+    if (tmp != "")
+        inputs->setBaseCurrency(tmp);
+    else if (params_->hasGroup("npv"))
         inputs->setBaseCurrency(params_->get("npv", "baseCurrency"));
     else {
         WLOG("Base currency not set");
@@ -746,6 +750,29 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         tmp = params_->get("sensitivity", "outputSensitivityThreshold", false);
         if (tmp != "")
             inputs->setSensiThreshold(parseReal(tmp));
+    }
+
+    
+    /************
+     * SCENARIO
+     ************/
+
+    tmp = params_->get("scenario", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        inputs->insertAnalytic("SCENARIO");
+
+        tmp = params_->get("scenario", "simulationConfigFile", false);
+        if (tmp != "") {
+            string simulationConfigFile = inputPath + "/" + tmp;
+            LOG("Loading scenario simulation config from file" << simulationConfigFile);
+            inputs->setScenarioSimMarketParamsFromFile(simulationConfigFile);
+        } else {
+            ALOG("Scenario Simulation market data not loaded");
+        }
+        
+        tmp = params_->get("scenario", "scenarioOutputFile", false);
+        if (tmp != "")
+            inputs->setScenarioOutputFile(tmp);
     }
 
     /****************
