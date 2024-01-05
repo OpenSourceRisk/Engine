@@ -178,6 +178,16 @@ void InputParameters::setSensiPricingEngine(const std::string& xml) {
     sensiPricingEngine_->fromXMLString(xml);
 }
 
+void InputParameters::setScenarioSimMarketParams(const std::string& xml) {
+    scenarioSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
+    scenarioSimMarketParams_->fromXMLString(xml);
+}
+
+void InputParameters::setScenarioSimMarketParamsFromFile(const std::string& fileName) {
+    scenarioSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
+    scenarioSimMarketParams_->fromFile(fileName);
+}
+
 void InputParameters::setSensiPricingEngineFromFile(const std::string& fileName) {
     sensiPricingEngine_ = boost::make_shared<EngineData>();
     sensiPricingEngine_->fromFile(fileName);
@@ -485,6 +495,7 @@ OutputParameters::OutputParameters(const boost::shared_ptr<Parameters>& params) 
     cashflowOutputFileName_ = params->get("cashflow", "outputFileName", false);
     curvesOutputFileName_ = params->get("curves", "outputFileName", false);
     scenarioDumpFileName_ = params->get("simulation", "scenariodump", false);
+    scenarioOutputName_ = params->get("scenario", "scenarioOutputFile", false);
     cubeFileName_ = params->get("simulation", "cubeFile", false);
     mktCubeFileName_ = params->get("simulation", "aggregationScenarioDataFileName", false);
     rawCubeFileName_ = params->get("xva", "rawCubeOutputFile", false);
@@ -510,7 +521,7 @@ OutputParameters::OutputParameters(const boost::shared_ptr<Parameters>& params) 
     fileNameMap_["curves"] = curvesOutputFileName_;
     fileNameMap_["cube"] = cubeFileName_;
     fileNameMap_["scenariodata"] = mktCubeFileName_;
-    fileNameMap_["scenario"] = scenarioDumpFileName_;
+    fileNameMap_["scenario"] = !scenarioOutputName_.empty() ? scenarioOutputName_ : scenarioDumpFileName_;
     fileNameMap_["rawcube"] = rawCubeFileName_;
     fileNameMap_["netcube"] = netCubeFileName_;
     fileNameMap_["dim_evolution"] = dimEvolutionFileName_;
