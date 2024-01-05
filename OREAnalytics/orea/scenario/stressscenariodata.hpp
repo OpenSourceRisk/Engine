@@ -23,8 +23,11 @@
 
 #pragma once
 
+#include <orea/scenario/stressscenariodata.hpp>
+
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/xmlutils.hpp>
+
 #include <qle/termstructures/dynamicstype.hpp>
 
 namespace ore {
