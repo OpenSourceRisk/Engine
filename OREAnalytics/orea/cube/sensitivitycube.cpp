@@ -78,6 +78,7 @@ SensitivityCube::SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube,
 }
 
 void SensitivityCube::initialise() {
+
     QL_REQUIRE(scenarioDescriptions_[0].type() == ShiftScenarioDescription::Type::Base,
                "Expected the first scenario in the sensitivity cube to be of type 'Base'");
 
@@ -213,7 +214,7 @@ Real SensitivityCube::delta(const Size tradeIdx, const RiskFactorKey& riskFactor
     auto s = shiftSchemes_.find(riskFactorKey);
     QL_REQUIRE(s != shiftSchemes_.end(),
                "SensitivityCube::delta(" << tradeIdx << ", " << riskFactorKey << "): no shift scheme stored.");
-    if (s->second == "Forward") {
+    if (s->second == "Forward" || s->second.empty()) {
         Size scenarioIdx = index(riskFactorKey, upFactors_).index;
         return cube_->get(tradeIdx, scenarioIdx) - cube_->getT0(tradeIdx, 0);
     } else if (s->second == "Backward") {
@@ -226,7 +227,7 @@ Real SensitivityCube::delta(const Size tradeIdx, const RiskFactorKey& riskFactor
     } else {
         QL_FAIL("SensitivityCube::delta(" << tradeIdx << ", " << riskFactorKey << "): unknown shift scheme '"
                                           << s->second << "'");
-    }    
+    }
 }
 
 Real SensitivityCube::delta(const string& tradeId, const RiskFactorKey& riskFactorKey) const {
