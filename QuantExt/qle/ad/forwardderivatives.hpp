@@ -28,6 +28,9 @@
 
 namespace QuantExt {
 
+/* Note: This formulation assumes a separate forward run to calculate the values. We could combine the calculation of
+   the values and derivatives and apply the deleter to improve memory consumption */
+
 template <class T>
 void forwardDerivatives(const ComputationGraph& g, const std::vector<T>& values, std::vector<T>& derivatives,
                         const std::vector<std::function<std::vector<T>(const std::vector<const T*>&, const T*)>>& grad,

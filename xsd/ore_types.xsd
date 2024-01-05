@@ -470,7 +470,7 @@
   <xs:simpleType name="interpolationMethodType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Linear"/>
-		<xs:enumeration value="Flat"/>
+      <xs:enumeration value="Flat"/>
       <xs:enumeration value="LogLinear"/>
       <xs:enumeration value="NaturalCubic"/>
       <xs:enumeration value="FinancialCubic"/>
@@ -484,11 +484,14 @@
       <xs:enumeration value="CubicFlat"/>
       <xs:enumeration value="HermiteFlat"/>
       <xs:enumeration value="ConvexMonotone"/>
+      <xs:enumeration value="DefaultLogMixedLinearCubic"/>
+      <xs:enumeration value="MonotonicLogMixedLinearCubic"/>
+      <xs:enumeration value="KrugerLogMixedLinearCubic"/>
+      <xs:enumeration value="LogMixedLinearCubicNaturalSpline"/>
       <xs:enumeration value="ExponentialSplines"/>
       <xs:enumeration value="NelsonSiegel"/>
       <xs:enumeration value="Svensson"/>
       <xs:enumeration value="BackwardFlat"/>
-      <xs:enumeration value="CubicSpline"/>
     </xs:restriction>
   </xs:simpleType>
 
