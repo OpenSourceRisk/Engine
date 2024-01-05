@@ -21,9 +21,8 @@
  */
 
 #pragma once
-
-#include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/engine/sensitivitystream.hpp>
+#include <orea/scenario/sensitivityscenariodata.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/portfolio/referencedata.hpp>
@@ -41,7 +40,7 @@ public:
     /*! Constructor providing the weights for the credit index decomposition and the ids and reference data used for
      */
     DecomposedSensitivityStream(
-        const boost::shared_ptr<SensitivityStream>& ss,const std::string& baseCurrency,
+        const boost::shared_ptr<SensitivityStream>& ss, const std::string& baseCurrency,
         std::map<std::string, std::map<std::string, double>> defaultRiskDecompositionWeights = {},
         const std::set<std::string>& eqComDecompositionTradeIds = {},
         const std::map<std::string, std::map<std::string, double>>& currencyHedgedIndexQuantities = {},
@@ -55,33 +54,52 @@ public:
     void reset() override;
 
 private:
-    struct DecompositionResults {
-        std::map<std::string, double> equityDelta;
-        //! Fx Delta in IndexCurrency
+    // Result of a equity / commodity index decomposition
+    struct IndexDecompositionResult {
+        std::map<std::string, double> spotRisk;
         std::map<std::string, double> fxRisk;
         std::string indexCurrency;
     };
 
+
+    //! Decompose a equity/commodity spot sensitivity into the constituent spot sensistivities
+    std::map<std::string, double>
+    constituentSpotRiskFromDecomposition(const double spotDelta, const std::map<std::string, double>& indexWeights) const;
+
+    //! Compute the resulting fx risks from a given equity/commodity decomposition
+    std::map<std::string, double>
+    fxRiskFromDecomposition(const std::map<std::string, double>& spotRisk,
+                            const std::map<std::string, std::vector<std::string>>& constituentCurrencies,
+                            const std::map<std::string, double>& fxSpotShiftSize, const double eqShiftSize) const;
+
+    //! Return the sensi shift size for the shifting the ccy-baseCurrency spot quote
+    double fxRiskShiftSize(const std::string ccy) const;
+    //! Returns the shift sizes for all currencies in the map
+    std::map<std::string, double> fxRiskShiftSizes(const std::map<std::string, std::vector<std::string>>& constituentCurrencies) const;
+    
+    //! Return the asset spot shift size
+    double assetSpotShiftSize(const std::string name) const;
+    
+    std::map<std::string, std::vector<std::string>> getConstituentCurrencies(const std::map<std::string, double>& constituents,
+                                                                const std::string& indexCurrency,
+                                                                const ore::data::CurveSpec::CurveType curveType) const;
+
     //! Decompose the record and add it to the internal storage;
     std::vector<SensitivityRecord> decompose(const SensitivityRecord& record) const;
     std::vector<SensitivityRecord> decomposeSurvivalProbability(const SensitivityRecord& record) const;
-    std::vector<SensitivityRecord> decomposeEquityRisk(const SensitivityRecord& record) const;
     std::vector<SensitivityRecord> decomposeCurrencyHedgedIndexRisk(const SensitivityRecord& record) const;
-    std::vector<SensitivityRecord> decomposeCommodityRisk(const SensitivityRecord& record) const;
 
-    DecompositionResults decomposeIndex(double delta,
-                                                           const boost::shared_ptr<ore::data::IndexReferenceDatum>& ird,
-                                                           ore::data::CurveSpec::CurveType curveType) const;
+    IndexDecompositionResult indexDecomposition(double delta, const std::string& indexName,
+                                                const ore::data::CurveSpec::CurveType curveType) const;
 
-    std::vector<SensitivityRecord> createDecompositionRecords(const std::map<std::string, double>& eqDeltas,
-                                                              const std::map<std::string, double>& fxDeltas,
-                                                              const std::string indexCurrency,
-                                                              const SensitivityRecord& sr) const;
+    std::vector<SensitivityRecord> sensitivityRecords(const std::map<std::string, double>& eqDeltas,
+                                                      const std::map<std::string, double>& fxDeltas,
+                                                      const std::string indexCurrency,
+                                                      const SensitivityRecord& orginialRecord) const;
 
     // get the curve currency for name, fallback to check equity curves
     std::string curveCurrency(const std::string& name, ore::data::CurveSpec::CurveType curveType) const;
     // Scale the fx risk entries from the index decomposition
-    void scaleFxRisk(std::map<std::string, double>& fxRisk, const std::string& equityName) const;
     std::vector<SensitivityRecord> decomposedRecords_;
     std::vector<SensitivityRecord>::iterator itCurrent_;
 

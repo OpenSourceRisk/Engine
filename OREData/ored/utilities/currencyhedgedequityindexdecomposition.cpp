@@ -74,7 +74,7 @@ loadCurrencyHedgedIndexDecomposition(const std::string& name, const boost::share
         QuantLib::Date refDate =
             CurrencyHedgedEquityIndexDecomposition::referenceDate(indexRefData, Settings::instance().evaluationDate());
         
-        std::vector<std::pair<std::string, double>> underlyingIndexWeightsAtRebalancing;
+        std::map<std::string, double> underlyingIndexWeightsAtRebalancing;
 
         if (indexRefData->currencyWeights().empty()) {
             boost::shared_ptr<ReferenceDatum> undIndexRefDataAtRefDate;

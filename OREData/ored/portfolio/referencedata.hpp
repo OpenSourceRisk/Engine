@@ -234,14 +234,14 @@ public:
     XMLNode* toXML(ore::data::XMLDocument& doc) override;
 
     // Get all underlyings (names and weights)
-    const vector<pair<string, double>> underlyings() const { return data_; }
+    const map<string, double> underlyings() const { return data_; }
     // Set all underlying (or reset)
-    void setUnderlyings(const vector<pair<string, double>>& data) { data_ = data; }
+    void setUnderlyings(const std::map<string, double>& data) { data_ = data; }
     // add a new underlying
-    void addUnderlying(const string& name, double weight) { data_.push_back(make_pair(name, weight)); }
+    void addUnderlying(const string& name, double weight) { data_[name]+=weight; }
 
 private:
-    vector<pair<string, double>> data_;
+    std::map<std::string, double> data_;
 };
 
 //! EquityIndex Reference data, contains the names and weights of an equity index
@@ -323,7 +323,7 @@ public:
     QuantLib::Calendar hedgeCalendar() const { return hedgeCalendar_; }
     const std::map<std::string, std::string>& fxIndexes() const { return fxIndexes_; }
     //! Returns the currency weights at the last rebalancing date
-    const vector<pair<string, double>>& currencyWeights() const { return data_; }
+    const std::map<string, double>& currencyWeights() const { return data_; }
 
     Date referenceDate(const Date& asof);
     Date rebalancingDate(const Date& asof);
@@ -339,7 +339,7 @@ private:
 
     QuantLib::Calendar hedgeCalendar_;
     std::map<std::string, std::string> fxIndexes_;
-    vector<pair<string, double>> data_;
+    map<string, double> data_;
 };
 
 //! CreditIndex Reference data, contains the names and weights of a credit index
