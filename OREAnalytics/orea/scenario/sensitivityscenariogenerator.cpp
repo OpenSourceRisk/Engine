@@ -1712,7 +1712,6 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(bool up) {
             RiskFactorKey key(RiskFactorKey::KeyType::YoYInflationCurve, indexName, j);
             valid = valid && tryGetBaseScenarioValue(baseScenarioAbsolute_, key, yoys[j], continueOnError_);
             times[j] = dc.yearFraction(asof, d);
-            std::cout << "times " << j << " " << times[j] << std::endl;
         }
         if (!valid)
             continue;
@@ -1724,7 +1723,6 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(bool up) {
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j) {
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
-            std::cout << "times2 " << j << " " << shiftTimes[j] << std::endl;
         }
         Real shiftSize = getShiftSize(data);
         QL_REQUIRE(shiftTenors.size() > 0, "YoY Inflation Index shift tenors not specified");
