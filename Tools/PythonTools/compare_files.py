@@ -555,11 +555,11 @@ def compare_files_direct(name, file_1, file_2):
 def compare_files_xml(name, file_1, file_2):
     logger = logging.getLogger(__name__)
     logger.debug('%s: Comparing file %s against %s using xml diff', name, file_1, file_2)
-    diff = main.diff_files(file_1, file_2, formatter=formatting.XMLFormatter())
+    diff = main.diff_files(file_1, file_2)
     match = True
     for line in diff:
         match = False
-        logger.warning(line.rstrip('\n'))
+        logger.warning(line)
     return match
 
 def compare_files_json(name, file_1, file_2, config) -> bool:
