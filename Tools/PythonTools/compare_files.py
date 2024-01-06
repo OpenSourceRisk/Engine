@@ -544,8 +544,9 @@ def compare_files_direct(name, file_1, file_2):
         diff = difflib.unified_diff(s1, s2, fromfile=file_1, tofile=file_2)
         match = True
         for line in diff:
-            match = False
-            logger.warning(line.rstrip('\n'))
+            if line.strip():
+                match = False
+                logger.warning(line.rstrip('\n'))
 
     return match
 
