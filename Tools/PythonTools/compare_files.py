@@ -555,7 +555,7 @@ def compare_files_direct(name, file_1, file_2):
 def compare_files_xml(name, file_1, file_2):
     logger = logging.getLogger(__name__)
     logger.debug('%s: Comparing file %s against %s using xml diff', name, file_1, file_2)
-    diff = main.diff_files('file1.xml', 'file2.xml', formatter=formatting.XMLFormatter())
+    diff = main.diff_files(file_1, file_2, formatter=formatting.XMLFormatter())
     match = True
     for line in diff:
         match = False
