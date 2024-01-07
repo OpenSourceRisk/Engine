@@ -2118,7 +2118,7 @@ Figure \ref{fig_yoy_swap} shows the evolution of the 5Y maturity Year-on-Year in
 %--------------------------------------------------------
 
 The example in folder {\tt Examples/Example\_18} computes NPVs and cash flow projections for a vanilla bond portfolio
-consisting of a range of bond products, in particular demonstrating amortisation features:
+consisting of a range of bond products, in particular demonstrating amortisation features. Also, pricing using a benchmark bond price curve (bond definitions in referencedata.xml) is demonstrated:
 \begin{itemize}
 \item fixed rate bond
 \item floating rate bond linked to Euribor 6M
@@ -2129,6 +2129,7 @@ consisting of a range of bond products, in particular demonstrating amortisation
 \item bond with fixed annuity amortisation
 \item bond with floating annuity amortisation (this example needs QuantLib 1.10 or higher to work, in particular the amount() method in the Coupon class needs to be virtual)
 \item bond with fixed amount amortisation followed by percentage amortisation relative to previous notional
+\item fixed rate bond using a benchmark bond price curve instead of the benchmark yield curve
 \end{itemize}
 
 After running the example, the results of the computation can be found in the output files {\tt npv.csv} and {\tt
