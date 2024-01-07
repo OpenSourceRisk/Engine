@@ -199,17 +199,18 @@ StructuredLogger::StructuredLogger() : IndependentLogger(name) {
             std::find(this->messages().begin(), this->messages().end(), msg) == this->messages().end()) {
             // Store the message
             this->messages().push_back(msg);
-
+            
+            oreSeverity logSeverity = boost::log::extract<oreSeverity>(severity.get_name(), rec).get();
             // If a file sink has been defined, then send the log record to it.
             if (this->fileSink()) {
                 // Send to structured log file
                 lsrc::severity_logger_mt<oreSeverity> lg;
                 lg.add_attribute(messageType.get_name(), lattr::constant<string>(name));
-                BOOST_LOG_SEV(lg, oreSeverity::warning) << rec[lexpr::smessage];
+                BOOST_LOG_SEV(lg, logSeverity) << rec[lexpr::smessage];
             }
 
             // Also send to full log file
-            MLOG(oreSeverity::warning, StructuredMessage::name << " " << rec[lexpr::smessage]);
+            MLOG(logSeverity, StructuredMessage::name << " " << rec[lexpr::smessage]);
         }
     };
     sink->set_formatter(formatter);
@@ -564,7 +565,19 @@ StructuredMessage::StructuredMessage(const Category& category, const Group& grou
 void StructuredMessage::log() const {
     lsrc::severity_logger_mt<oreSeverity> lg;
     lg.add_attribute(messageType.get_name(), lattr::constant<string>(name));
-    BOOST_LOG_SEV(lg, oreSeverity::alert) << json();
+    
+    auto it = data_.find("category");
+    QL_REQUIRE(it != data_.end(), "StructuredMessage must have a 'category' key specified.");
+    QL_REQUIRE(it->second.type() == typeid(string), "StructuredMessage category must be a string.");
+
+    string category = boost::any_cast<string>(it->second);
+    if (category == to_string(StructuredMessage::Category::Unknown) || category == to_string(StructuredMessage::Category::Warning)) {
+        BOOST_LOG_SEV(lg, oreSeverity::warning) << json();
+    } else if (category == to_string(StructuredMessage::Category::Error)) {
+        BOOST_LOG_SEV(lg, oreSeverity::alert) << json();
+    } else {
+        QL_FAIL("StructuredMessage::log() invalid category '" << category << "'");
+    }
 }
 
 void StructuredMessage::addSubFields(const map<string, string>& subFields) {
