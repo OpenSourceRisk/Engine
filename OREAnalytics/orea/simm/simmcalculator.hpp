@@ -88,7 +88,7 @@ public:
     const std::map<ore::data::NettingSetDetails, std::pair<std::string, SimmResults>>& finalSimmResults(const SimmSide& side) const;
     const std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::pair<std::string, SimmResults>>>& finalSimmResults() const;
 
-    const std::map<SimmSide, std::set<std::string>> finalTradeIds() const { return finalTradeIds_; }
+    const std::map<SimmSide, std::set<std::string>>& finalTradeIds() const { return finalTradeIds_; }
 
     //! Return the calculator's calculation currency
     const std::string& calculationCurrency() const { return calculationCcy_; }
