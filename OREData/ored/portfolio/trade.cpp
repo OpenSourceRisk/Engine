@@ -129,12 +129,13 @@ void Trade::reset() {
     legs_.clear();
     legCurrencies_.clear();
     legPayers_.clear();
-    npvCurrency_ = "";
+    npvCurrency_.clear();
     notional_ = Null<Real>();
-    notionalCurrency_ = "";
+    notionalCurrency_.clear();
     maturity_ = Date();
-    issuer_ = "";
+    issuer_.clear();
     requiredFixings_.clear();
+    pricingEngineId_.clear();
 }
     
 const std::map<std::string, boost::any>& Trade::additionalData() const { return additionalData_; }
@@ -275,6 +276,10 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
             }
         }
     }
+}
+
+void Trade::setPricingEngineId(const EngineBuilder& builder) {
+    pricingEngineId_ = tradeType() + "/" + builder.model() + "/" + builder.engine();
 }
 
 } // namespace data
