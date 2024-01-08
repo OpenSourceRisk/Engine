@@ -162,26 +162,26 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     // of the sim market yield curves for the scenario calculation
     cvsData.shiftTenors = {1 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,  4 * Years,
                            5 * Years,  7 * Years,  10 * Years, 15 * Years, 20 * Years, 30 * Years};
-    cvsData.shiftType = "Absolute";
+    cvsData.shiftType = ShiftType::Absolute;
     cvsData.shiftSize = 1E-5;
 
     SensitivityScenarioData::SpotShiftData fxsData;
-    fxsData.shiftType = "Absolute";
+    fxsData.shiftType = ShiftType::Absolute;
     fxsData.shiftSize = 1E-5;
 
     SensitivityScenarioData::VolShiftData fxvsData;
-    fxvsData.shiftType = "Absolute";
+    fxvsData.shiftType = ShiftType::Absolute;
     fxvsData.shiftSize = 1E-5;
     fxvsData.shiftExpiries = {5 * Years};
 
     SensitivityScenarioData::CapFloorVolShiftData cfvsData;
-    cfvsData.shiftType = "Absolute";
+    cfvsData.shiftType = ShiftType::Absolute;
     cfvsData.shiftSize = 1E-5;
     cfvsData.shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     cfvsData.shiftStrikes = {0.01, 0.02, 0.03, 0.04, 0.05};
 
     SensitivityScenarioData::GenericYieldVolShiftData swvsData;
-    swvsData.shiftType = "Absolute";
+    swvsData.shiftType = ShiftType::Absolute;
     swvsData.shiftSize = 1E-5;
     swvsData.shiftExpiries = {6 * Months, 1 * Years, 2 * Years,  3 * Years,
                               5 * Years,  7 * Years, 10 * Years, 20 * Years};
