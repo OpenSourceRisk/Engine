@@ -174,5 +174,50 @@ RiskFactorKey parseRiskFactorKey(const string& str) {
     RiskFactorKey rfk(parseRiskFactorKeyType(tokens[0]), tokens[1], parseInteger(tokens[2]));
     return rfk;
 }
+
+ShiftScheme parseShiftScheme(const std::string& s) {
+    static map<string, ShiftScheme> m = {{"Forward", ShiftScheme::Forward},
+                                         {"Backward", ShiftScheme::Backward},
+                                         {"Central", ShiftScheme::Central}};
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Cannot convert shift scheme \"" << s << "\" to ShiftScheme");
+    }
+}
+
+std::ostream& operator<<(std::ostream& out, const ShiftScheme& shiftScheme) {
+    if (shiftScheme == ShiftScheme::Forward)
+        return out << "Forward";
+    else if (shiftScheme == ShiftScheme::Backward)
+        return out << "Backward";
+    else if (shiftScheme == ShiftScheme::Central)
+        return out << "Central";
+    else
+        QL_FAIL("Invalid ShiftScheme " << static_cast<int>(shiftScheme));
+}
+
+ShiftType parseShiftType(const std::string& s) {
+    static map<string, ShiftType> m = {
+        {"Absolute", ShiftType::Absolute},
+        {"Relative", ShiftType::Relative}};
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Cannot convert shift type \"" << s << "\" to ShiftType");
+    }
+}
+
+std::ostream& operator<<(std::ostream& out, const ShiftType& shiftType) {
+    if (shiftType == ShiftType::Absolute)
+        return out << "Absolute";
+    else if (shiftType == ShiftType::Relative)
+        return out << "Relative";
+    else
+        QL_FAIL("Invalid ShiftType " << shiftType);
+}
+
 } // namespace analytics
 } // namespace ore

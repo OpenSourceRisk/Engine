@@ -53,7 +53,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             LOG("Loading stress parameters for recovery rate for " << isin);
             SpotShiftData data;
             data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
-            data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+            data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
             test.recoveryRateShifts[isin] = data;
         }
 
@@ -66,7 +66,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             string name = XMLUtils::getAttribute(child, "name");
             LOG("Loading stress parameters for survival probability for " << name);
             CurveShiftData data;
-            data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+            data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
             data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
             data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
             QL_REQUIRE(data.shifts.size() == data.shiftTenors.size(),
@@ -84,7 +84,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             string ccy = XMLUtils::getAttribute(child, "ccy");
             LOG("Loading stress parameters for discount curve for ccy " << ccy);
             CurveShiftData data;
-            data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+            data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
             data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
             data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
             QL_REQUIRE(data.shifts.size() == data.shiftTenors.size(),
@@ -103,7 +103,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             LOG("Loading stress parameters for index " << index);
             // same as discount curve sensitivity loading from here ...
             CurveShiftData data;
-            data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+            data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
             data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
             data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
             QL_REQUIRE(data.shifts.size() == data.shiftTenors.size(),
@@ -122,7 +122,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             LOG("Loading stress parameters for yield curve " << name);
             // same as discount curve sensitivity loading from here ...
             CurveShiftData data;
-            data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+            data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
             data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
             data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
             QL_REQUIRE(data.shifts.size() == data.shiftTenors.size(),
@@ -140,7 +140,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             string ccypair = XMLUtils::getAttribute(child, "ccypair");
             LOG("Loading stress parameters for FX " << ccypair);
             SpotShiftData data;
-            data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+            data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
             data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
             test.fxShifts[ccypair] = data;
         }
@@ -154,7 +154,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             string ccypair = XMLUtils::getAttribute(child, "ccypair");
             LOG("Loading stress parameters for FX vols " << ccypair);
             VolShiftData data;
-            data.shiftType = XMLUtils::getChildValue(child, "ShiftType");
+            data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType"));
             data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
             data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
             test.fxVolShifts[ccypair] = data;
@@ -169,7 +169,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             string equity = XMLUtils::getAttribute(child, "equity");
             LOG("Loading stress parameters for Equity " << equity);
             SpotShiftData data;
-            data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+            data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
             data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
             test.equityShifts[equity] = data;
         }
@@ -183,7 +183,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             string equity = XMLUtils::getAttribute(child, "equity");
             LOG("Loading stress parameters for Equity vols " << equity);
             VolShiftData data;
-            data.shiftType = XMLUtils::getChildValue(child, "ShiftType");
+            data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType"));
             data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
             data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
             test.equityVolShifts[equity] = data;
@@ -198,7 +198,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             string ccy = XMLUtils::getAttribute(child, "ccy");
             LOG("Loading stress parameters for swaption vols " << ccy);
             SwaptionVolShiftData data;
-            data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+            data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
             data.shiftTerms = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTerms", true);
             data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
             XMLNode* shiftSizes = XMLUtils::getChildNode(child, "Shifts");
@@ -235,7 +235,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
 		}
 	    }
             CapFloorVolShiftData data;
-            data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+            data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
             data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
             data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
             test.capVolShifts[key] = data;
@@ -250,7 +250,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             string bond = XMLUtils::getAttribute(child, "security");
             LOG("Loading stress parameters for Security spreads " << bond);
             SpotShiftData data;
-            data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+            data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
             data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
             test.securitySpreadShifts[bond] = data;
         }
