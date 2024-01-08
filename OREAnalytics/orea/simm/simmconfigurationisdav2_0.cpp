@@ -33,6 +33,8 @@ using std::vector;
 namespace ore {
 namespace analytics {
 
+using RiskType = CrifRecord::RiskType;
+
 SimmConfiguration_ISDA_V2_0::SimmConfiguration_ISDA_V2_0(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
                                                          const std::string& name, const std::string version)
     : SimmConfigurationBase(simmBucketMapper, name, version) {

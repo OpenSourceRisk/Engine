@@ -66,7 +66,7 @@ boost::shared_ptr<EngineFactory> registerBuilders(boost::shared_ptr<EngineData> 
 void parSensiBumpAnalysis(boost::shared_ptr<Portfolio>& portfolio, boost::shared_ptr<EngineData>& engineData,
                           boost::shared_ptr<Market>& initMarket, map<string, Real>& baseManualPv, string& baseCcy,
                           vector<Handle<Quote>>& parValVecBase, vector<string>& labelVec, Real shiftSize,
-                          string& shiftType, std::map<std::pair<std::string, std::string>, Real>& parDelta,
+                          ShiftType shiftType, std::map<std::pair<std::string, std::string>, Real>& parDelta,
                           std::map<std::pair<std::string, std::string>, Real>& zeroDelta, map<string, Real>& basePv) {
 
     Size tradeCount = portfolio->size();
@@ -105,8 +105,8 @@ void parSensiBumpAnalysis(boost::shared_ptr<Portfolio>& portfolio, boost::shared
         // if ((curveType == "CDSVolatility") || (curveType == "EquityVolatility")) sensiLabel = sensiLabel + "/ATM";
         for (Size j = 0; j < parValVecBase.size(); ++j) {
             if (i == j) {
-                Real newVal =
-                    (shiftType == "ABSOLUTE") ? (baseValues[j] + shiftSize) : (baseValues[j] * (1.0 + shiftSize));
+                Real newVal = (shiftType == ShiftType::Absolute) ? (baseValues[j] + shiftSize)
+                                                                 : (baseValues[j] * (1.0 + shiftSize));
                 boost::dynamic_pointer_cast<SimpleQuote>(*parValVecBase[j])->setValue(newVal);
             } else {
                 boost::dynamic_pointer_cast<SimpleQuote>(*parValVecBase[j])->setValue(baseValues[j]);
@@ -459,8 +459,7 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
     for (auto d_it : initParMarket->discountRateHelpersInstMap()) {
         string ccy = d_it.first;
         Real shiftSize = zeroAnalysis->sensitivityData()->discountCurveShiftData()[ccy]->shiftSize;
-        string shiftType =
-            boost::to_upper_copy(zeroAnalysis->sensitivityData()->discountCurveShiftData()[ccy]->shiftType);
+        ShiftType shiftType = zeroAnalysis->sensitivityData()->discountCurveShiftData()[ccy]->shiftType;
         vector<Period> parTenorVec = initParMarket->discountRateHelperTenorsMap().find(ccy)->second;
         vector<Handle<Quote>> parValVecBase = initParMarket->discountRateHelperValuesMap().find(ccy)->second;
         vector<string> sensiLabels(parValVecBase.size());
@@ -480,8 +479,7 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
             zeroAnalysis->sensitivityData()->indexCurveShiftData()[idxName] =
                 boost::make_shared<SensitivityScenarioData::CurveShiftData>();
         Real shiftSize = zeroAnalysis->sensitivityData()->indexCurveShiftData()[idxName]->shiftSize;
-        string shiftType =
-            boost::to_upper_copy(zeroAnalysis->sensitivityData()->indexCurveShiftData()[idxName]->shiftType);
+        ShiftType shiftType = zeroAnalysis->sensitivityData()->indexCurveShiftData()[idxName]->shiftType;
         vector<Period> parTenorVec = initParMarket->indexCurveRateHelperTenorsMap().find(idxName)->second;
         vector<Handle<Quote>> parValVecBase = initParMarket->indexCurveRateHelperValuesMap().find(idxName)->second;
         vector<string> sensiLabels(parValVecBase.size());
@@ -500,8 +498,7 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
             zeroAnalysis->sensitivityData()->creditCurveShiftData()[name] =
                 boost::make_shared<SensitivityScenarioData::CurveShiftData>();
         Real shiftSize = zeroAnalysis->sensitivityData()->creditCurveShiftData()[name]->shiftSize;
-        string shiftType =
-            boost::to_upper_copy(zeroAnalysis->sensitivityData()->creditCurveShiftData()[name]->shiftType);
+        ShiftType shiftType = zeroAnalysis->sensitivityData()->creditCurveShiftData()[name]->shiftType;
         vector<Period> parTenorVec = initParMarket->defaultRateHelperTenorsMap().find(name)->second;
         vector<Handle<Quote>> parValVecBase = initParMarket->defaultRateHelperValuesMap().find(name)->second;
         vector<string> sensiLabels(parValVecBase.size());
@@ -516,7 +513,7 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
     for (auto d_it : initParMarket->cdsVolRateHelperValuesMap()) {
         string name = d_it.first;
         Real shiftSize = zeroAnalysis->sensitivityData()->cdsVolShiftData()[name].shiftSize;
-        string shiftType = boost::to_upper_copy(zeroAnalysis->sensitivityData()->cdsVolShiftData()[name].shiftType);
+        ShiftType shiftType = zeroAnalysis->sensitivityData()->cdsVolShiftData()[name].shiftType;
         vector<Period> parTenorVec = initParMarket->cdsVolRateHelperTenorsMap().find(name)->second;
         vector<Handle<Quote>> parValVecBase = initParMarket->cdsVolRateHelperValuesMap().find(name)->second;
         vector<string> sensiLabels(parValVecBase.size());
@@ -531,7 +528,7 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
     for (auto d_it : initParMarket->equityVolRateHelperValuesMap()) {
         string name = d_it.first;
         Real shiftSize = zeroAnalysis->sensitivityData()->equityVolShiftData()[name].shiftSize;
-        string shiftType = boost::to_upper_copy(zeroAnalysis->sensitivityData()->equityVolShiftData()[name].shiftType);
+        ShiftType shiftType = zeroAnalysis->sensitivityData()->equityVolShiftData()[name].shiftType;
         vector<Period> parTenorVec = initParMarket->equityVolRateHelperTenorsMap().find(name)->second;
         vector<Handle<Quote>> parValVecBase = initParMarket->equityVolRateHelperValuesMap().find(name)->second;
         vector<string> sensiLabels(parValVecBase.size());
@@ -546,8 +543,7 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
     for (auto d_it : initParMarket->swaptionVolRateHelperValuesMap()) {
         string name = d_it.first;
         Real shiftSize = zeroAnalysis->sensitivityData()->swaptionVolShiftData()[name].shiftSize;
-        string shiftType =
-            boost::to_upper_copy(zeroAnalysis->sensitivityData()->swaptionVolShiftData()[name].shiftType);
+        ShiftType shiftType = zeroAnalysis->sensitivityData()->swaptionVolShiftData()[name].shiftType;
         vector<Period> parTenorVec = initParMarket->swaptionVolRateHelperTenorsMap().find(name)->second;
         vector<Period> swapTenorVec = initParMarket->swaptionVolRateHelperSwapTenorsMap().find(name)->second;
         vector<Real> strikeSpreadVec = zeroAnalysis->sensitivityData()->swaptionVolShiftData()[name].shiftStrikes;
@@ -578,8 +574,7 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
     for (auto d_it : initParMarket->baseCorrRateHelperValuesMap()) {
         string name = d_it.first;
         Real shiftSize = zeroAnalysis->sensitivityData()->baseCorrelationShiftData()[name].shiftSize;
-        string shiftType =
-            boost::to_upper_copy(zeroAnalysis->sensitivityData()->baseCorrelationShiftData()[name].shiftType);
+        ShiftType shiftType = zeroAnalysis->sensitivityData()->baseCorrelationShiftData()[name].shiftType;
         vector<Period> parTenorVec = initParMarket->baseCorrRateHelperTenorsMap().find(name)->second;
         vector<string> lossLevelVec = initParMarket->baseCorrLossLevelsMap().find(name)->second;
         vector<Handle<Quote>> parValVecBase = initParMarket->baseCorrRateHelperValuesMap().find(name)->second;
@@ -597,8 +592,7 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
     for (auto d_it : initParMarket->zeroInflationRateHelperInstMap()) {
         string idxName = d_it.first;
         Real shiftSize = zeroAnalysis->sensitivityData()->zeroInflationCurveShiftData()[idxName]->shiftSize;
-        string shiftType =
-            boost::to_upper_copy(zeroAnalysis->sensitivityData()->zeroInflationCurveShiftData()[idxName]->shiftType);
+        ShiftType shiftType = zeroAnalysis->sensitivityData()->zeroInflationCurveShiftData()[idxName]->shiftType;
         vector<Period> parTenorVec = initParMarket->zeroInflationRateHelperTenorsMap().find(idxName)->second;
         vector<Handle<Quote>> parValVecBase = initParMarket->zeroInflationRateHelperValuesMap().find(idxName)->second;
         vector<string> sensiLabels(parValVecBase.size());
@@ -613,8 +607,7 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
     for (auto d_it : initParMarket->yoyInflationRateHelperInstMap()) {
         string idxName = d_it.first;
         Real shiftSize = zeroAnalysis->sensitivityData()->yoyInflationCurveShiftData()[idxName]->shiftSize;
-        string shiftType =
-            boost::to_upper_copy(zeroAnalysis->sensitivityData()->yoyInflationCurveShiftData()[idxName]->shiftType);
+        ShiftType shiftType = zeroAnalysis->sensitivityData()->yoyInflationCurveShiftData()[idxName]->shiftType;
         vector<Period> parTenorVec = initParMarket->yoyInflationRateHelperTenorsMap().find(idxName)->second;
         vector<Handle<Quote>> parValVecBase = initParMarket->yoyInflationRateHelperValuesMap().find(idxName)->second;
         vector<string> sensiLabels(parValVecBase.size());

@@ -22,9 +22,13 @@
 
 #pragma once
 
+#include <boost/filesystem/path.hpp>
+#include <orea/aggregation/creditsimulationparameters.hpp>
 #include <orea/app/parameters.hpp>
 #include <orea/cube/npvcube.hpp>
-#include <orea/aggregation/creditsimulationparameters.hpp>
+#include <orea/engine/sensitivitystream.hpp>
+#include <orea/scenario/scenariogenerator.hpp>
+#include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/stressscenariodata.hpp>
@@ -33,18 +37,19 @@
 #include <orea/engine/sensitivitystream.hpp>
 #include <orea/simm/crifloader.hpp>
 #include <orea/simm/simmcalibration.hpp>
+#include <orea/simm/crif.hpp>
 #include <orea/simm/simmbasicnamemapper.hpp>
 #include <orea/simm/simmbucketmapper.hpp>
+#include <orea/simm/simmconfiguration.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/iborfallbackconfig.hpp>
-#include <ored/model/crossassetmodeldata.hpp>
+#include <ored/marketdata/csvloader.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
+#include <ored/model/crossassetmodeldata.hpp>
 #include <ored/portfolio/nettingsetmanager.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/referencedata.hpp>
-#include <ored/marketdata/csvloader.hpp>
 #include <ored/utilities/csvfilereader.hpp>
-#include <boost/filesystem/path.hpp>
 
 namespace ore {
 namespace analytics {
@@ -283,7 +288,7 @@ public:
 
     // Setters for SIMM
     void setSimmVersion(const std::string& s) { simmVersion_ = s; }
-    void setCrifLoader();
+    
     void setCrifFromFile(const std::string& fileName,
                          char eol = '\n', char delim = ',', char quoteChar = '\0', char escapeChar = '\\');
     void setCrifFromBuffer(const std::string& csvBuffer,
@@ -553,7 +558,7 @@ public:
      * Getters for SIMM
      ******************/
     const std::string& simmVersion() { return simmVersion_; }
-    const boost::shared_ptr<ore::analytics::CrifLoader>& crifLoader() { return crifLoader_; }
+    const ore::analytics::Crif& crif() { return crif_; }
     const boost::shared_ptr<ore::analytics::SimmBasicNameMapper>& simmNameMapper() { return simmNameMapper_; }
     const boost::shared_ptr<ore::analytics::SimmBucketMapper>& simmBucketMapper() { return simmBucketMapper_; }
     const boost::shared_ptr<ore::analytics::SimmCalibrationData>& simmCalibrationData() { return simmCalibrationData_; }
@@ -561,6 +566,7 @@ public:
     const std::string& simmResultCurrency() { return simmResultCurrency_; }
     const std::string& simmReportingCurrency() { return simmReportingCurrency_; }
     bool enforceIMRegulations() { return enforceIMRegulations_; }
+    boost::shared_ptr<SimmConfiguration> getSimmConfiguration();
 
     /**************************************************
      * Getters for Zero to Par Sensi conversion
@@ -805,7 +811,7 @@ protected:
      * SIMM analytic
      ***************/
     std::string simmVersion_;
-    boost::shared_ptr<ore::analytics::CrifLoader> crifLoader_;
+    ore::analytics::Crif crif_;
     boost::shared_ptr<ore::analytics::SimmBasicNameMapper> simmNameMapper_;
     boost::shared_ptr<ore::analytics::SimmBucketMapper> simmBucketMapper_;
     boost::shared_ptr<ore::analytics::SimmCalibrationData> simmCalibrationData_;
