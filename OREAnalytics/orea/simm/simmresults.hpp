@@ -37,7 +37,7 @@ namespace analytics {
 */
 class SimmResults {
 public:
-    typedef SimmConfiguration::ProductClass ProductClass;
+    typedef CrifRecord::ProductClass ProductClass;
     typedef SimmConfiguration::RiskClass RiskClass;
     typedef SimmConfiguration::MarginType MarginType;
     typedef std::tuple<ProductClass, RiskClass, MarginType, std::string> Key;
@@ -52,7 +52,7 @@ public:
                 overwritten if overwrite=true. Otherwise, the amounts are added together.
                 Can check this using the <code>has</code> method before adding.
     */
-    void add(const SimmConfiguration::ProductClass& pc, const SimmConfiguration::RiskClass& rc,
+    void add(const CrifRecord::ProductClass& pc, const SimmConfiguration::RiskClass& rc,
              const SimmConfiguration::MarginType& mt, const std::string& b, QuantLib::Real im,
              const std::string& resultCurrency, const std::string& calculationCurrency, const bool overwrite);
 
@@ -67,13 +67,13 @@ public:
                  value in the results for the given combination. Can avoid this by first checking
                  the results using the <code>has</code> method.
     */
-    QuantLib::Real get(const SimmConfiguration::ProductClass& pc, const SimmConfiguration::RiskClass& rc,
+    QuantLib::Real get(const CrifRecord::ProductClass& pc, const SimmConfiguration::RiskClass& rc,
                        const SimmConfiguration::MarginType& mt, const std::string b) const;
 
     /*! Check if there is an initial margin value in the results container for the given combination of
         SIMM <em>product class</em>, <em>risk class</em> and <em>margin type</em>
     */
-    bool has(const SimmConfiguration::ProductClass& pc, const SimmConfiguration::RiskClass& rc,
+    bool has(const CrifRecord::ProductClass& pc, const SimmConfiguration::RiskClass& rc,
              const SimmConfiguration::MarginType& mt, const std::string b) const;
 
     //! Return true if the container is empty, otherwise false
