@@ -297,5 +297,8 @@ private:
     XMLNode* parDataToXML(ore::data::XMLDocument& doc, const boost::shared_ptr<CurveShiftData>& csd) const;
 };
 
+// Utility to extract the set of keys that are used in a sensi config to qualiffy shift specs
+std::set<std::string> getShiftSpecKeys(const SensitivityScenarioData& d);
+
 } // namespace analytics
 } // namespace ore
