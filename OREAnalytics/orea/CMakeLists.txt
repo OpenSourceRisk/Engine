@@ -92,6 +92,7 @@ scenario/shiftscenariogenerator.cpp
 scenario/simplescenario.cpp
 scenario/stressscenariodata.cpp
 scenario/stressscenariogenerator.cpp
+simm/crif.cpp
 simm/crifloader.cpp
 simm/crifrecord.cpp
 simm/simmbasicnamemapper.cpp
@@ -240,6 +241,7 @@ scenario/simplescenario.hpp
 scenario/simplescenariofactory.hpp
 scenario/stressscenariodata.hpp
 scenario/stressscenariogenerator.hpp
+simm/crif.hpp
 simm/crifloader.hpp
 simm/crifrecord.hpp
 simm/simmbasicnamemapper.hpp
