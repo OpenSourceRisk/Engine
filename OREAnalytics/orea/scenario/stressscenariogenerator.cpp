@@ -101,7 +101,7 @@ void StressScenarioGenerator::addFxShifts(StressTestScenarioData::StressTestData
         TLOG("Apply stress scenario to fx " << ccypair);
 
         StressTestScenarioData::SpotShiftData data = d.second;
-        ShiftType type = parseShiftType(data.shiftType);
+        ShiftType type = data.shiftType;
         bool relShift = (type == ShiftType::Relative);
         // QL_REQUIRE(type == ShiftType::Relative, "FX scenario type must be relative");
         Real size = data.shiftSize;
@@ -119,7 +119,7 @@ void StressScenarioGenerator::addEquityShifts(StressTestScenarioData::StressTest
     for (auto d : std.equityShifts) {
         string equity = d.first;
         StressTestScenarioData::SpotShiftData data = d.second;
-        ShiftType type = parseShiftType(data.shiftType);
+        ShiftType type = data.shiftType;
         bool relShift = (type == ShiftType::Relative);
         // QL_REQUIRE(type == ShiftType::Relative, "FX scenario type must be relative");
         Real size = data.shiftSize;
@@ -149,7 +149,7 @@ void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::Str
         std::vector<Real> shiftedZeros(n_ten);
 
         StressTestScenarioData::CurveShiftData data = d.second;
-        ShiftType shiftType = parseShiftType(data.shiftType);
+        ShiftType shiftType = data.shiftType;
         //DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(ccy));
 	DayCounter dc;
         if(auto s = simMarket_.lock()) {
@@ -209,7 +209,7 @@ void StressScenarioGenerator::addSurvivalProbabilityShifts(StressTestScenarioDat
         std::vector<Real> shiftedZeros(n_ten);
 
         StressTestScenarioData::CurveShiftData data = d.second;
-        ShiftType shiftType = parseShiftType(data.shiftType);
+        ShiftType shiftType = data.shiftType;
         //DayCounter dc = parseDayCounter(simMarketData_->defaultCurveDayCounter(name));
 	DayCounter dc;
         if(auto s = simMarket_.lock()) {
@@ -271,7 +271,7 @@ void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::Stress
         std::vector<Real> shiftedZeros(n_ten);
 
         StressTestScenarioData::CurveShiftData data = d.second;
-        ShiftType shiftType = parseShiftType(data.shiftType);
+        ShiftType shiftType = data.shiftType;
         //DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(indexName));
 	DayCounter dc;
         if(auto s = simMarket_.lock()) {
@@ -332,7 +332,7 @@ void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::Stress
         std::vector<Real> shiftedZeros(n_ten);
 
         StressTestScenarioData::CurveShiftData data = d.second;
-        ShiftType shiftType = parseShiftType(data.shiftType);
+        ShiftType shiftType = data.shiftType;
         //DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(name));
 	DayCounter dc;
         if(auto s = simMarket_.lock()) {
@@ -413,7 +413,7 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
             times[j] = dc.yearFraction(asof, d);
         }
 
-        ShiftType shiftType = parseShiftType(data.shiftType);
+        ShiftType shiftType = data.shiftType;
         std::vector<Period> shiftTenors = data.shiftExpiries;
         std::vector<Time> shiftTimes(shiftTenors.size());
         vector<Real> shifts = data.shifts;
@@ -474,7 +474,7 @@ void StressScenarioGenerator::addEquityVolShifts(StressTestScenarioData::StressT
             times[j] = dc.yearFraction(asof, d);
         }
 
-        ShiftType shiftType = parseShiftType(data.shiftType);
+        ShiftType shiftType = data.shiftType;
         std::vector<Period> shiftTenors = data.shiftExpiries;
         std::vector<Time> shiftTimes(shiftTenors.size());
         vector<Real> shifts = data.shifts;
@@ -519,7 +519,7 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
         vector<vector<Real>> shiftedVolData(n_swvol_exp, vector<Real>(n_swvol_term, 0.0));
 
         StressTestScenarioData::SwaptionVolShiftData data = d.second;
-        ShiftType shiftType = parseShiftType(data.shiftType);
+        ShiftType shiftType = data.shiftType;
         map<pair<Period, Period>, Real> shifts = data.shifts;
 
         vector<Real> shiftExpiryTimes(data.shiftExpiries.size(), 0.0);
@@ -614,7 +614,7 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
 
         StressTestScenarioData::CapFloorVolShiftData data = d.second;
 
-        ShiftType shiftType = parseShiftType(data.shiftType);
+        ShiftType shiftType = data.shiftType;
         vector<Real> shifts = data.shifts;
         vector<Real> shiftExpiryTimes(data.shiftExpiries.size(), 0.0);
 
@@ -672,7 +672,7 @@ void StressScenarioGenerator::addSecuritySpreadShifts(StressTestScenarioData::St
         string bond = d.first;
         TLOG("Apply stress scenario to security spread " << bond);
         StressTestScenarioData::SpotShiftData data = d.second;
-        ShiftType type = parseShiftType(data.shiftType);
+        ShiftType type = data.shiftType;
         bool relShift = (type == ShiftType::Relative);
         Real size = data.shiftSize;
 
@@ -691,7 +691,7 @@ void StressScenarioGenerator::addRecoveryRateShifts(StressTestScenarioData::Stre
         string isin = d.first;
         TLOG("Apply stress scenario to recovery rate " << isin);
         StressTestScenarioData::SpotShiftData data = d.second;
-        ShiftType type = parseShiftType(data.shiftType);
+        ShiftType type = data.shiftType;
         bool relShift = (type == ShiftType::Relative);
         Real size = data.shiftSize;
 

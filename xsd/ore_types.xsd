@@ -934,5 +934,20 @@
       <xs:enumeration value="TheyPay"/>
     </xs:restriction>
   </xs:simpleType>
+
+  <xs:simpleType name="shiftType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Relative"/>
+      <xs:enumeration value="Absolute"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="shiftScheme">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Forward"/>
+      <xs:enumeration value="Backward"/>
+      <xs:enumeration value="Central"/>
+    </xs:restriction>
+  </xs:simpleType>
     
 </xs:schema>
