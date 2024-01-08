@@ -38,8 +38,69 @@ using RFType = RiskFactorKey::KeyType;
 using ShiftData = SensitivityScenarioData::ShiftData;
 
 void SensitivityScenarioData::shiftDataFromXML(XMLNode* child, ShiftData& data) {
-    data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
-    data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+
+    // read in the shift types, sizes, schemes for all keys
+
+    vector<string> shiftTypeKeys;
+    vector<string> shiftSizeKeys;
+    vector<string> shiftSchemeKeys;
+
+    auto shiftTypes = XMLUtils::getChildrenValuesWithAttributes(child, std::string(), "ShiftType", "key", shiftTypeKeys);
+    auto shiftSizes = XMLUtils::getChildrenValuesWithAttributes<Real>(child, std::string(), "ShiftSize", "key",
+                                                                      shiftSizeKeys, &ore::data::parseReal);
+    auto shiftSchemes =
+        XMLUtils::getChildrenValuesWithAttributes(child, std::string(), "ShiftScheme", "key", shiftSchemeKeys);
+
+    // check that attributes are unique
+
+    QL_REQUIRE(shiftTypeKeys.size() == std::set<string>(shiftTypeKeys.begin(), shiftTypeKeys.end()).size(),
+               "SensitivityScenarioData::shiftDataFromXML(): non-unique attributes for ShiftType in node '"
+                   << XMLUtils::getNodeName(child) << "'");
+    QL_REQUIRE(shiftSizeKeys.size() == std::set<string>(shiftSizeKeys.begin(), shiftSizeKeys.end()).size(),
+               "SensitivityScenarioData::shiftDataFromXML(): non-unique attributes for ShiftSize in node '"
+                   << XMLUtils::getNodeName(child) << "'");
+    QL_REQUIRE(shiftSchemeKeys.size() == std::set<string>(shiftSchemeKeys.begin(), shiftSchemeKeys.end()).size(),
+               "SensitivityScenarioData::shiftDataFromXML(): non-unique attributes for ShiftScheme in node '"
+                   << XMLUtils::getNodeName(child) << "'");
+
+    // extract the parameter without attribute, shift type and size are mandatory, scheme is optional
+
+    auto shiftTypeEmptyKey = std::find(shiftTypeKeys.begin(), shiftTypeKeys.end(), std::string());
+    auto shiftSizeEmptyKey = std::find(shiftSizeKeys.begin(), shiftSizeKeys.end(), std::string());
+    auto shiftSchemeEmptyKey = std::find(shiftSchemeKeys.begin(), shiftSchemeKeys.end(), std::string());
+
+    QL_REQUIRE(shiftTypeEmptyKey != shiftTypeKeys.end(),
+               "SensitivityScenarioData::shiftDataFromXML(): no ShiftType without attribute defined in node '"
+                   << XMLUtils::getNodeName(child) << "'");
+    QL_REQUIRE(shiftSizeEmptyKey != shiftTypeKeys.end(),
+               "SensitivityScenarioData::shiftDataFromXML(): no ShiftSize without attribute defined in node '"
+                   << XMLUtils::getNodeName(child) << "'");
+
+    data.shiftType = parseShiftType(shiftTypes.at(std::distance(shiftTypeKeys.begin(),shiftTypeEmptyKey)));
+    data.shiftSize = shiftSizes.at(std::distance(shiftSizeKeys.begin(),shiftSizeEmptyKey));
+
+    if(shiftSchemeEmptyKey == shiftSchemeKeys.end())
+        data.shiftScheme = ShiftScheme::Forward;
+    else
+        data.shiftScheme = parseShiftScheme(shiftSchemes.at(std::distance(shiftSchemeKeys.begin(), shiftSchemeEmptyKey)));
+
+    // extract the parameters with attribute
+
+    for (Size i = 0; i < shiftTypeKeys.size(); ++i) {
+        if (!shiftTypeKeys[i].empty()) {
+            data.keyedShiftType[shiftTypeKeys[i]] = parseShiftType(shiftTypes[i]);
+        }
+    }
+    for (Size i = 0; i < shiftSizeKeys.size(); ++i) {
+        if (!shiftSizeKeys[i].empty()) {
+            data.keyedShiftSize[shiftSizeKeys[i]] = shiftSizes[i];
+        }
+    }
+    for (Size i = 0; i < shiftSchemeKeys.size(); ++i) {
+        if(!shiftSchemeKeys[i].empty()) {
+            data.keyedShiftScheme[shiftSchemeKeys[i]] = parseShiftScheme(shiftSchemes[i]);
+        }
+    }
 }
 
 void SensitivityScenarioData::curveShiftDataFromXML(XMLNode* child, CurveShiftData& data) {
@@ -61,8 +122,15 @@ void SensitivityScenarioData::volShiftDataFromXML(XMLNode* child, VolShiftData& 
 }
 
 void SensitivityScenarioData::shiftDataToXML(XMLDocument& doc, XMLNode* node, const ShiftData& data) const {
-    XMLUtils::addChild(doc, node, "ShiftType", data.shiftType);
+    XMLUtils::addChild(doc, node, "ShiftType", ore::data::to_string(data.shiftType));
+    for (auto const& [k, v] : data.keyedShiftType)
+        XMLUtils::addChild(doc, node, "ShiftType", ore::data::to_string(v), "key", k);
     XMLUtils::addChild(doc, node, "ShiftSize", data.shiftSize);
+    for (auto const& [k, v] : data.keyedShiftSize)
+        XMLUtils::addChild(doc, node, "ShiftSize", XMLUtils::convertToString(v), "key", k);
+    XMLUtils::addChild(doc, node, "ShiftScheme", ore::data::to_string(data.shiftScheme));
+    for (auto const& [k, v] : data.keyedShiftScheme)
+        XMLUtils::addChild(doc, node, "ShiftScheme", ore::data::to_string(v), "key", k);
 }
 
 void SensitivityScenarioData::curveShiftDataToXML(XMLDocument& doc, XMLNode* node, const CurveShiftData& data) const {
@@ -126,10 +194,6 @@ const ShiftData& SensitivityScenarioData::shiftData(const RiskFactorKey::KeyType
     default:
         QL_FAIL("Cannot return shift data for key type: " << keyType);
     }
-}
-
-bool SensitivityScenarioData::twoSidedDelta(const RiskFactorKey::KeyType& keyType) const {
-    return twoSidedDeltas_.count(keyType) == 1;
 }
 
 void SensitivityScenarioData::fromXML(XMLNode* root) {
@@ -462,15 +526,6 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         useSpreadedTermStructures_ = parseBool(XMLUtils::getNodeValue(n));
     else
         useSpreadedTermStructures_ = false;
-
-    DLOG("Get TwoSidedDeltaKeyTypes.");
-    if (auto n = XMLUtils::getChildNode(node, "TwoSidedDeltaKeyTypes")) {
-        for (XMLNode* c = XMLUtils::getChildNode(n, "RiskFactorKeyType"); c; c = XMLUtils::getNextSibling(c)) {
-            auto keyType = parseRiskFactorKeyType(XMLUtils::getNodeValue(c));
-            twoSidedDeltas_.insert(keyType);
-            TLOG("Added key type " << keyType << " from TwoSidedDeltaKeyTypes.");
-        }
-    }
 
     if (!parConversion_)
         return;
@@ -841,14 +896,6 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
 
     XMLUtils::addChild(doc, root, "ComputeGamma", computeGamma_);
     XMLUtils::addChild(doc, root, "UseSpreadedTermStructures", useSpreadedTermStructures_);
-
-    if (!twoSidedDeltas_.empty()) {
-        DLOG("toXML for TwoSidedDeltaKeyTypes");
-        XMLNode* parent = XMLUtils::addChild(doc, root, "TwoSidedDeltaKeyTypes");
-        for (const auto& keyType : twoSidedDeltas_) {
-            XMLUtils::addChild(doc, parent, "RiskFactorKeyType", to_string(keyType));
-        }
-    }
 
     // If not par, no more to do
     if (!parConversion_)
