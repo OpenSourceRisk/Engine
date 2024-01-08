@@ -34,6 +34,8 @@ using std::vector;
 namespace ore {
 namespace analytics {
 
+using RiskType = CrifRecord::RiskType;
+
 QuantLib::Size SimmConfiguration_ISDA_V2_2::group(const string& qualifier,
                                                   const std::map<QuantLib::Size, std::set<string>>& categories) const {
     QuantLib::Size result = 0;

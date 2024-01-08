@@ -27,6 +27,7 @@
 #include <ored/utilities/currencyconfig.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/portfolio/scriptedtrade.hpp>
+#include <orea/simm/crifloader.hpp>
 
 namespace ore {
 namespace analytics {
@@ -43,6 +44,7 @@ vector<string> getFileNames(const string& fileString, const string& path) {
 
 InputParameters::InputParameters() {
     iborFallbackConfig_ = boost::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig());
+    simmBucketMapper_ = boost::make_shared<SimmBucketMapperBase>();
     loadParameters();
 }
 
@@ -417,26 +419,23 @@ void InputParameters::setCreditSimulationParametersFromBuffer(const std::string&
     creditSimulationParameters_ = boost::make_shared<CreditSimulationParameters>();
     creditSimulationParameters_->fromXMLString(xml);
 } 
-
-void InputParameters::setCrifLoader() {
-    boost::shared_ptr<SimmConfiguration> configuration = buildSimmConfiguration(
-        simmVersion_, boost::make_shared<SimmBucketMapperBase>(), simmCalibrationData(), mporDays());
-    bool updateMappings = true;
-    bool aggregateTrades = false;
-    crifLoader_ =
-        boost::make_shared<CrifLoader>(configuration, CrifRecord::additionalHeaders, updateMappings, aggregateTrades);
-}
     
 void InputParameters::setCrifFromFile(const std::string& fileName, char eol, char delim, char quoteChar, char escapeChar) {
-    if (!crifLoader_)
-        setCrifLoader();
-    crifLoader_->loadFromFile(fileName, eol, delim, quoteChar, escapeChar);
+    boost::shared_ptr<SimmConfiguration> configuration =
+        buildSimmConfiguration(simmVersion_, boost::make_shared<SimmBucketMapperBase>(),simmCalibrationData(), mporDays());
+    bool updateMappings = true;
+    bool aggregateTrades = false;
+    auto crifLoader = CsvFileCrifLoader(fileName, configuration, CrifRecord::additionalHeaders, updateMappings, aggregateTrades, eol, delim, quoteChar, escapeChar, reportNaString());
+    crif_ = crifLoader.loadCrif();
 }
 
 void InputParameters::setCrifFromBuffer(const std::string& csvBuffer, char eol, char delim, char quoteChar, char escapeChar) {
-    if (!crifLoader_)
-        setCrifLoader();
-    crifLoader_->loadFromString(csvBuffer, eol, delim, quoteChar, escapeChar);
+    boost::shared_ptr<SimmConfiguration> configuration =
+        buildSimmConfiguration(simmVersion_, boost::make_shared<SimmBucketMapperBase>(), simmCalibrationData(), mporDays());
+    bool updateMappings = true;
+    bool aggregateTrades = false;
+    auto crifLoader = CsvBufferCrifLoader(csvBuffer, configuration, CrifRecord::additionalHeaders, updateMappings, aggregateTrades, eol, delim, quoteChar, escapeChar, reportNaString());
+    crif_ = crifLoader.loadCrif();
 }
 
 void InputParameters::setSimmNameMapper(const std::string& xml) {
@@ -597,5 +596,13 @@ Date InputParameters::mporDate() {
     }
     return mporDate_;
 }
+
+boost::shared_ptr<SimmConfiguration> InputParameters::getSimmConfiguration() {
+    QL_REQUIRE(simmBucketMapper() != nullptr,
+               "Internal error, load simm bucket mapper before retrieving simmconfiguration");
+    return buildSimmConfiguration(simmVersion(), simmBucketMapper(), simmCalibrationData(), mporDays());
+}
+
+
 } // namespace analytics
 } // namespace ore

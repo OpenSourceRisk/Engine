@@ -30,7 +30,7 @@ namespace ore {
 namespace analytics {
 
 // Ease syntax
-using RiskType = SimmConfiguration::RiskType;
+using RiskType = CrifRecord::RiskType;
 
 SimmConcentration_ISDA_V2_1::SimmConcentration_ISDA_V2_1(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper)
     : simmBucketMapper_(simmBucketMapper) {
