@@ -115,7 +115,7 @@ splitPortfolioByScenarioGenerators(
         result.push_back(std::make_pair(boost::make_shared<Portfolio>(), gen));
     }
     for(auto const& [id, t]: portfolio->trades()) {
-        Size j=1;
+        Size j;
         for(j=1;j<consolidatedScenGen.size();++j) {
             if(consolidatedScenGen[j].first.find(id) != consolidatedScenGen[j].first.end()) {
                 result[j].first->add(t);
