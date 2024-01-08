@@ -145,7 +145,7 @@ std::map<AssetClass, std::set<std::string>>
 CommodityPosition::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<AssetClass, std::set<std::string>> result;
     for (auto const& u : data_.underlyings()) {
-        result[AssetClass::EQ].insert(u.name());
+        result[AssetClass::COM].insert(u.name());
     }
     return result;
 }
