@@ -165,5 +165,15 @@ private:
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive&, const unsigned int) {}
 };
+
+enum class ShiftScheme { Forward, Backward, Central };
+enum class ShiftType { Absolute, Relative };
+
+ShiftScheme parseShiftScheme(const std::string& s);
+std::ostream& operator<<(std::ostream& out, const ShiftScheme& shiftScheme);
+
+ShiftType parseShiftType(const std::string& s);
+std::ostream& operator<<(std::ostream& out, const ShiftType& shiftType);
+
 } // namespace analytics
 } // namespace ore

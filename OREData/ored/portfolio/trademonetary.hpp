@@ -18,8 +18,9 @@
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
+#include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/xmlutils.hpp>
 
 using ore::data::XMLNode;
 using ore::data::XMLSerializable;

@@ -2154,7 +2154,7 @@ void ParSensitivityAnalysis::populateShiftSizes(const RiskFactorKey& key, Real p
     Real zeroShiftSize = getShiftSize(key, sensitivityData_, simMarket);
     auto shiftData = sensitivityData_.shiftData(key.keytype, key.name);
     Real parShiftSize = shiftData.shiftSize;
-    if (shiftData.shiftType == "Relative")
+    if (shiftData.shiftType == ShiftType::Relative)
         parShiftSize *= parRate;
     
     // Update the map

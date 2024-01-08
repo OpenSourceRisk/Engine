@@ -14,6 +14,7 @@ using ore::analytics::ScenarioSimMarketParameters;
 using ore::analytics::SensitivityScenarioData;
 using ore::analytics::SimpleScenario;
 using ore::analytics::ScenarioShiftCalculator;
+using ore::analytics::ShiftType;
 using namespace QuantLib;
 
 using RFType = RiskFactorKey::KeyType;
@@ -39,7 +40,7 @@ BOOST_AUTO_TEST_CASE(testAbsoluteDiscountShift) {
     // Discount curve sensitivity set up to have 1bp absolute shift
     ssd->discountCurveShiftData()["EUR"] = boost::make_shared<CurveShiftData>();
     ssd->discountCurveShiftData()["EUR"]->shiftSize = 0.0001;
-    ssd->discountCurveShiftData()["EUR"]->shiftType = "Absolute";
+    ssd->discountCurveShiftData()["EUR"]->shiftType = ShiftType::Absolute;
 
     ssp->setYieldCurveTenors("EUR", {3 * Months, 6 * Months});
 
@@ -81,7 +82,7 @@ BOOST_AUTO_TEST_CASE(testRelativeDiscountShift) {
     // Discount curve sensitivity set up to have 1% relative shift
     ssd->discountCurveShiftData()["EUR"] = boost::make_shared<CurveShiftData>();
     ssd->discountCurveShiftData()["EUR"]->shiftSize = 0.01;
-    ssd->discountCurveShiftData()["EUR"]->shiftType = "Relative";
+    ssd->discountCurveShiftData()["EUR"]->shiftType = ShiftType::Relative;
 
     ssp->setYieldCurveTenors("EUR", {3 * Months, 6 * Months});
 
@@ -123,7 +124,7 @@ BOOST_AUTO_TEST_CASE(testAbsoluteSurvivalShift) {
     // Credit curve sensitivity set up to have 10bp absolute shift
     ssd->creditCurveShiftData()["APPLE"] = boost::make_shared<CurveShiftData>();
     ssd->creditCurveShiftData()["APPLE"]->shiftSize = 0.0010;
-    ssd->creditCurveShiftData()["APPLE"]->shiftType = "Absolute";
+    ssd->creditCurveShiftData()["APPLE"]->shiftType = ShiftType::Absolute;
 
     ssp->setDefaultTenors("APPLE", {3 * Months, 6 * Months, 1 * Years});
 
@@ -171,7 +172,7 @@ BOOST_AUTO_TEST_CASE(testRelativeSurvivalShift) {
     // Credit curve sensitivity set up to have 10% relative shift
     ssd->creditCurveShiftData()["APPLE"] = boost::make_shared<CurveShiftData>();
     ssd->creditCurveShiftData()["APPLE"]->shiftSize = 0.10;
-    ssd->creditCurveShiftData()["APPLE"]->shiftType = "Relative";
+    ssd->creditCurveShiftData()["APPLE"]->shiftType = ShiftType::Relative;
 
     ssp->setDefaultTenors("APPLE", {3 * Months, 6 * Months, 1 * Years});
 
@@ -215,7 +216,7 @@ BOOST_AUTO_TEST_CASE(testAbsoluteFxShift) {
 
     // FX spot sensitivity set up to have 5bp absolute shift
     ssd->fxShiftData()["EURUSD"].shiftSize = shift;
-    ssd->fxShiftData()["EURUSD"].shiftType = "Absolute";
+    ssd->fxShiftData()["EURUSD"].shiftType = ShiftType::Absolute;
 
     // EURUSD spot scenario
     RiskFactorKey rf(RFType::FXSpot, "EURUSD", 0);
@@ -256,7 +257,7 @@ BOOST_AUTO_TEST_CASE(testRelativeFxShift) {
 
     // FX spot sensitivity set up to have 2% relative shift
     ssd->fxShiftData()["EURUSD"].shiftSize = shift;
-    ssd->fxShiftData()["EURUSD"].shiftType = "Relative";
+    ssd->fxShiftData()["EURUSD"].shiftType = ShiftType::Relative;
 
     // EURUSD spot scenario
     RiskFactorKey rf(RFType::FXSpot, "EURUSD", 0);
@@ -297,7 +298,7 @@ BOOST_AUTO_TEST_CASE(testAbsoluteSwaptionVolShift) {
 
     // Swaption volatility sensitivity set up to have 1bp absolute shift
     ssd->swaptionVolShiftData()["EUR"].shiftSize = shift;
-    ssd->swaptionVolShiftData()["EUR"].shiftType = "Absolute";
+    ssd->swaptionVolShiftData()["EUR"].shiftType = ShiftType::Absolute;
 
     // Swaption volatility scenario (index will correspond to some point on
     // a cube or matrix)
@@ -339,7 +340,7 @@ BOOST_AUTO_TEST_CASE(testRelativeSwaptionVolShift) {
 
     // Swaption volatility sensitivity set up to have 1% relative shift
     ssd->swaptionVolShiftData()["EUR"].shiftSize = shift;
-    ssd->swaptionVolShiftData()["EUR"].shiftType = "Relative";
+    ssd->swaptionVolShiftData()["EUR"].shiftType = ShiftType::Relative;
 
     // Swaption volatility scenario (index will correspond to some point on
     // a cube or matrix)
