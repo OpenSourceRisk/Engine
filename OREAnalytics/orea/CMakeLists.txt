@@ -18,6 +18,7 @@ aggregation/xvacalculator.cpp
 app/analytic.cpp
 app/analytics/parconversionanalytic.cpp
 app/analytics/pricinganalytic.cpp
+app/analytics/scenarioanalytic.cpp
 app/analytics/scenariostatisticsanalytic.cpp
 app/analytics/simmanalytic.cpp
 app/analytics/varanalytic.cpp
@@ -150,6 +151,7 @@ aggregation/xvacalculator.hpp
 app/analytic.hpp
 app/analytics/parconversionanalytic.hpp
 app/analytics/pricinganalytic.hpp
+app/analytics/scenarioanalytic.hpp
 app/analytics/scenariostatisticsanalytic.hpp
 app/analytics/simmanalytic.hpp
 app/analytics/varanalytic.hpp
