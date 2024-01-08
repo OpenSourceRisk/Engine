@@ -159,7 +159,7 @@ double DecomposedSensitivityStream::fxRiskShiftSize(const std::string ccy) const
     auto fxpair = ccy + baseCurrency_;
     auto fxShiftSizeIt = ssd_->fxShiftData().find(fxpair);
     QL_REQUIRE(fxShiftSizeIt != ssd_->fxShiftData().end(), "Couldn't find shiftsize for " << fxpair);
-    QL_REQUIRE(fxShiftSizeIt->second.shiftType == "Relative",
+    QL_REQUIRE(fxShiftSizeIt->second.shiftType == ore::analytics::ShiftType::Relative,
                "Requires a relative fxSpot shift for index decomposition");
     return fxShiftSizeIt->second.shiftSize;
 }
@@ -179,7 +179,7 @@ DecomposedSensitivityStream::fxRiskShiftSizes(const std::map<std::string, std::v
 double DecomposedSensitivityStream::assetSpotShiftSize(const std::string name) const {
     auto eqShiftSizeIt = ssd_->equityShiftData().find(name);
     QL_REQUIRE(eqShiftSizeIt != ssd_->equityShiftData().end(), "Couldn't find a shift size for " << name);
-    QL_REQUIRE(eqShiftSizeIt->second.shiftType == "Relative",
+    QL_REQUIRE(eqShiftSizeIt->second.shiftType == ore::analytics::ShiftType::Relative,
                "Requires a relative eqSpot shift for index decomposition");
     return eqShiftSizeIt->second.shiftSize;
 }

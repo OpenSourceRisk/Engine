@@ -470,7 +470,7 @@ class ReferenceDataManager {
 public:
     virtual ~ReferenceDataManager() {}
     virtual bool hasData(const string& type, const string& id,
-                         const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) const = 0;
+                         const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) = 0;
     virtual boost::shared_ptr<ReferenceDatum>
     getData(const string& type, const string& id, const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) = 0;
     virtual void add(const boost::shared_ptr<ReferenceDatum>& referenceDatum) = 0;
@@ -494,7 +494,7 @@ public:
     void clear() { data_.clear(); }
 
     bool hasData(const string& type, const string& id,
-                 const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) const override;
+                 const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) override;
     boost::shared_ptr<ReferenceDatum> getData(const string& type, const string& id,
                                               const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) override;
     void add(const boost::shared_ptr<ReferenceDatum>& referenceDatum) override;

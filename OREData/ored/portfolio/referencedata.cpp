@@ -603,7 +603,7 @@ void BasicReferenceDataManager::check(const string& type, const string& id, cons
         
 }
 
-bool BasicReferenceDataManager::hasData(const string& type, const string& id, const QuantLib::Date& asof) const {
+bool BasicReferenceDataManager::hasData(const string& type, const string& id, const QuantLib::Date& asof) {
     Date asofDate = asof;
     if (asofDate == QuantLib::Null<QuantLib::Date>()) {
         asofDate = Settings::instance().evaluationDate();
