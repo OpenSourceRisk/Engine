@@ -30,12 +30,12 @@
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
 
+#include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/report/report.hpp>
 #include <ored/utilities/progressbar.hpp>
-#include <ored/marketdata/loader.hpp>
 
 #include <map>
 #include <set>
@@ -94,7 +94,7 @@ public:
     virtual ~SensitivityAnalysis() {}
 
     //! Generate the Sensitivities
-    void generateSensitivities(boost::shared_ptr<NPVSensiCube> cube = boost::shared_ptr<NPVSensiCube>());
+    void generateSensitivities();
 
     //! The ASOF date for the sensitivity analysis
     const QuantLib::Date asof() const { return asof_; }
@@ -105,10 +105,8 @@ public:
     //! A getter for the sim market
     const boost::shared_ptr<ScenarioSimMarket> simMarket() const { return simMarket_; }
 
-    //! A getter for SensitivityScenarioGenerator
-    const boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator() const {
-        return scenarioGenerator_;
-    }
+    //! A getter for SensitivityScenarioGenerator (the main one, without possibly customized shifts)
+    const boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator() const { return scenarioGenerator_; }
 
     //! A getter for ScenarioSimMarketParameters
     const boost::shared_ptr<ScenarioSimMarketParameters> simMarketData() const { return simMarketData_; }
@@ -122,25 +120,17 @@ public:
     //! the portfolio of trades
     boost::shared_ptr<Portfolio> portfolio() const { return portfolio_; }
 
-    //! a wrapper for the sensitivity results cube
-    boost::shared_ptr<SensitivityCube> sensiCube() const { return sensiCube_; }
+    //! a wrapper for the sensitivity results cubes (one per shift configuration)
+    std::vector<boost::shared_ptr<SensitivityCube>> sensiCubes() const { return sensiCubes_; }
 
-protected:
-    //! initialize the various components that will be passed to the sensitivities valuation engine
-    void initialize(boost::shared_ptr<NPVSensiCube>& cube);
-    //! initialize the cube with the appropriate dimensions
-    void initializeCube(boost::shared_ptr<NPVSensiCube>& cube) const;
-    //! build engine factory
-    boost::shared_ptr<EngineFactory> buildFactory() const;
-    //! reset and rebuild the portfolio to make use of the appropriate engine factory
-    void resetPortfolio(const boost::shared_ptr<EngineFactory>& factory);
-    /*! build the ScenarioSimMarket that will be used by ValuationEngine and
-     * initialize the SensitivityScenarioGenerator that determines which sensitivities to compute */
-    void initializeSimMarket(boost::shared_ptr<ScenarioFactory> scenFact = {});
+    //! a wrapper for the first sensitivity result cube (if that is unique, otherwise throws, for bwd compatibility)
+    boost::shared_ptr<SensitivityCube> sensiCube() const {
+        QL_REQUIRE(sensiCubes_.size() == 1, "SensitivityAnalysis: sensiCube() called, but got "
+                                                << sensiCubes_.size() << " sensi cubes. Check the calling code.");
+        return sensiCubes_.front();
+    }
 
-    //! build valuation calculators for valuation engine
-    std::vector<boost::shared_ptr<ValuationCalculator>> buildValuationCalculators() const;
-
+private:
     boost::shared_ptr<ore::data::Market> market_;
     std::string marketConfiguration_;
     Date asof_;
@@ -168,12 +158,10 @@ protected:
     //! do dry run
     bool dryRun_;
 
-    //! initializationFlag
-    bool initialized_;
     //! model builders
     std::set<std::pair<string, boost::shared_ptr<QuantExt::ModelBuilder>>> modelBuilders_;
     //! sensitivityCube
-    boost::shared_ptr<SensitivityCube> sensiCube_;
+    std::vector<boost::shared_ptr<SensitivityCube>> sensiCubes_;
 
     bool useSingleThreadedEngine_;
     // additional members needed for multihreaded constructor
@@ -187,18 +175,6 @@ protected:
 */
 Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensiParams,
                   const boost::shared_ptr<ScenarioSimMarket>& simMarket, const std::string& marketConfiguration = "");
-
-
-/*! Build a scenario sim market for sensi analysis */
-boost::shared_ptr<ore::analytics::ScenarioSimMarket>
-buildScenarioSimMarketForSensitivityAnalysis(const boost::shared_ptr<ore::data::Market>& market,
-                           const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-                           const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
-                           const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
-                           const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
-                           const boost::shared_ptr<ScenarioFactory>& scenFactory,
-                           const std::string& marketConfiguration, bool continueOnError, bool overrideTenors,
-                           IborFallbackConfig& iborFallback);
 
 } // namespace analytics
 } // namespace ore

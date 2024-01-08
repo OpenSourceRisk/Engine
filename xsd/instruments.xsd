@@ -2839,13 +2839,6 @@
     </xs:all>
   </xs:complexType>
 
-  <xs:simpleType name="shiftType">
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="Relative"/>
-      <xs:enumeration value="Absolute"/>
-    </xs:restriction>
-  </xs:simpleType>
-
   <xs:complexType name="varianceOptionData">
     <xs:all>
       <xs:element type="stFreeStyleLongShort" name="LongShort"/>
