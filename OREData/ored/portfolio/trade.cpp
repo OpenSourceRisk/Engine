@@ -135,7 +135,7 @@ void Trade::reset() {
     maturity_ = Date();
     issuer_.clear();
     requiredFixings_.clear();
-    pricingEngineId_.clear();
+    sensitivityTemplate_.clear();
 }
     
 const std::map<std::string, boost::any>& Trade::additionalData() const { return additionalData_; }
