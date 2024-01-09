@@ -122,6 +122,9 @@ void ScriptedTrade::build(const boost::shared_ptr<EngineFactory>& engineFactory,
             }
         }
     }
+
+    // set sensitivity template
+    sensitivityTemplate_ = builder->sensitivityTemplate();
 }
 
 void ScriptedTrade::build(const boost::shared_ptr<EngineFactory>& engineFactory) {

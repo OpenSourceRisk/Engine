@@ -278,8 +278,8 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
     }
 }
 
-void Trade::setPricingEngineId(const EngineBuilder& builder) {
-    pricingEngineId_ = tradeType() + "/" + builder.model() + "/" + builder.engine();
+void Trade::setSensitivityTemplate(const EngineBuilder& builder) {
+    sensitivityTemplate_ = builder.engineParameter("SensitivityTemplate", {}, false, std::string());
 }
 
 } // namespace data

@@ -145,7 +145,7 @@ void SensitivityAnalysis::generateSensitivities() {
 
     std::set<std::string> sensiTemplateIdsFromPortfolio;
     for (auto const& [_, t] : portfolio_->trades())
-        sensiTemplateIdsFromPortfolio.insert(t->pricingEngineId());
+        sensiTemplateIdsFromPortfolio.insert(t->sensitivityTemplate());
 
     // take the intersection of pricing engine ids and add en empty id for the default config as the first element
 
