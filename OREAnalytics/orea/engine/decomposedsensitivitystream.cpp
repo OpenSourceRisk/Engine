@@ -59,38 +59,39 @@ SensitivityRecord DecomposedSensitivityStream::next() {
 std::vector<SensitivityRecord> DecomposedSensitivityStream::decompose(const SensitivityRecord& record) const {
     std::vector<SensitivityRecord> results;
 
-    bool tradeIdValidSurvival =
+    bool tradeMarkedForDecompositionDefaultRisk =
         defaultRiskDecompositionWeights_.find(record.tradeId) != defaultRiskDecompositionWeights_.end();
-    bool tradeIdValid = eqComDecompositionTradeIds_.find(record.tradeId) != eqComDecompositionTradeIds_.end();
+    bool tradeMarkedForDecomposition =
+        eqComDecompositionTradeIds_.find(record.tradeId) != eqComDecompositionTradeIds_.end();
     bool isNotCrossGamma = record.isCrossGamma() == false;
     bool isSurvivalProbSensi = record.key_1.keytype == RiskFactorKey::KeyType::SurvivalProbability;
     bool isEquitySpotSensi = record.key_1.keytype == RiskFactorKey::KeyType::EquitySpot;
     bool isCommoditySpotSensi = record.key_1.keytype == RiskFactorKey::KeyType::CommodityCurve;
 
-    bool hasEquityIndexRefData =
-        refDataManager_ != nullptr && refDataManager_->hasData("EquityIndex", record.key_1.name);
-    bool hasCurrencyHedgedIndexRefData =
-        refDataManager_ != nullptr && refDataManager_->hasData("CurrencyHedgedEquityIndex", record.key_1.name);
-    bool hasCommodityRefData =
-        refDataManager_ != nullptr && refDataManager_->hasData("CommodityIndex", record.key_1.name);
+    bool decomposeEquitySpot = tradeMarkedForDecomposition && isEquitySpotSensi && refDataManager_ != nullptr &&
+                               refDataManager_->hasData("EquityIndex", record.key_1.name);
+    bool decomposeCurrencyHedgedSpot = tradeMarkedForDecomposition && isEquitySpotSensi && refDataManager_ != nullptr &&
+                                       refDataManager_->hasData("CurrencyHedgedEquityIndex", record.key_1.name);
+    bool decomposeCommoditySpot = tradeMarkedForDecomposition && (isCommoditySpotSensi || isEquitySpotSensi) &&
+                                  refDataManager_ != nullptr &&
+                                  refDataManager_->hasData("CommodityIndex", record.key_1.name);
 
     try {
-        if (isSurvivalProbSensi && tradeIdValidSurvival && isNotCrossGamma) {
+        if (tradeMarkedForDecompositionDefaultRisk && isSurvivalProbSensi && isNotCrossGamma) {
             return decomposeSurvivalProbability(record);
-        } else if (isEquitySpotSensi && tradeIdValid && hasEquityIndexRefData && isNotCrossGamma) {
+        } else if (decomposeEquitySpot && isNotCrossGamma) {
             auto decompResults =
                 indexDecomposition(record.delta, record.key_1.name, ore::data::CurveSpec::CurveType::Equity);
             return sensitivityRecords(decompResults.spotRisk, decompResults.fxRisk, decompResults.indexCurrency,
                                       record);
-        } else if (isEquitySpotSensi && tradeIdValid && hasCurrencyHedgedIndexRefData && isNotCrossGamma) {
+        } else if (decomposeCurrencyHedgedSpot && isNotCrossGamma) {
             return decomposeCurrencyHedgedIndexRisk(record);
-        } else if ((isEquitySpotSensi || isCommoditySpotSensi) && tradeIdValid && hasCommodityRefData &&
-                   isNotCrossGamma) {
+        } else if (decomposeCommoditySpot && isNotCrossGamma) {
             auto decompResults =
                 indexDecomposition(record.delta, record.key_1.name, ore::data::CurveSpec::CurveType::Commodity);
             return sensitivityRecords(decompResults.spotRisk, decompResults.fxRisk, decompResults.indexCurrency,
                                       record);
-        } else if ((isEquitySpotSensi || isCommoditySpotSensi) && tradeIdValid && isNotCrossGamma) {
+        } else if (tradeMarkedForDecomposition && (isCommoditySpotSensi || isEquitySpotSensi) && isNotCrossGamma) {
             auto subFields = std::map<std::string, std::string>({{"tradeId", record.tradeId}});
             StructuredAnalyticsErrorMessage(
                 "Sensitivity Decomposition", "Index decomposition failed",
