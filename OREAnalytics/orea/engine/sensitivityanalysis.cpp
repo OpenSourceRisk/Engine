@@ -139,24 +139,24 @@ void SensitivityAnalysis::generateSensitivities() {
 
     // collect the pricing engine ids that are used in the sensitivity config
 
-    std::set<std::string> pricingEngineIdsFromSensiConfig = getShiftSpecKeys(*sensitivityData_);
+    std::set<std::string> sensiTemplateIdsFromSensiConfig = getShiftSpecKeys(*sensitivityData_);
 
     // collect the pricing engine ids that are relevant for the portfolio
 
-    std::set<std::string> pricingEngineIdsFromPortfolio;
+    std::set<std::string> sensiTemplateIdsFromPortfolio;
     for (auto const& [_, t] : portfolio_->trades())
-        pricingEngineIdsFromPortfolio.insert(t->pricingEngineId());
+        sensiTemplateIdsFromPortfolio.insert(t->pricingEngineId());
 
     // take the intersection of pricing engine ids and add en empty id for the default config as the first element
 
-    std::vector<std::string> pricingEngineIds{std::string()};
-    std::set_intersection(pricingEngineIdsFromSensiConfig.begin(), pricingEngineIdsFromSensiConfig.end(),
-                          pricingEngineIdsFromPortfolio.begin(), pricingEngineIdsFromPortfolio.end(),
-                          std::back_inserter(pricingEngineIds));
+    std::vector<std::string> sensiTemplateIds{std::string()};
+    std::set_intersection(sensiTemplateIdsFromSensiConfig.begin(), sensiTemplateIdsFromSensiConfig.end(),
+                          sensiTemplateIdsFromPortfolio.begin(), sensiTemplateIdsFromPortfolio.end(),
+                          std::back_inserter(sensiTemplateIds));
 
-    LOG("Need to process " << pricingEngineIds.size() << " sensi scenario sets resulting from "
-                           << pricingEngineIdsFromSensiConfig.size() << " pricing engine ids in sensi config and "
-                           << pricingEngineIdsFromPortfolio.size() << " pricing engine ids in portfolio.");
+    LOG("Need to process " << sensiTemplateIds.size() << " sensi scenario sets resulting from "
+                           << sensiTemplateIdsFromSensiConfig.size() << " sensi templates in sensi config and "
+                           << sensiTemplateIdsFromPortfolio.size() << " sensi templates in portfolio.");
 
     if (useSingleThreadedEngine_) {
 
@@ -172,12 +172,12 @@ void SensitivityAnalysis::generateSensitivities() {
             todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(), continueOnError_,
             sensitivityData_->useSpreadedTermStructures(), continueOnError_, overrideTenors_, iborFallbackConfig_);
 
-        std::vector<boost::shared_ptr<SensitivityScenarioGenerator>> scenarioGenerators;
-        for (Size i = 0; i < pricingEngineIds.size(); ++i) {
+        std::vector<boost::shared_ptr<SensitivityScenarioGenerator>> scenarioGenerators(sensiTemplateIds.size());
+        for (Size i = 0; i < sensiTemplateIds.size(); ++i) {
             scenarioGenerators[i] = boost::make_shared<SensitivityScenarioGenerator>(
                 sensitivityData_, simMarket_->baseScenario(), simMarketData_, simMarket_,
                 boost::make_shared<DeltaScenarioFactory>(simMarket_->baseScenario()), overrideTenors_,
-                pricingEngineIds[i], continueOnError_, simMarket_->baseScenarioAbsolute());
+                sensiTemplateIds[i], continueOnError_, simMarket_->baseScenarioAbsolute());
         }
         scenarioGenerator_ = scenarioGenerators.front();
 
@@ -198,7 +198,7 @@ void SensitivityAnalysis::generateSensitivities() {
 
         sensiCubes_.clear();
         for (auto const& [pf, scenGen] :
-             splitPortfolioByScenarioGenerators(portfolio_, pricingEngineIds, scenarioGenerators)) {
+             splitPortfolioByScenarioGenerators(portfolio_, sensiTemplateIds, scenarioGenerators)) {
             if(pf->trades().empty())
                 continue;
             LOG("Run Sensitivity Scenarios for " << pf->size() << " out of " << portfolio_->size() << " trades.");
