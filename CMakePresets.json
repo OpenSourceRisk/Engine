@@ -158,7 +158,8 @@
         "QL_BUILD_TEST_SUITE": false,
         "QL_BUILD_BENCHMARK": false,
         "QL_ENABLE_SESSIONS": true,
-        "ORE_BUILD_DOC": false
+        "ORE_BUILD_DOC": false,
+        "BUILD_SHARED_LIBS": false
       },
       "condition": {
         "type": "equals",
