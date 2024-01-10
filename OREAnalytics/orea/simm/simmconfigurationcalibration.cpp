@@ -20,6 +20,8 @@ using std::vector;
 namespace ore {
 namespace analytics {
 
+using RiskType = CrifRecord::RiskType;
+
 string SimmConfigurationCalibration::group(const string& qualifier,
                                            const std::map<string, std::set<string>>& categories) const {
     string result;

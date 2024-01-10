@@ -48,26 +48,26 @@ public:
     const boost::shared_ptr<SimmBucketMapper>& bucketMapper() const override { return simmBucketMapper_; }
 
     //! Return true if the SIMM risk type \p rt has buckets
-    bool hasBuckets(const RiskType& rt) const override;
+    bool hasBuckets(const CrifRecord::RiskType& rt) const override;
 
     /*! Return the SIMM <em>bucket</em> name for the given risk type \p rt
         and \p qualifier
     */
-    std::string bucket(const RiskType& rt, const std::string& qualifier) const override;
+    std::string bucket(const CrifRecord::RiskType& rt, const std::string& qualifier) const override;
 
     const bool checkValue(const std::string&, const std::vector<std::string>&) const;
 
     //! Return the SIMM <em>bucket</em> names for the given risk type \p rt
     //! An empty vector is returned if the risk type has no buckets
-    std::vector<std::string> buckets(const RiskType& rt) const override;
+    std::vector<std::string> buckets(const CrifRecord::RiskType& rt) const override;
 
     //! Return the list of SIMM <em>Label1</em> values for risk type \p rt
     //! An empty vector is returned if the risk type does not use <em>Label1</em>
-    std::vector<std::string> labels1(const RiskType& rt) const override;
+    std::vector<std::string> labels1(const CrifRecord::RiskType& rt) const override;
 
     //! Return the list of SIMM <em>Label2</em> values for risk type \p rt
     //! An empty vector is returned if the risk type does not use <em>Label2</em>
-    std::vector<std::string> labels2(const RiskType& rt) const override;
+    std::vector<std::string> labels2(const CrifRecord::RiskType& rt) const override;
 
     //! Return the SIMM <em>Label2</em> value for the given interest rate index
     std::string labels2(const boost::shared_ptr<QuantLib::InterestRateIndex>& irIndex) const override;
@@ -76,7 +76,7 @@ public:
     std::string labels2(const QuantLib::Period& p) const override;
 
     //! Add SIMM <em>Label2</em> values under certain circumstances.
-    void addLabels2(const RiskType& rt, const std::string& label_2) override {}
+    void addLabels2(const CrifRecord::RiskType& rt, const std::string& label_2) override {}
 
     /*! Return the SIMM <em>risk weight</em> for the given risk type \p rt with
         the given \p qualifier and the given \p label_1. Three possibilities:
@@ -86,7 +86,7 @@ public:
         -# there is a qualifier-dependent and label1-dependent risk weight for the risk
            factor's RiskType so need all three parameters
     */
-    QuantLib::Real weight(const RiskType& rt, boost::optional<std::string> qualifier = boost::none,
+    QuantLib::Real weight(const CrifRecord::RiskType& rt, boost::optional<std::string> qualifier = boost::none,
                           boost::optional<std::string> label_1 = boost::none,
                           const std::string& calculationCurrency = "") const override;
 
@@ -99,13 +99,13 @@ public:
 
         \warning An error is thrown if there is no curvature from the risk type \p rt
     */
-    QuantLib::Real curvatureWeight(const RiskType& rt, const std::string& label_1) const override;
+    QuantLib::Real curvatureWeight(const CrifRecord::RiskType& rt, const std::string& label_1) const override;
 
     /*! Give back the SIMM <em>historical volatility ratio</em> for the risk type \p rt
 
         \remark 1.0 is returned if there is no historical volatility ratio for \p rt
     */
-    QuantLib::Real historicalVolatilityRatio(const RiskType& rt) const override;
+    QuantLib::Real historicalVolatilityRatio(const CrifRecord::RiskType& rt) const override;
 
     /*! Give back the value of \f$\sigma_{kj}\f$ from the SIMM docs for risk type \p rt.
         In general, \p rt is a volatility risk type and the method returns:
@@ -117,7 +117,7 @@ public:
 
         \remark For convenience, returns 1.0 if not applicable for risk type \p rt
     */
-    QuantLib::Real sigma(const RiskType& rt, boost::optional<std::string> qualifier = boost::none,
+    QuantLib::Real sigma(const CrifRecord::RiskType& rt, boost::optional<std::string> qualifier = boost::none,
                          boost::optional<std::string> label_1 = boost::none,
                          const std::string& calculationCurrency = "") const override;
 
@@ -128,14 +128,14 @@ public:
     /*! Give back the SIMM <em>concentration threshold</em> for the risk type \p rt and the
         SIMM \p qualifier
     */
-    QuantLib::Real concentrationThreshold(const RiskType& rt, const std::string& qualifier) const override {
+    QuantLib::Real concentrationThreshold(const CrifRecord::RiskType& rt, const std::string& qualifier) const override {
         return simmConcentration_->threshold(rt, qualifier);
     }
 
     /*! Return true if \p rt is a valid SIMM <em>RiskType</em> under the current configuration.
         Otherwise, return false.
     */
-    bool isValidRiskType(const RiskType& rt) const override { return validRiskTypes_.count(rt) > 0; }
+    bool isValidRiskType(const CrifRecord::RiskType& rt) const override { return validRiskTypes_.count(rt) > 0; }
 
     //! Return the correlation between SIMM risk classes \p rc_1 and \p rc_2
     QuantLib::Real correlationRiskClasses(const RiskClass& rc_1, const RiskClass& rc_2) const override;
@@ -152,9 +152,9 @@ public:
 
         \todo test if the default return value of 0 makes sense
     */
-    QuantLib::Real correlation(const RiskType& firstRt, const std::string& firstQualifier,
+    QuantLib::Real correlation(const CrifRecord::RiskType& firstRt, const std::string& firstQualifier,
                                const std::string& firstLabel_1, const std::string& firstLabel_2,
-                               const RiskType& secondRt, const std::string& secondQualifier,
+                               const CrifRecord::RiskType& secondRt, const std::string& secondQualifier,
                                const std::string& secondLabel_1, const std::string& secondLabel_2,
                                const std::string& calculationCurrency = "") const override;
 
@@ -188,45 +188,45 @@ protected:
     QuantLib::Size labelIndex(const std::string& label, const std::vector<std::string>& labels) const;
 
     //! A base implementation of addLabels2 that can be shared by derived classes
-    void addLabels2Impl(const RiskType& rt, const std::string& label_2);
+    void addLabels2Impl(const CrifRecord::RiskType& rt, const std::string& label_2);
 
     /*! Map giving the SIMM <em>bucket</em> names for each risk type. If risk type is
         not present in the map keys => there are no buckets for that risk type
     */
-    std::map<RiskType, std::vector<std::string>> mapBuckets_;
+    std::map<CrifRecord::RiskType, std::vector<std::string>> mapBuckets_;
 
     /*! Map giving the possible SIMM <em>Label1</em> values for each risk type. If
         risk type is not present in the map keys then the <em>Label1</em> value is
         not used for that risk type
     */
-    std::map<RiskType, std::vector<std::string>> mapLabels_1_;
+    std::map<CrifRecord::RiskType, std::vector<std::string>> mapLabels_1_;
 
     /*! Map giving the possible SIMM <em>Label2</em> values for each risk type. If
         risk type is not present in the map keys then the <em>Label2</em> value is
         not used for that risk type
     */
-    std::map<RiskType, std::vector<std::string>> mapLabels_2_;
+    std::map<CrifRecord::RiskType, std::vector<std::string>> mapLabels_2_;
 
     /*! Risk weights, there are three types:
         -# risk type dependent only
         -# risk type and bucket dependent
         -# risk type, bucket and label1 dependent
     */
-    std::map<RiskType, QuantLib::Real> rwRiskType_;
-    std::map<RiskType, Amounts> rwBucket_;
-    std::map<RiskType, Amounts> rwLabel_1_;
+    std::map<CrifRecord::RiskType, QuantLib::Real> rwRiskType_;
+    std::map<CrifRecord::RiskType, Amounts> rwBucket_;
+    std::map<CrifRecord::RiskType, Amounts> rwLabel_1_;
 
     /*! Map from risk type to a vector of curvature weights. The size of the vector of
         weights for a given risk type must equal the size of the vector of Label1 values
         for that risk type in the map <code>mapLabels_1_</code>
     */
-    std::map<RiskType, std::vector<QuantLib::Real>> curvatureWeights_;
+    std::map<CrifRecord::RiskType, std::vector<QuantLib::Real>> curvatureWeights_;
 
     //! Map from risk type to a historical volatility ratio.
-    std::map<RiskType, QuantLib::Real> historicalVolatilityRatios_;
+    std::map<CrifRecord::RiskType, QuantLib::Real> historicalVolatilityRatios_;
 
     //! Set of valid risk types for the current configuration
-    std::set<RiskType> validRiskTypes_;
+    std::set<CrifRecord::RiskType> validRiskTypes_;
 
     //! Risk class correlation matrix
     Amounts riskClassCorrelation_;
@@ -235,13 +235,13 @@ protected:
         risk type i.e. correlation between qualifiers of the risk type that fall
         in different buckets
     */
-    std::map<RiskType, Amounts> interBucketCorrelation_;
+    std::map<CrifRecord::RiskType, Amounts> interBucketCorrelation_;
 
     /*! Map from risk type to an intra-bucket correlation for that
         risk type i.e. correlation between qualifiers of the risk type that fall
         in the same bucket
     */
-    std::map<RiskType, Amounts> intraBucketCorrelation_;
+    std::map<CrifRecord::RiskType, Amounts> intraBucketCorrelation_;
 
     /*! @name Single Correlations
         Single correlation numbers that don't fit in to a structure. They can be

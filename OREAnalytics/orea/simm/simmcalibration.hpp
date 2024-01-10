@@ -69,9 +69,9 @@ public:
             RiskWeights(const SimmConfiguration::RiskClass& rc) : riskClass_(rc) {}
             RiskWeights(const SimmConfiguration::RiskClass& rc, ore::data::XMLNode* node);
 
-            virtual const std::map<SimmConfiguration::RiskType, std::map<QuantLib::Size, boost::shared_ptr<Amount>>>
+            virtual const std::map<CrifRecord::RiskType, std::map<QuantLib::Size, boost::shared_ptr<Amount>>>
             uniqueRiskWeights() const {
-                return std::map<SimmConfiguration::RiskType, std::map<QuantLib::Size, boost::shared_ptr<Amount>>>();
+                return std::map<CrifRecord::RiskType, std::map<QuantLib::Size, boost::shared_ptr<Amount>>>();
             }
 
             //! \name Serialisation
@@ -101,7 +101,7 @@ public:
             ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
             void fromXML(ore::data::XMLNode* node) override;
             //@}
-            virtual const std::map<SimmConfiguration::RiskType, std::map<QuantLib::Size, boost::shared_ptr<Amount>>>
+            virtual const std::map<CrifRecord::RiskType, std::map<QuantLib::Size, boost::shared_ptr<Amount>>>
             uniqueRiskWeights() const override;
 
             const std::map<QuantLib::Size, boost::shared_ptr<Amount>>& inflation() const { return inflation_; }
@@ -121,7 +121,7 @@ public:
             ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
             void fromXML(ore::data::XMLNode* node) override;
             //@}
-            virtual const std::map<SimmConfiguration::RiskType, std::map<QuantLib::Size, boost::shared_ptr<Amount>>>
+            virtual const std::map<CrifRecord::RiskType, std::map<QuantLib::Size, boost::shared_ptr<Amount>>>
             uniqueRiskWeights() const override;
 
         private:
@@ -250,18 +250,18 @@ public:
         const boost::shared_ptr<ConcentrationThresholds>& concentrationThresholds() const {
             return concentrationThresholds_;
         }
-        const std::map<SimmConfiguration::RiskType, std::vector<std::string>>& buckets() const { return buckets_; }
-        const std::map<SimmConfiguration::RiskType, std::vector<std::string>>& labels1() const { return labels1_; }
-        const std::map<SimmConfiguration::RiskType, std::vector<std::string>>& labels2() const { return labels2_; }
+        const std::map<CrifRecord::RiskType, std::vector<std::string>>& buckets() const { return buckets_; }
+        const std::map<CrifRecord::RiskType, std::vector<std::string>>& labels1() const { return labels1_; }
+        const std::map<CrifRecord::RiskType, std::vector<std::string>>& labels2() const { return labels2_; }
 
     private:
         SimmConfiguration::RiskClass riskClass_;
         boost::shared_ptr<RiskWeights> riskWeights_;
         boost::shared_ptr<Correlations> correlations_;
         boost::shared_ptr<ConcentrationThresholds> concentrationThresholds_;
-        std::map<SimmConfiguration::RiskType, std::vector<std::string>> buckets_;
-        std::map<SimmConfiguration::RiskType, std::vector<std::string>> labels1_;
-        std::map<SimmConfiguration::RiskType, std::vector<std::string>> labels2_;
+        std::map<CrifRecord::RiskType, std::vector<std::string>> buckets_;
+        std::map<CrifRecord::RiskType, std::vector<std::string>> labels1_;
+        std::map<CrifRecord::RiskType, std::vector<std::string>> labels2_;
     };
 
     SimmCalibration() {}

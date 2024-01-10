@@ -66,13 +66,13 @@ public:
         SIMM <em>Qualifier</em>. An error is thrown if there is no <em>bucket</em>
         for the combination.
     */
-    std::string bucket(const SimmConfiguration::RiskType& riskType, const std::string& qualifier) const override;
+    std::string bucket(const CrifRecord::RiskType& riskType, const std::string& qualifier) const override;
 
     //! Check if the given SIMM <em>RiskType</em> has a bucket structure.
-    bool hasBuckets(const SimmConfiguration::RiskType& riskType) const override;
+    bool hasBuckets(const CrifRecord::RiskType& riskType) const override;
 
     //! Check if the given \p riskType and \p qualifier has a valid mapping
-    bool has(const SimmConfiguration::RiskType& riskType, const std::string& qualifier,
+    bool has(const CrifRecord::RiskType& riskType, const std::string& qualifier,
              boost::optional<bool> fallback = boost::none) const override;
 
     //! \name Serialisation
@@ -86,7 +86,7 @@ public:
               mappings e.g. <code>addMappingRange</code> that adds a range of
               mappings at once
     */
-    void addMapping(const SimmConfiguration::RiskType& riskType, const std::string& qualifier,
+    void addMapping(const CrifRecord::RiskType& riskType, const std::string& qualifier,
                     const std::string& bucket, const std::string& validFrom = "", const std::string& validTo = "", bool fallback = false) override;
 
     //! Set the Reference data manager
@@ -104,15 +104,15 @@ protected:
     virtual std::string irBucket(const std::string& qualifier) const;
 
     //! Check the risk type before adding a mapping entry
-    void checkRiskType(const SimmConfiguration::RiskType& riskType) const;
+    void checkRiskType(const CrifRecord::RiskType& riskType) const;
 
     /*! Map from SIMM <em>RiskType</em> to another map that holds the
         SIMM <em>Qualifier</em> to SIMM <em>bucket</em> mappings
     */
-    std::map<SimmConfiguration::RiskType, std::map<std::string, std::set<BucketMapping>>> bucketMapping_;
+    std::map<CrifRecord::RiskType, std::map<std::string, std::set<BucketMapping>>> bucketMapping_;
 
     //! Set of SIMM risk types that have buckets
-    std::set<SimmConfiguration::RiskType> rtWithBuckets_;
+    std::set<CrifRecord::RiskType> rtWithBuckets_;
 
 private:
     //! Reset the SIMM bucket mapper i.e. clears all mappings and adds the initial hard-coded commodity mappings

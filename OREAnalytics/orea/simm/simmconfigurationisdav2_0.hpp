@@ -45,7 +45,7 @@ public:
     std::string labels2(const boost::shared_ptr<QuantLib::InterestRateIndex>& irIndex) const override;
 
     //! Add SIMM <em>Label2</em> values under certain circumstances.
-    void addLabels2(const RiskType& rt, const std::string& label_2) override;
+    void addLabels2(const CrifRecord::RiskType& rt, const std::string& label_2) override;
 };
 
 } // namespace analytics

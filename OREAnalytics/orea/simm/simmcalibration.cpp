@@ -53,7 +53,7 @@ Size getMPOR(XMLNode* node) {
 }
 
 using RC = SimmConfiguration::RiskClass;
-using RT = SimmConfiguration::RiskType;
+using RT = CrifRecord::RiskType;
 
 SimmCalibration::Amount::Amount(const tuple<string, string, string>& key, const string& value) {
     bucket_ = std::get<0>(key);

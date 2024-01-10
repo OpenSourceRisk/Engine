@@ -18,6 +18,7 @@ aggregation/xvacalculator.cpp
 app/analytic.cpp
 app/analytics/parconversionanalytic.cpp
 app/analytics/pricinganalytic.cpp
+app/analytics/scenarioanalytic.cpp
 app/analytics/scenariostatisticsanalytic.cpp
 app/analytics/simmanalytic.cpp
 app/analytics/varanalytic.cpp
@@ -92,6 +93,7 @@ scenario/shiftscenariogenerator.cpp
 scenario/simplescenario.cpp
 scenario/stressscenariodata.cpp
 scenario/stressscenariogenerator.cpp
+simm/crif.cpp
 simm/crifloader.cpp
 simm/crifrecord.cpp
 simm/simmbasicnamemapper.cpp
@@ -149,6 +151,7 @@ aggregation/xvacalculator.hpp
 app/analytic.hpp
 app/analytics/parconversionanalytic.hpp
 app/analytics/pricinganalytic.hpp
+app/analytics/scenarioanalytic.hpp
 app/analytics/scenariostatisticsanalytic.hpp
 app/analytics/simmanalytic.hpp
 app/analytics/varanalytic.hpp
@@ -240,6 +243,7 @@ scenario/simplescenario.hpp
 scenario/simplescenariofactory.hpp
 scenario/stressscenariodata.hpp
 scenario/stressscenariogenerator.hpp
+simm/crif.hpp
 simm/crifloader.hpp
 simm/crifrecord.hpp
 simm/simmbasicnamemapper.hpp
