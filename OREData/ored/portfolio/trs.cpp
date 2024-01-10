@@ -581,10 +581,10 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                         for (Size j = 0; j < underlying_.size(); ++j) {
                             Date fixingDate = underlyingIndex[j]->fixingCalendar().adjust(d, Preceding);
                             for (auto const& [n, _] : indexNamesAndQty)
-                                requiredFixings_.addFixingDate(fixingDate, n, cpn->date());
+                                requiredFixings_.addFixingDate(fixingDate, n, cpn->date(), false, false);
                             for (auto const& n : fxIndices) {
                                 requiredFixings_.addFixingDate(n.second->fixingCalendar().adjust(fixingDate, Preceding),
-                                                               n.first, cpn->date());
+                                                               n.first, cpn->date(), false, false);
                             }
                         }
                     }
