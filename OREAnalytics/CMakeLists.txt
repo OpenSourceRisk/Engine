@@ -4,8 +4,8 @@ project(OREAnalytics CXX)
 
 enable_testing()
 
-include("../cmake/writeAll.cmake")
-include("../cmake/commonSettings.cmake")
+include(writeAll)
+include(commonSettings)
 
 get_library_name("OREAnalytics" OREA_LIB_NAME)
 get_library_name("OREData" ORED_LIB_NAME)
