@@ -130,8 +130,10 @@ if(MSVC)
     endif()
 
 else()
-    # build shared libs always
-    set(BUILD_SHARED_LIBS ON)
+    if (NOT DEFINED BUILD_SHARED_LIBS)
+        # build shared libs always
+        set(BUILD_SHARED_LIBS ON)
+    endif()
 
     # link against dynamic boost libraries
     add_definitions(-DBOOST_ALL_DYN_LINK)
