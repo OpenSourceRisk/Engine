@@ -1400,37 +1400,43 @@ ParSensitivityAnalysis::makeOIS(const boost::shared_ptr<Market>& market, string 
     // 2) singleCurve = true
     //    - discounts: iborIndex(indexName) -> yieldCurve(yieldCurveName) -> discountCurve(ccy)
     //    - forwards:  iborIndex(indexName) -> yieldCurve(yieldCurveName) -> discountCurve(ccy)
-    auto conventions = InstrumentConventions::instance().conventions();
     boost::shared_ptr<OisConvention> conv = boost::dynamic_pointer_cast<OisConvention>(convention);
     QL_REQUIRE(conv, "convention not recognised, expected OisConvention");
-    string name = indexName != "" ? indexName : conv->indexName();
-    boost::shared_ptr<IborIndex> index;
-    if (market != nullptr) {
-        index = market->iborIndex(name, marketConfiguration_).currentLink();
-    } else {
-        // make ois below requires a non empty ts
-        auto h = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.00, Actual365Fixed()));
-        index = parseIborIndex(name, h);
+    boost::shared_ptr<IborIndex> index = parseIborIndex(conv->indexName());
+    if (market == nullptr) {
+        if(!expDiscountCurve.empty())
+            parHelperDependencies_.emplace(RiskFactorKey::KeyType::IndexCurve, expDiscountCurve, 0);
+        else
+            parHelperDependencies_.emplace(RiskFactorKey::KeyType::DiscountCurve, ccy);
+        if (!singleCurve)
+            parHelperDependencies_.emplace(RiskFactorKey::KeyType::IndexCurve, indexName != "" ? indexName : conv->indexName(), 0);
     }
     boost::shared_ptr<OvernightIndex> overnightIndexTmp = boost::dynamic_pointer_cast<OvernightIndex>(index);
-    QL_REQUIRE(overnightIndexTmp, "ParSensitivityAnalysis::makeOIS(): expected OIS index, got  \"" << name << "\"");
-    Handle<YieldTermStructure> indexTs = overnightIndexTmp->forwardingTermStructure();
-    if (market != nullptr && singleCurve) {
-        if (indexName != "")
-            indexTs = overnightIndexTmp->forwardingTermStructure();
-        else if (yieldCurveName != "")
-            indexTs = market->yieldCurve(yieldCurveName, marketConfiguration_);
-        else if (equityForecastCurveName != "")
-            indexTs = market->equityForecastCurve(equityForecastCurveName, marketConfiguration_);
-        else if (ccy != "")
-            indexTs = market->discountCurve(ccy, marketConfiguration_);
-        else
-            QL_FAIL("Index curve not identified in ParSensitivityAnalysis::makeOIS (ccy=" << ccy << ")");
+    QL_REQUIRE(overnightIndexTmp, "ParSensitivityAnalysis::makeOIS(): expected OIS index, got  \"" << conv->indexName() << "\"");
+    // makeOIS below requires non-empty ts
+    Handle<YieldTermStructure> indexTs = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.00, Actual365Fixed()));
+    if (market != nullptr) {
+        if (singleCurve) {
+            if (indexName != "") {
+                indexTs = market->iborIndex(indexName, marketConfiguration_).currentLink()->forwardingTermStructure();
+            } else if (yieldCurveName != "") {
+                indexTs = market->yieldCurve(yieldCurveName, marketConfiguration_);
+            } else if (equityForecastCurveName != "") {
+                indexTs = market->equityForecastCurve(equityForecastCurveName, marketConfiguration_);
+            } else if (ccy != "") {
+                indexTs = market->discountCurve(ccy, marketConfiguration_);
+            } else {
+                QL_FAIL("Index curve not identified in ParSensitivityAnalysis::makeOIS");
+            }
+        } else {
+            indexTs = market->iborIndex(indexName != "" ? indexName : conv->indexName(), marketConfiguration_)
+                          .currentLink()
+                          ->forwardingTermStructure();
+        }
     }
     boost::shared_ptr<OvernightIndex> overnightIndex =
         boost::dynamic_pointer_cast<OvernightIndex>(overnightIndexTmp->clone(indexTs));
-    
-    // FIXME do we want to remove today's historic fixing from the index as we do for the Ibor case?
+    removeTodaysFixingIndices_.insert(overnightIndex->name());
     boost::shared_ptr<OvernightIndexedSwap> helper = MakeOIS(term, overnightIndex, Null<Rate>(), 0 * Days)
         .withTelescopicValueDates(true);
 
@@ -1466,12 +1472,8 @@ ParSensitivityAnalysis::makeOIS(const boost::shared_ptr<Market>& market, string 
         helper->setPricingEngine(swapEngine);
     }
 
-    if(!singleCurve)
-        parHelperDependencies_.emplace(RiskFactorKey::KeyType::IndexCurve, name, 0);
-
     // set pillar date
     Date latestRelevantDate = helper->maturityDate();
-    
     return std::pair<boost::shared_ptr<Instrument>, Date>(helper, latestRelevantDate);
 }
 
