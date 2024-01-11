@@ -825,14 +825,17 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
     }
 
     underlyingPv[0] = rollback(underlyingPv[0], eventTimes[0], 0.0);
-    
     swaptionPv = rollback(swaptionPv, eventTimes[0], 0.0);
 
      if (arguments_.IsPremium) {
+        Real test;
         if (arguments_.protectionFeePayer) {
-            underlyingPv.at(0).set(0, (underlyingPv.at(0).at(0) + arguments_.premium));       
+            test = arguments_.premium;
         } else {
-            underlyingPv.at(0).set(0, (underlyingPv.at(0).at(0) - arguments_.premium));
+            test = -arguments_.premium;
+        }
+        for (int i = 0; i < optionPv.size(); i++) {
+            optionPv[i] += test; 
         }
         
      } 
