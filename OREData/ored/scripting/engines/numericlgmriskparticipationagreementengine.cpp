@@ -825,17 +825,18 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
     }
 
     underlyingPv[0] = rollback(underlyingPv[0], eventTimes[0], 0.0);
+
     swaptionPv = rollback(swaptionPv, eventTimes[0], 0.0);
 
      if (arguments_.IsPremium) {
-        Real test;
+        Real premium;
         if (arguments_.protectionFeePayer) {
-            test = arguments_.premium;
+            premium = arguments_.premium;
         } else {
-            test = -arguments_.premium;
+            premium = -arguments_.premium;
         }
         for (int i = 0; i < optionPv.size(); i++) {
-            optionPv[i] += test; 
+            optionPv[i] += premium; 
         }
         
      } 
