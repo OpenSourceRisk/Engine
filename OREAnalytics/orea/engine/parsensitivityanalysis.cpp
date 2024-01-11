@@ -224,7 +224,7 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                     } else if (instType == "FXF")
                         ret = makeFxForward(simMarket, simMarketParams_->baseCcy(), ccy, term, convention, parHelperDependencies_[key]);
                     else if (instType == "TBS"){
-                        ret = makeTenorBasisSwap(simMarket, ccy, "", "", "", "", term, convention, parHelperDependencies_[key], data.discountCurve);
+                        ret = makeTenorBasisSwap(simMarket, ccy, "", "", "", "", term, convention, singleCurve, parHelperDependencies_[key], data.discountCurve);
                         boost::shared_ptr<TenorBasisSwapConvention> conv = boost::dynamic_pointer_cast<TenorBasisSwapConvention>(convention);
                         QL_REQUIRE(conv, "convention not recognised, expected TenorBasisSwapConvention");
                         dpar_dzero_multiplier_tmp = conv->dpar_dzero_multiplier();
@@ -306,7 +306,7 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                         ret = makeOIS(simMarket, ccy, "", curveName, equityForecastCurveName, term, convention, singleCurve,
                             parHelperDependencies_[key], data.discountCurve);
                     else if (instType == "TBS"){
-                        ret = makeTenorBasisSwap(simMarket, ccy, "", "", curveName, "", term, convention,
+                        ret = makeTenorBasisSwap(simMarket, ccy, "", "", curveName, "", term, convention, singleCurve,
                             parHelperDependencies_[key], data.discountCurve);
                         boost::shared_ptr<TenorBasisSwapConvention> conv = boost::dynamic_pointer_cast<TenorBasisSwapConvention>(convention);
                         QL_REQUIRE(conv, "convention not recognised, expected TenorBasisSwapConvention");
@@ -388,7 +388,7 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                         ret = makeOIS(simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName, term, convention, singleCurve,
                             parHelperDependencies_[key], data.discountCurve);
                     else if (instType == "TBS"){
-                        ret = makeTenorBasisSwap(simMarket, ccy, "", "", "", "", term, convention,
+                        ret = makeTenorBasisSwap(simMarket, ccy, "", "", "", "", term, convention, singleCurve,
                             parHelperDependencies_[key], data.discountCurve);
                         boost::shared_ptr<TenorBasisSwapConvention> conv = boost::dynamic_pointer_cast<TenorBasisSwapConvention>(convention);
                         QL_REQUIRE(conv, "convention not recognised, expected TenorBasisSwapConvention");
@@ -1479,25 +1479,20 @@ std::pair<boost::shared_ptr<QuantLib::Instrument>, Date>
 ParSensitivityAnalysis::makeTenorBasisSwap(const boost::shared_ptr<Market>& market, string ccy, string shortIndexName,
                                            string longIndexName, string yieldCurveName, string equityForecastCurveName,
                                            Period term, const boost::shared_ptr<Convention>& convention,
+                                           const bool singleCurve,
                                            std::set<ore::analytics::RiskFactorKey>& parHelperDependencies_,
                                            const string& expDiscountCurve) {
 
-    auto conventions = InstrumentConventions::instance().conventions();
     boost::shared_ptr<TenorBasisSwapConvention> conv =
         boost::dynamic_pointer_cast<TenorBasisSwapConvention>(convention);
     QL_REQUIRE(conv, "convention not recognised, expected TenorBasisSwapConvention");
-    string shortIndexNameTmp = shortIndexName == "" ? conv->shortIndexName() : shortIndexName;
-    string longIndexNameTmp = longIndexName == "" ? conv->longIndexName() : longIndexName;
+    Handle<YieldTermStructure> discountCurve, shortIndexCurve, longIndexCurve;
+    boost::shared_ptr<IborIndex> longIndex = parseIborIndex(conv->longIndexName());
+    boost::shared_ptr<IborIndex> shortIndex = parseIborIndex(conv->shortIndexName());
+    boost::shared_ptr<OvernightIndex> shortIndexOn = boost::dynamic_pointer_cast<OvernightIndex>(shortIndex);
 
-    Handle<YieldTermStructure> discountCurve;
-    boost::shared_ptr<IborIndex> longIndex, shortIndex;
-    boost::shared_ptr<OvernightIndex> shortIndexOn;
-    if (market == nullptr) {
-        longIndex = parseIborIndex(longIndexNameTmp);
-        shortIndex = parseIborIndex(shortIndexNameTmp);
-        shortIndexOn = boost::dynamic_pointer_cast<OvernightIndex>(shortIndex);
-    } else {
-        if (!expDiscountCurve.empty()){
+    if (market != nullptr) {
+        if (!expDiscountCurve.empty()) {
             // Look up the explicit discount curve in the market
             auto discountIndex = market->iborIndex(expDiscountCurve, marketConfiguration_);
             discountCurve = discountIndex->forwardingTermStructure();
@@ -1507,10 +1502,23 @@ ParSensitivityAnalysis::makeTenorBasisSwap(const boost::shared_ptr<Market>& mark
             discountCurve = market->yieldCurve(yieldCurveName, marketConfiguration_);
         else if (equityForecastCurveName != "")
             discountCurve = market->equityForecastCurve(equityForecastCurveName, marketConfiguration_);
-        shortIndex = *market->iborIndex(shortIndexNameTmp, marketConfiguration_);
-        shortIndexOn = boost::dynamic_pointer_cast<OvernightIndex>(shortIndex);
-        longIndex = *market->iborIndex(longIndexNameTmp, marketConfiguration_);
+        else {
+            QL_FAIL("tenor basis swap discount curve undetermined");
+        }
+        if(singleCurve)
+            shortIndexCurve = discountCurve;
+        else
+            shortIndexCurve =
+                market->iborIndex(shortIndexName != "" ? shortIndexName : conv->shortIndexName(), marketConfiguration_)
+                    ->forwardingTermStructure();
+        longIndexCurve =
+            market->iborIndex(longIndexName != "" ? longIndexName : conv->longIndexName(), marketConfiguration_)
+                ->forwardingTermStructure();
     }
+    longIndex = longIndex->clone(longIndexCurve);
+    shortIndex = shortIndex->clone(shortIndexCurve);
+    if(shortIndexOn)
+        shortIndexOn = boost::static_pointer_cast<OvernightIndex>(shortIndexOn->clone(shortIndexCurve));
     boost::shared_ptr<Swap> helper;
     Date latestRelevantDate;
     boost::shared_ptr<Libor> longIndexAsLibor = boost::dynamic_pointer_cast<Libor>(longIndex);
@@ -1519,6 +1527,8 @@ ParSensitivityAnalysis::makeTenorBasisSwap(const boost::shared_ptr<Market>& mark
         longIndexAsLibor != nullptr ? longIndexAsLibor->jointCalendar() : longIndex->fixingCalendar();
     Calendar shortIndexCalendar =
         shortIndexAsLibor != nullptr ? shortIndexAsLibor->jointCalendar() : shortIndex->fixingCalendar();
+    removeTodaysFixingIndices_.insert(shortIndex->name());
+    removeTodaysFixingIndices_.insert(longIndex->name());
     if (shortIndexOn) {
         // OIS vs Libor
         Date settlementDate = longIndexCalendar.advance(
@@ -1537,8 +1547,6 @@ ParSensitivityAnalysis::makeTenorBasisSwap(const boost::shared_ptr<Market>& mark
                                     .withCalendar(longIndexCalendar)
                                     .withConvention(longIndex->businessDayConvention())
                                     .forwards();
-        // FIXME do we want to remove today's historic fixing from the short index as we do for the Ibor case?
-        removeTodaysFixingIndices_.insert(longIndex->name());
         helper = boost::make_shared<OvernightIndexedBasisSwap>(OvernightIndexedBasisSwap::Payer, 100.0, oisSchedule,
                                                                shortIndexOn, iborSchedule, longIndex);
         boost::shared_ptr<IborCoupon> lastCoupon1 = boost::dynamic_pointer_cast<IborCoupon>(
@@ -1553,8 +1561,6 @@ ParSensitivityAnalysis::makeTenorBasisSwap(const boost::shared_ptr<Market>& mark
         // Libor vs Libor
         Date settlementDate = longIndexCalendar.advance(
             longIndexCalendar.adjust(asof_), longIndex->fixingDays() * Days);
-        removeTodaysFixingIndices_.insert(longIndex->name());
-        removeTodaysFixingIndices_.insert(shortIndex->name());
         helper = boost::make_shared<TenorBasisSwap>(settlementDate, 1.0, term, true, longIndex, 0.0, shortIndex, 0.0,
                                                     conv->shortPayTenor(), DateGeneration::Backward,
                                                     conv->includeSpread(), conv->subPeriodsCouponType());
@@ -1575,10 +1581,17 @@ ParSensitivityAnalysis::makeTenorBasisSwap(const boost::shared_ptr<Market>& mark
     if (market != nullptr) {
         boost::shared_ptr<PricingEngine> swapEngine = boost::make_shared<DiscountingSwapEngine>(discountCurve);
         helper->setPricingEngine(swapEngine);
+    } else {
+        if (!singleCurve) {
+            parHelperDependencies_.emplace(RiskFactorKey::KeyType::IndexCurve, shortIndexName, 0);
+        }
+        parHelperDependencies_.emplace(RiskFactorKey::KeyType::IndexCurve, longIndexName, 0);
+        if(!expDiscountCurve.empty())
+            parHelperDependencies_.emplace(RiskFactorKey::KeyType::IndexCurve, expDiscountCurve, 0);
+        else
+            parHelperDependencies_.emplace(RiskFactorKey::KeyType::DiscountCurve, ccy);
     }
 
-    parHelperDependencies_.emplace(RiskFactorKey::KeyType::IndexCurve, shortIndexNameTmp, 0);
-    parHelperDependencies_.emplace(RiskFactorKey::KeyType::IndexCurve, longIndexNameTmp, 0);
 
     // latest date and return result
     return std::pair<boost::shared_ptr<Instrument>, Date>(helper, latestRelevantDate);

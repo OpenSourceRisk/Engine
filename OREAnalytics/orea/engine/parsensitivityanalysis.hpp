@@ -135,7 +135,7 @@ private:
     makeTenorBasisSwap(const boost::shared_ptr<ore::data::Market>& market, string ccy, string shortIndexName,
                        string longIndexName, string yieldCurveName, string equityForecastCurveName, Period term,
                        const boost::shared_ptr<Convention>& conventions,
-                       std::set<ore::analytics::RiskFactorKey>& parHelperDependencies, const std::string& expDiscountCurve = "");
+                       const bool singleCurve, std::set<ore::analytics::RiskFactorKey>& parHelperDependencies, const std::string& expDiscountCurve = "");
 
     //! Create Cap/Floor instrument for implying flat vol sensitivity from optionlet vol sensitivity
     boost::shared_ptr<QuantLib::CapFloor> makeCapFloor(const boost::shared_ptr<ore::data::Market>& market, string ccy,
