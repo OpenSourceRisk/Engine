@@ -1,0 +1,62 @@
+# syntax = docker/dockerfile:experimental
+ARG debian_tag
+FROM debian:${debian_tag} as orebuild
+
+MAINTAINER Quaternion Risk Management
+LABEL Description="Provide a base environment for building in C++ with Boost"
+
+RUN apt-get update && apt-get upgrade -y \
+ && apt-get install -f -y build-essential cmake ninja-build libboost-all-dev zlib1g-dev opencl-headers ocl-icd-opencl-dev doxygen graphviz ccache libeigen3-dev
+ 
+# Argument for number of cores to use while building
+ARG num_cores
+ARG cmake_build_type=${CMAKE_BUILD_TYPE}
+
+ENV PATH="/usr/lib/ccache:$PATH"
+ENV CCACHE_DIR="/ccache"
+ENV CCACHE_MAXSIZE="10G"
+# needed if QL_USE_PCH is ON
+#ENV CCACHE_SLOPPINESS="pch_defines,time_macros,pch_defines,time_macros,include_file_mtime,include_file_ctim"
+
+# Copy ORE sources for libs and app
+COPY CMakeLists.txt /ore/CMakeLists.txt
+COPY QuantLib /ore/QuantLib
+COPY QuantExt /ore/QuantExt
+COPY OREData /ore/OREData
+COPY OREAnalytics /ore/OREAnalytics
+COPY App /ore/App
+COPY ThirdPartyLibs /ore/ThirdPartyLibs
+COPY ORETest /ore/ORETest
+COPY cmake /ore/cmake
+
+# Need the dos2unix all if building from Windows because the shell 
+# scripts fail if there are CRLF present in the files
+RUN cd /ore \
+  && mkdir -p build.ore && cd build.ore \
+  && cmake .. -DCMAKE_BUILD_TYPE=${cmake_build_type} -DCMAKE_CXX_FLAGS="-D BOOST_ENABLE_ASSERT_HANDLER -mavx2" -DQL_ENABLE_SESSIONS=ON -DQL_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DQL_BUILD_EXAMPLES=OFF -DQL_BUILD_BENCHMARK=OFF -DORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DORE_USE_ZLIB=ON -D ORE_ENABLE_OPENCL=ON
+
+WORKDIR /ore/build.ore
+RUN --mount=type=cache,target=/ccache/ ccache -z \
+  && make -j ${num_cores} && make install \
+  && ccache -s \
+  && make doc_quantext 2>&1 | grep -v "ignoring unsupported tag" \
+  && make doc_ored 2>&1 | grep -v "ignoring unsupported tag" \
+  && make doc_orea 2>&1 | grep -v "ignoring unsupported tag" 
+  
+WORKDIR / 
+RUN mkdir -p html \
+  && mkdir /html/ored && cp -r /ore/OREData/doc/html/* /html/ored \
+  && mkdir /html/orea && cp -r /ore/OREAnalytics/doc/html/* /html/orea \
+  && mkdir /html/qle && cp -r /ore/QuantExt/doc/html/* /html/qle 
+  
+FROM debian:${debian_tag} as ore
+
+COPY --from=orebuild /usr/local/include /usr/local/include
+COPY --from=orebuild /usr/local/lib/ /usr/local/lib
+COPY --from=orebuild /usr/local/bin/ /usr/local/bin
+COPY --from=orebuild /html /html
+COPY --from=orebuild /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
+
+RUN ldconfig
+
+CMD bash
