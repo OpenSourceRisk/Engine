@@ -616,6 +616,7 @@ void TenorBasisSwapConvention::build() {
     longPayTenor_ = strLongPayTenor_.empty() ? longIndex()->tenor() : parsePeriod(strLongPayTenor_);
     spreadOnShort_ = strSpreadOnShort_.empty() ? true : parseBool(strSpreadOnShort_);
     includeSpread_ = strIncludeSpread_.empty() ? false : parseBool(strIncludeSpread_);
+    dpar_dzero_multiplier_ = strdpar_dzero_multiplier_.empty() ? 1.0 : parseReal(strdpar_dzero_multiplier_);
     subPeriodsCouponType_ = strSubPeriodsCouponType_.empty() ? SubPeriodsCoupon1::Compounding
                                                              : parseSubPeriodsCouponType(strSubPeriodsCouponType_);
 }
@@ -633,6 +634,7 @@ void TenorBasisSwapConvention::fromXML(XMLNode* node) {
     strLongPayTenor_ = XMLUtils::getChildValue(node, "LongPayTenor", false);
     strSpreadOnShort_ = XMLUtils::getChildValue(node, "SpreadOnShort", false);
     strIncludeSpread_ = XMLUtils::getChildValue(node, "IncludeSpread", false);
+    strdpar_dzero_multiplier_ = XMLUtils::getChildValue(node, "DPar_DZero_Multiplier", false);
     strSubPeriodsCouponType_ = XMLUtils::getChildValue(node, "SubPeriodsCouponType", false);
 
     build();
@@ -652,6 +654,8 @@ XMLNode* TenorBasisSwapConvention::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "SpreadOnShort", strSpreadOnShort_);
     if (!strIncludeSpread_.empty())
         XMLUtils::addChild(doc, node, "IncludeSpread", strIncludeSpread_);
+    if (!strdpar_dzero_multiplier_.empty())
+        XMLUtils::addChild(doc, node, "DPar_DZero_Multiplier", strdpar_dzero_multiplier_);
     if (!strSubPeriodsCouponType_.empty())
         XMLUtils::addChild(doc, node, "SubPeriodsCouponType", strSubPeriodsCouponType_);
     return node;

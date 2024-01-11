@@ -195,6 +195,7 @@ private:
     ParContainer parSensi_;
     //! par helpers (all except cap/floors)
     std::map<ore::analytics::RiskFactorKey, boost::shared_ptr<Instrument>> parHelpers_;
+    std::map<ore::analytics::RiskFactorKey, double> dpar_dzero_multiplier_;
     //! par helpers: IR cap / floors
     std::map<ore::analytics::RiskFactorKey, boost::shared_ptr<QuantLib::CapFloor>> parCaps_;
     std::map<ore::analytics::RiskFactorKey, Handle<YieldTermStructure>> parCapsYts_;
