@@ -187,6 +187,11 @@ std::tuple<Natural, Calendar, BusinessDayConvention> getFxIndexConventions(const
         TLOG("getFxIndexConvention(" << index << "): " << fxCon->spotDays() << " / " << fxCon->advanceCalendar().name()
                                      << " from convention.");
         return std::make_tuple(fxCon->spotDays(), fxCon->advanceCalendar(), fxCon->convention());
+    } else if (auto comCon = boost::dynamic_pointer_cast<CommodityForwardConvention>(con); comCon !=nullptr
+               && (isPseudoCurrency(ccy1) || isPseudoCurrency(ccy2))) {
+        TLOG("getFxIndexConvention(" << index << "): " << fxCon->spotDays() << " / " << fxCon->advanceCalendar().name()
+                                     << " from convention.");
+        return std::make_tuple(0, comCon->advanceCalendar(), comCon->bdc());
     }
 
     // default calendar for pseudo currencies is USD
