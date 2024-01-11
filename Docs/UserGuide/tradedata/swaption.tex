@@ -93,7 +93,7 @@ The relevant fields in the \lstinline!OptionData! node for a Swaption are:
 
 \item \lstinline!OptionType![Optional]: This flag is optional for swaptions, and even if set, has no impact. Whether a swaption is a payer or receiver swaption is determined by the Payer flags on the legs of the underlying swap.
 
-\item  \lstinline!Style!: The exercise style of the Swaption. The allowable values are \emph{European} or \emph{Bermudan}.
+\item  \lstinline!Style!: The exercise style of the Swaption. The allowable values are \emph{European},  \emph{Bermudan} or  \emph{American}.  Note that  \emph{American} exercise style isn't supported, and if set to  \emph{American}, it will behave as  \emph{Bermudan} exercise style.
 
 \item \lstinline!NoticePeriod![Optional]: The notice period defining the date (relative to the exercise date) on which the exercise
   decision has to be taken. If not given the notice period defaults to \emph{0D}, i.e. the notice date is identical to the
@@ -105,7 +105,7 @@ The relevant fields in the \lstinline!OptionData! node for a Swaption are:
 \item \lstinline!NoticeConvention![Optional]: The roll convention used to compute the notice date from the exercise date. Defaults to
   \emph{Unadjusted} if not given. Allowable values: See Table \ref{tab:convention} Roll Convention.
 
-\item  \lstinline!Settlement!: Delivery Type. The allowable values are \emph{Cash} or \emph{Physical}.
+\item  \lstinline!Settlement!: Delivery Type. The allowable values are \emph{Cash} or \emph{Physical}. Note that for TradeType \emph{CallableSwap} only \emph{Physical} is allowed.
 
 \item \lstinline!SettlementMethod![Optional]: Specifies the method to calculate the settlement amount for Swaptions and CallableSwaps. Allowable values: \emph{PhysicalOTC}, \emph{PhysicalCleared}, \emph{CollateralizedCashPrice}, \emph{ParYieldCurve}. Defaults to \emph{ParYieldCurve} if Settlement is \emph{Cash} and defaults to \emph{PhysicalOTC} if Settlement is \emph{Physical}.
 
@@ -147,6 +147,32 @@ The relevant fields in the \lstinline!OptionData! node for a Swaption are:
 \item \lstinline!Premiums! [Optional]: Option premium node with amounts paid by the option buyer to the option seller.
 
 Allowable values:  See section \ref{ss:premiums}
+
+\item An \lstinline!ExerciseData! [Optional] node where one  \lstinline!Date! element must be given, and one \lstinline!Price! element can optionally also be given.  See Listing \ref{lst:exercise_data}
+
+This node marks the Swaption as exercised. If the \lstinline!ExerciseData! node is omitted it is assumed the Swaption has not been exercised. 
+
+The effective exercise date is the next \lstinline!ExerciseDate! in the \lstinline!ExerciseDates! node
+  greater or equal the given \lstinline!Date!  in \lstinline!ExerciseData!. 
+  
+  For a cash-settled Swaption, the \lstinline!Price! given in \lstinline!ExerciseData!
+  represents the cash settlement amount. It is paid according to the \lstinline!PaymentData! node: If an explicit list of payment dates is given, the payment takes place on the next date following the effective exercise date. If the \lstinline!PaymentData! is rules-based, the payment date is derived from the effective exercise date using the given calendar, lag and convention.
+  
+If a Swaption is cash-settled and has an \lstinline!ExerciseData! node with a \lstinline!Date!  but no \lstinline!Price!, then the Swaption is considered exercised on the given date, but without a settlement amount being paid.   
+  
+ \begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<ExerciseData>
+  <Date>2023-09-03</Date>
+  <Price>112000</Price>
+</ExerciseData>
+\end{minted}
+\caption{ExerciseData to mark a Swaption or CallableSwap as exercised}
+\label{lst:exercise_data}
+\end{listing}
+  
+\item A \lstinline!PaymentData! [Optional] node can be added which defines dates or rules-based settlement date(s) for cash-settled Swaptions.  Note that if rules-based, only \emph{Exercise} is allowed in the \lstinline!RelativeTo! field for Swaptions. See  \lstinline!PaymentData! in \ref{ss:option_data}
+
 
 \end{itemize}
 

@@ -21,7 +21,6 @@
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/parsensitivityanalysis.hpp>
 #include <orea/engine/parsensitivitycubestream.hpp>
-#include <orea/engine/sensitivityanalysisplus.hpp>
 #include <orea/engine/stresstest.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 
@@ -90,7 +89,7 @@ void PricingAnalyticImpl::runAnalytic(
         if (type == "NPV") {
             CONSOLEW("Pricing: NPV Report");
             ReportWriter(inputs_->reportNaString())
-                .writeNpv(*report, effectiveResultCurrency, analytic()->market(), "",
+                .writeNpv(*report, effectiveResultCurrency, analytic()->market(), inputs_->marketConfig("pricing"),
                           analytic()->portfolio());
             analytic()->reports()[type]["npv"] = report;
             CONSOLE("OK");
@@ -101,18 +100,6 @@ void PricingAnalyticImpl::runAnalytic(
                     .writeAdditionalResultsReport(*addReport, analytic()->portfolio(), analytic()->market(),
                                                   effectiveResultCurrency);
                 analytic()->reports()[type]["additional_results"] = addReport;
-                CONSOLE("OK");
-            }
-            // FIXME: Leave this here as additional output within the NPV analytic, or store report as separate analytic?
-            if (inputs_->outputTodaysMarketCalibration()) {
-                CONSOLEW("Pricing: Market Calibration");
-                LOG("Write todays market calibration report");
-                auto t = boost::dynamic_pointer_cast<TodaysMarket>(analytic()->market());
-                QL_REQUIRE(t != nullptr, "expected todays market instance");
-                boost::shared_ptr<InMemoryReport> mktReport = boost::make_shared<InMemoryReport>();
-                ReportWriter(inputs_->reportNaString())
-                    .writeTodaysMarketCalibrationReport(*mktReport, t->calibrationInfo());
-                analytic()->reports()[type]["todaysmarketcalibration"] = mktReport;
                 CONSOLE("OK");
             }
             if (inputs_->outputCurves()) {
@@ -179,7 +166,7 @@ void PricingAnalyticImpl::runAnalytic(
                 LOG("Single-threaded sensi analysis");
                 std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders;
                 std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;
-                sensiAnalysis = boost::make_shared<SensitivityAnalysisPlus>(
+                sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
                     analytic()->portfolio(), analytic()->market(), configuration, inputs_->pricingEngine(),
                     analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
                     recalibrateModels, analytic()->configurations().curveConfig,
@@ -194,13 +181,12 @@ void PricingAnalyticImpl::runAnalytic(
                     extraTradeBuilders = {};
                 std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>()> extraEngineBuilders = {};
                 std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()> extraLegBuilders = {};
-                sensiAnalysis = boost::make_shared<SensitivityAnalysisPlus>(
-                    inputs_->nThreads(), inputs_->asof(), loader, analytic()->portfolio(),
-                    Market::defaultConfiguration, inputs_->pricingEngine(),
-                    analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData, 
-                    recalibrateModels, analytic()->configurations().curveConfig,
-                    analytic()->configurations().todaysMarketParams, ccyConv, inputs_->refDataManager(),
-                    *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
+                sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
+                    inputs_->nThreads(), inputs_->asof(), loader, analytic()->portfolio(), Market::defaultConfiguration,
+                    inputs_->pricingEngine(), analytic()->configurations().simMarketParams,
+                    analytic()->configurations().sensiScenarioData, recalibrateModels,
+                    analytic()->configurations().curveConfig, analytic()->configurations().todaysMarketParams, ccyConv,
+                    inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
                 LOG("Multi-threaded sensi analysis created");
             }
             // FIXME: Why are these disabled?
@@ -221,7 +207,7 @@ void PricingAnalyticImpl::runAnalytic(
             }
 
             LOG("Sensi analysis - generate");
-            sensiAnalysis->registerProgressIndicator(boost::make_shared<ProgressLog>("sensitivities", 100, ORE_NOTICE));
+            sensiAnalysis->registerProgressIndicator(boost::make_shared<ProgressLog>("sensitivities", 100, oreSeverity::notice));
             sensiAnalysis->generateSensitivities();
 
             LOG("Sensi analysis - write sensitivity report in memory");
@@ -237,6 +223,14 @@ void PricingAnalyticImpl::runAnalytic(
                 .writeScenarioReport(*scenarioReport, sensiAnalysis->sensiCube(),
                                      inputs_->sensiThreshold());
             analytic()->reports()[type]["sensitivity_scenario"] = scenarioReport;
+
+            auto simmSensitivityConfigReport = boost::make_shared<InMemoryReport>();
+            ReportWriter(inputs_->reportNaString())
+                .writeSensitivityConfigReport(*simmSensitivityConfigReport,
+                                              sensiAnalysis->scenarioGenerator()->shiftSizes(),
+                                              sensiAnalysis->scenarioGenerator()->baseValues(),
+                                              sensiAnalysis->scenarioGenerator()->keyToFactor());
+            analytic()->reports()[type]["sensitivity_config"] = simmSensitivityConfigReport;
 
             if (inputs_->parSensi()) {
                 LOG("Sensi analysis - par conversion");

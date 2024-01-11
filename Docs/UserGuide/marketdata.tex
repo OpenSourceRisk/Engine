@@ -530,13 +530,30 @@ Example: Three Months SOFR Futures (DEC 2019):
   \label{tab:swaprate_quote}
 \end{table}
 
+\begin{table}[H]
+\centering
+  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+    \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{IR\_SWAP} & \\ \hline
+    Quote Type & \emph{RATE} & \\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the Swap rate\\ \hline
+    IndexName & Optional, any string & Generally used to differentiate swaps referencing different interest rate indices with the same tenor\\ \hline
+    Start Date & A valid date \\ \hline
+    Tenor & An integer followed by D, W, M or Y & Underlying index period \\ \hline
+    End Date & A valid date \\ \hline
+  \end{tabular}
+  \caption{Swap Rate with Start and End Date}
+  \label{tab:swaprate_quote_dated}
+\end{table}
 
-Forward start is usually not quoted, but needs to be derived from conventions.
+Forward start for the non-dated variant is usually not quoted, but needs to be derived from conventions.
 
 \medskip
 Example:
 \begin{itemize}
 \item {IR\_SWAP/RATE/EUR/2D/6M/10Y}
+\item {IR\_SWAP/RATE/GBP/20230921/1D/20231102}
 \end{itemize}
 
 % %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

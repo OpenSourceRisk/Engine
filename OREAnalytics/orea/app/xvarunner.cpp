@@ -82,10 +82,10 @@ void XvaRunner::buildCamModel(const boost::shared_ptr<ore::data::Market>& market
     LOG("XvaRunner::buildCamModel() called");
 
     Settings::instance().evaluationDate() = asof_;
-    CrossAssetModelBuilder modelBuilder(market, crossAssetModelData_, Market::defaultConfiguration,
-                                        Market::defaultConfiguration, Market::defaultConfiguration,
-                                        Market::defaultConfiguration, Market::defaultConfiguration,
-                                        Market::defaultConfiguration, false, continueOnErr);
+    CrossAssetModelBuilder modelBuilder(
+        market, crossAssetModelData_, Market::defaultConfiguration, Market::defaultConfiguration,
+        Market::defaultConfiguration, Market::defaultConfiguration, Market::defaultConfiguration,
+        Market::defaultConfiguration, false, continueOnErr, "", SalvagingAlgorithm::None, "xva cam building");
     model_ = *modelBuilder.model();
 }
 
@@ -94,6 +94,9 @@ void XvaRunner::bufferSimulationPaths() {
     LOG("XvaRunner::bufferSimulationPaths() called");
 
     auto stateProcess = model_->stateProcess();
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(stateProcess)) {
+        tmp->resetCache(scenarioGeneratorData_->getGrid()->timeGrid().size() - 1);
+    }
     auto pathGen = MultiPathGeneratorFactory().build(scenarioGeneratorData_->sequenceType(), stateProcess,
                                                      scenarioGeneratorData_->getGrid()->timeGrid(),
                                                      scenarioGeneratorData_->seed(), scenarioGeneratorData_->ordering(),

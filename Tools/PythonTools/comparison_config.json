@@ -226,6 +226,26 @@
           "IMModel",
           "TradeType"
         ],
+        "optional_cols": [
+          "BaseCurrency",
+          "end_date",
+          "trade_date",
+          "notional",
+          "trade_currency",
+          "notional2",
+          "trade_currency2",
+          "underlying",
+          "mtm_curr",
+          "mtm_value",
+          "settlement_type",
+          "strike",
+          "call_put",
+          "long_short",
+          "asset_class",
+          "base_product",
+          "sub_product",
+          "xccy_resettable"
+        ],
         "optional_keys": [
           "collect_regulations",
           "post_regulations"
@@ -256,6 +276,7 @@
           },
           {
             "names": [
+              "BaseCurrency",
               "IMModel",
               "TradeType"
             ],
@@ -426,7 +447,44 @@
           }
         ]
       },
+      "frtbcrif.csv": {
+        "keys": [
+            "RiskType",
+            "Qualifier",
+            "Bucket",
+            "Label1",
+            "Label2",
+            "AmountCurrency"
+            
+        ],
+        "column_settings": [
+          {
+            "names": [
+                "AmountUSD"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
       "frtb.csv": {
+        "keys": [
+            "CorrelationScenario",
+            "CapitalRequirement",
+            "RiskClass",
+            "Bucket"
+        ],
+        "column_settings": [
+          {
+            "names": [
+                "FrtbCharge"
+            ],
+            "abs_tol": 0.01,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "frtb_rrao.csv": {
         "keys": [
             "CorrelationScenario",
             "CapitalRequirement",
@@ -526,7 +584,10 @@
               "Exceptions",
               "GreenUpTo",
               "AmberUpTo",
-              "Zone"
+              "Zone",
+              "Currency",
+              "SIMMResultCurrency",
+              "SIMMCalculationCurrency"
             ],
             "abs_tol": null,
             "rel_tol": null
@@ -612,7 +673,8 @@
         "use_cols": [
           "InitialMargin",
           "Regulation",
-          "Currency"
+          "Currency",
+          "CalculationCurrency"
         ],
         "optional_cols": [
           "InitialMargin(Report)",
@@ -631,6 +693,7 @@
             "names": [
               "Regulation",
               "Currency",
+              "CalculationCurrency",
               "ReportCurrency"
             ],
             "abs_tol": null,
@@ -675,11 +738,15 @@
         "keys": [
           "TradeId",
           "Portfolio",
-          "ProductClass"
+          "ProductClass",
+          "CollectRegulations",
+          "PostRegulations"
         ],
         "column_settings": [
           {
             "names": [
+              "Maturity",
+              "Multiplier",
               "Notional",
               "PV",
               "Notional(Base)",
@@ -688,6 +755,17 @@
             ],
             "abs_tol": 0.1,
             "rel_tol": 1e-12
+          },
+          {
+            "names": [
+              "EndDate",
+              "Label",
+              "NotionalCurrency",
+              "PVCurrency",
+              "BaseCurrency"
+            ],
+            "abs_tol": null,
+            "rel_tol": null
           }
         ]
       },
@@ -719,6 +797,7 @@
           "ProductClass",
           "RiskClass",
           "MarginType",
+          "Bucket",
           "SimmSide"
         ],
         "rename_cols": {
@@ -1015,6 +1094,21 @@
           }
         ]
       },
+      "xvacg-exposure.csv": {
+        "keys": [
+          "Date"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "EPE",
+              "ENE"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 0.0001
+          }
+        ]
+      },
       ".*xva.*\\.csv": {
         "keys": [
           "TradeId",
@@ -1221,7 +1315,122 @@
           }
         ]
       }
-
+    }
+  },
+  "json_settings": {
+    "files": {
+      "log_progress.*\\.json": {
+        "ignore_keys": [
+          "@timestamp"
+        ],
+        "settings": [
+          {
+            "names": [
+              "progress",
+              "total"
+            ],
+            "abs_tol": 0
+          }
+        ]
+      },
+      "log_structured.*\\.json": {},
+      "marketdata\\.json": {
+        "settings": [
+          {
+            "names": [
+              "curves/data/discountFactor",
+              "curves/data/time",
+              "curves/data/zeroRate"
+            ],
+            "abs_tol": 1e-15,
+            "rel_tol": 1e-8
+          }
+        ]
+      },
+      "curves\\.json": {
+        "settings": [
+          {
+            "names": [
+              "data/discountFactor",
+              "data/time",
+              "data/zeroRate"
+            ],
+            "abs_tol": 1e-15,
+            "rel_tol": 1e-9
+          }
+        ]
+      },
+      "simm\\.json": {
+        "ignore_keys": [
+          "simmResultsPath"
+        ],
+        "settings": [
+          {
+            "names": [
+              "initial_margin",
+              "simmReport/initial_margin"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "frtb\\.json": {
+        "settings": [
+          {
+            "names": [
+              "frtbCharge"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "total_im\\.json": {
+        "settings": [
+          {
+            "names": [
+              "initial_margin"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "response\\.json": {
+        "ignore_keys": [
+          "simmResultsPath"
+        ],
+        "settings": [
+          {
+            "names": [
+              "simmReport/initial_margin",
+              "totalIMReport/initial_margin",
+              "frtb/frtbCharge"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "flownpv\\.json": {
+        "settings": [
+          {
+            "names": [
+              "presentValue"
+            ],
+            "abs_tol": 1e-6,
+            "rel_tol": 1e-12
+          },
+          {
+            "names": [
+              "jobId"
+            ],
+            "abs_tol": 0,
+            "rel_tol": null
+          }
+        ]
+      }
     }
   }
 }

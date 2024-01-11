@@ -22,6 +22,7 @@
 #include <ored/utilities/marketdata.hpp>
 
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
+#include <qle/indexes/iborindexfixingoverride.hpp>
 
 using namespace QuantExt;
 
@@ -53,16 +54,24 @@ Leg FloatingLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<En
     QL_REQUIRE(floatData, "Wrong LegType, expected Floating");
     string indexName = floatData->index();
     auto index = *engineFactory->market()->iborIndex(indexName, configuration);
+    
     auto ois = boost::dynamic_pointer_cast<OvernightIndex>(index);
     Leg result;
-    if (ois != nullptr)
-        result = makeOISLeg(data, ois, engineFactory, true, openEndDateReplacement);
-    else {
+    if (ois != nullptr) {
+        boost::shared_ptr<OvernightIndex> idx = ois;
+        if (!floatData->historicalFixings().empty())
+            idx = boost::make_shared<OvernightIndexWithFixingOverride>(ois, floatData->historicalFixings());
+        result = makeOISLeg(data, idx, engineFactory, true, openEndDateReplacement);
+    } else {
         auto bma = boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(index);
         if (bma != nullptr)
-            result = makeBMALeg(data, bma, openEndDateReplacement);
-        else
-            result = makeIborLeg(data, index, engineFactory, true, openEndDateReplacement);
+            result = makeBMALeg(data, bma, engineFactory, openEndDateReplacement);
+        else {
+            boost::shared_ptr<IborIndex> idx = index;
+            if (!floatData->historicalFixings().empty())
+                idx = boost::make_shared<IborIndexWithFixingOverride>(index, floatData->historicalFixings());
+            result = makeIborLeg(data, idx, engineFactory, true, openEndDateReplacement);
+        }
     }
     applyIndexing(result, data, engineFactory, requiredFixings, openEndDateReplacement, useXbsCurves);
     addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(requiredFixings));

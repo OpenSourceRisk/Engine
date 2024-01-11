@@ -34,30 +34,14 @@ using std::vector;
 namespace ore {
 namespace analytics {
 
-SensitivityFileStream::SensitivityFileStream(const string& fileName, char delim, const string& comment)
-    : delim_(delim), comment_(comment), lineNo_(0) {
-
-    // Open the file
-    file_.open(fileName);
-    QL_REQUIRE(file_.is_open(), "error opening file " << fileName);
-    LOG("The file " << fileName << " has been opened for streaming");
+void SensitivityInputStream::setStream(std::istream* stream) { 
+    stream_ = stream; 
 }
 
-SensitivityFileStream::~SensitivityFileStream() {
-    // Close the file if still open
-    if (file_.is_open()) {
-        file_.close();
-    }
-    LOG("The file stream has been closed");
-}
-
-SensitivityRecord SensitivityFileStream::next() {
-    // Just in case
-    QL_REQUIRE(file_.is_open(), "The file stream is not open.");
-
+SensitivityRecord SensitivityInputStream::next() {
     // Get the next valid SensitivityRecord
     string line;
-    while (getline(file_, line)) {
+    while (getline(*stream_, line)) {
         // Update the current line number
         ++lineNo_;
 
@@ -80,14 +64,14 @@ SensitivityRecord SensitivityFileStream::next() {
     return SensitivityRecord();
 }
 
-void SensitivityFileStream::reset() {
+void SensitivityInputStream::reset() {
     // Reset to beginning of file and line number
-    file_.clear();
-    file_.seekg(0, std::ios::beg);
+    stream_->clear();
+    stream_->seekg(0, std::ios::beg);
     lineNo_ = 0;
 }
 
-SensitivityRecord SensitivityFileStream::processRecord(const vector<string>& entries) const {
+SensitivityRecord SensitivityInputStream::processRecord(const vector<string>& entries) const {
 
     QL_REQUIRE(entries.size() == 10, "On line number " << lineNo_ << ": A sensitivity record needs 10 entries");
 
@@ -111,6 +95,32 @@ SensitivityRecord SensitivityFileStream::processRecord(const vector<string>& ent
     tryParseReal(entries[9], sr.gamma); // might be #N/A, if not computed
 
     return sr;
+}
+
+SensitivityFileStream::SensitivityFileStream(const string& fileName, char delim, const string& comment)
+    : SensitivityInputStream(delim, comment) {
+
+    // set file name
+    file_ = new std::ifstream(fileName);
+    QL_REQUIRE(file_->is_open(), "error opening file " << fileName);
+    LOG("The file " << fileName << " has been opened for streaming");
+
+    // pass stream to function set stream
+    setStream(file_);
+}
+
+SensitivityFileStream::~SensitivityFileStream() {
+    // Close the file if still open
+    if (file_->is_open()) {
+        file_->close();
+    }
+    LOG("The file stream has been closed");
+}
+
+SensitivityBufferStream::SensitivityBufferStream(const std::string& buffer, char delim, const std::string& comment)
+    : SensitivityInputStream(delim, comment) {
+    std::stringstream* stream = new std::stringstream(buffer);
+    setStream(stream);
 }
 
 } // namespace analytics

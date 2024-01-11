@@ -95,7 +95,7 @@ void SimpleProgressBar::reset() {
     finalized_ = false;
 }
 
-ProgressLog::ProgressLog(const std::string& message, const unsigned int numberOfMessages, const int logLevel)
+ProgressLog::ProgressLog(const std::string& message, const unsigned int numberOfMessages, const oreSeverity logLevel)
     : message_(message), numberOfMessages_(numberOfMessages), logLevel_(logLevel), messageCounter_(0) {}
 
 void ProgressLog::updateProgress(const unsigned long progress, const unsigned long total) {
@@ -105,6 +105,7 @@ void ProgressLog::updateProgress(const unsigned long progress, const unsigned lo
     MLOG(logLevel_, message_ << " " << progress << " out of " << total << " steps ("
                              << static_cast<int>(static_cast<double>(progress) / static_cast<double>(total) * 100.0)
                              << "%) completed");
+    ProgressMessage(message_, progress, total).log();
     messageCounter_++;
 }
 

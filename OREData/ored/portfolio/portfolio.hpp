@@ -66,6 +66,8 @@ public:
     //! Portfolio size
     QuantLib::Size size() const { return trades_.size(); }
 
+    bool empty() const { return trades_.empty(); }
+
     //! XMLSerializable interface
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) override;
@@ -112,7 +114,7 @@ public:
 
         \warning This method will return an empty map if the Portfolio has not been built.
     */
-    std::map<std::string, std::set<QuantLib::Date>>
+    std::map<std::string, RequiredFixings::FixingDates>
     fixings(const QuantLib::Date& settlementDate = QuantLib::Date()) const;
 
     /*! Returns the names of the underlying instruments for each asset class */

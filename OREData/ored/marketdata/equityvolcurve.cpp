@@ -55,7 +55,7 @@ namespace ore {
 namespace data {
 
 EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const Loader& loader,
-                               const CurveConfigurations& curveConfigs, const Handle<EquityIndex>& eqIndex,
+                               const CurveConfigurations& curveConfigs, const Handle<EquityIndex2>& eqIndex,
                                const map<string, boost::shared_ptr<EquityCurve>>& requiredEquityCurves,
                                const map<string, boost::shared_ptr<EquityVolCurve>>& requiredEquityVolCurves,
                                const map<string, boost::shared_ptr<FXVolCurve>>& requiredFxVolCurves,
@@ -224,7 +224,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
 
         // Loop over quotes and process equity option quotes that are explicitly specified in the config
         std::ostringstream ss;
-        ss << MarketDatum::InstrumentType::EQUITY_OPTION << "/" << vcc.quoteType() << "/" << vc.curveID() << "/"
+        ss << MarketDatum::InstrumentType::EQUITY_OPTION << "/" << vcc.quoteType() << "/" << vc.equityId() << "/"
            << vc.ccy() << "/*";
         Wildcard w(ss.str());
         for (const auto& md : loader.get(w, asof)) {
@@ -320,7 +320,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
 
 void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConfig& vc,
                                      const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader,
-                                     const QuantLib::Handle<EquityIndex>& eqIndex) {
+                                     const QuantLib::Handle<EquityIndex2>& eqIndex) {
     
     DLOG("EquityVolCurve: start building 2-D strike volatility surface");
    
@@ -352,7 +352,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
     Size putQuotesAdded = 0;
     Size excludedAlreadyExpired = 0;
     std::ostringstream ss;
-    ss << MarketDatum::InstrumentType::EQUITY_OPTION << "/" << vssc.quoteType() << "/" << vc.curveID() << "/"
+    ss << MarketDatum::InstrumentType::EQUITY_OPTION << "/" << vssc.quoteType() << "/" << vc.equityId() << "/"
        << vc.ccy() << "/*";
     Wildcard w(ss.str());
     for (const auto& md : loader.get(w, asof)) {
@@ -566,7 +566,7 @@ vector<Real> checkMoneyness(const vector<string>& strMoneynessLevels) {
 
 void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConfig& vc,
                                      const VolatilityMoneynessSurfaceConfig& vmsc, const Loader& loader,
-                                     const QuantLib::Handle<EquityIndex>& eqIndex) {
+                                     const QuantLib::Handle<EquityIndex2>& eqIndex) {
 
     LOG("EquityVolCurve: start building 2-D volatility moneyness strike surface");
     using boost::adaptors::transformed;
@@ -605,7 +605,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
 
     // Read the quotes to fill the expiry dates and vols matrix.
     std::ostringstream ss;
-    ss << MarketDatum::InstrumentType::EQUITY_OPTION << "/" << vmsc.quoteType() << "/" << vc.curveID() << "/"
+    ss << MarketDatum::InstrumentType::EQUITY_OPTION << "/" << vmsc.quoteType() << "/" << vc.equityId() << "/"
        << vc.ccy() << "/*";
     Wildcard w(ss.str());
     for (const auto& md : loader.get(w, asof)) {
@@ -614,8 +614,9 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
 
         auto q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
         QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to EquityOptionQuote");
-        QL_REQUIRE(q->eqName() == vc.curveID(),
-            "EquityOptionQuote eqName '" << q->eqName() << "' <> EquityVolatilityCurveConfig curveID '" << vc.curveID() << "'");
+        QL_REQUIRE(q->eqName() == vc.equityId(), "EquityOptionQuote eqName '"
+                                                     << q->eqName() << "' <> EquityVolatilityCurveConfig equityId '"
+                                                     << vc.equityId() << "'");
         QL_REQUIRE(q->ccy() == vc.ccy(),
             "EquityOptionQuote ccy '" << q->ccy() << "' <> EquityVolatilityCurveConfig ccy '" << vc.ccy() << "'");
         QL_REQUIRE(q->quoteType() == vmsc.quoteType(),
@@ -766,7 +767,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
 
 void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilityCurveConfig& vc,
                                      const VolatilityDeltaSurfaceConfig& vdsc, const Loader& loader,
-                                     const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex) {
+                                     const QuantLib::Handle<QuantExt::EquityIndex2>& eqIndex) {
 
     using boost::adaptors::transformed;
     using boost::algorithm::join;
@@ -833,7 +834,7 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
 
     // Read the quotes to fill the expiry dates and vols matrix.
     std::ostringstream ss;
-    ss << MarketDatum::InstrumentType::EQUITY_OPTION << "/" << vdsc.quoteType() << "/" << vc.curveID() << "/"
+    ss << MarketDatum::InstrumentType::EQUITY_OPTION << "/" << vdsc.quoteType() << "/" << vc.equityId() << "/"
        << vc.ccy() << "/*";
     Wildcard w(ss.str());
     for (const auto& md : loader.get(w, asof)) {
@@ -842,8 +843,9 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
 
         auto q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
         QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to EquityOptionQuote");
-        QL_REQUIRE(q->eqName() == vc.curveID(),
-            "EquityOptionQuote eqName '" << q->eqName() << "' <> EquityVolatilityCurveConfig curveID '" << vc.curveID() << "'");
+        QL_REQUIRE(q->eqName() == vc.equityId(), "EquityOptionQuote eqName '"
+                                                     << q->eqName() << "' <> EquityVolatilityCurveConfig equityId '"
+                                                     << vc.equityId() << "'");
         QL_REQUIRE(q->ccy() == vc.ccy(),
             "EquityOptionQuote ccy '" << q->ccy() << "' <> EquityVolatilityCurveConfig ccy '" << vc.ccy() << "'");
         QL_REQUIRE(q->quoteType() == vdsc.quoteType(),
@@ -1076,7 +1078,7 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVol
 
 void EquityVolCurve::buildCalibrationInfo(const QuantLib::Date& asof, const CurveConfigurations& curveConfigs,
                                           const EquityVolatilityCurveConfig& config,
-                                          const Handle<EquityIndex>& eqIndex) {
+                                          const Handle<EquityIndex2>& eqIndex) {
 
     DLOG("EquityVolCurve: Building calibration info for eq vol surface");
 
@@ -1131,6 +1133,10 @@ void EquityVolCurve::buildCalibrationInfo(const QuantLib::Date& asof, const Curv
 
         if (reportOnDeltaGrid) {
             calibrationInfo_->deltas = deltas;
+            calibrationInfo_->deltaCallPrices =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
+            calibrationInfo_->deltaPutPrices =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
             calibrationInfo_->deltaGridStrikes =
                 std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
             calibrationInfo_->deltaGridProb =
@@ -1180,6 +1186,13 @@ void EquityVolCurve::buildCalibrationInfo(const QuantLib::Date& asof, const Curv
                         }
                         Real stddev = std::sqrt(vol_->blackVariance(t, strike));
                         callPricesDelta[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);
+
+                        if (d.isPut()) {
+                            calibrationInfo_->deltaPutPrices[i][j] = blackFormula(Option::Put, strike, forwards[i], stddev, rfDisc[i]);
+                        } else {
+                            calibrationInfo_->deltaCallPrices[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev, rfDisc[i]);
+                        }
+
                         calibrationInfo_->deltaGridStrikes[i][j] = strike;
                         calibrationInfo_->deltaGridImpliedVolatility[i][j] = stddev / std::sqrt(t);
                     } catch (const std::exception& e) {
@@ -1212,6 +1225,10 @@ void EquityVolCurve::buildCalibrationInfo(const QuantLib::Date& asof, const Curv
 
         if (reportOnMoneynessGrid) {
             calibrationInfo_->moneyness = moneyness;
+            calibrationInfo_->moneynessCallPrices =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
+            calibrationInfo_->moneynessPutPrices =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
             calibrationInfo_->moneynessGridStrikes =
                 std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
             calibrationInfo_->moneynessGridProb =
@@ -1233,6 +1250,11 @@ void EquityVolCurve::buildCalibrationInfo(const QuantLib::Date& asof, const Curv
                         Real stddev = std::sqrt(vol_->blackVariance(t, strike));
                         callPricesMoneyness[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);
                         calibrationInfo_->moneynessGridImpliedVolatility[i][j] = stddev / std::sqrt(t);
+                        if (moneyness[j] >= 1) {
+                            calibrationInfo_->moneynessCallPrices[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev, rfDisc[i]);
+                        } else {
+                            calibrationInfo_->moneynessPutPrices[i][j] = blackFormula(Option::Put, strike, forwards[i], stddev, rfDisc[i]);
+                        };
                     } catch (const std::exception& e) {
                         TLOG("EquityVolCurve: error for time " << t << " moneyness " << moneyness[j] << ": " << e.what());
                     }

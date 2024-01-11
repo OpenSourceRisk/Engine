@@ -24,16 +24,13 @@
 #include <ql/cashflows/cashflows.hpp>
 #include <ql/quotes/derivedquote.hpp>
 #include <ql/termstructures/volatility/optionlet/constantoptionletvol.hpp>
+#include <ql/utilities/null_deleter.hpp>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/function.hpp>
 
 using namespace QuantLib;
 using std::ostream;
-
-namespace {
-void no_deletion(OptionletVolatilityStructure*) {}
-} // namespace
 
 namespace QuantExt {
 
@@ -46,7 +43,7 @@ OISCapFloorHelper::OISCapFloorHelper(CapFloorHelper::Type type, const Period& te
                                      QuantLib::VolatilityType quoteVolatilityType, QuantLib::Real quoteDisplacement)
     : RelativeDateBootstrapHelper<OptionletVolatilityStructure>(
           Handle<Quote>(boost::make_shared<DerivedQuote<boost::function<Real(Real)>>>(
-              quote, boost::bind(&OISCapFloorHelper::npv, this, _1)))),
+              quote, boost::bind(&OISCapFloorHelper::npv, this, boost::placeholders::_1)))),
       type_(type), tenor_(tenor), rateComputationPeriod_(rateComputationPeriod), strike_(strike), index_(index),
       discountHandle_(discountingCurve), moving_(moving), effectiveDate_(effectiveDate), quoteType_(quoteType),
       quoteVolatilityType_(quoteVolatilityType), quoteDisplacement_(quoteDisplacement), rawQuote_(quote),
@@ -130,7 +127,7 @@ void OISCapFloorHelper::setTermStructure(OptionletVolatilityStructure* ovts) {
         }
     }
 
-    boost::shared_ptr<OptionletVolatilityStructure> temp(ovts, no_deletion);
+    boost::shared_ptr<OptionletVolatilityStructure> temp(ovts, null_deleter());
     ovtsHandle_.linkTo(temp, false);
     RelativeDateBootstrapHelper<OptionletVolatilityStructure>::setTermStructure(ovts);
 

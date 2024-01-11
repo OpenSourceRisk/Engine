@@ -1,5 +1,6 @@
 # syntax = nexus3.acadiasoft.net:4445/docker/dockerfile:experimental
 ARG quantlib_version=${QL_TAG}
+ARG cmake_build_type=${CMAKE_BUILD_TYPE}
 FROM env_quantlib:${quantlib_version}
 
 MAINTAINER Quaternion Risk Management
@@ -27,10 +28,12 @@ RUN cd /ore \
   && find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';' \
   && cp Docker/CMakeLists_ORE.txt CMakeLists.txt \
   && mkdir -p build.ore && cd build.ore \
-  && cmake .. -DORE_BUILD_DOC=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-mavx2" -DORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON
+  && cmake .. -DQL_USE_PCH=OFF -DORE_BUILD_DOC=ON -DCMAKE_BUILD_TYPE=${cmake_build_type} -DCMAKE_CXX_FLAGS="-mavx2" -DORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DORE_USE_ZLIB=ON -D ORE_ENABLE_OPENCL=ON
 
 WORKDIR /ore/build.ore
-RUN --mount=type=cache,target=/ccache/ make -j ${num_cores} \
+RUN --mount=type=cache,target=/ccache/ ccache -z \
+  && make -j ${num_cores} \
+  && ccache -s \
   && make install \
   && make doc_quantext 2>&1 | grep -v "ignoring unsupported tag" \
   && make doc_ored 2>&1 | grep -v "ignoring unsupported tag" \

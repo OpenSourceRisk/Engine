@@ -23,6 +23,7 @@
 #include <ql/cashflows/couponpricer.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
+#include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/utilities/vectors.hpp>
 
 using namespace QuantLib;

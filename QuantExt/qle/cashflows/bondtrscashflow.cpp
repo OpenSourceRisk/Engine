@@ -23,38 +23,18 @@ namespace QuantExt {
 BondTRSCashFlow::BondTRSCashFlow(const Date& paymentDate, const Date& fixingStartDate, const Date& fixingEndDate,
                                  const Real bondNotional, const boost::shared_ptr<BondIndex>& bondIndex,
                                  const Real initialPrice, const boost::shared_ptr<FxIndex>& fxIndex)
-    : paymentDate_(paymentDate), fixingStartDate_(fixingStartDate), fixingEndDate_(fixingEndDate),
-      bondNotional_(bondNotional), bondIndex_(bondIndex), initialPrice_(initialPrice), fxIndex_(fxIndex) {
-    QL_REQUIRE(!bondIndex->relative(), "BondTRSCashFlow: bond index should not use relative prices");
-    registerWith(fxIndex_);
+    : TRSCashFlow(paymentDate, fixingStartDate, fixingEndDate, bondNotional, bondIndex, initialPrice, fxIndex)  {}
+
+const Real BondTRSCashFlow::notional(Date date) const {
+    auto bondIndex = ext::dynamic_pointer_cast<BondIndex>(index_);
+    QL_REQUIRE(bondIndex, "BondTRSCashFlow::notional index must be a BondIndex");
+    return bondIndex->bond()->notional(fixingStartDate_); 
 }
 
-Real BondTRSCashFlow::amount() const { return bondNotional_ * (bondEnd() * fxEnd() - bondStart() * fxStart()); }
-
-Date BondTRSCashFlow::date() const { return paymentDate_; }
-
-void BondTRSCashFlow::accept(AcyclicVisitor& v) {
-    Visitor<BondTRSCashFlow>* v1 = dynamic_cast<Visitor<BondTRSCashFlow>*>(&v);
-    if (v1 != 0)
-        v1->visit(*this);
-    else
-        CashFlow::accept(v);
+void BondTRSCashFlow::setFixingStartDate(QuantLib::Date fixingDate) { 
+    QL_REQUIRE(fixingDate < fixingEndDate_, "BondTRSCashFlow fixingStartDate must be before fixingEndDate");    
+    fixingStartDate_ = fixingDate; 
 }
-
-Real BondTRSCashFlow::fxStart() const {
-    return fxIndex_ ? fxIndex_->fixing(fxIndex_->fixingCalendar().adjust(fixingStartDate_, Preceding)) : 1.0;
-}
-
-Real BondTRSCashFlow::fxEnd() const {
-    return fxIndex_ ? fxIndex_->fixing(fxIndex_->fixingCalendar().adjust(fixingEndDate_, Preceding)) : 1.0;
-}
-
-Real BondTRSCashFlow::bondStart() const {
-    return initialPrice_ != Null<Real>() ? initialPrice_ * bondIndex_->bond()->notional(fixingStartDate_)
-                                         : bondIndex_->fixing(fixingStartDate_);
-}
-
-Real BondTRSCashFlow::bondEnd() const { return bondIndex_->fixing(fixingEndDate_); }
 
 BondTRSLeg::BondTRSLeg(const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates,
                        const Real bondNotional, const boost::shared_ptr<BondIndex>& bondIndex,

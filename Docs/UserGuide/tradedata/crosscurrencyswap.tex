@@ -7,8 +7,12 @@ A Cross Currency Swap can be represented with either trade type \emph{Swap} or \
 \item  Optionally additional legs of type \emph{Cashflow}.
 \end{itemize}
 
+Rebalancing\\
+A Cross Currency Swap can be rebalancing, meaning the notional amount on one leg resets to the equivalent of a fixed amount in another currency (called ForeignCurrency, and is typically the currency of the other leg) at each period. This is represented using an \lstinline!FXReset! node on the resetting/rebalancing leg, within the \lstinline!Notionals! node. 
 
-A Cross Currency Swap can be rebalancing, meaning the notional amount on one leg resets to the equivalent of a fixed amount in another currency (called ForeignCurrency, and is typically the currency of the other leg) at each period. This is represented using an \lstinline!FXReset! node on the resetting/rebalancing leg, within the \lstinline!Notionals! node. Note that the Notional in leg currency must be set even on the rebalancing leg, but this is only used as starting notional.
+Note that for rebalancing Cross Currency Swaps, the Notional in leg currency on the rebalancing leg is optional. If set, it is used as starting notional, and causes the first period (if forward starting)  to be considered as "on-the-run" for purposes of SIMM exemptions as the fx rate for the notional is considered to have been fixed from the inception of the trade. If no notional on the rebalancing leg is set, the starting notional will be based on a projected fx rate (i.e. not "on-the-run") until the actual fixing date.
+
+Also on rebalancing Cross Currency Swaps, the NotionalInitialExchange and NotionalFinalExchange flags must be set the same way on both legs.
 
 The optional \lstinline!FXReset! node includes the following elements:
 
@@ -123,3 +127,56 @@ Listing \ref{lst:crosscurrencyswapnonreset} shows an example of a non-rebalancin
 \label{lst:crosscurrencyswapreset}
 \end{listing}
 
+Non-Deliverable\\
+Note that Cross Currency Swaps having legs in non-deliverable currencies with payment in a deliverable currency are supported by using the Indexings node (\ref{ss:indexings}), setting Settlement  to \emph{Cash} and setting the Currency to the deliverable currency, while keeping the Notional expressed in the non-deliverable currency amount. 
+
+The Indexings node includes a mandatory fx Index field defining the deliverable and non-deliverable currency pair, and an optional InitialNotionalFixing field for the contractual fx rate to be applied to the initial notional exchange. Notice that the InitialNotionalFixing rate has to be expressed as amount in deliverable or payment currency per unit of non-deliverable currency, and if omitted defaults to a projected (if in the future) or an fx fixing from market data (if in the past).  The Indexing node can also include optional FixingCalendar, IsInArrears and FixingDays fields to determine the date(s) of the fx fixing(s).
+
+ Listing \ref{lst:ndir_xccy_swap} includes an example USD-CLP non-deliverable cross currency swap where one leg is in CLP which is a non-deliverable
+currency, and the other is in USD which is deliverable. Note that it is possible for both legs to be in different non-deliverable currencies.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<SwapData>
+  <Settlement>Cash</Settlement>
+  <LegData>
+   <LegType>Floating</LegType>
+   <Payer>false</Payer>  
+   <Currency>USD</Currency>
+    <Notionals>
+     <Notional>1000000</Notional>
+      <Exchanges>
+       <NotionalInitialExchange>true</NotionalInitialExchange>
+       <NotionalFinalExchange>true</NotionalFinalExchange>
+      </Exchanges>
+    </Notionals>
+    ...
+  </LegData>
+  <LegData>
+   <LegType>Floating</LegType>
+   <Payer>false</Payer>  
+   <Currency>USD</Currency><!-- Payment currency is USD rather than CLP -->
+    <Notionals>
+     <Notional>850000000</Notional><!-- in CLP -->
+      <Exchanges>
+       <NotionalInitialExchange>true</NotionalInitialExchange>
+       <NotionalFinalExchange>true</NotionalFinalExchange>
+      </Exchanges>
+     </Notionals>
+     <Indexings>
+      <Indexing>
+	<Index>FX-TR20H-CLP-USD</Index><!-- to convert CLP flows into USD -->
+	<FixingCalendar>CLP,USD</FixingCalendar>
+        <IsInArrears>true</IsInArrears>
+        <FixingDays>2</FixingDays>
+        <InitialNotionalFixing>0.15</InitialNotionalFixing><!-- applied to initial ntl exchange -->
+      </Indexing>
+     </Indexings>     
+    ...
+  </LegData>
+</SwapData>
+\end{minted}
+\caption{Non deliverable Cross Currency Swap}
+\label{lst:ndir_xccy_swap}
+\end{listing}

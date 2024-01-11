@@ -53,10 +53,11 @@ void CompositeTrade::build(const boost::shared_ptr<EngineFactory>& engineFactory
         if (trade->notionalCurrency().empty()) {
             // trade is not guaranteed to provide a non-null notional, but if it does we require a notional currency
             if (trade->notional() != Null<Real>()) {
-                ALOG(StructuredTradeErrorMessage(
+                StructuredTradeErrorMessage(
                     trade, "Error building composite trade '" + id() + "'",
                     "Component trade '" + trade->id() + "' does not provide notional currency for notional " +
-                        std::to_string(trade->notional()) + ". Assuming " + npvCurrency_ + "."));
+                                                std::to_string(trade->notional()) + ". Assuming " + npvCurrency_ + ".")
+                    .log();
             }
         } else if (trade->notionalCurrency() != npvCurrency_)
             fxNotional = engineFactory->market()->fxRate(trade->notionalCurrency() + npvCurrency_);
@@ -197,13 +198,13 @@ Real CompositeTrade::calculateNotional(const vector<Real>& notionals) const {
         QL_FAIL("Unsupported notional calculation type.");
 }
 
-map<string, set<Date>> CompositeTrade::fixings(const Date& settlementDate) const {
+map<string, RequiredFixings::FixingDates> CompositeTrade::fixings(const Date& settlementDate) const {
 
-    map<string, set<Date>> result;
+    map<string, RequiredFixings::FixingDates>  result;
     for (const auto& t : trades_) {
         auto fixings = t->fixings(settlementDate);
-        for (const auto& kv : fixings) {
-            result[kv.first].insert(kv.second.begin(), kv.second.end());
+        for (const auto& [indexName, fixingDates] : fixings) {
+            result[indexName].addDates(fixingDates);
         }
     }
     return result;

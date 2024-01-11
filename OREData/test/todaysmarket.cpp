@@ -53,15 +53,15 @@ public:
     MarketDataLoader();
     std::vector<boost::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date&) const override;
     std::set<Fixing> loadFixings() const override { return fixings_; }
-    std::set<Dividend> loadDividends() const override { return dividends_; }
+    std::set<QuantExt::Dividend> loadDividends() const override { return dividends_; }
     void add(QuantLib::Date date, const string& name, QuantLib::Real value) {}
     void addFixing(QuantLib::Date date, const string& name, QuantLib::Real value) {}
-    void addDividend(const Dividend& div) {}
+    void addDividend(const QuantExt::Dividend& div) {}
 
 private:
     std::map<QuantLib::Date, std::vector<boost::shared_ptr<MarketDatum>>> data_;
     std::set<Fixing> fixings_;
-    std::set<Dividend> dividends_;
+    std::set<QuantExt::Dividend> dividends_;
 };
 
 vector<boost::shared_ptr<MarketDatum>> MarketDataLoader::loadQuotes(const Date& d) const {
@@ -751,7 +751,7 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     vcc.push_back(boost::make_shared<VolatilityCurveConfig>(eqVolQuotes, "Flat", "Flat"));
 
     configs->add(CurveSpec::CurveType::EquityVolatility, "SP5", boost::make_shared<EquityVolatilityCurveConfig>(
-        "SP5", "", "USD", vcc, "A365", "USD"));
+        "SP5", "", "USD", vcc, "SP5", "A365", "USD"));
 
     // clang-format off
     vector<string> commodityQuotes{

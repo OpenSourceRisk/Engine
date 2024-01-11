@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2017 Quaternion Risk Management Ltd
+ Copyright (C) 2017, 2023 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -21,9 +21,10 @@
     \ingroup tradedata
 */
 
+
 #pragma once
 
-#include <ored/portfolio/trade.hpp>
+#include <ored/portfolio/swap.hpp>
 
 namespace ore {
 namespace data {
@@ -32,13 +33,14 @@ namespace data {
 /*!
   \ingroup tradedata
 */
-class ForwardRateAgreement : public Trade {
+class ForwardRateAgreement : public Swap {
 public:
-    ForwardRateAgreement() : Trade("ForwardRateAgreement") {}
+    ForwardRateAgreement() : ore::data::Swap("ForwardRateAgreement") {}
     ForwardRateAgreement(Envelope& env, string longShort, string currency, string startDate, string endDate,
                          string index, double strike, double amount)
-        : Trade("ForwardRateAgreement", env), longShort_(longShort), currency_(currency), startDate_(startDate),
+        : ore::data::Swap(env, "ForwardRateAgreement"), longShort_(longShort), currency_(currency), startDate_(startDate),
           endDate_(endDate), index_(index), strike_(strike), amount_(amount) {}
+
     void build(const boost::shared_ptr<EngineFactory>& engineFactory) override;
 
     virtual void fromXML(XMLNode* node) override;
@@ -56,3 +58,4 @@ private:
 };
 } // namespace data
 } // namespace ore
+

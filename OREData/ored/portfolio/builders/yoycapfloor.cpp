@@ -55,6 +55,7 @@ boost::shared_ptr<PricingEngine> YoYCapFloorEngineBuilder::engineImpl(const stri
         break;
     default:
         QL_FAIL("Caplet volatility type, " << ovs->volatilityType() << ", not covered in EngineFactory");
+        return nullptr; // avoid gcc warning
         break;
     }
 }

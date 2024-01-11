@@ -53,7 +53,7 @@ std::ostream& operator<<(std::ostream& out, EquityReturnType t);
 class EquityCoupon : public Coupon, public Observer {   
 public:
     EquityCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate, Natural fixingDays,
-                 const boost::shared_ptr<EquityIndex>& equityCurve, const DayCounter& dayCounter,
+                 const boost::shared_ptr<QuantExt::EquityIndex2>& equityCurve, const DayCounter& dayCounter,
                  EquityReturnType returnType, Real dividendFactor = 1.0, bool notionalReset = false, 
                  Real initialPrice = Null<Real>(), Real quantity = Null<Real>(), const Date& fixingStartDate = Date(),
                  const Date& fixingEndDate = Date(), const Date& refPeriodStart = Date(),
@@ -80,7 +80,7 @@ public:
     //! \name Inspectors
     //@{
     //! equity reference rate curve
-    const boost::shared_ptr<EquityIndex>& equityCurve() const { return equityCurve_; }
+    const boost::shared_ptr<QuantExt::EquityIndex2>& equityCurve() const { return equityCurve_; }
     //! fx index curve
     const boost::shared_ptr<FxIndex>& fxIndex() const { return fxIndex_; }
     //! the return type of the coupon
@@ -127,7 +127,7 @@ public:
 protected:
     boost::shared_ptr<EquityCouponPricer> pricer_;
     Natural fixingDays_;
-    boost::shared_ptr<EquityIndex> equityCurve_;
+    boost::shared_ptr<QuantExt::EquityIndex2> equityCurve_;
     DayCounter dayCounter_;
     EquityReturnType returnType_;
     Real dividendFactor_;
@@ -160,7 +160,7 @@ inline boost::shared_ptr<EquityCouponPricer> EquityCoupon::pricer() const { retu
  */
 class EquityLeg {
 public:
-    EquityLeg(const Schedule& schedule, const boost::shared_ptr<EquityIndex>& equityCurve,
+    EquityLeg(const Schedule& schedule, const boost::shared_ptr<QuantExt::EquityIndex2>& equityCurve,
               const boost::shared_ptr<FxIndex>& fxIndex = nullptr);
     EquityLeg& withNotional(Real notional);
     EquityLeg& withNotionals(const std::vector<Real>& notionals);
@@ -180,7 +180,7 @@ public:
 
 private:
     Schedule schedule_;
-    boost::shared_ptr<EquityIndex> equityCurve_;
+    boost::shared_ptr<QuantExt::EquityIndex2> equityCurve_;
     boost::shared_ptr<FxIndex> fxIndex_;
     std::vector<Real> notionals_;
     DayCounter paymentDayCounter_;

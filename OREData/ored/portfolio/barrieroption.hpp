@@ -63,10 +63,10 @@ public:
     virtual QuantLib::Real tradeMultiplier() = 0;
     virtual Currency tradeCurrency() = 0;
     virtual boost::shared_ptr<QuantLib::PricingEngine>
-    vanillaPricigingEngine(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+    vanillaPricingEngine(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
                            const QuantLib::Date& paymentDate) = 0;
     virtual boost::shared_ptr<QuantLib::PricingEngine>
-    barrierPricigingEngine(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+    barrierPricingEngine(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
                            const QuantLib::Date& paymentDate) = 0;
     virtual const QuantLib::Handle<QuantLib::Quote>& spotQuote() = 0;
 
@@ -183,7 +183,7 @@ public:
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override { return BarrierOption::toXML(doc); }
 
 private:
-    boost::shared_ptr<QuantExt::EquityIndex> eqIndex_;
+    boost::shared_ptr<QuantExt::EquityIndex2> eqIndex_;
     QuantLib::Currency currency_;
     std::string currencyStr_;
     QuantLib::Real quantity_;

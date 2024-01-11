@@ -5,6 +5,8 @@ import logging
 import unittest
 from pathlib import Path
 import nose
+import collections
+#collections.Callable = collections.abc.Callable
 
 # Pull in some shared utilities
 script_dir = Path(__file__).parents[0]
@@ -48,7 +50,8 @@ class TestExamples(unittest.TestCase):
             self.logger.warning('No ExpectedOutput folder detected, skipped.')
 
     def runAndRegressExample(self, name):
-        os.environ['OVERWRITE_SCENARIOGENERATOR_SAMPLES'] = '50'
+        if not name.endswith('Example_54'):
+            os.environ['OVERWRITE_SCENARIOGENERATOR_SAMPLES'] = '50'
         self.logger.info('{}: run {}'.format(self._testMethodName, name))
         ret = run_example(name)
         os.environ['OVERWRITE_SCENARIOGENERATOR_SAMPLES'] = ''

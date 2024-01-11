@@ -49,6 +49,7 @@
 #include <qle/termstructures/crossccyfixfloatmtmresetswaphelper.hpp>
 #include <qle/termstructures/crossccyfixfloatswaphelper.hpp>
 #include <qle/termstructures/discountratiomodifiedcurve.hpp>
+#include <qle/termstructures/doubleoibasisswaphelper.hpp>
 #include <qle/termstructures/immfraratehelper.hpp>
 #include <qle/termstructures/iterativebootstrap.hpp>
 #include <qle/termstructures/oibasisswaphelper.hpp>
@@ -58,6 +59,7 @@
 #include <qle/termstructures/weightedyieldtermstructure.hpp>
 #include <qle/termstructures/yieldplusdefaultyieldtermstructure.hpp>
 #include <qle/termstructures/iborfallbackcurve.hpp>
+#include <qle/termstructures/bondyieldshiftedcurvetermstructure.hpp>
 
 #include <ored/marketdata/defaultcurve.hpp>
 #include <ored/marketdata/fittedbondcurvehelpermarket.hpp>
@@ -270,6 +272,9 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
         } else if (curveSegments_[0]->type() == YieldCurveSegment::Type::IborFallback) {
             DLOG("Building IborFallbackCurve " << curveSpec_);
             buildIborFallbackCurve();
+        } else if (curveSegments_[0]->type() == YieldCurveSegment::Type::BondYieldShifted) {
+            DLOG("Building BondYieldShiftedCurve " << curveSpec_);
+            buildBondYieldShiftedCurve();
         } else {
             DLOG("Bootstrapping YieldCurve " << curveSpec_);
             buildBootstrappedCurve();
@@ -1111,7 +1116,7 @@ void YieldCurve::buildFittedBondCurve() {
                        "Market quote not of type Bond / Price.");
             boost::shared_ptr<BondPriceQuote> bondQuote = boost::dynamic_pointer_cast<BondPriceQuote>(marketQuote);
             QL_REQUIRE(bondQuote, "market quote has type bond quote, but can not be casted, this is unexpected.");
-	    auto m = [](Real x) { return 100.0 * x; };
+	        auto m = [](Real x) { return 100.0 * x; };
             Handle<Quote> rescaledBondQuote(boost::make_shared<DerivedQuote<decltype(m)>>(bondQuote->quote(), m));
             string securityID = bondQuote->securityID();
 
@@ -1308,6 +1313,103 @@ void YieldCurve::buildFittedBondCurve() {
         calInfo->iterations = static_cast<int>(tmp->fitResults().numberOfIterations());
         calibrationInfo_ = calInfo;
     }
+}
+
+void YieldCurve::buildBondYieldShiftedCurve() {
+    QL_REQUIRE(curveSegments_.size() == 1,
+               "One segment required for bond yield shifted curve, got " << curveSegments_.size());
+    QL_REQUIRE(curveSegments_[0]->type() == YieldCurveSegment::Type::BondYieldShifted,
+               "The curve segment is not of type Bond Yield Shifted.");
+    auto segment = boost::dynamic_pointer_cast<BondYieldShiftedYieldCurveSegment>(curveSegments_[0]);
+    QL_REQUIRE(segment != nullptr, "expected BondYieldShiftedYieldCurveSegment, this is unexpected");
+    auto it = requiredYieldCurves_.find(yieldCurveKey(currency_, segment->referenceCurveID(), asofDate_));
+    QL_REQUIRE(it != requiredYieldCurves_.end(), "Could not find reference curve: " << segment->referenceCurveID());
+
+    //prepare parameters
+    auto quoteIDs = segment->quotes();
+    boost::shared_ptr<QuantLib::Bond> bond;
+    string securityID;
+    Date securityMaturityDate;
+    Rate bondYield = Null<Real>();
+    Real thisDuration = Null<Real>();
+
+    auto engineData = boost::make_shared<EngineData>();
+    engineData->model("Bond") = "DiscountedCashflows";
+    engineData->engine("Bond") = "DiscountingRiskyBondEngine";
+    engineData->engineParameters("Bond") = {{"TimestepPeriod", "3M"}};
+
+    //  needed to link the ibors in case bond is a floater
+    std::map<std::string, Handle<YieldTermStructure>> iborCurveMapping;
+    for (auto const& c : segment->iborIndexCurves()) {
+        auto index = parseIborIndex(c.first);
+        auto key = yieldCurveKey(index->currency(), c.second, asofDate_);
+        auto y = requiredYieldCurves_.find(key);
+        QL_REQUIRE(y != requiredYieldCurves_.end(), "required ibor curve '" << key << "' for iborIndex '" << c.first
+                                                                             << "' not provided");
+        iborCurveMapping[c.first] = y->second->handle();
+    }
+
+    auto engineFactory = boost::make_shared<EngineFactory>(engineData,
+                                                            boost::make_shared<FittedBondCurveHelperMarket>(iborCurveMapping),
+                                                            std::map<MarketContext, string>(),
+                                                            referenceData_,
+                                                            iborFallbackConfig_);
+
+    QL_REQUIRE(quoteIDs.size() > 0, "at least one bond for shifting of the reference curve required.");
+
+    std::vector<Real> bondYields, bondDurations;
+
+    for (Size b = 0; b < quoteIDs.size(); ++b) {
+
+        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(quoteIDs[b], asofDate_);
+
+        QL_REQUIRE(marketQuote != nullptr,"no quotes for the bond " << quoteIDs[b].first << " found. this is unexpected");
+
+        QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::BOND && marketQuote->quoteType() == MarketDatum::QuoteType::PRICE,
+                "Market quote not of type Bond / Price.");
+        boost::shared_ptr<BondPriceQuote> bondQuote = boost::dynamic_pointer_cast<BondPriceQuote>(marketQuote);
+        QL_REQUIRE(bondQuote, "market quote has type bond quote, but can not be casted, this is unexpected.");
+        auto m = [bondQuote](Real x) { return x * 100.0; };
+        Handle<Quote> rescaledBondQuote(boost::make_shared<DerivedQuote<decltype(m)>>(bondQuote->quote(), m));
+
+        securityID = bondQuote->securityID();
+        QL_REQUIRE(referenceData_ != nullptr, "reference data required to build bond yield shifted curve");
+
+        auto res = BondFactory::instance().build(engineFactory, referenceData_, securityID);
+        auto qlInstr = res.bond;
+        auto inflationQuoteFactor = res.inflationFactor();
+
+        // skip bonds with settlement date <= curve reference date or which are otherwise non-tradeable
+        if (qlInstr->settlementDate() > asofDate_ && QuantLib::BondFunctions::isTradable(*qlInstr)) {
+
+            Date thisMaturity = qlInstr->maturityDate();
+            bondYield = qlInstr->yield(rescaledBondQuote->value() * inflationQuoteFactor,
+                                                      ActualActual(ActualActual::ISDA), Continuous, NoFrequency);
+
+            thisDuration = QuantLib::BondFunctions::duration(*qlInstr,InterestRate(bondYield,ActualActual(ActualActual::ISDA),Continuous,NoFrequency)
+                                                                           ,Duration::Modified,asofDate_);
+
+            DLOG("found bond " << securityID << ", maturity = " << QuantLib::io::iso_date(thisMaturity)
+                << ", clean price = " << rescaledBondQuote->value() * inflationQuoteFactor
+                << ", yield (cont,act/act) = " << bondYield
+                << ", duration = " << thisDuration);
+
+            bondYields.push_back(bondYield);
+            bondDurations.push_back(thisDuration);
+
+            DLOG("calculated duration of the bond " << securityID << " is equal to " << thisDuration)
+
+        } else {
+
+            DLOG("Skipping bond " << securityID
+                << ", with settlement date " << QuantLib::io::iso_date(qlInstr->settlementDate())
+                << ", isTradable = " << std::boolalpha << QuantLib::BondFunctions::isTradable(*qlInstr));
+        }
+
+    }
+
+    p_ = boost::make_shared<BondYieldShiftedCurveTermStructure>(it->second->handle(), bondYields, bondDurations);
+
 }
 
 void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment,
@@ -1588,15 +1690,25 @@ void YieldCurve::addOISs(const boost::shared_ptr<YieldCurveSegment>& segment,
                     oisTenor, oisQuote->quote(), brlCdiIndex,
                     discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true);
             } else {
-                oisHelper = boost::make_shared<QuantExt::OISRateHelper>(
-                    oisConvention->spotLag(), oisTenor, oisQuote->quote(), onIndex, oisConvention->fixedDayCounter(),
-                    oisConvention->fixedCalendar(), oisConvention->paymentLag(), oisConvention->eom(),
-                    oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
-                    oisConvention->fixedPaymentConvention(), oisConvention->rule(),
-                    discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true,
-                    oisSegment->pillarChoice());
+                
+                if (oisQuote->startDate() == Null<Date>() || oisQuote->maturityDate() == Null<Date>())
+                    oisHelper = boost::make_shared<QuantExt::OISRateHelper>(
+                        oisConvention->spotLag(), oisTenor, oisQuote->quote(), onIndex, oisConvention->fixedDayCounter(),
+                        oisConvention->fixedCalendar(), oisConvention->paymentLag(), oisConvention->eom(),
+                        oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
+                        oisConvention->fixedPaymentConvention(), oisConvention->rule(),
+                        discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true,
+                        oisSegment->pillarChoice());
+                else {
+                    oisHelper = boost::make_shared<QuantExt::DatedOISRateHelper>(oisQuote->startDate(),
+                        oisQuote->maturityDate(), oisQuote->quote(), onIndex, oisConvention->fixedDayCounter(),
+                        oisConvention->fixedCalendar(), oisConvention->paymentLag(),
+                        oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
+                        oisConvention->fixedPaymentConvention(), oisConvention->rule(),
+                        discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true,
+                        oisSegment->pillarChoice());
+                }
             }
-
             instruments.push_back(oisHelper);
         }
     }
@@ -1631,7 +1743,8 @@ void YieldCurve::addSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
             QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::IR_SWAP,
                        "Market quote not of type swap.");
             swapQuote = boost::dynamic_pointer_cast<SwapQuote>(marketQuote);
-
+            QL_REQUIRE(swapQuote->startDate() == Null<Date>(),
+                       "swap quote with fixed start date is not supported for ibor / subperiods swap instruments");
             // Create a swap helper if we do.
             Period swapTenor = swapQuote->term();
             boost::shared_ptr<RateHelper> swapHelper;
@@ -1709,6 +1822,8 @@ void YieldCurve::addAverageOISs(const boost::shared_ptr<YieldCurveSegment>& segm
             QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::IR_SWAP,
                        "Market quote not of type swap.");
             swapQuote = boost::dynamic_pointer_cast<SwapQuote>(marketQuote);
+            QL_REQUIRE(swapQuote->startDate() == Null<Date>(),
+                       "swap quote with fixed start date is not supported for average ois instrument");
 
             // Secondly, the basis spread quote.
             marketQuote = loader_.get(averageOisQuoteIDs[i + 1], asofDate_);
@@ -1810,19 +1925,30 @@ void YieldCurve::addTenorBasisSwaps(const boost::shared_ptr<YieldCurveSegment>& 
             Period basisSwapTenor = basisSwapQuote->maturity();
             boost::shared_ptr<RateHelper> basisSwapHelper;
             if (boost::dynamic_pointer_cast<OvernightIndex>(shortIndex) != nullptr) {
-                // is it OIS vs Libor...
-                basisSwapHelper.reset(
-                    new OIBSHelper(longIndex->fixingDays(), basisSwapTenor, basisSwapQuote->quote(),
-                                   boost::static_pointer_cast<OvernightIndex>(shortIndex), longIndex,
-                                   discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true));
-            } else {
+                if (boost::dynamic_pointer_cast<OvernightIndex>(longIndex) != nullptr) {
+                    // is it OI vs OI...
+                    basisSwapHelper.reset(
+                        new DoubleOIBSHelper(longIndex->fixingDays(), basisSwapTenor, basisSwapQuote->quote(),
+                            boost::static_pointer_cast<OvernightIndex>(shortIndex), boost::static_pointer_cast<OvernightIndex>(longIndex),
+                            discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), basisSwapConvention->spreadOnShort(), 
+                            basisSwapConvention->shortPayTenor(), basisSwapConvention->longPayTenor(), true));
+                }
+                else {
+                    // is it OI vs Libor...
+                    basisSwapHelper.reset(
+                        new OIBSHelper(longIndex->fixingDays(), basisSwapTenor, basisSwapQuote->quote(),
+                            boost::static_pointer_cast<OvernightIndex>(shortIndex), longIndex,
+                            discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true));
+                }
+            }
+            else {
                 // ...or Libor vs Libor?
                 basisSwapHelper.reset(
                     new TenorBasisSwapHelper(basisSwapQuote->quote(), basisSwapTenor, longIndex, shortIndex,
-                                             basisSwapConvention->shortPayTenor(),
-                                             discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(),
-                                             basisSwapConvention->spreadOnShort(), basisSwapConvention->includeSpread(),
-                                             basisSwapConvention->subPeriodsCouponType()));
+                        basisSwapConvention->shortPayTenor(),
+                        discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(),
+                        basisSwapConvention->spreadOnShort(), basisSwapConvention->includeSpread(),
+                        basisSwapConvention->subPeriodsCouponType()));
             }
             instruments.push_back(basisSwapHelper);
         }

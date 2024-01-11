@@ -92,9 +92,9 @@ BOOST_AUTO_TEST_CASE(testBlackVolSurfaceProxy) {
         boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.01)), dc));
 
     // set up EquityIndexes for the index and underlying
-    boost::shared_ptr<EquityIndex> index = boost::make_shared<EquityIndex>("Index", UnitedStates(UnitedStates::Settlement), USDCurrency(),
+    boost::shared_ptr<EquityIndex2> index = boost::make_shared<EquityIndex2>("Index", UnitedStates(UnitedStates::Settlement), USDCurrency(),
                                                                            indexSpot, indexForecast, indexDividend);
-    boost::shared_ptr<EquityIndex> underlying = boost::make_shared<EquityIndex>(
+    boost::shared_ptr<EquityIndex2> underlying = boost::make_shared<EquityIndex2>(
         "Underlying", UnitedStates(UnitedStates::Settlement), USDCurrency(), underlyingSpot, underlyingForecast, underlyingDividend);
 
     // set up a vol surface for the index

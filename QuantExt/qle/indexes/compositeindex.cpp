@@ -19,7 +19,9 @@
 #include <qle/indexes/compositeindex.hpp>
 
 #include <qle/calendars/largejointcalendar.hpp>
+#include <qle/indexes/bondindex.hpp>
 #include <qle/indexes/equityindex.hpp>
+#include <qle/indexes/genericindex.hpp>
 
 namespace QuantExt {
 
@@ -58,8 +60,19 @@ bool CompositeIndex::isValidFixingDate(const Date& fixingDate) const {
 Real CompositeIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
     Real result = 0.0;
     for (Size i = 0; i < indices_.size(); ++i) {
+        Real indexFixing;
+        try {
+            indexFixing = indices_[i]->fixing(fixingDate, forecastTodaysFixing);
+        } catch (const std::exception&) {
+            auto gi = QuantLib::ext::dynamic_pointer_cast<QuantExt::GenericIndex>(indices_[i]);
+            if (gi && gi->expiry() != Date() && fixingDate >= gi->expiry())
+                indexFixing = 0.0; 
+            else
+                throw;
+        }
+
         // if the fixing date is not a valid fx fixing date, adjust the latter to the preceding valid date
-        result += indices_[i]->fixing(fixingDate, forecastTodaysFixing) * weights_[i] *
+        result += indexFixing * weights_[i] *
                   (fxConversion_.empty() || fxConversion_[i] == nullptr
                        ? 1.0
                        : fxConversion_[i]->fixing(fxConversion_[i]->fixingCalendar().adjust(fixingDate, Preceding),
@@ -72,7 +85,7 @@ Real CompositeIndex::dividendsBetweenDates(const Date& startDate, const Date& en
     const Date& today = Settings::instance().evaluationDate();
     Real dividends = 0.0;
     for (Size i = 0; i < indices_.size(); ++i) {
-        if (auto ei = boost::dynamic_pointer_cast<EquityIndex>(indices_[i])) {
+        if (auto ei = boost::dynamic_pointer_cast<EquityIndex2>(indices_[i])) {
             for (auto const& d : ei->dividendFixings()) {
                 if (d.exDate >= startDate && d.exDate <= std::min(endDate, today)) {
                     // if the fixing date is not a valid fx fixing date, adjust the latter to the preceding valid date
@@ -94,7 +107,7 @@ std::vector<std::pair<QuantLib::Date, std::string>> CompositeIndex::dividendFixi
     std::vector<std::pair<QuantLib::Date, std::string>> fixings;
     const Date& eDate = endDate == Date() ? Settings::instance().evaluationDate() : endDate;
     for (Size i = 0; i < indices_.size(); ++i) {
-        if (boost::dynamic_pointer_cast<EquityIndex>(indices_[i]) && !fxConversion_.empty() && fxConversion_[i]) {
+        if (boost::dynamic_pointer_cast<EquityIndex2>(indices_[i]) && !fxConversion_.empty() && fxConversion_[i]) {
             Date d = fxConversion_[i]->fixingCalendar().adjust(startDate, Preceding);
             while (d <= eDate) {
                 fixings.push_back(std::make_pair<Date, std::string>(

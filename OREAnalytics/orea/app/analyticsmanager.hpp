@@ -47,9 +47,13 @@ public:
     const boost::shared_ptr<Analytic>& getAnalytic(const std::string& type) const;
     Size numberOfAnalytics() { return analytics_.size(); }
     const boost::shared_ptr<InputParameters>& inputs() { return inputs_; }
+    std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> todaysMarketParams();
     void runAnalytics(const std::set<std::string>& analyticTypes,
-                      const boost::shared_ptr<MarketCalibrationReport>& marketCalibrationReport = nullptr);
+                      const boost::shared_ptr<MarketCalibrationReportBase>& marketCalibrationReport = nullptr);
     void addAnalytic(const std::string& label, const boost::shared_ptr<Analytic>& analytic);
+
+    // returns a vector of all analytics, including dependent analytics
+    std::map<std::string, boost::shared_ptr<Analytic>> analytics() { return analytics_; }
     void clear();
     
     Analytic::analytic_reports const reports();

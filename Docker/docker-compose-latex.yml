@@ -3,6 +3,8 @@ version: '3'
 services:
   qrm_latex:
     image: qrm/latex:ubuntu
+    cap_drop:
+      - NET_RAW
     build:
       context: .
       dockerfile: Dockerfile-Latex

@@ -24,11 +24,11 @@
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/todaysmarketcalibrationinfo.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
+#include <ored/report/report.hpp>
 
 namespace ore {
 namespace analytics {
-
-class MarketCalibrationReport {
+class MarketCalibrationReportBase {
 public:
 
     struct CalibrationFilters {
@@ -62,8 +62,8 @@ public:
         bool mdFilterCommVols = true;
     };
 
-    MarketCalibrationReport(const std::string& calibrationFilter);
-    virtual ~MarketCalibrationReport() = default;
+    MarketCalibrationReportBase(const std::string& calibrationFilter);
+    virtual ~MarketCalibrationReportBase() = default;
 
     virtual void initialise(const std::string& label) {};
 
@@ -99,11 +99,56 @@ public:
                                 const std::string& label = std::string());
 
     // write out to file, should be overwritten in derived classes
-    virtual void outputCalibrationReport() = 0;
+    virtual boost::shared_ptr<ore::data::Report> outputCalibrationReport() = 0;
 
 private:
     CalibrationFilters calibrationFilters_;
+};
 
+class MarketCalibrationReport : public MarketCalibrationReportBase {
+public:
+    MarketCalibrationReport(const std::string& calibrationFilter,
+                            const boost::shared_ptr<ore::data::Report>& report);
+    
+    boost::shared_ptr<ore::data::Report> outputCalibrationReport() override;
+
+    void addYieldCurve(const QuantLib::Date& refdate, boost::shared_ptr<ore::data::YieldCurveCalibrationInfo> yts,
+                       const std::string& name, bool isDiscount, const std::string& label) override;
+
+    // Add inflation curve data to array
+    void addInflationCurve(const QuantLib::Date& refdate,
+                           boost::shared_ptr<ore::data::InflationCurveCalibrationInfo> yts, const std::string& name,
+                           const std::string& label) override;
+
+    // Add commodity curve data to array
+    void addCommodityCurve(const QuantLib::Date& refdate,
+                           boost::shared_ptr<ore::data::CommodityCurveCalibrationInfo> yts, const std::string& name,
+                           const std::string& label) override;
+
+    // Add fx/eq/comm vol curve data to array
+    void addFxVol(const QuantLib::Date& refdate, boost::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> vol,
+                  const std::string& name, const std::string& label) override;
+    void addEqVol(const QuantLib::Date& refdate, boost::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> vol,
+                  const std::string& name, const std::string& label) override;
+    void addCommVol(const QuantLib::Date& refdate, boost::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> vol,
+                    const std::string& name, const std::string& label) override;
+
+    // Add ir vol curve data to array
+    void addIrVol(const QuantLib::Date& refdate, boost::shared_ptr<ore::data::IrVolCalibrationInfo> vol,
+                  const std::string& name, const std::string& label) override;
+
+private:
+     boost::shared_ptr<ore::data::Report> report_;
+     
+     // a map of already reported calibrations
+     std::map<std::string, std::map<std::string, std::set<std::string>>> calibrations_;
+
+     void addRowReport(const std::string& moType, const std::string& moId, const std::string& resId,
+                       const std::string& key1, const std::string& key2, const std::string& key3,
+                       const boost::any& value);
+     void addEqFxVol(const std::string& type, boost::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> vol,
+                     const std::string& id, const std::string& label);
+     const bool checkCalibrations(std::string label, std::string type, std::string id) const;
 };
 
 } // namespace analytics

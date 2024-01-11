@@ -116,7 +116,7 @@ BOOST_FIXTURE_TEST_CASE(testBermudanSwaption, BermudanTestData) {
     auto swapEngine = boost::make_shared<DiscountingSwapEngine>(yts);
 
     auto mcMultiLegOptionEngine = boost::make_shared<McMultiLegOptionEngine>(
-        xasset, MersenneTwisterAntithetic, SobolBrownianBridge, 10000, 25000, 42, 42, 4, LsmBasisSystem::Monomial);
+        xasset, SobolBrownianBridge, SobolBrownianBridge, 25000, 0, 42, 42, 4, LsmBasisSystem::Monomial);
 
     underlying->setPricingEngine(swapEngine);
     swaption->setPricingEngine(swaptionEngineLgm);
@@ -171,8 +171,8 @@ BOOST_AUTO_TEST_CASE(testFxOption) {
         boost::make_shared<VanillaOption>(boost::make_shared<PlainVanillaPayoff>(Option::Call, 0.8), exercise);
 
     Leg usdFlow, eurFlow;
-    usdFlow.push_back(boost::make_shared<SimpleCashFlow>(1.0, exDate));
-    eurFlow.push_back(boost::make_shared<SimpleCashFlow>(-0.8, exDate));
+    usdFlow.push_back(boost::make_shared<SimpleCashFlow>(1.0, exDate + 1));
+    eurFlow.push_back(boost::make_shared<SimpleCashFlow>(-0.8, exDate + 1));
 
     auto multiLegOption =
         boost::make_shared<MultiLegOption>(std::vector<Leg>{eurFlow, usdFlow}, std::vector<bool>{false, false},
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(testFxOption) {
 
     // for european options there is no traning phase actually
     auto mcMultiLegOptionEngine = boost::make_shared<McMultiLegOptionEngine>(
-        xasset, SobolBrownianBridge, SobolBrownianBridge, 10000, 25000, 42, 42, 4, LsmBasisSystem::Monomial);
+        xasset, SobolBrownianBridge, SobolBrownianBridge, 25000, 0, 42, 42, 4, LsmBasisSystem::Monomial);
 
     multiLegOption->setPricingEngine(mcMultiLegOptionEngine);
     boost::timer::cpu_timer timer;

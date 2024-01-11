@@ -1,6 +1,7 @@
 # cpp files, this list is maintained manually
 
-set(QuantExt-Test_SRC analyticcashsettledeuropeanengine.cpp
+set(QuantExt-Test_SRC ad.cpp
+analyticcashsettledeuropeanengine.cpp
 analyticlgmswaptionengine.cpp
 basecorrelationcurve.cpp
 bfrrvolsurface.cpp
@@ -19,8 +20,10 @@ cashflow.cpp
 commodityforward.cpp
 commodityschwartzmodel.cpp
 commodityspreadoption.cpp
+computeenvironment.cpp
 correlationtermstructure.cpp
 cpicapfloor.cpp
+cpileg.cpp
 crcirpp.cpp
 crossassetmodel.cpp
 crossassetmodel2.cpp
@@ -65,6 +68,7 @@ pricetermstructureadapter.cpp
 qle_calendars.cpp
 quadraticinterpolation.cpp
 randomvariable.cpp
+randomvariablelsmbasissystem.cpp
 ratehelpers.cpp
 stabilisedglls.cpp
 staticallycorrectedyieldtermstructure.cpp

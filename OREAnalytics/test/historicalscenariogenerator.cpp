@@ -4,10 +4,11 @@
 */
 
 #include <oret/toplevelfixture.hpp>
-#include <test/testmarket.hpp>
 #include <orea/scenario/simplescenario.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <orea/scenario/historicalscenariogenerator.hpp>
+
+#include "testmarket.hpp"
 
 using namespace std;
 using namespace ore;
@@ -60,7 +61,7 @@ BOOST_AUTO_TEST_CASE(testHistoricalScenarioGeneratorTransform) {
     histScenariosLoader->historicalScenarios() = scenarios;
     histScenariosLoader->dates() = vector<Date>{d1, d2};
     boost::shared_ptr<HistoricalScenarioGenerator> histScenarios = boost::make_shared<HistoricalScenarioGenerator>(
-        histScenariosLoader, boost::make_shared<SimpleScenarioFactory>(), TARGET(), 1);
+        histScenariosLoader, boost::make_shared<SimpleScenarioFactory>(), TARGET(), nullptr, 1);
     histScenarios->baseScenario() = s1;
 
     // Init market

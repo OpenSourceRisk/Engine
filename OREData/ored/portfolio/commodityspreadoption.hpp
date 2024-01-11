@@ -23,9 +23,58 @@
 
 namespace ore::data {
 
+class CommoditySpreadOptionData : public XMLSerializable {
+public:
+
+    class OptionStripData : public XMLSerializable {
+    public:
+        ScheduleData schedule() const { return schedule_; }
+        BusinessDayConvention bdc() const { return bdc_; }
+        int lag() const { return lag_; }
+        Calendar calendar() const { return calendar_; }
+        //! \name Serialisation
+        //@{
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(XMLDocument& doc) override;
+        //@}
+    private:
+        ScheduleData schedule_;
+        BusinessDayConvention bdc_;
+        int lag_;
+        Calendar calendar_;
+    };
+
+    CommoditySpreadOptionData() {}
+    CommoditySpreadOptionData(const std::vector<ore::data::LegData>& legData, const ore::data::OptionData& optionData,
+                              QuantLib::Real strike)
+        : legData_(legData), optionData_(optionData), strike_(strike) {}
+    //! \name Serialisation
+    //@{
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
+    //@}
+
+    const std::vector<ore::data::LegData>& legData() const { return legData_; }
+    const ore::data::OptionData& optionData() const { return optionData_; }
+    QuantLib::Real strike() const { return strike_; }
+    boost::optional<OptionStripData> optionStrip() { return optionStrip_; }
+
+private:
+    boost::shared_ptr<ore::data::LegData> createLegData() const { return boost::make_shared<ore::data::LegData>(); }
+
+    std::vector<ore::data::LegData> legData_;
+    ore::data::OptionData optionData_;
+    QuantLib::Real strike_;
+
+    boost::optional<OptionStripData> optionStrip_;
+    
+};
+
 class CommoditySpreadOption : public ore::data::Trade {
 public:
-    CommoditySpreadOption() : ore::data::Trade("CommoditySpreadOption"){}
+    CommoditySpreadOption() : ore::data::Trade("CommoditySpreadOption") {}
+    CommoditySpreadOption(const CommoditySpreadOptionData& data)
+        : ore::data::Trade("CommoditySpreadOption"), csoData_(data) {}
 
     //! Implement the build method
     void build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) override;
@@ -38,22 +87,14 @@ public:
 
     //! \name Inspectors
     //@{
-    std::vector<std::string> const& fxIndex() const {return fxIndex_; }
-    const ore::data::OptionData& option() const { return optionData_; }
-    QuantLib::Real strike() const { return strike_; }
+    std::vector<std::string> const& fxIndex() const { return fxIndex_; }
+    const ore::data::OptionData& option() const { return csoData_.optionData(); }
+    QuantLib::Real strike() const { return csoData_.strike(); }
 
     //@}
 
 private:
-
-    std::vector<ore::data::LegData> legData_;
-    boost::shared_ptr<QuantExt::CommodityCashFlow> longAssetCashFlow_;
-    boost::shared_ptr<QuantExt::CommodityCashFlow> shortAssetCashFlow_;
-    std::vector<std::string> fxIndex_;
-    ore::data::OptionData optionData_;
-    QuantLib::Date expiryDate_;
-    QuantLib::Real strike_;
-    boost::shared_ptr<ore::data::LegData> createLegData() const { return boost::make_shared<ore::data::LegData>(); }
-
+    CommoditySpreadOptionData csoData_;
+    std::vector<std::string> fxIndex_;    
 };
-}
+} // namespace ore::data

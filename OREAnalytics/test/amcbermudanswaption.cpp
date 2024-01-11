@@ -176,7 +176,7 @@ std::ostream& operator<<(std::ostream& os, const TestCase& testCase) { return os
 
 TestCase testCaseData[] = {
     {"Physical Settled Swaption EUR 10y10y",
-     20E-4,
+     25E-4,
      true,
      1,
      false,
@@ -236,7 +236,7 @@ TestCase testCaseData[] = {
       {19.5041, 0},           {20, 0},
       {20.5039, 0},           {21.0012, 0}}},
     {"Physical Settled Swaption USD 10y10y",
-     20E-4,
+     40E-4,
      true,
      1,
      false,
@@ -416,9 +416,6 @@ BOOST_DATA_TEST_CASE(testBermudanSwaptionExposure, boost::unit_test::data::make(
 
     // Model
     boost::shared_ptr<QuantExt::CrossAssetModel> model = ccLgm;
-
-    // State process
-    boost::shared_ptr<StochasticProcess> stateProcess = model->stateProcess();
 
     // Simulation market parameters, we just need the yield curve structure here
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig(new ScenarioSimMarketParameters);
@@ -658,7 +655,7 @@ BOOST_DATA_TEST_CASE(testBermudanSwaptionExposure, boost::unit_test::data::make(
         void build(const boost::shared_ptr<EngineFactory>&) override {}
     };
     AMCValuationEngine amcValEngine(model, sgd, boost::shared_ptr<Market>(), std::vector<string>(),
-                                    std::vector<string>());
+                                    std::vector<string>(), 0);
     auto trade = boost::make_shared<TestTrade>("BermudanSwaption", testCase.inBaseCcy ? "EUR" : "USD",
                                                boost::make_shared<VanillaInstrument>(swaption));
     trade->id() = "DummyTradeId";

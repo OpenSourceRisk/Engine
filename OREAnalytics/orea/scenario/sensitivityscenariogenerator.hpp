@@ -122,7 +122,12 @@ public:
     */
     const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes() const { return shiftSizes_; }
 
+    /*! Similarly, reeturn the base values for each risk factor */
+    const std::map<RiskFactorKey, QuantLib::Real>& baseValues() const { return baseValues_; }
+
     Size numScenarios() const { return scenarios_.size(); }
+
+    boost::shared_ptr<Scenario> baseScenarioAbsolute() const { return baseScenarioAbsolute_; }
 
 private:
     void generateScenarios();
@@ -188,6 +193,8 @@ private:
 
     //! Holds the shift sizes for each risk factor key
     std::map<RiskFactorKey, QuantLib::Real> shiftSizes_;
+    //! Holds the base valuesfor each risk factor key
+    std::map<RiskFactorKey, QuantLib::Real> baseValues_;
 
     boost::shared_ptr<Scenario> baseScenarioAbsolute_;
 };

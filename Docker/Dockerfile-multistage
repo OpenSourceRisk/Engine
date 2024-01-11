@@ -1,0 +1,58 @@
+ARG debian_tag
+
+# ore build
+
+FROM debian:${debian_tag} as orebuild
+
+ARG num_cores
+ARG cmake_build_type
+
+COPY CMakeLists.txt /ore/CMakeLists.txt
+COPY .clang-format /ore/.clang-format
+COPY .gitignore /ore/.gitignore
+COPY CMakePresets.json /ore/CMakePresets.json
+COPY News.txt /ore/News.txt
+COPY README.md /ore/README.md
+COPY license.txt /ore/license.txt
+COPY licenseheader.txt /ore/licenseheader.txt
+COPY ore.props /ore/ore.props
+COPY runCmakeVS.cmd /ore/runCmakeVS.cmd
+COPY QuantLib /ore/QuantLib
+COPY QuantExt /ore/QuantExt
+COPY OREData /ore/OREData
+COPY OREAnalytics /ore/OREAnalytics
+COPY App /ore/App
+COPY ThirdPartyLibs /ore/ThirdPartyLibs
+COPY ORETest /ore/ORETest
+COPY cmake /ore/cmake
+COPY Docker /ore/Docker
+COPY Docs ore/Docs
+COPY Examples ore/Examples
+COPY Tools ore/Tools
+COPY xsd ore/xsd
+
+RUN apt-get update && apt-get upgrade -y \
+ && apt-get install -f -y build-essential libbz2-dev cmake ninja-build zlib1g-dev libboost-all-dev opencl-headers ocl-icd-opencl-dev
+
+RUN cd / \
+  && mkdir -p build_ore && cd build_ore \
+  && cmake /ore -GNinja -DCMAKE_BUILD_TYPE=${cmake_build_type} -DORE_BUILD_DOC=OFF -DORE_USE_ZLIB=ON -DQL_ENABLE_SESSIONS=ON -DORE_ENABLE_OPENCL=ON
+
+RUN cd /build_ore \
+  && cmake --build . -- -j${num_cores} install
+
+RUN ldconfig
+
+# ore
+
+FROM debian:${debian_tag} as ore
+
+COPY --from=orebuild /usr/local/include /usr/local/include
+COPY --from=orebuild /usr/local/lib/ /usr/local/lib
+COPY --from=orebuild /usr/local/bin/ /usr/local/bin
+COPY --from=orebuild /ore /ore
+COPY --from=orebuild /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
+
+RUN ldconfig
+
+CMD bash

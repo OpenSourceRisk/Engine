@@ -103,7 +103,7 @@ void EquityDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engi
 
     
 
-    boost::shared_ptr<QuantExt::EquityIndex> eqIndex = engineFactory->market()->equityCurve(assetName).currentLink();
+    boost::shared_ptr<QuantExt::EquityIndex2> eqIndex = engineFactory->market()->equityCurve(assetName).currentLink();
 
     // set pricing engines
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
@@ -125,9 +125,9 @@ void EquityDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engi
 
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    Date lastPremiumDate =
-        addPremiums(additionalInstruments, additionalMultipliers, payoffAmount_, option_.premiumData(),
-                    isLong ? -1.0 : 1.0, ccy, engineFactory, builder->configuration(MarketContext::pricing));
+    Date lastPremiumDate = addPremiums(
+        additionalInstruments, additionalMultipliers, (isLong ? 1.0 : -1.0) * payoffAmount_, option_.premiumData(),
+        isLong ? -1.0 : 1.0, ccy, engineFactory, builder->configuration(MarketContext::pricing));
 
     Handle<Quote> spot = market->equitySpot(assetName);
     instrument_ = boost::make_shared<DoubleBarrierOptionWrapper>(

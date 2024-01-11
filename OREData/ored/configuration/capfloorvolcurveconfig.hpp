@@ -46,7 +46,7 @@ public:
     enum class VolatilityType { Lognormal, Normal, ShiftedLognormal };
 
     //! The type of structure that has been configured
-    enum class Type { Atm, Surface, SurfaceWithAtm };
+    enum class Type { TermAtm, TermSurface, TermSurfaceWithAtm, OptionletAtm, OptionletSurface, OptionletSurfaceWithAtm };
 
     //! Default constructor
     CapFloorVolatilityCurveConfig() {}
@@ -61,7 +61,8 @@ public:
         const QuantLib::Size onCapSettlementDays, const std::string& discountCurve,
         const std::string& interpolationMethod = "BicubicSpline", const std::string& interpolateOn = "TermVolatilities",
         const std::string& timeInterpolation = "LinearFlat", const std::string& strikeInterpolation = "LinearFlat",
-        const std::vector<std::string>& atmTenors = {}, const BootstrapConfig& bootstrapConfig = BootstrapConfig());
+        const std::vector<std::string>& atmTenors = {}, const BootstrapConfig& bootstrapConfig = BootstrapConfig(),
+        const string& inputType = "TermVolatilities");
 
     //! Detailled constructor for proxy config
     CapFloorVolatilityCurveConfig(const std::string& curveID, const std::string& curveDescription,
@@ -140,8 +141,9 @@ private:
     bool quoteIncludesIndexName_ = false;
     std::vector<std::string> atmTenors_;
     BootstrapConfig bootstrapConfig_;
-    Type type_ = Type::Surface;
+    Type type_ = Type::TermSurface;
     std::string extrapolation_;
+    std::string inputType_;
     //
     std::string proxySourceCurveId_;
     std::string proxySourceIndex_;

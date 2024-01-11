@@ -36,11 +36,15 @@ namespace QuantExt {
 using namespace QuantLib;
 
 //! Equity Index
-/*! \ingroup indexes */
-class EquityIndex : public EqFxIndexBase {
+/*! \ingroup indexes 
+  Renamed to EquityIndex2, because Quantlib has introduced an EquityIndex class in v1.30
+  which causes name conflicts in the compilation of the joint SWIG wrapper across 
+  QuantLib and QuantExt.
+*/
+class EquityIndex2 : public EqFxIndexBase {
 public:
     /*! spot quote is interpreted as of today */
-    EquityIndex(const std::string& familyName, const Calendar& fixingCalendar, const Currency& currency,
+    EquityIndex2(const std::string& familyName, const Calendar& fixingCalendar, const Currency& currency,
                 const Handle<Quote> spotQuote = Handle<Quote>(),
                 const Handle<YieldTermStructure>& rate = Handle<YieldTermStructure>(),
                 const Handle<YieldTermStructure>& dividend = Handle<YieldTermStructure>());
@@ -84,7 +88,7 @@ public:
     // @}
     //! \name Additional methods
     //@{
-    virtual boost::shared_ptr<EquityIndex> clone(const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
+    virtual boost::shared_ptr<EquityIndex2> clone(const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
                                                  const Handle<YieldTermStructure>& dividend) const;
     // @}
 protected:
@@ -100,15 +104,15 @@ private:
 
 // inline definitions
 
-inline std::string EquityIndex::name() const { return name_; }
+inline std::string EquityIndex2::name() const { return name_; }
 
-inline Calendar EquityIndex::fixingCalendar() const { return fixingCalendar_; }
+inline Calendar EquityIndex2::fixingCalendar() const { return fixingCalendar_; }
 
-inline bool EquityIndex::isValidFixingDate(const Date& d) const { return fixingCalendar().isBusinessDay(d); }
+inline bool EquityIndex2::isValidFixingDate(const Date& d) const { return fixingCalendar().isBusinessDay(d); }
 
-inline void EquityIndex::update() { notifyObservers(); }
+inline void EquityIndex2::update() { notifyObservers(); }
 
-inline Real EquityIndex::pastFixing(const Date& fixingDate) const {
+inline Real EquityIndex2::pastFixing(const Date& fixingDate) const {
     QL_REQUIRE(isValidFixingDate(fixingDate), fixingDate << " is not a valid fixing date");
     return timeSeries()[fixingDate];
 }

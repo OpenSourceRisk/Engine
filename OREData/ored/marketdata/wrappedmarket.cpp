@@ -139,7 +139,7 @@ Handle<YieldTermStructure> WrappedMarket::equityForecastCurve(const string& eqNa
     return market_->equityForecastCurve(eqName, configuration);
 }
 
-Handle<QuantExt::EquityIndex> WrappedMarket::equityCurve(const string& eqName, const string& configuration) const {
+Handle<QuantExt::EquityIndex2> WrappedMarket::equityCurve(const string& eqName, const string& configuration) const {
     return market_->equityCurve(eqName, configuration);
 }
 

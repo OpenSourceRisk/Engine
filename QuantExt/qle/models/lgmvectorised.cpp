@@ -30,8 +30,8 @@
 namespace QuantExt {
 
 RandomVariable LgmVectorised::numeraire(const Time t, const RandomVariable& x,
-                                        const Handle<YieldTermStructure> discountCurve) const {
-    QL_REQUIRE(t >= 0.0, "t (" << t << ") >= 0 required in LGM::numeraire");
+                                        const Handle<YieldTermStructure>& discountCurve) const {
+    QL_REQUIRE(t >= 0.0, "t (" << t << ") >= 0 required in LGMVectorised::numeraire");
     RandomVariable Ht(x.size(), p_->H(t));
     return exp(Ht * x + RandomVariable(x.size(), 0.5 * p_->zeta(t)) * Ht * Ht) /
            RandomVariable(x.size(),
@@ -39,10 +39,10 @@ RandomVariable LgmVectorised::numeraire(const Time t, const RandomVariable& x,
 }
 
 RandomVariable LgmVectorised::discountBond(const Time t, const Time T, const RandomVariable& x,
-                                           Handle<YieldTermStructure> discountCurve) const {
+                                           const Handle<YieldTermStructure>& discountCurve) const {
     if (QuantLib::close_enough(t, T))
         return RandomVariable(x.size(), 1.0);
-    QL_REQUIRE(T >= t && t >= 0.0, "T(" << T << ") >= t(" << t << ") >= 0 required in LGM::discountBond");
+    QL_REQUIRE(T >= t && t >= 0.0, "T(" << T << ") >= t(" << t << ") >= 0 required in LGMVectorised::discountBond");
     RandomVariable Ht(x.size(), p_->H(t));
     RandomVariable HT(x.size(), p_->H(T));
     return RandomVariable(x.size(),
@@ -52,26 +52,49 @@ RandomVariable LgmVectorised::discountBond(const Time t, const Time T, const Ran
 }
 
 RandomVariable LgmVectorised::reducedDiscountBond(const Time t, const Time T, const RandomVariable& x,
-                                                  const Handle<YieldTermStructure> discountCurve) const {
+                                                  const Handle<YieldTermStructure>& discountCurve) const {
     if (QuantLib::close_enough(t, T))
         return RandomVariable(x.size(), 1.0) / numeraire(t, x, discountCurve);
-    QL_REQUIRE(T >= t && t >= 0.0, "T(" << T << ") >= t(" << t << ") >= 0 required in LGM::reducedDiscountBond");
+    QL_REQUIRE(T >= t && t >= 0.0,
+               "T(" << T << ") >= t(" << t << ") >= 0 required in LGMVectorised::reducedDiscountBond");
     RandomVariable HT(x.size(), p_->H(T));
     return RandomVariable(x.size(),
                           (discountCurve.empty() ? p_->termStructure()->discount(T) : discountCurve->discount(T))) *
            exp(-HT * x - RandomVariable(x.size(), 0.5 * p_->zeta(t)) * HT * HT);
 }
 
+RandomVariable LgmVectorised::discountBondOption(Option::Type type, const Real K, const Time t, const Time S,
+                                                 const Time T, const RandomVariable& x,
+                                                 const Handle<YieldTermStructure>& discountCurve) const {
+    QL_REQUIRE(T > S && S >= t && t >= 0.0,
+               "T(" << T << ") > S(" << S << ") >= t(" << t << ") >= 0 required in LGMVectorised::discountBondOption");
+    RandomVariable w(x.size(), type == Option::Call ? 1.0 : -1.0);
+    RandomVariable pS = discountBond(t, S, x, discountCurve);
+    RandomVariable pT = discountBond(t, T, x, discountCurve);
+    // slight generalization of Lichters, Stamm, Gallagher 11.2.1
+    // with t < S, SSRN: https://ssrn.com/abstract=2246054
+    RandomVariable sigma(x.size(), std::sqrt(p_->zeta(t)) * (p_->H(T) - p_->H(S)));
+    RandomVariable dp =
+        log(pT / (RandomVariable(x.size(), K) * pS)) / sigma + RandomVariable(x.size(), 0.5) * sigma * sigma;
+    RandomVariable dm = dp - sigma;
+    return w * (pT * normalCdf(w * dp) - pS * RandomVariable(x.size(), K) * normalCdf(w * dm));
+}
+
 RandomVariable LgmVectorised::fixing(const boost::shared_ptr<InterestRateIndex>& index, const Date& fixingDate,
                                      const Time t, const RandomVariable& x) const {
 
     // handle case where fixing is deterministic
+
     Date today = Settings::instance().evaluationDate();
     if (fixingDate <= today)
         return RandomVariable(x.size(), index->fixing(fixingDate));
 
     // handle stochastic fixing
+
     if (auto ibor = boost::dynamic_pointer_cast<IborIndex>(index)) {
+
+        // Ibor Index
+
         Date d1 = ibor->valueDate(fixingDate);
         Date d2 = ibor->maturityDate(d1);
         Time T1 = std::max(t, p_->termStructure()->timeFromReference(d1));
@@ -82,6 +105,9 @@ RandomVariable LgmVectorised::fixing(const boost::shared_ptr<InterestRateIndex>&
         RandomVariable disc2 = reducedDiscountBond(t, T2, x, ibor->forwardingTermStructure());
         return (disc1 / disc2 - RandomVariable(x.size(), 1.0)) / RandomVariable(x.size(), dt);
     } else if (auto swap = boost::dynamic_pointer_cast<SwapIndex>(index)) {
+
+        // Swap Index
+
         auto swapDiscountCurve =
             swap->exogenousDiscount() ? swap->discountingTermStructure() : swap->forwardingTermStructure();
         Leg floatingLeg, fixedLeg;
@@ -154,6 +180,7 @@ RandomVariable LgmVectorised::fixing(const boost::shared_ptr<InterestRateIndex>&
                 reducedDiscountBond(t, T, x, swapDiscountCurve) * RandomVariable(x.size(), cpn->accrualPeriod());
         }
         return numerator / denominator;
+
     } else {
         QL_FAIL("LgmVectorised::fixing(): index ('" << index->name() << "') must be ibor or swap index");
     }
@@ -163,13 +190,9 @@ RandomVariable LgmVectorised::compoundedOnRate(const boost::shared_ptr<Overnight
                                                const std::vector<Date>& fixingDates,
                                                const std::vector<Date>& valueDates, const std::vector<Real>& dt,
                                                const Natural rateCutoff, const bool includeSpread, const Real spread,
-                                               const Real gearing, const Period lookback,
-                                               const DayCounter& accrualDayCounter, const Real cap, const Real floor,
+                                               const Real gearing, const Period lookback, Real cap, Real floor,
                                                const bool localCapFloor, const bool nakedOption, const Time t,
                                                const RandomVariable& x) const {
-
-    QL_REQUIRE(!localCapFloor, "LgmVectorised::compoundedOnRate(): localCapFloor = true is not supported");
-    QL_REQUIRE(!nakedOption, "LgmVectorised::compoundedOnRate(): nakedOption = true is not supported");
 
     QL_REQUIRE(!includeSpread || QuantLib::close_enough(gearing, 1.0),
                "LgmVectorised::compoundedOnRate(): if include spread = true, only a gearing 1.0 is allowed - scale "
@@ -266,42 +289,67 @@ RandomVariable LgmVectorised::compoundedOnRate(const boost::shared_ptr<Overnight
         if (includeSpread) {
             compoundFactorWithoutSpreadLgm *= disc1 / disc2;
             Real tau =
-                accrualDayCounter.yearFraction(valueDates[i], valueDates.back()) / (valueDates.back() - valueDates[i]);
+                index->dayCounter().yearFraction(valueDates[i], valueDates.back()) / (valueDates.back() - valueDates[i]);
             compoundFactorLgm *= RandomVariable(
                 x.size(), std::pow(1.0 + tau * spread, static_cast<int>(valueDates.back() - valueDates[i])));
         }
     }
 
-    Rate tau = accrualDayCounter.yearFraction(valueDates.front(), valueDates.back());
+    Rate tau = index->dayCounter().yearFraction(valueDates.front(), valueDates.back());
     RandomVariable rate = (compoundFactorLgm - RandomVariable(x.size(), 1.0)) / RandomVariable(x.size(), tau);
     RandomVariable swapletRate = RandomVariable(x.size(), gearing) * rate;
-    // RandomVariable effectiveSpread, effectiveIndexFixing;
+    RandomVariable effectiveSpread, effectiveIndexFixing;
     if (!includeSpread) {
         swapletRate += RandomVariable(x.size(), spread);
-        // effectiveSpread = RandomVariable(x.size(), spread);
-        // effectiveIndexFixing = RandomVaraible(x, rate);
+        effectiveSpread = RandomVariable(x.size(), spread);
+        effectiveIndexFixing = rate;
     } else {
-        // effectiveSpread =
-        //     rate - (compoundFactorWithoutSpreadLgm - RandomVariable(x.size() 1.0)) / RandomVariable(x.size(), tau);
-        // effectiveIndexFixing = rate - effectiveSpread_;
+        effectiveSpread =
+            rate - (compoundFactorWithoutSpreadLgm - RandomVariable(x.size(), 1.0)) / RandomVariable(x.size(), tau);
+        effectiveIndexFixing = rate - effectiveSpread;
     }
 
-    RandomVariable floorVal(x.size(), floor == Null<Real>() ? -QL_MAX_REAL : floor);
-    RandomVariable capVal(x.size(), cap == Null<Real>() ? QL_MAX_REAL : cap);
+    if (cap == Null<Real>() && floor == Null<Real>())
+        return swapletRate;
 
-    return max(floorVal, min(capVal, swapletRate));
+    // handle cap / floor - we compute the intrinsic value only
+
+    if (gearing < 0.0) {
+        std::swap(cap, floor);
+    }
+
+    if (nakedOption)
+        swapletRate = RandomVariable(x.size(), 0.0);
+
+    RandomVariable floorletRate(x.size(), 0.0);
+    RandomVariable capletRate(x.size(), 0.0);
+
+    if (floor != Null<Real>()) {
+        // ignore localCapFloor, treat as global
+        RandomVariable effectiveStrike =
+            (RandomVariable(x.size(), floor) - effectiveSpread) / RandomVariable(x.size(), gearing);
+        floorletRate = RandomVariable(x.size(), gearing) *
+                       max(RandomVariable(x.size(), 0.0), effectiveStrike - effectiveIndexFixing);
+    }
+
+    if (cap != Null<Real>()) {
+        RandomVariable effectiveStrike =
+            (RandomVariable(x.size(), cap) - effectiveSpread) / RandomVariable(x.size(), gearing);
+        capletRate = RandomVariable(x.size(), gearing) *
+                     max(RandomVariable(x.size(), 0.0), effectiveIndexFixing - effectiveStrike);
+        if (nakedOption && floor == Null<Real>())
+            capletRate = -capletRate;
+    }
+
+    return swapletRate + floorletRate - capletRate;
 }
 
 RandomVariable LgmVectorised::averagedOnRate(const boost::shared_ptr<OvernightIndex>& index,
                                              const std::vector<Date>& fixingDates, const std::vector<Date>& valueDates,
                                              const std::vector<Real>& dt, const Natural rateCutoff,
                                              const bool includeSpread, const Real spread, const Real gearing,
-                                             const Period lookback, const DayCounter& accrualDayCounter, const Real cap,
-                                             const Real floor, const bool localCapFloor, const bool nakedOption,
-                                             const Time t, const RandomVariable& x) const {
-
-    QL_REQUIRE(!localCapFloor, "LgmVectorised::averageOnRate(): localCapFloor = true is not supported");
-    QL_REQUIRE(!nakedOption, "LgmVectorised::averagedOnRate(): nakedOption = true is not supported");
+                                             const Period lookback, Real cap, Real floor, const bool localCapFloor,
+                                             const bool nakedOption, const Time t, const RandomVariable& x) const {
 
     QL_REQUIRE(!includeSpread || QuantLib::close_enough(gearing, 1.0),
                "LgmVectorised::averageOnRate(): if include spread = true, only a gearing 1.0 is allowed - scale "
@@ -382,17 +430,49 @@ RandomVariable LgmVectorised::averagedOnRate(const boost::shared_ptr<OvernightIn
         accumulatedRateLgm += log(disc1 / disc2);
     }
 
-    Rate tau = accrualDayCounter.yearFraction(valueDates.front(), valueDates.back());
+    Rate tau = index->dayCounter().yearFraction(valueDates.front(), valueDates.back());
     RandomVariable rate =
         RandomVariable(x.size(), gearing / tau) * accumulatedRateLgm + RandomVariable(x.size(), spread);
-    RandomVariable floorVal(x.size(), floor == Null<Real>() ? -QL_MAX_REAL : floor);
-    RandomVariable capVal(x.size(), cap == Null<Real>() ? QL_MAX_REAL : cap);
-    return max(floorVal, min(capVal, rate));
+
+    if (cap == Null<Real>() && floor == Null<Real>())
+        return rate;
+
+    // handle cap / floor - we compute the intrinsic value only
+
+    if (gearing < 0.0) {
+        std::swap(cap, floor);
+    }
+
+    RandomVariable forwardRate = (rate - RandomVariable(x.size(), spread)) / RandomVariable(x.size(), gearing);
+    RandomVariable floorletRate(x.size(), 0.0);
+    RandomVariable capletRate(x.size(), 0.0);
+
+    if (nakedOption)
+        rate = RandomVariable(x.size(), 0.0);
+
+    if (floor != Null<Real>()) {
+        // ignore localCapFloor, treat as global
+        RandomVariable effectiveStrike = RandomVariable(x.size(), (floor - spread) / gearing);
+        floorletRate =
+            RandomVariable(x.size(), gearing) * max(RandomVariable(x.size(), 0.0), effectiveStrike - forwardRate);
+    }
+
+    if (cap != Null<Real>()) {
+        RandomVariable effectiveStrike = RandomVariable(x.size(), (cap - spread) / gearing);
+        capletRate =
+            RandomVariable(x.size(), gearing) * max(RandomVariable(x.size(), 0.0), forwardRate - effectiveStrike);
+        if (nakedOption && floor == Null<Real>())
+            capletRate = -capletRate;
+    }
+
+    return rate + floorletRate - capletRate;
 }
 
 RandomVariable LgmVectorised::averagedBmaRate(const boost::shared_ptr<BMAIndex>& index,
                                               const std::vector<Date>& fixingDates, const Date& accrualStartDate,
-                                              const Date& accrualEndDate, const Time t, const RandomVariable& x) const {
+                                              const Date& accrualEndDate, const bool includeSpread, const Real spread,
+                                              const Real gearing, Real cap, Real floor, const bool nakedOption,
+                                              const Time t, const RandomVariable& x) const {
 
     // similar to AverageBMACouponPricer
 
@@ -468,9 +548,48 @@ RandomVariable LgmVectorised::averagedBmaRate(const boost::shared_ptr<BMAIndex>&
         d1 = d2;
     }
 
-    avgBMA /= RandomVariable(x.size(), (endDate - startDate));
+    avgBMA *= RandomVariable(x.size(), gearing / (endDate - startDate));
+    avgBMA += RandomVariable(x.size(), spread);
 
-    return avgBMA;
+    if (cap == Null<Real>() && floor == Null<Real>())
+        return avgBMA;
+
+    // handle cap / floor - we compute the intrinsic value only
+
+    if (gearing < 0.0) {
+        std::swap(cap, floor);
+    }
+
+    RandomVariable forwardRate = (avgBMA - RandomVariable(x.size(), spread)) / RandomVariable(x.size(), gearing);
+    RandomVariable floorletRate(x.size(), 0.0);
+    RandomVariable capletRate(x.size(), 0.0);
+
+    if (nakedOption)
+        avgBMA = RandomVariable(x.size(), 0.0);
+
+    if (floor != Null<Real>()) {
+        // ignore localCapFloor, treat as global
+        RandomVariable effectiveStrike = RandomVariable(x.size(), (floor - spread) / gearing);
+        floorletRate =
+            RandomVariable(x.size(), gearing) * max(RandomVariable(x.size(), 0.0), effectiveStrike - forwardRate);
+    }
+
+    if (cap != Null<Real>()) {
+        RandomVariable effectiveStrike = RandomVariable(x.size(), (cap - spread) / gearing);
+        capletRate =
+            RandomVariable(x.size(), gearing) * max(RandomVariable(x.size(), 0.0), forwardRate - effectiveStrike);
+        if (nakedOption && floor == Null<Real>())
+            capletRate = -capletRate;
+    }
+
+    return avgBMA + floorletRate - capletRate;
+}
+
+RandomVariable LgmVectorised::subPeriodsRate(const boost::shared_ptr<InterestRateIndex>& index,
+                                             const std::vector<Date>& fixingDates, const Time t,
+                                             const RandomVariable& x) const {
+
+    return fixing(index, fixingDates.front(), t, x);
 }
 
 } // namespace QuantExt

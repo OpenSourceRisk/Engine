@@ -90,8 +90,9 @@ void FxTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
             payDate = payCalendar.advance(expiryDate, opd->lag(), Days, opd->convention());
         } else {
             if (opd->dates().size() > 1)
-                WLOG(ore::data::StructuredTradeWarningMessage(
-                    id(), tradeType(), "Trade build", "Found more than 1 payment date. The first one will be used."));
+                ore::data::StructuredTradeWarningMessage(id(), tradeType(), "Trade build",
+                                                         "Found more than 1 payment date. The first one will be used.")
+                    .log();
             payDate = opd->dates().front();
         }
     }
@@ -189,9 +190,10 @@ void FxTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
 
         std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
         std::vector<Real> additionalMultipliers;
-        Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, payoffAmount_,
-                                           option_.premiumData(), isLong ? -1.0 : 1.0, parseCurrency(payoffCurrency_),
-                                           engineFactory, builder->configuration(MarketContext::pricing));
+        Date lastPremiumDate =
+            addPremiums(additionalInstruments, additionalMultipliers, (isLong ? 1.0 : -1.0) * payoffAmount_,
+                        option_.premiumData(), isLong ? -1.0 : 1.0, parseCurrency(payoffCurrency_), engineFactory,
+                        builder->configuration(MarketContext::pricing));
 
         Handle<Quote> spot = market->fxRate(fgnCcy.code() + domCcy.code());
 
@@ -213,10 +215,12 @@ void FxTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
         for (Date d = start; d <= expiryDate; d = fixingCal.advance(d, 1 * Days))
             requiredFixings_.addFixingDate(d, fxIndex_, payDate);
     }
-    
+
     // Check if the barrier has been triggered already. If payoff-at-hit, and barrier was touched in the past, then
     // create instrument again, with expiry date and pay date corresponding to that past barrier exercise date
-    if (barrierOptionWrapper->exercise()) {
+    if (auto rt = engineFactory->engineData()->globalParameters().find("RunType");
+        rt != engineFactory->engineData()->globalParameters().end() && rt->second != "PortfolioAnalyser" &&
+        barrierOptionWrapper->exercise()) {
         QL_REQUIRE(barrierOptionWrapper->exerciseDate() != Date(), "Option is exercised but exercise date was not defined");
         expiryDate = barrierOptionWrapper->exerciseDate();
         additionalData_["exerciseDate"] = expiryDate;

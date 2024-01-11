@@ -35,7 +35,7 @@ using ore::data::CachingPricingEngineBuilder;
 class ConvertibleBondEngineBuilder
     : public ore::data::CachingPricingEngineBuilder<
           std::string, const std::string&, const std::string&, const std::string&, const bool, const std::string&,
-          const std::string&, const bool, boost::shared_ptr<QuantExt::EquityIndex>,
+          const std::string&, const bool, boost::shared_ptr<QuantExt::EquityIndex2>,
           const boost::shared_ptr<QuantExt::FxIndex>&, const std::string&, const QuantLib::Date&,
           const QuantLib::Date&> {
 protected:
@@ -44,7 +44,7 @@ protected:
 
     std::string keyImpl(const std::string& id, const std::string& ccy, const std::string& creditCurveId,
                         const bool hasCreditRisk, const std::string& securityId, const std::string& referenceCurveId,
-                        const bool isExchangeable, boost::shared_ptr<QuantExt::EquityIndex> equity,
+                        const bool isExchangeable, boost::shared_ptr<QuantExt::EquityIndex2> equity,
                         const boost::shared_ptr<QuantExt::FxIndex>& fx, const std::string& equityCreditCurveId,
                         const QuantLib::Date& startDate, const QuantLib::Date& maturityDate) override;
 };
@@ -58,7 +58,7 @@ protected:
     boost::shared_ptr<QuantExt::PricingEngine>
     engineImpl(const std::string& id, const std::string& ccy, const std::string& creditCurveId,
                const bool hasCreditRisk, const std::string& securityId, const std::string& referenceCurveId,
-               const bool isExchangeable, boost::shared_ptr<QuantExt::EquityIndex> equity,
+               const bool isExchangeable, boost::shared_ptr<QuantExt::EquityIndex2> equity,
                const boost::shared_ptr<QuantExt::FxIndex>& fx, const std::string& equityCreditCurveId,
                const QuantLib::Date& startDate, const QuantLib::Date& maturityDate) override;
 };

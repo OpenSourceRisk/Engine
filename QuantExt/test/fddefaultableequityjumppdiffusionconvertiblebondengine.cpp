@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(test_vanilla_bond) {
     Handle<Quote> bondRecoveryRate(boost::make_shared<SimpleQuote>(0.25));
     Handle<Quote> securitySpread(boost::make_shared<SimpleQuote>(0.00));
 
-    auto equity = boost::make_shared<EquityIndex>("myEqIndex", NullCalendar(), EURCurrency(),
+    auto equity = boost::make_shared<EquityIndex2>("myEqIndex", NullCalendar(), EURCurrency(),
                                                   Handle<Quote>(boost::make_shared<SimpleQuote>(S0)), rate, dividend);
 
     auto bond = boost::make_shared<FixedRateBond>(0, TARGET(), 100000.0, today, today + 5 * Years, 1 * Years,

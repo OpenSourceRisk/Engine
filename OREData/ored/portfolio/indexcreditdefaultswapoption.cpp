@@ -135,6 +135,9 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
     Date exerciseDate = parseDate(exerciseDates.front());
     boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(exerciseDate);
 
+    QL_REQUIRE(parseDate(legData.schedule().rules().front().endDate()) > exerciseDate, 
+        "IndexCreditDefaultSwapOption: ExerciseDate must be before EndDate");
+
     // We apply an automatic correction to a common mistake in the input data, where the full index underlying
     // is provided and not only the part of the underlying into which we exercise.
     if (legData.schedule().rules().size() == 1 && legData.schedule().dates().empty()) {
@@ -256,10 +259,11 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
     auto creditCurveId = this->creditCurveId();
     // warn if that is not possible, except for trades on custom baskets
     if (swap_.basket().constituents().empty() && splitCurveIdWithTenor(creditCurveId).second == 0 * Days) {
-        ALOG(StructuredTradeWarningMessage(id(), tradeType(), "Could not imply Index CDS term.",
+        StructuredTradeWarningMessage(id(), tradeType(), "Could not imply Index CDS term.",
                                            "Index CDS term could not be derived from start, end date, are these "
                                            "dates correct (credit curve id is '" +
-                                               swap_.creditCurveId() + "')"));
+                                          swap_.creditCurveId() + "')")
+            .log();
     }
 
     // for cash settlement build the underlying swap with the inccy discount curve
@@ -309,8 +313,8 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
     vector<Real> additionalMultipliers;
     string configuration = iCdsOptionEngineBuilder->configuration(MarketContext::pricing);
     maturity_ =
-        std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, 1.0, option_.premiumData(),
-                                        -indicatorLongShort, ccy, engineFactory, configuration));
+        std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, indicatorLongShort,
+                                        option_.premiumData(), -indicatorLongShort, ccy, engineFactory, configuration));
 
     // Instrument wrapper depends on the settlement type.
     // The instrument build should be indpednent of the evaluation date. However, the general behavior
@@ -505,10 +509,11 @@ void IndexCreditDefaultSwapOption::fromBasket(const Date& asof, map<string, Real
                 notionals_.tradeDate += ntl;
                 notionals_.valuationDate += ntl;
             } else {
-                ALOG(StructuredTradeErrorMessage(id(), "IndexCDSOption", "Error building trade",
+                StructuredTradeErrorMessage(id(), "IndexCDSOption", "Error building trade",
                                                  ("Invalid Basket: found a duplicate credit curve " + creditCurve +
                                                   ".Skip it. Check the basket data for possible errors.")
-                                                     .c_str()));
+                                                .c_str())
+                    .log();
             }
         } else {
             QL_FAIL("Constituent " << creditCurve << " in index CDS option trade " << id()
@@ -536,11 +541,12 @@ void IndexCreditDefaultSwapOption::fromBasket(const Date& asof, map<string, Real
 
     DLOG("All underlyings added, total notional = " << totalNtl);
     if (!close(fullNtl, totalNtl) && totalNtl > fullNtl) {
-        ALOG(StructuredTradeErrorMessage(id(), "IndexCDSOption", "Error building trade",
+        StructuredTradeErrorMessage(id(), "IndexCDSOption", "Error building trade",
                                          ("Sum of basket notionals (" + std::to_string(totalNtl) +
                                           ") is greater than trade notional (" + std::to_string(fullNtl) +
                                           "). Check the basket data for possible errors.")
-                                             .c_str()));
+                                        .c_str())
+            .log();
     }
 
     DLOG("Finished building constituents using basket data.");

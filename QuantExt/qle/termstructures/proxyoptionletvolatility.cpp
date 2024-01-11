@@ -17,10 +17,13 @@
 */
 
 #include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/termstructures/atmadjustedsmilesection.hpp>
 #include <qle/termstructures/proxyoptionletvolatility.hpp>
+#include <qle/utilities/cashflows.hpp>
 #include <qle/utilities/time.hpp>
 
+#include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/termstructures/volatility/smilesection.hpp>
 
@@ -34,16 +37,8 @@ bool isOis(const boost::shared_ptr<IborIndex>& index) {
     return boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(index) != nullptr;
 }
 
-Real getOisAtmLevel(const boost::shared_ptr<OvernightIndex>& on, const Date& fixingDate,
-                    const Period& rateComputationPeriod) {
-    Date today = Settings::instance().evaluationDate();
-    Date start = on->valueDate(fixingDate);
-    Date end = on->fixingCalendar().advance(start, rateComputationPeriod);
-    Date adjStart = std::max(start, today);
-    Date adjEnd = std::max(adjStart + 1, end);
-    OvernightIndexedCoupon cpn(end, 1.0, adjStart, adjEnd, on);
-    cpn.setPricer(boost::make_shared<OvernightIndexedCouponPricer>());
-    return cpn.rate();
+bool isBMA(const boost::shared_ptr<IborIndex>& index) {
+    return boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(index) != nullptr;
 }
 
 } // namespace
@@ -59,13 +54,11 @@ ProxyOptionletVolatility::ProxyOptionletVolatility(const Handle<OptionletVolatil
 
     QL_REQUIRE(baseIndex != nullptr, "ProxyOptionletVolatility: no base index given.");
     QL_REQUIRE(targetIndex != nullptr, "ProxyOptionletVolatility: no target index given.");
-    QL_REQUIRE(boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(targetIndex_) == nullptr ||
-                   targetRateComputationPeriod != 0 * Days,
-               "ProxyOptionletVolatility: target index is OIS ("
+    QL_REQUIRE((!isOis(targetIndex_) && !isBMA(targetIndex)) || targetRateComputationPeriod != 0 * Days,
+               "ProxyOptionletVolatility: target index is OIS or BMA/SIFMA ("
                    << targetIndex->name() << "), so targetRateComputationPeriod must be given and != 0D.");
-    QL_REQUIRE(boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(baseIndex_) == nullptr ||
-                   baseRateComputationPeriod != 0 * Days,
-               "ProxyOptionletVolatility: base index is OIS ("
+    QL_REQUIRE((!isOis(baseIndex_) && !isBMA(baseIndex_)) || baseRateComputationPeriod != 0 * Days,
+               "ProxyOptionletVolatility: base index is OIS or BMA/SIFMA ("
                    << baseIndex->name() << "), so baseRateComputationPeriod must be given and != 0D.");
     registerWith(baseVol_);
     registerWith(baseIndex_);
@@ -83,13 +76,27 @@ boost::shared_ptr<SmileSection> ProxyOptionletVolatility::smileSectionImpl(const
 
     // compute the base and target forward rate levels
 
-    Real baseAtmLevel = isOis(baseIndex_) ? getOisAtmLevel(boost::dynamic_pointer_cast<OvernightIndex>(baseIndex_),
-                                           baseIndex_->fixingCalendar().adjust(fixingDate), baseRateComputationPeriod_)
-                                          : baseIndex_->fixing(baseIndex_->fixingCalendar().adjust(fixingDate));
-    Real targetAtmLevel = isOis(targetIndex_)
-            ? getOisAtmLevel(boost::dynamic_pointer_cast<OvernightIndex>(targetIndex_),
-                             targetIndex_->fixingCalendar().adjust(fixingDate), targetRateComputationPeriod_)
-                              : targetIndex_->fixing(targetIndex_->fixingCalendar().adjust(fixingDate));
+    Real baseAtmLevel;
+    if (isOis(baseIndex_))
+        baseAtmLevel = getOisAtmLevel(boost::dynamic_pointer_cast<OvernightIndex>(baseIndex_),
+                                      baseIndex_->fixingCalendar().adjust(fixingDate), baseRateComputationPeriod_);
+    else if (isBMA(baseIndex_))
+        baseAtmLevel = getBMAAtmLevel(boost::dynamic_pointer_cast<BMAIndexWrapper>(baseIndex_)->bma(),
+                                      baseIndex_->fixingCalendar().adjust(fixingDate), baseRateComputationPeriod_);
+    else
+        baseAtmLevel = baseIndex_->fixing(baseIndex_->fixingCalendar().adjust(fixingDate));
+
+    Real targetAtmLevel;
+    if (isOis(targetIndex_))
+        targetAtmLevel =
+            getOisAtmLevel(boost::dynamic_pointer_cast<OvernightIndex>(targetIndex_),
+                           targetIndex_->fixingCalendar().adjust(fixingDate), targetRateComputationPeriod_);
+    else if (isBMA(targetIndex_))
+        targetAtmLevel =
+            getBMAAtmLevel(boost::dynamic_pointer_cast<BMAIndexWrapper>(targetIndex_)->bma(),
+                           targetIndex_->fixingCalendar().adjust(fixingDate), targetRateComputationPeriod_);
+    else
+        targetAtmLevel = targetIndex_->fixing(targetIndex_->fixingCalendar().adjust(fixingDate));
 
     // build the atm-adjusted smile section and return it
 

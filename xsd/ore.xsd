@@ -5,6 +5,7 @@
   <xs:complexType name="ore">
     <xs:all>
       <xs:element type="parameterListType" name="Setup"/>
+      <xs:element type="parameterListType" name="Logging" minOccurs="0" />
       <xs:element type="parameterListType" name="Markets"/>
       <xs:element type="analyticsType" name="Analytics"/>
     </xs:all>

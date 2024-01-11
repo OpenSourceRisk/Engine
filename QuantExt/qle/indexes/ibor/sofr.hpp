@@ -17,7 +17,7 @@
 */
 
 /*! \file sofr.hpp
-    \brief %SOFR index, straight copy from QuantLib 1.16
+    \brief %SOFR-TERM index
 */
 
 #ifndef quantext_sofr_hpp
@@ -27,12 +27,6 @@
 
 namespace QuantExt {
 using namespace QuantLib;
-
-//! %Sofr (Secured Overnight Financing Rate) index.
-class Sofr : public OvernightIndex {
-public:
-    explicit Sofr(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>());
-};
 
 //! %Sofr term index, see https://www.cmegroup.com/market-data/cme-group-benchmark-administration/term-sofr.html#
 class SofrTerm : public TermRateIndex {

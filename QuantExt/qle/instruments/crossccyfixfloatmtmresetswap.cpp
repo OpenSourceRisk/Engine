@@ -125,7 +125,7 @@ void CrossCcyFixFloatMtMResetSwap::initialize() {
         Date aDate = floatSchedule_.dates().front();
         aDate = floatPaymentCalendar_.adjust(aDate, floatPaymentBdc_);
         boost::shared_ptr<CashFlow> aCashflow = boost::make_shared<SimpleCashFlow>(-floatNotional, aDate);
-        floatLeg.insert(fixedLeg.begin(), aCashflow);
+        floatLeg.insert(floatLeg.begin(), aCashflow);
 
         // Final notional exchange
         aDate = fixedLeg.back()->date();

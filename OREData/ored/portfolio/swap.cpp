@@ -42,6 +42,9 @@ using std::make_pair;
 namespace ore {
 namespace data {
 
+
+
+
 void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Swap::build() called for trade " << id());
     
@@ -55,6 +58,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Size numLegs = legData_.size();
     legPayers_ = vector<bool>(numLegs);
     std::vector<QuantLib::Currency> currencies(numLegs);
+    std::vector<QuantLib::Currency> currenciesForMcSimulation;
     legs_.resize(numLegs);
 
     isXCCY_ = false;
@@ -67,11 +71,36 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             currencies[i] = parseCurrencyWithMinors(legData_[i].currency());
         else
             currencies[i] = parseCurrency(legData_[i].currency());
+
         if (currencies[i] != currency)
             isXCCY_ = true;
         isResetting_ = isResetting_ || (!legData_[i].isNotResetXCCY());
     }
 
+    
+    // Check if there is indexing is used, need to collect all underlying currrencies
+    // for AMC simulations, such a trade needs to be treated a x-ccy swap with both leg paying
+    // one currency.
+    auto addUnique = [](vector<Currency>& currencies, Currency ccy) {
+        if (std::find(currencies.begin(), currencies.end(), ccy) ==
+            currencies.end()) {
+            currencies.push_back(ccy);
+        }
+    };
+    
+    for (Size i = 0; i < numLegs; ++i) {
+        addUnique(currenciesForMcSimulation, currencies[i]);
+        vector<Indexing> indexings = legData_[i].indexing();
+        if (!indexings.empty() && indexings.front().hasData()) {
+            Indexing indexing = indexings.front();
+            if (boost::starts_with(indexing.index(), "FX-")) {
+                auto index = parseFxIndex(indexing.index());
+                addUnique(currenciesForMcSimulation, index->targetCurrency());
+                addUnique(currenciesForMcSimulation, index->sourceCurrency());
+            }
+        }
+    }
+    isXCCY_ = isXCCY_ || currenciesForMcSimulation.size() > 1;
     static std::set<std::string> eligibleForXbs = {"Fixed", "Floating"};
     bool useXbsCurves = true;
     for(Size i=0;i<numLegs;++i) {
@@ -151,7 +180,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         boost::shared_ptr<CrossCurrencySwapEngineBuilderBase> swapBuilder =
             boost::dynamic_pointer_cast<CrossCurrencySwapEngineBuilderBase>(builder);
         QL_REQUIRE(swapBuilder, "No Builder found for CrossCurrencySwap " << id());
-        swap->setPricingEngine(swapBuilder->engine(currencies, npvCcy));
+        swap->setPricingEngine(swapBuilder->engine(currenciesForMcSimulation, npvCcy));
         // take the first legs currency as the npv currency (arbitrary choice)
         instrument_.reset(new VanillaInstrument(swap));
     } else {
@@ -273,7 +302,7 @@ Swap::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& reference
 
             boost::shared_ptr<Index> index = parseIndex(ind);
 
-            if (auto ei = boost::dynamic_pointer_cast<EquityIndex>(index)) {
+            if (auto ei = boost::dynamic_pointer_cast<EquityIndex2>(index)) {
                 result[AssetClass::EQ].insert(ei->name());
             } else if (auto ci = boost::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {
                 result[AssetClass::COM].insert(ci->name());

@@ -283,11 +283,11 @@ TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
     yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityDividend, "Lufthansa")] =
         flatRateDiv(0.0);
 
-    equityCurves_[make_pair(Market::defaultConfiguration, "SP5")] = Handle<EquityIndex>(boost::make_shared<EquityIndex>(
+    equityCurves_[make_pair(Market::defaultConfiguration, "SP5")] = Handle<EquityIndex2>(boost::make_shared<EquityIndex2>(
         "SP5", UnitedStates(UnitedStates::Settlement), parseCurrency("USD"), equitySpot("SP5"), yieldCurve(YieldCurveType::Discount, "USD"),
         yieldCurve(YieldCurveType::EquityDividend, "SP5")));
     equityCurves_[make_pair(Market::defaultConfiguration, "Lufthansa")] =
-        Handle<EquityIndex>(boost::make_shared<EquityIndex>(
+        Handle<EquityIndex2>(boost::make_shared<EquityIndex2>(
             "Lufthansa", TARGET(), parseCurrency("EUR"), equitySpot("Lufthansa"),
             yieldCurve(YieldCurveType::Discount, "EUR"), yieldCurve(YieldCurveType::EquityDividend, "Lufthansa")));
 
@@ -814,11 +814,11 @@ TestMarketParCurves::TestMarketParCurves(const Date& asof) : MarketImpl(false) {
     vector<Real> parRates1(parInst.size(), 0.03);
     vector<Real> parRates2(parInst.size(), 0.02);
 
-    equityCurves_[make_pair(Market::defaultConfiguration, "SP5")] = Handle<EquityIndex>(boost::make_shared<EquityIndex>(
+    equityCurves_[make_pair(Market::defaultConfiguration, "SP5")] = Handle<EquityIndex2>(boost::make_shared<EquityIndex2>(
         "SP5", UnitedStates(UnitedStates::Settlement), parseCurrency("USD"), equitySpot("SP5"), yieldCurve(YieldCurveType::Discount, "USD"),
         yieldCurve(YieldCurveType::EquityDividend, "SP5")));
     equityCurves_[make_pair(Market::defaultConfiguration, "Lufthansa")] =
-        Handle<EquityIndex>(boost::make_shared<EquityIndex>(
+        Handle<EquityIndex2>(boost::make_shared<EquityIndex2>(
             "Lufthansa", TARGET(), parseCurrency("EUR"), equitySpot("Lufthansa"),
             yieldCurve(YieldCurveType::Discount, "EUR"), yieldCurve(YieldCurveType::EquityDividend, "Lufthansa")));
 

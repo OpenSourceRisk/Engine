@@ -95,12 +95,12 @@ void CliquetOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     additionalData_["currency"] = currency_;
 
     // ISDA taxonomy
-    if (underlying_->type() == "EQ") {
+    if (underlying_->type() == "Equity") {
         additionalData_["isdaAssetClass"] = string("Equity");
         additionalData_["isdaBaseProduct"] = string("Other");
         additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");  
     } 
-    else if (underlying_->type() == "COM") {
+    else if (underlying_->type() == "Commodity") {
         // assuming that Commoditiy is treated like Equity
         additionalData_["isdaAssetClass"] = string("Commodity");
         additionalData_["isdaBaseProduct"] = string("Other");

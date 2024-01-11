@@ -1,6 +1,7 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
  Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
+ Copyright (C) 2023 Oleg Kulkov
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -145,6 +146,8 @@ private:
     void buildYieldPlusDefaultCurve();
     //! Build a yield curve that uses QuantExt::IborFallbackCurve
     void buildIborFallbackCurve();
+    //! Build a yield curve that uses QuantExt::bondYieldShiftedCurve
+    void buildBondYieldShiftedCurve();
 
     //! Return the yield curve with the given \p id from the requiredYieldCurves_ map
     boost::shared_ptr<YieldCurve> getYieldCurve(const std::string& ccy, const std::string& id) const;

@@ -30,6 +30,7 @@
 #include <ql/termstructures/volatility/equityfx/andreasenhugevolatilityinterpl.hpp>
 #include <ql/termstructures/volatility/equityfx/localconstantvol.hpp>
 #include <ql/termstructures/volatility/equityfx/localvolsurface.hpp>
+#include <ql/termstructures/volatility/equityfx/noexceptlocalvolsurface.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 
@@ -38,7 +39,7 @@ namespace data {
 
 LocalVolModelBuilder::LocalVolModelBuilder(
     const std::vector<Handle<YieldTermStructure>>& curves,
-    const std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
+    const std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
     const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
     const Type lvType, const std::vector<Real>& calibrationMoneyness, const bool dontCalibrate)
     : BlackScholesModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear), lvType_(lvType),
@@ -56,6 +57,8 @@ std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>> LocalVolModelBuil
 
     QL_REQUIRE(lvType_ != Type::AndreasenHuge || !calibrationMoneyness_.empty(), "no calibration moneyness provided");
 
+    calculate();
+    
     std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>> processes;
 
     for (Size l = 0; l < processes_.size(); ++l) {
@@ -124,6 +127,7 @@ std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>> LocalVolModelBuil
                 AndreasenHugeVolatilityInterpl::CubicSpline, AndreasenHugeVolatilityInterpl::Call, 500, Null<Real>(),
                 Null<Real>());
             localVol = Handle<LocalVolTermStructure>(boost::make_shared<AndreasenHugeLocalVolAdapter>(ah));
+            //localVol->enableExtrapolation();
             DLOG("Andreasen-Huge local vol calibration for process #"
                  << l
                  << ": "
@@ -134,6 +138,11 @@ std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>> LocalVolModelBuil
             localVol = Handle<LocalVolTermStructure>(
                 boost::make_shared<LocalVolSurface>(processes_[l]->blackVolatility(), processes_[l]->riskFreeRate(),
                                                     processes_[l]->dividendYield(), processes_[l]->stateVariable()));
+        } else if (lvType_ == Type::DupireFloored) {
+            localVol = Handle<LocalVolTermStructure>(
+                boost::make_shared<NoExceptLocalVolSurface>(processes_[l]->blackVolatility(), processes_[l]->riskFreeRate(),
+                                                            processes_[l]->dividendYield(), processes_[l]->stateVariable(),
+                                                            0.0));
         } else {
             QL_FAIL("unexpected local vol type");
         }

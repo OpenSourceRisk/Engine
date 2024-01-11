@@ -138,6 +138,15 @@ Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
   overwrites the last date of the schedule that is otherwise built from IMM dates.
 
 Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item \lstinline!RemoveFirstDate! [Optional]: If true the first date will be removed from the schedule. Useful to define a payment schedule using the rules for a calculation schedule.
+
+Allowable values: true, false
+
+\item \lstinline!RemoveLastDate! [Optional]: If true the last date will be removed from the schedule. Useful to define a fixing or reset schedule using the rules for a calculation schedule.
+
+Allowable values: true, false
+
 \end{itemize}
 
 \medskip
@@ -201,5 +210,13 @@ Allowable values: See Table \ref{tab:calendar} Calendar. Defaults to \emph{NullC
 \item \lstinline!Convention! [Optional]: The roll convention to be applied to each date in the base schedule in order to obtain the derived schedule.
 
 Allowable values: See Table \ref{tab:convention} Roll Convention. Defaults to \emph{Unadjusted} if left blank or omitted.
+
+\item \lstinline!RemoveFirstDate! [Optional]: If true the first date will be removed from the schedule. Useful to define a payment schedule based on a calculation schedule.
+
+Allowable values: true, false
+
+\item \lstinline!RemoveLastDate! [Optional]: If true the last date will be removed from the schedule. Useful to define a fixing or reset schedule based on a calculation schedule.
+
+Allowable values: true, false
 
 \end{itemize}

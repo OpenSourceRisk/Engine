@@ -135,8 +135,8 @@ void CurveConfigurations::parseNode(const CurveSpec::CurveType& type, const stri
                 configs_[type][curveId] = config;
                 unparsed_.at(type).erase(curveId);
             } catch (std::exception& ex) {
-                string err = "Curve config under node '" + to_string(type) + "was requested, but could not be parsed.";
-                ALOG(StructuredCurveErrorMessage(curveId, err, ex.what()));
+                string err = "Curve config under node '" + to_string(type) + " was requested, but could not be parsed.";
+                StructuredCurveErrorMessage(curveId, err, ex.what()).log();
                 QL_FAIL(err);
             }
         } else
@@ -259,13 +259,12 @@ std::set<string> CurveConfigurations::quotes() const {
 std::set<string> CurveConfigurations::conventions(const boost::shared_ptr<TodaysMarketParameters> todaysMarketParams,
                                                   const set<string>& configurations) const {
     set<string> conventions = minimalCurveConfig(todaysMarketParams, configurations)->conventions();
+
     // Checking for any swapIndices
-
     if (todaysMarketParams->hasMarketObject(MarketObject::SwapIndexCurve)) {
-        auto mapping = todaysMarketParams->mapping(MarketObject::SwapIndexCurve, Market::defaultConfiguration);
-
-        for (auto m : mapping)
+        for (const auto& m : todaysMarketParams->mapping(MarketObject::SwapIndexCurve, Market::defaultConfiguration)) {
             conventions.insert(m.first);
+        }
     }
 
     return conventions;
@@ -279,7 +278,8 @@ std::set<string> CurveConfigurations::conventions() const {
                 auto ycc = boost::dynamic_pointer_cast<YieldCurveConfig>(c.second);
                 if (ycc) {
                     for (auto& s : ycc->curveSegments())
-                        conventions.insert(s->conventionsID());
+                        if (!s->conventionsID().empty())
+                            conventions.insert(s->conventionsID());
                 }
             }
         }
@@ -588,6 +588,71 @@ XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
     addNodes(doc, parent, "Correlations");
 
     return parent;
+}
+
+void CurveConfigurations::addAdditionalCurveConfigs(const CurveConfigurations& c) {
+
+    // add parsed configs
+
+    for (auto const& [curveType, configs] : c.configs_) {
+        for (auto const& [name, config] : configs) {
+            auto c1 = configs_.find(curveType);
+            if (c1 == configs_.end()) {
+                configs_[curveType] = {{name, config}};
+                continue;
+            }
+            auto c2 = c1->second.find(name);
+            if (c2 == c1->second.end()) {
+                c1->second[name] = config;
+                continue;
+            }
+        }
+    }
+
+    // add unparsed configs
+
+    for (auto const& [curveType, configs] : c.unparsed_) {
+        for (auto const& [name, config] : configs) {
+            auto c1 = unparsed_.find(curveType);
+            if (c1 == unparsed_.end()) {
+                unparsed_[curveType] = {{name, config}};
+                continue;
+            }
+            auto c2 = c1->second.find(name);
+            if (c2 == c1->second.end()) {
+                c1->second[name] = config;
+                continue;
+            }
+        }
+    }
+}
+
+void CurveConfigurationsManager::add(const QuantLib::ext::shared_ptr<CurveConfigurations>& config, std::string id) {
+    configs_[id] = config;
+}
+
+const QuantLib::ext::shared_ptr<CurveConfigurations>& CurveConfigurationsManager::get(std::string id) const {
+    auto it = configs_.find(id);
+    if (it == configs_.end()) {
+        WLOG("CurveConfigurationsManager: could not find CurveConfiguration for id "
+             << id << ", attempting to get default curveConfig.");
+        it = configs_.find("");
+        QL_REQUIRE(it != configs_.end(), "CurveConfigurationsManager: could not find CurveConfiguration for id " << id);
+    }
+    return it->second;
+}
+
+const bool CurveConfigurationsManager::has(std::string id) const { 
+    auto it = configs_.find(id); 
+    return it != configs_.end();
+}
+
+const std::map<std::string, QuantLib::ext::shared_ptr<CurveConfigurations>>& CurveConfigurationsManager::curveConfigurations() const {
+    return configs_;
+}
+
+const bool CurveConfigurationsManager::empty() const { 
+    return configs_.size() == 0; 
 }
 } // namespace data
 } // namespace ore

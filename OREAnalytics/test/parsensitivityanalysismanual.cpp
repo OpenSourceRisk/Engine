@@ -17,12 +17,17 @@
 */
 
 #include "parsensitivityanalysismanual.hpp"
-#include <test/oreatoplevelfixture.hpp>
-#include <test/testmarket.hpp>
-#include <test/testportfolio.hpp>
+#include "testmarket.hpp"
+#include "testportfolio.hpp"
+
 #include <orea/engine/observationmode.hpp>
+#include <orea/engine/parsensitivityanalysis.hpp>
+#include <orea/engine/zerotoparcube.hpp>
+#include <orea/scenario/deltascenariofactory.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
+
 #include <ored/portfolio/builders/capfloor.hpp>
+#include <ored/portfolio/builders/cdo.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
 #include <ored/portfolio/builders/fxforward.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
@@ -35,13 +40,12 @@
 #include <ored/report/csvreport.hpp>
 #include <ored/utilities/osutils.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <ored/portfolio/builders/cdo.hpp>
-#include <orea/engine/parsensitivityanalysis.hpp>
-#include <orea/engine/sensitivityanalysisplus.hpp>
-#include <orea/engine/zerotoparcube.hpp>
-#include <orea/scenario/deltascenariofactory.hpp>
+
 #include <oret/toplevelfixture.hpp>
+
 #include <ql/time/date.hpp>
+
+#include <test/oreatoplevelfixture.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -396,8 +400,8 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
                         "Some trades not built correctly," << portfolio->size() << " vs. " << tradeCount);
     // build the sensitivity analysis object
     boost::shared_ptr<SensitivityAnalysis> zeroAnalysis =
-        boost::make_shared<SensitivityAnalysisPlus>(portfolio, initMarket, "default", engineData, simMarketData,
-                                                    sensiData, false, nullptr, nullptr, false, nullptr);
+        boost::make_shared<SensitivityAnalysis>(portfolio, initMarket, "default", engineData, simMarketData, sensiData,
+                                                false, nullptr, nullptr, false, nullptr);
     ParSensitivityAnalysis parAnalysis(today, simMarketData, *sensiData, "default");
     parAnalysis.alignPillars();
     zeroAnalysis->overrideTenors(true);

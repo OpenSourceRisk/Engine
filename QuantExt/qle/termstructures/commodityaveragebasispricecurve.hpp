@@ -31,7 +31,7 @@
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/utilities/dataformatters.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
-#include <qle/termstructures/pricetermstructure.hpp>
+#include <qle/termstructures/commoditybasispricetermstructure.hpp>
 #include <qle/time/futureexpirycalculator.hpp>
 
 namespace QuantExt {
@@ -44,7 +44,7 @@ namespace QuantExt {
     \ingroup termstructures
 */
 template <class Interpolator>
-class CommodityAverageBasisPriceCurve : public PriceTermStructure,
+class CommodityAverageBasisPriceCurve : public CommodityBasisPriceTermStructure,
                                         public QuantLib::LazyObject,
                                         protected QuantLib::InterpolatedCurve<Interpolator> {
 public:
@@ -52,12 +52,11 @@ public:
     //@{
     //! Curve constructed from dates and quotes
     CommodityAverageBasisPriceCurve(const QuantLib::Date& referenceDate,
-                                    const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote> >& basisData,
+                                    const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote>>& basisData,
                                     const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
                                     const boost::shared_ptr<CommodityIndex>& index,
-                                    const QuantLib::Handle<PriceTermStructure>& basePts,
                                     const boost::shared_ptr<FutureExpiryCalculator>& baseFec, bool addBasis = true,
-                                    const Interpolator& interpolator = Interpolator());
+                                    bool priceAsHistFixing = true, const Interpolator& interpolator = Interpolator());
     //@}
 
     //! \name Observer interface
@@ -80,7 +79,7 @@ public:
     //@{
     QuantLib::Time minTime() const override;
     std::vector<QuantLib::Date> pillarDates() const override;
-    const QuantLib::Currency& currency() const override { return basePts_->currency(); }
+    const QuantLib::Currency& currency() const override { return baseIndex_->priceCurve()->currency(); }
     //@}
 
     //! \name Inspectors
@@ -97,11 +96,6 @@ protected:
 
 private:
     std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote> > basisData_;
-    boost::shared_ptr<FutureExpiryCalculator> basisFec_;
-    boost::shared_ptr<CommodityIndex> index_;
-    QuantLib::Handle<PriceTermStructure> basePts_;
-    boost::shared_ptr<FutureExpiryCalculator> baseFec_;
-    bool addBasis_;
 
     std::vector<QuantLib::Date> dates_;
 
@@ -125,12 +119,12 @@ template <class Interpolator>
 CommodityAverageBasisPriceCurve<Interpolator>::CommodityAverageBasisPriceCurve(
     const QuantLib::Date& referenceDate, const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote> >& basisData,
     const boost::shared_ptr<FutureExpiryCalculator>& basisFec, const boost::shared_ptr<CommodityIndex>& index,
-    const QuantLib::Handle<PriceTermStructure>& basePts, const boost::shared_ptr<FutureExpiryCalculator>& baseFec,
-    bool addBasis, const Interpolator& interpolator)
-    : PriceTermStructure(referenceDate, QuantLib::NullCalendar(), basePts->dayCounter()),
-      QuantLib::InterpolatedCurve<Interpolator>(interpolator), basisData_(basisData), basisFec_(basisFec),
-      index_(index), basePts_(basePts), baseFec_(baseFec), addBasis_(addBasis) {
-
+    const boost::shared_ptr<FutureExpiryCalculator>& baseFec, bool addBasis, bool priceAsHistFixing,
+    const Interpolator& interpolator)
+    : CommodityBasisPriceTermStructure(referenceDate, basisFec, index, baseFec, addBasis, 0, true, priceAsHistFixing),
+      QuantLib::InterpolatedCurve<Interpolator>(interpolator), basisData_(basisData) {
+    QL_REQUIRE(baseIndex_ != nullptr && !baseIndex_->priceCurve().empty(),
+               "CommodityAverageBasisPriceCurve requires baseIndex with priceCurve");
     using QuantLib::Date;
     using QuantLib::Schedule;
     using QuantLib::io::iso_date;
@@ -140,8 +134,6 @@ CommodityAverageBasisPriceCurve<Interpolator>::CommodityAverageBasisPriceCurve(
     using std::max;
     using std::sort;
     using std::vector;
-
-    registerWith(basePts_);
 
     // Observe the quotes
     for (auto it = basisData_.cbegin(); it != basisData_.cend();) {
@@ -172,7 +164,7 @@ CommodityAverageBasisPriceCurve<Interpolator>::CommodityAverageBasisPriceCurve(
 
     // Get the first basis contract expiry date on or after the max date. Here, max date is defined as the maximum of
     // 1) last pillar date of base price curve and 2) basis curve data.
-    Date maxDate = max(basePts_->maxDate(), basisData_.rbegin()->first);
+    Date maxDate = max(baseIndex_->priceCurve()->maxDate(), basisData_.rbegin()->first);
     Date end = basisFec_->nextExpiry(true, maxDate);
 
     // Create the leg schedule using a vector of dates which are the successive basis contract expiry dates
@@ -204,7 +196,7 @@ CommodityAverageBasisPriceCurve<Interpolator>::CommodityAverageBasisPriceCurve(
     this->data_.resize(this->times_.size());
 
     // Populate the leg of cashflows.
-    baseLeg_ = CommodityIndexedAverageLeg(Schedule(expiries), index_)
+    baseLeg_ = CommodityIndexedAverageLeg(Schedule(expiries), baseIndex_)
                    .withFutureExpiryCalculator(baseFec_)
                    .useFuturePrice(true)
                    .withQuantities(1.0);

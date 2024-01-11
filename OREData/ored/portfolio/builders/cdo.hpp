@@ -26,7 +26,6 @@
 #include <qle/pricingengines/midpointcdoengine.hpp>
 
 // avoid compile error from homogeneouspooldef.hpp
-#include <boost/bind.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include <qle/models/homogeneouspooldef.hpp>
@@ -53,6 +52,9 @@ using namespace std;
 /*! Pricing engines are cached by currency
     \ingroup portfolio
 */
+
+std::vector<QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>>
+buildPerformanceOptimizedDefaultCurves(const std::vector<QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>>& curves);
 
 class CdoEngineBuilder
     : public CachingPricingEngineBuilder<vector<string>, const Currency&, bool, const vector<string>&,

@@ -309,22 +309,33 @@ private:
   This class holds single market points of type
   - IR_SWAP
 
-  Specific data comprise currency, fwdStart, tenor, term
+  Specific data comprise currency, fwdStart, tenor, term, startDate, maturityDate
+  The constructoir accepts either fwdStart/term or startDate/maturityDate
 
   \ingroup marketdata
 */
 class SwapQuote : public MarketDatum {
 public:
     SwapQuote() {}
-    //! Constructor
+    //! Constructor if fwdStart / tenor is given
     SwapQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Period fwdStart,
               Period term, Period tenor, const std::string& indexName = "")
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::IR_SWAP), ccy_(ccy), fwdStart_(fwdStart),
-          term_(term), tenor_(tenor), indexName_(indexName) {}
+          term_(term), tenor_(tenor), indexName_(indexName), startDate_(Null<Date>()), maturityDate_(Null<Date>()) {}
+    //! Constructor if startDate, maturityDate is given
+    SwapQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Date startDate,
+              Date maturityDate, Period tenor, const std::string& indexName = "")
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::IR_SWAP), ccy_(ccy), fwdStart_(Period()),
+          term_(Period()), tenor_(tenor), indexName_(indexName), startDate_(startDate), maturityDate_(maturityDate) {}
 
     //! Make a copy of the market datum
     boost::shared_ptr<MarketDatum> clone() override {
-        return boost::make_shared<SwapQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, fwdStart_, term_, tenor_);
+        if (startDate_ == Null<Date>() && maturityDate_ == Null<Date>())
+            return boost::make_shared<SwapQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, fwdStart_, term_,
+                                                 tenor_);
+        else
+            return boost::make_shared<SwapQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, startDate_,
+                                                 maturityDate_, tenor_);
     }
 
     //! \name Inspectors
@@ -334,6 +345,8 @@ public:
     const Period& term() const { return term_; }
     const Period& tenor() const { return tenor_; }
     const std::string& indeName() const { return indexName_; }
+    const Date& startDate() const { return startDate_; }
+    const Date& maturityDate() const { return maturityDate_; }
     //@}
 private:
     string ccy_;
@@ -341,24 +354,13 @@ private:
     Period term_;
     Period tenor_;
     std::string indexName_;
+    Date startDate_;
+    Date maturityDate_;
     //! Serialization
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
-//! Zero market data class
-/*!
-  This class holds single market points of type
-  - ZERO.
-  Specific data comprise currency, date and day counter.
-
-  Zero rates are hardly quoted in the market, but derived from quoted
-  yields such as deposits, swaps, as well as futures prices.
-  This data type is included here nevertheless
-  to enable consistency checks between ORE and reference systems.
-
-  \ingroup marketdata
-*/
 class ZeroQuote : public MarketDatum {
 public:
     ZeroQuote() {}

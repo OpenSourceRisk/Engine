@@ -26,12 +26,11 @@ McMultiLegOptionEngine::McMultiLegOptionEngine(
     const Size calibrationSeed, const Size pricingSeed, const Size polynomOrder,
     const LsmBasisSystem::PolynomialType polynomType, const SobolBrownianGenerator::Ordering ordering,
     const SobolRsg::DirectionIntegers directionIntegers, const std::vector<Handle<YieldTermStructure>>& discountCurves,
-    const std::vector<Date>& simulationDates, const std::vector<Size>& externalModelIndices, const bool minimalObsDate,
-    const bool regressionOnExerciseOnly)
+    const std::vector<Date>& simulationDates, const std::vector<Size>& externalModelIndices, const bool minObsDate,
+    const RegressorModel regressorModel)
     : McMultiLegBaseEngine(model, calibrationPathGenerator, pricingPathGenerator, calibrationSamples, pricingSamples,
                            calibrationSeed, pricingSeed, polynomOrder, polynomType, ordering, directionIntegers,
-                           discountCurves, simulationDates, externalModelIndices, minimalObsDate,
-                           regressionOnExerciseOnly) {
+                           discountCurves, simulationDates, externalModelIndices, minObsDate, regressorModel) {
     registerWith(model_);
     for (auto& h : discountCurves_) {
         registerWith(h);
@@ -45,14 +44,13 @@ McMultiLegOptionEngine::McMultiLegOptionEngine(
     const LsmBasisSystem::PolynomialType polynomType, const SobolBrownianGenerator::Ordering ordering,
     const SobolRsg::DirectionIntegers directionIntegers, const Handle<YieldTermStructure>& discountCurve,
     const std::vector<Date>& simulationDates, const std::vector<Size>& externalModelIndices, const bool minimalObsDate,
-    const bool regressionOnExerciseOnly)
+    const RegressorModel regressorModel)
     : McMultiLegOptionEngine(Handle<CrossAssetModel>(boost::make_shared<CrossAssetModel>(
                                  std::vector<boost::shared_ptr<IrModel>>(1, model),
                                  std::vector<boost::shared_ptr<FxBsParametrization>>())),
                              calibrationPathGenerator, pricingPathGenerator, calibrationSamples, pricingSamples,
                              calibrationSeed, pricingSeed, polynomOrder, polynomType, ordering, directionIntegers,
-                             {discountCurve}, simulationDates, externalModelIndices, minimalObsDate,
-                             regressionOnExerciseOnly) {}
+                             {discountCurve}, simulationDates, externalModelIndices, minimalObsDate, regressorModel) {}
 
 void McMultiLegOptionEngine::calculate() const {
 

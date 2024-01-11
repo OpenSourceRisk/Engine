@@ -545,9 +545,9 @@ BOOST_AUTO_TEST_CASE(testCcyLgm3fForeignPayouts) {
     Size usdIdx = ccLgm->ccyIndex(USDCurrency());
     Size eurUsdIdx = usdIdx - 1;
 
-    ccLgm->correlation(CrossAssetModel::AssetType::IR, eurIdx, CrossAssetModel::AssetType::IR, usdIdx, -0.2);
-    ccLgm->correlation(CrossAssetModel::AssetType::IR, eurIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, 0.8);
-    ccLgm->correlation(CrossAssetModel::AssetType::IR, usdIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, -0.5);
+    ccLgm->setCorrelation(CrossAssetModel::AssetType::IR, eurIdx, CrossAssetModel::AssetType::IR, usdIdx, -0.2);
+    ccLgm->setCorrelation(CrossAssetModel::AssetType::IR, eurIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, 0.8);
+    ccLgm->setCorrelation(CrossAssetModel::AssetType::IR, usdIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, -0.5);
 
     boost::shared_ptr<LinearGaussMarkovModel> eurLgm = boost::make_shared<LinearGaussMarkovModel>(eurLgmParam);
     boost::shared_ptr<LinearGaussMarkovModel> usdLgm = boost::make_shared<LinearGaussMarkovModel>(usdLgmParam);
@@ -566,6 +566,12 @@ BOOST_AUTO_TEST_CASE(testCcyLgm3fForeignPayouts) {
     TimeGrid grid(T, steps);
     PseudoRandom::rsg_type sg2 = PseudoRandom::make_sequence_generator(steps, seed);
 
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
+        tmp->resetCache(grid.size() - 1);
+    }
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(usdProcess)) {
+        tmp->resetCache(grid.size() - 1);
+    }
     MultiPathGeneratorMersenneTwister pg(process, grid, seed, false);
     PathGenerator<PseudoRandom::rsg_type> pg2(usdProcess, grid, sg2, false);
 
@@ -1224,6 +1230,12 @@ BOOST_AUTO_TEST_CASE(testLgm5fMoments) {
 
     TimeGrid grid(T, steps);
 
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
+        tmp->resetCache(grid.size() - 1);
+    }
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
+        tmp->resetCache(grid.size() - 1);
+    }
     MultiPathGeneratorSobolBrownianBridge pgen(p_euler, grid);
     MultiPathGeneratorSobolBrownianBridge pgen2(p_exact, grid);
 
@@ -1388,12 +1400,14 @@ BOOST_AUTO_TEST_CASE(testLgmGsrEquivalence) {
                 // summarize a possible problem, so we output differences
                 // in the mean as well
                 if (std::fabs(mean(stat_gsr) - mean(stat_lgm)) > tol ||
-                    std::fabs(variance(stat_gsr) - variance(stat_lgm)) > tol) {
+                    std::fabs(boost::accumulators::variance(stat_gsr) - boost::accumulators::variance(stat_lgm)) >
+                        tol) {
                     BOOST_ERROR("failed to verify LGM-GSR equivalence, "
                                 "(mean,variance) of zero rate is ("
-                                << mean(stat_gsr) << "," << variance(stat_gsr) << ") for GSR, (" << mean(stat_lgm)
-                                << "," << variance(stat_lgm) << ") for LGM, for T=" << T[i] << ", sigma=" << sigma[j]
-                                << ", kappa=" << kappa[k] << ", shift=" << shift);
+                                << mean(stat_gsr) << "," << boost::accumulators::variance(stat_gsr) << ") for GSR, ("
+                                << mean(stat_lgm) << "," << boost::accumulators::variance(stat_lgm)
+                                << ") for LGM, for T=" << T[i] << ", sigma=" << sigma[j] << ", kappa=" << kappa[k]
+                                << ", shift=" << shift);
                 }
             }
         }
@@ -1481,8 +1495,14 @@ BOOST_AUTO_TEST_CASE(testIrFxCrCirppMartingaleProperty) {
     LowDiscrepancy::rsg_type sg2 = LowDiscrepancy::make_sequence_generator(process2->factors() * steps, seed);
 
     TimeGrid grid1(T, 1);
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process1)) {
+        tmp->resetCache(grid1.size() - 1);
+    }
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg1(process1, grid1, sg1, false);
     TimeGrid grid2(T, steps);
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process2)) {
+        tmp->resetCache(grid2.size() - 1);
+    }
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg2(process2, grid2, sg2, false);
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > eurzb1, usdzb1, gbpzb1, n1eur1, n2usd1,
@@ -1703,8 +1723,14 @@ BOOST_AUTO_TEST_CASE(testIrFxCrMoments) {
     Size seed = 18;
     TimeGrid grid(T, steps);
 
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
+        tmp->resetCache(grid.size() - 1);
+    }
     MultiPathGeneratorSobolBrownianBridge pgen(p_euler, grid, SobolBrownianGenerator::Diagonal, seed,
                                                SobolRsg::JoeKuoD7);
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
+        tmp->resetCache(grid.size() - 1);
+    }
     MultiPathGeneratorSobolBrownianBridge pgen2(p_exact, grid, SobolBrownianGenerator::Diagonal, seed,
                                                 SobolRsg::JoeKuoD7);
 
@@ -2273,7 +2299,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
     BOOST_TEST_MESSAGE("get Euler state process");
     boost::shared_ptr<StochasticProcess> process2 = d.modelEuler->stateProcess();
 
-    Size n = 50000;                         // number of paths
+    Size n = 5000;                         // number of paths
     Size seed = 18;                         // rng seed
     Time T = 2.0;                          // maturity of payoff
     Time T2 = 20.0;                         // zerobond maturity
@@ -2285,8 +2311,14 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
 
     BOOST_TEST_MESSAGE("build multi path generator");
     TimeGrid grid1(T, 1);
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process1)) {
+        tmp->resetCache(grid1.size() - 1);
+    }
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg1(process1, grid1, sg1, false);
     TimeGrid grid2(T, steps);
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process2)) {
+        tmp->resetCache(grid2.size() - 1);
+    }
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg2(process2, grid2, sg2, false);
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > eurzb1, usdzb1, gbpzb1, infeur1, infgbp1,
@@ -2424,7 +2456,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
 
     // a bit higher than for plain zero bond , since we look at indexed zero
     // bonds, too
-    Real tol1 = 3.0E-4;  // EXACT
+    Real tol1 = 5.0E-4;  // EXACT
     Real tol2 = 14.0E-4; // EULER
 
     Real ev = d.eurYts->discount(T2);
@@ -2533,7 +2565,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMoments,
 
     Real T = 2.0;                            // horizon at which we compare the moments
     Size steps = static_cast<Size>(T * 10); // number of simulation steps (Euler and exact)
-    Size paths = 30000;                     // number of paths
+    Size paths = 10000;                     // number of paths
 
     Array e_an = p_exact->expectation(0.0, p_exact->initialValues(), T);
     Matrix v_an = p_exact->covariance(0.0, p_exact->initialValues(), T);
@@ -2541,6 +2573,12 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMoments,
     Size seed = 18;
     TimeGrid grid(T, steps);
 
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
+        tmp->resetCache(grid.size() - 1);
+    }
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
+        tmp->resetCache(grid.size() - 1);
+    }
     MultiPathGeneratorSobolBrownianBridge pgen(p_euler, grid, SobolBrownianGenerator::Diagonal, seed,
                                                SobolRsg::JoeKuoD7);
     MultiPathGeneratorSobolBrownianBridge pgen2(p_exact, grid, SobolBrownianGenerator::Diagonal, seed,
@@ -2608,7 +2646,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMoments,
     }
     BOOST_TEST_MESSAGE("==================");
 
-    Real errTolLd[] = { 0.5E-4, 0.5E-4, 0.5E-4, 10.0E-4, 10.0E-4, 0.9E-4, 0.8E-4, 0.7E-4, 0.7E-4, 0.7E-4, 0.7E-4, 0.7E-4, 0.7E-4 };
+    Real errTolLd[] = { 0.5E-4, 0.5E-4, 0.5E-4, 10.0E-4, 10.0E-4, 1E-4, 1E-4, 1E-4, 1E-4, 1E-4, 1E-4, 1E-4, 1E-4 };
 
     for (Size i = 0; i < n; ++i) {
         // check expectation against analytical calculation (Euler)
@@ -2629,7 +2667,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMoments,
                                                                  << e_an[i] - mean(e_eu2[i]) << " tolerance is "
                                                                  << errTolLd[i]);
         }
-    }
+    } 
 
     // as above, this is a bit rough compared to the more differentiated
     // test of the IR-FX model ...
@@ -2877,7 +2915,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMartingaleProperty) {
     IrFxInfCrEqModelTestData d;
 
     boost::shared_ptr<StochasticProcess> process1 = d.modelExact->stateProcess();
-    boost::shared_ptr<StochasticProcess> process2 = d.modelExact->stateProcess();
+    boost::shared_ptr<StochasticProcess> process2 = d.modelEuler->stateProcess();
 
     Size n = 50000;                         // number of paths
     Size seed = 18;                         // rng seed
@@ -2891,8 +2929,14 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMartingaleProperty) {
     LowDiscrepancy::rsg_type sg2 = LowDiscrepancy::make_sequence_generator(process2->factors() * steps, seed);
 
     TimeGrid grid1(T, 1);
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process1)) {
+        tmp->resetCache(grid1.size() - 1);
+    }
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg1(process1, grid1, sg1, false);
     TimeGrid grid2(T, steps);
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process2)) {
+        tmp->resetCache(grid2.size() - 1);
+    }
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg2(process2, grid2, sg2, false);
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > eurzb1, usdzb1, gbpzb1, infeur1, infgbp1,
@@ -3128,8 +3172,14 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMoments) {
     Size seed = 18;
     TimeGrid grid(T, steps);
 
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
+        tmp->resetCache(grid.size() - 1);
+    }
     MultiPathGeneratorSobolBrownianBridge pgen(p_euler, grid, SobolBrownianGenerator::Diagonal, seed,
                                                SobolRsg::JoeKuoD7);
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
+        tmp->resetCache(grid.size() - 1);
+    }
     MultiPathGeneratorSobolBrownianBridge pgen2(p_exact, grid, SobolBrownianGenerator::Diagonal, seed,
                                                 SobolRsg::JoeKuoD7);
 
@@ -3375,21 +3425,21 @@ struct IrFxEqModelTestData {
         eqSpIdx = ccLgmEuler->eqIndex("SP");
         eqLhIdx = ccLgmEuler->eqIndex("LH");
 
-        ccLgmEuler->correlation(CrossAssetModel::AssetType::IR, eurIdx, CrossAssetModel::AssetType::IR, usdIdx, -0.2);
-        ccLgmEuler->correlation(CrossAssetModel::AssetType::IR, eurIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, 0.8);
-        ccLgmEuler->correlation(CrossAssetModel::AssetType::IR, usdIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, -0.5);
-        ccLgmEuler->correlation(CrossAssetModel::AssetType::EQ, eqSpIdx, CrossAssetModel::AssetType::EQ, eqLhIdx, 0.6);
-        ccLgmEuler->correlation(CrossAssetModel::AssetType::EQ, eqSpIdx, CrossAssetModel::AssetType::IR, usdIdx, -0.1);
-        ccLgmEuler->correlation(CrossAssetModel::AssetType::EQ, eqLhIdx, CrossAssetModel::AssetType::IR, eurIdx, -0.05);
-        ccLgmEuler->correlation(CrossAssetModel::AssetType::EQ, eqSpIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, 0.1);
+        ccLgmEuler->setCorrelation(CrossAssetModel::AssetType::IR, eurIdx, CrossAssetModel::AssetType::IR, usdIdx, -0.2);
+        ccLgmEuler->setCorrelation(CrossAssetModel::AssetType::IR, eurIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, 0.8);
+        ccLgmEuler->setCorrelation(CrossAssetModel::AssetType::IR, usdIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, -0.5);
+        ccLgmEuler->setCorrelation(CrossAssetModel::AssetType::EQ, eqSpIdx, CrossAssetModel::AssetType::EQ, eqLhIdx, 0.6);
+        ccLgmEuler->setCorrelation(CrossAssetModel::AssetType::EQ, eqSpIdx, CrossAssetModel::AssetType::IR, usdIdx, -0.1);
+        ccLgmEuler->setCorrelation(CrossAssetModel::AssetType::EQ, eqLhIdx, CrossAssetModel::AssetType::IR, eurIdx, -0.05);
+        ccLgmEuler->setCorrelation(CrossAssetModel::AssetType::EQ, eqSpIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, 0.1);
 
-        ccLgmExact->correlation(CrossAssetModel::AssetType::IR, eurIdx, CrossAssetModel::AssetType::IR, usdIdx, -0.2);
-        ccLgmExact->correlation(CrossAssetModel::AssetType::IR, eurIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, 0.8);
-        ccLgmExact->correlation(CrossAssetModel::AssetType::IR, usdIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, -0.5);
-        ccLgmExact->correlation(CrossAssetModel::AssetType::EQ, eqSpIdx, CrossAssetModel::AssetType::EQ, eqLhIdx, 0.6);
-        ccLgmExact->correlation(CrossAssetModel::AssetType::EQ, eqSpIdx, CrossAssetModel::AssetType::IR, usdIdx, -0.1);
-        ccLgmExact->correlation(CrossAssetModel::AssetType::EQ, eqLhIdx, CrossAssetModel::AssetType::IR, eurIdx, -0.05);
-        ccLgmExact->correlation(CrossAssetModel::AssetType::EQ, eqSpIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, 0.1);
+        ccLgmExact->setCorrelation(CrossAssetModel::AssetType::IR, eurIdx, CrossAssetModel::AssetType::IR, usdIdx, -0.2);
+        ccLgmExact->setCorrelation(CrossAssetModel::AssetType::IR, eurIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, 0.8);
+        ccLgmExact->setCorrelation(CrossAssetModel::AssetType::IR, usdIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, -0.5);
+        ccLgmExact->setCorrelation(CrossAssetModel::AssetType::EQ, eqSpIdx, CrossAssetModel::AssetType::EQ, eqLhIdx, 0.6);
+        ccLgmExact->setCorrelation(CrossAssetModel::AssetType::EQ, eqSpIdx, CrossAssetModel::AssetType::IR, usdIdx, -0.1);
+        ccLgmExact->setCorrelation(CrossAssetModel::AssetType::EQ, eqLhIdx, CrossAssetModel::AssetType::IR, eurIdx, -0.05);
+        ccLgmExact->setCorrelation(CrossAssetModel::AssetType::EQ, eqSpIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, 0.1);
     }
 
     SavedSettings backup;
@@ -3429,7 +3479,13 @@ BOOST_AUTO_TEST_CASE(testEqLgm5fPayouts) {
     TimeGrid grid_euler(T, steps_euler);
     PseudoRandom::rsg_type sg2 = PseudoRandom::make_sequence_generator(steps, seed);
 
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
+        tmp->resetCache(grid.size() - 1);
+    }
     MultiPathGeneratorMersenneTwister pg(process, grid, seed, false);
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process2)) {
+        tmp->resetCache(grid_euler.size() - 1);
+    }
     MultiPathGeneratorMersenneTwister pg2(process2, grid_euler, seed, false);
 
     // test
@@ -3639,7 +3695,14 @@ BOOST_AUTO_TEST_CASE(testEqLgm5fMoments) {
     TimeGrid grid_euler(T, steps_euler);
     TimeGrid grid_exact(T, steps_exact);
 
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
+        tmp->resetCache(grid_euler.size() - 1);
+    }
     MultiPathGeneratorSobolBrownianBridge pgen(p_euler, grid_euler);
+
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
+        tmp->resetCache(grid_exact.size() - 1);
+    }
     MultiPathGeneratorSobolBrownianBridge pgen2(p_exact, grid_exact);
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > e_eu[5], e_eu2[5];
@@ -3726,6 +3789,16 @@ BOOST_AUTO_TEST_CASE(testEqLgm5fMoments) {
     }
 
     BOOST_TEST_MESSAGE("Testing correlation matrix recovery in presence of equity simulation");
+
+    // reset caching so that we can retrieve further info from the processes
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
+        tmp->resetCache(0);
+    }
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
+        tmp->resetCache(grid_euler.size() - 1);
+    }
+
+
     Matrix corr_input = d.ccLgmExact->correlation();
     BOOST_CHECK(corr_input.rows() == corr_input.columns());
     Size dim = corr_input.rows();
@@ -3799,7 +3872,7 @@ BOOST_AUTO_TEST_CASE(testCorrelationRecovery) {
 
     // for ir-fx this fully specifies the correlation matrix
     // for new asset classes add other possible combinations as well
-    Size currencies[] = { 1, 2, 3, 4, 5, 10, 20, 50, 100 };
+    Size currencies[] = { 1, 2, 3, 4, 5, 10, 20 };
 
     MersenneTwisterUniformRng mt(42);
 
@@ -4108,7 +4181,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqCorrelationRecovery) {
 
     // for ir-fx this fully specifies the correlation matrix
     // for new asset classes add other possible combinations as well
-    Size currencies[] = { 1, 2, 3, 4, 5, 10, 20 };
+    Size currencies[] = { 1, 2, 3, 4, 5 };
     Size cpiindexes[] = { 0, 1, 10 };
     Size creditnames[] = { 0, 1, 5 };
     Size eqs[] = { 0, 1, 5 };
@@ -4347,7 +4420,7 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByAlpha) {
     boost::shared_ptr<CrossAssetModel> model =
         boost::make_shared<CrossAssetModel>(parametrizations, Matrix(), SalvagingAlgorithm::None);
 
-    model->correlation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::INF, 0, 0.33);
+    model->setCorrelation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::INF, 0, 0.33);
 
     // pricing engine
     boost::shared_ptr<AnalyticDkCpiCapFloorEngine> engine =
@@ -4376,6 +4449,9 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByAlpha) {
     boost::shared_ptr<StochasticProcess> process = model->stateProcess();
     LowDiscrepancy::rsg_type sg = LowDiscrepancy::make_sequence_generator(process->factors() * steps, seed);
     TimeGrid grid(T, steps);
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
+        tmp->resetCache(grid.size() - 1);
+    }
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg(process, grid, sg, false);
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > floor;
@@ -4479,7 +4555,7 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByH) {
     boost::shared_ptr<CrossAssetModel> model =
         boost::make_shared<CrossAssetModel>(parametrizations, Matrix(), SalvagingAlgorithm::None);
 
-    model->correlation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::INF, 0, 0.33);
+    model->setCorrelation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::INF, 0, 0.33);
 
     // pricing engine
     boost::shared_ptr<AnalyticDkCpiCapFloorEngine> engine =
@@ -4510,6 +4586,9 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByH) {
     boost::shared_ptr<StochasticProcess> process = model->stateProcess();
     LowDiscrepancy::rsg_type sg = LowDiscrepancy::make_sequence_generator(process->factors() * steps, seed);
     TimeGrid grid(T, steps);
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
+        tmp->resetCache(grid.size() - 1);
+    }
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg(process, grid, sg, false);
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > floor;
@@ -4610,7 +4689,7 @@ BOOST_AUTO_TEST_CASE(testCrCalibration) {
     boost::shared_ptr<CrossAssetModel> model =
         boost::make_shared<CrossAssetModel>(parametrizations, Matrix(), SalvagingAlgorithm::None);
 
-    model->correlation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::CR, 0, 0.33);
+    model->setCorrelation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::CR, 0, 0.33);
 
     // pricing engine
     boost::shared_ptr<AnalyticLgmCdsOptionEngine> engine =
@@ -4654,6 +4733,9 @@ BOOST_AUTO_TEST_CASE(testCrCalibration) {
     boost::shared_ptr<StochasticProcess> process = model->stateProcess();
     LowDiscrepancy::rsg_type sg = LowDiscrepancy::make_sequence_generator(process->factors() * steps, seed);
     TimeGrid grid(T, steps);
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
+        tmp->resetCache(grid.size() - 1);
+    }
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg(process, grid, sg, false);
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > cdso;

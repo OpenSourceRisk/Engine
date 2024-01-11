@@ -19,7 +19,9 @@
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 
 #include <qle/cashflows/averageonindexedcoupon.hpp>
+#include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/instruments/rebatedexercise.hpp>
 
 #include <ql/cashflows/averagebmacoupon.hpp>
@@ -34,7 +36,7 @@ using namespace QuantLib;
 
 #define THROW_ERROR_CPN_NOT_SUPPORTED                                                                                  \
     QL_FAIL("NumericLgmMultiLegOptionEngineBase: coupon type not handled, supported coupon types: Fix, (capfloored) "  \
-            "Ibor, (capfloored) ON comp, (capfloored) ON avg, BMA/SIFMA")
+            "Ibor, (capfloored) ON comp, (capfloored) ON avg, BMA/SIFMA, subperiod")
 
 /* For a given cashflow and option exercise date, return the simulation date on which we determine the coupon amout.
    - If the pay date is <= today, null is returned.
@@ -65,6 +67,8 @@ Date getSimulationDates(const Date& today, const Date& latestOptionDate, const b
             return std::max(minDate, cfon->underlying()->fixingDates().front());
         } else if (auto cfav = boost::dynamic_pointer_cast<QuantExt::CappedFlooredAverageONIndexedCoupon>(cpn)) {
             return std::max(minDate, cfav->underlying()->fixingDates().front());
+        } else if (auto sub = boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(cpn)) {
+            return std::max(minDate, sub->fixingDates().front());
         }
         THROW_ERROR_CPN_NOT_SUPPORTED;
     } else {
@@ -104,22 +108,19 @@ RandomVariable getUnderlyingCashflowPv(const LgmVectorised& lgm, const Real t, c
         } else if (auto on = boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(cpn)) {
             return lgm.compoundedOnRate(boost::dynamic_pointer_cast<OvernightIndex>(on->index()), on->fixingDates(),
                                         on->valueDates(), on->dt(), on->rateCutoff(), on->includeSpread(), on->spread(),
-                                        on->gearing(), on->lookback(), on->dayCounter(),
-                                        Null<Real>(), Null<Real>(), false, false, t, x) *
+                                        on->gearing(), on->lookback(), Null<Real>(), Null<Real>(), false, false, t, x) *
                    RandomVariable(x.size(), on->accrualPeriod() * on->nominal()) *
                    lgm.reducedDiscountBond(t, T, x, discountCurve);
         } else if (auto av = boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(cpn)) {
             return lgm.averagedOnRate(boost::dynamic_pointer_cast<OvernightIndex>(av->index()), av->fixingDates(),
                                       av->valueDates(), av->dt(), av->rateCutoff(), false, av->spread(), av->gearing(),
-                                      av->lookback(), av->dayCounter(), Null<Real>(), Null<Real>(),
-                                      false, false, t, x) *
+                                      av->lookback(), Null<Real>(), Null<Real>(), false, false, t, x) *
                    RandomVariable(x.size(), av->accrualPeriod() * av->nominal()) *
                    lgm.reducedDiscountBond(t, T, x, discountCurve);
         } else if (auto bma = boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(cpn)) {
-            return (RandomVariable(x.size(), bma->gearing()) *
-                        lgm.averagedBmaRate(boost::dynamic_pointer_cast<BMAIndex>(bma->index()), bma->fixingDates(),
-                                            bma->accrualStartDate(), bma->accrualEndDate(), t, x) +
-                    RandomVariable(x.size(), bma->spread())) *
+            return lgm.averagedBmaRate(boost::dynamic_pointer_cast<BMAIndex>(bma->index()), bma->fixingDates(),
+                                       bma->accrualStartDate(), bma->accrualEndDate(), false, bma->spread(),
+                                       bma->gearing(), Null<Real>(), Null<Real>(), false, t, x) *
                    RandomVariable(x.size(), bma->accrualPeriod() * bma->nominal()) *
                    lgm.reducedDiscountBond(t, T, x, discountCurve);
         } else if (auto cf = boost::dynamic_pointer_cast<QuantLib::CappedFlooredCoupon>(cpn)) {
@@ -137,19 +138,29 @@ RandomVariable getUnderlyingCashflowPv(const LgmVectorised& lgm, const Real t, c
             auto und = cfon->underlying();
             return lgm.compoundedOnRate(boost::dynamic_pointer_cast<OvernightIndex>(und->index()), und->fixingDates(),
                                         und->valueDates(), und->dt(), und->rateCutoff(), und->includeSpread(),
-                                        und->spread(), und->gearing(), und->lookback(),
-                                        und->dayCounter(), cfon->cap(), cfon->floor(), cfon->localCapFloor(),
-                                        cfon->nakedOption(), t, x) *
+                                        und->spread(), und->gearing(), und->lookback(), cfon->cap(), cfon->floor(),
+                                        cfon->localCapFloor(), cfon->nakedOption(), t, x) *
                    RandomVariable(x.size(), cfon->accrualPeriod() * cfon->nominal()) *
                    lgm.reducedDiscountBond(t, T, x, discountCurve);
         } else if (auto cfav = boost::dynamic_pointer_cast<QuantExt::CappedFlooredAverageONIndexedCoupon>(cpn)) {
             auto und = cfav->underlying();
             return lgm.averagedOnRate(boost::dynamic_pointer_cast<OvernightIndex>(und->index()), und->fixingDates(),
                                       und->valueDates(), und->dt(), und->rateCutoff(), cfav->includeSpread(),
-                                      und->spread(), und->gearing(), und->lookback(),
-                                      und->dayCounter(), cfav->cap(), cfav->floor(), cfav->localCapFloor(),
-                                      cfav->nakedOption(), t, x) *
+                                      und->spread(), und->gearing(), und->lookback(), cfav->cap(), cfav->floor(),
+                                      cfav->localCapFloor(), cfav->nakedOption(), t, x) *
                    RandomVariable(x.size(), cfav->accrualPeriod() * cfav->nominal()) *
+                   lgm.reducedDiscountBond(t, T, x, discountCurve);
+        } else if (auto cfbma = boost::dynamic_pointer_cast<QuantExt::CappedFlooredAverageBMACoupon>(cpn)) {
+            auto und = cfbma->underlying();
+            return lgm.averagedBmaRate(boost::dynamic_pointer_cast<BMAIndex>(und->index()), und->fixingDates(),
+                                       und->accrualStartDate(), und->accrualEndDate(), cfbma->includeSpread(),
+                                       und->spread(), und->gearing(), cfbma->cap(), cfbma->floor(),
+                                       cfbma->nakedOption(), t, x) *
+                   RandomVariable(x.size(), cfbma->accrualPeriod() * cfbma->nominal()) *
+                   lgm.reducedDiscountBond(t, T, x, discountCurve);
+        } else if (auto sub = boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(cpn)) {
+            return lgm.subPeriodsRate(sub->index(), sub->fixingDates(), t, x) *
+                   RandomVariable(x.size(), sub->accrualPeriod() * sub->nominal()) *
                    lgm.reducedDiscountBond(t, T, x, discountCurve);
         }
         THROW_ERROR_CPN_NOT_SUPPORTED;

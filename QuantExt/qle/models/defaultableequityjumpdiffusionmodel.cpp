@@ -25,6 +25,9 @@
 #include <ql/methods/finitedifferences/meshers/uniform1dmesher.hpp>
 #include <ql/methods/finitedifferences/solvers/fdmbackwardsolver.hpp>
 #include <ql/pricingengines/blackformula.hpp>
+#include <ql/quotes/simplequote.hpp>
+#include <ql/time/calendars/nullcalendar.hpp>
+#include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/timegrid.hpp>
 
 namespace QuantExt {
@@ -32,7 +35,7 @@ namespace QuantExt {
 using namespace QuantLib;
 
 DefaultableEquityJumpDiffusionModelBuilder::DefaultableEquityJumpDiffusionModelBuilder(
-    const std::vector<Real>& stepTimes, const boost::shared_ptr<EquityIndex>& equity,
+    const std::vector<Real>& stepTimes, const boost::shared_ptr<QuantExt::EquityIndex2>& equity,
     const Handle<BlackVolTermStructure>& volatility, const Handle<DefaultProbabilityTermStructure>& creditCurve,
     const Real p, const Real eta, const bool staticMesher, const Size timeStepsPerYear, const Size stateGridPoints,
     const Real mesherEpsilon, const Real mesherScaling, const Real mesherConcentration,
@@ -146,7 +149,7 @@ void DefaultableEquityJumpDiffusionModelBuilder::performCalculations() const {
 
 DefaultableEquityJumpDiffusionModel::DefaultableEquityJumpDiffusionModel(
     const std::vector<Real>& stepTimes, const std::vector<Real>& h0, const std::vector<Real>& sigma,
-    const boost::shared_ptr<QuantExt::EquityIndex>& equity,
+    const boost::shared_ptr<QuantExt::EquityIndex2>& equity,
     const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve, const DayCounter& volDayCounter, const Real p,
     const Real eta, const bool adjustEquityForward)
     : stepTimes_(stepTimes), h0_(h0), sigma_(sigma), equity_(equity), creditCurve_(creditCurve),
@@ -159,7 +162,7 @@ void DefaultableEquityJumpDiffusionModel::update() { notifyObservers(); }
 
 const std::vector<Real>& DefaultableEquityJumpDiffusionModel::stepTimes() const { return stepTimes_; }
 
-boost::shared_ptr<QuantExt::EquityIndex> DefaultableEquityJumpDiffusionModel::equity() const { return equity_; }
+boost::shared_ptr<QuantExt::EquityIndex2> DefaultableEquityJumpDiffusionModel::equity() const { return equity_; }
 
 Real DefaultableEquityJumpDiffusionModel::totalBlackVariance() const { return totalBlackVariance_; }
 
@@ -307,6 +310,8 @@ void DefaultableEquityJumpDiffusionModel::bootstrap(
                 } catch (...) {
                 }
             }
+
+            impliedModelVol = std::max(1E-4, impliedModelVol);
 
             // 1.3 bootstrap the stepwise model sigma
 

@@ -80,7 +80,7 @@ boost::shared_ptr<PricingEngine> CamAmcFxForwardEngineBuilder::engineImpl(const 
         parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering")),
         parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")), discountCurves, simulationDates_,
         externalModelIndices, parseBool(engineParameter("MinObsDate")),
-        parseBool(engineParameter("RegressionOnExerciseOnly")));
+        parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")));
 
     return engine;
 }

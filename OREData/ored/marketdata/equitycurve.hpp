@@ -54,7 +54,7 @@ public:
     //! \name Inspectors
     //@{
     const EquityCurveSpec& spec() const { return spec_; };
-    boost::shared_ptr<QuantExt::EquityIndex> equityIndex() const { return equityIndex_; };
+    boost::shared_ptr<QuantExt::EquityIndex2> equityIndex() const { return equityIndex_; };
     boost::shared_ptr<YieldCurveCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
     //@}
 private:
@@ -65,7 +65,7 @@ private:
     DayCounter dc_;
     YieldCurve::InterpolationVariable dividendInterpVariable_;
     YieldCurve::InterpolationMethod dividendInterpMethod_;
-    boost::shared_ptr<QuantExt::EquityIndex> equityIndex_;
+    boost::shared_ptr<QuantExt::EquityIndex2> equityIndex_;
     boost::shared_ptr<YieldCurveCalibrationInfo> calibrationInfo_;
 };
 } // namespace data

@@ -82,7 +82,9 @@ public:
         //! reference calibration grid
         const std::string& referenceCalibrationGrid_ = "",
 	//! salvaging algorithm to apply to correlation matrix
-	const SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None);
+	const SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None,
+        //! id of the builder
+        const std::string& id = "unknown");
 
     //! Default destructor
     ~CrossAssetModelBuilder() {}
@@ -138,6 +140,7 @@ private:
     const bool continueOnError_;
     const std::string referenceCalibrationGrid_;
     const SalvagingAlgorithm::Type salvaging_;
+    const std::string id_;
 
     // TODO: Move CalibrationErrorType, optimizer and end criteria parameters to data
     boost::shared_ptr<OptimizationMethod> optimizationMethod_;

@@ -1,3 +1,46 @@
+Changes for the 11th ORE release (1.8.11.0):
+============================================
+
+ORE 1.8.11.0 includes the following notable changes, details can be
+found in the commits between July 2023 and beginning of October 2023.
+
+INSTRUMENTS
+- Add the Scripted Trade framework, see Example 52
+- Add support for fixings at trade level, see Example 51
+- Add Commodity Heat Rate Option
+- Add support for FRA on OIS
+- Add support for SIFMA Cap/Floor
+
+MARKETS
+- Support Optionlet volatility input
+- Add Dated OIS Rate Helper to the ORE yield curve to support instruments
+  tailored to Central Bank meeting dates, see Example 53
+
+ANALYTICS
+- Add SIMM 2.6
+- Add support for SIMM with one-day horizon, see updated Example 44
+- Convert pre-computed zero sensitivities into par sensitivities, see Example 50 
+- Add support for Cross Currency MtM Reset Swaps to AMC exposure simulation
+
+TEST
+- QuantExt: 272 test functions (vs 267 in the previous release)
+- OREData: 257 test functions (vs. 206 in the previous release)
+- OREAnalytics: 78 test functions 
+
+DOCUMENTATION
+- A separate guide for the Scripted Trade has been added,
+  see Docs/ScriptedTrade/scriptedtrade.tex
+
+LANGUAGE BINDINGS
+- Upgrade to QuantLib-SWIG-v1.31.1
+
+OTHER
+- Added an external compute device interface (to utilise GPUs)
+- Logging enhancements (progress, structured logs)
+- Introduced Blackduck and Coverity scans of the code base before releases
+- Upgrade of ORE's QuantLib fork to QuantLib-v1.31.1
+ 
+
 Changes for the 10th ORE release (1.8.10.0):
 ============================================
 
@@ -5,26 +48,44 @@ ORE 1.8.10.0 includes the following notable changes, details can be
 found in the commits between April and June 2022.
 
 INSTRUMENTS
-- roll out of Hybrid instruments, thanks to Acadia Inc., as announced in September 22:
-  * Composite Trade, composites of any ORE trade types
-  * Convertible Bond
-  * Asset Swapped Convertible Bond Transaction (ASCOT), American Option on a Convertible Bond
-  * Generic Total Return Swap and Contract For Difference framework, referencing a single bond,
-    forward bond, convertible bond, derivative trade, equity/equity option position or bond position.
+- roll out of Hybrid and Credit instruments, thanks to Acadia Inc., as announced in September 22:
+  * Collateralized Bond Obligation, see Examples 45
+  * Generic Total Return Swap and Contract For Difference framework, see Example 46,
+    referencing Bonds, Forward Bonds, Convertible Bonds, CBOs,
+    Equity and Equity Option positions, or any combination of derivatives covered in ORE
+  * Composite Trade, composites of any ORE trade types, see Example 47
+  * Convertible Bond and Asset Swapped Convertible Option Transaction (ASCOT), see Example 48
+- support separate fixing and payment date schedules on floating legs
+- support notional changes within calculation periods on fixed and floating legs
 
-MAERKETS
+MARKETS
+- Add a new yield curve segment "Bond Yield Shifted", see Example 49, thanks to Oleg Kulkov
 
 ANALYTICS
-- Add a Credit Portfolio Model to construct portfolio loss distributions due to credit migration,
-  credit default and market moves across cash products and derivatives (see Example 43)
+- Add a proof-of-concept Credit Portfolio Model to construct portfolio loss distributions due to
+  credit migration, credit default and market moves across cash products and derivatives, see Example 43
+- Add the ISDA Standard Initial Margin Model (SIMM), all versions since inception, see Example 44
+- Fix the Windows builds with QL_ENABLE_SESSIONS=ON (to enable ORE multi-threading on Windows),
+  thanks to Steven van Haaren for reporting this issue and triggering this fix. 
 
 TEST
+- QuantExt: 267 test functions (vs 263 in the previous release)
+- OREData: 206 test functions (vs. 203 in the previous release)
+- OREAnalytics: 78 test functions (vs. 68 in the previous release)
 
 DOCUMENTATION
+- The user guide has grown from 486 to 537 pages, due to the migration of Hybrid instruments
+  into ORE, new analytics and examples 43ff.
+- A separate guide for the Credit Portfolio Model in ORE has been added,
+  see Docs/UserGuide/creditmodel.tex
 
-LANGUAGE BINDINGS
+LANGUAGE BINDINGS & PYTHON MODULE
+- Upgrade to QuantLib-SWIG-v1.30
+- Added four of the Jupyter notebooks presented at the Acadia Quant Summit (London 
+  see oreswig/OREAnalytics-SWIG/Python/Examples/Notebooks
 
 OTHER
+- Upgraded ORE's QuantLib fork to QuantLib-v1.30
 
 
 Changes for the 9th ORE release (1.8.9.0):

@@ -227,7 +227,7 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
         brent.setLowerBound(1.0E-8);
         try {
             fepAdjustedForwardSpread = brent.solve(target, 1.0E-7, arguments_.swap->fairSpreadClean(), 0.0001);
-        } catch (const std::exception e) {
+        } catch (const std::exception& e) {
             QL_FAIL(
                 "NumericalIntegrationIndexCdsOptionEngine::doCalc(): failed to calibrate forward spread: " << e.what());
         }
@@ -248,7 +248,7 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
         Brent brent2;
         try {
             exerciseBoundary = brent2.solve(payoff, 1.0E-7, 0.0, 0.0001);
-        } catch (const std::exception e) {
+        } catch (const std::exception& e) {
             QL_FAIL(
                 "NumericalIntegrationIndexCdsOptionEngine::doCalc(): failed to find exercise boundary: " << e.what());
         }
@@ -276,7 +276,7 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
                                             std::exp(-0.5 * x * x) / boost::math::constants::root_two_pi<Real>();
                                  },
                                  lowerIntegrationBound, upperIntegrationBound);
-        } catch (const std::exception e) {
+        } catch (const std::exception& e) {
             QL_FAIL(
                 "NumericalIntegrationIndexCdsOptionEngine::doCalc(): failed to compute option payoff: " << e.what());
         }

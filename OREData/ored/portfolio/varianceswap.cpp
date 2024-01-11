@@ -55,7 +55,7 @@ void VarSwap::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFac
     Real varianceStrike = strike_ * strike_;
     Real varianceNotional = notional_ / (2 * 100 * strike_);
 
-    boost::shared_ptr<VarianceSwap> varSwap(new QuantExt::VarianceSwap(
+    boost::shared_ptr<QuantExt::VarianceSwap2> varSwap(new QuantExt::VarianceSwap2(
         longShort, varianceStrike, momentType == MomentType::Variance ? varianceNotional : notional_, start_, endDate,
         cal_, addPastDividends_));
 

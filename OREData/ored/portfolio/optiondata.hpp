@@ -74,6 +74,7 @@ public:
     const string& style() const { return style_; }
     const bool& payoffAtExpiry() const { return payoffAtExpiry_; }
     const vector<string>& exerciseDates() const { return exerciseDates_; }
+    const ScheduleData& exerciseDatesSchedule() const { return exerciseDatesSchedule_; }
     const string& noticePeriod() const { return noticePeriod_; }
     const string& noticeCalendar() const { return noticeCalendar_; }
     const string& noticeConvention() const { return noticeConvention_; }
@@ -95,9 +96,15 @@ public:
     //! \name Setters
     //@{
     void setExerciseDates(const std::vector<std::string>& exerciseDates) { exerciseDates_ = exerciseDates; }
+    void setExerciseDates(const ScheduleData& exerciseDatesSchedule) { exerciseDatesSchedule_ = exerciseDatesSchedule; }
     void setAutomaticExercise(bool automaticExercise) { automaticExercise_ = automaticExercise; }
     void setPaymentData(const OptionPaymentData& paymentData) { paymentData_ = paymentData; }
     void setCallPut(const string& callPut) { callPut_ = callPut; }
+    void setLongShort(const std::string& longShort) { longShort_ = longShort; }
+    void setStyle(const std::string& style) { style_ = style; }
+    void setPayoffAtExpiry(const bool payoffAtExpiry) { payoffAtExpiry_ = payoffAtExpiry; }
+    void setNoticePeriod(const std::string& noticePeriod) { noticePeriod_ = noticePeriod; }
+    void setSettlement(const std::string& settlement) { settlement_ = settlement; }
     //@}
 
     //! \name Serialisation
@@ -116,6 +123,7 @@ private:
     string payoffType2_;  // Geometric, Arithmetic
     string style_;        // European, Bermudan, American
     bool payoffAtExpiry_; // Y or N
+    ScheduleData exerciseDatesSchedule_;
     vector<string> exerciseDates_;
     string noticePeriod_;
     string noticeCalendar_;
@@ -135,22 +143,41 @@ private:
     boost::optional<OptionPaymentData> paymentData_;
 };
 
-/* Helper class to build an exercise instance for Bermudan swaptions and related instruments from given option data.
-   Only future exercise dates that exercise into a whole future accrual period of the underlying are kept.
-   If no exercise dates are left, exercise() will return a nullptr. */
+// Helper class to build an exercise instance for Bermudan swaptions and related instruments from given option data.
 
 class ExerciseBuilder {
 public:
     ExerciseBuilder(const OptionData& optionData, const std::vector<QuantLib::Leg> legs);
 
+    // null if exercsied or no alive exercise dates
     boost::shared_ptr<QuantLib::Exercise> exercise() const { return exercise_; }
+    // exercise dates associated to alive notice dates
     const std::vector<QuantLib::Date>& exerciseDates() const { return exerciseDates_; }
+    // alive notice dates (w.r.t. global eval date), only dates exercising into whole periods are kept
     const std::vector<QuantLib::Date>& noticeDates() const { return noticeDates_; }
+
+    // true if exercised
+    bool isExercised() const { return isExercised_; }
+    // only for exercised option: The applicable exercise date
+    const QuantLib::Date& exerciseDate() const { return exerciseDate_; }
+    // only for exercised options: cash settlement amount or null
+    boost::shared_ptr<QuantLib::CashFlow> cashSettlement() const { return cashSettlement_; }
+    // only for exercised options: exercise fee amount or null
+    boost::shared_ptr<QuantLib::CashFlow> feeSettlement() const { return feeSettlement_; }
 
 private:
     boost::shared_ptr<QuantLib::Exercise> exercise_;
+
     std::vector<QuantLib::Date> exerciseDates_;
     std::vector<QuantLib::Date> noticeDates_;
+
+    bool isExercised_ = false;
+    QuantLib::Date exerciseDate_;
+    boost::shared_ptr<QuantLib::CashFlow> cashSettlement_;
+    boost::shared_ptr<QuantLib::CashFlow> feeSettlement_;
+
+    // index in all exercise date vector if exercised
+    Size exerciseDateIndex_ = QuantLib::Null<QuantLib::Size>();
 };
 
 } // namespace data

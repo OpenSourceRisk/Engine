@@ -21,7 +21,10 @@
 #include <orea/aggregation/staticcreditxvacalculator.hpp>
 #include <orea/aggregation/xvacalculator.hpp>
 #include <orea/app/analytic.hpp>
+#include <orea/app/analytics/parconversionanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
+#include <orea/app/analytics/scenariostatisticsanalytic.hpp>
+#include <orea/app/analytics/simmanalytic.hpp>
 #include <orea/app/analytics/varanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/app/analyticsmanager.hpp>
@@ -37,6 +40,7 @@
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/app/xvarunner.hpp>
+#include <orea/app/zerosensitivityloader.hpp>
 #include <orea/cube/cube_io.hpp>
 #include <orea/cube/cubecsvreader.hpp>
 #include <orea/cube/cubeinterpretation.hpp>
@@ -68,7 +72,6 @@
 #include <orea/engine/riskfilter.hpp>
 #include <orea/engine/sensitivityaggregator.hpp>
 #include <orea/engine/sensitivityanalysis.hpp>
-#include <orea/engine/sensitivityanalysisplus.hpp>
 #include <orea/engine/sensitivitycubestream.hpp>
 #include <orea/engine/sensitivityfilestream.hpp>
 #include <orea/engine/sensitivityinmemorystream.hpp>
@@ -78,6 +81,7 @@
 #include <orea/engine/valuationcalculator.hpp>
 #include <orea/engine/valuationengine.hpp>
 #include <orea/engine/varcalculator.hpp>
+#include <orea/engine/xvaenginecg.hpp>
 #include <orea/engine/zerotoparcube.hpp>
 #include <orea/scenario/aggregationscenariodata.hpp>
 #include <orea/scenario/clonedscenariogenerator.hpp>
@@ -97,10 +101,10 @@
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/scenario/scenariogeneratordata.hpp>
+#include <orea/scenario/scenariogeneratortransform.hpp>
 #include <orea/scenario/scenarioshiftcalculator.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
-#include <orea/scenario/scenariosimmarketplus.hpp>
 #include <orea/scenario/scenariowriter.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
@@ -115,7 +119,9 @@
 #include <orea/simm/simmbucketmapper.hpp>
 #include <orea/simm/simmbucketmapperbase.hpp>
 #include <orea/simm/simmcalculator.hpp>
+#include <orea/simm/simmcalibration.hpp>
 #include <orea/simm/simmconcentration.hpp>
+#include <orea/simm/simmconcentrationcalibration.hpp>
 #include <orea/simm/simmconcentrationisdav1_3.hpp>
 #include <orea/simm/simmconcentrationisdav1_3_38.hpp>
 #include <orea/simm/simmconcentrationisdav2_0.hpp>
@@ -125,8 +131,10 @@
 #include <orea/simm/simmconcentrationisdav2_3_8.hpp>
 #include <orea/simm/simmconcentrationisdav2_5.hpp>
 #include <orea/simm/simmconcentrationisdav2_5a.hpp>
+#include <orea/simm/simmconcentrationisdav2_6.hpp>
 #include <orea/simm/simmconfiguration.hpp>
 #include <orea/simm/simmconfigurationbase.hpp>
+#include <orea/simm/simmconfigurationcalibration.hpp>
 #include <orea/simm/simmconfigurationisdav1_0.hpp>
 #include <orea/simm/simmconfigurationisdav1_3.hpp>
 #include <orea/simm/simmconfigurationisdav1_3_38.hpp>
@@ -137,6 +145,7 @@
 #include <orea/simm/simmconfigurationisdav2_3_8.hpp>
 #include <orea/simm/simmconfigurationisdav2_5.hpp>
 #include <orea/simm/simmconfigurationisdav2_5a.hpp>
+#include <orea/simm/simmconfigurationisdav2_6.hpp>
 #include <orea/simm/simmnamemapper.hpp>
 #include <orea/simm/simmresults.hpp>
 #include <orea/simm/utilities.hpp>

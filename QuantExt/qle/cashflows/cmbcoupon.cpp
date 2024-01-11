@@ -92,8 +92,9 @@ void CmbCoupon::setPricer(const ext::shared_ptr<FloatingRateCouponPricer>& price
 CmbLeg::CmbLeg(Schedule schedule, std::vector<ext::shared_ptr<ConstantMaturityBondIndex>> bondIndices)
     : schedule_(std::move(schedule)), bondIndices_(bondIndices),
       paymentAdjustment_(Following), inArrears_(false), zeroPayments_(false) {
-    QL_REQUIRE(bondIndices_.size() == schedule.size() - 1,
-	       "vector size mismatch between schedule (" << schedule.size() << ") and bond indices (" << bondIndices_.size() << ")");
+    QL_REQUIRE(bondIndices_.size() == schedule_.size() - 1, "vector size mismatch between schedule ("
+                                                                << schedule_.size() << ") and bond indices ("
+                                                                << bondIndices_.size() << ")");
 }
 
 CmbLeg& CmbLeg::withNotionals(Real notional) {

@@ -31,7 +31,8 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <test/oreatoplevelfixture.hpp>
-#include <test/testmarket.hpp>
+
+#include "testmarket.hpp"
 
 #include <ql/indexes/ibor/all.hpp>
 

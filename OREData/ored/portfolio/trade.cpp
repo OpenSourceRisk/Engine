@@ -246,6 +246,19 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                 ALOG("original nominal could not be determined for trade " << id() << ", set to zero: " << e.what());
             }
             additionalData_["originalNotional[" + legID + "]"] = originalNotional;
+            if (auto eqc = boost::dynamic_pointer_cast<QuantExt::EquityCoupon>(coupon)) {
+                Real quantity = eqc->quantity();
+                if (quantity == Null<Real>()) {
+                    if (eqc->legInitialNotional() != Null<Real>() && eqc->initialPrice() != Null<Real>()) {
+                        quantity = eqc->legInitialNotional() / eqc->initialPrice();
+                    }
+                }
+                additionalData_["initialQuantity[" + legID + "]"] = quantity;
+                
+                Real currentPrice = eqc->equityCurve()->fixing(asof);
+                if (currentPrice != Null<Real>() && originalNotional != Null<Real>())
+                    additionalData_["currentQuantity" + legID + "]"] = originalNotional / currentPrice;
+            }
         }
     }
     for (Size j = 0; j < legs_[i].size(); ++j) {

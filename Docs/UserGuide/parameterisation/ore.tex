@@ -528,7 +528,8 @@ scenarios is described in more detail in section \ref{sec:stress}.
       <Parameter name="mcSamples">100000</Parameter> 
       <Parameter name="mcSeed">42</Parameter> 
       <Parameter name="outputFile">var.csv</Parameter> 
-    </Analytic> </Analytics>
+    </Analytic> 
+</Analytics>
 \end{minted}
 \caption{ORE analytic: VaR}
 \label{lst:ore_var}
@@ -547,4 +548,34 @@ The parameters have the following interpretation:
 \item {\tt mcSamples:} Number of Monte Carlo samples used when the {\em MonteCarlo} method is chosen 
 \item {\tt mcSeed:} Random number generator seed when the {\em MonteCarlo} method is chosen
 \item {\tt outputFile:} Output file name
+\end{itemize}
+
+\medskip The {\tt scenarioStatistics} 'analytics' provide the statistics and distribution of the scenarios generated through simulation. Listing \ref{lst:ore_scenarioStatistics}
+shows a typical configuration for sensitivity calculation.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+  <Analytic type="scenarioStatistics">
+	<Parameter name="active">Y</Parameter>
+	<Parameter name="simulationConfigFile">simulation.xml</Parameter>
+	<Parameter name="distributionBuckets">20</Parameter>
+	<Parameter name="outputZeroRate">Y</Parameter>
+	<Parameter name="scenariodump">scenariodump.csv</Parameter>
+  </Analytic>
+</Analytics>
+\end{minted}
+\caption{ORE analytic: scenarioStatistics}
+\label{lst:ore_scenarioStatistics}
+\end{listing}
+
+The parameters have the following interpretation:
+
+\begin{itemize}
+\item {\tt simulationConfigFile:} Configuration file defining the simulation market under which sensitivities are computed,
+  see \ref{sec:simulation}.
+\item {\tt distributionBuckets:} Number of buckets used for the distribution histogram.
+\item {\tt outputZeroRate:} Determine whether the statistics report and distribution report will use zero rate or discount factors. If set to Y, the reports will use zero rates. If set to N, they will use discount factors.
+\item {\tt scenariodump:} File containing all the scenarios generated through simulation market. If the node is not given, this file will not be outputted.
 \end{itemize}

@@ -148,6 +148,12 @@ public:
     //! Give back a set containing the ProductClass values optionally excluding 'All'
     static std::set<ProductClass> productClasses(bool includeAll = false);
 
+    //! For a given risk class, return the corresponding risk types
+    static std::pair<RiskType, RiskType> riskClassToRiskType(const RiskClass& rc);
+
+    //! For a given rirsk type, return the corresponding risk class
+    static RiskClass riskTypeToRiskClass(const RiskType& rt);
+
     //! Define ordering for ProductClass according to a waterfall:
     // Empty < RatesFX < Equity < Commodity < Credit
     // All is unhandled
@@ -288,6 +294,8 @@ public:
                                        const std::string& secondLabel_1, const std::string& secondLabel_2,
                                        const std::string& calculationCurrency = "") const = 0;
 
+    virtual bool isSimmConfigCalibration() const { return false; }
+
 protected:
     //! Number of risk classes including RiskClass::All
     static const QuantLib::Size numberOfRiskClasses;
@@ -329,6 +337,8 @@ SimmConfiguration::IMModel parseIMModel(const std::string& pc);
 
 SimmConfiguration::Regulation parseRegulation(const std::string& regulation);
 
+std::string combineRegulations(const std::string&, const std::string&);
+
 //! Reads a string containing regulations applicable for a given CRIF record
 std::set<std::string> parseRegulationString(const std::string& regsString,
                                             const std::set<std::string>& valueIfEmpty = {"Unspecified"});
@@ -346,10 +356,6 @@ std::string filterRegulations(const std::string& regsString, const std::vector<s
 
 //! From a vector of regulations, determine the winning regulation based on order of priority
 SimmConfiguration::Regulation getWinningRegulation(const std::vector<std::string>& winningRegulations);
-
-SimmConfiguration::ProductClass simmProductClassFromOreTradeType(const std::string& tradeType);
-
-SimmConfiguration::ProductClass scheduleProductClassFromOreTradeType(const std::string& tradeType);
 
 } // namespace analytics
 } // namespace ore

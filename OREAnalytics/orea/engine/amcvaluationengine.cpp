@@ -33,6 +33,7 @@
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
+#include <qle/models/lgmimpliedyieldtermstructure.hpp>
 
 #include <ql/instruments/compositeinstrument.hpp>
 
@@ -94,8 +95,8 @@ simulatePathInterface2(const boost::shared_ptr<AmcCalculator>& amcCalc, const st
     try {
         return amcCalc->simulatePath(pathTimes, paths, isRelevantTime, moveStateToPreviousTime);
     } catch (const std::exception& e) {
-        ALOG(StructuredTradeErrorMessage(tradeLabel, tradeType, "error during amc path simulation for trade.",
-                                         e.what()));
+        StructuredTradeErrorMessage(tradeLabel, tradeType, "error during amc path simulation for trade.", e.what())
+            .log();
         return std::vector<QuantExt::RandomVariable>(std::count(isRelevantTime.begin(), isRelevantTime.end(), true) + 1,
                                                      RandomVariable(paths.front().front().size()));
     }
@@ -140,7 +141,7 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                    const boost::shared_ptr<ore::data::Market>& market,
                    const boost::shared_ptr<ore::analytics::ScenarioGeneratorData>& sgd,
                    const std::vector<string>& aggDataIndices, const std::vector<string>& aggDataCurrencies,
-                   boost::shared_ptr<ore::analytics::AggregationScenarioData> asd,
+                   const Size aggDataNumberCreditStates, boost::shared_ptr<ore::analytics::AggregationScenarioData> asd,
                    boost::shared_ptr<NPVCube> outputCube, boost::shared_ptr<ProgressIndicator> progressIndicator) {
 
     progressIndicator->updateProgress(0, portfolio->size() + 1);
@@ -206,70 +207,100 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     timer.start();
     Size progressCounter = 0;
 
+    // reset timing stats
+    RandomVariableStats::instance().enabled = true;
+    RandomVariableStats::instance().data_ops = 0;
+    RandomVariableStats::instance().calc_ops = 0;
+    RandomVariableStats::instance().data_timer.start();
+    RandomVariableStats::instance().data_timer.stop();
+    RandomVariableStats::instance().calc_timer.start();
+    RandomVariableStats::instance().calc_timer.stop();
+    McEngineStats::instance().other_timer.start();
+    McEngineStats::instance().other_timer.stop();
+    McEngineStats::instance().path_timer.start();
+    McEngineStats::instance().path_timer.stop();
+    McEngineStats::instance().calc_timer.start();
+    McEngineStats::instance().calc_timer.stop();
+
+
     auto extractAmcCalculator = [&amcCalculators, &tradeId, &tradeLabel, &tradeType, &effectiveMultiplier,
-                            &currencyIndex, &tradeFees, &model, &outputCube](
-        const std::pair<std::string, boost::shared_ptr<Trade>>& trade,
-        boost::shared_ptr<AmcCalculator> amcCalc, Real multiplier) {
+                                 &currencyIndex, &tradeFees, &model,
+                                 &outputCube](const std::pair<std::string, boost::shared_ptr<Trade>>& trade,
+                                              boost::shared_ptr<AmcCalculator> amcCalc, Real multiplier, bool addFees) {
         LOG("AMCCalculator extracted for \"" << trade.first << "\"");
         amcCalculators.push_back(amcCalc);
         effectiveMultiplier.push_back(multiplier);
         currencyIndex.push_back(model->ccyIndex(amcCalc->npvCurrency()));
-
         if (auto id = outputCube->idsAndIndexes().find(trade.first); id != outputCube->idsAndIndexes().end()) {
             tradeId.push_back(id->second);
         } else {
             QL_FAIL("AMCValuationEngine: trade id '" << trade.first
                                                     << "' is not present in output cube - internal error.");
         }
-
         tradeLabel.push_back(trade.first);
         tradeType.push_back(trade.second->tradeType());
         tradeFees.push_back({});
-        for (Size i = 0; i < trade.second->instrument()->additionalInstruments().size(); ++i) {
-            if (auto p = boost::dynamic_pointer_cast<QuantExt::Payment>(
-                    trade.second->instrument()->additionalInstruments()[i])) {
-                tradeFees.back().push_back(std::make_tuple(model->ccyIndex(p->currency()), p->cashFlow()->amount(),
-                                                        p->cashFlow()->date()));
-            } else {
-                ALOG(StructuredTradeErrorMessage(trade.second, "Additional instrument is ignored in AMC simulation",
-                                                "only QuantExt::Payment is handled as additional instrument."));
+        if (addFees) {
+            for (Size i = 0; i < trade.second->instrument()->additionalInstruments().size(); ++i) {
+                if (auto p = boost::dynamic_pointer_cast<QuantExt::Payment>(
+                        trade.second->instrument()->additionalInstruments()[i])) {
+                    tradeFees.back().push_back(std::make_tuple(model->ccyIndex(p->currency()), p->cashFlow()->amount(),
+                                                               p->cashFlow()->date()));
+                } else {
+                    StructuredTradeErrorMessage(trade.second, "Additional instrument is ignored in AMC simulation",
+                                                "only QuantExt::Payment is handled as additional instrument.")
+                        .log();
+                }
             }
         }
     };
+
     for (auto const& trade : portfolio->trades()) {
         boost::shared_ptr<AmcCalculator> amcCalc;
         try {
             auto inst = trade.second->instrument()->qlInstrument(true);
+            QL_REQUIRE(inst != nullptr,
+                       "instrument has no ql instrument, this is not supported by the amc valuation engine.");
             Real multiplier = trade.second->instrument()->multiplier() *
                 trade.second->instrument()->multiplier2();
+
+            // handle composite trades
             if (auto cInst = boost::dynamic_pointer_cast<CompositeInstrument>(inst)) {
                 auto addResults = cInst->additionalResults();
                 std::vector<Real> multipliers;
-                while(true) {
+                while (true) {
                     std::stringstream ss;
                     ss << multipliers.size() + 1 << "_multiplier";
                     if (addResults.find(ss.str()) == addResults.end())
                         break;
                     multipliers.push_back(inst->result<Real>(ss.str()));
                 }
+                std::vector<boost::shared_ptr<AmcCalculator>> amcCalcs;
                 for (Size cmpIdx = 0; cmpIdx < multipliers.size(); ++cmpIdx) {
                     std::stringstream ss;
                     ss << cmpIdx + 1 << "_amcCalculator";
                     if (addResults.find(ss.str()) != addResults.end()) {
-                        amcCalc = inst->result<boost::shared_ptr<AmcCalculator>>(ss.str());
-                        extractAmcCalculator(trade, amcCalc, multiplier * multipliers[cmpIdx]);
+                        amcCalcs.push_back(inst->result<boost::shared_ptr<AmcCalculator>>(ss.str()));
                     }
+                }
+                QL_REQUIRE(amcCalcs.size() == multipliers.size(),
+                           "Did not find amc calculators for all components of composite trade.");
+                for (Size cmpIdx = 0; cmpIdx < multipliers.size(); ++cmpIdx) {
+                    extractAmcCalculator(trade, amcCalc, multiplier * multipliers[cmpIdx], cmpIdx == 0);
                 }
                 continue;
             }
-            amcCalc = inst->result<boost::shared_ptr<AmcCalculator>>(
-                "amcCalculator");
-            extractAmcCalculator(trade, amcCalc, multiplier);
+
+            // handle non-composite trades
+            amcCalc = inst->result<boost::shared_ptr<AmcCalculator>>("amcCalculator");
+            extractAmcCalculator(trade, amcCalc, multiplier, true);
+
         } catch (const std::exception& e) {
-            ALOG(StructuredTradeErrorMessage(trade.second, "Error building trade for AMC simulation", e.what()));
+            StructuredTradeErrorMessage(trade.second, "Error building trade for AMC simulation", e.what()).log();
         }
         progressIndicator->updateProgress(++progressCounter, portfolio->size() + 1);
     }
+
     timer.stop();
     calibrationTime += timer.elapsed().wall * 1e-9;
     LOG("Extracted " << amcCalculators.size() << " AMCCalculators for " << portfolio->size() << " source trades");
@@ -287,6 +318,9 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     // set up cache for paths
 
     auto process = model->stateProcess();
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
+        tmp->resetCache(sgd->getGrid()->timeGrid().size() - 1);
+    }
     Size nStates = process->size();
     QL_REQUIRE(sgd->getGrid()->timeGrid().size() > 0, "AMCValuationEngine: empty time grid given");
     std::vector<Real> pathTimes(std::next(sgd->getGrid()->timeGrid().begin(), 1), sgd->getGrid()->timeGrid().end());
@@ -356,6 +390,11 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                     }
                     asd->set(dateIndex, i, index->fixing(index->fixingCalendar().adjust(d)),
                              AggregationScenarioDataType::IndexFixing, asdIndexName[j]);
+                }
+                // set credit states
+                for (Size j = 0; j < aggDataNumberCreditStates; ++j) {
+                    asd->set(dateIndex, i, path[model->pIdx(CrossAssetModel::AssetType::CrState, j)][k],
+                             AggregationScenarioDataType::CreditState, std::to_string(j));
                 }
                 ++dateIndex;
             }
@@ -499,6 +538,21 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     LOG("residual time        : " << residualTime << " sec");
     LOG("total time           : " << totalTime << " sec");
     LOG("AMCValuationEngine finished for one of possibly multiple threads.");
+    LOG("RandomVariableStats  : ");
+    LOG("Data Ops             : " << RandomVariableStats::instance().data_ops / 1E6 << " MOPS");
+    LOG("Calc Ops             : " << RandomVariableStats::instance().calc_ops / 1E6 << " MOPS");
+    LOG("Data Timer           : " << RandomVariableStats::instance().data_timer.elapsed().wall / 1E9 << " sec");
+    LOG("Calc Timer           : " << RandomVariableStats::instance().calc_timer.elapsed().wall / 1E9 << " sec");
+    LOG("Data Performace      : " << RandomVariableStats::instance().data_ops * 1E3 /
+                                         RandomVariableStats::instance().data_timer.elapsed().wall
+                                  << " MFLOPS");
+    LOG("Calc Performace      : " << RandomVariableStats::instance().calc_ops * 1E3 /
+                                         RandomVariableStats::instance().calc_timer.elapsed().wall
+                                  << " MFLOPS");
+    LOG("MC Other Timer       : " << McEngineStats::instance().other_timer.elapsed().wall / 1E9 << " sec");
+    LOG("MC Path Timer        : " << McEngineStats::instance().path_timer.elapsed().wall / 1E9 << " sec");
+    LOG("MC Calc Timer        : " << McEngineStats::instance().calc_timer.elapsed().wall / 1E9 << " sec");
+
 } // runCoreEngine()
 
 } // namespace
@@ -507,7 +561,8 @@ AMCValuationEngine::AMCValuationEngine(
     const QuantLib::Size nThreads, const QuantLib::Date& today, const QuantLib::Size nSamples,
     const boost::shared_ptr<ore::data::Loader>& loader,
     const boost::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData, const std::vector<string>& aggDataIndices,
-    const std::vector<string>& aggDataCurrencies, const boost::shared_ptr<CrossAssetModelData>& crossAssetModelData,
+    const std::vector<string>& aggDataCurrencies, const Size aggDataNumberCreditStates,
+    const boost::shared_ptr<CrossAssetModelData>& crossAssetModelData,
     const boost::shared_ptr<ore::data::EngineData>& engineData,
     const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
     const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
@@ -520,8 +575,9 @@ AMCValuationEngine::AMCValuationEngine(
                                                                    const std::vector<QuantLib::Date>&,
                                                                    const QuantLib::Size)>& cubeFactory)
     : useMultithreading_(true), aggDataIndices_(aggDataIndices), aggDataCurrencies_(aggDataCurrencies),
-      scenarioGeneratorData_(scenarioGeneratorData), nThreads_(nThreads), today_(today), nSamples_(nSamples),
-      loader_(loader), crossAssetModelData_(crossAssetModelData), engineData_(engineData), curveConfigs_(curveConfigs),
+      aggDataNumberCreditStates_(aggDataNumberCreditStates), scenarioGeneratorData_(scenarioGeneratorData),
+      nThreads_(nThreads), today_(today), nSamples_(nSamples), loader_(loader),
+      crossAssetModelData_(crossAssetModelData), engineData_(engineData), curveConfigs_(curveConfigs),
       todaysMarketParams_(todaysMarketParams), configurationLgmCalibration_(configurationLgmCalibration),
       configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
       configurationInfCalibration_(configurationInfCalibration),
@@ -546,9 +602,11 @@ AMCValuationEngine::AMCValuationEngine(const boost::shared_ptr<QuantExt::CrossAs
                                        const boost::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
                                        const boost::shared_ptr<Market>& market,
                                        const std::vector<string>& aggDataIndices,
-                                       const std::vector<string>& aggDataCurrencies)
+                                       const std::vector<string>& aggDataCurrencies,
+                                       const Size aggDataNumberCreditStates)
     : useMultithreading_(false), aggDataIndices_(aggDataIndices), aggDataCurrencies_(aggDataCurrencies),
-      scenarioGeneratorData_(scenarioGeneratorData), model_(model), market_(market) {
+      aggDataNumberCreditStates_(aggDataNumberCreditStates), scenarioGeneratorData_(scenarioGeneratorData),
+      model_(model), market_(market) {
 
     QL_REQUIRE((aggDataIndices.empty() && aggDataCurrencies.empty()) || market != nullptr,
                "AMCValuationEngine: market is required for asd generation");
@@ -586,8 +644,8 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<Portfolio>& portfolio
 
     try {
         // we can use the mt progress indicator here although we are running on a single thread
-        runCoreEngine(portfolio, model_, market_, scenarioGeneratorData_, aggDataIndices_, aggDataCurrencies_, asd_,
-                      outputCube,
+        runCoreEngine(portfolio, model_, market_, scenarioGeneratorData_, aggDataIndices_, aggDataCurrencies_,
+                      aggDataNumberCreditStates_, asd_, outputCube,
                       boost::make_shared<ore::analytics::MultiThreadedProgressIndicator>(this->progressIndicators()));
     } catch (const std::exception& e) {
         QL_FAIL("Error during amc val engine run: " << e.what());
@@ -711,7 +769,7 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<ore::data::Portfolio>
                 ore::data::CrossAssetModelBuilder modelBuilder(
                     initMarket, crossAssetModelData_, configurationLgmCalibration_, configurationFxCalibration_,
                     configurationEqCalibration_, configurationInfCalibration_, configurationCrCalibration_,
-                    configurationFinalModel_, false, true);
+                    configurationFinalModel_, false, true, "", SalvagingAlgorithm::None, "xva/amc cam building");
 
                 auto cam = *modelBuilder.model();
 
@@ -736,7 +794,7 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<ore::data::Portfolio>
                 // run core engine code (asd is written for thread id 0 only)
 
                 runCoreEngine(portfolio, cam, initMarket, scenarioGeneratorData_, aggDataIndices_, aggDataCurrencies_,
-                              id == 0 ? asd_ : nullptr, miniCubes_[id], progressIndicator);
+                              aggDataNumberCreditStates_, id == 0 ? asd_ : nullptr, miniCubes_[id], progressIndicator);
 
                 // return code 0 = ok
 
@@ -748,9 +806,9 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<ore::data::Portfolio>
 
                 // log error and return code 1 = not ok
 
-                ALOG(ore::analytics::StructuredAnalyticsErrorMessage("AMC Valuation Engine (multithreaded mode)",
-                                                                     "",
-                                                                     e.what()));
+                ore::analytics::StructuredAnalyticsErrorMessage("AMC Valuation Engine (multithreaded mode)", "",
+                                                                e.what())
+                    .log();
                 rc = 1;
             }
 

@@ -91,8 +91,9 @@ void FxDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFa
             payDate = opd->calendar().advance(expiryDate, opd->lag(), Days, opd->convention());
         } else {
             if (opd->dates().size() > 1)
-                WLOG(ore::data::StructuredTradeWarningMessage(
-                    id(), tradeType(), "Trade build", "Found more than 1 payment date. The first one will be used."));
+                ore::data::StructuredTradeWarningMessage(id(), tradeType(), "Trade build",
+                                                         "Found more than 1 payment date. The first one will be used.")
+                    .log();
             payDate = opd->dates().front();
         }
     }
@@ -156,9 +157,10 @@ void FxDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFa
 
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, payoffAmount_,
-                                       option_.premiumData(), isLong ? -1.0 : 1.0, parseCurrency(payoffCurrency_),
-                                       engineFactory, builder->configuration(MarketContext::pricing));
+    Date lastPremiumDate =
+        addPremiums(additionalInstruments, additionalMultipliers, (isLong ? 1.0 : -1.0) * payoffAmount_,
+                    option_.premiumData(), isLong ? -1.0 : 1.0, parseCurrency(payoffCurrency_), engineFactory,
+                    builder->configuration(MarketContext::pricing));
 
     Handle<Quote> spot = market->fxSpot(fgnCcy.code() + domCcy.code());
     instrument_ = boost::make_shared<DoubleBarrierOptionWrapper>(

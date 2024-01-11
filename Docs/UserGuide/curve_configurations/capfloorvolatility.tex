@@ -1,7 +1,9 @@
 \subsubsection{Cap Floor Volatility Structures}
 \label{sss:capfloorconfig}
 
-The cap volatility structure parameterisation allows the user to pick out term cap volatilities in the market data and define how they should be stripped to create an optionlet volatility structure. The parameterisation allows for three separate types of input term cap volatility structures:
+The cap volatility structure parameterisation allows the user to pick out term cap volatilities or optionlet volatilities in the market data. 
+
+If term cap volatilities are given, users can define how they should be stripped to create an optionlet volatility structure. The parameterisation allows for three separate types of input term cap volatility structures:
 
 \begin{enumerate}
 \item A strip of at-the-money (ATM) cap volatilities.
@@ -9,19 +11,33 @@ The cap volatility structure parameterisation allows the user to pick out term c
 \item A combined structure containing both the ATM cap volatilities and the maturity by strike grid of cap volatilities.
 \end{enumerate}
 
-The input cap volatilities may be normal, lognormal or shifted lognormal. The structure of the market quotes is provided in Table \ref{tab:capfloor_implvol_quote}.
+If optionlet volatilities are given, no bootstrapping will be performed on the input market data. The curve or surface will be constructed using the interpolation method defined by user. The parameterisation allows for three separate types of input optionlet volatilities structures:
 
-The structure of the XML, i.e.\ the nodes that are necessary, used and ignored, and the way that the optionlet volatilities are stripped hinges on the value of the \lstinline!InterpolateOn! node. This node may be set to \lstinline!TermVolatilities! or \lstinline!OptionletVolatilities!.
+\begin{enumerate}
+\item A strip of at-the-money (ATM) optionlet volatilities.
+\item A optionlet maturity tenor by absolute optionlet strike grid of optionlet volatilities.
+\item A combined structure containing both the ATM optionlet volatilities and the maturity by strike grid of optionlet volatilities.
+\end{enumerate}
+
+The input volatilities may be normal, lognormal or shifted lognormal. The structure of the market quotes is provided in Table \ref{tab:capfloor_implvol_quote}.
+
+Whether the input market data are term cap volatilities or optionlet volatilities depends on the value of the \lstinline!InputType! node. This node may be set to \lstinline!TermVolatilities! for term cap volatilites or \lstinline!OptionletVolatilities! for optionlet volatilities.
+
+For term cap volatilities, the structure of the XML, i.e.\ the nodes that are necessary, used and ignored, and the way that the optionlet volatilities are stripped hinges on the value of the \lstinline!InterpolateOn! node. This node may be set to \lstinline!TermVolatilities! or \lstinline!OptionletVolatilities!. This node will be ignored if the inputs are optionlet volatilities.
 
 When set to \lstinline!TermVolatilities!, a column of sequential caps or floors, are created for each strike level out to the maximum cap maturity configured. In other words, if the index tenor is 6M, the first cap created would have a maturity of 1Y, the second cap 18M, the third cap 2Y and so on until we have a cap with maturity equal to the maximum maturity tenor in the configuration. The volatility for each of these caps or floors is then interpolated from the term cap volatility surface using the configured interpolation. Finally, the optionlet volatility at each cap or floor maturity, starting from the first, is derived in turn such that the column of cap or floor volatilities are matched.
 
-When set to \lstinline!OptionletVolatilities!, the optionlet volatility structure pillar dates are set to the fixing dates on the last caplet on each of the configured caps or floors i.e.\ caps or floors with the maturities in the configured \lstinline!Tenors! or \lstinline!AtmTenors!. The optionlet volatilities on these pillar dates are then solved for such that the configured cap or floor volatilities are matched. In the following sections, we describe four XML configurations separately for clarity:
+When set to \lstinline!OptionletVolatilities!, the optionlet volatility structure pillar dates are set to the fixing dates on the last caplet on each of the configured caps or floors i.e.\ caps or floors with the maturities in the configured \lstinline!Tenors! or \lstinline!AtmTenors!. The optionlet volatilities on these pillar dates are then solved for such that the configured cap or floor volatilities are matched. 
+
+In the following sections, we describe six XML configurations separately for clarity:
 
 \begin{enumerate}
-\item ATM curve with interpolation on term volatilities.
-\item ATM curve with interpolation on optionlet volatilities.
-\item Surface, possibly including an ATM column, with interpolation on term volatilities.
-\item Surface, possibly including an ATM column, with interpolation on optionlet volatilities.
+\item Term volatility ATM curve with interpolation on term volatilities.
+\item Term volatility ATM curve with interpolation on optionlet volatilities.
+\item Term volatility surface, possibly including an ATM column, with interpolation on term volatilities.
+\item Term volatility surface, possibly including an ATM column, with interpolation on optionlet volatilities.
+\item Optionlet volatility ATM curve.
+\item Optionlet volatility surface.
 \end{enumerate}
 
 Listing \ref{lst:capfloorvol_atm_configuration_term} shows the layout for parameterising an ATM cap volatility curve with interpolation on term volatilities. Nodes that have no effect for this parameterisation but that are allowed by the schema are not referenced. The meaning of each of the nodes is as follows:
@@ -78,6 +94,9 @@ As referenced above, the allowable values are \lstinline!TermVolatilities! or \l
 \item \lstinline!BootstrapConfig! [Optional]:
 This node holds configuration details for the iterative bootstrap that are described in section \ref{sec:bootstrap_config}. If omitted, this node's default values described in section \ref{sec:bootstrap_config} are used.
 
+\item \lstinline!InputType! [Optional]:
+The type of the marketdata input. Allowable values are \lstinline!TermVolatilities! or \lstinline!OptionletVolatilities!. As we are describing term cap volatilities input, this should be set to \lstinline!TermVolatilities! or omitted as shown in Listing \ref{lst:capfloorvol_atm_configuration_term}. If omitted, the default value is \lstinline!TermVolatilities!.
+
 \end{itemize}
 
 \begin{longlisting}
@@ -100,6 +119,7 @@ This node holds configuration details for the iterative bootstrap that are descr
   <SettlementDays>...</SettlementDays>
   <InterpolateOn>TermVolatilities</InterpolateOn>
   <BootstrapConfig>...</BootstrapConfig>
+  <InputType>TermVolatilities</InputType>
 </CapFloorVolatility>
 \end{minted}
 \caption{ATM cap floor configuration with interpolation on term volatilities.}
@@ -160,6 +180,9 @@ Indicates the interpolation and extrapolation, if allowed by the \lstinline!Extr
 \item \lstinline!BootstrapConfig! [Optional]:
 This node holds configuration details for the iterative bootstrap that are described in section \ref{sec:bootstrap_config}. If omitted, this node's default values described in section \ref{sec:bootstrap_config} are used.
 
+\item \lstinline!InputType! [Optional]:
+The type of the marketdata input. Allowable values are \lstinline!TermVolatilities! or \lstinline!OptionletVolatilities!. As we are describing term cap volatilities input, this should be set to \lstinline!TermVolatilities! or omitted as shown in Listing \ref{lst:capfloorvol_atm_configuration_opt}. If omitted, the default value is \lstinline!TermVolatilities!.
+
 \end{itemize}
 
 \begin{longlisting}
@@ -182,6 +205,7 @@ This node holds configuration details for the iterative bootstrap that are descr
   <InterpolateOn>OptionletVolatilities</InterpolateOn>
   <TimeInterpolation>...</TimeInterpolation>
   <BootstrapConfig>...</BootstrapConfig>
+  <InputType>TermVolatilities</InputType>
 </CapFloorVolatility>
 \end{minted}
 \caption{ATM cap floor configuration with interpolation on optionlet volatilities.}
@@ -242,6 +266,9 @@ As referenced above, the allowable values are \lstinline!TermVolatilities! or \l
 \item \lstinline!BootstrapConfig! [Optional]:
 This node holds configuration details for the iterative bootstrap that are described in section \ref{sec:bootstrap_config}. If omitted, this node's default values described in section \ref{sec:bootstrap_config} are used.
 
+\item \lstinline!InputType! [Optional]:
+The type of the marketdata input. Allowable values are \lstinline!TermVolatilities! or \lstinline!OptionletVolatilities!. As we are describing term cap volatilities input, this should be set to \lstinline!TermVolatilities! or omitted as shown in Listing \ref{lst:capfloorvol_surface_configuration_term}. If omitted, the default value is \lstinline!TermVolatilities!.
+
 \end{itemize}
 
 \begin{longlisting}
@@ -264,6 +291,7 @@ This node holds configuration details for the iterative bootstrap that are descr
   <SettlementDays>...</SettlementDays>
   <InterpolateOn>TermVolatilities</InterpolateOn>
   <BootstrapConfig>...</BootstrapConfig>
+  <InputType>TermVolatilities</InputType>
 </CapFloorVolatility>
 \end{minted}
 \caption{Cap floor surface with interpolation on term volatilities.}
@@ -330,6 +358,9 @@ If true, the quote labels that are looked up in the market data to build the sur
 \item \lstinline!BootstrapConfig! [Optional]:
 This node holds configuration details for the iterative bootstrap that are described in section \ref{sec:bootstrap_config}. If omitted, this node's default values described in section \ref{sec:bootstrap_config} are used.
 
+\item \lstinline!InputType! [Optional]:
+The type of the marketdata input. Allowable values are \lstinline!TermVolatilities! or \lstinline!OptionletVolatilities!. As we are describing term cap volatilities input, this should be set to \lstinline!TermVolatilities! or omitted as shown in Listing \ref{lst:capfloorvol_surface_configuration_opt}. If omitted, the default value is \lstinline!TermVolatilities!.
+
 \end{itemize}
 
 \begin{longlisting}
@@ -355,8 +386,174 @@ This node holds configuration details for the iterative bootstrap that are descr
   <StrikeInterpolation>...</StrikeInterpolation>
   <QuoteIncludesIndexName>...</QuoteIncludesIndexName>
   <BootstrapConfig>...</BootstrapConfig>
+  <InputType>TermVolatilities</InputType>
 </CapFloorVolatility>
 \end{minted}
 \caption{Cap floor surface with interpolation on optionlet volatilities.}
 \label{lst:capfloorvol_surface_configuration_opt}
+\end{longlisting}
+
+Listing \ref{lst:capfloorvol_optionlet_atm_configuration} shows the layout for parameterising an ATM optionlet volatility curve. Nodes that have no effect for this parameterisation but that are allowed by the schema are not referenced. The meaning of each of the nodes is as follows:
+
+\begin{itemize}
+\item
+\lstinline!CurveId!: Unique identifier for the cap floor volatility structure.
+
+\item \lstinline!CurveDescription! [Optional]:
+A description of the volatility structure. It is for information only and may be left blank.
+
+\item \lstinline!VolatilityType!:
+Indicates the cap floor volatility type. It may be \lstinline!Normal!, \lstinline!Lognormal! or \lstinline!ShiftedLognormal!. Note that this then determines which market data points are looked up in the market when creating the ATM optionlet curve. In particular, the market will be searched for market data points of the form \lstinline!CAPFLOOR/RATE_NVOL/Currency/Tenor/IndexTenor/1/1/0!, \lstinline!CAPFLOOR/RATE_LNVOL/Currency/Tenor/IndexTenor/1/1/0! or \lstinline!CAPFLOOR/RATE_SLNVOL/Currency/Tenor/IndexTenor/1/1/0! respectively.
+
+\item \lstinline!Extrapolation!:
+The allowable values are \lstinline!None!, \lstinline!Flat! and \lstinline!Linear!. If set to \lstinline!None!, extrapolation is turned off and an exception is thrown if the optionlet surface is queried outside the allowable times. Otherwise, extrapolation is allowed and the type of extrapolation is determined by the \lstinline!TimeInterpolation! node value described below.
+
+\item \lstinline!IncludeAtm!:
+A boolean value indicating if an ATM curve should be used. Allowable boolean values are given in the Table \ref{tab:boolean_allowable}. As we are describing an ATM curve here, this node should be set to \lstinline!true! as shown in \ref{lst:capfloorvol_optionlet_atm_configuration}.
+
+\item \lstinline!DayCounter!:
+The day counter used to convert from dates to times in the underlying structure. Allowable values are given in the Table \ref{tab:daycount}.
+
+\item \lstinline!Calendar!:
+The calendar used to advance dates by periods in the underlying structure. In particular, it is used in deriving the cap maturity dates from the configured cap tenors. Allowable values are given in the Table \ref{tab:calendar}.
+
+\item \lstinline!BusinessDayConvention!:
+The business day convention used to advance dates by periods in the underlying structure. In particular, it is used in deriving the cap maturity dates from the configured cap tenors. Allowable values are given in the Table \ref{tab:allow_stand_data} under \lstinline!Roll Convention!.
+
+\item \lstinline!Tenors! [Optional]:
+A comma separated list of valid tenor strings giving the cap floor maturity tenors to be used in the tenor by strike surface. A single wildcard character, \lstinline!*!, can also be used for wildcard tenor. In this case, i.e.\ configuring a surface, they must be provided.
+
+\item \lstinline!OptionalQuotes! [Optional]:
+A boolean flag to indicate whether market data quotes for all tenors are required. Optionlet volatilities do not support optional quotes, so this node should be false or omitted. Default value is false.
+
+\item \lstinline!IborIndex!:
+A valid interest rate index name giving the index underlying the cap floor quotes. Allowable values are given in the Table \ref{tab:indices}.
+
+\item \lstinline!DiscountCurve!:
+A reference to a valid discount curve specification that will be used to discount cashflows. It should be of the form \lstinline!Yield/Currency/curve_name! where \lstinline!curve_name! is the name of a yield curve defined in the yield curve configurations.
+
+\item \lstinline!AtmTenors! [Optional]:
+A comma separated list of valid tenor strings giving the cap floor maturities to be used in the ATM curve. A single wildcard character, \lstinline!*!, can also be used for wildcard tenor. In this case, all the tenors found in the market data input will be used to construct the ATM curve. If omitted, the tenors for the ATM curve must be provided in the \lstinline!Tenors! node instead. If the tenors are provided here, the \lstinline!Tenors! node may be omitted.
+
+\item \lstinline!SettlementDays! [Optional]:
+Any non-negative integer is allowed here. If omitted, it is assumed to be 0. If provided the reference date of the term volatility curve and the stripped optionlet volatility structure will be calculated by advancing the valuation date by this number of days using the configured calendar and business day convention. In general, this should be omitted or set to 0.
+
+\item \lstinline!TimeInterpolation! [Optional]:
+Indicates the interpolation and extrapolation, if allowed by the \lstinline!Extrapolation! node, in the time direction. The allowable values are \lstinline!Linear!, \lstinline!LinearFlat!, \lstinline!BackwardFlat!, \lstinline!Cubic! and \lstinline!CubicFlat!. If not set, \lstinline!LinearFlat! is assumed. Note that \lstinline!Linear! indicates linear interpolation and linear extrapolation. \lstinline!LinearFlat! indicates linear interpolation and flat extrapolation. Analogous meanings apply for \lstinline!Cubic! and \lstinline!CubicFlat!.
+
+\item \lstinline!InputType!:
+The type of the marketdata input. Allowable values are \lstinline!TermVolatilities! or \lstinline!OptionletVolatilities!. As we are describing ATM curve on optionlet volatilities, this should be set to \lstinline!OptionletVolatilities! as shown in Listing \ref{lst:capfloorvol_optionlet_atm_configuration}.
+
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CapFloorVolatility>
+  <CurveId>...</CurveId>
+  <CurveDescription>...</CurveDescription>
+  <VolatilityType>...</VolatilityType>
+  <Extrapolation>...</Extrapolation>
+  <IncludeAtm>true</IncludeAtm>
+  <DayCounter>...</DayCounter>
+  <Calendar>...</Calendar>
+  <BusinessDayConvention>...</BusinessDayConvention>
+  <Tenors>...</Tenors>
+  <OptionalQuotes>false</OptionalQuotes>
+  <IborIndex>...</IborIndex>
+  <DiscountCurve>...</DiscountCurve>
+  <AtmTenors>...</AtmTenors>
+  <SettlementDays>...</SettlementDays>
+  <TimeInterpolation>...</TimeInterpolation>
+  <BootstrapConfig>...</BootstrapConfig>
+  <InputType>OptionletVolatilities</InputType>
+</CapFloorVolatility>
+\end{minted}
+\caption{ATM cap floor configuration with optionlet volatilities input.}
+\label{lst:capfloorvol_optionlet_atm_configuration}
+\end{longlisting}
+
+Listing \ref{lst:capfloorvol_optionlet_surface_configuration} shows the layout for parameterising an optionlet tenor by absolute optionlet strike volatility surface. This parameterisation also allows for the inclusion of an optionlet ATM curve in combination with the surface. Nodes that have no effect for this parameterisation but that are allowed by the schema are not referenced. The meaning of each of the nodes is as follows:
+
+\begin{itemize}
+\item
+\lstinline!CurveId!: Unique identifier for the cap floor volatility structure.
+
+\item \lstinline!CurveDescription! [Optional]:
+A description of the volatility structure. It is for information only and may be left blank.
+
+\item \lstinline!VolatilityType!:
+Indicates the cap floor volatility type. It may be \lstinline!Normal!, \lstinline!Lognormal! or \lstinline!ShiftedLognormal!. Note that this then determines which market data points are looked up in the market when creating the ATM optionlet curve. In particular, the market will be searched for market data points of the form \lstinline!CAPFLOOR/RATE_NVOL/Currency/Tenor/IndexTenor/1/1/0!, \lstinline!CAPFLOOR/RATE_LNVOL/Currency/Tenor/IndexTenor/1/1/0! or \lstinline!CAPFLOOR/RATE_SLNVOL/Currency/Tenor/IndexTenor/1/1/0! respectively.
+
+\item \lstinline!Extrapolation!:
+The allowable values are \lstinline!None!, \lstinline!Flat! and \lstinline!Linear!. If set to \lstinline!None!, extrapolation is turned off and an exception is thrown if the optionlet surface is queried outside the allowable times. Otherwise, extrapolation is allowed and the type of extrapolation is determined by the \lstinline!TimeInterpolation! node value described below.
+
+\item \lstinline!IncludeAtm!:
+A boolean value indicating if an ATM curve should be used in combination with the surface. Allowable boolean values are given in the Table \ref{tab:boolean_allowable}. If set to \lstinline!true!, the \lstinline!AtmTenors! node needs to be populated with the ATM tenors to use. The ATM quotes that are searched for are as outlined in the previous sections above. The optionlet surface is amended by inserting the optionlet volatilities at the forecast fixings.
+
+\item \lstinline!DayCounter!:
+The day counter used to convert from dates to times in the underlying structure. Allowable values are given in the Table \ref{tab:daycount}.
+
+\item \lstinline!Calendar!:
+The calendar used to advance dates by periods in the underlying structure. In particular, it is used in deriving the cap maturity dates from the configured cap tenors. Allowable values are given in the Table \ref{tab:calendar}.
+
+\item \lstinline!BusinessDayConvention!:
+The business day convention used to advance dates by periods in the underlying structure. In particular, it is used in deriving the cap maturity dates from the configured cap tenors. Allowable values are given in the Table \ref{tab:allow_stand_data} under \lstinline!Roll Convention!.
+
+\item \lstinline!Tenors! [Optional]:
+A comma separated list of valid tenor strings giving the cap floor maturity tenors to be used in the surface. A single wildcard character, \lstinline!*!, can also be used for wildcard tenor. In this case, all the tenors found in the market data input will be used to construct the ATM curve. If omitted, the tenors for the ATM curve must be provided in the \lstinline!AtmTenors! node instead. If the tenors are provided here, the \lstinline!AtmTenors! node may be omitted.
+
+\item \lstinline!OptionalQuotes! [Optional]:
+A boolean flag to indicate whether market data quotes for all tenors are required. Optionlet volatilities do not support optional quotes, so this node should be false or omitted. Default value is false.
+
+\item \lstinline!IborIndex!:
+A valid interest rate index name giving the index underlying the cap floor quotes. Allowable values are given in the Table \ref{tab:indices}.
+
+\item \lstinline!DiscountCurve!:
+A reference to a valid discount curve specification that will be used to discount cashflows. It should be of the form \lstinline!Yield/Currency/curve_name! where \lstinline!curve_name! is the name of a yield curve defined in the yield curve configurations.
+
+\item \lstinline!AtmTenors! [Optional]:
+A comma separated list of valid tenor strings giving the cap floor maturities to be used in the ATM curve. A single wildcard character, \lstinline!*!, can also be used for wildcard tenor. It must be provided when \lstinline!IncludeAtm! is \lstinline!true! and omitted when \lstinline!IncludeAtm! is \lstinline!false!.
+
+\item \lstinline!SettlementDays! [Optional]:
+Any non-negative integer is allowed here. If omitted, it is assumed to be 0. If provided the reference date of the term volatility curve and the stripped optionlet volatility structure will be calculated by advancing the valuation date by this number of days using the configured calendar and business day convention. In general, this should be omitted or set to 0.
+
+\item \lstinline!TimeInterpolation! [Optional]:
+Indicates the interpolation and extrapolation, if allowed by the \lstinline!Extrapolation! node, in the time direction. The allowable values are \lstinline!Linear!, \lstinline!LinearFlat!, \lstinline!BackwardFlat!, \lstinline!Cubic! and \lstinline!CubicFlat!. If not set, \lstinline!LinearFlat! is assumed. Note that \lstinline!Linear! indicates linear interpolation and linear extrapolation. \lstinline!LinearFlat! indicates linear interpolation and flat extrapolation. Analogous meanings apply for \lstinline!Cubic! and \lstinline!CubicFlat!.
+
+\item \lstinline!StrikeInterpolation! [Optional]:
+Indicates the interpolation and extrapolation, if allowed by the \lstinline!Extrapolation! node, in the strike direction. Again, as \lstinline!InterpolateOn! is set to \lstinline!OptionletVolatilities! here, the interpolation is used to interpolate the optionlet volatilities in the strike direction. The allowable values are \lstinline!Linear!, \lstinline!LinearFlat!, \lstinline!Cubic! and \lstinline!CubicFlat!. If not set, \lstinline!LinearFlat! is assumed.
+
+\item \lstinline!QuoteIncludesIndexName! [Optional]:
+If true, the quote labels that are looked up in the market data to build the surface include the index name as e.g. in \lstinline!CAPFLOOR/RATE_NVOL/USD/USD-LIBOR-3M/1Y/3M/0/0/0.01!. If false, the index name is not include as in \lstinline!CAPFLOOR/RATE_NVOL/USD/1Y/3M/0/0/0.01!. If the flag is not given, it defaults to false. Including the index name in the market quotes allows to build cap surfaces on different underlying indices with the same tenor. The flag also affects shift quotes as e.g. \lstinline!CAPFLOOR/SHIFT/USD/USD-LIBOR-3M/5Y! (index included in quote) vs. \lstinline!CAPFLOOR/SHIFT/USD/5Y! (index not included in quote).
+
+\item \lstinline!InputType!:
+The type of the marketdata input. Allowable values are \lstinline!TermVolatilities! or \lstinline!OptionletVolatilities!. As we are describing ATM curve on optionlet volatilities, this should be set to \lstinline!OptionletVolatilities! as shown in Listing \ref{lst:capfloorvol_optionlet_surface_configuration}.
+
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CapFloorVolatility>
+  <CurveId>...</CurveId>
+  <CurveDescription>...</CurveDescription>
+  <VolatilityType>...</VolatilityType>
+  <Extrapolation>...</Extrapolation>
+  <IncludeAtm>...</IncludeAtm>
+  <DayCounter>...</DayCounter>
+  <Calendar>...</Calendar>
+  <BusinessDayConvention>...</BusinessDayConvention>
+  <Tenors>...</Tenors>
+  <OptionalQuotes>false</OptionalQuotes>
+  <IborIndex>...</IborIndex>
+  <DiscountCurve>...</DiscountCurve>
+  <AtmTenors>...</AtmTenors>
+  <SettlementDays>...</SettlementDays>
+  <TimeInterpolation>...</TimeInterpolation>
+  <StrikeInterpolation>...</StrikeInterpolation>
+  <QuoteIncludesIndexName>...</QuoteIncludesIndexName>
+  <InputType>OptionletVolatilities</InputType>
+</CapFloorVolatility>
+\end{minted}
+\caption{Cap floor surface with optionlet volatilities input.}
+\label{lst:capfloorvol_optionlet_surface_configuration}
 \end{longlisting}

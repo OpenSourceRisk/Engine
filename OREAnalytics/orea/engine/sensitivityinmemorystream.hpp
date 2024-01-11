@@ -35,7 +35,8 @@ public:
     //! Default constructor
     SensitivityInMemoryStream();
     //! Constructor from set of sensitivity records
-    SensitivityInMemoryStream(const std::set<SensitivityRecord>& records);
+    template<class Iter>
+    SensitivityInMemoryStream(Iter begin, Iter end);
     //! Returns the next SensitivityRecord in the stream
     SensitivityRecord next() override;
     //! Resets the stream so that SensitivityRecords can be streamed again
@@ -49,10 +50,13 @@ public:
 
 private:
     //! Container of records
-    std::set<SensitivityRecord> records_;
+    std::vector<SensitivityRecord> records_;
     //! Iterator to current element
-    std::set<SensitivityRecord>::iterator itCurrent_;
+    std::vector<SensitivityRecord>::iterator itCurrent_;
 };
+
+template <class Iter> 
+SensitivityInMemoryStream::SensitivityInMemoryStream(Iter begin, Iter end) : records_(begin, end) {}
 
 } // namespace analytics
 } // namespace ore

@@ -361,17 +361,19 @@ void CommodityCurve::buildCrossCurrencyPriceCurve(
 }
 
 void CommodityCurve::buildBasisPriceCurve(const Date& asof, const CommodityCurveConfig& config,
-                                          const Handle<PriceTermStructure>& basePts,
-                                          const Loader& loader) {
+                                          const Handle<PriceTermStructure>& basePts, const Loader& loader) {
 
     LOG("CommodityCurve: start building commodity basis curve.");
 
+    QL_REQUIRE(!basePts.empty() && basePts.currentLink() != nullptr,
+               "Internal error: Can not build commodityBasisCurve '" << config.curveID() << "'without empty baseCurve");
+
     boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
-    
+
     // We need to have commodity future conventions for both the base curve and the basis curve
     QL_REQUIRE(conventions->has(config.conventionsId()), "Commodity conventions " << config.conventionsId()
-                                                                                 << " requested by commodity config "
-                                                                                 << config.curveID() << " not found");
+                                                                                  << " requested by commodity config "
+                                                                                  << config.curveID() << " not found");
     auto basisConvention =
         boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions->get(config.conventionsId()));
     QL_REQUIRE(basisConvention,
@@ -388,7 +390,8 @@ void CommodityCurve::buildBasisPriceCurve(const Date& asof, const CommodityCurve
     auto baseFec = boost::make_shared<ConventionsBasedFutureExpiry>(*baseConvention);
 
     // Construct the commodity index.
-    auto index = parseCommodityIndex(baseConvention->id(), false, basePts);
+    auto baseIndex = parseCommodityIndex(baseConvention->id(), false, basePts);
+    
 
     // Sort the configured quotes on expiry dates
     // Ignore tenor based quotes i.e. we expect an explicit expiry date and log a warning if the expiry date does not
@@ -416,23 +419,22 @@ void CommodityCurve::buildBasisPriceCurve(const Date& asof, const CommodityCurve
         // We are building a curve that will be used to return an average price.
         if (!baseConvention->isAveraging() && config.averageBase()) {
             DLOG("Creating a CommodityAverageBasisPriceCurve.");
-            populateCurve<CommodityAverageBasisPriceCurve>(asof, basisData, basisFec, index,
-                basePts, baseFec, config.addBasis());
+            populateCurve<CommodityAverageBasisPriceCurve>(asof, basisData, basisFec, baseIndex, baseFec,
+                                                           config.addBasis(), config.priceAsHistFixing());
         } else {
-            // Either 1) base convention is not averaging and config.averageBase() is false or 2) the base convention 
+            // Either 1) base convention is not averaging and config.averageBase() is false or 2) the base convention
             // is averaging. Either way, we build a CommodityBasisPriceCurve.
             DLOG("Creating a CommodityBasisPriceCurve for an average price curve.");
-            populateCurve<CommodityBasisPriceCurve>(asof, basisData, basisFec, index, basePts,
-                baseFec, config.addBasis(), config.monthOffset());
+            populateCurve<CommodityBasisPriceCurve>(asof, basisData, basisFec, baseIndex, baseFec,
+                                                    config.addBasis(), config.monthOffset(), config.priceAsHistFixing());
         }
     } else {
         // We are building a curve that will be used to return a price on a single date.
-        QL_REQUIRE(!baseConvention->isAveraging(), "A commodity basis curve with non-averaging" <<
-            " basis and averaging base is not valid.");
+        QL_REQUIRE(!baseConvention->isAveraging(), "A commodity basis curve with non-averaging"
+                                                       << " basis and averaging base is not valid.");
 
-        DLOG("Creating a CommodityBasisPriceCurve.");
-        populateCurve<CommodityBasisPriceCurve>(asof, basisData, basisFec, index, basePts,
-            baseFec, config.addBasis(), config.monthOffset());
+        populateCurve<CommodityBasisPriceCurve>(asof, basisData, basisFec, baseIndex, baseFec, config.addBasis(),
+                                                config.monthOffset(), config.priceAsHistFixing());
     }
 
     LOG("CommodityCurve: finished building commodity basis curve.");

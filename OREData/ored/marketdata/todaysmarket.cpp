@@ -62,7 +62,7 @@ using namespace std;
 using namespace QuantLib;
 
 using QuantExt::CommodityIndex;
-using QuantExt::EquityIndex;
+using QuantExt::EquityIndex2;
 using QuantExt::FxIndex;
 using QuantExt::PriceTermStructure;
 using QuantExt::PriceTermStructureAdapter;
@@ -244,7 +244,7 @@ void TodaysMarket::initialise(const Date& asof) {
 
     if (!buildErrors.empty()) {
         for (auto const& error : buildErrors) {
-            ALOG(StructuredCurveErrorMessage(error.first, "Failed to Build Curve", error.second));
+            StructuredCurveErrorMessage(error.first, "Failed to Build Curve", error.second).log();
         }
         if (!continueOnError_) {
             string errStr;
@@ -653,7 +653,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             yieldCurves_[make_tuple(configuration, YieldCurveType::EquityDividend, node.name)] =
                 itr->second->equityIndex()->equityDividendCurve();
             equitySpots_[make_pair(configuration, node.name)] = itr->second->equityIndex()->equitySpot();
-            equityCurves_[make_pair(configuration, node.name)] = Handle<EquityIndex>(itr->second->equityIndex());
+            equityCurves_[make_pair(configuration, node.name)] = Handle<EquityIndex2>(itr->second->equityIndex());
             IndexNameTranslator::instance().add(itr->second->equityIndex()->name(),
                                                 "EQ-" + itr->second->equityIndex()->name());
             break;
@@ -675,7 +675,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 // The EQVol builder should rather get the index from the requiredEquityCurves_.
                 // In addition we should maybe specify the eqIndex name in the vol curve config explicitly
                 // instead of assuming that it has the same curve id as the vol curve to be build?
-                Handle<EquityIndex> eqIndex = MarketImpl::equityCurve(eqvolspec->curveConfigID(), configuration);
+                Handle<EquityIndex2> eqIndex = MarketImpl::equityCurve(eqvolspec->curveConfigID(), configuration);
                 boost::shared_ptr<EquityVolCurve> eqVolCurve = boost::make_shared<EquityVolCurve>(
                     asof_, *eqvolspec, *loader_, *curveConfigs_, eqIndex, requiredEquityCurves_,
                     requiredEquityVolCurves_, requiredFxVolCurves_, requiredCorrelationCurves_, this,
@@ -825,14 +825,17 @@ void TodaysMarket::require(const MarketObject o, const string& name, const strin
     auto tmp = dependencies_.find(configuration);
     if (tmp == dependencies_.end()) {
         if (configuration != Market::defaultConfiguration) {
-            ALOG(StructuredCurveErrorMessage(ore::data::to_string(o) + "(" + name + ")", "Failed to Build Curve",
-                                             "Configuration '" + configuration +
-                                                 "' not known, retry with default configuration."));
+            StructuredCurveWarningMessage(
+                ore::data::to_string(o) + "(" + name + ")", "Unknown market configuration.",
+                "Configuration '" + configuration +
+                    "' not known - check why this is used. Will retry with default configuration.")
+                .log();
             require(o, name, Market::defaultConfiguration);
             return;
         } else {
-            ALOG(StructuredCurveErrorMessage(ore::data::to_string(o) + "(" + name + ")", "Failed to Build Curve",
-                                             "Configuration 'default' not known, this is unexpected. Do nothing."));
+            StructuredCurveErrorMessage(ore::data::to_string(o) + "(" + name + ")", "Failed to Build Curve",
+                                        "Configuration 'default' not known, this is unexpected. Do nothing.")
+                .log();
             return;
         }
     }
@@ -929,7 +932,7 @@ void TodaysMarket::require(const MarketObject o, const string& name, const strin
 
     if (!buildErrors.empty()) {
         for (auto const& error : buildErrors) {
-            ALOG(StructuredCurveErrorMessage(error.first, "Failed to Build Curve", error.second));
+            StructuredCurveErrorMessage(error.first, "Failed to Build Curve", error.second).log();
         }
         if (!continueOnError_) {
             string errStr;

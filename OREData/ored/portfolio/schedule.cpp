@@ -27,6 +27,51 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
+namespace {
+std::vector<Date> everyWeekDayDates(const Date& startDate, const Date& endDate, const Date& firstDate, const QuantLib::Weekday weekday) {
+    std::vector<Date> result;
+    if (firstDate != Date())
+        result.push_back(firstDate);
+    Date d = startDate;
+    while (d <= endDate && (d.weekday() != weekday || d < firstDate)) {
+        ++d;
+    }
+    if (d.weekday() == weekday && (result.empty() || result.back() != d))
+        result.push_back(d);
+    while (d + 7 <= endDate) {
+        d += 7;
+        result.push_back(d);
+    }
+    return result;
+}
+
+std::vector<Date> weeklyDates(const Date& startDate, const Date& endDate, const Date& firstDate,
+                                       bool includeWeekend = false) {
+    QuantLib::Weekday weekday = includeWeekend ? QuantLib::Sunday : QuantLib::Friday;
+    // We want the first period to span from
+    //  [startDate, first Friday/SunDay following startDate]
+    // or
+    //  [firstDate, first Friday/SunDay following firstDate]
+    Date effectiveFirstDate = firstDate == Date() ? startDate : firstDate;
+    auto dates = everyWeekDayDates(startDate, endDate, effectiveFirstDate, weekday);
+    // Handle broken period
+    if (!dates.empty()) {
+        // If startDate/first Date falls on end of week,
+        // the first period is consist of only one day, so first periods should be
+        // [startDate, startDate], [startDate+1, next end of the week], ...
+        if (effectiveFirstDate.weekday() == weekday) {
+            dates.insert(dates.begin(), effectiveFirstDate);
+        }
+        // add the enddate if the enddate doesnt fall on friday, last broken period
+        if (dates.back() < endDate) {
+            dates.push_back(endDate);
+        }
+    }
+    return dates;
+}
+
+} // namespace
+
 void ScheduleRules::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Rules");
     startDate_ = XMLUtils::getChildValue(node, "StartDate");
@@ -48,6 +93,8 @@ void ScheduleRules::fromXML(XMLNode* node) {
     endOfMonth_ = XMLUtils::getChildValue(node, "EndOfMonth");
     firstDate_ = XMLUtils::getChildValue(node, "FirstDate");
     lastDate_ = XMLUtils::getChildValue(node, "LastDate");
+    removeFirstDate_ = XMLUtils::getChildValueAsBool(node, "RemoveFirstDate", false, false);
+    removeLastDate_ = XMLUtils::getChildValueAsBool(node, "RemoveLastDate", false, false);
 }
 
 XMLNode* ScheduleRules::toXML(XMLDocument& doc) {
@@ -63,6 +110,10 @@ XMLNode* ScheduleRules::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, rules, "EndOfMonth", endOfMonth_);
     XMLUtils::addChild(doc, rules, "FirstDate", firstDate_);
     XMLUtils::addChild(doc, rules, "LastDate", lastDate_);
+    if(removeFirstDate_)
+        XMLUtils::addChild(doc,rules,"RemoveFirstDate", removeFirstDate_);
+    if(removeLastDate_)
+        XMLUtils::addChild(doc,rules,"RemoveLastDate", removeLastDate_);
     return rules;
 }
 
@@ -93,19 +144,23 @@ void ScheduleDerived::fromXML(XMLNode* node) {
     shift_ = XMLUtils::getChildValue(node, "Shift", false);
     calendar_ = XMLUtils::getChildValue(node, "Calendar", false);
     convention_ = XMLUtils::getChildValue(node, "Convention", false);
+    removeFirstDate_ = XMLUtils::getChildValueAsBool(node, "RemoveFirstDate", false, false);
+    removeLastDate_ = XMLUtils::getChildValueAsBool(node, "RemoveLastDate", false, false);
 }
 
 XMLNode* ScheduleDerived::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("Derived");
     XMLUtils::addChild(doc, node, "BaseSchedule", baseSchedule_);
-
     if (!shift_.empty())
         XMLUtils::addChild(doc, node, "Shift", shift_);
     if (!calendar_.empty())
         XMLUtils::addChild(doc, node, "Calendar", calendar_);
     if (!convention_.empty())
         XMLUtils::addChild(doc, node, "Convention", convention_);
-
+    if(removeFirstDate_)
+        XMLUtils::addChild(doc, node, "RemoveFirstDate", removeFirstDate_);
+    if(removeLastDate_)
+        XMLUtils::addChild(doc, node, "RemoveLastDate", removeLastDate_);
     return node;
 }
 
@@ -258,7 +313,8 @@ Schedule makeSchedule(const ScheduleDerived& data, const Schedule& baseSchedule)
         derivedDates.push_back(derivedDate);
     }
     return Schedule(vector<Date>(derivedDates.begin(), derivedDates.end()), calendar, convention, boost::none,
-                    baseSchedule.tenor(), boost::none, baseSchedule.endOfMonth());
+                    baseSchedule.tenor(), boost::none, baseSchedule.endOfMonth(), std::vector<bool>(0), 
+                    data.removeFirstDate(), data.removeLastDate());
 }
 
 Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacement) {
@@ -296,10 +352,32 @@ Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacem
         bdcEnd = parseBusinessDayConvention(data.termConvention());
     else
         bdcEnd = bdc; // except here
-    if (!data.rule().empty())
-        rule = parseDateGenerationRule(data.rule());
+
     if (!data.endOfMonth().empty())
         endOfMonth = parseBool(data.endOfMonth());
+
+    if (!data.rule().empty()) {
+
+        // handle special rules outside the QuantLib date generation rules
+
+        if (data.rule() == "EveryThursday") {
+            auto dates = everyWeekDayDates(startDate, endDate, firstDate, QuantLib::Thursday);
+            for (auto& d : dates)
+                d = calendar.adjust(d, bdc);
+            return Schedule(dates, calendar, bdc, bdcEnd, tenor, rule, endOfMonth);
+        } else if (data.rule() == "BusinessWeek" || data.rule() == "CalendarWeek") {
+            auto dates = weeklyDates(startDate, endDate, firstDate, data.rule() == "CalendarWeek");
+            for (auto& d : dates)
+                d = calendar.adjust(d, bdc);
+            return Schedule(dates, calendar, bdc, bdcEnd, tenor, rule, endOfMonth, std::vector<bool>(0), data.removeFirstDate(), data.removeLastDate());
+        }
+
+        // parse rule for further processing below
+
+        rule = parseDateGenerationRule(data.rule());
+    }
+
+    // handling of date generation rules that require special adjustments
 
     if ((rule == DateGeneration::CDS || rule == DateGeneration::CDS2015) &&
         (firstDate != Null<Date>() || lastDate != Null<Date>())) {
@@ -315,10 +393,14 @@ Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacem
             dates.front() = firstDate;
         if (lastDate != Date())
             dates.back() = lastDate;
-        return Schedule(dates, calendar, bdc, bdcEnd, tenor, rule, endOfMonth);
-    } else {
-        return Schedule(startDate, endDate, tenor, calendar, bdc, bdcEnd, rule, endOfMonth, firstDate, lastDate);
+        return Schedule(dates, calendar, bdc, bdcEnd, tenor, rule, endOfMonth, std::vector<bool>(0),
+                        data.removeFirstDate(), data.removeLastDate());
     }
+
+    // default handling (QuantLib scheduler)
+
+    return Schedule(startDate, endDate, tenor, calendar, bdc, bdcEnd, rule, endOfMonth, firstDate, lastDate,
+                    data.removeFirstDate(), data.removeLastDate());
 }
 
 namespace {
@@ -340,6 +422,8 @@ Calendar parseCalendarTemp(const string& s) { return parseCalendar(s); }
 } // namespace
 
 Schedule makeSchedule(const ScheduleData& data, const Date& openEndDateReplacement, const map<string, QuantLib::Schedule>& baseSchedules) {
+    if(!data.hasData())
+        return Schedule();
     // only the last rule-based schedule is allowed to have an open end date, check this
     for (Size i = 1; i < data.rules().size(); ++i) {
         QL_REQUIRE(!data.rules()[i - 1].endDate().empty(),

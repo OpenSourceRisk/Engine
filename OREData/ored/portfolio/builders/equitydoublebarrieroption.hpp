@@ -26,7 +26,7 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <ql/experimental/barrieroption/analyticdoublebarrierengine.hpp>
+#include <ql/pricingengines//barrier/analyticdoublebarrierengine.hpp>
 #include <ql/pricingengines/barrier/fdblackscholesbarrierengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
 #include <qle/termstructures/blackmonotonevarvoltermstructure.hpp>

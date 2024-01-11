@@ -137,6 +137,23 @@ Real ReturnConfiguration::applyReturn(const RiskFactorKey& key, const Real baseV
     return value;
 }
 
+const std::map<RiskFactorKey::KeyType, ReturnConfiguration::ReturnType> ReturnConfiguration::returnTypes() const {
+    return returnType_;
+}
+
+std::ostream& operator<<(std::ostream& out, const ReturnConfiguration::ReturnType t) {
+    switch (t) {
+    case ReturnConfiguration::ReturnType::Absolute:
+        return out << "Absolute";
+    case ReturnConfiguration::ReturnType::Relative:
+        return out << "Relative";
+    case ReturnConfiguration::ReturnType::Log:
+        return out << "Log";
+    default:
+        return out << "Unknown ReturnType (" << static_cast<int>(t) << ")";
+    }
+}
+
 void ReturnConfiguration::check(const RiskFactorKey& key) const {
 
     auto keyType = key.keytype;
@@ -147,12 +164,13 @@ void ReturnConfiguration::check(const RiskFactorKey& key) const {
 
 HistoricalScenarioGenerator::HistoricalScenarioGenerator(
     const boost::shared_ptr<HistoricalScenarioLoader>& historicalScenarioLoader,
-    const boost::shared_ptr<ScenarioFactory>& scenarioFactory, const QuantLib::Calendar& cal, const Size mporDays,
+    const boost::shared_ptr<ScenarioFactory>& scenarioFactory, const QuantLib::Calendar& cal,
+    const boost::shared_ptr<ore::data::AdjustmentFactors>& adjFactors, const Size mporDays,
     const bool overlapping, const ReturnConfiguration& returnConfiguration,
-    const boost::shared_ptr<ore::data::AdjustmentFactors>& adjFactors, const std::string& labelPrefix)
-    : i_(0), historicalScenarioLoader_(historicalScenarioLoader), scenarioFactory_(scenarioFactory), cal_(cal),
-      mporDays_(mporDays), overlapping_(overlapping), returnConfiguration_(returnConfiguration),
-      adjFactors_(adjFactors), labelPrefix_(labelPrefix) {
+    const std::string& labelPrefix)
+    : i_(0), historicalScenarioLoader_(historicalScenarioLoader), scenarioFactory_(scenarioFactory), 
+      cal_(cal), mporDays_(mporDays), adjFactors_(adjFactors), overlapping_(overlapping),
+      returnConfiguration_(returnConfiguration), labelPrefix_(labelPrefix) {
 
     QL_REQUIRE(mporDays > 0, "Invalid mpor days of 0");
 
@@ -222,7 +240,9 @@ boost::shared_ptr<Scenario> HistoricalScenarioGenerator::next(const Date& d) {
     boost::shared_ptr<Scenario> scen = scenarioFactory_->buildScenario(d, "", 1.0);
 
     // loop over all keys
-    for (auto key : baseScenario_->keys()) {
+    calculationDetails_.resize(baseScenario_->keys().size());
+    Size calcDetailsCounter = 0;
+    for (auto const& key : baseScenario_->keys()) {
         Real base = baseScenario_->get(key);
         Real v1 = 1.0, v2 = 1.0;
         if (!s1->has(key) || !s2->has(key)) {
@@ -237,7 +257,8 @@ boost::shared_ptr<Scenario> HistoricalScenarioGenerator::next(const Date& d) {
         // Calculate the returned value
         Real returnVal = returnConfiguration_.returnValue(key, v1, v2, s1->asof(), s2->asof());
         // Adjust return for any scaling
-        returnVal = returnVal * scaling(key, returnVal);
+        Real scaling = this->scaling(key, returnVal);
+        returnVal = returnVal * scaling;
         // Calculate the shifted value
         value = returnConfiguration_.applyReturn(key, base, returnVal);
         if (std::isinf(value)) {
@@ -245,6 +266,22 @@ boost::shared_ptr<Scenario> HistoricalScenarioGenerator::next(const Date& d) {
         }
         // Add it
         scen->add(key, value);
+        // Populate calculation details
+        calculationDetails_[calcDetailsCounter].scenarioDate1 = s1->asof();
+        calculationDetails_[calcDetailsCounter].scenarioDate2 = s2->asof();
+        calculationDetails_[calcDetailsCounter].key = key;
+        calculationDetails_[calcDetailsCounter].baseValue = base;
+        calculationDetails_[calcDetailsCounter].adjustmentFactor1 =
+            adjFactors_ ? adjFactors_->getFactor(key.name, s1->asof()) : 1.0;
+        calculationDetails_[calcDetailsCounter].adjustmentFactor2 =
+            adjFactors_ ? adjFactors_->getFactor(key.name, s2->asof()) : 1.0;
+        calculationDetails_[calcDetailsCounter].scenarioValue1 = v1;
+        calculationDetails_[calcDetailsCounter].scenarioValue2 = v2;
+        calculationDetails_[calcDetailsCounter].returnType = returnConfiguration_.returnTypes().at(key.keytype);
+        calculationDetails_[calcDetailsCounter].scaling = scaling;
+        calculationDetails_[calcDetailsCounter].returnValue = returnVal;
+        calculationDetails_[calcDetailsCounter].scenarioValue = value;
+        ++calcDetailsCounter;
     }
 
     // Label the scenario
@@ -255,6 +292,11 @@ boost::shared_ptr<Scenario> HistoricalScenarioGenerator::next(const Date& d) {
     // return it.
     ++i_;
     return scen;
+}
+
+const std::vector<HistoricalScenarioGenerator::HistoricalScenarioCalculationDetails>&
+HistoricalScenarioGenerator::lastHistoricalScenarioCalculationDetails() const {
+    return calculationDetails_;
 }
 
 Size HistoricalScenarioGenerator::numScenarios() const {
@@ -332,9 +374,9 @@ void HistoricalScenarioGeneratorRandom::reset() {
 }
 
 boost::shared_ptr<Scenario> HistoricalScenarioGeneratorTransform::next(const Date& d) {
-    boost::shared_ptr<Scenario> scenario = hsg_->next(d)->clone();
-    const vector<RiskFactorKey>& keys = hsg_->baseScenario()->keys();
-    Date asof = hsg_->baseScenario()->asof();
+    boost::shared_ptr<Scenario> scenario = HistoricalScenarioGenerator::next(d)->clone();
+    const vector<RiskFactorKey>& keys = baseScenario()->keys();
+    Date asof = baseScenario()->asof();
     vector<Period> tenors;
     Date endDate;
     DayCounter dc;
@@ -343,8 +385,6 @@ boost::shared_ptr<Scenario> HistoricalScenarioGeneratorTransform::next(const Dat
         if ((keys[k].keytype == RiskFactorKey::KeyType::DiscountCurve) ||
             (keys[k].keytype == RiskFactorKey::KeyType::IndexCurve) ||
             (keys[k].keytype == RiskFactorKey::KeyType::SurvivalProbability)) {
-            Real df = scenario->get(keys[k]);
-            Real compound = 1 / df;
             if ((keys[k].keytype == RiskFactorKey::KeyType::DiscountCurve)) {
                 dc = simMarket_->discountCurve(keys[k].name)->dayCounter();
                 tenors = simMarketConfig_->yieldCurveTenors(keys[k].name);
@@ -355,27 +395,51 @@ boost::shared_ptr<Scenario> HistoricalScenarioGeneratorTransform::next(const Dat
                 dc = simMarket_->defaultCurve(keys[k].name)->curve()->dayCounter();
                 tenors = simMarketConfig_->defaultTenors(keys[k].name);
             }
+
             endDate = asof + tenors[keys[k].index];
-            Real zero = InterestRate::impliedRate(compound, dc, QuantLib::Compounding::Continuous,
-                                                  QuantLib::Frequency::Annual, asof, endDate)
-                            .rate();
+
+            auto toZero = [&dc, &asof, &endDate](double compound) {
+                return InterestRate::impliedRate(compound, dc, QuantLib::Compounding::Continuous,
+                                                 QuantLib::Frequency::Annual, asof, endDate)
+                    .rate();
+            };
+
+            Real zero = toZero(1.0 / scenario->get(keys[k]));
             scenario->add(keys[k], zero);
+            // update calc details
+            calculationDetails_[k].baseValue = toZero(1.0 / calculationDetails_[k].baseValue);
+            calculationDetails_[k].scenarioValue1 = toZero(1.0 / calculationDetails_[k].scenarioValue1);
+            calculationDetails_[k].scenarioValue2 = toZero(1.0 / calculationDetails_[k].scenarioValue2);
+            calculationDetails_[k].returnType = ReturnConfiguration::ReturnType::Absolute;
+            calculationDetails_[k].returnValue =
+                calculationDetails_[k].scaling *
+                (calculationDetails_[k].scenarioValue2 - calculationDetails_[k].scenarioValue1);
+            calculationDetails_[k].scenarioValue = toZero(1.0 / calculationDetails_[k].scenarioValue);
         }
     }
     return scenario;
 }
 
-void HistoricalScenarioGeneratorTransform::reset() { hsg_->reset(); }
-
 HistoricalScenarioGeneratorWithFilteredDates::HistoricalScenarioGeneratorWithFilteredDates(
     const std::vector<TimePeriod>& filter, const boost::shared_ptr<HistoricalScenarioGenerator>& gen)
-    : HistoricalScenarioGenerator(gen->scenarioLoader(), gen->scenarioFactory(), gen->cal(), gen->mporDays(),
-        gen->overlapping(), gen->returnConfiguration(), gen->adjFactors(), gen->labelPrefix()),
+    : HistoricalScenarioGenerator(gen->scenarioLoader(), gen->scenarioFactory(), gen->cal(), gen->adjFactors(),
+                                  gen->mporDays(), gen->overlapping(), gen->returnConfiguration(), gen->labelPrefix()),
       gen_(gen), i_orig_(0) {
 
     // set base scenario
 
     baseScenario_ = gen->baseScenario();
+
+    for (auto const& f : filter) {
+        // Check that backtest and benchmark periods are covered by the historical scenario generator
+        Date minDate = *std::min_element(f.startDates().begin(), f.startDates().end());
+        Date maxDate = *std::max_element(f.endDates().begin(), f.endDates().end());
+         
+        QL_REQUIRE(startDates_.front() <= minDate && maxDate <= endDates_.back(),
+             "The backtesting period " << f << " is not covered by the historical scenario generator: Required dates = ["
+             << ore::data::to_string(minDate) << "," << ore::data::to_string(maxDate)
+             << "], Covered dates = [" << startDates_.front() << "," << endDates_.back() << "]");
+    }
 
     // filter start / end dates on relevant scenarios
 

@@ -365,6 +365,7 @@ void CalendarParser::reset() {
         {"ZMW", AmendedCalendar(WeekendsOnly(), "ZMW")},
 
         // ISO 10383 MIC Exchange
+        {"XASX", Australia(Australia::ASX)},
         {"BVMF", Brazil(Brazil::Exchange)},
         {"XTSE", Canada(Canada::TSX)},
         {"XSHG", China(China::SSE)},
@@ -390,6 +391,7 @@ void CalendarParser::reset() {
         {"London stock exchange", UnitedKingdom(UnitedKingdom::Exchange)},
         {"LNB", UnitedKingdom()},
         {"New York stock exchange", UnitedStates(UnitedStates::NYSE)},
+        {"SOFR fixing calendar", UnitedStates(UnitedStates::SOFR)},
         {"NGL", Netherlands()},
         {"NYB", UnitedStates(UnitedStates::Settlement)},
         {"SA", SouthAfrica()}, // TODO: consider remove it, not ISO & confuses with Saudi Arabia

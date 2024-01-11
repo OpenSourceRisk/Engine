@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(test_zero_p) {
     Handle<DefaultProbabilityTermStructure> creditCurve(
         boost::make_shared<FlatHazardRate>(0, NullCalendar(), 0.0050, Actual365Fixed()));
 
-    auto equity = boost::make_shared<EquityIndex>("myEqIndex", NullCalendar(), EURCurrency(),
+    auto equity = boost::make_shared<EquityIndex2>("myEqIndex", NullCalendar(), EURCurrency(),
                                                   Handle<Quote>(boost::make_shared<SimpleQuote>(S0)), rate, dividend);
 
     std::vector<Real> strikes;
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(test_nonzero_p) {
     Handle<DefaultProbabilityTermStructure> creditCurve(
         boost::make_shared<FlatHazardRate>(0, NullCalendar(), 0.0050, Actual365Fixed()));
 
-    auto equity = boost::make_shared<EquityIndex>("myEqIndex", NullCalendar(), EURCurrency(),
+    auto equity = boost::make_shared<EquityIndex2>("myEqIndex", NullCalendar(), EURCurrency(),
                                                   Handle<Quote>(boost::make_shared<SimpleQuote>(S0)), rate, dividend);
 
     std::vector<Real> strikes;

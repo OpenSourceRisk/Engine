@@ -190,7 +190,7 @@ CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatility
         dayCounter_ = parseDayCounter(config.dayCounter());
 
         // loop over the volatility configs attempting to build in the order provided
-        DLOG("CommodityVolCurve: Attempting to build equity vol curve from volatilityConfig, "
+        DLOG("CommodityVolCurve: Attempting to build commodity vol curve from volatilityConfig, "
              << config.volatilityConfig().size() << " volatility configs provided.");
         for (auto vc : config.volatilityConfig()) {
             try {
@@ -266,10 +266,12 @@ CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatility
             if (buildCalibrationInfo)
                     this->buildVolCalibrationInfo(asof, vc, curveConfigs, config);
             } catch (std::exception& e) {
-                DLOG("CommodityVolCurve: equity vol curve building failed :" << e.what());
+                DLOG("CommodityVolCurve: commodity vol curve building failed :" << e.what());
             } catch (...) {
-                DLOG("CommodityVolCurve: equity vol curve building failed: unknown error");
+                DLOG("CommodityVolCurve: commodity vol curve building failed: unknown error");
             }
+            if (volatility_)
+                break;
         }
         QL_REQUIRE(volatility_ , "CommodityVolCurve: Failed to build commodity volatility structure from "
                     << config.volatilityConfig().size() << " volatility configs provided.");
@@ -339,7 +341,7 @@ void CommodityVolCurve::buildVolatility(const QuantLib::Date& asof, const Commod
             if (!q)
                 continue;
             QL_REQUIRE(q->quoteType() == vcc.quoteType(),
-                "EquityOptionQuote type '" << q->quoteType() << "' <> VolatilityCurveConfig quote type '" << vcc.quoteType() << "'");
+                "CommodityOptionQuote type '" << q->quoteType() << "' <> VolatilityCurveConfig quote type '" << vcc.quoteType() << "'");
 
             TLOG("The quote " << q->name() << " matched the pattern");
 
@@ -818,7 +820,8 @@ void CommodityVolCurve::buildVolatilityExplicit(const Date& asof, CommodityVolat
     }
 
     // set max expiry date (used in buildCalibrationInfo())
-    maxExpiry_ = *max_element(expiryDates.begin(),expiryDates.end());
+    if (!expiryDates.empty())
+        maxExpiry_ = *max_element(expiryDates.begin(), expiryDates.end());
 
     // Trace log the surface
     TLOG("Explicit strike surface grid points:");
@@ -1048,7 +1051,8 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         copy(row.value().second.begin(), row.value().second.end(), vols.row_begin(row.index()));
     }
 
-    maxExpiry_ = *std::max_element(expiryDates.begin(),expiryDates.end());
+    if (!expiryDates.empty())
+        maxExpiry_ = *std::max_element(expiryDates.begin(), expiryDates.end());
 
     // Need to multiply each put delta value by -1 before passing it to the BlackVolatilitySurfaceDelta ctor
     // i.e. a put delta of 0.25 that is passed in to the config must be -0.25 when passed to the ctor.
@@ -1088,7 +1092,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     }
 
     // Strike interpolation
-    InterpolatedSmileSection::InterpolationMethod im;
+    QuantExt::InterpolatedSmileSection::InterpolationMethod im;
     if (vdsc.strikeInterpolation() == "Linear") {
         im = InterpolatedSmileSection::InterpolationMethod::Linear;
     } else if (vdsc.strikeInterpolation() == "NaturalCubic") {
@@ -1272,7 +1276,8 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         }
     }
 
-    maxExpiry_ = *std::max_element(expiryDates.begin(),expiryDates.end());
+    if (!expiryDates.empty())
+        maxExpiry_ = *std::max_element(expiryDates.begin(), expiryDates.end());
 
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
     // BlackVarianceSurfaceMoneyness time extrapolation is hard-coded to constant in volatility.
@@ -1554,8 +1559,18 @@ Handle<PriceTermStructure> CommodityVolCurve::correctFuturePriceCurve(const Date
 
     // Add future price at option expiry to the curve i.e. override any interpolation between future option
     // expiry (oed) and future expiry (fed).
+    auto futureExpiryCalculator = expCalc_;
+    if (convention_ && !convention_->optionUnderlyingFutureConvention().empty()) {
+        boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+        auto [found, conv] =
+            conventions->get(convention_->optionUnderlyingFutureConvention(), Convention::Type::CommodityFuture);
+        if (found) {
+            futureExpiryCalculator = boost::make_shared<ConventionsBasedFutureExpiry>(
+                *boost::dynamic_pointer_cast<CommodityFutureConvention>(conv));
+        }
+    }
     for (const Date& oed : optionExpiries) {
-        Date fed = expCalc_->nextExpiry(true, oed, 0, false);
+        Date fed = futureExpiryCalculator->nextExpiry(true, oed, 0, false);
         // In general, expect that the future expiry date will already be in curveData but maybe not.
         auto it = curveData.find(fed);
         if (it != curveData.end()) {
@@ -1772,6 +1787,10 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, boost::shared_
         std::vector<std::vector<Real>> callPricesDelta(times.size(), std::vector<Real>(deltas.size(), 0.0));
         if (reportOnDeltaGrid) {
             info->deltas = deltas;
+            info->deltaCallPrices =
+                    std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
+            info->deltaPutPrices =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
             info->deltaGridStrikes =
                 std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
             info->deltaGridProb = std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
@@ -1819,6 +1838,13 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, boost::shared_
                         }
                         Real stddev = std::sqrt(volatility_->blackVariance(t, strike));
                         callPricesDelta[i][j] = QuantExt::blackFormula(Option::Call, strike, forwards[i], stddev);
+
+                        if (d.isPut()) {
+                            info->deltaPutPrices[i][j] = blackFormula(Option::Put, strike, forwards[i], stddev, yts_->discount(t));
+                        } else {
+                            info->deltaCallPrices[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev, yts_->discount(t));
+                        }
+
                         info->deltaGridStrikes[i][j] = strike;
                         info->deltaGridImpliedVolatility[i][j] = stddev / std::sqrt(t);
                     } catch (const std::exception& e) {
@@ -1851,6 +1877,10 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, boost::shared_
         std::vector<std::vector<Real>> callPricesMoneyness(times.size(), std::vector<Real>(moneyness.size(), 0.0));
         if (reportOnMoneynessGrid) {
             info->moneyness = moneyness;
+            info->moneynessCallPrices =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
+            info->moneynessPutPrices =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
             info->moneynessGridStrikes =
                 std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
             info->moneynessGridProb =
@@ -1872,6 +1902,11 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, boost::shared_
                         Real stddev = std::sqrt(volatility_->blackVariance(t, strike));
                         callPricesMoneyness[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);
                         info->moneynessGridImpliedVolatility[i][j] = stddev / std::sqrt(t);
+                        if (moneyness[j] >= 1) {
+                            calibrationInfo_->moneynessCallPrices[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev, yts_->discount(t));
+                        } else {
+                            calibrationInfo_->moneynessPutPrices[i][j] = blackFormula(Option::Put, strike, forwards[i], stddev, yts_->discount(t));
+                        };
                     } catch (const std::exception& e) {
                         TLOG("CommodityVolCurve: error for time " << t << " moneyness " << moneyness[j] << ": " << e.what());
                     }

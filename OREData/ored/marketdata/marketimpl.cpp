@@ -199,7 +199,7 @@ Handle<QuantLib::SwaptionVolatilityStructure> MarketImpl::yieldVol(const string&
 Handle<QuantExt::FxIndex> MarketImpl::fxIndexImpl(const string& fxIndex, const string& configuration) const {
     QL_REQUIRE(fx_ != nullptr,
                "MarketImpl::fxIndex(" << fxIndex << "): fx_ is null. This is an internal error. Contact dev.");
-    return fx_->getIndex(fxIndex, this);
+    return fx_->getIndex(fxIndex, this, configuration);
 }
 
 Handle<Quote> MarketImpl::fxRateImpl(const string& ccypair, const string& configuration) const {
@@ -361,9 +361,9 @@ Handle<Quote> MarketImpl::equitySpot(const string& key, const string& configurat
     return lookup<Handle<Quote>>(equitySpots_, key, configuration, "equity spot");
 }
 
-Handle<QuantExt::EquityIndex> MarketImpl::equityCurve(const string& key, const string& configuration) const {
+Handle<QuantExt::EquityIndex2> MarketImpl::equityCurve(const string& key, const string& configuration) const {
     require(MarketObject::EquityCurve, key, configuration);
-    return lookup<Handle<QuantExt::EquityIndex>>(equityCurves_, key, configuration, "equity curve");
+    return lookup<Handle<QuantExt::EquityIndex2>>(equityCurves_, key, configuration, "equity curve");
 };
 
 Handle<YieldTermStructure> MarketImpl::equityDividendCurve(const string& key, const string& configuration) const {

@@ -1,5 +1,6 @@
 # syntax = nexus3.acadiasoft.net:4445/docker/dockerfile:experimental
 ARG boost_version=latest
+ARG boost_variant=release
 FROM build_env_boost:${boost_version}
 
 MAINTAINER Quaternion Risk Management
@@ -7,6 +8,9 @@ LABEL Description="Build QuantLib and add to the Boost build environment"
 
 # Argument for number of cores to use while building
 ARG num_cores
+
+# Argument that chooses cmake build type
+ARG cmake_build_type
 
 # Exclusions are performed by .dockerignore
 COPY QuantLib /ore/QuantLib
@@ -17,21 +21,26 @@ RUN apt-get update \
 
 ENV PATH="/usr/lib/ccache:$PATH"
 ENV CCACHE_DIR="/ccache"
+ENV CCACHE_MAXSIZE="10G"
+# needed if QL_USE_PCH is ON
+#ENV CCACHE_SLOPPINESS="pch_defines,time_macros,pch_defines,time_macros,include_file_mtime,include_file_ctim"
 
-# Need the dos2unix all if building from Windows because the shell 
-# scripts fail if there are CRLF present in the files
+# - Need the dos2unix all if building from Windows because the shell
+#   scripts fail if there are CRLF present in the files
+# - add  -fpch-preprocess to CMAKE_CXX_FLAGS when QL_USE_PCH is set to ON
 RUN cd /ore/QuantLib \
   && find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';' \
   && mkdir -p build.ql && cd build.ql \
-  && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_EXTENSIONS=OFF -DCMAKE_CXX_FLAGS="-D BOOST_ENABLE_ASSERT_HANDLER -mavx2" -DQL_ENABLE_SESSIONS=ON -DQL_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON
+  && cmake .. -DQL_USE_PCH=OFF -DCMAKE_BUILD_TYPE=${cmake_build_type} -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_EXTENSIONS=OFF -DCMAKE_CXX_FLAGS="-D BOOST_ENABLE_ASSERT_HANDLER -mavx2" -DQL_ENABLE_SESSIONS=ON -DQL_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DQL_BUILD_EXAMPLES=OFF -DQL_BUILD_BENCHMARK=OFF
  
 WORKDIR /ore/QuantLib/build.ql
-RUN --mount=type=cache,target=/ccache/ make -j ${num_cores} \
+RUN --mount=type=cache,target=/ccache/ ccache -z \
+  && make -j ${num_cores} \
+  && ccache -s \
   && make install \
   && cd / \
   && cp -r /ore/QuantLib/test-suite /usr/local/include \
   && rm -rf ore \
   && ldconfig
-  
 
 CMD bash

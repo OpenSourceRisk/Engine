@@ -49,7 +49,7 @@ public:
     EquityVolCurve() {}
     //! Detailed constructor
     EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const Loader& loader,
-                   const CurveConfigurations& curveConfigs, const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex,
+                   const CurveConfigurations& curveConfigs, const QuantLib::Handle<QuantExt::EquityIndex2>& eqIndex,
                    const std::map<std::string, boost::shared_ptr<EquityCurve>>& requiredEquityCurves = {},
                    const std::map<std::string, boost::shared_ptr<EquityVolCurve>>& requiredEquityVolCurves = {},
                    const std::map<std::string, boost::shared_ptr<FXVolCurve>>& requiredFxVolCurves = {},
@@ -72,17 +72,17 @@ public:
     //! Build a volatility surface from a collection of expiry and absolute strike pairs.
     void buildVolatility(const QuantLib::Date& asof, EquityVolatilityCurveConfig& vc,
                          const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader,
-                         const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex);
+                         const QuantLib::Handle<QuantExt::EquityIndex2>& eqIndex);
 
     //! Build a volatility surface from a collection of expiry and moneyness strike pairs.
     void buildVolatility(const QuantLib::Date& asof, EquityVolatilityCurveConfig& vc,
                          const VolatilityMoneynessSurfaceConfig& vmsc, const Loader& loader,
-                         const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex);
+                         const QuantLib::Handle<QuantExt::EquityIndex2>& eqIndex);
 
     //! Build a volatility surface from a collection of expiry and strike delta pairs 
     void buildVolatility(const QuantLib::Date& asof, EquityVolatilityCurveConfig& vc,
                          const VolatilityDeltaSurfaceConfig& vdsc, const Loader& loader,
-                         const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex);
+                         const QuantLib::Handle<QuantExt::EquityIndex2>& eqIndex);
 
     //! Build a volatility surface as a proxy from another volatility surface
     void buildVolatility(const QuantLib::Date& asof, const EquityVolatilityCurveSpec& spec,
@@ -95,7 +95,7 @@ public:
 
     //! Build the calibration info
     void buildCalibrationInfo(const QuantLib::Date& asof, const CurveConfigurations& curveConfigs,
-                              const EquityVolatilityCurveConfig& config, const Handle<QuantExt::EquityIndex>& eqIndex);
+                              const EquityVolatilityCurveConfig& config, const Handle<QuantExt::EquityIndex2>& eqIndex);
 
     const boost::shared_ptr<BlackVolTermStructure>& volTermStructure() const { return vol_; }
     const boost::shared_ptr<FxEqCommVolCalibrationInfo>& calibrationInfo() const { return calibrationInfo_; }

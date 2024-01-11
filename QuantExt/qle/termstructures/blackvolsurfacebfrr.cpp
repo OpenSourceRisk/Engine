@@ -176,8 +176,11 @@ Real SimpleDeltaInterpolatedSmile::atmStrike(const DeltaVolQuote::DeltaType dt, 
     return result;
 }
 
-Real SimpleDeltaInterpolatedSmile::volatilityAtSimpleDelta(const Real tnp) {
-    return untransformVol((*interpolation_)(tnp));
+Real SimpleDeltaInterpolatedSmile::volatilityAtSimpleDelta(const Real simpleDelta) {
+    Real tmp = untransformVol((*interpolation_)(simpleDelta));
+    QL_REQUIRE(std::isfinite(tmp), "SimpleDeltaInterpolatedSmile::volatilityAtSimpleDelta() non-finite result ("
+                                       << tmp << ") for simple delta " << simpleDelta);
+    return tmp;
 }
 
 Real SimpleDeltaInterpolatedSmile::volatility(const Real strike) {
@@ -210,6 +213,7 @@ createSmile(const Real spot, const Real domDisc, const Real forDisc, const Real 
             const BlackVolatilitySurfaceBFRR::SmileInterpolation smileInterpolation) {
 
     Real phirr = riskReversalInFavorOf == Option::Call ? 1.0 : -1.0;
+    boost::shared_ptr<SimpleDeltaInterpolatedSmile> resultSmile;
 
     if (!butterflyIsBrokerStyle) {
 
@@ -228,8 +232,8 @@ createSmile(const Real spot, const Real domDisc, const Real forDisc, const Real 
 
         // ... and set up the interpolated smile
 
-        return boost::make_shared<SimpleDeltaInterpolatedSmile>(spot, domDisc, forDisc, expiryTime, deltas, vol_p,
-                                                                vol_c, atmVol, dt, at, smileInterpolation);
+        resultSmile = boost::make_shared<SimpleDeltaInterpolatedSmile>(
+            spot, domDisc, forDisc, expiryTime, deltas, vol_p, vol_c, atmVol, dt, at, smileInterpolation);
 
     } else {
 
@@ -365,8 +369,20 @@ createSmile(const Real spot, const Real domDisc, const Real forDisc, const Real 
                                                         << expiryTime << " failed: target function value ("
                                                         << problem.functionValue() << ") not close to zero");
 
-        return targetFunction.bestSmile;
+        resultSmile = targetFunction.bestSmile;
     }
+
+    // sanity check of result smile before return it
+
+    static const std::vector<Real> samplePoints = {0.01, 0.05, 0.1, 0.2, 0.5, 0.8, 0.9, 0.95, 0.99};
+    for (auto const& simpleDelta : samplePoints) {
+        Real vol = resultSmile->volatilityAtSimpleDelta(simpleDelta);
+        QL_REQUIRE(vol > 0.0001 && vol < 5.0, "createSmile at expiry " << expiryTime << ": volatility at simple delta "
+                                                                       << simpleDelta << " (" << vol
+                                                                       << ") is not plausible.");
+    }
+
+    return resultSmile;
 }
 
 } // namespace detail

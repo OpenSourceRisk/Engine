@@ -16,20 +16,17 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/function.hpp>
 #include <ql/instruments/makecapfloor.hpp>
 #include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
 #include <ql/quotes/derivedquote.hpp>
+#include <ql/utilities/null_deleter.hpp>
 #include <qle/termstructures/capfloorhelper.hpp>
 
 using namespace QuantLib;
 using std::ostream;
-
-namespace {
-void no_deletion(OptionletVolatilityStructure*) {}
-} // namespace
 
 namespace QuantExt {
 
@@ -47,7 +44,7 @@ CapFloorHelper::CapFloorHelper(Type type, const Period& tenor, Rate strike, cons
                                bool endOfMonth, bool firstCapletExcluded)
     : RelativeDateBootstrapHelper<OptionletVolatilityStructure>(
           Handle<Quote>(boost::make_shared<DerivedQuote<boost::function<Real(Real)> > >(
-              quote, boost::bind(&CapFloorHelper::npv, this, _1)))),
+              quote, boost::bind(&CapFloorHelper::npv, this, boost::placeholders::_1)))),
       type_(type), tenor_(tenor), strike_(strike), iborIndex_(iborIndex), discountHandle_(discountingCurve),
       moving_(moving), effectiveDate_(effectiveDate), quoteType_(quoteType), quoteVolatilityType_(quoteVolatilityType),
       quoteDisplacement_(quoteDisplacement), endOfMonth_(endOfMonth), firstCapletExcluded_(firstCapletExcluded),
@@ -132,7 +129,7 @@ void CapFloorHelper::setTermStructure(OptionletVolatilityStructure* ovts) {
     }
 
     // Set this helper's optionlet volatility structure
-    boost::shared_ptr<OptionletVolatilityStructure> temp(ovts, no_deletion);
+    boost::shared_ptr<OptionletVolatilityStructure> temp(ovts, null_deleter());
     ovtsHandle_.linkTo(temp, false);
 
     // Set the term structure pointer member variable in the base class

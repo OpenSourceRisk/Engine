@@ -44,7 +44,7 @@ void FxBarrierOption::checkBarriers() {
 }
 
 boost::shared_ptr<QuantLib::PricingEngine>
-FxBarrierOption::vanillaPricigingEngine(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+FxBarrierOption::vanillaPricingEngine(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
                                         const QuantLib::Date& paymentDate) {   
 
     if (paymentDate > expiryDate) {
@@ -69,7 +69,7 @@ FxBarrierOption::vanillaPricigingEngine(const boost::shared_ptr<EngineFactory>& 
 }
 
 boost::shared_ptr<QuantLib::PricingEngine>
-FxBarrierOption::barrierPricigingEngine(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+FxBarrierOption::barrierPricingEngine(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
                                         const QuantLib::Date& paymentDate) {
 
     boost::shared_ptr<EngineBuilder> builder = ef->builder(tradeType_);

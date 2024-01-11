@@ -29,27 +29,27 @@ namespace data {
 
 EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(
     const string& curveID, const string& curveDescription, const string& currency,
-    const vector<boost::shared_ptr<VolatilityConfig>>& volatilityConfig, const string& dayCounter,
-    const string& calendar, const OneDimSolverConfig& solverConfig, const boost::optional<bool>& preferOutOfTheMoney)
+    const vector<boost::shared_ptr<VolatilityConfig>>& volatilityConfig, const string& equityId, 
+    const string& dayCounter, const string& calendar, const OneDimSolverConfig& solverConfig, 
+    const boost::optional<bool>& preferOutOfTheMoney)
     : CurveConfig(curveID, curveDescription), ccy_(currency), volatilityConfig_(volatilityConfig),
-      dayCounter_(dayCounter), calendar_(calendar), solverConfig_(solverConfig),
+      equityId_(equityId), dayCounter_(dayCounter), calendar_(calendar), solverConfig_(solverConfig),
       preferOutOfTheMoney_(preferOutOfTheMoney) {
     populateQuotes();
     populateRequiredCurveIds();
 }
 
-EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription,
-                                                         const string& currency,
-                                                         const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
-                                                         const string& dayCounter, const string& calendar,
-                                                         const OneDimSolverConfig& solverConfig,
-                                                         const boost::optional<bool>& preferOutOfTheMoney)
+EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(
+    const string& curveID, const string& curveDescription, const string& currency,
+    const boost::shared_ptr<VolatilityConfig>& volatilityConfig, const string& equityId,
+    const string& dayCounter, const string& calendar, const OneDimSolverConfig& solverConfig,
+    const boost::optional<bool>& preferOutOfTheMoney)
     : EquityVolatilityCurveConfig(curveID, curveDescription, currency,
-                                  std::vector<boost::shared_ptr<VolatilityConfig>>{volatilityConfig}, dayCounter,
-                                  calendar, solverConfig, preferOutOfTheMoney) {}
+        std::vector<boost::shared_ptr<VolatilityConfig>>{volatilityConfig}, equityId, dayCounter, 
+        calendar, solverConfig, preferOutOfTheMoney) {}
 
 const string EquityVolatilityCurveConfig::quoteStem(const string& volType) const {
-    return "EQUITY_OPTION/" + volType + "/" + curveID_ + "/" + ccy_ + "/";
+    return "EQUITY_OPTION/" + volType + "/" + equityId() + "/" + ccy_ + "/";
 }
 
 void EquityVolatilityCurveConfig::populateQuotes() {
@@ -97,6 +97,7 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
 
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
+    equityId_ = XMLUtils::getChildValue(node, "EquityId", false);
     ccy_ = XMLUtils::getChildValue(node, "Currency", true);
 
     calendar_ = XMLUtils::getChildValue(node, "Calendar", false);
@@ -138,13 +139,13 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
                        "Dimension ATM, but multiple strikes provided for EquityVolatility " << curveID_);
             // if ATM create VolatilityCurveConfig which requires quotes to be provided
             vector<string> quotes(expiries.size());
-            string quoteStem = "EQUITY_OPTION/RATE_LNVOL/" + curveID_ + "/" + ccy_ + "/";
+            string stem = quoteStem("RATE_LNVOL");
             if (expiries.size() == 1 && expiries.front() == "*") {
-                quotes[0] = (quoteStem + "*");
+                quotes[0] = (stem + "*");
             } else {
                 Size i = 0;
                 for (auto ex : expiries) {
-                    quotes[i] = (quoteStem + ex + "/ATMF");
+                    quotes[i] = (stem + ex + "/ATMF");
                     i++;
                 }
             }
@@ -178,6 +179,7 @@ XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {
 
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
+    XMLUtils::addChild(doc, node, "EquityId", equityId_);
     XMLUtils::addChild(doc, node, "Currency", ccy_);
     XMLUtils::addChild(doc, node, "DayCounter", dayCounter_);
 

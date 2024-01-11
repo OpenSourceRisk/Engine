@@ -97,6 +97,8 @@ Real CubeInterpretation::getCloseOutNpv(const boost::shared_ptr<NPVCube>& cube, 
 
 Real CubeInterpretation::getMporPositiveFlows(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
                                              Size sampleIdx) const {
+    if (mporFlowsIndex_ == QuantLib::Null<Size>())
+        return 0.0;
     Real aggMporFlowsVal = 0.0;
     try {
         aggMporFlowsVal = getGenericValue(cube, tradeIdx, dateIdx, sampleIdx, mporFlowsIndex_);
@@ -109,6 +111,8 @@ Real CubeInterpretation::getMporPositiveFlows(const boost::shared_ptr<NPVCube>& 
 
 Real CubeInterpretation::getMporNegativeFlows(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
                                              Size sampleIdx) const {
+    if (mporFlowsIndex_ == QuantLib::Null<Size>())
+        return 0.0;
     Real aggMporFlowsVal = 0.0;
     try {
         aggMporFlowsVal = getGenericValue(cube, tradeIdx, dateIdx, sampleIdx, mporFlowsIndex_ + 1);

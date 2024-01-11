@@ -57,6 +57,10 @@ struct CrifRecord {
     std::string amountCurrency;
     mutable QuantLib::Real amount = QuantLib::Null<QuantLib::Real>();
     mutable QuantLib::Real amountUsd = QuantLib::Null<QuantLib::Real>();
+    
+    // additional fields used exclusively by the SIMM calculator for handling amounts converted in a given result ccy
+    std::string resultCurrency;
+    mutable QuantLib::Real amountResultCcy = QuantLib::Null<QuantLib::Real>();
 
     // optional data
     std::string tradeType;
@@ -102,6 +106,8 @@ struct CrifRecord {
     bool hasAmountCcy() const { return !amountCurrency.empty(); }
     bool hasAmount() const { return amount != QuantLib::Null<QuantLib::Real>(); }
     bool hasAmountUsd() const { return amountUsd != QuantLib::Null<QuantLib::Real>(); }
+    bool hasResultCcy() const { return !resultCurrency.empty(); }
+    bool hasAmountResultCcy() const { return amountResultCcy != QuantLib::Null<QuantLib::Real>(); }
 
     // We use (and require) amountUsd for all risk types except for SIMM parameters AddOnNotionalFactor and
     // ProductClassMultiplier as these are multipliers and not amounts denominated in the amountCurrency
@@ -159,7 +165,9 @@ struct RiskTypeTag {};
 struct BucketTag {};
 struct BucketQualifierTag {};
 struct QualifierTag {};
+struct NoProductClassQualifierTag {};
 
+struct OnlyRiskTypeTag {};
 /*! A structure that we can use to aggregate CrifRecords across trades in a portfolio
     to provide the net sensitivities that we need to perform a downstream SIMM calculation.
 */
@@ -179,6 +187,10 @@ typedef boost::multi_index_container<
             boost::multi_index::composite_key<
                 CrifRecord, boost::multi_index::member<CrifRecord, NettingSetDetails, &CrifRecord::nettingSetDetails>>>,
         boost::multi_index::ordered_non_unique<
+            boost::multi_index::tag<OnlyRiskTypeTag>,
+            boost::multi_index::composite_key<
+                CrifRecord, boost::multi_index::member<CrifRecord, SimmConfiguration::RiskType, &CrifRecord::riskType>>>,
+        boost::multi_index::ordered_non_unique<
             boost::multi_index::tag<ProductClassTag>,
             boost::multi_index::composite_key<
                 CrifRecord,
@@ -197,6 +209,13 @@ typedef boost::multi_index_container<
                 CrifRecord,
                 boost::multi_index::member<CrifRecord, NettingSetDetails, &CrifRecord::nettingSetDetails>,
                 boost::multi_index::member<CrifRecord, SimmConfiguration::ProductClass, &CrifRecord::productClass>,
+                boost::multi_index::member<CrifRecord, SimmConfiguration::RiskType, &CrifRecord::riskType>,
+                boost::multi_index::member<CrifRecord, std::string, &CrifRecord::qualifier>>>,
+        boost::multi_index::ordered_non_unique<
+            boost::multi_index::tag<NoProductClassQualifierTag>,
+            boost::multi_index::composite_key<
+                CrifRecord,
+                boost::multi_index::member<CrifRecord, NettingSetDetails, &CrifRecord::nettingSetDetails>,
                 boost::multi_index::member<CrifRecord, SimmConfiguration::RiskType, &CrifRecord::riskType>,
                 boost::multi_index::member<CrifRecord, std::string, &CrifRecord::qualifier>>>,
         boost::multi_index::ordered_non_unique<

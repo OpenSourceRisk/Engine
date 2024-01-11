@@ -45,7 +45,7 @@ public:
     enum class BootstrapMode { Alternating, Simultaneously };
 
     DefaultableEquityJumpDiffusionModelBuilder(
-        const std::vector<Real>& stepTimes, const boost::shared_ptr<QuantExt::EquityIndex>& equity,
+        const std::vector<Real>& stepTimes, const boost::shared_ptr<QuantExt::EquityIndex2>& equity,
         const Handle<QuantLib::BlackVolTermStructure>& volatility,
         const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve, const Real p = 0.0, const Real eta = 1.0,
         const bool staticMesher = false, const Size timeStepsPerYear = 24, const Size stateGridPoints = 100,
@@ -67,7 +67,7 @@ private:
 
     // input data
     std::vector<Real> stepTimes_;
-    boost::shared_ptr<EquityIndex> equity_;
+    boost::shared_ptr<QuantExt::EquityIndex2> equity_;
     Handle<BlackVolTermStructure> volatility_;
     Handle<DefaultProbabilityTermStructure> creditCurve_;
     Real p_, eta_;
@@ -119,14 +119,14 @@ public:
 
     DefaultableEquityJumpDiffusionModel(const std::vector<Real>& stepTimes, const std::vector<Real>& h0,
                                         const std::vector<Real>& sigma,
-                                        const boost::shared_ptr<QuantExt::EquityIndex>& equity,
+                                        const boost::shared_ptr<QuantExt::EquityIndex2>& equity,
                                         const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve,
                                         const DayCounter& volDayCounter, const Real p = 0.0, const Real eta = 1.0,
                                         const bool adjustEquityForward = true);
 
     // inspectors for input data
     const std::vector<Real>& stepTimes() const;
-    boost::shared_ptr<QuantExt::EquityIndex> equity() const;
+    boost::shared_ptr<QuantExt::EquityIndex2> equity() const;
     Real totalBlackVariance() const;
     const DayCounter& volDayCounter() const;
     Handle<QuantLib::DefaultProbabilityTermStructure> creditCurve() const;
@@ -167,7 +167,7 @@ private:
     // input data
     std::vector<Real> stepTimes_;
     mutable std::vector<Real> h0_, sigma_;
-    boost::shared_ptr<EquityIndex> equity_;
+    boost::shared_ptr<QuantExt::EquityIndex2> equity_;
     Handle<DefaultProbabilityTermStructure> creditCurve_;
     DayCounter volDayCounter_;
     Real p_, eta_;

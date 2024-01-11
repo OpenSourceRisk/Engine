@@ -168,10 +168,11 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
                     basketNotionals.push_back(ntl);
                     totalRemainingNtl += ntl;
                 } else {
-                    ALOG(StructuredTradeErrorMessage(id(), "Synthetic CDO", "Error building trade",
+                    StructuredTradeErrorMessage(id(), "Synthetic CDO", "Error building trade",
                                                      ("Invalid Basket: found a duplicate credit curve " + creditCurve +
                                                       ", skip it. Check the basket data for possible errors.")
-                                                         .c_str()));
+                                                    .c_str())
+                        .log();
                 }
             } else {
                 DLOG("Underlying " << creditCurve << " notional is " << ntl << " so assuming a credit event occured.");
@@ -214,22 +215,23 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
         }
 
         if (!close(totalRemainingNtl, origTotalNtl) && totalRemainingNtl > origTotalNtl) {
-            ALOG(StructuredTradeErrorMessage(id(), "Synthetic CDO", "Error building trade",
+            StructuredTradeErrorMessage(id(), "Synthetic CDO", "Error building trade",
                                              ("Total remaining notional (" + std::to_string(totalRemainingNtl) +
                                               ") is greater than total original notional (" +
                                               std::to_string(origTotalNtl) +
                                               "),  check the basket data for possible errors.")
-                                                 .c_str()));
+                                            .c_str())
+                .log();
         }
 
         if (!close(totalNtl, origTotalNtl)) {
-            ALOG(
-                StructuredTradeErrorMessage(id(), "Synthetic CDO", "Error building trade",
+            StructuredTradeErrorMessage(id(), "Synthetic CDO", "Error building trade",
                                             ("Expected the total notional (" + std::to_string(totalNtl) + " = " +
                                              std::to_string(totalRemainingNtl) + " + " + std::to_string(totalPriorNtl) +
                                              ") to equal the total original notional (" + std::to_string(origTotalNtl) +
                                              "),  check the basket data for possible errors.")
-                                                .c_str()));
+                                            .c_str())
+                .log();
         }
 
         DLOG("Finished building constituents using basket data.");
@@ -452,54 +454,18 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     Handle<DefaultProbabilityTermStructure> baseCurve;
     vector<Time> baseCurveTimes;
     vector<Real> expLoss;
+
+    if (cdoEngineBuilder->optimizedSensitivityCalculation()) {
+        dpts = buildPerformanceOptimizedDefaultCurves(dpts);
+    }
+
     for (Size i = 0; i < creditCurves.size(); ++i) {
         const string& cc = creditCurves[i];
         DefaultProbKey key = NorthAmericaCorpDefaultKey(ccy, SeniorSec, Period(), 1.0);
         Real recoveryRate = recoveryRates[i];
-        auto targetCurve = dpts[i];
-
-        expLoss.push_back((1 - recoveryRate) * targetCurve->defaultProbability(maturity_, true) * basketNotionals[i]);
-
-        if (!cdoEngineBuilder->optimizedSensitivityCalculation()) {
-            clientCurve = targetCurve;
-        } else {
-            // Disable sensitivites for the all but the first default probability curve
-            // Shift all other curves along with the first curve, reduce the numbers of calculations
-            // For all but the first curve use a spreaded curve, with the first curve as reference and
-            // the inital spread between the curve and the first curve, keep the spread constant
-            // in case of a spreaded curve we need to use the underlying reference curve to retrieve the
-            // correct pillar times, otherwise the interpolation grid is to coarse and we wouldnt match
-            // today's market prices
-            
-            // Extract the times of the target curve
-            vector<Time> targetCurveTimes = extractTimeGridDefaultCurve(targetCurve);
-            // Sort times we need to interpolate an all pillars of the base and target curve
-            std::sort(targetCurveTimes.begin(), targetCurveTimes.end());
-            // Use the first curve as basis curve and update times
-            if (i == 0) {
-                baseCurve = targetCurve;
-                clientCurve = baseCurve;
-                baseCurveTimes = targetCurveTimes;
-            } else {
-                std::vector<Time> times;
-                std::set_union(baseCurveTimes.begin(), baseCurveTimes.end(), targetCurveTimes.begin(),
-                               targetCurveTimes.end(), std::back_inserter(times));
-
-                vector<Handle<Quote>> spreads(times.size());
-                std::transform(times.begin(), times.end(), spreads.begin(), [&baseCurve, &targetCurve](Time t) {
-                    Probability spread = targetCurve->survivalProbability(t, true) / baseCurve->survivalProbability(t, true);
-                    return Handle<Quote>(boost::make_shared<SimpleQuote>(spread));
-                });
-                clientCurve = Handle<DefaultProbabilityTermStructure>(
-                    boost::make_shared<SpreadedSurvivalProbabilityTermStructure>(baseCurve, times, spreads));
-                if (baseCurve->allowsExtrapolation()) {
-                    clientCurve->enableExtrapolation();
-                }
-            }
-        }
-        dpts.push_back(clientCurve);
-        
-        std::pair<DefaultProbKey, Handle<DefaultProbabilityTermStructure>> p(key, clientCurve);
+        auto defaultCurve = dpts[i];
+        expLoss.push_back((1 - recoveryRate) * defaultCurve->defaultProbability(maturity_, true) * basketNotionals[i]);
+        std::pair<DefaultProbKey, Handle<DefaultProbabilityTermStructure>> p(key, defaultCurve);
         vector<pair<DefaultProbKey, Handle<DefaultProbabilityTermStructure>>> probabilities(1, p);
         // Empty default set. Adjustments have been made above to account for existing credit events.
         Issuer issuer(probabilities, DefaultEventSet());

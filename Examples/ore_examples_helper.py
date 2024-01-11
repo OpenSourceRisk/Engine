@@ -36,7 +36,12 @@ class OreExample(object):
         self.dry = dry
         self.ax = None
         self.plot_name = ""
-        self._locate_ore_exe()
+        if 'ORE_EXAMPLES_USE_PYTHON' in os.environ.keys():
+            self.use_python = os.environ['ORE_EXAMPLES_USE_PYTHON']=="1"
+            self.ore_exe = ""
+        else:
+            self.use_python = False
+            self._locate_ore_exe()
 
     def _locate_ore_exe(self):
         if os.name == 'nt':
@@ -49,6 +54,8 @@ class OreExample(object):
                     self.ore_exe = "..\..\\..\\build\\ore\\App\\ore.exe"
                 elif os.path.isfile("..\\..\\..\\build\\ore\\App\\RelWithDebInfo\\ore.exe"):
                     self.ore_exe = "..\\..\\..\\build\\ore\\App\\RelWithDebInfo\\ore.exe"
+                elif os.path.isfile("..\\..\\build\\App\\Release\\ore.exe"):
+                    self.ore_exe = "..\\..\\build\\App\\Release\\ore.exe"
                 else:
                     print_on_console("ORE executable not found.")
                     quit()
@@ -260,7 +267,11 @@ class OreExample(object):
 
     def run(self, xml):
         if not self.dry:
-            if subprocess.call([self.ore_exe, xml]) != 0:
+            if(self.use_python):
+                res = subprocess.call([sys.executable, os.path.join(os.pardir, "ore_wrapper.py"), xml])
+            else:
+                res = subprocess.call([self.ore_exe, xml])
+            if res != 0:
                 raise Exception("Return Code was not Null.")
 
     def run_plus(self, xml):

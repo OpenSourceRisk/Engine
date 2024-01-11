@@ -25,8 +25,6 @@
 #define quantext_stripped_optionlet_adapter_h
 
 #include <algorithm>
-#include <boost/bind.hpp>
-#include <boost/lambda/lambda.hpp>
 #include <ql/math/interpolation.hpp>
 #include <ql/termstructures/interpolatedcurve.hpp>
 #include <ql/termstructures/volatility/flatsmilesection.hpp>
@@ -252,9 +250,6 @@ inline boost::shared_ptr<QuantLib::SmileSection>
 StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::smileSectionImpl(QuantLib::Time optionTime) const {
 
     // Some localised typedefs and using declarations to make the code more readable
-    using boost::lambda::_1;
-    using boost::lambda::_2;
-    using QuantLib::close;
     using QuantLib::Null;
     using QuantLib::Rate;
     using QuantLib::Real;

@@ -102,6 +102,28 @@ void EngineBuilderFactory::addAmcEngineBuilder(
     amcEngineBuilderBuilders_.push_back(builder);
 }
 
+void EngineBuilderFactory::addAmcCgEngineBuilder(
+    const std::function<boost::shared_ptr<EngineBuilder>(const boost::shared_ptr<ore::data::ModelCG>& model,
+                                                         const std::vector<Date>& grid)>& builder,
+    const bool allowOverwrite) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    auto tmp = builder(nullptr, {});
+    auto key = make_tuple(tmp->model(), tmp->engine(), tmp->tradeTypes());
+    auto it = std::remove_if(
+        amcCgEngineBuilderBuilders_.begin(), amcCgEngineBuilderBuilders_.end(),
+        [&key](std::function<boost::shared_ptr<EngineBuilder>(const boost::shared_ptr<ore::data::ModelCG>& model,
+                                                              const std::vector<Date>& grid)>& b) {
+            auto tmp = b(nullptr, {});
+            return key == std::make_tuple(tmp->model(), tmp->engine(), tmp->tradeTypes());
+        });
+    QL_REQUIRE(it == amcCgEngineBuilderBuilders_.end() || allowOverwrite,
+               "EngineBuilderFactory::addAmcCgEngineBuilder(" << tmp->model() << "/" << tmp->engine() << "/"
+                                                              << boost::algorithm::join(tmp->tradeTypes(), ",")
+                                                              << "): builder for given key already exists.");
+    amcCgEngineBuilderBuilders_.erase(it, amcCgEngineBuilderBuilders_.end());
+    amcCgEngineBuilderBuilders_.push_back(builder);
+}
+
 void EngineBuilderFactory::addLegBuilder(const std::function<boost::shared_ptr<LegBuilder>()>& builder,
                                          const bool allowOverwrite) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
@@ -130,6 +152,16 @@ EngineBuilderFactory::generateAmcEngineBuilders(const boost::shared_ptr<QuantExt
     std::vector<boost::shared_ptr<EngineBuilder>> result;
     for (auto const& b : amcEngineBuilderBuilders_)
         result.push_back(b(cam, grid));
+    return result;
+}
+
+std::vector<boost::shared_ptr<EngineBuilder>>
+EngineBuilderFactory::generateAmcCgEngineBuilders(const boost::shared_ptr<ore::data::ModelCG>& model,
+                                                  const std::vector<Date>& grid) const {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    std::vector<boost::shared_ptr<EngineBuilder>> result;
+    for (auto const& b : amcCgEngineBuilderBuilders_)
+        result.push_back(b(model, grid));
     return result;
 }
 
@@ -176,13 +208,15 @@ boost::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tradeType)
     const string& model = engineData_->model(tradeType);
     const string& engine = engineData_->engine(tradeType);
     typedef pair<tuple<string, string, set<string>>, boost::shared_ptr<EngineBuilder>> map_type;
-    auto it =
-        std::find_if(builders_.begin(), builders_.end(), [&model, &engine, &tradeType](const map_type& v) -> bool {
-            const set<string>& types = std::get<2>(v.first);
-            return std::get<0>(v.first) == model && std::get<1>(v.first) == engine &&
-                   std::find(types.begin(), types.end(), tradeType) != types.end();
-        });
+    auto pred = [&model, &engine, &tradeType](const map_type& v) -> bool {
+        const set<string>& types = std::get<2>(v.first);
+        return std::get<0>(v.first) == model && std::get<1>(v.first) == engine &&
+               std::find(types.begin(), types.end(), tradeType) != types.end();
+    };
+    auto it = std::find_if(builders_.begin(), builders_.end(), pred);
     QL_REQUIRE(it != builders_.end(), "No EngineBuilder for " << model << "/" << engine << "/" << tradeType);
+    QL_REQUIRE(std::find_if(std::next(it, 1), builders_.end(), pred) == builders_.end(),
+               "Ambiguous EngineBuilder for " << model << "/" << engine << "/" << tradeType);
 
     boost::shared_ptr<EngineBuilder> builder = it->second;
     string effectiveTradeType = tradeType;

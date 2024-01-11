@@ -354,6 +354,9 @@ template <class Archive> void SwapQuote::serialize(Archive& ar, const unsigned i
     ar& fwdStart_;
     ar& term_;
     ar& tenor_;
+    ar& indexName_;
+    ar& startDate_;
+    ar& maturityDate_;
 }
 
 template <class Archive> void ZeroQuote::serialize(Archive& ar, const unsigned int version) {

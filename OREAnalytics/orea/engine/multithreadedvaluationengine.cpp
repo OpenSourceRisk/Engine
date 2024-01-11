@@ -16,18 +16,17 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/engine/multithreadedvaluationengine.hpp>
-
-#include <orea/scenario/scenariosimmarketplus.hpp>
-
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/cube/inmemorycube.hpp>
+#include <orea/engine/multithreadedvaluationengine.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/scenario/clonedscenariogenerator.hpp>
 
 #include <ored/marketdata/clonedloader.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/trade.hpp>
+#include <ored/utilities/dategrid.hpp>
 
 #include <boost/timer/timer.hpp>
 
@@ -52,7 +51,7 @@ MultiThreadedValuationEngine::MultiThreadedValuationEngine(
     const boost::shared_ptr<ore::analytics::ScenarioFilter>& scenarioFilter,
     const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData,
     const ore::data::IborFallbackConfig& iborFallbackConfig, const bool handlePseudoCurrenciesTodaysMarket,
-    const bool handlePseudoCurrenciesSimMarket,
+    const bool handlePseudoCurrenciesSimMarket, const bool recalibrateModels,
     const std::function<boost::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
                                                                    const std::vector<QuantLib::Date>&,
                                                                    const QuantLib::Size)>& cubeFactory,
@@ -68,8 +67,9 @@ MultiThreadedValuationEngine::MultiThreadedValuationEngine(
       useSpreadedTermStructures_(useSpreadedTermStructures), cacheSimData_(cacheSimData),
       scenarioFilter_(scenarioFilter), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
       handlePseudoCurrenciesTodaysMarket_(handlePseudoCurrenciesTodaysMarket),
-      handlePseudoCurrenciesSimMarket_(handlePseudoCurrenciesSimMarket), cubeFactory_(cubeFactory),
-      nettingSetCubeFactory_(nettingSetCubeFactory), cptyCubeFactory_(cptyCubeFactory), context_(context) {
+      handlePseudoCurrenciesSimMarket_(handlePseudoCurrenciesSimMarket), recalibrateModels_(recalibrateModels),
+      cubeFactory_(cubeFactory), nettingSetCubeFactory_(nettingSetCubeFactory), cptyCubeFactory_(cptyCubeFactory),
+      context_(context) {
 
     QL_REQUIRE(nThreads_ != 0, "MultiThreadedValuationEngine: nThreads must be > 0");
 
@@ -121,7 +121,9 @@ void MultiThreadedValuationEngine::buildCube(
 
     // build portfolio against init market and trigger single pricing to generate pricing stats
 
-    LOG("Reset and build portfolio against init market to produce pricing stats from a single pricing.");
+    LOG("Reset and build portfolio against init market to produce pricing stats from a single pricing. Using pricing "
+        "configuration '"
+        << configuration_ << "'.");
 
     boost::shared_ptr<ore::data::Market> initMarket = boost::make_shared<ore::data::TodaysMarket>(
         today_, todaysMarketParams_, loader_, curveConfigs_, true, true, true, referenceData_, false,
@@ -281,7 +283,7 @@ void MultiThreadedValuationEngine::buildCube(
                 // build sim market
 
                 boost::shared_ptr<ore::analytics::ScenarioSimMarket> simMarket =
-                    boost::make_shared<ore::analytics::ScenarioSimMarketPlus>(
+                    boost::make_shared<ore::analytics::ScenarioSimMarket>(
                         initMarket, simMarketData_, configuration_, *curveConfigs_, *todaysMarketParams_, true,
                         useSpreadedTermStructures_, cacheSimData_, false, iborFallbackConfig_,
                         handlePseudoCurrenciesSimMarket_);
@@ -312,8 +314,10 @@ void MultiThreadedValuationEngine::buildCube(
 
                 // build valuation engine
 
-                auto valEngine = boost::make_shared<ore::analytics::ValuationEngine>(today_, dateGrid_, simMarket,
-                                                                                     engineFactory->modelBuilders());
+                auto valEngine = boost::make_shared<ore::analytics::ValuationEngine>(
+                    today_, dateGrid_, simMarket,
+                    recalibrateModels_ ? engineFactory->modelBuilders()
+                                       : std::set<std::pair<std::string, boost::shared_ptr<QuantExt::ModelBuilder>>>());
                 valEngine->registerProgressIndicator(progressIndicator);
 
                 // build mini-cube
@@ -340,7 +344,7 @@ void MultiThreadedValuationEngine::buildCube(
 
                 // log error and return code 1 = not ok
 
-                ALOG(ore::analytics::StructuredAnalyticsErrorMessage("Multithreaded Valuation Engine", "", e.what()));
+                ore::analytics::StructuredAnalyticsErrorMessage("Multithreaded Valuation Engine", "", e.what()).log();
                 rc = 1;
             }
 

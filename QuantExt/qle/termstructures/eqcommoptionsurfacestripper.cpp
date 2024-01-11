@@ -310,7 +310,7 @@ boost::shared_ptr<BlackVolTermStructure> OptionSurfaceStripper::volSurface() {
 }
 
 EquityOptionSurfaceStripper::EquityOptionSurfaceStripper(
-    const Handle<EquityIndex>& equityIndex,
+    const Handle<QuantExt::EquityIndex2>& equityIndex,
     const boost::shared_ptr<OptionInterpolatorBase>& callSurface,
     const boost::shared_ptr<OptionInterpolatorBase>& putSurface,
     const Calendar& calendar,

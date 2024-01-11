@@ -101,7 +101,7 @@ void EquityTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFact
     QL_REQUIRE(eqIndex_ != "", "No eqIndex provided");
     QL_REQUIRE(calendar_ != "", "No calendar provided");
 
-    boost::shared_ptr<QuantExt::EquityIndex> eqIndex = parseEquityIndex(eqIndex_);
+    boost::shared_ptr<QuantExt::EquityIndex2> eqIndex = parseEquityIndex(eqIndex_);
 
     // check if the barrier has been triggered already
     bool triggered = false;
@@ -145,9 +145,9 @@ void EquityTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFact
 
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    Date lastPremiumDate =
-        addPremiums(additionalInstruments, additionalMultipliers, payoffAmount_, option_.premiumData(),
-                    isLong ? -1.0 : 1.0, ccy, engineFactory, builder->configuration(MarketContext::pricing));
+    Date lastPremiumDate = addPremiums(
+        additionalInstruments, additionalMultipliers, (isLong ? 1.0 : -1.0) * payoffAmount_, option_.premiumData(),
+        isLong ? -1.0 : 1.0, ccy, engineFactory, builder->configuration(MarketContext::pricing));
 
     Handle<Quote> spot = market->equitySpot(assetName);
     instrument_ = boost::make_shared<SingleBarrierOptionWrapper>(

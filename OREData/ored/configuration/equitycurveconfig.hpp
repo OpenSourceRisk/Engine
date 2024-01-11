@@ -56,7 +56,7 @@ public:
                       const string& currency, const string& calendar, const Type& type, const string& equitySpotQuote,
                       const vector<string>& quotes, const string& dayCountID = "",
                       const string& dividendInterpVariable = "Zero", const string& dividendInterpMethod = "Linear",
-                      bool extrapolation = true,
+                      const bool dividendExtrapolation = false, const bool extrapolation = false,
                       const QuantLib::Exercise::Type& exerciseStyle = QuantLib::Exercise::Type::European);
     //! Default constructor
     EquityCurveConfig() {}
@@ -78,6 +78,7 @@ public:
     const string& dayCountID() const { return dayCountID_; }
     const string& dividendInterpolationVariable() const { return divInterpVariable_; }
     const string& dividendInterpolationMethod() const { return divInterpMethod_; }
+    bool dividendExtrapolation() const { return dividendExtrapolation_; }
     bool extrapolation() const { return extrapolation_; }
     const QuantLib::Exercise::Type exerciseStyle() const { return exerciseStyle_; }
     const vector<string>& fwdQuotes() { return fwdQuotes_; }
@@ -91,6 +92,7 @@ public:
     string& dayCountID() { return dayCountID_; }
     string& dividendInterpolationVariable() { return divInterpVariable_; }
     string& dividendInterpolationMethod() { return divInterpMethod_; }
+    bool& dividendExtrapolation() { return dividendExtrapolation_; }
     bool& extrapolation() { return extrapolation_; }
     QuantLib::Exercise::Type& exerciseStyle() { return exerciseStyle_; }
 
@@ -110,6 +112,7 @@ private:
     string dayCountID_;
     string divInterpVariable_;
     string divInterpMethod_;
+    bool dividendExtrapolation_;
     bool extrapolation_;
     QuantLib::Exercise::Type exerciseStyle_;
 };

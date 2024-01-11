@@ -37,7 +37,7 @@ void EquitySwap::checkEquitySwap(const vector<LegData>& legData) {
     for (Size i = 0; i < legData.size(); ++i) {
         if (legData[i].legType() == "Equity") {
             equityLegIndex_ = i;
-        } else if (legData[i].legType() == "Fixed" || legData[i].legType() == "Floating") {
+        } else {
             irLegIndex_ = i;
         }
     }

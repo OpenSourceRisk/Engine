@@ -42,6 +42,7 @@
 #include <ql/cashflows/cashflowvectors.hpp>
 #include <ql/cashflows/couponpricer.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
+#include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/utilities/vectors.hpp>
 
 using std::vector;
@@ -210,7 +211,7 @@ void OvernightIndexedCouponPricer::compute() const {
     Date today = Settings::instance().evaluationDate();
     while (i < n && fixingDates[std::min(i, nCutoff)] < today) {
         // rate must have been fixed
-        Rate pastFixing = IndexManager::instance().getHistory(index->name())[fixingDates[std::min(i, nCutoff)]];
+        Rate pastFixing = index->pastFixing(fixingDates[std::min(i, nCutoff)]);
         QL_REQUIRE(pastFixing != Null<Real>(),
                    "Missing " << index->name() << " fixing for " << fixingDates[std::min(i, nCutoff)]);
         if (coupon_->includeSpread()) {
@@ -225,7 +226,7 @@ void OvernightIndexedCouponPricer::compute() const {
     if (i < n && fixingDates[std::min(i, nCutoff)] == today) {
         // might have been fixed
         try {
-            Rate pastFixing = IndexManager::instance().getHistory(index->name())[fixingDates[std::min(i, nCutoff)]];
+            Rate pastFixing = index->pastFixing(fixingDates[std::min(i, nCutoff)]);
             if (pastFixing != Null<Real>()) {
                 if (coupon_->includeSpread()) {
                     compoundFactorWithoutSpread *= (1.0 + pastFixing * dt[i]);
@@ -266,13 +267,13 @@ void OvernightIndexedCouponPricer::compute() const {
             compoundFactorWithoutSpread *= startDiscount / endDiscount;
             // this is an approximation, see "Ester / Daily Spread Curve Setup in ORE":
             // set tau to an average value
-            Real tau = coupon_->dayCounter().yearFraction(dates[i], dates.back()) / (dates.back() - dates[i]);
+            Real tau = index->dayCounter().yearFraction(dates[i], dates.back()) / (dates.back() - dates[i]);
             // now use formula (4) from the paper
             compoundFactor *= std::pow(1.0 + tau * coupon_->spread(), static_cast<int>(dates.back() - dates[i]));
         }
     }
 
-    Rate tau = coupon_->dayCounter().yearFraction(dates.front(), dates.back());
+    Rate tau = index->dayCounter().yearFraction(dates.front(), dates.back());
     Rate rate = (compoundFactor - 1.0) / tau;
     swapletRate_ = coupon_->gearing() * rate;
     if (!coupon_->includeSpread()) {

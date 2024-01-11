@@ -3,9 +3,13 @@ version: '3'
 services:
   env_quantlib:
     image: env_quantlib:${QL_TAG}
+    cap_drop:
+      - NET_RAW
     build:
       context: ../
       dockerfile: Docker/Dockerfile-QuantLib
       args:
         - boost_version=${BOOST_TAG}
+        - boost_variant=${BOOST_VARIANT}
+        - cmake_build_type=${CMAKE_BUILD_TYPE}
         - num_cores=${NUM_CORES}

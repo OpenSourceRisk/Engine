@@ -150,7 +150,7 @@ private:
 class EquityOptionSurfaceStripper : public OptionSurfaceStripper {
 
 public:
-    EquityOptionSurfaceStripper(const QuantLib::Handle<QuantExt::EquityIndex>& equityIndex,
+    EquityOptionSurfaceStripper(const QuantLib::Handle<QuantExt::EquityIndex2>& equityIndex,
         const boost::shared_ptr<OptionInterpolatorBase>& callSurface,
         const boost::shared_ptr<OptionInterpolatorBase>& putSurface,
         const QuantLib::Calendar& calendar,
@@ -172,7 +172,7 @@ protected:
     //@}
 
 private:
-    QuantLib::Handle<QuantExt::EquityIndex> equityIndex_;
+    QuantLib::Handle<QuantExt::EquityIndex2> equityIndex_;
 };
 
 class CommodityOptionSurfaceStripper : public OptionSurfaceStripper {

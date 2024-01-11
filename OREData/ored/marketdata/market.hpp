@@ -279,7 +279,7 @@ public:
     equityDividendCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<YieldTermStructure>
     equityForecastCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
-    virtual Handle<QuantExt::EquityIndex>
+    virtual Handle<QuantExt::EquityIndex2>
     equityCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 

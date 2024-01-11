@@ -27,7 +27,7 @@
 
 namespace QuantExt {
 
-EquityIndex::EquityIndex(const std::string& familyName, const Calendar& fixingCalendar, const Currency& currency,
+EquityIndex2::EquityIndex2(const std::string& familyName, const Calendar& fixingCalendar, const Currency& currency,
                          const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
                          const Handle<YieldTermStructure>& dividend)
     : familyName_(familyName), currency_(currency), rate_(rate), dividend_(dividend), spotQuote_(spotQuote),
@@ -41,11 +41,11 @@ EquityIndex::EquityIndex(const std::string& familyName, const Calendar& fixingCa
     registerWith(IndexManager::instance().notifier(name()));
 }
 
-Real EquityIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
+Real EquityIndex2::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
     return fixing(fixingDate, forecastTodaysFixing, false);
 }
 
-Real EquityIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing, bool incDividend) const {
+Real EquityIndex2::fixing(const Date& fixingDate, bool forecastTodaysFixing, bool incDividend) const {
 
     QL_REQUIRE(isValidFixingDate(fixingDate),
                "Fixing date " << fixingDate << " is not valid for equity index '" << name_ << "'");
@@ -76,16 +76,16 @@ Real EquityIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing, bool
     return result;
 }
 
-Real EquityIndex::forecastFixing(const Date& fixingDate) const { return forecastFixing(fixingDate, false); }
+Real EquityIndex2::forecastFixing(const Date& fixingDate) const { return forecastFixing(fixingDate, false); }
 
-Real EquityIndex::forecastFixing(const Date& fixingDate, bool incDividend) const {
+Real EquityIndex2::forecastFixing(const Date& fixingDate, bool incDividend) const {
     QL_REQUIRE(!rate_.empty(), "null term structure set to this instance of " << name());
     return forecastFixing(rate_->timeFromReference(fixingDate), incDividend);
 }
 
-Real EquityIndex::forecastFixing(const Time& fixingTime) const { return forecastFixing(fixingTime, false); }
+Real EquityIndex2::forecastFixing(const Time& fixingTime) const { return forecastFixing(fixingTime, false); }
 
-Real EquityIndex::forecastFixing(const Time& fixingTime, bool incDividend) const {
+Real EquityIndex2::forecastFixing(const Time& fixingTime, bool incDividend) const {
     QL_REQUIRE(!spotQuote_.empty(), "null spot quote set to this instance of " << name());
     QL_REQUIRE(!rate_.empty() && !dividend_.empty(), "null term structure set to this instance of " << name());
 
@@ -102,7 +102,7 @@ Real EquityIndex::forecastFixing(const Time& fixingTime, bool incDividend) const
     return forward;
 }
 
-void EquityIndex::addDividend(const Dividend& dividend, bool forceOverwrite) {
+void EquityIndex2::addDividend(const Dividend& dividend, bool forceOverwrite) {
     std::string tag = name();
     std::set<Dividend> divs = DividendManager::instance().getHistory(tag);
     if (!forceOverwrite) {
@@ -118,7 +118,7 @@ void EquityIndex::addDividend(const Dividend& dividend, bool forceOverwrite) {
     DividendManager::instance().setHistory(tag, divs);
 }
 
-Real EquityIndex::dividendsBetweenDates(const Date& startDate, const Date& endDate) const {
+Real EquityIndex2::dividendsBetweenDates(const Date& startDate, const Date& endDate) const {
     const Date& today = Settings::instance().evaluationDate();
 
     const std::set<Dividend>& history = dividendFixings();
@@ -134,9 +134,9 @@ Real EquityIndex::dividendsBetweenDates(const Date& startDate, const Date& endDa
     return dividends;
 }
 
-boost::shared_ptr<EquityIndex> EquityIndex::clone(const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
+boost::shared_ptr<EquityIndex2> EquityIndex2::clone(const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
                                                   const Handle<YieldTermStructure>& dividend) const {
-    return boost::make_shared<EquityIndex>(familyName(), fixingCalendar(), currency(), spotQuote, rate, dividend);
+    return boost::make_shared<EquityIndex2>(familyName(), fixingCalendar(), currency(), spotQuote, rate, dividend);
 }
 
 } // namespace QuantExt

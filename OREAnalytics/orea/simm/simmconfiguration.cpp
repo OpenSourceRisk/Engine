@@ -35,6 +35,7 @@ using boost::assign::list_of;
 using std::map;
 using std::ostream;
 using std::set;
+using std::pair;
 using std::string;
 using std::vector;
 
@@ -116,220 +117,6 @@ const Size SimmConfiguration::numberOfMarginTypes = marginTypeMap.size();
 const Size SimmConfiguration::numberOfProductClasses = productClassMap.size();
 const Size SimmConfiguration::numberOfRegulations = regulationsMap.size();
 
-// Initialise the ORE trade to product class mapping
-// Note that not all trade types are here, some are defined by logic (e.g. FxForward)
-const map<string, SimmConfiguration::ProductClass> tradeProductClassMap = {
-    {"CommodityAccumulator", SimmConfiguration::ProductClass::Commodity},
-    {"CommodityAsianOption", SimmConfiguration::ProductClass::Commodity},
-    {"CommodityAveragePriceOption", SimmConfiguration::ProductClass::Commodity},
-    {"CommodityBasketOption", SimmConfiguration::ProductClass::Commodity},
-    {"CommodityForward", SimmConfiguration::ProductClass::Commodity},
-    {"CommodityOption", SimmConfiguration::ProductClass::Commodity},
-    {"CommodityDigitalAveragePriceOption", SimmConfiguration::ProductClass::Commodity},
-    {"CommodityDigitalOption", SimmConfiguration::ProductClass::Commodity},
-    {"CommodityOptionStrip", SimmConfiguration::ProductClass::Commodity},
-    {"CommodityPosition", SimmConfiguration::ProductClass::Commodity},
-    {"CommodityRainbowOption", SimmConfiguration::ProductClass::Commodity},
-    {"CommoditySpreadOption", SimmConfiguration::ProductClass::Commodity},
-    {"CommoditySwap", SimmConfiguration::ProductClass::Commodity},
-    {"CommoditySwaption", SimmConfiguration::ProductClass::Commodity},
-    {"CommodityTaRF", SimmConfiguration::ProductClass::Commodity},
-    {"CommodityVarianceSwap", SimmConfiguration::ProductClass::Commodity},
-    {"CommodityPairwiseVarianceSwap", SimmConfiguration::ProductClass::Commodity},
-    {"CommodityBasketVarianceSwap", SimmConfiguration::ProductClass::Commodity},
-    {"Ascot", SimmConfiguration::ProductClass::Credit},
-    {"AssetBackedCreditDefaultSwap", SimmConfiguration::ProductClass::Credit},
-    {"CBO", SimmConfiguration::ProductClass::Credit},
-    {"CreditDefaultSwap", SimmConfiguration::ProductClass::Credit},
-    {"CreditDefaultSwapOption", SimmConfiguration::ProductClass::Credit},
-    {"CreditLinkedSwap", SimmConfiguration::ProductClass::Credit},
-    {"IndexCreditDefaultSwap", SimmConfiguration::ProductClass::Credit},
-    {"IndexCreditDefaultSwapOption", SimmConfiguration::ProductClass::Credit},
-    {"RiskParticipationAgreement", SimmConfiguration::ProductClass::Credit},
-    {"SyntheticCDO", SimmConfiguration::ProductClass::Credit},
-    {"Failed", SimmConfiguration::ProductClass::Empty},
-    {"IMScheduleTrade", SimmConfiguration::ProductClass::Empty},
-    {"SensiTrade", SimmConfiguration::ProductClass::Empty},
-    {"UseCounterparty", SimmConfiguration::ProductClass::Empty},
-    {"EquityAccumulator", SimmConfiguration::ProductClass::Equity},
-    {"EquityAsianOption", SimmConfiguration::ProductClass::Equity},
-    {"EquityAsianOption", SimmConfiguration::ProductClass::Equity},
-    {"EquityBarrierOption", SimmConfiguration::ProductClass::Equity},
-    {"EquityBasketOption", SimmConfiguration::ProductClass::Equity},
-    {"EquityCliquetOption", SimmConfiguration::ProductClass::Equity},
-    {"EquityDigitalOption", SimmConfiguration::ProductClass::Equity},
-    {"EquityDoubleBarrierOption", SimmConfiguration::ProductClass::Equity},
-    {"EquityDoubleTouchOption", SimmConfiguration::ProductClass::Equity},
-    {"EquityEuropeanBarrierOption", SimmConfiguration::ProductClass::Equity},
-    {"EquityForward", SimmConfiguration::ProductClass::Equity},
-    {"EquityFutureOption", SimmConfiguration::ProductClass::Equity},
-    {"EquityOption", SimmConfiguration::ProductClass::Equity},
-    {"EquityOptionPosition", SimmConfiguration::ProductClass::Equity},
-    {"EquityOutperformanceOption", SimmConfiguration::ProductClass::Equity},
-    {"EquityPosition", SimmConfiguration::ProductClass::Equity},
-    {"EquityRainbowOption", SimmConfiguration::ProductClass::Equity},
-    {"EquitySwap", SimmConfiguration::ProductClass::Equity},
-    {"EquityWorstOfBasketSwap", SimmConfiguration::ProductClass::Equity},
-    {"EquityTaRF", SimmConfiguration::ProductClass::Equity},
-    {"EquityTouchOption", SimmConfiguration::ProductClass::Equity},
-    {"EquityVarianceSwap", SimmConfiguration::ProductClass::Equity},
-    {"EquityPairwiseVarianceSwap", SimmConfiguration::ProductClass::Equity},
-    {"EquityBasketVarianceSwap", SimmConfiguration::ProductClass::Equity},
-    {"FxAccumulator", SimmConfiguration::ProductClass::RatesFX},
-    {"FxAsianOption", SimmConfiguration::ProductClass::RatesFX},
-    {"FxAsianOption", SimmConfiguration::ProductClass::RatesFX},
-    {"FxBarrierOption", SimmConfiguration::ProductClass::RatesFX},
-    {"FxBasketOption", SimmConfiguration::ProductClass::RatesFX},
-    {"FxDigitalBarrierOption", SimmConfiguration::ProductClass::RatesFX},
-    {"FxDigitalOption", SimmConfiguration::ProductClass::RatesFX},
-    {"FxDoubleBarrierOption", SimmConfiguration::ProductClass::RatesFX},
-    {"FxDoubleTouchOption", SimmConfiguration::ProductClass::RatesFX},
-    {"FxEuropeanBarrierOption", SimmConfiguration::ProductClass::RatesFX},
-    {"FxAverageForward", SimmConfiguration::ProductClass::RatesFX},
-    {"FxForward", SimmConfiguration::ProductClass::RatesFX},
-    {"FxKIKOBarrierOption", SimmConfiguration::ProductClass::RatesFX},
-    {"FxOption", SimmConfiguration::ProductClass::RatesFX},
-    {"FxRainbowOption", SimmConfiguration::ProductClass::RatesFX},
-    {"FxSwap", SimmConfiguration::ProductClass::RatesFX},
-    {"FxTaRF", SimmConfiguration::ProductClass::RatesFX},
-    {"FxTouchOption", SimmConfiguration::ProductClass::RatesFX},
-    {"FxVarianceSwap", SimmConfiguration::ProductClass::RatesFX},
-    {"FxPairwiseVarianceSwap", SimmConfiguration::ProductClass::RatesFX},
-    {"FxBasketVarianceSwap", SimmConfiguration::ProductClass::RatesFX},
-    {"BalanceGuaranteedSwap", SimmConfiguration::ProductClass::RatesFX},
-    {"Bond", SimmConfiguration::ProductClass::RatesFX},
-    {"BondOption", SimmConfiguration::ProductClass::RatesFX},
-    {"BondRepo", SimmConfiguration::ProductClass::RatesFX},
-    {"BondTRS", SimmConfiguration::ProductClass::RatesFX},
-    {"CallableSwap", SimmConfiguration::ProductClass::RatesFX},
-    {"CapFloor", SimmConfiguration::ProductClass::RatesFX},
-    {"ConvertibleBond", SimmConfiguration::ProductClass::RatesFX},
-    {"FlexiSwap", SimmConfiguration::ProductClass::RatesFX},
-    {"ForwardBond", SimmConfiguration::ProductClass::RatesFX},
-    {"ForwardRateAgreement", SimmConfiguration::ProductClass::RatesFX},
-    {"MultiLegOption", SimmConfiguration::ProductClass::RatesFX},
-    {"CrossCurrencySwap", SimmConfiguration::ProductClass::RatesFX},
-    {"Swap", SimmConfiguration::ProductClass::RatesFX},
-    {"InflationSwap", SimmConfiguration::ProductClass::RatesFX},
-    {"Swaption", SimmConfiguration::ProductClass::RatesFX},
-    {"TotalReturnSwap", SimmConfiguration::ProductClass::RatesFX},
-    {"ContractForDifference", SimmConfiguration::ProductClass::RatesFX},
-    {"Autocallable_01", SimmConfiguration::ProductClass::Equity},
-    // These are generic products that need logic to determine the product class, see
-    // utilities.cpp/simmProductClassFromOreTrade()
-    {"Autocallable_01", SimmConfiguration::ProductClass::Equity},
-    {"CompositeTrade", SimmConfiguration::ProductClass::RatesFX},
-    {"DoubleDigitalOption", SimmConfiguration::ProductClass::RatesFX},
-    {"EuropeanOptionBarrier", SimmConfiguration::ProductClass::Equity},
-    {"PerformanceOption_01", SimmConfiguration::ProductClass::Equity},
-    {"ScriptedTrade", SimmConfiguration::ProductClass::Equity}};
-
-// Initialise the ORE trade to product class mapping
-// Note that not all trade types are here, some are defined by logic (e.g. FxForward)
-const map<string, SimmConfiguration::ProductClass> tradeScheduleProductClassMap = {
-    {"CommodityAccumulator", SimmConfiguration::ProductClass::Commodity},
-    {"CommodityAsianOption", SimmConfiguration::ProductClass::Commodity},
-    {"CommodityAveragePriceOption", SimmConfiguration::ProductClass::Commodity},
-    {"CommodityBasketOption", SimmConfiguration::ProductClass::Commodity},
-    {"CommodityDigitalAveragePriceOption", SimmConfiguration::ProductClass::Commodity},
-    {"CommodityForward", SimmConfiguration::ProductClass::Commodity},
-    {"CommodityOption", SimmConfiguration::ProductClass::Commodity},
-    {"CommodityOptionStrip", SimmConfiguration::ProductClass::Commodity},
-    {"CommodityRainbowOption", SimmConfiguration::ProductClass::Commodity},
-    {"CommodityWorstOfBasketSwap", SimmConfiguration::ProductClass::Commodity},
-    {"CommoditySwap", SimmConfiguration::ProductClass::Commodity},
-    {"CommoditySwaption", SimmConfiguration::ProductClass::Commodity},
-    {"CommodityTaRF", SimmConfiguration::ProductClass::Commodity},
-    {"CommodityVarianceSwap", SimmConfiguration::ProductClass::Commodity},
-    {"CommodityPairwiseVarianceSwap", SimmConfiguration::ProductClass::Commodity},
-    {"CommodityBasketVarianceSwap", SimmConfiguration::ProductClass::Commodity},
-    {"Ascot", SimmConfiguration::ProductClass::Credit},
-    {"AssetBackedCreditDefaultSwap", SimmConfiguration::ProductClass::Credit},
-    {"CBO", SimmConfiguration::ProductClass::Credit},
-    {"CreditDefaultSwap", SimmConfiguration::ProductClass::Credit},
-    {"CreditDefaultSwapOption", SimmConfiguration::ProductClass::Credit},
-    {"CreditLinkedSwap", SimmConfiguration::ProductClass::Credit},
-    {"IndexCreditDefaultSwap", SimmConfiguration::ProductClass::Credit},
-    {"IndexCreditDefaultSwapOption", SimmConfiguration::ProductClass::Credit},
-    {"RiskParticipationAgreement", SimmConfiguration::ProductClass::Credit},
-    {"SyntheticCDO", SimmConfiguration::ProductClass::Credit},
-    {"Failed", SimmConfiguration::ProductClass::Empty},
-    {"IMScheduleTrade", SimmConfiguration::ProductClass::Empty},
-    {"SensiTrade", SimmConfiguration::ProductClass::Empty},
-    {"UseCounterparty", SimmConfiguration::ProductClass::Empty},
-    {"EquityAccumulator", SimmConfiguration::ProductClass::Equity},
-    {"EquityAsianOption", SimmConfiguration::ProductClass::Equity},
-    {"EquityAsianOption", SimmConfiguration::ProductClass::Equity},
-    {"EquityBarrierOption", SimmConfiguration::ProductClass::Equity},
-    {"EquityBasketOption", SimmConfiguration::ProductClass::Equity},
-    {"EquityCliquetOption", SimmConfiguration::ProductClass::Equity},
-    {"EquityDigitalOption", SimmConfiguration::ProductClass::Equity},
-    {"EquityDoubleBarrierOption", SimmConfiguration::ProductClass::Equity},
-    {"EquityDoubleTouchOption", SimmConfiguration::ProductClass::Equity},
-    {"EquityEuropeanBarrierOption", SimmConfiguration::ProductClass::Equity},
-    {"EquityForward", SimmConfiguration::ProductClass::Equity},
-    {"EquityFutureOption", SimmConfiguration::ProductClass::Equity},
-    {"EquityOption", SimmConfiguration::ProductClass::Equity},
-    {"EquityOptionPosition", SimmConfiguration::ProductClass::Equity},
-    {"EquityOutperformanceOption", SimmConfiguration::ProductClass::Equity},
-    {"EquityPosition", SimmConfiguration::ProductClass::Equity},
-    {"EquityRainbowOption", SimmConfiguration::ProductClass::Equity},
-    {"EquitySwap", SimmConfiguration::ProductClass::Equity},
-    {"EquityTaRF", SimmConfiguration::ProductClass::Equity},
-    {"EquityTouchOption", SimmConfiguration::ProductClass::Equity},
-    {"EquityVarianceSwap", SimmConfiguration::ProductClass::Equity},
-    {"EquityPairwiseVarianceSwap", SimmConfiguration::ProductClass::Equity},
-    {"EquityBasketVarianceSwap", SimmConfiguration::ProductClass::Equity},
-    {"FxAccumulator", SimmConfiguration::ProductClass::FX},
-    {"FxAsianOption", SimmConfiguration::ProductClass::FX},
-    {"FxAsianOption", SimmConfiguration::ProductClass::FX},
-    {"FxBarrierOption", SimmConfiguration::ProductClass::FX},
-    {"FxBasketOption", SimmConfiguration::ProductClass::FX},
-    {"FxDigitalBarrierOption", SimmConfiguration::ProductClass::FX},
-    {"FxDigitalOption", SimmConfiguration::ProductClass::FX},
-    {"FxDoubleBarrierOption", SimmConfiguration::ProductClass::FX},
-    {"FxDoubleTouchOption", SimmConfiguration::ProductClass::FX},
-    {"FxEuropeanBarrierOption", SimmConfiguration::ProductClass::FX},
-    {"FxWorstOfBasketSwap", SimmConfiguration::ProductClass::FX},
-    {"FxAverageForward", SimmConfiguration::ProductClass::FX},
-    {"FxForward", SimmConfiguration::ProductClass::FX},
-    {"FxKIKOBarrierOption", SimmConfiguration::ProductClass::FX},
-    {"FxOption", SimmConfiguration::ProductClass::FX},
-    {"FxRainbowOption", SimmConfiguration::ProductClass::FX},
-    {"FxSwap", SimmConfiguration::ProductClass::FX},
-    {"FxTaRF", SimmConfiguration::ProductClass::FX},
-    {"FxTouchOption", SimmConfiguration::ProductClass::FX},
-    {"FxVarianceSwap", SimmConfiguration::ProductClass::FX},
-    {"FxPairwiseVarianceSwap", SimmConfiguration::ProductClass::FX},
-    {"FxBasketVarianceSwap", SimmConfiguration::ProductClass::FX},
-    {"BalanceGuaranteedSwap", SimmConfiguration::ProductClass::Rates},
-    {"Bond", SimmConfiguration::ProductClass::Rates},
-    {"BondOption", SimmConfiguration::ProductClass::Rates},
-    {"BondRepo", SimmConfiguration::ProductClass::Rates},
-    {"BondTRS", SimmConfiguration::ProductClass::Rates},
-    {"CallableSwap", SimmConfiguration::ProductClass::Rates},
-    {"CapFloor", SimmConfiguration::ProductClass::Rates},
-    {"ConvertibleBond", SimmConfiguration::ProductClass::Rates},
-    {"FlexiSwap", SimmConfiguration::ProductClass::Rates},
-    {"ForwardBond", SimmConfiguration::ProductClass::Rates},
-    {"ForwardRateAgreement", SimmConfiguration::ProductClass::Rates},
-    {"MultiLegOption", SimmConfiguration::ProductClass::Rates},
-    {"CrossCurrencySwap", SimmConfiguration::ProductClass::Rates},
-    {"Swap", SimmConfiguration::ProductClass::Rates},
-    {"InflationSwap", SimmConfiguration::ProductClass::Rates},
-    {"Swaption", SimmConfiguration::ProductClass::Rates},
-    {"TotalReturnSwap", SimmConfiguration::ProductClass::Rates},
-    {"ContractForDifference", SimmConfiguration::ProductClass::Rates},
-    {"Autocallable_01", SimmConfiguration::ProductClass::Equity},
-    // These are generic products that need logic to determine the product class, see
-    // utilities.cpp/simmProductClassFromOreTrade()
-    {"Autocallable_01", SimmConfiguration::ProductClass::Equity},
-    {"CompositeTrade", SimmConfiguration::ProductClass::Rates},
-    {"DoubleDigitalOption", SimmConfiguration::ProductClass::Rates},
-    {"EuropeanOptionBarrier", SimmConfiguration::ProductClass::Equity},
-    {"PerformanceOption_01", SimmConfiguration::ProductClass::Equity},
-    {"ScriptedTrade", SimmConfiguration::ProductClass::Equity}};
-
 set<SimmConfiguration::RiskClass> SimmConfiguration::riskClasses(bool includeAll) {
 
     // This only works if 'All' is the last enum value
@@ -382,16 +169,68 @@ set<SimmConfiguration::ProductClass> SimmConfiguration::productClasses(bool incl
     return result;
 }
 
-SimmConfiguration::ProductClass simmProductClassFromOreTradeType(const string& tradeType) {
-    QL_REQUIRE(tradeProductClassMap.count(tradeType) > 0,
-               "simmProductClassFromOreTradeType: tradeType '" << tradeType << "' not recognised");
-    return tradeProductClassMap.at(tradeType);
+pair<SimmConfiguration::RiskType, SimmConfiguration::RiskType>
+SimmConfiguration::riskClassToRiskType(const RiskClass& rc) {
+    RiskType deltaRiskType, vegaRiskType;
+    switch (rc) {
+    case RiskClass::InterestRate:
+        deltaRiskType = RiskType::IRCurve;
+        vegaRiskType = RiskType::IRVol;
+        break;
+    case RiskClass::CreditQualifying:
+        deltaRiskType = RiskType::CreditQ;
+        vegaRiskType = RiskType::CreditVol;
+        break;
+    case RiskClass::CreditNonQualifying:
+        deltaRiskType = RiskType::CreditNonQ;
+        vegaRiskType = RiskType::CreditVolNonQ;
+        break;
+    case RiskClass::Equity:
+        deltaRiskType = RiskType::Equity;
+        vegaRiskType = RiskType::EquityVol;
+        break;
+    case RiskClass::Commodity:
+        deltaRiskType = RiskType::Commodity;
+        vegaRiskType = RiskType::CommodityVol;
+        break;
+    case RiskClass::FX:
+        deltaRiskType = RiskType::FX;
+        vegaRiskType = RiskType::FXVol;
+        break;
+    default:
+        QL_FAIL("riskClassToRiskType: Unexpected risk class");
+    }
+
+    return std::make_pair(deltaRiskType, vegaRiskType);
 }
 
-SimmConfiguration::ProductClass scheduleProductClassFromOreTradeType(const string& tradeType) {
-    QL_REQUIRE(tradeScheduleProductClassMap.count(tradeType) > 0,
-               "scheduleProductClassFromOreTradeType: tradeType '" << tradeType << "' not recognised");
-    return tradeScheduleProductClassMap.at(tradeType);
+SimmConfiguration::RiskClass SimmConfiguration::riskTypeToRiskClass(const RiskType& rt) {
+    switch (rt) {
+    case RiskType::Commodity:
+    case RiskType::CommodityVol:
+        return RiskClass::Commodity;
+    case RiskType::CreditQ:
+    case RiskType::CreditVol:
+    case RiskType::BaseCorr:
+        return RiskClass::CreditQualifying;
+    case RiskType::CreditNonQ:
+    case RiskType::CreditVolNonQ:
+        return RiskClass::CreditNonQualifying;
+    case RiskType::Equity:
+    case RiskType::EquityVol:
+        return RiskClass::Equity;
+    case RiskType::FX:
+    case RiskType::FXVol:
+        return RiskClass::FX;
+    case RiskType::Inflation:
+    case RiskType::InflationVol:
+    case RiskType::IRCurve:
+    case RiskType::IRVol:
+    case RiskType::XCcyBasis:
+        return RiskClass::InterestRate;
+    default:
+        QL_FAIL("riskTypeToRiskClass: Invalid risk type");
+    }
 }
 
 ostream& operator<<(ostream& out, const SimmConfiguration::SimmSide& s) {
@@ -494,6 +333,15 @@ SimmConfiguration::Regulation parseRegulation(const string& regulation) {
     } else {
         return regulationsMap.right.at(regulation);
     }
+}
+
+string combineRegulations(const string& regs1, const string& regs2) {
+    if (regs1.empty())
+        return regs2;
+    if (regs2.empty())
+        return regs1;
+
+    return regs1 + ',' + regs2;
 }
 
 set<string> parseRegulationString(const string& regsString, const set<string>& valueIfEmpty) {

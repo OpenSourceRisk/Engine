@@ -49,7 +49,7 @@ Rate AverageONIndexedCouponPricer::swapletRate() const {
         Date valuationDate = Settings::instance().evaluationDate();
         // Deal with past fixings.
         while (i < numPeriods && fixingDates[std::min(i, nCutoff)] < valuationDate) {
-            Rate pastFixing = overnightIndex_->fixing(fixingDates[std::min(i, nCutoff)]);
+            Rate pastFixing = overnightIndex_->pastFixing(fixingDates[std::min(i, nCutoff)]);
             QL_REQUIRE(pastFixing != Null<Real>(),
                        "Missing " << overnightIndex_->name() << " fixing for " << fixingDates[std::min(i, nCutoff)]);
             accumulatedRate += pastFixing * accrualFractions[i];
@@ -57,7 +57,7 @@ Rate AverageONIndexedCouponPricer::swapletRate() const {
         }
         // Use valuation date's fixing also if available.
         if (i < numPeriods && fixingDates[std::min(i, nCutoff)] == valuationDate) {
-            Rate valuationDateFixing = IndexManager::instance().getHistory(overnightIndex_->name())[valuationDate];
+            Rate valuationDateFixing = overnightIndex_->pastFixing(valuationDate);
             if (valuationDateFixing != Null<Real>()) {
                 accumulatedRate += valuationDateFixing * accrualFractions[i];
                 ++i;
@@ -69,16 +69,9 @@ Rate AverageONIndexedCouponPricer::swapletRate() const {
             QL_REQUIRE(!projectionCurve.empty(),
                        "Null term structure set to this instance of " << overnightIndex_->name());
 
-            // we know that nCutoff >= i because either
-            // a) i = today, but if nCutoff < today, there is no forward part
-            // b) i = today + 1bd, the we have a historical fixing available on today and if nCutoff = today
-            //        again there is no forward part
-            QL_REQUIRE(nCutoff >= i,
-                       "internal inconsistency: nCutoff (" << nCutoff << ") >= i (" << i << ") expected.");
-
             // handle the part until the rate cutoff (might be empty, i.e. startForecast = endForecast)
             Date startForecast = coupon_->valueDates()[i];
-            Date endForecast = coupon_->valueDates()[nCutoff];
+            Date endForecast = coupon_->valueDates()[std::max(nCutoff, i)];
             DiscountFactor startDiscount = projectionCurve->discount(startForecast);
             DiscountFactor endDiscount = projectionCurve->discount(endForecast);
 
@@ -103,7 +96,7 @@ Rate AverageONIndexedCouponPricer::swapletRate() const {
         QL_FAIL("Invalid Approximation for AverageONIndexedCouponPricer");
     }
     // Return factor * rate + spread
-    Rate tau = coupon_->dayCounter().yearFraction(coupon_->valueDates().front(), coupon_->valueDates().back());
+    Rate tau = overnightIndex_->dayCounter().yearFraction(coupon_->valueDates().front(), coupon_->valueDates().back());
     Rate rate = gearing_ * accumulatedRate / tau + spread_;
     return rate;
 }

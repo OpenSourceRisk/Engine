@@ -32,9 +32,11 @@ namespace data {
 //! Utility class for Structured Model errors
 class StructuredModelErrorMessage : public StructuredMessage {
 public:
-    StructuredModelErrorMessage(const std::string& exceptionType, const std::string& exceptionWhat)
-        : StructuredMessage(Category::Error, Group::Model, exceptionWhat,
-                            std::map<std::string, std::string>({{"exceptionType", exceptionType}})) {}
+    StructuredModelErrorMessage(const std::string& exceptionType, const std::string& exceptionWhat,
+                                const std::string& contextId)
+        : StructuredMessage(
+              Category::Error, Group::Model, exceptionWhat,
+              std::map<std::string, std::string>({{"exceptionType", exceptionType}, {"context-id", contextId}})) {}
 };
 
 } // namespace data

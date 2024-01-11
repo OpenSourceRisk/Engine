@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<PricingEngines>
+  <Product type="Swap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters />
+    <Engine>DiscountingSwapEngine</Engine>
+    <EngineParameters />
+  </Product>
+  <Product type="Bond">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingRiskyBondEngine</Engine>
+    <EngineParameters>
+      <Parameter name="TimestepPeriod">6M</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="ConvertibleBond">
+    <Model>DefaultableEquityJumpDiffusion</Model>
+    <ModelParameters>
+      <Parameter name="p">0.0</Parameter>
+      <Parameter name="eta">1.0</Parameter>
+    </ModelParameters>
+    <Engine>FD</Engine>
+    <EngineParameters>
+      <Parameter name="MesherIsStatic">true</Parameter>
+      <Parameter name="Bootstrap.CalibrationGrid">3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y,40Y,50Y</Parameter>
+      <Parameter name="Bootstrap.TimeStepsPerYear">24</Parameter>
+      <Parameter name="Bootstrap.StateGridPoints">400</Parameter>
+      <Parameter name="Bootstrap.MesherEpsilon">1E-5</Parameter>
+      <Parameter name="Bootstrap.MesherScaling">1.5</Parameter>
+      <Parameter name="Bootstrap.Mode">Alternating</Parameter>
+      <Parameter name="Pricing.TimeStepsPerYear">24</Parameter>
+      <Parameter name="Pricing.StateGridPoints">100</Parameter>
+      <Parameter name="Pricing.MesherEpsilon">1E-4</Parameter>
+      <Parameter name="Pricing.MesherScaling">1.5</Parameter>
+      <Parameter name="Pricing.ConversionRatioDiscretisationGrid">0.1,0.5,0.7,0.9,1.0,1.1,1.2,1.3,1.5,2.0,5.0,10.0</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="Ascot">
+    <Model>BlackScholes</Model>
+    <ModelParameters/>
+    <Engine>Intrinsic</Engine>
+    <EngineParameters>
+      <Parameter name="TimeStepsPerYear">24</Parameter>
+    </EngineParameters>
+  </Product>
+</PricingEngines>

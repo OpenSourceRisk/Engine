@@ -31,13 +31,15 @@ BondIndex::BondIndex(const std::string& securityName, const bool dirty, const bo
                      const Handle<YieldTermStructure>& discountCurve,
                      const Handle<DefaultProbabilityTermStructure>& defaultCurve, const Handle<Quote>& recoveryRate,
                      const Handle<Quote>& securitySpread, const Handle<YieldTermStructure>& incomeCurve,
-                     const bool conditionalOnSurvival, const PriceQuoteMethod priceQuoteMethod,
-                     const double priceQuoteBaseValue, const bool isInflationLinked, const double bidAskAdjustment)
+                     const bool conditionalOnSurvival, const Date& issueDate, const PriceQuoteMethod priceQuoteMethod,
+                     const double priceQuoteBaseValue, const bool isInflationLinked, const double bidAskAdjustment,
+                     const bool bondIssueDateFallback)
     : securityName_(securityName), dirty_(dirty), relative_(relative), fixingCalendar_(fixingCalendar), bond_(bond),
       discountCurve_(discountCurve), defaultCurve_(defaultCurve), recoveryRate_(recoveryRate),
       securitySpread_(securitySpread), incomeCurve_(incomeCurve), conditionalOnSurvival_(conditionalOnSurvival),
-      priceQuoteMethod_(priceQuoteMethod), priceQuoteBaseValue_(priceQuoteBaseValue),
-      isInflationLinked_(isInflationLinked), bidAskAdjustment_(bidAskAdjustment) {
+      issueDate_(issueDate), priceQuoteMethod_(priceQuoteMethod), priceQuoteBaseValue_(priceQuoteBaseValue),
+      isInflationLinked_(isInflationLinked), bidAskAdjustment_(bidAskAdjustment),
+      bondIssueDateFallback_(bondIssueDateFallback) {
 
     registerWith(Settings::instance().evaluationDate());
     registerWith(IndexManager::instance().notifier(BondIndex::name()));
@@ -52,7 +54,7 @@ BondIndex::BondIndex(const std::string& securityName, const bool dirty, const bo
                                                                         securitySpread, 6 * Months, boost::none);
 }
 
-std::string BondIndex::name() const { return "BondIndex-" + securityName_; }
+std::string BondIndex::name() const { return "BOND-" + securityName_; }
 
 Calendar BondIndex::fixingCalendar() const { return fixingCalendar_; }
 
@@ -131,12 +133,15 @@ Rate BondIndex::forecastFixing(const Date& fixingDate) const {
 
 Real BondIndex::pastFixing(const Date& fixingDate) const {
     QL_REQUIRE(isValidFixingDate(fixingDate), fixingDate << " is not a valid fixing date for '" << name() << "'");
-    Real price = timeSeries()[fixingDate] + bidAskAdjustment_;
+
+    Date fd = (bondIssueDateFallback_ && fixingDate < issueDate_) ? issueDate_ : fixingDate;
+
+    Real price = timeSeries()[fd] + bidAskAdjustment_;
     if (price == Null<Real>())
         return price;
     if (dirty_) {
         QL_REQUIRE(bond_, "BondIndex::pastFixing(): bond required for dirty prices");
-        price += bond_->accruedAmount(fixingDate) / 100.0;
+        price += bond_->accruedAmount(fd) / 100.0;
     }
 
     if (isInflationLinked_) {
@@ -145,7 +150,7 @@ Real BondIndex::pastFixing(const Date& fixingDate) const {
 
     if (!relative_) {
         QL_REQUIRE(bond_, "BondIndex::pastFixing(): bond required for absolute prices");
-        price *= bond_->notional(fixingDate);
+        price *= bond_->notional(fd);
     }
     return price;
 }
@@ -157,9 +162,9 @@ BondFuturesIndex::BondFuturesIndex(const QuantLib::Date& expiryDate, const std::
                                    const Handle<DefaultProbabilityTermStructure>& defaultCurve,
                                    const Handle<Quote>& recoveryRate, const Handle<Quote>& securitySpread,
                                    const Handle<YieldTermStructure>& incomeCurve, const bool conditionalOnSurvival,
-                                   const PriceQuoteMethod priceQuoteMethod, const double priceQuoteBaseValue)
+                                   const Date& issueDate, const PriceQuoteMethod priceQuoteMethod, const double priceQuoteBaseValue)
     : BondIndex(securityName, dirty, relative, fixingCalendar, bond, discountCurve, defaultCurve, recoveryRate,
-                securitySpread, incomeCurve, conditionalOnSurvival, priceQuoteMethod, priceQuoteBaseValue),
+                securitySpread, incomeCurve, conditionalOnSurvival, issueDate, priceQuoteMethod, priceQuoteBaseValue),
       expiryDate_(expiryDate) {}
 
 std::string BondFuturesIndex::name() const {

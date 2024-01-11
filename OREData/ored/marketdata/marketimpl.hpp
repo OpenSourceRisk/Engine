@@ -128,7 +128,7 @@ public:
 
     //! Equity curves
     Handle<Quote> equitySpot(const string& eqName, const string& configuration = Market::defaultConfiguration) const override;
-    Handle<QuantExt::EquityIndex> equityCurve(const string& eqName,
+    Handle<QuantExt::EquityIndex2> equityCurve(const string& eqName,
                                               const string& configuration = Market::defaultConfiguration) const override;
 
     Handle<YieldTermStructure> equityDividendCurve(const string& eqName,
@@ -229,7 +229,7 @@ protected:
     mutable map<tuple<string, string, string>, Handle<QuantExt::CorrelationTermStructure>> correlationCurves_;
     mutable map<pair<string, string>, QuantLib::Handle<QuantExt::CommodityIndex>> commodityIndices_;
     mutable map<pair<string, string>, QuantLib::Handle<QuantLib::BlackVolTermStructure>> commodityVols_;
-    mutable map<pair<string, string>, QuantLib::Handle<QuantExt::EquityIndex>> equityCurves_;
+    mutable map<pair<string, string>, QuantLib::Handle<QuantExt::EquityIndex2>> equityCurves_;
     mutable map<pair<string, string>, Handle<Quote>> cprs_;
 
     //! add a swap index to the market
