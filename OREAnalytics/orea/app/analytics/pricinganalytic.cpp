@@ -234,6 +234,11 @@ void PricingAnalyticImpl::runAnalytic(
 
             if (inputs_->parSensi()) {
                 LOG("Sensi analysis - par conversion");
+
+                if (inputs_->optimiseRiskFactors()){
+                    parAnalysis->relevantRiskFactors() = sensiAnalysis->sensiCube()->relevantRiskFactors();
+                    LOG("optimiseRiskFactors active : parSensi risk factors set to zeroSensi risk factors");
+                }
                 parAnalysis->computeParInstrumentSensitivities(sensiAnalysis->simMarket());
                 boost::shared_ptr<ParSensitivityConverter> parConverter =
                     boost::make_shared<ParSensitivityConverter>(parAnalysis->parSensitivities(), parAnalysis->shiftSizes());

@@ -710,6 +710,10 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         if (tmp != "")
             inputs->setParSensi(parseBool(tmp));
 
+        tmp = params_->get("sensitivity", "OptimiseRiskFactors", false);
+        if (tmp != "")
+            inputs->setOptimiseRiskFactors(parseBool(tmp));
+
         tmp = params_->get("sensitivity", "outputJacobi", false);
         if (tmp != "")
             inputs->setOutputJacobi(parseBool(tmp));
