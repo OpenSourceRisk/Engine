@@ -47,15 +47,8 @@ WORKDIR /
 RUN mkdir -p html \
   && mkdir /html/ored && cp -r /ore/OREData/doc/html/* /html/ored \
   && mkdir /html/orea && cp -r /ore/OREAnalytics/doc/html/* /html/orea \
-  && mkdir /html/qle && cp -r /ore/QuantExt/doc/html/* /html/qle 
-  
-FROM debian:${debian_tag} as ore
-
-COPY --from=orebuild /usr/local/include /usr/local/include
-COPY --from=orebuild /usr/local/lib/ /usr/local/lib
-COPY --from=orebuild /usr/local/bin/ /usr/local/bin
-COPY --from=orebuild /html /html
-COPY --from=orebuild /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
+  && mkdir /html/qle && cp -r /ore/QuantExt/doc/html/* /html/qle \
+  && rm -rf ore
 
 RUN ldconfig
 
