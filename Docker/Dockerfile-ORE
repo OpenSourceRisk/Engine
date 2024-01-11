@@ -1,3 +1,29 @@
+ARG debian_tag
+FROM debian:${debian_tag}
+
+MAINTAINER Quaternion Risk Management
+LABEL Description="Provide a base environment for building in C++ with Boost"
+
+RUN apt-get update && apt-get upgrade -y \
+ && apt-get install -f -y build-essential wget libbz2-dev autoconf libtool dos2unix cmake zlib1g-dev opencl-headers ocl-icd-opencl-dev \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
+
+ARG boost_version
+ARG boost_dir
+ARG boost_variant=release
+ARG num_cores
+
+RUN wget http://downloads.sourceforge.net/project/boost/boost/${boost_version}/${boost_dir}.tar.gz \
+    && tar xfz ${boost_dir}.tar.gz \
+    && rm ${boost_dir}.tar.gz \
+    && cd ${boost_dir} \
+    && ./bootstrap.sh \
+    && ./b2 --without-python -j ${num_cores} link=shared runtime-link=shared variant=${boost_variant} install \
+    && cd .. \
+    && rm -rf ${boost_dir} \
+    && ldconfig
+	
 # syntax = nexus3.acadiasoft.net:4445/docker/dockerfile:experimental
 ARG quantlib_version=${QL_TAG}
 ARG cmake_build_type=${CMAKE_BUILD_TYPE}
@@ -10,9 +36,18 @@ LABEL Description="Build ORE and add to the QuantLib build environment"
 ARG num_cores
 
 # install Eigen
-RUN apt-get install -f -y libeigen3-dev
+RUN apt-get update \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -y doxygen graphviz ccache libeigen3-dev \
+  && apt-get clean
+
+ENV PATH="/usr/lib/ccache:$PATH"
+ENV CCACHE_DIR="/ccache"
+ENV CCACHE_MAXSIZE="10G"
+# needed if QL_USE_PCH is ON
+#ENV CCACHE_SLOPPINESS="pch_defines,time_macros,pch_defines,time_macros,include_file_mtime,include_file_ctim"
 
 # Copy ORE sources for libs and app
+COPY QuantLib /ore/QuantLib
 COPY QuantExt /ore/QuantExt
 COPY OREData /ore/OREData
 COPY OREAnalytics /ore/OREAnalytics
@@ -26,9 +61,8 @@ COPY Docker /ore/Docker
 # scripts fail if there are CRLF present in the files
 RUN cd /ore \
   && find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';' \
-  && cp Docker/CMakeLists_ORE.txt CMakeLists.txt \
   && mkdir -p build.ore && cd build.ore \
-  && cmake .. -DQL_USE_PCH=OFF -DORE_BUILD_DOC=ON -DCMAKE_BUILD_TYPE=${cmake_build_type} -DCMAKE_CXX_FLAGS="-mavx2" -DORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DORE_USE_ZLIB=ON -D ORE_ENABLE_OPENCL=ON
+  && cmake .. -DQL_USE_PCH=OFF -DORE_BUILD_DOC=ON -DCMAKE_BUILD_TYPE=${cmake_build_type} -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_EXTENSIONS=OFF  -DCMAKE_CXX_FLAGS="-D BOOST_ENABLE_ASSERT_HANDLER -mavx2" -DQL_ENABLE_SESSIONS=ON -DQL_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DQL_BUILD_EXAMPLES=OFF -DQL_BUILD_BENCHMARK=OFF -DORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DORE_USE_ZLIB=ON -D ORE_ENABLE_OPENCL=ON
 
 WORKDIR /ore/build.ore
 RUN --mount=type=cache,target=/ccache/ ccache -z \
