@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.15)
 
 project(App CXX)
 
-include("../cmake/commonSettings.cmake")
+include(commonSettings)
 
 get_library_name("OREPlusBase" OREPBASE_LIB_NAME)
 get_library_name("OREAnalytics" OREA_LIB_NAME)
