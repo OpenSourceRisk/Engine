@@ -1,13 +1,13 @@
 version: '3'
 
 services:
-  env_ore_1:
-    image: env_ore_1:${ORE_TAG}
+  env_ore:
+    image: env_ore:${ORE_TAG}
     cap_drop:
       - NET_RAW
     build:
       context: ../
-      dockerfile: Docker/Dockerfile-ORE-1
+      dockerfile: Docker/Dockerfile-ORE
       args:
         - debian_tag=${DEBIAN_TAG}
         - cmake_build_type=${CMAKE_BUILD_TYPE}

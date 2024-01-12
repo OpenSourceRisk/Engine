@@ -1,4 +1,4 @@
-# syntax = nexus3.acadiasoft.net:4445/docker/dockerfile:experimental
+# syntax = docker/dockerfile:experimental
 ARG debian_tag
 FROM debian:${debian_tag} as orebuild
 
