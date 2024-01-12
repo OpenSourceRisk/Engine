@@ -14,7 +14,7 @@ ARG cmake_build_type=${CMAKE_BUILD_TYPE}
 
 ENV PATH="/usr/lib/ccache:$PATH"
 ENV CCACHE_DIR="/ccache"
-ENV CCACHE_MAXSIZE="10G"
+ENV CCACHE_MAXSIZE="15G"
 # needed if QL_USE_PCH is ON
 #ENV CCACHE_SLOPPINESS="pch_defines,time_macros,pch_defines,time_macros,include_file_mtime,include_file_ctim"
 
