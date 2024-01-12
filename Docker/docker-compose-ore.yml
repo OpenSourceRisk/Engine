@@ -1,8 +1,8 @@
 version: '3'
 
 services:
-  env_ore:
-    image: env_ore_1:${ORE_TAG}
+  env_ore_2:
+    image: env_ore_2:${ORE_TAG}
     cap_drop:
       - NET_RAW
     build:
