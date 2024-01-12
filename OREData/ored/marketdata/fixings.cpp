@@ -43,6 +43,8 @@ void applyFixings(const set<Fixing>& fixings) {
     QuantExt::SavedObservableSettings savedObservableSettings;
     ObservableSettings::instance().disableUpdates(true);
 
+
+
     Size count = 1;
     cpu_timer timer;
     boost::shared_ptr<Index> index;
