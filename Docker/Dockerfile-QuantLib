@@ -14,9 +14,18 @@ ARG cmake_build_type
 
 # Exclusions are performed by .dockerignore
 COPY QuantLib /ore/QuantLib
+COPY CMakeLists.txt /ore/CMakeLists.txt
+COPY QuantLib /ore/QuantLib
+COPY QuantExt /ore/QuantExt
+COPY OREData /ore/OREData
+COPY OREAnalytics /ore/OREAnalytics
+COPY App /ore/App
+COPY ThirdPartyLibs /ore/ThirdPartyLibs
+COPY ORETest /ore/ORETest
+COPY cmake /ore/cmake
 
 RUN apt-get update \
-  && DEBIAN_FRONTEND=noninteractive apt-get install -y doxygen graphviz ccache \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -y doxygen graphviz ccache libeigen3-dev \
   && apt-get clean
 
 ENV PATH="/usr/lib/ccache:$PATH"
