@@ -243,7 +243,7 @@ void SensitivityScenarioGenerator::generateScenarios() {
         }
     }
 
-    LOG("sensitivity scenario generator initialised");
+    LOG("sensitivity scenario generator finished generating scenarios.");
 }
 
 namespace {
@@ -351,7 +351,7 @@ void SensitivityScenarioGenerator::generateFxScenarios(bool up) {
         DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
                                        << " created: " << newRate);
     }
-    LOG("FX scenarios done");
+    DLOG("FX scenarios done");
 }
 
 void SensitivityScenarioGenerator::generateEquityScenarios(bool up) {
@@ -393,7 +393,7 @@ void SensitivityScenarioGenerator::generateEquityScenarios(bool up) {
         DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
                                        << " created: " << newRate);
     }
-    LOG("Equity scenarios done");
+    DLOG("Equity scenarios done");
 }
 
 namespace {
@@ -511,7 +511,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
 
         } // end of shift curve tenors
     }
-    LOG("Discount curve scenarios done");
+    DLOG("Discount curve scenarios done");
 }
 
 void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
@@ -609,7 +609,7 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
 
         } // end of shift curve tenors
     }
-    LOG("Index curve scenarios done");
+    DLOG("Index curve scenarios done");
 }
 
 void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
@@ -704,7 +704,7 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
 
         } // end of shift curve tenors
     }
-    LOG("Yield curve scenarios done");
+    DLOG("Yield curve scenarios done");
 }
 
 void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
@@ -801,7 +801,7 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
 
         } // end of shift curve tenors
     }
-    LOG("Dividend yield curve scenarios done");
+    DLOG("Dividend yield curve scenarios done");
 }
 
 void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
@@ -914,7 +914,7 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
             }
         }
     }
-    LOG("FX vol scenarios done");
+    DLOG("FX vol scenarios done");
 }
 
 void SensitivityScenarioGenerator::generateEquityVolScenarios(bool up) {
@@ -1030,7 +1030,7 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(bool up) {
             }
         }
     }
-    LOG("Equity vol scenarios done");
+    DLOG("Equity vol scenarios done");
 }
 
 void SensitivityScenarioGenerator::generateGenericYieldVolScenarios(bool up, RiskFactorKey::KeyType rfType) {
@@ -1230,7 +1230,7 @@ void SensitivityScenarioGenerator::generateGenericYieldVolScenarios(bool up, Ris
 }
 
 void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up) {
-    LOG("starting swapVol sgen");
+    DLOG("starting swapVol sgen");
     // We can choose to shift fewer discount curves than listed in the market
     // Log an ALERT if some swaption currencies in simmarket are excluded from the list
     for (auto sim_key : simMarketData_->swapVolKeys()) {
@@ -1239,11 +1239,11 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up) {
         }
     }
     generateGenericYieldVolScenarios(up, RFType::SwaptionVolatility);
-    LOG("Swaption vol scenarios done");
+    DLOG("Swaption vol scenarios done");
 }
 
 void SensitivityScenarioGenerator::generateYieldVolScenarios(bool up) {
-    LOG("starting yieldVol sgen");
+    DLOG("starting yieldVol sgen");
     // We can choose to shift fewer discount curves than listed in the market
     // Log an ALERT if some bond securityId in simmarket are excluded from the list
     for (auto sim_securityId : simMarketData_->yieldVolNames()) {
@@ -1252,7 +1252,7 @@ void SensitivityScenarioGenerator::generateYieldVolScenarios(bool up) {
         }
     }
     generateGenericYieldVolScenarios(up, RFType::YieldVolatility);
-    LOG("Yield vol scenarios done");
+    DLOG("Yield vol scenarios done");
 }
 
 void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
@@ -1375,7 +1375,7 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
             }
         }
     }
-    LOG("Optionlet vol scenarios done");
+    DLOG("Optionlet vol scenarios done");
 }
 
 void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up) {
@@ -1447,7 +1447,7 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up)
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
             boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
-            LOG("generate survival probability scenario, name " << name << ", bucket " << j << ", up " << up
+            DLOG("generate survival probability scenario, name " << name << ", bucket " << j << ", up " << up
                                                                 << ", desc " << scenarioDescriptions_.back());
 
             // apply averaged hazard rate shift at tenor point j
@@ -1480,7 +1480,7 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up)
 
         } // end of shift curve tenors
     }
-    LOG("Discount curve scenarios done");
+    DLOG("Discount curve scenarios done");
 }
 
 void SensitivityScenarioGenerator::generateCdsVolScenarios(bool up) {
@@ -1568,10 +1568,10 @@ void SensitivityScenarioGenerator::generateCdsVolScenarios(bool up) {
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
             scenarioDescriptions_.push_back(CdsVolScenarioDescription(name, j, strikeBucket, up, getShiftScheme(data)));
-            LOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
+            DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
         }
     }
-    LOG("CDS vol scenarios done");
+    DLOG("CDS vol scenarios done");
 }
 
 void SensitivityScenarioGenerator::generateZeroInflationScenarios(bool up) {
@@ -1664,7 +1664,7 @@ void SensitivityScenarioGenerator::generateZeroInflationScenarios(bool up) {
 
         } // end of shift curve tenors
     }
-    LOG("Zero Inflation Index curve scenarios done");
+    DLOG("Zero Inflation Index curve scenarios done");
 }
 
 void SensitivityScenarioGenerator::generateYoYInflationScenarios(bool up) {
@@ -1763,7 +1763,7 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(bool up) {
 
         } // end of shift curve tenors
     }
-    LOG("YoY Inflation Index curve scenarios done");
+    DLOG("YoY Inflation Index curve scenarios done");
 }
 
 void SensitivityScenarioGenerator::generateYoYInflationCapFloorVolScenarios(bool up) {
@@ -1870,7 +1870,7 @@ void SensitivityScenarioGenerator::generateYoYInflationCapFloorVolScenarios(bool
             }
         }
     }
-    LOG("YoY inflation optionlet vol scenarios done");
+    DLOG("YoY inflation optionlet vol scenarios done");
 }
 
 void SensitivityScenarioGenerator::generateZeroInflationCapFloorVolScenarios(bool up) {
@@ -1977,7 +1977,7 @@ void SensitivityScenarioGenerator::generateZeroInflationCapFloorVolScenarios(boo
             }
         }
     }
-    LOG("Zero inflation cap/floor vol scenarios done");
+    DLOG("Zero inflation cap/floor vol scenarios done");
 }
 
 void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(bool up) {
@@ -2093,7 +2093,7 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(bool up) {
             }
         }
     }
-    LOG("Base correlation scenarios done");
+    DLOG("Base correlation scenarios done");
 }
 
 void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
@@ -2189,7 +2189,7 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
             DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
         }
     }
-    LOG("Commodity curve scenarios done");
+    DLOG("Commodity curve scenarios done");
 }
 
 void SensitivityScenarioGenerator::generateCommodityVolScenarios(bool up) {
@@ -2296,7 +2296,7 @@ void SensitivityScenarioGenerator::generateCommodityVolScenarios(bool up) {
             }
         }
     }
-    LOG("Commodity volatility scenarios done");
+    DLOG("Commodity volatility scenarios done");
 }
 
 void SensitivityScenarioGenerator::generateCorrelationScenarios(bool up) {
@@ -2392,8 +2392,6 @@ void SensitivityScenarioGenerator::generateCorrelationScenarios(bool up) {
                         } else {
                             scenario->add(key, shiftedCorrData[jj][kk]);
                         }
-
-                        LOG(jj << " " << kk << " " << shiftedCorrData[jj][kk] << " " << corrData[jj][kk]);
                         // Possibly store valid shift size
                         if (validShiftSize && j == jj && k == kk) {
                             storeShiftData(key, corrData[jj][kk], shiftedCorrData[jj][kk]);
@@ -2411,7 +2409,7 @@ void SensitivityScenarioGenerator::generateCorrelationScenarios(bool up) {
             }
         }
     }
-    LOG("Correlation scenarios done");
+    DLOG("Correlation scenarios done");
 }
 
 void SensitivityScenarioGenerator::generateSecuritySpreadScenarios(bool up) {
@@ -2452,7 +2450,7 @@ void SensitivityScenarioGenerator::generateSecuritySpreadScenarios(bool up) {
         DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
                                        << " created: " << newSpread);
     }
-    LOG("Security scenarios done");
+    DLOG("Security scenarios done");
 }
 
 SensitivityScenarioGenerator::ScenarioDescription

@@ -76,17 +76,95 @@ SensitivityAnalysis::SensitivityAnalysis(
       portfolio_(portfolio), dryRun_(dryRun), useSingleThreadedEngine_(false), nThreads_(nThreads), loader_(loader),
       context_(context) {}
 
+namespace {
+std::vector<std::pair<std::set<std::string>, boost::shared_ptr<SensitivityScenarioGenerator>>>
+consolidateScenarioGenerators(const std::vector<std::string>& ids,
+                              const std::vector<boost::shared_ptr<SensitivityScenarioGenerator>>& scenarioGenerators) {
+    std::vector<std::pair<std::set<std::string>, boost::shared_ptr<SensitivityScenarioGenerator>>> result;
+    result.push_back(std::make_pair(std::set<std::string>{ids.front()}, scenarioGenerators.front()));
+    for (Size i = 1; i < ids.size(); ++i) {
+        bool foundIdenticalScenarioGenerator = false;
+        Size j;
+        for (j = 0; j < result.size() && !foundIdenticalScenarioGenerator; ++j) {
+            if (result[j].second->scenarios().size() != scenarioGenerators[i]->scenarios().size())
+                continue;
+            foundIdenticalScenarioGenerator = true;
+            for (Size k = 1; k < result[j].second->scenarios().size(); ++k) {
+                if (!result[j].second->scenarios()[k]->isCloseEnough(scenarioGenerators[i]->scenarios()[k])) {
+                    foundIdenticalScenarioGenerator = false;
+                    break;
+                }
+            }
+        }
+        if (foundIdenticalScenarioGenerator) {
+            result[j].first.insert(ids[i]);
+        } else {
+            result.push_back(std::make_pair(std::set<std::string>{ids[i]}, scenarioGenerators[i]));
+        }
+    }
+    return result;
+}
+
+std::vector<std::pair<boost::shared_ptr<Portfolio>, boost::shared_ptr<SensitivityScenarioGenerator>>>
+splitPortfolioByScenarioGenerators(
+    const boost::shared_ptr<Portfolio>& portfolio, std::vector<std::string> ids,
+    const std::vector<boost::shared_ptr<SensitivityScenarioGenerator>>& scenarioGenerators) {
+    auto consolidatedScenGen = consolidateScenarioGenerators(ids, scenarioGenerators);
+    std::vector<std::pair<boost::shared_ptr<Portfolio>, boost::shared_ptr<SensitivityScenarioGenerator>>> result;
+    for(auto const& [_, gen]:consolidatedScenGen) {
+        result.push_back(std::make_pair(boost::make_shared<Portfolio>(), gen));
+    }
+    for(auto const& [id, t]: portfolio->trades()) {
+        Size j;
+        for(j=1;j<consolidatedScenGen.size();++j) {
+            if(consolidatedScenGen[j].first.find(id) != consolidatedScenGen[j].first.end()) {
+                result[j].first->add(t);
+                break;
+            }
+        }
+        if(j == consolidatedScenGen.size())
+            result.front().first->add(t);
+    }
+    return result;
+}
+} // namespace
+
 void SensitivityAnalysis::generateSensitivities() {
+
+    LOG("Sensitivity analysis started...");
 
     QL_REQUIRE(useSingleThreadedEngine_ || !nonShiftedBaseCurrencyConversion_,
                "SensitivityAnalysis::generateSensitivities(): multi-threaded engine does not support non-shifted base "
                "ccy conversion currently. This requires a a small code extension. Contact Dev.");
 
-    std::string pricingEngineId;
+    // collect the pricing engine ids that are used in the sensitivity config
+
+    std::set<std::string> sensiTemplateIdsFromSensiConfig = getShiftSpecKeys(*sensitivityData_);
+
+    // collect the pricing engine ids that are relevant for the portfolio
+
+    std::set<std::string> sensiTemplateIdsFromPortfolio;
+    for (auto const& [_, t] : portfolio_->trades())
+        sensiTemplateIdsFromPortfolio.insert(t->sensitivityTemplate());
+
+    // take the intersection of pricing engine ids and add en empty id for the default config as the first element
+
+    std::vector<std::string> sensiTemplateIds{std::string()};
+    std::set_intersection(sensiTemplateIdsFromSensiConfig.begin(), sensiTemplateIdsFromSensiConfig.end(),
+                          sensiTemplateIdsFromPortfolio.begin(), sensiTemplateIdsFromPortfolio.end(),
+                          std::back_inserter(sensiTemplateIds));
+
+    LOG("Need to process " << sensiTemplateIds.size() << " sensi scenario sets resulting from "
+                           << sensiTemplateIdsFromSensiConfig.size() << " sensi templates in sensi config and "
+                           << sensiTemplateIdsFromPortfolio.size() << " sensi templates in portfolio.");
 
     if (useSingleThreadedEngine_) {
 
         // handle single threaded sensi analysis
+
+        LOG("SensitivitiyAnalysis::generateSensitivities(): use single-threaded engine to generate sensi cube. Using "
+            "configuration '"
+            << marketConfiguration_ << "'");
 
         simMarket_ = boost::make_shared<ScenarioSimMarket>(
             market_, simMarketData_, marketConfiguration_,
@@ -94,31 +172,20 @@ void SensitivityAnalysis::generateSensitivities() {
             todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(), continueOnError_,
             sensitivityData_->useSpreadedTermStructures(), continueOnError_, overrideTenors_, iborFallbackConfig_);
 
-        scenarioGenerator_ = boost::make_shared<SensitivityScenarioGenerator>(
-            sensitivityData_, simMarket_->baseScenario(), simMarketData_, simMarket_,
-            boost::make_shared<DeltaScenarioFactory>(simMarket_->baseScenario()), overrideTenors_, pricingEngineId,
-            continueOnError_, simMarket_->baseScenarioAbsolute());
-
-        boost::shared_ptr<NPVSensiCube> cube =
-            boost::make_shared<DoublePrecisionSensiCube>(portfolio_->ids(), asof_, scenarioGenerator_->samples());
-
-        simMarket_->scenarioGenerator() = scenarioGenerator_;
+        std::vector<boost::shared_ptr<SensitivityScenarioGenerator>> scenarioGenerators(sensiTemplateIds.size());
+        for (Size i = 0; i < sensiTemplateIds.size(); ++i) {
+            scenarioGenerators[i] = boost::make_shared<SensitivityScenarioGenerator>(
+                sensitivityData_, simMarket_->baseScenario(), simMarketData_, simMarket_,
+                boost::make_shared<DeltaScenarioFactory>(simMarket_->baseScenario()), overrideTenors_,
+                sensiTemplateIds[i], continueOnError_, simMarket_->baseScenarioAbsolute());
+        }
+        scenarioGenerator_ = scenarioGenerators.front();
 
         map<MarketContext, string> configurations;
         configurations[MarketContext::pricing] = marketConfiguration_;
         auto ed = boost::make_shared<EngineData>(*engineData_);
         ed->globalParameters()["RunType"] =
             std::string("Sensitivity") + (sensitivityData_->computeGamma() ? "DeltaGamma" : "Delta");
-        boost::shared_ptr<EngineFactory> factory =
-            boost::make_shared<EngineFactory>(ed, simMarket_, configurations, referenceData_, iborFallbackConfig_);
-
-        portfolio_->reset();
-        portfolio_->build(factory, "sensi analysis");
-
-        if (recalibrateModels_)
-            modelBuilders_ = factory->modelBuilders();
-        else
-            modelBuilders_.clear();
 
         boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>("1,0W", NullCalendar());
         vector<boost::shared_ptr<ValuationCalculator>> calculators;
@@ -129,17 +196,31 @@ void SensitivityAnalysis::generateSensitivities() {
             // use the scenario FX rate when converting sensi to base currency
             calculators.push_back(boost::make_shared<NPVCalculator>(simMarketData_->baseCcy()));
 
-        ValuationEngine engine(asof_, dg, simMarket_, modelBuilders_);
-        for (auto const& i : this->progressIndicators())
-            engine.registerProgressIndicator(i);
+        sensiCubes_.clear();
+        for (auto const& [pf, scenGen] :
+             splitPortfolioByScenarioGenerators(portfolio_, sensiTemplateIds, scenarioGenerators)) {
+            if(pf->trades().empty())
+                continue;
+            LOG("Run Sensitivity Scenarios for " << pf->size() << " out of " << portfolio_->size() << " trades.");
+            boost::shared_ptr<NPVSensiCube> cube =
+                boost::make_shared<DoublePrecisionSensiCube>(portfolio_->ids(), asof_, scenarioGenerator_->samples());
+            simMarket_->scenarioGenerator() = scenGen;
+            auto factory =
+                boost::make_shared<EngineFactory>(ed, simMarket_, configurations, referenceData_, iborFallbackConfig_);
+            pf->reset();
+            pf->build(factory, "sensi analysis");
+            if (recalibrateModels_)
+                modelBuilders_ = factory->modelBuilders();
+            else
+                modelBuilders_.clear();
+            ValuationEngine engine(asof_, dg, simMarket_, modelBuilders_);
+            for (auto const& i : this->progressIndicators())
+                engine.registerProgressIndicator(i);
+            engine.buildCube(portfolio_, cube, calculators, true, nullptr, nullptr, {}, dryRun_);
 
-        LOG("Run Sensitivity Scenarios");
-        engine.buildCube(portfolio_, cube, calculators, true, nullptr, nullptr, {}, dryRun_);
-
-        sensiCubes_ = {boost::make_shared<SensitivityCube>(cube, scenarioGenerator_->scenarioDescriptions(),
-                                                           scenarioGenerator_->shiftSizes(),
-                                                           scenarioGenerator_->shiftSchemes())};
-
+            sensiCubes_.push_back(boost::make_shared<SensitivityCube>(cube, scenGen->scenarioDescriptions(),
+                                                                      scenGen->shiftSizes(), scenGen->shiftSchemes()));
+        }
     } else {
 
         // handle request to use multi-threaded engine
@@ -160,7 +241,7 @@ void SensitivityAnalysis::generateSensitivities() {
 
         scenarioGenerator_ = boost::make_shared<SensitivityScenarioGenerator>(
             sensitivityData_, simMarket_->baseScenario(), simMarketData_, simMarket_,
-            boost::make_shared<DeltaScenarioFactory>(simMarket_->baseScenario()), overrideTenors_, pricingEngineId,
+            boost::make_shared<DeltaScenarioFactory>(simMarket_->baseScenario()), overrideTenors_, std::string(),
             continueOnError_, simMarket_->baseScenarioAbsolute());
 
         simMarket_->scenarioGenerator() = scenarioGenerator_;

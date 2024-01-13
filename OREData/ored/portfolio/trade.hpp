@@ -161,6 +161,9 @@ public:
     //! returns all additional data returned by the trade once built
     const virtual std::map<std::string,boost::any>& additionalData() const;
 
+    /*! returns the pricing engine id 'Swap/DiscountedCashflows/DiscountingSwapEngine'
+      for this trade, this is only available after build() has been called */
+    const std::string& sensitivityTemplate() const { return sensitivityTemplate_; }
     //@}
 
     //! \name Utility
@@ -196,6 +199,7 @@ protected:
     string notionalCurrency_;
     Date maturity_;
     string issuer_;
+    string sensitivityTemplate_;
 
     std::size_t savedNumberOfPricings_ = 0;
     boost::timer::nanosecond_type savedCumulativePricingTime_ = 0;
@@ -218,6 +222,9 @@ protected:
        as "legNo + 1", i.e. starting with 1 (1, 2, ...). The result leg id can be overwriten using the second
        parameter resultLegId. */
     void setLegBasedAdditionalData(const Size legNo, Size resultLegId = Null<Size>()) const;
+
+    /* sets the sensitivity template for this trade based on a builder (engine parameter SensitivityTemplate) */
+    void setSensitivityTemplate(const EngineBuilder& builder);
 
 private:
     string id_;
