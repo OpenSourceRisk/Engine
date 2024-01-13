@@ -21,6 +21,7 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/marketdata.hpp>
 
 #include <qle/indexes/fxindex.hpp>
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
@@ -190,17 +191,13 @@ QuantLib::Handle<QuantExt::FxIndex> Market::fxIndex(const string& fxIndex, const
             Calendar calendar = NullCalendar();
 
             if (source != target) {
-                const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
-                // first check if we have a convention specific to the pair (e.g. XAUUSD), otherwise use
                 try {
-                    auto comCon =
-                        boost::dynamic_pointer_cast<data::CommodityForwardConvention>(conventions->get(fxIndex));
-                    calendar = comCon->advanceCalendar();
+                    auto [sDays, cal, _] = getFxIndexConventions(fxIndex);
+                    calendar = cal;
                 } catch (...) {
-                    WLOG("Market::fxIndex Cannot find commodity conventions for " << fxIndex);
+                    WLOG("Market::fxIndex Cannot find commodity conventions for " << fxIndex);   
                 }
             }
-
             fxInd = Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
                 fxIndexBase->familyName(), spotDays, fxIndexBase->sourceCurrency(), fxIndexBase->targetCurrency(),
                 calendar, spot, sorTS, tarTS));

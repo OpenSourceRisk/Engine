@@ -120,8 +120,13 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
     Handle<Quote> spot = market->fxSpot(boughtCurrency_ + soldCurrency_);
     
     boost::shared_ptr<QuantExt::FxIndex> fxIndex;
-    if (!fxIndex_.empty())
-        fxIndex = parseFxIndex(fxIndex_);
+    if (!fxIndex_.empty()) {
+        auto fxi = market->fxIndex(fxIndex_);
+        if (!fxi.empty()) {
+            fxIndex = fxi.currentLink();
+        }
+    }
+        
 
     // checking fixings
     if (startDate_ != "" && parseDate(startDate()) < today) {
