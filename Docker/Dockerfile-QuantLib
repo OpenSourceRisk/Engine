@@ -1,4 +1,7 @@
 # syntax = nexus3.acadiasoft.net:4445/docker/dockerfile:experimental
+ARG debian_tag
+FROM debian:${debian_tag}
+
 MAINTAINER Quaternion Risk Management
 LABEL Description="Build QuantLib and add to the Boost build environment"
 
@@ -21,7 +24,7 @@ COPY ORETest /ore/ORETest
 COPY cmake /ore/cmake
 
 RUN apt-get update \
-  && DEBIAN_FRONTEND=noninteractive apt-get install -y libboost-all-dev doxygen graphviz ccache libeigen3-dev \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libbz2-dev autoconf libtool dos2unix cmake zlib1g-dev opencl-headers ocl-icd-opencl-dev libboost-all-dev doxygen graphviz ccache libeigen3-dev \
   && apt-get clean
 
 ENV PATH="/usr/lib/ccache:$PATH"
