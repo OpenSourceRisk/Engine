@@ -114,6 +114,7 @@ struct TestData : ore::test::OreaTopLevelFixture {
 
         hValues = {0.012};  // reversion
         aValues = {0.0075}; // HW vol
+
         irConfigs.push_back(boost::make_shared<IrLgmData>(
             "USD", calibrationType, revType, volType, false, ParamType::Constant, hTimes, hValues, true,
             ParamType::Piecewise, aTimes, aValues, 0.0, 1.0, swaptionExpiries, swaptionTerms, swaptionStrikes));
