@@ -30,6 +30,7 @@ COPY cmake /ore/cmake
 ENV PATH="/usr/lib/ccache:$PATH"
 ENV CCACHE_DIR="/ccache"
 ENV CCACHE_MAXSIZE="10G"
+ENV CMAKE_CXX_COMPILER_LAUNCHER="ccache"
 # needed if QL_USE_PCH is ON
 #ENV CCACHE_SLOPPINESS="pch_defines,time_macros,pch_defines,time_macros,include_file_mtime,include_file_ctim"
 
