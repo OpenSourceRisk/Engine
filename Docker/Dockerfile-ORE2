@@ -43,7 +43,7 @@ RUN cd /ore \
  
 WORKDIR /ore/build.ore
 RUN --mount=type=cache,target=/ccache/ ccache -z && ccache -s \
-  && cmake --build . -- -j ${num_cores} install \
+  && cmake --build . -- -j ${num_cores} \
   && ccache -s
 
 CMD bash
