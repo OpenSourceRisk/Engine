@@ -36,7 +36,6 @@ class Ascot : public Trade {
 public:
     //! Default constructor
     Ascot() : Trade("Ascot") {}
-	
 
     //! Constructor for coupon bonds
     Ascot(const Envelope& env, const ConvertibleBond& bond, const OptionData& optionData,
