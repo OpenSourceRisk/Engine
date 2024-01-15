@@ -23,9 +23,11 @@ COPY ThirdPartyLibs /ore/ThirdPartyLibs
 COPY ORETest /ore/ORETest
 COPY cmake /ore/cmake
 
-RUN apt-get update \
-  && DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libbz2-dev autoconf libtool dos2unix cmake zlib1g-dev opencl-headers ocl-icd-opencl-dev libboost-all-dev doxygen graphviz ccache libeigen3-dev \
-  && apt-get clean
+RUN rm -f /etc/apt/apt.conf.d/docker-clean
+RUN --mount=type=cache,target=/var/cache/apt \
+	apt-get update && \
+	apt-get install -yqq --no-install-recommends build-essential libbz2-dev autoconf libtool dos2unix cmake zlib1g-dev opencl-headers ocl-icd-opencl-dev libboost-all-dev doxygen graphviz ccache libeigen3-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 ENV PATH="/usr/lib/ccache:$PATH"
 ENV CCACHE_DIR="/ccache"
