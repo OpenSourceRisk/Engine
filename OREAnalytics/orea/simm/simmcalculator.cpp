@@ -103,9 +103,12 @@ SimmCalculator::SimmCalculator(const SimmNetSensitivities& simmNetSensitivities,
 
         // Make sure we have CRIF amount denominated in the result ccy
         CrifRecord newCrifRecord = cr;
-        if (resultCcy_ == "USD" && cr.hasAmountUsd()) {
+        
+        if (cr.requiresAmountUsd() && resultCcy_ == "USD" && cr.hasAmountUsd()) {
             newCrifRecord.amountResultCcy = newCrifRecord.amountUsd;
-        } else {
+        } else if(cr.requiresAmountUsd()) {
+            // ProductClassMultiplier and AddOnNotionalFactor  don't have a currency and dont need to be converted,
+            // we use the amount
             const Real fxSpot = market_->fxRate(newCrifRecord.amountCurrency + resultCcy_)->value();
             newCrifRecord.amountResultCcy = fxSpot * newCrifRecord.amount;
         }
