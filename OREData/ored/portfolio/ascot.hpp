@@ -43,8 +43,7 @@ public:
         : Trade("Ascot", env), bond_(bond), optionData_(optionData), fundingLegData_(fundingLegData) {}
 
     void build(const boost::shared_ptr<ore::data::EngineFactory>&) override;
-    void fromXML(XMLNode* node) override;
-	
+    void fromXML(XMLNode* node) override;	
     XMLNode* toXML(XMLDocument& doc) override;
     std::map<AssetClass, std::set<std::string>>
     underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
