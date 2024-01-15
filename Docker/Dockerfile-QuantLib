@@ -1,6 +1,8 @@
-# syntax = nexus3.acadiasoft.net:4445/docker/dockerfile:experimental
-ARG debian_tag
-FROM debian:11.7
+# syntax = docker/dockerfile:experimental
+ARG debian_tag=${DEBIAN_TAG}
+FROM debian:${debian_tag}
+
+MAINTAINER Quaternion Risk Management
 LABEL Description="Build QuantLib and add to the Boost build environment"
 
 # Argument for number of cores to use while building
