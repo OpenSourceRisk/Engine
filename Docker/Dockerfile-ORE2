@@ -12,7 +12,7 @@ ARG num_cores
 ARG cmake_build_type
 
 RUN apt-get update \
-  && DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libbz2-dev autoconf libtool dos2unix cmake ninja-build zlib1g-dev opencl-headers ocl-icd-opencl-dev libboost-all-dev doxygen graphviz ccache libeigen3-dev \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libbz2-dev autoconf libtool cmake ninja-build zlib1g-dev opencl-headers ocl-icd-opencl-dev libboost-all-dev doxygen graphviz ccache libeigen3-dev \
   && apt-get clean
 
 # Exclusions are performed by .dockerignore
@@ -30,21 +30,27 @@ COPY cmake /ore/cmake
 ENV PATH="/usr/lib/ccache:$PATH"
 ENV CCACHE_DIR="/ccache"
 ENV CCACHE_MAXSIZE="10G"
-ENV CMAKE_CXX_COMPILER_LAUNCHER="ccache"
 # needed if QL_USE_PCH is ON
 #ENV CCACHE_SLOPPINESS="pch_defines,time_macros,pch_defines,time_macros,include_file_mtime,include_file_ctim"
 
-# - Need the dos2unix all if building from Windows because the shell
-#   scripts fail if there are CRLF present in the files
 # - add  -fpch-preprocess to CMAKE_CXX_FLAGS when QL_USE_PCH is set to ON
 RUN cd /ore \
-  && find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';' \
   && mkdir -p build.ore && cd build.ore \
-  && cmake .. -GNinja -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DQL_USE_PCH=OFF -DORE_BUILD_DOC=ON -DCMAKE_BUILD_TYPE=${cmake_build_type} -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_EXTENSIONS=OFF -DCMAKE_CXX_FLAGS="-D BOOST_ENABLE_ASSERT_HANDLER -mavx2" -DQL_ENABLE_SESSIONS=ON -DQL_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DQL_BUILD_EXAMPLES=OFF -DQL_BUILD_BENCHMARK=OFF -DORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DORE_USE_ZLIB=ON -D ORE_ENABLE_OPENCL=ON
+  && cmake .. -GNinja -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DQL_USE_PCH=OFF -DORE_BUILD_DOC=ON -DCMAKE_BUILD_TYPE=${cmake_build_type} -DCMAKE_CXX_FLAGS="-D BOOST_ENABLE_ASSERT_HANDLER -mavx2" -DQL_ENABLE_SESSIONS=ON -DQL_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DQL_BUILD_EXAMPLES=OFF -DQL_BUILD_BENCHMARK=OFF -DORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DORE_USE_ZLIB=ON -D ORE_ENABLE_OPENCL=ON
  
 WORKDIR /ore/build.ore
-RUN --mount=type=cache,target=/ccache/ ccache -z && ccache -s \
-  && cmake --build . -- -j ${num_cores} \
-  && ccache -s
+RUN --mount=type=cache,target=/ccache/ ccache -z \
+  && cmake --build . -- -j ${num_cores} install \
+  && ccache -s \
+  && make doc_quantext 2>&1 | grep -v "ignoring unsupported tag" \
+  && make doc_ored 2>&1 | grep -v "ignoring unsupported tag" \
+  && make doc_orea 2>&1 | grep -v "ignoring unsupported tag" 
+
+WORKDIR / 
+RUN mkdir -p html \
+  && mkdir /html/ored && cp -r /ore/OREData/doc/html/* /html/ored \
+  && mkdir /html/orea && cp -r /ore/OREAnalytics/doc/html/* /html/orea \
+  && mkdir /html/qle && cp -r /ore/QuantExt/doc/html/* /html/qle \
+  && rm -rf ore
 
 CMD bash
