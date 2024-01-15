@@ -33,6 +33,8 @@ using ore::data::parseInteger;
 namespace ore {
 namespace analytics {
 
+using RiskType = CrifRecord::RiskType;
+
 SimmConfiguration_ISDA_V1_3_38::SimmConfiguration_ISDA_V1_3_38(
     const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper, const std::string& name, const std::string version)
     : SimmConfigurationBase(simmBucketMapper, name, version) {

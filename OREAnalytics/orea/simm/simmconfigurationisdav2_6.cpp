@@ -18,7 +18,7 @@ using std::vector;
 
 namespace ore {
 namespace analytics {
-
+    using RiskType = CrifRecord::RiskType;
 QuantLib::Size SimmConfiguration_ISDA_V2_6::group(const string& qualifier,
                                                   const std::map<QuantLib::Size, std::set<string>>& categories) const {
     QuantLib::Size result = 0;
@@ -102,33 +102,33 @@ SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr
     // Explanations of all these members are given in the hpp file
 
     mapBuckets_ = {
-        { RiskType::IRCurve, { "1", "2", "3" } },
-        { RiskType::CreditQ, { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "Residual" } },
-        { RiskType::CreditVol, { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "Residual" } },
-        { RiskType::CreditNonQ, { "1", "2", "Residual" } },
-        { RiskType::CreditVolNonQ, { "1", "2", "Residual" } },
-        { RiskType::Equity, { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "Residual" } },
-        { RiskType::EquityVol, { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "Residual" } },
-        { RiskType::Commodity, { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17" } },
-        { RiskType::CommodityVol, { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17" } }
+        { CrifRecord::RiskType::IRCurve, { "1", "2", "3" } },
+        { CrifRecord::RiskType::CreditQ, { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "Residual" } },
+        { CrifRecord::RiskType::CreditVol, { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "Residual" } },
+        { CrifRecord::RiskType::CreditNonQ, { "1", "2", "Residual" } },
+        { CrifRecord::RiskType::CreditVolNonQ, { "1", "2", "Residual" } },
+        { CrifRecord::RiskType::Equity, { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "Residual" } },
+        { CrifRecord::RiskType::EquityVol, { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "Residual" } },
+        { CrifRecord::RiskType::Commodity, { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17" } },
+        { CrifRecord::RiskType::CommodityVol, { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17" } }
     };
 
     mapLabels_1_ = {
-        { RiskType::IRCurve, { "2w", "1m", "3m", "6m", "1y", "2y", "3y", "5y", "10y", "15y", "20y", "30y" } },
-        { RiskType::CreditQ, { "1y", "2y", "3y", "5y", "10y" } },
-        { RiskType::CreditNonQ, { "1y", "2y", "3y", "5y", "10y" } },
-        { RiskType::IRVol, { "2w", "1m", "3m", "6m", "1y", "2y", "3y", "5y", "10y", "15y", "20y", "30y" } },
-        { RiskType::InflationVol, { "2w", "1m", "3m", "6m", "1y", "2y", "3y", "5y", "10y", "15y", "20y", "30y" } },
-        { RiskType::CreditVol, { "1y", "2y", "3y", "5y", "10y" } },
-        { RiskType::CreditVolNonQ, { "1y", "2y", "3y", "5y", "10y" } },
-        { RiskType::EquityVol, { "2w", "1m", "3m", "6m", "1y", "2y", "3y", "5y", "10y", "15y", "20y", "30y" } },
-        { RiskType::CommodityVol, { "2w", "1m", "3m", "6m", "1y", "2y", "3y", "5y", "10y", "15y", "20y", "30y" } },
-        { RiskType::FXVol, { "2w", "1m", "3m", "6m", "1y", "2y", "3y", "5y", "10y", "15y", "20y", "30y" } }
+        { CrifRecord::RiskType::IRCurve, { "2w", "1m", "3m", "6m", "1y", "2y", "3y", "5y", "10y", "15y", "20y", "30y" } },
+        { CrifRecord::RiskType::CreditQ, { "1y", "2y", "3y", "5y", "10y" } },
+        { CrifRecord::RiskType::CreditNonQ, { "1y", "2y", "3y", "5y", "10y" } },
+        { CrifRecord::RiskType::IRVol, { "2w", "1m", "3m", "6m", "1y", "2y", "3y", "5y", "10y", "15y", "20y", "30y" } },
+        { CrifRecord::RiskType::InflationVol, { "2w", "1m", "3m", "6m", "1y", "2y", "3y", "5y", "10y", "15y", "20y", "30y" } },
+        { CrifRecord::RiskType::CreditVol, { "1y", "2y", "3y", "5y", "10y" } },
+        { CrifRecord::RiskType::CreditVolNonQ, { "1y", "2y", "3y", "5y", "10y" } },
+        { CrifRecord::RiskType::EquityVol, { "2w", "1m", "3m", "6m", "1y", "2y", "3y", "5y", "10y", "15y", "20y", "30y" } },
+        { CrifRecord::RiskType::CommodityVol, { "2w", "1m", "3m", "6m", "1y", "2y", "3y", "5y", "10y", "15y", "20y", "30y" } },
+        { CrifRecord::RiskType::FXVol, { "2w", "1m", "3m", "6m", "1y", "2y", "3y", "5y", "10y", "15y", "20y", "30y" } }
     };
 
     mapLabels_2_ = {
-        { RiskType::IRCurve, { "OIS", "Libor1m", "Libor3m", "Libor6m", "Libor12m", "Prime", "Municipal" } },
-        { RiskType::CreditQ, { "", "Sec" } }
+        { CrifRecord::RiskType::IRCurve, { "OIS", "Libor1m", "Libor3m", "Libor6m", "Libor12m", "Prime", "Municipal" } },
+        { CrifRecord::RiskType::CreditQ, { "", "Sec" } }
     };
 
     // Populate CCY groups that are used for FX correlations and risk weights
@@ -149,19 +149,19 @@ SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr
         rwFX_ = Matrix(2, 2, temp.begin(), temp.end());
 
         rwRiskType_ = {
-            { RiskType::Inflation, 61 },
-            { RiskType::XCcyBasis, 21 },
-            { RiskType::IRVol, 0.23 },
-            { RiskType::InflationVol, 0.23 },
-            { RiskType::CreditVol, 0.76 },
-            { RiskType::CreditVolNonQ, 0.76 },
-            { RiskType::CommodityVol, 0.55 },
-            { RiskType::FXVol, 0.48 },
-            { RiskType::BaseCorr, 10 }
+            { CrifRecord::RiskType::Inflation, 61 },
+            { CrifRecord::RiskType::XCcyBasis, 21 },
+            { CrifRecord::RiskType::IRVol, 0.23 },
+            { CrifRecord::RiskType::InflationVol, 0.23 },
+            { CrifRecord::RiskType::CreditVol, 0.76 },
+            { CrifRecord::RiskType::CreditVolNonQ, 0.76 },
+            { CrifRecord::RiskType::CommodityVol, 0.55 },
+            { CrifRecord::RiskType::FXVol, 0.48 },
+            { CrifRecord::RiskType::BaseCorr, 10 }
         };
 
         rwBucket_ = {
-            {RiskType::CreditQ,
+            {CrifRecord::RiskType::CreditQ,
              {{{"1", "", ""}, 75},
               {{"2", "", ""}, 90},
               {{"3", "", ""}, 84},
@@ -175,8 +175,8 @@ SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr
               {{"11", "", ""}, 214},
               {{"12", "", ""}, 173},
               {{"Residual", "", ""}, 343}}},
-            {RiskType::CreditNonQ, {{{"1", "", ""}, 280}, {{"2", "", ""}, 1300}, {{"Residual", "", ""}, 1300}}},
-            {RiskType::Equity,
+            {CrifRecord::RiskType::CreditNonQ, {{{"1", "", ""}, 280}, {{"2", "", ""}, 1300}, {{"Residual", "", ""}, 1300}}},
+            {CrifRecord::RiskType::Equity,
              {{{"1", "", ""}, 30},
               {{"2", "", ""}, 33},
               {{"3", "", ""}, 36},
@@ -190,7 +190,7 @@ SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr
               {{"11", "", ""}, 19},
               {{"12", "", ""}, 19},
               {{"Residual", "", ""}, 50}}},
-            {RiskType::Commodity,
+            {CrifRecord::RiskType::Commodity,
              {{{"1", "", ""}, 48},
               {{"2", "", ""}, 29},
               {{"3", "", ""}, 33},
@@ -208,7 +208,7 @@ SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr
               {{"15", "", ""}, 13},
               {{"16", "", ""}, 68},
               {{"17", "", ""}, 17}}},
-            {RiskType::EquityVol,
+            {CrifRecord::RiskType::EquityVol,
              {{{"1", "", ""}, 0.45},
               {{"2", "", ""}, 0.45},
               {{"3", "", ""}, 0.45},
@@ -225,7 +225,7 @@ SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr
         };
 
         rwLabel_1_ = {
-            {RiskType::IRCurve, {
+            {CrifRecord::RiskType::IRCurve, {
                 {{"1", "2w", ""}, 109},
                 {{"1", "1m", ""}, 105},
                 {{"1", "3m", ""}, 90},
@@ -266,14 +266,14 @@ SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr
         };
 
         // Historical volatility ratios
-        historicalVolatilityRatios_[RiskType::EquityVol] = 0.6;
-        historicalVolatilityRatios_[RiskType::CommodityVol] = 0.74;
-        historicalVolatilityRatios_[RiskType::FXVol] = 0.57;
+        historicalVolatilityRatios_[CrifRecord::RiskType::EquityVol] = 0.6;
+        historicalVolatilityRatios_[CrifRecord::RiskType::CommodityVol] = 0.74;
+        historicalVolatilityRatios_[CrifRecord::RiskType::FXVol] = 0.57;
         hvr_ir_ = 0.47;
 
         // Curvature weights
         curvatureWeights_ = {
-            { RiskType::IRVol, { 0.5,
+            { CrifRecord::RiskType::IRVol, { 0.5,
                                  0.5 * 14.0 / (365.0 / 12.0),
                                  0.5 * 14.0 / (3.0 * 365.0 / 12.0),
                                  0.5 * 14.0 / (6.0 * 365.0 / 12.0),
@@ -286,18 +286,18 @@ SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr
                                  0.5 * 14.0 / (20.0 * 365.0),
                                  0.5 * 14.0 / (30.0 * 365.0) }
             },
-            { RiskType::CreditVol, { 0.5 * 14.0 / 365.0,
+            { CrifRecord::RiskType::CreditVol, { 0.5 * 14.0 / 365.0,
                                      0.5 * 14.0 / (2.0 * 365.0),
                                      0.5 * 14.0 / (3.0 * 365.0),
                                      0.5 * 14.0 / (5.0 * 365.0),
                                      0.5 * 14.0 / (10.0 * 365.0) }
             }
         };
-        curvatureWeights_[RiskType::InflationVol] = curvatureWeights_[RiskType::IRVol];
-        curvatureWeights_[RiskType::EquityVol] = curvatureWeights_[RiskType::IRVol];
-        curvatureWeights_[RiskType::CommodityVol] = curvatureWeights_[RiskType::IRVol];
-        curvatureWeights_[RiskType::FXVol] = curvatureWeights_[RiskType::IRVol];
-        curvatureWeights_[RiskType::CreditVolNonQ] = curvatureWeights_[RiskType::CreditVol];
+        curvatureWeights_[CrifRecord::RiskType::InflationVol] = curvatureWeights_[CrifRecord::RiskType::IRVol];
+        curvatureWeights_[CrifRecord::RiskType::EquityVol] = curvatureWeights_[CrifRecord::RiskType::IRVol];
+        curvatureWeights_[CrifRecord::RiskType::CommodityVol] = curvatureWeights_[CrifRecord::RiskType::IRVol];
+        curvatureWeights_[CrifRecord::RiskType::FXVol] = curvatureWeights_[CrifRecord::RiskType::IRVol];
+        curvatureWeights_[CrifRecord::RiskType::CreditVolNonQ] = curvatureWeights_[CrifRecord::RiskType::CreditVol];
 
     } else {
        // SIMM:Technical Paper, Section I.1: "All delta and vega risk weights should be replaced with the values for
@@ -311,19 +311,19 @@ SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr
         rwFX_ = Matrix(2, 2, temp.begin(), temp.end());
 
         rwRiskType_ = {
-            { RiskType::Inflation, 15 },
-            { RiskType::XCcyBasis, 6.0 },
-            { RiskType::IRVol, 0.046 },
-            { RiskType::InflationVol, 0.046 },
-            { RiskType::CreditVol, 0.09 },
-            { RiskType::CreditVolNonQ, 0.09 },
-            { RiskType::CommodityVol, 0.14 },
-            { RiskType::FXVol, 0.1 },
-            { RiskType::BaseCorr, 2.4 }
+            { CrifRecord::RiskType::Inflation, 15 },
+            { CrifRecord::RiskType::XCcyBasis, 6.0 },
+            { CrifRecord::RiskType::IRVol, 0.046 },
+            { CrifRecord::RiskType::InflationVol, 0.046 },
+            { CrifRecord::RiskType::CreditVol, 0.09 },
+            { CrifRecord::RiskType::CreditVolNonQ, 0.09 },
+            { CrifRecord::RiskType::CommodityVol, 0.14 },
+            { CrifRecord::RiskType::FXVol, 0.1 },
+            { CrifRecord::RiskType::BaseCorr, 2.4 }
         };
 
         rwBucket_ = {
-            {RiskType::CreditQ,
+            {CrifRecord::RiskType::CreditQ,
              {{{"1", "", ""}, 20},
               {{"2", "", ""}, 27},
               {{"3", "", ""}, 17},
@@ -337,8 +337,8 @@ SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr
               {{"11", "", ""}, 43},
               {{"12", "", ""}, 37},
               {{"Residual", "", ""}, 93}}},
-            {RiskType::CreditNonQ, {{{"1", "", ""}, 66}, {{"2", "", ""}, 280}, {{"Residual", "", ""}, 280}}},
-            {RiskType::Equity,
+            {CrifRecord::RiskType::CreditNonQ, {{{"1", "", ""}, 66}, {{"2", "", ""}, 280}, {{"Residual", "", ""}, 280}}},
+            {CrifRecord::RiskType::Equity,
              {{{"1", "", ""}, 8.8},
               {{"2", "", ""}, 9.6},
               {{"3", "", ""}, 10},
@@ -352,7 +352,7 @@ SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr
               {{"11", "", ""}, 6.1},
               {{"12", "", ""}, 6.1},
               {{"Residual", "", ""}, 14}}},
-            {RiskType::Commodity,
+            {CrifRecord::RiskType::Commodity,
              {{{"1", "", ""}, 11},
               {{"2", "", ""}, 9.1},
               {{"3", "", ""}, 8.3},
@@ -370,7 +370,7 @@ SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr
               {{"15", "", ""}, 3.8},
               {{"16", "", ""}, 18},
               {{"17", "", ""}, 5.2}}},
-            {RiskType::EquityVol,
+            {CrifRecord::RiskType::EquityVol,
              {{{"1", "", ""}, 0.093},
               {{"2", "", ""}, 0.093},
               {{"3", "", ""}, 0.093},
@@ -388,7 +388,7 @@ SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr
 
         rwLabel_1_ = {
             {
-                RiskType::IRCurve,
+                CrifRecord::RiskType::IRCurve,
              {{{"1", "2w", ""}, 19},
               {{"1", "1m", ""}, 15},
               {{"1", "3m", ""}, 12},
@@ -428,15 +428,15 @@ SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr
         };
 
         // Historical volatility ratios
-        historicalVolatilityRatios_[RiskType::EquityVol] = 0.55;
-        historicalVolatilityRatios_[RiskType::CommodityVol] = 0.74;
-        historicalVolatilityRatios_[RiskType::FXVol] = 0.74;
+        historicalVolatilityRatios_[CrifRecord::RiskType::EquityVol] = 0.55;
+        historicalVolatilityRatios_[CrifRecord::RiskType::CommodityVol] = 0.74;
+        historicalVolatilityRatios_[CrifRecord::RiskType::FXVol] = 0.74;
         hvr_ir_ = 0.51;
 
         // Curvature weights
         //SIMM:Technical Paper, Section I.3, this 10-day formula for curvature weights is modified
         curvatureWeights_ = {
-            { RiskType::IRVol, { 0.5 / 10.0,
+            { CrifRecord::RiskType::IRVol, { 0.5 / 10.0,
                                  0.5 * 1.40 / (365.0 / 12.0),
                                  0.5 * 1.40 / (3.0 * 365.0 / 12.0),
                                  0.5 * 1.40 / (6.0 * 365.0 / 12.0),
@@ -449,44 +449,44 @@ SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr
                                  0.5 * 1.40 / (20.0 * 365.0),
                                  0.5 * 1.40 / (30.0 * 365.0) }
             },
-            { RiskType::CreditVol, { 0.5 * 1.40 / 365.0,
+            { CrifRecord::RiskType::CreditVol, { 0.5 * 1.40 / 365.0,
                                      0.5 * 1.40 / (2.0 * 365.0),
                                      0.5 * 1.40 / (3.0 * 365.0),
                                      0.5 * 1.40 / (5.0 * 365.0),
                                      0.5 * 1.40 / (10.0 * 365.0) }
             }
         };
-        curvatureWeights_[RiskType::InflationVol] = curvatureWeights_[RiskType::IRVol];
-        curvatureWeights_[RiskType::EquityVol] = curvatureWeights_[RiskType::IRVol];
-        curvatureWeights_[RiskType::CommodityVol] = curvatureWeights_[RiskType::IRVol];
-        curvatureWeights_[RiskType::FXVol] = curvatureWeights_[RiskType::IRVol];
-        curvatureWeights_[RiskType::CreditVolNonQ] = curvatureWeights_[RiskType::CreditVol];
+        curvatureWeights_[CrifRecord::RiskType::InflationVol] = curvatureWeights_[CrifRecord::RiskType::IRVol];
+        curvatureWeights_[CrifRecord::RiskType::EquityVol] = curvatureWeights_[CrifRecord::RiskType::IRVol];
+        curvatureWeights_[CrifRecord::RiskType::CommodityVol] = curvatureWeights_[CrifRecord::RiskType::IRVol];
+        curvatureWeights_[CrifRecord::RiskType::FXVol] = curvatureWeights_[CrifRecord::RiskType::IRVol];
+        curvatureWeights_[CrifRecord::RiskType::CreditVolNonQ] = curvatureWeights_[CrifRecord::RiskType::CreditVol];
     }
 
 
     // Valid risk types
     validRiskTypes_ = {
-        RiskType::Commodity,
-        RiskType::CommodityVol,
-        RiskType::CreditNonQ,
-        RiskType::CreditQ,
-        RiskType::CreditVol,
-        RiskType::CreditVolNonQ,
-        RiskType::Equity,
-        RiskType::EquityVol,
-        RiskType::FX,
-        RiskType::FXVol,
-        RiskType::Inflation,
-        RiskType::IRCurve,
-        RiskType::IRVol,
-        RiskType::InflationVol,
-        RiskType::BaseCorr,
-        RiskType::XCcyBasis,
-        RiskType::ProductClassMultiplier,
-        RiskType::AddOnNotionalFactor,
-        RiskType::PV,
-        RiskType::Notional,
-        RiskType::AddOnFixedAmount
+        CrifRecord::RiskType::Commodity,
+        CrifRecord::RiskType::CommodityVol,
+        CrifRecord::RiskType::CreditNonQ,
+        CrifRecord::RiskType::CreditQ,
+        CrifRecord::RiskType::CreditVol,
+        CrifRecord::RiskType::CreditVolNonQ,
+        CrifRecord::RiskType::Equity,
+        CrifRecord::RiskType::EquityVol,
+        CrifRecord::RiskType::FX,
+        CrifRecord::RiskType::FXVol,
+        CrifRecord::RiskType::Inflation,
+        CrifRecord::RiskType::IRCurve,
+        CrifRecord::RiskType::IRVol,
+        CrifRecord::RiskType::InflationVol,
+        CrifRecord::RiskType::BaseCorr,
+        CrifRecord::RiskType::XCcyBasis,
+        CrifRecord::RiskType::ProductClassMultiplier,
+        CrifRecord::RiskType::AddOnNotionalFactor,
+        CrifRecord::RiskType::PV,
+        CrifRecord::RiskType::Notional,
+        CrifRecord::RiskType::AddOnFixedAmount
     };
 
     // Risk class correlation matrix
@@ -537,7 +537,7 @@ SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr
     fxHighVolCorrelation_ = Matrix(2, 2, temp.begin(), temp.end());
 
     // Interest rate tenor correlations (i.e. Label1 level correlations)
-    intraBucketCorrelation_[RiskType::IRCurve] = {
+    intraBucketCorrelation_[CrifRecord::RiskType::IRCurve] = {
         {{"", "2w", "1m"}, 0.77},
         {{"", "2w", "3m"}, 0.67},
         {{"", "2w", "6m"}, 0.59},
@@ -673,7 +673,7 @@ SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr
     };
 
     // CreditQ inter-bucket correlations
-    interBucketCorrelation_[RiskType::CreditQ] = {
+    interBucketCorrelation_[CrifRecord::RiskType::CreditQ] = {
         {{"", "1", "2"}, 0.38},
         {{"", "1", "3"}, 0.38},
         {{"", "1", "4"}, 0.35},
@@ -809,7 +809,7 @@ SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr
     };
 
      // Equity inter-bucket correlations
-    interBucketCorrelation_[RiskType::Equity] = {
+    interBucketCorrelation_[CrifRecord::RiskType::Equity] = {
         {{"", "1", "2"}, 0.18},
         {{"", "1", "3"}, 0.19},
         {{"", "1", "4"}, 0.19},
@@ -945,7 +945,7 @@ SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr
     };
 
     // Commodity inter-bucket correlations
-    interBucketCorrelation_[RiskType::Commodity] = {
+    interBucketCorrelation_[CrifRecord::RiskType::Commodity] = {
         {{"", "1", "2"}, 0.22},
         {{"", "1", "3"}, 0.18},
         {{"", "1", "4"}, 0.21},
@@ -1221,7 +1221,7 @@ SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr
     };
 
     // Equity intra-bucket correlations (exclude Residual and deal with it in the method - it is 0%) - changed
-    intraBucketCorrelation_[RiskType::Equity] = {
+    intraBucketCorrelation_[CrifRecord::RiskType::Equity] = {
         {{"1", "", ""}, 0.18},
         {{"2", "", ""}, 0.2},
         {{"3", "", ""}, 0.28},
@@ -1237,7 +1237,7 @@ SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const boost::shared_ptr
     };
 
     // Commodity intra-bucket correlations
-    intraBucketCorrelation_[RiskType::Commodity] = {
+    intraBucketCorrelation_[CrifRecord::RiskType::Commodity] = {
         {{"1", "", ""}, 0.83},
         {{"2", "", ""}, 0.97},
         {{"3", "", ""}, 0.93},

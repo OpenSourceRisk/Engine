@@ -24,6 +24,7 @@
 #include <ql/errors.hpp>
 
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string/trim.hpp>
 
 namespace ore {
 namespace data {

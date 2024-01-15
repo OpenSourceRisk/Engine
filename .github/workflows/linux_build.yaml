@@ -1,10 +1,10 @@
-name: C/C++ CI
+name: C/C++ CI Ubuntu
 
 on:
   push:
-    branches: master
+    branches: [master]
   pull_request:
-    branches: master
+    branches: [master]
     types: [ready_for_review, opened, synchronize, reopened]
     paths:
       - .github/workflows/linux_build.yaml

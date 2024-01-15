@@ -23,8 +23,11 @@
 
 #pragma once
 
+#include <orea/scenario/scenario.hpp>
+
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/xmlutils.hpp>
+
 #include <qle/termstructures/dynamicstype.hpp>
 
 namespace ore {
@@ -44,30 +47,30 @@ using std::vector;
 class StressTestScenarioData : public XMLSerializable {
 public:
     struct CurveShiftData {
-        string shiftType;
+        ShiftType shiftType;
         vector<Real> shifts;
         vector<Period> shiftTenors;
     };
 
     struct SpotShiftData {
-        string shiftType;
+        ShiftType shiftType;
         Real shiftSize;
     };
 
     struct VolShiftData {
-        string shiftType;
+        ShiftType shiftType;
         vector<Period> shiftExpiries;
         vector<Real> shifts;
     };
 
     struct CapFloorVolShiftData {
-        string shiftType;
+        ShiftType shiftType;
         vector<Period> shiftExpiries;
         vector<Real> shifts;
     };
 
     struct SwaptionVolShiftData {
-        string shiftType;
+        ShiftType shiftType;
         Real parallelShiftSize;
         vector<Period> shiftExpiries;
         vector<Period> shiftTerms;
