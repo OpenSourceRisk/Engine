@@ -1,5 +1,4 @@
-# syntax = docker/dockerfile:experimental
-ARG debian_tag
+# syntax = docker/dockerfile:1.2
 FROM debian:${debian_tag}
 
 MAINTAINER Quaternion Risk Management
