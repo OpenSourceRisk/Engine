@@ -1,8 +1,15 @@
 #!/usr/bin/env python
 
 import sys
+import os
 sys.path.append('../')
 from ore_examples_helper import OreExample
+
+samples1=os.environ["OVERWRITE_SCENARIOGENERATOR_SAMPLES"]
+print("samples1 =", samples1)
+os.environ["OVERWRITE_SCENARIOGENERATOR_SAMPLES"]=""
+samples2=os.environ["OVERWRITE_SCENARIOGENERATOR_SAMPLES"]
+print("samples2 =", samples2)
 
 oreex = OreExample(sys.argv[1] if len(sys.argv)>1 else False)
 
@@ -33,3 +40,5 @@ oreex.setup_plot("dim_lpiswp")
 oreex.plot("dim_evolution.csv", 8, 4, 'b', "DIM Evolution", filter='CPTY_B', filterCol=7)
 oreex.decorate_plot(title="Example Scripting / AMC - DIM Evolution for LPI Swap (sticky date mpor mode)")
 oreex.save_plot_to_file()
+
+os.environ["OVERWRITE_SCENARIOGENERATOR_SAMPLES"]=samples1
