@@ -132,7 +132,7 @@
 \title{ORE User Guide}
 %\author{Quaternion Risk Management Ltd.}
 %\author{Acadia Inc.}
-\date{16 October 2023}
+\date{15 January 2024}
 \maketitle
 
 \newpage
@@ -156,6 +156,7 @@ Date & Author & Comment \\
 31 March 2023 & Acadia & updates for release 9\\
 16 June 2023 & Acadia & updates for release 10\\
 16 October 2023 & Acadia & updates for release 11\\
+15 January 2024 & Acadia & updates for release 12\\
 \hline
 \end{supertabular}
 \end{center}
@@ -1256,6 +1257,16 @@ Example & Description \\
 51 & Custom Trade Fixings\\
 \hline
 52 & Scripted Trades \\
+\hline
+53 & Curve Building using FRAs tailored to Central Bank Meeting Dates\\
+\hline
+54 & Scripted Trade Exposure with AMC: Bermudan Swaption and LPI Swap \\
+\hline
+55 & Scripted Trade Exposure with AMC: Fx TaRF \\
+\hline
+56 & CVA Sensitivity using AAD \\
+\hline
+57 & Base Scenario Analytic \\
 \hline
 \end{tabular}
 \caption{ORE examples.}
@@ -3537,12 +3548,75 @@ Though this initial Example\_52 shows only single-asset Equity cases, the script
   significantly more versatile, more examples and scripts to follow.
 
 %--------------------------------------------------------------------
-\subsection{GBP OIS Curve using MPC Swaps}% Example 53
+\subsection{Curve Building around Central Bank Meeting Dates}% Example 53
 \label{example:53}
 %--------------------------------------------------------------------
 
 This example demonstrates the build of a GBP OIS curve using MPC Swaps at the short end.
 
+%--------------------------------------------------------------------
+\subsection{Scripted Trade Exposure with AMC: Bermudan Swaption and LPI Swap}% Example 54
+\label{example:54}
+%--------------------------------------------------------------------
+
+This example demonstrates exposure simulation using AMC for selected scripted trade types
+\begin{itemize}
+\item Bermudan Swaption
+\item LPI Swap
+\end{itemize}
+Both payoffs are defined in {\tt scriptlibrary.xml} which is referenced in {\tt portfolio.xml}. \\
+
+To enable the AMC processing requires the following highlighted settings in {\tt ore.xml}.
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+    <Analytic type="simulation">
+      <Parameter name="active">Y</Parameter>
+      <!-- Set to Y to trigger AMC processing -->
+      <Parameter name="amc">Y</Parameter>
+      <Parameter name="simulationConfigFile">simulation.xml</Parameter>
+      <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+      <!-- Specify a separate pricing engine file for AMC engines -->
+      <Parameter name="amcPricingEnginesFile">pricingengine\_amc.xml</Parameter>
+      <!-- Specify trade types to be covered by the AMC processing -->
+      <Parameter name="amcTradeTypes">ScriptedTrade</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="storeScenarios">N</Parameter>
+      <Parameter name="cubeFile">cube.csv.gz</Parameter>
+      <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
+      <Parameter name="aggregationScenarioDataDump">scenariodata.csv</Parameter>
+    </Analytic>
+\end{minted}
+
+Note that ORE can handle a mix of trades covered by AMC simulation and covered by ``classic'' simulation.
+The respective NPV cubes are combined before generating results such as exposures or XVAs.
+
+%--------------------------------------------------------------------
+\subsection{Scripted Trade Exposure with AMC: Target Redemption Forward}% Example 55
+\label{example:55}
+%--------------------------------------------------------------------
+
+This example demonstrates exposure simulation and XVA for another scripted product, an
+FX Target Redemption Forward (TaRF). In contrast to the cases presented above, you won't see
+the payoff script library in the Input folder, nor is the script embedded into the trade XML file.
+The trade type in this case is {\tt FxTARF} which has its own implementation in OREData/ored/portfolio/tarf.xpp
+and a separate trade schema. However, the scipted trade framework is used under the hood, and the payoff
+script is embedded into the C++ code in OREData/ored/portfolio/tarf.cpp.
+
+%--------------------------------------------------------------------
+\subsection{CVA Sensitivity using AD}% Example 56
+\label{example:56}
+%--------------------------------------------------------------------
+
+This example demonstrates a prototype CVA sensitivity calculation applying Adjoint Algorithmic Differentiation (AAD)
+to a Swap instrument represented as scripted trade. 
+
+%--------------------------------------------------------------------
+\subsection{Base Scenario Analytic}% Example 57
+\label{example:57}
+%--------------------------------------------------------------------
+
+Demonstration of the {\tt Scenario} analytic which has been added to export the simulation market's base scenario
+as a file.
 
 \clearpage
 %========================================================
