@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<ScriptLibrary>
+  <Script>
+    <Name>Swap</Name>
+    <Script>
+      <Code><![CDATA[
+      NUMBER _AMC_NPV[SIZE(_AMC_SimDates)];
+      NUMBER UnderlyingNpv[SIZE(_AMC_SimDates) + 1];
+      NUMBER i, j, lastFixedLegIndex, lastFloatLegIndex;
+      lastFixedLegIndex = SIZE(FixedLegSchedule);
+      lastFloatLegIndex = SIZE(FloatLegSchedule);
+      FOR i IN (SIZE(_AMC_SimDates), 1, -1) DO
+        UnderlyingNpv[i] = UnderlyingNpv[i + 1];
+        FOR j IN (lastFixedLegIndex, 2, -1) DO
+          IF FixedLegSchedule[j] >= _AMC_SimDates[i] THEN
+            UnderlyingNpv[i] = UnderlyingNpv[i] + PAY( Notional * FixedRate * dcf( FixedDayCounter, FixedLegSchedule[j-1], FixedLegSchedule[j] ),
+                                                   FixedLegSchedule[j], FixedLegSchedule[j], PayCurrency );
+            lastFixedLegIndex = j - 1;
+          END;
+        END;
+        FOR j IN (lastFloatLegIndex, 2, -1) DO
+          IF FloatLegSchedule[j] >= _AMC_SimDates[i] THEN
+            UnderlyingNpv[i] = UnderlyingNpv[i] - PAY( Notional * (FloatIndex(FixingSchedule[j-1]) + FloatSpread) * dcf( FloatDayCounter, FloatLegSchedule[j-1], FloatLegSchedule[j] ),
+                                                 FixingSchedule[j-1], FloatLegSchedule[j], PayCurrency );
+            lastFloatLegIndex = j - 1;
+          END;
+        END;
+      END;
+      FOR i IN (1, SIZE(_AMC_SimDates), 1) DO
+        _AMC_NPV[i] = UnderlyingNpv[i];
+      END;
+      value = UnderlyingNpv[1];
+      FOR j IN (lastFixedLegIndex, 2, -1) DO
+        value = value + PAY( Notional * FixedRate * dcf( FixedDayCounter, FixedLegSchedule[j-1], FixedLegSchedule[j] ),
+                                                 FixedLegSchedule[j], FixedLegSchedule[j], PayCurrency );
+      END;
+      FOR j IN (lastFloatLegIndex, 2, -1) DO
+        value = value - PAY( Notional * (FloatIndex(FixingSchedule[j-1]) + FloatSpread) * dcf( FloatDayCounter, FloatLegSchedule[j-1], FloatLegSchedule[j] ),
+                                               FixingSchedule[j-1], FloatLegSchedule[j], PayCurrency );
+      END;
+      ]]></Code>
+      <NPV>value</NPV>
+    </Script>
+  </Script>
+</ScriptLibrary>
