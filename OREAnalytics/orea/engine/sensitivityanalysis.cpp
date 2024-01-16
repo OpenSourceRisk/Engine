@@ -77,52 +77,18 @@ SensitivityAnalysis::SensitivityAnalysis(
       context_(context) {}
 
 namespace {
-std::vector<std::pair<std::set<std::string>, boost::shared_ptr<SensitivityScenarioGenerator>>>
-consolidateScenarioGenerators(const std::vector<std::string>& ids,
-                              const std::vector<boost::shared_ptr<SensitivityScenarioGenerator>>& scenarioGenerators) {
-    std::vector<std::pair<std::set<std::string>, boost::shared_ptr<SensitivityScenarioGenerator>>> result;
-    result.push_back(std::make_pair(std::set<std::string>{ids.front()}, scenarioGenerators.front()));
-    for (Size i = 1; i < ids.size(); ++i) {
-        bool foundIdenticalScenarioGenerator = false;
-        Size j;
-        for (j = 0; j < result.size() && !foundIdenticalScenarioGenerator; ++j) {
-            if (result[j].second->scenarios().size() != scenarioGenerators[i]->scenarios().size())
-                continue;
-            foundIdenticalScenarioGenerator = true;
-            for (Size k = 1; k < result[j].second->scenarios().size(); ++k) {
-                if (!result[j].second->scenarios()[k]->isCloseEnough(scenarioGenerators[i]->scenarios()[k])) {
-                    foundIdenticalScenarioGenerator = false;
-                    break;
-                }
-            }
-        }
-        if (foundIdenticalScenarioGenerator) {
-            result[j].first.insert(ids[i]);
-        } else {
-            result.push_back(std::make_pair(std::set<std::string>{ids[i]}, scenarioGenerators[i]));
-        }
-    }
-    return result;
-}
-
 std::vector<std::pair<boost::shared_ptr<Portfolio>, boost::shared_ptr<SensitivityScenarioGenerator>>>
 splitPortfolioByScenarioGenerators(
     const boost::shared_ptr<Portfolio>& portfolio, std::vector<std::string> ids,
     const std::vector<boost::shared_ptr<SensitivityScenarioGenerator>>& scenarioGenerators) {
-    auto consolidatedScenGen = consolidateScenarioGenerators(ids, scenarioGenerators);
     std::vector<std::pair<boost::shared_ptr<Portfolio>, boost::shared_ptr<SensitivityScenarioGenerator>>> result;
-    for(auto const& [_, gen]:consolidatedScenGen) {
+    for(auto const& gen: scenarioGenerators) {
         result.push_back(std::make_pair(boost::make_shared<Portfolio>(), gen));
     }
     for(auto const& [id, t]: portfolio->trades()) {
-        Size j;
-        for(j=1;j<consolidatedScenGen.size();++j) {
-            if(consolidatedScenGen[j].first.find(id) != consolidatedScenGen[j].first.end()) {
-                result[j].first->add(t);
-                break;
-            }
-        }
-        if(j == consolidatedScenGen.size())
+        if(auto f = std::find(ids.begin(),ids.end(), t->sensitivityTemplate()); f!= ids.end())
+            result[std::distance(ids.begin(), f)].first->add(t);
+        else
             result.front().first->add(t);
     }
     return result;
@@ -137,11 +103,11 @@ void SensitivityAnalysis::generateSensitivities() {
                "SensitivityAnalysis::generateSensitivities(): multi-threaded engine does not support non-shifted base "
                "ccy conversion currently. This requires a a small code extension. Contact Dev.");
 
-    // collect the pricing engine ids that are used in the sensitivity config
+    // collect the sensi template ids that are used in the sensitivity config
 
     std::set<std::string> sensiTemplateIdsFromSensiConfig = getShiftSpecKeys(*sensitivityData_);
 
-    // collect the pricing engine ids that are relevant for the portfolio
+    // collect the sensi template ids that are relevant for the portfolio
 
     std::set<std::string> sensiTemplateIdsFromPortfolio;
     for (auto const& [_, t] : portfolio_->trades())
@@ -155,8 +121,13 @@ void SensitivityAnalysis::generateSensitivities() {
                           std::back_inserter(sensiTemplateIds));
 
     LOG("Need to process " << sensiTemplateIds.size() << " sensi scenario sets resulting from "
-                           << sensiTemplateIdsFromSensiConfig.size() << " sensi templates in sensi config and "
-                           << sensiTemplateIdsFromPortfolio.size() << " sensi templates in portfolio.");
+                           << sensiTemplateIdsFromSensiConfig.size()
+                           << " sensi templates in sensi config (different from default config) and "
+                           << sensiTemplateIdsFromPortfolio.size()
+                           << " sensi templates in portfolio (including default config, if configured in pe config");
+
+    // status quo
+    sensiTemplateIds = {std::string()};
 
     if (useSingleThreadedEngine_) {
 
