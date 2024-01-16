@@ -93,6 +93,10 @@ public:
 
     //@}
 
+    //! Add underlying Commodity names
+    std::map<ore::data::AssetClass, std::set<std::string>>
+    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+
 private:
     CommoditySpreadOptionData csoData_;
     std::vector<std::string> fxIndex_;    
