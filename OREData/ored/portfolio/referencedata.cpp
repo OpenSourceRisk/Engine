@@ -353,7 +353,7 @@ void CurrencyHedgedEquityIndexReferenceDatum::fromXML(XMLNode* node) {
             double weight = XMLUtils::getChildValueAsDouble(child, "Weight", true);
             QL_REQUIRE(weight > 0 || QuantLib::close_enough(weight, 0.0),
                        "Try to add negtive weight for Underlying" << name);
-            data_.push_back(make_pair(name, weight));
+            data_[name] += weight;
             totalWeight += weight;
         }
         QL_REQUIRE(data_.empty() || QuantLib::close_enough(totalWeight, 1.0),
@@ -603,7 +603,7 @@ void BasicReferenceDataManager::check(const string& type, const string& id, cons
         
 }
 
-bool BasicReferenceDataManager::hasData(const string& type, const string& id, const QuantLib::Date& asof) const {
+bool BasicReferenceDataManager::hasData(const string& type, const string& id, const QuantLib::Date& asof) {
     Date asofDate = asof;
     if (asofDate == QuantLib::Null<QuantLib::Date>()) {
         asofDate = Settings::instance().evaluationDate();
