@@ -1062,39 +1062,70 @@ void YieldCurve::buildDiscountCurve() {
     boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
     boost::shared_ptr<Convention> convention;
 
-    for (Size i = 0; i < discountQuoteIDs.size(); ++i) {
-        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(discountQuoteIDs[i], asofDate_);
-        if (marketQuote) {
-            QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::DISCOUNT,
-                       "Market quote not of type Discount.");
-            boost::shared_ptr<DiscountQuote> discountQuote = boost::dynamic_pointer_cast<DiscountQuote>(marketQuote);
+    vector<string> quotes;
+    quotes.reserve(discountQuoteIDs.size()); // Reserve space for efficiency
 
-            if(discountQuote->date() != Date()){
+    std::transform(discountQuoteIDs.begin(), discountQuoteIDs.end(), std::back_inserter(quotes),
+                   [](const std::pair<string, bool>& pair) {
+                       return pair.first; // Extract only the quote part
+                   });
 
-                data[discountQuote->date()] = discountQuote->quote()->value();
+    auto wildcard = getUniqueWildcard(quotes);
 
-            } else if (discountQuote->tenor() != Period()){
+    std::set<boost::shared_ptr<MarketDatum>> marketData;
+    if (wildcard) {
+        marketData = loader_.get(*wildcard, asofDate_);
+    } else {
+        std::ostringstream ss;
+        ss << MarketDatum::InstrumentType::DISCOUNT << "/" << MarketDatum::QuoteType::RATE << "/" << currency_ << "/*";
+        Wildcard w(ss.str());
+        marketData = loader_.get(w, asofDate_);
+    }
 
-                if(!convention)
-                    convention = conventions->get(discountCurveSegment->conventionsID());
-                boost::shared_ptr<ZeroRateConvention> zeroConvention = boost::dynamic_pointer_cast<ZeroRateConvention>(convention);
-                QL_REQUIRE(zeroConvention, "could not cast to ZeroRateConvention");
+    for (const auto& marketQuote : marketData) {
+        QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::DISCOUNT,
+                    "Market quote not of type Discount.");
+        boost::shared_ptr<DiscountQuote> discountQuote = boost::dynamic_pointer_cast<DiscountQuote>(marketQuote);
 
-                Calendar cal = zeroConvention->tenorCalendar();
-                BusinessDayConvention rollConvention = zeroConvention->rollConvention();
-                Date date = cal.adjust(cal.adjust(asofDate_, rollConvention) + discountQuote->tenor(), rollConvention);
-                DLOG("YieldCurve::buildDiscountCurve - tenor " << discountQuote->tenor() << " to date " << io::iso_date(date));
-                data[date] = discountQuote->quote()->value();
+        // filtering
+        if (!wildcard) {
+            vector<string>::const_iterator it = find(quotes.begin(), quotes.end(), discountQuote->name());
+            if (it == quotes.end())
+                continue;
+        }
 
-            } else {
-                QL_FAIL("YieldCurve::buildDiscountCurve - neither date nor tenor recognised");
-            }
+        if (discountQuote->date() != Date()) {
 
+            data[discountQuote->date()] = discountQuote->quote()->value();
+
+        } else if (discountQuote->tenor() != Period()) {
+
+            if (!convention)
+                convention = conventions->get(discountCurveSegment->conventionsID());
+            boost::shared_ptr<ZeroRateConvention> zeroConvention =
+                boost::dynamic_pointer_cast<ZeroRateConvention>(convention);
+            QL_REQUIRE(zeroConvention, "could not cast to ZeroRateConvention");
+
+            Calendar cal = zeroConvention->tenorCalendar();
+            BusinessDayConvention rollConvention = zeroConvention->rollConvention();
+            Date date = cal.adjust(cal.adjust(asofDate_, rollConvention) + discountQuote->tenor(), rollConvention);
+            DLOG("YieldCurve::buildDiscountCurve - tenor " << discountQuote->tenor() << " to date "
+                                                            << io::iso_date(date));
+            data[date] = discountQuote->quote()->value();
+
+        } else {
+            QL_FAIL("YieldCurve::buildDiscountCurve - neither date nor tenor recognised");
         }
     }
 
+    // Some logging and checks
     QL_REQUIRE(data.size() > 0, "No market data found for curve spec " << curveSpec_.name() << " with as of date "
                                                                        << io::iso_date(asofDate_));
+    if (!wildcard) {
+        QL_REQUIRE(data.size() == quotes.size(), "Found " << data.size() << " quotes, but "
+                                                          << quotes.size()
+                                                          << " quotes given in config " << curveConfig_->curveID());
+    }
 
     if (data.begin()->first > asofDate_) {
         DLOG("Insert discount curve point at time zero for " << curveSpec_.name());

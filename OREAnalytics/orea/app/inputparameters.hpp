@@ -136,6 +136,11 @@ public:
         sensiPricingEngine_ = engineData;
     }
 
+    // Setters for scenario
+    void setScenarioSimMarketParams(const std::string& xml);
+    void setScenarioSimMarketParamsFromFile(const std::string& fileName);
+    void setScenarioOutputFile(const std::string& filename) { scenarioOutputFile_ = filename; }
+
     // Setters for stress testing
     void setStressThreshold(Real r) { stressThreshold_ = r; }
     void setStressSimMarketParams(const std::string& xml); 
@@ -415,6 +420,12 @@ public:
     const boost::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiScenarioData() { return sensiScenarioData_; }
     const boost::shared_ptr<ore::data::EngineData>& sensiPricingEngine() { return sensiPricingEngine_; }
     // const boost::shared_ptr<ore::data::TodaysMarketParameters>& sensiTodaysMarketParams() { return sensiTodaysMarketParams_; }
+        
+    /****************************
+     * Getters for scenario build
+     ****************************/
+    const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& scenarioSimMarketParams() { return scenarioSimMarketParams_; }
+    const std::string& scenarioOutputFile() { return scenarioOutputFile_; }
 
     /****************************
      * Getters for stress testing
@@ -676,6 +687,13 @@ protected:
     boost::shared_ptr<ore::data::EngineData> sensiPricingEngine_;
     // boost::shared_ptr<ore::data::TodaysMarketParameters> sensiTodaysMarketParams_;
 
+    
+    /**********************
+     * SCENARIO analytic
+     **********************/
+    boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> scenarioSimMarketParams_;
+    std::string scenarioOutputFile_;
+
     /*****************
      * STRESS analytic
      *****************/
@@ -847,6 +865,7 @@ private:
     std::string cashflowOutputFileName_;
     std::string curvesOutputFileName_;
     std::string scenarioDumpFileName_;
+    std::string scenarioOutputName_;
     std::string cubeFileName_;
     std::string mktCubeFileName_;
     std::string rawCubeFileName_;
