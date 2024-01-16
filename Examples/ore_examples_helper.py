@@ -95,12 +95,14 @@ class OreExample(object):
                 for time in times:
                     print_on_console("\t" + time.split()[0] + ": " + time.split()[1])
 
-    def get_output_data_from_column(self, csv_name, colidx, offset=1):
+    def get_output_data_from_column(self, csv_name, colidx, offset=1, filter='', filterCol=0):
         f = open(os.path.join(os.path.join(os.getcwd(), "Output"), csv_name))
         data = []
         for line in f:
+            tokens = line.split(',')
             if colidx < len(line.split(',')):
-                data.append(line.split(',')[colidx])
+                if (filter == '' or tokens[filterCol] == filter):
+                    data.append(line.split(',')[colidx])
             else:
                 data.append("Error")
         return [float(i) for i in data[offset:]]
@@ -111,9 +113,9 @@ class OreExample(object):
         for file in files:
             shutil.copy(os.path.join("Output", file), os.path.join("Output", subdir))
 
-    def plot(self, filename, colIdxTime, colIdxVal, color, label, offset=1, marker='', linestyle='-'):
-        self.ax.plot(self.get_output_data_from_column(filename, colIdxTime, offset),
-                     self.get_output_data_from_column(filename, colIdxVal, offset),
+    def plot(self, filename, colIdxTime, colIdxVal, color, label, offset=1, marker='', linestyle='-', filter='', filterCol=0):
+        self.ax.plot(self.get_output_data_from_column(filename, colIdxTime, offset, filter, filterCol),
+                     self.get_output_data_from_column(filename, colIdxVal, offset, filter, filterCol),
                      linewidth=2,
                      linestyle=linestyle,
                      color=color,
