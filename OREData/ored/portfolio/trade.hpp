@@ -163,7 +163,7 @@ public:
 
     /*! returns the pricing engine id 'Swap/DiscountedCashflows/DiscountingSwapEngine'
       for this trade, this is only available after build() has been called */
-    const std::string& sensitivityTemplate() const { return sensitivityTemplate_; }
+    const std::string& sensitivityTemplate() const;
     //@}
 
     //! \name Utility
@@ -200,6 +200,7 @@ protected:
     Date maturity_;
     string issuer_;
     string sensitivityTemplate_;
+    bool sensitivityTemplateSet_ = false;
 
     std::size_t savedNumberOfPricings_ = 0;
     boost::timer::nanosecond_type savedCumulativePricingTime_ = 0;
