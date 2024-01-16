@@ -19,6 +19,7 @@
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
 #include <qle/cashflows/brlcdicouponpricer.hpp>
 #include <qle/cashflows/couponpricer.hpp>
+#include <qle/cashflows/formulabasedcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscouponpricer.hpp>
 
@@ -35,7 +36,8 @@ class PricerSetter : public AcyclicVisitor,
                      public Visitor<QuantExt::OvernightIndexedCoupon>,
                      public Visitor<CappedFlooredOvernightIndexedCoupon>,
                      public Visitor<AverageONIndexedCoupon>,
-                     public Visitor<QuantExt::SubPeriodsCoupon1> {
+                     public Visitor<QuantExt::SubPeriodsCoupon1>,
+                     public Visitor<FormulaBasedCoupon> {
 private:
     const boost::shared_ptr<FloatingRateCouponPricer> pricer_;
 
@@ -49,6 +51,7 @@ public:
     void visit(CappedFlooredOvernightIndexedCoupon& c) override;
     void visit(AverageONIndexedCoupon& c) override;
     void visit(QuantExt::SubPeriodsCoupon1& c) override;
+    void visit(FormulaBasedCoupon& c) override;
 };
 
 void PricerSetter::visit(CashFlow&) {
@@ -107,6 +110,12 @@ void PricerSetter::visit(QuantExt::SubPeriodsCoupon1& c) {
         boost::dynamic_pointer_cast<QuantExt::SubPeriodsCouponPricer1>(pricer_);
     QL_REQUIRE(subPeriodsCouponPricer, "Pricer not compatible with sub-periods coupon");
     c.setPricer(subPeriodsCouponPricer);
+}
+
+void PricerSetter::visit(FormulaBasedCoupon& c) {
+    auto p = boost::dynamic_pointer_cast<FormulaBasedCouponPricer>(pricer_);
+    QL_REQUIRE(p, "Pricer not compatible with Formula Based coupon");
+    c.setPricer(p);
 }
 } // namespace
 
