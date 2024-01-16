@@ -47,6 +47,7 @@ equityforwardcurvestripper.cpp
 exactbachelierimpliedvolatility.cpp
 fddefaultableequityjumppdiffusionconvertiblebondengine.cpp
 fillemptymatrix.cpp
+formulabasedcoupon.cpp
 forwardbond.cpp
 fxvolsmile.cpp
 hullwhitebucketing.cpp
