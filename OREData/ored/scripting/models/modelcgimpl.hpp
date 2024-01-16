@@ -70,9 +70,7 @@ public:
 
     // Model interface implementation (partial)
     const std::string& baseCcy() const override { return currencies_.front(); }
-    std::size_t dt(const Date& d1, const Date& d2) const override {
-        return cg_const(*g_, dayCounter_.yearFraction(d1, d2));
-    }
+    std::size_t dt(const Date& d1, const Date& d2) const override;
     std::size_t pay(const std::size_t amount, const Date& obsdate, const Date& paydate,
                     const std::string& currency) const override;
     std::size_t discount(const Date& obsdate, const Date& paydate, const std::string& currency) const override;
@@ -145,6 +143,9 @@ private:
 // convenience function to add model parameters, standalone variant
 std::size_t addModelParameter(ComputationGraph& g, std::vector<std::pair<std::size_t, std::function<double(void)>>>& m,
                               const std::string& id, std::function<double(void)> f);
+
+// map date to a coarser grid if sloppyDates = true, otherwise just return d
+Date getSloppyDate(const Date& d, const bool sloppyDates, const std::set<Date>& dates);
 
 } // namespace data
 } // namespace ore

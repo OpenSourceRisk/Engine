@@ -637,12 +637,14 @@ public:
     //! return a std::string for the log file
     virtual std::string msg() const = 0;
     //! generate Boost log record to pass to corresponding sinks
-    virtual void log() const = 0;
+    void log() const;
     //! create JSON-like output from the data
     const std::string json() const { return jsonify(data_); }
     void set(const std::string& key, const boost::any& value) { data_[key] = value; }
 
 protected:
+    //! generate Boost log record - this method is called by log()
+    virtual void emitLog() const = 0;
     static std::string jsonify(const boost::any&);
 
     std::map<std::string, boost::any> data_;
@@ -691,7 +693,7 @@ public:
     //! return a std::string for the log file
     std::string msg() const { return std::string(name) + std::string(" ") + json(); }
     //! generate Boost log record to pass to corresponding sinks
-    void log() const;
+    void emitLog() const;
 
 protected:
     void addSubFields(const std::map<std::string, std::string>&);
@@ -720,7 +722,7 @@ public:
     //! return a std::string for the log file
     std::string msg() const { return std::string(name) + std::string(" ") + json(); }
     //! generate Boost log record to pass to corresponding sinks
-    void log() const;
+    void emitLog() const;
 
 private:
     std::string message_;
@@ -735,7 +737,7 @@ public:
     //! return a std::string for the log file
     std::string msg() const { return std::string(name) + std::string(" ") + json(); }
     //! generate Boost log record to pass to corresponding sinks
-    void log() const;
+    void emitLog() const;
 };
 
 //! Singleton to control console logging

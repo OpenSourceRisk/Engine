@@ -18,6 +18,7 @@ aggregation/xvacalculator.cpp
 app/analytic.cpp
 app/analytics/parconversionanalytic.cpp
 app/analytics/pricinganalytic.cpp
+app/analytics/scenarioanalytic.cpp
 app/analytics/scenariostatisticsanalytic.cpp
 app/analytics/simmanalytic.cpp
 app/analytics/varanalytic.cpp
@@ -45,6 +46,7 @@ cube/sparsenpvcube.cpp
 engine/amcvaluationengine.cpp
 engine/bufferedsensitivitystream.cpp
 engine/cptycalculator.cpp
+engine/decomposedsensitivitystream.cpp
 engine/filteredsensitivitystream.cpp
 engine/historicalpnlgenerator.cpp
 engine/historicalsensipnlcalculator.cpp
@@ -66,6 +68,7 @@ engine/sensitivityrecord.cpp
 engine/stresstest.cpp
 engine/valuationcalculator.cpp
 engine/valuationengine.cpp
+engine/xvaenginecg.cpp
 engine/zerotoparcube.cpp
 scenario/clonedscenariogenerator.cpp
 scenario/clonescenariofactory.cpp
@@ -91,12 +94,15 @@ scenario/shiftscenariogenerator.cpp
 scenario/simplescenario.cpp
 scenario/stressscenariodata.cpp
 scenario/stressscenariogenerator.cpp
+simm/crif.cpp
 simm/crifloader.cpp
 simm/crifrecord.cpp
 simm/simmbasicnamemapper.cpp
 simm/simmbucketmapperbase.cpp
 simm/simmcalculator.cpp
+simm/simmcalibration.cpp
 simm/simmconcentration.cpp
+simm/simmconcentrationcalibration.cpp
 simm/simmconcentrationisdav1_3.cpp
 simm/simmconcentrationisdav1_3_38.cpp
 simm/simmconcentrationisdav2_0.cpp
@@ -109,6 +115,7 @@ simm/simmconcentrationisdav2_5a.cpp
 simm/simmconcentrationisdav2_6.cpp
 simm/simmconfiguration.cpp
 simm/simmconfigurationbase.cpp
+simm/simmconfigurationcalibration.cpp
 simm/simmconfigurationisdav1_0.cpp
 simm/simmconfigurationisdav1_3.cpp
 simm/simmconfigurationisdav1_3_38.cpp
@@ -145,6 +152,7 @@ aggregation/xvacalculator.hpp
 app/analytic.hpp
 app/analytics/parconversionanalytic.hpp
 app/analytics/pricinganalytic.hpp
+app/analytics/scenarioanalytic.hpp
 app/analytics/scenariostatisticsanalytic.hpp
 app/analytics/simmanalytic.hpp
 app/analytics/varanalytic.hpp
@@ -180,6 +188,7 @@ cube/sparsenpvcube.hpp
 engine/amcvaluationengine.hpp
 engine/bufferedsensitivitystream.hpp
 engine/cptycalculator.hpp
+engine/decomposedsensitivitystream.hpp
 engine/filteredsensitivitystream.hpp
 engine/historicalpnlgenerator.hpp
 engine/historicalsensipnlcalculator.hpp
@@ -204,6 +213,7 @@ engine/stresstest.hpp
 engine/valuationcalculator.hpp
 engine/valuationengine.hpp
 engine/varcalculator.hpp
+engine/xvaenginecg.hpp
 engine/zerotoparcube.hpp
 scenario/aggregationscenariodata.hpp
 scenario/clonedscenariogenerator.hpp
@@ -235,13 +245,16 @@ scenario/simplescenario.hpp
 scenario/simplescenariofactory.hpp
 scenario/stressscenariodata.hpp
 scenario/stressscenariogenerator.hpp
+simm/crif.hpp
 simm/crifloader.hpp
 simm/crifrecord.hpp
 simm/simmbasicnamemapper.hpp
 simm/simmbucketmapper.hpp
 simm/simmbucketmapperbase.hpp
 simm/simmcalculator.hpp
+simm/simmcalibration.hpp
 simm/simmconcentration.hpp
+simm/simmconcentrationcalibration.hpp
 simm/simmconcentrationisdav1_3.hpp
 simm/simmconcentrationisdav1_3_38.hpp
 simm/simmconcentrationisdav2_0.hpp
@@ -254,6 +267,7 @@ simm/simmconcentrationisdav2_5a.hpp
 simm/simmconcentrationisdav2_6.hpp
 simm/simmconfiguration.hpp
 simm/simmconfigurationbase.hpp
+simm/simmconfigurationcalibration.hpp
 simm/simmconfigurationisdav1_0.hpp
 simm/simmconfigurationisdav1_3.hpp
 simm/simmconfigurationisdav1_3_38.hpp

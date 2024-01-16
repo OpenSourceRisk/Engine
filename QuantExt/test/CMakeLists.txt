@@ -1,6 +1,7 @@
 # cpp files, this list is maintained manually
 
-set(QuantExt-Test_SRC analyticcashsettledeuropeanengine.cpp
+set(QuantExt-Test_SRC ad.cpp
+analyticcashsettledeuropeanengine.cpp
 analyticlgmswaptionengine.cpp
 basecorrelationcurve.cpp
 bfrrvolsurface.cpp
@@ -46,6 +47,7 @@ equityforwardcurvestripper.cpp
 exactbachelierimpliedvolatility.cpp
 fddefaultableequityjumppdiffusionconvertiblebondengine.cpp
 fillemptymatrix.cpp
+formulabasedcoupon.cpp
 forwardbond.cpp
 fxvolsmile.cpp
 hullwhitebucketing.cpp
