@@ -60,18 +60,24 @@ public:
     };
 
     struct CurveShiftData : ShiftData {
+        CurveShiftData() : ShiftData() {}
+        CurveShiftData(const ShiftData& d) : ShiftData(d) {}
         virtual ~CurveShiftData() {}
         vector<Period> shiftTenors;
     };
 
-    struct SpotShiftData : ShiftData {};
+    using SpotShiftData = ShiftData;
 
     struct CdsVolShiftData : ShiftData {
+        CdsVolShiftData() : ShiftData() {}
+        CdsVolShiftData(const ShiftData& d) : ShiftData(d) {}
         string ccy;
         vector<Period> shiftExpiries;
     };
 
     struct BaseCorrelationShiftData : ShiftData {
+        BaseCorrelationShiftData() : ShiftData() {}
+        BaseCorrelationShiftData(const ShiftData& d) : ShiftData(d) {}
         vector<Period> shiftTerms;
         vector<Real> shiftLossLevels;
         string indexName;
@@ -79,26 +85,27 @@ public:
 
     struct VolShiftData : ShiftData {
         VolShiftData() : shiftStrikes({0.0}), isRelative(false) {}
+        VolShiftData(const ShiftData& d) : ShiftData(d), shiftStrikes({0.0}), isRelative(false) {}
         vector<Period> shiftExpiries;
         vector<Real> shiftStrikes;
         bool isRelative;
     };
 
     struct CapFloorVolShiftData : VolShiftData {
+        CapFloorVolShiftData() : VolShiftData() {}
+        CapFloorVolShiftData(const VolShiftData& d) : VolShiftData(d) {}
         string indexName;
     };
 
     struct GenericYieldVolShiftData : VolShiftData {
+        GenericYieldVolShiftData() : VolShiftData() {}
+        GenericYieldVolShiftData(const VolShiftData& d) : VolShiftData(d) {}
         vector<Period> shiftTerms;
     };
 
-    struct CurveShiftParData : SensitivityScenarioData::CurveShiftData {
-        CurveShiftParData(SensitivityScenarioData::CurveShiftData c) {
-            shiftType = c.shiftType;
-            shiftSize = c.shiftSize;
-            shiftTenors = c.shiftTenors;
-        }
-        CurveShiftParData() {}
+    struct CurveShiftParData : CurveShiftData {
+        CurveShiftParData() : CurveShiftData() {}
+        CurveShiftParData(const CurveShiftData& c) : CurveShiftData(c) {}
         vector<string> parInstruments;
         bool parInstrumentSingleCurve = true;
 
@@ -115,15 +122,9 @@ public:
         map<string, string> parInstrumentConventions;
     };
 
-    struct CapFloorVolShiftParData : SensitivityScenarioData::CapFloorVolShiftData {
-        CapFloorVolShiftParData(SensitivityScenarioData::CapFloorVolShiftData c) {
-            shiftType = c.shiftType;
-            shiftSize = c.shiftSize;
-            shiftExpiries = c.shiftExpiries;
-            shiftStrikes = c.shiftStrikes;
-            indexName = c.indexName;
-        }
-        CapFloorVolShiftParData() {}
+    struct CapFloorVolShiftParData : CapFloorVolShiftData {
+        CapFloorVolShiftParData() : CapFloorVolShiftData() {}
+        CapFloorVolShiftParData(const CapFloorVolShiftData& c) : CapFloorVolShiftData(c) {}
         vector<string> parInstruments;
         bool parInstrumentSingleCurve = true;
 
