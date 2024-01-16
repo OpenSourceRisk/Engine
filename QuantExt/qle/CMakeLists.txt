@@ -52,6 +52,8 @@ cashflows/equitymargincouponpricer.cpp
 cashflows/fixedratefxlinkednotionalcoupon.cpp
 cashflows/floatingannuitycoupon.cpp
 cashflows/floatingannuitynominal.cpp
+cashflows/formulabasedcoupon.cpp
+cashflows/mcgaussianformulabasedcouponpricer.cpp
 cashflows/fxlinkedcashflow.cpp
 cashflows/iborfracoupon.cpp
 cashflows/indexedcoupon.cpp
@@ -84,6 +86,7 @@ indexes/dividendmanager.cpp
 indexes/equityindex.cpp
 indexes/fallbackiborindex.cpp
 indexes/fallbackovernightindex.cpp
+indexes/formulabasedindex.cpp
 indexes/fxindex.cpp
 indexes/genericiborindex.cpp
 indexes/ibor/ameribor.cpp
@@ -147,6 +150,7 @@ instruments/varianceswap.cpp
 math/basiccpuenvironment.cpp
 math/blockmatrixinverse.cpp
 math/bucketeddistribution.cpp
+math/compiledformula.cpp
 math/computeenvironment.cpp
 math/deltagammavar.cpp
 math/differentialevolution_mt.cpp
@@ -447,6 +451,8 @@ cashflows/fixedratefxlinkednotionalcoupon.hpp
 cashflows/floatingannuitycoupon.hpp
 cashflows/floatingannuitynominal.hpp
 cashflows/floatingratefxlinkednotionalcoupon.hpp
+cashflows/formulabasedcoupon.hpp
+cashflows/mcgaussianformulabasedcouponpricer.hpp
 cashflows/fxlinkedcashflow.hpp
 cashflows/iborfracoupon.hpp
 cashflows/indexedcoupon.hpp
@@ -488,6 +494,7 @@ indexes/equityindex.hpp
 indexes/escpi.hpp
 indexes/fallbackiborindex.hpp
 indexes/fallbackovernightindex.hpp
+indexes/formulabasedindex.hpp
 indexes/frcpi.hpp
 indexes/fxindex.hpp
 indexes/genericiborindex.hpp
@@ -605,6 +612,7 @@ interpolators/optioninterpolator2d.hpp
 math/basiccpuenvironment.hpp
 math/blockmatrixinverse.hpp
 math/bucketeddistribution.hpp
+math/compiledformula.hpp
 math/computeenvironment.hpp
 math/constantinterpolation.hpp
 math/covariancesalvage.hpp
