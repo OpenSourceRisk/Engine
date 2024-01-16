@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file engine/xvacgengine.hpp
+/*! \file orea/engine/xvaenginecg.hpp
     \brief xva engine using cg infrastructure
     \ingroup engine
 */
