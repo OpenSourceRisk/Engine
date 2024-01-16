@@ -45,11 +45,11 @@ SensitivityScenarioGenerator::SensitivityScenarioGenerator(
     const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
     const boost::shared_ptr<ScenarioSimMarket>& simMarket,
     const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, const bool overrideTenors,
-    const std::string& pricingEngineId, const bool continueOnError,
+    const std::string& sensitivityTemplate, const bool continueOnError,
     const boost::shared_ptr<Scenario>& baseScenarioAbsolute)
     : ShiftScenarioGenerator(baseScenario, simMarketData, simMarket), sensitivityData_(sensitivityData),
-      sensiScenarioFactory_(sensiScenarioFactory), pricingEngineId_(pricingEngineId), overrideTenors_(overrideTenors),
-      continueOnError_(continueOnError),
+      sensiScenarioFactory_(sensiScenarioFactory), sensitivityTemplate_(sensitivityTemplate),
+      overrideTenors_(overrideTenors), continueOnError_(continueOnError),
       baseScenarioAbsolute_(baseScenarioAbsolute == nullptr ? baseScenario : baseScenarioAbsolute) {
 
     QL_REQUIRE(sensitivityData_, "SensitivityScenarioGenerator: sensitivityData is null");
@@ -264,19 +264,19 @@ bool tryGetBaseScenarioValue(const boost::shared_ptr<Scenario> baseScenario, con
 } // namespace
 
 ShiftType SensitivityScenarioGenerator::getShiftType(SensitivityScenarioData::ShiftData& data) const {
-    if (auto it = data.keyedShiftType.find(pricingEngineId_); it != data.keyedShiftType.end())
+    if (auto it = data.keyedShiftType.find(sensitivityTemplate_); it != data.keyedShiftType.end())
         return it->second;
     return data.shiftType;
 }
 
 Real SensitivityScenarioGenerator::getShiftSize(SensitivityScenarioData::ShiftData& data) const {
-    if (auto it = data.keyedShiftSize.find(pricingEngineId_); it != data.keyedShiftSize.end())
+    if (auto it = data.keyedShiftSize.find(sensitivityTemplate_); it != data.keyedShiftSize.end())
         return it->second;
     return data.shiftSize;
 }
 
 ShiftScheme SensitivityScenarioGenerator::getShiftScheme(SensitivityScenarioData::ShiftData& data) const {
-    if (auto it = data.keyedShiftScheme.find(pricingEngineId_); it != data.keyedShiftScheme.end())
+    if (auto it = data.keyedShiftScheme.find(sensitivityTemplate_); it != data.keyedShiftScheme.end())
         return it->second;
     return data.shiftScheme;
 }
