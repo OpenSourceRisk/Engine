@@ -181,6 +181,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             boost::dynamic_pointer_cast<CrossCurrencySwapEngineBuilderBase>(builder);
         QL_REQUIRE(swapBuilder, "No Builder found for CrossCurrencySwap " << id());
         swap->setPricingEngine(swapBuilder->engine(currenciesForMcSimulation, npvCcy));
+        setSensitivityTemplate(*swapBuilder);
         // take the first legs currency as the npv currency (arbitrary choice)
         instrument_.reset(new VanillaInstrument(swap));
     } else {
@@ -189,6 +190,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
         QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
         swap->setPricingEngine(swapBuilder->engine(npvCcy));
+        setSensitivityTemplate(*swapBuilder);
         instrument_.reset(new VanillaInstrument(swap));
     }
 
