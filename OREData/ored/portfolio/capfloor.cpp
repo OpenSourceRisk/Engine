@@ -217,8 +217,17 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         // the StrippedCappedFlooredCoupon used to extract the naked options assumes a long floor
         // and a short cap while we have documented a collar to be a short floor and long cap
         qlInstrument = boost::make_shared<QuantLib::Swap>(legs_, std::vector<bool>{!floors_.empty() && !caps_.empty()});
-        qlInstrument->setPricingEngine(
-            boost::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
+        if (engineFactory->engineData()->hasProduct("Swap")) {
+            builder = engineFactory->builder("Swap");
+            boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
+                boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
+            QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
+            qlInstrument->setPricingEngine(swapBuilder->engine(parseCurrency(legData_.currency())));
+            setSensitivityTemplate(*swapBuilder);
+        } else {
+            qlInstrument->setPricingEngine(
+                boost::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
+        }
         maturity_ = CashFlows::maturityDate(legs_.front());
     } else if (legData_.legType() == "CMSSpread") {
         builder = engineFactory->builder("Swap");
