@@ -78,6 +78,7 @@ void CliquetOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
         boost::dynamic_pointer_cast<CliquetOptionEngineBuilder>(builder);
 
     cliquet->setPricingEngine(cliquetOptionBuilder->engine(name(), ccy));
+    setSensitivityTemplate(*cliquetOptionBuilder);
 
     instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(cliquet));
 
