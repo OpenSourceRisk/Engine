@@ -51,7 +51,7 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     else if (option_.payoffType2() == "Geometric")
         tradeTypeBuilder += "Geometric";
     else {
-        QL_FAIL("payoff type 2 must be 'Arithmetic' or 'Geomtetric'");
+        QL_FAIL("payoff type 2 must be 'Arithmetic' or 'Geometric'");
     }
 
     // Add Price/Strike
