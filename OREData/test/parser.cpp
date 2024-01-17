@@ -27,6 +27,7 @@
 #include <ql/time/calendars/austria.hpp>
 #include <ql/time/calendars/chile.hpp>
 #include <ql/time/calendars/france.hpp>
+#include <ql/time/calendars/jointcalendar.hpp>
 #include <ql/time/calendars/thailand.hpp>
 #include <ql/time/daycounters/all.hpp>
 #include <qle/calendars/colombia.hpp>
