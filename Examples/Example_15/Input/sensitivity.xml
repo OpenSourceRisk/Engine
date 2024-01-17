@@ -5,26 +5,31 @@
     <DiscountCurve ccy="EUR">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </DiscountCurve>
     <DiscountCurve ccy="USD">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </DiscountCurve>
     <DiscountCurve ccy="GBP">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </DiscountCurve>
     <DiscountCurve ccy="CHF">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </DiscountCurve>
     <DiscountCurve ccy="JPY">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </DiscountCurve>
   </DiscountCurves>
@@ -33,46 +38,55 @@
     <IndexCurve index="EUR-EURIBOR-6M">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </IndexCurve>
     <IndexCurve index="EUR-EURIBOR-3M">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </IndexCurve>
     <IndexCurve index="EUR-EONIA">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </IndexCurve>
     <IndexCurve index="USD-LIBOR-3M">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </IndexCurve>
     <IndexCurve index="USD-LIBOR-6M">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </IndexCurve>
     <IndexCurve index="GBP-LIBOR-3M">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </IndexCurve>
     <IndexCurve index="GBP-LIBOR-6M">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </IndexCurve>
     <IndexCurve index="CHF-LIBOR-6M">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </IndexCurve>
     <IndexCurve index="JPY-LIBOR-6M">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </IndexCurve>
   </IndexCurves>
@@ -81,6 +95,7 @@
     <YieldCurve name="BENCHMARK_EUR">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </YieldCurve>
   </YieldCurves>
@@ -89,18 +104,22 @@
     <FxSpot ccypair="USDEUR">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
     </FxSpot>
     <FxSpot ccypair="GBPEUR">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
     </FxSpot>
     <FxSpot ccypair="CHFEUR">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
     </FxSpot>
     <FxSpot ccypair="JPYEUR">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
     </FxSpot>
   </FxSpots>
   <!-- FX ATM vol shifts -->
@@ -108,18 +127,21 @@
     <FxVolatility ccypair="USDEUR">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
       <ShiftStrikes/>
     </FxVolatility>
     <FxVolatility ccypair="GBPEUR">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
       <ShiftStrikes/>
     </FxVolatility>
     <FxVolatility ccypair="JPYEUR">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
       <ShiftStrikes/>
     </FxVolatility>
@@ -139,6 +161,7 @@
     <CapFloorVolatility ccy="EUR">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftExpiries>1Y,2Y,3Y,5Y,7Y,10Y</ShiftExpiries>
       <ShiftStrikes>0.01,0.02,0.03,0.04,0.05</ShiftStrikes>
       <Index>EUR-EURIBOR-6M</Index>
@@ -146,6 +169,7 @@
     <CapFloorVolatility ccy="USD">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftExpiries>1Y,2Y,3Y,5Y,7Y,10Y</ShiftExpiries>
       <ShiftStrikes>0.01,0.02,0.03,0.04,0.05</ShiftStrikes>
       <Index>USD-LIBOR-3M</Index>
@@ -159,12 +183,14 @@
       <Currency>EUR</Currency>
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftTenors>6M,1Y,2Y,5Y,10Y</ShiftTenors>
     </CreditCurve>
     <CreditCurve name="BANK">
       <Currency>USD</Currency>
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftTenors>6M,1Y,2Y,5Y,10Y</ShiftTenors>
     </CreditCurve>
   </CreditCurves>
@@ -173,10 +199,12 @@
     <EquitySpot equity="SP5">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
     </EquitySpot>
     <EquitySpot equity="Lufthansa">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
     </EquitySpot>
   </EquitySpots>
   <!-- Equity ATM vol shifts -->
@@ -184,12 +212,14 @@
     <EquityVolatility equity="SP5">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftExpiries>6M,1Y,2Y,3Y,5Y</ShiftExpiries>
       <ShiftStrikes/>
     </EquityVolatility>
     <EquityVolatility equity="Lufthansa">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftExpiries>6M,1Y,2Y,3Y,5Y</ShiftExpiries>
       <ShiftStrikes/>
     </EquityVolatility>
@@ -198,26 +228,31 @@
     <ZeroInflationIndexCurve index="EUHICP">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </ZeroInflationIndexCurve>
     <ZeroInflationIndexCurve index="EUHICPXT">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </ZeroInflationIndexCurve>
     <ZeroInflationIndexCurve index="FRHICP">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </ZeroInflationIndexCurve>
     <ZeroInflationIndexCurve index="UKRPI">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </ZeroInflationIndexCurve>
     <ZeroInflationIndexCurve index="USCPI">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </ZeroInflationIndexCurve>
   </ZeroInflationIndexCurves>
@@ -225,6 +260,7 @@
     <YYInflationIndexCurve index="EUHICPXT">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </YYInflationIndexCurve>
   </YYInflationIndexCurves>
@@ -233,6 +269,7 @@
     <SecuritySpread security="SECURITY_1">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
     </SecuritySpread>
   </SecuritySpreads>
   <!-- Cross Gamma filter: Pairs of factor sub-strings -->
