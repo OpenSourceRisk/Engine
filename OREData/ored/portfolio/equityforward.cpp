@@ -72,6 +72,7 @@ void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     boost::shared_ptr<EquityForwardEngineBuilder> eqFwdBuilder =
         boost::dynamic_pointer_cast<EquityForwardEngineBuilder>(builder);
     inst->setPricingEngine(eqFwdBuilder->engine(name, ccy));
+    setSensitivityTemplate(*eqFwdBuilder);
 
     // set up other Trade details
     instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(inst));
