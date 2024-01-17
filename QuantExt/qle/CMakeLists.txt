@@ -15,7 +15,6 @@ calendars/ice.cpp
 calendars/ireland.cpp
 calendars/islamicweekendsonly.cpp
 calendars/israel.cpp
-calendars/largejointcalendar.cpp
 calendars/luxembourg.cpp
 calendars/malaysia.cpp
 calendars/mauritius.cpp
@@ -413,7 +412,6 @@ calendars/ice.hpp
 calendars/ireland.hpp
 calendars/islamicweekendsonly.hpp
 calendars/israel.hpp
-calendars/largejointcalendar.hpp
 calendars/luxembourg.hpp
 calendars/malaysia.hpp
 calendars/mauritius.hpp
