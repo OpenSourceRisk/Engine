@@ -65,6 +65,7 @@ void FxAverageForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     boost::shared_ptr<SwapEngineBuilderBase> swapBuilder = boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
     QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
     swap->setPricingEngine(swapBuilder->engine(payCcy));
+    setSensitivityTemplate(*swapBuilder);
     instrument_.reset(new VanillaInstrument(swap));
     
     npvCurrency_ = settlementCurrency_;

@@ -78,6 +78,8 @@ void CommodityDigitalAveragePriceOption::build(const boost::shared_ptr<EngineFac
     opt1.build(engineFactory);
     opt2.build(engineFactory);
 
+    setSensitivityTemplate(opt1.sensitivityTemplate());
+
     boost::shared_ptr<Instrument> inst1 = opt1.instrument()->qlInstrument();
     boost::shared_ptr<Instrument> inst2 = opt2.instrument()->qlInstrument();
 
