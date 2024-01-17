@@ -102,6 +102,7 @@ void BondRepo::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     qlInstr->setPricingEngine(builder->engine(securityLegData_.incomeCurveId()));
     instrument_ = boost::make_shared<VanillaInstrument>(qlInstr);
+    setSensitivityTemplate(*builder);
 
     // set additionalData
     additionalData_["underlyingSecurityId"] = securityLegData_.securityId();

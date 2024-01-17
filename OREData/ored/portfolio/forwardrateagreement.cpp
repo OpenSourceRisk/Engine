@@ -63,6 +63,7 @@ void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineF
     boost::shared_ptr<SwapEngineBuilderBase> swapBuilder = boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
     QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
     swap->setPricingEngine(swapBuilder->engine(npvCcy));
+    setSensitivityTemplate(*swapBuilder);
     instrument_.reset(new VanillaInstrument(swap));
     maturity_ = endDate;
 
