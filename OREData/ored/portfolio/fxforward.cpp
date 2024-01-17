@@ -126,6 +126,7 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         boost::dynamic_pointer_cast<FxForwardEngineBuilderBase>(builder);
 
     instrument_->qlInstrument()->setPricingEngine(fxBuilder->engine(boughtCcy, soldCcy));
+    setSensitivityTemplate(*fxBuilder);
 
     additionalData_["soldCurrency"] = soldCurrency_;
     additionalData_["boughtCurrency"] = boughtCurrency_;

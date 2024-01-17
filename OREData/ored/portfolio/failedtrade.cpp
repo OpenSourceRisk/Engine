@@ -42,6 +42,7 @@ void FailedTrade::build(const boost::shared_ptr<EngineFactory>&) {
     notional_ = 0.0;
     notionalCurrency_ = npvCurrency_ = "USD";
     maturity_ = Date::maxDate();
+    setSensitivityTemplate(std::string());
 }
 
 void FailedTrade::setUnderlyingTradeType(const std::string& underlyingTradeType) {

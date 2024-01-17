@@ -270,6 +270,7 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
     Settlement::Type settleType = parseSettlementType(option_.settlement());
     cds->setPricingEngine(iCdsEngineBuilder->engine(ccy, creditCurveId, constituentIds, overrideCurve,
                                                     swap_.recoveryRate(), settleType == Settlement::Cash));
+    setSensitivityTemplate(*iCdsEngineBuilder);
 
     // Strike may be in terms of spread or price
     auto strikeType = parseCdsOptionStrikeType(effectiveStrikeType_);
@@ -294,6 +295,7 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
     auto p = splitCurveIdWithTenor(swap_.creditCurveId());
     volCurveId_ = p.first;
     option->setPricingEngine(iCdsOptionEngineBuilder->engine(ccy, creditCurveId, volCurveId_, constituentIds));
+    setSensitivityTemplate(*iCdsOptionEngineBuilder);
 
     // Keep this comment about the maturity date being the underlying maturity instead of the option expiry.
     // [RL] Align option product maturities with ISDA AANA/GRID guidance as of November 2020.

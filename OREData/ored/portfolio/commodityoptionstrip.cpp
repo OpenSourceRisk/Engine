@@ -315,6 +315,7 @@ void CommodityOptionStrip::buildAPOs(const Leg& leg, const boost::shared_ptr<Eng
             commOption->id() = tempDatum.id;
             commOption->build(engineFactory);
             boost::shared_ptr<InstrumentWrapper> instWrapper = commOption->instrument();
+            setSensitivityTemplate(commOption->sensitivityTemplate());
             additionalInstruments.push_back(instWrapper->qlInstrument());
             additionalMultipliers.push_back(instWrapper->multiplier());
 
@@ -437,6 +438,7 @@ void CommodityOptionStrip::buildStandardOptions(const Leg& leg, const boost::sha
             commOption->id() = tempDatum.id;
             commOption->build(engineFactory);
             boost::shared_ptr<InstrumentWrapper> instWrapper = commOption->instrument();
+            setSensitivityTemplate(commOption->sensitivityTemplate());
             additionalInstruments.push_back(instWrapper->qlInstrument());
             additionalMultipliers.push_back(instWrapper->multiplier());
 
