@@ -79,6 +79,7 @@ void EquityPosition::build(const boost::shared_ptr<ore::data::EngineFactory>& en
     auto qlInstr =
         boost::make_shared<EquityPositionInstrumentWrapper>(data_.quantity(), indices_, weights_, fxConversion_);
     qlInstr->setPricingEngine(boost::make_shared<EquityPositionInstrumentWrapperEngine>());
+    setSensitivityTemplate(std::string());
     instrument_ = boost::make_shared<VanillaInstrument>(qlInstr);
 
     // no sensible way to set these members
