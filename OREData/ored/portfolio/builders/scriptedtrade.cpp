@@ -530,6 +530,7 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
     }
 
     // global parameters that are relevant
+
     calibrate_ = globalParameters_.count("Calibrate") == 0 || parseBool(globalParameters_.at("Calibrate"));
 
     if (!calibrate_) {
@@ -538,6 +539,10 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
 
     continueOnCalibrationError_ = globalParameters_.count("ContinueOnCalibrationError") > 0 &&
                                   parseBool(globalParameters_.at("ContinueOnCalibrationError"));
+
+    // sensitivity template
+
+    sensitivityTemplate_ = engineParameter("SensitivityTemplate", {resolvedProductTag_}, false, std::string());
 }
 
 void ScriptedTradeEngineBuilder::populateFixingsMap(const IborFallbackConfig& iborFallbackConfig) {
