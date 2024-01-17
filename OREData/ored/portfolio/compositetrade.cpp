@@ -44,7 +44,10 @@ void CompositeTrade::build(const boost::shared_ptr<EngineFactory>& engineFactory
 	trade->build(engineFactory);
 	trade->validate();
 
-	Handle<Quote> fx = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
+        if (sensitivityTemplate_.empty())
+            setSensitivityTemplate(trade->sensitivityTemplate());
+
+        Handle<Quote> fx = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
 	if (trade->npvCurrency() != npvCurrency_)
 	    fx = engineFactory->market()->fxRate(trade->npvCurrency() + npvCurrency_);
 	fxRates_.push_back(fx);

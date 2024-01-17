@@ -16,9 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ored/portfolio/structuredtradewarning.hpp>
 #include <ored/portfolio/trade.hpp>
-#include <ored/utilities/to_string.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
+#include <ored/utilities/to_string.hpp>
 
 #include <qle/cashflows/equitycouponpricer.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
@@ -129,12 +130,14 @@ void Trade::reset() {
     legs_.clear();
     legCurrencies_.clear();
     legPayers_.clear();
-    npvCurrency_ = "";
+    npvCurrency_.clear();
     notional_ = Null<Real>();
-    notionalCurrency_ = "";
+    notionalCurrency_.clear();
     maturity_ = Date();
-    issuer_ = "";
+    issuer_.clear();
     requiredFixings_.clear();
+    sensitivityTemplate_.clear();
+    sensitivityTemplateSet_ = false;
 }
     
 const std::map<std::string, boost::any>& Trade::additionalData() const { return additionalData_; }
@@ -275,6 +278,26 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
             }
         }
     }
+}
+
+void Trade::setSensitivityTemplate(const EngineBuilder& builder) {
+    sensitivityTemplate_ = builder.engineParameter("SensitivityTemplate", {}, false, std::string());
+    sensitivityTemplateSet_ = true;
+}
+
+void Trade::setSensitivityTemplate(const std::string& id) {
+    sensitivityTemplate_ = id;
+    sensitivityTemplateSet_ = true;
+}
+
+const std::string& Trade::sensitivityTemplate() const {
+    if (!sensitivityTemplateSet_) {
+        StructuredTradeWarningMessage(
+            id(), tradeType(), "No valid sensitivty template.",
+            "Either build() was not called, or the trade builder did not set the sensitivity template.")
+            .log();
+    }
+    return sensitivityTemplate_;
 }
 
 } // namespace data
