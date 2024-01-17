@@ -301,6 +301,7 @@ void CommodityAveragePriceOption::buildStandardOption(const boost::shared_ptr<En
     CommodityOption commOption(envelope(), optionData_, name_, currency_, effectiveQuantity, effectiveStrike,
                                flow->index()->isFuturesIndex(), flow->pricingDate());
     commOption.build(engineFactory);
+    setSensitivityTemplate(commOption.sensitivityTemplate());
     instrument_ = commOption.instrument();
     maturity_ = commOption.maturity();
 }
