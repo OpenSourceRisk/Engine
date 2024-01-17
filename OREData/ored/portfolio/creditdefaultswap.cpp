@@ -115,6 +115,7 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
 
     QL_REQUIRE(cdsBuilder, "No Builder found for CreditDefaultSwap: " << id());
     cds->setPricingEngine(cdsBuilder->engine(parseCurrency(npvCurrency_), swap_.creditCurveId(), swap_.recoveryRate()));
+    setSensitivityTemplate(*cdsBuilder);
 
     instrument_.reset(new VanillaInstrument(cds));
 
