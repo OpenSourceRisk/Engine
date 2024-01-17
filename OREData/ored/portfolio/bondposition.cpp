@@ -108,6 +108,8 @@ void BondPosition::build(const boost::shared_ptr<ore::data::EngineFactory>& engi
     additionalData_["isdaBaseProduct"] = string("");
     additionalData_["isdaSubProduct"] = string("");
     additionalData_["isdaTransaction"] = string("");
+
+    setSensitivityTemplate(std::string());
 }
 
 void BondPosition::setNpvCurrencyConversion(const std::string& ccy, const Handle<Quote>& conversion) {

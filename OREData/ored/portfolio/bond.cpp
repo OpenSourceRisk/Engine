@@ -268,6 +268,7 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE(bondBuilder, "No Builder found for Bond: " << id());
     bond->setPricingEngine(bondBuilder->engine(currency, bondData_.creditCurveId(), bondData_.hasCreditRisk(),
                                                bondData_.securityId(), bondData_.referenceCurveId()));
+    setSensitivityTemplate(*bondBuilder);
     instrument_.reset(new VanillaInstrument(bond, mult));
 
     npvCurrency_ = bondData_.currency();
