@@ -103,6 +103,7 @@ void EquityEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& 
     vanillaK->setPricingEngine(eqOptBuilder->engine(assetName_, ccy, expiryDate));
     vanillaB->setPricingEngine(eqOptBuilder->engine(assetName_, ccy, expiryDate));
     rebateInstrument->setPricingEngine(eqDigitalOptBuilder->engine(assetName_, ccy));
+    setSensitivityTemplate(*eqDigitalOptBuilder);
 
     boost::shared_ptr<CompositeInstrument> qlInstrument = boost::make_shared<CompositeInstrument>();
     qlInstrument->add(rebateInstrument);

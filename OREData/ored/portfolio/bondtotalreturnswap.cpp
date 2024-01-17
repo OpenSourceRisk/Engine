@@ -186,6 +186,7 @@ void BondTRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         boost::dynamic_pointer_cast<BondTRSEngineBuilder>(builder_trs);
     QL_REQUIRE(trsBondBuilder, "No Builder found for BondTRS: " << id());
     bondTRS->setPricingEngine(trsBondBuilder->engine(fundingLegData_.currency()));
+    setSensitivityTemplate(*trsBondBuilder);
     instrument_.reset(new VanillaInstrument(bondTRS));
 
     npvCurrency_ = fundingLegData_.currency();

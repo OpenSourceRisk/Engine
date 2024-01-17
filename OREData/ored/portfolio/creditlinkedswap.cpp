@@ -179,6 +179,7 @@ void CreditLinkedSwap::build(const boost::shared_ptr<EngineFactory>& engineFacto
     // set pricing engine
 
     qlInstr->setPricingEngine(builder->engine(npvCurrency_, creditCurveId_));
+    setSensitivityTemplate(*builder);
 
     // ISDA taxonomy
 

@@ -14,7 +14,11 @@ option(ORE_USE_ZLIB "Use compression for boost::iostreams" OFF)
 
 include(CTest)
 
-include("cmake/commonSettings.cmake")
+# Path for local cmake modules
+if(NOT "${CMAKE_CURRENT_LIST_DIR}/cmake" IN_LIST CMAKE_MODULE_PATH)
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+endif()
+include(commonSettings)
 
 set(USE_GLOBAL_ORE_BUILD ON)
 

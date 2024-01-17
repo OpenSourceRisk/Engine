@@ -143,6 +143,7 @@ void CommoditySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     auto swap = boost::make_shared<QuantLib::Swap>(legs_, legPayers_);
     boost::shared_ptr<PricingEngine> engine = engineBuilder->engine(parseCurrency(npvCurrency_));
     swap->setPricingEngine(engine);
+    setSensitivityTemplate(*engineBuilder);
     instrument_ = boost::make_shared<VanillaInstrument>(swap);
 
     // ISDA taxonomy, assuming Commodity follows the Equity template
