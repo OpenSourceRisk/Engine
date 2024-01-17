@@ -227,6 +227,7 @@ void FxEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& engi
         auto fxDigitalOptBuilder = boost::dynamic_pointer_cast<FxDigitalCSOptionEngineBuilder>(digitalBuilder);
         digital->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy));
         rebateInstrument->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy));
+        setSensitivityTemplate(*fxDigitalOptBuilder);
     } else {
         builder = engineFactory->builder("FxOption");
         QL_REQUIRE(builder, "No builder found for FxOption");
@@ -237,10 +238,12 @@ void FxEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& engi
         auto fxDigitalOptBuilder = boost::dynamic_pointer_cast<FxDigitalOptionEngineBuilder>(digitalBuilder);
         digital->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, flipResults));
         rebateInstrument->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, flipResults));
+        setSensitivityTemplate(*fxDigitalOptBuilder);
     }
 
     vanillaK->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
     vanillaB->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
+    setSensitivityTemplate(*fxOptBuilder);
 
     boost::shared_ptr<CompositeInstrument> qlInstrument = boost::make_shared<CompositeInstrument>();
     qlInstrument->add(rebateInstrument);

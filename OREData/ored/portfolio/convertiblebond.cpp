@@ -566,6 +566,7 @@ void ConvertibleBond::build(const boost::shared_ptr<ore::data::EngineFactory>& e
         id(), data_.bondData().currency(), data_.bondData().creditCurveId(), data_.bondData().hasCreditRisk(),
         data_.bondData().securityId(), data_.bondData().referenceCurveId(), exchangeableData.isExchangeable, equity, fx,
         data_.conversionData().exchangeableData().equityCreditCurve(), qlUnderlyingBond->startDate(), lastDate));
+    setSensitivityTemplate(*builder);
 
     // set up other trade member variables
 
