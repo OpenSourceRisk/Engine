@@ -16,7 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <qle/math/basiccpuenvironment.hpp>
 #include <qle/math/computeenvironment.hpp>
+#include <qle/math/openclenvironment.hpp>
 #include <qle/math/randomvariable.hpp>
 #include <qle/math/randomvariable_io.hpp>
 #include <qle/math/randomvariable_opcodes.hpp>
@@ -36,9 +38,14 @@ BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(ComputeEnvironmentTest)
 
-struct ComputeEnvironmentCleanUp {
-    ComputeEnvironmentCleanUp() {}
-    ~ComputeEnvironmentCleanUp() { ComputeEnvironment::instance().reset(); }
+struct ComputeEnvironmentFixture {
+    ComputeEnvironmentFixture() {
+        QuantExt::ComputeFrameworkRegistry::instance()
+            .add("OpenCL", &QuantExt::createComputeFrameworkCreator<QuantExt::OpenClFramework>, true);
+                QuantExt::ComputeFrameworkRegistry::instance()
+            .add("BasicCpu", &QuantExt::createComputeFrameworkCreator<QuantExt::BasicCpuFramework>, true);
+    }
+    ~ComputeEnvironmentFixture() { ComputeEnvironment::instance().reset(); }
 };
 
 namespace {
@@ -58,7 +65,7 @@ void outputTimings(const ComputeContext& c) {
 
 BOOST_AUTO_TEST_CASE(testEnvironmentInit) {
     BOOST_TEST_MESSAGE("testing enviroment initialization");
-    ComputeEnvironmentCleanUp cleanUp;
+    ComputeEnvironmentFixture fixture;
     auto init = []() {
         for (auto const& d : ComputeEnvironment::instance().getAvailableDevices()) {
             ComputeEnvironment::instance().selectContext(d);
@@ -70,7 +77,7 @@ BOOST_AUTO_TEST_CASE(testEnvironmentInit) {
 }
 
 BOOST_AUTO_TEST_CASE(testSimpleCalc) {
-    ComputeEnvironmentCleanUp cleanUp;
+    ComputeEnvironmentFixture fixture;
     const std::size_t n = 1024;
     for (auto const& d : ComputeEnvironment::instance().getAvailableDevices()) {
         BOOST_TEST_MESSAGE("testing simple calc on device '" << d << "'.");
@@ -107,7 +114,7 @@ BOOST_AUTO_TEST_CASE(testSimpleCalc) {
 }
 
 BOOST_AUTO_TEST_CASE(testLargeCalc) {
-    ComputeEnvironmentCleanUp cleanUp;
+    ComputeEnvironmentFixture fixture;
 
     const std::size_t n = 65536;
     const std::size_t m = 1024;
@@ -172,7 +179,7 @@ BOOST_AUTO_TEST_CASE(testLargeCalc) {
 }
 
 BOOST_AUTO_TEST_CASE(testRngGeneration) {
-    ComputeEnvironmentCleanUp cleanUp;
+    ComputeEnvironmentFixture fixture;
     const std::size_t n = 65536;
     for (auto const& d : ComputeEnvironment::instance().getAvailableDevices()) {
         BOOST_TEST_MESSAGE("testing rng generation on device '" << d << "'.");
