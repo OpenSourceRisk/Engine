@@ -82,11 +82,11 @@ splitPortfolioByScenarioGenerators(
     const boost::shared_ptr<Portfolio>& portfolio, std::vector<std::string> ids,
     const std::vector<boost::shared_ptr<SensitivityScenarioGenerator>>& scenarioGenerators) {
     std::vector<std::pair<boost::shared_ptr<Portfolio>, boost::shared_ptr<SensitivityScenarioGenerator>>> result;
-    for(auto const& gen: scenarioGenerators) {
+    for (auto const& gen : scenarioGenerators) {
         result.push_back(std::make_pair(boost::make_shared<Portfolio>(), gen));
     }
-    for(auto const& [id, t]: portfolio->trades()) {
-        if(auto f = std::find(ids.begin(),ids.end(), t->sensitivityTemplate()); f!= ids.end())
+    for (auto const& [id, t] : portfolio->trades()) {
+        if (auto f = std::find(ids.begin(), ids.end(), t->sensitivityTemplate()); f != ids.end())
             result[std::distance(ids.begin(), f)].first->add(t);
         else
             result.front().first->add(t);
@@ -170,7 +170,7 @@ void SensitivityAnalysis::generateSensitivities() {
         sensiCubes_.clear();
         for (auto const& [pf, scenGen] :
              splitPortfolioByScenarioGenerators(portfolio_, sensiTemplateIds, scenarioGenerators)) {
-            if(pf->trades().empty())
+            if (pf->trades().empty())
                 continue;
             LOG("Run Sensitivity Scenarios for " << pf->size() << " out of " << portfolio_->size() << " trades.");
             boost::shared_ptr<NPVSensiCube> cube =
@@ -210,10 +210,14 @@ void SensitivityAnalysis::generateSensitivities() {
             todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(), continueOnError_,
             sensitivityData_->useSpreadedTermStructures(), false, false, iborFallbackConfig_);
 
-        scenarioGenerator_ = boost::make_shared<SensitivityScenarioGenerator>(
-            sensitivityData_, simMarket_->baseScenario(), simMarketData_, simMarket_,
-            boost::make_shared<DeltaScenarioFactory>(simMarket_->baseScenario()), overrideTenors_, std::string(),
-            continueOnError_, simMarket_->baseScenarioAbsolute());
+        std::vector<boost::shared_ptr<SensitivityScenarioGenerator>> scenarioGenerators(sensiTemplateIds.size());
+        for (Size i = 0; i < sensiTemplateIds.size(); ++i) {
+            scenarioGenerators[i] = boost::make_shared<SensitivityScenarioGenerator>(
+                sensitivityData_, simMarket_->baseScenario(), simMarketData_, simMarket_,
+                boost::make_shared<DeltaScenarioFactory>(simMarket_->baseScenario()), overrideTenors_,
+                sensiTemplateIds[i], continueOnError_, simMarket_->baseScenarioAbsolute());
+        }
+        scenarioGenerator_ = scenarioGenerators.front();
 
         simMarket_->scenarioGenerator() = scenarioGenerator_;
 
@@ -221,37 +225,46 @@ void SensitivityAnalysis::generateSensitivities() {
         ed->globalParameters()["RunType"] =
             std::string("Sensitivity") + (sensitivityData_->computeGamma() ? "DeltaGamma" : "Delta");
 
-        MultiThreadedValuationEngine engine(
-            nThreads_, asof_, boost::make_shared<ore::analytics::DateGrid>(), scenarioGenerator_->numScenarios(),
-            loader_, scenarioGenerator_, ed, curveConfigs_, todaysMarketParams_, marketConfiguration_, simMarketData_,
-            sensitivityData_->useSpreadedTermStructures(), false, boost::make_shared<ore::analytics::ScenarioFilter>(),
-            referenceData_, iborFallbackConfig_, true, true, recalibrateModels_,
-            [](const QuantLib::Date& asof, const std::set<std::string>& ids, const std::vector<QuantLib::Date>&,
-               const QuantLib::Size samples) {
-                return boost::make_shared<ore::analytics::DoublePrecisionSensiCube>(ids, asof, samples);
-            },
-            {}, {}, context_);
-        for (auto const& i : this->progressIndicators())
-            engine.registerProgressIndicator(i);
+        sensiCubes_.clear();
+        for (auto const& [pf, scenGen] :
+             splitPortfolioByScenarioGenerators(portfolio_, sensiTemplateIds, scenarioGenerators)) {
+            if (pf->trades().empty())
+                continue;
 
-        auto baseCcy = simMarketData_->baseCcy();
-        engine.buildCube(
-            portfolio_,
-            [&baseCcy]() -> std::vector<boost::shared_ptr<ValuationCalculator>> {
-                return {boost::make_shared<NPVCalculator>(baseCcy)};
-            },
-            {}, true, dryRun_);
-        std::vector<boost::shared_ptr<NPVSensiCube>> miniCubes;
-        for (auto const& c : engine.outputCubes()) {
-            miniCubes.push_back(boost::dynamic_pointer_cast<NPVSensiCube>(c));
-            QL_REQUIRE(miniCubes.back() != nullptr,
-                       "SensitivityAnalysis::generateSensitivities(): internal error, could not cast to NPVSensiCube.");
+            MultiThreadedValuationEngine engine(
+                nThreads_, asof_, boost::make_shared<ore::analytics::DateGrid>(), scenarioGenerator_->numScenarios(),
+                loader_, scenGen, ed, curveConfigs_, todaysMarketParams_, marketConfiguration_, simMarketData_,
+                sensitivityData_->useSpreadedTermStructures(), false,
+                boost::make_shared<ore::analytics::ScenarioFilter>(), referenceData_, iborFallbackConfig_, true, true,
+                recalibrateModels_,
+                [](const QuantLib::Date& asof, const std::set<std::string>& ids, const std::vector<QuantLib::Date>&,
+                   const QuantLib::Size samples) {
+                    return boost::make_shared<ore::analytics::DoublePrecisionSensiCube>(ids, asof, samples);
+                },
+                {}, {}, context_);
+            for (auto const& i : this->progressIndicators())
+                engine.registerProgressIndicator(i);
+
+            auto baseCcy = simMarketData_->baseCcy();
+            engine.buildCube(
+                portfolio_,
+                [&baseCcy]() -> std::vector<boost::shared_ptr<ValuationCalculator>> {
+                    return {boost::make_shared<NPVCalculator>(baseCcy)};
+                },
+                {}, true, dryRun_);
+            std::vector<boost::shared_ptr<NPVSensiCube>> miniCubes;
+            for (auto const& c : engine.outputCubes()) {
+                miniCubes.push_back(boost::dynamic_pointer_cast<NPVSensiCube>(c));
+                QL_REQUIRE(
+                    miniCubes.back() != nullptr,
+                    "SensitivityAnalysis::generateSensitivities(): internal error, could not cast to NPVSensiCube.");
+            }
+            auto cube = boost::make_shared<JointNPVSensiCube>(miniCubes, portfolio_->ids());
+
+            sensiCubes_.push_back(boost::make_shared<SensitivityCube>(cube, scenarioGenerator_->scenarioDescriptions(),
+                                                                      scenarioGenerator_->shiftSizes(),
+                                                                      scenarioGenerator_->shiftSchemes()));
         }
-        auto cube = boost::make_shared<JointNPVSensiCube>(miniCubes, portfolio_->ids());
-
-        sensiCubes_ = {boost::make_shared<SensitivityCube>(cube, scenarioGenerator_->scenarioDescriptions(),
-                                                           scenarioGenerator_->shiftSizes(),
-                                                           scenarioGenerator_->shiftSchemes())};
     }
 
     LOG("Sensitivity analysis completed");
