@@ -81,15 +81,22 @@ std::vector<std::pair<boost::shared_ptr<Portfolio>, boost::shared_ptr<Sensitivit
 splitPortfolioByScenarioGenerators(
     const boost::shared_ptr<Portfolio>& portfolio, std::vector<std::string> ids,
     const std::vector<boost::shared_ptr<SensitivityScenarioGenerator>>& scenarioGenerators) {
+    DLOG("Splitting portfolio by scenario generators for sensitivity run(s)");
     std::vector<std::pair<boost::shared_ptr<Portfolio>, boost::shared_ptr<SensitivityScenarioGenerator>>> result;
     for (auto const& gen : scenarioGenerators) {
         result.push_back(std::make_pair(boost::make_shared<Portfolio>(), gen));
     }
     for (auto const& [id, t] : portfolio->trades()) {
-        if (auto f = std::find(ids.begin(), ids.end(), t->sensitivityTemplate()); f != ids.end())
+        if (auto f = std::find(ids.begin(), ids.end(), t->sensitivityTemplate()); f != ids.end()) {
             result[std::distance(ids.begin(), f)].first->add(t);
-        else
+            TLOG("adding trade " << std::setw(35) << t->id() << " to sensi run for id " << std::setw(20)
+                                 << t->sensitivityTemplate() << ", trade sensi-template: " << std::setw(20)
+                                 << t->sensitivityTemplate());
+        } else {
             result.front().first->add(t);
+            TLOG("adding trade " << std::setw(35) << t->id() << " to sensi run for id " << std::setw(20) << "<default>"
+                                 << ", trade sensi-template: " << std::setw(20) << t->sensitivityTemplate());
+        }
     }
     return result;
 }
@@ -120,14 +127,11 @@ void SensitivityAnalysis::generateSensitivities() {
                           sensiTemplateIdsFromPortfolio.begin(), sensiTemplateIdsFromPortfolio.end(),
                           std::back_inserter(sensiTemplateIds));
 
-    LOG("Need to process " << sensiTemplateIds.size() << " sensi scenario sets resulting from "
-                           << sensiTemplateIdsFromSensiConfig.size()
-                           << " sensi templates in sensi config (different from default config) and "
-                           << sensiTemplateIdsFromPortfolio.size()
-                           << " sensi templates in portfolio (including default config, if configured in pe config");
-
-    // status quo
-    sensiTemplateIds = {std::string()};
+    LOG("Need to process "
+        << sensiTemplateIds.size() << " sensi scenario sets resulting from " << sensiTemplateIdsFromSensiConfig.size()
+        << " sensi templates in sensi config (different from default config) and "
+        << sensiTemplateIdsFromPortfolio.size()
+        << " sensi templates in portfolio (including default config, if configured in pe config for a trade)");
 
     if (useSingleThreadedEngine_) {
 
@@ -190,6 +194,7 @@ void SensitivityAnalysis::generateSensitivities() {
             engine.buildCube(portfolio_, cube, calculators, true, nullptr, nullptr, {}, dryRun_);
 
             sensiCubes_.push_back(boost::make_shared<SensitivityCube>(cube, scenGen->scenarioDescriptions(),
+                                                                      scenarioGenerator_->shiftSizes(),
                                                                       scenGen->shiftSizes(), scenGen->shiftSchemes()));
         }
     } else {
@@ -261,9 +266,9 @@ void SensitivityAnalysis::generateSensitivities() {
             }
             auto cube = boost::make_shared<JointNPVSensiCube>(miniCubes, portfolio_->ids());
 
-            sensiCubes_.push_back(boost::make_shared<SensitivityCube>(cube, scenarioGenerator_->scenarioDescriptions(),
+            sensiCubes_.push_back(boost::make_shared<SensitivityCube>(cube, scenGen->scenarioDescriptions(),
                                                                       scenarioGenerator_->shiftSizes(),
-                                                                      scenarioGenerator_->shiftSchemes()));
+                                                                      scenGen->shiftSizes(), scenGen->shiftSchemes()));
         }
     }
 

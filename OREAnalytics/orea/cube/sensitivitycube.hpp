@@ -46,9 +46,9 @@ public:
     typedef ShiftScenarioGenerator::ScenarioDescription ShiftScenarioDescription;
 
     struct FactorData {
-        FactorData() : index(0), shiftSize(0.0) {}
-        QuantLib::Size index;
-        QuantLib::Real shiftSize;
+        QuantLib::Size index = 0;
+        QuantLib::Real targetShiftSize = 0.0;
+        QuantLib::Real actualShiftSize = 0.0;
         string factorDesc;
         bool operator<(const FactorData& fd) const { return index < fd.index; }
     };
@@ -56,12 +56,14 @@ public:
     //! Constructor using a vector of scenario descriptions
     SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube,
                     const std::vector<ShiftScenarioDescription>& scenarioDescriptions,
-                    const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes,
+                    const std::map<RiskFactorKey, QuantLib::Real>& targetShiftSizes,
+                    const std::map<RiskFactorKey, QuantLib::Real>& actualShiftSizes,
                     const std::map<RiskFactorKey, ShiftScheme>& shiftSchemes);
 
     //! Constructor using a vector of scenario description strings
     SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube, const std::vector<std::string>& scenarioDescriptions,
-                    const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes,
+                    const std::map<RiskFactorKey, QuantLib::Real>& targetShiftSizes,
+                    const std::map<RiskFactorKey, QuantLib::Real>& actualshiftSizes,
                     const std::map<RiskFactorKey, ShiftScheme>& shiftSchemes);
 
     //! \name Inspectors
@@ -102,8 +104,11 @@ public:
     const std::map<crossPair, std::tuple<SensitivityCube::FactorData, SensitivityCube::FactorData, QuantLib::Size>>&
     crossFactors() const;
 
-    //! Returns the absolute shift size for given risk factor \p key
-    QuantLib::Real shiftSize(const RiskFactorKey& riskFactorKey) const;
+    //! Returns the absolute target shift size for given risk factor \p key
+    QuantLib::Real targetShiftSize(const RiskFactorKey& riskFactorKey) const;
+
+    //! Returns the absolute actual shift size for given risk factor \p key
+    QuantLib::Real actualShiftSize(const RiskFactorKey& riskFactorKey) const;
 
     //! Returns the shift scheme for given risk factor \p key
     ShiftScheme shiftScheme(const RiskFactorKey& riskFactorKey) const;
@@ -112,13 +117,13 @@ public:
     QuantLib::Real npv(const std::string& tradeId) const;
 
     //! Get the NPV with scenario description \p scenarioDescription for trade with ID \p tradeId
-    QuantLib::Real npv(const std::string& tradeId, const ShiftScenarioDescription& scenarioDescription) const;
+    // QuantLib::Real npv(const std::string& tradeId, const ShiftScenarioDescription& scenarioDescription) const;
 
     //! Get the NPV for trade given the index of trade in the cube
     QuantLib::Real npv(QuantLib::Size id) const;
 
     //! Get the NPV for trade given the index of trade and scenario in the cube
-    QuantLib::Real npv(QuantLib::Size id, QuantLib::Size scenarioIdx) const;
+    // QuantLib::Real npv(QuantLib::Size id, QuantLib::Size scenarioIdx) const;
 
     //! Get the trade delta for trade with index \p tradeIdx and for the given risk factor key \p riskFactorKey
     QuantLib::Real delta(const Size tradeIdx, const RiskFactorKey& riskFactorKey) const;
@@ -142,7 +147,8 @@ public:
 
     //! Get the trade cross gamma for trade given the index of trade and risk factors in the cube
     QuantLib::Real crossGamma(QuantLib::Size tradeIdx, QuantLib::Size upIdx_1, QuantLib::Size upIdx_2,
-                              QuantLib::Size crossIdx) const;
+                              QuantLib::Size crossId, QuantLib::Real targetShiftSize1, QuantLib::Real actualShiftSize1,
+                              QuantLib::Real targetShiftSize2, QuantLib::Real actualShiftSize2) const;
 
     //! Get the relevant risk factors
     std::set<RiskFactorKey> relevantRiskFactors() const;
@@ -153,7 +159,8 @@ private:
 
     boost::shared_ptr<NPVSensiCube> cube_;
     std::vector<ShiftScenarioDescription> scenarioDescriptions_;
-    std::map<RiskFactorKey, QuantLib::Real> shiftSizes_;
+    std::map<RiskFactorKey, QuantLib::Real> targetShiftSizes_;
+    std::map<RiskFactorKey, QuantLib::Real> actualShiftSizes_;
     std::map<RiskFactorKey, ShiftScheme> shiftSchemes_;
 
     // Duplication between map keys below and these sets but trade-off
