@@ -39,6 +39,8 @@ boost::shared_ptr<QuantLib::PricingEngine> EquityBarrierOption::vanillaPricingEn
         boost::dynamic_pointer_cast<EquityEuropeanOptionEngineBuilder>(builder);
     QL_REQUIRE(eqOptBuilder, "No eqOptBuilder found");
 
+    setSensitivityTemplate(*eqOptBuilder);
+
     return eqOptBuilder->engine(equityName(), tradeCurrency(), expiryDate);
 }
 
@@ -52,6 +54,8 @@ EquityBarrierOption::barrierPricingEngine(const boost::shared_ptr<EngineFactory>
     boost::shared_ptr<EquityBarrierOptionEngineBuilder> eqBarrierOptBuilder =
         boost::dynamic_pointer_cast<EquityBarrierOptionEngineBuilder>(builder);
     QL_REQUIRE(eqBarrierOptBuilder, "No eqBarrierOptBuilder found");
+
+    setSensitivityTemplate(*eqBarrierOptBuilder);
 
     return eqBarrierOptBuilder->engine(equityName(), tradeCurrency(), expiryDate);
 }
