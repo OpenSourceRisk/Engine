@@ -187,6 +187,8 @@ void TRS::fromXML(XMLNode* node) {
         boost::shared_ptr<Trade> u;
         try {
             u = TradeFactory::instance().build(tradeType);
+            if(sensitivityTemplate().empty())
+                setSensitivityTemplate(u->sensitivityTemplate());
         } catch (const std::exception& e) {
             QL_FAIL("Failed for build TRS underlying trade # " << underlyingCounter + 1 << ": " << e.what());
         }
@@ -202,6 +204,8 @@ void TRS::fromXML(XMLNode* node) {
         QL_REQUIRE(t != nullptr, "expected 'Trade' node under 'Derivative' node");
         std::string tradeType = XMLUtils::getChildValue(t, "TradeType", true);
         auto u = TradeFactory::instance().build(tradeType);
+        if(sensitivityTemplate().empty())
+            setSensitivityTemplate(u->sensitivityTemplate());
         QL_REQUIRE(u, "No trade builder found for TRS derivative trade type '"
                           << tradeType << "' when processing underlying trade #" << (underlyingCounter + 1));
         u->id() = this->id() + "_underlying" +

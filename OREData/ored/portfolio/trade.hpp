@@ -224,8 +224,9 @@ protected:
        parameter resultLegId. */
     void setLegBasedAdditionalData(const Size legNo, Size resultLegId = Null<Size>()) const;
 
-    /* sets the sensitivity template for this trade based on a builder (engine parameter SensitivityTemplate) */
+    /* sets the sensitivity template for this trade */
     void setSensitivityTemplate(const EngineBuilder& builder);
+    void setSensitivityTemplate(const std::string& id);
 
 private:
     string id_;

@@ -144,6 +144,7 @@ void FxDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFa
     boost::shared_ptr<FxDoubleTouchOptionEngineBuilder> fxDoubleTouchOptBuilder =
         boost::dynamic_pointer_cast<FxDoubleTouchOptionEngineBuilder>(builder);
     doubleTouch->setPricingEngine(fxDoubleTouchOptBuilder->engine(fgnCcy, domCcy, payDate, flipResults));
+    setSensitivityTemplate(*fxDoubleTouchOptBuilder);
 
     // if a knock-in option is triggered it becomes a simple forward cashflow
     // which we price as a swap

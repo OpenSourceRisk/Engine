@@ -84,6 +84,7 @@ void CommoditySwaption::build(const boost::shared_ptr<EngineFactory>& engineFact
     auto configuration = builder->configuration(MarketContext::pricing);
     Currency currency = parseCurrency(ccy_);
     boost::shared_ptr<PricingEngine> engine = engineBuilder->engine(currency, name_);
+    setSensitivityTemplate(*engineBuilder);
     swaption->setPricingEngine(engine);
 
     // Set the instrument wrapper properly

@@ -285,6 +285,11 @@ void Trade::setSensitivityTemplate(const EngineBuilder& builder) {
     sensitivityTemplateSet_ = true;
 }
 
+void Trade::setSensitivityTemplate(const std::string& id) {
+    sensitivityTemplate_ = id;
+    sensitivityTemplateSet_ = true;
+}
+
 const std::string& Trade::sensitivityTemplate() const {
     if (!sensitivityTemplateSet_) {
         StructuredTradeWarningMessage(
