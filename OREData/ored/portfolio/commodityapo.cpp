@@ -301,6 +301,7 @@ void CommodityAveragePriceOption::buildStandardOption(const boost::shared_ptr<En
     CommodityOption commOption(envelope(), optionData_, name_, currency_, effectiveQuantity, effectiveStrike,
                                flow->index()->isFuturesIndex(), flow->pricingDate());
     commOption.build(engineFactory);
+    setSensitivityTemplate(commOption.sensitivityTemplate());
     instrument_ = commOption.instrument();
     maturity_ = commOption.maturity();
 }
@@ -390,6 +391,7 @@ void CommodityAveragePriceOption::buildApo(const boost::shared_ptr<EngineFactory
     auto engineBuilder = boost::dynamic_pointer_cast<CommodityApoBaseEngineBuilder>(builder);
     boost::shared_ptr<PricingEngine> engine = engineBuilder->engine(ccy, name_, id(), apo);
     apo->setPricingEngine(engine);
+    setSensitivityTemplate(*engineBuilder);
 
     // position type and trade multiplier
     Position::Type positionType = parsePositionType(optionData_.longShort());
