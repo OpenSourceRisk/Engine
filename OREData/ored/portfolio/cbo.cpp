@@ -109,6 +109,7 @@ void CBO::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     boost::shared_ptr<CboMCEngineBuilder> cboBuilder = boost::dynamic_pointer_cast<CboMCEngineBuilder>(builder);
     QL_REQUIRE(cboBuilder, "No Builder found for CBO: " << id());
     cbo->setPricingEngine(cboBuilder->engine(bondbasket_->pool()));
+    setSensitivityTemplate(*cboBuilder);
     instrument_.reset(new VanillaInstrument(cbo, multiplier_));
 
     maturity_ = schedule.endDate();

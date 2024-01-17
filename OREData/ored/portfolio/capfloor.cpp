@@ -117,6 +117,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                     boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
                 QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
                 qlInstrument->setPricingEngine(swapBuilder->engine(parseCurrency(legData_.currency())));
+                setSensitivityTemplate(*swapBuilder);
             } else {
                 qlInstrument->setPricingEngine(
                     boost::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
@@ -156,6 +157,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             boost::shared_ptr<CapFloorEngineBuilder> capFloorBuilder =
                 boost::dynamic_pointer_cast<CapFloorEngineBuilder>(builder);
             qlInstrument->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
+            setSensitivityTemplate(*capFloorBuilder);
 
             maturity_ = boost::dynamic_pointer_cast<QuantLib::CapFloor>(qlInstrument)->maturityDate();
         }
@@ -186,8 +188,17 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         // the StrippedCappedFlooredCoupon used to extract the naked options assumes a long floor
         // and a short cap while we have documented a collar to be a short floor and long cap
         qlInstrument = boost::make_shared<QuantLib::Swap>(legs_, std::vector<bool>{!floors_.empty() && !caps_.empty()});
-        qlInstrument->setPricingEngine(
-            boost::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
+        if (engineFactory->engineData()->hasProduct("Swap")) {
+            builder = engineFactory->builder("Swap");
+            boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
+                boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
+            QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
+            qlInstrument->setPricingEngine(swapBuilder->engine(parseCurrency(legData_.currency())));
+            setSensitivityTemplate(*swapBuilder);
+        } else {
+            qlInstrument->setPricingEngine(
+                boost::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
+        }
         maturity_ = CashFlows::maturityDate(legs_.front());
 
     } else if (legData_.legType() == "DurationAdjustedCMS") {
@@ -227,8 +238,17 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         // the StrippedCappedFlooredCoupon used to extract the naked options assumes a long floor
         // and a short cap while we have documented a collar to be a short floor and long cap
         qlInstrument = boost::make_shared<QuantLib::Swap>(legs_, std::vector<bool>{!floors_.empty() && !caps_.empty()});
-        qlInstrument->setPricingEngine(
-            boost::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
+        if (engineFactory->engineData()->hasProduct("Swap")) {
+            builder = engineFactory->builder("Swap");
+            boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
+                boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
+            QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
+            qlInstrument->setPricingEngine(swapBuilder->engine(parseCurrency(legData_.currency())));
+            setSensitivityTemplate(*swapBuilder);
+        } else {
+            qlInstrument->setPricingEngine(
+                boost::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
+        }
         maturity_ = CashFlows::maturityDate(legs_.front());
     } else if (legData_.legType() == "CPI") {
         DLOG("CPI CapFloor Type " << capFloorType << " ID " << id());
@@ -345,6 +365,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                     Option::Call, nominal, startDate, baseCPI, paymentDate, cal, conv, cal, conv, caps_[i], zeroIndex,
                     observationLag, interpolationMethod);
                 capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
+                setSensitivityTemplate(*capFloorBuilder);
                 boost::dynamic_pointer_cast<QuantLib::CompositeInstrument>(qlInstrument)->add(capfloor, gearing);
                 maturity_ = std::max(maturity_, capfloor->payDate());
             }
@@ -356,6 +377,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                     Option::Put, nominal, startDate, baseCPI, paymentDate, cal, conv, cal, conv, floors_[i], zeroIndex,
                     observationLag, interpolationMethod);
                 capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
+                setSensitivityTemplate(*capFloorBuilder);
                 boost::dynamic_pointer_cast<QuantLib::CompositeInstrument>(qlInstrument)->add(capfloor, sign * gearing);
                 maturity_ = std::max(maturity_, capfloor->payDate());
             }
@@ -419,6 +441,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         boost::shared_ptr<YoYCapFloorEngineBuilder> capFloorBuilder =
             boost::dynamic_pointer_cast<YoYCapFloorEngineBuilder>(builder);
         qlInstrument->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
+        setSensitivityTemplate(*capFloorBuilder);
 
         // Wrap the QL instrument in a vanilla instrument
 

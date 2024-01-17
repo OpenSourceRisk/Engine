@@ -390,6 +390,7 @@ void CommodityAveragePriceOption::buildApo(const boost::shared_ptr<EngineFactory
     auto engineBuilder = boost::dynamic_pointer_cast<CommodityApoBaseEngineBuilder>(builder);
     boost::shared_ptr<PricingEngine> engine = engineBuilder->engine(ccy, name_, id(), apo);
     apo->setPricingEngine(engine);
+    setSensitivityTemplate(*engineBuilder);
 
     // position type and trade multiplier
     Position::Type positionType = parsePositionType(optionData_.longShort());

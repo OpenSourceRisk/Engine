@@ -273,6 +273,7 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
         boost::shared_ptr<PricingEngine> commoditySpreadOptionEngine =
             engineBuilder->engine(ccy, longFlow->index(), shortFlow->index(), id());
         spreadOption->setPricingEngine(commoditySpreadOptionEngine);
+        setSensitivityTemplate(*engineBuilder);
         if (i > 0) {
             additionalInstruments.push_back(spreadOption);
             additionalMultipliers.push_back(bsInd);

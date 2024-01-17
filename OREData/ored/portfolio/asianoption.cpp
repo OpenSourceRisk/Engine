@@ -158,6 +158,7 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     string configuration = asianOptionBuilder->configuration(MarketContext::pricing);
     if (!asian->isExpired()) {
         asian->setPricingEngine(asianOptionBuilder->engine(assetName_, payCcy, expiryDate));
+        setSensitivityTemplate(*asianOptionBuilder);
     } else {
         DLOG("No engine attached for option on trade " << id() << " with expiry date " << io::iso_date(expiryDate)
                                                        << " because it is expired.");

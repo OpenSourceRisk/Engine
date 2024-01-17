@@ -116,6 +116,7 @@ void EquityOptionPosition::build(const boost::shared_ptr<ore::data::EngineFactor
                 boost::dynamic_pointer_cast<VanillaOptionEngineBuilder>(engineFactory->builder(tradeTypeBuilder));
             QL_REQUIRE(builder, "EquityOptionPosition::build(): no engine builder for '" << tradeTypeBuilder << "'");
             options_.back()->setPricingEngine(builder->engine(u.underlying().name(), eq->currency(), optionExpiry));
+            setSensitivityTemplate(*builder);
         }
 
         // populate index for historical prices
