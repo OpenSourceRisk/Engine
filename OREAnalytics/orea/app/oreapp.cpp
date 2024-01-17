@@ -261,7 +261,15 @@ void OREApp::analytics() {
                 string reportName = b.first;
                 std::string fileName = inputs_->resultsPath().string() + "/" + outputs_->outputFileName(reportName, "csv.gz");
                 LOG("write npv cube " << reportName << " to file " << fileName);
-                saveCube(fileName, *b.second);
+                NPVCubeWithMetaData r;
+                r.cube = b.second;
+                if (b.first == "cube") {
+                    // store meta data together with npv cube
+                    r.scenarioGeneratorData = inputs_->scenarioGeneratorData();
+                    r.storeFlows = inputs_->storeFlows();
+                    r.storeCreditStateNPVs = inputs_->storeCreditStateNPVs();
+                }
+                saveCube(fileName, r);
             }
         }
         
@@ -501,7 +509,11 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     
     inputs->setResultsPath(outputPath);
 
-    if (params_->hasGroup("npv"))
+    // first look for baseCurrency in setUp, and then in NPV node
+    tmp = params_->get("setup", "baseCurrency", false);
+    if (tmp != "")
+        inputs->setBaseCurrency(tmp);
+    else if (params_->hasGroup("npv"))
         inputs->setBaseCurrency(params_->get("npv", "baseCurrency"));
     else {
         WLOG("Base currency not set");
@@ -705,6 +717,8 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         tmp = params_->get("sensitivity", "alignPillars", false);
         if (tmp != "")
             inputs->setAlignPillars(parseBool(tmp));
+        else
+            inputs->setAlignPillars(inputs->parSensi());
 
         tmp = params_->get("sensitivity", "marketConfigFile", false);
         if (tmp != "") {
@@ -738,6 +752,29 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         tmp = params_->get("sensitivity", "outputSensitivityThreshold", false);
         if (tmp != "")
             inputs->setSensiThreshold(parseReal(tmp));
+    }
+
+    
+    /************
+     * SCENARIO
+     ************/
+
+    tmp = params_->get("scenario", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        inputs->insertAnalytic("SCENARIO");
+
+        tmp = params_->get("scenario", "simulationConfigFile", false);
+        if (tmp != "") {
+            string simulationConfigFile = inputPath + "/" + tmp;
+            LOG("Loading scenario simulation config from file" << simulationConfigFile);
+            inputs->setScenarioSimMarketParamsFromFile(simulationConfigFile);
+        } else {
+            ALOG("Scenario Simulation market data not loaded");
+        }
+        
+        tmp = params_->get("scenario", "scenarioOutputFile", false);
+        if (tmp != "")
+            inputs->setScenarioOutputFile(tmp);
     }
 
     /****************
@@ -850,6 +887,13 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
             string file = inputPath + "/" + tmp;
             inputs->setCrifFromFile(file, inputs->csvEolChar(), inputs->csvSeparator(), '\"', inputs->csvEscapeChar());
         }
+
+        tmp = params_->get("simm", "simmCalibration", false);
+        if (tmp != "") {
+            string file = inputPath + "/" + tmp;
+            if (boost::filesystem::exists(file))
+                inputs->setSimmCalibrationDataFromFile(file);
+        }
         
         tmp = params_->get("simm", "calculationCurrency", false);
         if (tmp != "")
@@ -896,6 +940,17 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     tmp = params_->get("simulation", "amc", false);
     if (tmp != "")
         inputs->setAmc(parseBool(tmp));
+
+    tmp = params_->get("simulation", "amcCg", false);
+    if (tmp != "")
+        inputs->setAmcCg(parseBool(tmp));
+
+    tmp = params_->get("simulation", "xvaCgSensitivityConfigFile", false);
+    if (tmp != "") {
+        string file = inputPath + "/" + tmp;
+        LOG("Load xva cg sensitivity scenario data from file" << file);
+        inputs->setXvaCgSensiScenarioDataFromFile(file);
+    }
 
     tmp = params_->get("simulation", "amcTradeTypes", false);
     if (tmp != "")
@@ -1004,15 +1059,14 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         }
     }
 
-    if (inputs->analytics().find("XVA") != inputs->analytics().end() ||
-        inputs->analytics().find("EXPOSURE") != inputs->analytics().end()) {
+    if (inputs->analytics().find("XVA") != inputs->analytics().end()) {
         tmp = params_->get("xva", "csaFile", false);
         QL_REQUIRE(tmp != "", "Netting set manager is required for XVA");
         string csaFile = inputPath + "/" + tmp;
         LOG("Loading netting and csa data from file" << csaFile);
         inputs->setNettingSetManagerFromFile(csaFile);
     }
-    
+
     tmp = params_->get("xva", "nettingSetCubeFile", false);
     if (inputs->loadCube() && tmp != "") {
         string cubeFile = inputs->resultsPath().string() + "/" + tmp;
@@ -1046,6 +1100,10 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     tmp = params_->get("xva", "flipViewXVA", false);
     if (tmp != "")
         inputs->setFlipViewXVA(parseBool(tmp));
+
+    tmp = params_->get("xva", "mporCashFlowMode", false);
+    if (tmp != "")
+        inputs->setMporCashFlowMode(parseMporCashFlowMode(tmp));
 
     tmp = params_->get("xva", "fullInitialCollateralisation", false);
     if (tmp != "")

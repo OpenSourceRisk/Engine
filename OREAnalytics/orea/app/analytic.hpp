@@ -147,10 +147,9 @@ public:
 
     virtual std::set<QuantLib::Date> marketDates() const { return {inputs_->asof()}; }
 
-private:
+protected:
     std::unique_ptr<Impl> impl_;
 
-protected:
     //! list of analytic types run by this analytic
     std::set<std::string> types_;
     //! contains all the input parameters for the run

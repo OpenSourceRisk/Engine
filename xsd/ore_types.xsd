@@ -470,7 +470,7 @@
   <xs:simpleType name="interpolationMethodType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Linear"/>
-		<xs:enumeration value="Flat"/>
+      <xs:enumeration value="Flat"/>
       <xs:enumeration value="LogLinear"/>
       <xs:enumeration value="NaturalCubic"/>
       <xs:enumeration value="FinancialCubic"/>
@@ -484,11 +484,14 @@
       <xs:enumeration value="CubicFlat"/>
       <xs:enumeration value="HermiteFlat"/>
       <xs:enumeration value="ConvexMonotone"/>
+      <xs:enumeration value="DefaultLogMixedLinearCubic"/>
+      <xs:enumeration value="MonotonicLogMixedLinearCubic"/>
+      <xs:enumeration value="KrugerLogMixedLinearCubic"/>
+      <xs:enumeration value="LogMixedLinearCubicNaturalSpline"/>
       <xs:enumeration value="ExponentialSplines"/>
       <xs:enumeration value="NelsonSiegel"/>
       <xs:enumeration value="Svensson"/>
       <xs:enumeration value="BackwardFlat"/>
-      <xs:enumeration value="CubicSpline"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -919,6 +922,31 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="None"/>
       <xs:enumeration value="Daily"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="mporCashFlowMode">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Unspecified"/>
+      <xs:enumeration value="NonePay"/>
+      <xs:enumeration value="BothPay"/>
+      <xs:enumeration value="WePay"/>
+      <xs:enumeration value="TheyPay"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="shiftType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Relative"/>
+      <xs:enumeration value="Absolute"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="shiftScheme">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Forward"/>
+      <xs:enumeration value="Backward"/>
+      <xs:enumeration value="Central"/>
     </xs:restriction>
   </xs:simpleType>
     

@@ -62,7 +62,9 @@ endif()
 
 if(MSVC)
     set(BUILD_SHARED_LIBS OFF)
-
+    add_compile_definitions(_WINVER=0x0601)
+    add_compile_definitions(_WIN32_WINNT=0x0601)
+    add_compile_definitions(BOOST_USE_WINAPI_VERSION=0x0601)
     # build static libs always
     set(CMAKE_MSVC_RUNTIME_LIBRARY
         "MultiThreaded$<$<CONFIG:Debug>:Debug>$<$<BOOL:${MSVC_LINK_DYNAMIC_RUNTIME}>:DLL>")
@@ -130,8 +132,10 @@ if(MSVC)
     endif()
 
 else()
-    # build shared libs always
-    set(BUILD_SHARED_LIBS ON)
+    if (NOT DEFINED BUILD_SHARED_LIBS)
+        # build shared libs always
+        set(BUILD_SHARED_LIBS ON)
+    endif()
 
     # link against dynamic boost libraries
     add_definitions(-DBOOST_ALL_DYN_LINK)

@@ -74,7 +74,7 @@ loadCurrencyHedgedIndexDecomposition(const std::string& name, const boost::share
         QuantLib::Date refDate =
             CurrencyHedgedEquityIndexDecomposition::referenceDate(indexRefData, Settings::instance().evaluationDate());
         
-        std::vector<std::pair<std::string, double>> underlyingIndexWeightsAtRebalancing;
+        std::map<std::string, double> underlyingIndexWeightsAtRebalancing;
 
         if (indexRefData->currencyWeights().empty()) {
             boost::shared_ptr<ReferenceDatum> undIndexRefDataAtRefDate;
@@ -163,7 +163,7 @@ QuantLib::Date CurrencyHedgedEquityIndexDecomposition::rebalancingDate(const Qua
 }
 
 std::map<std::string, double> CurrencyHedgedEquityIndexDecomposition::fxSpotRiskFromForwards(
-    const double quantity, const QuantLib::Date& asof, const boost::shared_ptr<ore::data::Market>& todaysMarket) const {
+    const double quantity, const QuantLib::Date& asof, const boost::shared_ptr<ore::data::Market>& todaysMarket, const double shiftsize) const {
 
     std::map<std::string, double> fxRisks;
     auto indexCurve = todaysMarket->equityCurve(indexName());
@@ -181,13 +181,13 @@ std::map<std::string, double> CurrencyHedgedEquityIndexDecomposition::fxSpotRisk
         auto fxIndex = todaysMarket->fxIndex("FX-" + fxIndexFamily + "-" + underlyingIndexCurrency_ + "-" + indexCurrency_);
         double forwardNotional =
             quantity * adjustmentFactor * weight * indexCurve->fixing(refDate) / fxIndex->fixing(refDate);
-        fxRisks[ccy] = 0.01 * forwardNotional * fxIndex->fixing(asof);
+        fxRisks[ccy] = shiftsize * forwardNotional * fxIndex->fixing(asof);
     }
     return fxRisks;
 }
 
 double
-CurrencyHedgedEquityIndexDecomposition::unhedgedDelta(double hedgedDelta, const double quantity,
+CurrencyHedgedEquityIndexDecomposition::unhedgedSpotExposure(double hedgedExposure, const double quantity,
                                                       const QuantLib::Date& asof,
                                                       const boost::shared_ptr<ore::data::Market>& todaysMarket) const {
     auto indexCurve = todaysMarket->equityCurve(indexName());
@@ -195,32 +195,37 @@ CurrencyHedgedEquityIndexDecomposition::unhedgedDelta(double hedgedDelta, const 
     QuantLib::Date rebalanceDt = rebalancingDate(asof);
     auto fxIndexFamily = parseFxIndex(fxIndexName())->familyName();
     auto fxIndex = todaysMarket->fxIndex("FX-" + fxIndexFamily + "-" + underlyingIndexCurrency_ + "-" + indexCurrency_);
-    // In case we have a option unit delta isnt one
-    double scaling = (hedgedDelta * 100 / quantity) / indexCurve->fixing(asof); 
+    double hedgedUnitPrice = (hedgedExposure / quantity);
+    // In case we have a option and the unit delta isnt one
+    double scaling =  hedgedUnitPrice / indexCurve->fixing(asof); 
+    // Change in the fx since the last rebalacing
     double fxReturn = fxIndex->fixing(asof) / fxIndex->fixing(rebalanceDt);
+    // Return of the underlying since last rebalacning
     double underlyingIndexReturn = underlyingCurve->equitySpot()->value() / underlyingCurve->fixing(rebalanceDt);
-    double unhedgedDelta= indexCurve->fixing(rebalanceDt) * underlyingIndexReturn * fxReturn;
-    return scaling * 0.01 * quantity * unhedgedDelta;
+    // Unhedged price of the index 
+    double unhedgedUnitPrice= indexCurve->fixing(rebalanceDt) * underlyingIndexReturn * fxReturn;
+    // Unhedged exposure
+    return scaling * quantity * unhedgedUnitPrice;
 }
 
 void CurrencyHedgedEquityIndexDecomposition::addAdditionalFixingsForEquityIndexDecomposition(
-    const QuantLib::Date& asof, std::map<std::string, std::set<QuantLib::Date>>& fixings) const {
+    const QuantLib::Date& asof, std::map<std::string, RequiredFixings::FixingDates>& fixings) const {
     if (isValid()) {
         QuantLib::Date rebalancingDt = rebalancingDate(asof);
         QuantLib::Date referenceDt = referenceDate(asof);
-        fixings[IndexNameTranslator::instance().oreName(indexName())].insert(rebalancingDt);
-        fixings[IndexNameTranslator::instance().oreName(indexName())].insert(referenceDt);
+        fixings[IndexNameTranslator::instance().oreName(indexName())].addDate(rebalancingDt, false);
+        fixings[IndexNameTranslator::instance().oreName(indexName())].addDate(referenceDt, false);
 
         IndexNameTranslator::instance().add(underlyingIndexName(), "EQ-" + underlyingIndexName());
-        fixings[IndexNameTranslator::instance().oreName(underlyingIndexName())].insert(rebalancingDt);
-        fixings[IndexNameTranslator::instance().oreName(underlyingIndexName())].insert(referenceDt);
+        fixings[IndexNameTranslator::instance().oreName(underlyingIndexName())].addDate(rebalancingDt, false);
+        fixings[IndexNameTranslator::instance().oreName(underlyingIndexName())].addDate(referenceDt, false);
 
-        fixings[fxIndexName()].insert(referenceDt);
-        fixings[fxIndexName()].insert(rebalancingDt);
+        fixings[fxIndexName()].addDate(referenceDt, false);
+        fixings[fxIndexName()].addDate(rebalancingDt, false);
 
         for (const auto& [currency, name] : currencyWeightsAndFxIndexNames()) {
-            fixings[name.second].insert(referenceDt);
-            fixings[name.second].insert(rebalancingDt);
+            fixings[name.second].addDate(referenceDt, false);
+            fixings[name.second].addDate(rebalancingDt, false);
         }
     }
 }

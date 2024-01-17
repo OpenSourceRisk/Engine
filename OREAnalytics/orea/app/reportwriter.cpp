@@ -196,7 +196,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
             auto addResults = trade->instrument()->additionalResults();
             auto cashFlowResults = addResults.find("cashFlowResults");
 
-            const Real multiplier = trade->instrument()->multiplier();
+            const Real multiplier = trade->instrument()->multiplier() * trade->instrument()->multiplier2();
 
             if (cashFlowResults == addResults.end()) {
 
@@ -1491,7 +1491,7 @@ void ReportWriter::writeCube(ore::data::Report& report, const boost::shared_ptr<
 }
 
 // Ease notation again
-typedef SimmConfiguration::ProductClass ProductClass;
+typedef CrifRecord::ProductClass ProductClass;
 typedef SimmConfiguration::RiskClass RiskClass;
 typedef SimmConfiguration::MarginType MarginType;
 typedef SimmConfiguration::SimmSide SimmSide;
@@ -1660,7 +1660,7 @@ void ReportWriter::writeSIMMReport(
     }
 }
 
-void ReportWriter::writeSIMMData(const SimmNetSensitivities& simmData, const boost::shared_ptr<Report>& dataReport,
+void ReportWriter::writeSIMMData(const ore::analytics::Crif& simmData, const boost::shared_ptr<Report>& dataReport,
                                  const bool hasNettingSetDetails) {
 
     LOG("Writing SIMM data report.");
@@ -1708,7 +1708,7 @@ void ReportWriter::writeSIMMData(const SimmNetSensitivities& simmData, const boo
         // Same check as above, but for backwards compatibility, if im_model is not used
         // but Risk::Type is PV or Notional
         if (cr.imModel.empty() &&
-            (cr.riskType == SimmConfiguration::RiskType::Notional || cr.riskType == SimmConfiguration::RiskType::PV))
+            (cr.riskType == CrifRecord::RiskType::Notional || cr.riskType == CrifRecord::RiskType::PV))
             continue;
 
         // Write current netted CRIF record
@@ -1743,13 +1743,13 @@ void ReportWriter::writeSIMMData(const SimmNetSensitivities& simmData, const boo
     LOG("SIMM data report written.");
 }
 
-void ReportWriter::writeCrifReport(const boost::shared_ptr<Report>& report, const SimmNetSensitivities& crifRecords) {
+void ReportWriter::writeCrifReport(const boost::shared_ptr<Report>& report, const Crif& crif) {
 
     // If we have SIMM parameters, check if at least one of them uses netting set details optional field/s
     // It is easier to check here than to pass the flag from other places, since otherwise we'd have to handle certain edge cases
     // e.g. SIMM parameters use optional NSDs, but trades don't. So SIMM report should not display NSDs, but CRIF report still should.
     bool hasNettingSetDetails = false;
-    for (const CrifRecord& cr : crifRecords) {
+    for (const auto& cr : crif) {
         if (!cr.nettingSetDetails.emptyOptionalFields())
             hasNettingSetDetails = true;
     }
@@ -1758,7 +1758,7 @@ void ReportWriter::writeCrifReport(const boost::shared_ptr<Report>& report, cons
     bool hasCollectRegulations = false;
     bool hasPostRegulations = false;
     bool hasScheduleTrades = false;
-    for (const auto& cr : crifRecords) {
+    for (const auto& cr : crif) {
         // Check which additional fields are being used/populated
         for (const auto& af : cr.additionalFields) {
             if (std::find(addFields.begin(), addFields.end(), af.first) == addFields.end()) {
@@ -1803,8 +1803,17 @@ void ReportWriter::writeCrifReport(const boost::shared_ptr<Report>& report, cons
         .addColumn("IMModel", string())
         .addColumn("TradeType", string());
 
-    if (hasScheduleTrades)
+    if (hasScheduleTrades || crif.type() == Crif::CrifType::Frtb)
         report->addColumn("end_date", string());
+
+    if (crif.type() == Crif::CrifType::Frtb) {
+        report->addColumn("Label3", string())
+            .addColumn("CreditQuality", string())
+            .addColumn("LongShortInd", string())
+            .addColumn("CoveredBondInd", string())
+            .addColumn("TrancheThickness", string())
+            .addColumn("BB_RW", string());
+    }
 
     if (hasCollectRegulations)
         report->addColumn("collect_regulations", string());
@@ -1818,7 +1827,7 @@ void ReportWriter::writeCrifReport(const boost::shared_ptr<Report>& report, cons
     }
 
     // Write individual CRIF records
-    for (const auto& cr : crifRecords) {
+    for (const auto& cr : crif) {
         
         report->next().add(cr.tradeId).add(cr.portfolioId);
 
@@ -1840,8 +1849,17 @@ void ReportWriter::writeCrifReport(const boost::shared_ptr<Report>& report, cons
             .add(cr.imModel)
             .add(cr.tradeType);
 
-        if (hasScheduleTrades)
+        if (hasScheduleTrades || crif.type() == Crif::CrifType::Frtb)
             report->add(cr.endDate);
+
+        if (crif.type() == Crif::CrifType::Frtb) {
+            report->add(cr.label3)
+                .add(cr.creditQuality)
+                .add(cr.longShortInd)
+                .add(cr.coveredBondInd)
+                .add(cr.trancheThickness)
+                .add(cr.bb_rw);
+        }
 
         if (hasCollectRegulations) {
             string regString = escapeCommaSeparatedList(cr.collectRegulations, '\0');
@@ -1857,7 +1875,7 @@ void ReportWriter::writeCrifReport(const boost::shared_ptr<Report>& report, cons
             if (cr.additionalFields.find(af) == cr.additionalFields.end())
                 report->add("");
             else
-                report->add(cr.additionalFields.at(af));
+                report->add(cr.getAdditionalFieldAsStr(af));
         }
     }
 

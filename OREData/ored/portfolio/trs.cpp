@@ -32,6 +32,7 @@
 #include <boost/assign/list_of.hpp>
 #include <boost/bimap.hpp>
 #include <boost/optional.hpp>
+#include <boost/range/adaptor/map.hpp>
 
 namespace ore {
 namespace data {
@@ -571,20 +572,41 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("add required fixings for fundings legs with daily resets (if any)");
 
     for (Size i = 0; i < fundingLegs.size(); ++i) {
-        if (fundingNotionalTypes[i] != TRS::FundingData::NotionalType::DailyReset)
-            continue;
-        for (auto const& c : fundingLegs[i]) {
-            if (auto cpn = boost::dynamic_pointer_cast<QuantLib::Coupon>(c)) {
-                QL_REQUIRE(boost::dynamic_pointer_cast<QuantLib::FixedRateCoupon>(c),
-                           "daily reset funding legs support fixed rate coupons only");
-                for (QuantLib::Date d = cpn->accrualStartDate(); d < cpn->accrualEndDate(); ++d) {
+        if (fundingNotionalTypes[i] == TRS::FundingData::NotionalType::DailyReset) {
+            for (auto const& c : fundingLegs[i]) {
+                if (auto cpn = boost::dynamic_pointer_cast<QuantLib::Coupon>(c)) {
+                    QL_REQUIRE(boost::dynamic_pointer_cast<QuantLib::FixedRateCoupon>(c),
+                               "daily reset funding legs support fixed rate coupons only");
+                    for (QuantLib::Date d = cpn->accrualStartDate(); d < cpn->accrualEndDate(); ++d) {
+                        for (Size j = 0; j < underlying_.size(); ++j) {
+                            Date fixingDate = underlyingIndex[j]->fixingCalendar().adjust(d, Preceding);
+                            for (auto const& [n, _] : indexNamesAndQty)
+                                requiredFixings_.addFixingDate(fixingDate, n, cpn->date(), false, false);
+                            for (auto const& n : fxIndices) {
+                                requiredFixings_.addFixingDate(n.second->fixingCalendar().adjust(fixingDate, Preceding),
+                                                               n.first, cpn->date(), false, false);
+                            }
+                        }
+                    }
+                }
+            }
+        }  else if (fundingNotionalTypes[i] == TRS::FundingData::NotionalType::PeriodReset) {
+            for (auto const& c : fundingLegs[i]) {
+                if (auto cpn = boost::dynamic_pointer_cast<QuantLib::Coupon>(c)) {
                     for (Size j = 0; j < underlying_.size(); ++j) {
-                        Date fixingDate = underlyingIndex[j]->fixingCalendar().adjust(d, Preceding);
+                        Date fundingStartDate = cpn->accrualStartDate();
+                        Size currentIdx = std::distance(valuationDates.begin(),
+                                            std::upper_bound(valuationDates.begin(),
+                                                             valuationDates.end(),
+                                                             fundingStartDate + fundingData_.fundingResetGracePeriod()));
+                        if (currentIdx > 0)
+                            --currentIdx;
+                        Date fixingDate = valuationDates[currentIdx];
                         for (auto const& [n, _] : indexNamesAndQty)
-                            requiredFixings_.addFixingDate(fixingDate, n, cpn->date());
+                            requiredFixings_.addFixingDate(fixingDate, n, cpn->date(), false, false);
                         for (auto const& n : fxIndices) {
                             requiredFixings_.addFixingDate(n.second->fixingCalendar().adjust(fixingDate, Preceding),
-                                                           n.first, cpn->date());
+                                                           n.first, cpn->date(), false, false);
                         }
                     }
                 }
@@ -652,6 +674,23 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         fxIndexAdditionalCashflows, fxIndices);
     wrapper->setPricingEngine(boost::make_shared<TRSWrapperAccrualEngine>());
     instrument_ = boost::make_shared<VanillaInstrument>(wrapper);
+
+    // if the first valuation date is > today, we potentially need fixings for fx conversion as of "today"
+
+    if (Date today = Settings::instance().evaluationDate(); !valuationDates.empty() && valuationDates.front() > today) {
+        std::set<boost::shared_ptr<QuantExt::FxIndex>> tmp;
+        auto fxIndicesVal = fxIndices | boost::adaptors::map_values;
+        tmp.insert(fxIndicesVal.begin(), fxIndicesVal.end());
+        tmp.insert(fxIndexAsset.begin(), fxIndexAsset.end());
+        tmp.insert(fxIndexReturn);
+        tmp.insert(fxIndexAdditionalCashflows);
+        for (auto const& fx : tmp) {
+            if (fx != nullptr) {
+                requiredFixings_.addFixingDate(fx->fixingCalendar().adjust(today, Preceding),
+                                               IndexNameTranslator::instance().oreName(fx->name()));
+            }
+        }
+    }
 
     // set trade member variables (leave legs empty for the time being, we just have the funding leg really)
 

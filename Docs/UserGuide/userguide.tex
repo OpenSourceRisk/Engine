@@ -132,7 +132,7 @@
 \title{ORE User Guide}
 %\author{Quaternion Risk Management Ltd.}
 %\author{Acadia Inc.}
-\date{16 October 2023}
+\date{15 January 2024}
 \maketitle
 
 \newpage
@@ -156,6 +156,7 @@ Date & Author & Comment \\
 31 March 2023 & Acadia & updates for release 9\\
 16 June 2023 & Acadia & updates for release 10\\
 16 October 2023 & Acadia & updates for release 11\\
+15 January 2024 & Acadia & updates for release 12\\
 \hline
 \end{supertabular}
 \end{center}
@@ -606,11 +607,11 @@ ORE. On all platforms the minimum required boost version is 1\_78.
 \subsubsection*{Windows}
 
 \begin{enumerate}
-\item Download the pre-compiled binaries for your MSVC version (e.g. MSVC-14.2 for MSVC2019) from \cite{boost-binaries}
+\item Download the pre-compiled binaries for your MSVC version (e.g. MSVC-14.3 for MSVC2022) from \cite{boost-binaries}
 %, any recent version should work
 \begin{itemize}
-\item 32-bit: \cite{boost-binaries}{\bs}VERSION{\bs}boost\_VERSION-msvc-14.2-32.exe{\bs}download 
-\item 64-bit: \cite{boost-binaries}{\bs}VERSION{\bs}boost\_VERSION-msvc-14.2-64.exe{\bs}download
+\item 32-bit: \cite{boost-binaries}{\bs}VERSION{\bs}boost\_VERSION-msvc-14.3-32.exe{\bs}download 
+\item 64-bit: \cite{boost-binaries}{\bs}VERSION{\bs}boost\_VERSION-msvc-14.3-64.exe{\bs}download
 \end{itemize}
 \item Start the installation file and choose an installation folder (the ``boost root directory''). Take a note of that folder as it will be needed later on.   
 \item Finish the installation by clicking Next a couple of times.
@@ -621,19 +622,19 @@ Alternatively, compile all Boost libraries directly from the source code:
 \begin{enumerate}
 \item Open a Visual Studio Tools Command Prompt
 \begin{itemize}
-\item 32-bit: VS2019 x86 Native Tools Command Prompt
-\item 64-bit: VS2019 x64 Native Tools Command Prompt
+\item 32-bit: VS2022 x86 Native Tools Command Prompt
+\item 64-bit: VS2022 x64 Native Tools Command Prompt
 \end{itemize}
 \item Navigate to the boost root directory
 \item Run bootstrap.bat
 \item Build the libraries from the source code
 \begin{itemize}
 \item 32-bit: \\
-  {\footnotesize\tt .{\bs}b2 --stagedir=.{\bs}lib{\bs}Win32{\bs}lib --build-type=complete toolset=msvc-14.0 \bs \\
+  {\footnotesize\tt .{\bs}b2 --stagedir=.{\bs}lib{\bs}Win32{\bs}lib --build-type=complete toolset=msvc-14.3 \bs \\
     address-model=32 --with-test --with-system --with-filesystem  \bs \\
     --with-serialization --with-regex --with-date\_time stage}
 \item 64-bit: \\
-  {\footnotesize\tt .{\bs}b2 --stagedir=.{\bs}lib{\bs}x64{\bs}lib --build-type=complete toolset=msvc-14.0 \bs \\
+  {\footnotesize\tt .{\bs}b2 --stagedir=.{\bs}lib{\bs}x64{\bs}lib --build-type=complete toolset=msvc-14.3 \bs \\
     address-model=64 --with-test --with-system --with-filesystem \bs \\
     --with-serialization --with-regex --with-date\_time stage}
 \end{itemize}
@@ -653,7 +654,7 @@ Alternatively, compile all Boost libraries directly from the source code:
 
 \begin{enumerate}
 
-\item Download and install Visual Studio Community Edition (Version 2017 or later). 
+\item Download and install Visual Studio Community Edition (Version 2019 or later, 2022 is recommended). 
 During the installation, make sure you install the Visual
 C++ support under the Programming Languages features (disabled by default).
 
@@ -662,8 +663,8 @@ C++ support under the Programming Languages features (disabled by default).
 Set environment variables, e.g.:
 \begin{itemize}
   	\item  {\tt \%BOOST\%} pointing to your directory, e.g, {\tt C:{\bs}boost\_1\_72\_0} 
-  	\item {\tt \%BOOST\_LIB32\%} pointing to your Win32 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib32\-msvc\-14.2} 
-	\item  {\tt \%BOOST\_LIB64\%} pointing to your x64 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib64\-msvc\-14.2} 
+  	\item {\tt \%BOOST\_LIB32\%} pointing to your Win32 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib32\-msvc\-14.3} 
+	\item  {\tt \%BOOST\_LIB64\%} pointing to your x64 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib64\-msvc\-14.3} 
  \end{itemize}
  
 \item Download and install CMake for Windows (https://cmake.org/download/). Visual Studio Community Edition 2019 or later supports CMake and you can install the feature 'C++ CMake Tools for Windows' instead of installing CMake as standalone program.
@@ -672,10 +673,10 @@ Set environment variables, e.g.:
 
 %\subsubsection*{Visual Studio with CMake}
 
-From Visual Studio 2015 and later supports CMake Projects.
+Visual Studio 2019 and later supports CMake Projects.
 
 \begin{enumerate}
-\item Start Visual Studio 2017 or later.
+\item Start Visual Studio 2019 or later.
 \item Select "Open a local folder" from the start page or menu.
 \item In the dialog window, select the ORE root directory.
 \item Visual Studio will read the cmake presets from CMakePresets.json and the project file CMakeList.txt and configure the project.
@@ -683,7 +684,7 @@ From Visual Studio 2015 and later supports CMake Projects.
 \item The executables are built in the subfolder {\tt /build/TARGET/CONFIGURATION/EXECUTABLE}, e.g. {\tt /build/App/Release/ore.exe}.
 \end{enumerate}
 
-ORE is shipped with configuration and build presets using Visual Studio 2022 and the Ninja build system. Those presets are configured in the CMakePreset.json which is read by Visual Studio by default when opening the CMake project. If you want to use Visual Studio 2019 or Visual Studio 2017 instead, you would have to change the Generator in the CMakePreset.json from "Visual Studio 17 2022" to "Visual Studio 16 2019" or "Visual Studio 15 2017".
+ORE is shipped with configuration and build presets using Visual Studio 2022 and the Ninja build system. Those presets are configured in the CMakePreset.json which is read by Visual Studio by default when opening the CMake project. If you want to use Visual Studio 2019 instead, you would have to change the Generator in the CMakePreset.json from "Visual Studio 17 2022" to "Visual Studio 16 2019".
 
 You can switch in the solution explorer from the file view to the projects view, where the CMake Targets View can be selected. In this view, the various target projects can be seen below "ORE Project" and be used in a similar manner as the usual VS projects.
 
@@ -883,7 +884,7 @@ Typical usage of the Python wrapper is shown in ORE's {\tt Example\_42} and in O
 %
 %{\footnotesize
 %{\tt mkdir build $\backslash$} \\
-%{\tt cmake -G "Visual Studio 15 2017" $\backslash$}\\
+%{\tt cmake -G "Visual Studio 17 2022" $\backslash$}\\
 %\hspace{1cm} {\tt -A x64 $\backslash$}\\
 %\hspace{1cm} {\tt -D SWIG\_DIR=C:$\backslash$dev$\backslash$swigwin$\backslash$Lib $\backslash$}\\
 %\hspace{1cm} {\tt -D SWIG\_EXECUTABLE=C:$\backslash$dev$\backslash$swigwin$\backslash$swig.exe $\backslash$}\\
@@ -1256,6 +1257,16 @@ Example & Description \\
 51 & Custom Trade Fixings\\
 \hline
 52 & Scripted Trades \\
+\hline
+53 & Curve Building using FRAs tailored to Central Bank Meeting Dates\\
+\hline
+54 & Scripted Trade Exposure with AMC: Bermudan Swaption and LPI Swap \\
+\hline
+55 & Scripted Trade Exposure with AMC: Fx TaRF \\
+\hline
+56 & CVA Sensitivity using AAD \\
+\hline
+57 & Base Scenario Analytic \\
 \hline
 \end{tabular}
 \caption{ORE examples.}
@@ -2851,7 +2862,8 @@ engine types. The engine parameters are the same for all products:
 
 \begin{enumerate}
 \item \verb+Training.Sequence+: The sequence type for the traning phase, can be \verb+MersenneTwister+,
-  \verb+MersenneTwisterAntithetc+, \verb+Sobol+ or \verb+SobolBrownianBridge+
+  \verb+MersenneTwisterAntithetc+, \verb+Sobol+, \verb+Burley2020Sobol+, \verb+SobolBrownianBridge+,
+  \verb+Burley2020SobolBrownianBridge+
 \item \verb+Training.Seed+: The seed for the random number generation in the training phase
 \item \verb+Training.Samples+: The number of samples to be used for the training phase
 \item \verb+Pricing.Sequence+: The sequence type for the pricing phase, same values allowed as for training
@@ -3536,12 +3548,75 @@ Though this initial Example\_52 shows only single-asset Equity cases, the script
   significantly more versatile, more examples and scripts to follow.
 
 %--------------------------------------------------------------------
-\subsection{GBP OIS Curve using MPC Swaps}% Example 53
+\subsection{Curve Building around Central Bank Meeting Dates}% Example 53
 \label{example:53}
 %--------------------------------------------------------------------
 
 This example demonstrates the build of a GBP OIS curve using MPC Swaps at the short end.
 
+%--------------------------------------------------------------------
+\subsection{Scripted Trade Exposure with AMC: Bermudan Swaption and LPI Swap}% Example 54
+\label{example:54}
+%--------------------------------------------------------------------
+
+This example demonstrates exposure simulation using AMC for selected scripted trade types
+\begin{itemize}
+\item Bermudan Swaption
+\item LPI Swap
+\end{itemize}
+Both payoffs are defined in {\tt scriptlibrary.xml} which is referenced in {\tt portfolio.xml}. \\
+
+To enable the AMC processing requires the following highlighted settings in {\tt ore.xml}.
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+    <Analytic type="simulation">
+      <Parameter name="active">Y</Parameter>
+      <!-- Set to Y to trigger AMC processing -->
+      <Parameter name="amc">Y</Parameter>
+      <Parameter name="simulationConfigFile">simulation.xml</Parameter>
+      <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+      <!-- Specify a separate pricing engine file for AMC engines -->
+      <Parameter name="amcPricingEnginesFile">pricingengine\_amc.xml</Parameter>
+      <!-- Specify trade types to be covered by the AMC processing -->
+      <Parameter name="amcTradeTypes">ScriptedTrade</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="storeScenarios">N</Parameter>
+      <Parameter name="cubeFile">cube.csv.gz</Parameter>
+      <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
+      <Parameter name="aggregationScenarioDataDump">scenariodata.csv</Parameter>
+    </Analytic>
+\end{minted}
+
+Note that ORE can handle a mix of trades covered by AMC simulation and covered by ``classic'' simulation.
+The respective NPV cubes are combined before generating results such as exposures or XVAs.
+
+%--------------------------------------------------------------------
+\subsection{Scripted Trade Exposure with AMC: Target Redemption Forward}% Example 55
+\label{example:55}
+%--------------------------------------------------------------------
+
+This example demonstrates exposure simulation and XVA for another scripted product, an
+FX Target Redemption Forward (TaRF). In contrast to the cases presented above, you won't see
+the payoff script library in the Input folder, nor is the script embedded into the trade XML file.
+The trade type in this case is {\tt FxTARF} which has its own implementation in OREData/ored/portfolio/tarf.xpp
+and a separate trade schema. However, the scipted trade framework is used under the hood, and the payoff
+script is embedded into the C++ code in OREData/ored/portfolio/tarf.cpp.
+
+%--------------------------------------------------------------------
+\subsection{CVA Sensitivity using AD}% Example 56
+\label{example:56}
+%--------------------------------------------------------------------
+
+This example demonstrates a prototype CVA sensitivity calculation applying Adjoint Algorithmic Differentiation (AAD)
+to a Swap instrument represented as scripted trade. 
+
+%--------------------------------------------------------------------
+\subsection{Base Scenario Analytic}% Example 57
+\label{example:57}
+%--------------------------------------------------------------------
+
+Demonstration of the {\tt Scenario} analytic which has been added to export the simulation market's base scenario
+as a file.
 
 \clearpage
 %========================================================
@@ -4036,6 +4111,7 @@ to txt or csv in which case an uncompressed version of the file is written to di
     <Parameter name="flipViewXVA">N</Parameter>
     <Parameter name="flipViewBorrowingCurvePostfix">_BORROW</Parameter>
     <Parameter name="flipViewLendingCurvePostfix">_LEND</Parameter>
+    <Parameter name="mporCashFlowMode">NonePay</Parameter>
   </Analytic>
 </Analytics>
 \end{minted}
@@ -4147,6 +4223,9 @@ date, sample) {\em after} taking collateral into account. Leave empty to skip ge
 \item {\tt flipViewXVA:} If set to {\tt Y}, the perspective in XVA calculations is switched to the cpty view, the npvs and the netting sets being reverted during calculation. In order to get the lending/borrowing curve, the calculation assumes these curves being set up with the cptyname + the postfix given in the next two settings.
 \item {\tt flipViewBorrowingCurvePostfix:} postfix for the borrowing curve, the calculation assumes this is curves being set up with cptyname + postfix given.
 \item {\tt flipViewLendingCurvePostfix:} postfix for the lending curve, the calculation assumes this is curve being set up with cptyname + postfix given.
+\item {\tt mporCashFlowMode:} Assumption about payment of cashflows within mpor period. One of NonePay, BothPay, WePay,
+  TheyPay, Unspecified. Defaults to Unspecified, in this case PP will assume NonePay if mpor sticky date is used,
+  otherwise to BothPay.
 \end{itemize}
 
 The two cube file outputs {\tt rawCubeOutputFile} and {\tt netCubeOutputFile} are provided for interactive analysis and visualisation purposes, see section
@@ -4347,6 +4426,7 @@ The parameters have the following interpretation:
       <Parameter name="resultCurrency">USD</Parameter>
       <Parameter name="enforceIMRegulations">true</Parameter>
       <Parameter name="mporDays">1</Parameter>
+      <Parameter name="simmCalibration">simmcalibration.xml</Parameter>
     </Analytic>
 <Analytics>
 \end{minted}
@@ -4358,7 +4438,7 @@ The parameters have the following interpretation:
 
 \begin{itemize}
 \item {\tt version:} SIMM model version string \\
-Allowable values: 1.0, 1.1, 1.2, 1.3, 1.3.38, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.5A  \\
+Allowable values: 1.0, 1.1, 1.2, 1.3, 1.3.38, 2.0, 2.1, 2.2, 2.3, 2.4 (or 2.3.8), 2.5, 2.5A, 2.6 (or 2.5.6) \\
 Note that any new SIMM model versions are integrated into ORE with each release, tested against the official ISDA SIMM unit tests.
 \item {\tt crif:} Name of the CRIF file to be loaded
 \item {\tt calculationCurrency:} Determines the {\tt Risk\_FX} CRIF entry that is ignored in ISDA SIMM calculation \\
@@ -4369,6 +4449,7 @@ Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
 Allowable values: Allowable boolean values are given in Table \ref{tab:boolean_allowable}. Defaults to \emph{False} if omitted.
 \item {\tt mporDays} (optional): Currency for expressing the amounts in the resulting SIMM report, by default set to the calculationCurrency. \\
 Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+\item {\tt simmCalibration} (optional): Name of the SIMM calibration configuration file. See Section \ref{sec:simmcalibration} \lstinline!SIMM Calibration!.
 \end{itemize}
 
 The SIMM analytic requires minimal market data input and today's market configuration - FX rates for conversions calculation currency, USD and result currency.
@@ -5131,17 +5212,17 @@ required because the simulation must step over 'good' dates on which index fixin
 % more efficient memory usage. \todo[inline]{Remove Scenario choice}
 \item {\tt DayCounter:} Day count convention used to translate dates to times. Optional, defaults to ActualActual ISDA.
 \item {\tt Sequence:} Choose random sequence generator ({\em MersenneTwister, MersenneTwisterAntithetic, Sobol,
-SobolBrownianBridge}).
+  Burley2020Sobol, SobolBrownianBridge, Burley2020SobolBrownianBridge}).
 \item {\tt Seed:} Random number generator seed
 \item {\tt Samples:} Number of Monte Carlo paths to be produced
 %\item {\tt Fixings: } Choose whether fixings should be simulated or not, and if so which fixing simulation method to
 use ({\em Backward, Forward, BestOfForwardBackward, InterpolatedForwardBackward}), which number of forward horizon days
 to use if one of the {\em Forward } related methods is chosen.
-\item {\tt Ordering:} If the sequence type {\em SobolBrownianBridge} is used, ordering of variates ({\em Factors, Steps,
-    Diagonal})
-\item {\tt DirectionIntegers:} If the sequence type {\em SobolBrownianBridge} or {\em Sobol} is used, type of direction
-  integers in Sobol generator ({\em Unit, Jaeckel, SobolLevitan, SobolLevitanLemieux, JoeKuoD5, JoeKuoD6, JoeKuoD7, Kuo,
-    Kuo2, Kuo3})
+\item {\tt Ordering:} If the sequence type {\em SobolBrownianBridge} or {\em Burley2020SobolBrownianBridge} is used,
+  ordering of variates ({\em Factors, Steps, Diagonal})
+\item {\tt DirectionIntegers:} If the sequence type {\em SobolBrownianBridge}, {\em Burley2020SobolBrownianBridge}, {\em
+  Sobol} or {\em Burley2020Sobol} is used, type of direction integers in Sobol generator ({\em Unit, Jaeckel,
+  SobolLevitan, SobolLevitanLemieux, JoeKuoD5, JoeKuoD6, JoeKuoD7, Kuo, Kuo2, Kuo3})
 \item {\tt CloseOutLag}: If this tag is present, this specifies the close-out period length (e.g. 2W) used; otherwise no close-out grid is built. The close-out grid is an auxiliary time grid that is offset from the main default date grid by the close-out period, typically set to the applicable margin period of risk. If present, it is used to evolve the portfolio value and determine close-out values associated with the preceding default date valuation.
 \item {\tt MporMode}: This tag is expected if the previous one is present, permissible values are then {\tt StickyDate} and {\tt ActualDate}. {\tt StickyDate} means that only market data is evolved from the default date to close-out date for close-out date valuation, the valuation as of date remains unchanged and trades do not ``age'' over the period. As a consequence, exposure evolutions will not show spikes caused by cash flows within the close-out period. {\tt ActualDate} means that trades will also age over the close-out period so that one can experience exposure evolution spikes due to cash flows. 
 \end{itemize}
@@ -6251,6 +6332,8 @@ If a new calendar is added in this way and the schema is being used to validate 
 \include{referencedata}
 
 \include{iborfallbackconfig}
+
+\include{simmcalibration}
 
 %--------------------------------------------------------
 %\subsection{Conventions: {\tt conventions.xml}}
@@ -7842,6 +7925,9 @@ implementation of the inverse cumulative normal distribution to transform $U[0,1
 
 \bibitem{Andersen2016} Leif B. G. Andersen, Michael Pykhtin, Alexander Sokol, {\em Rethinking Margin Period of Risk},
   http://papers.ssrn.com/sol3/papers.cfm?abstract\_id=2719964, 2016
+
+\bibitem{SIMM2.5A} ISDA SIMM Methodology, version 2.5A, (based on v2.5a) \\
+  \url{https://www.isda.org/a/FBLgE/ISDA-SIMM\_v2.5A.pdf}
 
   % \bibitem{SIMM}{SIMM Methodology\\ \tiny
   %   http://www2.isda.org/attachment/ODM1Mw==/ISDA\%20SIMM\%20Methodology\_7\%20April\%202016\_v3.15\%20(PUBLIC).pdf}

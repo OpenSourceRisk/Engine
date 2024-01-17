@@ -47,9 +47,16 @@ class SensitivityScenarioData : public XMLSerializable {
 public:
     struct ShiftData {
         virtual ~ShiftData() {}
-        ShiftData() : shiftSize(0.0) {}
-        string shiftType;
-        Real shiftSize;
+
+        // default shift size, type (Absolute, Relative) and scheme (Forward, Backward, Central)
+        ShiftType shiftType = ShiftType::Absolute;
+        Real shiftSize = 0.0;
+        ShiftScheme shiftScheme = ShiftScheme::Forward;
+
+        // product specific shift size, type, scheme
+        map<string, ShiftType> keyedShiftType;
+        map<string, Real> keyedShiftSize;
+        map<string, ShiftScheme> keyedShiftScheme;
     };
 
     struct CurveShiftData : ShiftData {
@@ -181,13 +188,6 @@ public:
 
     //! Give back the shift data for the given risk factor type, \p keyType, with the given \p name
     const ShiftData& shiftData(const ore::analytics::RiskFactorKey::KeyType& keyType, const std::string& name) const;
-
-    //! Check if a two sided delta has been configured for the given risk factor key type, \p keyType.
-    bool twoSidedDelta(const RiskFactorKey::KeyType& keyType) const;
-
-    //! Return the set of risk factor key types configured for two sided delta.
-    const std::set<RiskFactorKey::KeyType>& twoSidedDeltas() const { return twoSidedDeltas_; }
-
     //@}
 
     //! \name Setters
@@ -228,8 +228,6 @@ public:
     vector<pair<string, string>>& crossGammaFilter() { return crossGammaFilter_; }
     bool& computeGamma() { return computeGamma_; }
     bool& useSpreadedTermStructures() { return useSpreadedTermStructures_; }
-
-    std::set<RiskFactorKey::KeyType>& twoSidedDeltas() { return twoSidedDeltas_; }
     //@}
 
     //! \name Serialisation
@@ -292,15 +290,12 @@ protected:
     bool useSpreadedTermStructures_;
     bool parConversion_;
 
-    /*! Set of risk factor keys for which a two sided delta has been configured.
-    */
-    std::set<RiskFactorKey::KeyType> twoSidedDeltas_;
-
 private:
     void parDataFromXML(XMLNode* child, CurveShiftParData& data);
 
     //! toXML helper method
     XMLNode* parDataToXML(ore::data::XMLDocument& doc, const boost::shared_ptr<CurveShiftData>& csd) const;
 };
+
 } // namespace analytics
 } // namespace ore

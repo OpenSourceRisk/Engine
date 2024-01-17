@@ -263,6 +263,10 @@ public:
 
     //! Write a node out as a string
     static string toString(XMLNode* node);
+
+    // helper routine to convert a value of an arbitrary type to string
+    static string convertToString(const Real value);
 };
+
 } // namespace data
 } // namespace ore

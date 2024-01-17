@@ -22,9 +22,13 @@
 
 #pragma once
 
+#include <boost/filesystem/path.hpp>
+#include <orea/aggregation/creditsimulationparameters.hpp>
 #include <orea/app/parameters.hpp>
 #include <orea/cube/npvcube.hpp>
-#include <orea/aggregation/creditsimulationparameters.hpp>
+#include <orea/engine/sensitivitystream.hpp>
+#include <orea/scenario/scenariogenerator.hpp>
+#include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/stressscenariodata.hpp>
@@ -32,18 +36,20 @@
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/engine/sensitivitystream.hpp>
 #include <orea/simm/crifloader.hpp>
+#include <orea/simm/simmcalibration.hpp>
+#include <orea/simm/crif.hpp>
 #include <orea/simm/simmbasicnamemapper.hpp>
 #include <orea/simm/simmbucketmapper.hpp>
+#include <orea/simm/simmconfiguration.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/iborfallbackconfig.hpp>
-#include <ored/model/crossassetmodeldata.hpp>
+#include <ored/marketdata/csvloader.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
+#include <ored/model/crossassetmodeldata.hpp>
 #include <ored/portfolio/nettingsetmanager.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/referencedata.hpp>
-#include <ored/marketdata/csvloader.hpp>
 #include <ored/utilities/csvfilereader.hpp>
-#include <boost/filesystem/path.hpp>
 
 namespace ore {
 namespace analytics {
@@ -130,6 +136,11 @@ public:
         sensiPricingEngine_ = engineData;
     }
 
+    // Setters for scenario
+    void setScenarioSimMarketParams(const std::string& xml);
+    void setScenarioSimMarketParamsFromFile(const std::string& fileName);
+    void setScenarioOutputFile(const std::string& filename) { scenarioOutputFile_ = filename; }
+
     // Setters for stress testing
     void setStressThreshold(Real r) { stressThreshold_ = r; }
     void setStressSimMarketParams(const std::string& xml); 
@@ -159,6 +170,9 @@ public:
     // Setters for exposure simulation
     void setSalvageCorrelationMatrix(bool b) { salvageCorrelationMatrix_ = b; }
     void setAmc(bool b) { amc_ = b; }
+    void setAmcCg(bool b) { amcCg_ = b; }
+    void setXvaCgSensiScenarioData(const std::string& xml);
+    void setXvaCgSensiScenarioDataFromFile(const std::string& fileName);
     void setAmcTradeTypes(const std::string& s); // parse to set<string>
     void setExposureBaseCurrency(const std::string& s) { exposureBaseCurrency_ = s; } 
     void setExposureObservationModel(const std::string& s) { exposureObservationModel_ = s; }
@@ -196,12 +210,16 @@ public:
     void setXvaBaseCurrency(const std::string& s) { xvaBaseCurrency_ = s; }
     void setLoadCube(bool b) { loadCube_ = b; }
     // TODO: API for setting NPV and market cubes
+    /* This overwrites scenarioGeneratorData, storeFlows, storeCreditStateNpvs to the values stored together with the
+       cube. Therefore this method should be called after setScenarioGeneratorData(), setStoreFlows(),
+       setStoreCreditStateNPVs() to ensure that the overwrite takes place. */
     void setCubeFromFile(const std::string& file);
     void setNettingSetCubeFromFile(const std::string& file);
     void setCptyCubeFromFile(const std::string& file);
     void setMarketCubeFromFile(const std::string& file);
     // boost::shared_ptr<AggregationScenarioData> mktCube();
     void setFlipViewXVA(bool b) { flipViewXVA_ = b; }
+    void setMporCashFlowMode(const MporCashFlowMode m) { mporCashFlowMode_ = m; }
     void setFullInitialCollateralisation(bool b) { fullInitialCollateralisation_ = b; }
     void setExposureProfiles(bool b) { exposureProfiles_ = b; }
     void setExposureProfilesByTrade(bool b) { exposureProfilesByTrade_ = b; }
@@ -270,7 +288,7 @@ public:
 
     // Setters for SIMM
     void setSimmVersion(const std::string& s) { simmVersion_ = s; }
-    void setCrifLoader();
+    
     void setCrifFromFile(const std::string& fileName,
                          char eol = '\n', char delim = ',', char quoteChar = '\0', char escapeChar = '\\');
     void setCrifFromBuffer(const std::string& csvBuffer,
@@ -281,6 +299,10 @@ public:
     void setSimmBucketMapper(const boost::shared_ptr<ore::analytics::SimmBucketMapper>& p) { simmBucketMapper_ = p; }
     void setSimmBucketMapper(const std::string& xml);
     void setSimmBucketMapperFromFile(const std::string& fileName);
+    void setSimmCalibrationData(const boost::shared_ptr<ore::analytics::SimmCalibrationData>& s) {
+        simmCalibrationData_ = s;
+    }
+    void setSimmCalibrationDataFromFile(const std::string& fileName);
     void setSimmCalculationCurrency(const std::string& s) { simmCalculationCurrency_ = s; }
     void setSimmResultCurrency(const std::string& s) { simmResultCurrency_ = s; }
     void setSimmReportingCurrency(const std::string& s) { simmReportingCurrency_ = s; }
@@ -398,6 +420,12 @@ public:
     const boost::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiScenarioData() { return sensiScenarioData_; }
     const boost::shared_ptr<ore::data::EngineData>& sensiPricingEngine() { return sensiPricingEngine_; }
     // const boost::shared_ptr<ore::data::TodaysMarketParameters>& sensiTodaysMarketParams() { return sensiTodaysMarketParams_; }
+        
+    /****************************
+     * Getters for scenario build
+     ****************************/
+    const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& scenarioSimMarketParams() { return scenarioSimMarketParams_; }
+    const std::string& scenarioOutputFile() { return scenarioOutputFile_; }
 
     /****************************
      * Getters for stress testing
@@ -425,6 +453,8 @@ public:
      *********************************/
     bool salvageCorrelationMatrix() { return salvageCorrelationMatrix_; }
     bool amc() { return amc_; }
+    bool amcCg() { return amcCg_; }
+    const boost::shared_ptr<ore::analytics::SensitivityScenarioData>& xvaCgSensiScenarioData() { return xvaCgSensiScenarioData_; }
     const std::set<std::string>& amcTradeTypes() { return amcTradeTypes_; }
     const std::string& exposureBaseCurrency() { return exposureBaseCurrency_; }
     const std::string& exposureObservationModel() { return exposureObservationModel_; }
@@ -454,6 +484,7 @@ public:
     const boost::shared_ptr<NPVCube>& cptyCube() { return cptyCube_; }
     const boost::shared_ptr<AggregationScenarioData>& mktCube() { return mktCube_; }
     bool flipViewXVA() { return flipViewXVA_; }
+    MporCashFlowMode mporCashFlowMode() { return mporCashFlowMode_; }
     bool fullInitialCollateralisation() { return fullInitialCollateralisation_; }
     bool exposureProfiles() { return exposureProfiles_; }
     bool exposureProfilesByTrade() { return exposureProfilesByTrade_; }
@@ -527,13 +558,15 @@ public:
      * Getters for SIMM
      ******************/
     const std::string& simmVersion() { return simmVersion_; }
-    const boost::shared_ptr<ore::analytics::CrifLoader>& crifLoader() { return crifLoader_; }
+    const ore::analytics::Crif& crif() { return crif_; }
     const boost::shared_ptr<ore::analytics::SimmBasicNameMapper>& simmNameMapper() { return simmNameMapper_; }
     const boost::shared_ptr<ore::analytics::SimmBucketMapper>& simmBucketMapper() { return simmBucketMapper_; }
+    const boost::shared_ptr<ore::analytics::SimmCalibrationData>& simmCalibrationData() { return simmCalibrationData_; }
     const std::string& simmCalculationCurrency() { return simmCalculationCurrency_; }
     const std::string& simmResultCurrency() { return simmResultCurrency_; }
     const std::string& simmReportingCurrency() { return simmReportingCurrency_; }
     bool enforceIMRegulations() { return enforceIMRegulations_; }
+    boost::shared_ptr<SimmConfiguration> getSimmConfiguration();
 
     /**************************************************
      * Getters for Zero to Par Sensi conversion
@@ -654,6 +687,13 @@ protected:
     boost::shared_ptr<ore::data::EngineData> sensiPricingEngine_;
     // boost::shared_ptr<ore::data::TodaysMarketParameters> sensiTodaysMarketParams_;
 
+    
+    /**********************
+     * SCENARIO analytic
+     **********************/
+    boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> scenarioSimMarketParams_;
+    std::string scenarioOutputFile_;
+
     /*****************
      * STRESS analytic
      *****************/
@@ -681,6 +721,8 @@ protected:
      *******************/
     bool salvageCorrelationMatrix_ = false;
     bool amc_ = false;
+    bool amcCg_ = false;
+    boost::shared_ptr<ore::analytics::SensitivityScenarioData> xvaCgSensiScenarioData_;
     std::set<std::string> amcTradeTypes_;
     std::string exposureBaseCurrency_ = "";
     std::string exposureObservationModel_ = "Disable";
@@ -714,6 +756,7 @@ protected:
     std::string xvaBaseCurrency_ = "";
     bool loadCube_ = false;
     bool flipViewXVA_ = false;
+    MporCashFlowMode mporCashFlowMode_ = MporCashFlowMode::Unspecified;
     bool exerciseNextBreak_ = false;
     bool cvaAnalytic_ = true;
     bool dvaAnalytic_ = false;
@@ -768,9 +811,10 @@ protected:
      * SIMM analytic
      ***************/
     std::string simmVersion_;
-    boost::shared_ptr<ore::analytics::CrifLoader> crifLoader_;
+    ore::analytics::Crif crif_;
     boost::shared_ptr<ore::analytics::SimmBasicNameMapper> simmNameMapper_;
     boost::shared_ptr<ore::analytics::SimmBucketMapper> simmBucketMapper_;
+    boost::shared_ptr<ore::analytics::SimmCalibrationData> simmCalibrationData_;
     std::string simmCalculationCurrency_ = "";
     std::string simmResultCurrency_ = "";
     std::string simmReportingCurrency_ = "";
@@ -821,6 +865,7 @@ private:
     std::string cashflowOutputFileName_;
     std::string curvesOutputFileName_;
     std::string scenarioDumpFileName_;
+    std::string scenarioOutputName_;
     std::string cubeFileName_;
     std::string mktCubeFileName_;
     std::string rawCubeFileName_;

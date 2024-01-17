@@ -120,8 +120,13 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
     Handle<Quote> spot = market->fxSpot(boughtCurrency_ + soldCurrency_);
     
     boost::shared_ptr<QuantExt::FxIndex> fxIndex;
-    if (!fxIndex_.empty())
-        fxIndex = parseFxIndex(fxIndex_);
+    if (!fxIndex_.empty()) {
+        auto fxi = market->fxIndex(fxIndex_);
+        if (!fxi.empty()) {
+            fxIndex = fxi.currentLink();
+        }
+    }
+        
 
     // checking fixings
     if (startDate_ != "" && parseDate(startDate()) < today) {
@@ -170,9 +175,9 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
 
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    Date lastPremiumDate =
-        addPremiums(additionalInstruments, additionalMultipliers, boughtAmount_, option_.premiumData(), -bsInd, soldCcy,
-                    engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
+    Date lastPremiumDate = addPremiums(
+        additionalInstruments, additionalMultipliers, (positionType == Position::Long ? 1.0 : -1.0) * boughtAmount_,
+        option_.premiumData(), -bsInd, soldCcy, engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
 
     // we build a knock out option
     boost::shared_ptr<Instrument> barrier =

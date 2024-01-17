@@ -77,6 +77,7 @@
 #include <ored/portfolio/builders/equityfuturesoption.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
 #include <ored/portfolio/builders/equitytouchoption.hpp>
+#include <ored/portfolio/builders/formulabasedcoupon.hpp>
 #include <ored/portfolio/builders/forwardbond.hpp>
 #include <ored/portfolio/builders/fxasianoption.hpp>
 #include <ored/portfolio/builders/fxbarrieroption.hpp>
@@ -139,6 +140,8 @@
 #include <ored/portfolio/equityswap.hpp>
 #include <ored/portfolio/equitytouchoption.hpp>
 #include <ored/portfolio/failedtrade.hpp>
+#include <ored/portfolio/formulabasedlegbuilder.hpp>
+#include <ored/portfolio/formulabasedlegdata.hpp>
 #include <ored/portfolio/forwardbond.hpp>
 #include <ored/portfolio/forwardrateagreement.hpp>
 #include <ored/portfolio/fxaverageforward.hpp>
@@ -231,6 +234,7 @@ void initBuilders() {
     ORE_REGISTER_LEG_DATA("CommodityFloating", CommodityFloatingLegData, false)
     ORE_REGISTER_LEG_DATA("DurationAdjustedCMS", DurationAdjustedCmsLegData, false)
     ORE_REGISTER_LEG_DATA("EquityMargin", EquityMarginLegData, false)
+    ORE_REGISTER_LEG_DATA("FormulaBased", FormulaBasedLegData, false)
 
     ORE_REGISTER_CALIBRATION_INSTRUMENT("CpiCapFloor", CpiCapFloor, false)
     ORE_REGISTER_CALIBRATION_INSTRUMENT("YoYCapFloor", YoYCapFloor, false)
@@ -370,6 +374,7 @@ void initBuilders() {
     ORE_REGISTER_LEGBUILDER("DigitalCMSSpreadLegBuilder", DigitalCMSSpreadLegBuilder, false)
     ORE_REGISTER_LEGBUILDER("EquityLegBuilder", EquityLegBuilder, false)
     ORE_REGISTER_LEGBUILDER("EquityMarginLegBuilder", EquityMarginLegBuilder, false)
+    ORE_REGISTER_LEGBUILDER("FormulaBasedLegBuilder", FormulaBasedLegBuilder, false)
 
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcCurrencySwapEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(LgmAmcBermudanSwaptionEngineBuilder, false)
@@ -377,6 +382,8 @@ void initBuilders() {
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcFxOptionEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcFxForwardEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(ScriptedTradeEngineBuilder, false)
+
+    ORE_REGISTER_AMCCG_ENGINE_BUILDER(ScriptedTradeEngineBuilder, false)
 
     ORE_REGISTER_ENGINE_BUILDER(CommoditySpreadOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CpiCapFloorEngineBuilder, false)
@@ -487,6 +494,8 @@ void initBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(RiskParticipationAgreementSwapLGMGridEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(RiskParticipationAgreementTLockLGMGridEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityCliquetOptionMcScriptEngineBuilder, false)
+
+    ORE_REGISTER_ENGINE_BUILDER(FormulaBasedCouponPricerBuilder, false)
 
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("Bond", BondTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("ForwardBond", ForwardBondTrsUnderlyingBuilder, false)

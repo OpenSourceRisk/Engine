@@ -158,6 +158,7 @@ portfolio/builders/equityforward.cpp
 portfolio/builders/equityfuturesoption.cpp
 portfolio/builders/equityoption.cpp
 portfolio/builders/equitytouchoption.cpp
+portfolio/builders/formulabasedcoupon.cpp
 portfolio/builders/forwardbond.cpp
 portfolio/builders/fxasianoption.cpp
 portfolio/builders/fxbarrieroption.cpp
@@ -227,6 +228,9 @@ portfolio/equitytouchoption.cpp
 portfolio/europeanoptionbarrier.cpp
 portfolio/failedtrade.cpp
 portfolio/fixingdates.cpp
+portfolio/formulabasedindexbuilder.cpp
+portfolio/formulabasedlegbuilder.cpp
+portfolio/formulabasedlegdata.cpp
 portfolio/forwardbond.cpp
 portfolio/forwardrateagreement.cpp
 portfolio/fxaverageforward.cpp
@@ -314,8 +318,10 @@ scripting/models/blackscholescgbase.cpp
 scripting/models/fdblackscholesbase.cpp
 scripting/models/gaussiancam.cpp
 scripting/models/gaussiancamcg.cpp
+scripting/models/hwcg.cpp
 scripting/models/lgmcg.cpp
 scripting/models/localvol.cpp
+scripting/models/modelcg.cpp
 scripting/models/modelcgimpl.cpp
 scripting/models/modelimpl.cpp
 scripting/paylog.cpp
@@ -338,6 +344,7 @@ utilities/currencyparser.cpp
 utilities/dategrid.cpp
 utilities/fileio.cpp
 utilities/flowanalysis.cpp
+utilities/formulaparser.cpp
 utilities/indexnametranslator.cpp
 utilities/indexparser.cpp
 utilities/inflationstartdate.cpp
@@ -523,6 +530,7 @@ portfolio/builders/equityforward.hpp
 portfolio/builders/equityfuturesoption.hpp
 portfolio/builders/equityoption.hpp
 portfolio/builders/equitytouchoption.hpp
+portfolio/builders/formulabasedcoupon.hpp
 portfolio/builders/forwardbond.hpp
 portfolio/builders/fxasianoption.hpp
 portfolio/builders/fxbarrieroption.hpp
@@ -595,6 +603,9 @@ portfolio/equitytouchoption.hpp
 portfolio/europeanoptionbarrier.hpp
 portfolio/failedtrade.hpp
 portfolio/fixingdates.hpp
+portfolio/formulabasedindexbuilder.hpp
+portfolio/formulabasedlegbuilder.hpp
+portfolio/formulabasedlegdata.hpp
 portfolio/forwardbond.hpp
 portfolio/forwardrateagreement.hpp
 portfolio/fxaverageforward.hpp
@@ -685,7 +696,6 @@ scripting/engines/scriptedinstrumentpricingengine.hpp
 scripting/engines/scriptedinstrumentpricingenginecg.hpp
 scripting/grammar.hpp
 scripting/models/amcmodel.hpp
-scripting/models/amcmodelcg.hpp
 scripting/models/blackscholes.hpp
 scripting/models/blackscholesbase.hpp
 scripting/models/blackscholescg.hpp
@@ -694,6 +704,7 @@ scripting/models/dummymodel.hpp
 scripting/models/fdblackscholesbase.hpp
 scripting/models/gaussiancam.hpp
 scripting/models/gaussiancamcg.hpp
+scripting/models/hwcg.hpp
 scripting/models/lgmcg.hpp
 scripting/models/localvol.hpp
 scripting/models/model.hpp
@@ -720,6 +731,7 @@ utilities/currencyhedgedequityindexdecomposition.hpp
 utilities/currencyparser.hpp
 utilities/dategrid.hpp
 utilities/fileio.hpp
+utilities/formulaparser.hpp
 utilities/flowanalysis.hpp
 utilities/indexnametranslator.hpp
 utilities/indexparser.hpp

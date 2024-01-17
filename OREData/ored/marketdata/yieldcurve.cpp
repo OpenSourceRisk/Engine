@@ -38,6 +38,7 @@
 
 #include <ql/indexes/ibor/all.hpp>
 #include <ql/math/interpolations/convexmonotoneinterpolation.hpp>
+#include <ql/math/interpolations/mixedinterpolation.hpp>
 #include <qle/indexes/ibor/brlcdi.hpp>
 #include <qle/math/logquadraticinterpolation.hpp>
 #include <qle/math/quadraticinterpolation.hpp>
@@ -100,7 +101,7 @@ namespace data {
 template <template <class> class CurveType>
 boost::shared_ptr<YieldTermStructure> buildYieldCurve(const vector<Date>& dates, const vector<QuantLib::Real>& rates,
                                                       const DayCounter& dayCounter,
-                                                      YieldCurve::InterpolationMethod interpolationMethod) {
+                                                      YieldCurve::InterpolationMethod interpolationMethod, Size n) {
 
     boost::shared_ptr<YieldTermStructure> yieldts;
     switch (interpolationMethod) {
@@ -140,28 +141,48 @@ boost::shared_ptr<YieldTermStructure> buildYieldCurve(const vector<Date>& dates,
                                                             CubicInterpolation::SecondDerivative, 0.0,
                                                             CubicInterpolation::SecondDerivative, 0.0)));
          break;
-    default:
-        QL_FAIL("Interpolation method not recognised.");
+     case YieldCurve::InterpolationMethod::DefaultLogMixedLinearCubic:
+         yieldts.reset(
+             new CurveType<DefaultLogMixedLinearCubic>(dates, rates, dayCounter, DefaultLogMixedLinearCubic(n)));
+         break;
+     case YieldCurve::InterpolationMethod::MonotonicLogMixedLinearCubic:
+         yieldts.reset(
+             new CurveType<MonotonicLogMixedLinearCubic>(dates, rates, dayCounter, MonotonicLogMixedLinearCubic(n)));
+         break;
+     case YieldCurve::InterpolationMethod::KrugerLogMixedLinearCubic:
+         yieldts.reset(
+             new CurveType<KrugerLogMixedLinearCubic>(dates, rates, dayCounter, KrugerLogMixedLinearCubic(n)));
+         break;
+     case YieldCurve::InterpolationMethod::LogMixedLinearCubicNaturalSpline:
+         yieldts.reset(new CurveType<LogMixedLinearCubic>(
+             dates, rates, dayCounter,
+             LogMixedLinearCubic(n, MixedInterpolation::ShareRanges, CubicInterpolation::Spline, false,
+                                 CubicInterpolation::SecondDerivative, 0.0, CubicInterpolation::SecondDerivative,
+                                 0.0)));
+         break;
+
+     default:
+         QL_FAIL("Interpolation method '" << interpolationMethod << "' not recognised.");
     }
     return yieldts;
 }
 
 boost::shared_ptr<YieldTermStructure> zerocurve(const vector<Date>& dates, const vector<Rate>& yields,
                                                 const DayCounter& dayCounter,
-                                                YieldCurve::InterpolationMethod interpolationMethod) {
-    return buildYieldCurve<InterpolatedZeroCurve>(dates, yields, dayCounter, interpolationMethod);
+                                                YieldCurve::InterpolationMethod interpolationMethod, Size n) {
+    return buildYieldCurve<InterpolatedZeroCurve>(dates, yields, dayCounter, interpolationMethod, n);
 }
 
 boost::shared_ptr<YieldTermStructure> discountcurve(const vector<Date>& dates, const vector<DiscountFactor>& dfs,
                                                     const DayCounter& dayCounter,
-                                                    YieldCurve::InterpolationMethod interpolationMethod) {
-    return buildYieldCurve<InterpolatedDiscountCurve>(dates, dfs, dayCounter, interpolationMethod);
+                                                    YieldCurve::InterpolationMethod interpolationMethod, Size n) {
+    return buildYieldCurve<InterpolatedDiscountCurve>(dates, dfs, dayCounter, interpolationMethod, n);
 }
 
 boost::shared_ptr<YieldTermStructure> forwardcurve(const vector<Date>& dates, const vector<Rate>& forwards,
                                                    const DayCounter& dayCounter,
-                                                   YieldCurve::InterpolationMethod interpolationMethod) {
-    return buildYieldCurve<InterpolatedForwardCurve>(dates, forwards, dayCounter, interpolationMethod);
+                                                   YieldCurve::InterpolationMethod interpolationMethod, Size n) {
+    return buildYieldCurve<InterpolatedForwardCurve>(dates, forwards, dayCounter, interpolationMethod, n);
 }
 
 /* Helper functions
@@ -187,6 +208,14 @@ YieldCurve::InterpolationMethod parseYieldCurveInterpolationMethod(const string&
         return YieldCurve::InterpolationMethod::Hermite;
     else if (s == "CubicSpline")
         return YieldCurve::InterpolationMethod::CubicSpline;
+    else if (s == "DefaultLogMixedLinearCubic")
+        return YieldCurve::InterpolationMethod::DefaultLogMixedLinearCubic;
+    else if (s == "MonotonicLogMixedLinearCubic")
+        return YieldCurve::InterpolationMethod::MonotonicLogMixedLinearCubic;
+    else if (s == "KrugerLogMixedLinearCubic")
+        return YieldCurve::InterpolationMethod::KrugerLogMixedLinearCubic;
+    else if (s == "LogMixedLinearCubicNaturalSpline")
+        return YieldCurve::InterpolationMethod::LogMixedLinearCubicNaturalSpline;
     else if (s == "NelsonSiegel")
         return YieldCurve::InterpolationMethod::NelsonSiegel;
     else if (s == "Svensson")
@@ -205,6 +234,43 @@ YieldCurve::InterpolationVariable parseYieldCurveInterpolationVariable(const str
     else
         QL_FAIL("Yield curve interpolation variable " << s << " not recognized");
 };
+
+std::ostream& operator<<(std::ostream& out, const YieldCurve::InterpolationMethod m) {
+    if (m == YieldCurve::InterpolationMethod::Linear)
+        return out << "Linear";
+    else if (m == YieldCurve::InterpolationMethod::LogLinear)
+        return out << "LogLinear";
+    else if (m == YieldCurve::InterpolationMethod::NaturalCubic)
+        return out << "NaturalCubic";
+    else if (m == YieldCurve::InterpolationMethod::FinancialCubic)
+        return out << "FinancialCubic";
+    else if (m == YieldCurve::InterpolationMethod::ConvexMonotone)
+        return out << "ConvexMonotone";
+    else if (m == YieldCurve::InterpolationMethod::ExponentialSplines)
+        return out << "ExponentialSplines";
+    else if (m == YieldCurve::InterpolationMethod::Quadratic)
+        return out << "Quadratic";
+    else if (m == YieldCurve::InterpolationMethod::LogQuadratic)
+        return out << "LogQuadratic";
+    else if (m == YieldCurve::InterpolationMethod::Hermite)
+        return out << "Hermite";
+    else if (m == YieldCurve::InterpolationMethod::CubicSpline)
+        return out << "CubicSpline";
+    else if (m == YieldCurve::InterpolationMethod::DefaultLogMixedLinearCubic)
+        return out << "DefaultLogMixedLinearCubic";
+    else if (m == YieldCurve::InterpolationMethod::MonotonicLogMixedLinearCubic)
+        return out << "MonotonicLogMixedLinearCubic";
+    else if (m == YieldCurve::InterpolationMethod::KrugerLogMixedLinearCubic)
+        return out << "KrugerLogMixedLinearCubic";
+    else if (m == YieldCurve::InterpolationMethod::LogMixedLinearCubicNaturalSpline)
+        return out << "LogMixedLinearCubicNaturalSpline";
+    else if (m == YieldCurve::InterpolationMethod::NelsonSiegel)
+        return out << "NelsonSiegel";
+    else if (m == YieldCurve::InterpolationMethod::Svensson)
+        return out << "Svensson";
+    else
+        QL_FAIL("Yield curve interpolation method " << static_cast<int>(m) << " not recognized");
+}
 
 YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigurations& curveConfigs,
                        const Loader& loader, const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves,
@@ -416,8 +482,43 @@ YieldCurve::piecewisecurve(vector<boost::shared_ptr<RateHelper>> instruments) {
                  QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
          } break;
+         case InterpolationMethod::DefaultLogMixedLinearCubic: {
+             typedef PiecewiseYieldCurve<ZeroYield, DefaultLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, DefaultLogMixedLinearCubic(mixedInterpolationSize_),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::MonotonicLogMixedLinearCubic: {
+             typedef PiecewiseYieldCurve<ZeroYield, MonotonicLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, MonotonicLogMixedLinearCubic(mixedInterpolationSize_),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::KrugerLogMixedLinearCubic: {
+             typedef PiecewiseYieldCurve<ZeroYield, KrugerLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, KrugerLogMixedLinearCubic(mixedInterpolationSize_),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::LogMixedLinearCubicNaturalSpline: {
+             typedef PiecewiseYieldCurve<ZeroYield, LogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_,
+                 LogMixedLinearCubic(mixedInterpolationSize_, MixedInterpolation::ShareRanges,
+                                     CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
+                                     CubicInterpolation::SecondDerivative, 0.0),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
         default:
-            QL_FAIL("Interpolation method not recognised.");
+            QL_FAIL("Interpolation method '" << interpolationMethod_ << "' not recognised.");
         }
         break;
     case InterpolationVariable::Discount:
@@ -485,11 +586,10 @@ YieldCurve::piecewisecurve(vector<boost::shared_ptr<RateHelper>> instruments) {
          case InterpolationMethod::Quadratic: {
              typedef PiecewiseYieldCurve<Discount, QuantExt::Quadratic, QuantExt::IterativeBootstrap> my_curve;
              ATTR_UNUSED typedef my_curve::traits_type dummy;
-             yieldts =
-                 boost::make_shared<my_curve>(
- 					asofDate_, instruments, zeroDayCounter_, QuantExt::Quadratic(1, 0, 1, 0, 1),
- 					QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
- 														   minFactor, dontThrowSteps));
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, QuantExt::Quadratic(1, 0, 1, 0, 1),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
          } break;
          case InterpolationMethod::LogQuadratic: {
              typedef PiecewiseYieldCurve<Discount, QuantExt::LogQuadratic, QuantExt::IterativeBootstrap> my_curve;
@@ -499,8 +599,43 @@ YieldCurve::piecewisecurve(vector<boost::shared_ptr<RateHelper>> instruments) {
                  QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
          } break;
+         case InterpolationMethod::DefaultLogMixedLinearCubic: {
+             typedef PiecewiseYieldCurve<Discount, DefaultLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, DefaultLogMixedLinearCubic(mixedInterpolationSize_),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::MonotonicLogMixedLinearCubic: {
+             typedef PiecewiseYieldCurve<Discount, MonotonicLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, MonotonicLogMixedLinearCubic(mixedInterpolationSize_),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::KrugerLogMixedLinearCubic: {
+             typedef PiecewiseYieldCurve<Discount, KrugerLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, KrugerLogMixedLinearCubic(mixedInterpolationSize_),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::LogMixedLinearCubicNaturalSpline: {
+             typedef PiecewiseYieldCurve<Discount, LogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_,
+                 LogMixedLinearCubic(mixedInterpolationSize_, MixedInterpolation::ShareRanges,
+                                     CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
+                                     CubicInterpolation::SecondDerivative, 0.0),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
         default:
-            QL_FAIL("Interpolation method not recognised.");
+            QL_FAIL("Interpolation method '" << interpolationMethod_ << "' not recognised.");
         }
         break;
     case InterpolationVariable::Forward:
@@ -581,8 +716,43 @@ YieldCurve::piecewisecurve(vector<boost::shared_ptr<RateHelper>> instruments) {
                  QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
          } break;
+         case InterpolationMethod::DefaultLogMixedLinearCubic: {
+             typedef PiecewiseYieldCurve<ForwardRate, DefaultLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, DefaultLogMixedLinearCubic(mixedInterpolationSize_),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::MonotonicLogMixedLinearCubic: {
+             typedef PiecewiseYieldCurve<ForwardRate, MonotonicLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, MonotonicLogMixedLinearCubic(mixedInterpolationSize_),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::KrugerLogMixedLinearCubic: {
+             typedef PiecewiseYieldCurve<ForwardRate, KrugerLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, KrugerLogMixedLinearCubic(mixedInterpolationSize_),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::LogMixedLinearCubicNaturalSpline: {
+             typedef PiecewiseYieldCurve<ForwardRate, LogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_,
+                 LogMixedLinearCubic(mixedInterpolationSize_, MixedInterpolation::ShareRanges,
+                                     CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
+                                     CubicInterpolation::SecondDerivative, 0.0),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
         default:
-            QL_FAIL("Interpolation method not recognised.");
+            QL_FAIL("Interpolation method '" << interpolationMethod_ << "' not recognised.");
         }
         break;
     default:
@@ -615,11 +785,11 @@ YieldCurve::piecewisecurve(vector<boost::shared_ptr<RateHelper>> instruments) {
         zeros[0] = zeros[1];
         forwards[0] = forwards[1];
         if (interpolationVariable_ == InterpolationVariable::Zero)
-            p_ = zerocurve(dates, zeros, zeroDayCounter_, interpolationMethod_);
+            p_ = zerocurve(dates, zeros, zeroDayCounter_, interpolationMethod_, mixedInterpolationSize_);
         else if (interpolationVariable_ == InterpolationVariable::Discount)
-            p_ = discountcurve(dates, discounts, zeroDayCounter_, interpolationMethod_);
+            p_ = discountcurve(dates, discounts, zeroDayCounter_, interpolationMethod_, mixedInterpolationSize_);
         else if (interpolationVariable_ == InterpolationVariable::Forward)
-            p_ = forwardcurve(dates, forwards, zeroDayCounter_, interpolationMethod_);
+            p_ = forwardcurve(dates, forwards, zeroDayCounter_, interpolationMethod_, mixedInterpolationSize_);
         else
             QL_FAIL("Interpolation variable not recognised.");
     }
@@ -892,39 +1062,70 @@ void YieldCurve::buildDiscountCurve() {
     boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
     boost::shared_ptr<Convention> convention;
 
-    for (Size i = 0; i < discountQuoteIDs.size(); ++i) {
-        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(discountQuoteIDs[i], asofDate_);
-        if (marketQuote) {
-            QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::DISCOUNT,
-                       "Market quote not of type Discount.");
-            boost::shared_ptr<DiscountQuote> discountQuote = boost::dynamic_pointer_cast<DiscountQuote>(marketQuote);
+    vector<string> quotes;
+    quotes.reserve(discountQuoteIDs.size()); // Reserve space for efficiency
 
-            if(discountQuote->date() != Date()){
+    std::transform(discountQuoteIDs.begin(), discountQuoteIDs.end(), std::back_inserter(quotes),
+                   [](const std::pair<string, bool>& pair) {
+                       return pair.first; // Extract only the quote part
+                   });
 
-                data[discountQuote->date()] = discountQuote->quote()->value();
+    auto wildcard = getUniqueWildcard(quotes);
 
-            } else if (discountQuote->tenor() != Period()){
+    std::set<boost::shared_ptr<MarketDatum>> marketData;
+    if (wildcard) {
+        marketData = loader_.get(*wildcard, asofDate_);
+    } else {
+        std::ostringstream ss;
+        ss << MarketDatum::InstrumentType::DISCOUNT << "/" << MarketDatum::QuoteType::RATE << "/" << currency_ << "/*";
+        Wildcard w(ss.str());
+        marketData = loader_.get(w, asofDate_);
+    }
 
-                if(!convention)
-                    convention = conventions->get(discountCurveSegment->conventionsID());
-                boost::shared_ptr<ZeroRateConvention> zeroConvention = boost::dynamic_pointer_cast<ZeroRateConvention>(convention);
-                QL_REQUIRE(zeroConvention, "could not cast to ZeroRateConvention");
+    for (const auto& marketQuote : marketData) {
+        QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::DISCOUNT,
+                    "Market quote not of type Discount.");
+        boost::shared_ptr<DiscountQuote> discountQuote = boost::dynamic_pointer_cast<DiscountQuote>(marketQuote);
 
-                Calendar cal = zeroConvention->tenorCalendar();
-                BusinessDayConvention rollConvention = zeroConvention->rollConvention();
-                Date date = cal.adjust(cal.adjust(asofDate_, rollConvention) + discountQuote->tenor(), rollConvention);
-                DLOG("YieldCurve::buildDiscountCurve - tenor " << discountQuote->tenor() << " to date " << io::iso_date(date));
-                data[date] = discountQuote->quote()->value();
+        // filtering
+        if (!wildcard) {
+            vector<string>::const_iterator it = find(quotes.begin(), quotes.end(), discountQuote->name());
+            if (it == quotes.end())
+                continue;
+        }
 
-            } else {
-                QL_FAIL("YieldCurve::buildDiscountCurve - neither date nor tenor recognised");
-            }
+        if (discountQuote->date() != Date()) {
 
+            data[discountQuote->date()] = discountQuote->quote()->value();
+
+        } else if (discountQuote->tenor() != Period()) {
+
+            if (!convention)
+                convention = conventions->get(discountCurveSegment->conventionsID());
+            boost::shared_ptr<ZeroRateConvention> zeroConvention =
+                boost::dynamic_pointer_cast<ZeroRateConvention>(convention);
+            QL_REQUIRE(zeroConvention, "could not cast to ZeroRateConvention");
+
+            Calendar cal = zeroConvention->tenorCalendar();
+            BusinessDayConvention rollConvention = zeroConvention->rollConvention();
+            Date date = cal.adjust(cal.adjust(asofDate_, rollConvention) + discountQuote->tenor(), rollConvention);
+            DLOG("YieldCurve::buildDiscountCurve - tenor " << discountQuote->tenor() << " to date "
+                                                            << io::iso_date(date));
+            data[date] = discountQuote->quote()->value();
+
+        } else {
+            QL_FAIL("YieldCurve::buildDiscountCurve - neither date nor tenor recognised");
         }
     }
 
+    // Some logging and checks
     QL_REQUIRE(data.size() > 0, "No market data found for curve spec " << curveSpec_.name() << " with as of date "
                                                                        << io::iso_date(asofDate_));
+    if (!wildcard) {
+        QL_REQUIRE(data.size() == quotes.size(), "Found " << data.size() << " quotes, but "
+                                                          << quotes.size()
+                                                          << " quotes given in config " << curveConfig_->curveID());
+    }
 
     if (data.begin()->first > asofDate_) {
         DLOG("Insert discount curve point at time zero for " << curveSpec_.name());
@@ -967,45 +1168,51 @@ void YieldCurve::buildDiscountCurve() {
 
 void YieldCurve::buildBootstrappedCurve() {
 
-    /* Loop over segments and add helpers. */
-    vector<boost::shared_ptr<RateHelper>> instruments;
-    for (Size i = 0; i < curveSegments_.size(); i++) {
+    QL_REQUIRE(!curveSegments_.empty(), "no curve segments defined.");
+
+    /* Loop over segments and add helpers for each segment. */
+
+    DLOG("Building instrument sets for yield curve segments 0..." << curveSegments_.size() - 1);
+
+    std::vector<vector<boost::shared_ptr<RateHelper>>> instrumentsPerSegment(curveSegments_.size());
+
+    for (Size i = 0; i < curveSegments_.size(); ++i) {
         switch (curveSegments_[i]->type()) {
         case YieldCurveSegment::Type::Deposit:
-            addDeposits(curveSegments_[i], instruments);
+            addDeposits(curveSegments_[i], instrumentsPerSegment[i]);
             break;
         case YieldCurveSegment::Type::FRA:
-            addFras(curveSegments_[i], instruments);
+            addFras(curveSegments_[i], instrumentsPerSegment[i]);
             break;
         case YieldCurveSegment::Type::Future:
-            addFutures(curveSegments_[i], instruments);
+            addFutures(curveSegments_[i], instrumentsPerSegment[i]);
             break;
         case YieldCurveSegment::Type::OIS:
-            addOISs(curveSegments_[i], instruments);
+            addOISs(curveSegments_[i], instrumentsPerSegment[i]);
             break;
         case YieldCurveSegment::Type::Swap:
-            addSwaps(curveSegments_[i], instruments);
+            addSwaps(curveSegments_[i], instrumentsPerSegment[i]);
             break;
         case YieldCurveSegment::Type::AverageOIS:
-            addAverageOISs(curveSegments_[i], instruments);
+            addAverageOISs(curveSegments_[i], instrumentsPerSegment[i]);
             break;
         case YieldCurveSegment::Type::TenorBasis:
-            addTenorBasisSwaps(curveSegments_[i], instruments);
+            addTenorBasisSwaps(curveSegments_[i], instrumentsPerSegment[i]);
             break;
         case YieldCurveSegment::Type::TenorBasisTwo:
-            addTenorBasisTwoSwaps(curveSegments_[i], instruments);
+            addTenorBasisTwoSwaps(curveSegments_[i], instrumentsPerSegment[i]);
             break;
         case YieldCurveSegment::Type::BMABasis:
-            addBMABasisSwaps(curveSegments_[i], instruments);
+            addBMABasisSwaps(curveSegments_[i], instrumentsPerSegment[i]);
             break;
         case YieldCurveSegment::Type::FXForward:
-            addFXForwards(curveSegments_[i], instruments);
+            addFXForwards(curveSegments_[i], instrumentsPerSegment[i]);
             break;
         case YieldCurveSegment::Type::CrossCcyBasis:
-            addCrossCcyBasisSwaps(curveSegments_[i], instruments);
+            addCrossCcyBasisSwaps(curveSegments_[i], instrumentsPerSegment[i]);
             break;
         case YieldCurveSegment::Type::CrossCcyFixFloat:
-            addCrossCcyFixFloatSwaps(curveSegments_[i], instruments);
+            addCrossCcyFixFloatSwaps(curveSegments_[i], instrumentsPerSegment[i]);
             break;
         default:
             QL_FAIL("Yield curve segment type not recognized.");
@@ -1013,9 +1220,87 @@ void YieldCurve::buildBootstrappedCurve() {
         }
     }
 
-    DLOG("Bootstrapping with " << instruments.size() << " instruments");
+    /* If we have two instruments with identical pillar dates wthin a segment, remove the earlier one */
+
+    for (Size i = 0; i < curveSegments_.size(); ++i) {
+        for (auto it = instrumentsPerSegment[i].begin(); it != instrumentsPerSegment[i].end();) {
+            if (std::next(it, 1) != instrumentsPerSegment[i].end() &&
+                (*it)->pillarDate() == (*std::next(it, 1))->pillarDate()) {
+                DLOG("Removing instrument with pillar date "
+                     << (*it)->pillarDate() << " in segment #" << i
+                     << " because the next instrument in the same segment has the same pillar date");
+                it = instrumentsPerSegment[i].erase(it);
+            } else
+                ++it;
+        }
+    }
+
+    /* Determine min and max pillar date in each segment */
+
+    std::vector<std::pair<Date, Date>> minMaxDatePerSegment(curveSegments_.size(),
+                                                            std::make_pair(Date::maxDate(), Date::minDate()));
+    for (Size i = 0; i < curveSegments_.size(); ++i) {
+        if (!instrumentsPerSegment[i].empty()) {
+            auto [minIt, maxIt] =
+                std::minmax_element(instrumentsPerSegment[i].begin(), instrumentsPerSegment[i].end(),
+                                    [](const boost::shared_ptr<RateHelper>& h, const boost::shared_ptr<RateHelper>& j) {
+                                        return h->pillarDate() < h->pillarDate();
+                                    });
+            minMaxDatePerSegment[i] = std::make_pair((*minIt)->pillarDate(), (*maxIt)->pillarDate());
+        }
+    }
+
+    /* If there are two segments with different priorities and overlapping instruments, remove instruments as
+     * appropriate */
+
+    for (Size i = 0; i < curveSegments_.size(); ++i) {
+        if (i < curveSegments_.size() - 1 && curveSegments_[i]->priority() > curveSegments_[i + 1]->priority()) {
+            for (auto it = instrumentsPerSegment[i].begin(); it != instrumentsPerSegment[i].end();) {
+                if ((*it)->pillarDate() > minMaxDatePerSegment[i + 1].first - curveSegments_[i]->minDistance()) {
+                    DLOG("Removing instrument in segment #"
+                         << i << " (priority " << curveSegments_[i]->priority() << ") because its pillar date "
+                         << (*it)->pillarDate() << " > " << minMaxDatePerSegment[i + 1].first
+                         << " (min pillar date in segment #" << (i + 1) << ", priority "
+                         << curveSegments_[i + 1]->priority() << ") minus " << curveSegments_[i]->minDistance()
+                         << " (min distance in segment #" << i << ")");
+                    it = instrumentsPerSegment[i].erase(it);
+                } else
+                    ++it;
+            }
+        }
+        if (i > 0 && curveSegments_[i - 1]->priority() < curveSegments_[i]->priority()) {
+            for (auto it = instrumentsPerSegment[i].begin(); it != instrumentsPerSegment[i].end();) {
+                if ((*it)->pillarDate() < minMaxDatePerSegment[i - 1].second + curveSegments_[i - 1]->minDistance()) {
+                    DLOG("Removing instrument in segment #"
+                         << i << " (priority " << curveSegments_[i]->priority() << ") because its pillar date "
+                         << (*it)->pillarDate() << " < " << minMaxDatePerSegment[i - 1].second
+                         << " (max pillar date in segment #" << (i - 1) << ", priority "
+                         << curveSegments_[i - 1]->priority() << ") plus " << curveSegments_[i - 1]->minDistance()
+                         << " (min distance in segment #" << (i - 1) << ")");
+                    it = instrumentsPerSegment[i].erase(it);
+                } else
+                    ++it;
+            }
+        }
+    }
+
+    /* Set mixed interpolation size using the specified cutoff for the number of segments */
+
+    mixedInterpolationSize_ = 0;
+    for (Size i = 0; i < curveConfig_->mixedInterpolationCutoff(); ++i)
+        mixedInterpolationSize_ += instrumentsPerSegment[i].size();
+
+    /* Now put all remaining instruments into a single vector. */
+
+    vector<boost::shared_ptr<RateHelper>> instruments;
+    for (Size i = 0; i < curveSegments_.size(); ++i) {
+        instruments.insert(instruments.end(), instrumentsPerSegment[i].begin(), instrumentsPerSegment[i].end());
+        DLOG("Adding " << instrumentsPerSegment[i].size() << " instruments for segment #" << i);
+    }
 
     /* Build the bootstrapped curve from the instruments. */
+
+    DLOG("Bootstrapping with " << instruments.size() << " instruments");
     QL_REQUIRE(instruments.size() > 0,
                "Empty instrument list for date = " << io::iso_date(asofDate_) << " and curve = " << curveSpec_.name());
     p_ = piecewisecurve(instruments);
@@ -1535,7 +1820,7 @@ void YieldCurve::addFutures(const boost::shared_ptr<YieldCurveSegment>& segment,
                 }
 
                 if (endDate <= asofDate_) {
-                    WLOG("Skipping the " << io::ordinal(i + 1) << " overnight index future instrument because its "
+                    DLOG("Skipping the " << io::ordinal(i + 1) << " overnight index future instrument because its "
                                          << "end date, " << io::iso_date(endDate)
                                          << ", is on or before the valuation date, " << io::iso_date(asofDate_) << ".");
                     continue;
@@ -1566,7 +1851,7 @@ void YieldCurve::addFutures(const boost::shared_ptr<YieldCurveSegment>& segment,
                 Date immDate = IMM::nextDate(refDate, false);
 
                 if (immDate < asofDate_) {
-                    WLOG("Skipping the " << io::ordinal(i + 1) << " money market future instrument because its "
+                    DLOG("Skipping the " << io::ordinal(i + 1) << " money market future instrument because its "
                                          << "start date, " << io::iso_date(immDate)
                                          << ", is before the valuation date, " << io::iso_date(asofDate_) << ".");
                     continue;

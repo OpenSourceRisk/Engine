@@ -141,7 +141,7 @@ bool SingleBarrierOptionWrapper::exercise() const {
                             StructuredMessage::Category::Error, StructuredMessage::Group::Fixing,
                             "Missing fixing for index " + index_->name() + " on " + ore::data::to_string(d) +
                                 ", Skipping this date, assuming no trigger",
-                                          std::map<string, string>({{"exceptionType", "Invalid or missing fixings"}}))
+                            std::map<std::string, std::string>({{"exceptionType", "Invalid or missing fixings"}}))
                             .log();
                     } else {
                         // This is so we can use pastIndex and not fail on a missing fixing to be
@@ -202,7 +202,7 @@ bool DoubleBarrierOptionWrapper::exercise() const {
                             StructuredMessage::Category::Error, StructuredMessage::Group::Fixing,
                             "Missing fixing for index " + index_->name() + " on " + ore::data::to_string(d) +
                                 ", Skipping this date, assuming no trigger",
-                                          std::map<string, string>({{"exceptionType", "Invalid or missing fixings"}}))
+                            std::map<std::string, std::string>({{"exceptionType", "Invalid or missing fixings"}}))
                             .log();
                     } else {
                         const bool isTouchingOnly = false;
