@@ -187,8 +187,6 @@ void TRS::fromXML(XMLNode* node) {
         boost::shared_ptr<Trade> u;
         try {
             u = TradeFactory::instance().build(tradeType);
-            if(sensitivityTemplate().empty())
-                setSensitivityTemplate(u->sensitivityTemplate());
         } catch (const std::exception& e) {
             QL_FAIL("Failed for build TRS underlying trade # " << underlyingCounter + 1 << ": " << e.what());
         }
@@ -204,8 +202,6 @@ void TRS::fromXML(XMLNode* node) {
         QL_REQUIRE(t != nullptr, "expected 'Trade' node under 'Derivative' node");
         std::string tradeType = XMLUtils::getChildValue(t, "TradeType", true);
         auto u = TradeFactory::instance().build(tradeType);
-        if(sensitivityTemplate().empty())
-            setSensitivityTemplate(u->sensitivityTemplate());
         QL_REQUIRE(u, "No trade builder found for TRS derivative trade type '"
                           << tradeType << "' when processing underlying trade #" << (underlyingCounter + 1));
         u->id() = this->id() + "_underlying" +
@@ -337,6 +333,10 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         underlying_[i]->reset();
         underlying_[i]->build(engineFactory);
         requiredFixings_.addData(underlying_[i]->requiredFixings());
+        // populate sensi template from first underlying, we have to make _some_ assumption here!
+        if (sensitivityTemplate_.empty()) {
+            setSensitivityTemplate(underlying_[i]->sensitivityTemplate());
+        }
     }
 
     // we use dirty prices, so we need accrued amounts in the past
