@@ -40,12 +40,6 @@ SensitivityRecord ParSensitivityCubeStream::next() {
 
     SensitivityRecord sr;
 
-    if (tradeIdx_ == cube_->zeroCubes()[zeroCubeIdx_]->tradeIdx().end() &&
-        zeroCubeIdx_ < cube_->zeroCubes().size() - 1) {
-        ++zeroCubeIdx_;
-        init();
-    }
-
     while (itCurrent_ == currentDeltas_.end() && tradeIdx_ != cube_->zeroCubes()[zeroCubeIdx_]->tradeIdx().end()) {
         // Move to next trade
         tradeIdx_++;
@@ -75,7 +69,12 @@ SensitivityRecord ParSensitivityCubeStream::next() {
             // Move iterator to next par delta
             itCurrent_++;
         }
+    } else if (zeroCubeIdx_ < cube_->zeroCubes().size() - 1) {
+        ++zeroCubeIdx_;
+        init();
+        return next();
     }
+
     return sr;
 }
 
