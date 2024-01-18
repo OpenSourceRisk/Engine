@@ -224,8 +224,6 @@ void SensitivityAnalysis::generateSensitivities() {
         }
         scenarioGenerator_ = scenarioGenerators.front();
 
-        simMarket_->scenarioGenerator() = scenarioGenerator_;
-
         auto ed = boost::make_shared<EngineData>(*engineData_);
         ed->globalParameters()["RunType"] =
             std::string("Sensitivity") + (sensitivityData_->computeGamma() ? "DeltaGamma" : "Delta");
@@ -271,6 +269,8 @@ void SensitivityAnalysis::generateSensitivities() {
                                                                       scenGen->shiftSizes(), scenGen->shiftSchemes()));
         }
     }
+
+    simMarket_->scenarioGenerator() = scenarioGenerator_;
 
     LOG("Sensitivity analysis completed");
 }
