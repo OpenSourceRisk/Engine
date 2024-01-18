@@ -124,11 +124,9 @@ void SensitivityCubeStream::updateForNewTrade() {
         // add cross gamma keys
 
         for (auto const& [crossPair, data] : cubes_[currentCubeIdx_]->crossFactors()) {
-            if (!close_enough(cubes_[currentCubeIdx_]->crossGamma(
-                                  tradeIdx_->second, std::get<0>(data).index, std::get<1>(data).index,
-                                  std::get<2>(data), std::get<0>(data).targetShiftSize,
-                                  std::get<0>(data).actualShiftSize, std::get<1>(data).targetShiftSize,
-                                  std::get<1>(data).actualShiftSize),
+            // scaling of cross gamma is not relevant here, so we use 1
+            if (!close_enough(cubes_[currentCubeIdx_]->crossGamma(tradeIdx_->second, std::get<0>(data).index,
+                                                                  std::get<1>(data).index, std::get<2>(data), 1.0, 1.0),
                               0.0)) {
                 currentCrossGammaKeys_.insert(crossPair);
 
