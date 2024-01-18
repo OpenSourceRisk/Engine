@@ -1103,9 +1103,9 @@ void ReportWriter::writeScenarioReport(ore::data::Report& report,
                     report.add(tradeId);
                     report.add(prettyPrintInternalCurveName(scenarioDescription.factors()));
                     report.add(scenarioDescription.typeString());
+                    report.add(baseNpv);
                     report.add(shift1);
                     report.add(shift2);
-                    report.add(baseNpv);
                     report.add(scenarioNpv);
                     report.add(difference);
                 } else if (!std::isfinite(difference)) {
