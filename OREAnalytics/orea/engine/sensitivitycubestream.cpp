@@ -56,20 +56,23 @@ SensitivityCubeStream::SensitivityCubeStream(const std::vector<boost::shared_ptr
 
 SensitivityRecord SensitivityCubeStream::next() {
 
-    if (tradeIdx_ == cubes_[currentCubeIdx_]->tradeIdx().end() && currentCubeIdx_ < cubes_.size() - 1) {
-        ++currentCubeIdx_;
-        tradeIdx_ = cubes_[currentCubeIdx_]->tradeIdx().begin();
-        updateForNewTrade();
-    }
-
     while (tradeIdx_ != cubes_[currentCubeIdx_]->tradeIdx().end() && currentDeltaKey_ == currentDeltaKeys_.end() &&
            currentCrossGammaKey_ == currentCrossGammaKeys_.end()) {
         ++tradeIdx_;
         updateForNewTrade();
     }
 
-    if(tradeIdx_ == cubes_[currentCubeIdx_]->tradeIdx().end())
-        return SensitivityRecord();
+    if (tradeIdx_ == cubes_[currentCubeIdx_]->tradeIdx().end()) {
+        if (currentCubeIdx_ < cubes_.size() - 1) {
+            std::cout << "update cube index" << std::endl;
+            ++currentCubeIdx_;
+            tradeIdx_ = cubes_[currentCubeIdx_]->tradeIdx().begin();
+            updateForNewTrade();
+            return next();
+        } else {
+            return SensitivityRecord();
+        }
+    }
 
     SensitivityRecord sr;
     Size tradeIdx = tradeIdx_->second;
