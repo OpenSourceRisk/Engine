@@ -178,7 +178,7 @@ void SensitivityAnalysis::generateSensitivities() {
                 continue;
             LOG("Run Sensitivity Scenarios for " << pf->size() << " out of " << portfolio_->size() << " trades.");
             boost::shared_ptr<NPVSensiCube> cube =
-                boost::make_shared<DoublePrecisionSensiCube>(portfolio_->ids(), asof_, scenarioGenerator_->samples());
+                boost::make_shared<DoublePrecisionSensiCube>(pf->ids(), asof_, scenarioGenerator_->samples());
             simMarket_->scenarioGenerator() = scenGen;
             auto factory =
                 boost::make_shared<EngineFactory>(ed, simMarket_, configurations, referenceData_, iborFallbackConfig_);
@@ -191,7 +191,7 @@ void SensitivityAnalysis::generateSensitivities() {
             ValuationEngine engine(asof_, dg, simMarket_, modelBuilders_);
             for (auto const& i : this->progressIndicators())
                 engine.registerProgressIndicator(i);
-            engine.buildCube(portfolio_, cube, calculators, true, nullptr, nullptr, {}, dryRun_);
+            engine.buildCube(pf, cube, calculators, true, nullptr, nullptr, {}, dryRun_);
 
             sensiCubes_.push_back(boost::make_shared<SensitivityCube>(cube, scenGen->scenarioDescriptions(),
                                                                       scenarioGenerator_->shiftSizes(),
@@ -252,7 +252,7 @@ void SensitivityAnalysis::generateSensitivities() {
 
             auto baseCcy = simMarketData_->baseCcy();
             engine.buildCube(
-                portfolio_,
+                pf,
                 [&baseCcy]() -> std::vector<boost::shared_ptr<ValuationCalculator>> {
                     return {boost::make_shared<NPVCalculator>(baseCcy)};
                 },
@@ -264,7 +264,7 @@ void SensitivityAnalysis::generateSensitivities() {
                     miniCubes.back() != nullptr,
                     "SensitivityAnalysis::generateSensitivities(): internal error, could not cast to NPVSensiCube.");
             }
-            auto cube = boost::make_shared<JointNPVSensiCube>(miniCubes, portfolio_->ids());
+            auto cube = boost::make_shared<JointNPVSensiCube>(miniCubes, pf->ids());
 
             sensiCubes_.push_back(boost::make_shared<SensitivityCube>(cube, scenGen->scenarioDescriptions(),
                                                                       scenarioGenerator_->shiftSizes(),
