@@ -64,7 +64,6 @@ SensitivityRecord SensitivityCubeStream::next() {
 
     if (tradeIdx_ == cubes_[currentCubeIdx_]->tradeIdx().end()) {
         if (currentCubeIdx_ < cubes_.size() - 1) {
-            std::cout << "update cube index" << std::endl;
             ++currentCubeIdx_;
             tradeIdx_ = cubes_[currentCubeIdx_]->tradeIdx().begin();
             updateForNewTrade();
