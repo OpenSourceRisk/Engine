@@ -235,8 +235,8 @@ void SensitivityAnalysis::generateSensitivities() {
                 continue;
 
             MultiThreadedValuationEngine engine(
-                nThreads_, asof_, boost::make_shared<ore::analytics::DateGrid>(), scenarioGenerator_->numScenarios(),
-                loader_, scenGen, ed, curveConfigs_, todaysMarketParams_, marketConfiguration_, simMarketData_,
+                nThreads_, asof_, boost::make_shared<ore::analytics::DateGrid>(), scenGen->numScenarios(), loader_,
+                scenGen, ed, curveConfigs_, todaysMarketParams_, marketConfiguration_, simMarketData_,
                 sensitivityData_->useSpreadedTermStructures(), false,
                 boost::make_shared<ore::analytics::ScenarioFilter>(), referenceData_, iborFallbackConfig_, true, true,
                 recalibrateModels_,
