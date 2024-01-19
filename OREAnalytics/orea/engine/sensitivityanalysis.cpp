@@ -178,7 +178,7 @@ void SensitivityAnalysis::generateSensitivities() {
                 continue;
             LOG("Run Sensitivity Scenarios for " << pf->size() << " out of " << portfolio_->size() << " trades.");
             boost::shared_ptr<NPVSensiCube> cube =
-                boost::make_shared<DoublePrecisionSensiCube>(pf->ids(), asof_, scenarioGenerator_->samples());
+                boost::make_shared<DoublePrecisionSensiCube>(pf->ids(), asof_, scenGen->samples());
             simMarket_->scenarioGenerator() = scenGen;
             auto factory =
                 boost::make_shared<EngineFactory>(ed, simMarket_, configurations, referenceData_, iborFallbackConfig_);
