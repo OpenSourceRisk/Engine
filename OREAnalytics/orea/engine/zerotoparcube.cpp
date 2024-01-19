@@ -104,7 +104,7 @@ map<RiskFactorKey, Real> ZeroToParCube::parDeltas(QuantLib::Size cubeIdx, QuantL
     }
 
     // Add non-zero deltas that do not need to be converted from underlying zero cube
-    for (const auto& f : zeroCube->factors()) {
+    for (const auto& f : rkeys) {
         if (!ParSensitivityAnalysis::isParType(f.keytype) || typesDisabled_.count(f.keytype) == 1) {
             Real delta = zeroCube->delta(tradeIdx, f);
             if (!close(delta, 0.0)) {
