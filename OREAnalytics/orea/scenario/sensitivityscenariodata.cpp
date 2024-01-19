@@ -45,7 +45,8 @@ void SensitivityScenarioData::shiftDataFromXML(XMLNode* child, ShiftData& data) 
     vector<string> shiftSizeKeys;
     vector<string> shiftSchemeKeys;
 
-    auto shiftTypes = XMLUtils::getChildrenValuesWithAttributes(child, std::string(), "ShiftType", "key", shiftTypeKeys);
+    auto shiftTypes =
+        XMLUtils::getChildrenValuesWithAttributes(child, std::string(), "ShiftType", "key", shiftTypeKeys);
     auto shiftSizes = XMLUtils::getChildrenValuesWithAttributes<Real>(child, std::string(), "ShiftSize", "key",
                                                                       shiftSizeKeys, &ore::data::parseReal);
     auto shiftSchemes =
@@ -72,17 +73,18 @@ void SensitivityScenarioData::shiftDataFromXML(XMLNode* child, ShiftData& data) 
     QL_REQUIRE(shiftTypeEmptyKey != shiftTypeKeys.end(),
                "SensitivityScenarioData::shiftDataFromXML(): no ShiftType without attribute defined in node '"
                    << XMLUtils::getNodeName(child) << "'");
-    QL_REQUIRE(shiftSizeEmptyKey != shiftTypeKeys.end(),
+    QL_REQUIRE(shiftSizeEmptyKey != shiftSizeKeys.end(),
                "SensitivityScenarioData::shiftDataFromXML(): no ShiftSize without attribute defined in node '"
                    << XMLUtils::getNodeName(child) << "'");
 
-    data.shiftType = parseShiftType(shiftTypes.at(std::distance(shiftTypeKeys.begin(),shiftTypeEmptyKey)));
-    data.shiftSize = shiftSizes.at(std::distance(shiftSizeKeys.begin(),shiftSizeEmptyKey));
+    data.shiftType = parseShiftType(shiftTypes.at(std::distance(shiftTypeKeys.begin(), shiftTypeEmptyKey)));
+    data.shiftSize = shiftSizes.at(std::distance(shiftSizeKeys.begin(), shiftSizeEmptyKey));
 
-    if(shiftSchemeEmptyKey == shiftSchemeKeys.end())
+    if (shiftSchemeEmptyKey == shiftSchemeKeys.end())
         data.shiftScheme = ShiftScheme::Forward;
     else
-        data.shiftScheme = parseShiftScheme(shiftSchemes.at(std::distance(shiftSchemeKeys.begin(), shiftSchemeEmptyKey)));
+        data.shiftScheme =
+            parseShiftScheme(shiftSchemes.at(std::distance(shiftSchemeKeys.begin(), shiftSchemeEmptyKey)));
 
     // extract the parameters with attribute
 
@@ -97,7 +99,7 @@ void SensitivityScenarioData::shiftDataFromXML(XMLNode* child, ShiftData& data) 
         }
     }
     for (Size i = 0; i < shiftSchemeKeys.size(); ++i) {
-        if(!shiftSchemeKeys[i].empty()) {
+        if (!shiftSchemeKeys[i].empty()) {
             data.keyedShiftScheme[shiftSchemeKeys[i]] = parseShiftScheme(shiftSchemes[i]);
         }
     }
