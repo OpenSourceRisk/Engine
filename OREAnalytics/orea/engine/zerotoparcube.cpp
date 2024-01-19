@@ -69,12 +69,11 @@ map<RiskFactorKey, Real> ZeroToParCube::parDeltas(QuantLib::Size cubeIdx, QuantL
 
     std::set<RiskFactorKey> rkeys;
     for (auto const& kv : sensiCube->getTradeNPVs(tradeIdx)) {
-        rkeys.insert(zeroCube->upDownFactor(kv.first));
+        if (auto k = zeroCube->upDownFactor(kv.first); k.keytype != RiskFactorKey::KeyType::None)
+            rkeys.insert(k);
     }
 
     for (auto const& rk : rkeys) {
-        if (rk.keytype == RiskFactorKey::KeyType::None)
-            continue;
         auto it = factorToIndex_.find(rk);
         if (it == factorToIndex_.end()) {
             if (ParSensitivityAnalysis::isParType(rk.keytype) && typesDisabled_.count(rk.keytype) != 1) {
