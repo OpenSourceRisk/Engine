@@ -128,6 +128,7 @@ map<RiskFactorKey, Real> ZeroToParCube::parDeltas(const string& tradeId) const {
     for (cubeIdx = 0; cubeIdx < zeroCubes_.size() && tradeIdx == Null<Size>(); ++cubeIdx) {
         try {
             tradeIdx = zeroCubes_[cubeIdx]->npvCube()->getTradeIndex(tradeId);
+            break;
         } catch (...) {
         }
     }
