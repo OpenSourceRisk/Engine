@@ -6015,7 +6015,7 @@ The general structure is shown in listing \ref{lst:sensitivity_config}, for a mo
 
 The ShiftType, ShiftSize, ShiftScheme nodes take an optional attribute key that allows to configure different values for
 different sensitivity templates. The sensitivity templates are defined in the pricing engine configuration. This is best
-explained by an example: In Example 15 the product type BermudanSwaption has a sensitivity template {\tt IR_FD}
+explained by an example: In Example 15 the product type BermudanSwaption has a sensitivity template \verb+IR_FD+
 attached, see \ref{lst:sensi_template}. This can be used to specify different shifts for trades that were built against
 this engine configuration, see \ref{lst:sensi_config_template}: For Bermudan swaptions a larger shift size of 10bp and a
 central difference scheme is used to compute discount curve sensitivities in EUR. Since no separate shift type is
