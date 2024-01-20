@@ -16,7 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/cube/sensitivitycube.hpp>
 
 #include <ored/utilities/log.hpp>
@@ -208,11 +207,9 @@ Real SensitivityCube::npv(Size id) const { return cube_->getT0(id, 0); }
 namespace {
 Real scaling(const SensitivityCube::FactorData& fd) {
     if (fd.targetShiftSize == 0.0 || fd.actualShiftSize == 0) {
-        StructuredAnalyticsWarningMessage("Sensitivity Calculation",
-                                          "Scaling from different shift size is not possible, if that is configured.",
-                                          "No shift sizes available for '" + ore::data::to_string(fd.rfkey) +
-                                              "', check consistency of simulation and sensitivity config.")
-            .log();
+        WLOG("Sensitivity Calculation: Scaling from different shift size is not possible, if that is configured. No "
+             "shift sizes available for '"
+             << fd.rfkey << "', check consistency of simulation and sensitivity config.");
         return 1.0;
     }
     return fd.targetShiftSize / fd.actualShiftSize;
