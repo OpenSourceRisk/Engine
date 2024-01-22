@@ -257,10 +257,14 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                     }
                 }
                 additionalData_["initialQuantity[" + legID + "]"] = quantity;
-                
-                Real currentPrice = eqc->equityCurve()->fixing(asof);
-                if (currentPrice != Null<Real>() && originalNotional != Null<Real>())
+
+                Real currentPrice = Null<Real>();
+                if (eqc->equityCurve()->isValidFixingDate(asof)) {
+                    currentPrice = eqc->equityCurve()->equitySpot()->value();
+                }
+                if (currentPrice != Null<Real>() && originalNotional != Null<Real>()) {
                     additionalData_["currentQuantity" + legID + "]"] = originalNotional / currentPrice;
+                }
             }
         }
     }
