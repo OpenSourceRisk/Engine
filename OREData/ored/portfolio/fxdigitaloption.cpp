@@ -79,6 +79,7 @@ void FxDigitalOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
     boost::shared_ptr<FxDigitalOptionEngineBuilder> fxOptBuilder =
         boost::dynamic_pointer_cast<FxDigitalOptionEngineBuilder>(builder);
     vanilla->setPricingEngine(fxOptBuilder->engine(forCcy, domCcy, flipResults));
+    setSensitivityTemplate(*fxOptBuilder);
 
     Position::Type positionType = parsePositionType(option_.longShort());
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);

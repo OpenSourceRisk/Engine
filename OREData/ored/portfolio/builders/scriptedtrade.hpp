@@ -62,6 +62,7 @@ public:
     const QuantLib::Date& lastRelevantDate() const { return lastRelevantDate_; }
     const std::string& simmProductClass() const { return simmProductClass_; }
     const std::string& scheduleProductClass() const { return scheduleProductClass_; }
+    const std::string& sensitivityTemplate() const { return sensitivityTemplate_; }
     const std::map<std::string, std::set<Date>>& fixings() const { return fixings_; }
 
 protected:
@@ -118,6 +119,7 @@ protected:
     QuantLib::Date lastRelevantDate_;
     std::string simmProductClass_;
     std::string scheduleProductClass_;
+    std::string sensitivityTemplate_;
     std::map<std::string, std::set<Date>> fixings_;
 
     // temporary variables used during engine building

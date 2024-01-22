@@ -176,6 +176,7 @@ void FxTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
         boost::shared_ptr<FxTouchOptionEngineBuilder> fxTouchOptBuilder =
             boost::dynamic_pointer_cast<FxTouchOptionEngineBuilder>(builder);
         barrier->setPricingEngine(fxTouchOptBuilder->engine(fgnCcy, domCcy, type_, payDate, flipResults));
+        setSensitivityTemplate(*fxTouchOptBuilder);
         if (type_ == "One-Touch") {
             // if a one-touch option is triggered it becomes a simple forward cashflow
             // which we price as a swap
