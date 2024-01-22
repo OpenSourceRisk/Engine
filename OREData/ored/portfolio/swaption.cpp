@@ -235,6 +235,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         QL_REQUIRE(builder, "could not get swap builder to build exercised swaption instrument.");
         auto swap = boost::make_shared<QuantLib::Swap>(legs_, legPayers_);
         swap->setPricingEngine(builder->engine(parseCurrency(npvCurrency_)));
+        setSensitivityTemplate(*builder);
         instrument_ = boost::make_shared<VanillaInstrument>(swap, positionType_ == Position::Long ? 1.0 : -1.0,
                                                             additionalInstruments, additionalMultipliers);
         maturity_ = std::max(maturity_, lastPremiumDate);
@@ -262,6 +263,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         swap->setPricingEngine(builder->engine(parseCurrency(npvCurrency_)));
         instrument_ = boost::make_shared<VanillaInstrument>(swap, positionType_ == Position::Long ? 1.0 : -1.0,
                                                             additionalInstruments, additionalMultipliers);
+        setSensitivityTemplate(*builder);
         maturity_ = std::max(maturity_, lastPremiumDate);
         DLOG("Building (non-exercised) swaption without alive exercise dates done.");
         return;
@@ -325,6 +327,7 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
 
     swaption->setPricingEngine(
         swaptionBuilder->engine(IndexNameTranslator::instance().oreName(swap->iborIndex()->name())));
+    setSensitivityTemplate(*swaptionBuilder);
 
     if (settlementType_ == Settlement::Physical) {
         instrument_ = boost::make_shared<EuropeanOptionWrapper>(
@@ -427,6 +430,7 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     timer.stop();
     DLOG("Swaption model calibration time: " << timer.format(default_places, "%w") << " s");
     swaption->setPricingEngine(swaptionEngine);
+    setSensitivityTemplate(*swaptionBuilder);
 
     auto swapEngine = swapBuilder->engine(parseCurrency(npvCurrency_));
 
@@ -521,7 +525,8 @@ boost::shared_ptr<VanillaSwap> Swaption::buildVanillaSwap(const boost::shared_pt
                                         spread, floatingDayCounter, paymentConvention);
 
     swap->setPricingEngine(swapBuilder->engine(currency));
-    return swap;
+    setSensitivityTemplate(*swapBuilder);
+     return swap;
 }
 
 std::vector<boost::shared_ptr<Instrument>>

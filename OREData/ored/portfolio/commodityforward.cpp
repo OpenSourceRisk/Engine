@@ -141,6 +141,7 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     boost::shared_ptr<CommodityForwardEngineBuilder> commodityForwardEngineBuilder =
         boost::dynamic_pointer_cast<CommodityForwardEngineBuilder>(builder);
     commodityForward->setPricingEngine(commodityForwardEngineBuilder->engine(currency)); // the engine accounts for NDF if settlement data are present
+    setSensitivityTemplate(*commodityForwardEngineBuilder);
 
     // set up other Trade details
     instrument_ = boost::make_shared<VanillaInstrument>(commodityForward);

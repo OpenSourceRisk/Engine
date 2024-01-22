@@ -51,5 +51,15 @@ Real DeltaScenario::getNumeraire() const {
         deltaNum = baseScenario_->getNumeraire();
     return deltaNum;
 }
+
+bool DeltaScenario::isCloseEnough(const boost::shared_ptr<Scenario>& s) const {
+    if (auto d = boost::dynamic_pointer_cast<DeltaScenario>(s)) {
+        return (baseScenario_.get() == d->baseScenario_.get() || baseScenario_->isCloseEnough(s)) &&
+               (delta_.get() == d->delta_.get() || delta_->isCloseEnough(s));
+    } else {
+        return Scenario::isCloseEnough(s);
+    }
+}
+
 } // namespace analytic
 } // namespace ore

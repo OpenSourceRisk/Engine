@@ -145,6 +145,7 @@ void MultiLegOption::build(const boost::shared_ptr<EngineFactory>& engineFactory
     auto engine = builder->engine(id(), exDates, multiLegOption->maturityDate(), allCurrencies, underlyingFixingDates,
                                   underlyingIndices);
     multiLegOption->setPricingEngine(engine);
+    setSensitivityTemplate(*builder);
 
     DLOG("Pricing engine set.")
 
