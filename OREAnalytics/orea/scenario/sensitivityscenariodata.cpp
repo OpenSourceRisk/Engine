@@ -1061,5 +1061,63 @@ XMLNode* SensitivityScenarioData::parDataToXML(XMLDocument& doc,
     return parNode;
 }
 
+namespace {
+void extractKeysFromShiftData(const ShiftData& d, std::set<string>& pids) {
+    for (auto const& [k, _] : d.keyedShiftType)
+        pids.insert(k);
+    for (auto const& [k, _] : d.keyedShiftSize)
+        pids.insert(k);
+    for (auto const& [k, _] : d.keyedShiftScheme)
+        pids.insert(k);
+}
+} // namespace
+
+std::set<std::string> getShiftSpecKeys(const SensitivityScenarioData& d) {
+    std::set<std::string> pids;
+    for (auto const& [_, v] : d.discountCurveShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.indexCurveShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.fxShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.capFloorVolShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.swaptionVolShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.yieldVolShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.fxVolShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.cdsVolShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.baseCorrelationShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.zeroInflationCurveShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.yoyInflationCapFloorVolShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.yoyInflationCapFloorVolShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.zeroInflationCapFloorVolShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.creditCurveShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.equityShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.equityVolShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.dividendYieldShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.commodityCurveShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.commodityVolShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.correlationShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.securityShiftData())
+        extractKeysFromShiftData(v, pids);
+    return pids;
+}
+
 } // namespace analytics
 } // namespace ore

@@ -69,6 +69,7 @@ void EquityDigitalOption::build(const boost::shared_ptr<EngineFactory>& engineFa
     boost::shared_ptr<EquityDigitalOptionEngineBuilder> eqOptBuilder =
         boost::dynamic_pointer_cast<EquityDigitalOptionEngineBuilder>(builder);
     vanilla->setPricingEngine(eqOptBuilder->engine(assetName, ccy));
+    setSensitivityTemplate(*eqOptBuilder);
 
     Position::Type positionType = parsePositionType(option_.longShort());
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);

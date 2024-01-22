@@ -37,6 +37,7 @@ equitytrades.cpp
 expiry.cpp
 fittedbondcurve.cpp
 fixings.cpp
+formulaparser.cpp
 fxaccumulator.cpp
 fxasianoption.cpp
 fxexotics.cpp

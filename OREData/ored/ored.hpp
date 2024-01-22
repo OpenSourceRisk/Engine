@@ -173,6 +173,7 @@
 #include <ored/portfolio/builders/equityfuturesoption.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
 #include <ored/portfolio/builders/equitytouchoption.hpp>
+#include <ored/portfolio/builders/formulabasedcoupon.hpp>
 #include <ored/portfolio/builders/forwardbond.hpp>
 #include <ored/portfolio/builders/fxasianoption.hpp>
 #include <ored/portfolio/builders/fxbarrieroption.hpp>
@@ -245,6 +246,9 @@
 #include <ored/portfolio/europeanoptionbarrier.hpp>
 #include <ored/portfolio/failedtrade.hpp>
 #include <ored/portfolio/fixingdates.hpp>
+#include <ored/portfolio/formulabasedindexbuilder.hpp>
+#include <ored/portfolio/formulabasedlegbuilder.hpp>
+#include <ored/portfolio/formulabasedlegdata.hpp>
 #include <ored/portfolio/forwardbond.hpp>
 #include <ored/portfolio/forwardrateagreement.hpp>
 #include <ored/portfolio/fxaverageforward.hpp>
@@ -371,6 +375,7 @@
 #include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/fileio.hpp>
 #include <ored/utilities/flowanalysis.hpp>
+#include <ored/utilities/formulaparser.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/inflationstartdate.hpp>

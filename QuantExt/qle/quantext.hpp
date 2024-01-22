@@ -61,11 +61,13 @@
 #include <qle/cashflows/floatingannuitycoupon.hpp>
 #include <qle/cashflows/floatingannuitynominal.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
+#include <qle/cashflows/formulabasedcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/iborfracoupon.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/cashflows/jyyoyinflationcouponpricer.hpp>
 #include <qle/cashflows/lognormalcmsspreadpricer.hpp>
+#include <qle/cashflows/mcgaussianformulabasedcouponpricer.hpp>
 #include <qle/cashflows/nonstandardcapflooredyoyinflationcoupon.hpp>
 #include <qle/cashflows/nonstandardinflationcouponpricer.hpp>
 #include <qle/cashflows/nonstandardyoyinflationcoupon.hpp>
@@ -102,6 +104,7 @@
 #include <qle/indexes/escpi.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/indexes/fallbackovernightindex.hpp>
+#include <qle/indexes/formulabasedindex.hpp>
 #include <qle/indexes/frcpi.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/genericiborindex.hpp>
@@ -219,6 +222,7 @@
 #include <qle/math/basiccpuenvironment.hpp>
 #include <qle/math/blockmatrixinverse.hpp>
 #include <qle/math/bucketeddistribution.hpp>
+#include <qle/math/compiledformula.hpp>
 #include <qle/math/computeenvironment.hpp>
 #include <qle/math/constantinterpolation.hpp>
 #include <qle/math/covariancesalvage.hpp>
