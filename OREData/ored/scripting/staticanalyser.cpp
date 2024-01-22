@@ -260,36 +260,36 @@ public:
                 QL_REQUIRE(v.which() == ValueTypeWhich::Event, "date expected as arg #2 (obsdate)");
                 fwdCompAvgEvalDates_[indexName].insert(boost::get<EventVec>(v).value);
             }
+            Date minStart = Date::maxDate();
+            Date maxEnd = Date::minDate();
             for (auto const& v : startDateValues) {
                 QL_REQUIRE(v.which() == ValueTypeWhich::Event, "date expected as arg #3 (startdate)");
-                for (auto const& w : endDateValues) {
-                    QL_REQUIRE(w.which() == ValueTypeWhich::Event, "date expected as arg #4 (enddate)");
-                    Date start = boost::get<EventVec>(v).value;
-                    Date end = boost::get<EventVec>(w).value;
-                    if (start >= end) {
-                        continue;
-		    }
-                    RandomVariable lookback, fixingDays;
-                    for (auto const& l : lookbackValues) {
-                        QL_REQUIRE(l.which() == ValueTypeWhich::Number, "number expected as arg #7 (lookback)");
-                        lookback = boost::get<RandomVariable>(l);
-                        QL_REQUIRE(lookback.deterministic(), "expected arg #7 (lookback) to be deterministic");
-                        for (auto const& f : fixingDaysValues) {
-                            QL_REQUIRE(f.which() == ValueTypeWhich::Number, "number expected as arg #9 (fixingDays)");
-                            fixingDays = boost::get<RandomVariable>(f);
-                            QL_REQUIRE(fixingDays.deterministic(), "expected arg #9 (fixingDays) to be deterministic");
-                            // construct template coupon and extract fixing and value dates
-                            QuantExt::OvernightIndexedCoupon cpn(
-                                end, 1.0, start, end, on, 1.0, 0.0, Date(), Date(), DayCounter(), false, false,
-                                static_cast<Integer>(lookback.at(0)) * Days, 0, static_cast<Natural>(fixingDays.at(0)));
-                            fwdCompAvgFixingDates_[indexName].insert(cpn.fixingDates().begin(),
-                                                                     cpn.fixingDates().end());
-                            DLOG("adding " << cpn.fixingDates().size() << " fixing dates for index " << indexName);
-                            if (!cpn.valueDates().empty()) {
-                                fwdCompAvgStartEndDates_[indexName].insert(cpn.valueDates().front());
-                                fwdCompAvgStartEndDates_[indexName].insert(cpn.valueDates().back());
-                            }
-                        }
+                minStart = std::min(minStart, boost::get<EventVec>(v).value);
+            }
+            for (auto const& w : endDateValues) {
+                QL_REQUIRE(w.which() == ValueTypeWhich::Event, "date expected as arg #4 (enddate)");
+                maxEnd = std::max(maxEnd, boost::get<EventVec>(w).value);
+            }
+            if (minStart >= maxEnd)
+                continue;
+            RandomVariable lookback, fixingDays;
+            for (auto const& l : lookbackValues) {
+                QL_REQUIRE(l.which() == ValueTypeWhich::Number, "number expected as arg #7 (lookback)");
+                lookback = boost::get<RandomVariable>(l);
+                QL_REQUIRE(lookback.deterministic(), "expected arg #7 (lookback) to be deterministic");
+                for (auto const& f : fixingDaysValues) {
+                    QL_REQUIRE(f.which() == ValueTypeWhich::Number, "number expected as arg #9 (fixingDays)");
+                    fixingDays = boost::get<RandomVariable>(f);
+                    QL_REQUIRE(fixingDays.deterministic(), "expected arg #9 (fixingDays) to be deterministic");
+                    // construct template coupon and extract fixing and value dates
+                    QuantExt::OvernightIndexedCoupon cpn(
+                        maxEnd, 1.0, minStart, maxEnd, on, 1.0, 0.0, Date(), Date(), DayCounter(), false, false,
+                        static_cast<Integer>(lookback.at(0)) * Days, 0, static_cast<Natural>(fixingDays.at(0)));
+                    fwdCompAvgFixingDates_[indexName].insert(cpn.fixingDates().begin(), cpn.fixingDates().end());
+                    DLOG("adding " << cpn.fixingDates().size() << " fixing dates for index " << indexName);
+                    if (!cpn.valueDates().empty()) {
+                        fwdCompAvgStartEndDates_[indexName].insert(cpn.valueDates().front());
+                        fwdCompAvgStartEndDates_[indexName].insert(cpn.valueDates().back());
                     }
                 }
             }
