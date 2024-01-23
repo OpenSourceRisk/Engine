@@ -911,8 +911,8 @@ void test1dShifts(bool granular) {
     vector<Real> diffAbsolute(tenors.size(), 0.0);
     vector<Real> diffRelative(tenors.size(), 0.0);
     Real shiftSize = 0.01;
-    SensitivityScenarioGenerator::ShiftType shiftTypeAbsolute = SensitivityScenarioGenerator::ShiftType::Absolute;
-    SensitivityScenarioGenerator::ShiftType shiftTypeRelative = SensitivityScenarioGenerator::ShiftType::Relative;
+    ShiftType shiftTypeAbsolute = ShiftType::Absolute;
+    ShiftType shiftTypeRelative = ShiftType::Relative;
     for (Size i = 0; i < shiftTenors.size(); ++i) {
         scenarioGenerator->applyShift(i, shiftSize, true, shiftTypeAbsolute, shiftTimes, initialZeros, times,
                                       shiftedZeros, true);
@@ -1017,8 +1017,8 @@ BOOST_AUTO_TEST_CASE(test2dShifts) {
     vector<vector<Real>> diffAbsolute(expiries.size(), vector<Real>(terms.size(), 0.0));
     vector<vector<Real>> diffRelative(expiries.size(), vector<Real>(terms.size(), 0.0));
     Real shiftSize = 0.01; // arbitrary
-    SensitivityScenarioGenerator::ShiftType shiftTypeAbsolute = SensitivityScenarioGenerator::ShiftType::Absolute;
-    SensitivityScenarioGenerator::ShiftType shiftTypeRelative = SensitivityScenarioGenerator::ShiftType::Relative;
+    ShiftType shiftTypeAbsolute = ShiftType::Absolute;
+    ShiftType shiftTypeRelative = ShiftType::Relative;
     for (Size i = 0; i < expiryShiftTenors.size(); ++i) {
         for (Size j = 0; j < termShiftTenors.size(); ++j) {
             scenarioGenerator->applyShift(i, j, shiftSize, true, shiftTypeAbsolute, shiftExpiryTimes, shiftTermTimes,

@@ -32,7 +32,7 @@ namespace ore {
 namespace analytics {
 
 // Ease syntax
-using RiskType = SimmConfiguration::RiskType;
+using RiskType = CrifRecord::RiskType;
 using RiskClass = SimmConfiguration::RiskClass;
 using IRFXConcentrationThresholds = SimmCalibration::RiskClassData::IRFXConcentrationThresholds;
 

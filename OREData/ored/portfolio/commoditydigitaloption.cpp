@@ -102,6 +102,8 @@ void CommodityDigitalOption::build(const boost::shared_ptr<EngineFactory>& engin
     boost::shared_ptr<Instrument> inst1 = opt1.instrument()->qlInstrument();
     boost::shared_ptr<Instrument> inst2 = opt2.instrument()->qlInstrument();
 
+    setSensitivityTemplate(opt1.sensitivityTemplate());
+
     boost::shared_ptr<CompositeInstrument> composite = boost::make_shared<CompositeInstrument>();
     // add and subtract such that the long call spread and long put spread have positive values
     if (optionData_.callPut() == "Call") {

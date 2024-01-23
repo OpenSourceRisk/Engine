@@ -161,9 +161,22 @@ public:
     //! clones a scenario and returns a pointer to the new object
     virtual boost::shared_ptr<Scenario> clone() const = 0;
 
+    //! checks for equality up to numerical differences
+    virtual bool isCloseEnough(const boost::shared_ptr<Scenario>& s) const;
+
 private:
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive&, const unsigned int) {}
 };
+
+enum class ShiftScheme { Forward, Backward, Central };
+enum class ShiftType { Absolute, Relative };
+
+ShiftScheme parseShiftScheme(const std::string& s);
+std::ostream& operator<<(std::ostream& out, const ShiftScheme& shiftScheme);
+
+ShiftType parseShiftType(const std::string& s);
+std::ostream& operator<<(std::ostream& out, const ShiftType& shiftType);
+
 } // namespace analytics
 } // namespace ore

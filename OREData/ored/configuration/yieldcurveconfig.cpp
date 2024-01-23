@@ -217,11 +217,11 @@ YieldCurveConfig::YieldCurveConfig(const string& curveID, const string& curveDes
                                    const vector<boost::shared_ptr<YieldCurveSegment>>& curveSegments,
                                    const string& interpolationVariable, const string& interpolationMethod,
                                    const string& zeroDayCounter, bool extrapolation,
-                                   const BootstrapConfig& bootstrapConfig)
+                                   const BootstrapConfig& bootstrapConfig, const Size mixedInterpolationCutoff)
     : CurveConfig(curveID, curveDescription), currency_(currency), discountCurveID_(discountCurveID),
       curveSegments_(curveSegments), interpolationVariable_(interpolationVariable),
       interpolationMethod_(interpolationMethod), zeroDayCounter_(zeroDayCounter), extrapolation_(extrapolation),
-      bootstrapConfig_(bootstrapConfig) {
+      bootstrapConfig_(bootstrapConfig), mixedInterpolationCutoff_(mixedInterpolationCutoff) {
     populateRequiredCurveIds();
 }
 
@@ -309,26 +309,11 @@ void YieldCurveConfig::fromXML(XMLNode* node) {
     // Read in the optional nodes.
 
     // Empty strings if not there (or if there and empty).
-    interpolationVariable_ = XMLUtils::getChildValue(node, "InterpolationVariable", false);
-    interpolationMethod_ = XMLUtils::getChildValue(node, "InterpolationMethod", false);
-    zeroDayCounter_ = XMLUtils::getChildValue(node, "YieldCurveDayCounter", false);
-
-    // Add hardcoded defaults for now.
-    if (interpolationVariable_.empty()) {
-        interpolationVariable_ = "Discount";
-    }
-    if (interpolationMethod_.empty()) {
-        interpolationMethod_ = interpolationVariable_ == "Zero" ? "Linear" : "LogLinear";
-    }
-    if (zeroDayCounter_.empty()) {
-        zeroDayCounter_ = "A365";
-    }
-    XMLNode* nodeToTest = XMLUtils::getChildNode(node, "Extrapolation");
-    if (nodeToTest) {
-        extrapolation_ = XMLUtils::getChildValueAsBool(node, "Extrapolation", false);
-    } else {
-        extrapolation_ = true;
-    }
+    interpolationVariable_ = XMLUtils::getChildValue(node, "InterpolationVariable", false, "Discount");
+    interpolationMethod_ = XMLUtils::getChildValue(node, "InterpolationMethod", false, interpolationVariable_ == "Zero" ? "Linear" : "LogLinear");
+    mixedInterpolationCutoff_ = XMLUtils::getChildValueAsInt(node, "MixedInterpolationCutoff", false, 1);
+    zeroDayCounter_ = XMLUtils::getChildValue(node, "YieldCurveDayCounter", false, "A365");
+    extrapolation_ = XMLUtils::getChildValueAsBool(node, "Extrapolation", false, true);
 
     // Optional bootstrap configuration
     if (XMLNode* n = XMLUtils::getChildNode(node, "BootstrapConfig")) {
@@ -367,6 +352,7 @@ XMLNode* YieldCurveConfig::toXML(XMLDocument& doc) {
     // Add the defaultable elements.
     XMLUtils::addChild(doc, node, "InterpolationVariable", interpolationVariable_);
     XMLUtils::addChild(doc, node, "InterpolationMethod", interpolationMethod_);
+    XMLUtils::addChild(doc, node, "MixedInterpolationCutoff", (int)mixedInterpolationCutoff_);
     XMLUtils::addChild(doc, node, "YieldCurveDayCounter", zeroDayCounter_);
     XMLUtils::addChild(doc, node, "Tolerance", bootstrapConfig_.accuracy());
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
@@ -447,6 +433,8 @@ void YieldCurveSegment::fromXML(XMLNode* node) {
     pillarChoice_ = parsePillarChoice(XMLUtils::getChildValue(node, "PillarChoice", false, "LastRelevantDate"));
     QL_REQUIRE(pillarChoice_ == QuantLib::Pillar::MaturityDate || pillarChoice_ == QuantLib::Pillar::LastRelevantDate,
                "PillarChoice " << pillarChoice_ << " not supported, expected MaturityDate, LastRelevantDate");
+    priority_ = XMLUtils::getChildValueAsInt(node, "Priority", false, 0);
+    minDistance_ = XMLUtils::getChildValueAsInt(node, "MinDistance", false, 1);
 }
 
 XMLNode* YieldCurveSegment::toXML(XMLDocument& doc) {
@@ -481,6 +469,8 @@ XMLNode* YieldCurveSegment::toXML(XMLDocument& doc) {
     if (!conventionsID_.empty())
         XMLUtils::addChild(doc, node, "Conventions", conventionsID_);
     XMLUtils::addChild(doc, node, "PillarChoice", ore::data::to_string(pillarChoice_));
+    XMLUtils::addChild(doc, node, "Priority", (int)priority_);
+    XMLUtils::addChild(doc, node, "MinDistance", (int)minDistance_);
     return node;
 }
 

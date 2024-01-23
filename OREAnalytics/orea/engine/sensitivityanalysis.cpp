@@ -56,7 +56,7 @@ SensitivityAnalysis::SensitivityAnalysis(
       curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams), overrideTenors_(false),
       nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion), referenceData_(referenceData),
       iborFallbackConfig_(iborFallbackConfig), continueOnError_(continueOnError), engineData_(engineData),
-      portfolio_(portfolio), dryRun_(dryRun), initialized_(false), useSingleThreadedEngine_(true) {}
+      portfolio_(portfolio), dryRun_(dryRun), useSingleThreadedEngine_(true) {}
 
 SensitivityAnalysis::SensitivityAnalysis(
     const Size nThreads, const Date& asof, const boost::shared_ptr<ore::data::Loader>& loader,
@@ -73,71 +73,125 @@ SensitivityAnalysis::SensitivityAnalysis(
       todaysMarketParams_(todaysMarketParams), overrideTenors_(false),
       nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion), referenceData_(referenceData),
       iborFallbackConfig_(iborFallbackConfig), continueOnError_(continueOnError), engineData_(engineData),
-      portfolio_(portfolio), dryRun_(dryRun), initialized_(false), useSingleThreadedEngine_(false), nThreads_(nThreads),
-      loader_(loader), context_(context) {}
+      portfolio_(portfolio), dryRun_(dryRun), useSingleThreadedEngine_(false), nThreads_(nThreads), loader_(loader),
+      context_(context) {}
 
-std::vector<boost::shared_ptr<ValuationCalculator>> SensitivityAnalysis::buildValuationCalculators() const {
-    vector<boost::shared_ptr<ValuationCalculator>> calculators;
-    if (nonShiftedBaseCurrencyConversion_) // use "original" FX rates to convert sensi to base currency
-        calculators.push_back(boost::make_shared<NPVCalculatorFXT0>(simMarketData_->baseCcy(), market_));
-    else // use the scenario FX rate when converting sensi to base currency
-        calculators.push_back(boost::make_shared<NPVCalculator>(simMarketData_->baseCcy()));
-    return calculators;
-}
-
-void SensitivityAnalysis::initialize(boost::shared_ptr<NPVSensiCube>& cube) {
-    LOG("Build Sensitivity Scenario Generator and Simulation Market");
-    initializeSimMarket();
-
-    LOG("Build Engine Factory and rebuild portfolio");
-    boost::shared_ptr<EngineFactory> factory = buildFactory();
-    resetPortfolio(factory);
-    if (recalibrateModels_)
-        modelBuilders_ = factory->modelBuilders();
-    else
-        modelBuilders_.clear();
-
-    if (!cube) {
-        LOG("Build the cube object to store sensitivities");
-        initializeCube(cube);
+namespace {
+std::vector<std::pair<boost::shared_ptr<Portfolio>, boost::shared_ptr<SensitivityScenarioGenerator>>>
+splitPortfolioByScenarioGenerators(
+    const boost::shared_ptr<Portfolio>& portfolio, std::vector<std::string> ids,
+    const std::vector<boost::shared_ptr<SensitivityScenarioGenerator>>& scenarioGenerators) {
+    std::vector<std::pair<boost::shared_ptr<Portfolio>, boost::shared_ptr<SensitivityScenarioGenerator>>> result;
+    for(auto const& gen: scenarioGenerators) {
+        result.push_back(std::make_pair(boost::make_shared<Portfolio>(), gen));
     }
-
-    sensiCube_ =
-        boost::make_shared<SensitivityCube>(cube, scenarioGenerator_->scenarioDescriptions(),
-                                            scenarioGenerator_->shiftSizes(), sensitivityData_->twoSidedDeltas());
-
-    initialized_ = true;
+    for(auto const& [id, t]: portfolio->trades()) {
+        if(auto f = std::find(ids.begin(),ids.end(), t->sensitivityTemplate()); f!= ids.end())
+            result[std::distance(ids.begin(), f)].first->add(t);
+        else
+            result.front().first->add(t);
+    }
+    return result;
 }
+} // namespace
 
-void SensitivityAnalysis::generateSensitivities(boost::shared_ptr<NPVSensiCube> cube) {
+void SensitivityAnalysis::generateSensitivities() {
 
-    QL_REQUIRE(useSingleThreadedEngine_ || cube == nullptr,
-               "SensitivityAnalysis::generateSensitivities(): when using multi-threaded engine no NPVSensiCube should "
-               "be specified, it is built automatically");
+    LOG("Sensitivity analysis started...");
 
     QL_REQUIRE(useSingleThreadedEngine_ || !nonShiftedBaseCurrencyConversion_,
                "SensitivityAnalysis::generateSensitivities(): multi-threaded engine does not support non-shifted base "
                "ccy conversion currently. This requires a a small code extension. Contact Dev.");
 
-    QL_REQUIRE(useSingleThreadedEngine_ || recalibrateModels_,
-               "SensitivityAnalysis::generateSensitivities(): multi-threaded engine does not support recalibrateModels "
-               "= false. This requires a small code extension. Contact Dev.");
+    // collect the sensi template ids that are used in the sensitivity config
+
+    std::set<std::string> sensiTemplateIdsFromSensiConfig = getShiftSpecKeys(*sensitivityData_);
+
+    // collect the sensi template ids that are relevant for the portfolio
+
+    std::set<std::string> sensiTemplateIdsFromPortfolio;
+    for (auto const& [_, t] : portfolio_->trades())
+        sensiTemplateIdsFromPortfolio.insert(t->sensitivityTemplate());
+
+    // take the intersection of pricing engine ids and add en empty id for the default config as the first element
+
+    std::vector<std::string> sensiTemplateIds{std::string()};
+    std::set_intersection(sensiTemplateIdsFromSensiConfig.begin(), sensiTemplateIdsFromSensiConfig.end(),
+                          sensiTemplateIdsFromPortfolio.begin(), sensiTemplateIdsFromPortfolio.end(),
+                          std::back_inserter(sensiTemplateIds));
+
+    LOG("Need to process " << sensiTemplateIds.size() << " sensi scenario sets resulting from "
+                           << sensiTemplateIdsFromSensiConfig.size()
+                           << " sensi templates in sensi config (different from default config) and "
+                           << sensiTemplateIdsFromPortfolio.size()
+                           << " sensi templates in portfolio (including default config, if configured in pe config");
+
+    // status quo
+    sensiTemplateIds = {std::string()};
 
     if (useSingleThreadedEngine_) {
 
         // handle single threaded sensi analysis
 
-        QL_REQUIRE(!initialized_, "unexpected state of SensitivitiesAnalysis object (it is already initialized)");
-        initialize(cube);
-        QL_REQUIRE(initialized_, "SensitivitiesAnalysis member objects not correctly initialized");
-        boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>("1,0W", NullCalendar());
-        vector<boost::shared_ptr<ValuationCalculator>> calculators = buildValuationCalculators();
-        ValuationEngine engine(asof_, dg, simMarket_, modelBuilders_);
-        for (auto const& i : this->progressIndicators())
-            engine.registerProgressIndicator(i);
-        LOG("Run Sensitivity Scenarios");
-        engine.buildCube(portfolio_, cube, calculators, true, nullptr, nullptr, {}, dryRun_);
+        LOG("SensitivitiyAnalysis::generateSensitivities(): use single-threaded engine to generate sensi cube. Using "
+            "configuration '"
+            << marketConfiguration_ << "'");
 
+        simMarket_ = boost::make_shared<ScenarioSimMarket>(
+            market_, simMarketData_, marketConfiguration_,
+            curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
+            todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(), continueOnError_,
+            sensitivityData_->useSpreadedTermStructures(), continueOnError_, overrideTenors_, iborFallbackConfig_);
+
+        std::vector<boost::shared_ptr<SensitivityScenarioGenerator>> scenarioGenerators(sensiTemplateIds.size());
+        for (Size i = 0; i < sensiTemplateIds.size(); ++i) {
+            scenarioGenerators[i] = boost::make_shared<SensitivityScenarioGenerator>(
+                sensitivityData_, simMarket_->baseScenario(), simMarketData_, simMarket_,
+                boost::make_shared<DeltaScenarioFactory>(simMarket_->baseScenario()), overrideTenors_,
+                sensiTemplateIds[i], continueOnError_, simMarket_->baseScenarioAbsolute());
+        }
+        scenarioGenerator_ = scenarioGenerators.front();
+
+        map<MarketContext, string> configurations;
+        configurations[MarketContext::pricing] = marketConfiguration_;
+        auto ed = boost::make_shared<EngineData>(*engineData_);
+        ed->globalParameters()["RunType"] =
+            std::string("Sensitivity") + (sensitivityData_->computeGamma() ? "DeltaGamma" : "Delta");
+
+        boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>("1,0W", NullCalendar());
+        vector<boost::shared_ptr<ValuationCalculator>> calculators;
+        if (nonShiftedBaseCurrencyConversion_)
+            // use "original" FX rates to convert sensi to base currency
+            calculators.push_back(boost::make_shared<NPVCalculatorFXT0>(simMarketData_->baseCcy(), market_));
+        else
+            // use the scenario FX rate when converting sensi to base currency
+            calculators.push_back(boost::make_shared<NPVCalculator>(simMarketData_->baseCcy()));
+
+        sensiCubes_.clear();
+        for (auto const& [pf, scenGen] :
+             splitPortfolioByScenarioGenerators(portfolio_, sensiTemplateIds, scenarioGenerators)) {
+            if(pf->trades().empty())
+                continue;
+            LOG("Run Sensitivity Scenarios for " << pf->size() << " out of " << portfolio_->size() << " trades.");
+            boost::shared_ptr<NPVSensiCube> cube =
+                boost::make_shared<DoublePrecisionSensiCube>(portfolio_->ids(), asof_, scenarioGenerator_->samples());
+            simMarket_->scenarioGenerator() = scenGen;
+            auto factory =
+                boost::make_shared<EngineFactory>(ed, simMarket_, configurations, referenceData_, iborFallbackConfig_);
+            pf->reset();
+            pf->build(factory, "sensi analysis");
+            if (recalibrateModels_)
+                modelBuilders_ = factory->modelBuilders();
+            else
+                modelBuilders_.clear();
+            ValuationEngine engine(asof_, dg, simMarket_, modelBuilders_);
+            for (auto const& i : this->progressIndicators())
+                engine.registerProgressIndicator(i);
+            engine.buildCube(portfolio_, cube, calculators, true, nullptr, nullptr, {}, dryRun_);
+
+            sensiCubes_.push_back(boost::make_shared<SensitivityCube>(cube, scenGen->scenarioDescriptions(),
+                                                                      scenGen->shiftSizes(), scenGen->shiftSchemes()));
+        }
     } else {
 
         // handle request to use multi-threaded engine
@@ -158,8 +212,8 @@ void SensitivityAnalysis::generateSensitivities(boost::shared_ptr<NPVSensiCube> 
 
         scenarioGenerator_ = boost::make_shared<SensitivityScenarioGenerator>(
             sensitivityData_, simMarket_->baseScenario(), simMarketData_, simMarket_,
-            boost::make_shared<DeltaScenarioFactory>(simMarket_->baseScenario()), overrideTenors_, continueOnError_,
-            simMarket_->baseScenarioAbsolute());
+            boost::make_shared<DeltaScenarioFactory>(simMarket_->baseScenario()), overrideTenors_, std::string(),
+            continueOnError_, simMarket_->baseScenarioAbsolute());
 
         simMarket_->scenarioGenerator() = scenarioGenerator_;
 
@@ -171,7 +225,7 @@ void SensitivityAnalysis::generateSensitivities(boost::shared_ptr<NPVSensiCube> 
             nThreads_, asof_, boost::make_shared<ore::analytics::DateGrid>(), scenarioGenerator_->numScenarios(),
             loader_, scenarioGenerator_, ed, curveConfigs_, todaysMarketParams_, marketConfiguration_, simMarketData_,
             sensitivityData_->useSpreadedTermStructures(), false, boost::make_shared<ore::analytics::ScenarioFilter>(),
-            referenceData_, iborFallbackConfig_, true, true, true,
+            referenceData_, iborFallbackConfig_, true, true, recalibrateModels_,
             [](const QuantLib::Date& asof, const std::set<std::string>& ids, const std::vector<QuantLib::Date>&,
                const QuantLib::Size samples) {
                 return boost::make_shared<ore::analytics::DoublePrecisionSensiCube>(ids, asof, samples);
@@ -193,43 +247,14 @@ void SensitivityAnalysis::generateSensitivities(boost::shared_ptr<NPVSensiCube> 
             QL_REQUIRE(miniCubes.back() != nullptr,
                        "SensitivityAnalysis::generateSensitivities(): internal error, could not cast to NPVSensiCube.");
         }
-        cube = boost::make_shared<JointNPVSensiCube>(miniCubes, portfolio_->ids());
+        auto cube = boost::make_shared<JointNPVSensiCube>(miniCubes, portfolio_->ids());
 
-        sensiCube_ =
-            boost::make_shared<SensitivityCube>(cube, scenarioGenerator_->scenarioDescriptions(),
-                                                scenarioGenerator_->shiftSizes(), sensitivityData_->twoSidedDeltas());
-
-        initialized_ = true;
+        sensiCubes_ = {boost::make_shared<SensitivityCube>(cube, scenarioGenerator_->scenarioDescriptions(),
+                                                           scenarioGenerator_->shiftSizes(),
+                                                           scenarioGenerator_->shiftSchemes())};
     }
 
     LOG("Sensitivity analysis completed");
-}
-
-void SensitivityAnalysis::initializeSimMarket(boost::shared_ptr<ScenarioFactory> scenFact) {
-    simMarket_ = buildScenarioSimMarketForSensitivityAnalysis(market_, simMarketData_, sensitivityData_, curveConfigs_,
-                                                              todaysMarketParams_, scenFact, marketConfiguration_,
-                                                              continueOnError_, overrideTenors_, iborFallbackConfig_);
-    scenarioGenerator_ = boost::dynamic_pointer_cast<SensitivityScenarioGenerator>(simMarket_->scenarioGenerator());
-}
-
-boost::shared_ptr<EngineFactory> SensitivityAnalysis::buildFactory() const {
-    map<MarketContext, string> configurations;
-    configurations[MarketContext::pricing] = marketConfiguration_;
-    auto ed = boost::make_shared<EngineData>(*engineData_);
-    ed->globalParameters()["RunType"] =
-        std::string("Sensitivity") + (sensitivityData_->computeGamma() ? "DeltaGamma" : "Delta");
-    boost::shared_ptr<EngineFactory> factory =
-        boost::make_shared<EngineFactory>(ed, simMarket_, configurations, referenceData_, iborFallbackConfig_);
-    return factory;
-}
-
-void SensitivityAnalysis::resetPortfolio(const boost::shared_ptr<EngineFactory>& factory) {
-    portfolio_->reset();
-    portfolio_->build(factory, "sensi analysis");
-}
-
-void SensitivityAnalysis::initializeCube(boost::shared_ptr<NPVSensiCube>& cube) const {
-    cube = boost::make_shared<DoublePrecisionSensiCube>(portfolio_->ids(), asof_, scenarioGenerator_->samples());
 }
 
 Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensiParams,
@@ -245,7 +270,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         auto itr = sensiParams.fxShiftData().find(keylabel);
         QL_REQUIRE(itr != sensiParams.fxShiftData().end(), "shiftData not found for " << keylabel);
         shiftSize = itr->second.shiftSize;
-        if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+        if (itr->second.shiftType == ShiftType::Relative) {
             shiftMult = simMarket->fxRate(keylabel, marketConfiguration)->value();
         }
     } break;
@@ -253,7 +278,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         auto itr = sensiParams.equityShiftData().find(keylabel);
         QL_REQUIRE(itr != sensiParams.equityShiftData().end(), "shiftData not found for " << keylabel);
         shiftSize = itr->second.shiftSize;
-        if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+        if (itr->second.shiftType == ShiftType::Relative) {
             shiftMult = simMarket->equitySpot(keylabel, marketConfiguration)->value();
         }
     } break;
@@ -262,7 +287,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         auto itr = sensiParams.discountCurveShiftData().find(ccy);
         QL_REQUIRE(itr != sensiParams.discountCurveShiftData().end(), "shiftData not found for " << ccy);
         shiftSize = itr->second->shiftSize;
-        if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+        if (itr->second->shiftType == ShiftType::Relative) {
             Size keyIdx = key.index;
             Period p = itr->second->shiftTenors[keyIdx];
             Handle<YieldTermStructure> yts = simMarket->discountCurve(ccy, marketConfiguration);
@@ -276,7 +301,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         auto itr = sensiParams.indexCurveShiftData().find(idx);
         QL_REQUIRE(itr != sensiParams.indexCurveShiftData().end(), "shiftData not found for " << idx);
         shiftSize = itr->second->shiftSize;
-        if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+        if (itr->second->shiftType == ShiftType::Relative) {
             Size keyIdx = key.index;
             Period p = itr->second->shiftTenors[keyIdx];
             Handle<YieldTermStructure> yts = simMarket->iborIndex(idx, marketConfiguration)->forwardingTermStructure();
@@ -290,7 +315,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         auto itr = sensiParams.yieldCurveShiftData().find(yc);
         QL_REQUIRE(itr != sensiParams.yieldCurveShiftData().end(), "shiftData not found for " << yc);
         shiftSize = itr->second->shiftSize;
-        if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+        if (itr->second->shiftType == ShiftType::Relative) {
             Size keyIdx = key.index;
             Period p = itr->second->shiftTenors[keyIdx];
             Handle<YieldTermStructure> yts = simMarket->yieldCurve(yc, marketConfiguration);
@@ -305,7 +330,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         QL_REQUIRE(itr != sensiParams.dividendYieldShiftData().end(), "shiftData not found for " << eq);
         shiftSize = itr->second->shiftSize;
 
-        if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+        if (itr->second->shiftType == ShiftType::Relative) {
             Size keyIdx = key.index;
             Period p = itr->second->shiftTenors[keyIdx];
             Handle<YieldTermStructure> ts = simMarket->equityDividendCurve(eq, marketConfiguration);
@@ -319,7 +344,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         auto itr = sensiParams.fxVolShiftData().find(pair);
         QL_REQUIRE(itr != sensiParams.fxVolShiftData().end(), "shiftData not found for " << pair);
         shiftSize = itr->second.shiftSize;
-        if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+        if (itr->second.shiftType == ShiftType::Relative) {
             vector<Real> strikes = sensiParams.fxVolShiftData().at(pair).shiftStrikes;
             QL_REQUIRE(strikes.size() == 1 && close_enough(strikes[0], 0), "Only ATM FX vols supported");
             Real atmFwd = 0.0; // hardcoded, since only ATM supported
@@ -336,7 +361,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         auto itr = sensiParams.equityVolShiftData().find(pair);
         QL_REQUIRE(itr != sensiParams.equityVolShiftData().end(), "shiftData not found for " << pair);
         shiftSize = itr->second.shiftSize;
-        if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+        if (itr->second.shiftType == ShiftType::Relative) {
             Size keyIdx = key.index;
             Period p = itr->second.shiftExpiries[keyIdx];
             Handle<BlackVolTermStructure> vts = simMarket->equityVol(pair, marketConfiguration);
@@ -349,7 +374,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         auto itr = sensiParams.swaptionVolShiftData().find(keylabel);
         QL_REQUIRE(itr != sensiParams.swaptionVolShiftData().end(), "shiftData not found for " << keylabel);
         shiftSize = itr->second.shiftSize;
-        if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+        if (itr->second.shiftType == ShiftType::Relative) {
             vector<Real> strikes = itr->second.shiftStrikes;
             vector<Period> tenors = itr->second.shiftTerms;
             vector<Period> expiries = itr->second.shiftExpiries;
@@ -369,7 +394,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         auto itr = sensiParams.yieldVolShiftData().find(securityId);
         QL_REQUIRE(itr != sensiParams.yieldVolShiftData().end(), "shiftData not found for " << securityId);
         shiftSize = itr->second.shiftSize;
-        if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+        if (itr->second.shiftType == ShiftType::Relative) {
             vector<Real> strikes = itr->second.shiftStrikes;
             QL_REQUIRE(strikes.size() == 1 && close_enough(strikes[0], 0.0),
                        "shift strikes should be {0.0} for yield volatilities");
@@ -391,7 +416,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         auto itr = sensiParams.capFloorVolShiftData().find(ccy);
         QL_REQUIRE(itr != sensiParams.capFloorVolShiftData().end(), "shiftData not found for " << ccy);
         shiftSize = itr->second->shiftSize;
-        if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+        if (itr->second->shiftType == ShiftType::Relative) {
             vector<Real> strikes = itr->second->shiftStrikes;
             vector<Period> expiries = itr->second->shiftExpiries;
             QL_REQUIRE(strikes.size() > 0, "Only strike capfloor vols supported");
@@ -404,7 +429,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         auto itr = sensiParams.cdsVolShiftData().find(name);
         QL_REQUIRE(itr != sensiParams.cdsVolShiftData().end(), "shiftData not found for " << name);
         shiftSize = itr->second.shiftSize;
-        if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+        if (itr->second.shiftType == ShiftType::Relative) {
             vector<Period> expiries = itr->second.shiftExpiries;
             Size keyIdx = key.index;
             Size expIdx = keyIdx;
@@ -420,7 +445,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         auto itr = sensiParams.creditCurveShiftData().find(name);
         QL_REQUIRE(itr != sensiParams.creditCurveShiftData().end(), "shiftData not found for " << name);
         shiftSize = itr->second->shiftSize;
-        if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+        if (itr->second->shiftType == ShiftType::Relative) {
             Size keyIdx = key.index;
             Period p = itr->second->shiftTenors[keyIdx];
             Handle<DefaultProbabilityTermStructure> ts = simMarket->defaultCurve(name, marketConfiguration)->curve();
@@ -434,7 +459,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         auto itr = sensiParams.baseCorrelationShiftData().find(name);
         QL_REQUIRE(itr != sensiParams.baseCorrelationShiftData().end(), "shiftData not found for " << name);
         shiftSize = itr->second.shiftSize;
-        if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+        if (itr->second.shiftType == ShiftType::Relative) {
             vector<Real> lossLevels = itr->second.shiftLossLevels;
             vector<Period> terms = itr->second.shiftTerms;
             Size keyIdx = key.index;
@@ -452,7 +477,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         auto itr = sensiParams.zeroInflationCurveShiftData().find(idx);
         QL_REQUIRE(itr != sensiParams.zeroInflationCurveShiftData().end(), "shiftData not found for " << idx);
         shiftSize = itr->second->shiftSize;
-        if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+        if (itr->second->shiftType == ShiftType::Relative) {
             Size keyIdx = key.index;
             Period p = itr->second->shiftTenors[keyIdx];
             Handle<ZeroInflationTermStructure> yts =
@@ -467,7 +492,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         auto itr = sensiParams.yoyInflationCurveShiftData().find(idx);
         QL_REQUIRE(itr != sensiParams.yoyInflationCurveShiftData().end(), "shiftData not found for " << idx);
         shiftSize = itr->second->shiftSize;
-        if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+        if (itr->second->shiftType == ShiftType::Relative) {
             Size keyIdx = key.index;
             Period p = sensiParams.yoyInflationCurveShiftData().at(idx)->shiftTenors[keyIdx];
             Handle<YoYInflationTermStructure> yts =
@@ -482,7 +507,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         auto itr = sensiParams.yoyInflationCapFloorVolShiftData().find(name);
         QL_REQUIRE(itr != sensiParams.yoyInflationCapFloorVolShiftData().end(), "shiftData not found for " << name);
         shiftSize = itr->second->shiftSize;
-        if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+        if (itr->second->shiftType == ShiftType::Relative) {
             vector<Real> strikes = itr->second->shiftStrikes;
             vector<Period> expiries = itr->second->shiftExpiries;
             QL_REQUIRE(strikes.size() > 0, "Only strike yoy inflation capfloor vols supported");
@@ -501,7 +526,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         auto itr = sensiParams.zeroInflationCapFloorVolShiftData().find(name);
         QL_REQUIRE(itr != sensiParams.zeroInflationCapFloorVolShiftData().end(), "shiftData not found for " << name);
         shiftSize = itr->second->shiftSize;
-        if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+        if (itr->second->shiftType == ShiftType::Relative) {
             vector<Real> strikes = itr->second->shiftStrikes;
             vector<Period> expiries = itr->second->shiftExpiries;
             QL_REQUIRE(strikes.size() > 0, "Only strike zc inflation capfloor vols supported");
@@ -520,7 +545,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         auto it = sensiParams.commodityCurveShiftData().find(keylabel);
         QL_REQUIRE(it != sensiParams.commodityCurveShiftData().end(), "shiftData not found for " << keylabel);
         shiftSize = it->second->shiftSize;
-        if (parseShiftType(it->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+        if (it->second->shiftType == ShiftType::Relative) {
             Period p = it->second->shiftTenors[key.index];
             Handle<PriceTermStructure> priceCurve = simMarket->commodityPriceCurve(keylabel, marketConfiguration);
             Time t = priceCurve->dayCounter().yearFraction(asof, asof + p);
@@ -532,7 +557,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         QL_REQUIRE(it != sensiParams.commodityVolShiftData().end(), "shiftData not found for " << keylabel);
 
         shiftSize = it->second.shiftSize;
-        if (parseShiftType(it->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+        if (it->second.shiftType == ShiftType::Relative) {
             Size moneynessIndex = key.index / it->second.shiftExpiries.size();
             Size expiryIndex = key.index % it->second.shiftExpiries.size();
             Real moneyness = it->second.shiftStrikes[moneynessIndex];
@@ -548,7 +573,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         auto itr = sensiParams.securityShiftData().find(keylabel);
         QL_REQUIRE(itr != sensiParams.securityShiftData().end(), "shiftData not found for " << keylabel);
         shiftSize = itr->second.shiftSize;
-        if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+        if (itr->second.shiftType == ShiftType::Relative) {
             shiftMult = 1.0;
             try {
                 shiftMult = simMarket->securitySpread(keylabel, marketConfiguration)->value();
@@ -564,42 +589,6 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
     }
     Real realShift = shiftSize * shiftMult;
     return realShift;
-}
-
-boost::shared_ptr<ScenarioSimMarket> buildScenarioSimMarketForSensitivityAnalysis(
-    const boost::shared_ptr<ore::data::Market>& market,
-    const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-    const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
-    const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
-    const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
-    const boost::shared_ptr<ScenarioFactory>& scenFactory, const std::string& marketConfiguration, bool continueOnError,
-    bool overrideTenors, IborFallbackConfig& iborFallback) {
-    LOG("Initialise sim market for sensitivity analysis (continueOnError=" << std::boolalpha << continueOnError << ")");
-    auto simMarket = boost::make_shared<ScenarioSimMarket>(
-        market, simMarketData, marketConfiguration, curveConfigs ? *curveConfigs : ore::data::CurveConfigurations(),
-        todaysMarketParams ? *todaysMarketParams : ore::data::TodaysMarketParameters(), continueOnError,
-        sensitivityData->useSpreadedTermStructures(), false, false, iborFallback);
-    LOG("Sim market initialised for sensitivity analysis");
-
-    LOG("Create scenario factory for sensitivity analysis");
-    boost::shared_ptr<ScenarioFactory> scenarioFactory;
-    if (scenFactory == nullptr) {
-        scenarioFactory = boost::make_shared<DeltaScenarioFactory>(simMarket->baseScenario());
-        LOG("DeltaScenario factory created for sensitivity analysis");
-    } else {
-        scenarioFactory = scenFactory;
-    }
-
-    LOG("Create scenario generator for sensitivity analysis (continueOnError=" << std::boolalpha << continueOnError
-                                                                               << ")");
-    auto scenarioGenerator = boost::make_shared<SensitivityScenarioGenerator>(
-        sensitivityData, simMarket->baseScenario(), simMarketData, simMarket, scenarioFactory, overrideTenors,
-        continueOnError, simMarket->baseScenarioAbsolute());
-    LOG("Scenario generator created for sensitivity analysis");
-
-    // Set simulation market's scenario generator
-    simMarket->scenarioGenerator() = scenarioGenerator;
-    return simMarket;
 }
 
 } // namespace analytics

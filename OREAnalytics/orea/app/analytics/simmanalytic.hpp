@@ -22,6 +22,7 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/simm/crif.hpp>
 
 namespace ore {
 namespace analytics {
@@ -40,15 +41,15 @@ public:
 
 class SimmAnalytic : public Analytic {
 public:
-    SimmAnalytic(const boost::shared_ptr<InputParameters>& inputs,
-                 const boost::shared_ptr<SimmNetSensitivities>& crifRecords = nullptr,
+    SimmAnalytic(const boost::shared_ptr<InputParameters>& inputs, const Crif& crif = Crif(),
                  const bool hasNettingSetDetails = false,
                  const bool determineWinningRegulations = true)
         : Analytic(std::make_unique<SimmAnalyticImpl>(inputs), {"SIMM"}, inputs, false, false, false, false),
+          crif_(crif),
           hasNettingSetDetails_(hasNettingSetDetails),
           determineWinningRegulations_(determineWinningRegulations) {}
 
-    const boost::shared_ptr<SimmNetSensitivities>& crifRecords() const { return crifRecords_; }
+    const Crif& crif() const { return crif_; }
     bool hasNettingSetDetails() { return hasNettingSetDetails_; }
     bool determineWinningRegulations() { return determineWinningRegulations_; }
     
@@ -56,7 +57,7 @@ public:
     virtual void loadCrifRecords(const boost::shared_ptr<ore::data::InMemoryLoader>& loader);
 
 private:
-    boost::shared_ptr<SimmNetSensitivities> crifRecords_;
+    Crif crif_;
     bool hasNettingSetDetails_;
     bool determineWinningRegulations_;
 };

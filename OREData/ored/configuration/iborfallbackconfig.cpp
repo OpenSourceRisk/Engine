@@ -17,12 +17,17 @@
 */
 
 #include <ored/configuration/iborfallbackconfig.hpp>
-#include <ored/utilities/to_string.hpp>
-#include <ored/utilities/log.hpp>
 #include <ored/portfolio/structuredconfigurationwarning.hpp>
+#include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
+
+#include <ql/time/date.hpp>
 
 namespace ore {
 namespace data {
+
+using namespace QuantLib;
 
 IborFallbackConfig::IborFallbackConfig() { clear(); }
 IborFallbackConfig::IborFallbackConfig(const bool enableIborFallbacks, const bool useRfrCurveInTodaysMarket,
