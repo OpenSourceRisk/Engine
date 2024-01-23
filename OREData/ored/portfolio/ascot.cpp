@@ -72,6 +72,7 @@ void Ascot::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFacto
     auto qlAscot =
         boost::make_shared<QuantExt::Ascot>(type, exercise, bond_.data().bondData().bondNotional(), cb, fundingLeg);
     qlAscot->setPricingEngine(builder->engine(id(), bond_.data().bondData().currency()));
+    setSensitivityTemplate(*builder);
 
     Real multiplier = (parsePositionType(optionData_.longShort()) == Position::Long ? 1.0 : -1.0);
     instrument_ =

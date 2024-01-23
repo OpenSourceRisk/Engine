@@ -548,6 +548,7 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
 
         cdoDetach->setPricingEngine(
             cdoEngineBuilder->engine(ccy, false, {}, calibrationFactor, fixedRecovery));
+        setSensitivityTemplate(*cdoEngineBuilder);
         cdoD = cdoDetach;
 
         DLOG("Detachment tranche [0," << adjDetachPoint << "] built.");
@@ -566,6 +567,7 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
 
         cds->setPricingEngine(
             cdoEngineBuilder->engine(ccy, true, creditCurves, calibrationFactor, fixedRecovery));
+        setSensitivityTemplate(*cdoEngineBuilder);
         cdoD = cds;
 
         DLOG("Index CDS for [0,1.0] 'tranche' built.");
@@ -593,6 +595,7 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
 
         cdoA->setPricingEngine(
             cdoEngineBuilder->engine(ccy, false, {}, calibrationFactor, fixedRecovery));
+        setSensitivityTemplate(*cdoEngineBuilder);
 
         DLOG("Attachment tranche [0," << adjAttachPoint << "] built.");
 

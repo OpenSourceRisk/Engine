@@ -55,6 +55,8 @@ FxDoubleBarrierOption::vanillaPricingEngine(const boost::shared_ptr<EngineFactor
             boost::dynamic_pointer_cast<FxEuropeanCSOptionEngineBuilder>(builder);
         QL_REQUIRE(fxOptBuilder, "No FxEuropeanOptionEngineBuilder found");
 
+        setSensitivityTemplate(*fxOptBuilder);
+
         return fxOptBuilder->engine(parseCurrency(boughtCurrency_), parseCurrency(soldCurrency_), paymentDate);
     } else {
         boost::shared_ptr<EngineBuilder> builder = ef->builder("FxOption");
@@ -78,7 +80,9 @@ FxDoubleBarrierOption::barrierPricingEngine(const boost::shared_ptr<EngineFactor
     boost::shared_ptr<FxDoubleBarrierOptionEngineBuilder> fxBarrierOptBuilder =
         boost::dynamic_pointer_cast<FxDoubleBarrierOptionEngineBuilder>(builder);
     QL_REQUIRE(fxBarrierOptBuilder, "No fxBarrierOptBuilder found");
-    
+
+    setSensitivityTemplate(*fxBarrierOptBuilder);
+
     auto engine = fxBarrierOptBuilder->engine(parseCurrency(boughtCurrency_), parseCurrency(soldCurrency_), paymentDate);
     return engine;
 }

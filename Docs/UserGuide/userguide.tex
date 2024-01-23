@@ -132,7 +132,7 @@
 \title{ORE User Guide}
 %\author{Quaternion Risk Management Ltd.}
 %\author{Acadia Inc.}
-\date{16 October 2023}
+\date{15 January 2024}
 \maketitle
 
 \newpage
@@ -156,6 +156,7 @@ Date & Author & Comment \\
 31 March 2023 & Acadia & updates for release 9\\
 16 June 2023 & Acadia & updates for release 10\\
 16 October 2023 & Acadia & updates for release 11\\
+15 January 2024 & Acadia & updates for release 12\\
 \hline
 \end{supertabular}
 \end{center}
@@ -1256,6 +1257,16 @@ Example & Description \\
 51 & Custom Trade Fixings\\
 \hline
 52 & Scripted Trades \\
+\hline
+53 & Curve Building using FRAs tailored to Central Bank Meeting Dates\\
+\hline
+54 & Scripted Trade Exposure with AMC: Bermudan Swaption and LPI Swap \\
+\hline
+55 & Scripted Trade Exposure with AMC: Fx TaRF \\
+\hline
+56 & CVA Sensitivity using AAD \\
+\hline
+57 & Base Scenario Analytic \\
 \hline
 \end{tabular}
 \caption{ORE examples.}
@@ -3537,12 +3548,75 @@ Though this initial Example\_52 shows only single-asset Equity cases, the script
   significantly more versatile, more examples and scripts to follow.
 
 %--------------------------------------------------------------------
-\subsection{GBP OIS Curve using MPC Swaps}% Example 53
+\subsection{Curve Building around Central Bank Meeting Dates}% Example 53
 \label{example:53}
 %--------------------------------------------------------------------
 
 This example demonstrates the build of a GBP OIS curve using MPC Swaps at the short end.
 
+%--------------------------------------------------------------------
+\subsection{Scripted Trade Exposure with AMC: Bermudan Swaption and LPI Swap}% Example 54
+\label{example:54}
+%--------------------------------------------------------------------
+
+This example demonstrates exposure simulation using AMC for selected scripted trade types
+\begin{itemize}
+\item Bermudan Swaption
+\item LPI Swap
+\end{itemize}
+Both payoffs are defined in {\tt scriptlibrary.xml} which is referenced in {\tt portfolio.xml}. \\
+
+To enable the AMC processing requires the following highlighted settings in {\tt ore.xml}.
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+    <Analytic type="simulation">
+      <Parameter name="active">Y</Parameter>
+      <!-- Set to Y to trigger AMC processing -->
+      <Parameter name="amc">Y</Parameter>
+      <Parameter name="simulationConfigFile">simulation.xml</Parameter>
+      <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+      <!-- Specify a separate pricing engine file for AMC engines -->
+      <Parameter name="amcPricingEnginesFile">pricingengine\_amc.xml</Parameter>
+      <!-- Specify trade types to be covered by the AMC processing -->
+      <Parameter name="amcTradeTypes">ScriptedTrade</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="storeScenarios">N</Parameter>
+      <Parameter name="cubeFile">cube.csv.gz</Parameter>
+      <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
+      <Parameter name="aggregationScenarioDataDump">scenariodata.csv</Parameter>
+    </Analytic>
+\end{minted}
+
+Note that ORE can handle a mix of trades covered by AMC simulation and covered by ``classic'' simulation.
+The respective NPV cubes are combined before generating results such as exposures or XVAs.
+
+%--------------------------------------------------------------------
+\subsection{Scripted Trade Exposure with AMC: Target Redemption Forward}% Example 55
+\label{example:55}
+%--------------------------------------------------------------------
+
+This example demonstrates exposure simulation and XVA for another scripted product, an
+FX Target Redemption Forward (TaRF). In contrast to the cases presented above, you won't see
+the payoff script library in the Input folder, nor is the script embedded into the trade XML file.
+The trade type in this case is {\tt FxTARF} which has its own implementation in OREData/ored/portfolio/tarf.xpp
+and a separate trade schema. However, the scipted trade framework is used under the hood, and the payoff
+script is embedded into the C++ code in OREData/ored/portfolio/tarf.cpp.
+
+%--------------------------------------------------------------------
+\subsection{CVA Sensitivity using AD}% Example 56
+\label{example:56}
+%--------------------------------------------------------------------
+
+This example demonstrates a prototype CVA sensitivity calculation applying Adjoint Algorithmic Differentiation (AAD)
+to a Swap instrument represented as scripted trade. 
+
+%--------------------------------------------------------------------
+\subsection{Base Scenario Analytic}% Example 57
+\label{example:57}
+%--------------------------------------------------------------------
+
+Demonstration of the {\tt Scenario} analytic which has been added to export the simulation market's base scenario
+as a file.
 
 \clearpage
 %========================================================
@@ -5926,6 +6000,7 @@ The general structure is shown in listing \ref{lst:sensitivity_config}, for a mo
 \item {\tt ShiftType:} Both absolute or relative shifts can be used to compute a sensitivity, specified by the key words
   {\tt Absolute} resp. {\tt Relative}.
 \item {\tt ShiftSize:} The size of the shift to apply.
+\item {\tt ShiftScheme:} The finite difference scheme to use ({\tt Forward}, {\tt Backward}, {\tt Central}), if not given, this parameter defaults to {\tt Forward}
 \item {\tt ShiftTenors:} For curves, the tenor buckets to apply shifts to, given as a comma separated list of periods.
 \item {\tt ShiftExpiries:} For volatility surfaces, the option expiry buckets to apply shifts to, given as a comma
   separated list of periods.
@@ -5937,6 +6012,53 @@ The general structure is shown in listing \ref{lst:sensitivity_config}, for a mo
   list of absolute strikes
 \item {\tt CurveType:} In the context of Yield Curves used to identify an equity ``risk free'' rate forecasting curve; set to {\tt EquityForecast} in this case
 \end{itemize}
+
+The ShiftType, ShiftSize, ShiftScheme nodes take an optional attribute key that allows to configure different values for
+different sensitivity templates. The sensitivity templates are defined in the pricing engine configuration. This is best
+explained by an example: In Example 15 the product type BermudanSwaption has a sensitivity template \verb+IR_FD+
+attached, see \ref{lst:sensi_template}. This can be used to specify different shifts for trades that were built against
+this engine configuration, see \ref{lst:sensi_config_template}: For Bermudan swaptions a larger shift size of 10bp and a
+central difference scheme is used to compute discount curve sensitivities in EUR. Since no separate shift type is
+specified, the default shift type {\tt Absolute} is used. Note regarding the reports:
+
+\begin{itemize}
+\item the sensi scenario report contains scenario NPVs related to the possibly product specific configured shift sizes
+\item the sensi report contains renormalized sensitivities, i.e. sensitivities are always expressed w.r.t. the default shift sizes
+\item the sensi config report only contains the default configuration
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\scriptsize]{xml}
+  <Product type="BermudanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters>
+      ...
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+      ...
+      <Parameter name="SensitivityTemplate">IR_FD</Parameter>
+    </EngineParameters>
+  </Product>
+\end{minted}
+\caption{Sensitivity template definition}
+\label{lst:sensi_template}
+\end{longlisting}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\scriptsize]{xml}
+    <DiscountCurve ccy="EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
+      <ShiftSize key="IR_FD">0.001</ShiftSize>
+      <ShiftScheme key="IR_FD">Central</ShiftScheme>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </DiscountCurve>
+\end{minted}
+\caption{Sensitivity template definition}
+\label{lst:lst:sensi_config_template}
+\end{longlisting}
 
 The cross gamma filter section contains a list of pairs of sensitivity keys. For each possible pair of sensitivity keys
 matching the given strings, a cross gamma sensitivity is computed. The given pair of keys can be (and usually are)
