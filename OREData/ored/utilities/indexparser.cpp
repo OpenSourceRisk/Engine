@@ -53,7 +53,6 @@
 #include <qle/indexes/genericindex.hpp>
 #include <qle/indexes/ibor/ambor.hpp>
 #include <qle/indexes/ibor/ameribor.hpp>
-#include <qle/indexes/ibor/audbbsw.hpp>
 #include <qle/indexes/ibor/boebaserate.hpp>
 #include <qle/indexes/ibor/brlcdi.hpp>
 #include <qle/indexes/ibor/chfsaron.hpp>
@@ -69,7 +68,6 @@
 #include <qle/indexes/ibor/dkkcibor.hpp>
 #include <qle/indexes/ibor/dkkcita.hpp>
 #include <qle/indexes/ibor/dkkois.hpp>
-#include <qle/indexes/ibor/ester.hpp>
 #include <qle/indexes/ibor/hkdhibor.hpp>
 #include <qle/indexes/ibor/hkdhonia.hpp>
 #include <qle/indexes/ibor/hufbubor.hpp>
@@ -88,9 +86,7 @@
 #include <qle/indexes/ibor/nzdbkbm.hpp>
 #include <qle/indexes/ibor/phpphiref.hpp>
 #include <qle/indexes/ibor/plnpolonia.hpp>
-#include <qle/indexes/ibor/plnwibor.hpp>
 #include <qle/indexes/ibor/primeindex.hpp>
-#include <qle/indexes/ibor/rubmosprime.hpp>
 #include <qle/indexes/ibor/rubkeyrate.hpp>
 #include <qle/indexes/ibor/saibor.hpp>
 #include <qle/indexes/ibor/seksior.hpp>
@@ -313,14 +309,14 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
     // Map from our _unique internal name_ to an overnight index
     static map<string, boost::shared_ptr<OvernightIndex>> onIndices = {
         {"EUR-EONIA", boost::make_shared<Eonia>()},
-        {"EUR-ESTER", boost::make_shared<Ester>()},
+        {"EUR-ESTER", boost::make_shared<Estr>()},
         {"GBP-SONIA", boost::make_shared<Sonia>()},
         {"JPY-TONAR", boost::make_shared<Tonar>()},
         {"SGD-SORA", boost::make_shared<Sora>()},
         {"CHF-TOIS", boost::make_shared<CHFTois>()},
         {"CHF-SARON", boost::make_shared<CHFSaron>()},
         {"USD-FedFunds", boost::make_shared<FedFunds>()},
-        {"USD-SOFR", boost::make_shared<QuantExt::Sofr>()},
+        {"USD-SOFR", boost::make_shared<Sofr>()},
         {"USD-Prime", boost::make_shared<PrimeIndex>()},
         {"USD-AMERIBOR", boost::make_shared<USDAmeribor>()},
         {"AUD-AONIA", boost::make_shared<Aonia>()},
@@ -342,7 +338,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
 
     // Map from our _unique internal name_ to an ibor index (the period does not matter here)
     static map<string, boost::shared_ptr<IborIndexParser>> iborIndices = {
-        {"AUD-BBSW", boost::make_shared<IborIndexParserWithPeriod<AUDbbsw>>()},
+        {"AUD-BBSW", boost::make_shared<IborIndexParserWithPeriod<Bbsw>>()},
         {"AUD-LIBOR", boost::make_shared<IborIndexParserWithPeriod<AUDLibor>>()},
         {"EUR-EURIBOR", boost::make_shared<IborIndexParserWithPeriod<Euribor>>()},
         {"EUR-EURIBOR365", boost::make_shared<IborIndexParserWithPeriod<Euribor365>>()},
@@ -375,7 +371,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"ILS-TELBOR", boost::make_shared<IborIndexParserWithPeriod<ILSTelbor>>()},
         {"INR-MIFOR", boost::make_shared<IborIndexParserWithPeriod<INRMifor>>()},
         {"MXN-TIIE", boost::make_shared<IborIndexParserWithPeriod<MXNTiie>>()},
-        {"PLN-WIBOR", boost::make_shared<IborIndexParserWithPeriod<PLNWibor>>()},
+        {"PLN-WIBOR", boost::make_shared<IborIndexParserWithPeriod<Wibor>>()},
         {"SKK-BRIBOR", boost::make_shared<IborIndexParserWithPeriod<SKKBribor>>()},
         {"NZD-BKBM", boost::make_shared<IborIndexParserWithPeriod<NZDBKBM>>()},
         {"TRY-TRLIBOR", boost::make_shared<IborIndexParserWithPeriod<TRLibor>>()},
@@ -384,7 +380,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"KRW-CD", boost::make_shared<IborIndexParserWithPeriod<KRWCd>>()},
         {"KRW-KORIBOR", boost::make_shared<IborIndexParserWithPeriod<KRWKoribor>>()},
         {"ZAR-JIBAR", boost::make_shared<IborIndexParserWithPeriod<Jibar>>()},
-        {"RUB-MOSPRIME", boost::make_shared<IborIndexParserWithPeriod<RUBMosprime>>()},
+        {"RUB-MOSPRIME", boost::make_shared<IborIndexParserWithPeriod<Mosprime>>()},
         {"RUB-KEYRATE", boost::make_shared<IborIndexParserWithPeriod<RUBKeyRate>>()},
         {"THB-BIBOR", boost::make_shared<IborIndexParserWithPeriod<THBBibor>>()},
         {"THB-THBFIX", boost::make_shared<IborIndexParserWithPeriod<THBFIX>>()},

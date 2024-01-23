@@ -60,6 +60,8 @@ public:
     const std::map<std::string, boost::any>& additionalData() const override;
     bool hasCashflows() const override { return false; }
 
+    bool isExercised() const;
+
 private:
     OptionData optionData_;
     vector<LegData> legData_;

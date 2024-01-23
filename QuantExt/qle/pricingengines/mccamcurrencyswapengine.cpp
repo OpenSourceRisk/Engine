@@ -28,10 +28,11 @@ McCamCurrencySwapEngine::McCamCurrencySwapEngine(
     const Size pricingSamples, const Size calibrationSeed, const Size pricingSeed, const Size polynomOrder,
     const LsmBasisSystem::PolynomialType polynomType, const SobolBrownianGenerator::Ordering ordering,
     const SobolRsg::DirectionIntegers directionIntegers, const std::vector<Handle<YieldTermStructure>>& discountCurves,
-    const std::vector<Date>& simulationDates, const std::vector<Size>& externalModelIndices, const bool minimalObsDate)
+    const std::vector<Date>& simulationDates, const std::vector<Size>& externalModelIndices, const bool minimalObsDate,
+    const RegressorModel regressorModel)
     : McMultiLegBaseEngine(model, calibrationPathGenerator, pricingPathGenerator, calibrationSamples, pricingSamples,
                            calibrationSeed, pricingSeed, polynomOrder, polynomType, ordering, directionIntegers,
-                           discountCurves, simulationDates, externalModelIndices, minimalObsDate),
+                           discountCurves, simulationDates, externalModelIndices, minimalObsDate, regressorModel),
       currencies_(currencies), npvCcy_(npvCcy) {
     registerWith(model_);
     for (auto const& h : discountCurves)

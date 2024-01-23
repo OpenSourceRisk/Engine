@@ -1,8 +1,12 @@
 include(CheckCXXCompilerFlag)
-include(CheckLinkerFlag)
+if(CMAKE_MINOR_VERSION GREATER 18 OR CMAKE_MINOR_VERSION EQUAL 18)
+    include(CheckLinkerFlag)
+endif()
 
 option(MSVC_LINK_DYNAMIC_RUNTIME "Link against dynamic runtime" ON)
 option(MSVC_PARALLELBUILD "Use flag /MP" ON)
+
+option(QL_USE_PCH OFF)
 
 # define build type clang address sanitizer + undefined behaviour + LIBCPP assertions, but keep O2
 set(CMAKE_CXX_FLAGS_CLANG_ASAN_O2 "-fsanitize=address,undefined -fno-omit-frame-pointer -D_LIBCPP_ENABLE_ASSERTIONS=1 -g -O2")
@@ -30,6 +34,16 @@ endmacro()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS FALSE)
 
+# If available, use PIC for shared libs and PIE for executables
+if (NOT DEFINED CMAKE_POSITION_INDEPENDENT_CODE)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
+if (CMAKE_POSITION_INDEPENDENT_CODE)
+    # cmake policy CMP0083: add PIE support if possible (need cmake 3.14)
+    include(CheckPIESupported)
+    check_pie_supported()
+endif()
+
 # set compiler macro if open cl is enabled
 if (ORE_ENABLE_OPENCL)
   add_compile_definitions(ORE_ENABLE_OPENCL)
@@ -48,7 +62,9 @@ endif()
 
 if(MSVC)
     set(BUILD_SHARED_LIBS OFF)
-
+    add_compile_definitions(_WINVER=0x0601)
+    add_compile_definitions(_WIN32_WINNT=0x0601)
+    add_compile_definitions(BOOST_USE_WINAPI_VERSION=0x0601)
     # build static libs always
     set(CMAKE_MSVC_RUNTIME_LIBRARY
         "MultiThreaded$<$<CONFIG:Debug>:Debug>$<$<BOOL:${MSVC_LINK_DYNAMIC_RUNTIME}>:DLL>")
@@ -116,8 +132,10 @@ if(MSVC)
     endif()
 
 else()
-    # build shared libs always
-    set(BUILD_SHARED_LIBS ON)
+    if (NOT DEFINED BUILD_SHARED_LIBS)
+        # build shared libs always
+        set(BUILD_SHARED_LIBS ON)
+    endif()
 
     # link against dynamic boost libraries
     add_definitions(-DBOOST_ALL_DYN_LINK)
@@ -133,7 +151,16 @@ else()
 
     # add pthread flag
     add_compiler_flag("-pthread" usePThreadCompilerFlag)
-    add_linker_flag("-pthread" usePThreadLinkerFlag)
+    if(CMAKE_MINOR_VERSION GREATER 18 OR CMAKE_MINOR_VERSION EQUAL 18)
+        add_linker_flag("-pthread" usePThreadLinkerFlag)
+    endif()
+
+    if(QL_USE_PCH)
+      # see https://ccache.dev/manual/4.8.3.html#_precompiled_headers
+      add_compiler_flag("-Xclang -fno-pch-timestamp" supportsNoPchTimestamp)
+      # needed for gcc, although the ccache documentation does not strictly require this
+      add_compiler_flag("-fpch-preprocess" supportsPchPreprocess)
+    endif()
 
     # enable boost assert handler
     add_compiler_flag("-DBOOST_ENABLE_ASSERT_HANDLER" enableAssertionHandler)

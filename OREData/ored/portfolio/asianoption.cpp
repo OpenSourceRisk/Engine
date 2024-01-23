@@ -80,6 +80,7 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         npvCurrency_ = delegatingBuilderTrade_->npvCurrency();
         additionalData_ = delegatingBuilderTrade_->additionalData();
 	requiredFixings_ = delegatingBuilderTrade_->requiredFixings();
+        setSensitivityTemplate(delegatingBuilderTrade_->sensitivityTemplate());
 
         // notional and notional currency are defined in overriden methods!
 
@@ -158,6 +159,7 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     string configuration = asianOptionBuilder->configuration(MarketContext::pricing);
     if (!asian->isExpired()) {
         asian->setPricingEngine(asianOptionBuilder->engine(assetName_, payCcy, expiryDate));
+        setSensitivityTemplate(*asianOptionBuilder);
     } else {
         DLOG("No engine attached for option on trade " << id() << " with expiry date " << io::iso_date(expiryDate)
                                                        << " because it is expired.");
@@ -171,7 +173,7 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     std::vector<Real> additionalMultipliers;
     maturity_ = expiryDate;
     maturity_ =
-        std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, 1.0, option_.premiumData(),
+        std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(),
                                         positionType == QuantLib::Position::Long ? -1.0 : 1.0, payCcy, engineFactory,
                                         configuration));
 

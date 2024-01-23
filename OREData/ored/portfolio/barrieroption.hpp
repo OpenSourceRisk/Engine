@@ -63,10 +63,10 @@ public:
     virtual QuantLib::Real tradeMultiplier() = 0;
     virtual Currency tradeCurrency() = 0;
     virtual boost::shared_ptr<QuantLib::PricingEngine>
-    vanillaPricigingEngine(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+    vanillaPricingEngine(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
                            const QuantLib::Date& paymentDate) = 0;
     virtual boost::shared_ptr<QuantLib::PricingEngine>
-    barrierPricigingEngine(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+    barrierPricingEngine(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
                            const QuantLib::Date& paymentDate) = 0;
     virtual const QuantLib::Handle<QuantLib::Quote>& spotQuote() = 0;
 

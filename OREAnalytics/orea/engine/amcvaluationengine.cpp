@@ -95,8 +95,8 @@ simulatePathInterface2(const boost::shared_ptr<AmcCalculator>& amcCalc, const st
     try {
         return amcCalc->simulatePath(pathTimes, paths, isRelevantTime, moveStateToPreviousTime);
     } catch (const std::exception& e) {
-        ALOG(StructuredTradeErrorMessage(tradeLabel, tradeType, "error during amc path simulation for trade.",
-                                         e.what()));
+        StructuredTradeErrorMessage(tradeLabel, tradeType, "error during amc path simulation for trade.", e.what())
+            .log();
         return std::vector<QuantExt::RandomVariable>(std::count(isRelevantTime.begin(), isRelevantTime.end(), true) + 1,
                                                      RandomVariable(paths.front().front().size()));
     }
@@ -207,6 +207,22 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     timer.start();
     Size progressCounter = 0;
 
+    // reset timing stats
+    RandomVariableStats::instance().enabled = true;
+    RandomVariableStats::instance().data_ops = 0;
+    RandomVariableStats::instance().calc_ops = 0;
+    RandomVariableStats::instance().data_timer.start();
+    RandomVariableStats::instance().data_timer.stop();
+    RandomVariableStats::instance().calc_timer.start();
+    RandomVariableStats::instance().calc_timer.stop();
+    McEngineStats::instance().other_timer.start();
+    McEngineStats::instance().other_timer.stop();
+    McEngineStats::instance().path_timer.start();
+    McEngineStats::instance().path_timer.stop();
+    McEngineStats::instance().calc_timer.start();
+    McEngineStats::instance().calc_timer.stop();
+
+
     auto extractAmcCalculator = [&amcCalculators, &tradeId, &tradeLabel, &tradeType, &effectiveMultiplier,
                                  &currencyIndex, &tradeFees, &model,
                                  &outputCube](const std::pair<std::string, boost::shared_ptr<Trade>>& trade,
@@ -231,8 +247,9 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                     tradeFees.back().push_back(std::make_tuple(model->ccyIndex(p->currency()), p->cashFlow()->amount(),
                                                                p->cashFlow()->date()));
                 } else {
-                    ALOG(StructuredTradeErrorMessage(trade.second, "Additional instrument is ignored in AMC simulation",
-                                                     "only QuantExt::Payment is handled as additional instrument."));
+                    StructuredTradeErrorMessage(trade.second, "Additional instrument is ignored in AMC simulation",
+                                                "only QuantExt::Payment is handled as additional instrument.")
+                        .log();
                 }
             }
         }
@@ -242,6 +259,8 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
         boost::shared_ptr<AmcCalculator> amcCalc;
         try {
             auto inst = trade.second->instrument()->qlInstrument(true);
+            QL_REQUIRE(inst != nullptr,
+                       "instrument has no ql instrument, this is not supported by the amc valuation engine.");
             Real multiplier = trade.second->instrument()->multiplier() *
                 trade.second->instrument()->multiplier2();
 
@@ -277,7 +296,7 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
             extractAmcCalculator(trade, amcCalc, multiplier, true);
 
         } catch (const std::exception& e) {
-            ALOG(StructuredTradeErrorMessage(trade.second, "Error building trade for AMC simulation", e.what()));
+            StructuredTradeErrorMessage(trade.second, "Error building trade for AMC simulation", e.what()).log();
         }
         progressIndicator->updateProgress(++progressCounter, portfolio->size() + 1);
     }
@@ -299,6 +318,9 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     // set up cache for paths
 
     auto process = model->stateProcess();
+    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
+        tmp->resetCache(sgd->getGrid()->timeGrid().size() - 1);
+    }
     Size nStates = process->size();
     QL_REQUIRE(sgd->getGrid()->timeGrid().size() > 0, "AMCValuationEngine: empty time grid given");
     std::vector<Real> pathTimes(std::next(sgd->getGrid()->timeGrid().begin(), 1), sgd->getGrid()->timeGrid().end());
@@ -516,6 +538,21 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     LOG("residual time        : " << residualTime << " sec");
     LOG("total time           : " << totalTime << " sec");
     LOG("AMCValuationEngine finished for one of possibly multiple threads.");
+    LOG("RandomVariableStats  : ");
+    LOG("Data Ops             : " << RandomVariableStats::instance().data_ops / 1E6 << " MOPS");
+    LOG("Calc Ops             : " << RandomVariableStats::instance().calc_ops / 1E6 << " MOPS");
+    LOG("Data Timer           : " << RandomVariableStats::instance().data_timer.elapsed().wall / 1E9 << " sec");
+    LOG("Calc Timer           : " << RandomVariableStats::instance().calc_timer.elapsed().wall / 1E9 << " sec");
+    LOG("Data Performace      : " << RandomVariableStats::instance().data_ops * 1E3 /
+                                         RandomVariableStats::instance().data_timer.elapsed().wall
+                                  << " MFLOPS");
+    LOG("Calc Performace      : " << RandomVariableStats::instance().calc_ops * 1E3 /
+                                         RandomVariableStats::instance().calc_timer.elapsed().wall
+                                  << " MFLOPS");
+    LOG("MC Other Timer       : " << McEngineStats::instance().other_timer.elapsed().wall / 1E9 << " sec");
+    LOG("MC Path Timer        : " << McEngineStats::instance().path_timer.elapsed().wall / 1E9 << " sec");
+    LOG("MC Calc Timer        : " << McEngineStats::instance().calc_timer.elapsed().wall / 1E9 << " sec");
+
 } // runCoreEngine()
 
 } // namespace
@@ -769,9 +806,9 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<ore::data::Portfolio>
 
                 // log error and return code 1 = not ok
 
-                ALOG(ore::analytics::StructuredAnalyticsErrorMessage("AMC Valuation Engine (multithreaded mode)",
-                                                                     "",
-                                                                     e.what()));
+                ore::analytics::StructuredAnalyticsErrorMessage("AMC Valuation Engine (multithreaded mode)", "",
+                                                                e.what())
+                    .log();
                 rc = 1;
             }
 

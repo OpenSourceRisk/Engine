@@ -8,7 +8,7 @@
     <DiscountingCurvesId>ois</DiscountingCurvesId>
     <YieldCurvesId>ois</YieldCurvesId>
   </Configuration>
-  <Configuration id="collateral_eur">
+  <Configuration id="xois_eur">
     <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
   </Configuration>
   <Configuration id="libor">

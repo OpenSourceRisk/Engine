@@ -1,0 +1,33 @@
+\subsection{Static Analysis}\label{static_analysis}
+
+Extracts a superset of
+
+\begin{itemize}
+\item indices and associated observation dates from evaluation operator applications (see \ref{index_evalop}) as well as
+  forward dates, if applicable
+\item observation dates from the PAY function (see \ref{function_pay}) or from the DISCOUNT function (see
+  \ref{function_discount}) as well as payment dates / discount end dates; this is done per currency
+\item dates on which a conditional expectation is required from the NPV function (see \ref{function_npv})
+\end{itemize}
+
+that can possibly occur in a concrete script execution. The results from the static analysis are used to set up the
+model against which the script is eventually run.
+
+\subsection{Script Parser}
+
+Translates the script into an Abstract Syntax Tree (AST).
+
+\subsection{Script Analyzer}
+
+Extracts information from the AST and a concrete set of external data that is needed to set up and calibrate a model
+like the index names and the required simulation times for the indices.
+
+\subsection{Script Engine}
+
+Runs a script on the AST using a certain model type against a concrete model instance and given a concrete set of
+external data.
+
+\subsection{Model}
+
+Interface that a model must implement so that the script engine can be run against it. An example is the BlackScholes
+class.

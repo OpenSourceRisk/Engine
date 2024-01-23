@@ -1,0 +1,363 @@
+<?xml version="1.0"?>
+<ScriptLibrary>
+  <!-- Cash settled European EQ, FX, COM Option                                               
+   
+       Inputs:                                                                            
+       Expiry                          option expiry date                                     
+       Settlement                      option payoff settlement date                          
+       Strike                          option strike                                          
+       PutCall                         1 for call, -1 for put                                 
+       LongShort                       1 for a long, -1 for a short position                  
+       Quantity                        number of option contracts                             
+       Underlying                      underlying index                                       
+       PayCcy                          payment currency                                       
+       
+       Results:                                                                           
+       NPV                             npv of the option                                      
+       ExerciseProbability             exercise probability of the option                      
+  -->
+  <Script>
+    <Name>EuropeanOption</Name>
+    <Script>
+      <Code>
+        <![CDATA[
+          NUMBER Payoff, CurrentNotional;
+          Payoff = PutCall * (Underlying(Expiry) - Strike);
+          Option = LOGPAY( LongShort * Quantity * max( Payoff, 0 ), Expiry, Settlement, PayCcy, 1, OptionFlow);
+          CurrentNotional = Strike * Quantity;
+        ]]></Code>
+      <NPV>Option</NPV>
+      <Results>
+        <Result>CurrentNotional</Result>
+        <Result rename="notionalCurrency">PayCcy</Result>
+      </Results>
+      <CalibrationSpec>
+        <Calibration>
+          <Index>Underlying</Index>
+          <Strikes>
+            <Strike>Strike</Strike>
+          </Strikes>
+        </Calibration>
+      </CalibrationSpec>
+    </Script>
+    <Script purpose = "FD">
+      <Code>
+        <![CDATA[
+          NUMBER Payoff, CurrentNotional;
+          Payoff = PutCall * (Underlying(Expiry) - Strike);
+          Option = LOGPAY( LongShort * Quantity * max( Payoff, 0 ), Expiry, Settlement, PayCcy, 1, OptionFlow);
+          CurrentNotional = Strike * Quantity;
+        ]]></Code>
+      <NPV>Option</NPV>
+      <Results>
+        <Result>CurrentNotional</Result>
+        <Result rename="notionalCurrency">PayCcy</Result>
+      </Results>
+      <CalibrationSpec>
+        <Calibration>
+          <Index>Underlying</Index>
+          <Strikes>
+            <Strike>Strike</Strike>
+          </Strikes>
+        </Calibration>
+      </CalibrationSpec>
+    </Script>
+  </Script>
+
+  <!-- Single Barrier Option
+
+       Inputs:
+       PayoffType                           0 = Vanilla max(0, S-K), 1 = Cash or Nothing
+       LongShort                            long / short indicator, +1 for long, -1 for short position
+       PutCall                              put / call indicator, +1 for call, -1 for put
+       Quantity                             quantity for PayoffType = 0 (Vanilla)
+       Strike                               the strike for PayoffType = 0 (Vanilla)
+       Amount                               amount for PayoffType = 1 (Cash or Nothing)
+       PayCcy                               payment currency
+       Expiry                               option expiry date
+       Settlement                           option settlement date
+       Underlying                           the underlying index
+       BarrierType                          1 = DonwIn, 2 = UpIn, 3 = DownOut, 4 = UpOut
+       BarrierLevel                         barrier level
+       BarrierRebate                        barrier rebate (only for out)
+       BarrierRebateCurrency                barrier rebate currency
+       BarrierRebatePayTime                 0 = atHit, 1 = atExpiry (only for out)
+       BarrierMonitoringDates               list of barrier monitoring dates
+
+       Results:
+       Value                                NPV of the barrier option
+       currentNotional                      current notional
+       notionalCurrency                     current notional currency
+  -->
+
+  <Script>
+    <Name>SingleBarrierOption</Name>
+    <!--<ProductTag>SingleAssetOptionBwd({AssetClass})</ProductTag>-->
+    <Script>
+      <Code><![CDATA[
+        REQUIRE PayoffType == 0 OR PayoffType == 1;
+        NUMBER KnockedIn, KnockedOut, Active, Rebate;
+        NUMBER U, i, d, CurrentNotional;
+
+        FOR d IN (1, SIZE(BarrierMonitoringDates), 1) DO
+
+          U = Underlying(BarrierMonitoringDates[d]);
+
+          IF {BarrierType == 1 AND U <= BarrierLevel} OR
+             {BarrierType == 2 AND U >= BarrierLevel} THEN
+             IF KnockedOut == 0 THEN
+               KnockedIn = 1;
+	     END;
+          END;
+
+          IF {BarrierType == 3 AND U < BarrierLevel} OR
+             {BarrierType == 4 AND U > BarrierLevel} THEN
+            IF KnockedOut == 0 THEN
+              IF BarrierRebatePayTime == 0 THEN
+                Rebate = PAY( LongShort * BarrierRebate, BarrierMonitoringDates[d], BarrierMonitoringDates[d], BarrierRebateCurrency );
+              ELSE
+                Rebate = PAY( LongShort * BarrierRebate, BarrierMonitoringDates[d], Settlement, BarrierRebateCurrency );
+              END;
+            END;
+            KnockedOut = 1;
+          END;
+
+        END;
+
+        Active = 1;
+        IF BarrierType == 1 OR BarrierType == 2 THEN
+          Active = 0;
+        END;
+        
+        Active = max(Active, KnockedIn) * (1 - KnockedOut);
+
+	IF BarrierRebate != 0 THEN
+	  Rebate = (1 - Active) * PAY( LongShort * BarrierRebate, Settlement, Settlement, BarrierRebateCurrency );
+	END;
+
+        IF PayoffType == 0 THEN
+	  value = Active * PAY( LongShort * Quantity * max(0, PutCall * (Underlying(Expiry) - Strike)), Expiry, Settlement, PayCcy ) +
+                  Rebate;
+	ELSE
+	  value = Active * PAY( LongShort * Amount, Expiry, Settlement, PayCcy ) +
+                  Rebate;
+	END;
+
+        IF PayoffType == 0 THEN
+          CurrentNotional = Quantity * Strike;
+        ELSE
+          CurrentNotional = Amount;
+        END;
+        ]]></Code>
+      <NPV>value</NPV>
+      <Results>
+        <Result>CurrentNotional</Result>
+        <Result rename="notionalCurrency">PayCcy</Result>
+	<Result>Active</Result>
+      </Results>
+      <CalibrationSpec>
+        <Calibration>
+          <Index>Underlying</Index>
+          <Strikes>
+            <Strike>Strike</Strike>
+            <Strike>BarrierLevel</Strike>
+          </Strikes>
+        </Calibration>
+      </CalibrationSpec>
+    </Script>
+  </Script>
+
+  <Script>
+    <Name>SingleContinuousBarrierOption</Name>
+    <!--<ProductTag>SingleAssetOptionBwd({AssetClass})</ProductTag>-->
+    <Script>
+      <Code><![CDATA[
+        REQUIRE PayoffType == 0 OR PayoffType == 1;
+        NUMBER KnockedIn, KnockedOut, Active, Rebate;
+        NUMBER U, i, d, CurrentNotional, Alive;
+        Alive = 1;
+
+        FOR d IN (1, SIZE(BarrierMonitoringDates), 1) DO
+
+          U = Underlying(BarrierMonitoringDates[d]);
+
+          IF {BarrierType == 1 AND U <= BarrierLevel} OR
+             {BarrierType == 2 AND U >= BarrierLevel} THEN
+             IF KnockedOut == 0 THEN
+               KnockedIn = 1;
+	     END;
+          END;
+
+          IF {BarrierType == 3 AND U < BarrierLevel} OR
+             {BarrierType == 4 AND U > BarrierLevel} THEN
+            IF KnockedOut == 0 THEN
+              IF BarrierRebatePayTime == 0 THEN
+                Rebate = PAY( LongShort * BarrierRebate, BarrierMonitoringDates[d], BarrierMonitoringDates[d], BarrierRebateCurrency );
+              ELSE
+                Rebate = PAY( LongShort * BarrierRebate, BarrierMonitoringDates[d], Settlement, BarrierRebateCurrency );
+              END;
+            END;
+            KnockedOut = 1;
+          END;
+
+          IF BarrierType == 4 THEN
+            IF d == 1 OR BarrierMonitoringDates[d-1] <= StartDate THEN
+              Alive = Alive * (1 - ABOVEPROB(Underlying, StartDate, BarrierMonitoringDates[d], BarrierLevel));
+            ELSE
+              Alive = Alive * (1 - ABOVEPROB(Underlying, BarrierMonitoringDates[d-1], BarrierMonitoringDates[d], BarrierLevel));
+	    END;
+          END;
+
+          IF BarrierType == 3 THEN
+            IF d == 1 OR BarrierMonitoringDates[d-1] <= StartDate THEN
+              Alive = Alive * (1 - BELOWPROB(Underlying, StartDate, BarrierMonitoringDates[d], BarrierLevel));
+	    ELSE
+              Alive = Alive * (1 - BELOWPROB(Underlying, BarrierMonitoringDates[d-1], BarrierMonitoringDates[d], BarrierLevel));
+	    END;
+          END;
+
+        END;
+
+        Active = 1;
+        IF BarrierType == 1 OR BarrierType == 2 THEN
+          Active = 0;
+        END;
+        
+        Active = max(Active, KnockedIn) * (1 - KnockedOut);
+
+	IF BarrierRebate != 0 THEN
+	  Rebate = (1 - Active) * PAY( LongShort * BarrierRebate, Settlement, Settlement, BarrierRebateCurrency );
+	END;
+
+        IF PayoffType == 0 THEN
+	  value = Active * Alive * PAY( LongShort * Quantity * max(0, PutCall * (Underlying(Expiry) - Strike)), Expiry, Settlement, PayCcy ) +
+                  Rebate;
+	ELSE
+	  value = Active * Alive * PAY( LongShort * Amount, Expiry, Settlement, PayCcy ) +
+                  Rebate;
+	END;
+
+        IF PayoffType == 0 THEN
+          CurrentNotional = Quantity * Strike;
+        ELSE
+          CurrentNotional = Amount;
+        END;
+        ]]></Code>
+      <NPV>value</NPV>
+      <Results>
+        <Result>CurrentNotional</Result>
+        <Result rename="notionalCurrency">PayCcy</Result>
+	<Result>Active</Result>
+      </Results>
+      <CalibrationSpec>
+        <Calibration>
+          <Index>Underlying</Index>
+          <Strikes>
+            <Strike>Strike</Strike>
+            <Strike>BarrierLevel</Strike>
+          </Strikes>
+        </Calibration>
+      </CalibrationSpec>
+    </Script>
+  </Script>
+
+  <!-- Accumulator
+
+       Inputs:
+       Strike                          option strike
+       FixingAmount                    unleveraged amount paid on each fixing date
+       LongShort                       1 for a long, -1 for a short position
+       Underlying                      underlying index
+       PayCcy                          payment currency
+       StartDate                       start date (only needed if AmericanKO = 1)
+       FixingDates                     fixing valuation dates
+       SettlementDates                 settlement dates
+       RangeUpperBounds                upper bounds of fixing ranges
+       RangeLowerBounds                lower bounds of fixing ranges
+       RangeLeverages                  leverage amounts of fixing ranges
+       KnockOutLevel                   knock out level
+       KnockOutType                    barrier type 3=DownOut, 4=UpOut
+       AmericanKO                      1 for American KO style, -1 for European KO style
+       GuaranteedFixings               the number of fixings guaranteed regardless of knockout level
+
+       Results:
+       value                           npv of the option
+       CurrentNotional                 current notional
+       notionalCurrency                notional currency
+  -->
+  <Script>
+    <Name>Accumulator</Name>
+    <!--<ProductTag>SingleAssetOption({AssetClass})</ProductTag>-->
+    <Script>
+      <Code><![CDATA[
+            REQUIRE KnockOutType == 3 OR KnockOutType == 4;
+            NUMBER Payoff, fix, d, r, Alive, CurrentNotional, Factor, ThisPayout, Fixing[SIZE(FixingDates)];
+            Alive = 1;
+            FOR d IN (1, SIZE(FixingDates), 1) DO
+                fix = Underlying(FixingDates[d]);
+                Fixing[d] = fix;
+
+                IF AmericanKO == 1 THEN
+                  IF KnockOutType == 4 THEN
+                    IF FixingDates[d] >= StartDate THEN
+                       IF d == 1 OR FixingDates[d-1] <= StartDate THEN
+                          Alive = Alive * (1 - ABOVEPROB(Underlying, StartDate, FixingDates[d], KnockOutLevel));
+		       ELSE
+                          Alive = Alive * (1 - ABOVEPROB(Underlying, FixingDates[d-1], FixingDates[d], KnockOutLevel));
+		       END;
+                    END;
+                  ELSE
+                    IF FixingDates[d] >= StartDate THEN
+                       IF d == 1 OR FixingDates[d-1] <= StartDate THEN
+                          Alive = Alive * (1 - BELOWPROB(Underlying, StartDate, FixingDates[d], KnockOutLevel));
+		       ELSE
+                          Alive = Alive * (1 - BELOWPROB(Underlying, FixingDates[d-1], FixingDates[d], KnockOutLevel));
+		       END;
+                    END;
+                  END;
+                ELSE
+                  IF {KnockOutType == 4 AND fix >= KnockOutLevel} OR
+                     {KnockOutType == 3 AND fix <= KnockOutLevel} THEN
+                    Alive = 0;
+                  END;
+                END;
+
+                IF d <= GuaranteedFixings THEN
+                  Factor = 1;
+                ELSE
+                  Factor = Alive;
+                END;
+
+                FOR r IN (1, SIZE(RangeUpperBounds), 1) DO
+                  IF fix > RangeLowerBounds[r] AND fix <= RangeUpperBounds[r] THEN
+                    ThisPayout = RangeLeverages[r] * FixingAmount * (fix - Strike) * Factor;
+                    IF d > GuaranteedFixings OR ThisPayout >= 0 THEN
+                      Payoff = Payoff + LOGPAY(RangeLeverages[r] * FixingAmount * (fix - Strike) * Factor,
+                                               FixingDates[d], SettlementDates[d], PayCcy);
+                    END;
+                  END;
+                END;
+            END;
+            value = LongShort * Payoff;
+            CurrentNotional = FixingAmount * Strike;
+        ]]></Code>
+      <NPV>value</NPV>
+      <Results>
+        <Result>CurrentNotional</Result>
+        <Result rename="notionalCurrency">PayCcy</Result>
+        <Result>Alive</Result>
+        <Result>Fixing</Result>
+      </Results>
+      <CalibrationSpec>
+        <Calibration>
+          <Index>Underlying</Index>
+          <Strikes>
+            <Strike>Strike</Strike>
+            <Strike>KnockOutLevel</Strike>
+          </Strikes>
+        </Calibration>
+      </CalibrationSpec>
+    </Script>
+  </Script>
+  
+</ScriptLibrary>

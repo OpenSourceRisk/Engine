@@ -44,7 +44,7 @@ void FxDoubleBarrierOption::checkBarriers() {
 }
 
 boost::shared_ptr<QuantLib::PricingEngine>
-FxDoubleBarrierOption::vanillaPricigingEngine(const boost::shared_ptr<EngineFactory>& ef,
+FxDoubleBarrierOption::vanillaPricingEngine(const boost::shared_ptr<EngineFactory>& ef,
                                               const QuantLib::Date& expiryDate, const QuantLib::Date& paymentDate) {
 
     if (paymentDate > expiryDate) {
@@ -54,6 +54,8 @@ FxDoubleBarrierOption::vanillaPricigingEngine(const boost::shared_ptr<EngineFact
         boost::shared_ptr<FxEuropeanCSOptionEngineBuilder> fxOptBuilder =
             boost::dynamic_pointer_cast<FxEuropeanCSOptionEngineBuilder>(builder);
         QL_REQUIRE(fxOptBuilder, "No FxEuropeanOptionEngineBuilder found");
+
+        setSensitivityTemplate(*fxOptBuilder);
 
         return fxOptBuilder->engine(parseCurrency(boughtCurrency_), parseCurrency(soldCurrency_), paymentDate);
     } else {
@@ -69,7 +71,7 @@ FxDoubleBarrierOption::vanillaPricigingEngine(const boost::shared_ptr<EngineFact
 }
 
 boost::shared_ptr<QuantLib::PricingEngine>
-FxDoubleBarrierOption::barrierPricigingEngine(const boost::shared_ptr<EngineFactory>& ef,
+FxDoubleBarrierOption::barrierPricingEngine(const boost::shared_ptr<EngineFactory>& ef,
                                               const QuantLib::Date& expiryDate, const QuantLib::Date& paymentDate) {
 
     boost::shared_ptr<EngineBuilder> builder = ef->builder(tradeType_);
@@ -78,7 +80,9 @@ FxDoubleBarrierOption::barrierPricigingEngine(const boost::shared_ptr<EngineFact
     boost::shared_ptr<FxDoubleBarrierOptionEngineBuilder> fxBarrierOptBuilder =
         boost::dynamic_pointer_cast<FxDoubleBarrierOptionEngineBuilder>(builder);
     QL_REQUIRE(fxBarrierOptBuilder, "No fxBarrierOptBuilder found");
-    
+
+    setSensitivityTemplate(*fxBarrierOptBuilder);
+
     auto engine = fxBarrierOptBuilder->engine(parseCurrency(boughtCurrency_), parseCurrency(soldCurrency_), paymentDate);
     return engine;
 }

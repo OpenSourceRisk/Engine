@@ -93,10 +93,10 @@ public:
               const Handle<Quote>& recoveryRate = Handle<Quote>(),
               const Handle<Quote>& securitySpread = Handle<Quote>(),
               const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>(),
-              const bool conditionalOnSurvival = true,
+              const bool conditionalOnSurvival = true, const Date& issueDate = Date(),
               const PriceQuoteMethod priceQuoteMethod = PriceQuoteMethod::PercentageOfPar,
               const double priceQuoteBaseValue = 1.0, const bool isInflationLinked = false,
-              const double bidAskAdjustment = 0.0);
+              const double bidAskAdjustment = 0.0, const bool bondIssueDateFallback = false);
 
     //! \name Index interface
     //@{
@@ -129,6 +129,7 @@ public:
     Handle<Quote> securitySpread() const { return securitySpread_; }
     Handle<YieldTermStructure> incomeCurve() const { return incomeCurve_; }
     bool conditionalOnSurvival() const { return conditionalOnSurvival_; }
+    Date issueDate() const { return issueDate_; }
     PriceQuoteMethod priceQuoteMethod() const { return priceQuoteMethod_; }
     double priceQuoteBaseValue() const { return priceQuoteBaseValue_; }
     //@}
@@ -144,11 +145,13 @@ protected:
     Handle<Quote> securitySpread_;
     Handle<YieldTermStructure> incomeCurve_;
     bool conditionalOnSurvival_;
+    Date issueDate_;
     PriceQuoteMethod priceQuoteMethod_;
     double priceQuoteBaseValue_;
     bool isInflationLinked_;
     double bidAskAdjustment_;
     boost::shared_ptr<DiscountingRiskyBondEngine> vanillaBondEngine_;
+    bool bondIssueDateFallback_ = false;
 };
 
 //! Bond Futures Index
@@ -163,7 +166,7 @@ public:
         const Handle<DefaultProbabilityTermStructure>& defaultCurve = Handle<DefaultProbabilityTermStructure>(),
         const Handle<Quote>& recoveryRate = Handle<Quote>(), const Handle<Quote>& securitySpread = Handle<Quote>(),
         const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>(),
-        const bool conditionalOnSurvival = true,
+        const bool conditionalOnSurvival = true, const Date& issueDate = Date(),
         const PriceQuoteMethod priceQuoteMethod = PriceQuoteMethod::PercentageOfPar,
         const double priceQuoteBaseValue = 1.0);
 

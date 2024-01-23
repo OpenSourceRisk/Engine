@@ -23,7 +23,6 @@
 // Boost
 #include <boost/make_shared.hpp>
 #include <boost/timer/timer.hpp>
-using namespace boost;
 using boost::timer::cpu_timer;
 
 // Boost.Test

@@ -63,11 +63,11 @@ public:
         return currencyWeightsAndFxIndexNames_;
     }
 
-    std::map<std::string, double>
-    fxSpotRiskFromForwards(const double quantity, const QuantLib::Date& asof,
-                           const boost::shared_ptr<ore::data::Market>& todaysMarket) const;
+    std::map<std::string, double> fxSpotRiskFromForwards(
+        const double quantity, const QuantLib::Date& asof,
+        const boost::shared_ptr<ore::data::Market>& todaysMarket, const double shiftsize) const;
 
-    double unhedgedDelta(double hedgedDelta, const double quantity, const QuantLib::Date& asof,
+    double unhedgedSpotExposure(double hedgedExposure, const double quantity, const QuantLib::Date& asof,
                          const boost::shared_ptr<ore::data::Market>& todaysMarket) const;
 
     boost::shared_ptr<ore::data::EquityIndexReferenceDatum> underlyingRefData() const { return underlyingRefData_; }
@@ -76,7 +76,7 @@ public:
 
     void
     addAdditionalFixingsForEquityIndexDecomposition(const QuantLib::Date& asof,
-                                                    std::map<std::string, std::set<QuantLib::Date>>& fixings) const;
+                                                    std::map<std::string, RequiredFixings::FixingDates>& fixings) const;
 
 private:
     std::string name_;

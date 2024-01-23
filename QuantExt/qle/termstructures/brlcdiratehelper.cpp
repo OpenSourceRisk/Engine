@@ -17,14 +17,11 @@
 */
 
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
+#include <ql/utilities/null_deleter.hpp>
 #include <qle/instruments/brlcdiswap.hpp>
 #include <qle/termstructures/brlcdiratehelper.hpp>
 
 using namespace QuantLib;
-
-namespace {
-void no_deletion(YieldTermStructure*) {}
-} // namespace
 
 namespace QuantExt {
 
@@ -80,7 +77,7 @@ void BRLCdiRateHelper::initializeDates() {
 void BRLCdiRateHelper::setTermStructure(YieldTermStructure* t) {
 
     bool observer = false;
-    boost::shared_ptr<YieldTermStructure> temp(t, no_deletion);
+    boost::shared_ptr<YieldTermStructure> temp(t, null_deleter());
     termStructureHandle_.linkTo(temp, observer);
 
     if (discountHandle_.empty())
@@ -138,7 +135,7 @@ DatedBRLCdiRateHelper::DatedBRLCdiRateHelper(const Date& startDate, const Date& 
 void DatedBRLCdiRateHelper::setTermStructure(YieldTermStructure* t) {
 
     bool observer = false;
-    boost::shared_ptr<YieldTermStructure> temp(t, no_deletion);
+    boost::shared_ptr<YieldTermStructure> temp(t, null_deleter());
     termStructureHandle_.linkTo(temp, observer);
 
     if (discountHandle_.empty())

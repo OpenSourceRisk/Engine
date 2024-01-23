@@ -20,11 +20,9 @@
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/engine/parsensitivityanalysis.hpp>
-#include <orea/engine/sensitivityanalysisplus.hpp>
 #include <orea/engine/sensitivityinmemorystream.hpp>
 #include <orea/scenario/deltascenariofactory.hpp>
 #include <orea/scenario/scenario.hpp>
-#include <orea/scenario/scenariosimmarketplus.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <ored/utilities/to_string.hpp>
 
@@ -84,10 +82,18 @@ void ParConversionAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::I
 
         auto& configs = analytic()->configurations();
 
-        auto simMarket = buildScenarioSimMarketForSensitivityAnalysis(
-            analytic()->market(), configs.simMarketParams, configs.sensiScenarioData, configs.curveConfig,
-            configs.todaysMarketParams, nullptr, inputs_->marketConfig("pricing"), true, false,
-            *inputs_->iborFallbackConfig());
+        auto simMarket = boost::make_shared<ScenarioSimMarket>(
+            analytic()->market(), configs.simMarketParams, inputs_->marketConfig("pricing"),
+            configs.curveConfig ? *configs.curveConfig : ore::data::CurveConfigurations(),
+            configs.todaysMarketParams ? *configs.todaysMarketParams : ore::data::TodaysMarketParameters(), true,
+            configs.sensiScenarioData->useSpreadedTermStructures(), false, false, *inputs_->iborFallbackConfig());
+
+        auto scenarioGenerator = boost::make_shared<SensitivityScenarioGenerator>(
+            configs.sensiScenarioData, simMarket->baseScenario(), configs.simMarketParams, simMarket,
+            boost::make_shared<DeltaScenarioFactory>(simMarket->baseScenario()), true, std::string(), true,
+            simMarket->baseScenarioAbsolute());
+
+        simMarket->scenarioGenerator() = scenarioGenerator;
 
         parAnalysis->computeParInstrumentSensitivities(simMarket);
 
@@ -122,9 +128,10 @@ void ParConversionAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::I
                     if (it == factorToIndex.end()) {
                         if (ParSensitivityAnalysis::isParType(rf.keytype) && typesDisabled.count(rf.keytype) != 1) {
 
-                            ALOG(StructuredAnalyticsErrorMessage("Par conversion", "",
-                                                                 "Par factor " + ore::data::to_string(rf) +
-                                                                     " not found in factorToIndex map"));
+                            StructuredAnalyticsErrorMessage("Par conversion", "",
+                                                            "Par factor " + ore::data::to_string(rf) +
+                                                                " not found in factorToIndex map")
+                                .log();
                         } else {
                             SensitivityRecord sr;
                             sr.tradeId = id;

@@ -68,10 +68,18 @@ CommodityOptionStrip::CommodityOptionStrip(const Envelope& envelope, const LegDa
                                            const BarrierData& callBarrierData, const BarrierData& putBarrierData,
                                            const string& fxIndex, const bool isDigital, Real payoffPerUnit)
     : Trade("CommodityOptionStrip", envelope), legData_(legData), callPositions_(callPositions),
-      callStrikes_(callStrikes), putPositions_(putPositions), putStrikes_(putStrikes), premium_(premium),
-      premiumCurrency_(premiumCurrency), premiumPayDate_(premiumPayDate), style_(style), settlement_(settlement),
+      callStrikes_(callStrikes), putPositions_(putPositions), putStrikes_(putStrikes),
+      style_(style),
+      settlement_(settlement),
       callBarrierData_(callBarrierData), putBarrierData_(putBarrierData), fxIndex_(fxIndex), isDigital_(isDigital),
-      unaryPayoff_(payoffPerUnit) {}
+      unaryPayoff_(payoffPerUnit) {
+    if (!QuantLib::close_enough(premium, 0.0)) {
+        QL_REQUIRE(premiumPayDate != Date(), "The premium is non-zero so its payment date needs to be provided");
+        QL_REQUIRE(!premiumCurrency.empty(), "The premium is non-zero so its currency needs to be provided");
+        premiumData_ = PremiumData(premium, premiumCurrency, premiumPayDate);
+    }
+}
+
 
 void CommodityOptionStrip::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
@@ -164,11 +172,7 @@ void CommodityOptionStrip::fromXML(XMLNode* node) {
             putBarrierData_.fromXML(n2);
         }
     }
-
-    premium_ = XMLUtils::getChildValueAsDouble(stripNode, "PremiumAmount", false);
-    premiumCurrency_ = XMLUtils::getChildValue(stripNode, "PremiumCurrency", false);
-    premiumPayDate_ = parseDate(XMLUtils::getChildValue(stripNode, "PremiumPayDate", false));
-
+    premiumData_.fromXML(stripNode);
     style_ = "";
     if (XMLNode* n = XMLUtils::getChildNode(stripNode, "Style"))
         style_ = XMLUtils::getNodeValue(n);
@@ -217,12 +221,8 @@ XMLNode* CommodityOptionStrip::toXML(XMLDocument& doc) {
     }
 
     // These are all optional, really they should be grouped here
-
-    if (premiumCurrency_ != "" && premiumPayDate_ != Date()) {
-        XMLUtils::addChild(doc, stripNode, "PremiumAmount", premium_);
-        XMLUtils::addChild(doc, stripNode, "PremiumCurrency", premiumCurrency_);
-        XMLUtils::addChild(doc, stripNode, "PremiumPayDate", to_string(premiumPayDate_));
-    }
+    if (!premiumData_.premiumData().empty())
+        XMLUtils::appendNode(stripNode, premiumData_.toXML(doc));
 
     if (!style_.empty())
         XMLUtils::addChild(doc, stripNode, "Style", style_);
@@ -315,6 +315,7 @@ void CommodityOptionStrip::buildAPOs(const Leg& leg, const boost::shared_ptr<Eng
             commOption->id() = tempDatum.id;
             commOption->build(engineFactory);
             boost::shared_ptr<InstrumentWrapper> instWrapper = commOption->instrument();
+            setSensitivityTemplate(commOption->sensitivityTemplate());
             additionalInstruments.push_back(instWrapper->qlInstrument());
             additionalMultipliers.push_back(instWrapper->multiplier());
 
@@ -338,14 +339,11 @@ void CommodityOptionStrip::buildAPOs(const Leg& leg, const boost::shared_ptr<Eng
     additionalMultipliers.pop_back();
 
     // Possibly add a premium to the additional instruments and multipliers
-    // We expect here that the fee alrea minimal
-    // dy has the correct sign
-    if (!close(0.0, premium_)) {
-        maturity_ = std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, qlInstMult,
-                                                    PremiumData(premium_, premiumCurrency_, premiumPayDate_), 1.0,
-                                                    parseCurrency(legData_.currency()), engineFactory, ""));
-    }
+    // We expect here that the fee already has the correct sign
 
+    maturity_ = std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, qlInstMult, premiumData_,
+                                                1.0, parseCurrency(legData_.currency()), engineFactory, ""));
+    
     // Create the Trade's instrument wrapper
     instrument_ =
         boost::make_shared<VanillaInstrument>(qlInst, qlInstMult, additionalInstruments, additionalMultipliers);
@@ -440,6 +438,7 @@ void CommodityOptionStrip::buildStandardOptions(const Leg& leg, const boost::sha
             commOption->id() = tempDatum.id;
             commOption->build(engineFactory);
             boost::shared_ptr<InstrumentWrapper> instWrapper = commOption->instrument();
+            setSensitivityTemplate(commOption->sensitivityTemplate());
             additionalInstruments.push_back(instWrapper->qlInstrument());
             additionalMultipliers.push_back(instWrapper->multiplier());
 
@@ -459,13 +458,10 @@ void CommodityOptionStrip::buildStandardOptions(const Leg& leg, const boost::sha
 
     // Possibly add a premium to the additional instruments and multipliers
     // We expect here that the fee already has the correct sign
-    if (!close(0.0, premium_)) {
-        maturity_ = std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, qlInstMult,
-                                                    PremiumData(premium_, premiumCurrency_, premiumPayDate_), 1.0,
-                                                    parseCurrency(legData_.currency()), engineFactory, ""));
-        DLOG("Option premium added for commodity option strip " << id());
-    }
-
+    maturity_ = std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, qlInstMult, premiumData_,
+                                                1.0, parseCurrency(legData_.currency()), engineFactory, ""));
+    DLOG("Option premium added for commodity option strip " << id());
+    
     // Create the Trade's instrument wrapper
     instrument_ =
         boost::make_shared<VanillaInstrument>(qlInst, qlInstMult, additionalInstruments, additionalMultipliers);
@@ -498,11 +494,6 @@ void CommodityOptionStrip::check(Size numberPeriods) const {
                        << "flags provided with the put strikes (" << putPositions_.size()
                        << ") should be 1 or equal to "
                        << "the number of periods in the strip (" << numberPeriods << ")");
-    }
-
-    if (!close(0.0, premium_)) {
-        QL_REQUIRE(!premiumCurrency_.empty(), "The premium is non-zero so its currency needs to be provided");
-        QL_REQUIRE(premiumPayDate_ != Date(), "The premium is non-zero so its payment date needs to be provided");
     }
 }
 

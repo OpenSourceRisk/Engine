@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ql/errors.hpp>
+#include <ql/time/calendar.hpp>
 #include <ql/time/date.hpp>
 
 #include <vector>
@@ -42,8 +43,11 @@ public:
     /* The given vector of dates defines the contiguous parts of the time period
        as start1, end1, start2, end2, ...
        The single parts may overlap.
+       If mporDays, and a Calendar are provided, each startdate will be adjusted 
+       backward to include the mpor period
     */
-    TimePeriod(const std::vector<Date>& dates);
+    TimePeriod(const std::vector<Date>& dates, Size mporDays = QuantLib::Null<Size>(),
+               const QuantLib::Calendar& calendar = QuantLib::Calendar());
     Size numberOfContiguousParts() const { return startDates_.size(); }
     const std::vector<Date>& startDates() const { return startDates_; }
     const std::vector<Date>& endDates() const { return endDates_; }
@@ -54,35 +58,6 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& out, const TimePeriod& t);
-
-// implementation
-
-inline TimePeriod::TimePeriod(const std::vector<Date>& dates) {
-    QL_REQUIRE(dates.size() % 2 == 0, "TimePeriod: dates size must be an even number, got " << dates.size());
-    for (Size i = 0; i < dates.size(); ++i) {
-        if (i % 2 == 0)
-            startDates_.push_back(dates[i]);
-        else
-            endDates_.push_back(dates[i]);
-    }
-}
-
-inline bool TimePeriod::contains(const Date& d) const {
-    for (Size i = 0; i < startDates_.size(); ++i) {
-        if (d >= startDates_[i] && d <= endDates_[i])
-            return true;
-    }
-    return false;
-}
-
-inline std::ostream& operator<<(std::ostream& out, const TimePeriod& t) {
-    for (Size i = 0; i < t.numberOfContiguousParts(); ++i) {
-        out << QuantLib::io::iso_date(t.startDates()[i]) << " to " << QuantLib::io::iso_date(t.endDates()[i]);
-        if (i < t.numberOfContiguousParts() - 1)
-            out << " + ";
-    }
-    return out;
-}
 
 } // namespace data
 } // namespace ore

@@ -19,6 +19,7 @@
 #include <orea/engine/historicalpnlgenerator.hpp>
 
 #include <orea/engine/multithreadedvaluationengine.hpp>
+#include <orea/engine/valuationcalculator.hpp>
 
 #include <orea/cube/jointnpvcube.hpp>
 #include <orea/cube/inmemorycube.hpp>
@@ -116,7 +117,7 @@ void HistoricalPnlGenerator::generateCube(const boost::shared_ptr<ScenarioFilter
         MultiThreadedValuationEngine engine(
             nThreads_, today_, boost::make_shared<ore::analytics::DateGrid>(), hisScenGen_->numScenarios(), loader_,
             hisScenGen_, engineData_, curveConfigs_, todaysMarketParams_, configuration_, simMarketData_, false, false,
-            filter, referenceData_, iborFallbackConfig_, true, true, {}, {}, {}, context_);
+            filter, referenceData_, iborFallbackConfig_, true, true, true, {}, {}, {}, context_);
         for (auto const& i : this->progressIndicators()) {
             i->reset();
             engine.registerProgressIndicator(i);

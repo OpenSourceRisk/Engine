@@ -53,11 +53,13 @@ public:
     //! Detailed constructor
     EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
                                 const std::vector<boost::shared_ptr<VolatilityConfig>>& volatilityConfig,
+                                const string& equityId = string(),
                                 const string& dayCounter = "A365", const string& calendar = "NullCalendar",
                                 const OneDimSolverConfig& solverConfig = OneDimSolverConfig(),
                                 const boost::optional<bool>& preferOutOfTheMoney = boost::none);
     EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
                                 const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
+                                const string& equityId = string(),
                                 const string& dayCounter = "A365", const string& calendar = "NullCalendar",
                                 const OneDimSolverConfig& solverConfig = OneDimSolverConfig(),
                                 const boost::optional<bool>& preferOutOfTheMoney = boost::none);
@@ -71,6 +73,7 @@ public:
 
     //! \name Inspectors
     //@{
+    const string& equityId() const { return equityId_.empty() ? curveID_ : equityId_; }
     const string& ccy() const { return parseCurrencyWithMinors(ccy_).code(); }
     const string& dayCounter() const { return dayCounter_; }
     const string& calendar() const { return calendar_; }
@@ -96,6 +99,7 @@ private:
 
     string ccy_;
     std::vector<boost::shared_ptr<VolatilityConfig>> volatilityConfig_;
+    string equityId_;
     string dayCounter_;
     string calendar_;
     OneDimSolverConfig solverConfig_;

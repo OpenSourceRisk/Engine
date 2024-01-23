@@ -46,28 +46,30 @@ void SimmAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLo
     LOG("Get CRIF records from CRIF loader and fill amountUSD");        
     simmAnalytic->loadCrifRecords(loader);
 
-    auto simmConfiguration = inputs_->crifLoader()->simmConfiguration();
-
     if (analytic()->getWriteIntermediateReports()) {
         boost::shared_ptr<InMemoryReport> crifReport = boost::make_shared<InMemoryReport>();
-        ReportWriter(inputs_->reportNaString()).writeCrifReport(crifReport, *simmAnalytic->crifRecords());
+        ReportWriter(inputs_->reportNaString()).writeCrifReport(crifReport, simmAnalytic->crif());
         analytic()->reports()[LABEL]["crif"] = crifReport;
         LOG("CRIF report generated");
 
-        auto crifLoader = boost::make_shared<CrifLoader>(simmConfiguration, CrifRecord::additionalHeaders, true, true);
-        for (const auto& cr : *simmAnalytic->crifRecords())
-            crifLoader->add(cr);
+        Crif simmDataCrif = simmAnalytic->crif().aggregate();
         boost::shared_ptr<InMemoryReport> simmDataReport = boost::make_shared<InMemoryReport>();
         ReportWriter(inputs_->reportNaString())
-            .writeSIMMData(crifLoader->netRecords(true), simmDataReport);
+            .writeSIMMData(simmAnalytic->crif(), simmDataReport);
         analytic()->reports()[LABEL]["simm_data"] = simmDataReport;
         LOG("SIMM data report generated");
     }
     MEM_LOG;
 
+    LOG("Calculating SIMM");
+
+    // Save SIMM calibration data to output
+    if (inputs_->simmCalibrationData())
+        inputs_->simmCalibrationData()->toFile((inputs_->resultsPath() / "simmcalibration.xml").string());
+
     // Calculate SIMM
-    auto simm = boost::make_shared<SimmCalculator>(*simmAnalytic->crifRecords(),
-                                                   simmConfiguration,
+    auto simm = boost::make_shared<SimmCalculator>(simmAnalytic->crif(),
+                                                   inputs_->getSimmConfiguration(),
                                                    inputs_->simmCalculationCurrency(),
                                                    inputs_->simmResultCurrency(),
                                                    analytic()->market(),
@@ -104,12 +106,11 @@ void SimmAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLo
 
 void SimmAnalytic::loadCrifRecords(const boost::shared_ptr<ore::data::InMemoryLoader>& loader) {
     QL_REQUIRE(inputs_, "Inputs not set");
-    QL_REQUIRE(inputs_->crifLoader(), "CRIF loader not set");
-    QL_REQUIRE(inputs_->crifLoader()->hasCrifRecords(), "CRIF loader does not contain any records");
+    QL_REQUIRE(!inputs_->crif().empty(), "CRIF loader does not contain any records");
         
-    inputs_->crifLoader()->fillAmountUsd(market());
-    crifRecords_ = boost::make_shared<SimmNetSensitivities>(inputs_->crifLoader()->netRecords(true));
-    hasNettingSetDetails_ = inputs_->crifLoader()->hasNettingSetDetails();
+    crif_ = inputs_->crif();
+    crif_.fillAmountUsd(market());
+    hasNettingSetDetails_ = crif_.hasNettingSetDetails();
 }
 
 } // namespace analytics

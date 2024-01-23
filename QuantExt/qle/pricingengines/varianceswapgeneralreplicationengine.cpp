@@ -40,7 +40,7 @@ namespace QuantExt {
 
 GeneralisedReplicatingVarianceSwapEngine::GeneralisedReplicatingVarianceSwapEngine(
     const boost::shared_ptr<Index>& index, const boost::shared_ptr<GeneralizedBlackScholesProcess>& process,
-    const Handle<YieldTermStructure>& discountingTS, const Settings settings, const bool staticTodaysSpot)
+    const Handle<YieldTermStructure>& discountingTS, const VarSwapSettings settings, const bool staticTodaysSpot)
     : index_(index), process_(process), discountingTS_(discountingTS), settings_(settings),
       staticTodaysSpot_(staticTodaysSpot) {
 
@@ -176,9 +176,9 @@ Real GeneralisedReplicatingVarianceSwapEngine::calculateFutureVariance(const Dat
     // set up integrator
 
     boost::shared_ptr<Integrator> integrator;
-    if (settings_.scheme == Settings::Scheme::GaussLobatto) {
+    if (settings_.scheme == VarSwapSettings::Scheme::GaussLobatto) {
         integrator = boost::make_shared<GaussLobattoIntegral>(settings_.maxIterations, QL_MAX_REAL, settings_.accuracy);
-    } else if (settings_.scheme == Settings::Scheme::Segment) {
+    } else if (settings_.scheme == VarSwapSettings::Scheme::Segment) {
         integrator = boost::make_shared<SegmentIntegral>(settings_.steps);
     } else {
         QL_FAIL("GeneralisedReplicationVarianceSwapEngine: internal error, unknown scheme");
@@ -198,12 +198,12 @@ Real GeneralisedReplicatingVarianceSwapEngine::calculateFutureVariance(const Dat
 
     Real lower = F, upper = F;
 
-    if (settings_.bounds == Settings::Bounds::Fixed) {
+    if (settings_.bounds == VarSwapSettings::Bounds::Fixed) {
         Real tmp = std::max(0.01, T);
         Real stdDev = std::max(0.01, process_->blackVolatility()->blackVol(tmp, F, true)) * std::sqrt(tmp);
         lower = F * std::exp(settings_.fixedMinStdDevs * stdDev);
         upper = F * std::exp(settings_.fixedMaxStdDevs * stdDev);
-    } else if (settings_.bounds == Settings::Bounds::PriceThreshold) {
+    } else if (settings_.bounds == VarSwapSettings::Bounds::PriceThreshold) {
         Size i = 0, j = 0;
         for (; i < settings_.maxPriceThresholdSteps && replication(lower) > settings_.priceThreshold; ++i)
             lower *= (1.0 - settings_.priceThresholdStep);

@@ -14,7 +14,15 @@ every trade type allows for all barrier styles, the allowable combinations are l
     FxTouchOptionData & \emph{American} \\
     FxDoubleTouchOptionData & \emph{American} \\
     FxDoubleBarrierOptionData & \emph{American} \\
-    FxKIKOBarrierOptionData & \emph{American}
+    FxKIKOBarrierOptionData & \emph{American} \\
+    FxTaRFData & \emph{European} \\
+    FxAccumulatorData & \emph{European, American} \\
+    EquityTaRFData & \emph{European} \\
+    EquityAccumulatorData & \emph{European, American} \\
+    CommodityAccumulatorData & \emph{European, American} \\
+    FxGenericBarrierOption & \emph{American} \\
+    EquityGenericBarrierOption & \emph{American} \\
+    CommodityGenericBarrierOption & \emph{American}
 \end{tabular}
   \caption{Supported barrier styles per trade data container}
   \label{tab:barrierstyles}
@@ -92,6 +100,9 @@ Allowable values:  Any positive real number.
   \item FxDigitalBarrierOptionData
   \item FxDoubleBarrierOptionData
   \item FxEuropeanBarrierOptionData
+  \item FxGenericBarrierOptionData
+  \item EquityGenericBarrierOptionData
+  \item CommodityGenericBarrierOptionData
 \end{itemize}
 
  only. If defined for several ``in'' barriers, the amounts must be identical across all barrier definitions (because the
@@ -101,12 +112,24 @@ Allowable values:  Any positive real number.
 Allowable values:  Any positive real number. Defaults to zero if omitted. Cannot be left blank.
 
 \item RebateCurrency [Optional]: The currency in which the rebate amount is paid. Defaults to the natural pay currency
-  of the trade.
+  of the trade. Deviating currencies are supported by the following trade types only:
+
+  \begin{itemize}
+  \item FxGenericBarrierOptionData
+  \item EquityGenericBarrierOptionData
+  \item CommodityGenericBarrierOptionData
+  \end{itemize}
 
   Allowable Values: See Table \ref{tab:currency} \lstinline!Currency!.
 
 \item RebatePayTime [Optional]: For ``in'' barriers only atExpiry is allowed. For ``out'' barriers, both atExpiry and
-  atHit is possible. If not given, defaults to ``atExpiry''. 
+  atHit is possible. If not given, defaults to ``atExpiry''. This field is only supported by the following trade types:
+
+  \begin{itemize}
+  \item FxGenericBarrierOptionData
+  \item EquityGenericBarrierOptionData
+  \item CommodityGenericBarrierOptionData
+  \end{itemize}
 
   Allowable Values: \emph{atExpiry}, \emph{atHit}
 

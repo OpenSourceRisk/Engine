@@ -3,6 +3,8 @@ version: '3'
 services:
   build_env_boost:
     image: env_ore_test:latest
+    cap_drop:
+      - NET_RAW
     build:
       context: .
       dockerfile: Dockerfile-Test

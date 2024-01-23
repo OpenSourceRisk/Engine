@@ -171,15 +171,15 @@ The relevant fields in the \lstinline!OptionData! node for an CommoditySpreadOpt
   <SpreadStrike>2.3</SpreadStrike>
   <OptionStripPaymentDates>
   	<OptionStripDefinition>
-    	<Rules>
-        	<StartDate>2023-07-01</StartDate>
+          <Rules>
+	    <StartDate>2023-07-01</StartDate>
             <EndDate>2023-10-01</EndDate>
             <Tenor>1M</Tenor>
             <Calendar>NullCalendar</Calendar>
             <Convention>Unadjusted</Convention>
             <TermConvention>Unadjusted</TermConvention>
             <Rule>Backward</Rule>
-        </Rules>
+          </Rules>
   	</OptionStripDefinition>
     <PaymentCalendar>ICE_FuturesUS,US-NERC</PaymentCalendar>
     <PaymentLag>5</PaymentLag>
@@ -187,6 +187,6 @@ The relevant fields in the \lstinline!OptionData! node for an CommoditySpreadOpt
   </OptionStripPaymentDates>
 </CommoditySpreadOptionData>
     \end{minted}
-    \caption{Commodity Option data}
+    \caption{Commodity Spread Option data}
     \label{lst:com_s_option_data}
 \end{listing}

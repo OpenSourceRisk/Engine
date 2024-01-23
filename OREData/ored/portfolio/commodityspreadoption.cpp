@@ -273,6 +273,7 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
         boost::shared_ptr<PricingEngine> commoditySpreadOptionEngine =
             engineBuilder->engine(ccy, longFlow->index(), shortFlow->index(), id());
         spreadOption->setPricingEngine(commoditySpreadOptionEngine);
+        setSensitivityTemplate(*engineBuilder);
         if (i > 0) {
             additionalInstruments.push_back(spreadOption);
             additionalMultipliers.push_back(bsInd);
@@ -284,7 +285,7 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
 
     // Add premium
     auto configuration = engineBuilder->configuration(MarketContext::pricing);
-    maturity_ = std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, bsInd,
+    maturity_ = std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, firstMultiplier,
                                                 optionData_.premiumData(), -bsInd, ccy, engineFactory, configuration));
 
     instrument_ = boost::make_shared<VanillaInstrument>(firstInstrument, firstMultiplier, additionalInstruments,
@@ -303,6 +304,24 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
         additionalData_["premiumCurrency"] = premium.ccy;
     }
 }
+
+std::map<ore::data::AssetClass, std::set<std::string>>
+CommoditySpreadOption::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+    std::map<ore::data::AssetClass, std::set<std::string>> result;
+    auto legData = csoData_.legData();
+    for (const auto& leg : legData) {
+        set<string> indices = leg.indices();
+        for (auto ind : indices) {
+            boost::shared_ptr<Index> index = parseIndex(ind);
+            // only handle commodity
+            if (auto ci = boost::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {
+                result[ore::data::AssetClass::COM].insert(ci->name());
+            }
+        }
+    }
+    return result;
+}
+
 
 void CommoditySpreadOption::fromXML(XMLNode* node) {
     Trade::fromXML(node);
@@ -355,6 +374,7 @@ XMLNode* CommoditySpreadOptionData::toXML(XMLDocument& doc) {
     }
     return csoNode;
 }
+
 
 void CommoditySpreadOptionData::OptionStripData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "OptionStripPaymentDates");

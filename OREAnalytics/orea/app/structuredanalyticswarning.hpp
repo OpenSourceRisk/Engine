@@ -37,8 +37,7 @@ public:
               Category::Warning, Group::Analytics, warningWhat,
               std::map<std::string, std::string>({{"warningType", warningType}, {"analyticType", analyticType}})) {
 
-        if (!subFields.empty())
-            subFields_.insert(subFields.begin(), subFields.end());
+        addSubFields(subFields);
     }
 };
 

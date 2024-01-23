@@ -1,0 +1,21 @@
+The payoffs described in the Trade Specific Data for scripted trades usually involve a payment currency.
+Unless stated otherwise, this currency represents the {\em natural} payoff currency, i.e.
+
+\begin{itemize}
+\item for equity and commodity underlyings this should be the currency in which the underlying price is quoted
+\item for FX underlyings \lstinline!FX-SOURCE-CCY1-CCY2! this should be the domestic (target, numeraire) currency \lstinline!CCY2!.
+\end{itemize}
+
+If the payment currency is set to a different currency on the other hand, the resulting payoff is a true quanto payoff,
+i.e.\ the amount of the payoff is determined on the natural currency, but paid in a different currency {\em without}
+converting the amount to this latter currency using the fair FX Spot rate on the settlement date.
+
+We are aware that a conversion from the natural payoff currency to a different settlement currency using the fair FX
+Spot rate is sometimes part of the terms and conditions of a trade. This conversion has no or small impact on the
+valuation and risk profile of a trade though and is therefore usually not part of the payoff modeling.
+
+As an example consider a Forward Volatility Agreement on the FX pair GBP-EUR. The \lstinline!PayCcy! should be set to EUR in this
+case, even if the forward premium is settled in GBP as it is usual market practice for this pair.
+
+Notice that the above does not apply to fixed premiums, where the premium is given as a fixed number in the trade xml
+together with a premium currency in which this amount should be paid.

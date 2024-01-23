@@ -103,7 +103,7 @@ boost::shared_ptr<SmileSection> SwaptionVolCube2::smileSectionImpl(const Date& o
     calculate();
     Rate atmForward = atmStrike(optionDate, swapTenor);
     Volatility referenceVol = volsAreSpreads_ ? atmVol_->volatility(optionDate, swapTenor, atmForward) : 0.0;
-    Time optionTime = timeFromReference(optionDate);
+    Time optionTime = std::max(1E-6, timeFromReference(optionDate));
     Real exerciseTimeSqrt = std::sqrt(optionTime);
     std::vector<Real> strikes, stdDevs;
     strikes.reserve(nStrikes_);

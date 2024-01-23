@@ -36,7 +36,12 @@ class OreExample(object):
         self.dry = dry
         self.ax = None
         self.plot_name = ""
-        self._locate_ore_exe()
+        if 'ORE_EXAMPLES_USE_PYTHON' in os.environ.keys():
+            self.use_python = os.environ['ORE_EXAMPLES_USE_PYTHON']=="1"
+            self.ore_exe = ""
+        else:
+            self.use_python = False
+            self._locate_ore_exe()
 
     def _locate_ore_exe(self):
         if os.name == 'nt':
@@ -90,12 +95,14 @@ class OreExample(object):
                 for time in times:
                     print_on_console("\t" + time.split()[0] + ": " + time.split()[1])
 
-    def get_output_data_from_column(self, csv_name, colidx, offset=1):
+    def get_output_data_from_column(self, csv_name, colidx, offset=1, filter='', filterCol=0):
         f = open(os.path.join(os.path.join(os.getcwd(), "Output"), csv_name))
         data = []
         for line in f:
+            tokens = line.split(',')
             if colidx < len(line.split(',')):
-                data.append(line.split(',')[colidx])
+                if (filter == '' or tokens[filterCol] == filter):
+                    data.append(line.split(',')[colidx])
             else:
                 data.append("Error")
         return [float(i) for i in data[offset:]]
@@ -106,9 +113,9 @@ class OreExample(object):
         for file in files:
             shutil.copy(os.path.join("Output", file), os.path.join("Output", subdir))
 
-    def plot(self, filename, colIdxTime, colIdxVal, color, label, offset=1, marker='', linestyle='-'):
-        self.ax.plot(self.get_output_data_from_column(filename, colIdxTime, offset),
-                     self.get_output_data_from_column(filename, colIdxVal, offset),
+    def plot(self, filename, colIdxTime, colIdxVal, color, label, offset=1, marker='', linestyle='-', filter='', filterCol=0):
+        self.ax.plot(self.get_output_data_from_column(filename, colIdxTime, offset, filter, filterCol),
+                     self.get_output_data_from_column(filename, colIdxVal, offset, filter, filterCol),
                      linewidth=2,
                      linestyle=linestyle,
                      color=color,
@@ -262,7 +269,11 @@ class OreExample(object):
 
     def run(self, xml):
         if not self.dry:
-            if subprocess.call([self.ore_exe, xml]) != 0:
+            if(self.use_python):
+                res = subprocess.call([sys.executable, os.path.join(os.pardir, "ore_wrapper.py"), xml])
+            else:
+                res = subprocess.call([self.ore_exe, xml])
+            if res != 0:
                 raise Exception("Return Code was not Null.")
 
     def run_plus(self, xml):

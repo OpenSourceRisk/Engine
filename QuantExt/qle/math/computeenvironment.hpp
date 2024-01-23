@@ -23,7 +23,7 @@
 #pragma once
 
 #include <ql/patterns/singleton.hpp>
-
+#include <boost/thread/shared_mutex.hpp>
 #include <cstdint>
 #include <set>
 
@@ -47,6 +47,7 @@ private:
 
     std::vector<ComputeFramework*> frameworks_;
     ComputeContext* currentContext_;
+    std::string currentContextDeviceName_;
 };
 
 class ComputeFramework {
@@ -58,6 +59,10 @@ public:
 
 class ComputeContext {
 public:
+    struct Settings {
+        std::size_t regressionOrder = 4;
+    };
+
     struct DebugInfo {
         unsigned long numberOfOperations = 0;
         unsigned long nanoSecondsDataCopy = 0;
@@ -72,8 +77,8 @@ public:
                                                              const std::size_t version = 0,
                                                              const bool debug = false) = 0;
 
-    virtual std::size_t createInputVariable(float v) = 0;
-    virtual std::size_t createInputVariable(float* v) = 0;
+    virtual std::size_t createInputVariable(double v) = 0;
+    virtual std::size_t createInputVariable(double* v) = 0;
     virtual std::vector<std::vector<std::size_t>> createInputVariates(const std::size_t dim, const std::size_t steps,
                                                                       const std::uint32_t seed) = 0;
 
@@ -82,7 +87,7 @@ public:
     virtual void freeVariable(const std::size_t id) = 0;
     virtual void declareOutputVariable(const std::size_t id) = 0;
 
-    virtual void finalizeCalculation(std::vector<float*>& output) = 0;
+    virtual void finalizeCalculation(std::vector<double*>& output, const Settings& settings) = 0;
 
     // debug info
 
@@ -90,7 +95,22 @@ public:
 
     // convenience methods
 
-    void finalizeCalculation(std::vector<std::vector<float>>& output);
+    void finalizeCalculation(std::vector<std::vector<double>>& output, const Settings& settings);
+};
+
+template <class T> T* createComputeFrameworkCreator() { return new T; }
+
+class ComputeFrameworkRegistry : public QuantLib::Singleton<ComputeFrameworkRegistry, std::true_type> {
+public:
+    ComputeFrameworkRegistry() {}
+    void add(const std::string& name, std::function<ComputeFramework*(void)> creator,
+             const bool allowOverwrite = false);
+    const std::vector<std::function<ComputeFramework*(void)>>& getAll() const;
+
+private:
+    mutable boost::shared_mutex mutex_;
+    std::vector<std::string> names_;
+    std::vector<std::function<ComputeFramework*(void)>> creators_;
 };
 
 } // namespace QuantExt

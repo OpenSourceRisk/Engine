@@ -27,6 +27,7 @@
 #include <ored/marketdata/market.hpp>
 #include <ored/portfolio/enginedata.hpp>
 #include <ored/portfolio/legdata.hpp>
+#include <ored/scripting/models/modelcg.hpp>
 
 #include <qle/models/modelbuilder.hpp>
 
@@ -175,6 +176,9 @@ class EngineBuilderFactory : public QuantLib::Singleton<EngineBuilderFactory, st
     std::vector<std::function<boost::shared_ptr<EngineBuilder>(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
                                                                const std::vector<Date>& grid)>>
         amcEngineBuilderBuilders_;
+    std::vector<std::function<boost::shared_ptr<EngineBuilder>(const boost::shared_ptr<ore::data::ModelCG>& model,
+                                                               const std::vector<Date>& grid)>>
+        amcCgEngineBuilderBuilders_;
     std::vector<std::function<boost::shared_ptr<LegBuilder>()>> legBuilderBuilders_;
     mutable boost::shared_mutex mutex_;
 
@@ -185,6 +189,10 @@ public:
         const std::function<boost::shared_ptr<EngineBuilder>(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
                                                              const std::vector<Date>& grid)>& builder,
         const bool allowOverwrite = false);
+    void addAmcCgEngineBuilder(
+        const std::function<boost::shared_ptr<EngineBuilder>(const boost::shared_ptr<ore::data::ModelCG>& model,
+                                                             const std::vector<Date>& grid)>& builder,
+        const bool allowOverwrite = false);
     void addLegBuilder(const std::function<boost::shared_ptr<LegBuilder>()>& builder,
                        const bool allowOverwrite = false);
 
@@ -192,6 +200,9 @@ public:
     std::vector<boost::shared_ptr<EngineBuilder>>
     generateAmcEngineBuilders(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
                               const std::vector<Date>& grid) const;
+    std::vector<boost::shared_ptr<EngineBuilder>>
+    generateAmcCgEngineBuilders(const boost::shared_ptr<ore::data::ModelCG>& model,
+                                const std::vector<Date>& grid) const;
     std::vector<boost::shared_ptr<LegBuilder>> generateLegBuilders() const;
 };
 

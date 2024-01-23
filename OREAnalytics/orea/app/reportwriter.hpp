@@ -32,6 +32,7 @@
 #include <orea/engine/sensitivitystream.hpp>
 #include <orea/simm/crifrecord.hpp>
 #include <orea/simm/simmresults.hpp>
+#include <orea/simm/crif.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
@@ -99,7 +100,7 @@ public:
     virtual void writeAggregationScenarioData(ore::data::Report& report, const AggregationScenarioData& data);
 
     virtual void writeScenarioReport(ore::data::Report& report,
-                                     const boost::shared_ptr<SensitivityCube>& sensitivityCube,
+                                     const std::vector<boost::shared_ptr<SensitivityCube>>& sensitivityCubes,
                                      QuantLib::Real outputThreshold = 0.0);
 
     virtual void writeSensitivityReport(ore::data::Report& report, const boost::shared_ptr<SensitivityStream>& ss,
@@ -147,13 +148,13 @@ public:
         const bool isFinalSimm = true, QuantLib::Real fxSpot = 1.0, QuantLib::Real outputThreshold = 0.005);
 
     //! Write the SIMM data report i.e. the netted CRIF records used in a SIMM calculation
-    virtual void writeSIMMData(const SimmNetSensitivities& simmData,
+    virtual void writeSIMMData(const ore::analytics::Crif& simmData,
                                const boost::shared_ptr<ore::data::Report>& dataReport,
                                const bool hasNettingSetDetails = false);
 
     //! Write out CRIF records to a report
     virtual void writeCrifReport(const boost::shared_ptr<ore::data::Report>& report,
-                                 const SimmNetSensitivities& crifRecords);
+                                 const ore::analytics::Crif& crifRecords);
 
     virtual void writeScenarioStatistics(const boost::shared_ptr<ore::analytics::ScenarioGenerator>& generator,
                                          const std::vector<ore::analytics::RiskFactorKey>& keys,

@@ -17,11 +17,10 @@
 */
 
 #include <orea/app/parameters.hpp>
-#include <orea/orea.hpp>
-#include <ored/ored.hpp>
-#include <ostream>
+
+#include <ored/utilities/log.hpp>
+
 #include <ql/errors.hpp>
-#include <stdio.h>
 
 using QuantLib::Date;
 using std::string;
@@ -85,6 +84,17 @@ void Parameters::fromXML(XMLNode* node) {
         setupMap[key] = value;
     }
     data_["setup"] = setupMap;
+
+    XMLNode* loggingNode = XMLUtils::getChildNode(node, "Logging");
+    if (loggingNode) {
+        map<string, string> loggingMap;
+        for (XMLNode* child = XMLUtils::getChildNode(loggingNode); child; child = XMLUtils::getNextSibling(child)) {
+            string key = XMLUtils::getAttribute(child, "name");
+            string value = XMLUtils::getNodeValue(child);
+            loggingMap[key] = value;
+        }
+        data_["logging"] = loggingMap;
+    }
 
     XMLNode* marketsNode = XMLUtils::getChildNode(node, "Markets");
     if (marketsNode) {

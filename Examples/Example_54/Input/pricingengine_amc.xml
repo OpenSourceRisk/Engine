@@ -1,0 +1,148 @@
+<?xml version="1.0"?>
+<PricingEngines>
+  <Product type="ScriptedTrade">
+    <Model>Generic</Model>
+    <ModelParameters>
+      <Parameter name="Model">GaussianCam</Parameter>
+      <Parameter name="BaseCcy">USD</Parameter>
+      <Parameter name="EnforceBaseCcy">false</Parameter>
+      <Parameter name="GridCoarsening">3M(1W),1Y(1M),5Y(3M),10Y(1Y),50Y(5Y)</Parameter>
+      <Parameter name="IrReversion_EUR">0.01</Parameter>
+      <Parameter name="IrReversion_GBP">0.01</Parameter>
+      <Parameter name="FullDynamicFx">true</Parameter>
+      <Parameter name="FullDynamicIr">true</Parameter>
+      <!-- DK or JY -->
+      <Parameter name="InfModelType">JY</Parameter>
+    </ModelParameters>
+    <Engine>Generic</Engine>
+    <EngineParameters>
+      <Parameter name="Engine">MC</Parameter>
+      <Parameter name="Samples">10000</Parameter>
+      <Parameter name="RegressionOrder">4</Parameter>
+      <Parameter name="TimeStepsPerYear">24</Parameter>
+      <Parameter name="Interactive">false</Parameter>
+      <Parameter name="BootstrapTolerance">1.0</Parameter>
+      <Parameter name="ZeroVolatility">false</Parameter>
+      <Parameter name="Interactive">false</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="Swap">
+    <Model>CrossAssetModel</Model>
+    <ModelParameters/>
+    <Engine>AMC</Engine>
+    <EngineParameters>
+      <Parameter name="Training.Sequence">MersenneTwisterAntithetic</Parameter>
+      <Parameter name="Training.Seed">42</Parameter>
+      <Parameter name="Training.Samples">50000</Parameter>
+      <Parameter name="Pricing.Sequence">SobolBrownianBridge</Parameter>
+      <Parameter name="Pricing.Seed">17</Parameter>
+      <Parameter name="Pricing.Samples">0</Parameter>
+      <Parameter name="Training.BasisFunction">Monomial</Parameter>
+      <Parameter name="Training.BasisFunctionOrder">6</Parameter>
+      <Parameter name="BrownianBridgeOrdering">Steps</Parameter>
+      <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
+      <Parameter name="MinObsDate">true</Parameter>
+      <Parameter name="RegressionOnExerciseOnly">false</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CrossCurrencySwap">
+    <Model>CrossAssetModel</Model>
+    <ModelParameters/>
+    <Engine>AMC</Engine>
+    <EngineParameters>
+      <Parameter name="Training.Sequence">MersenneTwisterAntithetic</Parameter>
+      <Parameter name="Training.Seed">42</Parameter>
+      <Parameter name="Training.Samples">10000</Parameter>
+      <Parameter name="Pricing.Sequence">SobolBrownianBridge</Parameter>
+      <Parameter name="Pricing.Seed">17</Parameter>
+      <Parameter name="Pricing.Samples">0</Parameter>
+      <Parameter name="Training.BasisFunction">Monomial</Parameter>
+      <Parameter name="Training.BasisFunctionOrder">2</Parameter>
+      <Parameter name="BrownianBridgeOrdering">Steps</Parameter>
+      <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
+      <Parameter name="MinObsDate">true</Parameter>
+      <Parameter name="RegressionOnExerciseOnly">false</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="FxOption">
+    <Model>CrossAssetModel</Model>
+    <ModelParameters/>
+    <Engine>AMC</Engine>
+    <EngineParameters>
+      <Parameter name="Training.Sequence">MersenneTwisterAntithetic</Parameter>
+      <Parameter name="Training.Seed">42</Parameter>
+      <Parameter name="Training.Samples">10000</Parameter>
+      <Parameter name="Pricing.Sequence">SobolBrownianBridge</Parameter>
+      <Parameter name="Pricing.Seed">17</Parameter>
+      <Parameter name="Pricing.Samples">0</Parameter>
+      <Parameter name="Training.BasisFunction">Monomial</Parameter>
+      <Parameter name="Training.BasisFunctionOrder">2</Parameter>
+      <Parameter name="BrownianBridgeOrdering">Steps</Parameter>
+      <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
+      <Parameter name="MinObsDate">true</Parameter>
+      <Parameter name="RegressionOnExerciseOnly">false</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="BermudanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters/>
+    <Engine>AMC</Engine>
+    <EngineParameters>
+      <Parameter name="Training.Sequence">MersenneTwisterAntithetic</Parameter>
+      <Parameter name="Training.Seed">42</Parameter>
+      <Parameter name="Training.Samples">50000</Parameter>
+      <Parameter name="Pricing.Sequence">SobolBrownianBridge</Parameter>
+      <Parameter name="Pricing.Seed">17</Parameter>
+      <Parameter name="Pricing.Samples">0</Parameter>
+      <Parameter name="Training.BasisFunction">Monomial</Parameter>
+      <Parameter name="Training.BasisFunctionOrder">6</Parameter>
+      <Parameter name="BrownianBridgeOrdering">Steps</Parameter>
+      <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
+      <Parameter name="MinObsDate">true</Parameter>
+      <Parameter name="RegressionOnExerciseOnly">false</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="MultiLegOption">
+    <Model>CrossAssetModel</Model>
+    <ModelParameters/>
+    <Engine>AMC</Engine>
+    <EngineParameters>
+      <Parameter name="Training.Sequence">MersenneTwisterAntithetic</Parameter>
+      <Parameter name="Training.Seed">42</Parameter>
+      <Parameter name="Training.Samples">10000</Parameter>
+      <Parameter name="Pricing.Sequence">SobolBrownianBridge</Parameter>
+      <Parameter name="Pricing.Seed">17</Parameter>
+      <Parameter name="Pricing.Samples">0</Parameter>
+      <Parameter name="Training.BasisFunction">Monomial</Parameter>
+      <Parameter name="Training.BasisFunctionOrder">4</Parameter>
+      <Parameter name="BrownianBridgeOrdering">Steps</Parameter>
+      <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
+      <Parameter name="MinObsDate">true</Parameter>
+      <Parameter name="RegressionOnExerciseOnly">false</Parameter>
+    </EngineParameters>
+  </Product>
+  <!-- to ensure that legs can be built, not used otherwise -->
+  <Product type="CapFlooredIborLeg">
+    <Model>BlackOrBachelier</Model>
+    <ModelParameters/>
+    <Engine>BlackIborCouponPricer</Engine>
+    <EngineParameters/>
+  </Product>
+  <!-- to ensure that legs can be built, not used otherwise -->
+  <Product type="CMS">
+    <Model>LinearTSR</Model>
+    <ModelParameters/>
+    <Engine>LinearTSRPricer</Engine>
+    <EngineParameters>
+      <Parameter name="MeanReversion">0.0</Parameter>
+      <Parameter name="Policy">RateBound</Parameter>
+      <Parameter name="LowerRateBoundLogNormal">0.0001</Parameter>
+      <Parameter name="UpperRateBoundLogNormal">2.0000</Parameter>
+      <Parameter name="LowerRateBoundNormal">-2.0000</Parameter>
+      <Parameter name="UpperRateBoundNormal">2.0000</Parameter>
+      <Parameter name="VegaRatio">0.01</Parameter>
+      <Parameter name="PriceThreshold">0.0000001</Parameter>
+      <Parameter name="BsStdDev">3.0</Parameter>
+    </EngineParameters>
+  </Product>
+</PricingEngines>

@@ -18,8 +18,8 @@
 
 #include "sensitivityperformanceplus.hpp"
 #include <test/oreatoplevelfixture.hpp>
-#include <test/testmarket.hpp>
-#include <test/testportfolio.hpp>
+#include "testmarket.hpp"
+#include "testportfolio.hpp"
 
 #include <boost/timer/timer.hpp>
 #include <orea/app/reportwriter.hpp>
@@ -52,7 +52,6 @@
 #include <ored/report/csvreport.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/osutils.hpp>
-#include <orea/engine/sensitivityanalysisplus.hpp>
 #include <ql/math/randomnumbers/mt19937uniformrng.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/date.hpp>
@@ -236,15 +235,15 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5Big() {
         67 * Months, 68 * Months, 6 * Years,   76 * Months, 77 * Months, 78 * Months, 79 * Months, 80 * Months,
         7 * Years,   88 * Months, 89 * Months, 90 * Months, 91 * Months, 92 * Months, 10 * Years,  15 * Years,
         20 * Years,  25 * Years,  30 * Years,  50 * Years}; // multiple tenors: triangular shifts
-    cvsData->shiftType = "Absolute";
+    cvsData->shiftType = ShiftType::Absolute;
     cvsData->shiftSize = 0.0001;
 
     SensitivityScenarioData::SpotShiftData fxsData;
-    fxsData.shiftType = "Relative";
+    fxsData.shiftType = ShiftType::Relative;
     fxsData.shiftSize = 0.01;
 
     SensitivityScenarioData::VolShiftData fxvsData;
-    fxvsData.shiftType = "Relative";
+    fxvsData.shiftType = ShiftType::Relative;
     fxvsData.shiftSize = 1.0;
     fxvsData.shiftExpiries = {1 * Weeks,   2 * Weeks,   1 * Months,  2 * Months,  3 * Months,  4 * Months,  5 * Months,
                               6 * Months,  9 * Months,  10 * Months, 11 * Months, 1 * Years,   13 * Months, 14 * Months,
@@ -258,7 +257,7 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5Big() {
                               15 * Years,  20 * Years,  25 * Years,  30 * Years,  50 * Years};
 
     SensitivityScenarioData::CapFloorVolShiftData cfvsData;
-    cfvsData.shiftType = "Absolute";
+    cfvsData.shiftType = ShiftType::Absolute;
     cfvsData.shiftSize = 0.0001;
     cfvsData.shiftExpiries = {
         3 * Months,  4 * Months,  5 * Months,  6 * Months,  9 * Months,  10 * Months, 11 * Months, 1 * Years,
@@ -272,7 +271,7 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5Big() {
     cfvsData.shiftStrikes = {0.01, 0.02, 0.03, 0.04, 0.05};
 
     SensitivityScenarioData::GenericYieldVolShiftData swvsData;
-    swvsData.shiftType = "Relative";
+    swvsData.shiftType = ShiftType::Relative;
     swvsData.shiftSize = 0.01;
     swvsData.shiftExpiries = {1 * Weeks,   2 * Weeks,   1 * Months,  2 * Months,  3 * Months,  4 * Months,  5 * Months,
                               6 * Months,  9 * Months,  10 * Months, 11 * Months, 1 * Years,   13 * Months, 14 * Months,
@@ -349,26 +348,26 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
         boost::make_shared<SensitivityScenarioData::CurveShiftData>();
     cvsData->shiftTenors = {6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
                             7 * Years,  10 * Years, 15 * Years, 20 * Years}; // multiple tenors: triangular shifts
-    cvsData->shiftType = "Absolute";
+    cvsData->shiftType = ShiftType::Absolute;
     cvsData->shiftSize = 0.0001;
 
     SensitivityScenarioData::SpotShiftData fxsData;
-    fxsData.shiftType = "Relative";
+    fxsData.shiftType = ShiftType::Relative;
     fxsData.shiftSize = 0.01;
 
     SensitivityScenarioData::VolShiftData fxvsData;
-    fxvsData.shiftType = "Relative";
+    fxvsData.shiftType = ShiftType::Relative;
     fxvsData.shiftSize = 1.0;
     fxvsData.shiftExpiries = {5 * Years};
 
     SensitivityScenarioData::CapFloorVolShiftData cfvsData;
-    cfvsData.shiftType = "Absolute";
+    cfvsData.shiftType = ShiftType::Absolute;
     cfvsData.shiftSize = 0.0001;
     cfvsData.shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     cfvsData.shiftStrikes = {0.01, 0.02, 0.03, 0.04, 0.05};
 
     SensitivityScenarioData::GenericYieldVolShiftData swvsData;
-    swvsData.shiftType = "Relative";
+    swvsData.shiftType = ShiftType::Relative;
     swvsData.shiftSize = 0.01;
     swvsData.shiftExpiries = {6 * Months, 1 * Years, 3 * Years, 5 * Years, 10 * Years};
     swvsData.shiftTerms = {1 * Years, 3 * Years, 5 * Years, 10 * Years, 20 * Years};
@@ -428,11 +427,11 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData7() {
     cvsData->shiftTenors = {
         2 * Weeks, 1 * Months, 3 * Months, 6 * Months, 1 * Years,  2 * Years,
         3 * Years, 5 * Years,  10 * Years, 15 * Years, 20 * Years, 30 * Years}; // multiple tenors: triangular shifts
-    cvsData->shiftType = "Absolute";
+    cvsData->shiftType = ShiftType::Absolute;
     cvsData->shiftSize = 0.0001;
 
     SensitivityScenarioData::SpotShiftData fxsData;
-    fxsData.shiftType = "Relative";
+    fxsData.shiftType = ShiftType::Relative;
     fxsData.shiftSize = 0.01;
 
     sensiData->discountCurveShiftData()["EUR"] = cvsData;
@@ -753,9 +752,8 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
     boost::shared_ptr<Portfolio> portfolio = buildPortfolio(portfolioSize);
 
     boost::timer::cpu_timer timer;
-    boost::shared_ptr<SensitivityAnalysis> sa =
-        boost::make_shared<SensitivityAnalysisPlus>(
-            portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, false);
+    boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
+        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, false);
     sa->generateSensitivities();
     timer.stop();
     Real elapsed = timer.elapsed().wall * 1e-9;
@@ -803,9 +801,8 @@ void BT_Benchmark(bool crossGammas, ObservationMode::Mode om) {
     boost::shared_ptr<Portfolio> portfolio = buildPortfolio(portfolioSize, true);
 
     boost::timer::cpu_timer timer;
-    boost::shared_ptr<SensitivityAnalysis> sa =
-        boost::make_shared<SensitivityAnalysisPlus>(
-            portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, false);
+    boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
+        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, false);
     sa->generateSensitivities();
 
     // TODO: do we really want to write a report in the unit tests?

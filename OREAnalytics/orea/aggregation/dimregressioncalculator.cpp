@@ -194,7 +194,7 @@ void RegressionDynamicInitialMarginCalculator::build() {
             Size mporCalendarDays = cubeInterpretation_->getMporCalendarDays(cube_, j);
             Real horizonScaling = sqrt(1.0 * horizonCalendarDays_ / mporCalendarDays);
 
-            Real stdevDiff = sqrt(variance(accDiff));
+            Real stdevDiff = sqrt(boost::accumulators::variance(accDiff));
             Real E_OneOverNumeraire =
                 mean(accOneOverNumeraire); // "re-discount" (the stdev is calculated on non-discounted deltaNPVs)
 
@@ -388,7 +388,7 @@ map<string, Real> RegressionDynamicInitialMarginCalculator::unscaledCurrentDIM()
             acc_OneOverNum(1.0 / numeraire);
         }
         Real E_OneOverNumeraire = mean(acc_OneOverNum);
-        Real variance_t0 = variance(acc_delMtm);
+        Real variance_t0 = boost::accumulators::variance(acc_delMtm);
         Real sqrt_t0 = sqrt(variance_t0);
         t0dimReg[key] = (sqrt_t0 * confidenceLevel * E_OneOverNumeraire);
         std::sort(t0_delMtM_dist.begin(), t0_delMtM_dist.end());

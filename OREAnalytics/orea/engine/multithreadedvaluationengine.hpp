@@ -56,6 +56,7 @@ public:
         const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
         const ore::data::IborFallbackConfig& iborFallbackConfig = ore::data::IborFallbackConfig::defaultConfig(),
         const bool handlePseudoCurrenciesTodaysMarket = true, const bool handlePseudoCurrenciesSimMarket = true,
+        const bool recalibrateModels = true,
         const std::function<boost::shared_ptr<ore::analytics::NPVCube>(
             const QuantLib::Date&, const std::set<std::string>&, const std::vector<QuantLib::Date>&,
             const QuantLib::Size)>& cubeFactory = {},
@@ -109,6 +110,7 @@ private:
     ore::data::IborFallbackConfig iborFallbackConfig_;
     bool handlePseudoCurrenciesTodaysMarket_;
     bool handlePseudoCurrenciesSimMarket_;
+    bool recalibrateModels_;
     std::function<boost::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
                                                              const std::vector<QuantLib::Date>&, const QuantLib::Size)>
         cubeFactory_;

@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<!-- Copyright (C) 2019 Quaternion Risk Management -->
+<!-- All Rights Reserved -->
+<ScriptLibrary>
+  <!-- TaRF
+
+       Input Data:
+       FixingAmount                    unleveraged amount paid on each fixing date
+       LongShort                       1 for a long, -1 for a short position
+       Underlying                      underlying index
+       PayCcy                          payment currency
+       FixingDates                     fixing valuation dates
+       SettlementDates                 settlement dates
+       RangeUpperBounds                upper bounds of fixing ranges
+       RangeLowerBounds                lower bounds of fixing ranges
+       RangeLeverages                  leverage amounts of fixing ranges
+       RangeStrikes                    option strikes per range
+       KnockOutProfitAmount            if > 0, trigger for accumulated profit
+       KnockOutProfitEvents            if > 0, trigger for number of profit events
+       TargetAmount                    target amount for TargetType = exact
+       TargetType                      -1 for truncated, 0 for exact, 1 for full
+
+       Result Data:
+       value                           npv of the option
+       currentNotional                 current notional
+       notionalCurrency                notional currency
+  -->
+  <Script>
+    <Name>TaRF</Name>
+    <ProductTag>SingleAssetOption({AssetClass})</ProductTag>
+    <Script>
+      <Code><![CDATA[
+            REQUIRE FixingAmount > 0;
+            REQUIRE LongShort == 1 OR LongShort == -1;
+            REQUIRE SIZE(RangeUpperBounds) == SIZE(RangeLowerBounds);
+            REQUIRE SIZE(RangeLowerBounds) == SIZE(RangeLeverages);
+            REQUIRE SIZE(RangeLowerBounds) == SIZE(RangeStrikes);
+            REQUIRE TargetType == -1 OR TargetType == 0 OR TargetType == 1;
+            REQUIRE SIZE(FixingDates) == SIZE(SettlementDates);
+
+            NUMBER Payoff, d, r, PnL, wasTriggered, AccProfit, Hits, currentNotional;
+            NUMBER Fixing[SIZE(FixingDates)], Triggered[SIZE(FixingDates)];
+
+            FOR r IN (1, SIZE(RangeUpperBounds), 1) DO
+              REQUIRE RangeLowerBounds[r] <= RangeUpperBounds[r];
+              REQUIRE RangeStrikes[r] >= 0;
+            END;
+
+            FOR d IN (1, SIZE(FixingDates), 1) DO
+              Fixing[d] = Underlying(FixingDates[d]);
+              IF wasTriggered != 1 THEN
+                PnL = 0;
+                FOR r IN (1, SIZE(RangeUpperBounds), 1) DO
+                  IF Fixing[d] > RangeLowerBounds[r] AND Fixing[d] <= RangeUpperBounds[r] THEN
+                    PnL = PnL + RangeLeverages[r] * FixingAmount * (Fixing[d] - RangeStrikes[r]);
+                  END;
+                END;
+
+                IF PnL >= 0 THEN
+                  AccProfit = AccProfit + PnL;
+                  Hits = Hits + 1;
+                END;
+
+                IF {KnockOutProfitEvents > 0 AND Hits >= KnockOutProfitEvents} OR
+                   {KnockOutProfitAmount > 0 AND AccProfit >= KnockOutProfitAmount} THEN
+                  wasTriggered = 1;
+                  Triggered[d] = 1;
+                  IF TargetType == 0 THEN
+                    Payoff = Payoff + LOGPAY(TargetAmount - (AccProfit - PnL), FixingDates[d], SettlementDates[d], PayCcy, 0, Cashflow);
+                  END;
+                  IF TargetType == 1 THEN
+                    Payoff = Payoff + LOGPAY(PnL, FixingDates[d], SettlementDates[d], PayCcy, 0, Cashflow);
+                  END;
+                ELSE
+                    Payoff = Payoff + LOGPAY(PnL, FixingDates[d], SettlementDates[d], PayCcy, 0, Cashflow);
+                END;
+              END;
+            END;
+            value = LongShort * Payoff;
+            currentNotional = FixingAmount * RangeStrikes[1];
+        ]]></Code>
+      <NPV>value</NPV>
+      <Results>
+        <Result>currentNotional</Result>
+        <Result rename="notionalCurrency">PayCcy</Result>
+        <Result>Fixing</Result>
+        <Result>Triggered</Result>
+      </Results>
+    </Script>
+  </Script>
+</ScriptLibrary>

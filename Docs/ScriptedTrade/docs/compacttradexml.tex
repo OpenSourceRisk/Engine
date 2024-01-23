@@ -1,0 +1,130 @@
+In addition to the trade xml described in \ref{generalStructure},
+\ifdefined\STModuleDoc
+\ref{scriptNode}, \ref{dataNode}
+\fi
+we support an alternative, more compact, format where the variable names are derived from the node names and the type is given by an
+attribute. The script
+\ifdefined\STModuleDoc
+must sit in the script library in this case (i.e. inlining is not possible) and
+\fi
+is referenced via a name derived from the root node of the trade data. Consider the following example of a one touch option in the
+original format:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Trade id="SCRIPTED_FX_ONE-TOUCH_OPTION">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    <CounterParty>CPTY_A</CounterParty>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <AdditionalFields/>
+  </Envelope>
+  <ScriptedTradeData>
+    <ScriptName>OneTouchOption</ScriptName>
+    <Data>
+      <Event>
+        <Name>Settlement</Name>
+        <Value>2020-08-01</Value>
+      </Event>
+      <Event>
+        <Name>ObservationDates</Name>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2018-12-28</StartDate>
+            <EndDate>2020-08-01</EndDate>
+            <Tenor>1D</Tenor>
+            <Calendar>US</Calendar>
+            <Convention>U</Convention>
+            <TermConvention>U</TermConvention>
+            <Rule>Forward</Rule>
+          </Rules>
+        </ScheduleData>
+        <ApplyCoarsening>true</ApplyCoarsening>
+      </Event>
+      <Number>
+        <Name>BarrierLevel</Name>
+        <Value>0.009</Value>
+      </Number>
+      <Number>
+        <Name>Type</Name>
+        <Value>-1</Value>
+      </Number>
+      <Number>
+        <Name>LongShort</Name>
+        <Value>1</Value>
+      </Number>
+      <Number>
+        <Name>Amount</Name>
+        <Value>10000000</Value>
+      </Number>
+      <Currency>
+        <Name>PayCcy</Name>
+        <Value>USD</Value>
+      </Currency>
+      <Index>
+        <Name>Underlying</Name>
+        <Value>FX-TR20H-USD-JPY</Value>
+      </Index>
+    </Data>
+  </ScriptedTradeData>
+</Trade>
+\end{minted}
+
+In the compact format the same trade looks like this:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Trade id="SCRIPTED_FX_ONE-TOUCH_OPTION">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    <CounterParty>CPTY_A</CounterParty>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <AdditionalFields/>
+  </Envelope>
+  <OneTouchOptionData>
+    <Settlement type="event">2020-08-01</Settlement>
+    <ObservationDates type="event">
+      <ScheduleData>
+        <Rules>
+          <StartDate>2018-12-28</StartDate>
+          <EndDate>2020-08-01</EndDate>
+          <Tenor>1D</Tenor>
+          <Calendar>US</Calendar>
+          <Convention>U</Convention>
+          <TermConvention>U</TermConvention>
+          <Rule>Forward</Rule>
+        </Rules>
+      </ScheduleData>
+      <ApplyCoarsening>true</ApplyCoarsening>
+    </ObservationDates>
+    <BarrierLevel type="number">0.009</BarrierLevel>
+    <BarrierType type="barrierType">DownIn</BarrierType>
+    <LongShort type="longShort">Long</LongShort>
+    <Amount type="number">10000000</Amount>
+    <PayCcy type="currency">USD</PayCcy>
+    <Underlying type="index">FX-TR20H-USD-JPY</Underlying>
+  </OneTouchOptionData>
+</Trade>
+\end{minted}
+
+The supported types that must be specified in the \verb+type+ attribute are \verb+number+, \verb+event+,
+\verb+currency+, \verb+dayCounter+ and \verb+index+. In addition we support some custom types that are mapped to numbers
+internally and allow for a more natural representation of the trade:
+
+\begin{itemize}
+\item \verb+bool+ with a mapping \verb+true+ $\mapsto$ 1, \verb+false+ $\mapsto$ -1 
+\item \verb+optionType+ with a mapping \verb+Call+ $\mapsto$ 1, \verb+Put+ $\mapsto$ -1, \verb+Cap+ $\mapsto$ 1,
+  \verb+Floor+ $\mapsto$ -1
+\item \verb+longShort+ with a mapping \verb+Long+ $\mapsto$ 1, \verb+Short+ $\mapsto$ -1
+\item \verb+barrierType+ with a mapping \verb+DownIn+ $\mapsto$ 1, \verb+UpIn+ $\mapsto$ 2, \verb+DownOut+ $\mapsto$ 3,
+  \verb+UpOut+ $\mapsto$ 4
+\end{itemize}
+
+Arrays of events are specified as in the example above (ObservationDates), for the other types the values are listed in
+value tags, e.g. an array of numbers is declared as
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <MyNumberArray type="number">
+    <Value>100.0</Value>
+    <Value>200.0</Value>
+    <Value>200.0</Value>  
+  </MyNumberArray>
+\end{minted}

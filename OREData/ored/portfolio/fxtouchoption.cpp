@@ -90,8 +90,9 @@ void FxTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
             payDate = payCalendar.advance(expiryDate, opd->lag(), Days, opd->convention());
         } else {
             if (opd->dates().size() > 1)
-                WLOG(ore::data::StructuredTradeWarningMessage(
-                    id(), tradeType(), "Trade build", "Found more than 1 payment date. The first one will be used."));
+                ore::data::StructuredTradeWarningMessage(id(), tradeType(), "Trade build",
+                                                         "Found more than 1 payment date. The first one will be used.")
+                    .log();
             payDate = opd->dates().front();
         }
     }
@@ -175,6 +176,7 @@ void FxTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
         boost::shared_ptr<FxTouchOptionEngineBuilder> fxTouchOptBuilder =
             boost::dynamic_pointer_cast<FxTouchOptionEngineBuilder>(builder);
         barrier->setPricingEngine(fxTouchOptBuilder->engine(fgnCcy, domCcy, type_, payDate, flipResults));
+        setSensitivityTemplate(*fxTouchOptBuilder);
         if (type_ == "One-Touch") {
             // if a one-touch option is triggered it becomes a simple forward cashflow
             // which we price as a swap
@@ -189,9 +191,10 @@ void FxTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
 
         std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
         std::vector<Real> additionalMultipliers;
-        Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, payoffAmount_,
-                                           option_.premiumData(), isLong ? -1.0 : 1.0, parseCurrency(payoffCurrency_),
-                                           engineFactory, builder->configuration(MarketContext::pricing));
+        Date lastPremiumDate =
+            addPremiums(additionalInstruments, additionalMultipliers, (isLong ? 1.0 : -1.0) * payoffAmount_,
+                        option_.premiumData(), isLong ? -1.0 : 1.0, parseCurrency(payoffCurrency_), engineFactory,
+                        builder->configuration(MarketContext::pricing));
 
         Handle<Quote> spot = market->fxRate(fgnCcy.code() + domCcy.code());
 

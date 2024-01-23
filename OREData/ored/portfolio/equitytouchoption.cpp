@@ -131,6 +131,7 @@ void EquityTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFact
     boost::shared_ptr<EquityTouchOptionEngineBuilder> eqTouchOptBuilder =
         boost::dynamic_pointer_cast<EquityTouchOptionEngineBuilder>(builder);
     barrier->setPricingEngine(eqTouchOptBuilder->engine(assetName, ccy, type_));
+    setSensitivityTemplate(*eqTouchOptBuilder);
     if (type_ == "One-Touch") {
         // if a one-touch option is triggered it becomes a simple forward cashflow
         // which we price as a swap
@@ -145,9 +146,9 @@ void EquityTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFact
 
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    Date lastPremiumDate =
-        addPremiums(additionalInstruments, additionalMultipliers, payoffAmount_, option_.premiumData(),
-                    isLong ? -1.0 : 1.0, ccy, engineFactory, builder->configuration(MarketContext::pricing));
+    Date lastPremiumDate = addPremiums(
+        additionalInstruments, additionalMultipliers, (isLong ? 1.0 : -1.0) * payoffAmount_, option_.premiumData(),
+        isLong ? -1.0 : 1.0, ccy, engineFactory, builder->configuration(MarketContext::pricing));
 
     Handle<Quote> spot = market->equitySpot(assetName);
     instrument_ = boost::make_shared<SingleBarrierOptionWrapper>(

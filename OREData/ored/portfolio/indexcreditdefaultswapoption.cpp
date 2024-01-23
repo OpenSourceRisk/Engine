@@ -259,16 +259,18 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
     auto creditCurveId = this->creditCurveId();
     // warn if that is not possible, except for trades on custom baskets
     if (swap_.basket().constituents().empty() && splitCurveIdWithTenor(creditCurveId).second == 0 * Days) {
-        ALOG(StructuredTradeWarningMessage(id(), tradeType(), "Could not imply Index CDS term.",
+        StructuredTradeWarningMessage(id(), tradeType(), "Could not imply Index CDS term.",
                                            "Index CDS term could not be derived from start, end date, are these "
                                            "dates correct (credit curve id is '" +
-                                               swap_.creditCurveId() + "')"));
+                                          swap_.creditCurveId() + "')")
+            .log();
     }
 
     // for cash settlement build the underlying swap with the inccy discount curve
     Settlement::Type settleType = parseSettlementType(option_.settlement());
     cds->setPricingEngine(iCdsEngineBuilder->engine(ccy, creditCurveId, constituentIds, overrideCurve,
                                                     swap_.recoveryRate(), settleType == Settlement::Cash));
+    setSensitivityTemplate(*iCdsEngineBuilder);
 
     // Strike may be in terms of spread or price
     auto strikeType = parseCdsOptionStrikeType(effectiveStrikeType_);
@@ -293,6 +295,7 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
     auto p = splitCurveIdWithTenor(swap_.creditCurveId());
     volCurveId_ = p.first;
     option->setPricingEngine(iCdsOptionEngineBuilder->engine(ccy, creditCurveId, volCurveId_, constituentIds));
+    setSensitivityTemplate(*iCdsOptionEngineBuilder);
 
     // Keep this comment about the maturity date being the underlying maturity instead of the option expiry.
     // [RL] Align option product maturities with ISDA AANA/GRID guidance as of November 2020.
@@ -312,8 +315,8 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
     vector<Real> additionalMultipliers;
     string configuration = iCdsOptionEngineBuilder->configuration(MarketContext::pricing);
     maturity_ =
-        std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, 1.0, option_.premiumData(),
-                                        -indicatorLongShort, ccy, engineFactory, configuration));
+        std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, indicatorLongShort,
+                                        option_.premiumData(), -indicatorLongShort, ccy, engineFactory, configuration));
 
     // Instrument wrapper depends on the settlement type.
     // The instrument build should be indpednent of the evaluation date. However, the general behavior
@@ -508,10 +511,11 @@ void IndexCreditDefaultSwapOption::fromBasket(const Date& asof, map<string, Real
                 notionals_.tradeDate += ntl;
                 notionals_.valuationDate += ntl;
             } else {
-                ALOG(StructuredTradeErrorMessage(id(), "IndexCDSOption", "Error building trade",
+                StructuredTradeErrorMessage(id(), "IndexCDSOption", "Error building trade",
                                                  ("Invalid Basket: found a duplicate credit curve " + creditCurve +
                                                   ".Skip it. Check the basket data for possible errors.")
-                                                     .c_str()));
+                                                .c_str())
+                    .log();
             }
         } else {
             QL_FAIL("Constituent " << creditCurve << " in index CDS option trade " << id()
@@ -539,11 +543,12 @@ void IndexCreditDefaultSwapOption::fromBasket(const Date& asof, map<string, Real
 
     DLOG("All underlyings added, total notional = " << totalNtl);
     if (!close(fullNtl, totalNtl) && totalNtl > fullNtl) {
-        ALOG(StructuredTradeErrorMessage(id(), "IndexCDSOption", "Error building trade",
+        StructuredTradeErrorMessage(id(), "IndexCDSOption", "Error building trade",
                                          ("Sum of basket notionals (" + std::to_string(totalNtl) +
                                           ") is greater than trade notional (" + std::to_string(fullNtl) +
                                           "). Check the basket data for possible errors.")
-                                             .c_str()));
+                                        .c_str())
+            .log();
     }
 
     DLOG("Finished building constituents using basket data.");

@@ -23,20 +23,31 @@
 
 #pragma once
 
-#include <orea/cube/npvcube.hpp>
-#include <orea/engine/cptycalculator.hpp>
-#include <orea/engine/valuationcalculator.hpp>
-#include <orea/simulation/simmarket.hpp>
-#include <ored/portfolio/portfolio.hpp>
-#include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/progressbar.hpp>
-#include <qle/models/modelbuilder.hpp>
+
+#include <ql/time/date.hpp>
 
 #include <map>
 #include <set>
 
+namespace ore::data {
+class DateGrid;
+class Portfolio;
+class Trade;
+} // namespace ore::data
+
+namespace QuantExt {
+class ModelBuilder;
+}
+
 namespace ore {
 namespace analytics {
+
+class NPVCube;
+class CounterpartyCalculator;
+class ValuationCalculator;
+class SimMarket;
+
 using std::set;
 
 //! Valuation Engine
@@ -62,12 +73,12 @@ public:
         //! Valuation date
         const QuantLib::Date& today,
         //! Simulation date grid
-        const boost::shared_ptr<DateGrid>& dg,
+        const boost::shared_ptr<ore::data::DateGrid>& dg,
         //! Simulated market object
         const boost::shared_ptr<analytics::SimMarket>& simMarket,
         //! model builders to be updated
-        const set<std::pair<string, boost::shared_ptr<QuantExt::ModelBuilder>>>& modelBuilders =
-            set<std::pair<string, boost::shared_ptr<QuantExt::ModelBuilder>>>());
+        const set<std::pair<std::string, boost::shared_ptr<QuantExt::ModelBuilder>>>& modelBuilders =
+            set<std::pair<std::string, boost::shared_ptr<QuantExt::ModelBuilder>>>());
 
     //! Build NPV cube
     void buildCube(
@@ -90,21 +101,21 @@ public:
 
 private:
     void recalibrateModels();
-    void runCalculators(bool isCloseOutDate, const std::map<std::string, boost::shared_ptr<Trade>>& trades,
+    void runCalculators(bool isCloseOutDate, const std::map<std::string, boost::shared_ptr<ore::data::Trade>>& trades,
                         std::vector<bool>& tradeHasError,
                         const std::vector<boost::shared_ptr<ValuationCalculator>>& calculators,
                         boost::shared_ptr<analytics::NPVCube>& outputCube,
-                        boost::shared_ptr<analytics::NPVCube>& outputCubeSensis, const Date& d,
-                        const Size cubeDateIndex, const Size sample, const std::string& label = "");
-    void runCalculators(bool isCloseOutDate, const std::map<string, Size>& counterparties,
+                        boost::shared_ptr<analytics::NPVCube>& outputCubeSensis, const QuantLib::Date& d,
+                        const QuantLib::Size cubeDateIndex, const QuantLib::Size sample, const std::string& label = "");
+    void runCalculators(bool isCloseOutDate, const std::map<std::string, QuantLib::Size>& counterparties,
                         const std::vector<boost::shared_ptr<CounterpartyCalculator>>& calculators,
-                        boost::shared_ptr<analytics::NPVCube>& cptyCube, const Date& d,
-                        const Size cubeDateIndex, const Size sample);
-    void tradeExercisable(bool enable, const std::map<std::string, boost::shared_ptr<Trade>>& trades);
+                        boost::shared_ptr<analytics::NPVCube>& cptyCube, const QuantLib::Date& d,
+                        const QuantLib::Size cubeDateIndex, const QuantLib::Size sample);
+    void tradeExercisable(bool enable, const std::map<std::string, boost::shared_ptr<ore::data::Trade>>& trades);
     QuantLib::Date today_;
-    boost::shared_ptr<DateGrid> dg_;
-    boost::shared_ptr<analytics::SimMarket> simMarket_;
-    set<std::pair<string, boost::shared_ptr<QuantExt::ModelBuilder>>> modelBuilders_;
+    boost::shared_ptr<ore::data::DateGrid> dg_;
+    boost::shared_ptr<ore::analytics::SimMarket> simMarket_;
+    set<std::pair<std::string, boost::shared_ptr<QuantExt::ModelBuilder>>> modelBuilders_;
 };
 } // namespace analytics
 } // namespace ore

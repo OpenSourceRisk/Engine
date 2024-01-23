@@ -5,6 +5,12 @@
 #include <qle/auto_link.hpp>
 #endif
 
+#include <qle/ad/backwardderivatives.hpp>
+#include <qle/ad/computationgraph.hpp>
+#include <qle/ad/external_randomvariable_ops.hpp>
+#include <qle/ad/forwardderivatives.hpp>
+#include <qle/ad/forwardevaluation.hpp>
+#include <qle/ad/ssaform.hpp>
 #include <qle/calendars/amendedcalendar.hpp>
 #include <qle/calendars/austria.hpp>
 #include <qle/calendars/belgium.hpp>
@@ -55,11 +61,13 @@
 #include <qle/cashflows/floatingannuitycoupon.hpp>
 #include <qle/cashflows/floatingannuitynominal.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
+#include <qle/cashflows/formulabasedcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/iborfracoupon.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/cashflows/jyyoyinflationcouponpricer.hpp>
 #include <qle/cashflows/lognormalcmsspreadpricer.hpp>
+#include <qle/cashflows/mcgaussianformulabasedcouponpricer.hpp>
 #include <qle/cashflows/nonstandardcapflooredyoyinflationcoupon.hpp>
 #include <qle/cashflows/nonstandardinflationcouponpricer.hpp>
 #include <qle/cashflows/nonstandardyoyinflationcoupon.hpp>
@@ -70,6 +78,7 @@
 #include <qle/cashflows/strippedcapflooredyoyinflationcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/cashflows/subperiodscouponpricer.hpp>
+#include <qle/cashflows/trscashflow.hpp>
 #include <qle/cashflows/yoyinflationcoupon.hpp>
 #include <qle/cashflows/zerofixedcoupon.hpp>
 #include <qle/currencies/africa.hpp>
@@ -95,13 +104,13 @@
 #include <qle/indexes/escpi.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/indexes/fallbackovernightindex.hpp>
+#include <qle/indexes/formulabasedindex.hpp>
 #include <qle/indexes/frcpi.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/genericiborindex.hpp>
 #include <qle/indexes/genericindex.hpp>
 #include <qle/indexes/ibor/ambor.hpp>
 #include <qle/indexes/ibor/ameribor.hpp>
-#include <qle/indexes/ibor/audbbsw.hpp>
 #include <qle/indexes/ibor/boebaserate.hpp>
 #include <qle/indexes/ibor/brlcdi.hpp>
 #include <qle/indexes/ibor/chfsaron.hpp>
@@ -117,7 +126,6 @@
 #include <qle/indexes/ibor/dkkcibor.hpp>
 #include <qle/indexes/ibor/dkkcita.hpp>
 #include <qle/indexes/ibor/dkkois.hpp>
-#include <qle/indexes/ibor/ester.hpp>
 #include <qle/indexes/ibor/hkdhibor.hpp>
 #include <qle/indexes/ibor/hkdhonia.hpp>
 #include <qle/indexes/ibor/hufbubor.hpp>
@@ -136,10 +144,8 @@
 #include <qle/indexes/ibor/nzdbkbm.hpp>
 #include <qle/indexes/ibor/phpphiref.hpp>
 #include <qle/indexes/ibor/plnpolonia.hpp>
-#include <qle/indexes/ibor/plnwibor.hpp>
 #include <qle/indexes/ibor/primeindex.hpp>
 #include <qle/indexes/ibor/rubkeyrate.hpp>
-#include <qle/indexes/ibor/rubmosprime.hpp>
 #include <qle/indexes/ibor/saibor.hpp>
 #include <qle/indexes/ibor/seksior.hpp>
 #include <qle/indexes/ibor/sekstibor.hpp>
@@ -190,7 +196,6 @@
 #include <qle/instruments/equityforward.hpp>
 #include <qle/instruments/fixedbmaswap.hpp>
 #include <qle/instruments/forwardbond.hpp>
-#include <qle/instruments/forwardrateagreement.hpp>
 #include <qle/instruments/fxforward.hpp>
 #include <qle/instruments/genericswaption.hpp>
 #include <qle/instruments/impliedbondspread.hpp>
@@ -214,8 +219,10 @@
 #include <qle/instruments/vanillaforwardoption.hpp>
 #include <qle/instruments/varianceswap.hpp>
 #include <qle/interpolators/optioninterpolator2d.hpp>
+#include <qle/math/basiccpuenvironment.hpp>
 #include <qle/math/blockmatrixinverse.hpp>
 #include <qle/math/bucketeddistribution.hpp>
+#include <qle/math/compiledformula.hpp>
 #include <qle/math/computeenvironment.hpp>
 #include <qle/math/constantinterpolation.hpp>
 #include <qle/math/covariancesalvage.hpp>
@@ -225,6 +232,7 @@
 #include <qle/math/fillemptymatrix.hpp>
 #include <qle/math/flatextrapolation.hpp>
 #include <qle/math/flatextrapolation2d.hpp>
+#include <qle/math/kendallrankcorrelation.hpp>
 #include <qle/math/logquadraticinterpolation.hpp>
 #include <qle/math/matrixfunctions.hpp>
 #include <qle/math/method_mt.hpp>
@@ -235,13 +243,16 @@
 #include <qle/math/randomvariable.hpp>
 #include <qle/math/randomvariable_io.hpp>
 #include <qle/math/randomvariable_opcodes.hpp>
+#include <qle/math/randomvariable_ops.hpp>
 #include <qle/math/randomvariablelsmbasissystem.hpp>
 #include <qle/math/stabilisedglls.hpp>
 #include <qle/math/trace.hpp>
 #include <qle/methods/brownianbridgepathinterpolator.hpp>
+#include <qle/methods/fdmblackscholesmesher.hpp>
+#include <qle/methods/fdmblackscholesop.hpp>
 #include <qle/methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.hpp>
 #include <qle/methods/fdmdefaultableequityjumpdiffusionop.hpp>
-#include <qle/methods/interpolatedvariatemultipathgenerator.hpp>
+#include <qle/methods/fdmquantohelper.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
 #include <qle/methods/pathgeneratorfactory.hpp>
@@ -297,6 +308,7 @@
 #include <qle/models/hwmodel.hpp>
 #include <qle/models/hwparametrization.hpp>
 #include <qle/models/infdkparametrization.hpp>
+#include <qle/models/infdkvectorised.hpp>
 #include <qle/models/infjyparameterization.hpp>
 #include <qle/models/inhomogeneouspooldef.hpp>
 #include <qle/models/irlgm1fconstantparametrization.hpp>
@@ -327,6 +339,8 @@
 #include <qle/models/poollossmodel.hpp>
 #include <qle/models/projectedcrossassetmodel.hpp>
 #include <qle/models/pseudoparameter.hpp>
+#include <qle/models/representativefxoption.hpp>
+#include <qle/models/representativeswaption.hpp>
 #include <qle/models/transitionmatrix.hpp>
 #include <qle/models/yoycapfloorhelper.hpp>
 #include <qle/models/yoyinflationmodeltermstructure.hpp>
@@ -465,6 +479,7 @@
 #include <qle/termstructures/eqcommoptionsurfacestripper.hpp>
 #include <qle/termstructures/equityforwardcurvestripper.hpp>
 #include <qle/termstructures/flatcorrelation.hpp>
+#include <qle/termstructures/flatforwarddividendcurve.hpp>
 #include <qle/termstructures/futurepricehelper.hpp>
 #include <qle/termstructures/fxblackvolsurface.hpp>
 #include <qle/termstructures/fxsmilesection.hpp>

@@ -108,15 +108,13 @@ RandomVariable getUnderlyingCashflowPv(const LgmVectorised& lgm, const Real t, c
         } else if (auto on = boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(cpn)) {
             return lgm.compoundedOnRate(boost::dynamic_pointer_cast<OvernightIndex>(on->index()), on->fixingDates(),
                                         on->valueDates(), on->dt(), on->rateCutoff(), on->includeSpread(), on->spread(),
-                                        on->gearing(), on->lookback(), on->dayCounter(), Null<Real>(), Null<Real>(),
-                                        false, false, t, x) *
+                                        on->gearing(), on->lookback(), Null<Real>(), Null<Real>(), false, false, t, x) *
                    RandomVariable(x.size(), on->accrualPeriod() * on->nominal()) *
                    lgm.reducedDiscountBond(t, T, x, discountCurve);
         } else if (auto av = boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(cpn)) {
             return lgm.averagedOnRate(boost::dynamic_pointer_cast<OvernightIndex>(av->index()), av->fixingDates(),
                                       av->valueDates(), av->dt(), av->rateCutoff(), false, av->spread(), av->gearing(),
-                                      av->lookback(), av->dayCounter(), Null<Real>(), Null<Real>(), false, false, t,
-                                      x) *
+                                      av->lookback(), Null<Real>(), Null<Real>(), false, false, t, x) *
                    RandomVariable(x.size(), av->accrualPeriod() * av->nominal()) *
                    lgm.reducedDiscountBond(t, T, x, discountCurve);
         } else if (auto bma = boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(cpn)) {
@@ -140,16 +138,16 @@ RandomVariable getUnderlyingCashflowPv(const LgmVectorised& lgm, const Real t, c
             auto und = cfon->underlying();
             return lgm.compoundedOnRate(boost::dynamic_pointer_cast<OvernightIndex>(und->index()), und->fixingDates(),
                                         und->valueDates(), und->dt(), und->rateCutoff(), und->includeSpread(),
-                                        und->spread(), und->gearing(), und->lookback(), und->dayCounter(), cfon->cap(),
-                                        cfon->floor(), cfon->localCapFloor(), cfon->nakedOption(), t, x) *
+                                        und->spread(), und->gearing(), und->lookback(), cfon->cap(), cfon->floor(),
+                                        cfon->localCapFloor(), cfon->nakedOption(), t, x) *
                    RandomVariable(x.size(), cfon->accrualPeriod() * cfon->nominal()) *
                    lgm.reducedDiscountBond(t, T, x, discountCurve);
         } else if (auto cfav = boost::dynamic_pointer_cast<QuantExt::CappedFlooredAverageONIndexedCoupon>(cpn)) {
             auto und = cfav->underlying();
             return lgm.averagedOnRate(boost::dynamic_pointer_cast<OvernightIndex>(und->index()), und->fixingDates(),
                                       und->valueDates(), und->dt(), und->rateCutoff(), cfav->includeSpread(),
-                                      und->spread(), und->gearing(), und->lookback(), und->dayCounter(), cfav->cap(),
-                                      cfav->floor(), cfav->localCapFloor(), cfav->nakedOption(), t, x) *
+                                      und->spread(), und->gearing(), und->lookback(), cfav->cap(), cfav->floor(),
+                                      cfav->localCapFloor(), cfav->nakedOption(), t, x) *
                    RandomVariable(x.size(), cfav->accrualPeriod() * cfav->nominal()) *
                    lgm.reducedDiscountBond(t, T, x, discountCurve);
         } else if (auto cfbma = boost::dynamic_pointer_cast<QuantExt::CappedFlooredAverageBMACoupon>(cpn)) {

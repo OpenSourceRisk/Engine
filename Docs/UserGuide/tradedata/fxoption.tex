@@ -55,9 +55,11 @@ holder of the Put counterpart has the right to buy USD using EUR, or equivalentl
 
 \item \lstinline!PayOffAtExpiry! [Optional] The allowable values are \emph{true} for payoff at expiry, or \emph{false} for payoff at exercise (relevant for \emph{American} style FxOptions). Defaults to \emph{true} if left blank or omitted.
 
+\item \lstinline!AutomaticExercise! [Optional] The allowable values are \emph{true} indicating Automatic Exercise is applicable and  \emph{false} indicates that it is not. Used if the FXOption expiry date is on the currentdate or in the past, and the payment date is in the future - so that there still isan outstanding cashflow if the FXOption was in the money on the expiry date. Inthis case, if AutomaticExercise is applied, the FX fixingon the expiry date is used to automatically determine the payoff and thuswhether the option was exercised or not. Defaults to \emph{false} if left blank or omitted.
+
 \item An \lstinline!ExerciseDates! node where exactly one ExerciseDate date element must be given. For \emph{American} style FxOptions the ExerciseDate represents the Expiry date, i.e. they can be exercised up until this date. \\
 
-\item A \lstinline!PaymentData! [Optional] node can be added which defines the settlement date of the option payoff.
+\item A \lstinline!PaymentData! [Optional] node can be added which defines the settlement date of the option payoff. See  \lstinline!PaymentData! in \ref{ss:option_data}
 
 \item \lstinline!Premiums! [Optional]: Option premium amounts paid by the option buyer to the option seller. See section \ref{ss:premiums}
 

@@ -132,7 +132,7 @@
                  // Error will be thrown when calling value or
                  // derivative functions
                  for(Size i=0; i < n_; ++i) {
-                     if(x_[i] <= 0 || close_enough(y_[i], 0.0)) {
+                     if(x_[i] <= 0 || QuantLib::close_enough(y_[i], 0.0)) {
                          p_ = Null<Real>();
                          return;
                      }
@@ -143,9 +143,9 @@
                      q[i][0] = q[n_][i+1] = x_[i];
 
                      for(Size j=0; j<i; ++j) {
-                         q[i][j+1] += pow(x_[i] - x_[j], 3) / 6.0;
+                         q[i][j+1] += std::pow(x_[i] - x_[j], 3) / 6.0;
                      }
-                     Time t = -pow(x_[i], 3) / 6.0;
+                     Time t = -std::pow(x_[i], 3) / 6.0;
                      for(Size j=1; j<n_+1; ++j) {
                          q[i][j] += t;
                      }
@@ -168,9 +168,9 @@
                  Real l = lambdas_[0] * x;
                  Real b = 0;
                  for (Size i=0; i<n_ && x_[i]<x; ++i) {
-                     b += lambdas_[i+1] * pow(x - x_[i], 3);
+                     b += lambdas_[i+1] * std::pow(x - x_[i], 3);
                  }
-                 l += (b - p_ * pow(x, 3)) / 6.0;
+                 l += (b - p_ * std::pow(x, 3)) / 6.0;
                  return (l - y_offset_) / y_mul_;
              }
              Real primitive(Real x) const override {
@@ -182,9 +182,9 @@
                  Real l = lambdas_[0];
                  Real b = 0;
                  for (Size i=0; i<n_ && x_[i]<x; ++i) {
-                     b += lambdas_[i+1] * pow(x - x_[i], 2);
+                     b += lambdas_[i+1] * std::pow(x - x_[i], 2);
                  }
-                 l += (b - p_ * pow(x, 2)) / 2.0;
+                 l += (b - p_ * std::pow(x, 2)) / 2.0;
                  return l / y_mul_;
              }
              Real secondDerivative(Real x) const override {

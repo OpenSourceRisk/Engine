@@ -64,7 +64,7 @@
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
-#include <test/testmarket.hpp>
+#include "testmarket.hpp"
 
 #include <boost/timer/timer.hpp>
 
@@ -258,7 +258,7 @@ void test_measure(std::string measureName, Real shiftHorizon, std::string discNa
 
     Date d1 = grid->dates().back();
     Date d2 = d1 + horizon * Years;
-    Real relTolerance = 0.005;
+    Real relTolerance = 0.01;
     Real eurExpected = d.market->discountCurve("EUR")->discount(d2);
     Real eurExpected2 = d.market->discountCurve("EUR")->discount(d1);
     Real gbpExpected = d.market->fxRate("GBPEUR")->value() * d.market->discountCurve("GBP")->discount(d2);

@@ -28,8 +28,8 @@ namespace QuantExt {
 using namespace QuantLib;
 
     //! Islamic Weekends-only calendar
-    /*! This calendar has no bank holidays except for Ismalic weekends
-        (Fridays and Satirdays).
+    /*! This calendar has no bank holidays except for Islamic weekends
+        (Fridays and Saturdays).
 
         \ingroup calendars
     */

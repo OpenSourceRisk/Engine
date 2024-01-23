@@ -52,7 +52,7 @@ public:
         \warning If the risk type is not covered <code>QL_MAX_REAL</code> is
                  returned i.e. no concentration threshold
      */
-    QuantLib::Real threshold(const SimmConfiguration::RiskType& riskType, const std::string& qualifier) const override;
+    QuantLib::Real threshold(const CrifRecord::RiskType& riskType, const std::string& qualifier) const override;
 
 private:
     //! Help getting SIMM buckets from SIMM qualifiers

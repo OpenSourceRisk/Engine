@@ -46,6 +46,7 @@
  \emph{P, Preceding, PRECEDING}\\ 
  \emph{MP, ModifiedPreceding, Modified Preceding, MODIFIEDP}\\ 
  \emph{U, Unadjusted, INDIFF } \\
+ \emph{HMMF, HalfMonthModifiedFollowing, HalfMonthMF, Half Month Modified Following, HALFMONTHMF}\\
  \emph{NEAREST } (takes future date in case of equal distance) } \\ \hline
   \caption{Allowable Values for Roll Conventions}
   \label{tab:convention}
@@ -191,6 +192,7 @@ Note: Currency codes must also match available currencies in the {\tt simulation
     \emph{TH, THA, THB} & Thailand Calendar \\ \hline
     \emph{TR, TUR, TRY} & Turkey Calendar \\ \hline
     \emph{UA, UKR, UAH} & Ukraine Calendar \\ \hline
+    \emph{XASX} & Australian Securities Exchange Calendar \\ \hline
     \emph{BVMF} & Brazil Bovespa Calendar \\ \hline
     \emph{XTSE} & Canada Toronto Stock Exchange Calendar \\ \hline
     \emph{XSHG} & China Shanghai Stock Exchange Calendar \\ \hline
@@ -251,16 +253,19 @@ Note: Currency codes must also match available currencies in the {\tt simulation
     \emph{A364, Actual/364, Act/364, ACT/364}& Actual 364  \\ \hline
     \emph{Actual/365 (No Leap), Act/365 (NL), NL/365, Actual/365 (JGB)} & Actual 365 Fixed (No Leap Year)\\ \hline
     \emph{Act/365 (Canadian Bond)} & Actual 365 Fixed (Canadian Bond)\\ \hline
-    \emph{T360, 30/360, 30/360 (Bond Basis), ACT/nACT, 30/360 US, 30U/360, 30US/360} & Thirty 360 (US) \\ \hline
+    \emph{T360, 30/360, ACT/nACT, 30/360 US, 30/360 (US), 30U/360, 30US/360} & Thirty 360 (US) \\ \hline
+    \emph{30/360 (Bond Basis)} & Thirty 360 (Bond Basis) \\ \hline
     \emph{30E/360 (Eurobond Basis), 30E/360, 30/360 AIBD (Euro), 30E/360.ICMA, 30E/360 ICMA} & Thirty 360 (European) \\ \hline
     \emph{30E/360E, 30E/360 ISDA, 30E/360.ISDA, 30/360 German, 30/360 (German)} & Thirty 360 (German) \\ \hline
     \emph{30/360 Italian, 30/360 (Italian)} & Thirty 360 (Italian) \\ \hline
-    \emph{ActActISDA, ACT/ACT.ISDA, Actual/Actual (ISDA), ActualActual (ISDA), ACT/ACT, ACT} & Actual Actual (ISDA) \\ \hline
+    \emph{ActActISDA, ACT/ACT.ISDA, Actual/Actual (ISDA), ActualActual (ISDA), ACT/ACT, Act/Act, ACT} & Actual Actual (ISDA) \\ \hline
     \emph{ActActISMA, Actual/Actual (ISMA), ActualActual (ISMA), ACT/ACT.ISMA} & Actual Actual (ISMA) \\ \hline
     \emph{ActActICMA, Actual/Actual (ICMA), ActualActual (ICMA), ACT/ACT.ICMA} & Actual Actual (ICMA) \\ \hline
-    \emph{ActActAFB, ACT/ACT.AFB, Actual/Actual (AFB)} & Actual Actual (AFB) \\ \hline
+    \emph{ActActAFB, ACT/ACT.AFB, Actual/Actual (AFB), ACT29} & Actual Actual (AFB) \\ \hline
     \emph{BUS/252, Business/252} & Brazilian Bus/252 \\ \hline
     \emph{1/1} & 1/1  \\ \hline
+    \emph{Simple} & Simple Day Counter  \\ \hline
+    \emph{Year} & Year Counter  \\ \hline
   \end{tabular}
   \caption{Allowable Values for DayCount Convention}
   \label{tab:daycount}

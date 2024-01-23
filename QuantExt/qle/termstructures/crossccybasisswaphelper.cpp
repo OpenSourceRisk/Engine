@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 #include <ql/cashflows/iborcoupon.hpp>
+#include <ql/utilities/null_deleter.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
 
 #include <qle/termstructures/crossccybasisswaphelper.hpp>
@@ -23,10 +24,6 @@
 #include <boost/make_shared.hpp>
 
 namespace QuantExt {
-
-namespace {
-void no_deletion(YieldTermStructure*) {}
-} // namespace
 
 CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(
     const Handle<Quote>& spreadQuote, const Handle<Quote>& spotFX, Natural settlementDays,
@@ -200,7 +197,7 @@ void CrossCcyBasisSwapHelper::initializeDates() {
 void CrossCcyBasisSwapHelper::setTermStructure(YieldTermStructure* t) {
 
     bool observer = false;
-    boost::shared_ptr<YieldTermStructure> temp(t, no_deletion);
+    boost::shared_ptr<YieldTermStructure> temp(t, null_deleter());
 
     termStructureHandle_.linkTo(temp, observer);
 

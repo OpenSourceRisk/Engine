@@ -39,7 +39,7 @@ namespace ore {
 namespace analytics {
 
 // Ease syntax
-using RiskType = SimmConfiguration::RiskType;
+using RiskType = CrifRecord::RiskType;
 
 // Helper variable for switching risk type before lookup
 const map<RiskType, RiskType> nonVolRiskTypeMap = {
@@ -225,7 +225,7 @@ void SimmBucketMapperBase::fromXML(XMLNode* node) {
     for (XMLNode* rtNode = XMLUtils::getChildNode(node); rtNode; rtNode = XMLUtils::getNextSibling(rtNode)) {
         // Get the risk type that we are dealing with
         string strRiskType = XMLUtils::getNodeName(rtNode);
-        RiskType riskType = parseSimmRiskType(strRiskType);
+        RiskType riskType = parseRiskType(strRiskType);
 
         checkRiskType(riskType);
 

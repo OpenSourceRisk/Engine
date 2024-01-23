@@ -44,7 +44,8 @@ boost::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::buildMcEngine(const bo
         parsePolynomType(engineParameter("Training.BasisFunction")),
         parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering")),
         parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")), discountCurve, simulationDates,
-        externalModelIndices, parseBool(engineParameter("MinObsDate")));
+        externalModelIndices, parseBool(engineParameter("MinObsDate")),
+        parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")));
 }
 
 boost::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::engineImpl(const Currency& ccy) {

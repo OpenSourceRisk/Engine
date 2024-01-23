@@ -402,7 +402,7 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
 
     // Forward Leg
     CashFlowResults fwdCfResult;
-    fwdCfResult.payDate = computeDate;
+    fwdCfResult.payDate = settlementDate;
     fwdCfResult.legNumber = 1;
     fwdCfResult.amount = forwardContractForwardValue;
     fwdCfResult.discountFactor =

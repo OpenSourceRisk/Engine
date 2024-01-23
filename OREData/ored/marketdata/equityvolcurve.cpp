@@ -224,7 +224,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
 
         // Loop over quotes and process equity option quotes that are explicitly specified in the config
         std::ostringstream ss;
-        ss << MarketDatum::InstrumentType::EQUITY_OPTION << "/" << vcc.quoteType() << "/" << vc.curveID() << "/"
+        ss << MarketDatum::InstrumentType::EQUITY_OPTION << "/" << vcc.quoteType() << "/" << vc.equityId() << "/"
            << vc.ccy() << "/*";
         Wildcard w(ss.str());
         for (const auto& md : loader.get(w, asof)) {
@@ -352,7 +352,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
     Size putQuotesAdded = 0;
     Size excludedAlreadyExpired = 0;
     std::ostringstream ss;
-    ss << MarketDatum::InstrumentType::EQUITY_OPTION << "/" << vssc.quoteType() << "/" << vc.curveID() << "/"
+    ss << MarketDatum::InstrumentType::EQUITY_OPTION << "/" << vssc.quoteType() << "/" << vc.equityId() << "/"
        << vc.ccy() << "/*";
     Wildcard w(ss.str());
     for (const auto& md : loader.get(w, asof)) {
@@ -605,7 +605,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
 
     // Read the quotes to fill the expiry dates and vols matrix.
     std::ostringstream ss;
-    ss << MarketDatum::InstrumentType::EQUITY_OPTION << "/" << vmsc.quoteType() << "/" << vc.curveID() << "/"
+    ss << MarketDatum::InstrumentType::EQUITY_OPTION << "/" << vmsc.quoteType() << "/" << vc.equityId() << "/"
        << vc.ccy() << "/*";
     Wildcard w(ss.str());
     for (const auto& md : loader.get(w, asof)) {
@@ -614,8 +614,9 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
 
         auto q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
         QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to EquityOptionQuote");
-        QL_REQUIRE(q->eqName() == vc.curveID(),
-            "EquityOptionQuote eqName '" << q->eqName() << "' <> EquityVolatilityCurveConfig curveID '" << vc.curveID() << "'");
+        QL_REQUIRE(q->eqName() == vc.equityId(), "EquityOptionQuote eqName '"
+                                                     << q->eqName() << "' <> EquityVolatilityCurveConfig equityId '"
+                                                     << vc.equityId() << "'");
         QL_REQUIRE(q->ccy() == vc.ccy(),
             "EquityOptionQuote ccy '" << q->ccy() << "' <> EquityVolatilityCurveConfig ccy '" << vc.ccy() << "'");
         QL_REQUIRE(q->quoteType() == vmsc.quoteType(),
@@ -833,7 +834,7 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
 
     // Read the quotes to fill the expiry dates and vols matrix.
     std::ostringstream ss;
-    ss << MarketDatum::InstrumentType::EQUITY_OPTION << "/" << vdsc.quoteType() << "/" << vc.curveID() << "/"
+    ss << MarketDatum::InstrumentType::EQUITY_OPTION << "/" << vdsc.quoteType() << "/" << vc.equityId() << "/"
        << vc.ccy() << "/*";
     Wildcard w(ss.str());
     for (const auto& md : loader.get(w, asof)) {
@@ -842,8 +843,9 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
 
         auto q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
         QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to EquityOptionQuote");
-        QL_REQUIRE(q->eqName() == vc.curveID(),
-            "EquityOptionQuote eqName '" << q->eqName() << "' <> EquityVolatilityCurveConfig curveID '" << vc.curveID() << "'");
+        QL_REQUIRE(q->eqName() == vc.equityId(), "EquityOptionQuote eqName '"
+                                                     << q->eqName() << "' <> EquityVolatilityCurveConfig equityId '"
+                                                     << vc.equityId() << "'");
         QL_REQUIRE(q->ccy() == vc.ccy(),
             "EquityOptionQuote ccy '" << q->ccy() << "' <> EquityVolatilityCurveConfig ccy '" << vc.ccy() << "'");
         QL_REQUIRE(q->quoteType() == vdsc.quoteType(),

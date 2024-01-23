@@ -21,7 +21,6 @@
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/parsensitivityanalysis.hpp>
 #include <orea/engine/parsensitivitycubestream.hpp>
-#include <orea/engine/sensitivityanalysisplus.hpp>
 #include <orea/engine/stresstest.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 
@@ -90,7 +89,7 @@ void PricingAnalyticImpl::runAnalytic(
         if (type == "NPV") {
             CONSOLEW("Pricing: NPV Report");
             ReportWriter(inputs_->reportNaString())
-                .writeNpv(*report, effectiveResultCurrency, analytic()->market(), "",
+                .writeNpv(*report, effectiveResultCurrency, analytic()->market(), inputs_->marketConfig("pricing"),
                           analytic()->portfolio());
             analytic()->reports()[type]["npv"] = report;
             CONSOLE("OK");
@@ -167,7 +166,7 @@ void PricingAnalyticImpl::runAnalytic(
                 LOG("Single-threaded sensi analysis");
                 std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders;
                 std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;
-                sensiAnalysis = boost::make_shared<SensitivityAnalysisPlus>(
+                sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
                     analytic()->portfolio(), analytic()->market(), configuration, inputs_->pricingEngine(),
                     analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
                     recalibrateModels, analytic()->configurations().curveConfig,
@@ -182,13 +181,12 @@ void PricingAnalyticImpl::runAnalytic(
                     extraTradeBuilders = {};
                 std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>()> extraEngineBuilders = {};
                 std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()> extraLegBuilders = {};
-                sensiAnalysis = boost::make_shared<SensitivityAnalysisPlus>(
-                    inputs_->nThreads(), inputs_->asof(), loader, analytic()->portfolio(),
-                    Market::defaultConfiguration, inputs_->pricingEngine(),
-                    analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData, 
-                    recalibrateModels, analytic()->configurations().curveConfig,
-                    analytic()->configurations().todaysMarketParams, ccyConv, inputs_->refDataManager(),
-                    *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
+                sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
+                    inputs_->nThreads(), inputs_->asof(), loader, analytic()->portfolio(), Market::defaultConfiguration,
+                    inputs_->pricingEngine(), analytic()->configurations().simMarketParams,
+                    analytic()->configurations().sensiScenarioData, recalibrateModels,
+                    analytic()->configurations().curveConfig, analytic()->configurations().todaysMarketParams, ccyConv,
+                    inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
                 LOG("Multi-threaded sensi analysis created");
             }
             // FIXME: Why are these disabled?
@@ -209,12 +207,12 @@ void PricingAnalyticImpl::runAnalytic(
             }
 
             LOG("Sensi analysis - generate");
-            sensiAnalysis->registerProgressIndicator(boost::make_shared<ProgressLog>("sensitivities", 100, ORE_NOTICE));
+            sensiAnalysis->registerProgressIndicator(boost::make_shared<ProgressLog>("sensitivities", 100, oreSeverity::notice));
             sensiAnalysis->generateSensitivities();
 
             LOG("Sensi analysis - write sensitivity report in memory");
             auto baseCurrency = sensiAnalysis->simMarketData()->baseCcy();
-            auto ss = boost::make_shared<SensitivityCubeStream>(sensiAnalysis->sensiCube(), baseCurrency);
+            auto ss = boost::make_shared<SensitivityCubeStream>(sensiAnalysis->sensiCubes(), baseCurrency);
             ReportWriter(inputs_->reportNaString())
                 .writeSensitivityReport(*report, ss, inputs_->sensiThreshold());
             analytic()->reports()[type]["sensitivity"] = report;
@@ -222,18 +220,27 @@ void PricingAnalyticImpl::runAnalytic(
             LOG("Sensi analysis - write sensitivity scenario report in memory");
             boost::shared_ptr<InMemoryReport> scenarioReport = boost::make_shared<InMemoryReport>();
             ReportWriter(inputs_->reportNaString())
-                .writeScenarioReport(*scenarioReport, sensiAnalysis->sensiCube(),
+                .writeScenarioReport(*scenarioReport, sensiAnalysis->sensiCubes(),
                                      inputs_->sensiThreshold());
             analytic()->reports()[type]["sensitivity_scenario"] = scenarioReport;
+
+            auto simmSensitivityConfigReport = boost::make_shared<InMemoryReport>();
+            ReportWriter(inputs_->reportNaString())
+                .writeSensitivityConfigReport(*simmSensitivityConfigReport,
+                                              sensiAnalysis->scenarioGenerator()->shiftSizes(),
+                                              sensiAnalysis->scenarioGenerator()->baseValues(),
+                                              sensiAnalysis->scenarioGenerator()->keyToFactor());
+            analytic()->reports()[type]["sensitivity_config"] = simmSensitivityConfigReport;
 
             if (inputs_->parSensi()) {
                 LOG("Sensi analysis - par conversion");
                 parAnalysis->computeParInstrumentSensitivities(sensiAnalysis->simMarket());
                 boost::shared_ptr<ParSensitivityConverter> parConverter =
                     boost::make_shared<ParSensitivityConverter>(parAnalysis->parSensitivities(), parAnalysis->shiftSizes());
-                auto parCube = boost::make_shared<ZeroToParCube>(sensiAnalysis->sensiCube(), parConverter, typesDisabled, true);
+                auto parCube = boost::make_shared<ZeroToParCube>(sensiAnalysis->sensiCubes(), parConverter, typesDisabled, true);
                 LOG("Sensi analysis - write par sensitivity report in memory");
-                boost::shared_ptr<ParSensitivityCubeStream> pss = boost::make_shared<ParSensitivityCubeStream>(parCube, baseCurrency);
+                boost::shared_ptr<ParSensitivityCubeStream> pss =
+                    boost::make_shared<ParSensitivityCubeStream>(parCube, baseCurrency);
                 // If the stream is going to be reused - wrap it into a buffered stream to gain some
                 // performance. The cost for this is the memory footpring of the buffer.
                 boost::shared_ptr<InMemoryReport> parSensiReport = boost::make_shared<InMemoryReport>();

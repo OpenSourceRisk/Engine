@@ -109,8 +109,8 @@ public:
         return Handle<QuantExt::YoYOptionletVolatilitySurface>();
     }
 
-    Handle<CPIVolatilitySurface> cpiInflationCapFloorVolatilitySurface(const string&, const string&) const override {
-        return Handle<CPIVolatilitySurface>();
+    Handle<QuantLib::CPIVolatilitySurface> cpiInflationCapFloorVolatilitySurface(const string&, const string&) const override {
+        return Handle<QuantLib::CPIVolatilitySurface>();
     }
 
     Handle<Quote> equitySpot(const string&, const string&) const override { return Handle<Quote>(); }

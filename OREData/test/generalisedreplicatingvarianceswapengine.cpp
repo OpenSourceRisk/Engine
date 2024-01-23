@@ -167,9 +167,9 @@ BOOST_AUTO_TEST_CASE(testT0Pricing) {
         new BlackScholesMertonProcess(equityPrice, dividendTS, discountingTS, volTS));
 
     boost::shared_ptr<PricingEngine> engine(new GeneralisedReplicatingVarianceSwapEngine(
-        eqIndex, stochProcess, discountingTS, GeneralisedReplicatingVarianceSwapEngine::Settings()));
+        eqIndex, stochProcess, discountingTS, GeneralisedReplicatingVarianceSwapEngine::VarSwapSettings()));
 
-    QuantExt::VarianceSwap varianceSwap(Position::Long, varianceStrike, varianceNotional, today, exDate, cal, false);
+    QuantExt::VarianceSwap2 varianceSwap(Position::Long, varianceStrike, varianceNotional, today, exDate, cal, false);
     varianceSwap.setPricingEngine(engine);
 
     Real result = varianceSwap.variance();
@@ -235,9 +235,9 @@ BOOST_AUTO_TEST_CASE(testSeasonedSwapPricing) {
         new BlackScholesMertonProcess(equityPrice, dividendTS, yieldTS, volTS));
 
     boost::shared_ptr<PricingEngine> engine(new GeneralisedReplicatingVarianceSwapEngine(
-        eqIndex, stochProcess, discountingTS, GeneralisedReplicatingVarianceSwapEngine::Settings()));
+        eqIndex, stochProcess, discountingTS, GeneralisedReplicatingVarianceSwapEngine::VarSwapSettings()));
 
-    QuantExt::VarianceSwap varianceSwap(Position::Long, varianceStrike, varianceNotional, startDate, exDate, cal,
+    QuantExt::VarianceSwap2 varianceSwap(Position::Long, varianceStrike, varianceNotional, startDate, exDate, cal,
                                         false);
     varianceSwap.setPricingEngine(engine);
 
@@ -297,9 +297,9 @@ BOOST_AUTO_TEST_CASE(testForwardStartPricing) {
         new BlackScholesMertonProcess(equityPrice, dividendTS, discountingTS, volTS));
 
     boost::shared_ptr<PricingEngine> engine(new GeneralisedReplicatingVarianceSwapEngine(
-        eqIndex, stochProcess, discountingTS, GeneralisedReplicatingVarianceSwapEngine::Settings()));
+        eqIndex, stochProcess, discountingTS, GeneralisedReplicatingVarianceSwapEngine::VarSwapSettings()));
 
-    QuantExt::VarianceSwap varianceSwap(Position::Long, varianceStrike, varianceNotional, today + 7, exDate, cal,
+    QuantExt::VarianceSwap2 varianceSwap(Position::Long, varianceStrike, varianceNotional, today + 7, exDate, cal,
                                         false);
     varianceSwap.setPricingEngine(engine);
 

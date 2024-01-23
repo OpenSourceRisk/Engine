@@ -47,24 +47,37 @@ class SensitivityScenarioData : public XMLSerializable {
 public:
     struct ShiftData {
         virtual ~ShiftData() {}
-        ShiftData() : shiftSize(0.0) {}
-        string shiftType;
-        Real shiftSize;
+
+        // default shift size, type (Absolute, Relative) and scheme (Forward, Backward, Central)
+        ShiftType shiftType = ShiftType::Absolute;
+        Real shiftSize = 0.0;
+        ShiftScheme shiftScheme = ShiftScheme::Forward;
+
+        // product specific shift size, type, scheme
+        map<string, ShiftType> keyedShiftType;
+        map<string, Real> keyedShiftSize;
+        map<string, ShiftScheme> keyedShiftScheme;
     };
 
     struct CurveShiftData : ShiftData {
+        CurveShiftData() : ShiftData() {}
+        CurveShiftData(const ShiftData& d) : ShiftData(d) {}
         virtual ~CurveShiftData() {}
         vector<Period> shiftTenors;
     };
 
-    struct SpotShiftData : ShiftData {};
+    using SpotShiftData = ShiftData;
 
     struct CdsVolShiftData : ShiftData {
+        CdsVolShiftData() : ShiftData() {}
+        CdsVolShiftData(const ShiftData& d) : ShiftData(d) {}
         string ccy;
         vector<Period> shiftExpiries;
     };
 
     struct BaseCorrelationShiftData : ShiftData {
+        BaseCorrelationShiftData() : ShiftData() {}
+        BaseCorrelationShiftData(const ShiftData& d) : ShiftData(d) {}
         vector<Period> shiftTerms;
         vector<Real> shiftLossLevels;
         string indexName;
@@ -72,26 +85,27 @@ public:
 
     struct VolShiftData : ShiftData {
         VolShiftData() : shiftStrikes({0.0}), isRelative(false) {}
+        VolShiftData(const ShiftData& d) : ShiftData(d), shiftStrikes({0.0}), isRelative(false) {}
         vector<Period> shiftExpiries;
         vector<Real> shiftStrikes;
         bool isRelative;
     };
 
     struct CapFloorVolShiftData : VolShiftData {
+        CapFloorVolShiftData() : VolShiftData() {}
+        CapFloorVolShiftData(const VolShiftData& d) : VolShiftData(d) {}
         string indexName;
     };
 
     struct GenericYieldVolShiftData : VolShiftData {
+        GenericYieldVolShiftData() : VolShiftData() {}
+        GenericYieldVolShiftData(const VolShiftData& d) : VolShiftData(d) {}
         vector<Period> shiftTerms;
     };
 
-    struct CurveShiftParData : SensitivityScenarioData::CurveShiftData {
-        CurveShiftParData(SensitivityScenarioData::CurveShiftData c) {
-            shiftType = c.shiftType;
-            shiftSize = c.shiftSize;
-            shiftTenors = c.shiftTenors;
-        }
-        CurveShiftParData() {}
+    struct CurveShiftParData : CurveShiftData {
+        CurveShiftParData() : CurveShiftData() {}
+        CurveShiftParData(const CurveShiftData& c) : CurveShiftData(c) {}
         vector<string> parInstruments;
         bool parInstrumentSingleCurve = true;
 
@@ -108,15 +122,9 @@ public:
         map<string, string> parInstrumentConventions;
     };
 
-    struct CapFloorVolShiftParData : SensitivityScenarioData::CapFloorVolShiftData {
-        CapFloorVolShiftParData(SensitivityScenarioData::CapFloorVolShiftData c) {
-            shiftType = c.shiftType;
-            shiftSize = c.shiftSize;
-            shiftExpiries = c.shiftExpiries;
-            shiftStrikes = c.shiftStrikes;
-            indexName = c.indexName;
-        }
-        CapFloorVolShiftParData() {}
+    struct CapFloorVolShiftParData : CapFloorVolShiftData {
+        CapFloorVolShiftParData() : CapFloorVolShiftData() {}
+        CapFloorVolShiftParData(const CapFloorVolShiftData& c) : CapFloorVolShiftData(c) {}
         vector<string> parInstruments;
         bool parInstrumentSingleCurve = true;
 
@@ -181,13 +189,6 @@ public:
 
     //! Give back the shift data for the given risk factor type, \p keyType, with the given \p name
     const ShiftData& shiftData(const ore::analytics::RiskFactorKey::KeyType& keyType, const std::string& name) const;
-
-    //! Check if a two sided delta has been configured for the given risk factor key type, \p keyType.
-    bool twoSidedDelta(const RiskFactorKey::KeyType& keyType) const;
-
-    //! Return the set of risk factor key types configured for two sided delta.
-    const std::set<RiskFactorKey::KeyType>& twoSidedDeltas() const { return twoSidedDeltas_; }
-
     //@}
 
     //! \name Setters
@@ -228,8 +229,6 @@ public:
     vector<pair<string, string>>& crossGammaFilter() { return crossGammaFilter_; }
     bool& computeGamma() { return computeGamma_; }
     bool& useSpreadedTermStructures() { return useSpreadedTermStructures_; }
-
-    std::set<RiskFactorKey::KeyType>& twoSidedDeltas() { return twoSidedDeltas_; }
     //@}
 
     //! \name Serialisation
@@ -292,15 +291,15 @@ protected:
     bool useSpreadedTermStructures_;
     bool parConversion_;
 
-    /*! Set of risk factor keys for which a two sided delta has been configured.
-    */
-    std::set<RiskFactorKey::KeyType> twoSidedDeltas_;
-
 private:
     void parDataFromXML(XMLNode* child, CurveShiftParData& data);
 
     //! toXML helper method
     XMLNode* parDataToXML(ore::data::XMLDocument& doc, const boost::shared_ptr<CurveShiftData>& csd) const;
 };
+
+// Utility to extract the set of keys that are used in a sensi config to qualiffy shift specs
+std::set<std::string> getShiftSpecKeys(const SensitivityScenarioData& d);
+
 } // namespace analytics
 } // namespace ore

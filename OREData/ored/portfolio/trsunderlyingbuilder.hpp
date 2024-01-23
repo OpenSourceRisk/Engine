@@ -22,6 +22,8 @@
 #include <ored/portfolio/simmcreditqualifiermapping.hpp>
 #include <ored/portfolio/equityposition.hpp>
 #include <ored/portfolio/commodityposition.hpp>
+#include <ored/utilities/bondindexbuilder.hpp>
+#include <qle/cashflows/trscashflow.hpp>
 
 namespace ore {
 namespace data {
@@ -30,7 +32,8 @@ struct TrsUnderlyingBuilder {
     virtual ~TrsUnderlyingBuilder() {}
     virtual void
     build(const std::string& parentId, const boost::shared_ptr<Trade>& underlying,
-          const std::vector<Date>& valuationDates, const boost::shared_ptr<EngineFactory>& engineFactory,
+          const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates, 
+          const std::string& fundingCurrency, const boost::shared_ptr<EngineFactory>& engineFactory,
           boost::shared_ptr<QuantLib::Index>& underlyingIndex, Real& underlyingMultiplier,
           std::map<std::string, double>& indexQuantities, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices,
           Real& initialPrice, std::string& assetCurrency, std::string& creditRiskCurrency,
@@ -38,8 +41,8 @@ struct TrsUnderlyingBuilder {
           const std::function<boost::shared_ptr<QuantExt::FxIndex>(
               const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
               const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
-              getFxIndex,
-          const std::string& underlyingDerivativeId) const = 0;
+              getFxIndex, 
+        const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const = 0;
     virtual void updateUnderlying(const boost::shared_ptr<ReferenceDataManager>& refData,
                                   boost::shared_ptr<Trade>& underlying, const std::string& parentId) const {}
 };
@@ -62,7 +65,8 @@ public:
 struct BondTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
     void
     build(const std::string& parentId, const boost::shared_ptr<Trade>& underlying,
-          const std::vector<Date>& valuationDates, const boost::shared_ptr<EngineFactory>& engineFactory,
+          const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates, 
+          const std::string& fundingCurrency, const boost::shared_ptr<EngineFactory>& engineFactory,
           boost::shared_ptr<QuantLib::Index>& underlyingIndex, Real& underlyingMultiplier,
           std::map<std::string, double>& indexQuantities,
           std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices,
@@ -72,13 +76,14 @@ struct BondTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
               const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
               const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
               getFxIndex,
-          const std::string& underlyingDerivativeId) const override;
+          const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const override;
 };
 
 struct ForwardBondTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
     void
     build(const std::string& parentId, const boost::shared_ptr<Trade>& underlying,
-          const std::vector<Date>& valuationDates, const boost::shared_ptr<EngineFactory>& engineFactory,
+          const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates, 
+          const std::string& fundingCurrency, const boost::shared_ptr<EngineFactory>& engineFactory,
           boost::shared_ptr<QuantLib::Index>& underlyingIndex, Real& underlyingMultiplier,
           std::map<std::string, double>& indexQuantities,
           std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices,
@@ -86,16 +91,16 @@ struct ForwardBondTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
           std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
           const std::function<boost::shared_ptr<QuantExt::FxIndex>(
               const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
-              const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
-              getFxIndex,
-          const std::string& underlyingDerivativeId) const override;
+              const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>& getFxIndex,
+          const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const override;
 };
 
 template<class T>
 struct AssetPositionTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
     void
     build(const std::string& parentId, const boost::shared_ptr<Trade>& underlying,
-          const std::vector<Date>& valuationDates, const boost::shared_ptr<EngineFactory>& engineFactory,
+          const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates, 
+          const std::string& fundingCurrency, const boost::shared_ptr<EngineFactory>& engineFactory,
           boost::shared_ptr<QuantLib::Index>& underlyingIndex, Real& underlyingMultiplier,
           std::map<std::string, double>& indexQuantities,
           std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices,
@@ -103,9 +108,8 @@ struct AssetPositionTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
           std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
           const std::function<boost::shared_ptr<QuantExt::FxIndex>(
               const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
-              const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
-              getFxIndex,
-          const std::string& underlyingDerivativeId) const override;
+              const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>& getFxIndex,
+          const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const override;
 
     void updateQuantities(std::map<std::string, double>& indexQuantities, const std::string& indexName,
                           const double qty) const;
@@ -120,48 +124,55 @@ typedef AssetPositionTrsUnderlyingBuilder<ore::data::CommodityPosition> Commodit
 struct EquityOptionPositionTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
     void
     build(const std::string& parentId, const boost::shared_ptr<Trade>& underlying,
-          const std::vector<Date>& valuationDates, const boost::shared_ptr<EngineFactory>& engineFactory,
+          const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates, 
+          const std::string& fundingCurrency, const boost::shared_ptr<EngineFactory>& engineFactory,
           boost::shared_ptr<QuantLib::Index>& underlyingIndex, Real& underlyingMultiplier,
           std::map<std::string, double>& indexQuantities, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices,
           Real& initialPrice, std::string& assetCurrency, std::string& creditRiskCurrency,
           std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
           const std::function<boost::shared_ptr<QuantExt::FxIndex>(
               const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
-              const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
-              getFxIndex,
-          const std::string& underlyingDerivativeId) const override;
+              const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>& getFxIndex,
+          const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const override;
 };
 
 
 struct BondPositionTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
     void
     build(const std::string& parentId, const boost::shared_ptr<Trade>& underlying,
-          const std::vector<Date>& valuationDates, const boost::shared_ptr<EngineFactory>& engineFactory,
+          const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates, 
+          const std::string& fundingCurrency, const boost::shared_ptr<EngineFactory>& engineFactory,
           boost::shared_ptr<QuantLib::Index>& underlyingIndex, Real& underlyingMultiplier,
           std::map<std::string, double>& indexQuantities, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices,
           Real& initialPrice, std::string& assetCurrency, std::string& creditRiskCurrency,
           std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
           const std::function<boost::shared_ptr<QuantExt::FxIndex>(
               const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
-              const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
-              getFxIndex,
-          const std::string& underlyingDerivativeId) const override;
+              const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>& getFxIndex,
+          const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const override;
 };
 
 struct DerivativeTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
     void
     build(const std::string& parentId, const boost::shared_ptr<Trade>& underlying,
-          const std::vector<Date>& valuationDates, const boost::shared_ptr<EngineFactory>& engineFactory,
+          const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates, 
+          const std::string& fundingCurrency, const boost::shared_ptr<EngineFactory>& engineFactory,
           boost::shared_ptr<QuantLib::Index>& underlyingIndex, Real& underlyingMultiplier,
           std::map<std::string, double>& indexQuantities, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices,
           Real& initialPrice, std::string& assetCurrency, std::string& creditRiskCurrency,
           std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
           const std::function<boost::shared_ptr<QuantExt::FxIndex>(
               const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
-              const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
-              getFxIndex,
-          const std::string& underlyingDerivativeId) const override;
+              const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>& getFxIndex,
+          const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const override;
 };
+
+// utility functions for bond TRS
+void modifyBondTRSLeg(QuantLib::Leg& leg, QuantLib::Date issueDate);
+Leg makeBondTRSLeg(const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates,
+                   const BondIndexBuilder& bondIndexBuilder,
+                   QuantLib::Real initialPrice = QuantLib::Null<QuantLib::Real>(),
+                   QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex = nullptr);
 
 } // namespace data
 } // namespace ore

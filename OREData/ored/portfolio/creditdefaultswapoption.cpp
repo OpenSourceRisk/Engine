@@ -242,6 +242,7 @@ void CreditDefaultSwapOption::buildNoDefault(const boost::shared_ptr<EngineFacto
     npvCurrency_ = legData.currency();
     auto ccy = parseCurrency(npvCurrency_);
     cds->setPricingEngine(cdsBuilder->engine(ccy, swap_.creditCurveId(), swap_.recoveryRate()));
+    setSensitivityTemplate(*cdsBuilder);
 
     // Check option data
     QL_REQUIRE(option_.style() == "European", "CreditDefaultSwapOption option style must" <<
@@ -272,6 +273,7 @@ void CreditDefaultSwapOption::buildNoDefault(const boost::shared_ptr<EngineFacto
     QL_REQUIRE(cdsOptionEngineBuilder, "CreditDefaultSwapOption expected CDS option engine " <<
         " builder for underlying while building trade " << id() << ".");
     cdsOption->setPricingEngine(cdsOptionEngineBuilder->engine(ccy, swap_.creditCurveId(), term_));
+    setSensitivityTemplate(*cdsOptionEngineBuilder);
 
     // Copying here what is done for the index CDS option. The comment there is:
     // Align option product maturities with ISDA AANA/GRID guidance as of November 2020.
@@ -325,13 +327,16 @@ void CreditDefaultSwapOption::buildDefaulted(const boost::shared_ptr<EngineFacto
             amount *= -1.0;
     }
 
+    Position::Type positionType = parsePositionType(option_.longShort());
+    Real indicatorLongShort = positionType == Position::Long ? 1.0 : -1.0;
+
     // Use the add premiums method to add the payment.
     string marketConfig = Market::defaultConfiguration;
     auto ccy = parseCurrency(notionalCurrency_);
     vector<boost::shared_ptr<Instrument>> additionalInstruments;
     vector<Real> additionalMultipliers;
     Date premiumPayDate =
-        addPremiums(additionalInstruments, additionalMultipliers, 1.0,
+        addPremiums(additionalInstruments, additionalMultipliers, indicatorLongShort,
                     PremiumData(amount, notionalCurrency_, paymentDate), 1.0, ccy, engineFactory, marketConfig);
     DLOG("FEP payment (date = " << paymentDate << ", amount = " << amount << ") added for CDS option " << id() << ".");
 
@@ -346,8 +351,6 @@ void CreditDefaultSwapOption::buildDefaulted(const boost::shared_ptr<EngineFacto
     addPremium(engineFactory, ccy, marketConfig, additionalInstruments, additionalMultipliers);
 
     // Instrument wrapper.
-    Position::Type positionType = parsePositionType(option_.longShort());
-    Real indicatorLongShort = positionType == Position::Long ? 1.0 : -1.0;
     instrument_ = boost::make_shared<VanillaInstrument>(qlInst, indicatorLongShort,
         additionalInstruments, additionalMultipliers);
 }
@@ -361,8 +364,8 @@ Date CreditDefaultSwapOption::addPremium(const boost::shared_ptr<EngineFactory>&
         // pay the premium if long the option and receive the premium if short the option.
         Position::Type positionType = parsePositionType(option_.longShort());
         Real indicatorLongShort = positionType == Position::Long ? 1.0 : -1.0;
-        return addPremiums(additionalInstruments, additionalMultipliers, 1.0, option_.premiumData(), indicatorLongShort,
-                           tradeCurrency, ef, marketConfig);
+        return addPremiums(additionalInstruments, additionalMultipliers, indicatorLongShort, option_.premiumData(),
+                           indicatorLongShort, tradeCurrency, ef, marketConfig);
 }
 
 }

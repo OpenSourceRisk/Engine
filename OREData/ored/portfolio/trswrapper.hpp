@@ -83,11 +83,6 @@ public:
     //@}
 
 private:
-    //! \name Instrument interface
-    //@{
-    void setupExpired() const override;
-    //@}
-
     std::vector<boost::shared_ptr<ore::data::Trade>> underlying_;
     std::vector<boost::shared_ptr<QuantLib::Index>> underlyingIndex_;
     std::vector<QuantLib::Real> underlyingMultiplier_;
@@ -108,6 +103,8 @@ private:
     std::vector<boost::shared_ptr<QuantExt::FxIndex>> fxIndexAsset_;
     boost::shared_ptr<QuantExt::FxIndex> fxIndexReturn_, fxIndexAdditionalCashflows_;
     std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>> addFxIndices_;
+
+    Date lastDate_;
 };
 
 class TRSWrapper::arguments : public virtual QuantLib::PricingEngine::arguments {

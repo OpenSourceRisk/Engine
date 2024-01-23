@@ -128,30 +128,32 @@ void DiscountingBondTRSEngine::calculate() const {
         cfResults.back().type = "Return";
         if (auto bc = boost::dynamic_pointer_cast<BondTRSCashFlow>(c)) {
             cfResults.back().fixingDate = bc->fixingEndDate();
-            cfResults.back().fixingValue = bc->bondEnd();
+            cfResults.back().fixingValue = bc->assetEnd();
             cfResults.back().accrualStartDate = bc->fixingStartDate();
             cfResults.back().accrualEndDate = bc->fixingEndDate();
-            cfResults.back().notional = bc->bondNotional();
+            cfResults.back().notional = bc->notional();
             returnStartDates.push_back(bc->fixingStartDate());
             returnEndDates.push_back(bc->fixingEndDate());
             returnFxStarts.push_back(bc->fxStart());
             returnFxEnds.push_back(bc->fxEnd());
-            returnBondStarts.push_back(bc->bondStart());
-            returnBondEnds.push_back(bc->bondEnd());
-            returnBondNotionals.push_back(bc->bondNotional());
+            returnBondStarts.push_back(bc->assetStart());
+            returnBondEnds.push_back(bc->assetEnd());
+            returnBondNotionals.push_back(bc->notional());
         }
     }
 
     // 5 handle bond cashflows (leg #1)
 
-    Date start = arguments_.valuationDates.front();
-    Date end = arguments_.valuationDates.back();
+    boost::shared_ptr<Bond> bd = arguments_.bondIndex->bond();
+
+    Date start = bd->settlementDate(arguments_.valuationDates.front());
+    Date end = bd->settlementDate(arguments_.valuationDates.back());
 
     Real bondPayments = 0.0, bondRecovery = 0.0;
     bool hasLiveCashFlow = false;
     Size numCoupons = 0;
 
-    boost::shared_ptr<Bond> bd = arguments_.bondIndex->bond();
+    
 
     for (Size i = 0; i < bd->cashflows().size(); i++) {
 
@@ -164,7 +166,9 @@ void DiscountingBondTRSEngine::calculate() const {
 
         Date bondFlowPayDate;
         Date bondFlowValuationDate;
-        if (arguments_.payBondCashFlowsImmediately) {
+        bool paymentAfterMaturityButWithinBondSettlement =
+            bd->cashflows()[i]->date() > arguments_.valuationDates.back() && bd->cashflows()[i]->date() <= end;
+        if (arguments_.payBondCashFlowsImmediately || paymentAfterMaturityButWithinBondSettlement) {
             bondFlowPayDate = bd->cashflows()[i]->date();
             bondFlowValuationDate = bd->cashflows()[i]->date();
         } else {

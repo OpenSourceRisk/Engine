@@ -200,10 +200,12 @@ protected:
     // details on the last generated scenario
     std::vector<HistoricalScenarioCalculationDetails> calculationDetails_;
 
-private:
+protected:
     QuantLib::Calendar cal_;
-    boost::shared_ptr<ore::data::AdjustmentFactors> adjFactors_;
     QuantLib::Size mporDays_;
+
+private:
+    boost::shared_ptr<ore::data::AdjustmentFactors> adjFactors_;
     bool overlapping_;
     ReturnConfiguration returnConfiguration_;
     std::string labelPrefix_;

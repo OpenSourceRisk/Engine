@@ -34,7 +34,8 @@ BOOST_AUTO_TEST_CASE(testBasisSystem1d) {
 
     constexpr double x0 = -2.0;
     for (Size order = 0; order < 200; ++order) {
-        auto bs = RandomVariableLsmBasisSystem::pathBasisSystem(order);
+        auto bs =
+            RandomVariableLsmBasisSystem::pathBasisSystem(order, QuantLib::LsmBasisSystem::PolynomialType::Monomial);
         BOOST_REQUIRE(bs.size() == order + 1);
         for (Size i = 0; i <= order; ++i) {
             BOOST_CHECK_CLOSE(bs[i](RandomVariable(1, x0)).at(0), std::pow(x0, i), 1E-10);

@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(testEqCurveConfigLoad) {
     vector<string> actualQuotes = ec->quotes();
     BOOST_CHECK_EQUAL_COLLECTIONS(anticipatedQuotes.begin(), anticipatedQuotes.end(),
         actualQuotes.begin(), actualQuotes.end());
-    BOOST_CHECK(ec->extrapolation());
+    BOOST_CHECK(!ec->extrapolation());
 
     // now test the toXML member function
     ore::data::XMLDocument testDumpDoc;

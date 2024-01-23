@@ -160,6 +160,8 @@ void FdConvertibleBondEvents::processExerciseData(const std::vector<ConvertibleB
                        "date after "
                            << c.exerciseDate
                            << ", the last exercise date should not have exercise type FromThisDateOn");
+            if (nextDate <= today_)
+                continue;
             indexEnd = grid_.index(time(nextDate)) - 1;
         } else {
             QL_FAIL("FdConvertibleBondEvents: internal error, exercise type not "

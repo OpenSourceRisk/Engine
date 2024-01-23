@@ -25,6 +25,7 @@
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/legdata.hpp>
+#include <ored/utilities/bondindexbuilder.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -123,13 +124,9 @@ void BondTRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     auto bondIndex = bondIndexBuilder.bondIndex();
 
     // compute initial price taking into account the possible scaling with priceQuoteBaseValue and 100.0
-    Real effectiveInitialPrice = Null<Real>();
-    if (initialPrice_ != Null<Real>()) {
-        Real adj = bondData_.priceQuoteMethod() == BondIndex::PriceQuoteMethod::CurrencyPerUnit
-                       ? 1.0 / bondData_.priceQuoteBaseValue()
-                       : 1.0;
-        effectiveInitialPrice = initialPrice_ / 100.0 * adj;
-    }
+    Real effectiveInitialPrice = bondIndexBuilder.priceAdjustment(initialPrice_);
+    if (effectiveInitialPrice != Null<Real>())
+        effectiveInitialPrice = effectiveInitialPrice / 100.0;
 
     // add indexing data from the bond trs leg, if this is desired
 
@@ -189,6 +186,7 @@ void BondTRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         boost::dynamic_pointer_cast<BondTRSEngineBuilder>(builder_trs);
     QL_REQUIRE(trsBondBuilder, "No Builder found for BondTRS: " << id());
     bondTRS->setPricingEngine(trsBondBuilder->engine(fundingLegData_.currency()));
+    setSensitivityTemplate(*trsBondBuilder);
     instrument_.reset(new VanillaInstrument(bondTRS));
 
     npvCurrency_ = fundingLegData_.currency();

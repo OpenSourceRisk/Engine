@@ -111,6 +111,7 @@ void EquityDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engi
     boost::shared_ptr<EquityDoubleTouchOptionEngineBuilder> eqDoubleTouchOptBuilder =
         boost::dynamic_pointer_cast<EquityDoubleTouchOptionEngineBuilder>(builder);
     doubleTouch->setPricingEngine(eqDoubleTouchOptBuilder->engine(assetName, ccy));
+    setSensitivityTemplate(*eqDoubleTouchOptBuilder);
     if (type_ == "KnockIn") {
         // if a knock-in option is triggered it becomes a simple forward cashflow
         // which we price as a swap
@@ -125,9 +126,9 @@ void EquityDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engi
 
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    Date lastPremiumDate =
-        addPremiums(additionalInstruments, additionalMultipliers, payoffAmount_, option_.premiumData(),
-                    isLong ? -1.0 : 1.0, ccy, engineFactory, builder->configuration(MarketContext::pricing));
+    Date lastPremiumDate = addPremiums(
+        additionalInstruments, additionalMultipliers, (isLong ? 1.0 : -1.0) * payoffAmount_, option_.premiumData(),
+        isLong ? -1.0 : 1.0, ccy, engineFactory, builder->configuration(MarketContext::pricing));
 
     Handle<Quote> spot = market->equitySpot(assetName);
     instrument_ = boost::make_shared<DoubleBarrierOptionWrapper>(

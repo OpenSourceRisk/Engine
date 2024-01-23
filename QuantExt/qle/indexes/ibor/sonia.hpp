@@ -17,7 +17,7 @@
 */
 
 /*! \file sonia.hpp
-    \brief %SONIA index, straight copy from QuantLib 1.16
+    \brief %SONIA index
 */
 
 #ifndef quantext_sonia_hpp

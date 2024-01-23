@@ -29,7 +29,7 @@ void EquityBarrierOption::checkBarriers() {
     QL_REQUIRE(barrier().style().empty() || barrier().style() == "American", "Only american barrier style suppported");
 }
 
-boost::shared_ptr<QuantLib::PricingEngine> EquityBarrierOption::vanillaPricigingEngine(const boost::shared_ptr<EngineFactory>& ef,
+boost::shared_ptr<QuantLib::PricingEngine> EquityBarrierOption::vanillaPricingEngine(const boost::shared_ptr<EngineFactory>& ef,
     const QuantLib::Date& expiryDate, const QuantLib::Date& paymentDate) {    
 
     boost::shared_ptr<EngineBuilder> builder = ef->builder("EquityOption");
@@ -39,11 +39,13 @@ boost::shared_ptr<QuantLib::PricingEngine> EquityBarrierOption::vanillaPriciging
         boost::dynamic_pointer_cast<EquityEuropeanOptionEngineBuilder>(builder);
     QL_REQUIRE(eqOptBuilder, "No eqOptBuilder found");
 
+    setSensitivityTemplate(*eqOptBuilder);
+
     return eqOptBuilder->engine(equityName(), tradeCurrency(), expiryDate);
 }
 
 boost::shared_ptr<QuantLib::PricingEngine>
-EquityBarrierOption::barrierPricigingEngine(const boost::shared_ptr<EngineFactory>& ef,
+EquityBarrierOption::barrierPricingEngine(const boost::shared_ptr<EngineFactory>& ef,
                                             const QuantLib::Date& expiryDate, const QuantLib::Date& paymentDate) {
 
     boost::shared_ptr<EngineBuilder> builder = ef->builder(tradeType_);
@@ -52,6 +54,8 @@ EquityBarrierOption::barrierPricigingEngine(const boost::shared_ptr<EngineFactor
     boost::shared_ptr<EquityBarrierOptionEngineBuilder> eqBarrierOptBuilder =
         boost::dynamic_pointer_cast<EquityBarrierOptionEngineBuilder>(builder);
     QL_REQUIRE(eqBarrierOptBuilder, "No eqBarrierOptBuilder found");
+
+    setSensitivityTemplate(*eqBarrierOptBuilder);
 
     return eqBarrierOptBuilder->engine(equityName(), tradeCurrency(), expiryDate);
 }

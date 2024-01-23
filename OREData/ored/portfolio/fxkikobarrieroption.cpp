@@ -120,8 +120,13 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
     Handle<Quote> spot = market->fxSpot(boughtCurrency_ + soldCurrency_);
     
     boost::shared_ptr<QuantExt::FxIndex> fxIndex;
-    if (!fxIndex_.empty())
-        fxIndex = parseFxIndex(fxIndex_);
+    if (!fxIndex_.empty()) {
+        auto fxi = market->fxIndex(fxIndex_);
+        if (!fxi.empty()) {
+            fxIndex = fxi.currentLink();
+        }
+    }
+        
 
     // checking fixings
     if (startDate_ != "" && parseDate(startDate()) < today) {
@@ -170,9 +175,9 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
 
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    Date lastPremiumDate =
-        addPremiums(additionalInstruments, additionalMultipliers, boughtAmount_, option_.premiumData(), -bsInd, soldCcy,
-                    engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
+    Date lastPremiumDate = addPremiums(
+        additionalInstruments, additionalMultipliers, (positionType == Position::Long ? 1.0 : -1.0) * boughtAmount_,
+        option_.premiumData(), -bsInd, soldCcy, engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
 
     // we build a knock out option
     boost::shared_ptr<Instrument> barrier =
@@ -183,6 +188,7 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
     boost::shared_ptr<FxBarrierOptionEngineBuilder> fxBarrierOptBuilder =
         boost::dynamic_pointer_cast<FxBarrierOptionEngineBuilder>(builder);
     barrier->setPricingEngine(fxBarrierOptBuilder->engine(boughtCcy, soldCcy, expiryDate, expiryDate));
+    setSensitivityTemplate(*fxBarrierOptBuilder);
     Settlement::Type settleType = parseSettlementType(option_.settlement());
 
     boost::shared_ptr<InstrumentWrapper> koInstrument =
@@ -222,6 +228,7 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
             boost::shared_ptr<Instrument> barrier2 =
                 boost::make_shared<QuantLib::BarrierOption>(knockOutType, knockInLevel, 0, payoff, exercise);
             barrier2->setPricingEngine(fxBarrierOptBuilder->engine(boughtCcy, soldCcy, expiryDate, expiryDate));
+            setSensitivityTemplate(*fxBarrierOptBuilder);
             boost::shared_ptr<InstrumentWrapper> koInstrument2 =
                 boost::shared_ptr<InstrumentWrapper>(new SingleBarrierOptionWrapper(
                     barrier2, positionType == Position::Long ? false : true, expiryDate,
@@ -245,6 +252,7 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
                 DoubleBarrier::Type::KnockOut, std::min(knockInLevel, knockOutLevel),
                 std::max(knockInLevel, knockOutLevel), 0, payoff, exercise);
             doubleBarrier->setPricingEngine(fxDoubleBarrierOptBuilder->engine(boughtCcy, soldCcy, expiryDate));
+            setSensitivityTemplate(*fxDoubleBarrierOptBuilder);
 
             boost::shared_ptr<InstrumentWrapper> dkoInstrument =
                 boost::shared_ptr<InstrumentWrapper>(new DoubleBarrierOptionWrapper(

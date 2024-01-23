@@ -62,8 +62,9 @@ void BarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
             payDate = payCalendar.advance(expiryDate, opd->lag(), Days, opd->convention());
         } else {
             if (opd->dates().size() > 1)
-                WLOG(ore::data::StructuredTradeWarningMessage(
-                    id(), tradeType(), "Trade build", "Found more than 1 payment date. The first one will be used."));
+                ore::data::StructuredTradeWarningMessage(id(), tradeType(), "Trade build",
+                                                         "Found more than 1 payment date. The first one will be used.")
+                    .log();
             payDate = opd->dates().front();
         }
     }
@@ -130,8 +131,8 @@ void BarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
             barrier_.levels()[0].value(), barrier_.levels()[1].value(), rebate, payoff, exercise);
     }
 
-    boost::shared_ptr<QuantLib::PricingEngine> barrierEngine = barrierPricigingEngine(engineFactory, expiryDate, payDate);
-    boost::shared_ptr<QuantLib::PricingEngine> vanillaEngine = vanillaPricigingEngine(engineFactory, expiryDate, payDate);
+    boost::shared_ptr<QuantLib::PricingEngine> barrierEngine = barrierPricingEngine(engineFactory, expiryDate, payDate);
+    boost::shared_ptr<QuantLib::PricingEngine> vanillaEngine = vanillaPricingEngine(engineFactory, expiryDate, payDate);
    
     // set pricing engines
     barrier->setPricingEngine(barrierEngine);
@@ -164,9 +165,9 @@ void BarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     // Add additional premium payments
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
     Date lastPremiumDate =
-        addPremiums(additionalInstruments, additionalMultipliers, tradeMultiplier(), option_.premiumData(), -bsInd,
-                    tradeCurrency(), engineFactory, engineFactory->configuration(MarketContext::pricing));
-    
+        addPremiums(additionalInstruments, additionalMultipliers, bsInd * tradeMultiplier(), option_.premiumData(),
+                    -bsInd, tradeCurrency(), engineFactory, engineFactory->configuration(MarketContext::pricing));
+
     // set the maturity
     maturity_ = std::max(lastPremiumDate, payDate);
 }

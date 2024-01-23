@@ -76,6 +76,8 @@ public:
 
     boost::shared_ptr<Scenario> clone() const override;
 
+    bool isCloseEnough(const boost::shared_ptr<Scenario>& s) const override;
+
 protected:
     boost::shared_ptr<Scenario> baseScenario_;
     boost::shared_ptr<Scenario> delta_;

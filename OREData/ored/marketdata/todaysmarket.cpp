@@ -244,7 +244,7 @@ void TodaysMarket::initialise(const Date& asof) {
 
     if (!buildErrors.empty()) {
         for (auto const& error : buildErrors) {
-            ALOG(StructuredCurveErrorMessage(error.first, "Failed to Build Curve", error.second));
+            StructuredCurveErrorMessage(error.first, "Failed to Build Curve", error.second).log();
         }
         if (!continueOnError_) {
             string errStr;
@@ -825,14 +825,17 @@ void TodaysMarket::require(const MarketObject o, const string& name, const strin
     auto tmp = dependencies_.find(configuration);
     if (tmp == dependencies_.end()) {
         if (configuration != Market::defaultConfiguration) {
-            ALOG(StructuredCurveErrorMessage(ore::data::to_string(o) + "(" + name + ")", "Failed to Build Curve",
-                                             "Configuration '" + configuration +
-                                                 "' not known, retry with default configuration."));
+            StructuredCurveWarningMessage(
+                ore::data::to_string(o) + "(" + name + ")", "Unknown market configuration.",
+                "Configuration '" + configuration +
+                    "' not known - check why this is used. Will retry with default configuration.")
+                .log();
             require(o, name, Market::defaultConfiguration);
             return;
         } else {
-            ALOG(StructuredCurveErrorMessage(ore::data::to_string(o) + "(" + name + ")", "Failed to Build Curve",
-                                             "Configuration 'default' not known, this is unexpected. Do nothing."));
+            StructuredCurveErrorMessage(ore::data::to_string(o) + "(" + name + ")", "Failed to Build Curve",
+                                        "Configuration 'default' not known, this is unexpected. Do nothing.")
+                .log();
             return;
         }
     }
@@ -929,7 +932,7 @@ void TodaysMarket::require(const MarketObject o, const string& name, const strin
 
     if (!buildErrors.empty()) {
         for (auto const& error : buildErrors) {
-            ALOG(StructuredCurveErrorMessage(error.first, "Failed to Build Curve", error.second));
+            StructuredCurveErrorMessage(error.first, "Failed to Build Curve", error.second).log();
         }
         if (!continueOnError_) {
             string errStr;

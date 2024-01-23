@@ -17,14 +17,11 @@
 */
 #include <boost/make_shared.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
+#include <ql/utilities/null_deleter.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <qle/termstructures/crossccyfixfloatmtmresetswaphelper.hpp>
 
 namespace QuantExt {
-
-namespace {
-    void no_deletion(YieldTermStructure*) {}
-} // namespace
 
 CrossCcyFixFloatMtMResetSwapHelper::CrossCcyFixFloatMtMResetSwapHelper(
     const Handle<Quote>& rate, const Handle<Quote>& spotFx, Natural settlementDays, const Calendar& paymentCalendar,
@@ -115,7 +112,7 @@ void CrossCcyFixFloatMtMResetSwapHelper::initializeDates() {
 }
 
 void CrossCcyFixFloatMtMResetSwapHelper::setTermStructure(YieldTermStructure* t) {
-    boost::shared_ptr<YieldTermStructure> temp(t, no_deletion);
+    boost::shared_ptr<YieldTermStructure> temp(t, null_deleter());
     termStructureHandle_.linkTo(temp, false);
     RelativeDateRateHelper::setTermStructure(t);
 }

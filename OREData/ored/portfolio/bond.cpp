@@ -268,6 +268,7 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE(bondBuilder, "No Builder found for Bond: " << id());
     bond->setPricingEngine(bondBuilder->engine(currency, bondData_.creditCurveId(), bondData_.hasCreditRisk(),
                                                bondData_.securityId(), bondData_.referenceCurveId()));
+    setSensitivityTemplate(*bondBuilder);
     instrument_.reset(new VanillaInstrument(bond, mult));
 
     npvCurrency_ = bondData_.currency();
@@ -333,7 +334,9 @@ BondBuilder::Result BondFactory::build(const boost::shared_ptr<EngineFactory>& e
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     for (auto const& b : builders_) {
         if (referenceData->hasData(b.first, securityId)) {
-            return b.second->build(engineFactory, referenceData, securityId);
+            auto tmp = b.second->build(engineFactory, referenceData, securityId);
+            tmp.builderLabel = b.first;
+            return tmp;
         }
     }
 

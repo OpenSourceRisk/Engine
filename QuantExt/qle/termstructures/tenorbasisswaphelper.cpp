@@ -19,14 +19,11 @@
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/indexes/ibor/libor.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
+#include <ql/utilities/null_deleter.hpp>
 
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
 
 namespace QuantExt {
-
-namespace {
-void no_deletion(YieldTermStructure*) {}
-} // namespace
 
 TenorBasisSwapHelper::TenorBasisSwapHelper(Handle<Quote> spread, const Period& swapTenor,
                                            const boost::shared_ptr<IborIndex> longIndex,
@@ -106,7 +103,7 @@ void TenorBasisSwapHelper::setTermStructure(YieldTermStructure* t) {
 
     bool observer = false;
 
-    boost::shared_ptr<YieldTermStructure> temp(t, no_deletion);
+    boost::shared_ptr<YieldTermStructure> temp(t, null_deleter());
     termStructureHandle_.linkTo(temp, observer);
 
     if (discountHandle_.empty())

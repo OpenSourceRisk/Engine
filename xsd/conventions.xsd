@@ -427,6 +427,13 @@
       <xs:element type="bool" name="AdjustBeforeOffset" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="IsAveraging" minOccurs="0" maxOccurs="1"/>
       <xs:element type="prohibitedExpiriesType" name="ProhibitedExpiries" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="ValidContractMonths" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="monthType" name="Month" minOccurs="1" maxOccurs="12"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
       <xs:element type="xs:integer" name="OptionExpiryMonthLag" minOccurs="0" maxOccurs="1"/>
       <xs:element type="frequencyType" name="OptionContractFrequency" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:nonNegativeInteger" name="OptionExpiryOffset" minOccurs="0" maxOccurs="1"/>
