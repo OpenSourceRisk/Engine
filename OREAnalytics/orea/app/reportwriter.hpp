@@ -100,7 +100,7 @@ public:
     virtual void writeAggregationScenarioData(ore::data::Report& report, const AggregationScenarioData& data);
 
     virtual void writeScenarioReport(ore::data::Report& report,
-                                     const boost::shared_ptr<SensitivityCube>& sensitivityCube,
+                                     const std::vector<boost::shared_ptr<SensitivityCube>>& sensitivityCubes,
                                      QuantLib::Real outputThreshold = 0.0);
 
     virtual void writeSensitivityReport(ore::data::Report& report, const boost::shared_ptr<SensitivityStream>& ss,
