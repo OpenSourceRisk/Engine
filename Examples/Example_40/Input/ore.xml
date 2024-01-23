@@ -5,7 +5,7 @@
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
-    <Parameter name="logMask">31</Parameter>
+    <Parameter name="logMask">252</Parameter>
     <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>
     <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
     <Parameter name="implyTodaysFixings">N</Parameter>
@@ -81,6 +81,7 @@
       <Parameter name="sensitivityOutputFile">sensitivity.csv</Parameter>
       <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
       <Parameter name="parSensitivity">Y</Parameter>
+			<Parameter name="optimiseRiskFactors">Y</Parameter>
       <Parameter name="parSensitivityOutputFile">parsensitivity.csv</Parameter>
       <Parameter name="outputJacobi">Y</Parameter>
       <Parameter name="jacobiOutputFile">jacobi.csv</Parameter>
