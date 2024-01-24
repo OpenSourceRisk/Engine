@@ -142,7 +142,79 @@ The relevant fields in the \lstinline!OptionData! node for a Swaption are:
 \item \lstinline!ExerciseFeeSettlementConvention![Optional]: The roll convention used to compute the exercise fee settlement date from
   the exercise date. Defaults to \emph{Unadjusted} if not given. Allowable values: See Table \ref{tab:convention} Roll Convention.
 
-\item An \lstinline!ExerciseDates! node where exactly one \lstinline!ExerciseDate! date element must be given for \emph{European} style swaptions, and for \emph{Bermudan} style swaptions  at least two \lstinline!ExerciseDate! date elements must be given. \\
+\item An \lstinline!ExerciseDates! node where for \emph{European} style swaptions exactly one \lstinline!ExerciseDate! date element must be given.  \emph{Bermudan} style swaptions can have \lstinline!ExerciseDate! elements given directly (at least two  \lstinline!ExerciseDate! elements must be given), or Rules or Dates based exercise dates. See Listings \ref{lst:bermudan_swaption_exercisedates}, \ref{lst:bermudan_swaption_rules} and \ref{lst:bermudan_swaption_dates}.
+
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<SwaptionData>
+    <OptionData>
+        <LongShort>Long</LongShort>
+        <Style>Bermudan</Style>
+        <Settlement>Physical</Settlement>
+        <ExerciseDates>
+          <ExerciseDate>2027-03-02</ExerciseDate>
+          <ExerciseDate>2028-03-02</ExerciseDate>
+          <ExerciseDate>2029-03-02</ExerciseDate>
+        </ExerciseDates>
+        ...
+    </OptionData>
+   ...
+\end{minted}
+\caption{Bermudan Swaption ExerciseDate:s}
+\label{lst:bermudan_swaption_exercisedates}
+\end{listing}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<SwaptionData>
+    <OptionData>
+        <LongShort>Long</LongShort>
+        <Style>Bermudan</Style>
+        <Settlement>Physical</Settlement>
+        <ExerciseDates>
+         <Rules>
+          <StartDate>2027-03-02</StartDate>
+          <EndDate>2029-03-02</EndDate>
+          <Tenor>1Y</Tenor>
+          <Calendar>US</Calendar>
+          <Convention>MF</Convention>
+         <Rules>                    
+        </ExerciseDates>
+        ...
+    </OptionData>
+   ...
+\end{minted}
+\caption{Bermudan Swaption Rules based}
+\label{lst:bermudan_swaption_rules}
+\end{listing}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<SwaptionData>
+    <OptionData>
+        <LongShort>Long</LongShort>
+        <Style>Bermudan</Style>
+        <Settlement>Physical</Settlement>
+        <ExerciseDates>
+         <Dates>
+          <Calendar>NullCalendar</Calendar>
+          <Convention>Unadjusted</Convention>
+          <Dates>
+           <Date>2027-03-02</Date>
+           <Date>2028-03-02</Date>
+           <Date>2029-03-02</Date>
+          <Dates>
+         <Dates>                    
+        </ExerciseDates>
+        ...
+    </OptionData>
+   ...
+\end{minted}
+\caption{Bermudan Swaption Dates based}
+\label{lst:bermudan_swaption_dates}
+\end{listing}
+
 
 \item \lstinline!Premiums! [Optional]: Option premium node with amounts paid by the option buyer to the option seller.
 
