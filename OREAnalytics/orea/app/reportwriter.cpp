@@ -1066,7 +1066,7 @@ void ReportWriter::writeAggregationScenarioData(ore::data::Report& report, const
 }
 
 void ReportWriter::writeScenarioReport(ore::data::Report& report,
-                                       const boost::shared_ptr<SensitivityCube>& sensitivityCube,
+                                       const std::vector<boost::shared_ptr<SensitivityCube>>& sensitivityCubes,
                                        Real outputThreshold) {
 
     LOG("Writing Scenario report");
@@ -1075,31 +1075,44 @@ void ReportWriter::writeScenarioReport(ore::data::Report& report,
     report.addColumn("Factor", string());
     report.addColumn("Up/Down", string());
     report.addColumn("Base NPV", double(), 2);
+    // report.addColumn("ShiftSize_1", double(), 6);
+    // report.addColumn("ShiftSize_2", double(), 6);
     report.addColumn("Scenario NPV", double(), 2);
     report.addColumn("Difference", double(), 2);
 
-    auto scenarioDescriptions = sensitivityCube->scenarioDescriptions();
-    auto tradeIds = sensitivityCube->tradeIdx();
-    auto npvCube = sensitivityCube->npvCube();
+    for (auto const& sensitivityCube : sensitivityCubes) {
 
-    for (const auto& [tradeId, i] : tradeIds) {
+        auto scenarioDescriptions = sensitivityCube->scenarioDescriptions();
+        auto tradeIds = sensitivityCube->tradeIdx();
+        auto npvCube = sensitivityCube->npvCube();
 
-        Real baseNpv = npvCube->getT0(i);
-        for (const auto& [j, scenarioNpv] : npvCube->getTradeNPVs(i)) {
-            auto scenarioDescription = scenarioDescriptions[j];
-            Real difference = scenarioNpv - baseNpv;
-            if (fabs(difference) > outputThreshold) {
-                report.next();
-                report.add(tradeId);
-                report.add(prettyPrintInternalCurveName(scenarioDescription.factors()));
-                report.add(scenarioDescription.typeString());
-                report.add(baseNpv);
-                report.add(scenarioNpv);
-                report.add(difference);
-            } else if (!std::isfinite(difference)) {
-                // TODO: is this needed?
-                ALOG("sensitivity scenario for trade " << tradeId << ", factor " << scenarioDescription.factors()
-                                                       << " is not finite (" << difference << ")");
+        for (const auto& [tradeId, i] : tradeIds) {
+
+            Real baseNpv = npvCube->getT0(i);
+            for (const auto& [j, scenarioNpv] : npvCube->getTradeNPVs(i)) {
+                auto scenarioDescription = scenarioDescriptions[j];
+                Real difference = scenarioNpv - baseNpv;
+                // Real shift1 = scenarioDescription.key1().keytype == RiskFactorKey::KeyType::None
+                //                   ? Null<Real>()
+                //                   : sensitivityCube->actualShiftSize(scenarioDescription.key1());
+                // Real shift2 = scenarioDescription.key2().keytype == RiskFactorKey::KeyType::None
+                //                   ? Null<Real>()
+                //                   : sensitivityCube->actualShiftSize(scenarioDescription.key2());
+                if (fabs(difference) > outputThreshold) {
+                    report.next();
+                    report.add(tradeId);
+                    report.add(prettyPrintInternalCurveName(scenarioDescription.factors()));
+                    report.add(scenarioDescription.typeString());
+                    report.add(baseNpv);
+                    // report.add(shift1);
+                    // report.add(shift2);
+                    report.add(scenarioNpv);
+                    report.add(difference);
+                } else if (!std::isfinite(difference)) {
+                    // TODO: is this needed?
+                    ALOG("sensitivity scenario for trade " << tradeId << ", factor " << scenarioDescription.factors()
+                                                           << " is not finite (" << difference << ")");
+                }
             }
         }
     }
