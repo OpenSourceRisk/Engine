@@ -236,7 +236,14 @@ void PricingAnalyticImpl::runAnalytic(
                 LOG("Sensi analysis - par conversion");
 
                 if (inputs_->optimiseRiskFactors()){
-                    parAnalysis->relevantRiskFactors() = sensiAnalysis->sensiCube()->relevantRiskFactors();
+                    std::set<RiskFactorKey> collectRiskFactors;
+                    //collect risk factors of all cubes and ...
+                    for(auto& c : sensiAnalysis->sensiCubes()){
+                        auto currentRF = c->relevantRiskFactors();
+                        // ... and combine for the par analysis
+                        collectRiskFactors.insert(currentRF.begin(), currentRF.end());
+                    }
+                    parAnalysis->relevantRiskFactors() = collectRiskFactors;
                     LOG("optimiseRiskFactors active : parSensi risk factors set to zeroSensi risk factors");
                 }
                 parAnalysis->computeParInstrumentSensitivities(sensiAnalysis->simMarket());
