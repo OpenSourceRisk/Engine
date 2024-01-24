@@ -135,6 +135,7 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
         auto compositeBuilder = boost::dynamic_pointer_cast<EquityEuropeanCompositeEngineBuilder>(builder);
         vanilla->setPricingEngine(compositeBuilder->engine(assetName_, underlyingCurrency_, 
             parseCurrency(strike_.currency()), expiryDate_));
+        setSensitivityTemplate(*compositeBuilder);
 
         string configuration = Market::defaultConfiguration;
         Position::Type positionType = parsePositionType(option_.longShort());

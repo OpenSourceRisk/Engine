@@ -27,6 +27,13 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
+bool Scenario::isCloseEnough(const boost::shared_ptr<Scenario>& s) const {
+    return asof() == s->asof() && label() == s->label() && QuantLib::close_enough(getNumeraire(), s->getNumeraire()) &&
+           keys() == s->keys() && std::all_of(keys().begin(), keys().end(), [this, s](const RiskFactorKey& k) {
+               return QuantLib::close_enough(this->get(k), s->get(k));
+           });
+}
+
 std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type) {
     switch (type) {
     case RiskFactorKey::KeyType::DiscountCurve:

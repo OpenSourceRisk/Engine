@@ -111,6 +111,7 @@ void EquityDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engi
     boost::shared_ptr<EquityDoubleTouchOptionEngineBuilder> eqDoubleTouchOptBuilder =
         boost::dynamic_pointer_cast<EquityDoubleTouchOptionEngineBuilder>(builder);
     doubleTouch->setPricingEngine(eqDoubleTouchOptBuilder->engine(assetName, ccy));
+    setSensitivityTemplate(*eqDoubleTouchOptBuilder);
     if (type_ == "KnockIn") {
         // if a knock-in option is triggered it becomes a simple forward cashflow
         // which we price as a swap

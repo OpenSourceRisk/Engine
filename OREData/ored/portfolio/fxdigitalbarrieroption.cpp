@@ -130,6 +130,7 @@ void FxDigitalBarrierOption::build(const boost::shared_ptr<EngineFactory>& engin
     QL_REQUIRE(builder, "No builder found for FxDigitalOption");
     boost::shared_ptr<FxDigitalOptionEngineBuilder> fxOptBuilder =
         boost::dynamic_pointer_cast<FxDigitalOptionEngineBuilder>(builder);
+    setSensitivityTemplate(*builder);
 
     barrier->setPricingEngine(fxBarrierOptBuilder->engine(boughtCcy, soldCcy, expiryDate));
     vanilla->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, flipResults));

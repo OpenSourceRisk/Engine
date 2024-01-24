@@ -65,6 +65,7 @@ void VarSwap::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFac
     boost::shared_ptr<VarSwapEngineBuilder> varSwapBuilder = boost::dynamic_pointer_cast<VarSwapEngineBuilder>(builder);
 
     varSwap->setPricingEngine(varSwapBuilder->engine(name(), ccy, assetClassUnderlying_, momentType));
+    setSensitivityTemplate(*varSwapBuilder);
 
     // set up other Trade details
     instrument_ = boost::shared_ptr<ore::data::InstrumentWrapper>(new ore::data::VanillaInstrument(varSwap));
