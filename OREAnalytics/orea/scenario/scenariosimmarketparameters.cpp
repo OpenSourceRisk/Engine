@@ -42,19 +42,19 @@ namespace {
 template <typename T> const vector<T>& lookup(const map<string, vector<T>>& m, const string& k) {
     if (m.count(k) > 0) {
         return m.at(k);
-    } else if (m.count("") > 0) {
-        return m.at("");
+    } else if (m.count(std::string()) > 0) {
+        return m.at(std::string());
     } else
-        QL_FAIL("no vector for key \"" << k << "\" found.");
+        QL_FAIL("ScenarioSimMarketParameters: no vector for key \"" << k << "\" found.");
 }
 
 template <typename T> const T& lookup(const map<string, T>& m, const string& k) {
     if (m.count(k) > 0) {
         return m.at(k);
-    } else if (m.count("") > 0) {
-        return m.at("");
+    } else if (m.count(std::string()) > 0) {
+        return m.at(std::string());
     } else
-        QL_FAIL("no result for key \"" << k << "\" found.");
+        QL_FAIL("ScenarioSimMarketParameters: no result for key \"" << k << "\" found.");
 }
 
 } // namespace
