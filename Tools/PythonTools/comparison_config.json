@@ -921,6 +921,7 @@
           "ShiftSize_1",
           "ShiftSize_2"
         ],
+        "require_equal_optional_cols": false,
         "column_settings": [
           {
             "names": [
