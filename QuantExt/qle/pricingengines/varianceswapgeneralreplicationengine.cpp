@@ -138,6 +138,7 @@ Real GeneralisedReplicatingVarianceSwapEngine::calculateAccruedVariance(const Ca
          d = jointCal.advance(d, 1, Days)) {
         Real price = index_->fixing(d);
         QL_REQUIRE(price != Null<Real>(), "No fixing for " << index_->name() << " on date " << d);
+        QL_REQUIRE(price > 0.0, "Fixing for " << index_->name() << " on date " << d << " must be greater than zero.");
         // Add historical dividend payment back to price
         Real dividend = dividends[d] != Null<Real>() ? dividends[d] : 0;
         Real move = log((price + dividend) / last);
