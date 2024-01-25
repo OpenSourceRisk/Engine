@@ -25,4 +25,16 @@
     <RoundingPrecision>2</RoundingPrecision>
     <Format>%3% %1$.2f</Format>
   </Currency>
+		<Currency>
+		<Name>Bitcoin</Name>
+		<ISOCode>BTC</ISOCode>
+		<NumericCode>000</NumericCode>
+		<Symbol></Symbol>
+		<FractionSymbol></FractionSymbol>
+		<FractionsPerUnit>100000000</FractionsPerUnit>
+		<RoundingType>Closest</RoundingType>
+		<RoundingPrecision>2</RoundingPrecision>
+		<Format></Format>
+		<CurrencyType>Crypto</CurrencyType>
+	</Currency>
 </CurrencyConfig>

@@ -286,13 +286,11 @@ Currency parseCurrency(const string& s) { return CurrencyParser::instance().pars
 
 QuantExt::ConfigurableCurrency::Type parseCurrencyType(const string& s) {
     static map<string, QuantExt::ConfigurableCurrency::Type> m = {
-        {"Major", QuantExt::ConfigurableCurrency::Major},
-        {"Fiat Currency", QuantExt::ConfigurableCurrency::Major},
-        {"Minor", QuantExt::ConfigurableCurrency::Minor},
-        {"Metal", QuantExt::ConfigurableCurrency::Metal},
-        {"Precious Metal", QuantExt::ConfigurableCurrency::Metal},
-        {"Crypto", QuantExt::ConfigurableCurrency::Crypto},
-        {"Cryptocurrency", QuantExt::ConfigurableCurrency::Crypto}};
+        {"Major", QuantExt::ConfigurableCurrency::Major},   {"Fiat Currency", QuantExt::ConfigurableCurrency::Major},
+        {"Fiat", QuantExt::ConfigurableCurrency::Major},    {"Minor", QuantExt::ConfigurableCurrency::Minor},
+        {"Metal", QuantExt::ConfigurableCurrency::Metal},   {"Precious Metal", QuantExt::ConfigurableCurrency::Metal},
+        {"Crypto", QuantExt::ConfigurableCurrency::Crypto}, {"Cryptocurrency", QuantExt::ConfigurableCurrency::Crypto},
+        {"UND", QuantExt::ConfigurableCurrency::UND}};
 
     auto it = m.find(s);
     if (it != m.end()) {
