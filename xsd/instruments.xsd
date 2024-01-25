@@ -325,7 +325,7 @@
   </xs:complexType>
 
   <xs:complexType name="bondData">
-    <xs:sequence>
+    <xs:all>
       <xs:element type="xs:string" name="IssuerId" minOccurs="0"/>
       <xs:element type="xs:string" name="CreditCurveId" minOccurs="0"/>
       <xs:element type="xs:string" name="CreditGroup" minOccurs="0"/>
@@ -343,11 +343,11 @@
       <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="bool" name="CreditRisk" minOccurs="0"/>
       <xs:element type="xs:string" name="SubType" minOccurs="0"/>
-    </xs:sequence>
+    </xs:all>
   </xs:complexType>
 
   <xs:complexType name="forwardBondData">
-    <xs:sequence>
+    <xs:all>
       <xs:element type="bondData" name="BondData"/>
       <xs:element type="settlementData" name="SettlementData"/>
       <xs:element name="PremiumData" minOccurs="0">
@@ -359,7 +359,7 @@
         </xs:complexType>
       </xs:element>
       <xs:element type="xs:string" name="LongInForward"/>
-    </xs:sequence>
+    </xs:all>
   </xs:complexType>
 
   <xs:complexType name="varianceSwapData">
