@@ -107,11 +107,17 @@ Real impliedQuote(const boost::shared_ptr<Instrument>& i) {
         return boost::dynamic_pointer_cast<ZeroCouponInflationSwap>(i)->fairRate();
     if (boost::dynamic_pointer_cast<YearOnYearInflationSwap>(i))
         return boost::dynamic_pointer_cast<YearOnYearInflationSwap>(i)->fairRate();
-    if (boost::dynamic_pointer_cast<TenorBasisSwap>(i))
-        return boost::dynamic_pointer_cast<TenorBasisSwap>(i)->fairShortLegSpread(); // assume spread on short index
-    if (boost::dynamic_pointer_cast<OvernightIndexedBasisSwap>(i))
-        return boost::dynamic_pointer_cast<OvernightIndexedBasisSwap>(i)->fairOvernightSpread();
-    if (boost::dynamic_pointer_cast<FixedBMASwap>(i))
+    if (boost::dynamic_pointer_cast<TenorBasisSwap>(i)){
+        if(boost::dynamic_pointer_cast<TenorBasisSwap>(i)->spreadOnShort())
+            return boost::dynamic_pointer_cast<TenorBasisSwap>(i)->fairShortLegSpread();
+        else
+            return boost::dynamic_pointer_cast<TenorBasisSwap>(i)->fairLongLegSpread();
+    } if (boost::dynamic_pointer_cast<OvernightIndexedBasisSwap>(i)) {
+        if(boost::dynamic_pointer_cast<OvernightIndexedBasisSwap>(i)->spreadOnShort())
+            return boost::dynamic_pointer_cast<OvernightIndexedBasisSwap>(i)->fairOvernightSpread();
+        else
+            return boost::dynamic_pointer_cast<OvernightIndexedBasisSwap>(i)->fairIborSpread();
+    } if (boost::dynamic_pointer_cast<FixedBMASwap>(i))
         return boost::dynamic_pointer_cast<FixedBMASwap>(i)->fairRate();
     if (boost::dynamic_pointer_cast<SubPeriodsSwap>(i))
         return boost::dynamic_pointer_cast<SubPeriodsSwap>(i)->fairRate();
@@ -1529,7 +1535,7 @@ ParSensitivityAnalysis::makeTenorBasisSwap(const boost::shared_ptr<Market>& mark
                                     .withConvention(longIndex->businessDayConvention())
                                     .forwards();
         helper = boost::make_shared<OvernightIndexedBasisSwap>(OvernightIndexedBasisSwap::Payer, 100.0, oisSchedule,
-                                                               shortIndexOn, iborSchedule, longIndex);
+                                                               shortIndexOn, iborSchedule, longIndex, conv->spreadOnShort());
         boost::shared_ptr<IborCoupon> lastCoupon1 = boost::dynamic_pointer_cast<IborCoupon>(
             boost::static_pointer_cast<OvernightIndexedBasisSwap>(helper)->iborLeg().back());
         boost::shared_ptr<QuantLib::OvernightIndexedCoupon> lastCoupon2 =
@@ -1544,7 +1550,7 @@ ParSensitivityAnalysis::makeTenorBasisSwap(const boost::shared_ptr<Market>& mark
             longIndexCalendar.adjust(asof_), longIndex->fixingDays() * Days);
         helper = boost::make_shared<TenorBasisSwap>(settlementDate, 1.0, term, true, longIndex, 0.0, shortIndex, 0.0,
                                                     conv->shortPayTenor(), DateGeneration::Backward,
-                                                    conv->includeSpread(), conv->subPeriodsCouponType());
+                                                    conv->includeSpread(), conv->spreadOnShort(), conv->subPeriodsCouponType());
         boost::shared_ptr<IborCoupon> lastCoupon1 = boost::dynamic_pointer_cast<IborCoupon>(
             boost::static_pointer_cast<TenorBasisSwap>(helper)->longLeg().back());
         Date maxDate2;

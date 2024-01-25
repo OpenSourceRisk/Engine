@@ -120,7 +120,7 @@ void OIBSHelper::initializeDates() {
     swap_ = boost::shared_ptr<OvernightIndexedBasisSwap>(
         new OvernightIndexedBasisSwap(OvernightIndexedBasisSwap::Payer,
                                       10000.0, // arbitrary
-                                      oisSchedule, overnightIndex_, iborSchedule, iborIndex_, 0.0, 0.0, true));
+                                      oisSchedule, overnightIndex_, iborSchedule, iborIndex_, true, 0.0, 0.0, true));
     boost::shared_ptr<PricingEngine> engine(
         new DiscountingSwapEngine(discount_.empty() ? discountRelinkableHandle_ : discount_));
     swap_->setPricingEngine(engine);
