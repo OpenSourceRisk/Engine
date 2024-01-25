@@ -912,12 +912,24 @@
           "Factor",
           "Up/Down"
         ],
+        "use_cols": [
+          "Base NPV",
+          "Scenario NPV",
+          "Difference"
+        ],
+        "optional_cols": [
+          "ShiftSize_1",
+          "ShiftSize_2"
+        ],
+        "require_equal_optional_cols": false,
         "column_settings": [
           {
             "names": [
               "Base NPV",
               "Scenario NPV",
-              "Difference"
+              "Difference",
+              "ShiftSize_1",
+              "ShiftSize_2"
             ],
             "abs_tol": 1e-2,
             "rel_tol": 1e-12
