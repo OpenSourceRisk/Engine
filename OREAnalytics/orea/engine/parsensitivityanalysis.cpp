@@ -168,7 +168,6 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
     parHelpers_.clear();
     parCaps_.clear();
     parYoYCaps_.clear();
-    dpar_dzero_multiplier_.clear();
 
     const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
     QL_REQUIRE(conventions != nullptr, "conventions are empty");
@@ -201,7 +200,6 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                 string equityForecastCurveName = ""; // ignored, if empty
                 std::pair<boost::shared_ptr<Instrument>, Date> ret;
                 bool recognised = true, skipped = false;
-                double dpar_dzero_multiplier_tmp = 1.0;
                 try {
                     map<string, string> conventionsMap = data.parInstrumentConventions;
                     QL_REQUIRE(conventionsMap.find(instType) != conventionsMap.end(),
@@ -223,12 +221,9 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                         ret = makeCrossCcyBasisSwap(simMarket, otherCurrency, ccy, term, convention, parHelperDependencies_[key]);
                     } else if (instType == "FXF")
                         ret = makeFxForward(simMarket, simMarketParams_->baseCcy(), ccy, term, convention, parHelperDependencies_[key]);
-                    else if (instType == "TBS"){
+                    else if (instType == "TBS")
                         ret = makeTenorBasisSwap(simMarket, ccy, "", "", "", "", term, convention, singleCurve, parHelperDependencies_[key], data.discountCurve);
-                        boost::shared_ptr<TenorBasisSwapConvention> conv = boost::dynamic_pointer_cast<TenorBasisSwapConvention>(convention);
-                        QL_REQUIRE(conv, "convention not recognised, expected TenorBasisSwapConvention");
-                        dpar_dzero_multiplier_tmp = conv->dpar_dzero_multiplier();
-                    } else
+                    else
                         recognised = false;
                 } catch (const std::exception& e) {
                     skipped = true;
@@ -244,7 +239,6 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                     QL_FAIL("Instrument type " << instType << " for par sensitivity conversion not recognised");
                 if (!skipped) {
                     parHelpers_[key] = ret.first;
-                    dpar_dzero_multiplier_[key] = dpar_dzero_multiplier_tmp;
                     if (!simMarket) {
                         yieldCurvePillars_[ccy].push_back((ret.second - asof_) * Days);
                     }
@@ -288,7 +282,6 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                 bool singleCurve = data.parInstrumentSingleCurve;
                 std::pair<boost::shared_ptr<Instrument>, Date> ret;
                 bool recognised = true, skipped = false;
-                double dpar_dzero_multiplier_tmp = 1.0;
                 try {
                     map<string, string> conventionsMap = data.parInstrumentConventions;
                     QL_REQUIRE(conventionsMap.find(instType) != conventionsMap.end(),
@@ -305,13 +298,10 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                     else if (instType == "OIS")
                         ret = makeOIS(simMarket, ccy, "", curveName, equityForecastCurveName, term, convention, singleCurve,
                             parHelperDependencies_[key], data.discountCurve);
-                    else if (instType == "TBS"){
+                    else if (instType == "TBS")
                         ret = makeTenorBasisSwap(simMarket, ccy, "", "", curveName, "", term, convention, singleCurve,
                             parHelperDependencies_[key], data.discountCurve);
-                        boost::shared_ptr<TenorBasisSwapConvention> conv = boost::dynamic_pointer_cast<TenorBasisSwapConvention>(convention);
-                        QL_REQUIRE(conv, "convention not recognised, expected TenorBasisSwapConvention");
-                        dpar_dzero_multiplier_tmp = conv->dpar_dzero_multiplier();
-                    } else if (instType == "XBS") {
+                    else if (instType == "XBS") {
                         string otherCurrency = data.otherCurrency.empty() ? simMarketParams_->baseCcy() : data.otherCurrency;
                         ret = makeCrossCcyBasisSwap(simMarket, otherCurrency, ccy, term, convention, parHelperDependencies_[key]);
                     } else
@@ -330,7 +320,6 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                     QL_FAIL("Instrument type " << instType << " for par sensitivity conversion unexpected");
                 if (!skipped) {
                     parHelpers_[key] = ret.first;
-                    dpar_dzero_multiplier_[key] = dpar_dzero_multiplier_tmp;
                     if (!simMarket) {
                         yieldCurvePillars_[curveName].push_back((ret.second - asof_) * Days);
                     }
@@ -370,7 +359,6 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                 string equityForecastCurveName = ""; // ignored, if empty
                 std::pair<boost::shared_ptr<Instrument>, Date> ret;
                 bool recognised = true, skipped = false;
-                double dpar_dzero_multiplier_tmp = 1.0;
                 try {
                     map<string, string> conventionsMap = data.parInstrumentConventions;
                     QL_REQUIRE(conventionsMap.find(instType) != conventionsMap.end(),
@@ -387,13 +375,10 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                     else if (instType == "OIS")
                         ret = makeOIS(simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName, term, convention, singleCurve,
                             parHelperDependencies_[key], data.discountCurve);
-                    else if (instType == "TBS"){
+                    else if (instType == "TBS")
                         ret = makeTenorBasisSwap(simMarket, ccy, "", "", "", "", term, convention, singleCurve,
                             parHelperDependencies_[key], data.discountCurve);
-                        boost::shared_ptr<TenorBasisSwapConvention> conv = boost::dynamic_pointer_cast<TenorBasisSwapConvention>(convention);
-                        QL_REQUIRE(conv, "convention not recognised, expected TenorBasisSwapConvention");
-                        dpar_dzero_multiplier_tmp = conv->dpar_dzero_multiplier();
-                    } else
+                    else
                         recognised = false;
                 } catch (const std::exception& e) {
                     skipped = true;
@@ -410,7 +395,6 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                     QL_FAIL("Instrument type " << instType << " for par sensitivity conversion not recognised");
                 if (!skipped) {
                     parHelpers_[key] = ret.first;
-                    dpar_dzero_multiplier_[key] = dpar_dzero_multiplier_tmp;
                     if (!simMarket) {
                         yieldCurvePillars_[indexName].push_back((ret.second - asof_) * Days);
                     }
@@ -517,7 +501,6 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                 }
                 if (!skipped) {
                     parHelpers_[key] = ret.first;
-                    dpar_dzero_multiplier_[key] = 1.0;
                     if (!simMarket) {
                         cdsPillars_[name].push_back((ret.second - asof_) * Days);
                     }
@@ -553,7 +536,6 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                     auto tmp = makeZeroInflationSwap(simMarket, indexName, term, convention, singleCurve,
                         parHelperDependencies_[key], data.discountCurve);
                     parHelpers_[key] = tmp;
-                    dpar_dzero_multiplier_[key] = 1.0;
                     DLOG("Par instrument for zero inflation index " << indexName << " tenor " << j << " built.");
                 } catch (const std::exception& e) {
                     if (continueOnError_) {
@@ -594,12 +576,10 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                         auto tmp = makeYoyInflationSwap(simMarket, indexName, term, convention, singleCurve, true,
                             parHelperDependencies_[key], data.discountCurve);
                         parHelpers_[key] = tmp;
-                        dpar_dzero_multiplier_[key] = 1.0;
                     } else if (instType == "YYS") {
                         auto tmp = makeYoyInflationSwap(simMarket, indexName, term, convention, singleCurve, false,
                             parHelperDependencies_[key], data.discountCurve);
                         parHelpers_[key] = tmp;
-                        dpar_dzero_multiplier_[key] = 1.0;
                     } else
                         recognised = false;
                 } catch (const std::exception& e) {
@@ -787,7 +767,6 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const boost::shar
     createParInstruments(simMarket);
 
     map<RiskFactorKey, Real> parRatesBase, parCapVols; // for both ir and yoy caps
-    QL_REQUIRE(dpar_dzero_multiplier_.size() == parHelpers_.size(), "size mismatch : dpar_dzero_multiplier vs. parHelpers");
 
     for (auto& p : parHelpers_) {
         try {
@@ -931,7 +910,7 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const boost::shar
             auto base = parRatesBase.find(p.first);
             QL_REQUIRE(base != parRatesBase.end(), "internal error: did not find parRatesBase[" << p.first << "]");
 
-            Real tmp = (fair - base->second) / shiftSize * dpar_dzero_multiplier_[p.first];
+            Real tmp = (fair - base->second) / shiftSize;
 
             // special treatments for certain risk factors
 

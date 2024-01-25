@@ -654,7 +654,6 @@ public:
     const Period& longPayTenor() const { return longPayTenor_; }
     bool spreadOnShort() const { return spreadOnShort_; }
     bool includeSpread() const { return includeSpread_; }
-    double dpar_dzero_multiplier() const { return dpar_dzero_multiplier_; }
     SubPeriodsCoupon1::Type subPeriodsCouponType() const { return subPeriodsCouponType_; }
     //@}
 
@@ -670,7 +669,6 @@ private:
     Period longPayTenor_;
     bool spreadOnShort_;
     bool includeSpread_;
-    double dpar_dzero_multiplier_;
     SubPeriodsCoupon1::Type subPeriodsCouponType_;
 
     // Strings to store the inputs
@@ -680,7 +678,6 @@ private:
     string strLongPayTenor_;
     string strSpreadOnShort_;
     string strIncludeSpread_;
-    string strdpar_dzero_multiplier_;
     string strSubPeriodsCouponType_;
 };
 
