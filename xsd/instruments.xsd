@@ -325,7 +325,7 @@
   </xs:complexType>
 
   <xs:complexType name="bondData">
-    <xs:all>
+    <xs:sequence>
       <xs:element type="xs:string" name="IssuerId" minOccurs="0"/>
       <xs:element type="xs:string" name="CreditCurveId" minOccurs="0"/>
       <xs:element type="xs:string" name="CreditGroup" minOccurs="0"/>
@@ -343,7 +343,7 @@
       <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="bool" name="CreditRisk" minOccurs="0"/>
       <xs:element type="xs:string" name="SubType" minOccurs="0"/>
-    </xs:all>
+    </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="forwardBondData">
