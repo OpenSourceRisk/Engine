@@ -48,6 +48,7 @@ std::string ConfigurableCurrency::ToString(Type ccytype) {
         case UND:
             return "UND";
     }
+    return "UND";
 }
 
 } // namespace QuantExt
