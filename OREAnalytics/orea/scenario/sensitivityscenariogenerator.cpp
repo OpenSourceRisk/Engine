@@ -425,7 +425,13 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
 
     for (auto c : sensitivityData_->discountCurveShiftData()) {
         string ccy = c.first;
-        Size n_ten = simMarketData_->yieldCurveTenors(ccy).size();
+        Size n_ten;
+        try {
+            n_ten = simMarketData_->yieldCurveTenors(ccy).size();
+        } catch (const std::exception& e) {
+            ALOG("skip scenario generation for discount curve " << ccy << ": " << e.what());
+            continue;
+        }
         // original curves' buffer
         std::vector<Real> zeros(n_ten);
         std::vector<Real> times(n_ten);
@@ -525,7 +531,13 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
 
     for (auto idx : sensitivityData_->indexCurveShiftData()) {
         string indexName = idx.first;
-        Size n_ten = simMarketData_->yieldCurveTenors(indexName).size();
+        Size n_ten;
+        try {
+            n_ten = simMarketData_->yieldCurveTenors(indexName).size();
+        } catch (const std::exception& e) {
+            ALOG("skip scenario generation for index curve " << indexName << ": " << e.what());
+            continue;
+        }
         // original curves' buffer
         std::vector<Real> zeros(n_ten);
         std::vector<Real> times(n_ten);
@@ -624,7 +636,13 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
 
     for (auto y : sensitivityData_->yieldCurveShiftData()) {
         string name = y.first;
-        Size n_ten = simMarketData_->yieldCurveTenors(name).size();
+        Size n_ten;
+        try {
+            n_ten = simMarketData_->yieldCurveTenors(name).size();
+        } catch (const std::exception& e) {
+            ALOG("skip scenario generation for yield curve " << name << ": " << e.what());
+            continue;
+        }
         // original curves' buffer
         std::vector<Real> zeros(n_ten);
         std::vector<Real> times(n_ten);
@@ -720,7 +738,13 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
 
     for (auto d : sensitivityData_->dividendYieldShiftData()) {
         string name = d.first;
-        Size n_ten = simMarketData_->equityDividendTenors(name).size();
+        Size n_ten;
+        try {
+            n_ten = simMarketData_->equityDividendTenors(name).size();
+        } catch (const std::exception& e) {
+            ALOG("skip scenario generation for div yield " << name << ": " << e.what());
+            continue;
+        }
         // original curves' buffer
         std::vector<Real> zeros(n_ten);
         std::vector<Real> times(n_ten);
@@ -818,7 +842,13 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
         string ccyPair = f.first;
         QL_REQUIRE(ccyPair.length() == 6, "invalid ccy pair length");
 
-        Size n_fxvol_exp = simMarketData_->fxVolExpiries(ccyPair).size();
+        Size n_fxvol_exp;
+        try {
+            n_fxvol_exp = simMarketData_->fxVolExpiries(ccyPair).size();
+        } catch (const std::exception& e) {
+            ALOG("skip scenario generation for fx vol " << ccyPair << ": " << e.what());
+            continue;
+        }
         std::vector<Real> times(n_fxvol_exp);
         Size n_fxvol_strikes;
         vector<Real> vol_strikes;
@@ -933,7 +963,13 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(bool up) {
         if (!isScenarioRelevant(up, data))
             continue;
 
-        Size n_eqvol_exp = simMarketData_->equityVolExpiries(equity).size();
+        Size n_eqvol_exp;
+        try {
+            n_eqvol_exp = simMarketData_->equityVolExpiries(equity).size();
+        } catch (const std::exception& e) {
+            ALOG("skip scenario generation for eq vol " << equity << ": " << e.what());
+            continue;
+        }
         Size n_eqvol_strikes;
         vector<Real> vol_strikes;
         if (!simMarketData_->equityVolIsSurface(equity)) {
@@ -1109,7 +1145,13 @@ void SensitivityScenarioGenerator::generateGenericYieldVolScenarios(bool up, Ris
     for (auto s : shiftData) {
         std::string qualifier = s.first;
 
-        Size n_term = get_n_term(qualifier);
+        Size n_term;
+        try {
+            n_term = get_n_term(qualifier);
+        } catch (const std::exception& e) {
+            ALOG("skip scenario generation for general yield vol " << qualifier << ": " << e.what());
+            continue;
+        }
         Size n_expiry = get_n_expiry(qualifier);
 
         vector<Real> volExpiryTimes(n_expiry, 0.0);
@@ -1268,7 +1310,13 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
     for (auto c : sensitivityData_->capFloorVolShiftData()) {
         std::string key = c.first;
 
-        vector<Real> volStrikes = simMarketData_->capFloorVolStrikes(key);
+        vector<Real> volStrikes;
+        try {
+            volStrikes = simMarketData_->capFloorVolStrikes(key);
+        } catch (const std::exception& e) {
+            ALOG("skip scenario generation for cf vol " << key << ": " << e.what());
+            continue;
+        }
         // Strikes may be empty which indicates that the optionlet structure in the simulation market is an ATM curve
         if (volStrikes.empty()) {
             volStrikes = {0.0};
@@ -1394,7 +1442,12 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up)
 
     for (auto c : sensitivityData_->creditCurveShiftData()) {
         string name = c.first;
-        n_ten = simMarketData_->defaultTenors(name).size();
+        try {
+            n_ten = simMarketData_->defaultTenors(name).size();
+        } catch (const std::exception& e) {
+            ALOG("skip scenario generation for survival curve " << name << ": " << e.what());
+            continue;
+        }
         std::vector<Real> hazardRates(n_ten); // integrated hazard rates
         times.clear();
         times.resize(n_ten);
@@ -1587,7 +1640,13 @@ void SensitivityScenarioGenerator::generateZeroInflationScenarios(bool up) {
 
     for (auto z : sensitivityData_->zeroInflationCurveShiftData()) {
         string indexName = z.first;
-        Size n_ten = simMarketData_->zeroInflationTenors(indexName).size();
+        Size n_ten;
+        try {
+            n_ten = simMarketData_->zeroInflationTenors(indexName).size();
+        } catch (const std::exception& e) {
+            ALOG("skip scenario generation for zero inflation curve " << indexName << ": " << e.what());
+            continue;
+        }
         // original curves' buffer
         std::vector<Real> zeros(n_ten);
         std::vector<Real> times(n_ten);
@@ -1682,7 +1741,13 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(bool up) {
 
     for (auto y : sensitivityData_->yoyInflationCurveShiftData()) {
         string indexName = y.first;
-        Size n_ten = simMarketData_->yoyInflationTenors(indexName).size();
+        Size n_ten;
+        try {
+            n_ten = simMarketData_->yoyInflationTenors(indexName).size();
+        } catch (const std::exception& e) {
+            ALOG("skip scenario generation for yoy inflation curve " << indexName << ": " << e.what());
+            continue;
+        }
         // original curves' buffer
         std::vector<Real> yoys(n_ten);
         std::vector<Real> times(n_ten);
@@ -1777,7 +1842,13 @@ void SensitivityScenarioGenerator::generateYoYInflationCapFloorVolScenarios(bool
 
     for (auto c : sensitivityData_->yoyInflationCapFloorVolShiftData()) {
         std::string name = c.first;
-        Size n_yoyvol_strikes = simMarketData_->yoyInflationCapFloorVolStrikes(name).size();
+        Size n_yoyvol_strikes;
+        try {
+            n_yoyvol_strikes = simMarketData_->yoyInflationCapFloorVolStrikes(name).size();
+        } catch (const std::exception& e) {
+            ALOG("skip scenario generation for yoy inflation cf vol " << name << ": " << e.what());
+            continue;
+        }
         vector<Real> volStrikes = simMarketData_->yoyInflationCapFloorVolStrikes(name);
         Size n_yoyvol_exp = simMarketData_->yoyInflationCapFloorVolExpiries(name).size();
         SensitivityScenarioData::VolShiftData data = *c.second;
@@ -1884,7 +1955,13 @@ void SensitivityScenarioGenerator::generateZeroInflationCapFloorVolScenarios(boo
 
     for (auto c : sensitivityData_->zeroInflationCapFloorVolShiftData()) {
         std::string name = c.first;
-        Size n_strikes = simMarketData_->zeroInflationCapFloorVolStrikes(name).size();
+        Size n_strikes;
+        try {
+            n_strikes = simMarketData_->zeroInflationCapFloorVolStrikes(name).size();
+        } catch (const std::exception& e) {
+            ALOG("skip scenario generation for zero inflation cf vol " << name << ": " << e.what());
+            continue;
+        }
         Size n_exp = simMarketData_->zeroInflationCapFloorVolExpiries(name).size();
         vector<Real> volStrikes = simMarketData_->zeroInflationCapFloorVolStrikes(name);
         SensitivityScenarioData::VolShiftData data = *c.second;
@@ -2113,7 +2190,13 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
     for (auto c : sensitivityData_->commodityCurveShiftData()) {
         string name = c.first;
         // Tenors for this name in simulation market
-        vector<Period> simMarketTenors = simMarketData_->commodityCurveTenors(name);
+        vector<Period> simMarketTenors;
+        try {
+            simMarketTenors = simMarketData_->commodityCurveTenors(name);
+        } catch (const std::exception& e) {
+            ALOG("skip scenario generation for comm curve " << name << ": " << e.what());
+            continue;
+        }
         DayCounter dc = Actual365Fixed();
         try {
             if (auto s = simMarket_.lock()) {
@@ -2208,7 +2291,13 @@ void SensitivityScenarioGenerator::generateCommodityVolScenarios(bool up) {
     for (auto c : sensitivityData_->commodityVolShiftData()) {
         string name = c.first;
         // Simulation market data for the current name
-        const vector<Period>& expiries = simMarketData_->commodityVolExpiries(name);
+        vector<Period> expiries;
+        try {
+            expiries = simMarketData_->commodityVolExpiries(name);
+        } catch (const std::exception& e) {
+            ALOG("skip scenario generation for comm vol " << name << ": " << e.what());
+            continue;
+        }
         const vector<Real>& moneyness = simMarketData_->commodityVolMoneyness(name);
         QL_REQUIRE(!expiries.empty(), "Sim market commodity volatility expiries have not been specified for " << name);
         QL_REQUIRE(!moneyness.empty(), "Sim market commodity volatility moneyness has not been specified for " << name);
