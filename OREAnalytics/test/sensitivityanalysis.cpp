@@ -87,6 +87,7 @@ using testsuite::buildZeroBond;
 using testsuite::TestConfigurationObjects;
 using testsuite::TestMarket;
 
+namespace {
 void testPortfolioSensitivity(ObservationMode::Mode om) {
     SavedSettings backup;
 
@@ -118,7 +119,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket, 
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket,
                                                          scenarioFactory, false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
@@ -730,8 +731,8 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
             string label = to_string(desc[j]);
             if (fabs(sensi) > tiny) {
                 count++;
-                BOOST_TEST_MESSAGE("{ \"" << tradeId << "\", \"" << label << "\", " <<
-                    std::fixed << std::setprecision(12) << npv0 << ", " << sensi << " },");
+                BOOST_TEST_MESSAGE("{ \"" << tradeId << "\", \"" << label << "\", " << std::fixed
+                                          << std::setprecision(12) << npv0 << ", " << sensi << " },");
                 pair<string, string> p(tradeId, label);
                 QL_REQUIRE(npvMap.find(p) != npvMap.end(),
                            "pair (" << p.first << ", " << p.second << ") not found in npv map");
@@ -744,9 +745,8 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
                                         fabs((sensi - sensiMap[p]) / sensi) < tolerance,
                                     "sensitivity regression failed for pair ("
                                         << p.first << ", " << p.second << "): " << sensi << " vs " << sensiMap[p]);
-		coveredSensis.insert(p);
+                coveredSensis.insert(p);
             }
-            
         }
         currentTradeIdx++;
     }
@@ -768,7 +768,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     map<pair<string, string>, Real> deltaMap;
     map<pair<string, string>, Real> gammaMap;
     std::set<string> sensiTrades;
-    for (const auto& [pid,p] : portfolio->trades()) {
+    for (const auto& [pid, p] : portfolio->trades()) {
         sensiTrades.insert(pid);
         for (const auto& f : sa->sensiCube()->factors()) {
             auto des = sa->sensiCube()->factorDescription(f);
@@ -815,6 +815,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     ObservationMode::instance().setMode(backupMode);
     IndexManager::instance().clearHistories();
 }
+} // namespace
 
 BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::OreaTopLevelFixture)
 
@@ -882,7 +883,7 @@ void test1dShifts(bool granular) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket, 
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket,
                                                          scenarioFactory, false);
 
     // cache initial zero rates
@@ -978,9 +979,8 @@ BOOST_AUTO_TEST_CASE(test2dShifts) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket, 
-                                                         scenarioFactory,
-                                                         false);
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket,
+                                                         scenarioFactory, false);
 
     // cache initial zero rates
     vector<Period> expiries = simMarketData->swapVolExpiries("");
@@ -1162,15 +1162,14 @@ BOOST_AUTO_TEST_CASE(testEquityOptionDeltaGamma) {
     }
 
     bool recalibrateModels = true; // nothing to calibrate here
-    boost::shared_ptr<SensitivityAnalysis> sa =
-        boost::make_shared<SensitivityAnalysis>(portfolio, initMarket, Market::defaultConfiguration, data,
-                                                simMarketData, sensiData, recalibrateModels);
+    boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
+        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, recalibrateModels);
     sa->generateSensitivities();
 
     map<pair<string, string>, Real> deltaMap;
     map<pair<string, string>, Real> gammaMap;
     std::set<string> sensiTrades;
-    for (auto [pid,p] : portfolio->trades()) {
+    for (auto [pid, p] : portfolio->trades()) {
         sensiTrades.insert(pid);
         for (const auto& f : sa->sensiCube()->factors()) {
             auto des = sa->sensiCube()->factorDescription(f);
@@ -1385,7 +1384,7 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
     map<pair<string, string>, Real> deltaMap;
     map<pair<string, string>, Real> gammaMap;
     std::set<string> sensiTrades;
-    for (const auto& [pid ,_] : portfolio->trades()) {
+    for (const auto& [pid, _] : portfolio->trades()) {
         sensiTrades.insert(pid);
         for (const auto& f : sa->sensiCube()->factors()) {
             auto des = sa->sensiCube()->factorDescription(f);
