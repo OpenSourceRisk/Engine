@@ -45,7 +45,8 @@ void SensitivityScenarioData::shiftDataFromXML(XMLNode* child, ShiftData& data) 
     vector<string> shiftSizeKeys;
     vector<string> shiftSchemeKeys;
 
-    auto shiftTypes = XMLUtils::getChildrenValuesWithAttributes(child, std::string(), "ShiftType", "key", shiftTypeKeys);
+    auto shiftTypes =
+        XMLUtils::getChildrenValuesWithAttributes(child, std::string(), "ShiftType", "key", shiftTypeKeys);
     auto shiftSizes = XMLUtils::getChildrenValuesWithAttributes<Real>(child, std::string(), "ShiftSize", "key",
                                                                       shiftSizeKeys, &ore::data::parseReal);
     auto shiftSchemes =
@@ -72,17 +73,18 @@ void SensitivityScenarioData::shiftDataFromXML(XMLNode* child, ShiftData& data) 
     QL_REQUIRE(shiftTypeEmptyKey != shiftTypeKeys.end(),
                "SensitivityScenarioData::shiftDataFromXML(): no ShiftType without attribute defined in node '"
                    << XMLUtils::getNodeName(child) << "'");
-    QL_REQUIRE(shiftSizeEmptyKey != shiftTypeKeys.end(),
+    QL_REQUIRE(shiftSizeEmptyKey != shiftSizeKeys.end(),
                "SensitivityScenarioData::shiftDataFromXML(): no ShiftSize without attribute defined in node '"
                    << XMLUtils::getNodeName(child) << "'");
 
-    data.shiftType = parseShiftType(shiftTypes.at(std::distance(shiftTypeKeys.begin(),shiftTypeEmptyKey)));
-    data.shiftSize = shiftSizes.at(std::distance(shiftSizeKeys.begin(),shiftSizeEmptyKey));
+    data.shiftType = parseShiftType(shiftTypes.at(std::distance(shiftTypeKeys.begin(), shiftTypeEmptyKey)));
+    data.shiftSize = shiftSizes.at(std::distance(shiftSizeKeys.begin(), shiftSizeEmptyKey));
 
-    if(shiftSchemeEmptyKey == shiftSchemeKeys.end())
+    if (shiftSchemeEmptyKey == shiftSchemeKeys.end())
         data.shiftScheme = ShiftScheme::Forward;
     else
-        data.shiftScheme = parseShiftScheme(shiftSchemes.at(std::distance(shiftSchemeKeys.begin(), shiftSchemeEmptyKey)));
+        data.shiftScheme =
+            parseShiftScheme(shiftSchemes.at(std::distance(shiftSchemeKeys.begin(), shiftSchemeEmptyKey)));
 
     // extract the parameters with attribute
 
@@ -97,7 +99,7 @@ void SensitivityScenarioData::shiftDataFromXML(XMLNode* child, ShiftData& data) 
         }
     }
     for (Size i = 0; i < shiftSchemeKeys.size(); ++i) {
-        if(!shiftSchemeKeys[i].empty()) {
+        if (!shiftSchemeKeys[i].empty()) {
             data.keyedShiftScheme[shiftSchemeKeys[i]] = parseShiftScheme(shiftSchemes[i]);
         }
     }
@@ -1059,6 +1061,64 @@ XMLNode* SensitivityScenarioData::parDataToXML(XMLDocument& doc,
     }
 
     return parNode;
+}
+
+namespace {
+void extractKeysFromShiftData(const ShiftData& d, std::set<string>& pids) {
+    for (auto const& [k, _] : d.keyedShiftType)
+        pids.insert(k);
+    for (auto const& [k, _] : d.keyedShiftSize)
+        pids.insert(k);
+    for (auto const& [k, _] : d.keyedShiftScheme)
+        pids.insert(k);
+}
+} // namespace
+
+std::set<std::string> getShiftSpecKeys(const SensitivityScenarioData& d) {
+    std::set<std::string> pids;
+    for (auto const& [_, v] : d.discountCurveShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.indexCurveShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.fxShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.capFloorVolShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.swaptionVolShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.yieldVolShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.fxVolShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.cdsVolShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.baseCorrelationShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.zeroInflationCurveShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.yoyInflationCapFloorVolShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.yoyInflationCapFloorVolShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.zeroInflationCapFloorVolShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.creditCurveShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.equityShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.equityVolShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.dividendYieldShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.commodityCurveShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.commodityVolShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.correlationShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.securityShiftData())
+        extractKeysFromShiftData(v, pids);
+    return pids;
 }
 
 } // namespace analytics

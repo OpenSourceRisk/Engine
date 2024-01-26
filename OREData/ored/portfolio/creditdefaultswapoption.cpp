@@ -242,6 +242,7 @@ void CreditDefaultSwapOption::buildNoDefault(const boost::shared_ptr<EngineFacto
     npvCurrency_ = legData.currency();
     auto ccy = parseCurrency(npvCurrency_);
     cds->setPricingEngine(cdsBuilder->engine(ccy, swap_.creditCurveId(), swap_.recoveryRate()));
+    setSensitivityTemplate(*cdsBuilder);
 
     // Check option data
     QL_REQUIRE(option_.style() == "European", "CreditDefaultSwapOption option style must" <<
@@ -272,6 +273,7 @@ void CreditDefaultSwapOption::buildNoDefault(const boost::shared_ptr<EngineFacto
     QL_REQUIRE(cdsOptionEngineBuilder, "CreditDefaultSwapOption expected CDS option engine " <<
         " builder for underlying while building trade " << id() << ".");
     cdsOption->setPricingEngine(cdsOptionEngineBuilder->engine(ccy, swap_.creditCurveId(), term_));
+    setSensitivityTemplate(*cdsOptionEngineBuilder);
 
     // Copying here what is done for the index CDS option. The comment there is:
     // Align option product maturities with ISDA AANA/GRID guidance as of November 2020.

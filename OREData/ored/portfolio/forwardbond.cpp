@@ -149,6 +149,7 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     fwdBond->setPricingEngine(fwdBondBuilder->engine(id(), currency, bondData_.creditCurveId(),
                                                      bondData_.hasCreditRisk(), bondData_.securityId(),
                                                      bondData_.referenceCurveId(), bondData_.incomeCurveId()));
+    setSensitivityTemplate(*fwdBondBuilder);
     instrument_.reset(new VanillaInstrument(fwdBond, 1.0));
 
     additionalData_["currentNotional"] = currentNotional(bond->cashflows()) * bondData_.bondNotional();

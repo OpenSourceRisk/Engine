@@ -141,13 +141,14 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     boost::shared_ptr<CommodityForwardEngineBuilder> commodityForwardEngineBuilder =
         boost::dynamic_pointer_cast<CommodityForwardEngineBuilder>(builder);
     commodityForward->setPricingEngine(commodityForwardEngineBuilder->engine(currency)); // the engine accounts for NDF if settlement data are present
+    setSensitivityTemplate(*commodityForwardEngineBuilder);
 
     // set up other Trade details
     instrument_ = boost::make_shared<VanillaInstrument>(commodityForward);
     npvCurrency_ = fixingDate_==Date() ? currency_ : payCcy_;
 
     // notional_ = strike_ * quantity_;
-    notional_ = Null<Real>(); // is handled by override of notional()
+    notional_ = strike_ * quantity_;
     notionalCurrency_ = currency_;
 
     additionalData_["quantity"] = quantity_;
@@ -167,17 +168,7 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     additionalData_["isdaTransaction"] = string("");  
 }
 
-Real CommodityForward::notional() const {
-    // try to get the notional from the additional results of the instrument
-    try {
-        return instrument_->qlInstrument(true)->result<Real>("currentNotional");
-    } catch (const std::exception& e) {
-        if (strcmp(e.what(), "currentNotional not provided"))
-            ALOG("error when retrieving notional: " << e.what());
-    }
-    // if not provided, return null
-    return Null<Real>();
-}
+Real CommodityForward::notional() const { return notional_; }
 
 std::map<AssetClass, std::set<std::string>>
 CommodityForward::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
