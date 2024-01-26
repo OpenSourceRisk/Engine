@@ -35,18 +35,18 @@ using namespace QuantLib;
  */
 class ConfigurableCurrency : public Currency {
 public:
-    enum Type { UND, Major, Minor, Metal, Crypto };
+    enum class Type { Major, Metal, Crypto };
     ConfigurableCurrency(const std::string& name, const std::string& code, Integer numericCode,
                          const std::string& symbol, const std::string& fractionSymbol, Integer fractionsPerUnit,
                          const Rounding& rounding, const std::string& formatString, 
-                         const std::set<std::string>& minorUnitCodes, Type currencyType = UND);
+                         const std::set<std::string>& minorUnitCodes, Type currencyType = Type::Major);
     Type currencyType() const { return currencyType_; }
 
-    static std::string ToString(Type ccytype);
-
 private:
-    Type currencyType_;
+    ConfigurableCurrency::Type currencyType_;
 };
+
+std::ostream& operator<<(std::ostream& os, QuantExt::ConfigurableCurrency::Type ccytype);
 
 } // namespace QuantExt
 #endif
