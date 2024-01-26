@@ -16,9 +16,26 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <oret/toplevelfixture.hpp>
+
+#include <orea/cube/inmemorycube.hpp>
+#include <orea/engine/decomposedsensitivitystream.hpp>
+#include <orea/engine/observationmode.hpp>
+#include <orea/engine/sensitivityanalysis.hpp>
+#include <orea/engine/valuationcalculator.hpp>
+#include <orea/engine/valuationengine.hpp>
+#include <orea/scenario/clonescenariofactory.hpp>
+#include <orea/scenario/sensitivityscenariogenerator.hpp>
+
+#include <ored/portfolio/equityoption.hpp>
+#include <ored/portfolio/fxoption.hpp>
+
 #include <boost/test/unit_test.hpp>
 #include <boost/timer/timer.hpp>
-#include <orea/engine/decomposedsensitivitystream.hpp>
+
+#include "test/oreatoplevelfixture.hpp"
+#include "testmarket.hpp"
+#include "testportfolio.hpp"
 
 using namespace std;
 using namespace QuantLib;
@@ -31,7 +48,7 @@ using namespace ore::analytics;
 using boost::timer::cpu_timer;
 using boost::timer::default_places;
 
-
+namespace {
 void testPortfolioSensitivity(ObservationMode::Mode om) {
     SavedSettings backup;
 
@@ -44,14 +61,15 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     BOOST_TEST_MESSAGE("Today is " << today);
 
     // Init market
-    boost::shared_ptr<Market> initMarket = boost::make_shared<TestMarket>(today);
+    boost::shared_ptr<Market> initMarket = boost::make_shared<testsuite::TestMarket>(today);
 
     // build scenario sim market parameters
     boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData =
-        TestConfigurationObjects::setupSimMarketData5();
+        testsuite::TestConfigurationObjects::setupSimMarketData5();
 
     // sensitivity config
-    boost::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData5();
+    boost::shared_ptr<SensitivityScenarioData> sensiData =
+        testsuite::TestConfigurationObjects::setupSensitivityScenarioData5();
 
     // build scenario sim market
     boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
@@ -63,7 +81,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket, 
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket,
                                                          scenarioFactory, false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
@@ -111,41 +129,47 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
 
     // boost::shared_ptr<Portfolio> portfolio = buildSwapPortfolio(portfolioSize, factory);
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());
-    portfolio->add(buildSwap("1_Swap_EUR", "EUR", true, 10000000.0, 0, 10, 0.03, 0.00, "1Y", "30/360", "6M", "A360",
-                             "EUR-EURIBOR-6M"));
-    portfolio->add(buildSwap("2_Swap_USD", "USD", true, 10000000.0, 0, 15, 0.02, 0.00, "6M", "30/360", "3M", "A360",
-                             "USD-LIBOR-3M"));
-    portfolio->add(buildSwap("3_Swap_GBP", "GBP", true, 10000000.0, 0, 20, 0.04, 0.00, "6M", "30/360", "3M", "A360",
-                             "GBP-LIBOR-6M"));
-    portfolio->add(buildSwap("4_Swap_JPY", "JPY", true, 1000000000.0, 0, 5, 0.01, 0.00, "6M", "30/360", "3M", "A360",
-                             "JPY-LIBOR-6M"));
-    portfolio->add(buildEuropeanSwaption("5_Swaption_EUR", "Long", "EUR", true, 1000000.0, 10, 10, 0.02, 0.00, "1Y",
-                                         "30/360", "6M", "A360", "EUR-EURIBOR-6M", "Physical"));
-    portfolio->add(buildEuropeanSwaption("6_Swaption_EUR", "Long", "EUR", true, 1000000.0, 2, 5, 0.02, 0.00, "1Y",
-                                         "30/360", "6M", "A360", "EUR-EURIBOR-6M", "Physical"));
-    portfolio->add(buildEuropeanSwaption("17_Swaption_EUR", "Long", "EUR", true, 1000000.0, 2, 5, 0.02, 0.00, "1Y",
-                                         "30/360", "6M", "A360", "EUR-EURIBOR-6M", "Physical", 1200.0, "EUR",
-                                         "2018-04-14"));
-    portfolio->add(buildBermudanSwaption("13_Swaption_EUR", "Long", "EUR", true, 1000000.0, 5, 2, 10, 0.02, 0.00, "1Y",
-                                         "30/360", "6M", "A360", "EUR-EURIBOR-6M"));
-    portfolio->add(buildFxOption("7_FxOption_EUR_USD", "Long", "Call", 3, "EUR", 10000000.0, "USD", 11000000.0));
-    portfolio->add(buildFxOption("8_FxOption_EUR_GBP", "Long", "Call", 7, "EUR", 10000000.0, "GBP", 11000000.0));
-    portfolio->add(buildCap("9_Cap_EUR", "EUR", "Long", 0.05, 1000000.0, 0, 10, "6M", "A360", "EUR-EURIBOR-6M"));
-    portfolio->add(buildFloor("10_Floor_USD", "USD", "Long", 0.01, 1000000.0, 0, 10, "3M", "A360", "USD-LIBOR-3M"));
-    portfolio->add(buildZeroBond("11_ZeroBond_EUR", "EUR", 1.0, 10, "0"));
-    portfolio->add(buildZeroBond("12_ZeroBond_USD", "USD", 1.0, 10, "0"));
-    portfolio->add(buildEquityOption("14_EquityOption_SP5", "Long", "Call", 2, "SP5", "USD", 2147.56, 775));
-    portfolio->add(buildCPIInflationSwap("15_CPIInflationSwap_UKRPI", "GBP", true, 100000.0, 0, 10, 0.0, "6M",
-                                         "ACT/ACT", "GBP-LIBOR-6M", "1Y", "ACT/ACT", "UKRPI", 201.0, "2M", false,
-                                         0.005));
-    portfolio->add(buildYYInflationSwap("16_YoYInflationSwap_UKRPI", "GBP", true, 100000.0, 0, 10, 0.0, "1Y", "ACT/ACT",
-                                        "GBP-LIBOR-6M", "1Y", "ACT/ACT", "UKRPI", "2M", 2));
-    portfolio->add(buildCommodityForward("17_CommodityForward_GOLD", "Long", 1, "COMDTY_GOLD_USD", "USD", 1170.0, 100));
-    portfolio->add(buildCommodityForward("18_CommodityForward_OIL", "Short", 4, "COMDTY_WTI_USD", "USD", 46.0, 100000));
+    portfolio->add(testsuite::buildSwap("1_Swap_EUR", "EUR", true, 10000000.0, 0, 10, 0.03, 0.00, "1Y", "30/360", "6M",
+                                        "A360", "EUR-EURIBOR-6M"));
+    portfolio->add(testsuite::buildSwap("2_Swap_USD", "USD", true, 10000000.0, 0, 15, 0.02, 0.00, "6M", "30/360", "3M",
+                                        "A360", "USD-LIBOR-3M"));
+    portfolio->add(testsuite::buildSwap("3_Swap_GBP", "GBP", true, 10000000.0, 0, 20, 0.04, 0.00, "6M", "30/360", "3M",
+                                        "A360", "GBP-LIBOR-6M"));
+    portfolio->add(testsuite::buildSwap("4_Swap_JPY", "JPY", true, 1000000000.0, 0, 5, 0.01, 0.00, "6M", "30/360", "3M",
+                                        "A360", "JPY-LIBOR-6M"));
+    portfolio->add(testsuite::buildEuropeanSwaption("5_Swaption_EUR", "Long", "EUR", true, 1000000.0, 10, 10, 0.02,
+                                                    0.00, "1Y", "30/360", "6M", "A360", "EUR-EURIBOR-6M", "Physical"));
+    portfolio->add(testsuite::buildEuropeanSwaption("6_Swaption_EUR", "Long", "EUR", true, 1000000.0, 2, 5, 0.02, 0.00,
+                                                    "1Y", "30/360", "6M", "A360", "EUR-EURIBOR-6M", "Physical"));
+    portfolio->add(testsuite::buildEuropeanSwaption("17_Swaption_EUR", "Long", "EUR", true, 1000000.0, 2, 5, 0.02, 0.00,
+                                                    "1Y", "30/360", "6M", "A360", "EUR-EURIBOR-6M", "Physical", 1200.0,
+                                                    "EUR", "2018-04-14"));
+    portfolio->add(testsuite::buildBermudanSwaption("13_Swaption_EUR", "Long", "EUR", true, 1000000.0, 5, 2, 10, 0.02,
+                                                    0.00, "1Y", "30/360", "6M", "A360", "EUR-EURIBOR-6M"));
     portfolio->add(
-        buildCommodityOption("19_CommodityOption_GOLD", "Long", "Call", 1, "COMDTY_GOLD_USD", "USD", 1170.0, 100));
+        testsuite::buildFxOption("7_FxOption_EUR_USD", "Long", "Call", 3, "EUR", 10000000.0, "USD", 11000000.0));
     portfolio->add(
-        buildCommodityOption("20_CommodityOption_OIL", "Short", "Put", 4, "COMDTY_WTI_USD", "USD", 46.0, 100000));
+        testsuite::buildFxOption("8_FxOption_EUR_GBP", "Long", "Call", 7, "EUR", 10000000.0, "GBP", 11000000.0));
+    portfolio->add(
+        testsuite::buildCap("9_Cap_EUR", "EUR", "Long", 0.05, 1000000.0, 0, 10, "6M", "A360", "EUR-EURIBOR-6M"));
+    portfolio->add(
+        testsuite::buildFloor("10_Floor_USD", "USD", "Long", 0.01, 1000000.0, 0, 10, "3M", "A360", "USD-LIBOR-3M"));
+    portfolio->add(testsuite::buildZeroBond("11_ZeroBond_EUR", "EUR", 1.0, 10, "0"));
+    portfolio->add(testsuite::buildZeroBond("12_ZeroBond_USD", "USD", 1.0, 10, "0"));
+    portfolio->add(testsuite::buildEquityOption("14_EquityOption_SP5", "Long", "Call", 2, "SP5", "USD", 2147.56, 775));
+    portfolio->add(testsuite::buildCPIInflationSwap("15_CPIInflationSwap_UKRPI", "GBP", true, 100000.0, 0, 10, 0.0,
+                                                    "6M", "ACT/ACT", "GBP-LIBOR-6M", "1Y", "ACT/ACT", "UKRPI", 201.0,
+                                                    "2M", false, 0.005));
+    portfolio->add(testsuite::buildYYInflationSwap("16_YoYInflationSwap_UKRPI", "GBP", true, 100000.0, 0, 10, 0.0, "1Y",
+                                                   "ACT/ACT", "GBP-LIBOR-6M", "1Y", "ACT/ACT", "UKRPI", "2M", 2));
+    portfolio->add(
+        testsuite::buildCommodityForward("17_CommodityForward_GOLD", "Long", 1, "COMDTY_GOLD_USD", "USD", 1170.0, 100));
+    portfolio->add(
+        testsuite::buildCommodityForward("18_CommodityForward_OIL", "Short", 4, "COMDTY_WTI_USD", "USD", 46.0, 100000));
+    portfolio->add(testsuite::buildCommodityOption("19_CommodityOption_GOLD", "Long", "Call", 1, "COMDTY_GOLD_USD",
+                                                   "USD", 1170.0, 100));
+    portfolio->add(testsuite::buildCommodityOption("20_CommodityOption_OIL", "Short", "Put", 4, "COMDTY_WTI_USD", "USD",
+                                                   46.0, 100000));
     portfolio->build(factory);
 
     BOOST_TEST_MESSAGE("Portfolio size after build: " << portfolio->size());
@@ -675,8 +699,8 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
             string label = to_string(desc[j]);
             if (fabs(sensi) > tiny) {
                 count++;
-                BOOST_TEST_MESSAGE("{ \"" << tradeId << "\", \"" << label << "\", " <<
-                    std::fixed << std::setprecision(12) << npv0 << ", " << sensi << " },");
+                BOOST_TEST_MESSAGE("{ \"" << tradeId << "\", \"" << label << "\", " << std::fixed
+                                          << std::setprecision(12) << npv0 << ", " << sensi << " },");
                 pair<string, string> p(tradeId, label);
                 QL_REQUIRE(npvMap.find(p) != npvMap.end(),
                            "pair (" << p.first << ", " << p.second << ") not found in npv map");
@@ -689,9 +713,8 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
                                         fabs((sensi - sensiMap[p]) / sensi) < tolerance,
                                     "sensitivity regression failed for pair ("
                                         << p.first << ", " << p.second << "): " << sensi << " vs " << sensiMap[p]);
-		coveredSensis.insert(p);
+                coveredSensis.insert(p);
             }
-            
         }
         currentTradeIdx++;
     }
@@ -713,7 +736,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     map<pair<string, string>, Real> deltaMap;
     map<pair<string, string>, Real> gammaMap;
     std::set<string> sensiTrades;
-    for (const auto& [pid,p] : portfolio->trades()) {
+    for (const auto& [pid, p] : portfolio->trades()) {
         sensiTrades.insert(pid);
         for (const auto& f : sa->sensiCube()->factors()) {
             auto des = sa->sensiCube()->factorDescription(f);
@@ -760,10 +783,11 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     ObservationMode::instance().setMode(backupMode);
     IndexManager::instance().clearHistories();
 }
+} // namespace
 
 BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::OreaTopLevelFixture)
 
-BOOST_AUTO_TEST_SUITE(SensitivityAnalysisTest)
+BOOST_AUTO_TEST_SUITE(DecomposedSensitivityAnalysisTest)
 
 BOOST_AUTO_TEST_CASE(testPortfolioSensitivityNoneObs) {
     BOOST_TEST_MESSAGE("Testing Portfolio sensitivity (None observation mode)");
@@ -805,18 +829,18 @@ void test1dShifts(bool granular) {
     ccys.push_back("GBP");
 
     // Init market
-    boost::shared_ptr<Market> initMarket = boost::make_shared<TestMarket>(today);
+    boost::shared_ptr<Market> initMarket = boost::make_shared<testsuite::TestMarket>(today);
 
     // build scenario sim market parameters
     boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData =
-        TestConfigurationObjects::setupSimMarketData2();
+        testsuite::TestConfigurationObjects::setupSimMarketData2();
 
     // sensitivity config
     boost::shared_ptr<SensitivityScenarioData> sensiData;
     if (granular)
-        sensiData = TestConfigurationObjects::setupSensitivityScenarioData2b();
+        sensiData = testsuite::TestConfigurationObjects::setupSensitivityScenarioData2b();
     else
-        sensiData = TestConfigurationObjects::setupSensitivityScenarioData2();
+        sensiData = testsuite::TestConfigurationObjects::setupSensitivityScenarioData2();
 
     // build sim market
     auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData);
@@ -827,7 +851,7 @@ void test1dShifts(bool granular) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket, 
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket,
                                                          scenarioFactory, false);
 
     // cache initial zero rates
@@ -856,8 +880,8 @@ void test1dShifts(bool granular) {
     vector<Real> diffAbsolute(tenors.size(), 0.0);
     vector<Real> diffRelative(tenors.size(), 0.0);
     Real shiftSize = 0.01;
-    SensitivityScenarioGenerator::ShiftType shiftTypeAbsolute = SensitivityScenarioGenerator::ShiftType::Absolute;
-    SensitivityScenarioGenerator::ShiftType shiftTypeRelative = SensitivityScenarioGenerator::ShiftType::Relative;
+    ShiftType shiftTypeAbsolute = ShiftType::Absolute;
+    ShiftType shiftTypeRelative = ShiftType::Relative;
     for (Size i = 0; i < shiftTenors.size(); ++i) {
         scenarioGenerator->applyShift(i, shiftSize, true, shiftTypeAbsolute, shiftTimes, initialZeros, times,
                                       shiftedZeros, true);
@@ -905,14 +929,15 @@ BOOST_AUTO_TEST_CASE(test2dShifts) {
     ccys.push_back("GBP");
 
     // Init market
-    boost::shared_ptr<Market> initMarket = boost::make_shared<TestMarket>(today);
+    boost::shared_ptr<Market> initMarket = boost::make_shared<testsuite::TestMarket>(today);
 
     // build scenario sim market parameters
     boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData =
-        TestConfigurationObjects::setupSimMarketData2();
+        testsuite::TestConfigurationObjects::setupSimMarketData2();
 
     // sensitivity config
-    boost::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData2();
+    boost::shared_ptr<SensitivityScenarioData> sensiData =
+        testsuite::TestConfigurationObjects::setupSensitivityScenarioData2();
 
     // build sim market
     auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData);
@@ -923,9 +948,8 @@ BOOST_AUTO_TEST_CASE(test2dShifts) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket, 
-                                                         scenarioFactory,
-                                                         false);
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket,
+                                                         scenarioFactory, false);
 
     // cache initial zero rates
     vector<Period> expiries = simMarketData->swapVolExpiries("");
@@ -962,8 +986,8 @@ BOOST_AUTO_TEST_CASE(test2dShifts) {
     vector<vector<Real>> diffAbsolute(expiries.size(), vector<Real>(terms.size(), 0.0));
     vector<vector<Real>> diffRelative(expiries.size(), vector<Real>(terms.size(), 0.0));
     Real shiftSize = 0.01; // arbitrary
-    SensitivityScenarioGenerator::ShiftType shiftTypeAbsolute = SensitivityScenarioGenerator::ShiftType::Absolute;
-    SensitivityScenarioGenerator::ShiftType shiftTypeRelative = SensitivityScenarioGenerator::ShiftType::Relative;
+    ShiftType shiftTypeAbsolute = ShiftType::Absolute;
+    ShiftType shiftTypeRelative = ShiftType::Relative;
     for (Size i = 0; i < expiryShiftTenors.size(); ++i) {
         for (Size j = 0; j < termShiftTenors.size(); ++j) {
             scenarioGenerator->applyShift(i, j, shiftSize, true, shiftTypeAbsolute, shiftExpiryTimes, shiftTermTimes,
@@ -1009,14 +1033,15 @@ BOOST_AUTO_TEST_CASE(testEquityOptionDeltaGamma) {
 
     BOOST_TEST_MESSAGE("Today is " << today);
     // Init market
-    boost::shared_ptr<Market> initMarket = boost::make_shared<TestMarket>(today);
+    boost::shared_ptr<Market> initMarket = boost::make_shared<testsuite::TestMarket>(today);
 
     // build scenario sim market parameters
     boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData =
-        TestConfigurationObjects::setupSimMarketData5();
+        testsuite::TestConfigurationObjects::setupSimMarketData5();
 
     // sensitivity config
-    boost::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData5();
+    boost::shared_ptr<SensitivityScenarioData> sensiData =
+        testsuite::TestConfigurationObjects::setupSensitivityScenarioData5();
 
     map<string, SensitivityScenarioData::VolShiftData>& eqvs = sensiData->equityVolShiftData();
     for (auto& it : eqvs) {
@@ -1050,17 +1075,17 @@ BOOST_AUTO_TEST_CASE(testEquityOptionDeltaGamma) {
 
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());
     Size trnCount = 0;
-    portfolio->add(buildEquityOption("Call_SP5", "Long", "Call", 2, "SP5", "USD", 2147.56, 1000));
+    portfolio->add(testsuite::buildEquityOption("Call_SP5", "Long", "Call", 2, "SP5", "USD", 2147.56, 1000));
     trnCount++;
-    portfolio->add(buildEquityOption("Put_SP5", "Long", "Put", 2, "SP5", "USD", 2147.56, 1000));
+    portfolio->add(testsuite::buildEquityOption("Put_SP5", "Long", "Put", 2, "SP5", "USD", 2147.56, 1000));
     trnCount++;
-    // portfolio->add(buildEquityForward("Fwd_SP5", "Long", 2, "SP5", "USD", 2147.56, 1000));
+    // portfolio->add(testsuite::buildEquityForward("Fwd_SP5", "Long", 2, "SP5", "USD", 2147.56, 1000));
     // trnCount++;
-    portfolio->add(buildEquityOption("Call_Luft", "Short", "Call", 2, "Lufthansa", "EUR", 12.75, 1000));
+    portfolio->add(testsuite::buildEquityOption("Call_Luft", "Short", "Call", 2, "Lufthansa", "EUR", 12.75, 1000));
     trnCount++;
-    portfolio->add(buildEquityOption("Put_Luft", "Short", "Put", 2, "Lufthansa", "EUR", 12.75, 1000));
+    portfolio->add(testsuite::buildEquityOption("Put_Luft", "Short", "Put", 2, "Lufthansa", "EUR", 12.75, 1000));
     trnCount++;
-    // portfolio->add(buildEquityForward("Fwd_Luft", "Short", 2, "Lufthansa", "EUR", 12.75, 1000));
+    // portfolio->add(testsuite::buildEquityForward("Fwd_Luft", "Short", 2, "Lufthansa", "EUR", 12.75, 1000));
     // trnCount++;
     portfolio->build(factory);
     BOOST_CHECK_EQUAL(portfolio->size(), trnCount);
@@ -1107,15 +1132,14 @@ BOOST_AUTO_TEST_CASE(testEquityOptionDeltaGamma) {
     }
 
     bool recalibrateModels = true; // nothing to calibrate here
-    boost::shared_ptr<SensitivityAnalysis> sa =
-        boost::make_shared<SensitivityAnalysis>(portfolio, initMarket, Market::defaultConfiguration, data,
-                                                simMarketData, sensiData, recalibrateModels);
+    boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
+        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, recalibrateModels);
     sa->generateSensitivities();
 
     map<pair<string, string>, Real> deltaMap;
     map<pair<string, string>, Real> gammaMap;
     std::set<string> sensiTrades;
-    for (auto [pid,p] : portfolio->trades()) {
+    for (auto [pid, p] : portfolio->trades()) {
         sensiTrades.insert(pid);
         for (const auto& f : sa->sensiCube()->factors()) {
             auto des = sa->sensiCube()->factorDescription(f);
@@ -1214,14 +1238,15 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
     BOOST_TEST_MESSAGE("Today is " << today);
 
     // Init market
-    boost::shared_ptr<Market> initMarket = boost::make_shared<TestMarket>(today);
+    boost::shared_ptr<Market> initMarket = boost::make_shared<testsuite::TestMarket>(today);
 
     // build scenario sim market parameters
     boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData =
-        TestConfigurationObjects::setupSimMarketData5();
+        testsuite::TestConfigurationObjects::setupSimMarketData5();
 
     // sensitivity config
-    boost::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData5();
+    boost::shared_ptr<SensitivityScenarioData> sensiData =
+        testsuite::TestConfigurationObjects::setupSensitivityScenarioData5();
 
     map<string, SensitivityScenarioData::VolShiftData>& fxvs = sensiData->fxVolShiftData();
     for (auto& it : fxvs) {
@@ -1253,21 +1278,21 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
 
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());
     Size trnCount = 0;
-    portfolio->add(buildFxOption("Call_1", "Long", "Call", 1, "USD", 100000000.0, "EUR", 100000000.0));
+    portfolio->add(testsuite::buildFxOption("Call_1", "Long", "Call", 1, "USD", 100000000.0, "EUR", 100000000.0));
     trnCount++;
-    portfolio->add(buildFxOption("Put_1", "Long", "Put", 1, "USD", 100000000.0, "EUR", 100000000.0));
+    portfolio->add(testsuite::buildFxOption("Put_1", "Long", "Put", 1, "USD", 100000000.0, "EUR", 100000000.0));
     trnCount++;
-    portfolio->add(buildFxOption("Call_2", "Short", "Call", 2, "GBP", 100000000.0, "CHF", 130000000.0));
+    portfolio->add(testsuite::buildFxOption("Call_2", "Short", "Call", 2, "GBP", 100000000.0, "CHF", 130000000.0));
     trnCount++;
-    portfolio->add(buildFxOption("Put_2", "Short", "Put", 2, "GBP", 100000000.0, "CHF", 130000000.0));
+    portfolio->add(testsuite::buildFxOption("Put_2", "Short", "Put", 2, "GBP", 100000000.0, "CHF", 130000000.0));
     trnCount++;
-    portfolio->add(buildFxOption("Call_3", "Long", "Call", 1, "EUR", 100000000.0, "USD", 100000000.0));
+    portfolio->add(testsuite::buildFxOption("Call_3", "Long", "Call", 1, "EUR", 100000000.0, "USD", 100000000.0));
     trnCount++;
-    portfolio->add(buildFxOption("Put_3", "Short", "Put", 1, "EUR", 100000000.0, "USD", 100000000.0));
+    portfolio->add(testsuite::buildFxOption("Put_3", "Short", "Put", 1, "EUR", 100000000.0, "USD", 100000000.0));
     trnCount++;
-    portfolio->add(buildFxOption("Call_4", "Long", "Call", 1, "JPY", 10000000000.0, "EUR", 100000000.0));
+    portfolio->add(testsuite::buildFxOption("Call_4", "Long", "Call", 1, "JPY", 10000000000.0, "EUR", 100000000.0));
     trnCount++;
-    portfolio->add(buildFxOption("Call_5", "Long", "Call", 1, "EUR", 100000000.0, "JPY", 10000000000.0));
+    portfolio->add(testsuite::buildFxOption("Call_5", "Long", "Call", 1, "EUR", 100000000.0, "JPY", 10000000000.0));
     trnCount++;
     portfolio->build(factory);
     BOOST_CHECK_EQUAL(portfolio->size(), trnCount);
@@ -1330,7 +1355,7 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
     map<pair<string, string>, Real> deltaMap;
     map<pair<string, string>, Real> gammaMap;
     std::set<string> sensiTrades;
-    for (const auto& [pid ,_] : portfolio->trades()) {
+    for (const auto& [pid, _] : portfolio->trades()) {
         sensiTrades.insert(pid);
         for (const auto& f : sa->sensiCube()->factors()) {
             auto des = sa->sensiCube()->factorDescription(f);
@@ -1552,14 +1577,15 @@ BOOST_AUTO_TEST_CASE(testCrossGamma) {
     BOOST_TEST_MESSAGE("Today is " << today);
 
     // Init market
-    boost::shared_ptr<Market> initMarket = boost::make_shared<TestMarket>(today);
+    boost::shared_ptr<Market> initMarket = boost::make_shared<testsuite::TestMarket>(today);
 
     // build scenario sim market parameters
     boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData =
-        TestConfigurationObjects::setupSimMarketData5();
+        testsuite::TestConfigurationObjects::setupSimMarketData5();
 
     // sensitivity config
-    boost::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData5();
+    boost::shared_ptr<SensitivityScenarioData> sensiData =
+        testsuite::TestConfigurationObjects::setupSensitivityScenarioData5();
     vector<pair<string, string>>& cgFilter = sensiData->crossGammaFilter();
     BOOST_CHECK_EQUAL(cgFilter.size(), 0);
     cgFilter.push_back(pair<string, string>("DiscountCurve/EUR", "DiscountCurve/EUR"));
@@ -1632,31 +1658,35 @@ BOOST_AUTO_TEST_CASE(testCrossGamma) {
     // boost::shared_ptr<Portfolio> portfolio = buildSwapPortfolio(portfolioSize, factory);
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());
     Size trnCount = 0;
-    portfolio->add(buildSwap("1_Swap_EUR", "EUR", true, 10000000.0, 0, 10, 0.03, 0.00, "1Y", "30/360", "6M", "A360",
-                             "EUR-EURIBOR-6M"));
+    portfolio->add(testsuite::buildSwap("1_Swap_EUR", "EUR", true, 10000000.0, 0, 10, 0.03, 0.00, "1Y", "30/360", "6M",
+                                        "A360", "EUR-EURIBOR-6M"));
     trnCount++;
-    portfolio->add(buildSwap("2_Swap_USD", "USD", true, 10000000.0, 0, 15, 0.02, 0.00, "6M", "30/360", "3M", "A360",
-                             "USD-LIBOR-3M"));
+    portfolio->add(testsuite::buildSwap("2_Swap_USD", "USD", true, 10000000.0, 0, 15, 0.02, 0.00, "6M", "30/360", "3M",
+                                        "A360", "USD-LIBOR-3M"));
     trnCount++;
-    portfolio->add(buildSwap("3_Swap_GBP", "GBP", true, 10000000.0, 0, 20, 0.04, 0.00, "6M", "30/360", "3M", "A360",
-                             "GBP-LIBOR-6M"));
+    portfolio->add(testsuite::buildSwap("3_Swap_GBP", "GBP", true, 10000000.0, 0, 20, 0.04, 0.00, "6M", "30/360", "3M",
+                                        "A360", "GBP-LIBOR-6M"));
     trnCount++;
-    portfolio->add(buildSwap("4_Swap_JPY", "JPY", true, 1000000000.0, 0, 5, 0.01, 0.00, "6M", "30/360", "3M", "A360",
-                             "JPY-LIBOR-6M"));
+    portfolio->add(testsuite::buildSwap("4_Swap_JPY", "JPY", true, 1000000000.0, 0, 5, 0.01, 0.00, "6M", "30/360", "3M",
+                                        "A360", "JPY-LIBOR-6M"));
     trnCount++;
-    portfolio->add(buildEuropeanSwaption("5_Swaption_EUR", "Long", "EUR", true, 1000000.0, 10, 10, 0.02, 0.00, "1Y",
-                                         "30/360", "6M", "A360", "EUR-EURIBOR-6M", "Physical"));
+    portfolio->add(testsuite::buildEuropeanSwaption("5_Swaption_EUR", "Long", "EUR", true, 1000000.0, 10, 10, 0.02,
+                                                    0.00, "1Y", "30/360", "6M", "A360", "EUR-EURIBOR-6M", "Physical"));
     trnCount++;
-    portfolio->add(buildEuropeanSwaption("6_Swaption_EUR", "Long", "EUR", true, 1000000.0, 2, 5, 0.02, 0.00, "1Y",
-                                         "30/360", "6M", "A360", "EUR-EURIBOR-6M", "Physical"));
+    portfolio->add(testsuite::buildEuropeanSwaption("6_Swaption_EUR", "Long", "EUR", true, 1000000.0, 2, 5, 0.02, 0.00,
+                                                    "1Y", "30/360", "6M", "A360", "EUR-EURIBOR-6M", "Physical"));
     trnCount++;
-    portfolio->add(buildFxOption("7_FxOption_EUR_USD", "Long", "Call", 3, "EUR", 10000000.0, "USD", 11000000.0));
+    portfolio->add(
+        testsuite::buildFxOption("7_FxOption_EUR_USD", "Long", "Call", 3, "EUR", 10000000.0, "USD", 11000000.0));
     trnCount++;
-    portfolio->add(buildFxOption("8_FxOption_EUR_GBP", "Long", "Call", 7, "EUR", 10000000.0, "GBP", 11000000.0));
+    portfolio->add(
+        testsuite::buildFxOption("8_FxOption_EUR_GBP", "Long", "Call", 7, "EUR", 10000000.0, "GBP", 11000000.0));
     trnCount++;
-    portfolio->add(buildCap("9_Cap_EUR", "EUR", "Long", 0.05, 1000000.0, 0, 10, "6M", "A360", "EUR-EURIBOR-6M"));
+    portfolio->add(
+        testsuite::buildCap("9_Cap_EUR", "EUR", "Long", 0.05, 1000000.0, 0, 10, "6M", "A360", "EUR-EURIBOR-6M"));
     trnCount++;
-    portfolio->add(buildFloor("10_Floor_USD", "USD", "Long", 0.01, 1000000.0, 0, 10, "3M", "A360", "USD-LIBOR-3M"));
+    portfolio->add(
+        testsuite::buildFloor("10_Floor_USD", "USD", "Long", 0.01, 1000000.0, 0, 10, "3M", "A360", "USD-LIBOR-3M"));
     trnCount++;
     portfolio->build(factory);
     BOOST_CHECK_EQUAL(trnCount, portfolio->size());
