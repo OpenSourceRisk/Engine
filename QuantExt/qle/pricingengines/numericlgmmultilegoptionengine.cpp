@@ -321,8 +321,11 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
             // transfer relevant cashflow amounts to exercise into npv
 
             for (auto const& cf : option->second) {
-                underlyingNpv1 += underlyingNpv2[cf];
-                underlyingNpv2.erase(cf);
+                auto npv2Cf = underlyingNpv2.find(cf);
+                if (npv2Cf != underlyingNpv2.end()) {
+                    underlyingNpv1 += npv2Cf->second;
+                    underlyingNpv2.erase(cf);
+                }
             }
 
             // update the option value (exercise value including rebate vs. continuation value)
@@ -334,6 +337,9 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
         // rollback
 
         if (t_from != t_to) {
+            // if the underlyingNpv1 is 0 here we break and npv gets set to 0
+            if (QuantLib::close_enough(underlyingNpv1.at(0), 0.0))
+                break;
             underlyingNpv1 = rollback(underlyingNpv1, t_from, t_to);
             for (auto& c : underlyingNpv2) {
                 c.second = rollback(c.second, t_from, t_to);
