@@ -27,7 +27,7 @@ ConfigurableCurrency::ConfigurableCurrency(const std::string& name, const std::s
                                            const std::string& symbol, const std::string& fractionSymbol,
                                            Integer fractionsPerUnit, const Rounding& rounding,
                                            const std::string& formatString, const std::set<std::string>& minorUnitCodes,
-                                           Type currencyType)
+                                           ConfigurableCurrency::Type currencyType)
     : Currency(name, code, numericCode, symbol, fractionSymbol, fractionsPerUnit, rounding, formatString, Currency(),
                minorUnitCodes),
       currencyType_(currencyType) {
@@ -35,20 +35,17 @@ ConfigurableCurrency::ConfigurableCurrency(const std::string& name, const std::s
                                                rounding, formatString, Currency(), minorUnitCodes);
 }
 
-std::string ConfigurableCurrency::ToString(Type ccytype) {
+std::ostream& operator<<(std::ostream& os, ConfigurableCurrency::Type ccytype) {
     switch (ccytype) {
-        case Major:
-            return "Major";
-        case Minor:
-            return "Minor";
-        case Metal:
-            return "Metal";
-        case Crypto:
-            return "Crypto";
-        case UND:
-            return "UND";
+		case ConfigurableCurrency::Type::Major:
+			return os << "Major";
+        case ConfigurableCurrency::Type::Metal:
+            return os <<"Metal";
+        case ConfigurableCurrency::Type::Crypto:
+            return os << "Crypto";
+        default:
+            QL_FAIL("Unknown AssetClass");
     }
-    return "UND";
 }
 
 } // namespace QuantExt

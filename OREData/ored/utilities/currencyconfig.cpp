@@ -49,17 +49,17 @@ void CurrencyConfig::fromXML(XMLNode* baseNode) {
             // the digit where we switch form roundng down to rounding up, typically 5 and used across all
             // Integer digit = parseInteger(XMLUtils::getChildValue(node, "Digit", false));
             string format = XMLUtils::getChildValue(node, "Format", false);
-            QuantExt::ConfigurableCurrency::Type currencyType = parseCurrencyType(XMLUtils::getChildValue(node, "CurrencyType", false, "UND"));
+            QuantExt::ConfigurableCurrency::Type currencyType = parseCurrencyType(XMLUtils::getChildValue(node, "CurrencyType", false, "Major"));
             Rounding rounding(precision, roundingType);
             QuantExt::ConfigurableCurrency c(name, isoCode, numericCode, symbol, fractionSymbol, fractionsPerUnit,
                                              rounding, format, minorUnitCodes, currencyType);
             DLOG("loading configuration for currency code " << isoCode);
 
             switch (currencyType) { 
-                case QuantExt::ConfigurableCurrency::Crypto:
+                case QuantExt::ConfigurableCurrency::Type::Crypto:
                     CurrencyParser::instance().addCrypto(c.code(), c);
                     break;
-                case QuantExt::ConfigurableCurrency::Metal:
+                case QuantExt::ConfigurableCurrency::Type::Metal:
                     CurrencyParser::instance().addMetal(c.code(), c);
                     break;
                 default:
@@ -90,7 +90,7 @@ XMLNode* CurrencyConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, ccyNode, "RoundingPrecision", to_string(ccy.rounding().precision()));
         // XMLUtils::addChild(doc, ccyNode, "Digit", to_string(ccy.rounding().roundingDigit()));
         XMLUtils::addChild(doc, ccyNode, "Format", ccy.format());
-        XMLUtils::addChild(doc, ccyNode, "CurrencyType", ConfigurableCurrency::ToString(ccy.currencyType()));
+        XMLUtils::addChild(doc, ccyNode, "CurrencyType", to_string(ccy.currencyType()));
     }
     return node;
 }
