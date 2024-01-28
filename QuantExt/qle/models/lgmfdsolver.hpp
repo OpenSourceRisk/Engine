@@ -35,7 +35,7 @@ namespace QuantExt {
 //! Numerical FD solver for the LGM model
 class LgmFdSolver {
 public:
-    LgmFdSolver(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime,
+    LgmFdSolver(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime = 50.0,
                 const Size stateGridPoints = 64, const Size timeStepsPerYear = 24, const Real mesherEpsilon = 1E-4);
 
     /* get grid size */
@@ -44,8 +44,10 @@ public:
     /* get discretised states grid */
     RandomVariable stateGrid() const;
 
-    /* roll back an deflated NPV array from t1 to t0 */
-    RandomVariable rollback(const RandomVariable& v, const Real t1, const Real t0) const;
+    /* roll back an deflated NPV array from t1 to t0 using the given number of steps or,
+       if that is not given, the time steps per year specified in the constructor */
+    RandomVariable rollback(const RandomVariable& v, const Real t1, const Real t0,
+                            const Size steps = Null<Size>()) const;
 
     /* the underlying model */
     const boost::shared_ptr<LinearGaussMarkovModel>& model() const;
