@@ -45,7 +45,7 @@ RandomVariable LgmFdSolver::stateGrid() const { return mesherLocations_; }
 
 const boost::shared_ptr<LinearGaussMarkovModel>& LgmFdSolver::model() const { return model_; }
 
-RandomVariable LgmFdSolver::rollback(const RandomVariable& v, const Real t1, const Real t0, const Size steps) const {
+RandomVariable LgmFdSolver::rollback(const RandomVariable& v, const Real t1, const Real t0, Size steps) const {
     if (steps == Null<Size>())
         steps = std::max<Size>(1, static_cast<Size>(static_cast<double>(timeStepsPerYear_) * (t1 - t0) + 0.5));
     Array workingArray(v.size());
