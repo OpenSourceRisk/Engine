@@ -237,8 +237,8 @@ void PricingAnalyticImpl::runAnalytic(
 
                 if (inputs_->optimiseRiskFactors()){
                     std::set<RiskFactorKey> collectRiskFactors;
-                    //collect risk factors of all cubes and ...
-                    for(auto& c : sensiAnalysis->sensiCubes()){
+                    // collect risk factors of all cubes ...
+                    for(auto const& c : sensiAnalysis->sensiCubes()){
                         auto currentRF = c->relevantRiskFactors();
                         // ... and combine for the par analysis
                         collectRiskFactors.insert(currentRF.begin(), currentRF.end());
