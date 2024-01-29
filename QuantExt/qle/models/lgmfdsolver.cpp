@@ -16,12 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/models/lgmfdsolver.hpp>
 #include <qle/methods/fdmlgmop.hpp>
+#include <qle/models/lgmfdsolver.hpp>
 
+#include <ql/math/interpolations/cubicinterpolation.hpp>
 #include <ql/methods/finitedifferences/meshers/fdmmeshercomposite.hpp>
 #include <ql/methods/finitedifferences/meshers/fdmsimpleprocess1dmesher.hpp>
-
 
 namespace QuantExt {
 
@@ -51,7 +51,14 @@ RandomVariable LgmFdSolver::rollback(const RandomVariable& v, const Real t1, con
     Array workingArray(v.size());
     v.copyToArray(workingArray);
     solver_->rollback(workingArray, t1, t0, steps, 0);
-    return RandomVariable(workingArray);
+    if (QuantLib::close_enough(t0, 0.0)) {
+        Array x = mesher_->locations(0);
+        MonotonicCubicNaturalSpline interpolation(x.begin(), x.end(), workingArray.begin());
+        interpolation.enableExtrapolation();
+        return RandomVariable(gridSize(), interpolation(0.0));
+    } else {
+        return RandomVariable(workingArray);
+    }
 }
 
 } // namespace QuantExt
