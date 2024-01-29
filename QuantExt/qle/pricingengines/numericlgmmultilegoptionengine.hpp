@@ -28,15 +28,16 @@
 
 namespace QuantExt {
 
-class NumericLgmMultiLegOptionEngineBase : protected LgmConvolutionSolver2 {
+class NumericLgmMultiLegOptionEngineBase {
 public:
-    NumericLgmMultiLegOptionEngineBase(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy,
-                                       const Size ny, const Real sx, const Size nx,
+    NumericLgmMultiLegOptionEngineBase(const boost::shared_ptr<LgmBackwardSolver>& solver,
                                        const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
 
 protected:
     void calculate() const;
 
+    // inputs set in ctor
+    boost::shared_ptr<LgmBackwardSolver> solver_;
     Handle<YieldTermStructure> discountCurve_;
 
     // inputs set by derived classes
