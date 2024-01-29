@@ -48,10 +48,10 @@ public:
     std::vector<QuantLib::SparseMatrix> toMatrixDecomp() const override;
 #endif
 private:
-     ext::shared_ptr<FdmMesher> mesher_;
-     ext::shared_ptr<StochasticProcess1D> process_;
-     FirstDerivativeOp dxMap_;
-     TripleBandLinearOp dxxMap_;
+    ext::shared_ptr<FdmMesher> mesher_;
+    ext::shared_ptr<StochasticProcess1D> process_;
+    FirstDerivativeOp dxMap_;
+    TripleBandLinearOp dxxMap_;
     TripleBandLinearOp mapT_;
 };
 } // namespace QuantExt
