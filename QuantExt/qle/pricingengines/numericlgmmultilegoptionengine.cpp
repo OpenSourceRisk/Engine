@@ -337,9 +337,6 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
         // rollback
 
         if (t_from != t_to) {
-            // if the underlyingNpv1 is 0 here we break and npv gets set to 0
-            if (QuantLib::close_enough(underlyingNpv1.at(0), 0.0))
-                break;
             underlyingNpv1 = rollback(underlyingNpv1, t_from, t_to);
             for (auto& c : underlyingNpv2) {
                 c.second = rollback(c.second, t_from, t_to);
