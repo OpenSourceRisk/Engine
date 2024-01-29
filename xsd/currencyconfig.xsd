@@ -23,6 +23,7 @@
       <xs:element type="xs:string" name="RoundingType"/>
       <xs:element type="xs:integer" name="RoundingPrecision"/>
       <xs:element type="xs:string" name="Format"/>
+      <xs:element type="xs:string" name="CurrencyType" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
   

@@ -44,6 +44,8 @@ public:
                                                                         const std::string& delimiters) const;
 
     void addCurrency(const std::string& newName, const QuantLib::Currency& currency);
+    void addMetal(const std::string& newName, const QuantLib::Currency& currency);
+    void addCrypto(const std::string& newName, const QuantLib::Currency& currency);
 
     bool isValidCurrency(const std::string& name) const;
     bool isMinorCurrency(const std::string& name) const;
