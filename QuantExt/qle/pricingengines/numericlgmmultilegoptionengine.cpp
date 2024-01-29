@@ -375,11 +375,12 @@ NumericLgmMultiLegOptionEngine::NumericLgmMultiLegOptionEngine(const boost::shar
 }
 
 NumericLgmMultiLegOptionEngine::NumericLgmMultiLegOptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model,
-                                                               const Real maxTime, const Size stateGridPoints,
-                                                               const Size timeStepsPerYear, const Real mesherEpsilon,
+                                                               const Real maxTime, const QuantLib::FdmSchemeDesc scheme,
+                                                               const Size stateGridPoints, const Size timeStepsPerYear,
+                                                               const Real mesherEpsilon,
                                                                const Handle<YieldTermStructure>& discountCurve)
     : NumericLgmMultiLegOptionEngineBase(
-          boost::make_shared<LgmFdSolver>(model, maxTime, stateGridPoints, timeStepsPerYear, mesherEpsilon),
+          boost::make_shared<LgmFdSolver>(model, maxTime, scheme, stateGridPoints, timeStepsPerYear, mesherEpsilon),
           discountCurve) {
     registerWith(solver_->model());
     registerWith(discountCurve_);
@@ -411,11 +412,12 @@ NumericLgmSwaptionEngine::NumericLgmSwaptionEngine(const boost::shared_ptr<Linea
 }
 
 NumericLgmSwaptionEngine::NumericLgmSwaptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model,
-                                                   const Real maxTime, const Size stateGridPoints,
-                                                   const Size timeStepsPerYear, const Real mesherEpsilon,
+                                                   const Real maxTime, const QuantLib::FdmSchemeDesc scheme,
+                                                   const Size stateGridPoints, const Size timeStepsPerYear,
+                                                   const Real mesherEpsilon,
                                                    const Handle<YieldTermStructure>& discountCurve)
     : NumericLgmMultiLegOptionEngineBase(
-          boost::make_shared<LgmFdSolver>(model, maxTime, stateGridPoints, timeStepsPerYear, mesherEpsilon),
+          boost::make_shared<LgmFdSolver>(model, maxTime, scheme, stateGridPoints, timeStepsPerYear, mesherEpsilon),
           discountCurve) {
     registerWith(solver_->model());
     registerWith(discountCurve_);
@@ -446,10 +448,11 @@ NumericLgmNonstandardSwaptionEngine::NumericLgmNonstandardSwaptionEngine(
 }
 
 NumericLgmNonstandardSwaptionEngine::NumericLgmNonstandardSwaptionEngine(
-    const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime, const Size stateGridPoints,
-    const Size timeStepsPerYear, const Real mesherEpsilon, const Handle<YieldTermStructure>& discountCurve)
+    const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime, const QuantLib::FdmSchemeDesc scheme,
+    const Size stateGridPoints, const Size timeStepsPerYear, const Real mesherEpsilon,
+    const Handle<YieldTermStructure>& discountCurve)
     : NumericLgmMultiLegOptionEngineBase(
-          boost::make_shared<LgmFdSolver>(model, maxTime, stateGridPoints, timeStepsPerYear, mesherEpsilon),
+          boost::make_shared<LgmFdSolver>(model, maxTime, scheme, stateGridPoints, timeStepsPerYear, mesherEpsilon),
           discountCurve) {
     registerWith(solver_->model());
     registerWith(discountCurve_);

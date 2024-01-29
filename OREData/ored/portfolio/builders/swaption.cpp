@@ -233,6 +233,7 @@ boost::shared_ptr<PricingEngine> LGMFDBermudanSwaptionEngineBuilder::engineImpl(
     boost::shared_ptr<QuantExt::LGM> lgm = model(id, key, expiries, maturity, strikes);
 
     DLOG("Get engine data");
+    QuantLib::FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
     Size stateGridPoints = parseInteger(engineParameter("StateGridPoints"));
     Size timeStepsPerYear = parseInteger(engineParameter("TimeStepsPerYear"));
     Real mesherEpsilon = parseReal(engineParameter("MesherEpsilon"));
@@ -243,7 +244,7 @@ boost::shared_ptr<PricingEngine> LGMFDBermudanSwaptionEngineBuilder::engineImpl(
     boost::shared_ptr<IborIndex> index;
     std::string ccy = tryParseIborIndex(key, index) ? index->currency().code() : key;
     return boost::make_shared<QuantExt::NumericLgmMultiLegOptionEngine>(
-        lgm, maxTime, stateGridPoints, timeStepsPerYear, mesherEpsilon,
+        lgm, maxTime, scheme, stateGridPoints, timeStepsPerYear, mesherEpsilon,
         market_->discountCurve(ccy, configuration(MarketContext::pricing)));
 }
 
