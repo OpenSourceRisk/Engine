@@ -41,7 +41,7 @@ LgmFdSolver::LgmFdSolver(const boost::shared_ptr<LinearGaussMarkovModel>& model,
 
 Size LgmFdSolver::gridSize() const { return stateGridPoints_; }
 
-RandomVariable LgmFdSolver::stateGrid() const { return mesherLocations_; }
+RandomVariable LgmFdSolver::stateGrid(Real) const { return mesherLocations_; }
 
 const boost::shared_ptr<LinearGaussMarkovModel>& LgmFdSolver::model() const { return model_; }
 

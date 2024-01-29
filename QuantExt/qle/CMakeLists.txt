@@ -713,6 +713,7 @@ models/irmodel.hpp
 models/jyimpliedyoyinflationtermstructure.hpp
 models/jyimpliedzeroinflationtermstructure.hpp
 models/lgm.hpp
+models/lgmbackwardsolver.hpp
 models/lgmcalibrationinfo.hpp
 models/lgmconvolutionsolver2.hpp
 models/lgmfdsolver.hpp

@@ -25,7 +25,7 @@
 #pragma once
 
 #include <qle/math/randomvariable.hpp>
-#include <qle/models/lgm.hpp>
+#include <qle/models/lgmbackwardsolver.hpp>
 
 #include <ql/methods/finitedifferences/meshers/fdmmesher.hpp>
 #include <ql/methods/finitedifferences/solvers/fdmbackwardsolver.hpp>
@@ -33,23 +33,16 @@
 namespace QuantExt {
 
 //! Numerical FD solver for the LGM model
-class LgmFdSolver {
+class LgmFdSolver : LgmBackwardSolver {
 public:
     LgmFdSolver(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime = 50.0,
                 const Size stateGridPoints = 64, const Size timeStepsPerYear = 24, const Real mesherEpsilon = 1E-4);
-
-    /* get grid size */
-    Size gridSize() const;
-
-    /* get discretised states grid */
-    RandomVariable stateGrid() const;
-
-    /* roll back an deflated NPV array from t1 to t0 using the given number of steps or,
-       if that is not given, the time steps per year specified in the constructor */
-    RandomVariable rollback(const RandomVariable& v, const Real t1, const Real t0, Size steps = Null<Size>()) const;
-
-    /* the underlying model */
-    const boost::shared_ptr<LinearGaussMarkovModel>& model() const;
+    Size gridSize() const override;
+    RandomVariable stateGrid(const Real t) const override;
+    // if steps are not given, the time steps per year specified in the constructor
+    RandomVariable rollback(const RandomVariable& v, const Real t1, const Real t0,
+                            Size steps = Null<Size>()) const override;
+    const boost::shared_ptr<LinearGaussMarkovModel>& model() const override;
 
 private:
     boost::shared_ptr<LinearGaussMarkovModel> model_;
