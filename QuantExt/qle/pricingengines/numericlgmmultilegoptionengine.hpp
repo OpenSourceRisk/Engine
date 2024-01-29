@@ -21,8 +21,7 @@
 #include <ql/instruments/nonstandardswaption.hpp>
 #include <ql/instruments/swaption.hpp>
 #include <qle/instruments/multilegoption.hpp>
-#include <qle/models/lgmconvolutionsolver2.hpp>
-#include <qle/models/lgmvectorised.hpp>
+#include <qle/models/lgmbackwardsolver.hpp>
 
 #include <ql/pricingengines/genericmodelengine.hpp>
 
@@ -61,6 +60,11 @@ public:
                                    const Real sx, const Size nx,
                                    const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
 
+    NumericLgmMultiLegOptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime = 50.0,
+                                   const Size stateGridPoints = 64, const Size timeStepsPerYear = 24,
+                                   const Real mesherEpsilon = 1E-4,
+                                   const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
+
     void calculate() const override;
 };
 
@@ -69,6 +73,11 @@ class NumericLgmSwaptionEngine : public QuantLib::GenericEngine<Swaption::argume
 public:
     NumericLgmSwaptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny,
                              const Real sx, const Size nx,
+                             const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
+
+    NumericLgmSwaptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime = 50.0,
+                             const Size stateGridPoints = 64, const Size timeStepsPerYear = 24,
+                             const Real mesherEpsilon = 1E-4,
                              const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
 
     void calculate() const override;
@@ -80,6 +89,11 @@ class NumericLgmNonstandardSwaptionEngine
 public:
     NumericLgmNonstandardSwaptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy,
                                         const Size ny, const Real sx, const Size nx,
+                                        const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
+
+    NumericLgmNonstandardSwaptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model,
+                                        const Real maxTime = 50.0, const Size stateGridPoints = 64,
+                                        const Size timeStepsPerYear = 24, const Real mesherEpsilon = 1E-4,
                                         const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
 
     void calculate() const override;

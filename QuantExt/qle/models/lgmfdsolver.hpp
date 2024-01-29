@@ -33,7 +33,7 @@
 namespace QuantExt {
 
 //! Numerical FD solver for the LGM model
-class LgmFdSolver : LgmBackwardSolver {
+class LgmFdSolver : public LgmBackwardSolver {
 public:
     LgmFdSolver(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime = 50.0,
                 const Size stateGridPoints = 64, const Size timeStepsPerYear = 24, const Real mesherEpsilon = 1E-4);

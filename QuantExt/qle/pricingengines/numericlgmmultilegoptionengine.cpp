@@ -23,6 +23,9 @@
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/instruments/rebatedexercise.hpp>
+#include <qle/models/lgmconvolutionsolver2.hpp>
+#include <qle/models/lgmfdsolver.hpp>
+#include <qle/models/lgmvectorised.hpp>
 
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
@@ -371,6 +374,17 @@ NumericLgmMultiLegOptionEngine::NumericLgmMultiLegOptionEngine(const boost::shar
     registerWith(discountCurve_);
 }
 
+NumericLgmMultiLegOptionEngine::NumericLgmMultiLegOptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model,
+                                                               const Real maxTime, const Size stateGridPoints,
+                                                               const Size timeStepsPerYear, const Real mesherEpsilon,
+                                                               const Handle<YieldTermStructure>& discountCurve)
+    : NumericLgmMultiLegOptionEngineBase(
+          boost::make_shared<LgmFdSolver>(model, maxTime, stateGridPoints, timeStepsPerYear, mesherEpsilon),
+          discountCurve) {
+    registerWith(solver_->model());
+    registerWith(discountCurve_);
+}
+
 void NumericLgmMultiLegOptionEngine::calculate() const {
     legs_ = arguments_.legs;
     payer_ = arguments_.payer;
@@ -396,6 +410,17 @@ NumericLgmSwaptionEngine::NumericLgmSwaptionEngine(const boost::shared_ptr<Linea
     registerWith(discountCurve_);
 }
 
+NumericLgmSwaptionEngine::NumericLgmSwaptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model,
+                                                   const Real maxTime, const Size stateGridPoints,
+                                                   const Size timeStepsPerYear, const Real mesherEpsilon,
+                                                   const Handle<YieldTermStructure>& discountCurve)
+    : NumericLgmMultiLegOptionEngineBase(
+          boost::make_shared<LgmFdSolver>(model, maxTime, stateGridPoints, timeStepsPerYear, mesherEpsilon),
+          discountCurve) {
+    registerWith(solver_->model());
+    registerWith(discountCurve_);
+}
+
 void NumericLgmSwaptionEngine::calculate() const {
     legs_ = arguments_.legs;
     payer_ = arguments_.payer;
@@ -416,6 +441,16 @@ NumericLgmNonstandardSwaptionEngine::NumericLgmNonstandardSwaptionEngine(
     const Handle<YieldTermStructure>& discountCurve)
     : NumericLgmMultiLegOptionEngineBase(boost::make_shared<LgmConvolutionSolver2>(model, sy, ny, sx, nx),
                                          discountCurve) {
+    registerWith(solver_->model());
+    registerWith(discountCurve_);
+}
+
+NumericLgmNonstandardSwaptionEngine::NumericLgmNonstandardSwaptionEngine(
+    const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime, const Size stateGridPoints,
+    const Size timeStepsPerYear, const Real mesherEpsilon, const Handle<YieldTermStructure>& discountCurve)
+    : NumericLgmMultiLegOptionEngineBase(
+          boost::make_shared<LgmFdSolver>(model, maxTime, stateGridPoints, timeStepsPerYear, mesherEpsilon),
+          discountCurve) {
     registerWith(solver_->model());
     registerWith(discountCurve_);
 }
