@@ -174,7 +174,7 @@ private:
                          const boost::shared_ptr<Convention>& conventions, bool singleCurve, bool fromZero,
                          std::set<ore::analytics::RiskFactorKey>& parHelperDependencies,
 			 const std::string& expDiscountCurve = "");
-    
+
     //! Create YoY Cap/Floor for implying rate rate sensitivity from yoy optionlet vol sensitivity
     boost::shared_ptr<QuantLib::YoYInflationCapFloor>
     makeYoYCapFloor(const boost::shared_ptr<Market>& market, string indexName, Period term, Real strike,
