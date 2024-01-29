@@ -227,6 +227,7 @@ void DateGrid::addCloseOutDates(const QuantLib::Period& p) {
                 c = calendar_.adjust(dates_[i] + p);
             else
                 c = calendar_.advance(dates_[i], p, Following, false);
+            closeOutDates_[c] = dates_[i];
             if (i < dates_.size() - 1) {
                 // adjust the grid to ensure no overlap in valuation and closeout dates
                 if (c >= dates_[i + 1]) {
