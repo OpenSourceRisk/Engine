@@ -26,9 +26,10 @@
 namespace QuantExt {
 
 LgmFdSolver::LgmFdSolver(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime,
-                         const Size stateGridPoints, const Size timeStepsPerYear, const Real mesherEpsilon)
-    : model_(model), maxTime_(maxTime), stateGridPoints_(stateGridPoints), timeStepsPerYear_(timeStepsPerYear),
-      mesherEpsilon_(mesherEpsilon) {
+                         const QuantLib::FdmSchemeDesc scheme, const Size stateGridPoints, const Size timeStepsPerYear,
+                         const Real mesherEpsilon)
+    : model_(model), maxTime_(maxTime), scheme_(scheme), stateGridPoints_(stateGridPoints),
+      timeStepsPerYear_(timeStepsPerYear), mesherEpsilon_(mesherEpsilon) {
     mesher_ = boost::make_shared<FdmMesherComposite>(boost::make_shared<FdmSimpleProcess1dMesher>(
         stateGridPoints, boost::dynamic_pointer_cast<StochasticProcess1D>(model->stateProcess()), maxTime_,
         timeStepsPerYear_, mesherEpsilon_));
@@ -36,7 +37,7 @@ LgmFdSolver::LgmFdSolver(const boost::shared_ptr<LinearGaussMarkovModel>& model,
     operator_ = boost::make_shared<QuantExt::FdmLgmOp>(
         mesher_, boost::dynamic_pointer_cast<StochasticProcess1D>(model->stateProcess()));
     solver_ = boost::make_shared<FdmBackwardSolver>(
-        operator_, std::vector<boost::shared_ptr<BoundaryCondition<FdmLinearOp>>>(), nullptr, FdmSchemeDesc::Douglas());
+        operator_, std::vector<boost::shared_ptr<BoundaryCondition<FdmLinearOp>>>(), nullptr, scheme_);
 }
 
 Size LgmFdSolver::gridSize() const { return stateGridPoints_; }

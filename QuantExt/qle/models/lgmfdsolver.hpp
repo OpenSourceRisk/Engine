@@ -36,6 +36,7 @@ namespace QuantExt {
 class LgmFdSolver : public LgmBackwardSolver {
 public:
     LgmFdSolver(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime = 50.0,
+                const QuantLib::FdmSchemeDesc scheme = QuantLib::FdmSchemeDesc::Douglas(),
                 const Size stateGridPoints = 64, const Size timeStepsPerYear = 24, const Real mesherEpsilon = 1E-4);
     Size gridSize() const override;
     RandomVariable stateGrid(const Real t) const override;
@@ -47,6 +48,7 @@ public:
 private:
     boost::shared_ptr<LinearGaussMarkovModel> model_;
     Real maxTime_;
+    QuantLib::FdmSchemeDesc scheme_;
     Size stateGridPoints_;
     Size timeStepsPerYear_;
     Real mesherEpsilon_;

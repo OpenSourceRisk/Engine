@@ -18,11 +18,12 @@
 
 #pragma once
 
-#include <ql/instruments/nonstandardswaption.hpp>
-#include <ql/instruments/swaption.hpp>
 #include <qle/instruments/multilegoption.hpp>
 #include <qle/models/lgmbackwardsolver.hpp>
 
+#include <ql/instruments/nonstandardswaption.hpp>
+#include <ql/instruments/swaption.hpp>
+#include <ql/methods/finitedifferences/solvers/fdmbackwardsolver.hpp>
 #include <ql/pricingengines/genericmodelengine.hpp>
 
 namespace QuantExt {
@@ -61,6 +62,7 @@ public:
                                    const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
 
     NumericLgmMultiLegOptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime = 50.0,
+                                   const QuantLib::FdmSchemeDesc scheme = QuantLib::FdmSchemeDesc::Douglas(),
                                    const Size stateGridPoints = 64, const Size timeStepsPerYear = 24,
                                    const Real mesherEpsilon = 1E-4,
                                    const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
@@ -76,6 +78,7 @@ public:
                              const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
 
     NumericLgmSwaptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime = 50.0,
+                             const QuantLib::FdmSchemeDesc scheme = QuantLib::FdmSchemeDesc::Douglas(),
                              const Size stateGridPoints = 64, const Size timeStepsPerYear = 24,
                              const Real mesherEpsilon = 1E-4,
                              const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
@@ -92,8 +95,10 @@ public:
                                         const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
 
     NumericLgmNonstandardSwaptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model,
-                                        const Real maxTime = 50.0, const Size stateGridPoints = 64,
-                                        const Size timeStepsPerYear = 24, const Real mesherEpsilon = 1E-4,
+                                        const Real maxTime = 50.0,
+                                        const QuantLib::FdmSchemeDesc scheme = QuantLib::FdmSchemeDesc::Douglas(),
+                                        const Size stateGridPoints = 64, const Size timeStepsPerYear = 24,
+                                        const Real mesherEpsilon = 1E-4,
                                         const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
 
     void calculate() const override;
