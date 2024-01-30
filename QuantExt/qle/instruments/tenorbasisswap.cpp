@@ -65,10 +65,10 @@ private:
 TenorBasisSwap::TenorBasisSwap(const Date& effectiveDate, Real nominal, const Period& swapTenor, bool payLongIndex,
                                const boost::shared_ptr<IborIndex>& longIndex, Spread longSpread,
                                const boost::shared_ptr<IborIndex>& shortIndex, Spread shortSpread,
-                               const Period& shortPayTenor, DateGeneration::Rule rule, bool includeSpread,
+                               const Period& shortPayTenor, DateGeneration::Rule rule, bool includeSpread, bool spreadOnShort,
                                QuantExt::SubPeriodsCoupon1::Type type)
     : Swap(2), nominal_(nominal), payLongIndex_(payLongIndex), longIndex_(longIndex), longSpread_(longSpread),
-      shortIndex_(shortIndex), shortSpread_(shortSpread), shortPayTenor_(shortPayTenor), includeSpread_(includeSpread),
+      shortIndex_(shortIndex), shortSpread_(shortSpread), shortPayTenor_(shortPayTenor), includeSpread_(includeSpread), spreadOnShort_(spreadOnShort),
       type_(type) {
 
     // Checks
@@ -112,10 +112,10 @@ TenorBasisSwap::TenorBasisSwap(const Date& effectiveDate, Real nominal, const Pe
 TenorBasisSwap::TenorBasisSwap(Real nominal, bool payLongIndex, const Schedule& longSchedule,
                                const boost::shared_ptr<IborIndex>& longIndex, Spread longSpread,
                                const Schedule& shortSchedule, const boost::shared_ptr<IborIndex>& shortIndex,
-                               Spread shortSpread, bool includeSpread, QuantExt::SubPeriodsCoupon1::Type type)
+                               Spread shortSpread, bool includeSpread, bool spreadOnShort, QuantExt::SubPeriodsCoupon1::Type type)
     : Swap(2), nominal_(nominal), payLongIndex_(payLongIndex), longSchedule_(longSchedule), longIndex_(longIndex),
       longSpread_(longSpread), shortSchedule_(shortSchedule), shortIndex_(shortIndex), shortSpread_(shortSpread),
-      includeSpread_(includeSpread), type_(type) {
+      includeSpread_(includeSpread), spreadOnShort_(spreadOnShort), type_(type) {
 
     // Checks
     Period longTenor = longSchedule_.tenor();
