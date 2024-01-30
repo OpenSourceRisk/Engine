@@ -23,6 +23,9 @@
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/instruments/rebatedexercise.hpp>
+#include <qle/models/lgmconvolutionsolver2.hpp>
+#include <qle/models/lgmfdsolver.hpp>
+#include <qle/models/lgmvectorised.hpp>
 
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
@@ -185,9 +188,8 @@ RandomVariable getRebatePv(const LgmVectorised& lgm, const Real t, const RandomV
 }
 
 NumericLgmMultiLegOptionEngineBase::NumericLgmMultiLegOptionEngineBase(
-    const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny, const Real sx, const Size nx,
-    const Handle<YieldTermStructure>& discountCurve)
-    : LgmConvolutionSolver2(model, sy, ny, sx, nx), discountCurve_(discountCurve) {}
+    const boost::shared_ptr<LgmBackwardSolver>& solver, const Handle<YieldTermStructure>& discountCurve)
+    : solver_(solver), discountCurve_(discountCurve) {}
 
 void NumericLgmMultiLegOptionEngineBase::calculate() const {
 
@@ -198,7 +200,7 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
        TODO we should add exercise data to indicate past exercises and value outstanding cash settlement amounts,
        or - possibly (?) - the physical underlying in that we exercised into? Or would that be a separate trade? */
 
-    Date refDate = model()->parametrization()->termStructure()->referenceDate();
+    Date refDate = solver_->model()->parametrization()->termStructure()->referenceDate();
 
     /* we might have to handle an exercise with rebate, init a variable for that (null if not applicable) */
 
@@ -279,23 +281,23 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
 
     /* Step backwards through simulation dates and compute the option npv */
 
-    LgmVectorised lgm(model()->parametrization());
+    LgmVectorised lgm(solver_->model()->parametrization());
 
     // the current option npv that we roll back through the grid
-    RandomVariable optionNpv(gridSize(), 0.0);
+    RandomVariable optionNpv(solver_->gridSize(), 0.0);
     // cashflow npvs that are part of the latest exercise into option
-    RandomVariable underlyingNpv1(gridSize(), 0.0);
+    RandomVariable underlyingNpv1(solver_->gridSize(), 0.0);
     // cashflow npvs that are estimated, but not yet part of the latest exercise into option
     std::map<std::pair<Size, Size>, RandomVariable> underlyingNpv2;
 
     for (auto it = simulationDates.rbegin(); it != simulationDates.rend(); ++it) {
 
-        Real t_from = model()->parametrization()->termStructure()->timeFromReference(*it);
+        Real t_from = solver_->model()->parametrization()->termStructure()->timeFromReference(*it);
         Real t_to = (it != std::next(simulationDates.rend(), -1))
-                        ? model()->parametrization()->termStructure()->timeFromReference(*std::next(it, 1))
+                        ? solver_->model()->parametrization()->termStructure()->timeFromReference(*std::next(it, 1))
                         : t_from;
 
-        RandomVariable state = stateGrid(t_from);
+        RandomVariable state = solver_->stateGrid(t_from);
 
         auto option = optionDates.find(*it);
         auto cashflow = cashflowDates.find(*it);
@@ -305,7 +307,7 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
         if (cashflow != cashflowDates.end()) {
             for (auto const& cf : cashflow->second) {
                 auto tmp = getUnderlyingCashflowPv(lgm, t_from, state, discountCurve_, legs_[cf.first][cf.second]) *
-                           RandomVariable(gridSize(), payer_[cf.first]);
+                           RandomVariable(solver_->gridSize(), payer_[cf.first]);
                 auto it = underlyingNpv2.find(cf);
                 if (it != underlyingNpv2.end())
                     it->second += tmp;
@@ -337,11 +339,11 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
         // rollback
 
         if (t_from != t_to) {
-            underlyingNpv1 = rollback(underlyingNpv1, t_from, t_to);
+            underlyingNpv1 = solver_->rollback(underlyingNpv1, t_from, t_to);
             for (auto& c : underlyingNpv2) {
-                c.second = rollback(c.second, t_from, t_to);
+                c.second = solver_->rollback(c.second, t_from, t_to);
             }
-            optionNpv = rollback(optionNpv, t_from, t_to);
+            optionNpv = solver_->rollback(optionNpv, t_from, t_to);
         }
     }
 
@@ -353,7 +355,7 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
         underlyingNpv_ += c.second.at(0);
     }
 
-    additionalResults_ = getAdditionalResultsMap(model()->getCalibrationInfo());
+    additionalResults_ = getAdditionalResultsMap(solver_->model()->getCalibrationInfo());
 
     if (rebatedExercise) {
         for (Size i = 0; i < rebatedExercise->dates().size(); ++i) {
@@ -369,8 +371,21 @@ NumericLgmMultiLegOptionEngine::NumericLgmMultiLegOptionEngine(const boost::shar
                                                                const Real sy, const Size ny, const Real sx,
                                                                const Size nx,
                                                                const Handle<YieldTermStructure>& discountCurve)
-    : NumericLgmMultiLegOptionEngineBase(model, sy, ny, sx, nx, discountCurve) {
-    registerWith(LgmConvolutionSolver2::model());
+    : NumericLgmMultiLegOptionEngineBase(boost::make_shared<LgmConvolutionSolver2>(model, sy, ny, sx, nx),
+                                         discountCurve) {
+    registerWith(solver_->model());
+    registerWith(discountCurve_);
+}
+
+NumericLgmMultiLegOptionEngine::NumericLgmMultiLegOptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model,
+                                                               const Real maxTime, const QuantLib::FdmSchemeDesc scheme,
+                                                               const Size stateGridPoints, const Size timeStepsPerYear,
+                                                               const Real mesherEpsilon,
+                                                               const Handle<YieldTermStructure>& discountCurve)
+    : NumericLgmMultiLegOptionEngineBase(
+          boost::make_shared<LgmFdSolver>(model, maxTime, scheme, stateGridPoints, timeStepsPerYear, mesherEpsilon),
+          discountCurve) {
+    registerWith(solver_->model());
     registerWith(discountCurve_);
 }
 
@@ -393,8 +408,21 @@ void NumericLgmMultiLegOptionEngine::calculate() const {
 NumericLgmSwaptionEngine::NumericLgmSwaptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model,
                                                    const Real sy, const Size ny, const Real sx, const Size nx,
                                                    const Handle<YieldTermStructure>& discountCurve)
-    : NumericLgmMultiLegOptionEngineBase(model, sy, ny, sx, nx, discountCurve) {
-    registerWith(LgmConvolutionSolver2::model());
+    : NumericLgmMultiLegOptionEngineBase(boost::make_shared<LgmConvolutionSolver2>(model, sy, ny, sx, nx),
+                                         discountCurve) {
+    registerWith(solver_->model());
+    registerWith(discountCurve_);
+}
+
+NumericLgmSwaptionEngine::NumericLgmSwaptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model,
+                                                   const Real maxTime, const QuantLib::FdmSchemeDesc scheme,
+                                                   const Size stateGridPoints, const Size timeStepsPerYear,
+                                                   const Real mesherEpsilon,
+                                                   const Handle<YieldTermStructure>& discountCurve)
+    : NumericLgmMultiLegOptionEngineBase(
+          boost::make_shared<LgmFdSolver>(model, maxTime, scheme, stateGridPoints, timeStepsPerYear, mesherEpsilon),
+          discountCurve) {
+    registerWith(solver_->model());
     registerWith(discountCurve_);
 }
 
@@ -416,8 +444,20 @@ void NumericLgmSwaptionEngine::calculate() const {
 NumericLgmNonstandardSwaptionEngine::NumericLgmNonstandardSwaptionEngine(
     const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny, const Real sx, const Size nx,
     const Handle<YieldTermStructure>& discountCurve)
-    : NumericLgmMultiLegOptionEngineBase(model, sy, ny, sx, nx, discountCurve) {
-    registerWith(LgmConvolutionSolver2::model());
+    : NumericLgmMultiLegOptionEngineBase(boost::make_shared<LgmConvolutionSolver2>(model, sy, ny, sx, nx),
+                                         discountCurve) {
+    registerWith(solver_->model());
+    registerWith(discountCurve_);
+}
+
+NumericLgmNonstandardSwaptionEngine::NumericLgmNonstandardSwaptionEngine(
+    const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime, const QuantLib::FdmSchemeDesc scheme,
+    const Size stateGridPoints, const Size timeStepsPerYear, const Real mesherEpsilon,
+    const Handle<YieldTermStructure>& discountCurve)
+    : NumericLgmMultiLegOptionEngineBase(
+          boost::make_shared<LgmFdSolver>(model, maxTime, scheme, stateGridPoints, timeStepsPerYear, mesherEpsilon),
+          discountCurve) {
+    registerWith(solver_->model());
     registerWith(discountCurve_);
 }
 

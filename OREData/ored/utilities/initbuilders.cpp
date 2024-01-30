@@ -418,6 +418,7 @@ void initBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(FxTouchOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EuropeanSwaptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(LGMGridBermudanSwaptionEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(LGMFDBermudanSwaptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(LgmMcBermudanSwaptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(VarSwapEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxDoubleTouchOptionAnalyticEngineBuilder, false)
