@@ -357,10 +357,11 @@ std::pair<double, double> ValuationEngine::populateCube(
         simMarket_->updateDate(d);
     }
     // We can skip this step, if we have done that above in the close-out date section
-    if (!scenarioUpdated)
+    if (!scenarioUpdated){
         simMarket_->updateScenario(d);
+    }
     // Always with fixing update here, in contrast to the close-out date section
-    simMarket_->postUpdate(d, true);
+    simMarket_->postUpdate(d, !isStickyDate || isValueDate);
     // Aggregation scenario data update on valuation dates only
     if (isValueDate) {
         simMarket_->updateAsd(d);
@@ -371,12 +372,12 @@ std::pair<double, double> ValuationEngine::populateCube(
     updateTime += timer.elapsed().wall * 1e-9;
 
     timer.start();
-    if (isStickyDate) // switch on again, if sticky
+    if (isStickyDate && !isValueDate) // switch on again, if sticky
         tradeExercisable(false, trades);
     // loop over trades
     runCalculators(!isValueDate, trades, tradeHasError, calculators, outputCube, outputCubeNettingSet, d, cubeDateIndex,
                    sample, simMarket_->label());
-    if (isStickyDate) // switch on again, if sticky
+    if (isStickyDate && !isValueDate) // switch on again, if sticky
         tradeExercisable(true, trades);
     // loop over counterparty names
     if (isValueDate) {
