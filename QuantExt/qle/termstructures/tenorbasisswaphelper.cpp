@@ -72,7 +72,7 @@ void TenorBasisSwapHelper::initializeDates() {
 
     swap_ = boost::shared_ptr<TenorBasisSwap>(new TenorBasisSwap(effectiveDate, 1.0, swapTenor_, true, longIndex_, 0.0,
                                                                  shortIndex_, 0.0, shortPayTenor_,
-                                                                 DateGeneration::Backward, includeSpread_, type_));
+                                                                 DateGeneration::Backward, includeSpread_, spreadOnShort_, type_));
 
     boost::shared_ptr<PricingEngine> engine(new DiscountingSwapEngine(discountRelinkableHandle_));
     swap_->setPricingEngine(engine);
