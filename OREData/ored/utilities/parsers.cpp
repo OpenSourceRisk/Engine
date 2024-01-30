@@ -685,11 +685,15 @@ QuantLib::CPI::InterpolationType parseObservationInterpolation(const std::string
 }
 
 FdmSchemeDesc parseFdmSchemeDesc(const std::string& s) {
-    static std::map<std::string, FdmSchemeDesc> m = {
-        {"Hundsdorfer", FdmSchemeDesc::Hundsdorfer()},     {"Douglas", FdmSchemeDesc::Douglas()},
-        {"CraigSneyd", FdmSchemeDesc::CraigSneyd()},       {"ModifiedCraigSneyd", FdmSchemeDesc::ModifiedCraigSneyd()},
-        {"ImplicitEuler", FdmSchemeDesc::ImplicitEuler()}, {"ExplicitEuler", FdmSchemeDesc::ExplicitEuler()},
-        {"MethodOfLines", FdmSchemeDesc::MethodOfLines()}, {"TrBDF2", FdmSchemeDesc::TrBDF2()}};
+    static std::map<std::string, FdmSchemeDesc> m = {{"CrankNicolson", FdmSchemeDesc::CrankNicolson()},
+                                                     {"Hundsdorfer", FdmSchemeDesc::Hundsdorfer()},
+                                                     {"Douglas", FdmSchemeDesc::Douglas()},
+                                                     {"CraigSneyd", FdmSchemeDesc::CraigSneyd()},
+                                                     {"ModifiedCraigSneyd", FdmSchemeDesc::ModifiedCraigSneyd()},
+                                                     {"ImplicitEuler", FdmSchemeDesc::ImplicitEuler()},
+                                                     {"ExplicitEuler", FdmSchemeDesc::ExplicitEuler()},
+                                                     {"MethodOfLines", FdmSchemeDesc::MethodOfLines()},
+                                                     {"TrBDF2", FdmSchemeDesc::TrBDF2()}};
 
     auto it = m.find(s);
     if (it != m.end())
