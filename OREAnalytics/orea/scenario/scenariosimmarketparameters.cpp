@@ -146,8 +146,8 @@ void ScenarioSimMarketParameters::setDefaults() {
     // Defaults for simulate atm only
     setSimulateFxVolATMOnly(false);
     setSimulateEquityVolATMOnly(false);
-    setSimulateSwapVolATMOnly(false);
-    setSimulateCDSVollATMOnly(false);
+    simulateSwapVolATMOnly() = false;
+    setSimulateCdsVolsATMOnly(false);
     // Default interpolation for yield curves
     interpolation_ = "LogLinear";
     extrapolation_ = "FlatFwd";
@@ -666,10 +666,10 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         capFloorVolIsAtm_ != rhs.capFloorVolIsAtm_ || capFloorVolDecayMode_ != rhs.capFloorVolDecayMode_ ||
         defaultCurveCalendars_ != rhs.defaultCurveCalendars_ || defaultTenors_ != rhs.defaultTenors_ ||
         defaultCurveExtrapolation_ != rhs.defaultCurveExtrapolation_ || cdsVolExpiries_ != rhs.cdsVolExpiries_ ||
-        cdsVolDecayMode_ != rhs.cdsVolDecayMode_ || cdsVolSimulateATMOnly_ != rhs.cdsVolSimulateATMOnly ||
+        cdsVolDecayMode_ != rhs.cdsVolDecayMode_ || cdsVolSimulateATMOnly_ != rhs.cdsVolSimulateATMOnly_ ||
         equityDividendTenors_ != rhs.equityDividendTenors_ || fxVolIsSurface_ != rhs.fxVolIsSurface_ ||
         fxVolExpiries_ != rhs.fxVolExpiries_ || fxVolDecayMode_ != rhs.fxVolDecayMode_ ||
-        fxVolSimulateATMOnly_ != rhs.fxVolSimulateATMOnly || equityVolExpiries_ != rhs.equityVolExpiries_ ||
+        fxVolSimulateATMOnly_ != rhs.fxVolSimulateATMOnly_ || equityVolExpiries_ != rhs.equityVolExpiries_ ||
         equityVolDecayMode_ != rhs.equityVolDecayMode_ || equityVolSimulateATMOnly_ != rhs.equityVolSimulateATMOnly_ ||
         equityMoneyness_ != rhs.equityMoneyness_ || equityStandardDevs_ != rhs.equityStandardDevs_ ||
         additionalScenarioDataIndices_ != rhs.additionalScenarioDataIndices_ ||
