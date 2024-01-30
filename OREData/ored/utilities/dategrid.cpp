@@ -219,8 +219,8 @@ void DateGrid::addCloseOutDates(const QuantLib::Period& p) {
             }
         }
     } else {
-        std::vector<Date> tmpDates;
-        std::vector<bool> tmpIsCloseOutDate, tmpIsValuationDate;
+        std::set<QuantLib::Date> tmpDates;
+        std::set<QuantLib::Date> tmpValueDates;
         for (Size i = 0; i < dates_.size(); ++i) {
             Date c;
             if (p.units() == Days)
@@ -228,29 +228,23 @@ void DateGrid::addCloseOutDates(const QuantLib::Period& p) {
             else
                 c = calendar_.advance(dates_[i], p, Following, false);
             closeOutDates_[c] = dates_[i];
-            if (i < dates_.size() - 1) {
-                // adjust the grid to ensure no overlap in valuation and closeout dates
-                if (c >= dates_[i + 1]) {
-                    dates_[i + 1] = calendar_.advance(c, QuantLib::Period(1, QuantLib::Days));
-                    // check that the grid is still monotonic
-                    if ((i + 2) < dates_.size()) {
-                        QL_REQUIRE(dates_[i + 1] < dates_[i + 2],
-                                   "date grid is no longer monotonic: " << dates_[i + 1] << ", " << dates_[i + 2]);
-                    }
-                }
-                QL_REQUIRE(c < dates_[i + 1],
-                           "close out date " << c << " does not lie before next grid date " << dates_[i + 1]);
-            }
-            tmpDates.push_back(dates_[i]);
-            tmpDates.push_back(c);
-            tmpIsCloseOutDate.push_back(false);
-            tmpIsCloseOutDate.push_back(true);
-            tmpIsValuationDate.push_back(true);
-            tmpIsValuationDate.push_back(false);
+            tmpDates.insert(dates_[i]);
+            tmpDates.insert(c);
+            tmpValueDates.insert(dates_[i]);
         }
-        dates_ = tmpDates;
-        isCloseOutDate_ = tmpIsCloseOutDate;
-        isValuationDate_ = tmpIsValuationDate;
+        dates_.clear();
+        dates_.assign(tmpDates.begin(), tmpDates.end());
+        isCloseOutDate_ = std::vector<bool>(dates_.size(), false);
+        isValuationDate_ = std::vector<bool>(dates_.size(), true);
+        for(size_t i = 0; i < dates_.size(); ++i){
+            Date d = dates_[i];
+            if(closeOutDates_.count(d) == 1){
+                isCloseOutDate_[i] = true;
+            }
+            if(tmpValueDates.count(d) == 0){
+                isValuationDate_[i] = false;
+            }
+        }
         // FIXME ... (is that needed anywhere ?)
         tenors_ = std::vector<QuantLib::Period>(dates_.size(), 0 * Days);
         times_.resize(dates_.size());
