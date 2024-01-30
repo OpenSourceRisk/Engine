@@ -157,6 +157,14 @@ Volatility SpreadedSwaptionVolatility::volatilityImpl(Time optionTime, Time swap
     }
 }
 
+Real SpreadedSwaptionVolatility::shiftImpl(const Date& optionDate, const Period& swapTenor) const {
+    return base_->shift(optionDate, swapTenor);
+}
+
+Real SpreadedSwaptionVolatility::shiftImpl(Time optionTime, Time swapLength) const {
+    return base_->shift(optionTime, swapLength);
+}
+
 void SpreadedSwaptionVolatility::performCalculations() const {
     SwaptionVolatilityDiscrete::performCalculations();
     for (Size k = 0; k < strikeSpreads_.size(); ++k) {
