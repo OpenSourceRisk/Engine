@@ -25,7 +25,7 @@
 #pragma once
 
 #include <qle/math/randomvariable.hpp>
-#include <qle/models/lgm.hpp>
+#include <qle/models/lgmbackwardsolver.hpp>
 
 namespace QuantExt {
 
@@ -34,22 +34,16 @@ namespace QuantExt {
                exercise into swaptions
 */
 
-class LgmConvolutionSolver2 {
+class LgmConvolutionSolver2 : public LgmBackwardSolver {
 public:
     LgmConvolutionSolver2(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny,
                           const Real sx, const Size nx);
-
-    /* get grid size */
-    Size gridSize() const { return 2 * mx_ + 1; }
-
-    /* get discretised states grid at time t */
-    RandomVariable stateGrid(const Real t) const;
-
-    /* roll back an deflated NPV array from t1 to t0 */
-    RandomVariable rollback(const RandomVariable& v, const Real t1, const Real t0) const;
-
-    /* the underlying model */
-    const boost::shared_ptr<LinearGaussMarkovModel>& model() const { return model_; }
+    Size gridSize() const override { return 2 * mx_ + 1; }
+    RandomVariable stateGrid(const Real t) const override;
+    // steps are always ignored, since we can take large steps
+    RandomVariable rollback(const RandomVariable& v, const Real t1, const Real t0,
+                            Size steps = Null<Size>()) const override;
+    const boost::shared_ptr<LinearGaussMarkovModel>& model() const override { return model_; }
 
 private:
     boost::shared_ptr<LinearGaussMarkovModel> model_;
