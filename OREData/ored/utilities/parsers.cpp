@@ -284,6 +284,22 @@ DayCounter parseDayCounter(const string& s) {
 
 Currency parseCurrency(const string& s) { return CurrencyParser::instance().parseCurrency(s); }
 
+QuantExt::ConfigurableCurrency::Type parseCurrencyType(const string& s) {
+    static map<string, QuantExt::ConfigurableCurrency::Type> m = {
+        {"Major", QuantExt::ConfigurableCurrency::Type::Major}, {"Fiat Currency", QuantExt::ConfigurableCurrency::Type::Major},
+        {"Fiat", QuantExt::ConfigurableCurrency::Type::Major}, {"Metal", QuantExt::ConfigurableCurrency::Type::Metal}, 
+        {"Precious Metal", QuantExt::ConfigurableCurrency::Type::Metal}, {"Crypto", QuantExt::ConfigurableCurrency::Type::Crypto},
+        {"Cryptocurrency", QuantExt::ConfigurableCurrency::Type::Crypto}};
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Currency type \"" << s << "\" not recognised");
+    }
+}
+
+
 Currency parseMinorCurrency(const string& s) { return CurrencyParser::instance().parseMinorCurrency(s); }
 
 Currency parseCurrencyWithMinors(const string& s) { return CurrencyParser::instance().parseCurrencyWithMinors(s); }

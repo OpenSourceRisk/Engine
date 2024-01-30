@@ -323,8 +323,11 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
             // transfer relevant cashflow amounts to exercise into npv
 
             for (auto const& cf : option->second) {
-                underlyingNpv1 += underlyingNpv2[cf];
-                underlyingNpv2.erase(cf);
+                auto npv2Cf = underlyingNpv2.find(cf);
+                if (npv2Cf != underlyingNpv2.end()) {
+                    underlyingNpv1 += npv2Cf->second;
+                    underlyingNpv2.erase(cf);
+                }
             }
 
             // update the option value (exercise value including rebate vs. continuation value)
