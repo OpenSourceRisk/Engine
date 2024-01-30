@@ -78,6 +78,8 @@ public:
 private:
     boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const override;
     Volatility volatilityImpl(Time optionTime, Time swapLength, Rate strike) const override;
+    Real shiftImpl(const Date& optionDate, const Period& swapTenor) const override;
+    Real shiftImpl(Time optionTime, Time swapLength) const override;
     void performCalculations() const override;
     Real getAtmLevel(const Real optionTime, const Real swapLength, const boost::shared_ptr<SwapIndex> swapIndexBase,
                      const boost::shared_ptr<SwapIndex> shortSwapIndexBase) const;
