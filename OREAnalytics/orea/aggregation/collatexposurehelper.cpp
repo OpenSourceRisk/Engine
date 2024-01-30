@@ -58,12 +58,13 @@ std::ostream& operator<<(std::ostream& out, CollateralExposureHelper::Calculatio
 }
 
 Real CollateralExposureHelper::marginRequirementCalc(const boost::shared_ptr<CollateralAccount>& collat,
-                                                     const Real& uncollatValue, const Date& simulationDate) {
+                                                     const Real& uncollatValue, const Date& simulationDate,
+                                                     const boost::shared_ptr<CollateralBalance>& balance) {
     // first step, make sure collateral balance is up to date.
     //        collat->updateAccountBalance(simulationDate);
 
     Real collatBalance = collat->accountBalance();
-    Real csa = creditSupportAmount(collat->csaDef(), uncollatValue);
+    Real csa = creditSupportAmount(collat->csaDef(), uncollatValue, balance);
 
     Real openMargins = collat->outstandingMarginAmount(simulationDate);
     Real collatShortfall = csa - collatBalance - openMargins;
@@ -81,9 +82,21 @@ Real CollateralExposureHelper::marginRequirementCalc(const boost::shared_ptr<Col
 
  Real CollateralExposureHelper::creditSupportAmount(
     const boost::shared_ptr<ore::data::NettingSetDefinition>& nettingSet, 
-    const Real& uncollatValueCsaCur) {
+    const Real& uncollatValueCsaCur,
+    const boost::shared_ptr<ore::data::CollateralBalance>& initialBalance) {
 
-   Real ia = nettingSet->csaDetails()->independentAmountHeld();
+    Real ia;
+    if (initialBalance && initialBalance->independentAmount() != Null<Real>()) {
+        ia = initialBalance->independentAmount();
+        QL_REQUIRE(initialBalance->currency() == nettingSet->csaDetails()->csaCurrency(),
+                   "Collateral balance currency does not match CSA currency");
+        LOG("got independent amount from collateral balances for credit support amount calculation");
+    }
+    else {
+        ia = nettingSet->csaDetails()->independentAmountHeld();
+        LOG("got independent amount from CSA details for the credit support amount calculation");
+    }
+     
     Real threshold, csa;
     if (uncollatValueCsaCur - ia >= 0) {
         threshold = nettingSet->csaDetails()->thresholdRcv();
@@ -155,10 +168,11 @@ Real CollateralExposureHelper::estimateUncollatValue(const Date& simulationDate,
 void CollateralExposureHelper::updateMarginCall(const boost::shared_ptr<CollateralAccount>& collat,
                                                 const Real& uncollatValue, const Date& simulationDate,
                                                 const Real& annualisedZeroRate, const CalculationType& calcType,
-                                                const bool& eligMarginReqDateUs, const bool& eligMarginReqDateCtp) {
+                                                const bool& eligMarginReqDateUs, const bool& eligMarginReqDateCtp,
+                                                const boost::shared_ptr<CollateralBalance>& balance) {
     collat->updateAccountBalance(simulationDate, annualisedZeroRate);
 
-    Real margin = marginRequirementCalc(collat, uncollatValue, simulationDate);
+    Real margin = marginRequirementCalc(collat, uncollatValue, simulationDate, balance);
 
     if (margin != 0.0) {
         // settle margin call on appropriate date
@@ -190,12 +204,20 @@ boost::shared_ptr<vector<boost::shared_ptr<CollateralAccount>>> CollateralExposu
     const boost::shared_ptr<NettingSetDefinition>& csaDef, const Real& nettingSetPv, const Date& date_t0,
     const vector<vector<Real>>& nettingSetValues, const Date& nettingSet_maturity, const vector<Date>& dateGrid,
     const Real& csaFxTodayRate, const vector<vector<Real>>& csaFxScenarioRates, const Real& csaTodayCollatCurve,
-    const vector<vector<Real>>& csaScenCollatCurves, const CalculationType& calcType) {
+    const vector<vector<Real>>& csaScenCollatCurves, const CalculationType& calcType,
+    const boost::shared_ptr<CollateralBalance>& balance) {
+
     try {
-        // step 1; build a collateral account object, assuming t0 balance = 0,
+        // step 1; build a collateral account object, assuming t0 VM balance from the balance object (zero balance if missing),
         //         and calculate t0 margin requirement
-        boost::shared_ptr<CollateralAccount> tmpAcc(new CollateralAccount(csaDef, date_t0));
-        Real bal_t0 = marginRequirementCalc(tmpAcc, nettingSetPv, date_t0);
+
+        Real initialBalance = 0.0;
+        if (balance && balance->variationMargin() != Null<Real>()) {
+            initialBalance = balance->variationMargin();
+        }
+        
+        boost::shared_ptr<CollateralAccount> tmpAcc(new CollateralAccount(csaDef, initialBalance, date_t0));
+        Real bal_t0 = marginRequirementCalc(tmpAcc, nettingSetPv, date_t0, balance);
 
         // step 2; build a new collateral account object with t0 balance = bal_t0
         // a copy of this new object will be used as base for each scenario collateral path

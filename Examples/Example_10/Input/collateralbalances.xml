@@ -1,0 +1,21 @@
+<CollateralBalances>
+
+  <CollateralBalance>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <Currency>EUR</Currency>
+    <IndependentAmount>0</IndependentAmount>
+    <InitialMargin>0</InitialMargin>
+    <VariationMargin>0</VariationMargin>
+  </CollateralBalance>
+
+  <!--
+  <CollateralBalance>
+    <NettingSetId>CPTY_B</NettingSetId>
+    <Currency>EUR</Currency>
+    <IndependentAmount>20000</IndependentAmount>
+    <InitialMargin>20000</InitialMargin>
+    <VariationMargin>2000</VariationMargin>
+  </CollateralBalance>
+  -->
+    
+</CollateralBalances>

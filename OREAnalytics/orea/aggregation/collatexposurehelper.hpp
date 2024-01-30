@@ -24,6 +24,7 @@
 #pragma once
 
 #include <orea/aggregation/collateralaccount.hpp>
+#include <ored/portfolio/collateralbalance.hpp>
 #include <ql/handle.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/date.hpp>
@@ -71,7 +72,8 @@ public:
       - independent amount
     */
     static Real marginRequirementCalc(const boost::shared_ptr<CollateralAccount>& collat, const Real& uncollatValue,
-                                      const Date& simulationDate);
+                                      const Date& simulationDate,
+                                      const boost::shared_ptr<CollateralBalance>& balance = boost::shared_ptr<CollateralBalance>());
 
     /*!
       Performs linear interpolation between dates to
@@ -89,7 +91,8 @@ public:
     static void updateMarginCall(const boost::shared_ptr<CollateralAccount>& collat, const Real& uncollatValue,
                                  const Date& simulationDate, const Real& accrualFactor,
                                  const CalculationType& calcType = Symmetric, const bool& eligMarginReqDateUs = true,
-                                 const bool& eligMarginReqDateCtp = true);
+                                 const bool& eligMarginReqDateCtp = true,
+                                 const boost::shared_ptr<CollateralBalance>& balance = boost::shared_ptr<CollateralBalance>());
 
     /*!
         Computes the Credit Support Amount for the portfolio, given an unsecured exposure as input
@@ -97,7 +100,8 @@ public:
     */
     static Real creditSupportAmount(
         const boost::shared_ptr<ore::data::NettingSetDefinition>& nettingSet,
-        const Real& uncollatValueCsaCur);
+        const Real& uncollatValueCsaCur,
+        const boost::shared_ptr<ore::data::CollateralBalance>& initialBalance = boost::shared_ptr<ore::data::CollateralBalance>());
 
     /*!
       Takes a netting set (and scenario exposures) as input
@@ -107,7 +111,8 @@ public:
         const boost::shared_ptr<NettingSetDefinition>& csaDef, const Real& nettingSetPv, const Date& date_t0,
         const vector<vector<Real>>& nettingSetValues, const Date& nettingSet_maturity, const vector<Date>& dateGrid,
         const Real& csaFxTodayRate, const vector<vector<Real>>& csaFxScenarioRates, const Real& csaTodayCollatCurve,
-        const vector<vector<Real>>& csaScenCollatCurves, const CalculationType& calcType = Symmetric);
+        const vector<vector<Real>>& csaScenCollatCurves, const CalculationType& calcType = Symmetric,
+        const boost::shared_ptr<CollateralBalance>& balance = boost::shared_ptr<CollateralBalance>());
 };
 
 //! Convert text representation to CollateralExposureHelper::CalculationType
