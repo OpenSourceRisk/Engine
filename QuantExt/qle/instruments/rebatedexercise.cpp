@@ -23,34 +23,38 @@ namespace QuantExt {
 RebatedExercise::RebatedExercise(const Exercise& exercise, const Real rebate, const Natural rebateSettlementDays,
                                  const Calendar& rebatePaymentCalendar,
                                  const BusinessDayConvention rebatePaymentConvention)
-    : Exercise(exercise), exerciseDates_(std::vector<Date>()), rebates_(std::vector<Real>(dates().size(), rebate)),
-      rebateSettlementDays_(rebateSettlementDays), rebateSettlementPeriod_(boost::none),
-      rebatePaymentCalendar_(rebatePaymentCalendar), rebatePaymentConvention_(rebatePaymentConvention) {}
+    : RebatedExercise(exercise, exercise.dates(), std::vector<Real>(exercise.dates().size(), rebate),
+                      rebateSettlementDays * Days, rebatePaymentCalendar, rebatePaymentConvention) {}
+
+RebatedExercise::RebatedExercise(const Exercise& exercise, const Real rebate, const Period& rebateSettlementPeriod,
+                                 const Calendar& rebatePaymentCalendar,
+                                 const BusinessDayConvention rebatePaymentConvention)
+    : RebatedExercise(exercise, exercise.dates(), std::vector<Real>(exercise.dates().size(), rebate),
+                      rebateSettlementPeriod, rebatePaymentCalendar, rebatePaymentConvention) {}
 
 RebatedExercise::RebatedExercise(const Exercise& exercise, const std::vector<Real>& rebates,
                                  const Natural rebateSettlementDays, const Calendar& rebatePaymentCalendar,
                                  const BusinessDayConvention rebatePaymentConvention)
-    : Exercise(exercise), exerciseDates_(std::vector<Date>()), rebates_(rebates),
-      rebateSettlementDays_(rebateSettlementDays), rebateSettlementPeriod_(boost::none),
-      rebatePaymentCalendar_(rebatePaymentCalendar), rebatePaymentConvention_(rebatePaymentConvention) {
+    : RebatedExercise(exercise, exercise.dates(), rebates, rebateSettlementDays * Days, rebatePaymentCalendar,
+                      rebatePaymentConvention) {}
 
-    QL_REQUIRE(type_ == Bermudan, "a rebate vector is allowed only for a bermudan style exercise");
-
-    QL_REQUIRE(rebates.size() == dates().size(),
-               "the number of rebates (" << rebates.size() << ") must be equal to the number of exercise dates ("
-                                         << dates().size());
-}
+RebatedExercise::RebatedExercise(const Exercise& exercise, const std::vector<Real>& rebates,
+                                 const Period& rebateSettlementPeriod, const Calendar& rebatePaymentCalendar,
+                                 const BusinessDayConvention rebatePaymentConvention)
+    : RebatedExercise(exercise, exercise.dates(), rebates, rebateSettlementPeriod, rebatePaymentCalendar,
+                      rebatePaymentConvention) {}
 
 RebatedExercise::RebatedExercise(const Exercise& exercise, const std::vector<Date>& exerciseDates,
                                  const std::vector<Real>& rebates, const Period& rebateSettlementPeriod,
                                  const Calendar& rebatePaymentCalendar,
                                  const BusinessDayConvention rebatePaymentConvention)
-    : Exercise(exercise), exerciseDates_(exerciseDates), rebates_(rebates), rebateSettlementDays_(0),
+    : Exercise(exercise), exerciseDates_(exerciseDates), rebates_(rebates),
       rebateSettlementPeriod_(rebateSettlementPeriod), rebatePaymentCalendar_(rebatePaymentCalendar),
       rebatePaymentConvention_(rebatePaymentConvention) {
-    QL_REQUIRE(exerciseDates_.size() == dates().size(),
+    QL_REQUIRE(exerciseDates_.empty() || exerciseDates_.size() == dates().size(),
                "then number of notification dates ("
-                   << dates().size() << ") must be equal to the number of exercise dates (" << exerciseDates_.size());
+                   << dates().size() << ") must be equal to the number of exercise dates (" << exerciseDates_.size()
+                   << ")");
     QL_REQUIRE(rebates_.size() == dates().size(),
                "the number of rebates (" << rebates_.size() << ") must be equal to the number of exercise dates ("
                                          << dates().size());
