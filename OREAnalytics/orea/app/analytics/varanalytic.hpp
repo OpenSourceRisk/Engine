@@ -74,6 +74,7 @@ public:
 
     HistoricalSimulationVarAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
         : VarAnalyticImpl(inputs, LABEL) {}
+    void setUpConfigurations() override;
 
 protected:
     void setVarReport(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) override;

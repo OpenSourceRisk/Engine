@@ -105,6 +105,7 @@ public:
     void setCsvCommentCharacter(const char& c) { csvCommentCharacter_ = c; }
     void setDryRun(bool b) { dryRun_ = b; }
     void setMporDays(Size s) { mporDays_ = s; }
+    void setMporOverlappingPeriods(bool b) { mporOverlappingPeriods_ = b; }
     void setMporDate(const QuantLib::Date& d) { mporDate_ = d; }
     void setMporCalendar(const std::string& s); 
     void setMporForward(bool b) { mporForward_ = b; }
@@ -170,6 +171,7 @@ public:
     void setBenchmarkVarPeriod(const std::string& period);
     void setHistoricalScenarioReader(const std::string& fileName);
     void setSensitivityStreamFromBuffer(const std::string& buffer);
+    void setHistVarSimMarketParamsFromFile(const std::string& fileName);
 
     // Setters for exposure simulation
     void setSalvageCorrelationMatrix(bool b) { salvageCorrelationMatrix_ = b; }
@@ -391,6 +393,7 @@ public:
         } else
             return mporCalendar_;
     }
+    bool mporOverlappingPeriods() { return mporOverlappingPeriods_; }
     bool mporForward() { return mporForward_; }
 
     /***************************
@@ -452,7 +455,8 @@ public:
     const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>& covarianceData() { return covarianceData_; }
     const boost::shared_ptr<SensitivityStream>& sensitivityStream() { return sensitivityStream_; }
     std::string benchmarkVarPeriod() const { return benchmarkVarPeriod_; }
-    QuantLib::ext::shared_ptr<HistoricalScenarioReader> historicalScenarioReader() const { return historicalScenarioReader_; };
+    QuantLib::ext::shared_ptr<HistoricalScenarioReader> historicalScenarioReader() const { return historicalScenarioReader_;};
+    const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& histVarSimMarketParams() { return histVarSimMarketParams_; }
     
     /*********************************
      * Getters for exposure simulation 
@@ -660,6 +664,7 @@ protected:
     bool dryRun_ = false;
     QuantLib::Date mporDate_;
     QuantLib::Size mporDays_ = 10;
+    bool mporOverlappingPeriods_ = true;
     QuantLib::Calendar mporCalendar_;
     bool mporForward_ = true;
 
@@ -723,6 +728,7 @@ protected:
     boost::shared_ptr<SensitivityStream> sensitivityStream_;
     std::string benchmarkVarPeriod_;
     QuantLib::ext::shared_ptr<HistoricalScenarioReader> historicalScenarioReader_;
+    boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> histVarSimMarketParams_;
     std::string baseScenarioLoc_;
     
     /*******************

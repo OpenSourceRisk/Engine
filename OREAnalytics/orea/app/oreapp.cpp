@@ -855,9 +855,9 @@ void OREAppInputParameters::loadParameters() {
             setStressThreshold(parseReal(tmp));
     }
 
-    /****************
-     * VaR
-     ****************/
+    /********************
+     * VaR - Parametric
+     ********************/
 
     tmp = params_->get("parametricVar", "active", false);
     if (!tmp.empty() && parseBool(tmp)) {
@@ -902,6 +902,53 @@ void OREAppInputParameters::loadParameters() {
         std::string sensiFile = inputPath + "/" + tmp;
         LOG("Get sensitivity data from file " << sensiFile);
         setSensitivityStreamFromFile(sensiFile);
+    }
+
+    /********************
+     * VaR - Historical Simulation
+     ********************/
+
+    tmp = params_->get("historicalSimulationVar", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        insertAnalytic("HISTSIM_VAR");
+
+        tmp = params_->get("historicalSimulationVar", "historicalScenarioFile", false);
+        QL_REQUIRE(tmp != "", "historicalScenarioFile not provided");
+        std::string scenarioFile = inputPath + "/" + tmp;
+        setHistoricalScenarioReader(scenarioFile);     
+
+        tmp = params_->get("historicalSimulationVar", "simulationConfigFile", false);
+        QL_REQUIRE(tmp != "", "simulationConfigFile not provided");
+        string simulationConfigFile = inputPath + "/" + tmp;
+        setHistVarSimMarketParamsFromFile(simulationConfigFile);
+
+        tmp = params_->get("historicalSimulationVar", "historicalPeriod", false);
+        if (tmp != "")
+            setBenchmarkVarPeriod(tmp);
+
+        tmp = params_->get("historicalSimulationVar", "mporDays", false);
+        if (tmp != "")
+            setMporDays(static_cast<Size>(parseInteger(tmp)));
+
+        tmp = params_->get("historicalSimulationVar", "mporCalendar", false);
+        if (tmp != "")
+            setMporCalendar(tmp);
+
+        tmp = params_->get("historicalSimulationVar", "mporOverlappingPeriods", false);
+        if (tmp != "")
+            setMporOverlappingPeriods(parseBool(tmp));
+
+        tmp = params_->get("historicalSimulationVar", "quantiles", false);
+        if (tmp != "")
+            setVarQuantiles(tmp);
+
+        tmp = params_->get("historicalSimulationVar", "breakdown", false);
+        if (tmp != "")
+            setVarBreakDown(parseBool(tmp));
+
+        tmp = params_->get("historicalSimulationVar", "portfolioFilter", false);
+        if (tmp != "")
+            setPortfolioFilter(tmp);
     }
 
     /****************

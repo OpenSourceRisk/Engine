@@ -18,6 +18,7 @@
 #include <orea/engine/varcalculator.hpp>
 #include <ored/portfolio/trade.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <qle/math/deltagammavar.hpp>
 
 #include <boost/regex.hpp>
 
@@ -96,9 +97,10 @@ void VarTradeGroupContainer::add(const QuantLib::ext::shared_ptr<TradeGroup>& tr
 
 VarReport::VarReport(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const std::string& portfolioFilter,
                      const vector<Real>& p, boost::optional<ore::data::TimePeriod> period,
-                     std::unique_ptr<SensiRunArgs> sensiArgs, const bool breakdown) 
-    : MarketRiskReport(period, move(sensiArgs)), portfolio_(portfolio), portfolioFilter_(portfolioFilter), p_(p),
-      breakdown_(breakdown) {   
+                     const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
+                     std::unique_ptr<SensiRunArgs> sensiArgs, std::unique_ptr<FullRevalArgs> fullRevalArgs, const bool breakdown) 
+    : MarketRiskReport(period, hisScenGen, move(sensiArgs), move(fullRevalArgs), nullptr, breakdown), portfolio_(portfolio), 
+      portfolioFilter_(portfolioFilter), p_(p) {   
 
     riskGroups_ = QuantLib::ext::make_shared<VarRiskGroupContainer>();
     tradeGroups_ = QuantLib::ext::make_shared<VarTradeGroupContainer>();
@@ -125,12 +127,11 @@ VarReport::VarReport(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, cons
     }
 
     for (auto const& [tradeId, trade] : portfolio_->trades()) {
-        tradeIdGroups_[allStr].insert(make_pair(tradeId, pos));
-        if (breakdown) {
-            for (auto const& pId : trade->portfolioIds()) {
-                if (!hasFilter || boost::regex_match(pId, filter)) {                    
+        for (auto const& pId : trade->portfolioIds()) {
+            if (!hasFilter || boost::regex_match(pId, filter)) {
+                tradeIdGroups_[allStr].insert(make_pair(tradeId, pos));
+                if (breakdown)            
                     tradeIdGroups_[pId].insert(make_pair(tradeId, pos));
-                }
             }
         }
         pos++;
@@ -147,7 +148,7 @@ VarReport::VarReport(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, cons
     tradeGroups_->reset();
 }
 
-void VarReport::calculate(QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) {
+void VarReport::createReports(const ext::shared_ptr<MarketRiskReport::Reports>& reports) {
     QL_REQUIRE(reports->reports().size() == 1, "We should only report for VAR report");
     QuantLib::ext::shared_ptr<Report> report = reports->reports().at(0);
     // prepare report
@@ -156,8 +157,31 @@ void VarReport::calculate(QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& 
         report->addColumn("Quantile_" + std::to_string(p_[i]), double(), 6);
 
     createVarCalculator();
+}
 
-    MarketRiskReport::calculate(reports);
+void VarReport::writeVarResults(const ext::shared_ptr<MarketRiskReport::Reports>& reports,
+                                const ext::shared_ptr<MarketRiskGroup>& riskGroup,
+                                const ext::shared_ptr<TradeGroup>& tradeGroup) {
+
+    QL_REQUIRE(reports->reports().size() == 1, "We should only report for VAR report");
+    QuantLib::ext::shared_ptr<Report> report = reports->reports().at(0);
+
+    auto rg = ext::dynamic_pointer_cast<VarRiskGroup>(riskGroup);
+    auto tg = ext::dynamic_pointer_cast<VarTradeGroup>(tradeGroup);
+
+    std::vector<Real> var;
+    auto quantiles = p();
+    for (auto q : quantiles)
+        var.push_back(varCalculator_->var(q));
+
+    if (!close_enough(QuantExt::detail::absMax(var), 0.0)) {
+        report->next();
+        report->add(tg->portfolioId());
+        report->add(to_string(rg->riskClass()));
+        report->add(to_string(rg->riskType()));
+        for (auto const& v : var)
+            report->add(v);
+    }
 }
 
 QuantLib::ext::shared_ptr<ore::analytics::ScenarioFilter> 

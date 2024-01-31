@@ -47,8 +47,6 @@ namespace analytics {
 using QuantLib::Array;
 using QuantLib::Matrix;
 
-typedef std::pair<RiskFactorKey, RiskFactorKey> CrossPair;
-
 class HistoricalSimulationVarCalculator : public VarCalculator {
 public:
     HistoricalSimulationVarCalculator(const std::vector<QuantLib::Real>& pnls) : pnls_(pnls) {}
@@ -67,35 +65,19 @@ class HistoricalSimulationVarReport : public VarReport {
 public:
     virtual ~HistoricalSimulationVarReport() {}
 
-    HistoricalSimulationVarReport(
-        const std::string& baseCurrency,
-        const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
-        const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio, const std::string& portfolioFilter, 
-        const std::vector<QuantLib::Real>& p, const boost::optional<ore::data::TimePeriod>& period,
-        const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket,
-        const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
-        const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
-        const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig = nullptr);
-
-    void calculate(QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& report) override;
-
-    typedef std::pair<RiskFactorKey, RiskFactorKey> CrossPair;
+    HistoricalSimulationVarReport(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const std::string& portfolioFilter, 
+        const vector<Real>& p, boost::optional<ore::data::TimePeriod> period,
+        const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr, 
+        std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr, const bool breakdown = false);
 
 protected:
-    std::string baseCurrency_;
-    QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> hisScenGen_;
-    QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket_;
-    QuantLib::ext::shared_ptr<ore::data::EngineData> engineData_;
-    QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
-    QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
-        
-    //! Historical P&L generator
-    QuantLib::ext::shared_ptr<ore::analytics::HistoricalPnlGenerator> histPnlGen_;
+    void createVarCalculator() override;
+    void handleFullRevalResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
+        const QuantLib::ext::shared_ptr<MarketRiskGroup>& riskGroup, 
+        const QuantLib::ext::shared_ptr<TradeGroup>& tradeGroup) override;
 
-    void createVarCalculator() override {};
-    void handleSensiResults(QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& report,
-                                    const QuantLib::ext::shared_ptr<MarketRiskGroup>& riskGroup,
-                                    const QuantLib::ext::shared_ptr<TradeGroup>& tradeGroup) override {};
+private:
+    std::vector<QuantLib::Real> pnls_;
 };
 
 } // namespace analytics

@@ -115,10 +115,7 @@ public:
     
     typedef std::pair<RiskFactorKey, RiskFactorKey> CrossPair;
 
-protected:
-    
-    //! Historical scenario generator
-    QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> hisScenGen_;
+protected:    
     const QuantLib::ext::shared_ptr<SensitivityScenarioData> sensitivityConfig_;
     const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketConfig_;
 
@@ -126,7 +123,7 @@ protected:
     ParametricVarCalculator::ParametricVarParams parametricVarParams_;
     bool salvageCovarianceMatrix_ = true;
 
-    void handleSensiResults(QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
+    void handleSensiResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
                             const QuantLib::ext::shared_ptr<MarketRiskGroup>& riskGroup,
                             const QuantLib::ext::shared_ptr<TradeGroup>& tradeGroup) override;
 };

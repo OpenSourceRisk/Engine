@@ -192,6 +192,11 @@ void InputParameters::setScenarioSimMarketParamsFromFile(const std::string& file
     scenarioSimMarketParams_->fromFile(fileName);
 }
 
+void InputParameters::setHistVarSimMarketParamsFromFile(const std::string& fileName) {
+    histVarSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
+    histVarSimMarketParams_->fromFile(fileName);
+}
+
 void InputParameters::setSensiPricingEngineFromFile(const std::string& fileName) {
     sensiPricingEngine_ = boost::make_shared<EngineData>();
     sensiPricingEngine_->fromFile(fileName);
@@ -523,8 +528,9 @@ OutputParameters::OutputParameters(const boost::shared_ptr<Parameters>& params) 
     jacobiFileName_ = params->get("sensitivity", "jacobiOutputFile", false);    
     jacobiInverseFileName_ = params->get("sensitivity", "jacobiInverseOutputFile", false);    
     sensitivityScenarioFileName_ = params->get("sensitivity", "scenarioOutputFile", false);    
-    stressTestFileName_ = params->get("stress", "scenarioOutputFile", false);    
+    stressTestFileName_ = params->get("stress", "scenarioOutputFile", false);
     varFileName_ = params->get("parametricVar", "outputFile", false);
+    varFileName_ = params->get("historicalSimulationVar", "outputFile", false);
     parConversionOutputFileName_ = params->get("zeroToParSensiConversion", "outputFile", false);
     parConversionJacobiFileName_ = params->get("zeroToParSensiConversion", "jacobiOutputFile", false);
     parConversionJacobiInverseFileName_ = params->get("zeroToParSensiConversion", "jacobiInverseOutputFile", false);  

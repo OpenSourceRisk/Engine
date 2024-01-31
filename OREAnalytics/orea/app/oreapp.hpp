@@ -104,7 +104,7 @@ protected:
     boost::timer::cpu_timer runTimer_;
 };
 
-class OREAppInputParameters : public InputParameters {
+class OREAppInputParameters : virtual public InputParameters {
 public:
     OREAppInputParameters(const boost::shared_ptr<Parameters>& params) : InputParameters(), params_(params) {}
 

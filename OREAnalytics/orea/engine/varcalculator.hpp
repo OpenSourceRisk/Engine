@@ -116,10 +116,11 @@ public:
         const QuantLib::ext::shared_ptr<Portfolio> & portfolio,
         const std::string& portfolioFilter,
         const vector<Real>& p, boost::optional<ore::data::TimePeriod> period,
-        std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, 
+        const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr,
+        std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr, 
         const bool breakdown = false);
 
-    virtual void calculate(QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& report) override;
+    void createReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
 
     const std::vector<Real>& p() const { return p_; }
 
@@ -132,6 +133,9 @@ protected:
     virtual void createVarCalculator() = 0;
     std::string portfolioId(const QuantLib::ext::shared_ptr<TradeGroup>& tradeGroup) const override;
     std::string tradeGroupKey(const QuantLib::ext::shared_ptr<TradeGroup>& tradeGroup) const override;
+    void writeVarResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& report,
+                         const QuantLib::ext::shared_ptr<MarketRiskGroup>& riskGroup,
+                         const QuantLib::ext::shared_ptr<TradeGroup>& tradeGroup);
 
 private:
     QuantLib::ext::shared_ptr<Portfolio> portfolio_;

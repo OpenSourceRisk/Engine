@@ -62,13 +62,13 @@ void VarAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     LOG("Call VaR calculation");
     CONSOLEW("Risk: VaR Calculation");
     ext::shared_ptr<MarketRiskReport::Reports> reports = ext::make_shared<MarketRiskReport::Reports>();
-    QuantLib::ext::shared_ptr<InMemoryReport> paramVarReport = QuantLib::ext::make_shared<InMemoryReport>();
-    reports->add(paramVarReport);
+    QuantLib::ext::shared_ptr<InMemoryReport> varReport = QuantLib::ext::make_shared<InMemoryReport>();
+    reports->add(varReport);
 
     varReport_->calculate(reports);
     CONSOLE("OK");
         
-    analytic()->reports()[label_]["var"] = paramVarReport;
+    analytic()->reports()[label_]["var"] = varReport;
 
     LOG("VaR completed");
     MEM_LOG;
@@ -88,6 +88,11 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
         inputs_->salvageCovariance(), boost::none, move(sensiArgs), inputs_->varBreakDown());
 }
 
+void HistoricalSimulationVarAnalyticImpl::setUpConfigurations() {
+    VarAnalyticImpl::setUpConfigurations();
+    analytic()->configurations().simMarketParams = inputs_->histVarSimMarketParams();
+}
+
 void HistoricalSimulationVarAnalyticImpl::setVarReport(
     const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
 
@@ -100,7 +105,7 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
         
     auto scenarios =
         buildHistoricalScenarioGenerator(inputs_->historicalScenarioReader(), adjFactors, benchmarkVarPeriod,
-            inputs_->mporCalendar(), inputs_->mporDays(), true);
+            inputs_->mporCalendar(), inputs_->mporDays(), inputs_->mporOverlappingPeriods());
     
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams, Market::defaultConfiguration,
@@ -109,10 +114,12 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
     simMarket->scenarioGenerator() = scenarios;
     scenarios->baseScenario() = simMarket->baseScenario();
 
-    varReport_ = ext::make_shared<HistoricalSimulationVarReport>(
-        inputs_->baseCurrency(), scenarios, analytic()->portfolio(), inputs_->portfolioFilter(),
-        inputs_->varQuantiles(), benchmarkVarPeriod, simMarket, inputs_->pricingEngine(),
-        inputs_->refDataManager(), inputs_->iborFallbackConfig());
+    std::unique_ptr<MarketRiskReport::FullRevalArgs> fullRevalArgs = std::make_unique<MarketRiskReport::FullRevalArgs>(
+        inputs_->baseCurrency(), analytic()->portfolio(), simMarket, inputs_->pricingEngine(), inputs_->refDataManager(), 
+        *inputs_->iborFallbackConfig());
+
+    varReport_ = ext::make_shared<HistoricalSimulationVarReport>(analytic()->portfolio(), inputs_->portfolioFilter(), 
+        inputs_->varQuantiles(), benchmarkVarPeriod, scenarios, move(fullRevalArgs), inputs_->varBreakDown());
 
 }
 

@@ -143,7 +143,7 @@ ParametricVarReport::ParametricVarReport(const ext::shared_ptr<Portfolio>& portf
                                          boost::optional<ore::data::TimePeriod> period,
                                          std::unique_ptr<SensiRunArgs> sensiArgs,
                                          const bool breakdown)
-    : VarReport(portfolio, portfolioFilter, p, period, move(sensiArgs), breakdown),
+    : VarReport(portfolio, portfolioFilter, p, period, nullptr, move(sensiArgs), nullptr, breakdown),
       parametricVarParams_(parametricVarParams), salvageCovarianceMatrix_(salvageCovarianceMatrix) {
     sensiBased_ = true;
 }
@@ -158,9 +158,8 @@ ParametricVarReport::ParametricVarReport(
     boost::optional<ore::data::TimePeriod> period,
     std::unique_ptr<SensiRunArgs> sensiArgs,
     const bool breakdown)
-    : VarReport(portfolio, portfolioFilter, p, period, move(sensiArgs), breakdown),
-      hisScenGen_(hisScenGen), parametricVarParams_(parametricVarParams), 
-      salvageCovarianceMatrix_(salvageCovarianceMatrix) {
+    : VarReport(portfolio, portfolioFilter, p, period, hisScenGen, move(sensiArgs), nullptr, breakdown),
+      parametricVarParams_(parametricVarParams), salvageCovarianceMatrix_(salvageCovarianceMatrix) {
     sensiBased_ = true;
 }
 
@@ -169,29 +168,10 @@ void ParametricVarReport::createVarCalculator() {
         parametricVarParams_, covarianceMatrix_, deltas_, gammas_, salvage_, includeGammaMargin_, includeDeltaMargin_);
 }
 
-void ParametricVarReport::handleSensiResults(QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
+void ParametricVarReport::handleSensiResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
     const QuantLib::ext::shared_ptr<MarketRiskGroup>& riskGroup,
     const QuantLib::ext::shared_ptr<TradeGroup>& tradeGroup) {
-    
-    QL_REQUIRE(reports->reports().size() == 1, "We should only report for VAR report");
-    QuantLib::ext::shared_ptr<Report> report = reports->reports().at(0);
-
-    auto rg = QuantLib::ext::dynamic_pointer_cast<VarRiskGroup>(riskGroup);
-    auto tg = QuantLib::ext::dynamic_pointer_cast<VarTradeGroup>(tradeGroup);
-
-    std::vector<Real> var;
-    auto quantiles = p();
-    for (auto q : quantiles)
-        var.push_back(varCalculator_->var(q));
-
-    if (!close_enough(QuantExt::detail::absMax(var), 0.0)) {
-        report->next();
-        report->add(tg->portfolioId());
-        report->add(to_string(rg->riskClass()));
-        report->add(to_string(rg->riskType()));
-        for (auto const& v : var)
-            report->add(v);
-    }
+    writeVarResults(reports, riskGroup, tradeGroup);
 }
 
 } // namespace analytics
