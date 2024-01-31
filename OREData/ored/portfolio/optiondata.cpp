@@ -219,7 +219,8 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
                                                        << exerciseDates_.size()
                                                        << " exercise dates. Should the style be 'Bermudan'?");
             exercise_ = boost::make_shared<EuropeanExercise>(noticeDates_.back());
-        } else if (optionData.style() == "Bermudan") {
+        } else if (optionData.style() == "Bermudan" || optionData.style().empty()) {
+            // Note: empty exercise style defaults to Bermudan for backwards compatibility
             exercise_ = boost::make_shared<BermudanExercise>(noticeDates_);
         } else if (optionData.style() == "American") {
             QL_REQUIRE(noticeDates_.size() == 2, "ExerciseBuilder: internal error, style is american but got "
