@@ -218,16 +218,12 @@ void NettedExposureCalculator::build() {
         exposureCube_->setT0(epe[0], nettingSetCount, ExposureIndex::EPE);
         exposureCube_->setT0(ene[0], nettingSetCount, ExposureIndex::ENE);
 
-        // Retrieve the constant independent amount from the CollateralBalance or CSA data
+        // Retrieve the constant independent amount from the CSA data
         // This is used below to reduce the exposure across all paths and time steps.
         // See below for the conversion to base currency.
         Real independentAmount = 0;
         string independentAmountCurrency = "";
-        if (balance && balance->independentAmount() != Null<Real>()) {
-            independentAmount = balance->independentAmount();
-            independentAmountCurrency = balance->currency();
-        }
-        else if (netting->csaDetails()) {
+        if (netting->csaDetails()) {
             independentAmount = netting->csaDetails()->independentAmountHeld();
             independentAmountCurrency = netting->csaDetails()->csaCurrency();
         }

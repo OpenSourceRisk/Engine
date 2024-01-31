@@ -90,12 +90,6 @@ void CollateralBalance::fromXML(XMLNode* node) {
 
     currency_ = XMLUtils::getChildValue(node, "Currency", true);
 
-    XMLNode* iaNode = XMLUtils::getChildNode(node, "IndependentAmount");
-    if (!iaNode || (iaNode && XMLUtils::getNodeValue(iaNode).empty()))
-        ia_ = QuantLib::Null<QuantLib::Real>();
-    else
-        ia_ = parseReal(XMLUtils::getNodeValue(iaNode));
-
     XMLNode* initialMarginNode = XMLUtils::getChildNode(node, "InitialMargin");
     if (!initialMarginNode || (initialMarginNode && XMLUtils::getNodeValue(initialMarginNode).empty()))
         im_ = QuantLib::Null<QuantLib::Real>();
@@ -112,7 +106,6 @@ void CollateralBalance::fromXML(XMLNode* node) {
     LOG("Currency:           " << currency());
     LOG("Variation Margin:   " << variationMargin());
     LOG("Initial Margin:     " << initialMargin());
-    LOG("Independent Amount: " << independentAmount());
 }
 
 XMLNode* CollateralBalance::toXML(XMLDocument& doc) {
@@ -123,8 +116,6 @@ XMLNode* CollateralBalance::toXML(XMLDocument& doc) {
     } else {
         XMLUtils::appendNode(node, nettingSetDetails_.toXML(doc));
     }
-    if (ia_ != QuantLib::Null<QuantLib::Real>())
-        XMLUtils::addChild(doc, node, "IndependentAmount", ia_);
     if (im_ != QuantLib::Null<QuantLib::Real>())
         XMLUtils::addChild(doc, node, "InitialMargin", std::round(im_));
     if (vm_ != QuantLib::Null<QuantLib::Real>())

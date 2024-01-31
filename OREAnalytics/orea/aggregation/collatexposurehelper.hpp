@@ -72,8 +72,7 @@ public:
       - independent amount
     */
     static Real marginRequirementCalc(const boost::shared_ptr<CollateralAccount>& collat, const Real& uncollatValue,
-                                      const Date& simulationDate,
-                                      const boost::shared_ptr<CollateralBalance>& balance = boost::shared_ptr<CollateralBalance>());
+                                      const Date& simulationDate);
 
     /*!
       Performs linear interpolation between dates to
@@ -91,8 +90,7 @@ public:
     static void updateMarginCall(const boost::shared_ptr<CollateralAccount>& collat, const Real& uncollatValue,
                                  const Date& simulationDate, const Real& accrualFactor,
                                  const CalculationType& calcType = Symmetric, const bool& eligMarginReqDateUs = true,
-                                 const bool& eligMarginReqDateCtp = true,
-                                 const boost::shared_ptr<CollateralBalance>& balance = boost::shared_ptr<CollateralBalance>());
+                                 const bool& eligMarginReqDateCtp = true);
 
     /*!
         Computes the Credit Support Amount for the portfolio, given an unsecured exposure as input
@@ -100,8 +98,7 @@ public:
     */
     static Real creditSupportAmount(
         const boost::shared_ptr<ore::data::NettingSetDefinition>& nettingSet,
-        const Real& uncollatValueCsaCur,
-        const boost::shared_ptr<ore::data::CollateralBalance>& initialBalance = boost::shared_ptr<ore::data::CollateralBalance>());
+        const Real& uncollatValueCsaCur);
 
     /*!
       Takes a netting set (and scenario exposures) as input
