@@ -108,8 +108,8 @@ private:
                                            const std::vector<boost::shared_ptr<ValuationCalculator>>& calculators,
                                            boost::shared_ptr<analytics::NPVCube>& outputCube,
                                            boost::shared_ptr<analytics::NPVCube>& outputCubeNettingSet,
-                                           const std::map<std::string, Size>& counterparties,
-                                           const vector<boost::shared_ptr<CounterpartyCalculator>>& cptyCalculators,
+                                           const std::map<std::string, size_t>& counterparties,
+                                           const std::vector<boost::shared_ptr<CounterpartyCalculator>>& cptyCalculators,
                                            boost::shared_ptr<analytics::NPVCube>& outputCptyCube);
     void runCalculators(bool isCloseOutDate, const std::map<std::string, boost::shared_ptr<ore::data::Trade>>& trades,
                         std::vector<bool>& tradeHasError,
