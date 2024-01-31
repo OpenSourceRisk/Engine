@@ -103,12 +103,12 @@ private:
     void recalibrateModels();
     std::pair<double, double> populateCube(const QuantLib::Date& d, size_t cubeDateIndex, size_t sample,
                                            bool isValueDate, bool isStickyDate, bool scenarioUpdated,
-                                           const std::map<std::string, boost::shared_ptr<Trade>>& trades,
+                                           const std::map<std::string, boost::shared_ptr<ore::data::Trade>>& trades,
                                            std::vector<bool>& tradeHasError,
                                            const std::vector<boost::shared_ptr<ValuationCalculator>>& calculators,
                                            boost::shared_ptr<analytics::NPVCube>& outputCube,
                                            boost::shared_ptr<analytics::NPVCube>& outputCubeNettingSet,
-                                           const std::map<string, Size>& counterparties,
+                                           const std::map<std::string, Size>& counterparties,
                                            const vector<boost::shared_ptr<CounterpartyCalculator>>& cptyCalculators,
                                            boost::shared_ptr<analytics::NPVCube>& outputCptyCube);
     void runCalculators(bool isCloseOutDate, const std::map<std::string, boost::shared_ptr<ore::data::Trade>>& trades,
