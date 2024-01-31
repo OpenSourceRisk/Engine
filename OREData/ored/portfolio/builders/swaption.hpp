@@ -111,6 +111,27 @@ protected:
         const std::vector<Real>& strikes) override;
 };
 
+//! Implementation of BermudanSwaptionEngineBuilder using LGM FD pricer
+/*! \ingroup builders
+ */
+class LGMFDBermudanSwaptionEngineBuilder : public LGMBermudanSwaptionEngineBuilder {
+public:
+    LGMFDBermudanSwaptionEngineBuilder() : LGMBermudanSwaptionEngineBuilder("FD") {}
+
+protected:
+    virtual boost::shared_ptr<PricingEngine> engineImpl(
+        //! a unique (trade) id, for caching
+        const string& id,
+        //! the key (index or ccy)
+        const string& key,
+        //! Excercise dates
+        const std::vector<Date>& dates,
+        //! maturity of the underlying
+        const Date& maturity,
+        //! Fixed rate (null means ATM)
+        const std::vector<Real>& strikes) override;
+};
+
 //! Implementation of LGMBermudanSwaptionEngineBuilder using MC pricer
 /*! \ingroup portfolio
  */

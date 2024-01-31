@@ -142,6 +142,12 @@ QuantLib::DayCounter parseDayCounter(const string& s);
  */
 QuantLib::Currency parseCurrency(const string& s);
 
+//! Convert text to QuantExt::ConfigurableCurrency::Type (Major, Minor, Metal, Crypto)
+/*!
+  \ingroup utilities
+ */
+QuantExt::ConfigurableCurrency::Type parseCurrencyType(const string& s);
+
 //! Convert text to QuantLib::Currency for minor currencies e.g GBp -> GBPCurrency()
 /*!
   \ingroup utilities
