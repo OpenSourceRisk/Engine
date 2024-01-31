@@ -37,7 +37,7 @@ namespace QuantExt {
 using namespace QuantLib;
 
 bool NumericLgmMultiLegOptionEngineBase::CashflowInfo::isPartOfUnderlying(const Real optionTime) const {
-    return optionTime > belongsToUnderlyingMaxTime_ || QuantLib::close_enough(optionTime, belongsToUnderlyingMaxTime_);
+    return optionTime < belongsToUnderlyingMaxTime_ || QuantLib::close_enough(optionTime, belongsToUnderlyingMaxTime_);
 }
 
 bool NumericLgmMultiLegOptionEngineBase::CashflowInfo::canBeEstimated(const Real time) const {
@@ -69,6 +69,7 @@ NumericLgmMultiLegOptionEngineBase::buildCashflowInfo(const Size i, const Size j
     CashflowInfo info;
     auto const& ts = solver_->model()->parametrization()->termStructure();
     auto const& c = legs_[i][j];
+    Real payrec = payer_[i];
 
     Real T = solver_->model()->parametrization()->termStructure()->timeFromReference(c->date());
 
@@ -77,54 +78,55 @@ NumericLgmMultiLegOptionEngineBase::buildCashflowInfo(const Size i, const Size j
         info.belongsToUnderlyingMaxTime_ = ts->timeFromReference(cpn->accrualStartDate());
         if (auto ibor = boost::dynamic_pointer_cast<IborCoupon>(c)) {
             info.maxEstimationTime_ = ts->timeFromReference(ibor->fixingDate());
-            info.calculator_ = [ibor, T](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
-                                         const Handle<YieldTermStructure>& discountCurve) {
+            info.calculator_ = [ibor, T, payrec](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
+                                                 const Handle<YieldTermStructure>& discountCurve) {
                 return (RandomVariable(x.size(), ibor->gearing()) *
                             lgm.fixing(ibor->index(), ibor->fixingDate(), t, x) +
                         RandomVariable(x.size(), ibor->spread())) *
-                       RandomVariable(x.size(), ibor->accrualPeriod() * ibor->nominal()) *
+                       RandomVariable(x.size(), ibor->accrualPeriod() * ibor->nominal() * payrec) *
                        lgm.reducedDiscountBond(t, T, x, discountCurve);
             };
             done = true;
         } else if (auto fix = boost::dynamic_pointer_cast<FixedRateCoupon>(cpn)) {
             info.maxEstimationTime_ = ts->timeFromReference(fix->date());
-            info.calculator_ = [fix, T](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
-                                        const Handle<YieldTermStructure>& discountCurve) {
-                return RandomVariable(x.size(), fix->amount()) * lgm.reducedDiscountBond(t, T, x, discountCurve);
+            info.calculator_ = [fix, T, payrec](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
+                                                const Handle<YieldTermStructure>& discountCurve) {
+                return RandomVariable(x.size(), fix->amount() * payrec) *
+                       lgm.reducedDiscountBond(t, T, x, discountCurve);
             };
             done = true;
         } else if (auto on = boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(cpn)) {
             info.maxEstimationTime_ = ts->timeFromReference(on->fixingDates().front());
-            info.calculator_ = [on, T](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
-                                       const Handle<YieldTermStructure>& discountCurve) {
+            info.calculator_ = [on, T, payrec](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
+                                               const Handle<YieldTermStructure>& discountCurve) {
                 return lgm.compoundedOnRate(boost::dynamic_pointer_cast<OvernightIndex>(on->index()), on->fixingDates(),
                                             on->valueDates(), on->dt(), on->rateCutoff(), on->includeSpread(),
                                             on->spread(), on->gearing(), on->lookback(), Null<Real>(), Null<Real>(),
                                             false, false, t, x) *
-                       RandomVariable(x.size(), on->accrualPeriod() * on->nominal()) *
+                       RandomVariable(x.size(), on->accrualPeriod() * on->nominal() * payrec) *
                        lgm.reducedDiscountBond(t, T, x, discountCurve);
             };
             done = true;
         } else if (auto av = boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(cpn)) {
             info.maxEstimationTime_ = ts->timeFromReference(av->fixingDates().front());
-            info.calculator_ = [av, T](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
-                                       const Handle<YieldTermStructure>& discountCurve) {
+            info.calculator_ = [av, T, payrec](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
+                                               const Handle<YieldTermStructure>& discountCurve) {
                 return lgm.averagedOnRate(boost::dynamic_pointer_cast<OvernightIndex>(av->index()), av->fixingDates(),
                                           av->valueDates(), av->dt(), av->rateCutoff(), false, av->spread(),
                                           av->gearing(), av->lookback(), Null<Real>(), Null<Real>(), false, false, t,
                                           x) *
-                       RandomVariable(x.size(), av->accrualPeriod() * av->nominal()) *
+                       RandomVariable(x.size(), av->accrualPeriod() * av->nominal() * payrec) *
                        lgm.reducedDiscountBond(t, T, x, discountCurve);
             };
             done = true;
         } else if (auto bma = boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(cpn)) {
             info.maxEstimationTime_ = ts->timeFromReference(bma->fixingDates().front());
-            info.calculator_ = [bma, T](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
-                                        const Handle<YieldTermStructure>& discountCurve) {
+            info.calculator_ = [bma, T, payrec](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
+                                                const Handle<YieldTermStructure>& discountCurve) {
                 return lgm.averagedBmaRate(boost::dynamic_pointer_cast<BMAIndex>(bma->index()), bma->fixingDates(),
                                            bma->accrualStartDate(), bma->accrualEndDate(), false, bma->spread(),
                                            bma->gearing(), Null<Real>(), Null<Real>(), false, t, x) *
-                       RandomVariable(x.size(), bma->accrualPeriod() * bma->nominal()) *
+                       RandomVariable(x.size(), bma->accrualPeriod() * bma->nominal() * payrec) *
                        lgm.reducedDiscountBond(t, T, x, discountCurve);
             };
             done = true;
@@ -132,15 +134,16 @@ NumericLgmMultiLegOptionEngineBase::buildCashflowInfo(const Size i, const Size j
             auto und = cf->underlying();
             if (auto undibor = boost::dynamic_pointer_cast<QuantLib::IborCoupon>(und)) {
                 info.exactEstimationTime_ = ts->timeFromReference(und->fixingDate());
-                info.calculator_ = [cf, undibor, T](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
-                                                    const Handle<YieldTermStructure>& discountCurve) {
+                info.calculator_ = [cf, undibor, T, payrec](const LgmVectorised& lgm, const Real t,
+                                                            const RandomVariable& x,
+                                                            const Handle<YieldTermStructure>& discountCurve) {
                     RandomVariable cap(x.size(), cf->cap() == Null<Real>() ? QL_MAX_REAL : cf->cap());
                     RandomVariable floor(x.size(), cf->floor() == Null<Real>() ? -QL_MAX_REAL : cf->floor());
 
                     return max(floor, min(cap, (RandomVariable(x.size(), undibor->gearing()) *
                                                     lgm.fixing(undibor->index(), undibor->fixingDate(), t, x) +
                                                 RandomVariable(x.size(), undibor->spread())))) *
-                           RandomVariable(x.size(), undibor->accrualPeriod() * undibor->nominal()) *
+                           RandomVariable(x.size(), undibor->accrualPeriod() * undibor->nominal() * payrec) *
                            lgm.reducedDiscountBond(t, T, x, discountCurve);
                 };
                 done = true;
@@ -148,46 +151,46 @@ NumericLgmMultiLegOptionEngineBase::buildCashflowInfo(const Size i, const Size j
         } else if (auto cfon = boost::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCoupon>(cpn)) {
             auto und = cfon->underlying();
             info.exactEstimationTime_ = ts->timeFromReference(und->fixingDates().front());
-            info.calculator_ = [cfon, und, T](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
-                                              const Handle<YieldTermStructure>& discountCurve) {
+            info.calculator_ = [cfon, und, T, payrec](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
+                                                      const Handle<YieldTermStructure>& discountCurve) {
                 return lgm.compoundedOnRate(boost::dynamic_pointer_cast<OvernightIndex>(und->index()),
                                             und->fixingDates(), und->valueDates(), und->dt(), und->rateCutoff(),
                                             und->includeSpread(), und->spread(), und->gearing(), und->lookback(),
                                             cfon->cap(), cfon->floor(), cfon->localCapFloor(), cfon->nakedOption(), t,
                                             x) *
-                       RandomVariable(x.size(), cfon->accrualPeriod() * cfon->nominal()) *
+                       RandomVariable(x.size(), cfon->accrualPeriod() * cfon->nominal() * payrec) *
                        lgm.reducedDiscountBond(t, T, x, discountCurve);
             };
         } else if (auto cfav = boost::dynamic_pointer_cast<QuantExt::CappedFlooredAverageONIndexedCoupon>(cpn)) {
             auto und = cfav->underlying();
             info.exactEstimationTime_ = ts->timeFromReference(und->fixingDates().front());
-            info.calculator_ = [cfav, und, T](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
-                                              const Handle<YieldTermStructure>& discountCurve) {
+            info.calculator_ = [cfav, und, T, payrec](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
+                                                      const Handle<YieldTermStructure>& discountCurve) {
                 return lgm.averagedOnRate(boost::dynamic_pointer_cast<OvernightIndex>(und->index()), und->fixingDates(),
                                           und->valueDates(), und->dt(), und->rateCutoff(), cfav->includeSpread(),
                                           und->spread(), und->gearing(), und->lookback(), cfav->cap(), cfav->floor(),
                                           cfav->localCapFloor(), cfav->nakedOption(), t, x) *
-                       RandomVariable(x.size(), cfav->accrualPeriod() * cfav->nominal()) *
+                       RandomVariable(x.size(), cfav->accrualPeriod() * cfav->nominal() * payrec) *
                        lgm.reducedDiscountBond(t, T, x, discountCurve);
             };
         } else if (auto cfbma = boost::dynamic_pointer_cast<QuantExt::CappedFlooredAverageBMACoupon>(cpn)) {
             auto und = cfbma->underlying();
             info.exactEstimationTime_ = ts->timeFromReference(und->fixingDates().front());
-            info.calculator_ = [cfbma, und, T](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
-                                               const Handle<YieldTermStructure>& discountCurve) {
+            info.calculator_ = [cfbma, und, T, payrec](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
+                                                       const Handle<YieldTermStructure>& discountCurve) {
                 return lgm.averagedBmaRate(boost::dynamic_pointer_cast<BMAIndex>(und->index()), und->fixingDates(),
                                            und->accrualStartDate(), und->accrualEndDate(), cfbma->includeSpread(),
                                            und->spread(), und->gearing(), cfbma->cap(), cfbma->floor(),
                                            cfbma->nakedOption(), t, x) *
-                       RandomVariable(x.size(), cfbma->accrualPeriod() * cfbma->nominal()) *
+                       RandomVariable(x.size(), cfbma->accrualPeriod() * cfbma->nominal() * payrec) *
                        lgm.reducedDiscountBond(t, T, x, discountCurve);
             };
         } else if (auto sub = boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(cpn)) {
             info.maxEstimationTime_ = ts->timeFromReference(sub->fixingDates().front());
-            info.calculator_ = [sub, T](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
-                                        const Handle<YieldTermStructure>& discountCurve) {
+            info.calculator_ = [sub, T, payrec](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
+                                                const Handle<YieldTermStructure>& discountCurve) {
                 return lgm.subPeriodsRate(sub->index(), sub->fixingDates(), t, x) *
-                       RandomVariable(x.size(), sub->accrualPeriod() * sub->nominal()) *
+                       RandomVariable(x.size(), sub->accrualPeriod() * sub->nominal() * payrec) *
                        lgm.reducedDiscountBond(t, T, x, discountCurve);
             };
         }
@@ -198,9 +201,9 @@ NumericLgmMultiLegOptionEngineBase::buildCashflowInfo(const Size i, const Size j
         // can not cast to coupon
         info.belongsToUnderlyingMaxTime_ = ts->timeFromReference(c->date());
         info.maxEstimationTime_ = ts->timeFromReference(c->date());
-        info.calculator_ = [c, T](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
-                                  const Handle<YieldTermStructure>& discountCurve) {
-            return RandomVariable(x.size(), c->amount()) * lgm.reducedDiscountBond(t, T, x, discountCurve);
+        info.calculator_ = [c, T, payrec](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
+                                          const Handle<YieldTermStructure>& discountCurve) {
+            return RandomVariable(x.size(), c->amount() * payrec) * lgm.reducedDiscountBond(t, T, x, discountCurve);
         };
     }
 
@@ -391,7 +394,7 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
             underlyingNpv = solver_->rollback(underlyingNpv, t_from, t_to);
             optionNpv = solver_->rollback(optionNpv, t_from, t_to);
             for (auto& c : cache) {
-                if (c.initialised())
+                if (!c.initialised())
                     continue;
                 c = solver_->rollback(c, t_from, t_to);
             }
