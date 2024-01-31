@@ -161,6 +161,7 @@ NumericLgmMultiLegOptionEngineBase::buildCashflowInfo(const Size i, const Size j
                        RandomVariable(x.size(), cfon->accrualPeriod() * cfon->nominal() * payrec) *
                        lgm.reducedDiscountBond(t, T, x, discountCurve);
             };
+            done = true;
         } else if (auto cfav = boost::dynamic_pointer_cast<QuantExt::CappedFlooredAverageONIndexedCoupon>(cpn)) {
             auto und = cfav->underlying();
             info.exactEstimationTime_ = ts->timeFromReference(und->fixingDates().front());
@@ -173,6 +174,7 @@ NumericLgmMultiLegOptionEngineBase::buildCashflowInfo(const Size i, const Size j
                        RandomVariable(x.size(), cfav->accrualPeriod() * cfav->nominal() * payrec) *
                        lgm.reducedDiscountBond(t, T, x, discountCurve);
             };
+            done = true;
         } else if (auto cfbma = boost::dynamic_pointer_cast<QuantExt::CappedFlooredAverageBMACoupon>(cpn)) {
             auto und = cfbma->underlying();
             info.exactEstimationTime_ = ts->timeFromReference(und->fixingDates().front());
@@ -185,6 +187,7 @@ NumericLgmMultiLegOptionEngineBase::buildCashflowInfo(const Size i, const Size j
                        RandomVariable(x.size(), cfbma->accrualPeriod() * cfbma->nominal() * payrec) *
                        lgm.reducedDiscountBond(t, T, x, discountCurve);
             };
+            done = true;
         } else if (auto sub = boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(cpn)) {
             info.maxEstimationTime_ = ts->timeFromReference(sub->fixingDates().front());
             info.calculator_ = [sub, T, payrec](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
@@ -193,6 +196,7 @@ NumericLgmMultiLegOptionEngineBase::buildCashflowInfo(const Size i, const Size j
                        RandomVariable(x.size(), sub->accrualPeriod() * sub->nominal() * payrec) *
                        lgm.reducedDiscountBond(t, T, x, discountCurve);
             };
+            done = true;
         }
         QL_REQUIRE(done, "NumericLgmMultiLegOptionEngineBase: coupon type not handled, supported coupon types: Fix, "
                          "(capfloored) Ibor, (capfloored) ON comp, (capfloored) ON avg, BMA/SIFMA, subperiod. leg = "
@@ -206,6 +210,11 @@ NumericLgmMultiLegOptionEngineBase::buildCashflowInfo(const Size i, const Size j
             return RandomVariable(x.size(), c->amount() * payrec) * lgm.reducedDiscountBond(t, T, x, discountCurve);
         };
     }
+
+    // some postprocessing and checks
+
+    info.maxEstimationTime_ = std::max(0.0, info.maxEstimationTime_);
+    info.exactEstimationTime_ = std::max(0.0, info.exactEstimationTime_);
 
     QL_REQUIRE(
         info.belongsToUnderlyingMaxTime_ != Null<Real>(),
