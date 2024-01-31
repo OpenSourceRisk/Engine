@@ -284,6 +284,22 @@ DayCounter parseDayCounter(const string& s) {
 
 Currency parseCurrency(const string& s) { return CurrencyParser::instance().parseCurrency(s); }
 
+QuantExt::ConfigurableCurrency::Type parseCurrencyType(const string& s) {
+    static map<string, QuantExt::ConfigurableCurrency::Type> m = {
+        {"Major", QuantExt::ConfigurableCurrency::Type::Major}, {"Fiat Currency", QuantExt::ConfigurableCurrency::Type::Major},
+        {"Fiat", QuantExt::ConfigurableCurrency::Type::Major}, {"Metal", QuantExt::ConfigurableCurrency::Type::Metal}, 
+        {"Precious Metal", QuantExt::ConfigurableCurrency::Type::Metal}, {"Crypto", QuantExt::ConfigurableCurrency::Type::Crypto},
+        {"Cryptocurrency", QuantExt::ConfigurableCurrency::Type::Crypto}};
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Currency type \"" << s << "\" not recognised");
+    }
+}
+
+
 Currency parseMinorCurrency(const string& s) { return CurrencyParser::instance().parseMinorCurrency(s); }
 
 Currency parseCurrencyWithMinors(const string& s) { return CurrencyParser::instance().parseCurrencyWithMinors(s); }
@@ -669,11 +685,15 @@ QuantLib::CPI::InterpolationType parseObservationInterpolation(const std::string
 }
 
 FdmSchemeDesc parseFdmSchemeDesc(const std::string& s) {
-    static std::map<std::string, FdmSchemeDesc> m = {
-        {"Hundsdorfer", FdmSchemeDesc::Hundsdorfer()},     {"Douglas", FdmSchemeDesc::Douglas()},
-        {"CraigSneyd", FdmSchemeDesc::CraigSneyd()},       {"ModifiedCraigSneyd", FdmSchemeDesc::ModifiedCraigSneyd()},
-        {"ImplicitEuler", FdmSchemeDesc::ImplicitEuler()}, {"ExplicitEuler", FdmSchemeDesc::ExplicitEuler()},
-        {"MethodOfLines", FdmSchemeDesc::MethodOfLines()}, {"TrBDF2", FdmSchemeDesc::TrBDF2()}};
+    static std::map<std::string, FdmSchemeDesc> m = {{"CrankNicolson", FdmSchemeDesc::CrankNicolson()},
+                                                     {"Hundsdorfer", FdmSchemeDesc::Hundsdorfer()},
+                                                     {"Douglas", FdmSchemeDesc::Douglas()},
+                                                     {"CraigSneyd", FdmSchemeDesc::CraigSneyd()},
+                                                     {"ModifiedCraigSneyd", FdmSchemeDesc::ModifiedCraigSneyd()},
+                                                     {"ImplicitEuler", FdmSchemeDesc::ImplicitEuler()},
+                                                     {"ExplicitEuler", FdmSchemeDesc::ExplicitEuler()},
+                                                     {"MethodOfLines", FdmSchemeDesc::MethodOfLines()},
+                                                     {"TrBDF2", FdmSchemeDesc::TrBDF2()}};
 
     auto it = m.find(s);
     if (it != m.end())

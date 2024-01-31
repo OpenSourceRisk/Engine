@@ -749,6 +749,10 @@ void OREAppInputParameters::loadParameters() {
         if (tmp != "")
             setParSensi(parseBool(tmp));
 
+        tmp = params_->get("sensitivity", "optimiseRiskFactors", false);
+        if (tmp != "")
+            inputs->setOptimiseRiskFactors(parseBool(tmp));
+
         tmp = params_->get("sensitivity", "outputJacobi", false);
         if (tmp != "")
             setOutputJacobi(parseBool(tmp));

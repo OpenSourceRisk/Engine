@@ -5772,15 +5772,18 @@ within the enclosing tags {\tt <Market>} and {\tt </Market>}, as shown in the fo
 It should be noted that equity volatilities are taken to be a curve by default. To simulate an equity volatility surface with smile the xml node {\tt <Surface> } must be supplied.
 There are two methods in ORE for equity volatility simulation: 
 \begin{itemize}
-\item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this case set {\tt <SimulateATMOnly>} to true.
-\item Simulating the full volatility surface. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and explicit moneyness levels for simulation should be provided.
+\item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this
+  case set {\tt <SimulateATMOnly>} to true and no surface node is given.
+\item Simulating the full volatility surface. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and
+  explicit moneyness levels for simulation should be provided.
 \end{itemize}
 
 Swaption volatilities are taken to be a surface by default. To simulate a swaption volatility cube with smile the xml node {\tt <Cube> } must be supplied.
 There are two methods in ORE for swaption volatility cube simulation: 
 \begin{itemize}
 \item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this case set {\tt <SimulateATMOnly>} to true.
-\item Simulating the full volatility cube. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and explicit strike spreads for simulation should be provided.
+\item Simulating the full volatility cube. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and
+  explicit strike spreads for simulation should be provided.
 \end{itemize}
 
 FX volatilities are taken to be a curve by default. To simulate an FX volatility cube with smile the xml node {\tt <Surface> } must be supplied. The surface node contains the moneyness levels to be simulated.
@@ -5862,8 +5865,8 @@ StickyStrike.
     </Currencies>
     <Expiries>6M,1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Expiries>
     <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
+    <SimulateATMOnly>false</SimulateATMOnly>
     <Cube>
-     <SimulateATMOnly>false</SimulateATMOnly>
      <StrikeSpreads>-0.02,-0.01,0.0,0.01,0.02</StrikeSpreads>
     </Cube>
     <!-- Sets a new daycounter for just the EUR swaptionVolatility surface -->
@@ -5896,9 +5899,9 @@ StickyStrike.
         <Name>Lufthansa</Name>
       </Names>
       <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
+      <SimulateATMOnly>false</SimulateATMOnly>
       <Surface>
-        <SimulateATMOnly>false</SimulateATMOnly><!-- false -->
-        <Moneyness>0.1,0.5,1.0,1.5,2.0,3.0</Moneyness><!-- omitted if SimulateATMOnly true -->
+        <Moneyness>0.1,0.5,1.0,1.5,2.0,3.0</Moneyness>
       </Surface>
       <TimeExtrapolation>Flat</TimeExtrapolation>
       <StrikeExtrapolation>Flat</StrikeExtrapolation>
@@ -6000,6 +6003,7 @@ The general structure is shown in listing \ref{lst:sensitivity_config}, for a mo
 \item {\tt ShiftType:} Both absolute or relative shifts can be used to compute a sensitivity, specified by the key words
   {\tt Absolute} resp. {\tt Relative}.
 \item {\tt ShiftSize:} The size of the shift to apply.
+\item {\tt ShiftScheme:} The finite difference scheme to use ({\tt Forward}, {\tt Backward}, {\tt Central}), if not given, this parameter defaults to {\tt Forward}
 \item {\tt ShiftTenors:} For curves, the tenor buckets to apply shifts to, given as a comma separated list of periods.
 \item {\tt ShiftExpiries:} For volatility surfaces, the option expiry buckets to apply shifts to, given as a comma
   separated list of periods.
@@ -6011,6 +6015,53 @@ The general structure is shown in listing \ref{lst:sensitivity_config}, for a mo
   list of absolute strikes
 \item {\tt CurveType:} In the context of Yield Curves used to identify an equity ``risk free'' rate forecasting curve; set to {\tt EquityForecast} in this case
 \end{itemize}
+
+The ShiftType, ShiftSize, ShiftScheme nodes take an optional attribute key that allows to configure different values for
+different sensitivity templates. The sensitivity templates are defined in the pricing engine configuration. This is best
+explained by an example: In Example 15 the product type BermudanSwaption has a sensitivity template \verb+IR_FD+
+attached, see \ref{lst:sensi_template}. This can be used to specify different shifts for trades that were built against
+this engine configuration, see \ref{lst:sensi_config_template}: For Bermudan swaptions a larger shift size of 10bp and a
+central difference scheme is used to compute discount curve sensitivities in EUR. Since no separate shift type is
+specified, the default shift type {\tt Absolute} is used. Note regarding the reports:
+
+\begin{itemize}
+\item the sensi scenario report contains scenario NPVs related to the possibly product specific configured shift sizes
+\item the sensi report contains renormalized sensitivities, i.e. sensitivities are always expressed w.r.t. the default shift sizes
+\item the sensi config report only contains the default configuration
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\scriptsize]{xml}
+  <Product type="BermudanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters>
+      ...
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+      ...
+      <Parameter name="SensitivityTemplate">IR_FD</Parameter>
+    </EngineParameters>
+  </Product>
+\end{minted}
+\caption{Sensitivity template definition}
+\label{lst:sensi_template}
+\end{longlisting}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\scriptsize]{xml}
+    <DiscountCurve ccy="EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
+      <ShiftSize key="IR_FD">0.001</ShiftSize>
+      <ShiftScheme key="IR_FD">Central</ShiftScheme>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </DiscountCurve>
+\end{minted}
+\caption{Sensitivity template definition}
+\label{lst:lst:sensi_config_template}
+\end{longlisting}
 
 The cross gamma filter section contains a list of pairs of sensitivity keys. For each possible pair of sensitivity keys
 matching the given strings, a cross gamma sensitivity is computed. The given pair of keys can be (and usually are)

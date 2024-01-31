@@ -733,8 +733,8 @@ utilities/currencyhedgedequityindexdecomposition.hpp
 utilities/currencyparser.hpp
 utilities/dategrid.hpp
 utilities/fileio.hpp
-utilities/formulaparser.hpp
 utilities/flowanalysis.hpp
+utilities/formulaparser.hpp
 utilities/indexnametranslator.hpp
 utilities/indexparser.hpp
 utilities/inflationstartdate.hpp
