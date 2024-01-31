@@ -185,6 +185,29 @@ void NettedExposureCalculator::build() {
                 ALOG("ApplyInitialMargin deactivated in analytics, but active at netting set level " << nettingSetId);
         }
 
+        // Retrieve the constant independent amount from the CSA data and the VM balance
+        // This is used below to reduce the exposure across all paths and time steps.
+        // See below for the conversion to base currency.
+        Real independentAmount = 0, independentAmountBase = 0;
+        Real initialVMBalance = 0, initialVMBalanceBase = 0;
+        string csaCurrency = "";
+        if (netting->csaDetails()) {
+            csaCurrency = netting->csaDetails()->csaCurrency();
+            independentAmount = netting->csaDetails()->independentAmountHeld();
+            if (balance)
+                initialVMBalance = balance->variationMargin();
+            double fx = 1.0;
+            if (baseCurrency_ != csaCurrency)
+                fx = market_->fxSpot(csaCurrency + baseCurrency_)->value();
+            initialVMBalanceBase = fx * initialVMBalance;
+            independentAmountBase = fx * independentAmount;
+            DLOG("Netting set " << nettingSetId << ", IA base = " << independentAmountBase);
+            DLOG("Netting set " << nettingSetId << ", VM base = " << initialVMBalanceBase);
+        }
+        else {
+            DLOG("Netting set " << nettingSetId << ", IA base = VM base = 0");
+        }
+        
         Handle<YieldTermStructure> curve = market_->discountCurve(baseCurrency_, configuration_);
         vector<Real> epe(cube_->dates().size() + 1, 0.0);
         vector<Real> ene(cube_->dates().size() + 1, 0.0);
@@ -205,29 +228,19 @@ void NettedExposureCalculator::build() {
             ene[0] = 0;
             pfe[0] = 0;
         } else {
-            epe[0] = std::max(npv, 0.0);
-            ene[0] = std::max(-npv, 0.0);
-            pfe[0] = std::max(npv, 0.0);
+            epe[0] = std::max(npv - initialVMBalanceBase - independentAmountBase, 0.0);
+            ene[0] = std::max(-npv + initialVMBalanceBase, 0.0);
+            pfe[0] = std::max(npv - initialVMBalanceBase - independentAmountBase, 0.0);
         }
         // The fullInitialCollateralisation flag doesn't affect the eab, which feeds into the "ExpectedCollateral"
         // column of the 'exposure_nettingset_*' reports.  We always assume the full collateral here.
-        eab[0] = -npv;
+        eab[0] = npv;
         ee_b[0] = epe[0];
         eee_b[0] = ee_b[0];
         nettedCube_->setT0(npv, nettingSetCount);
         exposureCube_->setT0(epe[0], nettingSetCount, ExposureIndex::EPE);
         exposureCube_->setT0(ene[0], nettingSetCount, ExposureIndex::ENE);
 
-        // Retrieve the constant independent amount from the CSA data
-        // This is used below to reduce the exposure across all paths and time steps.
-        // See below for the conversion to base currency.
-        Real independentAmount = 0;
-        string independentAmountCurrency = "";
-        if (netting->csaDetails()) {
-            independentAmount = netting->csaDetails()->independentAmountHeld();
-            independentAmountCurrency = netting->csaDetails()->csaCurrency();
-        }
-        
         for (Size j = 0; j < cube_->dates().size(); ++j) {
 
             Date date = cube_->dates()[j];
@@ -246,9 +259,8 @@ void NettedExposureCalculator::build() {
                 }
 
                 Real independentAmountBase = independentAmount;
-                if (independentAmountCurrency != "" && independentAmountCurrency != baseCurrency_) {
-                    double fxRate = scenarioData_->get(j, k, AggregationScenarioDataType::FXSpot,
-                                                           netting->csaDetails()->csaCurrency());
+                if (csaCurrency != "" && csaCurrency != baseCurrency_) {
+                    double fxRate = scenarioData_->get(j, k, AggregationScenarioDataType::FXSpot, csaCurrency);
                     independentAmountBase *= fxRate;
                 }
 

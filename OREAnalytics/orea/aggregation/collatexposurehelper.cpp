@@ -198,16 +198,24 @@ boost::shared_ptr<vector<boost::shared_ptr<CollateralAccount>>> CollateralExposu
         //         and calculate t0 margin requirement
 
         Real initialBalance = 0.0;
-        if (balance && balance->variationMargin() != Null<Real>()) {
+        if (balance && balance->variationMargin() != Null<Real>()) {            
             initialBalance = balance->variationMargin();
+            DLOG("initial collateral balance: " << initialBalance);
+        }
+        else {
+            DLOG("initial collateral balance not found");
         }
         
         boost::shared_ptr<CollateralAccount> tmpAcc(new CollateralAccount(csaDef, initialBalance, date_t0));
+        DLOG("tmp initial collateral balance: " << tmpAcc->balance_t0());
+        DLOG("tmp current collateral balance: " << tmpAcc->accountBalance());
+
         Real bal_t0 = marginRequirementCalc(tmpAcc, nettingSetPv, date_t0);
 
         // step 2; build a new collateral account object with t0 balance = bal_t0
         // a copy of this new object will be used as base for each scenario collateral path
         CollateralAccount baseAcc(csaDef, bal_t0, date_t0);
+        DLOG("base current collateral balance: " << bal_t0 << ", " << baseAcc.accountBalance());
 
         // step 3; build an empty container for the return value(s)
         boost::shared_ptr<vector<boost::shared_ptr<CollateralAccount>>> scenarioCollatPaths(
