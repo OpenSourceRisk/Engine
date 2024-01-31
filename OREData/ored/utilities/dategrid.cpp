@@ -227,7 +227,7 @@ void DateGrid::addCloseOutDates(const QuantLib::Period& p) {
                 c = calendar_.adjust(dates_[i] + p);
             else
                 c = calendar_.advance(dates_[i], p, Following, false);
-            closeOutDates_[c] = dates_[i];
+            closeOutToValuation_[c] = dates_[i];
             tmpDates.insert(dates_[i]);
             tmpDates.insert(c);
             tmpValueDates.insert(dates_[i]);
@@ -238,7 +238,7 @@ void DateGrid::addCloseOutDates(const QuantLib::Period& p) {
         isValuationDate_ = std::vector<bool>(dates_.size(), true);
         for(size_t i = 0; i < dates_.size(); ++i){
             Date d = dates_[i];
-            if(closeOutDates_.count(d) == 1){
+            if(closeOutToValuation_.count(d) == 1){
                 isCloseOutDate_[i] = true;
             }
             if(tmpValueDates.count(d) == 0){

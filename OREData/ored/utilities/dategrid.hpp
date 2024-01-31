@@ -22,7 +22,7 @@
 */
 
 #pragma once
-
+#include <map>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/timegrid.hpp>
@@ -103,8 +103,8 @@ public:
 
     //! Given a close out date it returns the corresponding value date
     QuantLib::Date valuationDateFromCloseOutDate(const QuantLib::Date& closeOutDate) const { 
-        auto it = closeOutDates_.find(closeOutDate);
-        QL_REQUIRE(it != closeOutDates_.end(), "close out date " << closeOutDate << " not found in dategrid");
+        auto it = closeOutToValuation_.find(closeOutDate);
+        QL_REQUIRE(it != closeOutToValuation_.end(), "close out date " << closeOutDate << " not found in dategrid");
         return it->second;
     }
     //@}
@@ -121,7 +121,7 @@ private:
     QuantLib::Calendar calendar_;
     QuantLib::DayCounter dayCounter_;
     std::vector<QuantLib::Date> dates_;
-    std::map<QuantLib::Date, QuantLib::Date> closeOutDates_;
+    std::map<QuantLib::Date, QuantLib::Date> closeOutToValuation_;
     std::vector<QuantLib::Period> tenors_;
     std::vector<QuantLib::Time> times_;
     QuantLib::TimeGrid timeGrid_;
