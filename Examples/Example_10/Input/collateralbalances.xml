@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <CollateralBalances>
 
   <CollateralBalance>
@@ -6,14 +7,5 @@
     <InitialMargin>0</InitialMargin>
     <VariationMargin>0</VariationMargin>
   </CollateralBalance>
-
-  <!--
-  <CollateralBalance>
-    <NettingSetId>CPTY_B</NettingSetId>
-    <Currency>EUR</Currency>
-    <InitialMargin>20000</InitialMargin>
-    <VariationMargin>2000</VariationMargin>
-  </CollateralBalance>
-  -->
     
 </CollateralBalances>
