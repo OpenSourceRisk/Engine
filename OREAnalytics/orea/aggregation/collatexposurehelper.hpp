@@ -24,6 +24,7 @@
 #pragma once
 
 #include <orea/aggregation/collateralaccount.hpp>
+#include <ored/portfolio/collateralbalance.hpp>
 #include <ql/handle.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/date.hpp>
@@ -107,7 +108,8 @@ public:
         const boost::shared_ptr<NettingSetDefinition>& csaDef, const Real& nettingSetPv, const Date& date_t0,
         const vector<vector<Real>>& nettingSetValues, const Date& nettingSet_maturity, const vector<Date>& dateGrid,
         const Real& csaFxTodayRate, const vector<vector<Real>>& csaFxScenarioRates, const Real& csaTodayCollatCurve,
-        const vector<vector<Real>>& csaScenCollatCurves, const CalculationType& calcType = Symmetric);
+        const vector<vector<Real>>& csaScenCollatCurves, const CalculationType& calcType = Symmetric,
+        const boost::shared_ptr<CollateralBalance>& balance = boost::shared_ptr<CollateralBalance>());
 };
 
 //! Convert text representation to CollateralExposureHelper::CalculationType

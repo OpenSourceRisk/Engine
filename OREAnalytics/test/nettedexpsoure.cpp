@@ -585,6 +585,9 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
         boost::shared_ptr<NettingSetManager> nettingSetManager = boost::make_shared<NettingSetManager>();
         nettingSetManager->add(nettingSetDefinition);
 
+        // Empty balances for now
+        boost::shared_ptr<CollateralBalances> collateralBalances = boost::make_shared<CollateralBalances>();
+        
         map<string, vector<vector<Real>>> nettingSetDefaultValue;
         map<string, vector<vector<Real>>> nettingSetCloseOutValue;
         map<string, vector<vector<Real>>> nettingSetMporPositiveFlow;
@@ -657,7 +660,7 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
             nettingSetMporNegativeFlow = exposureCalculator->nettingSetMporNegativeFlow();
             boost::shared_ptr<NettedExposureCalculator> nettedExposureCalculator =
                 boost::make_shared<NettedExposureCalculator>(
-                    portfolio, initMarket, cube, "EUR", "Market", 0.99, calcType, false, nettingSetManager,
+                    portfolio, initMarket, cube, "EUR", "Market", 0.99, calcType, false, nettingSetManager, collateralBalances,
                     nettingSetDefaultValue, nettingSetCloseOutValue, nettingSetMporPositiveFlow,
                     nettingSetMporNegativeFlow, *asd, cubeInterpreter, false, dimCalculator, false, false, 0.1,
                     exposureCalculator->exposureCube(), 0, 0, false, mporStickyDate, MporCashFlowMode::Unspecified);

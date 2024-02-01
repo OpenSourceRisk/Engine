@@ -44,6 +44,7 @@ public:
               QuantLib::Date asof, const std::string& baseCurrency,
               const boost::shared_ptr<ore::data::Portfolio>& portfolio,
               const boost::shared_ptr<ore::data::NettingSetManager>& netting,
+              const boost::shared_ptr<ore::data::CollateralBalances>& collateralBalances,
               const boost::shared_ptr<ore::data::EngineData>& engineData,
               const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
               const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
@@ -130,6 +131,7 @@ protected:
     std::string baseCurrency_;
     boost::shared_ptr<ore::data::Portfolio> portfolio_;
     boost::shared_ptr<ore::data::NettingSetManager> netting_;
+    boost::shared_ptr<ore::data::CollateralBalances> collateralBalances_;
     boost::shared_ptr<ore::data::EngineData> engineData_;
     boost::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
     boost::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;

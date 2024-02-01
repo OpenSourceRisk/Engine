@@ -295,6 +295,16 @@ void InputParameters::setNettingSetManagerFromFile(const std::string& fileName) 
     nettingSetManager_->fromFile(fileName);
 }
 
+void InputParameters::setCollateralBalances(const std::string& xml) {
+    collateralBalances_ = boost::make_shared<CollateralBalances>();
+    collateralBalances_->fromXMLString(xml);
+}
+
+void InputParameters::setCollateralBalancesFromFile(const std::string& fileName) {
+    collateralBalances_ = boost::make_shared<CollateralBalances>();
+    collateralBalances_->fromFile(fileName);
+}
+
 void InputParameters::setCubeFromFile(const std::string& file) {
     auto r = ore::analytics::loadCube(file);
     cube_ = r.cube;
