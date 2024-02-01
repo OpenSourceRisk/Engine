@@ -56,6 +56,13 @@ bool NumericLgmMultiLegOptionEngineBase::CashflowInfo::mustBeEstimated(const Rea
 
 Real NumericLgmMultiLegOptionEngineBase::CashflowInfo::requiredSimulationTime() const { return exactEstimationTime_; }
 
+Real NumericLgmMultiLegOptionEngineBase::CashflowInfo::couponRatio(const Real time) const {
+    if (couponEndTime_ != Null<Real>() && couponStartTime_ != Null<Real>()) {
+        return std::max(0.0, std::min(1.0, (couponEndTime_ - time) / (couponEndTime_ - couponStartTime_)));
+    }
+    return 1.0;
+}
+
 RandomVariable
 NumericLgmMultiLegOptionEngineBase::CashflowInfo::pv(const LgmVectorised& lgm, const Real t,
                                                      const RandomVariable& state,
@@ -75,7 +82,15 @@ NumericLgmMultiLegOptionEngineBase::buildCashflowInfo(const Size i, const Size j
 
     if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c)) {
         bool done = false;
-        info.belongsToUnderlyingMaxTime_ = ts->timeFromReference(cpn->accrualStartDate());
+        if (exercise_->type() == Exercise::American) {
+            // american exercise implies that we can exercise into broken periods
+            info.belongsToUnderlyingMaxTime_ = ts->timeFromReference(cpn->accrualEndDate());
+        } else {
+            // bermudan exercise implies that we always exercise into whole periods
+            info.belongsToUnderlyingMaxTime_ = ts->timeFromReference(cpn->accrualStartDate());
+        }
+        info.couponStartTime_ = ts->timeFromReference(cpn->accrualStartDate());
+        info.couponEndTime_ = ts->timeFromReference(cpn->accrualEndDate());
         if (auto ibor = boost::dynamic_pointer_cast<IborCoupon>(c)) {
             info.maxEstimationTime_ = ts->timeFromReference(ibor->fixingDate());
             info.calculator_ = [ibor, T, payrec](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
@@ -374,15 +389,27 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
             if (cashflowStatus[i] == CashflowStatus::Done)
                 continue;
             if (cashflows[i].isPartOfUnderlying(t_from)) {
+                RandomVariable cpnRatio(solver_->gridSize(), cashflows[i].couponRatio(t_from));
+                bool isBrokenCoupon = !QuantLib::close_enough(cpnRatio.at(0), 1.0);
                 if (cashflowStatus[i] == CashflowStatus::Cached) {
-                    underlyingNpv += cache[i];
-                    cache[i].clear();
-                    cashflowStatus[i] = CashflowStatus::Done;
+                    if (isBrokenCoupon) {
+                        provisionalNpv += cache[i] * cpnRatio;
+                    } else {
+                        underlyingNpv += cache[i];
+                        cache[i].clear();
+                        cashflowStatus[i] = CashflowStatus::Done;
+                    }
                 } else if (cashflows[i].canBeEstimated(t_from)) {
-                    underlyingNpv += cashflows[i].pv(lgm, t_from, state, discountCurve_);
-                    cashflowStatus[i] = CashflowStatus::Done;
+                    if (isBrokenCoupon) {
+                        cache[i] = cashflows[i].pv(lgm, t_from, state, discountCurve_);
+                        cashflowStatus[i] = CashflowStatus::Cached;
+                        provisionalNpv += cache[i] * cpnRatio;
+                    } else {
+                        underlyingNpv += cashflows[i].pv(lgm, t_from, state, discountCurve_);
+                        cashflowStatus[i] = CashflowStatus::Done;
+                    }
                 } else {
-                    provisionalNpv += cashflows[i].pv(lgm, t_from, state, discountCurve_);
+                    provisionalNpv += cashflows[i].pv(lgm, t_from, state, discountCurve_) * cpnRatio;
                 }
             } else if (cashflows[i].mustBeEstimated(t_from) && cashflowStatus[i] == CashflowStatus::Open) {
                 cache[i] = cashflows[i].pv(lgm, t_from, state, discountCurve_);
@@ -393,7 +420,9 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
         // process optionality
 
         if (optionTimes.find(t_from) != optionTimes.end()) {
-            auto rebateNpv = getRebatePv(lgm, t_from, state, discountCurve_, rebatedExercise, optionDates.at(t_from));
+            auto rebateNpv =
+                getRebatePv(lgm, t_from, state, discountCurve_, rebatedExercise,
+                            exercise_->type() == Exercise::American ? Null<Date>() : optionDates.at(t_from));
             optionNpv = max(optionNpv, underlyingNpv + provisionalNpv + rebateNpv);
         }
 

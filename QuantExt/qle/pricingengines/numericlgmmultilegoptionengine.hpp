@@ -41,11 +41,14 @@ protected:
         bool canBeEstimated(const Real optionTime) const;
         bool mustBeEstimated(const Real optionTime) const;
         Real requiredSimulationTime() const;
+        Real couponRatio(const Real time) const;
         RandomVariable pv(const LgmVectorised& lgm, const Real t, const RandomVariable& state,
                           const Handle<YieldTermStructure>& discountCurve) const;
+        Real couponStartTime_ = Null<Real>();            // filled for classes derived from Coupon
+        Real couponEndTime_ = Null<Real>();              // filled for classes derived from Coupon
         Real belongsToUnderlyingMaxTime_ = Null<Real>(); // this is always filled
         Real maxEstimationTime_ = Null<Real>();          // either this or exactEstimationTime is filled
-        Real exactEstimationTime_ = Null<Real>();        // see above
+        Real exactEstimationTime_ = Null<Real>();        // ...
         std::function<RandomVariable(const LgmVectorised&, const Real, const RandomVariable&,
                                      const Handle<YieldTermStructure>&)>
             calculator_; // always a valid function
