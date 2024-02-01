@@ -248,7 +248,7 @@ LGMGridBermudanAmericanSwaptionEngineBuilder::engineImpl(const string& id, const
     std::string ccy = tryParseIborIndex(key, index) ? index->currency().code() : key;
     return boost::make_shared<QuantExt::NumericLgmMultiLegOptionEngine>(
         lgm, sy, ny, sx, nx, market_->discountCurve(ccy, configuration(MarketContext::pricing)),
-        parseInteger(modelParameter("ExerciseTimeStepsPerYear")));
+        isAmerican ? parseInteger(modelParameter("ExerciseTimeStepsPerYear")) : 0);
 }
 
 boost::shared_ptr<PricingEngine>
@@ -273,7 +273,7 @@ LGMFDBermudanAmericanSwaptionEngineBuilder::engineImpl(const string& id, const s
     return boost::make_shared<QuantExt::NumericLgmMultiLegOptionEngine>(
         lgm, maxTime, scheme, stateGridPoints, timeStepsPerYear, mesherEpsilon,
         market_->discountCurve(ccy, configuration(MarketContext::pricing)),
-        parseInteger(modelParameter("ExerciseTimeStepsPerYear")));
+        isAmerican ? parseInteger(modelParameter("ExerciseTimeStepsPerYear")) : 0);
 }
 
 boost::shared_ptr<PricingEngine>
