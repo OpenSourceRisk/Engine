@@ -97,6 +97,8 @@ public:
         const boost::shared_ptr<Portfolio>& portfolio,
         //! Netting set manager to access CSA details for each netting set
         const boost::shared_ptr<NettingSetManager>& nettingSetManager,
+        //! Collateral balances (VM, IM, IA)
+        const boost::shared_ptr<CollateralBalances>& collateralBalances,
         //! Market data object to access e.g. discounting and funding curves
         const boost::shared_ptr<Market>& market,
         //! Market configuration to use
@@ -327,6 +329,7 @@ protected:
 
     boost::shared_ptr<Portfolio> portfolio_;
     boost::shared_ptr<NettingSetManager> nettingSetManager_;
+    boost::shared_ptr<CollateralBalances> collateralBalances_;
     boost::shared_ptr<Market> market_;
     const std::string configuration_;
     boost::shared_ptr<NPVCube> cube_;

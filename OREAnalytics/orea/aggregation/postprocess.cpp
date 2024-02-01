@@ -55,6 +55,7 @@ namespace analytics {
 
 PostProcess::PostProcess(
     const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<NettingSetManager>& nettingSetManager,
+    const boost::shared_ptr<CollateralBalances>& collateralBalances,
     const boost::shared_ptr<Market>& market, const std::string& configuration, const boost::shared_ptr<NPVCube>& cube,
     const boost::shared_ptr<AggregationScenarioData>& scenarioData, const map<string, bool>& analytics,
     const string& baseCurrency, const string& allocMethod, Real marginalAllocationLimit, Real quantile,
@@ -68,7 +69,8 @@ PostProcess::PostProcess(
     const boost::shared_ptr<CreditSimulationParameters>& creditSimulationParameters,
     const std::vector<Real>& creditMigrationDistributionGrid, const std::vector<Size>& creditMigrationTimeSteps,
     const Matrix& creditStateCorrelationMatrix, bool withMporStickyDate, MporCashFlowMode mporCashFlowMode)
-    : portfolio_(portfolio), nettingSetManager_(nettingSetManager), market_(market), configuration_(configuration),
+: portfolio_(portfolio), nettingSetManager_(nettingSetManager), collateralBalances_(collateralBalances),
+      market_(market), configuration_(configuration),
       cube_(cube), cptyCube_(cptyCube), scenarioData_(scenarioData), analytics_(analytics), baseCurrency_(baseCurrency),
       quantile_(quantile), calcType_(parseCollateralCalculationType(calculationType)), dvaName_(dvaName),
       fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve), dimCalculator_(dimCalculator),
@@ -193,7 +195,7 @@ PostProcess::PostProcess(
      */
     nettedExposureCalculator_ = boost::make_shared<NettedExposureCalculator>(
         portfolio_, market_, cube_, baseCurrency, configuration_, quantile_, calcType_, analytics_["dynamicCredit"],
-        nettingSetManager_, exposureCalculator_->nettingSetDefaultValue(),
+        nettingSetManager_, collateralBalances_, exposureCalculator_->nettingSetDefaultValue(),
         exposureCalculator_->nettingSetCloseOutValue(), exposureCalculator_->nettingSetMporPositiveFlow(),
         exposureCalculator_->nettingSetMporNegativeFlow(), scenarioData_, cubeInterpretation_, analytics_["dim"],
         dimCalculator_, fullInitialCollateralisation_,
