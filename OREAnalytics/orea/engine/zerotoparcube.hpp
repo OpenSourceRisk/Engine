@@ -42,11 +42,16 @@ public:
                   const boost::shared_ptr<ParSensitivityConverter>& parConverter,
                   const std::set<ore::analytics::RiskFactorKey::KeyType>& typesDisabled = {},
                   const bool continueOnError = false);
+    //! Another Constructor!
+    ZeroToParCube(const std::vector<boost::shared_ptr<ore::analytics::SensitivityCube>>& zeroCubes,
+                  const boost::shared_ptr<ParSensitivityConverter>& parConverter,
+                  const std::set<ore::analytics::RiskFactorKey::KeyType>& typesDisabled = {},
+                  const bool continueOnError = false);
 
     //! Inspectors
     //@{
-    //! Underlying zero sensitivity cube
-    const boost::shared_ptr<ore::analytics::SensitivityCube>& zeroCube() const { return zeroCube_; }
+    //! Underlying zero sensitivity cubes
+    const std::vector<boost::shared_ptr<ore::analytics::SensitivityCube>>& zeroCubes() const { return zeroCubes_; }
     //! Par converter object
     const boost::shared_ptr<ParSensitivityConverter>& parConverter() const { return parConverter_; }
     //! The par risk factor types that are disabled for this instance of ZeroToParCube.
@@ -56,11 +61,12 @@ public:
     //! Return the non-zero par deltas for the given \p tradeId
     std::map<ore::analytics::RiskFactorKey, QuantLib::Real> parDeltas(const std::string& tradeId) const;
 
-    //! Return the non-zero par deltas for the given trade index
-    std::map<ore::analytics::RiskFactorKey, QuantLib::Real> parDeltas(QuantLib::Size tradeIdx) const;
+    //! Return the non-zero par deltas for the given cube and trade index
+    std::map<ore::analytics::RiskFactorKey, QuantLib::Real> parDeltas(QuantLib::Size cubeIdx,
+                                                                      QuantLib::Size tradeIdx) const;
 
 private:
-    boost::shared_ptr<ore::analytics::SensitivityCube> zeroCube_;
+    std::vector<boost::shared_ptr<ore::analytics::SensitivityCube>> zeroCubes_;
     boost::shared_ptr<ParSensitivityConverter> parConverter_;
     std::map<ore::analytics::RiskFactorKey, Size> factorToIndex_;
 

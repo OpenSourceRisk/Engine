@@ -16,8 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/engine/historicalsensipnlcalculator.hpp>
+#include <orea/app/structuredanalyticserror.hpp>
 #include <orea/cube/inmemorycube.hpp>
+#include <orea/engine/historicalsensipnlcalculator.hpp>
 #include <ored/utilities/to_string.hpp>
 
 #include <boost/accumulators/statistics/tail_quantile.hpp>
@@ -173,8 +174,16 @@ void HistoricalSensiPnlCalculator::populateSensiShifts(boost::shared_ptr<NPVCube
 
         Size j = 0;
         for (const auto& [_, key] : keyNameMapping) {
-            Real shift = shiftCalculator->shift(key, *baseScenario, *scenario);
-            cube->set(shift, j, 0, i);
+            try {
+                Real shift = shiftCalculator->shift(key, *baseScenario, *scenario);
+                cube->set(shift, j, 0, i);
+            } catch (const std::exception& e) {
+                StructuredAnalyticsErrorMessage(
+                    "HistocialSensiPnlCalculator",
+                    "Shift calcuation failed. Check consistency of simulation and sensi config.",
+                    "Error retrieving sensi key '" + ore::data::to_string(key) + "' from ssm scenario: '" + e.what())
+                    .log();
+            }
             j++;
         }
     }
