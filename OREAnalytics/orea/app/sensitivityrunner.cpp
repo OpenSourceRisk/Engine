@@ -117,7 +117,7 @@ void SensitivityRunner::sensiOutputReports(const boost::shared_ptr<SensitivityAn
 
     string outputFile = outputPath + "/" + params_->get("sensitivity", "scenarioOutputFile");
     CSVFileReport scenReport(outputFile);
-    ReportWriter().writeScenarioReport(scenReport, sensiAnalysis->sensiCube(), sensiThreshold);
+    ReportWriter().writeScenarioReport(scenReport, sensiAnalysis->sensiCubes(), sensiThreshold);
 
     // Create a stream from the sensitivity cube
     auto baseCurrency = sensiAnalysis->simMarketData()->baseCcy();
