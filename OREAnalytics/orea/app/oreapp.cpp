@@ -36,6 +36,7 @@
 #include <ored/report/inmemoryreport.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/utilities/currencyconfig.hpp>
+#include <ored/portfolio/collateralbalance.hpp>
 
 #include <qle/version.hpp>
 
@@ -1067,8 +1068,15 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         tmp = params_->get("xva", "csaFile", false);
         QL_REQUIRE(tmp != "", "Netting set manager is required for XVA");
         string csaFile = inputPath + "/" + tmp;
-        LOG("Loading netting and csa data from file" << csaFile);
+        LOG("Loading netting and csa data from file " << csaFile);
         inputs->setNettingSetManagerFromFile(csaFile);
+
+        tmp = params_->get("xva", "collateralBalancesFile", false);
+        if (tmp != "") {
+            string collBalancesFile = inputPath + "/" + tmp;
+            LOG("Loading collateral balances from file " << collBalancesFile);
+            inputs->setCollateralBalancesFromFile(collBalancesFile);
+        }
     }
 
     tmp = params_->get("xva", "nettingSetCubeFile", false);
