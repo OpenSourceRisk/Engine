@@ -102,10 +102,10 @@ void CollateralBalance::fromXML(XMLNode* node) {
     else
         vm_ = parseReal(XMLUtils::getNodeValue(variationMarginNode));
 
-    LOG("Loaded collateral balances for netting set " << nettingSetId());
-    LOG("Currency:           " << currency());
-    LOG("Variation Margin:   " << variationMargin());
-    LOG("Initial Margin:     " << initialMargin());
+    DLOG("Loaded collateral balances for netting set " << nettingSetId());
+    DLOG("Currency:           " << currency());
+    DLOG("Variation Margin:   " << variationMargin());
+    DLOG("Initial Margin:     " << initialMargin());
 }
 
 XMLNode* CollateralBalance::toXML(XMLDocument& doc) {

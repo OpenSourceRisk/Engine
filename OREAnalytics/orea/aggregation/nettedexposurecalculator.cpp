@@ -138,7 +138,7 @@ void NettedExposureCalculator::build() {
         boost::shared_ptr<CollateralBalance> balance = nullptr;
         if (collateralBalances_ && collateralBalances_->has(nettingSetId)) {
             balance = collateralBalances_->get(nettingSetId);
-            LOG("got collateral balances for netting set " << nettingSetId);
+            DLOG("got collateral balances for netting set " << nettingSetId);
         }
         
         //only for active CSA and calcType == NoLag close-out value is relevant
