@@ -34,6 +34,7 @@ namespace analytics {
 XvaRunner::XvaRunner(const boost::shared_ptr<InputParameters>& inputs,
                      Date asof, const string& baseCurrency, const boost::shared_ptr<Portfolio>& portfolio,
                      const boost::shared_ptr<NettingSetManager>& netting,
+                     const boost::shared_ptr<CollateralBalances>& collateralBalances,
                      const boost::shared_ptr<EngineData>& engineData,
                      const boost::shared_ptr<CurveConfigurations>& curveConfigs,
                      const boost::shared_ptr<TodaysMarketParameters>& todaysMarketParams,
@@ -44,7 +45,8 @@ XvaRunner::XvaRunner(const boost::shared_ptr<InputParameters>& inputs,
                      const IborFallbackConfig& iborFallbackConfig, Real dimQuantile, Size dimHorizonCalendarDays,
                      map<string, bool> analytics, string calculationType, string dvaName, string fvaBorrowingCurve,
                      string fvaLendingCurve, bool fullInitialCollateralisation, bool storeFlows)
-    : inputs_(inputs), asof_(asof), baseCurrency_(baseCurrency), portfolio_(portfolio), netting_(netting), engineData_(engineData),
+    : inputs_(inputs), asof_(asof), baseCurrency_(baseCurrency), portfolio_(portfolio), netting_(netting),
+      collateralBalances_(collateralBalances), engineData_(engineData),
       curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams), simMarketData_(simMarketData),
       scenarioGeneratorData_(scenarioGeneratorData), crossAssetModelData_(crossAssetModelData),
       referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig), dimQuantile_(dimQuantile),
@@ -237,7 +239,8 @@ void XvaRunner::generatePostProcessor(const boost::shared_ptr<Market>& market,
     boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator =
         getDimCalculator(npvCube, cubeInterpreter_, *scenarioData_, model_, nettingCube, currentIM);
 
-    postProcess_ = boost::make_shared<PostProcess>(portfolio_, netting_, market, "", npvCube, scenarioData, analytics_,
+    postProcess_ = boost::make_shared<PostProcess>(portfolio_, netting_, collateralBalances_,
+                                                   market, "", npvCube, scenarioData, analytics_,
                                                    baseCurrency_, "None", 1.0, 0.95, calculationType_, dvaName_,
                                                    fvaBorrowingCurve_, fvaLendingCurve_, dimCalculator,
                                                    cubeInterpreter_, fullInitialCollateralisation_);

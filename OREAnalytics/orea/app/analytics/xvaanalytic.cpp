@@ -502,8 +502,9 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
     LOG("XVA: amcRun completed");
 }
 
-void XvaAnalyticImpl::runPostProcessor() {
+void XvaAnalyticImpl::runPostProcessor() {    
     boost::shared_ptr<NettingSetManager> netting = inputs_->nettingSetManager();
+    boost::shared_ptr<CollateralBalances> balances = inputs_->collateralBalances();
     map<string, bool> analytics;
     analytics["exerciseNextBreak"] = inputs_->exerciseNextBreak();
     analytics["cva"] = inputs_->cvaAnalytic();
@@ -566,7 +567,7 @@ void XvaAnalyticImpl::runPostProcessor() {
     LOG("baseCurrency " << baseCurrency);
     
     postProcess_ = boost::make_shared<PostProcess>(
-        analytic()->portfolio(), netting, analytic()->market(), marketConfiguration, cube_, *scenarioData_, analytics,
+        analytic()->portfolio(), netting, balances, analytic()->market(), marketConfiguration, cube_, *scenarioData_, analytics,
         baseCurrency, allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
         fvaLendingCurve, dimCalculator_, cubeInterpreter_, fullInitialCollateralisation, cvaSensiGrid,
         cvaSensiShiftSize, kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle, kvaOurPdFloor,
