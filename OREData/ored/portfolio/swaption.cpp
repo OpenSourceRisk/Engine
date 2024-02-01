@@ -292,7 +292,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     if (exerciseType_ == Exercise::European && isStandard)
         buildEuropean(engineFactory);
     else
-        buildBermudan(engineFactory);
+        buildBermudanOrAmerican(engineFactory);
 
     // 11 ISDA taxonomy
 
@@ -347,7 +347,7 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
     DLOG("Building European Swaption done");
 }
 
-void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void Swaption::buildBermudanOrAmerican(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     if (settlementType_ == Settlement::Physical)
         maturity_ = underlying_->maturity();
@@ -355,7 +355,7 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
         maturity_ = exerciseBuilder_->noticeDates().back();
 
     if (settlementType_ == Settlement::Cash && settlementMethod_ == Settlement::ParYieldCurve)
-        WLOG("Cash-settled Bermudan Swaption (id = "
+        WLOG("Cash-settled Bermudan / American Swaption (id = "
              << id() << ") with ParYieldCurve settlement method not supported by Lgm engine. "
              << "Approximate pricing using CollateralizedCashPrice pricing methodology");
 
@@ -413,9 +413,10 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
         DLOG("no ibor, ois, bma/sifma, cms index found, use ccy key to look up vol");
     }
 
-    auto builder = engineFactory->builder("BermudanSwaption");
-    auto swaptionBuilder = boost::dynamic_pointer_cast<BermudanSwaptionEngineBuilder>(builder);
-    QL_REQUIRE(swaptionBuilder, "internal error: could not cast to BermudanSwaptionEngineBuilder");
+    auto builder = engineFactory->builder(
+        exerciseBuilder_->exercise()->type() == Exercise::American ? "AmericanSwaption" : "BermudanSwaption");
+    auto swaptionBuilder = boost::dynamic_pointer_cast<BermudanAmericanSwaptionEngineBuilder>(builder);
+    QL_REQUIRE(swaptionBuilder, "internal error: could not cast to BermudanAmericanSwaptionEngineBuilder");
 
     auto tmp = engineFactory->builder("Swap");
     auto swapBuilder = boost::dynamic_pointer_cast<SwapEngineBuilderBase>(tmp);
@@ -425,7 +426,8 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     // use ibor / ois index as key, if possible, otherwise the npv currency
     auto swaptionEngine = swaptionBuilder->engine(
         id(), index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name()),
-        exerciseBuilder_->noticeDates(), underlying_->maturity(), strikes);
+        exerciseBuilder_->noticeDates(), underlying_->maturity(), strikes,
+        exerciseBuilder_->exercise()->type() == Exercise::American);
     timer.stop();
     DLOG("Swaption model calibration time: " << timer.format(default_places, "%w") << " s");
     swaption->setPricingEngine(swaptionEngine);
