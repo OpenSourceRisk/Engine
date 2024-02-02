@@ -94,7 +94,11 @@ namespace QuantExt {
         DiscountFactor dividendDiscount =
             process_->dividendYield()->discount(
                                              arguments_.forwardDate);
-        DiscountFactor df = discountPtr->discount(arguments_.exercise->lastDate());
+        DiscountFactor df;
+        if (arguments_.paymentDate != Date())
+            df = discountPtr->discount(arguments_.paymentDate);
+        else
+            df = discountPtr->discount(arguments_.exercise->lastDate());
         DiscountFactor riskFreeDiscountForFwdEstimation =
             process_->riskFreeRate()->discount(arguments_.forwardDate);
         Real spot = process_->stateVariable()->value();
