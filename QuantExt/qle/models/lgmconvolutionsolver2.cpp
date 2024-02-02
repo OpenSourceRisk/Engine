@@ -68,7 +68,7 @@ RandomVariable LgmConvolutionSolver2::stateGrid(const Real t) const {
     return x;
 }
 
-RandomVariable LgmConvolutionSolver2::rollback(const RandomVariable& v, const Real t1, const Real t0) const {
+RandomVariable LgmConvolutionSolver2::rollback(const RandomVariable& v, const Real t1, const Real t0, Size) const {
     if (QuantLib::close_enough(t0, t1) || v.deterministic())
         return v;
     QL_REQUIRE(t0 < t1, "LgmConvolutionSolver2::rollback(): t0 (" << t0 << ") < t1 (" << t1 << ") required.");
