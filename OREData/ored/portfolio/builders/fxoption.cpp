@@ -35,7 +35,7 @@ using namespace QuantExt;
 boost::shared_ptr<PricingEngine> CamAmcFxOptionEngineBuilder::engineImpl(const string& assetName,
                                                                          const Currency& domCcy,
                                                                          const AssetClass& assetClassUnderlying,
-                                                                         const Date& expiryDate) {
+                                                                         const Date& expiryDate, const bool useFxSpot) {
 
     QL_REQUIRE(assetClassUnderlying == AssetClass::FX, "FX Option required");
     Currency forCcy = parseCurrency(assetName);
