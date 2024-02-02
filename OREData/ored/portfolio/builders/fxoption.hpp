@@ -82,8 +82,7 @@ public:
 protected:
     // the pricing engine depends on the ccys only, so the base class key implementation will just do fine
     boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
-                                                const AssetClass& assetClassUnderlying,
-                                                const Date& expiryDate) override;
+                                                const AssetClass& assetClassUnderlying, const Date& expiryDate, const bool useFxSpot) override;
 
 private:
     const boost::shared_ptr<QuantExt::CrossAssetModel> cam_;
