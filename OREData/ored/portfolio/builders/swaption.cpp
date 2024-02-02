@@ -22,12 +22,12 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 
-#include <ql/methods/montecarlo/lsmbasissystem.hpp>
-#include <ql/pricingengines/swaption/blackswaptionengine.hpp>
-
 #include <qle/methods/multipathgeneratorbase.hpp>
+#include <qle/pricingengines/blackmultilegoptionengine.hpp>
 #include <qle/pricingengines/mcmultilegoptionengine.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
+
+#include <ql/methods/montecarlo/lsmbasissystem.hpp>
 
 #include <set>
 
