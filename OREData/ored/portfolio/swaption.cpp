@@ -217,7 +217,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             }
         }
     }
-    
+
     // 8 ISDA taxonomy
 
     additionalData_["isdaAssetClass"] = string("Interest Rate");
@@ -246,11 +246,11 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                                                      exerciseBuilder_->exercise(), settlementType_, settlementMethod_);
 
     std::string builderType;
-    if(exerciseType_ == Exercise::European)
+    if (exerciseType_ == Exercise::European)
         builderType = "EuropeanSwaption";
-    else if(exerciseType_ == Exercise::Bermudan)
+    else if (exerciseType_ == Exercise::Bermudan)
         builderType = "BermudanSwaption";
-    else if(exerciseType_ == Exercise::American)
+    else if (exerciseType_ == Exercise::American)
         builderType = "AmericanSwaption";
 
     auto swaptionBuilder = boost::dynamic_pointer_cast<SwaptionEngineBuilder>(engineFactory->builder(builderType));
@@ -316,7 +316,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
              << (firstFloatSpread == Null<Real>() ? "NA" : std::to_string(firstFloatSpread)) << ")");
     }
 
-         // 9.3 get engine and set it
+    // 9.3 get engine and set it
 
     cpu_timer timer;
     // use ibor / ois index as key, if possible, otherwise the npv currency
@@ -328,7 +328,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     swaption->setPricingEngine(swaptionEngine);
     setSensitivityTemplate(*swaptionBuilder);
 
-         // 9.4 build underlying swaps, add premiums, build option wrapper
+    // 9.4 build underlying swaps, add premiums, build option wrapper
 
     auto swapEngine = swapBuilder->engine(parseCurrency(npvCurrency_));
 

@@ -58,7 +58,11 @@ boost::shared_ptr<PricingEngine> buildMcEngine(const std::function<string(string
 namespace ore {
 namespace data {
 
-boost::shared_ptr<PricingEngine> EuropeanSwaptionEngineBuilder::engineImpl(const string& key) {
+boost::shared_ptr<PricingEngine> EuropeanSwaptionEngineBuilder::engineImpl(const string& id, const string& key,
+                                                                           const std::vector<Date>& dates,
+                                                                           const Date& maturity,
+                                                                           const std::vector<Real>& strikes,
+                                                                           const bool isAmerican) {
     boost::shared_ptr<IborIndex> index;
     string ccyCode = tryParseIborIndex(key, index) ? index->currency().code() : key;
     Handle<YieldTermStructure> yts = market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
@@ -77,11 +81,10 @@ boost::shared_ptr<PricingEngine> EuropeanSwaptionEngineBuilder::engineImpl(const
     }
 }
 
-boost::shared_ptr<QuantExt::LGM> LGMBermudanAmericanSwaptionEngineBuilder::model(const string& id, const string& key,
-                                                                                 const std::vector<Date>& expiries,
-                                                                                 const Date& maturity,
-                                                                                 const std::vector<Real>& strikes,
-                                                                                 const bool isAmerican) {
+boost::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const string& id, const string& key,
+                                                                 const std::vector<Date>& expiries,
+                                                                 const Date& maturity, const std::vector<Real>& strikes,
+                                                                 const bool isAmerican) {
     boost::shared_ptr<IborIndex> index;
     std::string ccy = tryParseIborIndex(key, index) ? index->currency().code() : key;
 
@@ -155,7 +158,7 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanAmericanSwaptionEngineBuilder::model
         effStrikes.resize(effExpiries.size());
         Real t0 = Actual365Fixed().yearFraction(today, expiries[0]);
         Real t1 = Actual365Fixed().yearFraction(today, expiries[1]);
-        for(Size i=0;i<effExpiries.size();++i) {
+        for (Size i = 0; i < effExpiries.size(); ++i) {
             Real t = Actual365Fixed().yearFraction(today, effExpiries[i]);
             effStrikes[i] = strikes[0] + (strikes[1] - strikes[0]) / (t1 - t0) * (t - t0);
         }
@@ -228,10 +231,11 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanAmericanSwaptionEngineBuilder::model
     return model;
 }
 
-boost::shared_ptr<PricingEngine>
-LGMGridBermudanAmericanSwaptionEngineBuilder::engineImpl(const string& id, const string& key,
-                                                         const std::vector<Date>& expiries, const Date& maturity,
-                                                         const std::vector<Real>& strikes, const bool isAmerican) {
+boost::shared_ptr<PricingEngine> LGMGridSwaptionEngineBuilder::engineImpl(const string& id, const string& key,
+                                                                          const std::vector<Date>& expiries,
+                                                                          const Date& maturity,
+                                                                          const std::vector<Real>& strikes,
+                                                                          const bool isAmerican) {
     DLOG("Building LGM Grid Bermudan/American Swaption engine for trade " << id);
 
     boost::shared_ptr<QuantExt::LGM> lgm = model(id, key, expiries, maturity, strikes, isAmerican);
@@ -252,9 +256,8 @@ LGMGridBermudanAmericanSwaptionEngineBuilder::engineImpl(const string& id, const
 }
 
 boost::shared_ptr<PricingEngine>
-LGMFDBermudanAmericanSwaptionEngineBuilder::engineImpl(const string& id, const string& key,
-                                                       const std::vector<Date>& expiries, const Date& maturity,
-                                                       const std::vector<Real>& strikes, const bool isAmerican) {
+LGMFDSwaptionEngineBuilder::engineImpl(const string& id, const string& key, const std::vector<Date>& expiries,
+                                       const Date& maturity, const std::vector<Real>& strikes, const bool isAmerican) {
     DLOG("Building LGM FD Bermudan/American Swaption engine for trade " << id);
 
     boost::shared_ptr<QuantExt::LGM> lgm = model(id, key, expiries, maturity, strikes, isAmerican);
@@ -277,9 +280,8 @@ LGMFDBermudanAmericanSwaptionEngineBuilder::engineImpl(const string& id, const s
 }
 
 boost::shared_ptr<PricingEngine>
-LgmMcBermudanAmericanSwaptionEngineBuilder::engineImpl(const string& id, const string& key,
-                                                       const std::vector<Date>& expiries, const Date& maturity,
-                                                       const std::vector<Real>& strikes, const bool isAmerican) {
+LGMMCSwaptionEngineBuilder::engineImpl(const string& id, const string& key, const std::vector<Date>& expiries,
+                                       const Date& maturity, const std::vector<Real>& strikes, const bool isAmerican) {
     DLOG("Building MC Bermudan/American Swaption engine for trade " << id);
 
     auto lgm = model(id, key, expiries, maturity, strikes, isAmerican);
@@ -291,12 +293,11 @@ LgmMcBermudanAmericanSwaptionEngineBuilder::engineImpl(const string& id, const s
     auto discountCurve = market_->discountCurve(ccy, configuration(MarketContext::pricing));
     return buildMcEngine([this](const std::string& p) { return this->engineParameter(p); }, lgm, discountCurve,
                          std::vector<Date>(), std::vector<Size>());
-} // LgmMc engineImpl()
+}
 
 boost::shared_ptr<PricingEngine>
-LgmAmcBermudanAmericanSwaptionEngineBuilder::engineImpl(const string& id, const string& key,
-                                                        const std::vector<Date>& expiries, const Date& maturity,
-                                                        const std::vector<Real>& strikes, const bool isAmerican) {
+LGMAmcSwaptionEngineBuilder::engineImpl(const string& id, const string& key, const std::vector<Date>& expiries,
+                                        const Date& maturity, const std::vector<Real>& strikes, const bool isAmerican) {
     boost::shared_ptr<IborIndex> index;
     std::string ccy = tryParseIborIndex(key, index) ? index->currency().code() : key;
     Currency curr = parseCurrency(ccy);
@@ -314,7 +315,7 @@ LgmAmcBermudanAmericanSwaptionEngineBuilder::engineImpl(const string& id, const 
     Handle<YieldTermStructure> discountCurve;
     return buildMcEngine([this](const std::string& p) { return this->engineParameter(p); }, lgm, discountCurve,
                          simulationDates_, modelIndex);
-} // LgmCam engineImpl
+}
 
 } // namespace data
 } // namespace ore
