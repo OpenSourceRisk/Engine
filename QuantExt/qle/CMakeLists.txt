@@ -53,12 +53,12 @@ cashflows/fixedratefxlinkednotionalcoupon.cpp
 cashflows/floatingannuitycoupon.cpp
 cashflows/floatingannuitynominal.cpp
 cashflows/formulabasedcoupon.cpp
-cashflows/mcgaussianformulabasedcouponpricer.cpp
 cashflows/fxlinkedcashflow.cpp
 cashflows/iborfracoupon.cpp
 cashflows/indexedcoupon.cpp
 cashflows/jyyoyinflationcouponpricer.cpp
 cashflows/lognormalcmsspreadpricer.cpp
+cashflows/mcgaussianformulabasedcouponpricer.cpp
 cashflows/nonstandardcapflooredyoyinflationcoupon.cpp
 cashflows/nonstandardinflationcouponpricer.cpp
 cashflows/nonstandardyoyinflationcoupon.cpp
@@ -167,6 +167,7 @@ methods/fdmblackscholesmesher.cpp
 methods/fdmblackscholesop.cpp
 methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.cpp
 methods/fdmdefaultableequityjumpdiffusionop.cpp
+methods/fdmlgmop.cpp
 methods/fdmquantohelper.cpp
 methods/multipathgeneratorbase.cpp
 methods/multipathvariategenerator.cpp
@@ -209,6 +210,7 @@ models/jyimpliedzeroinflationtermstructure.cpp
 models/lgm.cpp
 models/lgmcalibrationinfo.cpp
 models/lgmconvolutionsolver2.cpp
+models/lgmfdsolver.cpp
 models/lgmimplieddefaulttermstructure.cpp
 models/lgmimpliedyieldtermstructure.cpp
 models/lgmvectorised.cpp
@@ -452,12 +454,12 @@ cashflows/floatingannuitycoupon.hpp
 cashflows/floatingannuitynominal.hpp
 cashflows/floatingratefxlinkednotionalcoupon.hpp
 cashflows/formulabasedcoupon.hpp
-cashflows/mcgaussianformulabasedcouponpricer.hpp
 cashflows/fxlinkedcashflow.hpp
 cashflows/iborfracoupon.hpp
 cashflows/indexedcoupon.hpp
 cashflows/jyyoyinflationcouponpricer.hpp
 cashflows/lognormalcmsspreadpricer.hpp
+cashflows/mcgaussianformulabasedcouponpricer.hpp
 cashflows/nonstandardcapflooredyoyinflationcoupon.hpp
 cashflows/nonstandardinflationcouponpricer.hpp
 cashflows/nonstandardyoyinflationcoupon.hpp
@@ -642,6 +644,7 @@ methods/fdmblackscholesmesher.hpp
 methods/fdmblackscholesop.hpp
 methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.hpp
 methods/fdmdefaultableequityjumpdiffusionop.hpp
+methods/fdmlgmop.hpp
 methods/fdmquantohelper.hpp
 methods/multipathgeneratorbase.hpp
 methods/multipathvariategenerator.hpp
@@ -710,8 +713,10 @@ models/irmodel.hpp
 models/jyimpliedyoyinflationtermstructure.hpp
 models/jyimpliedzeroinflationtermstructure.hpp
 models/lgm.hpp
+models/lgmbackwardsolver.hpp
 models/lgmcalibrationinfo.hpp
 models/lgmconvolutionsolver2.hpp
+models/lgmfdsolver.hpp
 models/lgmimplieddefaulttermstructure.hpp
 models/lgmimpliedyieldtermstructure.hpp
 models/lgmvectorised.hpp

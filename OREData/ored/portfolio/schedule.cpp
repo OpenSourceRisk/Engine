@@ -337,6 +337,9 @@ Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacem
 
     Date firstDate = parseDate(data.firstDate());
     Date lastDate = parseDate(data.lastDate());
+    if (firstDate != Date() && lastDate != Date())
+        QL_REQUIRE(firstDate <= lastDate, "Schedule::makeSchedule firstDate must be before lastDate");
+
     Period tenor = parsePeriod(data.tenor());
 
     // defaults

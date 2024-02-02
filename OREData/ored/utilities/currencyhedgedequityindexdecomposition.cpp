@@ -20,21 +20,13 @@ loadCurrencyHedgedIndexDecomposition(const std::string& name, const boost::share
     std::map<std::string, std::pair<double, std::string>> currencyWeightsAndFxIndexNames;
     
     if (refDataMgr) {
-        try {
+        if (refDataMgr->hasData("CurrencyHedgedEquityIndex", name))
             indexRefData = boost::dynamic_pointer_cast<CurrencyHedgedEquityIndexReferenceDatum>(
                 refDataMgr->getData("CurrencyHedgedEquityIndex", name));
-        } catch (...) {
-            // Index not a CurrencyHedgedEquityIndex or referencedata is missing, don't throw here
-        }
 
-        if (indexRefData != nullptr) {
-            try {
-                underlyingRefData = boost::dynamic_pointer_cast<EquityIndexReferenceDatum>(
-                    refDataMgr->getData("EquityIndex", indexRefData->underlyingIndexName()));
-            } catch (...) {
-                // referencedata is missing, but don't throw here, return null ptr
-            }
-        }
+        if (indexRefData != nullptr && refDataMgr->hasData("EquityIndex", indexRefData->underlyingIndexName()))
+            underlyingRefData = boost::dynamic_pointer_cast<EquityIndexReferenceDatum>(
+                refDataMgr->getData("EquityIndex", indexRefData->underlyingIndexName()));
     }
 
     if (indexRefData == nullptr || underlyingRefData == nullptr) {

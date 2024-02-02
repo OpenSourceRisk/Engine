@@ -39,25 +39,31 @@ public:
     RebatedExercise(const Exercise& exercise, const Real rebate = 0.0, const Natural rebateSettlementDays = 0,
                     const Calendar& rebatePaymentCalendar = NullCalendar(),
                     const BusinessDayConvention rebatePaymentConvention = Following);
+    //! same, but takes settl period instead of days
+    RebatedExercise(const Exercise& exercise, const Real rebate, const Period& rebateSettlementPeriod,
+                    const Calendar& rebatePaymentCalendar, const BusinessDayConvention rebatePaymentConvention);
     //! as ql ctor
     RebatedExercise(const Exercise& exercise, const std::vector<Real>& rebates, const Natural rebateSettlementDays = 0,
                     const Calendar& rebatePaymentCalendar = NullCalendar(),
                     const BusinessDayConvention rebatePaymentConvention = Following);
+    //! same, but takes settl period instead of days
+    RebatedExercise(const Exercise& exercise, const std::vector<Real>& rebates, const Period& rebateSettlementPeriod,
+                    const Calendar& rebatePaymentCalendar, const BusinessDayConvention rebatePaymentConvention);
     //! ctor that takes exercise dates != notification dates and a rebate settlement period
     RebatedExercise(const Exercise& exercise, const std::vector<Date>& exerciseDates, const std::vector<Real>& rebates,
                     const Period& rebateSettlementPeriod, const Calendar& rebatePaymentCalendar = NullCalendar(),
                     const BusinessDayConvention rebatePaymentConvention = Following);
     Real rebate(Size index) const;
     Date rebatePaymentDate(Size index) const;
+    Date rebatePaymentDate(const Date& exerciseDate) const;
     const std::vector<Real>& rebates() const { return rebates_; }
 
 private:
-    const std::vector<Date> exerciseDates_; // optional
-    const std::vector<Real> rebates_;
-    const Natural rebateSettlementDays_;
-    const boost::optional<Period> rebateSettlementPeriod_; // overrides settl days
-    const Calendar rebatePaymentCalendar_;
-    const BusinessDayConvention rebatePaymentConvention_;
+    std::vector<Date> exerciseDates_;
+    std::vector<Real> rebates_;
+    Period rebateSettlementPeriod_;
+    Calendar rebatePaymentCalendar_;
+    BusinessDayConvention rebatePaymentConvention_;
 };
 
 inline Real RebatedExercise::rebate(Size index) const {
@@ -69,9 +75,11 @@ inline Real RebatedExercise::rebate(Size index) const {
 inline Date RebatedExercise::rebatePaymentDate(Size index) const {
     QL_REQUIRE(type_ == European || type_ == Bermudan, "for american style exercises the rebate payment date "
                                                            << "has to be calculted in the client code");
-    Date baseDate = exerciseDates_.empty() ? dates_[index] : exerciseDates_[index];
-    Period settlPeriod = rebateSettlementPeriod_ ? *rebateSettlementPeriod_ : rebateSettlementDays_ * Days;
-    return rebatePaymentCalendar_.advance(baseDate, settlPeriod, rebatePaymentConvention_);
+    return rebatePaymentCalendar_.advance(exerciseDates_[index], rebateSettlementPeriod_, rebatePaymentConvention_);
+}
+
+inline Date RebatedExercise::rebatePaymentDate(const Date& exerciseDate) const {
+    return rebatePaymentCalendar_.advance(exerciseDate, rebateSettlementPeriod_, rebatePaymentConvention_);
 }
 
 } // namespace QuantExt

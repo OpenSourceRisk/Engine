@@ -63,7 +63,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
                          const boost::shared_ptr<ReferenceDataManager>& referenceData,
                          const IborFallbackConfig& iborFallbackConfig, const bool continueOnCalibrationError,
                          const bool continueOnError, const std::string& context)
-    : nThreads_(nThreads), asof_(asof), loader_(loader), curveConfigs_(curveConfigs),
+    : asof_(asof), loader_(loader), curveConfigs_(curveConfigs),
       todaysMarketParams_(todaysMarketParams), simMarketData_(simMarketData), engineData_(engineData),
       crossAssetModelData_(crossAssetModelData), scenarioGeneratorData_(scenarioGeneratorData), portfolio_(portfolio),
       marketConfiguration_(marketConfiguration), marketConfigurationInCcy_(marketConfigurationInCcy),
@@ -462,9 +462,9 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
         boost::shared_ptr<InMemoryReport> scenarioReport = boost::make_shared<InMemoryReport>();
         auto sensiCube = boost::make_shared<SensitivityCube>(
             resultCube, sensiScenarioGenerator_->scenarioDescriptions(), sensiScenarioGenerator_->shiftSizes(),
-            sensiScenarioGenerator_->shiftSchemes());
+            sensiScenarioGenerator_->shiftSizes(), sensiScenarioGenerator_->shiftSchemes());
         auto sensiStream = boost::make_shared<SensitivityCubeStream>(sensiCube, simMarketData_->baseCcy());
-        ReportWriter().writeScenarioReport(*scenarioReport, sensiCube, 0.0);
+        ReportWriter().writeScenarioReport(*scenarioReport, {sensiCube}, 0.0);
         scenarioReport->toFile("Output/xvacg-cva-sensi-scenario.csv");
     }
 
