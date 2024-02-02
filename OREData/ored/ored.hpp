@@ -199,6 +199,7 @@
 #include <ored/portfolio/cbo.hpp>
 #include <ored/portfolio/cdo.hpp>
 #include <ored/portfolio/cliquetoption.hpp>
+#include <ored/portfolio/collateralbalance.hpp>
 #include <ored/portfolio/commodityapo.hpp>
 #include <ored/portfolio/commoditydigitalapo.hpp>
 #include <ored/portfolio/commoditydigitaloption.hpp>
