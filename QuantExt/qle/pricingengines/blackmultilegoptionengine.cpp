@@ -28,8 +28,8 @@ void BlackMultiLegOptionEngineBase::calculate() const {
     // TODO...
 }
 
-BlackMultiLegOptionEngine(const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-                          const Handle<SwaptionVolatilityStructure>& volatility)
+BlackMultiLegOptionEngine::BlackMultiLegOptionEngine(const Handle<YieldTermStructure>& discountCurve,
+                                                     const Handle<SwaptionVolatilityStructure>& volatility)
     : BlackMultiLegOptionEngineBase(discountCurve, volatility) {
     registerWith(discountCurve_);
     registerWith(volatility_);
@@ -43,7 +43,7 @@ void BlackMultiLegOptionEngine::calculate() const {
     settlementType_ = arguments_.settlementType;
     settlementMethod_ = arguments_.settlementMethod;
 
-    NumericLgmMultiLegOptionEngineBase::calculate();
+    BlackMultiLegOptionEngineBase::calculate();
 
     results_.value = npv_;
     results_.underlyingNpv = underlyingNpv_;
@@ -66,7 +66,7 @@ void BlackSwaptionFromMultilegOptionEngine::calculate() const {
     settlementType_ = arguments_.settlementType;
     settlementMethod_ = arguments_.settlementMethod;
 
-    NumericLgmMultiLegOptionEngineBase::calculate();
+    BlackMultiLegOptionEngineBase::calculate();
 
     results_.value = npv_;
     results_.additionalResults = additionalResults_;
@@ -88,7 +88,7 @@ void BlackNonstandardSwaptionFromMultilegOptionEngine::calculate() const {
     settlementType_ = arguments_.settlementType;
     settlementMethod_ = arguments_.settlementMethod;
 
-    NumericLgmMultiLegOptionEngineBase::calculate();
+    BlackMultiLegOptionEngineBase::calculate();
 
     results_.value = npv_;
     results_.additionalResults = additionalResults_;

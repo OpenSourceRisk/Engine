@@ -24,7 +24,10 @@
 
 #include <qle/instruments/multilegoption.hpp>
 
+#include <ql/instruments/nonstandardswaption.hpp>
+#include <ql/instruments/swaption.hpp>
 #include <ql/pricingengines/genericmodelengine.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
 
 namespace QuantExt {
 
@@ -56,7 +59,7 @@ protected:
 class BlackMultiLegOptionEngine : public QuantLib::GenericEngine<MultiLegOption::arguments, MultiLegOption::results>,
                                   public BlackMultiLegOptionEngineBase {
 public:
-    BlackMultiLegOptionEngine(const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
+    BlackMultiLegOptionEngine(const Handle<YieldTermStructure>& discountCurve,
                               const Handle<SwaptionVolatilityStructure>& volatility);
 
     void calculate() const override;
