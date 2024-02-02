@@ -67,18 +67,7 @@ boost::shared_ptr<PricingEngine> EuropeanSwaptionEngineBuilder::engineImpl(const
     string ccyCode = tryParseIborIndex(key, index) ? index->currency().code() : key;
     Handle<YieldTermStructure> yts = market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
     Handle<SwaptionVolatilityStructure> svts = market_->swaptionVol(key, configuration(MarketContext::pricing));
-    switch (svts->volatilityType()) {
-    case ShiftedLognormal:
-        LOG("Build BlackSwaptionEngine for currency " << ccyCode);
-        return boost::make_shared<BlackSwaptionEngine>(yts, svts);
-    case Normal:
-        LOG("Build BachelierSwaptionEngine for currency " << ccyCode);
-        return boost::make_shared<BachelierSwaptionEngine>(yts, svts);
-    default:
-        QL_FAIL("Swaption volatility type " << svts->volatilityType() << "not covered in EngineFactory");
-        return nullptr; // avoid gcc warning
-        break;
-    }
+    return boost::make_shared<BlackMultiLegOptionEngine>(yts, svts);
 }
 
 boost::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const string& id, const string& key,
