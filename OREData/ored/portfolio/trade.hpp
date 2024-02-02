@@ -161,8 +161,8 @@ public:
     //! returns all additional data returned by the trade once built
     const virtual std::map<std::string,boost::any>& additionalData() const;
 
-    /*! returns the pricing engine id 'Swap/DiscountedCashflows/DiscountingSwapEngine'
-      for this trade, this is only available after build() has been called */
+    /*! returns the sensi template, e.g. "IR_Analytical" for this trade,
+        this is only available after build() has been called */
     const std::string& sensitivityTemplate() const;
     //@}
 
