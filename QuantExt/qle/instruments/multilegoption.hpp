@@ -44,6 +44,13 @@ public:
                    const Settlement::Type settlementType = Settlement::Physical,
                    Settlement::Method settlementMethod = Settlement::PhysicalOTC);
 
+    const std::vector<Leg>& legs() const { return legs_; }
+    const std::vector<bool>& payer() const { return payer_; }
+    const std::vector<Currency>& currency() const { return currency_; }
+    const boost::shared_ptr<Exercise> exercise() const { return exercise_; }
+    const Settlement::Type settlementType() const { return settlementType_; }
+    const Settlement::Method settlementMethod() const { return settlementMethod_; }
+
     void deepUpdate() override;
     bool isExpired() const override { return Settings::instance().evaluationDate() >= maturityDate(); }
     void setupArguments(PricingEngine::arguments*) const override;
@@ -67,7 +74,7 @@ private:
 class MultiLegOption::arguments : public virtual PricingEngine::arguments {
 public:
     std::vector<Leg> legs;
-    std::vector<Real> payer;
+    std::vector<bool> payer;
     std::vector<Currency> currency;
     boost::shared_ptr<Exercise> exercise;
     Settlement::Type settlementType;

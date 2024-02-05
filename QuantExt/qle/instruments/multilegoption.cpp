@@ -74,9 +74,7 @@ void MultiLegOption::setupArguments(PricingEngine::arguments* args) const {
     MultiLegOption::arguments* tmp = dynamic_cast<MultiLegOption::arguments*>(args);
     QL_REQUIRE(tmp != nullptr, "MultiLegOption: wrong pricing engine argument type");
     tmp->legs = legs_;
-    tmp->payer.resize(payer_.size());
-    for (Size i = 0; i < payer_.size(); ++i)
-        tmp->payer[i] = payer_[i] ? -1.0 : 1.0;
+    tmp->payer = payer_;
     tmp->currency = currency_;
     tmp->exercise = exercise_;
     tmp->settlementType = settlementType_;

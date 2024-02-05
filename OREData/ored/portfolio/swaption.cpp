@@ -25,6 +25,8 @@
 
 #include <qle/instruments/multilegoption.hpp>
 #include <qle/instruments/rebatedexercise.hpp>
+#include <qle/pricingengines/blackmultilegoptionengine.hpp>
+#include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
@@ -79,17 +81,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                                                              : parseSettlementMethod(optionData_.settlementMethod());
     positionType_ = parsePositionType(optionData_.longShort());
 
-    // 3 determine whether it is cross ccy, which we don't support at the moment
-    //   (although we have McMultilegOptionEngine for it, but not exposed as pricing builder, just as amc builder)
-
-    bool isCrossCcy = false;
-    for (Size i = 1; i < legData_.size(); ++i) {
-        isCrossCcy = isCrossCcy || legData_[0].currency() != legData_[1].currency();
-    }
-
-    QL_REQUIRE(!isCrossCcy, "Cross Currency Swaptions are not supported at the moment.");
-
-    // 4 fill currencies and set notional to null (will be retrieved via notional())
+    // 3 fill currencies and set notional to null (will be retrieved via notional())
 
     npvCurrency_ = notionalCurrency_ = "USD"; // only if no legs are given, not relevant in this case
 
@@ -101,7 +93,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     Date today = Settings::instance().evaluationDate();
 
-    // 5 if the swaption is exercised (as per option data / exercise data), build the cashflows that remain to be paid
+    // 4 if the swaption is exercised (as per option data / exercise data), build the cashflows that remain to be paid
 
     if (exerciseBuilder_->isExercised()) {
         Date exerciseDate = exerciseBuilder_->exerciseDate();
@@ -109,7 +101,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
         if (optionData_.settlement() == "Physical") {
 
-            // 5.1 if physical exercise, inlcude the "exercise-into" cashflows of the underlying
+            // 4.1 if physical exercise, inlcude the "exercise-into" cashflows of the underlying
 
             for (Size i = 0; i < underlying_->legs().size(); ++i) {
                 legs_.push_back(Leg());
@@ -132,7 +124,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
         } else {
 
-            // 5.2 if cash exercise, include the cashSettlement payment
+            // 4.2 if cash exercise, include the cashSettlement payment
 
             if (exerciseBuilder_->cashSettlement()) {
                 legs_.push_back(Leg());
@@ -143,7 +135,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             }
         }
 
-        // 5.3 include the exercise fee payment
+        // 4.3 include the exercise fee payment
 
         if (exerciseBuilder_->feeSettlement()) {
             legs_.push_back(Leg());
@@ -153,7 +145,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             maturity_ = std::max(maturity_, exerciseBuilder_->feeSettlement()->date());
         }
 
-        // 5.4 add unconditional premiums, build instrument (as swap) and exit
+        // 4.4 add unconditional premiums, build instrument (as swap) and exit
 
         std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
         std::vector<Real> additionalMultipliers;
@@ -173,7 +165,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         return;
     }
 
-    // 6 if we do not have an active exercise as of today, or no underlying legs we only build unconditional premiums
+    // 5 if we do not have an active exercise as of today, or no underlying legs we only build unconditional premiums
 
     if (exerciseBuilder_->exercise() == nullptr || exerciseBuilder_->exercise()->dates().empty() ||
         exerciseBuilder_->exercise()->dates().back() <= today || legData_.empty()) {
@@ -199,7 +191,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         return;
     }
 
-    // 7 fill legs, only include coupons after first exercise
+    // 6 fill legs, only include coupons after first exercise
 
     legCurrencies_ = underlying_->legCurrencies();
     legPayers_ = underlying_->legPayers();
@@ -218,14 +210,14 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         }
     }
 
-    // 8 ISDA taxonomy
+    // 7 ISDA taxonomy
 
     additionalData_["isdaAssetClass"] = string("Interest Rate");
     additionalData_["isdaBaseProduct"] = string("Option");
     additionalData_["isdaSubProduct"] = string("Swaption");
     additionalData_["isdaTransaction"] = string("");
 
-    // 9 build swaption
+    // 8 build swaption
 
     if (settlementType_ == Settlement::Physical)
         maturity_ = underlying_->maturity();
@@ -246,12 +238,21 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                                                      exerciseBuilder_->exercise(), settlementType_, settlementMethod_);
 
     std::string builderType;
-    if (exerciseType_ == Exercise::European)
+    std::vector<std::string> builderPrecheckMessages;
+    // for European swaptions that are not handled by the black pricer, we fall back to the numeric Bermudan pricer
+    if (exerciseType_ == Exercise::European &&
+        QuantExt::BlackMultiLegOptionEngineBase::instrumentIsHandled(*swaption, builderPrecheckMessages)) {
         builderType = "EuropeanSwaption";
-    else if (exerciseType_ == Exercise::Bermudan)
-        builderType = "BermudanSwaption";
-    else if (exerciseType_ == Exercise::American)
-        builderType = "AmericanSwaption";
+    } else {
+        QL_REQUIRE(
+            QuantExt::NumericLgmMultiLegOptionEngineBase::instrumentIsHandled(*swaption, builderPrecheckMessages),
+            "Swaption::build(): instrument is not handled by the available engines: " +
+                boost::join(builderPrecheckMessages, ", "));
+        if (exerciseType_ == Exercise::Bermudan)
+            builderType = "BermudanSwaption";
+        else if (exerciseType_ == Exercise::American)
+            builderType = "AmericanSwaption";
+    }
 
     auto swaptionBuilder = boost::dynamic_pointer_cast<SwaptionEngineBuilder>(engineFactory->builder(builderType));
     QL_REQUIRE(swaptionBuilder, "Swaption::build(): internal error: could not cast to SwaptionEngineBuilder");

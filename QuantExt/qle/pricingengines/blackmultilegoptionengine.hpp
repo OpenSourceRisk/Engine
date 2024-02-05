@@ -36,7 +36,14 @@ public:
     BlackMultiLegOptionEngineBase(const Handle<YieldTermStructure>& discountCurve,
                                   const Handle<SwaptionVolatilityStructure>& volatility);
 
+    static bool instrumentIsHandled(const MultiLegOption& m, std::vector<std::string>& messages);
+
 protected:
+    static bool instrumentIsHandled(const std::vector<Leg>& legs, const std::vector<bool>& payer,
+                                    const std::vector<Currency>& currency, const boost::shared_ptr<Exercise>& exercise,
+                                    const Settlement::Type& settlementType, const Settlement::Method& settlementMethod,
+                                    std::vector<std::string>& messages);
+
     void calculate() const;
 
     // inputs set in ctor
@@ -45,7 +52,7 @@ protected:
 
     // inputs set by derived classes
     mutable std::vector<Leg> legs_;
-    mutable std::vector<Real> payer_;
+    mutable std::vector<bool> payer_;
     mutable std::vector<Currency> currency_;
     mutable boost::shared_ptr<Exercise> exercise_;
     mutable Settlement::Type settlementType_;
