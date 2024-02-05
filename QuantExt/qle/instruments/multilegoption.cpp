@@ -64,6 +64,16 @@ void MultiLegOption::deepUpdate() {
     update();
 }
 
+bool MultiLegOption::isExpired() const {
+    Date today = Settings::instance().evaluationDate();
+    if (exercise_ == nullptr || exercise_->dates().empty()) {
+        return today >= maturityDate();
+    } else {
+        // only the option itself is represented, not something we exercised into
+        return today >= exercise_->dates().back();
+    }
+}
+
 Real MultiLegOption::underlyingNpv() const {
     calculate();
     QL_REQUIRE(underlyingNpv_ != Null<Real>(), "MultiLegOption: underlying npv not available");

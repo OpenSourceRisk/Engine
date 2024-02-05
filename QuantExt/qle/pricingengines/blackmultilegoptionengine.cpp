@@ -95,7 +95,7 @@ bool BlackMultiLegOptionEngineBase::instrumentIsHandled(const std::vector<Leg>& 
 
     // check exercise type
 
-    isHandled = isHandled && exercise->type() == Exercise::European;
+    isHandled = isHandled && (exercise == nullptr || exercise->type() == Exercise::European);
 
     return isHandled;
 }
@@ -106,6 +106,19 @@ void BlackMultiLegOptionEngineBase::calculate() const {
     QL_REQUIRE(instrumentIsHandled(legs_, payer_, currency_, exercise_, settlementType_, settlementMethod_, messages),
                "BlackMultiLegOptionEngineBase::calculate(): instrument is not handled: "
                    << boost::algorithm::join(messages, ", "));
+
+    // handle empty exercise
+
+    if (exercise_ == nullptr) {
+        npv_ = 0.0;
+        for (Size i = 0; i < legs_.size(); ++i) {
+            for (Size j = 0; j < legs_[i].size(); ++j) {
+                npv_ += legs_[i][j]->amount() * discountCurve_->discount(legs_[i][j]->date());
+            }
+        }
+        underlyingNpv_ = npv_;
+        return;
+    }
 
     // set exercise date and calculate exercise time on vol day counter
 

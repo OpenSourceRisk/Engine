@@ -39,6 +39,7 @@ public:
     class results;
     class engine;
 
+    //! exercise = nullptr means that the instrument is identical to the underlying itself (i.e. a swap)
     MultiLegOption(const std::vector<Leg>& legs, const std::vector<bool>& payer, const std::vector<Currency>& currency,
                    const boost::shared_ptr<Exercise>& exercise = boost::shared_ptr<Exercise>(),
                    const Settlement::Type settlementType = Settlement::Physical,
@@ -52,7 +53,7 @@ public:
     const Settlement::Method settlementMethod() const { return settlementMethod_; }
 
     void deepUpdate() override;
-    bool isExpired() const override { return Settings::instance().evaluationDate() >= maturityDate(); }
+    bool isExpired() const override;
     void setupArguments(PricingEngine::arguments*) const override;
     void fetchResults(const PricingEngine::results*) const override;
 

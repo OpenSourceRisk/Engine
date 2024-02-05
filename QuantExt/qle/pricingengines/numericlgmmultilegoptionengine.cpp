@@ -343,6 +343,21 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
         instrumentIsHandled(legs_, payer_, currency_, exercise_, settlementType_, settlementMethod_, messages),
         "NumericLgmMultiLegOptionEngineBase::calculate(): instrument is not handled: " << boost::join(messages, ", "));
 
+    // handle empty exercise
+
+    if (exercise_ == nullptr) {
+        npv_ = 0.0;
+        for (Size i = 0; i < legs_.size(); ++i) {
+            for (Size j = 0; j < legs_[i].size(); ++j) {
+                npv_ += legs_[i][j]->amount() * discountCurve_->discount(legs_[i][j]->date());
+            }
+        }
+        underlyingNpv_ = npv_;
+        return;
+    }
+
+    // we have a non-empty exercise
+
     auto rebatedExercise = boost::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_);
     auto const& ts = solver_->model()->parametrization()->termStructure();
     Date refDate = ts->referenceDate();
