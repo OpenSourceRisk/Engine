@@ -296,6 +296,12 @@ QuantLib::TimeGrid DateGrid::closeOutTimeGrid() const {
     return TimeGrid(times.begin(), times.end());
 }
 
+QuantLib::Date DateGrid::valuationDateFromCloseOutDate(const QuantLib::Date& closeOutDate) const {
+    auto it = closeOutToValuation_.find(closeOutDate);
+    QL_REQUIRE(it != closeOutToValuation_.end(), "close out date " << closeOutDate << " not found in dategrid");
+    return it->second;
+}
+
 boost::shared_ptr<DateGrid> generateShiftedDateGrid(const boost::shared_ptr<DateGrid>& dg,
                                                     const QuantLib::Period& shift) {
     DLOG("Building shifted date grid with shift of " << shift);
