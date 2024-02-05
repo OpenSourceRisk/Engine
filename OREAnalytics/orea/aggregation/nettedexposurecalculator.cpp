@@ -188,21 +188,19 @@ void NettedExposureCalculator::build() {
         // Retrieve the constant independent amount from the CSA data and the VM balance
         // This is used below to reduce the exposure across all paths and time steps.
         // See below for the conversion to base currency.
-        Real independentAmount = 0, independentAmountBase = 0;
-        Real initialVMBalance = 0, initialVMBalanceBase = 0;
+        Real initialVM = 0, initialVMbase = 0;
+        Real initialIM = 0, initialIMbase = 0;
         string csaCurrency = "";
-        if (netting->csaDetails()) {
-            csaCurrency = netting->csaDetails()->csaCurrency();
-            independentAmount = netting->csaDetails()->independentAmountHeld();
-            if (balance)
-                initialVMBalance = balance->variationMargin();
+        if (netting->activeCsaFlag() && balance) {
+            initialVM = balance->variationMargin();
+            initialIM = balance->initialMargin();
             double fx = 1.0;
-            if (baseCurrency_ != csaCurrency)
-                fx = market_->fxSpot(csaCurrency + baseCurrency_)->value();
-            initialVMBalanceBase = fx * initialVMBalance;
-            independentAmountBase = fx * independentAmount;
-            DLOG("Netting set " << nettingSetId << ", IA base = " << independentAmountBase);
-            DLOG("Netting set " << nettingSetId << ", VM base = " << initialVMBalanceBase);
+            if (baseCurrency_ != balance->currency())
+                fx = market_->fxSpot(balance->currency() + baseCurrency_)->value();
+            initialVMbase = fx * initialVM;
+            initialIMbase = fx * initialIM;
+            DLOG("Netting set " << nettingSetId << ", initial VM: " << initialVMbase << " " << baseCurrency_);
+            DLOG("Netting set " << nettingSetId << ", initial IM: " << initialIMbase << " " << baseCurrency_);
         }
         else {
             DLOG("Netting set " << nettingSetId << ", IA base = VM base = 0");
@@ -228,9 +226,9 @@ void NettedExposureCalculator::build() {
             ene[0] = 0;
             pfe[0] = 0;
         } else {
-            epe[0] = std::max(npv - initialVMBalanceBase - independentAmountBase, 0.0);
-            ene[0] = std::max(-npv + initialVMBalanceBase, 0.0);
-            pfe[0] = std::max(npv - initialVMBalanceBase - independentAmountBase, 0.0);
+            epe[0] = std::max(npv - initialVMbase - initialIMbase, 0.0);
+            ene[0] = std::max(-npv + initialVMbase, 0.0);
+            pfe[0] = std::max(npv - initialVMbase - initialIMbase, 0.0);
         }
         // The fullInitialCollateralisation flag doesn't affect the eab, which feeds into the "ExpectedCollateral"
         // column of the 'exposure_nettingset_*' reports.  We always assume the full collateral here.
@@ -257,13 +255,7 @@ void NettedExposureCalculator::build() {
                         balance *= fxRate;
                     }
                 }
-
-                Real independentAmountBase = independentAmount;
-                if (csaCurrency != "" && csaCurrency != baseCurrency_) {
-                    double fxRate = scenarioData_->get(j, k, AggregationScenarioDataType::FXSpot, csaCurrency);
-                    independentAmountBase *= fxRate;
-                }
-
+                
                 eab[j + 1] += balance / cube_->samples();
                 
                 Real mporCashFlow = 0;
@@ -307,19 +299,26 @@ void NettedExposureCalculator::build() {
                     dim_epe = dim;
                 if (initialMarginType != CSA::Type::CallOnly)
                     dim_ene = dim;
-
-                epe[j + 1] += std::max(exposure - dim_epe - independentAmountBase, 0.0) /
-                              cube_->samples(); // dim here represents the held IM, and is expressed as a positive number
-                ene[j + 1] += std::max(-exposure - dim_ene, 0.0) /
-                              cube_->samples(); // dim here represents the posted IM, and is expressed as a positive number
-                distribution[k] = exposure;
+                
+                // dim here represents the held IM, and is expressed as a positive number
+                epe[j + 1] += std::max(exposure - dim_epe, 0.0) / cube_->samples(); 
+                // dim here represents the posted IM, and is expressed as a positive number
+                ene[j + 1] += std::max(-exposure - dim_ene, 0.0) / cube_->samples(); 
+                distribution[k] = exposure - dim_epe;
                 nettedCube_->set(exposure, nettingSetCount, j, k);
-
+                
+                Real epeIncrement = std::max(exposure - dim_epe, 0.0) / cube_->samples();
+                DLOG("sample " << k << " date " << j << fixed << showpos << setprecision(2)
+                     << ": VM "  << setw(15) << balance
+                     << ": NPV " << setw(15) << data[j][k]
+                     << ": NPV-C " << setw(15) << distribution[k]
+                     << ": EPE " << setw(15) << epeIncrement);
+                
                 if (multiPath_) {
-                    exposureCube_->set(std::max(exposure - dim_epe - independentAmountBase, 0.0), nettingSetCount, j, k, ExposureIndex::EPE);
+                    exposureCube_->set(std::max(exposure - dim_epe, 0.0), nettingSetCount, j, k, ExposureIndex::EPE);
                     exposureCube_->set(std::max(-exposure - dim_ene, 0.0), nettingSetCount, j, k, ExposureIndex::ENE);
                 }
-
+ 
                 if (netting->activeCsaFlag()) {
                     Real indexValue = 0.0;
                     DayCounter dc = ActualActual(ActualActual::ISDA);
