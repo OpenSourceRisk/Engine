@@ -534,7 +534,7 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                     }
                     if (sgd->getGrid()->isValuationDate()[k - 1]) {
                         Date valuationDate = sgd->getGrid()->dates()[k - 1];
-                        dateIndexCache[valuationDate] = ++dateIndex;
+                        dateIndexCache[valuationDate] = std::make_pair(t, ++dateIndex);
                         for (Size i = 0; i < outputCube->samples(); ++i) {
                             Real v = outputCube->get(tradeId[j], dateIndex, i, 0);
                             outputCube->set(v +
