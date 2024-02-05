@@ -255,8 +255,8 @@ void BlackMultiLegOptionEngineBase::calculate() const {
         InterestRate sr(effectiveAtmForward, fixedDayCount, Compounded, Annual);
         for (auto const& c : cfInfo) {
             if (c.fixedRate != Null<Real>()) {
-                annuity +=
-                    c.nominal * c.accrual * sr.discountFactor(std::min(earliestAccrualStartDate, c.payDate), c.payDate);
+                annuity += std::abs(c.nominal) * c.accrual *
+                           sr.discountFactor(std::min(earliestAccrualStartDate, c.payDate), c.payDate);
             }
         }
         annuity *= discountCurve_->discount(earliestAccrualStartDate);
@@ -368,6 +368,7 @@ BlackNonstandardSwaptionFromMultilegOptionEngine::BlackNonstandardSwaptionFromMu
 
 void BlackNonstandardSwaptionFromMultilegOptionEngine::calculate() const {
     legs_ = arguments_.legs;
+    payer_.resize(arguments_.payer.size());
     for (Size i = 0; i < arguments_.payer.size(); ++i) {
         payer_[i] = QuantLib::close_enough(arguments_.payer[i], -1.0);
     }

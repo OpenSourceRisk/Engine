@@ -43,6 +43,7 @@ void McCamCurrencySwapEngine::calculate() const {
 
     leg_ = arguments_.legs;
     currency_ = arguments_.currency;
+    payer_.resize(arguments_.payer.size());
     for (Size i = 0; i < arguments_.payer.size(); ++i) {
         payer_[i] = QuantLib::close_enough(arguments_.payer[i], -1.0);
     }
