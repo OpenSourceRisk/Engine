@@ -102,13 +102,8 @@ public:
     //@}
 
     //! Given a close out date it returns the corresponding value date
-    QuantLib::Date valuationDateFromCloseOutDate(const QuantLib::Date& closeOutDate) const { 
-        auto it = closeOutToValuation_.find(closeOutDate);
-        QL_REQUIRE(it != closeOutToValuation_.end(), "close out date " << closeOutDate << " not found in dategrid");
-        return it->second;
-    }
+    QuantLib::Date valuationDateFromCloseOutDate(const QuantLib::Date& closeOutDate) const;
     //@}
-
 
     //! Accessor methods
     const QuantLib::Date& operator[](QuantLib::Size i) const { return dates_[i]; };
