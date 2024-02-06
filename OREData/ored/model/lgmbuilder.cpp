@@ -190,6 +190,9 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
         (data_->calibrateA() || data_->calibrateH()) && data_->calibrationType() != CalibrationType::None;
 
     try {
+        svts_ = market_->swaptionVol(data_->qualifier(), configuration_);
+        shortSwapIndex_ =
+            market_->swapIndex(market_->shortSwapIndexBase(data_->qualifier(), configuration_), configuration_);
         swapIndex_ = market_->swapIndex(market_->swapIndexBase(data_->qualifier(), configuration_), configuration_);
         // see the comment for dinscountCurve() in the interface
         modelDiscountCurve_ = RelinkableHandle<YieldTermStructure>(*swapIndex_->discountingTermStructure());
@@ -203,9 +206,6 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
     }
 
     if (requiresCalibration_) {
-        svts_ = market_->swaptionVol(data_->qualifier(), configuration_);
-        shortSwapIndex_ =
-            market_->swapIndex(market_->shortSwapIndexBase(data_->qualifier(), configuration_), configuration_);
         registerWith(svts_);
         marketObserver_->addObservable(swapIndex_->forwardingTermStructure());
         marketObserver_->addObservable(shortSwapIndex_->forwardingTermStructure());
