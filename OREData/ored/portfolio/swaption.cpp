@@ -371,15 +371,19 @@ void Swaption::buildBermudanOrAmerican(const boost::shared_ptr<EngineFactory>& e
     std::vector<Real> strikes(exerciseBuilder_->noticeDates().size(), Null<Real>());
     boost::shared_ptr<InterestRateIndex> index;
     for (Size i = 0; i < exerciseBuilder_->noticeDates().size(); ++i) {
-        Real firstFixedRate = Null<Real>();
-        Real firstFloatSpread = Null<Real>();
+        Real firstFixedRate = Null<Real>(), lastFixedRate = Null<Real>();
+        Real firstFloatSpread = Null<Real>(), lastFloatSpread = Null<Real>();
         for (auto const& l : underlying_->legs()) {
             for (auto const& c : l) {
                 if (auto cpn = boost::dynamic_pointer_cast<FixedRateCoupon>(c)) {
                     if (cpn->accrualStartDate() >= exerciseBuilder_->noticeDates()[i] && firstFixedRate == Null<Real>())
                         firstFixedRate = cpn->rate();
+                    lastFixedRate = cpn->rate();
                 } else if (auto cpn = boost::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
-                    firstFloatSpread = cpn->spread();
+                    if (cpn->accrualStartDate() >= exerciseBuilder_->noticeDates()[i] &&
+                        firstFloatSpread == Null<Real>())
+                        firstFloatSpread = cpn->spread();
+                    lastFloatSpread = cpn->spread();
                     if (index == nullptr) {
                         if (auto tmp = boost::dynamic_pointer_cast<IborIndex>(cpn->index())) {
                             DLOG("found ibor / ois index '" << tmp->name() << "'");
@@ -396,6 +400,12 @@ void Swaption::buildBermudanOrAmerican(const boost::shared_ptr<EngineFactory>& e
                 }
             }
         }
+        // if no first fixed rate (float spread) was found, fall back on the last values
+        if(firstFixedRate == Null<Real>())
+            firstFixedRate = lastFixedRate;
+        if(firstFloatSpread == Null<Real>())
+            firstFloatSpread = lastFloatSpread;
+        // construct calibration strike
         if (firstFixedRate != Null<Real>()) {
             strikes[i] = firstFixedRate;
             if (firstFloatSpread != Null<Real>()) {
