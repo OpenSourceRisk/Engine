@@ -37,10 +37,8 @@
 #include <qle/instruments/deposit.hpp>
 #include <qle/instruments/fxforward.hpp>
 #include <qle/instruments/makecds.hpp>
-#include <qle/instruments/oibasisswap.hpp>
 #include <qle/instruments/subperiodsswap.hpp>
 #include <qle/instruments/tenorbasisswap.hpp>
-#include <qle/instruments/doubleoibasisswap.hpp>
 #include <qle/math/blockmatrixinverse.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <qle/pricingengines/depositengine.hpp>
@@ -109,22 +107,10 @@ Real impliedQuote(const boost::shared_ptr<Instrument>& i) {
     if (boost::dynamic_pointer_cast<YearOnYearInflationSwap>(i))
         return boost::dynamic_pointer_cast<YearOnYearInflationSwap>(i)->fairRate();
     if (boost::dynamic_pointer_cast<TenorBasisSwap>(i)) {
-        if (boost::dynamic_pointer_cast<TenorBasisSwap>(i)->spreadOnShort())
-            return boost::dynamic_pointer_cast<TenorBasisSwap>(i)->fairShortLegSpread();
+        if (boost::dynamic_pointer_cast<TenorBasisSwap>(i)->spreadOnPay())
+            return boost::dynamic_pointer_cast<TenorBasisSwap>(i)->fairPayLegSpread();
         else
-            return boost::dynamic_pointer_cast<TenorBasisSwap>(i)->fairLongLegSpread();
-    }
-    if (boost::dynamic_pointer_cast<OvernightIndexedBasisSwap>(i)) {
-        if (boost::dynamic_pointer_cast<OvernightIndexedBasisSwap>(i)->spreadOnShort())
-            return boost::dynamic_pointer_cast<OvernightIndexedBasisSwap>(i)->fairOvernightSpread();
-        else
-            return boost::dynamic_pointer_cast<OvernightIndexedBasisSwap>(i)->fairIborSpread();
-    }
-    if (boost::dynamic_pointer_cast<DoubleOvernightIndexedBasisSwap>(i)) {
-        if (boost::dynamic_pointer_cast<DoubleOvernightIndexedBasisSwap>(i)->spreadOnShort())
-            return boost::dynamic_pointer_cast<DoubleOvernightIndexedBasisSwap>(i)->fairPaySpread();
-        else
-            return boost::dynamic_pointer_cast<DoubleOvernightIndexedBasisSwap>(i)->fairRecSpread();
+            return boost::dynamic_pointer_cast<TenorBasisSwap>(i)->fairRecLegSpread();
     }
     if (boost::dynamic_pointer_cast<FixedBMASwap>(i))
         return boost::dynamic_pointer_cast<FixedBMASwap>(i)->fairRate();
@@ -1532,12 +1518,7 @@ std::pair<boost::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityAnalysis:
     }
     longIndex = longIndex->clone(longIndexCurve);
     shortIndex = shortIndex->clone(shortIndexCurve);
-    if (shortIndexOn)
-        shortIndexOn = boost::static_pointer_cast<OvernightIndex>(shortIndexOn->clone(shortIndexCurve));
-    if (longIndexOn)
-        longIndexOn = boost::static_pointer_cast<OvernightIndex>(longIndexOn->clone(longIndexCurve));
-    boost::shared_ptr<Swap> helper;
-    Date latestRelevantDate;
+
     boost::shared_ptr<Libor> longIndexAsLibor = boost::dynamic_pointer_cast<Libor>(longIndex);
     boost::shared_ptr<Libor> shortIndexAsLibor = boost::dynamic_pointer_cast<Libor>(shortIndex);
     Calendar longIndexCalendar =
@@ -1547,93 +1528,35 @@ std::pair<boost::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityAnalysis:
     removeTodaysFixingIndices_.insert(shortIndex->name());
     removeTodaysFixingIndices_.insert(longIndex->name());
 
-    if(!shortIndexOn && longIndexOn)
-        QL_FAIL("This is unexpected: long index is overnight, short index is longer");
-
     Date settlementDate = longIndexCalendar.advance(
             longIndexCalendar.adjust(asof_), longIndex->fixingDays() * Days);
 
-    if (shortIndexOn && !longIndexOn) {
-        // OIS vs Libor
-        Schedule oisSchedule = MakeSchedule()
-                                   .from(settlementDate)
-                                   .to(settlementDate + term)
-                                   .withTenor(conv->shortPayTenor())
-                                   .withCalendar(shortIndexCalendar)
-                                   .withConvention(shortIndex->businessDayConvention())
-                                   .forwards();
-        Schedule iborSchedule = MakeSchedule()
-                                    .from(settlementDate)
-                                    .to(settlementDate + term)
-                                    .withTenor(longIndex->tenor())
-                                    .withCalendar(longIndexCalendar)
-                                    .withConvention(longIndex->businessDayConvention())
-                                    .forwards();
-        helper =
-            boost::make_shared<OvernightIndexedBasisSwap>(OvernightIndexedBasisSwap::Payer, 100.0, oisSchedule,
-                                                          shortIndexOn, iborSchedule, longIndex, conv->spreadOnShort());
-        boost::shared_ptr<IborCoupon> lastCoupon1 = boost::dynamic_pointer_cast<IborCoupon>(
-            boost::static_pointer_cast<OvernightIndexedBasisSwap>(helper)->iborLeg().back());
-        boost::shared_ptr<QuantLib::OvernightIndexedCoupon> lastCoupon2 =
-            boost::dynamic_pointer_cast<QuantLib::OvernightIndexedCoupon>(
-                boost::static_pointer_cast<OvernightIndexedBasisSwap>(helper)->overnightLeg().back());
-        latestRelevantDate = std::max(helper->maturityDate(),
-                 std::max(lastCoupon1->fixingEndDate(),
-                          shortIndexOn->fixingCalendar().advance(lastCoupon2->valueDates().back(), 1 * Days)));
-    } else if (shortIndexOn && longIndexOn) {
-        // OIS vs OIS
-        // from userguide: long index ... should be interpreted as the index of the received leg.
-        Schedule shortSchedule = MakeSchedule()
-                                     .from(settlementDate)
-                                     .to(settlementDate + term)
-                                     .withTenor(conv->shortPayTenor())
-                                     .withCalendar(shortIndexCalendar)
-                                     .withConvention(shortIndex->businessDayConvention())
-                                     .forwards();
-        Schedule longSchedule = MakeSchedule()
-                                    .from(settlementDate)
-                                    .to(settlementDate + term)
-                                    .withTenor(longIndex->tenor())
-                                    .withCalendar(longIndexCalendar)
-                                    .withConvention(longIndex->businessDayConvention())
-                                    .forwards();
+    bool telescopicValueDates = true;
+    // CHECK akin to yieldcurve long = pay , short = receive ...
+    boost::shared_ptr<Swap> helper =
+        boost::make_shared<TenorBasisSwap>(settlementDate, 1.0, term, longIndex, 0.0, conv->longPayTenor(), shortIndex,
+                                           0.0, conv->shortPayTenor(), DateGeneration::Backward, conv->includeSpread(),
+                                           conv->spreadOnShort(), conv->subPeriodsCouponType(), telescopicValueDates);
 
-        helper = boost::make_shared<DoubleOvernightIndexedBasisSwap>(
-            100.0, shortSchedule, shortIndexOn, longSchedule, longIndexOn, 0.0, 0.0, conv->spreadOnShort(), false);
-
-        boost::shared_ptr<QuantLib::OvernightIndexedCoupon> lastCouponShort =
-            boost::dynamic_pointer_cast<QuantLib::OvernightIndexedCoupon>(
-                boost::static_pointer_cast<DoubleOvernightIndexedBasisSwap>(helper)->payLeg().back());
-
-        boost::shared_ptr<QuantLib::OvernightIndexedCoupon> lastCouponLong =
-            boost::dynamic_pointer_cast<QuantLib::OvernightIndexedCoupon>(
-                boost::static_pointer_cast<DoubleOvernightIndexedBasisSwap>(helper)->recLeg().back());
-
-        latestRelevantDate =
-            std::max(helper->maturityDate(),
-                     std::max(shortIndexOn->fixingCalendar().advance(lastCouponShort->valueDates().back(), 1 * Days),
-                              longIndexOn->fixingCalendar().advance(lastCouponLong->valueDates().back(), 1 * Days)));
-
-    } else {
-        // Libor vs Libor
-        helper = boost::make_shared<TenorBasisSwap>(settlementDate, 1.0, term, true, longIndex, 0.0, shortIndex, 0.0,
-                                                    conv->shortPayTenor(), DateGeneration::Backward,
-                                                    conv->includeSpread(), conv->spreadOnShort(), conv->subPeriodsCouponType());
-        boost::shared_ptr<IborCoupon> lastCoupon1 = boost::dynamic_pointer_cast<IborCoupon>(
-            boost::static_pointer_cast<TenorBasisSwap>(helper)->longLeg().back());
-        Date maxDate2;
-        boost::shared_ptr<IborCoupon> lastCoupon2 = boost::dynamic_pointer_cast<IborCoupon>(
-            boost::static_pointer_cast<TenorBasisSwap>(helper)->shortLeg().back());
-        if (lastCoupon2 != nullptr)
-            maxDate2 = lastCoupon2->fixingEndDate();
-        else {
-            boost::shared_ptr<QuantExt::SubPeriodsCoupon1> lastCoupon2 =
-                boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(
-                    boost::static_pointer_cast<TenorBasisSwap>(helper)->shortLeg().back());
-            maxDate2 = shortIndexCalendar.advance(lastCoupon2->valueDates().back(), conv->shortPayTenor());
-        }
-        latestRelevantDate = std::max(helper->maturityDate(), std::max(lastCoupon1->fixingEndDate(), maxDate2));
+    boost::shared_ptr<IborCoupon> lastCoupon1 =
+        boost::dynamic_pointer_cast<IborCoupon>(boost::static_pointer_cast<TenorBasisSwap>(helper)->payLeg().back());
+    Date maxDate2;
+    boost::shared_ptr<IborCoupon> lastCoupon2 =
+        boost::dynamic_pointer_cast<IborCoupon>(boost::static_pointer_cast<TenorBasisSwap>(helper)->recLeg().back());
+    if (lastCoupon2 != nullptr)
+        maxDate2 = lastCoupon2->fixingEndDate();
+    else {
+        boost::shared_ptr<QuantExt::SubPeriodsCoupon1> lastCoupon2;
+        if (conv->spreadOnShort()) //CHECK: spreadOnShort = spreadOnPay
+            lastCoupon2 = boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(
+                boost::static_pointer_cast<TenorBasisSwap>(helper)->payLeg().back());
+        else
+            lastCoupon2 = boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(
+                boost::static_pointer_cast<TenorBasisSwap>(helper)->recLeg().back());
+        maxDate2 = shortIndexCalendar.advance(lastCoupon2->valueDates().back(), conv->shortPayTenor());
     }
+    Date latestRelevantDate = std::max(helper->maturityDate(), std::max(lastCoupon1->fixingEndDate(), maxDate2));
+
     if (market != nullptr) {
         boost::shared_ptr<PricingEngine> swapEngine = boost::make_shared<DiscountingSwapEngine>(discountCurve);
         helper->setPricingEngine(swapEngine);
