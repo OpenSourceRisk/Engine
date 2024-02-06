@@ -730,7 +730,7 @@ private:
 
 class ProgressMessage : public JSONMessage {
 public:
-    ProgressMessage(const std::string&, const QuantLib::Size, const QuantLib::Size);
+    ProgressMessage(const std::string&, const QuantLib::Size, const QuantLib::Size, const std::string& detail = "");
 
     static constexpr const char* name = "ProgressMessage";
 

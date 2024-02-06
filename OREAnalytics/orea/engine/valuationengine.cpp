@@ -239,6 +239,11 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                 }
             }
         }
+        std::ostringstream detail;
+        detail << nTrades << " trade" << (nTrades == 1 ? "" : "s") << ", " << outputCube->samples() << " sample"
+               << (outputCube->samples() == 1 ? "" : "s");
+        updateProgress(sample * nTrades, outputCube->samples() * nTrades, detail.str());
+
         timer.start();
         simMarket_->fixingManager()->reset();
         fixingTime += timer.elapsed().wall * 1e-9;
@@ -260,7 +265,10 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
         }
     }
 
-    updateProgress(outputCube->samples() * nTrades, outputCube->samples() * nTrades);
+    std::ostringstream detail;
+    detail << nTrades << " trade" << (nTrades == 1 ? "" : "s") << ", " << outputCube->samples() << " sample"
+           << (outputCube->samples() == 1 ? "" : "s");
+    updateProgress(outputCube->samples() * nTrades, outputCube->samples() * nTrades, detail.str());
     loopTimer.stop();
     LOG("ValuationEngine completed: loop " << setprecision(2) << loopTimer.format(2, "%w") << " sec, "
                                            << "pricing " << pricingTime << " sec, "
