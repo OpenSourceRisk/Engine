@@ -25,43 +25,103 @@
 
 namespace QuantExt {
 
-TenorBasisSwapHelper::TenorBasisSwapHelper(Handle<Quote> spread, const Period& swapTenor,
-                                           const boost::shared_ptr<IborIndex> longIndex,
-                                           const boost::shared_ptr<IborIndex> shortIndex, const Period& shortPayTenor,
-                                           const Handle<YieldTermStructure>& discountingCurve, bool spreadOnShort,
-                                           bool includeSpread, QuantExt::SubPeriodsCoupon1::Type type)
-    : RelativeDateRateHelper(spread), swapTenor_(swapTenor), longIndex_(longIndex), shortIndex_(shortIndex),
-      spreadOnShort_(spreadOnShort), includeSpread_(includeSpread), type_(type), discountHandle_(discountingCurve) {
+TenorBasisSwapHelper::TenorBasisSwapHelper(
+    Handle<Quote> spread, const Period& swapTenor, const boost::shared_ptr<IborIndex> payIndex,
+    const boost::shared_ptr<IborIndex> receiveIndex,
+    const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>(), bool spreadOnPay = true,
+    bool includeSpread = false, const Period& payFrequency = Period(), const Period& recFrequency = Period(),
+    const bool telescopicValueDates = false,
+    QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding)
+    : RelativeDateRateHelper(spread), swapTenor_(swapTenor), payIndex_(payIndex), receiveIndex_(receiveIndex),
+      spreadOnPay_(spreadOnPay), includeSpread_(includeSpread), payFrequency_(payFrequency),
+      recFrequency_(recFrequency), telescopicValueDates_(telescopicValueDates), type_(type),
+      discountHandle_(discountingCurve) {
 
-    bool longIndexHasCurve = !longIndex_->forwardingTermStructure().empty();
-    bool shortIndexHasCurve = !shortIndex_->forwardingTermStructure().empty();
-    bool haveDiscountCurve = !discountHandle_.empty();
-    QL_REQUIRE(!(longIndexHasCurve && shortIndexHasCurve && haveDiscountCurve),
-               "Have all curves nothing to solve for.");
+    // bool payIndexHasCurve = !payIndex_->forwardingTermStructure().empty();
+    // bool receiveIndexHasCurve = !receiveIndex_->forwardingTermStructure().empty();
+    // bool haveDiscountCurve = !discountHandle_.empty();
+    // QL_REQUIRE(!(payIndexHasCurve && receiveIndexHasCurve && haveDiscountCurve),
+    //            "Have all curves nothing to solve for.");
 
-    if (longIndexHasCurve && !shortIndexHasCurve) {
-        shortIndex_ = shortIndex_->clone(termStructureHandle_);
-        shortIndex_->unregisterWith(termStructureHandle_);
-    } else if (!longIndexHasCurve && shortIndexHasCurve) {
-        longIndex_ = longIndex_->clone(termStructureHandle_);
-        longIndex_->unregisterWith(termStructureHandle_);
-    } else if (!longIndexHasCurve && !shortIndexHasCurve) {
-        QL_FAIL("Need at least one of the indices to have a valid curve.");
+    // if (payIndexHasCurve && !receiveIndexHasCurve) {
+    //     receiveIndex_ = receiveIndex_->clone(termStructureHandle_);
+    //     receiveIndex_->unregisterWith(termStructureHandle_);
+    // } else if (!payIndexHasCurve && receiveIndexHasCurve) {
+    //     payIndex_ = payIndex_->clone(termStructureHandle_);
+    //     payIndex_->unregisterWith(termStructureHandle_);
+    // } else if (!payIndexHasCurve && !receiveIndexHasCurve) {
+    //     QL_FAIL("Need at least one of the indices to have a valid curve.");
+    // }
+
+       /* depending on the given curves we proceed as outlined in the following table
+
+       x = curve is given
+       . = curve is missing
+
+       Case | OI1 | OI2  | Discount | Action
+       =========================================
+         0  |  .  |   .  |    .     | throw exception
+         1  |  .  |   .  |    x     | throw exception
+         2  |  .  |   x  |    .     | imply OI1 = Discount
+         3  |  .  |   x  |    x     | imply OI1
+         4  |  x  |   .  |    .     | imply OI2, set Discount is OI1
+         5  |  x  |   .  |    x     | imply OI2
+         6  |  x  |   x  |    .     | imply Discount
+         7  |  x  |   x  |    x     | throw exception
+
+    */
+
+    bool payGiven = !payIndex_->forwardingTermStructure().empty();
+    bool recGiven = !receiveIndex_->forwardingTermStructure().empty();
+    bool discountGiven = !discountHandle_.empty();
+
+    if (!payGiven && !recGiven && !discountGiven) {
+        // case 0
+        QL_FAIL("no curve given");
+    } else if (!payGiven && !recGiven && discountGiven) {
+        // case 1
+        QL_FAIL("neither Index nor Discount curve is given");
+    } else if (!payGiven && recGiven && !discountGiven) {
+        // case 2
+        payIndex_ = boost::static_pointer_cast<IborIndex>(payIndex_->clone(termStructureHandle_));
+        payIndex_->unregisterWith(termStructureHandle_);
+        discountRelinkableHandle_.linkTo(*termStructureHandle_, false);
+    } else if (!payGiven && recGiven && discountGiven) {
+        // case 3
+        payIndex_ = boost::static_pointer_cast<IborIndex>(payIndex_->clone(termStructureHandle_));
+        payIndex_->unregisterWith(termStructureHandle_);
+    } else if (payGiven && !recGiven && !discountGiven) {
+        // case 4
+        receiveIndex_ = boost::static_pointer_cast<IborIndex>(receiveIndex_->clone(termStructureHandle_));
+        receiveIndex_->unregisterWith(termStructureHandle_);
+        discountRelinkableHandle_.linkTo(*payIndex_->forwardingTermStructure());
+    } else if (payGiven && !recGiven && discountGiven) {
+        // case 5
+        receiveIndex_ = boost::static_pointer_cast<IborIndex>(receiveIndex_->clone(termStructureHandle_));
+        receiveIndex_->unregisterWith(termStructureHandle_);
+    } else if (payGiven && recGiven && !discountGiven) {
+        // case 6
+        discountRelinkableHandle_.linkTo(*termStructureHandle_, false);
+    } else if (payGiven && recGiven && discountGiven) {
+        // case 7
+        QL_FAIL("Both Index and the Discount curves are all given");
     }
 
-    shortPayTenor_ = shortPayTenor == Period() ? shortIndex_->tenor() : shortPayTenor;
+    payFrequency_ = payFrequency == Period() ? payIndex_->tenor() : payFrequency;
+    recFrequency_ = recFrequency == Period() ? receiveIndex_->tenor() : recFrequency;
 
-    registerWith(longIndex_);
-    registerWith(shortIndex_);
+    registerWith(payIndex_);
+    registerWith(receiveIndex_);
     registerWith(discountHandle_);
     initializeDates();
 }
 
 void TenorBasisSwapHelper::initializeDates() {
 
-    boost::shared_ptr<Libor> longIndexAsLibor = boost::dynamic_pointer_cast<Libor>(longIndex_);
-    Calendar spotCalendar = longIndexAsLibor != NULL ? longIndexAsLibor->jointCalendar() : longIndex_->fixingCalendar();
-    Natural spotDays = longIndex_->fixingDays();
+    //CHECK : should the spot shift be based on pay ore receive, here we have th pay leg... 
+    boost::shared_ptr<Libor> payIndexAsLibor = boost::dynamic_pointer_cast<Libor>(payIndex_);
+    Calendar spotCalendar = payIndexAsLibor != NULL ? payIndexAsLibor->jointCalendar() : payIndex_->fixingCalendar();
+    Natural spotDays = payIndex_->fixingDays();
 
     Date valuationDate = Settings::instance().evaluationDate();
     // if the evaluation date is not a business day
@@ -70,9 +130,9 @@ void TenorBasisSwapHelper::initializeDates() {
 
     Date effectiveDate = spotCalendar.advance(valuationDate, spotDays * Days);
 
-    swap_ = boost::shared_ptr<TenorBasisSwap>(new TenorBasisSwap(effectiveDate, 1.0, swapTenor_, true, longIndex_, 0.0,
-                                                                 shortIndex_, 0.0, shortPayTenor_,
-                                                                 DateGeneration::Backward, includeSpread_, spreadOnShort_, type_));
+    swap_ = boost::shared_ptr<TenorBasisSwap>(new TenorBasisSwap(
+        effectiveDate, 1.0, swapTenor_, payIndex_, 0.0, payFrequency_, receiveIndex_, 0.0, recFrequency_,
+        DateGeneration::Backward, includeSpread_, spreadOnPay_, type_, telescopicValueDates_));
 
     boost::shared_ptr<PricingEngine> engine(new DiscountingSwapEngine(discountRelinkableHandle_));
     swap_->setPricingEngine(engine);
@@ -81,20 +141,20 @@ void TenorBasisSwapHelper::initializeDates() {
     latestDate_ = swap_->maturityDate();
 
     boost::shared_ptr<FloatingRateCoupon> lastFloating = boost::dynamic_pointer_cast<FloatingRateCoupon>(
-        termStructureHandle_ == shortIndex_->forwardingTermStructure() ? swap_->shortLeg().back()
-                                                                       : swap_->longLeg().back());
+        termStructureHandle_ == receiveIndex_->forwardingTermStructure() ? swap_->recLeg().back()
+                                                                       : swap_->payLeg().back());
     if (IborCoupon::Settings::instance().usingAtParCoupons()) {
         /* Subperiods coupons do not have a par approximation either... */
         if (boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(lastFloating)) {
-            Date fixingValueDate = shortIndex_->valueDate(lastFloating->fixingDate());
-            Date endValueDate = shortIndex_->maturityDate(fixingValueDate);
+            Date fixingValueDate = receiveIndex_->valueDate(lastFloating->fixingDate());
+            Date endValueDate = receiveIndex_->maturityDate(fixingValueDate);
             latestDate_ = std::max(latestDate_, endValueDate);
         }
     } else {
         /* May need to adjust latestDate_ if you are projecting libor based
         on tenor length rather than from accrual date to accrual date. */
-        Date fixingValueDate = shortIndex_->valueDate(lastFloating->fixingDate());
-        Date endValueDate = shortIndex_->maturityDate(fixingValueDate);
+        Date fixingValueDate = receiveIndex_->valueDate(lastFloating->fixingDate());
+        Date endValueDate = receiveIndex_->maturityDate(fixingValueDate);
         latestDate_ = std::max(latestDate_, endValueDate); 
     }
 }
@@ -116,8 +176,9 @@ void TenorBasisSwapHelper::setTermStructure(YieldTermStructure* t) {
 
 Real TenorBasisSwapHelper::impliedQuote() const {
     QL_REQUIRE(termStructure_ != 0, "Termstructure not set");
+    // we didn't register as observers - force calculation
     swap_->deepUpdate();
-    return (spreadOnShort_ ? swap_->fairShortLegSpread() : swap_->fairLongLegSpread());
+    return (spreadOnPay_ ? swap_->fairPayLegSpread() : swap_->fairRecLegSpread());
 }
 
 void TenorBasisSwapHelper::accept(AcyclicVisitor& v) {

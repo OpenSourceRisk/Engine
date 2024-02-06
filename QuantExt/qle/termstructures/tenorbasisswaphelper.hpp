@@ -36,10 +36,11 @@ using namespace QuantLib;
  */
 class TenorBasisSwapHelper : public RelativeDateRateHelper {
 public:
-    TenorBasisSwapHelper(Handle<Quote> spread, const Period& swapTenor, const boost::shared_ptr<IborIndex> longIndex,
-                         const boost::shared_ptr<IborIndex> shortIndex, const Period& shortPayTenor = Period(),
+    TenorBasisSwapHelper(Handle<Quote> spread, const Period& swapTenor, const boost::shared_ptr<IborIndex> payIndex,
+                         const boost::shared_ptr<IborIndex> receiveIndex,
                          const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>(),
-                         bool spreadOnShort = true, bool includeSpread = false,
+                         bool spreadOnPay = true, bool includeSpread = false, const Period& payFrequency = Period(),
+                         const Period& recFrequency = Period(), const bool telescopicValueDates = false,
                          QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding);
 
     //! \name RateHelper interface
@@ -60,11 +61,13 @@ protected:
     void initializeDates() override;
 
     Period swapTenor_;
-    boost::shared_ptr<IborIndex> longIndex_;
-    boost::shared_ptr<IborIndex> shortIndex_;
-    Period shortPayTenor_;
-    bool spreadOnShort_;
+    boost::shared_ptr<IborIndex> payIndex_;
+    boost::shared_ptr<IborIndex> receiveIndex_;
+    bool spreadOnPay_;
     bool includeSpread_;
+    Period payFrequency_;
+    Period recFrequency_;
+    bool telescopicValueDates_;
     QuantExt::SubPeriodsCoupon1::Type type_;
 
     boost::shared_ptr<TenorBasisSwap> swap_;
