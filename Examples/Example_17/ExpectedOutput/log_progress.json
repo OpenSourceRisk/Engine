@@ -1,101 +1,101 @@
-{ "@timestamp": "2023-10-20T23:35:55.064007", "key": "sensitivities", "progress": 0, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.072006", "key": "sensitivities", "progress": 2, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.081007", "key": "sensitivities", "progress": 4, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.089008", "key": "sensitivities", "progress": 6, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.096007", "key": "sensitivities", "progress": 7, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.104008", "key": "sensitivities", "progress": 9, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.111007", "key": "sensitivities", "progress": 11, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.119007", "key": "sensitivities", "progress": 13, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.125006", "key": "sensitivities", "progress": 14, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.132007", "key": "sensitivities", "progress": 16, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.139007", "key": "sensitivities", "progress": 18, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.148006", "key": "sensitivities", "progress": 20, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.153006", "key": "sensitivities", "progress": 21, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.160009", "key": "sensitivities", "progress": 23, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.167008", "key": "sensitivities", "progress": 25, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.174007", "key": "sensitivities", "progress": 27, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.179007", "key": "sensitivities", "progress": 28, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.187008", "key": "sensitivities", "progress": 30, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.194007", "key": "sensitivities", "progress": 32, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.202007", "key": "sensitivities", "progress": 34, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.208008", "key": "sensitivities", "progress": 35, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.215008", "key": "sensitivities", "progress": 37, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.221008", "key": "sensitivities", "progress": 39, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.228008", "key": "sensitivities", "progress": 41, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.233008", "key": "sensitivities", "progress": 42, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.240010", "key": "sensitivities", "progress": 44, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.247009", "key": "sensitivities", "progress": 46, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.254008", "key": "sensitivities", "progress": 48, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.259007", "key": "sensitivities", "progress": 49, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.265008", "key": "sensitivities", "progress": 51, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.272009", "key": "sensitivities", "progress": 53, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.279009", "key": "sensitivities", "progress": 55, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.284008", "key": "sensitivities", "progress": 56, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.291008", "key": "sensitivities", "progress": 58, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.297009", "key": "sensitivities", "progress": 60, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.305008", "key": "sensitivities", "progress": 62, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.310008", "key": "sensitivities", "progress": 63, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.316009", "key": "sensitivities", "progress": 65, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.323009", "key": "sensitivities", "progress": 67, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.329011", "key": "sensitivities", "progress": 69, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.335009", "key": "sensitivities", "progress": 70, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.342008", "key": "sensitivities", "progress": 72, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.348010", "key": "sensitivities", "progress": 74, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.355009", "key": "sensitivities", "progress": 76, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.359010", "key": "sensitivities", "progress": 77, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.366009", "key": "sensitivities", "progress": 79, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.372009", "key": "sensitivities", "progress": 81, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.379010", "key": "sensitivities", "progress": 83, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.384010", "key": "sensitivities", "progress": 84, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.390009", "key": "sensitivities", "progress": 86, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.399009", "key": "sensitivities", "progress": 88, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.406011", "key": "sensitivities", "progress": 90, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.411010", "key": "sensitivities", "progress": 91, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.419010", "key": "sensitivities", "progress": 93, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.427010", "key": "sensitivities", "progress": 95, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.433010", "key": "sensitivities", "progress": 97, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.438010", "key": "sensitivities", "progress": 98, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.445012", "key": "sensitivities", "progress": 100, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.452010", "key": "sensitivities", "progress": 102, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.459013", "key": "sensitivities", "progress": 104, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.464010", "key": "sensitivities", "progress": 105, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.472010", "key": "sensitivities", "progress": 107, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.480011", "key": "sensitivities", "progress": 109, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.488012", "key": "sensitivities", "progress": 111, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.494013", "key": "sensitivities", "progress": 112, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.501011", "key": "sensitivities", "progress": 114, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.510012", "key": "sensitivities", "progress": 116, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.518010", "key": "sensitivities", "progress": 118, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.524012", "key": "sensitivities", "progress": 119, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.532012", "key": "sensitivities", "progress": 121, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.541012", "key": "sensitivities", "progress": 123, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.548014", "key": "sensitivities", "progress": 125, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.554012", "key": "sensitivities", "progress": 126, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.562012", "key": "sensitivities", "progress": 128, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.569012", "key": "sensitivities", "progress": 130, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.578012", "key": "sensitivities", "progress": 132, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.584015", "key": "sensitivities", "progress": 133, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.592013", "key": "sensitivities", "progress": 135, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.600013", "key": "sensitivities", "progress": 137, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.607012", "key": "sensitivities", "progress": 139, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.612012", "key": "sensitivities", "progress": 140, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.619012", "key": "sensitivities", "progress": 142, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.627013", "key": "sensitivities", "progress": 144, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.635014", "key": "sensitivities", "progress": 146, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.641017", "key": "sensitivities", "progress": 147, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.651013", "key": "sensitivities", "progress": 149, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.658018", "key": "sensitivities", "progress": 151, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.667017", "key": "sensitivities", "progress": 153, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.673014", "key": "sensitivities", "progress": 154, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.679017", "key": "sensitivities", "progress": 156, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.689018", "key": "sensitivities", "progress": 158, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.698022", "key": "sensitivities", "progress": 160, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.704014", "key": "sensitivities", "progress": 161, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.713013", "key": "sensitivities", "progress": 163, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.721019", "key": "sensitivities", "progress": 165, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.730013", "key": "sensitivities", "progress": 167, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.735013", "key": "sensitivities", "progress": 168, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.743014", "key": "sensitivities", "progress": 170, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.750014", "key": "sensitivities", "progress": 172, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.760014", "key": "sensitivities", "progress": 174, "total": 175 }
-{ "@timestamp": "2023-10-20T23:35:55.763013", "key": "sensitivities", "progress": 175, "total": 175 }
+{ "@timestamp": "2024-02-06T18:33:26.884490", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 0, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:26.900490", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 10, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:26.914492", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 20, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:26.929491", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 30, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:26.941490", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 35, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:26.953490", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 45, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:26.965489", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 55, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:26.981488", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 65, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:26.992489", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 70, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.004488", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 80, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.018488", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 90, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.031488", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 100, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.040487", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 105, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.052487", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 115, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.063488", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 125, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.075487", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 135, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.087486", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 140, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.101487", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 150, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.112487", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 160, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.126488", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 170, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.144487", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 175, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.157484", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 185, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.169486", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 195, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.182487", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 205, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.198484", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 210, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.211484", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 220, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.222484", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 230, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.233485", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 240, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.247482", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 245, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.259484", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 255, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.270483", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 265, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.282483", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 275, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.294483", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 280, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.305483", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 290, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.317482", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 300, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.328482", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 310, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.341481", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 315, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.353481", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 325, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.364481", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 335, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.374481", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 345, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.386482", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 350, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.397480", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 360, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.407480", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 370, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.421480", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 380, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.434480", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 385, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.446479", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 395, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.457479", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 405, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.470478", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 415, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.481479", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 420, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.492478", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 430, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.504478", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 440, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.517478", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 450, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.527477", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 455, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.537477", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 465, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.549477", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 475, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.559478", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 485, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.570477", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 490, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.581476", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 500, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.594477", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 510, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.607476", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 520, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.618477", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 525, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.628475", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 535, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.641475", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 545, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.656475", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 555, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.669475", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 560, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.682475", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 570, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.693474", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 580, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.705474", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 590, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.715474", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 595, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.727474", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 605, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.742473", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 615, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.754473", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 625, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.763472", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 630, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.774474", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 640, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.784472", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 650, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.795472", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 660, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.808472", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 665, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.819472", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 675, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.831472", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 685, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.843471", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 695, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.854471", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 700, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.866470", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 710, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.877471", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 720, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.889470", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 730, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.900469", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 735, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.911469", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 745, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.923469", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 755, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.934469", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 765, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.944469", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 770, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.956469", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 780, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.967468", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 790, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.978468", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 800, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.988468", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 805, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:27.999469", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 815, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:28.011469", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 825, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:28.022467", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 835, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:28.035467", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 840, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:28.046467", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 850, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:28.057468", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 860, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:28.071467", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 870, "total": 875 }
+{ "@timestamp": "2024-02-06T18:33:28.080467", "detail": "5 trades, 175 samples", "key": "sensitivities", "progress": 875, "total": 875 }
