@@ -1038,6 +1038,15 @@
           "tradeId",
           "resultId",
           "resultType"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "resultValue",
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
         ]
       },
       ".*curves.*\\.csv": {
