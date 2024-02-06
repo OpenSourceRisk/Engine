@@ -49,6 +49,7 @@ public:
     TradeStrike strike() const { return strike_; }
     double quantity() const { return quantity_; }
     const QuantLib::Date forwardDate() const { return forwardDate_; }
+    const QuantLib::Date paymentDate() const { return paymentDate_; }
     //@}
 
     //! \name Serialisation
@@ -86,6 +87,9 @@ protected:
 
     //! Store the (optional) forward date.
     QuantLib::Date forwardDate_;
+
+    //! Store the (optional) payment date.
+    QuantLib::Date paymentDate_;
 };
 } // namespace data
 } // namespace ore

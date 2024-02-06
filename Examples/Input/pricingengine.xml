@@ -64,6 +64,29 @@
       <Parameter name="nx">10</Parameter>
     </EngineParameters>
   </Product>
+  <Product type="AmericanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters>
+      <Parameter name="Calibration">Bootstrap</Parameter>
+      <Parameter name="CalibrationStrategy">CoterminalATM</Parameter>
+      <Parameter name="Reversion">0.03</Parameter>
+      <Parameter name="ReversionType">HullWhite</Parameter>
+      <Parameter name="Volatility">0.01</Parameter>
+      <Parameter name="VolatilityType">Hagan</Parameter>
+      <!-- shift horizon as ratio of maturity time -->
+      <Parameter name="ShiftHorizon">0.5</Parameter>
+      <Parameter name="Tolerance">0.0001</Parameter>
+      <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+      <Parameter name="ExerciseTimeStepsPerYear">24</Parameter>
+    </ModelParameters>
+     <Engine>FD</Engine>
+    <EngineParameters>
+      <Parameter name="Scheme">Douglas</Parameter>
+      <Parameter name="StateGridPoints">64</Parameter>
+      <Parameter name="TimeStepsPerYear">24</Parameter>
+      <Parameter name="MesherEpsilon">1E-4</Parameter>
+    </EngineParameters>
+ </Product>
   <Product type="CapFloor">
     <Model>IborCapModel</Model>
     <ModelParameters/>

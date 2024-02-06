@@ -63,7 +63,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
                          const boost::shared_ptr<ReferenceDataManager>& referenceData,
                          const IborFallbackConfig& iborFallbackConfig, const bool continueOnCalibrationError,
                          const bool continueOnError, const std::string& context)
-    : nThreads_(nThreads), asof_(asof), loader_(loader), curveConfigs_(curveConfigs),
+    : asof_(asof), loader_(loader), curveConfigs_(curveConfigs),
       todaysMarketParams_(todaysMarketParams), simMarketData_(simMarketData), engineData_(engineData),
       crossAssetModelData_(crossAssetModelData), scenarioGeneratorData_(scenarioGeneratorData), portfolio_(portfolio),
       marketConfiguration_(marketConfiguration), marketConfigurationInCcy_(marketConfigurationInCcy),

@@ -40,6 +40,7 @@
 #include <qle/instruments/oibasisswap.hpp>
 #include <qle/instruments/subperiodsswap.hpp>
 #include <qle/instruments/tenorbasisswap.hpp>
+#include <qle/instruments/doubleoibasisswap.hpp>
 #include <qle/math/blockmatrixinverse.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <qle/pricingengines/depositengine.hpp>
@@ -69,8 +70,8 @@
 #include <qle/instruments/fixedbmaswap.hpp>
 
 #include <boost/lexical_cast.hpp>
-#include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/operation.hpp>
+#include <boost/numeric/ublas/vector.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -96,7 +97,7 @@ Real impliedQuote(const boost::shared_ptr<Instrument>& i) {
     if (boost::dynamic_pointer_cast<OvernightIndexedSwap>(i))
         return boost::dynamic_pointer_cast<OvernightIndexedSwap>(i)->fairRate();
     if (boost::dynamic_pointer_cast<CrossCcyBasisMtMResetSwap>(i))
-      return boost::dynamic_pointer_cast<CrossCcyBasisMtMResetSwap>(i)->fairSpread(); 
+        return boost::dynamic_pointer_cast<CrossCcyBasisMtMResetSwap>(i)->fairSpread();
     if (boost::dynamic_pointer_cast<CrossCcyBasisSwap>(i))
         return boost::dynamic_pointer_cast<CrossCcyBasisSwap>(i)->fairPaySpread();
     if (boost::dynamic_pointer_cast<FxForward>(i))
@@ -107,10 +108,24 @@ Real impliedQuote(const boost::shared_ptr<Instrument>& i) {
         return boost::dynamic_pointer_cast<ZeroCouponInflationSwap>(i)->fairRate();
     if (boost::dynamic_pointer_cast<YearOnYearInflationSwap>(i))
         return boost::dynamic_pointer_cast<YearOnYearInflationSwap>(i)->fairRate();
-    if (boost::dynamic_pointer_cast<TenorBasisSwap>(i))
-        return boost::dynamic_pointer_cast<TenorBasisSwap>(i)->fairShortLegSpread(); // assume spread on short index
-    if (boost::dynamic_pointer_cast<OvernightIndexedBasisSwap>(i))
-        return boost::dynamic_pointer_cast<OvernightIndexedBasisSwap>(i)->fairOvernightSpread();
+    if (boost::dynamic_pointer_cast<TenorBasisSwap>(i)) {
+        if (boost::dynamic_pointer_cast<TenorBasisSwap>(i)->spreadOnShort())
+            return boost::dynamic_pointer_cast<TenorBasisSwap>(i)->fairShortLegSpread();
+        else
+            return boost::dynamic_pointer_cast<TenorBasisSwap>(i)->fairLongLegSpread();
+    }
+    if (boost::dynamic_pointer_cast<OvernightIndexedBasisSwap>(i)) {
+        if (boost::dynamic_pointer_cast<OvernightIndexedBasisSwap>(i)->spreadOnShort())
+            return boost::dynamic_pointer_cast<OvernightIndexedBasisSwap>(i)->fairOvernightSpread();
+        else
+            return boost::dynamic_pointer_cast<OvernightIndexedBasisSwap>(i)->fairIborSpread();
+    }
+    if (boost::dynamic_pointer_cast<DoubleOvernightIndexedBasisSwap>(i)) {
+        if (boost::dynamic_pointer_cast<DoubleOvernightIndexedBasisSwap>(i)->spreadOnShort())
+            return boost::dynamic_pointer_cast<DoubleOvernightIndexedBasisSwap>(i)->fairPaySpread();
+        else
+            return boost::dynamic_pointer_cast<DoubleOvernightIndexedBasisSwap>(i)->fairRecSpread();
+    }
     if (boost::dynamic_pointer_cast<FixedBMASwap>(i))
         return boost::dynamic_pointer_cast<FixedBMASwap>(i)->fairRate();
     if (boost::dynamic_pointer_cast<SubPeriodsSwap>(i))
@@ -149,8 +164,8 @@ ParSensitivityAnalysis::ParSensitivityAnalysis(const Date& asof,
 
 void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<ScenarioSimMarket>& simMarket) {
 
-    QL_REQUIRE(typesDisabled_ != parTypes_, "At least one par risk factor type must be enabled " <<
-        "for a valid ParSensitivityAnalysis.");
+    QL_REQUIRE(typesDisabled_ != parTypes_, "At least one par risk factor type must be enabled "
+                                                << "for a valid ParSensitivityAnalysis.");
 
     // this is called twice, first (dry run) with simMarket = nullptr to
     // - do pillar adjustments and
@@ -160,25 +175,26 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
 
     bool dryRun = simMarket == nullptr;
     if (dryRun) {
-         Settings::instance().evaluationDate() = asof_;
+        Settings::instance().evaluationDate() = asof_;
     }
-    
+
     LOG("Build par instruments...");
-    
+
     parHelpers_.clear();
     parCaps_.clear();
     parYoYCaps_.clear();
 
     const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
     QL_REQUIRE(conventions != nullptr, "conventions are empty");
-    
+
     // Discount curve instruments
     if (typesDisabled_.count(RiskFactorKey::KeyType::DiscountCurve) == 0) {
 
         LOG("ParSensitivityAnalysis: Discount curve par instruments");
         for (auto c : sensitivityData_.discountCurveShiftData()) {
             string ccy = c.first;
-            QL_REQUIRE(simMarket || yieldCurvePillars_.find(ccy) == yieldCurvePillars_.end(), "duplicate entry in yieldCurvePillars '" << ccy << "'");
+            QL_REQUIRE(simMarket || yieldCurvePillars_.find(ccy) == yieldCurvePillars_.end(),
+                       "duplicate entry in yieldCurvePillars '" << ccy << "'");
             SensitivityScenarioData::CurveShiftParData data =
                 *boost::dynamic_pointer_cast<SensitivityScenarioData::CurveShiftParData>(c.second);
             LOG("ParSensitivityAnalysis: Discount curve ccy=" << ccy);
@@ -203,26 +219,32 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                 try {
                     map<string, string> conventionsMap = data.parInstrumentConventions;
                     QL_REQUIRE(conventionsMap.find(instType) != conventionsMap.end(),
-                        "conventions not found for ccy " << ccy << " and instrument type " << instType);
+                               "conventions not found for ccy " << ccy << " and instrument type " << instType);
                     boost::shared_ptr<Convention> convention = conventions->get(conventionsMap[instType]);
                     QL_REQUIRE(convention != nullptr, "convention is empty");
                     if (instType == "IRS")
-                        ret = makeSwap(simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName, term, convention,
-                            singleCurve, parHelperDependencies_[key], data.discountCurve);
+                        ret = makeSwap(simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName, term,
+                                       convention, singleCurve, parHelperDependencies_[key], data.discountCurve);
                     else if (instType == "DEP")
-                        ret = makeDeposit(simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName, term, convention);
+                        ret = makeDeposit(simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName, term,
+                                          convention);
                     else if (instType == "FRA")
-                        ret = makeFRA(simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName, term, convention);
+                        ret = makeFRA(simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName, term,
+                                      convention);
                     else if (instType == "OIS")
-                        ret = makeOIS(simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName, term, convention,
-                            singleCurve, parHelperDependencies_[key], data.discountCurve);
+                        ret = makeOIS(simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName, term,
+                                      convention, singleCurve, parHelperDependencies_[key], data.discountCurve);
                     else if (instType == "XBS") {
-                        string otherCurrency = data.otherCurrency.empty() ? simMarketParams_->baseCcy() : data.otherCurrency;
-                        ret = makeCrossCcyBasisSwap(simMarket, otherCurrency, ccy, term, convention, parHelperDependencies_[key]);
+                        string otherCurrency =
+                            data.otherCurrency.empty() ? simMarketParams_->baseCcy() : data.otherCurrency;
+                        ret = makeCrossCcyBasisSwap(simMarket, otherCurrency, ccy, term, convention,
+                                                    parHelperDependencies_[key]);
                     } else if (instType == "FXF")
-                        ret = makeFxForward(simMarket, simMarketParams_->baseCcy(), ccy, term, convention, parHelperDependencies_[key]);
+                        ret = makeFxForward(simMarket, simMarketParams_->baseCcy(), ccy, term, convention,
+                                            parHelperDependencies_[key]);
                     else if (instType == "TBS")
-                        ret = makeTenorBasisSwap(simMarket, ccy, "", "", "", "", term, convention, parHelperDependencies_[key], data.discountCurve);
+                        ret = makeTenorBasisSwap(simMarket, ccy, "", "", "", "", term, convention, singleCurve,
+                                                 parHelperDependencies_[key], data.discountCurve);
                     else
                         recognised = false;
                 } catch (const std::exception& e) {
@@ -243,7 +265,7 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                         yieldCurvePillars_[ccy].push_back((ret.second - asof_) * Days);
                     }
                     DLOG("Par instrument for discount curve, ccy " << ccy << " tenor " << j << ", type " << instType
-                        << " built.");
+                                                                   << " built.");
                 }
             }
         }
@@ -254,11 +276,11 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
         LOG("ParSensitivityAnalysis: Yield curve par instruments");
         // Yield curve instruments
         QL_REQUIRE(simMarketParams_->yieldCurveNames().size() == simMarketParams_->yieldCurveCurrencies().size(),
-            "vector size mismatch in sim market parameters yield curve names/currencies");
+                   "vector size mismatch in sim market parameters yield curve names/currencies");
         for (auto y : sensitivityData_.yieldCurveShiftData()) {
-            string curveName = y.first;            
+            string curveName = y.first;
             QL_REQUIRE(simMarket || yieldCurvePillars_.find(curveName) == yieldCurvePillars_.end(),
-                "duplicate entry in yieldCurvePillars '" << curveName << "'");
+                       "duplicate entry in yieldCurvePillars '" << curveName << "'");
             string equityForecastCurveName = ""; // ignored, if empty
             string ccy = "";
             for (Size j = 0; j < simMarketParams_->yieldCurveNames().size(); ++j) {
@@ -271,7 +293,7 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                 *boost::static_pointer_cast<SensitivityScenarioData::CurveShiftParData>(y.second);
             Size n_ten = data.shiftTenors.size();
             QL_REQUIRE(data.parInstruments.size() == n_ten,
-                "number of tenors does not match number of yield curve par instruments");
+                       "number of tenors does not match number of yield curve par instruments");
             for (Size j = 0; j < n_ten; ++j) {
                 RiskFactorKey key(RiskFactorKey::KeyType::YieldCurve, curveName, j);
                 if (!dryRun && !relevantRiskFactors_.empty() &&
@@ -285,25 +307,27 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                 try {
                     map<string, string> conventionsMap = data.parInstrumentConventions;
                     QL_REQUIRE(conventionsMap.find(instType) != conventionsMap.end(),
-                        "conventions not found for ccy " << ccy << " and instrument type " << instType);
+                               "conventions not found for ccy " << ccy << " and instrument type " << instType);
                     boost::shared_ptr<Convention> convention = conventions->get(conventionsMap[instType]);
 
                     if (instType == "IRS")
-                        ret = makeSwap(simMarket, ccy, "", curveName, equityForecastCurveName, term, convention, singleCurve,
-                            parHelperDependencies_[key], data.discountCurve);
+                        ret = makeSwap(simMarket, ccy, "", curveName, equityForecastCurveName, term, convention,
+                                       singleCurve, parHelperDependencies_[key], data.discountCurve);
                     else if (instType == "DEP")
                         ret = makeDeposit(simMarket, ccy, "", curveName, equityForecastCurveName, term, convention);
                     else if (instType == "FRA")
                         ret = makeFRA(simMarket, ccy, "", curveName, equityForecastCurveName, term, convention);
                     else if (instType == "OIS")
-                        ret = makeOIS(simMarket, ccy, "", curveName, equityForecastCurveName, term, convention, singleCurve,
-                            parHelperDependencies_[key], data.discountCurve);
+                        ret = makeOIS(simMarket, ccy, "", curveName, equityForecastCurveName, term, convention,
+                                      singleCurve, parHelperDependencies_[key], data.discountCurve);
                     else if (instType == "TBS")
-                        ret = makeTenorBasisSwap(simMarket, ccy, "", "", curveName, "", term, convention,
-                            parHelperDependencies_[key], data.discountCurve);
+                        ret = makeTenorBasisSwap(simMarket, ccy, "", "", curveName, "", term, convention, singleCurve,
+                                                 parHelperDependencies_[key], data.discountCurve);
                     else if (instType == "XBS") {
-                        string otherCurrency = data.otherCurrency.empty() ? simMarketParams_->baseCcy() : data.otherCurrency;
-                        ret = makeCrossCcyBasisSwap(simMarket, otherCurrency, ccy, term, convention, parHelperDependencies_[key]);
+                        string otherCurrency =
+                            data.otherCurrency.empty() ? simMarketParams_->baseCcy() : data.otherCurrency;
+                        ret = makeCrossCcyBasisSwap(simMarket, otherCurrency, ccy, term, convention,
+                                                    parHelperDependencies_[key]);
                     } else
                         recognised = false;
                 } catch (const std::exception& e) {
@@ -324,12 +348,12 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                         yieldCurvePillars_[curveName].push_back((ret.second - asof_) * Days);
                     }
                     DLOG("Par instrument for yield curve, ccy " << ccy << " tenor " << j << ", type " << instType
-                        << " built.");
+                                                                << " built.");
                 }
             }
         }
     }
-    
+
     if (typesDisabled_.count(RiskFactorKey::KeyType::IndexCurve) == 0) {
 
         LOG("ParSensitivityAnalysis: Index curve par instruments");
@@ -337,11 +361,12 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
         for (auto index : sensitivityData_.indexCurveShiftData()) {
             string indexName = index.first;
             QL_REQUIRE(simMarket || yieldCurvePillars_.find(indexName) == yieldCurvePillars_.end(),
-                "duplicate entry in yieldCurvePillars '" << indexName << "'");
-            SensitivityScenarioData::CurveShiftParData data = *boost::static_pointer_cast<SensitivityScenarioData::CurveShiftParData>(index.second);
+                       "duplicate entry in yieldCurvePillars '" << indexName << "'");
+            SensitivityScenarioData::CurveShiftParData data =
+                *boost::static_pointer_cast<SensitivityScenarioData::CurveShiftParData>(index.second);
             Size n_ten = data.shiftTenors.size();
             QL_REQUIRE(data.parInstruments.size() == n_ten,
-                "number of tenors does not match number of index curve par instruments");
+                       "number of tenors does not match number of index curve par instruments");
             vector<string> tokens;
             boost::split(tokens, indexName, boost::is_any_of("-"));
             QL_REQUIRE(tokens.size() >= 2, "index name " << indexName << " unexpected");
@@ -362,22 +387,24 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                 try {
                     map<string, string> conventionsMap = data.parInstrumentConventions;
                     QL_REQUIRE(conventionsMap.find(instType) != conventionsMap.end(),
-                        "conventions not found for ccy " << ccy << " and instrument type " << instType);
+                               "conventions not found for ccy " << ccy << " and instrument type " << instType);
                     boost::shared_ptr<Convention> convention = conventions->get(conventionsMap[instType]);
 
                     if (instType == "IRS")
-                        ret = makeSwap(simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName, term, convention, singleCurve,
-                            parHelperDependencies_[key], data.discountCurve);
+                        ret = makeSwap(simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName, term,
+                                       convention, singleCurve, parHelperDependencies_[key], data.discountCurve);
                     else if (instType == "DEP")
-                        ret = makeDeposit(simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName, term, convention);
+                        ret = makeDeposit(simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName, term,
+                                          convention);
                     else if (instType == "FRA")
-                        ret = makeFRA(simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName, term, convention);
+                        ret = makeFRA(simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName, term,
+                                      convention);
                     else if (instType == "OIS")
-                        ret = makeOIS(simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName, term, convention, singleCurve,
-                            parHelperDependencies_[key], data.discountCurve);
+                        ret = makeOIS(simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName, term,
+                                      convention, singleCurve, parHelperDependencies_[key], data.discountCurve);
                     else if (instType == "TBS")
-                        ret = makeTenorBasisSwap(simMarket, ccy, "", "", "", "", term, convention,
-                            parHelperDependencies_[key], data.discountCurve);
+                        ret = makeTenorBasisSwap(simMarket, ccy, "", "", "", "", term, convention, singleCurve,
+                                                 parHelperDependencies_[key], data.discountCurve);
                     else
                         recognised = false;
                 } catch (const std::exception& e) {
@@ -411,12 +438,11 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
 
         for (auto c : sensitivityData_.capFloorVolShiftData()) {
             string key = c.first;
-            auto datap =
-                boost::dynamic_pointer_cast<SensitivityScenarioData::CapFloorVolShiftParData>(c.second);
+            auto datap = boost::dynamic_pointer_cast<SensitivityScenarioData::CapFloorVolShiftParData>(c.second);
             string expDiscountCurve = datap ? datap->discountCurve : "";
             SensitivityScenarioData::CapFloorVolShiftData data = *c.second;
             string indexName = data.indexName;
-	    string ccy = parseIborIndex(indexName)->currency().code();
+            string ccy = parseIborIndex(indexName)->currency().code();
             Handle<YieldTermStructure> yts;
             Handle<OptionletVolatilityStructure> ovs;
             Size n_strikes = data.shiftStrikes.size();
@@ -434,13 +460,15 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                         continue;
                     try {
                         if (simMarket != nullptr) {
-                            yts = expDiscountCurve.empty() ? simMarket->discountCurve(ccy, marketConfiguration_)
-                                : simMarket->iborIndex(expDiscountCurve, marketConfiguration_)
-                                ->forwardingTermStructure();
+                            yts = expDiscountCurve.empty()
+                                      ? simMarket->discountCurve(ccy, marketConfiguration_)
+                                      : simMarket->iborIndex(expDiscountCurve, marketConfiguration_)
+                                            ->forwardingTermStructure();
                             ovs = simMarket->capFloorVol(key, marketConfiguration_);
                         }
                         Period term = data.shiftExpiries[k];
-                        auto tmp = makeCapFloor(simMarket, ccy, indexName, term, strike, isAtm, parHelperDependencies_[rfkey], expDiscountCurve);
+                        auto tmp = makeCapFloor(simMarket, ccy, indexName, term, strike, isAtm,
+                                                parHelperDependencies_[rfkey], expDiscountCurve);
                         parCaps_[rfkey] = tmp;
                         parCapsYts_[rfkey] = yts;
                         parCapsVts_[rfkey] = ovs;
@@ -469,7 +497,8 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
             string name = c.first;
             string ccy = sensitivityData_.creditCcys()[name];
             auto itr = sensitivityData_.creditCurveShiftData().find(name);
-            QL_REQUIRE(itr != sensitivityData_.creditCurveShiftData().end(), "creditCurveShiftData not found for " << name);
+            QL_REQUIRE(itr != sensitivityData_.creditCurveShiftData().end(),
+                       "creditCurveShiftData not found for " << name);
             SensitivityScenarioData::CurveShiftParData data =
                 *boost::static_pointer_cast<SensitivityScenarioData::CurveShiftParData>(c.second);
             Size n_expiries = data.shiftTenors.size();
@@ -485,10 +514,11 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                 try {
                     map<string, string> conventionsMap = data.parInstrumentConventions;
                     QL_REQUIRE(conventionsMap.find(instType) != conventionsMap.end(),
-                        "conventions not found for name " << name << " and instrument type " << instType);
+                               "conventions not found for name " << name << " and instrument type " << instType);
                     boost::shared_ptr<Convention> convention = conventions->get(conventionsMap[instType]);
 
-                    ret = makeCDS(simMarket, name, ccy, term, convention, parHelperDependencies_[key], data.discountCurve);
+                    ret = makeCDS(simMarket, name, ccy, term, convention, parHelperDependencies_[key],
+                                  data.discountCurve);
                 } catch (const std::exception& e) {
                     skipped = true;
                     if (continueOnError_) {
@@ -530,11 +560,12 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                 try {
                     map<string, string> conventionsMap = data.parInstrumentConventions;
                     QL_REQUIRE(conventionsMap.find(instType) != conventionsMap.end(),
-                        "conventions not found for zero inflation curve " << indexName << " and instrument type " << instType);
+                               "conventions not found for zero inflation curve " << indexName << " and instrument type "
+                                                                                 << instType);
                     boost::shared_ptr<Convention> convention = conventions->get(conventionsMap[instType]);
 
                     auto tmp = makeZeroInflationSwap(simMarket, indexName, term, convention, singleCurve,
-                        parHelperDependencies_[key], data.discountCurve);
+                                                     parHelperDependencies_[key], data.discountCurve);
                     parHelpers_[key] = tmp;
                     DLOG("Par instrument for zero inflation index " << indexName << " tenor " << j << " built.");
                 } catch (const std::exception& e) {
@@ -557,7 +588,8 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
         LOG("ParSensitivityAnalysis: YOYI curve par instruments");
         for (auto y : sensitivityData_.yoyInflationCurveShiftData()) {
             string indexName = y.first;
-            SensitivityScenarioData::CurveShiftParData data = *boost::static_pointer_cast<SensitivityScenarioData::CurveShiftParData>(y.second);
+            SensitivityScenarioData::CurveShiftParData data =
+                *boost::static_pointer_cast<SensitivityScenarioData::CurveShiftParData>(y.second);
             Size n_ten = data.shiftTenors.size();
             for (Size j = 0; j < n_ten; ++j) {
                 Period term = data.shiftTenors[j];
@@ -569,16 +601,17 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                 try {
                     map<string, string> conventionsMap = data.parInstrumentConventions;
                     QL_REQUIRE(conventionsMap.find(instType) != conventionsMap.end(),
-                        "conventions not found for zero inflation curve " << indexName << " and instrument type " << instType);
+                               "conventions not found for zero inflation curve " << indexName << " and instrument type "
+                                                                                 << instType);
                     boost::shared_ptr<Convention> convention = conventions->get(conventionsMap[instType]);
 
                     if (instType == "ZIS") {
                         auto tmp = makeYoyInflationSwap(simMarket, indexName, term, convention, singleCurve, true,
-                            parHelperDependencies_[key], data.discountCurve);
+                                                        parHelperDependencies_[key], data.discountCurve);
                         parHelpers_[key] = tmp;
                     } else if (instType == "YYS") {
                         auto tmp = makeYoyInflationSwap(simMarket, indexName, term, convention, singleCurve, false,
-                            parHelperDependencies_[key], data.discountCurve);
+                                                        parHelperDependencies_[key], data.discountCurve);
                         parHelpers_[key] = tmp;
                     } else
                         recognised = false;
@@ -613,7 +646,8 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                 Real strike = data.shiftStrikes[j];
                 pair<string, Size> key(indexName, j);
                 for (Size k = 0; k < n_expiries; ++k) {
-                    RiskFactorKey key(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility, indexName, k * n_strikes + j);
+                    RiskFactorKey key(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility, indexName,
+                                      k * n_strikes + j);
 
                     bool recognised = true;
                     string instType;
@@ -621,16 +655,16 @@ void ParSensitivityAnalysis::createParInstruments(const boost::shared_ptr<Scenar
                         instType = data.parInstruments[j];
                         map<string, string> conventionsMap = data.parInstrumentConventions;
                         QL_REQUIRE(conventionsMap.find(instType) != conventionsMap.end(),
-                            "conventions not found for zero inflation curve " << indexName << " and instrument type "
-                            << instType);
+                                   "conventions not found for zero inflation curve "
+                                       << indexName << " and instrument type " << instType);
                         boost::shared_ptr<Convention> convention = conventions->get(conventionsMap[instType]);
                         Period term = data.shiftExpiries[k];
                         if (instType == "ZIS") {
                             makeYoYCapFloor(simMarket, indexName, term, strike, convention, singleCurve, true,
-                                data.discountCurve, key);
+                                            data.discountCurve, key);
                         } else if (instType == "YYS") {
                             makeYoYCapFloor(simMarket, indexName, term, strike, convention, singleCurve, false,
-                                data.discountCurve, key);
+                                            data.discountCurve, key);
                         } else
                             recognised = false;
                         if (j == 0)
@@ -749,9 +783,9 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const boost::shar
 
     // We must have a ShiftScenarioGenerator
     boost::shared_ptr<ScenarioGenerator> simMarketScenGen = simMarket->scenarioGenerator();
-    boost::shared_ptr<ShiftScenarioGenerator> scenarioGenerator = 
+    boost::shared_ptr<ShiftScenarioGenerator> scenarioGenerator =
         boost::dynamic_pointer_cast<ShiftScenarioGenerator>(simMarketScenGen);
-    
+
     struct SimMarketResetter {
         SimMarketResetter(boost::shared_ptr<SimMarket> simMarket) : simMarket_(simMarket) {}
         ~SimMarketResetter() { simMarket_->reset(); }
@@ -772,7 +806,7 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const boost::shar
         try {
             Real parRate = impliedQuote(p.second);
             parRatesBase[p.first] = parRate;
-            
+
             // Populate zero and par shift size for the current risk factor
             populateShiftSizes(p.first, parRate, simMarket);
 
@@ -782,7 +816,7 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const boost::shar
     }
 
     for (auto& c : parCaps_) {
-        
+
         QL_REQUIRE(parCapsYts_.count(c.first) > 0,
                    "computeParInstrumentSensitivities(): no cap yts found for key " << c.first);
         QL_REQUIRE(parCapsVts_.count(c.first) > 0,
@@ -793,8 +827,8 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const boost::shar
                                                                   parCapsVts_.at(c.first)->volatilityType(),
                                                                   parCapsVts_.at(c.first)->displacement());
         parCapVols[c.first] = parVol;
-        TLOG("Fair implied cap volatility for key " << c.first << " is " << 
-            std::fixed << std::setprecision(12) << parVol << ".");
+        TLOG("Fair implied cap volatility for key " << c.first << " is " << std::fixed << std::setprecision(12)
+                                                    << parVol << ".");
 
         // Populate zero and par shift size for the current risk factor
         populateShiftSizes(c.first, parVol, simMarket);
@@ -814,8 +848,8 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const boost::shar
             *c.second, price, parYoYCapsYts_.at(c.first), 0.01, parYoYCapsVts_.at(c.first)->volatilityType(),
             parYoYCapsVts_.at(c.first)->displacement(), parYoYCapsIndex_.at(c.first));
         parCapVols[c.first] = parVol;
-        TLOG("Fair implied yoy cap volatility for key " << c.first << " is " <<
-            std::fixed << std::setprecision(12) << parVol << ".");
+        TLOG("Fair implied yoy cap volatility for key " << c.first << " is " << std::fixed << std::setprecision(12)
+                                                        << parVol << ".");
 
         // Populate zero and par shift size for the current risk factor
         populateShiftSizes(c.first, parVol, simMarket);
@@ -836,22 +870,22 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const boost::shar
     LOG("Compute par rate and flat vol sensitivities");
 
     vector<ShiftScenarioGenerator::ScenarioDescription> desc = scenarioGenerator->scenarioDescriptions();
-    QL_REQUIRE(desc.size() == scenarioGenerator->samples(), "descriptions size " << desc.size() <<
-        " does not match samples " << scenarioGenerator->samples());
+    QL_REQUIRE(desc.size() == scenarioGenerator->samples(),
+               "descriptions size " << desc.size() << " does not match samples " << scenarioGenerator->samples());
 
     std::set<RiskFactorKey> parKeysCheck, parKeysNonZero;
     std::set<RiskFactorKey> rawKeysCheck, rawKeysNonZero;
 
     for (auto const& p : parHelpers_) {
-	parKeysCheck.insert(p.first);
+        parKeysCheck.insert(p.first);
     }
 
-    for(auto const& p: parCaps_) {
-	parKeysCheck.insert(p.first);
+    for (auto const& p : parCaps_) {
+        parKeysCheck.insert(p.first);
     }
 
-    for(auto const& p: parYoYCaps_) {
-	parKeysCheck.insert(p.first);
+    for (auto const& p : parYoYCaps_) {
+        parKeysCheck.insert(p.first);
     }
 
     for (Size i = 1; i < scenarioGenerator->samples(); ++i) {
@@ -1116,12 +1150,10 @@ void ParSensitivityAnalysis::disable(const set<RiskFactorKey::KeyType>& types) {
     }
 }
 
-std::pair<boost::shared_ptr<Instrument>, Date>
-ParSensitivityAnalysis::makeSwap(const boost::shared_ptr<Market>& market, string ccy, string indexName,
-                                 string yieldCurveName, string equityForecastCurveName, Period term,
-                                 const boost::shared_ptr<Convention>& convention, bool singleCurve,
-                                 std::set<ore::analytics::RiskFactorKey>& parHelperDependencies_,
-				 const string& expDiscountCurve) {
+std::pair<boost::shared_ptr<Instrument>, Date> ParSensitivityAnalysis::makeSwap(
+    const boost::shared_ptr<Market>& market, string ccy, string indexName, string yieldCurveName,
+    string equityForecastCurveName, Period term, const boost::shared_ptr<Convention>& convention, bool singleCurve,
+    std::set<ore::analytics::RiskFactorKey>& parHelperDependencies_, const string& expDiscountCurve) {
     // Curve priorities, use in the following order if ccy/indexName/yieldCurveName strings are not blank
     // 1) singleCurve = false
     //    - discounts: discountCurve(ccy) -> yieldCurve(yieldCurveName)
@@ -1129,7 +1161,7 @@ ParSensitivityAnalysis::makeSwap(const boost::shared_ptr<Market>& market, string
     // 2) singleCurve = true
     //    - discounts: iborIndex(indexName) -> yieldCurve(yieldCurveName) -> discountCurve(ccy)
     //    - forwards:  iborIndex(indexName) -> yieldCurve(yieldCurveName) -> discountCurve(ccy)
-    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions(); 
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
     boost::shared_ptr<IRSwapConvention> conv = boost::dynamic_pointer_cast<IRSwapConvention>(convention);
     QL_REQUIRE(conv, "convention not recognised, expected IRSwapConvention");
     string name = indexName != "" ? indexName : conv->indexName();
@@ -1172,7 +1204,7 @@ ParSensitivityAnalysis::makeSwap(const boost::shared_ptr<Market>& market, string
         }
     }
 
-    if(!singleCurve)
+    if (!singleCurve)
         parHelperDependencies_.emplace(RiskFactorKey::KeyType::IndexCurve, name, 0);
 
     boost::shared_ptr<Swap> helper;
@@ -1182,22 +1214,23 @@ ParSensitivityAnalysis::makeSwap(const boost::shared_ptr<Market>& market, string
     if (bmaIndex) {
         // FIXME do we want to remove today's historic fixing from the index as we do for the Ibor case?
         helper = boost::shared_ptr<FixedBMASwap>(
-                     MakeFixedBMASwap(term, bmaIndex->bma(), 0.0, 0 * Days)
-                     .withBMALegTenor(3*Months));
+            MakeFixedBMASwap(term, bmaIndex->bma(), 0.0, 0 * Days).withBMALegTenor(3 * Months));
         // need to do very little with the factory, as the market conventions are default
         // should maybe discount with Libor, as this is how we assume the quotes come in.
-        boost::shared_ptr<AverageBMACoupon> lastCoupon = boost::dynamic_pointer_cast<AverageBMACoupon>(helper->leg(1).back());
+        boost::shared_ptr<AverageBMACoupon> lastCoupon =
+            boost::dynamic_pointer_cast<AverageBMACoupon>(helper->leg(1).back());
         latestRelevantDate = std::max(helper->maturityDate(), lastCoupon->fixingDates().end()[-2]);
     } else if (conv->hasSubPeriod()) {
         removeTodaysFixingIndices_.insert(index->name());
-        auto subPeriodSwap = boost::shared_ptr<SubPeriodsSwap>(MakeSubPeriodsSwap(term, index, 0.0, Period(conv->floatFrequency()), 0*Days)
-            .withSettlementDays(index->fixingDays())
-            .withFixedLegDayCount(conv->fixedDayCounter())
-            .withFixedLegTenor(Period(conv->fixedFrequency()))
-            .withFixedLegConvention(conv->fixedConvention())
-            .withFixedLegCalendar(conv->fixedCalendar())
-            .withSubCouponsType(conv->subPeriodsCouponType()));
-        
+        auto subPeriodSwap = boost::shared_ptr<SubPeriodsSwap>(
+            MakeSubPeriodsSwap(term, index, 0.0, Period(conv->floatFrequency()), 0 * Days)
+                .withSettlementDays(index->fixingDays())
+                .withFixedLegDayCount(conv->fixedDayCounter())
+                .withFixedLegTenor(Period(conv->fixedFrequency()))
+                .withFixedLegConvention(conv->fixedConvention())
+                .withFixedLegCalendar(conv->fixedCalendar())
+                .withSubCouponsType(conv->subPeriodsCouponType()));
+
         latestRelevantDate = subPeriodSwap->maturityDate();
         boost::shared_ptr<FloatingRateCoupon> lastCoupon =
             boost::dynamic_pointer_cast<FloatingRateCoupon>(subPeriodSwap->floatLeg().back());
@@ -1215,19 +1248,17 @@ ParSensitivityAnalysis::makeSwap(const boost::shared_ptr<Market>& market, string
             Date fixingValueDate = index->valueDate(lastCoupon->fixingDate());
             Date endValueDate = index->maturityDate(fixingValueDate);
             latestRelevantDate = std::max(latestRelevantDate, endValueDate);
-            
         }
     } else {
         removeTodaysFixingIndices_.insert(index->name());
-        helper = boost::shared_ptr<VanillaSwap>(
-                     MakeVanillaSwap(term, index, 0.0, 0 * Days)
-                     .withSettlementDays(index->fixingDays())
-                     .withFixedLegDayCount(conv->fixedDayCounter())
-                     .withFixedLegTenor(Period(conv->fixedFrequency()))
-                     .withFixedLegConvention(conv->fixedConvention())
-                     .withFixedLegTerminationDateConvention(conv->fixedConvention())
-                     .withFixedLegCalendar(conv->fixedCalendar())
-                     .withFloatingLegCalendar(conv->fixedCalendar()));
+        helper = boost::shared_ptr<VanillaSwap>(MakeVanillaSwap(term, index, 0.0, 0 * Days)
+                                                    .withSettlementDays(index->fixingDays())
+                                                    .withFixedLegDayCount(conv->fixedDayCounter())
+                                                    .withFixedLegTenor(Period(conv->fixedFrequency()))
+                                                    .withFixedLegConvention(conv->fixedConvention())
+                                                    .withFixedLegTerminationDateConvention(conv->fixedConvention())
+                                                    .withFixedLegCalendar(conv->fixedCalendar())
+                                                    .withFloatingLegCalendar(conv->fixedCalendar()));
         boost::shared_ptr<IborCoupon> lastCoupon = boost::dynamic_pointer_cast<IborCoupon>(helper->leg(1).back());
         latestRelevantDate = std::max(helper->maturityDate(), lastCoupon->fixingEndDate());
     }
@@ -1242,10 +1273,10 @@ ParSensitivityAnalysis::makeSwap(const boost::shared_ptr<Market>& market, string
 }
 
 std::pair<boost::shared_ptr<Instrument>, Date>
-ParSensitivityAnalysis::makeDeposit(const boost::shared_ptr<Market>& market, 
-                                    string ccy, string indexName, string yieldCurveName, string equityForecastCurveName,
-                                    Period term, const boost::shared_ptr<Convention>& convention) {
-    
+ParSensitivityAnalysis::makeDeposit(const boost::shared_ptr<Market>& market, string ccy, string indexName,
+                                    string yieldCurveName, string equityForecastCurveName, Period term,
+                                    const boost::shared_ptr<Convention>& convention) {
+
     // Curve priorities, use in the following order if ccy/indexName/yieldCurveName strings are not blank
     // Single curve setting only
     // - discounts: iborIndex(indexName) -> yieldCurve(yieldCurveName) -> discountCurve(ccy)
@@ -1300,8 +1331,9 @@ ParSensitivityAnalysis::makeDeposit(const boost::shared_ptr<Market>& market,
 }
 
 std::pair<boost::shared_ptr<Instrument>, Date>
-ParSensitivityAnalysis::makeFRA(const boost::shared_ptr<Market>& market, string ccy, string indexName, 
-    string yieldCurveName, string equityForecastCurveName, Period term, const boost::shared_ptr<Convention>& convention) {
+ParSensitivityAnalysis::makeFRA(const boost::shared_ptr<Market>& market, string ccy, string indexName,
+                                string yieldCurveName, string equityForecastCurveName, Period term,
+                                const boost::shared_ptr<Convention>& convention) {
     // Curve priorities, use in the following order if ccy/indexName/yieldCurveName strings are not blank
     // - discounts: discountCurve(ccy) -> yieldCurve(yieldCurveName) -> iborIndex(indexName)
     // - forwards:  iborIndex(indexName) -> yieldCurve(yieldCurveName) -> discountCurve(ccy)
@@ -1316,7 +1348,8 @@ ParSensitivityAnalysis::makeFRA(const boost::shared_ptr<Market>& market, string 
             if (yieldCurveName != "")
                 index = market->iborIndex(name)->clone(market->yieldCurve(yieldCurveName, marketConfiguration_));
             else if (equityForecastCurveName != "")
-                index = market->iborIndex(name)->clone(market->equityForecastCurve(equityForecastCurveName, marketConfiguration_));
+                index = market->iborIndex(name)->clone(
+                    market->equityForecastCurve(equityForecastCurveName, marketConfiguration_));
             else if (ccy != "")
                 index = market->iborIndex(name)->clone(market->discountCurve(ccy, marketConfiguration_));
             else
@@ -1325,8 +1358,8 @@ ParSensitivityAnalysis::makeFRA(const boost::shared_ptr<Market>& market, string 
     } else {
         index = parseIborIndex(name);
     }
-    boost::shared_ptr<IborIndex> fraConvIdx = ore::data::parseIborIndex(
-        conv->indexName(), index->forwardingTermStructure()); // used for setting up the FRA
+    boost::shared_ptr<IborIndex> fraConvIdx =
+        ore::data::parseIborIndex(conv->indexName(), index->forwardingTermStructure()); // used for setting up the FRA
     if (fraConvIdx->tenor() != index->tenor()) {
         WLOG("FRA building - mismatch between input index (" << indexName << ") and conventions (" << conv->indexName()
                                                              << ") - using conventions");
@@ -1366,12 +1399,10 @@ ParSensitivityAnalysis::makeFRA(const boost::shared_ptr<Market>& market, string 
     return std::pair<boost::shared_ptr<Instrument>, Date>(helper, maturityDate);
 }
 
-std::pair<boost::shared_ptr<Instrument>, Date>
-ParSensitivityAnalysis::makeOIS(const boost::shared_ptr<Market>& market, string ccy, string indexName,
-                                string yieldCurveName, string equityForecastCurveName, Period term,
-                                const boost::shared_ptr<Convention>& convention, bool singleCurve,
-                                std::set<ore::analytics::RiskFactorKey>& parHelperDependencies_,
-				const std::string& expDiscountCurve) {
+std::pair<boost::shared_ptr<Instrument>, Date> ParSensitivityAnalysis::makeOIS(
+    const boost::shared_ptr<Market>& market, string ccy, string indexName, string yieldCurveName,
+    string equityForecastCurveName, Period term, const boost::shared_ptr<Convention>& convention, bool singleCurve,
+    std::set<ore::analytics::RiskFactorKey>& parHelperDependencies_, const std::string& expDiscountCurve) {
     // Curve priorities, use in the following order if ccy/indexName/yieldCurveName strings are not blank
     // 1) singleCurve = false
     //    - discounts: discountCurve(ccy) -> yieldCurve(yieldCurveName)
@@ -1379,39 +1410,48 @@ ParSensitivityAnalysis::makeOIS(const boost::shared_ptr<Market>& market, string 
     // 2) singleCurve = true
     //    - discounts: iborIndex(indexName) -> yieldCurve(yieldCurveName) -> discountCurve(ccy)
     //    - forwards:  iborIndex(indexName) -> yieldCurve(yieldCurveName) -> discountCurve(ccy)
-    auto conventions = InstrumentConventions::instance().conventions();
     boost::shared_ptr<OisConvention> conv = boost::dynamic_pointer_cast<OisConvention>(convention);
     QL_REQUIRE(conv, "convention not recognised, expected OisConvention");
-    string name = indexName != "" ? indexName : conv->indexName();
-    boost::shared_ptr<IborIndex> index;
-    if (market != nullptr) {
-        index = market->iborIndex(name, marketConfiguration_).currentLink();
-    } else {
-        // make ois below requires a non empty ts
-        auto h = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.00, Actual365Fixed()));
-        index = parseIborIndex(name, h);
+    boost::shared_ptr<IborIndex> index = parseIborIndex(conv->indexName());
+    if (market == nullptr) {
+        if (!expDiscountCurve.empty())
+            parHelperDependencies_.emplace(RiskFactorKey::KeyType::IndexCurve, expDiscountCurve, 0);
+        else
+            parHelperDependencies_.emplace(RiskFactorKey::KeyType::DiscountCurve, ccy);
+        if (!singleCurve)
+            parHelperDependencies_.emplace(RiskFactorKey::KeyType::IndexCurve,
+                                           indexName != "" ? indexName : conv->indexName(), 0);
     }
     boost::shared_ptr<OvernightIndex> overnightIndexTmp = boost::dynamic_pointer_cast<OvernightIndex>(index);
-    QL_REQUIRE(overnightIndexTmp, "ParSensitivityAnalysis::makeOIS(): expected OIS index, got  \"" << name << "\"");
-    Handle<YieldTermStructure> indexTs = overnightIndexTmp->forwardingTermStructure();
-    if (market != nullptr && singleCurve) {
-        if (indexName != "")
-            indexTs = overnightIndexTmp->forwardingTermStructure();
-        else if (yieldCurveName != "")
-            indexTs = market->yieldCurve(yieldCurveName, marketConfiguration_);
-        else if (equityForecastCurveName != "")
-            indexTs = market->equityForecastCurve(equityForecastCurveName, marketConfiguration_);
-        else if (ccy != "")
-            indexTs = market->discountCurve(ccy, marketConfiguration_);
-        else
-            QL_FAIL("Index curve not identified in ParSensitivityAnalysis::makeOIS (ccy=" << ccy << ")");
+    QL_REQUIRE(overnightIndexTmp,
+               "ParSensitivityAnalysis::makeOIS(): expected OIS index, got  \"" << conv->indexName() << "\"");
+    // makeOIS below requires non-empty ts
+    Handle<YieldTermStructure> indexTs =
+        Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.00, Actual365Fixed()));
+    if (market != nullptr) {
+        if (singleCurve) {
+            if (indexName != "") {
+                indexTs = market->iborIndex(indexName, marketConfiguration_).currentLink()->forwardingTermStructure();
+            } else if (yieldCurveName != "") {
+                indexTs = market->yieldCurve(yieldCurveName, marketConfiguration_);
+            } else if (equityForecastCurveName != "") {
+                indexTs = market->equityForecastCurve(equityForecastCurveName, marketConfiguration_);
+            } else if (ccy != "") {
+                indexTs = market->discountCurve(ccy, marketConfiguration_);
+            } else {
+                QL_FAIL("Index curve not identified in ParSensitivityAnalysis::makeOIS");
+            }
+        } else {
+            indexTs = market->iborIndex(indexName != "" ? indexName : conv->indexName(), marketConfiguration_)
+                          .currentLink()
+                          ->forwardingTermStructure();
+        }
     }
     boost::shared_ptr<OvernightIndex> overnightIndex =
         boost::dynamic_pointer_cast<OvernightIndex>(overnightIndexTmp->clone(indexTs));
-    
-    // FIXME do we want to remove today's historic fixing from the index as we do for the Ibor case?
-    boost::shared_ptr<OvernightIndexedSwap> helper = MakeOIS(term, overnightIndex, Null<Rate>(), 0 * Days)
-        .withTelescopicValueDates(true);
+    removeTodaysFixingIndices_.insert(overnightIndex->name());
+    boost::shared_ptr<OvernightIndexedSwap> helper =
+        MakeOIS(term, overnightIndex, Null<Rate>(), 0 * Days).withTelescopicValueDates(true);
 
     if (market != nullptr) {
         RelinkableHandle<YieldTermStructure> engineYts;
@@ -1425,7 +1465,8 @@ ParSensitivityAnalysis::makeOIS(const boost::shared_ptr<Market>& market, string 
             else if (ccy != "")
                 engineYts.linkTo(*market->discountCurve(ccy, marketConfiguration_));
             else
-                QL_FAIL("discount curve not identified in ParSensitivityAnalysis::makeOIS, single curve (ccy=" << ccy << ")");
+                QL_FAIL("discount curve not identified in ParSensitivityAnalysis::makeOIS, single curve (ccy=" << ccy
+                                                                                                               << ")");
         } else {
             if (!expDiscountCurve.empty()) {
                 // Look up the explicit discount curve in the market
@@ -1445,38 +1486,28 @@ ParSensitivityAnalysis::makeOIS(const boost::shared_ptr<Market>& market, string 
         helper->setPricingEngine(swapEngine);
     }
 
-    if(!singleCurve)
-        parHelperDependencies_.emplace(RiskFactorKey::KeyType::IndexCurve, name, 0);
-
     // set pillar date
     Date latestRelevantDate = helper->maturityDate();
-    
     return std::pair<boost::shared_ptr<Instrument>, Date>(helper, latestRelevantDate);
 }
 
-std::pair<boost::shared_ptr<QuantLib::Instrument>, Date>
-ParSensitivityAnalysis::makeTenorBasisSwap(const boost::shared_ptr<Market>& market, string ccy, string shortIndexName,
-                                           string longIndexName, string yieldCurveName, string equityForecastCurveName,
-                                           Period term, const boost::shared_ptr<Convention>& convention,
-                                           std::set<ore::analytics::RiskFactorKey>& parHelperDependencies_,
-                                           const string& expDiscountCurve) {
+std::pair<boost::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityAnalysis::makeTenorBasisSwap(
+    const boost::shared_ptr<Market>& market, string ccy, string shortIndexName, string longIndexName,
+    string yieldCurveName, string equityForecastCurveName, Period term, const boost::shared_ptr<Convention>& convention,
+    const bool singleCurve, std::set<ore::analytics::RiskFactorKey>& parHelperDependencies_,
+    const string& expDiscountCurve) {
 
-    auto conventions = InstrumentConventions::instance().conventions();
     boost::shared_ptr<TenorBasisSwapConvention> conv =
         boost::dynamic_pointer_cast<TenorBasisSwapConvention>(convention);
     QL_REQUIRE(conv, "convention not recognised, expected TenorBasisSwapConvention");
-    string shortIndexNameTmp = shortIndexName == "" ? conv->shortIndexName() : shortIndexName;
-    string longIndexNameTmp = longIndexName == "" ? conv->longIndexName() : longIndexName;
+    Handle<YieldTermStructure> discountCurve, shortIndexCurve, longIndexCurve;
+    boost::shared_ptr<IborIndex> longIndex = parseIborIndex(conv->longIndexName());
+    boost::shared_ptr<IborIndex> shortIndex = parseIborIndex(conv->shortIndexName());
+    boost::shared_ptr<OvernightIndex> shortIndexOn = boost::dynamic_pointer_cast<OvernightIndex>(shortIndex);
+    boost::shared_ptr<OvernightIndex> longIndexOn = boost::dynamic_pointer_cast<OvernightIndex>(longIndex);
 
-    Handle<YieldTermStructure> discountCurve;
-    boost::shared_ptr<IborIndex> longIndex, shortIndex;
-    boost::shared_ptr<OvernightIndex> shortIndexOn;
-    if (market == nullptr) {
-        longIndex = parseIborIndex(longIndexNameTmp);
-        shortIndex = parseIborIndex(shortIndexNameTmp);
-        shortIndexOn = boost::dynamic_pointer_cast<OvernightIndex>(shortIndex);
-    } else {
-        if (!expDiscountCurve.empty()){
+    if (market != nullptr) {
+        if (!expDiscountCurve.empty()) {
             // Look up the explicit discount curve in the market
             auto discountIndex = market->iborIndex(expDiscountCurve, marketConfiguration_);
             discountCurve = discountIndex->forwardingTermStructure();
@@ -1486,10 +1517,25 @@ ParSensitivityAnalysis::makeTenorBasisSwap(const boost::shared_ptr<Market>& mark
             discountCurve = market->yieldCurve(yieldCurveName, marketConfiguration_);
         else if (equityForecastCurveName != "")
             discountCurve = market->equityForecastCurve(equityForecastCurveName, marketConfiguration_);
-        shortIndex = *market->iborIndex(shortIndexNameTmp, marketConfiguration_);
-        shortIndexOn = boost::dynamic_pointer_cast<OvernightIndex>(shortIndex);
-        longIndex = *market->iborIndex(longIndexNameTmp, marketConfiguration_);
+        else {
+            QL_FAIL("tenor basis swap discount curve undetermined");
+        }
+        if (singleCurve)
+            shortIndexCurve = discountCurve;
+        else
+            shortIndexCurve =
+                market->iborIndex(shortIndexName != "" ? shortIndexName : conv->shortIndexName(), marketConfiguration_)
+                    ->forwardingTermStructure();
+        longIndexCurve =
+            market->iborIndex(longIndexName != "" ? longIndexName : conv->longIndexName(), marketConfiguration_)
+                ->forwardingTermStructure();
     }
+    longIndex = longIndex->clone(longIndexCurve);
+    shortIndex = shortIndex->clone(shortIndexCurve);
+    if (shortIndexOn)
+        shortIndexOn = boost::static_pointer_cast<OvernightIndex>(shortIndexOn->clone(shortIndexCurve));
+    if (longIndexOn)
+        longIndexOn = boost::static_pointer_cast<OvernightIndex>(longIndexOn->clone(longIndexCurve));
     boost::shared_ptr<Swap> helper;
     Date latestRelevantDate;
     boost::shared_ptr<Libor> longIndexAsLibor = boost::dynamic_pointer_cast<Libor>(longIndex);
@@ -1498,10 +1544,17 @@ ParSensitivityAnalysis::makeTenorBasisSwap(const boost::shared_ptr<Market>& mark
         longIndexAsLibor != nullptr ? longIndexAsLibor->jointCalendar() : longIndex->fixingCalendar();
     Calendar shortIndexCalendar =
         shortIndexAsLibor != nullptr ? shortIndexAsLibor->jointCalendar() : shortIndex->fixingCalendar();
-    if (shortIndexOn) {
-        // OIS vs Libor
-        Date settlementDate = longIndexCalendar.advance(
+    removeTodaysFixingIndices_.insert(shortIndex->name());
+    removeTodaysFixingIndices_.insert(longIndex->name());
+
+    if(!shortIndexOn && longIndexOn)
+        QL_FAIL("This is unexpected: long index is overnight, short index is longer");
+
+    Date settlementDate = longIndexCalendar.advance(
             longIndexCalendar.adjust(asof_), longIndex->fixingDays() * Days);
+
+    if (shortIndexOn && !longIndexOn) {
+        // OIS vs Libor
         Schedule oisSchedule = MakeSchedule()
                                    .from(settlementDate)
                                    .to(settlementDate + term)
@@ -1516,10 +1569,9 @@ ParSensitivityAnalysis::makeTenorBasisSwap(const boost::shared_ptr<Market>& mark
                                     .withCalendar(longIndexCalendar)
                                     .withConvention(longIndex->businessDayConvention())
                                     .forwards();
-        // FIXME do we want to remove today's historic fixing from the short index as we do for the Ibor case?
-        removeTodaysFixingIndices_.insert(longIndex->name());
-        helper = boost::make_shared<OvernightIndexedBasisSwap>(OvernightIndexedBasisSwap::Payer, 100.0, oisSchedule,
-                                                               shortIndexOn, iborSchedule, longIndex);
+        helper =
+            boost::make_shared<OvernightIndexedBasisSwap>(OvernightIndexedBasisSwap::Payer, 100.0, oisSchedule,
+                                                          shortIndexOn, iborSchedule, longIndex, conv->spreadOnShort());
         boost::shared_ptr<IborCoupon> lastCoupon1 = boost::dynamic_pointer_cast<IborCoupon>(
             boost::static_pointer_cast<OvernightIndexedBasisSwap>(helper)->iborLeg().back());
         boost::shared_ptr<QuantLib::OvernightIndexedCoupon> lastCoupon2 =
@@ -1528,15 +1580,45 @@ ParSensitivityAnalysis::makeTenorBasisSwap(const boost::shared_ptr<Market>& mark
         latestRelevantDate = std::max(helper->maturityDate(),
                  std::max(lastCoupon1->fixingEndDate(),
                           shortIndexOn->fixingCalendar().advance(lastCoupon2->valueDates().back(), 1 * Days)));
+    } else if (shortIndexOn && longIndexOn) {
+        // OIS vs OIS
+        // from userguide: long index ... should be interpreted as the index of the received leg.
+        Schedule shortSchedule = MakeSchedule()
+                                     .from(settlementDate)
+                                     .to(settlementDate + term)
+                                     .withTenor(conv->shortPayTenor())
+                                     .withCalendar(shortIndexCalendar)
+                                     .withConvention(shortIndex->businessDayConvention())
+                                     .forwards();
+        Schedule longSchedule = MakeSchedule()
+                                    .from(settlementDate)
+                                    .to(settlementDate + term)
+                                    .withTenor(longIndex->tenor())
+                                    .withCalendar(longIndexCalendar)
+                                    .withConvention(longIndex->businessDayConvention())
+                                    .forwards();
+
+        helper = boost::make_shared<DoubleOvernightIndexedBasisSwap>(
+            100.0, shortSchedule, shortIndexOn, longSchedule, longIndexOn, 0.0, 0.0, conv->spreadOnShort(), false);
+
+        boost::shared_ptr<QuantLib::OvernightIndexedCoupon> lastCouponShort =
+            boost::dynamic_pointer_cast<QuantLib::OvernightIndexedCoupon>(
+                boost::static_pointer_cast<DoubleOvernightIndexedBasisSwap>(helper)->payLeg().back());
+
+        boost::shared_ptr<QuantLib::OvernightIndexedCoupon> lastCouponLong =
+            boost::dynamic_pointer_cast<QuantLib::OvernightIndexedCoupon>(
+                boost::static_pointer_cast<DoubleOvernightIndexedBasisSwap>(helper)->recLeg().back());
+
+        latestRelevantDate =
+            std::max(helper->maturityDate(),
+                     std::max(shortIndexOn->fixingCalendar().advance(lastCouponShort->valueDates().back(), 1 * Days),
+                              longIndexOn->fixingCalendar().advance(lastCouponLong->valueDates().back(), 1 * Days)));
+
     } else {
         // Libor vs Libor
-        Date settlementDate = longIndexCalendar.advance(
-            longIndexCalendar.adjust(asof_), longIndex->fixingDays() * Days);
-        removeTodaysFixingIndices_.insert(longIndex->name());
-        removeTodaysFixingIndices_.insert(shortIndex->name());
         helper = boost::make_shared<TenorBasisSwap>(settlementDate, 1.0, term, true, longIndex, 0.0, shortIndex, 0.0,
                                                     conv->shortPayTenor(), DateGeneration::Backward,
-                                                    conv->includeSpread(), conv->subPeriodsCouponType());
+                                                    conv->includeSpread(), conv->spreadOnShort(), conv->subPeriodsCouponType());
         boost::shared_ptr<IborCoupon> lastCoupon1 = boost::dynamic_pointer_cast<IborCoupon>(
             boost::static_pointer_cast<TenorBasisSwap>(helper)->longLeg().back());
         Date maxDate2;
@@ -1545,8 +1627,9 @@ ParSensitivityAnalysis::makeTenorBasisSwap(const boost::shared_ptr<Market>& mark
         if (lastCoupon2 != nullptr)
             maxDate2 = lastCoupon2->fixingEndDate();
         else {
-            boost::shared_ptr<QuantExt::SubPeriodsCoupon1> lastCoupon2 = boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(
-                boost::static_pointer_cast<TenorBasisSwap>(helper)->shortLeg().back());
+            boost::shared_ptr<QuantExt::SubPeriodsCoupon1> lastCoupon2 =
+                boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(
+                    boost::static_pointer_cast<TenorBasisSwap>(helper)->shortLeg().back());
             maxDate2 = shortIndexCalendar.advance(lastCoupon2->valueDates().back(), conv->shortPayTenor());
         }
         latestRelevantDate = std::max(helper->maturityDate(), std::max(lastCoupon1->fixingEndDate(), maxDate2));
@@ -1554,39 +1637,42 @@ ParSensitivityAnalysis::makeTenorBasisSwap(const boost::shared_ptr<Market>& mark
     if (market != nullptr) {
         boost::shared_ptr<PricingEngine> swapEngine = boost::make_shared<DiscountingSwapEngine>(discountCurve);
         helper->setPricingEngine(swapEngine);
+    } else {
+        if (!singleCurve) {
+            parHelperDependencies_.emplace(RiskFactorKey::KeyType::IndexCurve, shortIndexName, 0);
+        }
+        parHelperDependencies_.emplace(RiskFactorKey::KeyType::IndexCurve, longIndexName, 0);
+        if (!expDiscountCurve.empty())
+            parHelperDependencies_.emplace(RiskFactorKey::KeyType::IndexCurve, expDiscountCurve, 0);
+        else
+            parHelperDependencies_.emplace(RiskFactorKey::KeyType::DiscountCurve, ccy);
     }
-
-    parHelperDependencies_.emplace(RiskFactorKey::KeyType::IndexCurve, shortIndexNameTmp, 0);
-    parHelperDependencies_.emplace(RiskFactorKey::KeyType::IndexCurve, longIndexNameTmp, 0);
 
     // latest date and return result
     return std::pair<boost::shared_ptr<Instrument>, Date>(helper, latestRelevantDate);
 }
 
-boost::shared_ptr<CapFloor>
-ParSensitivityAnalysis::makeCapFloor(const boost::shared_ptr<Market>& market, string ccy, string indexName, Period term,
-                                     Real strike, bool isAtm,
-                                     std::set<ore::analytics::RiskFactorKey>& parHelperDependencies_,
-				     const std::string& expDiscountCurve) {
+boost::shared_ptr<CapFloor> ParSensitivityAnalysis::makeCapFloor(
+    const boost::shared_ptr<Market>& market, string ccy, string indexName, Period term, Real strike, bool isAtm,
+    std::set<ore::analytics::RiskFactorKey>& parHelperDependencies_, const std::string& expDiscountCurve) {
 
     boost::shared_ptr<CapFloor> inst;
     auto conventions = InstrumentConventions::instance().conventions();
 
     if (!market) {
         // No market so just return a dummy cap
-        boost::shared_ptr<IborIndex> index =
-            parseIborIndex(indexName);
-	QL_REQUIRE(boost::dynamic_pointer_cast<OvernightIndex>(index) == nullptr,
-		   "ParSensitivityAnalysis::makeCapFloor(): OIS indices are not yet supported for par conversion");
+        boost::shared_ptr<IborIndex> index = parseIborIndex(indexName);
+        QL_REQUIRE(boost::dynamic_pointer_cast<OvernightIndex>(index) == nullptr,
+                   "ParSensitivityAnalysis::makeCapFloor(): OIS indices are not yet supported for par conversion");
         inst = MakeCapFloor(CapFloor::Cap, term, index, 0.03);
     } else {
-        
+
         boost::shared_ptr<IborIndex> index = *market->iborIndex(indexName, marketConfiguration_);
-	QL_REQUIRE(boost::dynamic_pointer_cast<OvernightIndex>(index) == nullptr,
-		   "ParSensitivityAnalysis::makeCapFloor(): OIS indices are not yet supported for par conversion");
+        QL_REQUIRE(boost::dynamic_pointer_cast<OvernightIndex>(index) == nullptr,
+                   "ParSensitivityAnalysis::makeCapFloor(): OIS indices are not yet supported for par conversion");
         QL_REQUIRE(index, "Index not found with name " << indexName);
         Handle<YieldTermStructure> discount;
-        if(expDiscountCurve.empty())
+        if (expDiscountCurve.empty())
             discount = market->discountCurve(ccy, marketConfiguration_);
         else
             discount = market->iborIndex(expDiscountCurve, marketConfiguration_)->forwardingTermStructure();
@@ -1596,10 +1682,10 @@ ParSensitivityAnalysis::makeCapFloor(const boost::shared_ptr<Market>& market, st
         // Note this construction excludes the first caplet which is what we want
         inst = MakeCapFloor(CapFloor::Cap, term, index, 0.03);
         Rate atmRate = inst->atmRate(**discount);
-    	//bool isAtm = strike == Null<Real>();
-        //strike = isAtm ? atmRate : strike;
+        // bool isAtm = strike == Null<Real>();
+        // strike = isAtm ? atmRate : strike;
         strike = strike == Null<Real>() ? atmRate : strike;
-	CapFloor::Type type = strike >= atmRate ? CapFloor::Cap : CapFloor::Floor;
+        CapFloor::Type type = strike >= atmRate ? CapFloor::Cap : CapFloor::Floor;
 
         // Create the actual cap or floor instrument that we will use
         if (isAtm) {
@@ -1609,8 +1695,8 @@ ParSensitivityAnalysis::makeCapFloor(const boost::shared_ptr<Market>& market, st
         }
         Handle<OptionletVolatilityStructure> ovs = market->capFloorVol(indexName, marketConfiguration_);
         QL_REQUIRE(!ovs.empty(), "Optionlet volatility structure not found for index " << indexName);
-        QL_REQUIRE(ovs->volatilityType() == ShiftedLognormal || ovs->volatilityType() == Normal, 
-            "Optionlet volatility type " << ovs->volatilityType() << " not covered");
+        QL_REQUIRE(ovs->volatilityType() == ShiftedLognormal || ovs->volatilityType() == Normal,
+                   "Optionlet volatility type " << ovs->volatilityType() << " not covered");
         boost::shared_ptr<PricingEngine> engine;
         if (ovs->volatilityType() == ShiftedLognormal) {
             engine = boost::make_shared<BlackCapFloorEngine>(discount, ovs, ovs->displacement());
@@ -1663,15 +1749,14 @@ ParSensitivityAnalysis::makeCrossCcyBasisSwap(const boost::shared_ptr<Market>& m
         baseIndex = market->iborIndex(baseIndexName, marketConfiguration_);
         index = market->iborIndex(indexName, marketConfiguration_);
     } else {
-        baseIndex =
-            Handle<IborIndex>(parseIborIndex(baseIndexName));
+        baseIndex = Handle<IborIndex>(parseIborIndex(baseIndexName));
         index = Handle<IborIndex>(parseIborIndex(indexName));
     }
     Date today = Settings::instance().evaluationDate();
 
     // For now, to mimic the xccy helper behaviour in the case that today is settlementCalendar holiday
     today = conv->settlementCalendar().adjust(today);
-    
+
     Date start = conv->settlementCalendar().advance(today, conv->settlementDays() * Days, conv->rollConvention());
     Date end = conv->settlementCalendar().advance(start, term, conv->rollConvention());
     Schedule baseSchedule = MakeSchedule()
@@ -1713,80 +1798,74 @@ ParSensitivityAnalysis::makeCrossCcyBasisSwap(const boost::shared_ptr<Market>& m
     removeTodaysFixingIndices_.insert(index->name());
     boost::shared_ptr<CrossCcySwap> helper;
     bool telescopicValueDates = true; // same as in the yield curve building
-    
-    if (baseCcy == conv->spreadIndex()->currency().code()) { // base ccy index is spread index
-        if (conv->isResettable() && conv->flatIndexIsResettable()) {       // i.e. flat index leg is resettable
-	    DLOG("create resettable xccy par instrument (1), convention " << conv->id());
-	    helper = boost::make_shared<CrossCcyBasisMtMResetSwap>(
-		baseNotional, baseCurrency, baseSchedule, *baseIndex, 0.0, // spread index leg => use fairForeignSpread
-		currency, schedule, *index, 0.0, reversedFxIndex, true,    // resettable flat index leg
-		conv->paymentLag(), conv->flatPaymentLag(),
-		conv->includeSpread(), conv->lookback(), conv->fixingDays(), conv->rateCutoff(), conv->isAveraged(),
-		conv->flatIncludeSpread(), conv->flatLookback(), conv->flatFixingDays(), conv->flatRateCutoff(), conv->flatIsAveraged(),
-		telescopicValueDates, true);                               // fair spread leg is foreign
-	}
-	else if (conv->isResettable() && !conv->flatIndexIsResettable()) {  // i.e. spread index leg is resettable
-	    DLOG("create resettable xccy par instrument (2), convention " << conv->id());
-	    helper = boost::make_shared<CrossCcyBasisMtMResetSwap>(
-		notional, currency, schedule, *index, 0.0,                  // flat index leg
-		baseCurrency, baseSchedule, *baseIndex, 0.0, fxIndex, true, // resettable spread index leg => use fairDomesticSpread
-		conv->flatPaymentLag(), conv->paymentLag(),
-		conv->flatIncludeSpread(), conv->flatLookback(), conv->flatFixingDays(), conv->flatRateCutoff(), conv->flatIsAveraged(),
-		conv->includeSpread(), conv->lookback(), conv->fixingDays(), conv->rateCutoff(), conv->isAveraged(),
-		telescopicValueDates, false);                               // fair spread leg is domestic
-	}
-	else { // not resettable
-	    DLOG("create non-resettable xccy par instrument (3), convention " << conv->id());
-	    helper = boost::make_shared<CrossCcyBasisSwap>(
-		baseNotional, baseCurrency, baseSchedule, *baseIndex, 0.0, 1.0, // spread index leg => use fairPaySpread
-		notional, currency, schedule, *index, 0.0, 1.0,                 // flat index leg
-		conv->paymentLag(), conv->flatPaymentLag(),
-		conv->includeSpread(), conv->lookback(), conv->fixingDays(), conv->rateCutoff(), conv->isAveraged(),
-		conv->flatIncludeSpread(), conv->flatLookback(), conv->flatFixingDays(), conv->flatRateCutoff(), conv->flatIsAveraged(),
-		telescopicValueDates);
-	}
+
+    if (baseCcy == conv->spreadIndex()->currency().code()) {         // base ccy index is spread index
+        if (conv->isResettable() && conv->flatIndexIsResettable()) { // i.e. flat index leg is resettable
+            DLOG("create resettable xccy par instrument (1), convention " << conv->id());
+            helper = boost::make_shared<CrossCcyBasisMtMResetSwap>(
+                baseNotional, baseCurrency, baseSchedule, *baseIndex, 0.0, // spread index leg => use fairForeignSpread
+                currency, schedule, *index, 0.0, reversedFxIndex, true,    // resettable flat index leg
+                conv->paymentLag(), conv->flatPaymentLag(), conv->includeSpread(), conv->lookback(), conv->fixingDays(),
+                conv->rateCutoff(), conv->isAveraged(), conv->flatIncludeSpread(), conv->flatLookback(),
+                conv->flatFixingDays(), conv->flatRateCutoff(), conv->flatIsAveraged(), telescopicValueDates,
+                true);                                                       // fair spread leg is foreign
+        } else if (conv->isResettable() && !conv->flatIndexIsResettable()) { // i.e. spread index leg is resettable
+            DLOG("create resettable xccy par instrument (2), convention " << conv->id());
+            helper = boost::make_shared<CrossCcyBasisMtMResetSwap>(
+                notional, currency, schedule, *index, 0.0, // flat index leg
+                baseCurrency, baseSchedule, *baseIndex, 0.0, fxIndex,
+                true, // resettable spread index leg => use fairDomesticSpread
+                conv->flatPaymentLag(), conv->paymentLag(), conv->flatIncludeSpread(), conv->flatLookback(),
+                conv->flatFixingDays(), conv->flatRateCutoff(), conv->flatIsAveraged(), conv->includeSpread(),
+                conv->lookback(), conv->fixingDays(), conv->rateCutoff(), conv->isAveraged(), telescopicValueDates,
+                false); // fair spread leg is domestic
+        } else {        // not resettable
+            DLOG("create non-resettable xccy par instrument (3), convention " << conv->id());
+            helper = boost::make_shared<CrossCcyBasisSwap>(
+                baseNotional, baseCurrency, baseSchedule, *baseIndex, 0.0, 1.0, // spread index leg => use fairPaySpread
+                notional, currency, schedule, *index, 0.0, 1.0,                 // flat index leg
+                conv->paymentLag(), conv->flatPaymentLag(), conv->includeSpread(), conv->lookback(), conv->fixingDays(),
+                conv->rateCutoff(), conv->isAveraged(), conv->flatIncludeSpread(), conv->flatLookback(),
+                conv->flatFixingDays(), conv->flatRateCutoff(), conv->flatIsAveraged(), telescopicValueDates);
+        }
+    } else { // base ccy index is flat index
+        if (conv->isResettable() && conv->flatIndexIsResettable()) {
+            DLOG("create resettable xccy par instrument (4), convention " << conv->id());
+            // second leg is resettable, so the second leg is the base currency leg
+            helper = boost::make_shared<CrossCcyBasisMtMResetSwap>(
+                notional, currency, schedule, *index, 0.0,                  // spread index leg => use fairForeignSpread
+                baseCurrency, baseSchedule, *baseIndex, 0.0, fxIndex, true, // resettable flat index leg
+                conv->paymentLag(), conv->flatPaymentLag(), conv->includeSpread(), conv->lookback(), conv->fixingDays(),
+                conv->rateCutoff(), conv->isAveraged(), conv->flatIncludeSpread(), conv->flatLookback(),
+                conv->flatFixingDays(), conv->flatRateCutoff(), conv->flatIsAveraged(), telescopicValueDates,
+                true); // fair spread leg is foreign
+        } else if (conv->isResettable() && !conv->flatIndexIsResettable()) {
+            DLOG("create resettable xccy par instrument (5), convention " << conv->id());
+            // second leg is resettable, so the second leg is the non-base non-flat spread leg
+            helper = boost::make_shared<CrossCcyBasisMtMResetSwap>(
+                baseNotional, baseCurrency, baseSchedule, *baseIndex, 0.0, // flat index leg
+                currency, schedule, *index, 0.0, reversedFxIndex,
+                true, // resettable spread index leg => use fairDomesticSpread
+                conv->flatPaymentLag(), conv->paymentLag(), conv->flatIncludeSpread(), conv->flatLookback(),
+                conv->flatFixingDays(), conv->flatRateCutoff(), conv->flatIsAveraged(), conv->includeSpread(),
+                conv->lookback(), conv->fixingDays(), conv->rateCutoff(), conv->isAveraged(), telescopicValueDates,
+                false); // fair spread leg is domestic
+        } else {        // not resettable
+            DLOG("create non-resettable xccy par instrument (6), convention " << conv->id());
+            helper = boost::make_shared<CrossCcyBasisSwap>(
+                notional, currency, schedule, *index, 0.0, 1.0,                 // spread index leg => use fairPaySpread
+                baseNotional, baseCurrency, baseSchedule, *baseIndex, 0.0, 1.0, // flat index leg
+                conv->paymentLag(), conv->flatPaymentLag(), conv->includeSpread(), conv->lookback(), conv->fixingDays(),
+                conv->rateCutoff(), conv->isAveraged(), conv->flatIncludeSpread(), conv->flatLookback(),
+                conv->flatFixingDays(), conv->flatRateCutoff(), conv->flatIsAveraged(), telescopicValueDates);
+        }
     }
-    else { // base ccy index is flat index
-	if (conv->isResettable() && conv->flatIndexIsResettable()) {
-	    DLOG("create resettable xccy par instrument (4), convention " << conv->id());
-	    // second leg is resettable, so the second leg is the base currency leg 
-	    helper = boost::make_shared<CrossCcyBasisMtMResetSwap>(
-	        notional, currency, schedule, *index, 0.0,                  // spread index leg => use fairForeignSpread
-		baseCurrency, baseSchedule, *baseIndex, 0.0, fxIndex, true, // resettable flat index leg
-		conv->paymentLag(), conv->flatPaymentLag(),
-		conv->includeSpread(), conv->lookback(), conv->fixingDays(), conv->rateCutoff(), conv->isAveraged(),
-		conv->flatIncludeSpread(), conv->flatLookback(), conv->flatFixingDays(), conv->flatRateCutoff(), conv->flatIsAveraged(),
-		telescopicValueDates, true);                                // fair spread leg is foreign
-	}
-	else if (conv->isResettable() && !conv->flatIndexIsResettable()) {
-	    DLOG("create resettable xccy par instrument (5), convention " << conv->id());
-	    // second leg is resettable, so the second leg is the non-base non-flat spread leg  
-	    helper = boost::make_shared<CrossCcyBasisMtMResetSwap>(
-		baseNotional, baseCurrency, baseSchedule, *baseIndex, 0.0, // flat index leg
-		currency, schedule, *index, 0.0, reversedFxIndex, true,    // resettable spread index leg => use fairDomesticSpread
-		conv->flatPaymentLag(), conv->paymentLag(), 
-		conv->flatIncludeSpread(), conv->flatLookback(), conv->flatFixingDays(), conv->flatRateCutoff(), conv->flatIsAveraged(),
-		conv->includeSpread(), conv->lookback(), conv->fixingDays(), conv->rateCutoff(), conv->isAveraged(),
-		telescopicValueDates, false);                              // fair spread leg is domestic
-	}
-	else { // not resettable
-	    DLOG("create non-resettable xccy par instrument (6), convention " << conv->id());
-	    helper = boost::make_shared<CrossCcyBasisSwap>(
-	        notional, currency, schedule, *index, 0.0, 1.0,                 // spread index leg => use fairPaySpread
-		baseNotional, baseCurrency, baseSchedule, *baseIndex, 0.0, 1.0, // flat index leg
-		conv->paymentLag(), conv->flatPaymentLag(), 
-		conv->includeSpread(), conv->lookback(), conv->fixingDays(), conv->rateCutoff(), conv->isAveraged(),
-		conv->flatIncludeSpread(), conv->flatLookback(), conv->flatFixingDays(), conv->flatRateCutoff(), conv->flatIsAveraged(),
-		telescopicValueDates);
-	}
-    }
-    
-    
+
     bool isBaseDiscount = true;
     bool isNonBaseDiscount = true;
     if (market != nullptr) {
         baseDiscountCurve.linkTo(xccyYieldCurve(market, baseCcy, isBaseDiscount, marketConfiguration_).currentLink());
-	discountCurve.linkTo(xccyYieldCurve(market, ccy, isNonBaseDiscount, marketConfiguration_).currentLink());
+        discountCurve.linkTo(xccyYieldCurve(market, ccy, isNonBaseDiscount, marketConfiguration_).currentLink());
         boost::shared_ptr<PricingEngine> swapEngine =
             boost::make_shared<CrossCcySwapEngine>(baseCurrency, baseDiscountCurve, currency, discountCurve, fxSpot);
         helper->setPricingEngine(swapEngine);
@@ -1807,16 +1886,16 @@ ParSensitivityAnalysis::makeCrossCcyBasisSwap(const boost::shared_ptr<Market>& m
 
     // set pillar date
     Date latestRelevantDate = helper->maturityDate();
-    if (auto i = boost::dynamic_pointer_cast<CrossCcyBasisSwap>(helper)){
+    if (auto i = boost::dynamic_pointer_cast<CrossCcyBasisSwap>(helper)) {
         boost::shared_ptr<IborCoupon> lastCoupon0 =
-	    boost::dynamic_pointer_cast<IborCoupon>(helper->leg(0)[helper->leg(0).size() - 2]);
-	boost::shared_ptr<IborCoupon> lastCoupon1 =
-	    boost::dynamic_pointer_cast<IborCoupon>(helper->leg(1)[helper->leg(1).size() - 2]);
-	if (lastCoupon0 != nullptr)
-	    latestRelevantDate = std::max(latestRelevantDate, lastCoupon0->fixingEndDate());
-	if (lastCoupon1 != nullptr)
-	    latestRelevantDate = std::max(latestRelevantDate, lastCoupon1->fixingEndDate());
-	// yieldCurvePillars_[ccy].push_back((latestRelevantDate - asof_) * Days);
+            boost::dynamic_pointer_cast<IborCoupon>(helper->leg(0)[helper->leg(0).size() - 2]);
+        boost::shared_ptr<IborCoupon> lastCoupon1 =
+            boost::dynamic_pointer_cast<IborCoupon>(helper->leg(1)[helper->leg(1).size() - 2]);
+        if (lastCoupon0 != nullptr)
+            latestRelevantDate = std::max(latestRelevantDate, lastCoupon0->fixingEndDate());
+        if (lastCoupon1 != nullptr)
+            latestRelevantDate = std::max(latestRelevantDate, lastCoupon1->fixingEndDate());
+        // yieldCurvePillars_[ccy].push_back((latestRelevantDate - asof_) * Days);
     }
 
     return std::pair<boost::shared_ptr<Instrument>, Date>(helper, latestRelevantDate);
@@ -1846,14 +1925,13 @@ ParSensitivityAnalysis::makeFxForward(const boost::shared_ptr<Market>& market, s
     Real notional = 1.0 / fxSpot->value();
     boost::shared_ptr<FxForward> helper =
         boost::make_shared<FxForward>(baseNotional, baseCurrency, notional, currency, maturity, true);
-    
+
     bool isBaseDiscount = true;
     bool isNonBaseDiscount = true;
     if (market != nullptr) {
-        Handle<YieldTermStructure> baseDiscountCurve = xccyYieldCurve(
-            market, baseCcy, isBaseDiscount, marketConfiguration_);
-        Handle<YieldTermStructure> discountCurve = xccyYieldCurve(
-            market, ccy, isNonBaseDiscount, marketConfiguration_);
+        Handle<YieldTermStructure> baseDiscountCurve =
+            xccyYieldCurve(market, baseCcy, isBaseDiscount, marketConfiguration_);
+        Handle<YieldTermStructure> discountCurve = xccyYieldCurve(market, ccy, isNonBaseDiscount, marketConfiguration_);
         boost::shared_ptr<PricingEngine> engine = boost::make_shared<DiscountingFxForwardEngine>(
             baseCurrency, baseDiscountCurve, currency, discountCurve, fxSpot);
         helper->setPricingEngine(engine);
@@ -1883,12 +1961,13 @@ ParSensitivityAnalysis::makeCDS(const boost::shared_ptr<Market>& market, string 
     boost::shared_ptr<CdsConvention> conv = boost::dynamic_pointer_cast<CdsConvention>(convention);
     QL_REQUIRE(conv, "convention not recognised, expected CdsConvention");
 
-    boost::shared_ptr<QuantExt::CreditDefaultSwap> helper = MakeCreditDefaultSwap(term, 0.1).withNominal(1)
-        .withCouponTenor(Period(conv->frequency()))
-        .withDayCounter(conv->dayCounter())
-        .withDateGenerationRule(conv->rule())
-        .withSettlesAccrual(conv->settlesAccrual())
-        .withPaysAtDefaultTime(conv->paysAtDefaultTime())
+    boost::shared_ptr<QuantExt::CreditDefaultSwap> helper = MakeCreditDefaultSwap(term, 0.1)
+                                                                .withNominal(1)
+                                                                .withCouponTenor(Period(conv->frequency()))
+                                                                .withDayCounter(conv->dayCounter())
+                                                                .withDateGenerationRule(conv->rule())
+                                                                .withSettlesAccrual(conv->settlesAccrual())
+                                                                .withPaysAtDefaultTime(conv->paysAtDefaultTime())
         // .withPaysAtDefaultTime(conv->rebatesAccrual()) // FIXME: missing in conventions
         ;
 
@@ -1903,8 +1982,7 @@ ParSensitivityAnalysis::makeCDS(const boost::shared_ptr<Market>& market, string 
         }
 
         Handle<DefaultProbabilityTermStructure> dpts = market->defaultCurve(name, marketConfiguration_)->curve();
-        Handle<Quote> recovery =
-            market->recoveryRate(name, marketConfiguration_);
+        Handle<Quote> recovery = market->recoveryRate(name, marketConfiguration_);
 
         boost::shared_ptr<PricingEngine> cdsEngine =
             boost::make_shared<QuantExt::MidPointCdsEngine>(dpts, recovery->value(), yts);
@@ -1914,7 +1992,7 @@ ParSensitivityAnalysis::makeCDS(const boost::shared_ptr<Market>& market, string 
     parHelperDependencies_.emplace(RiskFactorKey::KeyType::DiscountCurve, ccy, 0);
 
     // set pillar date
-    //Date maturity = helper->maturity();
+    // Date maturity = helper->maturity();
     Date maturity = conv->calendar().adjust(helper->maturity(), conv->paymentConvention());
     // cdsPillars_[name].push_back((maturity - asof_) * Days);
     return std::pair<boost::shared_ptr<Instrument>, Date>(helper, maturity);
@@ -1952,9 +2030,9 @@ ParSensitivityAnalysis::makeZeroInflationSwap(const boost::shared_ptr<Market>& m
     Date start = Settings::instance().evaluationDate();
     start = getInflationSwapStart(start, *conv);
     Date end = start + term;
-    boost::shared_ptr<ZeroCouponInflationSwap> helper(
-        new ZeroCouponInflationSwap(ZeroCouponInflationSwap::Payer, 1.0, start, end, conv->infCalendar(),
-                                    conv->infConvention(), conv->dayCounter(), 0.0, index, conv->observationLag(), CPI::AsIndex));
+    boost::shared_ptr<ZeroCouponInflationSwap> helper(new ZeroCouponInflationSwap(
+        ZeroCouponInflationSwap::Payer, 1.0, start, end, conv->infCalendar(), conv->infConvention(), conv->dayCounter(),
+        0.0, index, conv->observationLag(), CPI::AsIndex));
 
     if (market != nullptr) {
         boost::shared_ptr<PricingEngine> swapEngine = boost::make_shared<DiscountingSwapEngine>(discountCurve);
@@ -1971,12 +2049,10 @@ ParSensitivityAnalysis::makeZeroInflationSwap(const boost::shared_ptr<Market>& m
     return helper;
 }
 
-boost::shared_ptr<Instrument>
-ParSensitivityAnalysis::makeYoyInflationSwap(const boost::shared_ptr<Market>& market, string indexName, Period term,
-                                             const boost::shared_ptr<Convention>& convention, bool singleCurve,
-                                             bool fromZero,
-                                             std::set<ore::analytics::RiskFactorKey>& parHelperDependencies_,
-                                             const std::string& expDiscountCurve) {
+boost::shared_ptr<Instrument> ParSensitivityAnalysis::makeYoyInflationSwap(
+    const boost::shared_ptr<Market>& market, string indexName, Period term,
+    const boost::shared_ptr<Convention>& convention, bool singleCurve, bool fromZero,
+    std::set<ore::analytics::RiskFactorKey>& parHelperDependencies_, const std::string& expDiscountCurve) {
 
     boost::shared_ptr<InflationSwapConvention> conv = boost::dynamic_pointer_cast<InflationSwapConvention>(convention);
     QL_REQUIRE(conv, "convention not recognised, expected InflationSwapConvention");
@@ -2111,9 +2187,9 @@ ParSensitivityAnalysis::makeYoYCapFloor(const boost::shared_ptr<Market>& market,
                      .withPaymentDayCounter(conv->dayCounter())
                      .withRateCurve(discountCurve);
 
-    if(market == nullptr)
+    if (market == nullptr)
         return boost::make_shared<YoYInflationCapFloor>(YoYInflationCapFloor::Cap, yoyLeg,
-                                                          std::vector<Real>(yoyLeg.size(), strike));
+                                                        std::vector<Real>(yoyLeg.size(), strike));
 
     auto ovs = market->yoyCapFloorVol(name, marketConfiguration_);
     boost::shared_ptr<PricingEngine> engine;
@@ -2148,7 +2224,7 @@ ParSensitivityAnalysis::makeYoYCapFloor(const boost::shared_ptr<Market>& market,
 }
 
 void ParSensitivityAnalysis::populateShiftSizes(const RiskFactorKey& key, Real parRate,
-    const boost::shared_ptr<ScenarioSimMarket>& simMarket) {
+                                                const boost::shared_ptr<ScenarioSimMarket>& simMarket) {
 
     // Get zero and par shift size for the key
     Real zeroShiftSize = getShiftSize(key, sensitivityData_, simMarket);
@@ -2156,28 +2232,23 @@ void ParSensitivityAnalysis::populateShiftSizes(const RiskFactorKey& key, Real p
     Real parShiftSize = shiftData.shiftSize;
     if (shiftData.shiftType == ShiftType::Relative)
         parShiftSize *= parRate;
-    
+
     // Update the map
     shiftSizes_[key] = make_pair(zeroShiftSize, parShiftSize);
-    
-    TLOG("Zero and par shift size for risk factor '" << key << "' is (" << std::fixed <<
-        std::setprecision(12) << zeroShiftSize << "," << parShiftSize << ")");
+
+    TLOG("Zero and par shift size for risk factor '" << key << "' is (" << std::fixed << std::setprecision(12)
+                                                     << zeroShiftSize << "," << parShiftSize << ")");
 }
 
 set<RiskFactorKey::KeyType> ParSensitivityAnalysis::parTypes_ = {
-    RiskFactorKey::KeyType::DiscountCurve,
-    RiskFactorKey::KeyType::YieldCurve,
-    RiskFactorKey::KeyType::IndexCurve,
-    RiskFactorKey::KeyType::OptionletVolatility,
-    RiskFactorKey::KeyType::SurvivalProbability,
-    RiskFactorKey::KeyType::ZeroInflationCurve,
-    RiskFactorKey::KeyType::YoYInflationCurve,
-    RiskFactorKey::KeyType::YoYInflationCapFloorVolatility
-};
+    RiskFactorKey::KeyType::DiscountCurve,       RiskFactorKey::KeyType::YieldCurve,
+    RiskFactorKey::KeyType::IndexCurve,          RiskFactorKey::KeyType::OptionletVolatility,
+    RiskFactorKey::KeyType::SurvivalProbability, RiskFactorKey::KeyType::ZeroInflationCurve,
+    RiskFactorKey::KeyType::YoYInflationCurve,   RiskFactorKey::KeyType::YoYInflationCapFloorVolatility};
 
 ParSensitivityConverter::ParSensitivityConverter(const ParSensitivityAnalysis::ParContainer& parSensitivities,
-    const map<RiskFactorKey, pair<Real, Real>>& shiftSizes) {
-    
+                                                 const map<RiskFactorKey, pair<Real, Real>>& shiftSizes) {
+
     // Populate the set of par keys (rows of Jacobi) and raw zero keys (columns of Jacobi)
     for (auto parEntry : parSensitivities) {
         parKeys_.insert(parEntry.first.first);
@@ -2385,14 +2456,14 @@ ParSensitivityConverter::ParSensitivityConverter(const ParSensitivityAnalysis::P
 
 boost::numeric::ublas::vector<Real>
 ParSensitivityConverter::convertSensitivity(const boost::numeric::ublas::vector<Real>& zeroSensitivities) {
-    
+
     DLOG("Start sensitivity conversion");
-    
+
     Size dim = zeroSensitivities.size();
-    QL_REQUIRE(jacobi_transp_inv_.size1() == dim,
-               "Size mismatch between Transoposed Jacobi inverse matrix ["
-                   << jacobi_transp_inv_.size1() << " x " << jacobi_transp_inv_.size2()
-                   << "] and zero sensitivity array [" << dim << "]");
+    QL_REQUIRE(jacobi_transp_inv_.size1() == dim, "Size mismatch between Transoposed Jacobi inverse matrix ["
+                                                      << jacobi_transp_inv_.size1() << " x "
+                                                      << jacobi_transp_inv_.size2() << "] and zero sensitivity array ["
+                                                      << dim << "]");
 
     // Vector storing approximation for \frac{\partial V}{\partial z_i} for each zero factor z_i
     boost::numeric::ublas::vector<Real> zeroDerivs(dim);
@@ -2401,18 +2472,18 @@ ParSensitivityConverter::convertSensitivity(const boost::numeric::ublas::vector<
     // Vector initially storing approximation for \frac{\partial V}{\partial c_i} for each par factor c_i
     boost::numeric::ublas::vector<Real> parSensitivities(dim);
     boost::numeric::ublas::axpy_prod(jacobi_transp_inv_, zeroDerivs, parSensitivities, true);
-    
-    // Update parSensitivities vector to hold the first order approximation of the NPV change due to the configured 
+
+    // Update parSensitivities vector to hold the first order approximation of the NPV change due to the configured
     // shift in each of the par factors c_i
     parSensitivities = element_prod(parSensitivities, parShifts_);
 
     DLOG("Sensitivity conversion done");
-    
+
     return parSensitivities;
 }
 
 void ParSensitivityConverter::writeConversionMatrix(Report& report) const {
-    
+
     // Report headers
     report.addColumn("RawFactor(z)", string());
     report.addColumn("ParFactor(c)", string());
@@ -2456,8 +2527,8 @@ private:
 };
 
 ImpliedCapFloorVolHelper::ImpliedCapFloorVolHelper(
-    const QuantLib::Instrument& cap, const std::function<boost::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator,
-    const Real targetValue)
+    const QuantLib::Instrument& cap,
+    const std::function<boost::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator, const Real targetValue)
     : targetValue_(targetValue) {
     // set an implausible value, so that calculation is forced
     // at first ImpliedCapFloorVolHelper::operator()(Volatility x) call
@@ -2491,16 +2562,16 @@ Volatility impliedVolatility(const CapFloor& cap, Real targetValue, const Handle
                              Volatility minVolNormal, Volatility maxVolNormal, const Handle<Index>& notUsed) {
     QL_REQUIRE(!cap.isExpired(), "instrument expired");
     std::function<boost::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator;
-        if (type == ShiftedLognormal)
-            engineGenerator = [&d, displacement](const Handle<Quote>& h) {
-                return boost::make_shared<BlackCapFloorEngine>(d, h, Actual365Fixed(), displacement);
-            };
-        else if (type == Normal)
-            engineGenerator = [&d](const Handle<Quote>& h) {
-                return boost::make_shared<BachelierCapFloorEngine>(d, h, Actual365Fixed());
-            };
-        else
-            QL_FAIL("volatility type " << type << " not implemented");
+    if (type == ShiftedLognormal)
+        engineGenerator = [&d, displacement](const Handle<Quote>& h) {
+            return boost::make_shared<BlackCapFloorEngine>(d, h, Actual365Fixed(), displacement);
+        };
+    else if (type == Normal)
+        engineGenerator = [&d](const Handle<Quote>& h) {
+            return boost::make_shared<BachelierCapFloorEngine>(d, h, Actual365Fixed());
+        };
+    else
+        QL_FAIL("volatility type " << type << " not implemented");
     ImpliedCapFloorVolHelper f(cap, engineGenerator, targetValue);
     NewtonSafe solver;
     solver.setMaxEvaluations(maxEvaluations);
@@ -2575,14 +2646,12 @@ Volatility impliedVolatility(const CapFloorType& cap, Real targetValue, const Ha
         // 1. Get strike for logging
         std::ostringstream oss;
         if (!cap.capRates().empty()) {
-            oss << "Cap: " 
-                << cap.capRates().size() << " strikes, starting with "
-                << cap.capRates().front() << "."; // they are probably all the same here
+            oss << "Cap: " << cap.capRates().size() << " strikes, starting with " << cap.capRates().front()
+                << "."; // they are probably all the same here
         }
         if (!cap.floorRates().empty()) {
-            oss << "Floor: "
-                << cap.floorRates().size() << " strikes, starting with "
-                << cap.floorRates().front() << "."; // they are probably all the same here
+            oss << "Floor: " << cap.floorRates().size() << " strikes, starting with " << cap.floorRates().front()
+                << "."; // they are probably all the same here
         }
         strikeStr = oss.str();
 
@@ -2594,36 +2663,33 @@ Volatility impliedVolatility(const CapFloorType& cap, Real targetValue, const Ha
             TLOG("Got vol " << vol << " on first attempt");
             return vol;
         } catch (std::exception& e) {
-            ALOG("Exception getting implied Vol for Cap (" << cap.maturityDate() <<
-                 " strike " << strikeStr << ") " << e.what());
+            ALOG("Exception getting implied Vol for Cap (" << cap.maturityDate() << " strike " << strikeStr << ") "
+                                                           << e.what());
         }
 
         // 3. Try with bigger bounds
         try {
             Volatility vol = impliedVolatility(cap, targetValue, d, guess, type, displacement, accuracy, maxEvaluations,
-                                               minVolLognormal / 100.0, maxVolLognormal * 100.0,
-                                               minVolNormal / 100.0, maxVolNormal * 100.0, index);
+                                               minVolLognormal / 100.0, maxVolLognormal * 100.0, minVolNormal / 100.0,
+                                               maxVolNormal * 100.0, index);
             TLOG("Got vol " << vol << " on second attempt");
             return vol;
         } catch (std::exception& e) {
-            ALOG("Exception getting implied Vol for Cap (" << cap.maturityDate() <<
-                 " strike " << strikeStr << ") " << e.what());
+            ALOG("Exception getting implied Vol for Cap (" << cap.maturityDate() << " strike " << strikeStr << ") "
+                                                           << e.what());
         }
 
-    } catch(...) {
+    } catch (...) {
         // pass through to below
     }
 
-    ALOG("Cap impliedVolatility() failed for Cap (" << cap.type() <<
-         ", maturity " << cap.maturityDate() <<
-         ", strike " << strikeStr <<
-         " for target " << targetValue <<
-         ". Returning Initial guess " << guess << " and continuing");
+    ALOG("Cap impliedVolatility() failed for Cap (" << cap.type() << ", maturity " << cap.maturityDate() << ", strike "
+                                                    << strikeStr << " for target " << targetValue
+                                                    << ". Returning Initial guess " << guess << " and continuing");
     return guess;
 }
 
-void writeParConversionMatrix(const ParSensitivityAnalysis::ParContainer& parSensitivities,
-    Report& report) {
+void writeParConversionMatrix(const ParSensitivityAnalysis::ParContainer& parSensitivities, Report& report) {
 
     // Report headers
     report.addColumn("ParFactor", string());

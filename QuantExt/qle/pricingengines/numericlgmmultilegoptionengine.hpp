@@ -18,26 +18,50 @@
 
 #pragma once
 
-#include <ql/instruments/nonstandardswaption.hpp>
-#include <ql/instruments/swaption.hpp>
 #include <qle/instruments/multilegoption.hpp>
-#include <qle/models/lgmconvolutionsolver2.hpp>
+#include <qle/models/lgmbackwardsolver.hpp>
 #include <qle/models/lgmvectorised.hpp>
 
+#include <ql/instruments/nonstandardswaption.hpp>
+#include <ql/instruments/swaption.hpp>
+#include <ql/methods/finitedifferences/solvers/fdmbackwardsolver.hpp>
 #include <ql/pricingengines/genericmodelengine.hpp>
 
 namespace QuantExt {
 
-class NumericLgmMultiLegOptionEngineBase : protected LgmConvolutionSolver2 {
+class NumericLgmMultiLegOptionEngineBase {
 public:
-    NumericLgmMultiLegOptionEngineBase(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy,
-                                       const Size ny, const Real sx, const Size nx,
-                                       const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
+    NumericLgmMultiLegOptionEngineBase(const boost::shared_ptr<LgmBackwardSolver>& solver,
+                                       const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
+                                       const Size americanExerciseTimeStepsPerYear = 24);
 
 protected:
+    struct CashflowInfo {
+        bool isPartOfUnderlying(const Real optionTime) const;
+        bool canBeEstimated(const Real optionTime) const;
+        bool mustBeEstimated(const Real optionTime) const;
+        Real requiredSimulationTime() const;
+        Real couponRatio(const Real time) const;
+        RandomVariable pv(const LgmVectorised& lgm, const Real t, const RandomVariable& state,
+                          const Handle<YieldTermStructure>& discountCurve) const;
+        Real couponStartTime_ = Null<Real>();            // filled for classes derived from Coupon
+        Real couponEndTime_ = Null<Real>();              // filled for classes derived from Coupon
+        Real belongsToUnderlyingMaxTime_ = Null<Real>(); // this is always filled
+        Real maxEstimationTime_ = Null<Real>();          // either this or exactEstimationTime is filled
+        Real exactEstimationTime_ = Null<Real>();        // ...
+        std::function<RandomVariable(const LgmVectorised&, const Real, const RandomVariable&,
+                                     const Handle<YieldTermStructure>&)>
+            calculator_; // always a valid function
+    };
+
+    CashflowInfo buildCashflowInfo(const Size i, const Size j) const;
+
     void calculate() const;
 
+    // inputs set in ctor
+    boost::shared_ptr<LgmBackwardSolver> solver_;
     Handle<YieldTermStructure> discountCurve_;
+    Size americanExerciseTimeStepsPerYear_;
 
     // inputs set by derived classes
     mutable std::vector<Leg> legs_;
@@ -58,7 +82,15 @@ class NumericLgmMultiLegOptionEngine
 public:
     NumericLgmMultiLegOptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny,
                                    const Real sx, const Size nx,
-                                   const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
+                                   const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
+                                   const Size americanExerciseTimeStepsPerYear = 24);
+
+    NumericLgmMultiLegOptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime = 50.0,
+                                   const QuantLib::FdmSchemeDesc scheme = QuantLib::FdmSchemeDesc::Douglas(),
+                                   const Size stateGridPoints = 64, const Size timeStepsPerYear = 24,
+                                   const Real mesherEpsilon = 1E-4,
+                                   const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
+                                   const Size americanExerciseTimeStepsPerYear = 24);
 
     void calculate() const override;
 };
@@ -68,7 +100,15 @@ class NumericLgmSwaptionEngine : public QuantLib::GenericEngine<Swaption::argume
 public:
     NumericLgmSwaptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny,
                              const Real sx, const Size nx,
-                             const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
+                             const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
+                             const Size americanExerciseTimeStepsPerYear = 24);
+
+    NumericLgmSwaptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime = 50.0,
+                             const QuantLib::FdmSchemeDesc scheme = QuantLib::FdmSchemeDesc::Douglas(),
+                             const Size stateGridPoints = 64, const Size timeStepsPerYear = 24,
+                             const Real mesherEpsilon = 1E-4,
+                             const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
+                             const Size americanExerciseTimeStepsPerYear = 24);
 
     void calculate() const override;
 };
@@ -79,7 +119,16 @@ class NumericLgmNonstandardSwaptionEngine
 public:
     NumericLgmNonstandardSwaptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy,
                                         const Size ny, const Real sx, const Size nx,
-                                        const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
+                                        const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
+                                        const Size americanExerciseTimeStepsPerYear = 24);
+
+    NumericLgmNonstandardSwaptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model,
+                                        const Real maxTime = 50.0,
+                                        const QuantLib::FdmSchemeDesc scheme = QuantLib::FdmSchemeDesc::Douglas(),
+                                        const Size stateGridPoints = 64, const Size timeStepsPerYear = 24,
+                                        const Real mesherEpsilon = 1E-4,
+                                        const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
+                                        const Size americanExerciseTimeStepsPerYear = 24);
 
     void calculate() const override;
 };
