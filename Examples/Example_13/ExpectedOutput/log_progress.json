@@ -1,10 +1,61 @@
-{ "@timestamp": "2023-12-06T12:46:42.936321", "key": "Running XVA Analytic", "progress": 0, "total": 1 }
-{ "@timestamp": "2023-12-06T12:46:42.937348", "key": "XVA: Build Today's Market", "progress": 0, "total": 1 }
-{ "@timestamp": "2023-12-06T12:46:43.163084", "key": "XVA: Build Today's Market", "progress": 1, "total": 1 }
-{ "@timestamp": "2023-12-06T12:46:43.181725", "key": "XVA: Load Cubes", "progress": 0, "total": 1 }
-{ "@timestamp": "2023-12-06T12:46:43.181771", "key": "XVA: Load Cubes", "progress": 1, "total": 1 }
-{ "@timestamp": "2023-12-06T12:46:43.195752", "key": "XVA: Aggregation", "progress": 0, "total": 1 }
-{ "@timestamp": "2023-12-06T12:46:43.274194", "key": "XVA: Aggregation", "progress": 1, "total": 1 }
-{ "@timestamp": "2023-12-06T12:46:43.274238", "key": "XVA: Reports", "progress": 0, "total": 1 }
-{ "@timestamp": "2023-12-06T12:46:43.279477", "key": "XVA: Reports", "progress": 1, "total": 1 }
-{ "@timestamp": "2023-12-06T12:46:43.279506", "key": "Running XVA Analytic", "progress": 1, "total": 1 }
+{ "@timestamp": "2024-02-06T14:39:28.065770", "key": "Running XVA Analytic", "progress": 0, "total": 1 }
+{ "@timestamp": "2024-02-06T14:39:28.066535", "key": "XVA: Build Today's Market", "progress": 0, "total": 1 }
+{ "@timestamp": "2024-02-06T14:39:28.160427", "key": "XVA: Build Today's Market", "progress": 1, "total": 1 }
+{ "@timestamp": "2024-02-06T14:39:28.480842", "key": "XVA: Build Portfolio", "progress": 0, "total": 1 }
+{ "@timestamp": "2024-02-06T14:39:28.481246", "key": "XVA: Build Portfolio", "progress": 1, "total": 1 }
+{ "@timestamp": "2024-02-06T14:39:28.482609", "key": "XVA: Building cube", "progress": 0, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:31.948899", "key": "XVA: Building cube", "progress": 1, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:32.023323", "key": "XVA: Building cube", "progress": 2, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:32.097712", "key": "XVA: Building cube", "progress": 3, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:32.170967", "key": "XVA: Building cube", "progress": 4, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:32.243320", "key": "XVA: Building cube", "progress": 5, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:32.315664", "key": "XVA: Building cube", "progress": 6, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:32.388187", "key": "XVA: Building cube", "progress": 7, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:32.464333", "key": "XVA: Building cube", "progress": 8, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:32.537036", "key": "XVA: Building cube", "progress": 9, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:32.609787", "key": "XVA: Building cube", "progress": 10, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:32.683837", "key": "XVA: Building cube", "progress": 11, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:32.756631", "key": "XVA: Building cube", "progress": 12, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:32.828895", "key": "XVA: Building cube", "progress": 13, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:32.903173", "key": "XVA: Building cube", "progress": 14, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:32.977488", "key": "XVA: Building cube", "progress": 15, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:33.054168", "key": "XVA: Building cube", "progress": 16, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:33.126703", "key": "XVA: Building cube", "progress": 17, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:33.198840", "key": "XVA: Building cube", "progress": 18, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:33.271439", "key": "XVA: Building cube", "progress": 19, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:33.343881", "key": "XVA: Building cube", "progress": 20, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:33.416305", "key": "XVA: Building cube", "progress": 21, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:33.489189", "key": "XVA: Building cube", "progress": 22, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:33.561667", "key": "XVA: Building cube", "progress": 23, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:33.636217", "key": "XVA: Building cube", "progress": 24, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:33.708556", "key": "XVA: Building cube", "progress": 25, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:33.781143", "key": "XVA: Building cube", "progress": 26, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:33.855493", "key": "XVA: Building cube", "progress": 27, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:33.928433", "key": "XVA: Building cube", "progress": 28, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:34.001057", "key": "XVA: Building cube", "progress": 29, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:34.075400", "key": "XVA: Building cube", "progress": 30, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:34.156743", "key": "XVA: Building cube", "progress": 31, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:34.231223", "key": "XVA: Building cube", "progress": 32, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:34.304273", "key": "XVA: Building cube", "progress": 33, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:34.377136", "key": "XVA: Building cube", "progress": 34, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:34.451497", "key": "XVA: Building cube", "progress": 35, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:34.524576", "key": "XVA: Building cube", "progress": 36, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:34.597080", "key": "XVA: Building cube", "progress": 37, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:34.669581", "key": "XVA: Building cube", "progress": 38, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:34.742334", "key": "XVA: Building cube", "progress": 39, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:34.816659", "key": "XVA: Building cube", "progress": 40, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:34.889396", "key": "XVA: Building cube", "progress": 41, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:34.962321", "key": "XVA: Building cube", "progress": 42, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:35.036411", "key": "XVA: Building cube", "progress": 43, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:35.109330", "key": "XVA: Building cube", "progress": 44, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:35.181877", "key": "XVA: Building cube", "progress": 45, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:35.257693", "key": "XVA: Building cube", "progress": 46, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:35.330177", "key": "XVA: Building cube", "progress": 47, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:35.404526", "key": "XVA: Building cube", "progress": 48, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:35.477242", "key": "XVA: Building cube", "progress": 49, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:35.549670", "key": "XVA: Building cube", "progress": 50, "total": 50 }
+{ "@timestamp": "2024-02-06T14:39:35.557769", "key": "XVA: Aggregation", "progress": 0, "total": 1 }
+{ "@timestamp": "2024-02-06T14:39:35.599933", "key": "XVA: Aggregation", "progress": 1, "total": 1 }
+{ "@timestamp": "2024-02-06T14:39:35.599952", "key": "XVA: Reports", "progress": 0, "total": 1 }
+{ "@timestamp": "2024-02-06T14:39:35.602308", "key": "XVA: Reports", "progress": 1, "total": 1 }
+{ "@timestamp": "2024-02-06T14:39:35.602325", "key": "Running XVA Analytic", "progress": 1, "total": 1 }
