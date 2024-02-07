@@ -136,7 +136,7 @@ public:
 private:
     mutable boost::shared_mutex mutex_;
     std::set<boost::shared_ptr<ProgressIndicator>> indicators_;
-    std::map<std::thread::id, std::pair<unsigned long, unsigned long>> threadData_;
+    std::map<std::thread::id, std::tuple<unsigned long, unsigned long, std::string>> threadData_;
 };
 
 } // namespace data

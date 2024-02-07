@@ -117,15 +117,20 @@ MultiThreadedProgressIndicator::MultiThreadedProgressIndicator(
 
 void MultiThreadedProgressIndicator::updateProgress(const unsigned long progress, const unsigned long total, const std::string& detail) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
-    threadData_[std::this_thread::get_id()] = std::make_pair(progress, total);
+    threadData_[std::this_thread::get_id()] = std::make_tuple(progress, total, detail);
     unsigned long progressTmp = 0;
     unsigned long totalTmp = 0;
+    std::ostringstream detailTmp;
     for (auto const& d : threadData_) {
-        progressTmp += d.second.first;
-        totalTmp += d.second.second;
+        progressTmp += std::get<0>(d.second);
+        totalTmp += std::get<1>(d.second);
+
+        if (detailTmp.tellp() != 0)
+            detailTmp << "|";
+        detailTmp << std::get<2>(d.second);
     }
     for (auto& i : indicators_)
-        i->updateProgress(progressTmp, totalTmp, detail);
+        i->updateProgress(progressTmp, totalTmp, detailTmp.str());
 }
 
 void MultiThreadedProgressIndicator::reset() {
