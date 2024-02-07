@@ -15,6 +15,7 @@
     <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
     <Parameter name="portfolioFile"></Parameter>
     <Parameter name="observationModel">None</Parameter>
+    <Parameter name="csvCommentReportHeader">N</Parameter>
   </Setup>
   <Markets>
     <Parameter name="lgmcalibration">default</Parameter>
@@ -30,6 +31,7 @@
       <Parameter name="crif">crif.csv</Parameter>
       <Parameter name="calculationCurrency">USD</Parameter>
       <Parameter name="enforceIMRegulations">Y</Parameter>
+      <Parameter name="writeIntermediateReports">N</Parameter>
       <Parameter name="mporDays">10</Parameter>
     </Analytic>
   </Analytics>

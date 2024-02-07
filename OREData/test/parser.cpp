@@ -27,11 +27,11 @@
 #include <ql/time/calendars/austria.hpp>
 #include <ql/time/calendars/chile.hpp>
 #include <ql/time/calendars/france.hpp>
+#include <ql/time/calendars/jointcalendar.hpp>
 #include <ql/time/calendars/thailand.hpp>
 #include <ql/time/daycounters/all.hpp>
 #include <qle/calendars/colombia.hpp>
 #include <qle/calendars/israel.hpp>
-#include <qle/calendars/largejointcalendar.hpp>
 #include <qle/calendars/malaysia.hpp>
 #include <qle/calendars/netherlands.hpp>
 #include <qle/calendars/peru.hpp>
@@ -927,7 +927,7 @@ BOOST_AUTO_TEST_CASE(testJointCalendar) {
     Calendar peru = QuantExt::Peru();
 
     cals.push_back(peru);
-    Calendar joint1 = QuantExt::LargeJointCalendar(cals);
+    Calendar joint1 = QuantLib::JointCalendar(cals);
 
     std::vector<Date> hol = joint1.holidayList(Date(1, January, 2018), Date(31, December, 2018));
     BOOST_CHECK(hol.size() == expectedHolidays.size());
@@ -955,7 +955,7 @@ BOOST_AUTO_TEST_CASE(testJointCalendar) {
 
     Calendar col = Colombia();
     cals.push_back(col);
-    Calendar joint2 = QuantExt::LargeJointCalendar(cals);
+    Calendar joint2 = QuantLib::JointCalendar(cals);
 
     hol = joint2.holidayList(Date(1, January, 2018), Date(31, December, 2018));
     BOOST_CHECK(hol.size() == expectedHolidays.size());
@@ -978,7 +978,7 @@ BOOST_AUTO_TEST_CASE(testJointCalendar) {
 
     Calendar phil = Philippines();
     cals.push_back(phil);
-    Calendar joint3 = QuantExt::LargeJointCalendar(cals);
+    Calendar joint3 = QuantLib::JointCalendar(cals);
 
     hol = joint3.holidayList(Date(1, January, 2018), Date(31, December, 2018));
     BOOST_CHECK(hol.size() == expectedHolidays.size());
@@ -1004,7 +1004,7 @@ BOOST_AUTO_TEST_CASE(testJointCalendar) {
 
     Calendar thai = Thailand();
     cals.push_back(thai);
-    Calendar joint4 = QuantExt::LargeJointCalendar(cals);
+    Calendar joint4 = QuantLib::JointCalendar(cals);
 
     hol = joint4.holidayList(Date(1, January, 2018), Date(31, December, 2018));
     BOOST_CHECK(hol.size() == expectedHolidays.size());
@@ -1020,7 +1020,7 @@ BOOST_AUTO_TEST_CASE(testJointCalendar) {
 
     Calendar mal = Malaysia();
     cals.push_back(mal);
-    Calendar joint5 = QuantExt::LargeJointCalendar(cals);
+    Calendar joint5 = QuantLib::JointCalendar(cals);
 
     hol = joint5.holidayList(Date(1, January, 2018), Date(31, December, 2018));
     BOOST_CHECK(hol.size() == expectedHolidays.size());
@@ -1044,7 +1044,7 @@ BOOST_AUTO_TEST_CASE(testJointCalendar) {
 
     Calendar chil = Chile();
     cals.push_back(chil);
-    Calendar joint6 = QuantExt::LargeJointCalendar(cals);
+    Calendar joint6 = QuantLib::JointCalendar(cals);
 
     hol = joint6.holidayList(Date(1, January, 2018), Date(31, December, 2018));
     BOOST_CHECK(hol.size() == expectedHolidays.size());
@@ -1062,7 +1062,7 @@ BOOST_AUTO_TEST_CASE(testJointCalendar) {
 
     Calendar net = Netherlands();
     cals.push_back(net);
-    Calendar joint7 = QuantExt::LargeJointCalendar(cals);
+    Calendar joint7 = QuantLib::JointCalendar(cals);
 
     hol = joint7.holidayList(Date(1, January, 2018), Date(31, December, 2018));
     BOOST_CHECK(hol.size() == expectedHolidays.size());
@@ -1083,7 +1083,7 @@ BOOST_AUTO_TEST_CASE(testJointCalendar) {
 
     Calendar fre = France();
     cals.push_back(fre);
-    Calendar joint8 = QuantExt::LargeJointCalendar(cals);
+    Calendar joint8 = QuantLib::JointCalendar(cals);
 
     hol = joint8.holidayList(Date(1, January, 2018), Date(31, December, 2018));
     BOOST_CHECK(hol.size() == expectedHolidays.size());
