@@ -190,7 +190,11 @@ double DecomposedSensitivityStream::assetSpotShiftSize(const std::string indexNa
     if (curveType == ore::data::CurveSpec::CurveType::Equity) {
         return equitySpotShiftSize(indexName);
     } else {
-        return commoditySpotShiftSize(indexName);
+        try {
+            return commoditySpotShiftSize(indexName);
+        } catch (...) {
+            return assetSpotShiftSize(indexName, ore::data::CurveSpec::CurveType::Equity);
+        }
     }
 }
 
@@ -243,7 +247,7 @@ DecomposedSensitivityStream::indexDecomposition(double delta, const std::string&
     auto spotRisk = constituentSpotRiskFromDecomposition(delta, indexWeights);
     auto currencies = getConstituentCurrencies(spotRisk, indexCurrency, curveType);
     auto fxShifts = fxRiskShiftSizes(currencies);
-    auto spotShift = assetSpotShiftSize(indexName, curveType);
+    double spotShift = assetSpotShiftSize(indexName, curveType);    
     auto fxRisk = fxRiskFromDecomposition(spotRisk, currencies, fxShifts, spotShift);
     result.spotRisk = spotRisk;
     result.fxRisk = fxRisk;
