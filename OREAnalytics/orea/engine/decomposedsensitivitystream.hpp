@@ -78,7 +78,9 @@ private:
     std::map<std::string, double> fxRiskShiftSizes(const std::map<std::string, std::vector<std::string>>& constituentCurrencies) const;
     
     //! Return the asset spot shift size
-    double assetSpotShiftSize(const std::string name) const;
+    double assetSpotShiftSize(const std::string name, const ore::data::CurveSpec::CurveType curveType) const;
+    double equitySpotShiftSize(const std::string name) const;
+    double commoditySpotShiftSize(const std::string name) const;
     
     std::map<std::string, std::vector<std::string>> getConstituentCurrencies(const std::map<std::string, double>& constituents,
                                                                 const std::string& indexCurrency,
