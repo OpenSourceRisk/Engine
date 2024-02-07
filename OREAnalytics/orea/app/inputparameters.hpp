@@ -122,6 +122,7 @@ public:
     // Setters for sensi analytics
     void setXbsParConversion(bool b) { xbsParConversion_ = b; }
     void setParSensi(bool b) { parSensi_ = b; }
+    void setOptimiseRiskFactors(bool b) { optimiseRiskFactors_ = b; }
     void setAlignPillars(bool b) { alignPillars_ = b; }
     void setOutputJacobi(bool b) { outputJacobi_ = b; }
     void setUseSensiSpreadedTermStructures(bool b) { useSensiSpreadedTermStructures_ = b; }
@@ -413,6 +414,7 @@ public:
      *****************************/
     bool xbsParConversion() { return xbsParConversion_; }
     bool parSensi() const { return parSensi_; };
+    bool optimiseRiskFactors() const { return optimiseRiskFactors_; }
     bool alignPillars() const { return alignPillars_; };
     bool outputJacobi() const { return outputJacobi_; };
     bool useSensiSpreadedTermStructures() { return useSensiSpreadedTermStructures_; }
@@ -680,6 +682,7 @@ protected:
      **********************/
     bool xbsParConversion_ = false;
     bool parSensi_ = false;
+    bool optimiseRiskFactors_ = false;
     bool outputJacobi_ = false;
     bool alignPillars_ = false;
     bool useSensiSpreadedTermStructures_ = true;

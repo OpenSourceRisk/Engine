@@ -42,7 +42,6 @@
 #include <set>
 #include <tuple>
 
-
 namespace ore {
 namespace analytics {
 using namespace std;
@@ -62,8 +61,7 @@ public:
     ParSensitivityAnalysis(const QuantLib::Date& asof,
                            const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams,
                            const ore::analytics::SensitivityScenarioData& sensitivityData,
-                           const string& marketConfiguration = "",
-                           const bool continueOnError = false,
+                           const string& marketConfiguration = "", const bool continueOnError = false,
                            const std::set<ore::analytics::RiskFactorKey::KeyType>& typesDisabled = {});
 
     virtual ~ParSensitivityAnalysis() {}
@@ -72,9 +70,7 @@ public:
     void computeParInstrumentSensitivities(const boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket);
 
     //! Return computed par sensitivities. Empty if they have not been computed yet.
-    const ParContainer& parSensitivities() const {
-        return parSensi_;
-    }
+    const ParContainer& parSensitivities() const { return parSensi_; }
 
     //! align pillars in scenario simulation market parameters with those of the par instruments
     void alignPillars();
@@ -91,15 +87,13 @@ public:
         return shiftSizes_;
     }
 
-    /*! Disable par conversion for the given set of risk factor key types. May be called multiple times in order to 
+    /*! Disable par conversion for the given set of risk factor key types. May be called multiple times in order to
         add key types that should not be considered for par conversion.
     */
     void disable(const std::set<ore::analytics::RiskFactorKey::KeyType>& types);
 
     //! Return the set of key types disabled for this instance of ParSensitivityAnalysis.
-    const std::set<ore::analytics::RiskFactorKey::KeyType>& typesDisabled() const {
-        return typesDisabled_;
-    }
+    const std::set<ore::analytics::RiskFactorKey::KeyType>& typesDisabled() const { return typesDisabled_; }
 
 private:
     //! Augment relevant risk factors
@@ -110,38 +104,42 @@ private:
 
     //! Create Deposit for implying par rate sensitivity from zero rate sensitivity
     std::pair<boost::shared_ptr<QuantLib::Instrument>, Date>
-    makeDeposit(const boost::shared_ptr<ore::data::Market>& market,
-        string ccy, string indexName, string yieldCurveName, string equityForecastCurveName, Period term, const boost::shared_ptr<Convention>& conventions);
+    makeDeposit(const boost::shared_ptr<ore::data::Market>& market, string ccy, string indexName, string yieldCurveName,
+                string equityForecastCurveName, Period term, const boost::shared_ptr<Convention>& conventions);
 
     //! Create FRA for implying par rate sensitivity from zero rate sensitivity
-    std::pair<boost::shared_ptr<QuantLib::Instrument>, Date> makeFRA(const boost::shared_ptr<ore::data::Market>& market,
-             string ccy, string indexName, string yieldCurveName, string equityForecastCurveName,
-             Period term, const boost::shared_ptr<Convention>& conventions);
+    std::pair<boost::shared_ptr<QuantLib::Instrument>, Date>
+    makeFRA(const boost::shared_ptr<ore::data::Market>& market, string ccy, string indexName, string yieldCurveName,
+            string equityForecastCurveName, Period term, const boost::shared_ptr<Convention>& conventions);
 
     //! Create Swap for implying par rate sensitivity from zero rate sensitivity
     std::pair<boost::shared_ptr<QuantLib::Instrument>, Date>
     makeSwap(const boost::shared_ptr<ore::data::Market>& market, string ccy, string indexName, string yieldCurveName,
              string equityForecastCurveName, Period term, const boost::shared_ptr<Convention>& conventions,
-             bool singleCurve, std::set<ore::analytics::RiskFactorKey>& parHelperDependencies, const std::string& expDiscountCurve = "");
+             bool singleCurve, std::set<ore::analytics::RiskFactorKey>& parHelperDependencies,
+             const std::string& expDiscountCurve = "");
 
     //! Create OIS Swap for implying par rate sensitivity from zero rate sensitivity
     std::pair<boost::shared_ptr<QuantLib::Instrument>, Date>
     makeOIS(const boost::shared_ptr<ore::data::Market>& market, string ccy, string indexName, string yieldCurveName,
             string equityForecastCurveName, Period term, const boost::shared_ptr<Convention>& conventions,
-            bool singleCurve, std::set<ore::analytics::RiskFactorKey>& parHelperDependencies, const std::string& expDiscountCurve = "");
+            bool singleCurve, std::set<ore::analytics::RiskFactorKey>& parHelperDependencies,
+            const std::string& expDiscountCurve = "");
 
     //! Create Basis Swap for implying par rate sensitivity from zero rate sensitivity
     std::pair<boost::shared_ptr<QuantLib::Instrument>, Date>
     makeTenorBasisSwap(const boost::shared_ptr<ore::data::Market>& market, string ccy, string shortIndexName,
                        string longIndexName, string yieldCurveName, string equityForecastCurveName, Period term,
-                       const boost::shared_ptr<Convention>& conventions,
-                       std::set<ore::analytics::RiskFactorKey>& parHelperDependencies, const std::string& expDiscountCurve = "");
+                       const boost::shared_ptr<Convention>& conventions, const bool singleCurve,
+                       std::set<ore::analytics::RiskFactorKey>& parHelperDependencies,
+                       const std::string& expDiscountCurve = "");
 
     //! Create Cap/Floor instrument for implying flat vol sensitivity from optionlet vol sensitivity
     boost::shared_ptr<QuantLib::CapFloor> makeCapFloor(const boost::shared_ptr<ore::data::Market>& market, string ccy,
-                                                       string indexName, Period term, Real strike, bool generatePillar, // isAtm ?
+                                                       string indexName, Period term, Real strike,
+                                                       bool generatePillar, // isAtm ?
                                                        std::set<ore::analytics::RiskFactorKey>& parHelperDependencies,
-						       const std::string& expDiscountCurve = "");
+                                                       const std::string& expDiscountCurve = "");
 
     //! Create Cross Ccy Basis Swap for implying par rate sensitivity from zero rate sensitivity
     std::pair<boost::shared_ptr<QuantLib::Instrument>, Date>
@@ -166,15 +164,15 @@ private:
     makeZeroInflationSwap(const boost::shared_ptr<ore::data::Market>& market, string indexName, Period term,
                           const boost::shared_ptr<Convention>& conventions, bool singleCurve,
                           std::set<ore::analytics::RiskFactorKey>& parHelperDependencies,
-			  const std::string& expDiscountCurve = "");
+                          const std::string& expDiscountCurve = "");
 
     //! Create YoY Swap for implying par rate sensitivity from yoy rate sensitivity
     boost::shared_ptr<QuantLib::Instrument>
     makeYoyInflationSwap(const boost::shared_ptr<ore::data::Market>& market, string indexName, Period term,
                          const boost::shared_ptr<Convention>& conventions, bool singleCurve, bool fromZero,
                          std::set<ore::analytics::RiskFactorKey>& parHelperDependencies,
-			 const std::string& expDiscountCurve = "");
-    
+                         const std::string& expDiscountCurve = "");
+
     //! Create YoY Cap/Floor for implying rate rate sensitivity from yoy optionlet vol sensitivity
     boost::shared_ptr<QuantLib::YoYInflationCapFloor>
     makeYoYCapFloor(const boost::shared_ptr<Market>& market, string indexName, Period term, Real strike,
@@ -183,7 +181,7 @@ private:
 
     //! Populate `shiftSizes_` for \p key given the implied fair par rate \p parRate
     void populateShiftSizes(const ore::analytics::RiskFactorKey& key, QuantLib::Real parRate,
-        const boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket);
+                            const boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket);
 
     //! As of date for the calculation of the par sensitivities
     QuantLib::Date asof_;
@@ -220,13 +218,13 @@ private:
     std::set<ore::analytics::RiskFactorKey::KeyType> typesDisabled_;
 
     /*! Store the zero rate and par rate absolute shift size for each risk factor key
-        
-        The first element in the pair is the zero or raw rate absolute shift size. The second element in the pair is 
+
+        The first element in the pair is the zero or raw rate absolute shift size. The second element in the pair is
         the corresponding par rate absolute shift size.
-        
-        In the case of the zero rate shift being configured as `Absolute` in `sensitivityData_`, then the par rate 
-        absolute shift size is just equal to the configured zero rate shift size. In the case of the zero rate 
-        shift being configured as `Relative` in `sensitivityData_`, we take the fair implied par rate and multiply it 
+
+        In the case of the zero rate shift being configured as `Absolute` in `sensitivityData_`, then the par rate
+        absolute shift size is just equal to the configured zero rate shift size. In the case of the zero rate
+        shift being configured as `Relative` in `sensitivityData_`, we take the fair implied par rate and multiply it
         by the configured relative zero rate shift size to give the par rate absolute shift size.
     */
     std::map<ore::analytics::RiskFactorKey, std::pair<QuantLib::Real, QuantLib::Real>> shiftSizes_;
@@ -269,10 +267,11 @@ private:
  */
 class ParSensitivityConverter {
 public:
-    /*! Constructor where \p parSensitivities is the par rate sensitivities w.r.t. zero shifts \p shiftSizes gives 
+    /*! Constructor where \p parSensitivities is the par rate sensitivities w.r.t. zero shifts \p shiftSizes gives
         the absolute zero and par shift sizes for each risk factor key.
     */
-    ParSensitivityConverter(const ParSensitivityAnalysis::ParContainer& parSensitivities,
+    ParSensitivityConverter(
+        const ParSensitivityAnalysis::ParContainer& parSensitivities,
         const std::map<ore::analytics::RiskFactorKey, std::pair<QuantLib::Real, QuantLib::Real>>& shiftSizes);
 
     //! Inspectors
@@ -311,7 +310,7 @@ private:
 
 //! Write par instrument sensitivity report
 void writeParConversionMatrix(const ore::analytics::ParSensitivityAnalysis::ParContainer& parSensitivities,
-    ore::data::Report& reportOut);
+                              ore::data::Report& reportOut);
 
 } // namespace analytics
 } // namespace ore

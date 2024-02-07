@@ -206,7 +206,7 @@ boost::shared_ptr<PricingEngine> LGMGridBermudanSwaptionEngineBuilder::engineImp
                                                                                   const std::vector<Date>& expiries,
                                                                                   const Date& maturity,
                                                                                   const std::vector<Real>& strikes) {
-    DLOG("Building Bermudan Swaption engine for trade " << id);
+    DLOG("Building LGM Grid Bermudan Swaption engine for trade " << id);
 
     boost::shared_ptr<QuantExt::LGM> lgm = model(id, key, expiries, maturity, strikes);
 
@@ -222,6 +222,30 @@ boost::shared_ptr<PricingEngine> LGMGridBermudanSwaptionEngineBuilder::engineImp
     std::string ccy = tryParseIborIndex(key, index) ? index->currency().code() : key;
     return boost::make_shared<QuantExt::NumericLgmMultiLegOptionEngine>(
         lgm, sy, ny, sx, nx, market_->discountCurve(ccy, configuration(MarketContext::pricing)));
+}
+
+boost::shared_ptr<PricingEngine> LGMFDBermudanSwaptionEngineBuilder::engineImpl(const string& id, const string& key,
+                                                                                const std::vector<Date>& expiries,
+                                                                                const Date& maturity,
+                                                                                const std::vector<Real>& strikes) {
+    DLOG("Building LGM FD Bermudan Swaption engine for trade " << id);
+
+    boost::shared_ptr<QuantExt::LGM> lgm = model(id, key, expiries, maturity, strikes);
+
+    DLOG("Get engine data");
+    QuantLib::FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
+    Size stateGridPoints = parseInteger(engineParameter("StateGridPoints"));
+    Size timeStepsPerYear = parseInteger(engineParameter("TimeStepsPerYear"));
+    Real mesherEpsilon = parseReal(engineParameter("MesherEpsilon"));
+
+    Real maxTime = lgm->termStructure()->timeFromReference(maturity);
+
+    DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
+    boost::shared_ptr<IborIndex> index;
+    std::string ccy = tryParseIborIndex(key, index) ? index->currency().code() : key;
+    return boost::make_shared<QuantExt::NumericLgmMultiLegOptionEngine>(
+        lgm, maxTime, scheme, stateGridPoints, timeStepsPerYear, mesherEpsilon,
+        market_->discountCurve(ccy, configuration(MarketContext::pricing)));
 }
 
 boost::shared_ptr<PricingEngine> LgmMcBermudanSwaptionEngineBuilder::engineImpl(const string& id, const string& key,

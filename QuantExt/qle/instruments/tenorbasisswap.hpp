@@ -45,12 +45,12 @@ public:
     TenorBasisSwap(const Date& effectiveDate, Real nominal, const Period& swapTenor, bool payLongIndex,
                    const boost::shared_ptr<IborIndex>& longIndex, Spread longSpread,
                    const boost::shared_ptr<IborIndex>& shortIndex, Spread shortSpread, const Period& shortPayTenor,
-                   DateGeneration::Rule rule = DateGeneration::Backward, bool includeSpread = false,
+                   DateGeneration::Rule rule = DateGeneration::Backward, bool includeSpread = false, bool spreadOnShort = true,
                    QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding);
     //! Constructor using Schedules with a full interface
     TenorBasisSwap(Real nominal, bool payLongIndex, const Schedule& longSchedule,
                    const boost::shared_ptr<IborIndex>& longIndex, Spread longSpread, const Schedule& shortSchedule,
-                   const boost::shared_ptr<IborIndex>& shortIndex, Spread shortSpread, bool includeSpread = false,
+                   const boost::shared_ptr<IborIndex>& shortIndex, Spread shortSpread, bool includeSpread = false, bool spreadOnShort = true,
                    QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding);
     //@}
     //! \name Inspectors
@@ -68,6 +68,7 @@ public:
     Spread shortSpread() const;
     const Period& shortPayTenor() const;
     bool includeSpread() const;
+    bool spreadOnShort() const { return spreadOnShort_; }
     QuantExt::SubPeriodsCoupon1::Type type() const;
     const Leg& shortLeg() const;
     //@}
@@ -99,6 +100,7 @@ private:
     Spread shortSpread_;
     Period shortPayTenor_;
     bool includeSpread_;
+    bool spreadOnShort_;
     QuantExt::SubPeriodsCoupon1::Type type_;
     Size shortNo_, longNo_;
 

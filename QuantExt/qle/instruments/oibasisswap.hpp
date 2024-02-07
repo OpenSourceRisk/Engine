@@ -45,11 +45,11 @@ public:
     enum Type { Receiver = -1, Payer = 1 };
     OvernightIndexedBasisSwap(Type type, Real nominal, const Schedule& oisSchedule,
                               const boost::shared_ptr<OvernightIndex>& overnightIndex, const Schedule& iborSchedule,
-                              const boost::shared_ptr<IborIndex>& iborIndex, Spread oisSpread = 0.0,
+                              const boost::shared_ptr<IborIndex>& iborIndex, const bool spreadOnShort = true, Spread oisSpread = 0.0,
                               Spread iborSpread = 0.0, const bool telescopicValueDates = false);
     OvernightIndexedBasisSwap(Type type, std::vector<Real> nominals, const Schedule& oisSchedule,
                               const boost::shared_ptr<OvernightIndex>& overnightIndex, const Schedule& iborSchedule,
-                              const boost::shared_ptr<IborIndex>& iborIndex, Spread oisSpread = 0.0,
+                              const boost::shared_ptr<IborIndex>& iborIndex, const bool spreadOnShort = true, Spread oisSpread = 0.0,
                               Spread iborSpread = 0.0, const bool telescopicValueDates = false);
     //! \name Inspectors
     //@{
@@ -68,6 +68,8 @@ public:
 
     const Leg& iborLeg() const { return legs_[0]; }
     const Leg& overnightLeg() const { return legs_[1]; }
+
+    bool spreadOnShort() const { return spreadOnShort_; }
     //@}
 
     //! \name Results
@@ -88,6 +90,7 @@ private:
     boost::shared_ptr<OvernightIndex> overnightIndex_;
     Schedule iborSchedule_;
     boost::shared_ptr<IborIndex> iborIndex_;
+    bool spreadOnShort_;
     Spread oisSpread_, iborSpread_;
     bool telescopicValueDates_;
 };
