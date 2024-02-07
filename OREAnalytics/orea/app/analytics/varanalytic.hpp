@@ -23,6 +23,7 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/engine/varcalculator.hpp>
 
 namespace ore {
@@ -36,7 +37,7 @@ public:
     }
     virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
-    void setUpConfigurations() override;    
+    virtual void setUpConfigurations() override;
 
 protected:
     QuantLib::ext::shared_ptr<VarReport> varReport_;
@@ -47,8 +48,9 @@ protected:
 class VarAnalytic : public Analytic {
 public:
     VarAnalytic(std::unique_ptr<Analytic::Impl> impl, const std::set<std::string>& analyticTypes,
-                const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::move(impl), analyticTypes, inputs, false, false, false, false) {}
+                const QuantLib::ext::shared_ptr<InputParameters>& inputs, bool simulationConfig = false,
+                bool sensitivityConfig = false)
+        : Analytic(std::move(impl), analyticTypes, inputs, simulationConfig, sensitivityConfig, false, false) {}
 };
 
 class ParametricVarAnalyticImpl : public VarAnalyticImpl {
@@ -56,7 +58,13 @@ public:
     static constexpr const char* LABEL = "PARAMETRIC_VAR";
 
     ParametricVarAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : VarAnalyticImpl(inputs, LABEL) {}
+        : VarAnalyticImpl(inputs, LABEL) {};
+
+    virtual void setUpConfigurations() override;
+    virtual QuantLib::ext::shared_ptr<SensitivityStream>
+    sensiStream(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
+        return inputs_->sensitivityStream();
+    };
 
 protected:
     void setVarReport(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) override;
@@ -66,6 +74,7 @@ class ParametricVarAnalytic : public VarAnalytic {
 public:
     ParametricVarAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
         : VarAnalytic(std::make_unique<ParametricVarAnalyticImpl>(inputs), {"PARAMETRIC_VAR"}, inputs) {}
+
 };
 
 class HistoricalSimulationVarAnalyticImpl : public VarAnalyticImpl {
@@ -83,7 +92,7 @@ protected:
 class HistoricalSimulationVarAnalytic : public VarAnalytic {
 public:
     HistoricalSimulationVarAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : VarAnalytic(std::make_unique<HistoricalSimulationVarAnalyticImpl>(inputs), {"HISTSIM_VAR"}, inputs) {}
+        : VarAnalytic(std::make_unique<HistoricalSimulationVarAnalyticImpl>(inputs), {"HISTSIM_VAR"}, inputs, true) {}
 };
 
 } // namespace analytics

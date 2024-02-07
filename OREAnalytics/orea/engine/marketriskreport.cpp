@@ -52,17 +52,18 @@ void MarketRiskReport::init() {
     }
 
     // save a sensi pnl calculator
-    if (sensiArgs_ && hisScenGen_) {
+    if (hisScenGen_) {
         // Build the filtered historical scenario generator
         hisScenGen_ = boost::make_shared<HistoricalScenarioGeneratorWithFilteredDates>(
             timePeriods(), hisScenGen_);
-        sensiPnlCalculator_ =
-            ext::make_shared<HistoricalSensiPnlCalculator>(hisScenGen_, sensiArgs_->sensitivityStream_);
 
         if (fullRevalArgs_ && fullRevalArgs_->simMarket_)
             hisScenGen_->baseScenario() = fullRevalArgs_->simMarket_->baseScenario();
-
     }
+
+    if (sensiArgs_ && hisScenGen_)
+        sensiPnlCalculator_ =
+            ext::make_shared<HistoricalSensiPnlCalculator>(hisScenGen_, sensiArgs_->sensitivityStream_);
 
     if (fullRevalArgs_) {
         LOG("Build the portfolio for full reval bt.")
@@ -274,7 +275,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
                     includeGammaMargin_ = includeGammaMargin(riskGroup);
                     //  bool haveDetailTrd = btArgs_->reports_.count(ReportType::DetailTrade) == 1;
 
-                    if (covCalculator && pnlCalculators_.size() > 0) {
+                    if (covCalculator || pnlCalculators_.size() > 0) {
                         sensiPnlCalculator_->calculateSensiPnl(srs, deltaKeys, scube->second, pnlCalculators_,
                                                                 covCalculator, tradeIds_, includeGammaMargin_,
                                                                 includeDeltaMargin_, runDetailTrd);
@@ -287,6 +288,8 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
             // Do the full revaluation step
             if (runFullReval(riskGroup))                                
                 handleFullRevalResults(reports, riskGroup, tradeGroup);
+
+            writeSummary(reports, riskGroup, tradeGroup);
         }
         if (sensiBased_)
             // Reset the sensitivity aggregator before changing the risk filter

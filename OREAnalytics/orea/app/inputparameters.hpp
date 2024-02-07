@@ -724,9 +724,9 @@ protected:
     bool varBreakDown_ = false;
     std::string portfolioFilter_;
     // Delta, DeltaGammaNormal, MonteCarlo, Cornish-Fisher, Saddlepoint 
-    std::string varMethod_;
-    Size mcVarSamples_ = 0;
-    long mcVarSeed_ = 0;
+    std::string varMethod_ = "DeltaGammaNormal";
+    Size mcVarSamples_ = 1000000;
+    long mcVarSeed_ = 42;
     std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covarianceData_;
     boost::shared_ptr<SensitivityStream> sensitivityStream_;
     std::string benchmarkVarPeriod_;

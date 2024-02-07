@@ -66,6 +66,7 @@ engine/sensitivitycubestream.cpp
 engine/sensitivityfilestream.cpp
 engine/sensitivityinmemorystream.cpp
 engine/sensitivityrecord.cpp
+engine/sensitivityreportstream.cpp
 engine/stresstest.cpp
 engine/valuationcalculator.cpp
 engine/valuationengine.cpp
@@ -211,6 +212,7 @@ engine/sensitivitycubestream.hpp
 engine/sensitivityfilestream.hpp
 engine/sensitivityinmemorystream.hpp
 engine/sensitivityrecord.hpp
+engine/sensitivityreportstream.hpp
 engine/sensitivitystream.hpp
 engine/stresstest.hpp
 engine/valuationcalculator.hpp

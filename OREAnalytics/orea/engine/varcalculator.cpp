@@ -127,11 +127,15 @@ VarReport::VarReport(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, cons
     }
 
     for (auto const& [tradeId, trade] : portfolio_->trades()) {
-        for (auto const& pId : trade->portfolioIds()) {
-            if (!hasFilter || boost::regex_match(pId, filter)) {
-                tradeIdGroups_[allStr].insert(make_pair(tradeId, pos));
-                if (breakdown)            
-                    tradeIdGroups_[pId].insert(make_pair(tradeId, pos));
+        if (!hasFilter && trade->portfolioIds().size() == 0)
+            tradeIdGroups_[allStr].insert(make_pair(tradeId, pos));
+        else {
+            for (auto const& pId : trade->portfolioIds()) {
+                if (!hasFilter || boost::regex_match(pId, filter)) {
+                    tradeIdGroups_[allStr].insert(make_pair(tradeId, pos));
+                    if (breakdown)
+                        tradeIdGroups_[pId].insert(make_pair(tradeId, pos));
+                }
             }
         }
         pos++;
