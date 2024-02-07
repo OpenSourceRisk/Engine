@@ -71,7 +71,7 @@ private:
     boost::shared_ptr<VanillaSwap> buildVanillaSwap(const boost::shared_ptr<EngineFactory>&);
 
     //! build all other types of Swaptions
-    void buildBermudan(const boost::shared_ptr<EngineFactory>&);
+    void buildBermudanOrAmerican(const boost::shared_ptr<EngineFactory>&);
 
     //! build underlying swaps for exposure simulation
     std::vector<boost::shared_ptr<Instrument>> buildUnderlyingSwaps(const boost::shared_ptr<PricingEngine>&,
