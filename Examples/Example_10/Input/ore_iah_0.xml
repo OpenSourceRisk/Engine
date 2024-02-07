@@ -3,8 +3,9 @@
   <Setup>
     <Parameter name="asofDate">2016-02-05</Parameter>
     <Parameter name="inputPath">Input</Parameter>
-    <Parameter name="outputPath">Output</Parameter>
+    <Parameter name="outputPath">Output/collateral_iah_0</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
+    <Parameter name="logMask">255</Parameter>
     <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>
     <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
     <Parameter name="implyTodaysFixings">N</Parameter>
@@ -38,18 +39,18 @@
       <Parameter name="outputFileName">curves.csv</Parameter>
     </Analytic>
     <Analytic type="simulation">
-      <Parameter name="active">N</Parameter>
-      <Parameter name="simulationConfigFile">simulation.xml</Parameter>
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="simulationConfigFile">simulation_iah.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
-      <Parameter name="storeFlows">Y</Parameter>
       <!-- Parameter name="scenariodump">scenariodump.csv</Parameter> -->
+      <Parameter name="storeFlows">Y</Parameter>
       <Parameter name="cubeFile">cube.csv.gz</Parameter>
       <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
     </Analytic>
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="csaFile">netting_mta.xml</Parameter>
+      <Parameter name="csaFile">netting_iah_0.xml</Parameter>
       <Parameter name="collateralBalancesFile">collateralbalances.xml</Parameter>
       <Parameter name="cubeFile">cube.csv.gz</Parameter>
       <Parameter name="scenarioFile">scenariodata.csv.gz</Parameter>
@@ -58,7 +59,7 @@
       <Parameter name="exposureProfilesByTrade">Y</Parameter>
       <Parameter name="quantile">0.95</Parameter>
       <Parameter name="calculationType">Symmetric</Parameter>
-      <Parameter name="allocationMethod">RelativeXVA</Parameter>
+      <Parameter name="allocationMethod">Marginal</Parameter>
       <Parameter name="marginalAllocationLimit">1.0</Parameter>
       <Parameter name="exerciseNextBreak">N</Parameter>
       <Parameter name="cva">Y</Parameter>
