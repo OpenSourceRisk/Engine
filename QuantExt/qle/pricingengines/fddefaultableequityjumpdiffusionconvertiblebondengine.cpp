@@ -303,6 +303,7 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
 
         if (events.hasNoConversionPlane(i) && valueNoConversion.empty()) {
             valueNoConversion = value;
+            conversionIndicatorNoConversion = conversionIndicator;
         }
 
         // 11.3a handle voluntary (contingent) conversion on t_i (overrides call and put)
@@ -798,9 +799,11 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
     results_.additionalResults["model.h0"] = model_->h0();
     results_.additionalResults["model.sigma"] = model_->sigma();
 
-    MonotonicCubicNaturalSpline interpolationConversionIndicator(
-        mesher_->locations().begin(), mesher_->locations().end(), conversionIndicator[0].begin());
-    results_.additionalResults["conversionIndicator"] = interpolationConversionIndicator(logSpot);
+    if (!conversionIndicator.empty()) {
+        MonotonicCubicNaturalSpline interpolationConversionIndicator(
+            mesher_->locations().begin(), mesher_->locations().end(), conversionIndicator[0].begin());
+        results_.additionalResults["conversionIndicator"] = interpolationConversionIndicator(logSpot);
+    }
 }
 
 } // namespace QuantExt
