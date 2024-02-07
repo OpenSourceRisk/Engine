@@ -179,7 +179,7 @@ DecomposedSensitivityStream::fxRiskShiftSizes(const std::map<std::string, std::v
 
 double DecomposedSensitivityStream::equitySpotShiftSize(const std::string name) const {
     auto eqShiftSizeIt = ssd_->equityShiftData().find(name);
-    QL_REQUIRE(eqShiftSizeIt != ssd_->equityShiftData().end(), "Couldn't find a shift size for " << name);
+    QL_REQUIRE(eqShiftSizeIt != ssd_->equityShiftData().end(), "Couldn't find a equity shift size for " << name);
     QL_REQUIRE(eqShiftSizeIt->second.shiftType == ore::analytics::ShiftType::Relative,
                "Requires a relative eqSpot shift for index decomposition");
     return eqShiftSizeIt->second.shiftSize;
@@ -189,22 +189,25 @@ double DecomposedSensitivityStream::assetSpotShiftSize(const std::string indexNa
                                                        const ore::data::CurveSpec::CurveType curveType) const {
     if (curveType == ore::data::CurveSpec::CurveType::Equity) {
         return equitySpotShiftSize(indexName);
+    } else if (curveType == ore::data::CurveSpec::CurveType::Commodity) {
+        return commoditySpotShiftSize(indexName);
     } else {
-        try {
-            return commoditySpotShiftSize(indexName);
-        } catch (...) {
-            return assetSpotShiftSize(indexName, ore::data::CurveSpec::CurveType::Equity);
-        }
+        QL_FAIL("unsupported curveType, got  "
+                << curveType << ". Only Equity and Commodity curves are supported for decomposition.");
     }
 }
 
-
 double DecomposedSensitivityStream::commoditySpotShiftSize(const std::string name) const {
     auto commShiftSizeIt = ssd_->commodityCurveShiftData().find(name);
-    QL_REQUIRE(commShiftSizeIt != ssd_->commodityCurveShiftData().end(), "Couldn't find a shift size for " << name);
-    QL_REQUIRE(commShiftSizeIt->second->shiftType == ore::analytics::ShiftType::Relative,
-               "Requires a relative eqSpot shift for index decomposition");
-    return commShiftSizeIt->second->shiftSize;
+    if (commShiftSizeIt != ssd_->commodityCurveShiftData().end()) {
+        QL_REQUIRE(commShiftSizeIt->second->shiftType == ore::analytics::ShiftType::Relative,
+                   "Requires a relative eqSpot shift for index decomposition");
+        return commShiftSizeIt->second->shiftSize;
+    } else {
+        LOG("Could not find a commodity shift size for commodity index "
+            << name << ". Try to find a equity spot shift size as fallback")
+        return equitySpotShiftSize(name);
+    }
 }
 
 std::map<std::string, std::vector<std::string>>
