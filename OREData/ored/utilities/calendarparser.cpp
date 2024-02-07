@@ -35,7 +35,6 @@
 #include <qle/calendars/ireland.hpp>
 #include <qle/calendars/islamicweekendsonly.hpp>
 #include <qle/calendars/israel.hpp>
-#include <qle/calendars/largejointcalendar.hpp>
 #include <qle/calendars/luxembourg.hpp>
 #include <qle/calendars/malaysia.hpp>
 #include <qle/calendars/mauritius.hpp>
@@ -88,7 +87,7 @@ QuantLib::Calendar CalendarParser::parseCalendar(const std::string& name) const 
                 QL_FAIL("Cannot convert \"" << name << "\" to Calendar [unhandled exception]");
             }
         }
-        return QuantExt::LargeJointCalendar(calendars);
+        return QuantLib::JointCalendar(calendars);
     }
 }
 
