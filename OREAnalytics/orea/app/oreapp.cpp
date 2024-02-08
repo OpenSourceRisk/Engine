@@ -1148,13 +1148,13 @@ void OREAppInputParameters::loadParameters() {
         QL_REQUIRE(tmp != "", "Netting set manager is required for XVA");
         string csaFile = inputPath + "/" + tmp;
         LOG("Loading netting and csa data from file " << csaFile);
-        inputs->setNettingSetManagerFromFile(csaFile);
+        setNettingSetManagerFromFile(csaFile);
 
         tmp = params_->get("xva", "collateralBalancesFile", false);
         if (tmp != "") {
             string collBalancesFile = inputPath + "/" + tmp;
             LOG("Loading collateral balances from file " << collBalancesFile);
-            inputs->setCollateralBalancesFromFile(collBalancesFile);
+            setCollateralBalancesFromFile(collBalancesFile);
         }
     }
 
