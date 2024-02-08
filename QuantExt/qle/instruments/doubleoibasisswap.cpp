@@ -23,24 +23,24 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-DoubleOvernightIndexedBasisSwap::DoubleOvernightIndexedBasisSwap(Real nominal, 
-    const Schedule& paySchedule, const boost::shared_ptr<OvernightIndex>& payIndex, 
-    const Schedule& recSchedule, const boost::shared_ptr<OvernightIndex>& recIndex, 
-    Spread paySpread, Spread recSpread, const bool telescopicValueDates)
-    : Swap(2), nominals_(std::vector<Real>(1, nominal)), paySchedule_(paySchedule),
-    payIndex_(payIndex), recSchedule_(recSchedule), recIndex_(recIndex),
-    paySpread_(paySpread), recSpread_(recSpread), telescopicValueDates_(telescopicValueDates) {
+DoubleOvernightIndexedBasisSwap::DoubleOvernightIndexedBasisSwap(
+    Real nominal, const Schedule& paySchedule, const boost::shared_ptr<OvernightIndex>& payIndex,
+    const Schedule& recSchedule, const boost::shared_ptr<OvernightIndex>& recIndex, Spread paySpread, Spread recSpread,
+    const bool spreadOnShort, const bool telescopicValueDates)
+    : Swap(2), nominals_(std::vector<Real>(1, nominal)), paySchedule_(paySchedule), payIndex_(payIndex),
+      recSchedule_(recSchedule), recIndex_(recIndex), paySpread_(paySpread), recSpread_(recSpread),
+      spreadOnShort_(spreadOnShort), telescopicValueDates_(telescopicValueDates) {
 
     initialize();
 }
 
-DoubleOvernightIndexedBasisSwap::DoubleOvernightIndexedBasisSwap(std::vector<Real> nominals,
-    const Schedule& paySchedule, const boost::shared_ptr<OvernightIndex>& payIndex, 
-    const Schedule& recSchedule, const boost::shared_ptr<OvernightIndex>& recIndex, 
-    Spread paySpread, Spread recSpread, const bool telescopicValueDates)
-    : Swap(2), nominals_(nominals), paySchedule_(paySchedule),
-    payIndex_(payIndex), recSchedule_(recSchedule), recIndex_(recIndex),
-    paySpread_(paySpread), recSpread_(recSpread), telescopicValueDates_(telescopicValueDates) {
+DoubleOvernightIndexedBasisSwap::DoubleOvernightIndexedBasisSwap(
+    std::vector<Real> nominals, const Schedule& paySchedule, const boost::shared_ptr<OvernightIndex>& payIndex,
+    const Schedule& recSchedule, const boost::shared_ptr<OvernightIndex>& recIndex, Spread paySpread, Spread recSpread,
+    const bool spreadOnShort, const bool telescopicValueDates)
+    : Swap(2), nominals_(nominals), paySchedule_(paySchedule), payIndex_(payIndex), recSchedule_(recSchedule),
+      recIndex_(recIndex), paySpread_(paySpread), recSpread_(recSpread), spreadOnShort_(spreadOnShort),
+      telescopicValueDates_(telescopicValueDates) {
 
     initialize();
 }

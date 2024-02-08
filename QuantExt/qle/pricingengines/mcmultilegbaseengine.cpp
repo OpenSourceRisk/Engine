@@ -737,6 +737,10 @@ void McMultiLegBaseEngine::calculate() const {
     std::set<Real> xvaTimes;
 
     if (exercise_ != nullptr) {
+
+        QL_REQUIRE(exercise_->type() != Exercise::American,
+                   "McMultiLegBaseEngine::calculate(): exercise style American is not supported yet.");
+
         for (auto const& d : exercise_->dates()) {
             if (d <= today_)
                 continue;

@@ -34,6 +34,7 @@ NettedExposureCalculator::NettedExposureCalculator(
     const boost::shared_ptr<NPVCube>& cube, const string& baseCurrency, const string& configuration,
     const Real quantile, const CollateralExposureHelper::CalculationType calcType, const bool multiPath,
     const boost::shared_ptr<NettingSetManager>& nettingSetManager,
+    const boost::shared_ptr<CollateralBalances>& collateralBalances,
     const map<string, vector<vector<Real>>>& nettingSetDefaultValue,
     const map<string, vector<vector<Real>>>& nettingSetCloseOutValue,
     const map<string, vector<vector<Real>>>& nettingSetMporPositiveFlow,
@@ -46,6 +47,7 @@ NettedExposureCalculator::NettedExposureCalculator(
     const bool flipViewXVA, const bool withMporStickyDate, const MporCashFlowMode mporCashFlowMode)
     : portfolio_(portfolio), market_(market), cube_(cube), baseCurrency_(baseCurrency), configuration_(configuration),
       quantile_(quantile), calcType_(calcType), multiPath_(multiPath), nettingSetManager_(nettingSetManager),
+      collateralBalances_(collateralBalances),
       nettingSetDefaultValue_(nettingSetDefaultValue), nettingSetCloseOutValue_(nettingSetCloseOutValue),
       nettingSetMporPositiveFlow_(nettingSetMporPositiveFlow), nettingSetMporNegativeFlow_(nettingSetMporNegativeFlow),
       scenarioData_(scenarioData), cubeInterpretation_(cubeInterpretation), applyInitialMargin_(applyInitialMargin),
@@ -131,6 +133,14 @@ void NettedExposureCalculator::build() {
         string nettingSetId = n.first;
         vector<vector<Real>> data = n.second;
         boost::shared_ptr<NettingSetDefinition> netting = nettingSetManager_->get(nettingSetId);
+
+        // retrieve collateral balances object, if possible
+        boost::shared_ptr<CollateralBalance> balance = nullptr;
+        if (collateralBalances_ && collateralBalances_->has(nettingSetId)) {
+            balance = collateralBalances_->get(nettingSetId);
+            DLOG("got collateral balances for netting set " << nettingSetId);
+        }
+        
         //only for active CSA and calcType == NoLag close-out value is relevant
         if (netting->activeCsaFlag() && calcType_ == CollateralExposureHelper::CalculationType::NoLag) 
             data = nettingSetCloseOutValue_[nettingSetId];
@@ -175,6 +185,27 @@ void NettedExposureCalculator::build() {
                 ALOG("ApplyInitialMargin deactivated in analytics, but active at netting set level " << nettingSetId);
         }
 
+        // Retrieve the constant independent amount from the CSA data and the VM balance
+        // This is used below to reduce the exposure across all paths and time steps.
+        // See below for the conversion to base currency.
+        Real initialVM = 0, initialVMbase = 0;
+        Real initialIM = 0, initialIMbase = 0;
+        string csaCurrency = "";
+        if (netting->activeCsaFlag() && balance) {
+            initialVM = balance->variationMargin();
+            initialIM = balance->initialMargin();
+            double fx = 1.0;
+            if (baseCurrency_ != balance->currency())
+                fx = market_->fxSpot(balance->currency() + baseCurrency_)->value();
+            initialVMbase = fx * initialVM;
+            initialIMbase = fx * initialIM;
+            DLOG("Netting set " << nettingSetId << ", initial VM: " << initialVMbase << " " << baseCurrency_);
+            DLOG("Netting set " << nettingSetId << ", initial IM: " << initialIMbase << " " << baseCurrency_);
+        }
+        else {
+            DLOG("Netting set " << nettingSetId << ", IA base = VM base = 0");
+        }
+        
         Handle<YieldTermStructure> curve = market_->discountCurve(baseCurrency_, configuration_);
         vector<Real> epe(cube_->dates().size() + 1, 0.0);
         vector<Real> ene(cube_->dates().size() + 1, 0.0);
@@ -195,13 +226,13 @@ void NettedExposureCalculator::build() {
             ene[0] = 0;
             pfe[0] = 0;
         } else {
-            epe[0] = std::max(npv, 0.0);
-            ene[0] = std::max(-npv, 0.0);
-            pfe[0] = std::max(npv, 0.0);
+            epe[0] = std::max(npv - initialVMbase - initialIMbase, 0.0);
+            ene[0] = std::max(-npv + initialVMbase, 0.0);
+            pfe[0] = std::max(npv - initialVMbase - initialIMbase, 0.0);
         }
         // The fullInitialCollateralisation flag doesn't affect the eab, which feeds into the "ExpectedCollateral"
         // column of the 'exposure_nettingset_*' reports.  We always assume the full collateral here.
-        eab[0] = -npv;
+        eab[0] = npv;
         ee_b[0] = epe[0];
         eee_b[0] = ee_b[0];
         nettedCube_->setT0(npv, nettingSetCount);
@@ -224,6 +255,7 @@ void NettedExposureCalculator::build() {
                         balance *= fxRate;
                     }
                 }
+                
                 eab[j + 1] += balance / cube_->samples();
                 
                 Real mporCashFlow = 0;
@@ -267,18 +299,26 @@ void NettedExposureCalculator::build() {
                     dim_epe = dim;
                 if (initialMarginType != CSA::Type::CallOnly)
                     dim_ene = dim;
-                epe[j + 1] += std::max(exposure - dim_epe, 0.0) /
-                              cube_->samples(); // dim here represents the held IM, and is expressed as a positive number
-                ene[j + 1] += std::max(-exposure - dim_ene, 0.0) /
-                              cube_->samples(); // dim here represents the posted IM, and is expressed as a positive number
-                distribution[k] = exposure;
+                
+                // dim here represents the held IM, and is expressed as a positive number
+                epe[j + 1] += std::max(exposure - dim_epe, 0.0) / cube_->samples(); 
+                // dim here represents the posted IM, and is expressed as a positive number
+                ene[j + 1] += std::max(-exposure - dim_ene, 0.0) / cube_->samples(); 
+                distribution[k] = exposure - dim_epe;
                 nettedCube_->set(exposure, nettingSetCount, j, k);
-
+                
+                Real epeIncrement = std::max(exposure - dim_epe, 0.0) / cube_->samples();
+                DLOG("sample " << k << " date " << j << fixed << showpos << setprecision(2)
+                     << ": VM "  << setw(15) << balance
+                     << ": NPV " << setw(15) << data[j][k]
+                     << ": NPV-C " << setw(15) << distribution[k]
+                     << ": EPE " << setw(15) << epeIncrement);
+                
                 if (multiPath_) {
                     exposureCube_->set(std::max(exposure - dim_epe, 0.0), nettingSetCount, j, k, ExposureIndex::EPE);
                     exposureCube_->set(std::max(-exposure - dim_ene, 0.0), nettingSetCount, j, k, ExposureIndex::ENE);
                 }
-
+ 
                 if (netting->activeCsaFlag()) {
                     Real indexValue = 0.0;
                     DayCounter dc = ActualActual(ActualActual::ISDA);
@@ -404,6 +444,13 @@ NettedExposureCalculator::collateralPaths(
         return collateral;
     }
 
+    // retrieve collateral balances object, if possible
+    boost::shared_ptr<CollateralBalance> balance = nullptr;
+    if (collateralBalances_ && collateralBalances_->has(nettingSetId)) {
+        balance = collateralBalances_->get(nettingSetId);
+        LOG("got collateral balances for netting set " << nettingSetId);
+    }
+    
     LOG("Build collateral account balance paths for netting set " << nettingSetId);
     boost::shared_ptr<NettingSetDefinition> netting = nettingSetManager_->get(nettingSetId);
     string csaFxPair = netting->csaDetails()->csaCurrency() + baseCurrency_;
@@ -458,7 +505,8 @@ NettedExposureCalculator::collateralPaths(
         csaScenFxRates,       // matrix of fx rates by date and sample, possibly 1
         csaRateToday,         // today's collateral compounding rate in CSA currency
         csaScenRates,         // matrix of CSA ccy short rates by date and sample
-        calcType_);
+        calcType_,
+        balance);             // initial collateral balances (VM, IM, IA) for the netting set
     LOG("Collateral account balance paths for netting set " << nettingSetId << " done");
 
     return collateral;
