@@ -1,4 +1,4 @@
-#Portfolio,ProductClass,RiskClass,MarginType,Bucket,SimmSide,Regulation,InitialMargin,Currency,CalculationCurrency
+Portfolio,ProductClass,RiskClass,MarginType,Bucket,SimmSide,Regulation,InitialMargin,Currency,CalculationCurrency
 CRIF_20191230,RatesFX,InterestRate,Delta,All,Call,ESA,811888.16,USD,USD
 CRIF_20191230,RatesFX,InterestRate,Delta,USD,Call,ESA,811888.16,USD,USD
 CRIF_20191230,RatesFX,InterestRate,Vega,All,Call,ESA,210187.75,USD,USD
