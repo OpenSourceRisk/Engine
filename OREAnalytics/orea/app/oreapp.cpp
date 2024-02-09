@@ -687,6 +687,15 @@ void OREAppInputParameters::loadParameters() {
             LOG("MarketContext::" << m.first << " = " << m.second);
     }
 
+    if (params_->has("setup", "csvCommentReportHeader"))
+        setCsvCommentCharacter(parseBool(params_->get("setup", "csvCommentReportHeader")));
+
+    if (params_->has("setup", "csvSeparator")) {
+        tmp = params_->get("setup", "csvSeparator");
+        QL_REQUIRE(tmp.size() == 1, "csvSeparator must be exactly one character");
+        setCsvSeparator(tmp[0]);
+    }
+
     /*************
      * NPV
      *************/
@@ -1006,6 +1015,10 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("simm", "enforceIMRegulations", false);
         if (tmp != "")
             setEnforceIMRegulations(parseBool(tmp));
+
+        tmp = params_->get("simm", "writeIntermediateReports", false);
+        if (tmp != "")
+            setWriteSimmIntermediateReports(parseBool(tmp));
     }
 
     /************

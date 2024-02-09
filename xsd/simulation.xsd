@@ -868,7 +868,7 @@
       </xs:element>
       <xs:element name="YieldVolatilities" minOccurs="0" maxOccurs="1">
         <xs:complexType>
-          <xs:all>
+          <xs:sequence>
             <xs:element type="bool" name="Simulate" maxOccurs="1" minOccurs="0"/>
             <xs:element type="timeDecayType" name="ReactionToTimeDecay"/>
             <xs:element name="Names">
@@ -912,7 +912,7 @@
                 </xs:simpleContent>
               </xs:complexType>
             </xs:element>
-          </xs:all>
+          </xs:sequence>
         </xs:complexType>
       </xs:element>
       <xs:element name="CapFloorVolatilities" minOccurs="0" maxOccurs="1">
@@ -986,7 +986,7 @@
       </xs:element>
       <xs:element name="CDSVolatilities" minOccurs="0" maxOccurs="1">
         <xs:complexType>
-          <xs:all>
+          <xs:sequence>
             <xs:element type="bool" name="Simulate" maxOccurs="1" minOccurs="0"/>
             <xs:element type="timeDecayType" name="ReactionToTimeDecay"/>
             <xs:element name="Names">
@@ -1006,7 +1006,7 @@
                 </xs:simpleContent>
               </xs:complexType>
             </xs:element>
-          </xs:all>
+          </xs:sequence>
         </xs:complexType>
       </xs:element>
       <xs:element name="FxVolatilities" minOccurs="0" maxOccurs="1">
@@ -1264,7 +1264,7 @@
       </xs:element>
       <xs:element name="CPICapFloorVolatilities" minOccurs="0" maxOccurs="1">
         <xs:complexType>
-          <xs:all>
+          <xs:sequence>
             <xs:element type="bool" name="Simulate" maxOccurs="1" minOccurs="0"/>
             <xs:element type="timeDecayType" name="ReactionToTimeDecay"/>
             <xs:element name="Names">
@@ -1285,12 +1285,12 @@
                 </xs:simpleContent>
               </xs:complexType>
             </xs:element>
-          </xs:all>
+          </xs:sequence>
         </xs:complexType>
       </xs:element>
       <xs:element name="YYCapFloorVolatilities" minOccurs="0" maxOccurs="1">
         <xs:complexType>
-          <xs:all>
+          <xs:sequence>
             <xs:element type="bool" name="Simulate" maxOccurs="1" minOccurs="0"/>
             <xs:element type="timeDecayType" name="ReactionToTimeDecay"/>
             <xs:element name="Names">
@@ -1311,7 +1311,7 @@
                 </xs:simpleContent>
               </xs:complexType>
             </xs:element>
-          </xs:all>
+          </xs:sequence>
         </xs:complexType>
       </xs:element>
       <xs:element name="Commodities" maxOccurs="1" minOccurs="0">
@@ -1354,7 +1354,7 @@
       </xs:element>
       <xs:element name="CommodityVolatilities" minOccurs="0" maxOccurs="1">
         <xs:complexType>
-          <xs:all>
+          <xs:sequence>
             <xs:element type="bool" name="Simulate"  maxOccurs="1" minOccurs="0"/>
             <xs:element type="timeDecayType" name="ReactionToTimeDecay"/>
             <xs:element name="Names">
@@ -1382,7 +1382,7 @@
                 </xs:simpleContent>
               </xs:complexType>
             </xs:element>
-          </xs:all>
+          </xs:sequence>
         </xs:complexType>
       </xs:element>
       <xs:element name="AggregationScenarioDataCurrencies" minOccurs="0" maxOccurs="1">
