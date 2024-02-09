@@ -106,7 +106,7 @@ protected:
 
 class OREAppInputParameters : virtual public InputParameters {
 public:
-    OREAppInputParameters(const boost::shared_ptr<Parameters>& params) : InputParameters(), params_(params) {}
+    OREAppInputParameters(const boost::shared_ptr<Parameters>& params) : params_(params) {}
 
      // load input parameters
     virtual void loadParameters() override;

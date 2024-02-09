@@ -632,7 +632,9 @@ Date InputParameters::mporDate() {
         QL_REQUIRE(!mporCalendar().empty(), "MporCalendar or BaseCurrency is required for mpor date");
         QL_REQUIRE(mporDays() != Null<Size>(), "mporDays is required for mpor date");
 
-        int effectiveMporDays = mporForward() ? mporDays() : -static_cast<int>(mporDays());
+        int effectiveMporDays = mporForward()
+            ? static_cast<int>(mporDays())
+                               : -static_cast<int>(mporDays());
 
         mporDate_ = mporCalendar().advance(asof(), effectiveMporDays, QuantExt::Days);
     }

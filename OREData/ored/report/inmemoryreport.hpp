@@ -100,7 +100,10 @@ private:
         return tmp;
     }
     vector<int> sizeToInt(const vector<Size>& v) const {
-        return std::vector<int>(std::begin(v), std::end(v));
+        std::vector<int> vi;
+        for (auto s : v)
+            vi.push_back(int(s));
+        return vi;
     }
     boost::shared_ptr<InMemoryReport> imReport_;
 };

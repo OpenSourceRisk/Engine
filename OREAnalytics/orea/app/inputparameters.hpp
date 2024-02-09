@@ -613,8 +613,8 @@ public:
      *************************************/
     const std::set<std::string>& analytics() { return analytics_; }
 
-    virtual void loadParameters() {}
-    virtual void writeOutParameters() {}
+    virtual void loadParameters(){};
+    virtual void writeOutParameters() = 0;
 
 protected:
 
