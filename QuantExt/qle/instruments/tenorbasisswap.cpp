@@ -123,7 +123,7 @@ TenorBasisSwap::TenorBasisSwap(std::vector<Real> nominals, const Schedule& paySc
                                const Schedule& recSchedule, const boost::shared_ptr<IborIndex>& recIndex,
                                Spread recSpread, bool includeSpread, bool spreadOnPay, QuantExt::SubPeriodsCoupon1::Type type,
                                const bool telescopicValueDates)
-    : Swap(2), nominals_(nominals_), paySchedule_(paySchedule), payIndex_(payIndex),
+    : Swap(2), nominals_(nominals), paySchedule_(paySchedule), payIndex_(payIndex),
       paySpread_(paySpread), recSchedule_(recSchedule), recIndex_(recIndex), recSpread_(recSpread),
       includeSpread_(includeSpread), spreadOnPay_(spreadOnPay), type_(type), telescopicValueDates_(telescopicValueDates) {
 
@@ -157,7 +157,7 @@ void TenorBasisSwap::initializeLegs() {
                          .withPaymentDayCounter(payIndex_->dayCounter())
                          .withPaymentCalendar(payIndexCalendar_);
         } else {
-            if (spreadOnPay) {
+            if (spreadOnPay_) {
                 //if spread leg and no overnight, the leg may be a subperiod leg
                 payLeg = QuantExt::SubPeriodsLeg1(paySchedule_, payIndex_)
                              .withNotionals(nominals_)
@@ -193,7 +193,7 @@ void TenorBasisSwap::initializeLegs() {
                          .withPaymentDayCounter(recIndex_->dayCounter())
                          .withPaymentCalendar(recIndexCalendar_);
         } else {
-            if (!spreadOnPay) {
+            if (!spreadOnPay_) {
                 //if spread leg and no overnight, the leg may be a subperiod leg
                 recLeg = QuantExt::SubPeriodsLeg1(recSchedule_, recIndex_)
                              .withNotionals(nominals_)
@@ -214,7 +214,7 @@ void TenorBasisSwap::initializeLegs() {
     //Allocate leg idx : spread leg = 0
     idxPay_ = 1;
     idxRec_ = 0;
-    if(spreadOnPay){
+    if(spreadOnPay_){
         idxPay_ = 0;
         idxRec_ = 1;
     }
@@ -291,7 +291,7 @@ void TenorBasisSwap::fetchResults(const PricingEngine::results* r) const {
     //non spread leg (idx 1) should be fine - no averaging or compounding
     if (fairSpread_[1] == Null<Spread>()) {
         if (legBPS_[1] != Null<Real>()) {
-            double s = spreadOnPay ? recSpread_ : paySpread_;
+            double s = spreadOnPay_ ? recSpread_ : paySpread_;
             fairSpread_[1] = s - NPV_ / (legBPS_[1] / basisPoint);
         }
     }
@@ -301,7 +301,7 @@ void TenorBasisSwap::fetchResults(const PricingEngine::results* r) const {
     if (fairSpread_[0] == Null<Spread>()) {
         if (noSubPeriod_ || !includeSpread_) {
             if (legBPS_[0] != Null<Real>()) {
-                double s = spreadOnPay ? paySpread_ : recSpread_;
+                double s = spreadOnPay_ ? paySpread_ : recSpread_;
                 fairSpread_[0] = s - NPV_ / (legBPS_[0] / basisPoint);
             }
         } else {
@@ -314,7 +314,7 @@ void TenorBasisSwap::fetchResults(const PricingEngine::results* r) const {
                 // Calculate a guess
                 Spread guess = 0.0;
                 if (legBPS_[0] != Null<Real>()) {
-                    double s = spreadOnPay ? paySpread_ : recSpread_;
+                    double s = spreadOnPay_ ? paySpread_ : recSpread_;
                     guess = s - NPV_ / (legBPS_[0] / basisPoint);
                 }
                 // Attempt to solve for fair spread

@@ -25,33 +25,16 @@
 
 namespace QuantExt {
 
-TenorBasisSwapHelper::TenorBasisSwapHelper(
-    Handle<Quote> spread, const Period& swapTenor, const boost::shared_ptr<IborIndex> payIndex,
-    const boost::shared_ptr<IborIndex> receiveIndex,
-    const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>(), bool spreadOnPay = true,
-    bool includeSpread = false, const Period& payFrequency = Period(), const Period& recFrequency = Period(),
-    const bool telescopicValueDates = false,
-    QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding)
+TenorBasisSwapHelper::TenorBasisSwapHelper(Handle<Quote> spread, const Period& swapTenor,
+                                           const boost::shared_ptr<IborIndex> payIndex,
+                                           const boost::shared_ptr<IborIndex> receiveIndex,
+                                           const Handle<YieldTermStructure>& discountingCurve, bool spreadOnPay,
+                                           bool includeSpread, const Period& payFrequency, const Period& recFrequency,
+                                           const bool telescopicValueDates, QuantExt::SubPeriodsCoupon1::Type type)
     : RelativeDateRateHelper(spread), swapTenor_(swapTenor), payIndex_(payIndex), receiveIndex_(receiveIndex),
       spreadOnPay_(spreadOnPay), includeSpread_(includeSpread), payFrequency_(payFrequency),
       recFrequency_(recFrequency), telescopicValueDates_(telescopicValueDates), type_(type),
       discountHandle_(discountingCurve) {
-
-    // bool payIndexHasCurve = !payIndex_->forwardingTermStructure().empty();
-    // bool receiveIndexHasCurve = !receiveIndex_->forwardingTermStructure().empty();
-    // bool haveDiscountCurve = !discountHandle_.empty();
-    // QL_REQUIRE(!(payIndexHasCurve && receiveIndexHasCurve && haveDiscountCurve),
-    //            "Have all curves nothing to solve for.");
-
-    // if (payIndexHasCurve && !receiveIndexHasCurve) {
-    //     receiveIndex_ = receiveIndex_->clone(termStructureHandle_);
-    //     receiveIndex_->unregisterWith(termStructureHandle_);
-    // } else if (!payIndexHasCurve && receiveIndexHasCurve) {
-    //     payIndex_ = payIndex_->clone(termStructureHandle_);
-    //     payIndex_->unregisterWith(termStructureHandle_);
-    // } else if (!payIndexHasCurve && !receiveIndexHasCurve) {
-    //     QL_FAIL("Need at least one of the indices to have a valid curve.");
-    // }
 
        /* depending on the given curves we proceed as outlined in the following table
 
