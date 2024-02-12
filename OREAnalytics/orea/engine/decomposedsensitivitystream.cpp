@@ -177,12 +177,37 @@ DecomposedSensitivityStream::fxRiskShiftSizes(const std::map<std::string, std::v
     return results;
 }
 
-double DecomposedSensitivityStream::assetSpotShiftSize(const std::string name) const {
+double DecomposedSensitivityStream::equitySpotShiftSize(const std::string name) const {
     auto eqShiftSizeIt = ssd_->equityShiftData().find(name);
-    QL_REQUIRE(eqShiftSizeIt != ssd_->equityShiftData().end(), "Couldn't find a shift size for " << name);
+    QL_REQUIRE(eqShiftSizeIt != ssd_->equityShiftData().end(), "Couldn't find a equity shift size for " << name);
     QL_REQUIRE(eqShiftSizeIt->second.shiftType == ore::analytics::ShiftType::Relative,
                "Requires a relative eqSpot shift for index decomposition");
     return eqShiftSizeIt->second.shiftSize;
+}
+
+double DecomposedSensitivityStream::assetSpotShiftSize(const std::string indexName,
+                                                       const ore::data::CurveSpec::CurveType curveType) const {
+    if (curveType == ore::data::CurveSpec::CurveType::Equity) {
+        return equitySpotShiftSize(indexName);
+    } else if (curveType == ore::data::CurveSpec::CurveType::Commodity) {
+        return commoditySpotShiftSize(indexName);
+    } else {
+        QL_FAIL("unsupported curveType, got  "
+                << curveType << ". Only Equity and Commodity curves are supported for decomposition.");
+    }
+}
+
+double DecomposedSensitivityStream::commoditySpotShiftSize(const std::string name) const {
+    auto commShiftSizeIt = ssd_->commodityCurveShiftData().find(name);
+    if (commShiftSizeIt != ssd_->commodityCurveShiftData().end()) {
+        QL_REQUIRE(commShiftSizeIt->second->shiftType == ore::analytics::ShiftType::Relative,
+                   "Requires a relative eqSpot shift for index decomposition");
+        return commShiftSizeIt->second->shiftSize;
+    } else {
+        LOG("Could not find a commodity shift size for commodity index "
+            << name << ". Try to find a equity spot shift size as fallback")
+        return equitySpotShiftSize(name);
+    }
 }
 
 std::map<std::string, std::vector<std::string>>
@@ -225,7 +250,7 @@ DecomposedSensitivityStream::indexDecomposition(double delta, const std::string&
     auto spotRisk = constituentSpotRiskFromDecomposition(delta, indexWeights);
     auto currencies = getConstituentCurrencies(spotRisk, indexCurrency, curveType);
     auto fxShifts = fxRiskShiftSizes(currencies);
-    auto spotShift = assetSpotShiftSize(indexName);
+    double spotShift = assetSpotShiftSize(indexName, curveType);    
     auto fxRisk = fxRiskFromDecomposition(spotRisk, currencies, fxShifts, spotShift);
     result.spotRisk = spotRisk;
     result.fxRisk = fxRisk;
@@ -260,7 +285,7 @@ DecomposedSensitivityStream::decomposeCurrencyHedgedIndexRisk(const SensitivityR
         QL_REQUIRE(quantity != QuantLib::Null<double>(),
                    "CurrencyHedgedIndexDecomposition failed, index quantity cannot be NULL.");
 
-        double assetSensiShift = assetSpotShiftSize(indexName);
+        double assetSensiShift = assetSpotShiftSize(indexName, ore::data::CurveSpec::CurveType::Equity);
 
         double hedgedExposure = sr.delta / assetSensiShift;
 

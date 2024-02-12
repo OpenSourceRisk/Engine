@@ -171,13 +171,13 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
 
     cpu_timer timer;
     cpu_timer loopTimer;
+    Size nTrades = trades.size();
 
-    // We call Cube::samples() each time her to allow for dynamic stopping times
+    // We call Cube::samples() each time here to allow for dynamic stopping times
     // e.g. MC convergence tests
     for (Size sample = 0; sample < (dryRun ? std::min<Size>(1, outputCube->samples()) : outputCube->samples());
          ++sample) {
         TLOG("ValuationEngine: apply scenario sample #" << sample);
-        updateProgress(sample, outputCube->samples());
 
         for (auto& [tradeId, trade] : portfolio->trades())
             trade->instrument()->reset();
@@ -239,6 +239,11 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                 }
             }
         }
+        std::ostringstream detail;
+        detail << nTrades << " trade" << (nTrades == 1 ? "" : "s") << ", " << outputCube->samples() << " sample"
+               << (outputCube->samples() == 1 ? "" : "s");
+        updateProgress(sample * nTrades, outputCube->samples() * nTrades, detail.str());
+
         timer.start();
         simMarket_->fixingManager()->reset();
         fixingTime += timer.elapsed().wall * 1e-9;
@@ -260,7 +265,10 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
         }
     }
 
-    updateProgress(outputCube->samples(), outputCube->samples());
+    std::ostringstream detail;
+    detail << nTrades << " trade" << (nTrades == 1 ? "" : "s") << ", " << outputCube->samples() << " sample"
+           << (outputCube->samples() == 1 ? "" : "s");
+    updateProgress(outputCube->samples() * nTrades, outputCube->samples() * nTrades, detail.str());
     loopTimer.stop();
     LOG("ValuationEngine completed: loop " << setprecision(2) << loopTimer.format(2, "%w") << " sec, "
                                            << "pricing " << pricingTime << " sec, "

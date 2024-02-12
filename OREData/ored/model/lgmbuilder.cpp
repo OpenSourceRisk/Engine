@@ -83,6 +83,8 @@ createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolati
                      const Handle<YieldTermStructure>& yts, BlackCalibrationHelper::CalibrationErrorType errorType,
                      Real strike, Real shift, const Size settlementDays, const RateAveraging::Type averagingMethod) {
 
+    DLOG("LgmBuilder::createSwaptionHelper(" << expiry << ", " << term << ")");
+
     // hardcoded parameters to ensure a robust cailbration:
 
     // 1 If the helper's strike is too far away from the ATM level in terms of the relevant std dev, we move the
@@ -188,6 +190,9 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
         (data_->calibrateA() || data_->calibrateH()) && data_->calibrationType() != CalibrationType::None;
 
     try {
+        svts_ = market_->swaptionVol(data_->qualifier(), configuration_);
+        shortSwapIndex_ =
+            market_->swapIndex(market_->shortSwapIndexBase(data_->qualifier(), configuration_), configuration_);
         swapIndex_ = market_->swapIndex(market_->swapIndexBase(data_->qualifier(), configuration_), configuration_);
         // see the comment for dinscountCurve() in the interface
         modelDiscountCurve_ = RelinkableHandle<YieldTermStructure>(*swapIndex_->discountingTermStructure());
@@ -201,9 +206,6 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
     }
 
     if (requiresCalibration_) {
-        svts_ = market_->swaptionVol(data_->qualifier(), configuration_);
-        shortSwapIndex_ =
-            market_->swapIndex(market_->shortSwapIndexBase(data_->qualifier(), configuration_), configuration_);
         registerWith(svts_);
         marketObserver_->addObservable(swapIndex_->forwardingTermStructure());
         marketObserver_->addObservable(shortSwapIndex_->forwardingTermStructure());
@@ -487,6 +489,7 @@ void LgmBuilder::getExpiryAndTerm(const Size j, Period& expiryPb, Period& termPb
 }
 
 Real LgmBuilder::getStrike(const Size j) const {
+    DLOG("LgmBuilder::getStrike(" << j << "): '" << data_->optionStrikes()[j] << "'");
     Strike strike = parseStrike(data_->optionStrikes()[j]);
     Real strikeValue;
     // TODO: Extend strike type coverage
