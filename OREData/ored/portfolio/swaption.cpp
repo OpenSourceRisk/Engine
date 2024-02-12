@@ -20,7 +20,6 @@
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/exercise.hpp>
 #include <ql/instruments/compositeinstrument.hpp>
-#include <ql/instruments/nonstandardswaption.hpp>
 #include <ql/instruments/swaption.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 
@@ -293,7 +292,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     if (exerciseType_ == Exercise::European && isStandard)
         buildEuropean(engineFactory);
     else
-        buildBermudan(engineFactory);
+        buildBermudanOrAmerican(engineFactory);
 
     // 11 ISDA taxonomy
 
@@ -348,7 +347,7 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
     DLOG("Building European Swaption done");
 }
 
-void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void Swaption::buildBermudanOrAmerican(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     if (settlementType_ == Settlement::Physical)
         maturity_ = underlying_->maturity();
@@ -356,7 +355,7 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
         maturity_ = exerciseBuilder_->noticeDates().back();
 
     if (settlementType_ == Settlement::Cash && settlementMethod_ == Settlement::ParYieldCurve)
-        WLOG("Cash-settled Bermudan Swaption (id = "
+        WLOG("Cash-settled Bermudan / American Swaption (id = "
              << id() << ") with ParYieldCurve settlement method not supported by Lgm engine. "
              << "Approximate pricing using CollateralizedCashPrice pricing methodology");
 
@@ -372,15 +371,19 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     std::vector<Real> strikes(exerciseBuilder_->noticeDates().size(), Null<Real>());
     boost::shared_ptr<InterestRateIndex> index;
     for (Size i = 0; i < exerciseBuilder_->noticeDates().size(); ++i) {
-        Real firstFixedRate = Null<Real>();
-        Real firstFloatSpread = Null<Real>();
+        Real firstFixedRate = Null<Real>(), lastFixedRate = Null<Real>();
+        Real firstFloatSpread = Null<Real>(), lastFloatSpread = Null<Real>();
         for (auto const& l : underlying_->legs()) {
             for (auto const& c : l) {
                 if (auto cpn = boost::dynamic_pointer_cast<FixedRateCoupon>(c)) {
                     if (cpn->accrualStartDate() >= exerciseBuilder_->noticeDates()[i] && firstFixedRate == Null<Real>())
                         firstFixedRate = cpn->rate();
+                    lastFixedRate = cpn->rate();
                 } else if (auto cpn = boost::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
-                    firstFloatSpread = cpn->spread();
+                    if (cpn->accrualStartDate() >= exerciseBuilder_->noticeDates()[i] &&
+                        firstFloatSpread == Null<Real>())
+                        firstFloatSpread = cpn->spread();
+                    lastFloatSpread = cpn->spread();
                     if (index == nullptr) {
                         if (auto tmp = boost::dynamic_pointer_cast<IborIndex>(cpn->index())) {
                             DLOG("found ibor / ois index '" << tmp->name() << "'");
@@ -397,6 +400,12 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
                 }
             }
         }
+        // if no first fixed rate (float spread) was found, fall back on the last values
+        if(firstFixedRate == Null<Real>())
+            firstFixedRate = lastFixedRate;
+        if(firstFloatSpread == Null<Real>())
+            firstFloatSpread = lastFloatSpread;
+        // construct calibration strike
         if (firstFixedRate != Null<Real>()) {
             strikes[i] = firstFixedRate;
             if (firstFloatSpread != Null<Real>()) {
@@ -414,9 +423,10 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
         DLOG("no ibor, ois, bma/sifma, cms index found, use ccy key to look up vol");
     }
 
-    auto builder = engineFactory->builder("BermudanSwaption");
-    auto swaptionBuilder = boost::dynamic_pointer_cast<BermudanSwaptionEngineBuilder>(builder);
-    QL_REQUIRE(swaptionBuilder, "internal error: could not cast to BermudanSwaptionEngineBuilder");
+    auto builder = engineFactory->builder(
+        exerciseBuilder_->exercise()->type() == Exercise::American ? "AmericanSwaption" : "BermudanSwaption");
+    auto swaptionBuilder = boost::dynamic_pointer_cast<BermudanAmericanSwaptionEngineBuilder>(builder);
+    QL_REQUIRE(swaptionBuilder, "internal error: could not cast to BermudanAmericanSwaptionEngineBuilder");
 
     auto tmp = engineFactory->builder("Swap");
     auto swapBuilder = boost::dynamic_pointer_cast<SwapEngineBuilderBase>(tmp);
@@ -426,7 +436,8 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     // use ibor / ois index as key, if possible, otherwise the npv currency
     auto swaptionEngine = swaptionBuilder->engine(
         id(), index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name()),
-        exerciseBuilder_->noticeDates(), underlying_->maturity(), strikes);
+        exerciseBuilder_->noticeDates(), underlying_->maturity(), strikes,
+        exerciseBuilder_->exercise()->type() == Exercise::American);
     timer.stop();
     DLOG("Swaption model calibration time: " << timer.format(default_places, "%w") << " s");
     swaption->setPricingEngine(swaptionEngine);

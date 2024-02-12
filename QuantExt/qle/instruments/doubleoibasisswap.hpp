@@ -39,14 +39,16 @@ using namespace QuantLib;
  */
 class DoubleOvernightIndexedBasisSwap : public Swap {
 public:
-    DoubleOvernightIndexedBasisSwap(Real nominal, 
-        const Schedule& paySchedule, const boost::shared_ptr<OvernightIndex>& payIndex, 
-        const Schedule& recSchedule, const boost::shared_ptr<OvernightIndex>& recIndex, 
-        Spread paySpread = 0.0, Spread recSpread = 0.0, const bool telescopicValueDates = false);
+    DoubleOvernightIndexedBasisSwap(Real nominal, const Schedule& paySchedule,
+                                    const boost::shared_ptr<OvernightIndex>& payIndex, const Schedule& recSchedule,
+                                    const boost::shared_ptr<OvernightIndex>& recIndex, Spread paySpread = 0.0,
+                                    Spread recSpread = 0.0, const bool spreadOnShort = true,
+                                    const bool telescopicValueDates = false);
     DoubleOvernightIndexedBasisSwap(std::vector<Real> nominals, const Schedule& paySchedule,
-                              const boost::shared_ptr<OvernightIndex>& payIndex, const Schedule& recSchedule,
-                              const boost::shared_ptr<OvernightIndex>& recIndex, Spread paySpread = 0.0,
-                              Spread secondLegSpread = 0.0, const bool telescopicValueDates = false);
+                                    const boost::shared_ptr<OvernightIndex>& payIndex, const Schedule& recSchedule,
+                                    const boost::shared_ptr<OvernightIndex>& recIndex, Spread paySpread = 0.0,
+                                    Spread secondLegSpread = 0.0, const bool spreadOnShort = true,
+                                    const bool telescopicValueDates = false);
     //! \name Inspectors
     //@{
     Type type() const { return type_; }
@@ -64,6 +66,9 @@ public:
 
     const Leg& payLeg() const { return legs_[0]; }
     const Leg& recLeg() const { return legs_[1]; }
+
+    const bool spreadOnShort() const { return spreadOnShort_; }
+
     //@}
 
     //! \name Results
@@ -85,6 +90,7 @@ private:
     Schedule recSchedule_;
     boost::shared_ptr<OvernightIndex> recIndex_;
     Spread paySpread_, recSpread_;
+    bool spreadOnShort_;
     bool telescopicValueDates_;
 };
 

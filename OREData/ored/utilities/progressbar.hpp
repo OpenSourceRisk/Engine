@@ -42,7 +42,7 @@ class ProgressIndicator {
 public:
     ProgressIndicator() {}
     virtual ~ProgressIndicator() {}
-    virtual void updateProgress(const unsigned long progress, const unsigned long total) = 0;
+    virtual void updateProgress(const unsigned long progress, const unsigned long total, const std::string& detail) = 0;
     virtual void reset() = 0;
 };
 
@@ -63,7 +63,7 @@ public:
     void unregisterAllProgressIndicators();
 
     //! update progress
-    void updateProgress(const unsigned long progress, const unsigned long total);
+    void updateProgress(const unsigned long progress, const unsigned long total, const std::string& detail = "");
 
     //! reset
     void resetProgress();
@@ -88,11 +88,11 @@ public:
                       const QuantLib::Size barWidth = 40, const QuantLib::Size numberOfScreenUpdates = 100);
 
     //! ProgressIndicator interface
-    void updateProgress(const unsigned long progress, const unsigned long total) override;
+    void updateProgress(const unsigned long progress, const unsigned long total, const std::string& detail) override;
     void reset() override;
 
 private:
-    std::string message_;
+    std::string key_;
     unsigned int messageWidth_, barWidth_, numberOfScreenUpdates_, updateCounter_;
     bool finalized_;
 };
@@ -102,14 +102,15 @@ private:
  */
 class ProgressLog : public ProgressIndicator {
 public:
-    ProgressLog(const std::string& message, const unsigned int numberOfMessages = 100, const oreSeverity logLevel = oreSeverity::debug);
+    ProgressLog(const std::string& message, const unsigned int numberOfMessages = 100,
+                const oreSeverity logLevel = oreSeverity::debug);
 
     //! ProgressIndicator interface
-    void updateProgress(const unsigned long progress, const unsigned long total) override;
+    void updateProgress(const unsigned long progress, const unsigned long total, const std::string& detail) override;
     void reset() override;
 
 private:
-    std::string message_;
+    std::string key_;
     unsigned int numberOfMessages_;
     oreSeverity logLevel_;
     unsigned int messageCounter_;
@@ -121,7 +122,7 @@ public:
     NoProgressBar(const std::string& message, const unsigned int messageWidth = 40);
 
     /*! ProgressIndicator interface */
-    void updateProgress(const unsigned long progress, const unsigned long total) override {}
+    void updateProgress(const unsigned long progress, const unsigned long total, const std::string& detail) override {}
     void reset() override {}
 };
 
@@ -129,13 +130,13 @@ public:
 class MultiThreadedProgressIndicator : public ProgressIndicator {
 public:
     explicit MultiThreadedProgressIndicator(const std::set<boost::shared_ptr<ProgressIndicator>>& indicators);
-    void updateProgress(const unsigned long progress, const unsigned long total) override;
+    void updateProgress(const unsigned long progress, const unsigned long total, const std::string& detail) override;
     void reset() override;
 
 private:
     mutable boost::shared_mutex mutex_;
     std::set<boost::shared_ptr<ProgressIndicator>> indicators_;
-    std::map<std::thread::id, std::pair<unsigned long, unsigned long>> threadData_;
+    std::map<std::thread::id, std::tuple<unsigned long, unsigned long, std::string>> threadData_;
 };
 
 } // namespace data

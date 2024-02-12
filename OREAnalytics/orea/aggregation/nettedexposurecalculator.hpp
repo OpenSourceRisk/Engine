@@ -49,6 +49,7 @@ public:
         const boost::shared_ptr<NPVCube>& cube, const string& baseCurrency, const string& configuration,
         const Real quantile, const CollateralExposureHelper::CalculationType calcType, const bool multiPath,
         const boost::shared_ptr<NettingSetManager>& nettingSetManager,
+        const boost::shared_ptr<CollateralBalances>& collateralBalances,
         const map<string, vector<vector<Real>>>& nettingSetDefaultValue,
         const map<string, vector<vector<Real>>>& nettingSetCloseOutValue,
         const map<string, vector<vector<Real>>>& nettingSetMporPositiveFlow,
@@ -102,6 +103,7 @@ protected:
     CollateralExposureHelper::CalculationType calcType_;
     bool multiPath_;
     const boost::shared_ptr<NettingSetManager> nettingSetManager_;
+    const boost::shared_ptr<CollateralBalances> collateralBalances_;
     map<string, vector<vector<Real>>> nettingSetDefaultValue_;
     map<string, vector<vector<Real>>> nettingSetCloseOutValue_;
     map<string, vector<vector<Real>>> nettingSetMporPositiveFlow_;

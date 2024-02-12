@@ -147,13 +147,17 @@ private:
 
 class ExerciseBuilder {
 public:
-    ExerciseBuilder(const OptionData& optionData, const std::vector<QuantLib::Leg> legs);
+    /*! TODO removeNoticeDatesAfterLastAccrualStart is only there for backwards compatibility, we should remove it at
+       some point and handle such notice dates in the callling code as appropriate. If the exercise style is American
+       the flag is set to false always internally. */
+    ExerciseBuilder(const OptionData& optionData, const std::vector<QuantLib::Leg> legs,
+                    bool removeNoticeDatesAfterLastAccrualStart = true);
 
     // null if exercsied or no alive exercise dates
     boost::shared_ptr<QuantLib::Exercise> exercise() const { return exercise_; }
-    // exercise dates associated to alive notice dates
+    // exercise dates associated to alive notice dates, for American style -> only start, end exercise date
     const std::vector<QuantLib::Date>& exerciseDates() const { return exerciseDates_; }
-    // alive notice dates (w.r.t. global eval date), only dates exercising into whole periods are kept
+    /* alive notice dates (w.r.t. global eval date), for American style -> only start, end notice date */
     const std::vector<QuantLib::Date>& noticeDates() const { return noticeDates_; }
 
     // true if exercised

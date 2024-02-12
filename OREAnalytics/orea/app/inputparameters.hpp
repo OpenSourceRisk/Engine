@@ -46,6 +46,7 @@
 #include <ored/marketdata/csvloader.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/model/crossassetmodeldata.hpp>
+#include <ored/portfolio/collateralbalance.hpp>
 #include <ored/portfolio/nettingsetmanager.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/referencedata.hpp>
@@ -122,6 +123,7 @@ public:
     // Setters for sensi analytics
     void setXbsParConversion(bool b) { xbsParConversion_ = b; }
     void setParSensi(bool b) { parSensi_ = b; }
+    void setOptimiseRiskFactors(bool b) { optimiseRiskFactors_ = b; }
     void setAlignPillars(bool b) { alignPillars_ = b; }
     void setOutputJacobi(bool b) { outputJacobi_ = b; }
     void setUseSensiSpreadedTermStructures(bool b) { useSensiSpreadedTermStructures_ = b; }
@@ -201,10 +203,10 @@ public:
     }
     void setNettingSetManager(const std::string& xml);
     void setNettingSetManagerFromFile(const std::string& fileName);
+    void setCollateralBalances(const std::string& xml); 
+    void setCollateralBalancesFromFile(const std::string& fileName);
     // TODO: load from XML
     // void setCounterpartyManager(const std::string& xml);
-    // TODO: load from XML
-    // void setCollateralBalances(const std::string& xml); 
 
     // Setters for xva
     void setXvaBaseCurrency(const std::string& s) { xvaBaseCurrency_ = s; }
@@ -413,6 +415,7 @@ public:
      *****************************/
     bool xbsParConversion() { return xbsParConversion_; }
     bool parSensi() const { return parSensi_; };
+    bool optimiseRiskFactors() const { return optimiseRiskFactors_; }
     bool alignPillars() const { return alignPillars_; };
     bool outputJacobi() const { return outputJacobi_; };
     bool useSensiSpreadedTermStructures() { return useSensiSpreadedTermStructures_; }
@@ -473,7 +476,7 @@ public:
     const boost::shared_ptr<ore::data::EngineData>& amcPricingEngine() { return amcPricingEngine_; }
     const boost::shared_ptr<ore::data::NettingSetManager>& nettingSetManager() { return nettingSetManager_; }
     // const boost::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager() { return counterpartyManager_; }
-    // const boost::shared_ptr<ore::data::CollateralBalances>& collateralBalances() { return collateralBalances_; }
+    const boost::shared_ptr<ore::data::CollateralBalances>& collateralBalances() { return collateralBalances_; }
 
     /*****************
      * Getters for xva
@@ -680,6 +683,7 @@ protected:
      **********************/
     bool xbsParConversion_ = false;
     bool parSensi_ = false;
+    bool optimiseRiskFactors_ = false;
     bool outputJacobi_ = false;
     bool alignPillars_ = false;
     bool useSensiSpreadedTermStructures_ = true;
@@ -689,7 +693,6 @@ protected:
     boost::shared_ptr<ore::data::EngineData> sensiPricingEngine_;
     // boost::shared_ptr<ore::data::TodaysMarketParameters> sensiTodaysMarketParams_;
 
-    
     /**********************
      * SCENARIO analytic
      **********************/
@@ -741,6 +744,7 @@ protected:
     boost::shared_ptr<ore::data::EngineData> simulationPricingEngine_;
     boost::shared_ptr<ore::data::EngineData> amcPricingEngine_;
     boost::shared_ptr<ore::data::NettingSetManager> nettingSetManager_;
+    boost::shared_ptr<ore::data::CollateralBalances> collateralBalances_;
     bool exposureProfiles_ = true;
     bool exposureProfilesByTrade_ = true;
     Real pfeQuantile_ = 0.95;

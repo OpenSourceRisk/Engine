@@ -183,6 +183,7 @@ portfolio/capfloor.cpp
 portfolio/cbo.cpp
 portfolio/cdo.cpp
 portfolio/cliquetoption.cpp
+portfolio/collateralbalance.cpp
 portfolio/commodityapo.cpp
 portfolio/commoditydigitalapo.cpp
 portfolio/commoditydigitaloption.cpp
@@ -557,6 +558,7 @@ portfolio/capfloor.hpp
 portfolio/cbo.hpp
 portfolio/cdo.hpp
 portfolio/cliquetoption.hpp
+portfolio/collateralbalance.hpp
 portfolio/commodityapo.hpp
 portfolio/commoditydigitalapo.hpp
 portfolio/commoditydigitaloption.hpp
