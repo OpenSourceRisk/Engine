@@ -205,6 +205,7 @@ void DateGrid::truncate(Size len) {
 }
 
 void DateGrid::addCloseOutDates(const QuantLib::Period& p) {
+    closeOutToValuation_.clear();
     if (p == QuantLib::Period(0, QuantLib::Days)) {
         for (Size i = 0; i < dates_.size(); ++i) {
             if (i == 0) {
@@ -217,6 +218,8 @@ void DateGrid::addCloseOutDates(const QuantLib::Period& p) {
                 isCloseOutDate_[i] = true;
                 isValuationDate_[i] = true;
             }
+            if (isCloseOutDate_[i] && i > 0)
+                closeOutToValuation_[dates_[i]] = dates_[i - 1];
         }
     } else {
         std::set<QuantLib::Date> tmpDates;
