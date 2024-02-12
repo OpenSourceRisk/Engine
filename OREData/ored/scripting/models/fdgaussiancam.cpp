@@ -178,6 +178,13 @@ Real FdGaussianCam::getFxSpot(const Size idx) const {
                                                                                                    << " available.");
 }
 
+RandomVariable FdGaussianCam::pay(const RandomVariable& amount, const Date& obsdate, const Date& paydate,
+                                  const std::string& currency) const {
+    auto result = ModelImpl::pay(amount, obsdate, paydate, currency);
+    result.setTime(timeFromReference(obsdate));
+    return result;
+}
+
 RandomVariable FdGaussianCam::npv(const RandomVariable& amount, const Date& obsdate, const Filter& filter,
                                   const boost::optional<long>& memSlot, const RandomVariable& addRegressor1,
                                   const RandomVariable& addRegressor2) const {
