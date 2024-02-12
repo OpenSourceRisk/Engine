@@ -112,7 +112,7 @@ public:
 
 class VarReport : public MarketRiskReport {
 public:
-    VarReport(
+    VarReport(const std::string& baseCurrency,
         const QuantLib::ext::shared_ptr<Portfolio> & portfolio,
         const std::string& portfolioFilter,
         const vector<Real>& p, boost::optional<ore::data::TimePeriod> period,

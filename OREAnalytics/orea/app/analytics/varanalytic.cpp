@@ -95,7 +95,8 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
             std::make_unique<MarketRiskReport::SensiRunArgs>(ss, nullptr, 0.01, inputs_->covarianceData());
 
         varReport_ = ext::make_shared<ParametricVarReport>(
-            analytic()->portfolio(), inputs_->portfolioFilter(), inputs_->varQuantiles(), varParams,
+            inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), inputs_->varQuantiles(),
+            varParams,
             inputs_->salvageCovariance(), boost::none, move(sensiArgs), inputs_->varBreakDown());
     } else {
         TimePeriod benchmarkVarPeriod(parseListOfValues<Date>(inputs_->benchmarkVarPeriod(), &parseDate),
@@ -123,7 +124,8 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
             std::make_unique<MarketRiskReport::SensiRunArgs>(ss, shiftCalculator, 0.01, inputs_->covarianceData());
 
         varReport_ = ext::make_shared<ParametricVarReport>(
-            analytic()->portfolio(), inputs_->portfolioFilter(), scenarios, inputs_->varQuantiles(), varParams,
+            inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), scenarios,
+            inputs_->varQuantiles(), varParams,
             inputs_->salvageCovariance(), benchmarkVarPeriod, move(sensiArgs), inputs_->varBreakDown());
     }
 }
@@ -155,10 +157,10 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
     scenarios->baseScenario() = simMarket->baseScenario();
 
     std::unique_ptr<MarketRiskReport::FullRevalArgs> fullRevalArgs = std::make_unique<MarketRiskReport::FullRevalArgs>(
-        inputs_->baseCurrency(), analytic()->portfolio(), simMarket, inputs_->pricingEngine(), inputs_->refDataManager(), 
-        *inputs_->iborFallbackConfig());
+        analytic()->portfolio(), simMarket, inputs_->pricingEngine(), inputs_->refDataManager(), *inputs_->iborFallbackConfig());
 
-    varReport_ = ext::make_shared<HistoricalSimulationVarReport>(analytic()->portfolio(), inputs_->portfolioFilter(), 
+    varReport_ = ext::make_shared<HistoricalSimulationVarReport>(
+        inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), 
         inputs_->varQuantiles(), benchmarkVarPeriod, scenarios, move(fullRevalArgs), inputs_->varBreakDown());
 
 }

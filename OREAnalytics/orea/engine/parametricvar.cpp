@@ -135,7 +135,7 @@ Real ParametricVarCalculator::var(Real confidence, const bool isCall,
         QL_FAIL("ParametricVarCalculator::computeVar(): method " << parametricVarParams_.method << " not known.");
 }
 
-ParametricVarReport::ParametricVarReport(const ext::shared_ptr<Portfolio>& portfolio,
+ParametricVarReport::ParametricVarReport(const std::string& baseCurrency, const ext::shared_ptr<Portfolio>& portfolio,
                                          const string& portfolioFilter,
                                          const vector<Real>& p,
                                          const ParametricVarCalculator::ParametricVarParams& parametricVarParams,
@@ -143,12 +143,13 @@ ParametricVarReport::ParametricVarReport(const ext::shared_ptr<Portfolio>& portf
                                          boost::optional<ore::data::TimePeriod> period,
                                          std::unique_ptr<SensiRunArgs> sensiArgs,
                                          const bool breakdown)
-    : VarReport(portfolio, portfolioFilter, p, period, nullptr, move(sensiArgs), nullptr, breakdown),
+    : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, nullptr, move(sensiArgs), nullptr, breakdown),
       parametricVarParams_(parametricVarParams), salvageCovarianceMatrix_(salvageCovarianceMatrix) {
     sensiBased_ = true;
 }
 
 ParametricVarReport::ParametricVarReport(
+    const std::string& baseCurrency,
     const ext::shared_ptr<Portfolio>& portfolio,
     const string& portfolioFilter,
     const ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
@@ -158,7 +159,7 @@ ParametricVarReport::ParametricVarReport(
     boost::optional<ore::data::TimePeriod> period,
     std::unique_ptr<SensiRunArgs> sensiArgs,
     const bool breakdown)
-    : VarReport(portfolio, portfolioFilter, p, period, hisScenGen, move(sensiArgs), nullptr, breakdown),
+    : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, hisScenGen, move(sensiArgs), nullptr, breakdown),
       parametricVarParams_(parametricVarParams), salvageCovarianceMatrix_(salvageCovarianceMatrix) {
     sensiBased_ = true;
 }

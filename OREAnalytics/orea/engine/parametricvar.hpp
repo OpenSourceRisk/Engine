@@ -96,6 +96,7 @@ class ParametricVarReport : public VarReport {
 public:
     virtual ~ParametricVarReport() {}
     ParametricVarReport(
+        const std::string& baseCurrency,
         const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
         const std::string& portfolioFilter,
         const std::vector<QuantLib::Real>& p,
@@ -103,7 +104,9 @@ public:
         const bool salvageCovarianceMatrix, boost::optional<ore::data::TimePeriod> period,
         std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, const bool breakdown = false);
     
-    ParametricVarReport(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+    ParametricVarReport(
+        const std::string& baseCurrency,
+        const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
         const std::string& portfolioFilter,
         const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
         const std::vector<QuantLib::Real>& p,

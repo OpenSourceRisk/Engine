@@ -32,11 +32,12 @@ using namespace QuantLib;
 namespace ore {
 namespace analytics {
 
-HistoricalSimulationVarReport::HistoricalSimulationVarReport(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+HistoricalSimulationVarReport::HistoricalSimulationVarReport(
+    const std::string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
     const string& portfolioFilter, const vector<Real>& p, boost::optional<TimePeriod> period,
     const ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen, std::unique_ptr<FullRevalArgs> fullRevalArgs,
     const bool breakdown)
-    : VarReport(portfolio, portfolioFilter, p, period, hisScenGen, nullptr, move(fullRevalArgs)) {
+    : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, hisScenGen, nullptr, move(fullRevalArgs)) {
     fullReval_ = true;
 }
 

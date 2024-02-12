@@ -65,7 +65,9 @@ class HistoricalSimulationVarReport : public VarReport {
 public:
     virtual ~HistoricalSimulationVarReport() {}
 
-    HistoricalSimulationVarReport(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const std::string& portfolioFilter, 
+    HistoricalSimulationVarReport(const std::string& baseCurrency,
+                                  const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+                                  const std::string& portfolioFilter, 
         const vector<Real>& p, boost::optional<ore::data::TimePeriod> period,
         const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr, 
         std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr, const bool breakdown = false);

@@ -100,7 +100,6 @@ public:
     };
 
     struct FullRevalArgs {
-        std::string baseCurrency_;
         QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio_;
         QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket> simMarket_;
         QuantLib::ext::shared_ptr<ore::data::EngineData> engineData_;
@@ -116,13 +115,13 @@ public:
         */
         std::string cubeFilename_;
 
-        FullRevalArgs(const std::string& bc, const QuantLib::ext::shared_ptr<ore::data::Portfolio>& p,
+        FullRevalArgs(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& p,
                       const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& sm,
                       const QuantLib::ext::shared_ptr<ore::data::EngineData>& ed,
                       const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& rd = nullptr,
                       const ore::data::IborFallbackConfig ifc = ore::data::IborFallbackConfig::defaultConfig(),
                       const bool dr = false)
-            : baseCurrency_(bc), portfolio_(p), simMarket_(sm), engineData_(ed), referenceData_(rd), iborFallbackConfig_(ifc), dryRun_(dr) {}
+            : portfolio_(p), simMarket_(sm), engineData_(ed), referenceData_(rd), iborFallbackConfig_(ifc), dryRun_(dr) {}
     };
 
     struct MultiThreadArgs {
@@ -155,12 +154,13 @@ public:
         std::vector<QuantLib::ext::shared_ptr<ore::data::Report>> reports_;
     };
 
-    MarketRiskReport(boost::optional<ore::data::TimePeriod> period, const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr, 
+    MarketRiskReport(const std::string& baseCurrency, boost::optional<ore::data::TimePeriod> period, const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr, 
         std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr,
         std::unique_ptr<MultiThreadArgs> multiThreadArgs = nullptr, const bool breakdown = false, 
         const bool requireTradePnl = false)
-        : period_(period), hisScenGen_(hisScenGen), sensiArgs_(std::move(sensiArgs)), fullRevalArgs_(std::move(fullRevalArgs)), 
-          multiThreadArgs_(std::move(multiThreadArgs)), breakdown_(breakdown), requireTradePnl_(requireTradePnl) {
+        : baseCurrency_(baseCurrency), period_(period), hisScenGen_(hisScenGen), sensiArgs_(std::move(sensiArgs)),
+          fullRevalArgs_(std::move(fullRevalArgs)),  multiThreadArgs_(std::move(multiThreadArgs)), breakdown_(breakdown), 
+          requireTradePnl_(requireTradePnl) {
         init();
     }
     virtual ~MarketRiskReport() {}
@@ -185,6 +185,7 @@ protected:
     bool sensiBased_ = false;
     bool fullReval_ = false;
 
+    std::string baseCurrency_;
     boost::optional<ore::data::TimePeriod> period_;
     QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> hisScenGen_;
     std::unique_ptr<SensiRunArgs> sensiArgs_;

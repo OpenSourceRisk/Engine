@@ -95,11 +95,11 @@ void VarTradeGroupContainer::add(const QuantLib::ext::shared_ptr<TradeGroup>& tr
     tradeGroups_.insert(tg);
 }
 
-VarReport::VarReport(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const std::string& portfolioFilter,
-                     const vector<Real>& p, boost::optional<ore::data::TimePeriod> period,
+VarReport::VarReport(const std::string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+                     const std::string& portfolioFilter, const vector<Real>& p, boost::optional<ore::data::TimePeriod> period,
                      const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
                      std::unique_ptr<SensiRunArgs> sensiArgs, std::unique_ptr<FullRevalArgs> fullRevalArgs, const bool breakdown) 
-    : MarketRiskReport(period, hisScenGen, move(sensiArgs), move(fullRevalArgs), nullptr, breakdown), portfolio_(portfolio), 
+    : MarketRiskReport(baseCurrency, period, hisScenGen, move(sensiArgs), move(fullRevalArgs), nullptr, breakdown), portfolio_(portfolio), 
       portfolioFilter_(portfolioFilter), p_(p) {   
 
     riskGroups_ = QuantLib::ext::make_shared<VarRiskGroupContainer>();
