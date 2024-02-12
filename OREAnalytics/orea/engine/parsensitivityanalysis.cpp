@@ -1478,7 +1478,7 @@ std::pair<boost::shared_ptr<Instrument>, Date> ParSensitivityAnalysis::makeOIS(
 }
 
 std::pair<boost::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityAnalysis::makeTenorBasisSwap(
-    const boost::shared_ptr<Market>& market, string ccy, string shortIndexName, string longIndexName,
+    const boost::shared_ptr<Market>& market, string ccy, string receiveIndexName, string payIndexName,
     string yieldCurveName, string equityForecastCurveName, Period term, const boost::shared_ptr<Convention>& convention,
     const bool singleCurve, std::set<ore::analytics::RiskFactorKey>& parHelperDependencies_,
     const string& expDiscountCurve) {
@@ -1486,11 +1486,11 @@ std::pair<boost::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityAnalysis:
     boost::shared_ptr<TenorBasisSwapConvention> conv =
         boost::dynamic_pointer_cast<TenorBasisSwapConvention>(convention);
     QL_REQUIRE(conv, "convention not recognised, expected TenorBasisSwapConvention");
-    Handle<YieldTermStructure> discountCurve, shortIndexCurve, longIndexCurve;
-    boost::shared_ptr<IborIndex> longIndex = parseIborIndex(conv->longIndexName());
-    boost::shared_ptr<IborIndex> shortIndex = parseIborIndex(conv->shortIndexName());
-    boost::shared_ptr<OvernightIndex> shortIndexOn = boost::dynamic_pointer_cast<OvernightIndex>(shortIndex);
-    boost::shared_ptr<OvernightIndex> longIndexOn = boost::dynamic_pointer_cast<OvernightIndex>(longIndex);
+    Handle<YieldTermStructure> discountCurve, receiveIndexCurve, payIndexCurve;
+    boost::shared_ptr<IborIndex> payIndex = parseIborIndex(conv->payIndexName());
+    boost::shared_ptr<IborIndex> receiveIndex = parseIborIndex(conv->receiveIndexName());
+    boost::shared_ptr<OvernightIndex> receiveIndexOn = boost::dynamic_pointer_cast<OvernightIndex>(receiveIndex);
+    boost::shared_ptr<OvernightIndex> payIndexOn = boost::dynamic_pointer_cast<OvernightIndex>(payIndex);
 
     if (market != nullptr) {
         if (!expDiscountCurve.empty()) {
@@ -1507,36 +1507,35 @@ std::pair<boost::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityAnalysis:
             QL_FAIL("tenor basis swap discount curve undetermined");
         }
         if (singleCurve)
-            shortIndexCurve = discountCurve;
+            receiveIndexCurve = discountCurve;
         else
-            shortIndexCurve =
-                market->iborIndex(shortIndexName != "" ? shortIndexName : conv->shortIndexName(), marketConfiguration_)
+            receiveIndexCurve =
+                market->iborIndex(receiveIndexName != "" ? receiveIndexName : conv->receiveIndexName(), marketConfiguration_)
                     ->forwardingTermStructure();
-        longIndexCurve =
-            market->iborIndex(longIndexName != "" ? longIndexName : conv->longIndexName(), marketConfiguration_)
+        payIndexCurve =
+            market->iborIndex(payIndexName != "" ? payIndexName : conv->payIndexName(), marketConfiguration_)
                 ->forwardingTermStructure();
     }
-    longIndex = longIndex->clone(longIndexCurve);
-    shortIndex = shortIndex->clone(shortIndexCurve);
+    payIndex = payIndex->clone(payIndexCurve);
+    receiveIndex = receiveIndex->clone(receiveIndexCurve);
 
-    boost::shared_ptr<Libor> longIndexAsLibor = boost::dynamic_pointer_cast<Libor>(longIndex);
-    boost::shared_ptr<Libor> shortIndexAsLibor = boost::dynamic_pointer_cast<Libor>(shortIndex);
-    Calendar longIndexCalendar =
-        longIndexAsLibor != nullptr ? longIndexAsLibor->jointCalendar() : longIndex->fixingCalendar();
-    Calendar shortIndexCalendar =
-        shortIndexAsLibor != nullptr ? shortIndexAsLibor->jointCalendar() : shortIndex->fixingCalendar();
-    removeTodaysFixingIndices_.insert(shortIndex->name());
-    removeTodaysFixingIndices_.insert(longIndex->name());
+    boost::shared_ptr<Libor> payIndexAsLibor = boost::dynamic_pointer_cast<Libor>(payIndex);
+    boost::shared_ptr<Libor> receiveIndexAsLibor = boost::dynamic_pointer_cast<Libor>(receiveIndex);
+    Calendar payIndexCalendar =
+        payIndexAsLibor != nullptr ? payIndexAsLibor->jointCalendar() : payIndex->fixingCalendar();
+    Calendar receiveIndexCalendar =
+        receiveIndexAsLibor != nullptr ? receiveIndexAsLibor->jointCalendar() : receiveIndex->fixingCalendar();
+    removeTodaysFixingIndices_.insert(receiveIndex->name());
+    removeTodaysFixingIndices_.insert(payIndex->name());
 
-    Date settlementDate = longIndexCalendar.advance(
-            longIndexCalendar.adjust(asof_), longIndex->fixingDays() * Days);
+    Date settlementDate = payIndexCalendar.advance(
+            payIndexCalendar.adjust(asof_), payIndex->fixingDays() * Days);
 
     bool telescopicValueDates = true;
-    // CHECK akin to yieldcurve long = pay , short = receive ...
     boost::shared_ptr<Swap> helper =
-        boost::make_shared<TenorBasisSwap>(settlementDate, 1.0, term, longIndex, 0.0, conv->longPayTenor(), shortIndex,
-                                           0.0, conv->shortPayTenor(), DateGeneration::Backward, conv->includeSpread(),
-                                           conv->spreadOnShort(), conv->subPeriodsCouponType(), telescopicValueDates);
+        boost::make_shared<TenorBasisSwap>(settlementDate, 1.0, term, payIndex, 0.0, conv->payFrequency(), receiveIndex,
+                                           0.0, conv->receiveFrequency(), DateGeneration::Backward, conv->includeSpread(),
+                                           conv->spreadOnPay(), conv->subPeriodsCouponType(), telescopicValueDates);
 
     boost::shared_ptr<IborCoupon> lastCoupon1 =
         boost::dynamic_pointer_cast<IborCoupon>(boost::static_pointer_cast<TenorBasisSwap>(helper)->payLeg().back());
@@ -1547,13 +1546,13 @@ std::pair<boost::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityAnalysis:
         maxDate2 = lastCoupon2->fixingEndDate();
     else {
         boost::shared_ptr<QuantExt::SubPeriodsCoupon1> lastCoupon2;
-        if (conv->spreadOnShort()) //CHECK: spreadOnShort = spreadOnPay
+        if (conv->spreadOnPay())
             lastCoupon2 = boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(
                 boost::static_pointer_cast<TenorBasisSwap>(helper)->payLeg().back());
         else
             lastCoupon2 = boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(
                 boost::static_pointer_cast<TenorBasisSwap>(helper)->recLeg().back());
-        maxDate2 = shortIndexCalendar.advance(lastCoupon2->valueDates().back(), conv->shortPayTenor());
+        maxDate2 = receiveIndexCalendar.advance(lastCoupon2->valueDates().back(), conv->receiveFrequency());
     }
     Date latestRelevantDate = std::max(helper->maturityDate(), std::max(lastCoupon1->fixingEndDate(), maxDate2));
 
@@ -1562,9 +1561,9 @@ std::pair<boost::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityAnalysis:
         helper->setPricingEngine(swapEngine);
     } else {
         if (!singleCurve) {
-            parHelperDependencies_.emplace(RiskFactorKey::KeyType::IndexCurve, shortIndexName, 0);
+            parHelperDependencies_.emplace(RiskFactorKey::KeyType::IndexCurve, receiveIndexName, 0);
         }
-        parHelperDependencies_.emplace(RiskFactorKey::KeyType::IndexCurve, longIndexName, 0);
+        parHelperDependencies_.emplace(RiskFactorKey::KeyType::IndexCurve, payIndexName, 0);
         if (!expDiscountCurve.empty())
             parHelperDependencies_.emplace(RiskFactorKey::KeyType::IndexCurve, expDiscountCurve, 0);
         else

@@ -638,21 +638,21 @@ public:
     //! Default constructor
     TenorBasisSwapConvention() {}
     //! Detailed constructor
-    TenorBasisSwapConvention(const string& id, const string& longIndex, const string& shortIndex,
-                             const string& shortPayTenor = "", const string& longPayTenor = "",
-                             const string& spreadOnShort = "", const string& includeSpread = "", 
+    TenorBasisSwapConvention(const string& id, const string& payIndex, const string& receiveIndex,
+                             const string& receiveFrequency = "", const string& payFrequency = "",
+                             const string& spreadOnPay = "", const string& includeSpread = "", 
                              const string& subPeriodsCouponType = "");
     //@}
 
     //! \name Inspectors
     //@{
-    boost::shared_ptr<IborIndex> longIndex() const;
-    boost::shared_ptr<IborIndex> shortIndex() const;
-    const string& longIndexName() const { return strLongIndex_; }
-    const string& shortIndexName() const { return strShortIndex_; }
-    const Period& shortPayTenor() const { return shortPayTenor_; }
-    const Period& longPayTenor() const { return longPayTenor_; }
-    bool spreadOnShort() const { return spreadOnShort_; }
+    boost::shared_ptr<IborIndex> payIndex() const;
+    boost::shared_ptr<IborIndex> receiveIndex() const;
+    const string& payIndexName() const { return strPayIndex_; }
+    const string& receiveIndexName() const { return strReceiveIndex_; }
+    const Period& receiveFrequency() const { return receiveFrequency_; }
+    const Period& payFrequency() const { return payFrequency_; }
+    bool spreadOnPay() const { return spreadOnPay_; }
     bool includeSpread() const { return includeSpread_; }
     SubPeriodsCoupon1::Type subPeriodsCouponType() const { return subPeriodsCouponType_; }
     //@}
@@ -665,18 +665,18 @@ public:
     //@}
 
 private:
-    Period shortPayTenor_;
-    Period longPayTenor_;
-    bool spreadOnShort_;
+    Period receiveFrequency_;
+    Period payFrequency_;
+    bool spreadOnPay_;
     bool includeSpread_;
     SubPeriodsCoupon1::Type subPeriodsCouponType_;
 
     // Strings to store the inputs
-    string strLongIndex_;
-    string strShortIndex_;
-    string strShortPayTenor_;
-    string strLongPayTenor_;
-    string strSpreadOnShort_;
+    string strPayIndex_;
+    string strReceiveIndex_;
+    string strReceiveFrequency_;
+    string strPayFrequency_;
+    string strSpreadOnPay_;
     string strIncludeSpread_;
     string strSubPeriodsCouponType_;
 };

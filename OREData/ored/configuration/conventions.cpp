@@ -599,22 +599,22 @@ boost::shared_ptr<OvernightIndex> AverageOisConvention::index() const {
     return tmp;
 }
 
-TenorBasisSwapConvention::TenorBasisSwapConvention(const string& id, const string& longIndex, const string& shortIndex,
-                                                   const string& shortPayTenor, const string& longPayTenor,
-                                                   const string& spreadOnShort, const string& includeSpread, 
+TenorBasisSwapConvention::TenorBasisSwapConvention(const string& id, const string& longIndex, const string& receiveIndex,
+                                                   const string& receiveFrequency, const string& payFrequency,
+                                                   const string& spreadOnPay, const string& includeSpread, 
                                                    const string& subPeriodsCouponType)
-    : Convention(id, Type::TenorBasisSwap), strLongIndex_(longIndex), strShortIndex_(shortIndex),
-      strShortPayTenor_(shortPayTenor), strLongPayTenor_(longPayTenor), strSpreadOnShort_(spreadOnShort),
+    : Convention(id, Type::TenorBasisSwap), strPayIndex_(longIndex), strReceiveIndex_(receiveIndex),
+      strReceiveFrequency_(receiveFrequency), strPayFrequency_(payFrequency), strSpreadOnPay_(spreadOnPay),
       strIncludeSpread_(includeSpread), strSubPeriodsCouponType_(subPeriodsCouponType) {
     build();
 }
 
 void TenorBasisSwapConvention::build() {
-    parseIborIndex(strLongIndex_);
-    parseIborIndex(strShortIndex_);
-    shortPayTenor_ = strShortPayTenor_.empty() ? shortIndex()->tenor() : parsePeriod(strShortPayTenor_);
-    longPayTenor_ = strLongPayTenor_.empty() ? longIndex()->tenor() : parsePeriod(strLongPayTenor_);
-    spreadOnShort_ = strSpreadOnShort_.empty() ? true : parseBool(strSpreadOnShort_);
+    parseIborIndex(strPayIndex_);
+    parseIborIndex(strReceiveIndex_);
+    receiveFrequency_ = strReceiveFrequency_.empty() ? receiveIndex()->tenor() : parsePeriod(strReceiveFrequency_);
+    payFrequency_ = strPayFrequency_.empty() ? payIndex()->tenor() : parsePeriod(strPayFrequency_);
+    spreadOnPay_ = strSpreadOnPay_.empty() ? true : parseBool(strSpreadOnPay_);
     includeSpread_ = strIncludeSpread_.empty() ? false : parseBool(strIncludeSpread_);
     subPeriodsCouponType_ = strSubPeriodsCouponType_.empty() ? SubPeriodsCoupon1::Compounding
                                                              : parseSubPeriodsCouponType(strSubPeriodsCouponType_);
@@ -627,11 +627,11 @@ void TenorBasisSwapConvention::fromXML(XMLNode* node) {
     id_ = XMLUtils::getChildValue(node, "Id", true);
 
     // Get string values from xml
-    strLongIndex_ = XMLUtils::getChildValue(node, "LongIndex", true);
-    strShortIndex_ = XMLUtils::getChildValue(node, "ShortIndex", true);
-    strShortPayTenor_ = XMLUtils::getChildValue(node, "ShortPayTenor", false);
-    strLongPayTenor_ = XMLUtils::getChildValue(node, "LongPayTenor", false);
-    strSpreadOnShort_ = XMLUtils::getChildValue(node, "SpreadOnShort", false);
+    strPayIndex_ = XMLUtils::getChildValue(node, "PayIndex", true);
+    strReceiveIndex_ = XMLUtils::getChildValue(node, "ReceiveIndex", true);
+    strReceiveFrequency_ = XMLUtils::getChildValue(node, "ReceiveFrequency", false);
+    strPayFrequency_ = XMLUtils::getChildValue(node, "PayFrequency", false);
+    strSpreadOnPay_ = XMLUtils::getChildValue(node, "SpreadOnPay", false);
     strIncludeSpread_ = XMLUtils::getChildValue(node, "IncludeSpread", false);
     strSubPeriodsCouponType_ = XMLUtils::getChildValue(node, "SubPeriodsCouponType", false);
 
@@ -642,14 +642,14 @@ XMLNode* TenorBasisSwapConvention::toXML(XMLDocument& doc) {
 
     XMLNode* node = doc.allocNode("TenorBasisSwap");
     XMLUtils::addChild(doc, node, "Id", id_);
-    XMLUtils::addChild(doc, node, "LongIndex", strLongIndex_);
-    XMLUtils::addChild(doc, node, "ShortIndex", strShortIndex_);
-    if (!strShortPayTenor_.empty())
-        XMLUtils::addChild(doc, node, "ShortPayTenor", strShortPayTenor_);
-    if (!strLongPayTenor_.empty())
-        XMLUtils::addChild(doc, node, "LongPayTenor", strLongPayTenor_);
-    if (!strSpreadOnShort_.empty())
-        XMLUtils::addChild(doc, node, "SpreadOnShort", strSpreadOnShort_);
+    XMLUtils::addChild(doc, node, "PayIndex", strPayIndex_);
+    XMLUtils::addChild(doc, node, "ReceiveIndex", strReceiveIndex_);
+    if (!strReceiveFrequency_.empty())
+        XMLUtils::addChild(doc, node, "ReceiveFrequency", strReceiveFrequency_);
+    if (!strPayFrequency_.empty())
+        XMLUtils::addChild(doc, node, "PayFrequency", strPayFrequency_);
+    if (!strSpreadOnPay_.empty())
+        XMLUtils::addChild(doc, node, "SpreadOnPay", strSpreadOnPay_);
     if (!strIncludeSpread_.empty())
         XMLUtils::addChild(doc, node, "IncludeSpread", strIncludeSpread_);
     if (!strSubPeriodsCouponType_.empty())
@@ -657,8 +657,8 @@ XMLNode* TenorBasisSwapConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
-boost::shared_ptr<IborIndex> TenorBasisSwapConvention::longIndex() const { return parseIborIndex(strLongIndex_); }
-boost::shared_ptr<IborIndex> TenorBasisSwapConvention::shortIndex() const { return parseIborIndex(strShortIndex_); }
+boost::shared_ptr<IborIndex> TenorBasisSwapConvention::payIndex() const { return parseIborIndex(strPayIndex_); }
+boost::shared_ptr<IborIndex> TenorBasisSwapConvention::receiveIndex() const { return parseIborIndex(strReceiveIndex_); }
 
 TenorBasisTwoSwapConvention::TenorBasisTwoSwapConvention(
     const string& id, const string& calendar, const string& longFixedFrequency, const string& longFixedConvention,
