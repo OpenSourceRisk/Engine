@@ -47,7 +47,9 @@ public:
         : Analytic(std::make_unique<SimmAnalyticImpl>(inputs), {"SIMM"}, inputs, false, false, false, false),
           crif_(crif),
           hasNettingSetDetails_(hasNettingSetDetails),
-          determineWinningRegulations_(determineWinningRegulations) {}
+          determineWinningRegulations_(determineWinningRegulations) {
+        setWriteIntermediateReports(inputs->writeSimmIntermediateReports());
+    }
 
     const Crif& crif() const { return crif_; }
     bool hasNettingSetDetails() { return hasNettingSetDetails_; }
