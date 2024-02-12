@@ -145,7 +145,9 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                    const Size aggDataNumberCreditStates, boost::shared_ptr<ore::analytics::AggregationScenarioData> asd,
                    boost::shared_ptr<NPVCube> outputCube, boost::shared_ptr<ProgressIndicator> progressIndicator) {
 
-    progressIndicator->updateProgress(0, portfolio->size() + 1);
+    std::ostringstream detail;
+    detail << portfolio->size() << " trade" << (portfolio->size() == 1 ? "" : "s");
+    progressIndicator->updateProgress(0, portfolio->size(), detail.str());
 
     // base currency is the base currency of the cam
 
@@ -297,7 +299,6 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
         } catch (const std::exception& e) {
             StructuredTradeErrorMessage(trade.second, "Error building trade for AMC simulation", e.what()).log();
         }
-        progressIndicator->updateProgress(++progressCounter, portfolio->size() + 1);
     }
 
     timer.stop();
@@ -548,7 +549,9 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                 }
             }
         }
-        progressIndicator->updateProgress(++progressCounter, portfolio->size() + 1);
+        std::ostringstream detail;
+        detail << portfolio->size() << " trade" << (portfolio->size() == 1 ? "" : "s");
+        progressIndicator->updateProgress(++progressCounter, portfolio->size(), detail.str());
     }
     timer.stop();
     valuationTime += timer.elapsed().wall * 1e-9;
