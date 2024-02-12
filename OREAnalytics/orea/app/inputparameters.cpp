@@ -540,7 +540,8 @@ OutputParameters::OutputParameters(const boost::shared_ptr<Parameters>& params) 
     sensitivityScenarioFileName_ = params->get("sensitivity", "scenarioOutputFile", false);    
     stressTestFileName_ = params->get("stress", "scenarioOutputFile", false);
     varFileName_ = params->get("parametricVar", "outputFile", false);
-    varFileName_ = params->get("historicalSimulationVar", "outputFile", false);
+    if (varFileName_.empty())
+        varFileName_ = params->get("historicalSimulationVar", "outputFile", false);
     parConversionOutputFileName_ = params->get("zeroToParSensiConversion", "outputFile", false);
     parConversionJacobiFileName_ = params->get("zeroToParSensiConversion", "jacobiOutputFile", false);
     parConversionJacobiInverseFileName_ = params->get("zeroToParSensiConversion", "jacobiInverseOutputFile", false);  

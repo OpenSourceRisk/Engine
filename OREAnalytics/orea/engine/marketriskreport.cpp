@@ -256,7 +256,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
 
                         // make covariance matrix positive semi-definite
                         DLOG("Covariance matrix has dimension " << deltaKeys.size() << " x " << deltaKeys.size());
-                        if (salvage_) {
+                        if (salvage_ && !covarianceMatrix_.empty()) {
                             DLOG("Covariance matrix is not salvaged, check for positive semi-definiteness");
                             SymmetricSchurDecomposition ssd(covarianceMatrix_);
                             Real evMin = ssd.eigenvalues().back();
