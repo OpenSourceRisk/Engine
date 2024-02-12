@@ -79,7 +79,7 @@ void FdGaussianCam::performCalculations() const {
     // build solver
 
     solver_ = std::unique_ptr<LgmBackwardSolver>(
-        new LgmFdSolver(cam_->lgm(0), timeFromReference(*simulationDates_.rend()), QuantLib::FdmSchemeDesc::Douglas(),
+        new LgmFdSolver(cam_->lgm(0), timeFromReference(*simulationDates_.rbegin()), QuantLib::FdmSchemeDesc::Douglas(),
                         stateGridPoints_, timeStepsPerYear_, mesherEpsilon_));
 
     // set up eff sim dates
@@ -121,6 +121,7 @@ RandomVariable FdGaussianCam::getIrIndexValue(const Size indexNo, const Date& d,
     LgmVectorised lgmv(cam_->irlgm1f(0));
     auto result = lgmv.fixing(irIndices_[indexNo].second, fixingDate, timeFromReference(d),
                               solver_->stateGrid(timeFromReference(d)));
+    result.setTime(timeFromReference(d));
     irIndexValueCache_[std::make_tuple(indexNo, d, fixingDate)] = result;
     return result;
 }
@@ -211,7 +212,25 @@ RandomVariable FdGaussianCam::npv(const RandomVariable& amount, const Date& obsd
 
     QL_REQUIRE(t1 != Null<Real>(),
                "FdGaussianCam::npv(): can not roll back amount wiithout time attached (to t0=" << t0 << ")");
-    return solver_->rollback(amount, t1, t0);
+    RandomVariable result = solver_->rollback(amount, t1, t0);
+    result.setTime(t0);
+    return result;
+}
+
+Real FdGaussianCam::extractT0Result(const RandomVariable& result) const {
+
+    calculate();
+
+    // roll back to today (if necessary)
+
+    RandomVariable r = npv(result, referenceDate(), Filter(), boost::none, RandomVariable(), RandomVariable());
+
+    // we expect the results to be determinstic as per LgmBackwardSolver interface
+
+    QL_REQUIRE(r.deterministic(), "FdGaussianCam::extractT0Result(): internal error, expected result to be "
+                                  "deterministic after rollback to time t = 0");
+
+    return r.at(0);
 }
 
 } // namespace data

@@ -57,6 +57,7 @@ public:
                               const Natural rateCutoff, const Natural fixingDays, const bool includeSpread,
                               const Real cap, const Real floor, const bool nakedOption,
                               const bool localCapFloor) const override;
+    Real extractT0Result(const RandomVariable& result) const override;
     // override to set time on result
     RandomVariable pay(const RandomVariable& amount, const Date& obsdate, const Date& paydate,
                        const std::string& currency) const override;
