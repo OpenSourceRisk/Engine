@@ -158,6 +158,7 @@ void TenorBasisSwap::initializeLegs() {
                          .withPaymentCalendar(payIndexCalendar_);
         } else {
             if (spreadOnPay) {
+                //if spread leg and no overnight, the leg may be a subperiod leg
                 payLeg = QuantExt::SubPeriodsLeg1(paySchedule_, payIndex_)
                              .withNotionals(nominals_)
                              .withSpread(paySpread_)
@@ -179,7 +180,7 @@ void TenorBasisSwap::initializeLegs() {
     Leg recLeg;
 
     if (recIndexON) {
-        payLeg = OvernightLeg(recSchedule_, recIndexON)
+        recLeg = OvernightLeg(recSchedule_, recIndexON)
                      .withNotionals(nominals_)
                      .withSpreads(recSpread_)
                      .withTelescopicValueDates(telescopicValueDates_);
@@ -193,6 +194,7 @@ void TenorBasisSwap::initializeLegs() {
                          .withPaymentCalendar(recIndexCalendar_);
         } else {
             if (!spreadOnPay) {
+                //if spread leg and no overnight, the leg may be a subperiod leg
                 recLeg = QuantExt::SubPeriodsLeg1(recSchedule_, recIndex_)
                              .withNotionals(nominals_)
                              .withSpread(recSpread_)
