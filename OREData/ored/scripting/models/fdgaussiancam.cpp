@@ -67,6 +67,8 @@ const Date& FdGaussianCam::referenceDate() const {
     return referenceDate_;
 }
 
+void FdGaussianCam::releaseMemory() { irIndexValueCache_.clear(); }
+
 void FdGaussianCam::performCalculations() const {
 
     if (simulationDates_.empty())

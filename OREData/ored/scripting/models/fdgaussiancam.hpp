@@ -61,6 +61,8 @@ public:
     // override to set time on result
     RandomVariable pay(const RandomVariable& amount, const Date& obsdate, const Date& paydate,
                        const std::string& currency) const override;
+    // override to clear cache
+    void releaseMemory() override;
 
 private:
     // ModelImpl interface implementation
