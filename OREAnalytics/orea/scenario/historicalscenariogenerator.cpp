@@ -18,6 +18,7 @@
 
 #include <orea/scenario/historicalscenariogenerator.hpp>
 #include <orea/scenario/simplescenario.hpp>
+#include <orea/scenario/simplescenariofactory.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -478,6 +479,21 @@ boost::shared_ptr<Scenario> HistoricalScenarioGeneratorWithFilteredDates::next(c
                "HistoricalScenarioGeneratorWithFilteredDates:next(): no more scenarios available");
     ++i_orig_;
     return gen_->next(d);
+}
+
+QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGenerator(
+    const boost::shared_ptr<HistoricalScenarioReader>& hsr,
+    const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors,
+    const TimePeriod& period, Calendar calendar, Size mporDays, const bool overlapping) {
+
+    auto scenarioFactory = boost::make_shared<SimpleScenarioFactory>();
+
+    boost::shared_ptr<HistoricalScenarioLoader> scenarioLoader = boost::make_shared<HistoricalScenarioLoader>(
+        hsr, period.startDates().front(), period.endDates().front(), calendar);
+
+    // Create the historical scenario generator
+    return boost::make_shared<HistoricalScenarioGenerator>(scenarioLoader, scenarioFactory, calendar, adjFactors,
+                                                           mporDays, overlapping, ReturnConfiguration(), "hs_");
 }
 
 } // namespace analytics

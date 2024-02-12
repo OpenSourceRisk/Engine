@@ -104,5 +104,19 @@ protected:
     boost::timer::cpu_timer runTimer_;
 };
 
+class OREAppInputParameters : virtual public InputParameters {
+public:
+    OREAppInputParameters(const boost::shared_ptr<Parameters>& params) : params_(params) {}
+
+     // load input parameters
+    virtual void loadParameters() override;
+
+    //! write out parameters
+    virtual void writeOutParameters() override{};
+
+private:
+    boost::shared_ptr<Parameters> params_;
+};
+
 } // namespace analytics
 } // namespace ore
