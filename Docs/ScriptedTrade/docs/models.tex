@@ -27,6 +27,7 @@ An example pricing engine configuration looks as follows.
       <Parameter name="Model_SingleAssetOptionBwd(FX)">BlackScholes</Parameter>
       <Parameter name="Model_SingleAssetOptionBwd(COMM)">BlackScholes</Parameter>
       <Parameter name="Model_SingleUnderlyingIrOption">GaussianCam</Parameter>
+      <Parameter name="Model_SingleUnderlyingIrOptionBwd">GaussianCam</Parameter>
       <Parameter name="Model_MultiUnderlyingIrOption">GaussianCam</Parameter>
       <Parameter name="Model_IrHybrid(EQ)">GaussianCam</Parameter>
       <Parameter name="Model_IrHybrid(FX)">GaussianCam</Parameter>
@@ -38,6 +39,7 @@ An example pricing engine configuration looks as follows.
       <Parameter name="Engine">MC</Parameter>
       <Parameter name="Samples">10000</Parameter>
       <Parameter name="StateGridPoints">200</Parameter>
+      <Parameter name="StateGridPoints_SingleUnderlyingIrOptionBwd">50</Parameter>
       <Parameter name="MesherEpsilon">1E-4</Parameter>
       <Parameter name="MesherScaling">1.5</Parameter>
       <Parameter name="MesherConcentration">0.1</Parameter>
@@ -54,7 +56,7 @@ An example pricing engine configuration looks as follows.
       <Parameter name="Engine_SingleAssetOptionBwd(EQ)">FD</Parameter>
       <Parameter name="Engine_SingleAssetOptionBwd(FX)">FD</Parameter>
       <Parameter name="Engine_SingleAssetOptionBwd(COMM)">FD</Parameter>
-      <Parameter name="Engine_SingleUnderlyingIrOption">6</Parameter>
+      <Parameter name="Engine_SingleUnderlyingIrOption">FD</Parameter>
       <Parameter name="useAD_MultiAssetOptionAD(EQ)">true</Parameter>
       <Parameter name="useAD_MultiAssetOptionAD(FX)">true</Parameter>
       <Parameter name="useAD_MultiAssetOptionAD(COMM)">true</Parameter>
