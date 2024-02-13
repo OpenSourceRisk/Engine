@@ -635,6 +635,42 @@ void TenorBasisSwapConvention::fromXML(XMLNode* node) {
     strIncludeSpread_ = XMLUtils::getChildValue(node, "IncludeSpread", false);
     strSubPeriodsCouponType_ = XMLUtils::getChildValue(node, "SubPeriodsCouponType", false);
 
+    //handle deprecated fields...
+    XMLNode* longIndex = XMLUtils::getChildNode(node, "LongIndex");
+    if(longIndex){
+        ALOG("TenorBasisSwapConvention: LongIndex is deprecated, fill empty PayIndex");
+        if(strPayIndex_.empty())
+            strPayIndex_ = XMLUtils::getNodeValue(longIndex);
+    }
+
+    XMLNode* longPayTenor = XMLUtils::getChildNode(node, "LongPayTenor");
+    if(longPayTenor){
+        ALOG("TenorBasisSwapConvention: LongPayTenor is deprecated, fill empty PayFrequency");
+        if(strPayFrequency_.empty())
+            strPayFrequency_ = XMLUtils::getNodeValue(longPayTenor);
+    }
+
+    XMLNode* shortIndex = XMLUtils::getChildNode(node, "ShortIndex");
+    if(shortIndex){
+        ALOG("TenorBasisSwapConvention: ShortIndex is deprecated, fill empty ReceiveIndex");
+        if(strReceiveIndex_.empty())
+            strReceiveIndex_ = XMLUtils::getNodeValue(shortIndex);
+    }
+
+    XMLNode* shortPayTenor = XMLUtils::getChildNode(node, "ShortPayTenor");
+    if(shortPayTenor){
+        ALOG("TenorBasisSwapConvention: ShortPayTenor is deprecated, fill empty ReceiveFrequency");
+        if(strReceiveFrequency_.empty())
+            strReceiveFrequency_ = XMLUtils::getNodeValue(shortPayTenor);
+    }
+
+    XMLNode* spreadOnShort = XMLUtils::getChildNode(node, "SpreadOnShort");
+    if(spreadOnShort){
+        ALOG("TenorBasisSwapConvention: SpreadOnShort is deprecated, fill empty SpreadOnRec");
+        if(strSpreadOnRec_.empty())
+            strSpreadOnRec_ = XMLUtils::getNodeValue(spreadOnShort);
+    }
+
     build();
 }
 
