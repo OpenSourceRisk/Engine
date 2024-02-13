@@ -150,7 +150,8 @@ void CrossAssetModelBuilder::performCalculations() const {
     }
 }
 
-void CrossAssetModelBuilder::resetModelParams(const AssetType t, const Size param, const Size index, const Size i) const {
+void CrossAssetModelBuilder::resetModelParams(const CrossAssetModel::AssetType t, const Size param, const Size index,
+                                              const Size i) const {
     auto mp = model_->MoveParameter(t, param, index, i);
     for (Size idx = 0; idx < mp.size(); ++idx) {
         if (!mp[idx]) {
@@ -226,8 +227,11 @@ void CrossAssetModelBuilder::buildModel() const {
     std::vector<std::string> currencies, regions, crNames, eqNames, infIndices, comNames;
     std::vector<boost::shared_ptr<LgmBuilder>> lgmBuilder;
     std::vector<boost::shared_ptr<HwBuilder>> hwBuilder;
+    std::vector<boost::shared_ptr<FxBsBuilder>> fxBuilder;
+    std::vector<boost::shared_ptr<EqBsBuilder>> eqBuilder;
     std::vector<boost::shared_ptr<CommoditySchwartzModelBuilder>> csBuilder;
 
+    std::set<std::string> recalibratedCurrencies;
     for (Size i = 0; i < config_->irConfigs().size(); i++) {
         auto irConfig = config_->irConfigs()[i];
         DLOG("IR Parametrization " << i << " qualifier " << irConfig->qualifier());
@@ -239,10 +243,12 @@ void CrossAssetModelBuilder::buildModel() const {
                     referenceCalibrationGrid_, false, id_);
             }
             auto builder = boost::dynamic_pointer_cast<LgmBuilder>(subBuilders_[CrossAssetModel::AssetType::IR][i]);
-            if (dontCalibrate_)
-                builder->freeze();
             lgmBuilder.push_back(builder);
             auto parametrization = builder->parametrization();
+            if(builder->requiresRecalibration())
+                recalibratedCurrencies.insert(parametrization->currency().code());
+            if (dontCalibrate_)
+                builder->freeze();
             swaptionBaskets_[i] = builder->swaptionBasket();
             QL_REQUIRE(std::find(currencies.begin(), currencies.end(), parametrization->currency().code()) ==
                            currencies.end(),
@@ -263,10 +269,12 @@ void CrossAssetModelBuilder::buildModel() const {
                     config_->bootstrapTolerance(), continueOnError_, referenceCalibrationGrid_, setCalibrationInfo);
             }
             auto builder = boost::dynamic_pointer_cast<HwBuilder>(subBuilders_[CrossAssetModel::AssetType::IR][i]);
-            if (dontCalibrate_)
-                builder->freeze();
             hwBuilder.push_back(builder);
             auto parametrization = builder->parametrization();
+            if(builder->requiresRecalibration())
+                recalibratedCurrencies.insert(parametrization->currency().code());
+            if (dontCalibrate_)
+                builder->freeze();
             swaptionBaskets_[i] = builder->swaptionBasket();
             QL_REQUIRE(std::find(currencies.begin(), currencies.end(), parametrization->currency().code()) ==
                            currencies.end(),
@@ -306,6 +314,7 @@ void CrossAssetModelBuilder::buildModel() const {
                 boost::make_shared<FxBsBuilder>(market_, fx, configurationFxCalibration_, referenceCalibrationGrid_);
         }
         auto builder = boost::dynamic_pointer_cast<FxBsBuilder>(subBuilders_[CrossAssetModel::AssetType::FX][i]);
+        fxBuilder.push_back(builder);
 
         boost::shared_ptr<QuantExt::FxBsParametrization> parametrization = builder->parametrization();
 
@@ -331,6 +340,7 @@ void CrossAssetModelBuilder::buildModel() const {
         }
         boost::shared_ptr<EqBsBuilder> builder =
             boost::dynamic_pointer_cast<EqBsBuilder>(subBuilders_[CrossAssetModel::AssetType::EQ][i]);
+        eqBuilder.push_back(builder);
         boost::shared_ptr<QuantExt::EqBsParametrization> parametrization = builder->parametrization();
         eqOptionBaskets_[i] = builder->optionBasket();
         eqParametrizations.push_back(parametrization);
@@ -525,6 +535,16 @@ void CrossAssetModelBuilder::buildModel() const {
             continue;
         }
 
+        if (!fxBuilder[i]->requiresRecalibration() &&
+            recalibratedCurrencies.find(fx->foreignCcy()) == recalibratedCurrencies.end() &&
+            recalibratedCurrencies.find(fx->domesticCcy()) == recalibratedCurrencies.end()) {
+            DLOG("FX Calibration "
+                 << i << " skipped, since neither fx builder nor ir models in dom / for ccy were recalibrated.");
+            continue;
+        }
+
+        std::cout << "calibrate fx " << fx->foreignCcy() << std::endl;
+
         DLOG("FX Calibration " << i);
 
         // attach pricing engines to helpers
@@ -593,6 +613,14 @@ void CrossAssetModelBuilder::buildModel() const {
             DLOG("EQ Calibration " << i << " skipped");
             continue;
         }
+
+        if (!eqBuilder[i]->requiresRecalibration() &&
+            recalibratedCurrencies.find(eq->currency()) == recalibratedCurrencies.end()) {
+            DLOG("EQ Calibration "
+                 << i << " skipped, since neither eq builder nor ir model in eq ccy were recalibrated.");
+            continue;
+        }
+
         DLOG("EQ Calibration " << i);
         // attach pricing engines to helpers
         Currency eqCcy = eqParametrizations[i]->currency();
@@ -665,12 +693,26 @@ void CrossAssetModelBuilder::buildModel() const {
             QL_REQUIRE(dkParam, "Expected DK model data to have given a DK parameterisation.");
             const auto& builder = subBuilders_.at(CrossAssetModel::AssetType::INF).at(i);
             const auto& dkBuilder = boost::dynamic_pointer_cast<InfDkBuilder>(builder);
+            if (!dkBuilder->requiresRecalibration() &&
+                recalibratedCurrencies.find(infParameterizations[i]->currency().code()) ==
+                    recalibratedCurrencies.end()) {
+                DLOG("Skipping inf dk calibration "
+                     << i << " since neither inf builder nor ir model in inf ccy were recalibrated.");
+                continue;
+            }
             calibrateInflation(*dkData, i, dkBuilder->optionBasket(), dkParam);
         } else if (auto jyData = boost::dynamic_pointer_cast<InfJyData>(imData)) {
             auto jyParam = boost::dynamic_pointer_cast<InfJyParameterization>(infParameterizations[i]);
             QL_REQUIRE(jyParam, "Expected JY model data to have given a JY parameterisation.");
             const auto& builder = subBuilders_.at(CrossAssetModel::AssetType::INF).at(i);
             const auto& jyBuilder = boost::dynamic_pointer_cast<InfJyBuilder>(builder);
+            if (!jyBuilder->requiresRecalibration() &&
+                recalibratedCurrencies.find(infParameterizations[i]->currency().code()) ==
+                    recalibratedCurrencies.end()) {
+                DLOG("Skipping inf jy calibration "
+                     << i << " since neither inf builder nor ir model in inf ccy were recalibrated.");
+                continue;
+            }
             calibrateInflation(*jyData, i, jyBuilder, jyParam);
         } else {
             QL_FAIL("CrossAssetModelBuilder expects either DK or JY inflation model data.");
