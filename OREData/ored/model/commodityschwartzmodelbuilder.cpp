@@ -153,7 +153,7 @@ void CommoditySchwartzModelBuilder::performCalculations() const {
             << " kappa=" << parametrization_->kappaParameter());
 
         // use identical start values for each calibration to ensure identical results for identical baskets
-        model->setParams(params_);
+        model_->setParams(params_);
 
         model_->calibrate(optionBasket_, *data_->optimizationMethod(), data_->endCriteria(), data_->constraint(), weights, fix);
 
