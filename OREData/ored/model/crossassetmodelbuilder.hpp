@@ -129,7 +129,8 @@ private:
     mutable std::vector<Real> comOptionCalibrationErrors_;
 
     //! Store model builders for each asset under each asset type.
-    mutable std::map<QuantExt::CrossAssetModel::AssetType, std::map<QuantLib::Size, boost::shared_ptr<QuantExt::ModelBuilder>>>
+    mutable std::map<QuantExt::CrossAssetModel::AssetType,
+                     std::map<QuantLib::Size, boost::shared_ptr<QuantExt::ModelBuilder>>>
         subBuilders_;
 
     const boost::shared_ptr<ore::data::Market> market_;

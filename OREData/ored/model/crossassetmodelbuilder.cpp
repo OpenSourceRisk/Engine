@@ -154,47 +154,50 @@ void CrossAssetModelBuilder::performCalculations() const {
     if (!dontCalibrate_ && requiresRecalibration()) {
         // reset market observer update flag
         marketObserver_->hasUpdated(true);
-        // the cast is a bit ugly, but we pretty much know what we are doing here
-        const_cast<CrossAssetModelBuilder*>(this)->unregisterWithSubBuilders();
         buildModel();
-        const_cast<CrossAssetModelBuilder*>(this)->registerWithSubBuilders();
     }
 }
 
 void CrossAssetModelBuilder::buildModel() const {
 
-    QL_REQUIRE(market_ != NULL, "CrossAssetModelBuilder: no market given");
     LOG("Start building CrossAssetModel");
+
+    QL_REQUIRE(market_ != NULL, "CrossAssetModelBuilder: no market given");
+
     DLOG("configurations: LgmCalibration "
          << configurationLgmCalibration_ << ", FxCalibration " << configurationFxCalibration_ << ", EqCalibration "
          << configurationEqCalibration_ << ", InfCalibration " << configurationInfCalibration_ << ", CrCalibration"
-         << configurationCrCalibration_ << ", ComCalibration"  << configurationComCalibration_
-         << ", FinalModel " << configurationFinalModel_);
+         << configurationCrCalibration_ << ", ComCalibration" << configurationComCalibration_ << ", FinalModel "
+         << configurationFinalModel_);
+
     if (dontCalibrate_) {
         DLOG("Calibration of the model is disabled.");
     }
 
-    QL_REQUIRE(config_->irConfigs().size() > 0, "missing IR configurations");
-    QL_REQUIRE(config_->irConfigs().size() == config_->fxConfigs().size() + 1,
-               "FX configuration size " << config_->fxConfigs().size() << " inconsistent with IR configuration size "
-                                        << config_->irConfigs().size());
+    bool buildersAreInitialized = !subBuilders_.empty();
 
-    swaptionBaskets_.resize(config_->irConfigs().size());
-    optionExpiries_.resize(config_->irConfigs().size());
-    swaptionMaturities_.resize(config_->irConfigs().size());
-    swaptionCalibrationErrors_.resize(config_->irConfigs().size());
-    fxOptionBaskets_.resize(config_->fxConfigs().size());
-    fxOptionExpiries_.resize(config_->fxConfigs().size());
-    fxOptionCalibrationErrors_.resize(config_->fxConfigs().size());
-    eqOptionBaskets_.resize(config_->eqConfigs().size());
-    eqOptionExpiries_.resize(config_->eqConfigs().size());
-    eqOptionCalibrationErrors_.resize(config_->eqConfigs().size());
-    inflationCalibrationErrors_.resize(config_->infConfigs().size());
-    comOptionBaskets_.resize(config_->comConfigs().size());
-    comOptionExpiries_.resize(config_->comConfigs().size());
-    comOptionCalibrationErrors_.resize(config_->comConfigs().size());
+    if (!buildersAreInitialized) {
+        QL_REQUIRE(config_->irConfigs().size() > 0, "missing IR configurations");
+        QL_REQUIRE(config_->irConfigs().size() == config_->fxConfigs().size() + 1,
+                   "FX configuration size " << config_->fxConfigs().size()
+                                            << " inconsistent with IR configuration size "
+                                            << config_->irConfigs().size());
 
-    subBuilders_.clear();
+        swaptionBaskets_.resize(config_->irConfigs().size());
+        optionExpiries_.resize(config_->irConfigs().size());
+        swaptionMaturities_.resize(config_->irConfigs().size());
+        swaptionCalibrationErrors_.resize(config_->irConfigs().size());
+        fxOptionBaskets_.resize(config_->fxConfigs().size());
+        fxOptionExpiries_.resize(config_->fxConfigs().size());
+        fxOptionCalibrationErrors_.resize(config_->fxConfigs().size());
+        eqOptionBaskets_.resize(config_->eqConfigs().size());
+        eqOptionExpiries_.resize(config_->eqConfigs().size());
+        eqOptionCalibrationErrors_.resize(config_->eqConfigs().size());
+        inflationCalibrationErrors_.resize(config_->infConfigs().size());
+        comOptionBaskets_.resize(config_->comConfigs().size());
+        comOptionExpiries_.resize(config_->comConfigs().size());
+        comOptionCalibrationErrors_.resize(config_->comConfigs().size());
+    }
 
     // Store information on the number of factors for each process. This is used when requesting a correlation matrix
     // from the CorrelationMatrixBuilder below.
@@ -229,10 +232,12 @@ void CrossAssetModelBuilder::buildModel() const {
         DLOG("IR Parametrization " << i << " qualifier " << irConfig->qualifier());
         
         if (auto ir = boost::dynamic_pointer_cast<IrLgmData>(irConfig)) {
-
-            auto builder =
-                boost::make_shared<LgmBuilder>(market_, ir, configurationLgmCalibration_, config_->bootstrapTolerance(),
-                                               continueOnError_, referenceCalibrationGrid_, false, id_);
+            if (!buildersAreInitialized) {
+                subBuilders_[CrossAssetModel::AssetType::IR][i] = boost::make_shared<LgmBuilder>(
+                    market_, ir, configurationLgmCalibration_, config_->bootstrapTolerance(), continueOnError_,
+                    referenceCalibrationGrid_, false, id_);
+            }
+            auto builder = boost::dynamic_pointer_cast<LgmBuilder>(subBuilders_[CrossAssetModel::AssetType::IR][i]);
             if (dontCalibrate_)
                 builder->freeze();
             lgmBuilder.push_back(builder);
@@ -246,16 +251,18 @@ void CrossAssetModelBuilder::buildModel() const {
             currencies.push_back(parametrization->currency().code());
             irParametrizations.push_back(parametrization);
             irDiscountCurves.push_back(builder->discountCurve());
-            subBuilders_[CrossAssetModel::AssetType::IR][i] = builder;
             processInfo[CrossAssetModel::AssetType::IR].emplace_back(ir->ccy(), 1);
         }
         else if(auto ir = boost::dynamic_pointer_cast<HwModelData>(irConfig)) {
             bool evaluateBankAccount = true; // updated in cross asset model for non-base ccys
             bool setCalibrationInfo = false;
             HwModel::Discretization discr = HwModel::Discretization::Euler;
-            auto builder = boost::make_shared<HwBuilder>(
-                market_, ir, measure, discr, evaluateBankAccount, configurationLgmCalibration_,
-                config_->bootstrapTolerance(), continueOnError_, referenceCalibrationGrid_, setCalibrationInfo);
+            if(!buildersAreInitialized) {
+                subBuilders_[CrossAssetModel::AssetType::IR][i] = boost::make_shared<HwBuilder>(
+                    market_, ir, measure, discr, evaluateBankAccount, configurationLgmCalibration_,
+                    config_->bootstrapTolerance(), continueOnError_, referenceCalibrationGrid_, setCalibrationInfo);
+            }
+            auto builder = boost::dynamic_pointer_cast<HwBuilder>(subBuilders_[CrossAssetModel::AssetType::IR][i]);
             if (dontCalibrate_)
                 builder->freeze();
             hwBuilder.push_back(builder);
@@ -269,7 +276,6 @@ void CrossAssetModelBuilder::buildModel() const {
             currencies.push_back(parametrization->currency().code());
             irParametrizations.push_back(parametrization);
             irDiscountCurves.push_back(builder->discountCurve());
-            subBuilders_[CrossAssetModel::AssetType::IR][i] = builder;
             processInfo[CrossAssetModel::AssetType::IR].emplace_back(ir->ccy(), parametrization->m());
         }
     }
@@ -295,13 +301,16 @@ void CrossAssetModelBuilder::buildModel() const {
         QL_REQUIRE(domCcy == domesticCcy, "FX parametrization [" << i << "]=" << ccy << "/" << domCcy
                                                                  << " does not match domestic ccy " << domesticCcy);
 
-        boost::shared_ptr<FxBsBuilder> builder =
-            boost::make_shared<FxBsBuilder>(market_, fx, configurationFxCalibration_, referenceCalibrationGrid_);
+        if (!buildersAreInitialized) {
+            subBuilders_[CrossAssetModel::AssetType::FX][i] =
+                boost::make_shared<FxBsBuilder>(market_, fx, configurationFxCalibration_, referenceCalibrationGrid_);
+        }
+        auto builder = boost::dynamic_pointer_cast<FxBsBuilder>(subBuilders_[CrossAssetModel::AssetType::FX][i]);
+
         boost::shared_ptr<QuantExt::FxBsParametrization> parametrization = builder->parametrization();
 
         fxOptionBaskets_[i] = builder->optionBasket();
         fxParametrizations.push_back(parametrization);
-        subBuilders_[CrossAssetModel::AssetType::FX][i] = builder;
         processInfo[CrossAssetModel::AssetType::FX].emplace_back(ccy.code() + domCcy.code(), 1);
     }
 
@@ -316,13 +325,16 @@ void CrossAssetModelBuilder::buildModel() const {
         QuantLib::Currency eqCcy = ore::data::parseCurrency(eq->currency());
         QL_REQUIRE(std::find(currencies.begin(), currencies.end(), eqCcy.code()) != currencies.end(),
                    "Currency (" << eqCcy << ") for equity " << eqName << " not covered by CrossAssetModelData");
-        boost::shared_ptr<EqBsBuilder> builder = boost::make_shared<EqBsBuilder>(
+        if(!buildersAreInitialized) {
+            subBuilders_[CrossAssetModel::AssetType::EQ][i] = boost::make_shared<EqBsBuilder>(
             market_, eq, domesticCcy, configurationEqCalibration_, referenceCalibrationGrid_);
+        }
+        boost::shared_ptr<EqBsBuilder> builder =
+            boost::dynamic_pointer_cast<EqBsBuilder>(subBuilders_[CrossAssetModel::AssetType::EQ][i]);
         boost::shared_ptr<QuantExt::EqBsParametrization> parametrization = builder->parametrization();
         eqOptionBaskets_[i] = builder->optionBasket();
         eqParametrizations.push_back(parametrization);
         eqNames.push_back(eqName);
-        subBuilders_[CrossAssetModel::AssetType::EQ][i] = builder;
         processInfo[CrossAssetModel::AssetType::EQ].emplace_back(eqName, 1);
     }
 
@@ -332,18 +344,23 @@ void CrossAssetModelBuilder::buildModel() const {
         boost::shared_ptr<InflationModelData> imData = config_->infConfigs()[i];
         DLOG("Inflation parameterisation (" << i << ") for index " << imData->index());
         if (auto dkData = boost::dynamic_pointer_cast<InfDkData>(imData)) {
-            boost::shared_ptr<InfDkBuilder> builder = boost::make_shared<InfDkBuilder>(
+            if(!buildersAreInitialized) {
+                subBuilders_[CrossAssetModel::AssetType::INF][i] = boost::make_shared<InfDkBuilder>(
                 market_, dkData, configurationInfCalibration_, referenceCalibrationGrid_, dontCalibrate_);
+            }
+            boost::shared_ptr<InfDkBuilder> builder =
+                boost::dynamic_pointer_cast<InfDkBuilder>(subBuilders_[CrossAssetModel::AssetType::INF][i]);
             if (dontCalibrate_)
                 builder->freeze();
             infParameterizations.push_back(builder->parametrization());
-            subBuilders_[CrossAssetModel::AssetType::INF][i] = builder;
             processInfo[CrossAssetModel::AssetType::INF].emplace_back(dkData->index(), 1);
         } else if (auto jyData = boost::dynamic_pointer_cast<InfJyData>(imData)) {
-            boost::shared_ptr<InfJyBuilder> builder = boost::make_shared<InfJyBuilder>(
-                market_, jyData, configurationInfCalibration_, referenceCalibrationGrid_);
+            if (!buildersAreInitialized) {
+                subBuilders_[CrossAssetModel::AssetType::INF][i] = boost::make_shared<InfJyBuilder>(
+                    market_, jyData, configurationInfCalibration_, referenceCalibrationGrid_);
+            }
+            auto builder = boost::dynamic_pointer_cast<InfJyBuilder>(subBuilders_[CrossAssetModel::AssetType::INF][i]);
             infParameterizations.push_back(builder->parameterization());
-            subBuilders_[CrossAssetModel::AssetType::INF][i] = builder;
             processInfo[CrossAssetModel::AssetType::INF].emplace_back(jyData->index(), 2);
         } else {
             QL_FAIL("CrossAssetModelBuilder expects either DK or JY inflation model data.");
@@ -360,12 +377,13 @@ void CrossAssetModelBuilder::buildModel() const {
         LOG("CR LGM Parametrization " << i);
         boost::shared_ptr<CrLgmData> cr = config_->crLgmConfigs()[i];
         string crName = cr->name();
-        boost::shared_ptr<CrLgmBuilder> builder =
-            boost::make_shared<CrLgmBuilder>(market_, cr, configurationCrCalibration_);
+        if(!buildersAreInitialized) {
+            subBuilders_[CrossAssetModel::AssetType::CR][i] = boost::make_shared<CrLgmBuilder>(market_, cr, configurationCrCalibration_);
+        }
+        auto builder = boost::dynamic_pointer_cast<CrLgmBuilder>(subBuilders_[CrossAssetModel::AssetType::CR][i]);
         boost::shared_ptr<QuantExt::CrLgm1fParametrization> parametrization = builder->parametrization();
         crLgmParametrizations.push_back(parametrization);
         crNames.push_back(crName);
-        subBuilders_[CrossAssetModel::AssetType::CR][i] = builder;
         processInfo[CrossAssetModel::AssetType::CR].emplace_back(crName, 1);
     }
 
@@ -375,12 +393,14 @@ void CrossAssetModelBuilder::buildModel() const {
         LOG("CR CIR Parametrization " << i);
         boost::shared_ptr<CrCirData> cr = config_->crCirConfigs()[i];
         string crName = cr->name();
-        boost::shared_ptr<CrCirBuilder> builder =
-            boost::make_shared<CrCirBuilder>(market_, cr, configurationCrCalibration_);
+        if (!buildersAreInitialized) {
+            subBuilders_[CrossAssetModel::AssetType::CR][i] =
+                boost::make_shared<CrCirBuilder>(market_, cr, configurationCrCalibration_);
+        }
+        auto builder = boost::dynamic_pointer_cast<CrCirBuilder>(subBuilders_[CrossAssetModel::AssetType::CR][i]);
         boost::shared_ptr<QuantExt::CrCirppParametrization> parametrization = builder->parametrization();
         crCirParametrizations.push_back(parametrization);
         crNames.push_back(crName);
-        subBuilders_[CrossAssetModel::AssetType::CR][i] = builder;
         processInfo[CrossAssetModel::AssetType::CR].emplace_back(crName, 1);
     }
 
@@ -395,14 +415,17 @@ void CrossAssetModelBuilder::buildModel() const {
         QuantLib::Currency comCcy = ore::data::parseCurrency(com->currency());
         QL_REQUIRE(std::find(currencies.begin(), currencies.end(), comCcy.code()) != currencies.end(),
                    "Currency (" << comCcy << ") for commodity " << comName << " not covered by CrossAssetModelData");
-        boost::shared_ptr<CommoditySchwartzModelBuilder> builder = boost::make_shared<CommoditySchwartzModelBuilder>(
-            market_, com, domesticCcy, configurationComCalibration_, referenceCalibrationGrid_);
+        if (!buildersAreInitialized) {
+            subBuilders_[CrossAssetModel::AssetType::COM][i] = boost::make_shared<CommoditySchwartzModelBuilder>(
+                market_, com, domesticCcy, configurationComCalibration_, referenceCalibrationGrid_);
+        }
+        auto builder = boost::dynamic_pointer_cast<CommoditySchwartzModelBuilder>(
+            subBuilders_[CrossAssetModel::AssetType::COM][i]);
         csBuilder.push_back(builder);
         boost::shared_ptr<QuantExt::CommoditySchwartzParametrization> parametrization = builder->parametrization();
         comOptionBaskets_[i] = builder->optionBasket();
         comParametrizations.push_back(parametrization);
         comNames.push_back(comName);
-        subBuilders_[CrossAssetModel::AssetType::COM][i] = builder;
         processInfo[CrossAssetModel::AssetType::COM].emplace_back(comName, 1);
     }
 
