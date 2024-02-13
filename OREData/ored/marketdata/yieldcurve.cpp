@@ -2211,7 +2211,7 @@ void YieldCurve::addTenorBasisSwaps(const boost::shared_ptr<YieldCurveSegment>& 
             basisSwapHelper.reset(
                 new TenorBasisSwapHelper(basisSwapQuote->quote(), basisSwapTenor, payIndex, receiveIndex,
                                          discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(),
-                                         basisSwapConvention->spreadOnPay(), basisSwapConvention->includeSpread(),
+                                         basisSwapConvention->spreadOnRec(), basisSwapConvention->includeSpread(),
                                          basisSwapConvention->payFrequency(), basisSwapConvention->receiveFrequency(),
                                          telescopicValueDates, basisSwapConvention->subPeriodsCouponType()));
 

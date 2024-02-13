@@ -601,10 +601,10 @@ boost::shared_ptr<OvernightIndex> AverageOisConvention::index() const {
 
 TenorBasisSwapConvention::TenorBasisSwapConvention(const string& id, const string& longIndex, const string& receiveIndex,
                                                    const string& receiveFrequency, const string& payFrequency,
-                                                   const string& spreadOnPay, const string& includeSpread, 
+                                                   const string& spreadOnRec, const string& includeSpread, 
                                                    const string& subPeriodsCouponType)
     : Convention(id, Type::TenorBasisSwap), strPayIndex_(longIndex), strReceiveIndex_(receiveIndex),
-      strReceiveFrequency_(receiveFrequency), strPayFrequency_(payFrequency), strSpreadOnPay_(spreadOnPay),
+      strReceiveFrequency_(receiveFrequency), strPayFrequency_(payFrequency), strSpreadOnRec_(spreadOnRec),
       strIncludeSpread_(includeSpread), strSubPeriodsCouponType_(subPeriodsCouponType) {
     build();
 }
@@ -614,7 +614,7 @@ void TenorBasisSwapConvention::build() {
     parseIborIndex(strReceiveIndex_);
     receiveFrequency_ = strReceiveFrequency_.empty() ? receiveIndex()->tenor() : parsePeriod(strReceiveFrequency_);
     payFrequency_ = strPayFrequency_.empty() ? payIndex()->tenor() : parsePeriod(strPayFrequency_);
-    spreadOnPay_ = strSpreadOnPay_.empty() ? true : parseBool(strSpreadOnPay_);
+    spreadOnRec_ = strSpreadOnRec_.empty() ? true : parseBool(strSpreadOnRec_);
     includeSpread_ = strIncludeSpread_.empty() ? false : parseBool(strIncludeSpread_);
     subPeriodsCouponType_ = strSubPeriodsCouponType_.empty() ? SubPeriodsCoupon1::Compounding
                                                              : parseSubPeriodsCouponType(strSubPeriodsCouponType_);
@@ -631,7 +631,7 @@ void TenorBasisSwapConvention::fromXML(XMLNode* node) {
     strReceiveIndex_ = XMLUtils::getChildValue(node, "ReceiveIndex", true);
     strReceiveFrequency_ = XMLUtils::getChildValue(node, "ReceiveFrequency", false);
     strPayFrequency_ = XMLUtils::getChildValue(node, "PayFrequency", false);
-    strSpreadOnPay_ = XMLUtils::getChildValue(node, "SpreadOnPay", false);
+    strSpreadOnRec_ = XMLUtils::getChildValue(node, "SpreadOnRec", false);
     strIncludeSpread_ = XMLUtils::getChildValue(node, "IncludeSpread", false);
     strSubPeriodsCouponType_ = XMLUtils::getChildValue(node, "SubPeriodsCouponType", false);
 
@@ -648,8 +648,8 @@ XMLNode* TenorBasisSwapConvention::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "ReceiveFrequency", strReceiveFrequency_);
     if (!strPayFrequency_.empty())
         XMLUtils::addChild(doc, node, "PayFrequency", strPayFrequency_);
-    if (!strSpreadOnPay_.empty())
-        XMLUtils::addChild(doc, node, "SpreadOnPay", strSpreadOnPay_);
+    if (!strSpreadOnRec_.empty())
+        XMLUtils::addChild(doc, node, "SpreadOnRec", strSpreadOnRec_);
     if (!strIncludeSpread_.empty())
         XMLUtils::addChild(doc, node, "IncludeSpread", strIncludeSpread_);
     if (!strSubPeriodsCouponType_.empty())

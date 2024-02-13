@@ -46,18 +46,18 @@ public:
                    const boost::shared_ptr<IborIndex>& payIndex, Spread paySpread, const Period& payFrequency,
                    const boost::shared_ptr<IborIndex>& recIndex, Spread recSpread, const Period& recFrequency,
                    DateGeneration::Rule rule = DateGeneration::Backward, bool includeSpread = false,
-                   bool spreadOnPay = true,
+                   bool spreadOnRec = true,
                    QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding,
                    const bool telescopicValueDates = false);
     //! Constructor using Schedules with a full interface
     TenorBasisSwap(Real nominal, const Schedule& paySchedule, const boost::shared_ptr<IborIndex>& payIndex,
                    Spread paySpread, const Schedule& recSchedule, const boost::shared_ptr<IborIndex>& recIndex,
-                   Spread recSpread, bool includeSpread = false, bool spreadOnPay = true,
+                   Spread recSpread, bool includeSpread = false, bool spreadOnRec = true,
                    QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding,
                    const bool telescopicValueDates = false);
     TenorBasisSwap(std::vector<Real> nominals, const Schedule& paySchedule, const boost::shared_ptr<IborIndex>& payIndex,
                    Spread paySpread, const Schedule& recSchedule, const boost::shared_ptr<IborIndex>& recIndex,
-                   Spread recSpread, bool includeSpread = false, bool spreadOnPay = true,
+                   Spread recSpread, bool includeSpread = false, bool spreadOnRec = true,
                    QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding,
                    const bool telescopicValueDates = false);
 
@@ -80,7 +80,7 @@ public:
     const Period& payFrequency() const;
 
     bool includeSpread() const;
-    bool spreadOnPay() const { return spreadOnPay_; }
+    bool spreadOnRec() const { return spreadOnRec_; }
     QuantExt::SubPeriodsCoupon1::Type type() const;
     //@}
     //! \name Results
@@ -112,7 +112,7 @@ private:
     Period recFrequency_;
 
     bool includeSpread_;
-    bool spreadOnPay_;
+    bool spreadOnRec_;
     QuantExt::SubPeriodsCoupon1::Type type_;
     bool telescopicValueDates_;
 

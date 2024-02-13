@@ -28,11 +28,11 @@ namespace QuantExt {
 TenorBasisSwapHelper::TenorBasisSwapHelper(Handle<Quote> spread, const Period& swapTenor,
                                            const boost::shared_ptr<IborIndex> payIndex,
                                            const boost::shared_ptr<IborIndex> receiveIndex,
-                                           const Handle<YieldTermStructure>& discountingCurve, bool spreadOnPay,
+                                           const Handle<YieldTermStructure>& discountingCurve, bool spreadOnRec,
                                            bool includeSpread, const Period& payFrequency, const Period& recFrequency,
                                            const bool telescopicValueDates, QuantExt::SubPeriodsCoupon1::Type type)
     : RelativeDateRateHelper(spread), swapTenor_(swapTenor), payIndex_(payIndex), receiveIndex_(receiveIndex),
-      spreadOnPay_(spreadOnPay), includeSpread_(includeSpread), payFrequency_(payFrequency),
+      spreadOnRec_(spreadOnRec), includeSpread_(includeSpread), payFrequency_(payFrequency),
       recFrequency_(recFrequency), telescopicValueDates_(telescopicValueDates), type_(type),
       discountHandle_(discountingCurve) {
 
@@ -115,7 +115,7 @@ void TenorBasisSwapHelper::initializeDates() {
 
     swap_ = boost::shared_ptr<TenorBasisSwap>(new TenorBasisSwap(
         effectiveDate, 1.0, swapTenor_, payIndex_, 0.0, payFrequency_, receiveIndex_, 0.0, recFrequency_,
-        DateGeneration::Backward, includeSpread_, spreadOnPay_, type_, telescopicValueDates_));
+        DateGeneration::Backward, includeSpread_, spreadOnRec_, type_, telescopicValueDates_));
 
     boost::shared_ptr<PricingEngine> engine(new DiscountingSwapEngine(discountRelinkableHandle_));
     swap_->setPricingEngine(engine);
@@ -161,7 +161,7 @@ Real TenorBasisSwapHelper::impliedQuote() const {
     QL_REQUIRE(termStructure_ != 0, "Termstructure not set");
     // we didn't register as observers - force calculation
     swap_->deepUpdate();
-    return (spreadOnPay_ ? swap_->fairPayLegSpread() : swap_->fairRecLegSpread());
+    return (spreadOnRec_ ? swap_->fairRecLegSpread() : swap_->fairPayLegSpread());
 }
 
 void TenorBasisSwapHelper::accept(AcyclicVisitor& v) {

@@ -640,7 +640,7 @@ public:
     //! Detailed constructor
     TenorBasisSwapConvention(const string& id, const string& payIndex, const string& receiveIndex,
                              const string& receiveFrequency = "", const string& payFrequency = "",
-                             const string& spreadOnPay = "", const string& includeSpread = "", 
+                             const string& spreadOnRec = "", const string& includeSpread = "", 
                              const string& subPeriodsCouponType = "");
     //@}
 
@@ -652,7 +652,7 @@ public:
     const string& receiveIndexName() const { return strReceiveIndex_; }
     const Period& receiveFrequency() const { return receiveFrequency_; }
     const Period& payFrequency() const { return payFrequency_; }
-    bool spreadOnPay() const { return spreadOnPay_; }
+    bool spreadOnRec() const { return spreadOnRec_; }
     bool includeSpread() const { return includeSpread_; }
     SubPeriodsCoupon1::Type subPeriodsCouponType() const { return subPeriodsCouponType_; }
     //@}
@@ -667,7 +667,7 @@ public:
 private:
     Period receiveFrequency_;
     Period payFrequency_;
-    bool spreadOnPay_;
+    bool spreadOnRec_;
     bool includeSpread_;
     SubPeriodsCoupon1::Type subPeriodsCouponType_;
 
@@ -676,7 +676,7 @@ private:
     string strReceiveIndex_;
     string strReceiveFrequency_;
     string strPayFrequency_;
-    string strSpreadOnPay_;
+    string strSpreadOnRec_;
     string strIncludeSpread_;
     string strSubPeriodsCouponType_;
 };

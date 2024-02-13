@@ -107,10 +107,10 @@ Real impliedQuote(const boost::shared_ptr<Instrument>& i) {
     if (boost::dynamic_pointer_cast<YearOnYearInflationSwap>(i))
         return boost::dynamic_pointer_cast<YearOnYearInflationSwap>(i)->fairRate();
     if (boost::dynamic_pointer_cast<TenorBasisSwap>(i)) {
-        if (boost::dynamic_pointer_cast<TenorBasisSwap>(i)->spreadOnPay())
-            return boost::dynamic_pointer_cast<TenorBasisSwap>(i)->fairPayLegSpread();
-        else
+        if (boost::dynamic_pointer_cast<TenorBasisSwap>(i)->spreadOnRec())
             return boost::dynamic_pointer_cast<TenorBasisSwap>(i)->fairRecLegSpread();
+        else
+            return boost::dynamic_pointer_cast<TenorBasisSwap>(i)->fairPayLegSpread();
     }
     if (boost::dynamic_pointer_cast<FixedBMASwap>(i))
         return boost::dynamic_pointer_cast<FixedBMASwap>(i)->fairRate();
@@ -1535,7 +1535,7 @@ std::pair<boost::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityAnalysis:
     boost::shared_ptr<Swap> helper =
         boost::make_shared<TenorBasisSwap>(settlementDate, 1.0, term, payIndex, 0.0, conv->payFrequency(), receiveIndex,
                                            0.0, conv->receiveFrequency(), DateGeneration::Backward, conv->includeSpread(),
-                                           conv->spreadOnPay(), conv->subPeriodsCouponType(), telescopicValueDates);
+                                           conv->spreadOnRec(), conv->subPeriodsCouponType(), telescopicValueDates);
 
     boost::shared_ptr<IborCoupon> lastCoupon1 =
         boost::dynamic_pointer_cast<IborCoupon>(boost::static_pointer_cast<TenorBasisSwap>(helper)->payLeg().back());
@@ -1546,7 +1546,7 @@ std::pair<boost::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityAnalysis:
         maxDate2 = lastCoupon2->fixingEndDate();
     else {
         boost::shared_ptr<QuantExt::SubPeriodsCoupon1> lastCoupon2;
-        if (conv->spreadOnPay())
+        if (conv->spreadOnRec())
             lastCoupon2 = boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(
                 boost::static_pointer_cast<TenorBasisSwap>(helper)->payLeg().back());
         else

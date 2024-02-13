@@ -383,7 +383,7 @@ node is shown in Listing \ref{lst:tenor_basis_conventions}.
   <PayFrequency> </PayFrequency>
   <ReceiveIndex> </ReceiveIndex>
   <ReceiveFrequency> </ReceiveFrequency>
-  <SpreadOnPay> </SpreadOnPay>
+  <SpreadOnRec> </SpreadOnRec>
   <IncludeSpread> </IncludeSpread>
   <SubPeriodsCouponType> </SubPeriodsCouponType>
 </TenorBasisSwap>
@@ -403,7 +403,7 @@ If not provided, this defaults to the PayIndex's tenor.
 \item ReceiveFrequency [Optional]: The frequency of payments on the ReceiveIndex leg. This is usually the same as the ReceiveIndex's tenor. 
 However, it can also be longer, e.g. overnight indexed vs overnight indexed basis swaps that may be quarterly on both legs. 
 If not provided, this defaults to the ReceiveIndex's tenor.
-\item SpreadOnPay [Optional]: \emph{True}  if the tenor basis swap quote has the spread on the pay index leg and \emph{False} if not. 
+\item SpreadOnRec [Optional]: \emph{True}  if the tenor basis swap quote has the spread on the pay index leg and \emph{False} if not. 
 If not provided, this defaults to \emph{True}.
 \item IncludeSpread [Optional]: \emph{True} if the tenor basis swap spread is to be included when compounding is performed on the spread leg and \emph{False} if not. 
 If not provided, this defaults to \emph{False}.

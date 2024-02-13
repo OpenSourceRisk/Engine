@@ -39,7 +39,7 @@ public:
     TenorBasisSwapHelper(Handle<Quote> spread, const Period& swapTenor, const boost::shared_ptr<IborIndex> payIndex,
                          const boost::shared_ptr<IborIndex> receiveIndex,
                          const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>(),
-                         bool spreadOnPay = true, bool includeSpread = false, const Period& payFrequency = Period(),
+                         bool spreadOnRec = true, bool includeSpread = false, const Period& payFrequency = Period(),
                          const Period& recFrequency = Period(), const bool telescopicValueDates = false,
                          QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding);
 
@@ -63,7 +63,7 @@ protected:
     Period swapTenor_;
     boost::shared_ptr<IborIndex> payIndex_;
     boost::shared_ptr<IborIndex> receiveIndex_;
-    bool spreadOnPay_;
+    bool spreadOnRec_;
     bool includeSpread_;
     Period payFrequency_;
     Period recFrequency_;
