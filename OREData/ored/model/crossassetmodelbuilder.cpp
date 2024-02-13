@@ -92,7 +92,11 @@ CrossAssetModelBuilder::CrossAssetModelBuilder(
       optimizationMethod_(boost::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
       endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)) {
     buildModel();
-    registerWithSubBuilders();
+    // register with sub builders
+    for (auto okv : subBuilders_)
+        for (auto ikv : okv.second) {
+            registerWith(ikv.second);
+        }
     // register market observer with correlations
     marketObserver_ = boost::make_shared<MarketObserver>();
     for (auto const& c : config->correlations())
@@ -125,18 +129,6 @@ const std::vector<Real>& CrossAssetModelBuilder::inflationCalibrationErrors() {
 const std::vector<Real>& CrossAssetModelBuilder::comOptionCalibrationErrors() {
     calculate();
     return comOptionCalibrationErrors_;
-}
-
-void CrossAssetModelBuilder::unregisterWithSubBuilders() {
-    for (auto okv : subBuilders_)
-        for (auto ikv : okv.second)
-            unregisterWith(ikv.second);
-}
-
-void CrossAssetModelBuilder::registerWithSubBuilders() {
-    for (auto okv : subBuilders_)
-        for (auto ikv : okv.second)
-            registerWith(ikv.second);
 }
 
 bool CrossAssetModelBuilder::requiresRecalibration() const {
