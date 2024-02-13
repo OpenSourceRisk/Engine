@@ -599,11 +599,11 @@ boost::shared_ptr<OvernightIndex> AverageOisConvention::index() const {
     return tmp;
 }
 
-TenorBasisSwapConvention::TenorBasisSwapConvention(const string& id, const string& longIndex, const string& receiveIndex,
+TenorBasisSwapConvention::TenorBasisSwapConvention(const string& id, const string& payIndex, const string& receiveIndex,
                                                    const string& receiveFrequency, const string& payFrequency,
                                                    const string& spreadOnRec, const string& includeSpread, 
                                                    const string& subPeriodsCouponType)
-    : Convention(id, Type::TenorBasisSwap), strPayIndex_(longIndex), strReceiveIndex_(receiveIndex),
+    : Convention(id, Type::TenorBasisSwap), strPayIndex_(payIndex), strReceiveIndex_(receiveIndex),
       strReceiveFrequency_(receiveFrequency), strPayFrequency_(payFrequency), strSpreadOnRec_(spreadOnRec),
       strIncludeSpread_(includeSpread), strSubPeriodsCouponType_(subPeriodsCouponType) {
     build();
