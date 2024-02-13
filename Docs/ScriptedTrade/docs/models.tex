@@ -27,6 +27,7 @@ An example pricing engine configuration looks as follows.
       <Parameter name="Model_SingleAssetOptionBwd(FX)">BlackScholes</Parameter>
       <Parameter name="Model_SingleAssetOptionBwd(COMM)">BlackScholes</Parameter>
       <Parameter name="Model_SingleUnderlyingIrOption">GaussianCam</Parameter>
+      <Parameter name="Model_SingleUnderlyingIrOptionBwd">GaussianCam</Parameter>
       <Parameter name="Model_MultiUnderlyingIrOption">GaussianCam</Parameter>
       <Parameter name="Model_IrHybrid(EQ)">GaussianCam</Parameter>
       <Parameter name="Model_IrHybrid(FX)">GaussianCam</Parameter>
@@ -38,6 +39,7 @@ An example pricing engine configuration looks as follows.
       <Parameter name="Engine">MC</Parameter>
       <Parameter name="Samples">10000</Parameter>
       <Parameter name="StateGridPoints">200</Parameter>
+      <Parameter name="StateGridPoints_SingleUnderlyingIrOptionBwd">50</Parameter>
       <Parameter name="MesherEpsilon">1E-4</Parameter>
       <Parameter name="MesherScaling">1.5</Parameter>
       <Parameter name="MesherConcentration">0.1</Parameter>
@@ -54,7 +56,7 @@ An example pricing engine configuration looks as follows.
       <Parameter name="Engine_SingleAssetOptionBwd(EQ)">FD</Parameter>
       <Parameter name="Engine_SingleAssetOptionBwd(FX)">FD</Parameter>
       <Parameter name="Engine_SingleAssetOptionBwd(COMM)">FD</Parameter>
-      <Parameter name="Engine_SingleUnderlyingIrOption">6</Parameter>
+      <Parameter name="Engine_SingleUnderlyingIrOption">FD</Parameter>
       <Parameter name="useAD_MultiAssetOptionAD(EQ)">true</Parameter>
       <Parameter name="useAD_MultiAssetOptionAD(FX)">true</Parameter>
       <Parameter name="useAD_MultiAssetOptionAD(COMM)">true</Parameter>
@@ -188,10 +190,14 @@ or as the first strike given in the list of calibration strikes for an index.
 
 See \ref{pricingengine_config} for the impact of the model parameter FullDynamicFx on the model setup.
 
-TimeStepsPerYear are ignored if the correlation structure is trivial, because then the process can be discretised
+For MC TimeStepsPerYear are ignored if the correlation structure is trivial, because then the process can be discretised
 exactly. Otherwise the given time steps per year are used to build a grid on which covariance matrices are computed
 assuming a constant volatility between the grid points. The actual MC paths are evoloved using these covariance matrices
 on the original (non-refined) time grid, i.e. taking large, exact steps again.
+
+For FD TimeStepsPerYear, StateGridPoints, MesherEpsilon, MesherScaling, MesherConcentration,
+MesehMaxConcentrationPoints, MesherIsStatic are used, see the description of these parameters for their detailled
+interpretation.
 
 \smallskip
 Available Engine types: MC, FD
@@ -229,8 +235,12 @@ Calibration strike specifications (see \ref{calibration}) are not yet supported 
 
 See \ref{pricingengine_config} for the impact of the model parameters FullDynamicFx, FullDynamicIr on the model setup.
 
+The FD model variant is supported for a single underlying IR model only. A single calibration strike is supported that
+can be specified for any IR model index appearing in the script. TimeStepsPerYear, StateGridPoints, MesherEpsilon are
+used, see the description of these parameters for their detailled interpretation.
+
 \smallskip
-Available Engine types: MC
+Available Engine types: MC, FD
 
 \subsection{Base Currency Determination}\label{baseccy_determination}
 
@@ -312,12 +322,12 @@ strike is given by the Strike variable and a secondary strike is given by the Kn
 The usage of the calibration strikes is twofold:
 
 \begin{itemize}
-\item For the determination of calibration strikes. This is only relevant / supported by the BlackScholes model, which
-  will use the first strike from the list to read the volatility from the market term structure (if Calibration is set
-  to Deal in the model parameters).
+\item For the determination of calibration strikes. This is only relevant / supported by the BlackScholes and
+  GaussianCam-FD model, which will use the first strike from the list to read the volatility from the market term
+  structure (if Calibration is set to Deal in the model parameters).
 \item To determine concentration points for an FD mesher if \verb+Engine+ is set to \verb+FD+. The first $n$ strikes are
   used as concentration points where $n$ is the minimum of specified strikes and the engine parameter
-  \verb+MesherMaxConcentrationPoints+.
+  \verb+MesherMaxConcentrationPoints+. This is supported by the BlackScholes model only.
 \end{itemize}
 
 \subsection{FX tags and correlation curves}\label{fxtags_correlationcurves}
