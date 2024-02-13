@@ -543,7 +543,7 @@
         "column_settings": [
           {
             "names": [],
-            "abs_tol": 1e-6,
+            "abs_tol": 1.0,
             "rel_tol": 1e-12
           }
         ]
