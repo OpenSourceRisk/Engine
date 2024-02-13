@@ -110,8 +110,6 @@ public:
 private:
     void performCalculations() const override;
     void buildModel() const;
-    void registerWithSubBuilders();
-    void unregisterWithSubBuilders();
 
     mutable std::vector<std::vector<boost::shared_ptr<BlackCalibrationHelper>>> swaptionBaskets_;
     mutable std::vector<std::vector<boost::shared_ptr<BlackCalibrationHelper>>> fxOptionBaskets_;
