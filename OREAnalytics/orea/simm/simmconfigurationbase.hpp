@@ -69,12 +69,6 @@ public:
     //! An empty vector is returned if the risk type does not use <em>Label2</em>
     std::vector<std::string> labels2(const CrifRecord::RiskType& rt) const override;
 
-    //! Return the SIMM <em>Label2</em> value for the given interest rate index
-    std::string labels2(const boost::shared_ptr<QuantLib::InterestRateIndex>& irIndex) const override;
-
-    //! Return the SIMM <em>Label2</em> value for the given Libor tenor
-    std::string labels2(const QuantLib::Period& p) const override;
-
     //! Add SIMM <em>Label2</em> values under certain circumstances.
     void addLabels2(const CrifRecord::RiskType& rt, const std::string& label_2) override {}
 

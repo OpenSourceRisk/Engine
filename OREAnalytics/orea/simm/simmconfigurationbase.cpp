@@ -27,9 +27,6 @@
 #include <ql/math/comparison.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/math/matrixutilities/symmetricschurdecomposition.hpp>
-#include <qle/indexes/ibor/termrateindex.hpp>
-
-#include <boost/algorithm/string/predicate.hpp>
 
 using namespace QuantLib;
 
@@ -66,28 +63,7 @@ std::ostream& operator<<(std::ostream& out, const tuple<string, string, string>&
                << std::get<2>(tup) << "']";
 }
 
-string periodToLabels2(const QuantLib::Period& p) {
-    if ((p.units() == Months && p.length() == 3) || (p.units() == Weeks && p.length() == 13)) {
-        return "Libor3m";
-    } else if ((p.units() == Months && p.length() == 6) || (p.units() == Weeks && p.length() == 26)) {
-        return "Libor6m";
-    } else if ((p.units() == Days && p.length() == 1) || p == 1 * Weeks) {
-        // 7 days here is based on ISDA SIMM FAQ and Implementation Questions, Sep 4, 2019 Section E.9
-        // Sub curve to be used for CNY seven-day repo rate (closest is OIS).
-        return "OIS";
-    } else if ((p.units() == Months && p.length() == 1) || (p.units() == Weeks && p.length() == 2) ||
-               (p.units() == Weeks && p.length() == 4) || (p.units() == Days && p.length() >= 28 && p.length() <= 31)) {
-        // 2 weeks here is based on ISDA SIMM Methodology paragraph 14:
-        // "Any sub curve not given on the above list should be mapped to its closest equivalent."
-        // A 2 week rate is more like sub-period than OIS.
-        return "Libor1m";
-    } else if ((p.units() == Months && p.length() == 12) || (p.units() == Years && p.length() == 1) ||
-               (p.units() == Weeks && p.length() == 52)) {
-        return "Libor12m";
-    } else {
-        return "";
-    }
-}
+
 
 } // anonymous namespace
 
@@ -127,31 +103,6 @@ vector<string> SimmConfigurationBase::labels2(const RiskType& rt) const {
     QL_REQUIRE(isValidRiskType(rt),
                "The risk type " << rt << " is not valid for SIMM configuration with name" << name_);
     return lookup(rt, mapLabels_2_);
-}
-
-string SimmConfigurationBase::labels2(const QuantLib::Period& p) const {
-    string label2 = periodToLabels2(p);
-    QL_REQUIRE(!label2.empty(), "Could not determine SIMM Label2 for period " << p);
-    return label2;
-}
-
-string SimmConfigurationBase::labels2(const boost::shared_ptr<InterestRateIndex>& irIndex) const {
-
-    string label2;
-    if (boost::algorithm::starts_with(irIndex->name(), "BMA")) {
-        // There was no municipal until later so override this in
-        // derived configurations and use 'Prime' in base
-        label2 = "Prime";
-    } else if (irIndex->familyName() == "Prime") {
-        label2 = "Prime";
-    } else if(boost::dynamic_pointer_cast<QuantExt::TermRateIndex>(irIndex) != nullptr) {
-	// see ISDA-SIMM-FAQ_Methodology-and-Implementation_20220323_clean.pdf: E.8 Term RFR rate risk should be treated as RFR rate risk
-        label2 = "OIS";
-    } else {
-        label2 = periodToLabels2(irIndex->tenor());
-        QL_REQUIRE(!label2.empty(), "Could not determine SIMM Label2 for index " << irIndex->name());
-    }
-    return label2;
 }
 
 QuantLib::Real SimmConfigurationBase::weight(const RiskType& rt, boost::optional<string> qualifier,

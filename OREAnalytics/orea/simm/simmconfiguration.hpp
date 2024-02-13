@@ -27,7 +27,7 @@
 #include <vector>
 
 #include <boost/optional.hpp>
-
+#include <orea/simm/crifconfiguration.hpp>
 #include <orea/simm/crifrecord.hpp>
 #include <orea/simm/simmbucketmapper.hpp>
 #include <ql/indexes/interestrateindex.hpp>
@@ -37,7 +37,7 @@ namespace ore {
 namespace analytics {
 
 //! Abstract base class defining the interface for a SIMM configuration
-class SimmConfiguration {
+class SimmConfiguration : public CrifConfiguration {
 public:
     virtual ~SimmConfiguration() {}
 
@@ -157,17 +157,6 @@ public:
     //! Return the list of SIMM <em>Label2</em> values for risk type \p rt
     //! An empty vector is returned if the risk type does not use <em>Label2</em>
     virtual std::vector<std::string> labels2(const CrifRecord::RiskType& rt) const = 0;
-
-    /*! Return the SIMM <em>Label2</em> value for the given interest rate index
-        \p irIndex. For interest rate indices, this is the SIMM sub curve name
-        e.g. 'Libor1m', 'Libor3m' etc.
-    */
-    virtual std::string labels2(const boost::shared_ptr<QuantLib::InterestRateIndex>& irIndex) const = 0;
-
-    /*! Return the SIMM <em>Label2</em> value for the given Libor tenor
-        \p p. This is the SIMM sub curve name, e.g. 'Libor1m', 'Libor3m' etc.
-    */
-    virtual std::string labels2(const QuantLib::Period& p) const = 0;
 
     /*! Add SIMM <em>Label2</em> values under certain circumstances.
 

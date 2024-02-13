@@ -1,0 +1,51 @@
+/*
+ Copyright (C) 2024 AcadiaSoft Inc.
+ All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
+
+/*! \file orea/simm/crifconfiguration.hpp
+    \brief CRIF configuration interface
+*/
+
+#pragma once
+
+#include <orea/scenario/scenario.hpp>
+#include <ql/indexes/interestrateindex.hpp>
+#include <ql/time/period.hpp>
+#include <string>
+
+namespace ore {
+namespace analytics {
+
+class CrifConfiguration {
+public:
+    virtual ~CrifConfiguration();
+
+    //virtual bool isValidSensitivity(const ore::analytics::RiskFactorKey::KeyType& rfkey) const = 0;
+
+    /*! Return the CRIF <em>Label2</em> value for the given interest rate index
+        \p irIndex. For interest rate indices, this is the CRIF sub curve name
+        e.g. 'Libor1m', 'Libor3m' etc.
+    */
+    virtual std::string labels2(const boost::shared_ptr<QuantLib::InterestRateIndex>& irIndex) const;
+
+    /*! Return the CRIF <em>Label2</em> value for the given Libor tenor
+        \p p. This is the CRIF sub curve name, e.g. 'Libor1m', 'Libor3m' etc.
+    */
+    virtual std::string labels2(const QuantLib::Period& p) const = 0;
+};
+} // namespace analytics
+} // namespace ore
