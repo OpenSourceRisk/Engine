@@ -147,4 +147,18 @@ void LinkableCalibratedModel::setParams(const Array& params) {
     generateArguments();
     notifyObservers();
 }
+
+void LinkableCalibratedModel::setParam(Size idx, const Real value) {
+    for (Size i = 0; i < arguments_.size(); ++i) {
+        for (Size j = 0; j < arguments_[i]->size(); ++j) {
+            if (idx == 0)
+                arguments_[i]->setParam(j, value);
+            else
+                --idx;
+        }
+    }
+    generateArguments();
+    notifyObservers();
+}
+
 } // namespace QuantExt
