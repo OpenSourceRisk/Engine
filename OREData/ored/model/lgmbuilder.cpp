@@ -325,11 +325,9 @@ bool LgmBuilder::requiresRecalibration() const {
 void LgmBuilder::performCalculations() const {
 
     DLOG("Recalibrate LGM model for qualifier " << data_->qualifier() << " currency " << currency_);
-    std::cout << "reaclibrate model ... " << std::flush;
 
     if (!requiresRecalibration()) {
         DLOG("Skipping calibration as nothing has changed");
-        std::cout << " skipped." << std::endl;
         return;
     }
 
@@ -463,9 +461,6 @@ void LgmBuilder::performCalculations() const {
         DLOG("Apply scaling " << data_->scaling() << " to the " << data_->qualifier() << " LGM model");
         parametrization_->scaling() = data_->scaling();
     }
-
-    std::cout << "  done." << std::endl;
-
 } // performCalculations()
 
 void LgmBuilder::getExpiryAndTerm(const Size j, Period& expiryPb, Period& termPb, Date& expiryDb, Date& termDb,
