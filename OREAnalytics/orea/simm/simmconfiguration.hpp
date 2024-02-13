@@ -143,13 +143,6 @@ public:
     //! Return true if the SIMM risk type \p rt has buckets
     virtual bool hasBuckets(const CrifRecord::RiskType& rt) const = 0;
 
-    /*! Return the SIMM <em>bucket</em> name for the given risk type \p rt
-        and \p qualifier
-
-        \warning Throws an error if there are no buckets for the risk type \p rt
-    */
-    virtual std::string bucket(const CrifRecord::RiskType& rt, const std::string& qualifier) const = 0;
-
     //! Return the list of SIMM <em>Label1</em> values for risk type \p rt
     //! An empty vector is returned if the risk type does not use <em>Label1</em>
     virtual std::vector<std::string> labels1(const CrifRecord::RiskType& rt) const = 0;

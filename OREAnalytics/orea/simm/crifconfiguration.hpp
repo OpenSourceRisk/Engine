@@ -36,6 +36,13 @@ public:
 
     //virtual bool isValidSensitivity(const ore::analytics::RiskFactorKey::KeyType& rfkey) const = 0;
 
+    /*! Return the CRIF <em>bucket</em> name for the given risk type \p rt
+        and \p qualifier
+
+        \warning Throws an error if there are no buckets for the risk type \p rt
+    */
+    virtual std::string bucket(const CrifRecord::RiskType& rt, const std::string& qualifier) const = 0;
+
     /*! Return the CRIF <em>Label2</em> value for the given interest rate index
         \p irIndex. For interest rate indices, this is the CRIF sub curve name
         e.g. 'Libor1m', 'Libor3m' etc.
