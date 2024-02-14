@@ -107,8 +107,8 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
             adjFactors = boost::make_shared<ore::data::AdjustmentFactors>(adjLoader->adjustmentFactors());
 
         auto scenarios = buildHistoricalScenarioGenerator(inputs_->historicalScenarioReader(), adjFactors,
-                                                          benchmarkVarPeriod, inputs_->mporCalendar(),
-                                                          inputs_->mporDays(), inputs_->mporOverlappingPeriods());
+            benchmarkVarPeriod, inputs_->mporCalendar(), inputs_->mporDays(), analytic()->configurations().simMarketParams,
+            analytic()->configurations().todaysMarketParams, inputs_->mporOverlappingPeriods());
 
         auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
             analytic()->market(), analytic()->configurations().simMarketParams, Market::defaultConfiguration,
@@ -146,8 +146,9 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
         adjFactors = boost::make_shared<ore::data::AdjustmentFactors>(adjLoader->adjustmentFactors());
         
     auto scenarios =
-        buildHistoricalScenarioGenerator(inputs_->historicalScenarioReader(), adjFactors, benchmarkVarPeriod,
-            inputs_->mporCalendar(), inputs_->mporDays(), inputs_->mporOverlappingPeriods());
+        buildHistoricalScenarioGenerator(inputs_->historicalScenarioReader(), adjFactors, benchmarkVarPeriod, inputs_->mporCalendar(),
+        inputs_->mporDays(), analytic()->configurations().simMarketParams,
+        analytic()->configurations().todaysMarketParams, inputs_->mporOverlappingPeriods());
     
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams, Market::defaultConfiguration,

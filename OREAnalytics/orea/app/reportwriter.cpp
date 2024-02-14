@@ -21,6 +21,7 @@
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/simm/utilities.hpp>
+#include <orea/scenario/scenariowriter.hpp>
 
 #include <ored/utilities/marketdata.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
@@ -1998,6 +1999,143 @@ void ReportWriter::writeScenarioDistributions(const boost::shared_ptr<ScenarioGe
         }
     }
     report.end();
+}
+
+void ReportWriter::writeHistoricalScenarioDetails(
+    const boost::shared_ptr<ore::analytics::HistoricalScenarioGenerator>& generator, ore::data::Report& report) {
+
+    report.addColumn("PLDate1", Date())
+        .addColumn("PLDate2", Date())
+        .addColumn("Key", string())
+        .addColumn("BaseValue", double(), 8)
+        .addColumn("AdjustmentFactor1", double(), 8)
+        .addColumn("AdjustmentFactor2", double(), 8)
+        .addColumn("ScenarioValue1", double(), 8)
+        .addColumn("ScenarioValue2", double(), 8)
+        .addColumn("ShiftType", string())
+        .addColumn("Return", double(), 8)
+        .addColumn("ScenarioValue", double(), 8);
+
+    Date asof = generator->baseScenario()->asof();
+    for (Size i = 0; i < generator->startDates().size(); ++i) {
+        std::ignore = generator->next(asof);
+        for (auto const& d : generator->lastHistoricalScenarioCalculationDetails()) {
+            report.next()
+                .add(d.scenarioDate1)
+                .add(d.scenarioDate2)
+                .add(ore::data::to_string(d.key))
+                .add(d.baseValue)
+                .add(d.adjustmentFactor1)
+                .add(d.adjustmentFactor2)
+                .add(d.scenarioValue1)
+                .add(d.scenarioValue2)
+                .add(ore::data::to_string(d.returnType))
+                .add(d.returnValue)
+                .add(d.scenarioValue);
+        }
+    }
+    report.end();
+}
+
+void ReportWriter::writeStockSplitReport(const boost::shared_ptr<Scenario>& baseScenario,
+                                         const boost::shared_ptr<ore::analytics::HistoricalScenarioLoader>& hsloader,
+                                         const boost::shared_ptr<ore::data::AdjustmentFactors>& adjFactors,
+                                         const boost::shared_ptr<ore::data::Report>& report) {
+
+    report->addColumn("EquityId", string())
+        .addColumn("Date", Date())
+        .addColumn("Price", double(), 8)
+        .addColumn("Factor", double(), 8)
+        .addColumn("CumulatedFactor", double(), 8)
+        .addColumn("AdjustedPrice", double(), 8);
+
+    if (adjFactors) {
+        std::set<std::string> names;
+        for (auto const& k : baseScenario->keys()) {
+            if (k.keytype == RiskFactorKey::KeyType::EquitySpot) {
+                names.insert(k.name);
+            }
+        }
+
+        std::vector<QuantLib::Date> hsdates = hsloader->dates();
+
+        for (auto const& name : names) {
+
+            std::set<QuantLib::Date> dates = adjFactors->dates(name);
+            dates.insert(hsdates.begin(), hsdates.end());
+
+            for (auto const& d : dates) {
+
+                Real price = Null<Real>();
+                if (std::find(hsdates.begin(), hsdates.end(), d) != hsdates.end()) {
+                    auto scen = hsloader->getHistoricalScenario(d);
+                    RiskFactorKey rf(RiskFactorKey::KeyType::EquitySpot, name);
+                    if (scen->has(rf))
+                        price = scen->get(rf);
+                }
+                Real factor = adjFactors->getFactorContribution(name, d);
+                Real cumFactor = adjFactors->getFactor(name, d);
+                Real adjPrice = price == Null<Real>() ? Null<Real>() : price * cumFactor;
+
+                report->next().add(name).add(d).add(price).add(factor).add(cumFactor).add(adjPrice);
+            }
+        }
+    }
+    report->end();
+}
+
+void ReportWriter::writeHistoricalScenarioDistributions(
+    boost::shared_ptr<HistoricalScenarioGenerator>& hsgen,
+    const boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
+    const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams,
+    boost::shared_ptr<ore::data::Report> histScenDetailsReport, boost::shared_ptr<ore::data::Report> statReport,
+    boost::shared_ptr<ore::data::Report> distReport, Size distSteps) {
+
+    // Don't leave it up to the caller to do this
+    simMarket->scenarioGenerator() = hsgen;
+    hsgen->baseScenario() = simMarket->baseScenario();
+
+    // If both report pointers are null, return early
+    if (!statReport && !distReport)
+        return;
+
+    // Make a transformed generator i.e. discount -> zero etc.
+    auto hsgent = boost::make_shared<HistoricalScenarioGeneratorTransform>(hsgen, simMarket, simMarketParams);
+
+    const vector<RiskFactorKey>& keys = hsgen->baseScenario()->keys();
+    Size numScen = hsgen->numScenarios();
+    Date asof = hsgen->baseScenario()->asof();
+
+    // Write the statistics report if requested
+    if (statReport) {
+        hsgent->reset();
+        writeScenarioStatistics(hsgent, keys, numScen, {asof}, *statReport);
+    }
+
+    // Write the distribution report if requested
+    if (distReport) {
+        QL_REQUIRE(distSteps != Null<Size>(),
+                   "When creating a distribution report, a valid distribution step size is required");
+        hsgent->reset();
+        writeScenarioDistributions(hsgent, keys, numScen, {asof}, distSteps, *distReport);
+    }
+
+    // Write the scenario report if requested
+    if (histScenDetailsReport) {
+        hsgent->reset();
+        writeHistoricalScenarioDetails(hsgent, *histScenDetailsReport);
+    }
+}
+
+void ReportWriter::writeHistoricalScenarios(const boost::shared_ptr<HistoricalScenarioLoader>& hsloader,
+                                            const boost::shared_ptr<ore::data::Report>& report) {
+    ScenarioWriter sw(nullptr, report);
+    auto scenarios = hsloader->historicalScenarios();
+    bool writeHeader = true;
+    for (const auto& s : scenarios) {
+        sw.writeScenario(s, writeHeader);
+        writeHeader = false;
+    }
 }
 
 } // namespace analytics

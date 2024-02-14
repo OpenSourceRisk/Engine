@@ -470,7 +470,7 @@ void HistoricalScenarioGeneratorWithFilteredDates::reset() {
     i_orig_ = 0;
 }
 
-boost::shared_ptr<Scenario> HistoricalScenarioGeneratorWithFilteredDates::next(const Date& d) {
+QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGeneratorWithFilteredDates::next(const Date& d) {
     while (i_orig_ < gen_->numScenarios() && !isRelevantScenario_[i_orig_]) {
         gen_->next(d);
         ++i_orig_;
@@ -482,9 +482,13 @@ boost::shared_ptr<Scenario> HistoricalScenarioGeneratorWithFilteredDates::next(c
 }
 
 QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGenerator(
-    const boost::shared_ptr<HistoricalScenarioReader>& hsr,
-    const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors,
-    const TimePeriod& period, Calendar calendar, Size mporDays, const bool overlapping) {
+    const QuantLib::ext::shared_ptr<HistoricalScenarioReader>& hsr,
+    const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors, const TimePeriod& period,
+    Calendar calendar, Size mporDays,
+    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParams,
+    const QuantLib::ext::shared_ptr<TodaysMarketParameters>& marketParams, const bool overlapping) {
+
+    hsr->load(simParams, marketParams);
 
     auto scenarioFactory = boost::make_shared<SimpleScenarioFactory>();
 
