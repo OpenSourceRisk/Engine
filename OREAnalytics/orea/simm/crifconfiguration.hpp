@@ -47,12 +47,12 @@ public:
         \p irIndex. For interest rate indices, this is the CRIF sub curve name
         e.g. 'Libor1m', 'Libor3m' etc.
     */
-    virtual std::string labels2(const boost::shared_ptr<QuantLib::InterestRateIndex>& irIndex) const;
+    virtual std::string label2(const boost::shared_ptr<QuantLib::InterestRateIndex>& irIndex) const;
 
     /*! Return the CRIF <em>Label2</em> value for the given Libor tenor
         \p p. This is the CRIF sub curve name, e.g. 'Libor1m', 'Libor3m' etc.
     */
-    virtual std::string labels2(const QuantLib::Period& p) const = 0;
+    virtual std::string label2(const QuantLib::Period& p) const = 0;
 };
 } // namespace analytics
 } // namespace ore
