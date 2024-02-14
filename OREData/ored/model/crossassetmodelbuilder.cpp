@@ -103,6 +103,8 @@ CrossAssetModelBuilder::CrossAssetModelBuilder(
         marketObserver_->addObservable(c.second);
     // reset market observer's updated flag
     marketObserver_->hasUpdated(true);
+    // register with market observer
+    registerWith(marketObserver_);
 }
 
 Handle<QuantExt::CrossAssetModel> CrossAssetModelBuilder::model() const {
@@ -244,9 +246,9 @@ void CrossAssetModelBuilder::buildModel() const {
             }
             auto builder = boost::dynamic_pointer_cast<LgmBuilder>(subBuilders_[CrossAssetModel::AssetType::IR][i]);
             lgmBuilder.push_back(builder);
+            if (builder->requiresRecalibration())
+                recalibratedCurrencies.insert(builder->parametrization()->currency().code());
             auto parametrization = builder->parametrization();
-            if(builder->requiresRecalibration())
-                recalibratedCurrencies.insert(parametrization->currency().code());
             if (dontCalibrate_)
                 builder->freeze();
             swaptionBaskets_[i] = builder->swaptionBasket();
@@ -270,9 +272,9 @@ void CrossAssetModelBuilder::buildModel() const {
             }
             auto builder = boost::dynamic_pointer_cast<HwBuilder>(subBuilders_[CrossAssetModel::AssetType::IR][i]);
             hwBuilder.push_back(builder);
+            if (builder->requiresRecalibration())
+                recalibratedCurrencies.insert(builder->parametrization()->currency().code());
             auto parametrization = builder->parametrization();
-            if(builder->requiresRecalibration())
-                recalibratedCurrencies.insert(parametrization->currency().code());
             if (dontCalibrate_)
                 builder->freeze();
             swaptionBaskets_[i] = builder->swaptionBasket();
@@ -543,8 +545,6 @@ void CrossAssetModelBuilder::buildModel() const {
             continue;
         }
 
-        std::cout << "calibrate fx " << fx->foreignCcy() << std::endl;
-
         DLOG("FX Calibration " << i);
 
         // attach pricing engines to helpers
@@ -591,6 +591,7 @@ void CrossAssetModelBuilder::buildModel() const {
                 }
             }
         }
+        fxBuilder[i]->setCalibrationDone();
     }
 
     /*************************
@@ -616,8 +617,8 @@ void CrossAssetModelBuilder::buildModel() const {
 
         if (!eqBuilder[i]->requiresRecalibration() &&
             recalibratedCurrencies.find(eq->currency()) == recalibratedCurrencies.end()) {
-            DLOG("EQ Calibration "
-                 << i << " skipped, since neither eq builder nor ir model in eq ccy were recalibrated.");
+            DLOG("EQ Calibration " << i
+                                   << " skipped, since neither eq builder nor ir model in eq ccy were recalibrated.");
             continue;
         }
 
@@ -664,6 +665,7 @@ void CrossAssetModelBuilder::buildModel() const {
                 }
             }
         }
+        eqBuilder[i]->setCalibrationDone();
     }
 
     /*************************
@@ -728,10 +730,6 @@ void CrossAssetModelBuilder::buildModel() const {
         irDiscountCurves[i].linkTo(*market_->discountCurve(p->currency().code(), configurationFinalModel_));
         DLOG("Relinked discounting curve for " << p->currency().code() << " as final model curves");
     }
-
-    // play safe (although the cache of the model should be empty at
-    // this point from all what we know...)
-    model_->update();
 
     DLOG("Building CrossAssetModel done");
 }
