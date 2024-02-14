@@ -246,11 +246,12 @@ void CrossAssetModelBuilder::buildModel() const {
             }
             auto builder = boost::dynamic_pointer_cast<LgmBuilder>(subBuilders_[CrossAssetModel::AssetType::IR][i]);
             lgmBuilder.push_back(builder);
+            if (dontCalibrate_) {
+                builder->freeze();
+            }
             if (builder->requiresRecalibration())
                 recalibratedCurrencies.insert(builder->parametrization()->currency().code());
             auto parametrization = builder->parametrization();
-            if (dontCalibrate_)
-                builder->freeze();
             swaptionBaskets_[i] = builder->swaptionBasket();
             QL_REQUIRE(std::find(currencies.begin(), currencies.end(), parametrization->currency().code()) ==
                            currencies.end(),
@@ -362,14 +363,12 @@ void CrossAssetModelBuilder::buildModel() const {
             }
             boost::shared_ptr<InfDkBuilder> builder =
                 boost::dynamic_pointer_cast<InfDkBuilder>(subBuilders_[CrossAssetModel::AssetType::INF][i]);
-            if (dontCalibrate_)
-                builder->freeze();
             infParameterizations.push_back(builder->parametrization());
             processInfo[CrossAssetModel::AssetType::INF].emplace_back(dkData->index(), 1);
         } else if (auto jyData = boost::dynamic_pointer_cast<InfJyData>(imData)) {
             if (!buildersAreInitialized) {
                 subBuilders_[CrossAssetModel::AssetType::INF][i] = boost::make_shared<InfJyBuilder>(
-                    market_, jyData, configurationInfCalibration_, referenceCalibrationGrid_);
+                    market_, jyData, configurationInfCalibration_, referenceCalibrationGrid_, dontCalibrate_);
             }
             auto builder = boost::dynamic_pointer_cast<InfJyBuilder>(subBuilders_[CrossAssetModel::AssetType::INF][i]);
             infParameterizations.push_back(builder->parameterization());
@@ -703,6 +702,7 @@ void CrossAssetModelBuilder::buildModel() const {
                 continue;
             }
             calibrateInflation(*dkData, i, dkBuilder->optionBasket(), dkParam);
+            dkBuilder->setCalibrationDone();
         } else if (auto jyData = boost::dynamic_pointer_cast<InfJyData>(imData)) {
             auto jyParam = boost::dynamic_pointer_cast<InfJyParameterization>(infParameterizations[i]);
             QL_REQUIRE(jyParam, "Expected JY model data to have given a JY parameterisation.");
@@ -716,6 +716,7 @@ void CrossAssetModelBuilder::buildModel() const {
                 continue;
             }
             calibrateInflation(*jyData, i, jyBuilder, jyParam);
+            jyBuilder->setCalibrationDone();
         } else {
             QL_FAIL("CrossAssetModelBuilder expects either DK or JY inflation model data.");
         }
