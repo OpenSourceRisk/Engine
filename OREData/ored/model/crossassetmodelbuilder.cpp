@@ -854,6 +854,9 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
         toCalibrate[2] = idxVol.calibrate();
 
         // Calibrate the model.
+        resetModelParams(CrossAssetModel::AssetType::INF, 0, modelIdx, Null<Size>());
+        resetModelParams(CrossAssetModel::AssetType::INF, 1, modelIdx, Null<Size>());
+        resetModelParams(CrossAssetModel::AssetType::INF, 2, modelIdx, Null<Size>());
         model_->calibrateInfJyGlobal(modelIdx, allHelpers, *optimizationMethod_, endCriteria_, toCalibrate);
 
     } else {
@@ -913,7 +916,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
 
             // reset to initial params to ensure identical calibration outcomes for identical baskets
             resetModelParams(CrossAssetModel::AssetType::INF, 2, modelIdx, Null<Size>());
-            resetModelParams(CrossAssetModel::AssetType::INF, 2, rrIdx, Null<Size>());
+            resetModelParams(CrossAssetModel::AssetType::INF, rrIdx, modelIdx, Null<Size>());
 
             while (inflationCalibrationErrors_[modelIdx] > cc.rmseTolerance() && numIts < cc.maxIterations()) {
                 model_->calibrateInfJyIterative(modelIdx, 2, idxBasket, *optimizationMethod_, endCriteria_);
