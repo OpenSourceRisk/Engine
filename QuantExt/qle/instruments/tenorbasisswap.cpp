@@ -118,7 +118,7 @@ TenorBasisSwap::TenorBasisSwap(Real nominal, const Schedule& paySchedule,
     initializeLegs();
 }
 
-TenorBasisSwap::TenorBasisSwap(std::vector<Real> nominals, const Schedule& paySchedule,
+TenorBasisSwap::TenorBasisSwap(const std::vector<Real>& nominals, const Schedule& paySchedule,
                                const boost::shared_ptr<IborIndex>& payIndex, Spread paySpread,
                                const Schedule& recSchedule, const boost::shared_ptr<IborIndex>& recIndex,
                                Spread recSpread, bool includeSpread, bool spreadOnRec, QuantExt::SubPeriodsCoupon1::Type type,

@@ -55,7 +55,7 @@ public:
                    Spread recSpread, bool includeSpread = false, bool spreadOnRec = true,
                    QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding,
                    const bool telescopicValueDates = false);
-    TenorBasisSwap(std::vector<Real> nominals, const Schedule& paySchedule, const boost::shared_ptr<IborIndex>& payIndex,
+    TenorBasisSwap(const std::vector<Real>& nominals, const Schedule& paySchedule, const boost::shared_ptr<IborIndex>& payIndex,
                    Spread paySpread, const Schedule& recSchedule, const boost::shared_ptr<IborIndex>& recIndex,
                    Spread recSpread, bool includeSpread = false, bool spreadOnRec = true,
                    QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding,
@@ -65,7 +65,7 @@ public:
     //! \name Inspectors
     //@{
     Real nominal() const;
-    std::vector<Real> nominals() const { return nominals_; }
+    const std::vector<Real>& nominals() const { return nominals_; }
 
     const Schedule& paySchedule() const;
     const boost::shared_ptr<IborIndex>& payIndex() const;
