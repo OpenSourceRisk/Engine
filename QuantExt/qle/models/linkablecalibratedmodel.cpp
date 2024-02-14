@@ -149,12 +149,11 @@ void LinkableCalibratedModel::setParams(const Array& params) {
 }
 
 void LinkableCalibratedModel::setParam(Size idx, const Real value) {
+    int tmp = static_cast<int>(idx);
     for (Size i = 0; i < arguments_.size(); ++i) {
         for (Size j = 0; j < arguments_[i]->size(); ++j) {
-            if (idx == 0)
+            if (tmp-- == 0)
                 arguments_[i]->setParam(j, value);
-            else
-                --idx;
         }
     }
     generateArguments();

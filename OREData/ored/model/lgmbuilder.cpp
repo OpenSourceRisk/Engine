@@ -213,7 +213,7 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
         marketObserver_->addObservable(shortSwapIndex_->forwardingTermStructure());
         marketObserver_->addObservable(shortSwapIndex_->discountingTermStructure());
     }
-    marketObserver_->addObservable(modelDiscountCurve_);
+    // we do not register with modelDiscountCurve_, since this curve does not affect the calibration
     marketObserver_->addObservable(calibrationDiscountCurve_);
     registerWith(marketObserver_);
     // notify observers of all market data changes, not only when not calculated

@@ -72,6 +72,8 @@ public:
     void forceRecalculate() override;
     bool requiresRecalibration() const override;
     //@}
+    
+    void setCalibrationDone() const;
 
 private:
     void performCalculations() const override;
