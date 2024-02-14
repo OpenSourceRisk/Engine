@@ -141,7 +141,7 @@
     <xs:all>
       <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="PayIndex" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="period" name="PayIndex" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="period" name="PayFrequency" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="ReceiveIndex" minOccurs="1" maxOccurs="1"/>
       <xs:element type="period" name="ReceiveFrequency" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="SpreadOnRec" minOccurs="0" maxOccurs="1"/>
