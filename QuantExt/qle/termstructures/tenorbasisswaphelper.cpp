@@ -45,7 +45,7 @@ TenorBasisSwapHelper::TenorBasisSwapHelper(Handle<Quote> spread, const Period& s
        =========================================
          0  |  .  |   .  |    .     | throw exception
          1  |  .  |   .  |    x     | throw exception
-         2  |  .  |   x  |    .     | imply OI1 = Discount
+         2  |  .  |   x  |    .     | imply OI1, set Discount is OI2
          3  |  .  |   x  |    x     | imply OI1
          4  |  x  |   .  |    .     | imply OI2, set Discount is OI1
          5  |  x  |   .  |    x     | imply OI2
@@ -68,7 +68,8 @@ TenorBasisSwapHelper::TenorBasisSwapHelper(Handle<Quote> spread, const Period& s
         // case 2
         payIndex_ = boost::static_pointer_cast<IborIndex>(payIndex_->clone(termStructureHandle_));
         payIndex_->unregisterWith(termStructureHandle_);
-        discountRelinkableHandle_.linkTo(*termStructureHandle_, false);
+        //discountRelinkableHandle_.linkTo(*termStructureHandle_, false);
+        discountRelinkableHandle_.linkTo(*receiveIndex_->forwardingTermStructure());
     } else if (!payGiven && recGiven && discountGiven) {
         // case 3
         payIndex_ = boost::static_pointer_cast<IborIndex>(payIndex_->clone(termStructureHandle_));
@@ -84,6 +85,7 @@ TenorBasisSwapHelper::TenorBasisSwapHelper(Handle<Quote> spread, const Period& s
         receiveIndex_->unregisterWith(termStructureHandle_);
     } else if (payGiven && recGiven && !discountGiven) {
         // case 6
+        //TODO this case won't work ... "empty Handle cannot be dereferenced"
         discountRelinkableHandle_.linkTo(*termStructureHandle_, false);
     } else if (payGiven && recGiven && discountGiven) {
         // case 7
@@ -101,7 +103,7 @@ TenorBasisSwapHelper::TenorBasisSwapHelper(Handle<Quote> spread, const Period& s
 
 void TenorBasisSwapHelper::initializeDates() {
 
-    //CHECK : should the spot shift be based on pay ore receive, here we have th pay leg... 
+    //CHECK : should the spot shift be based on pay ore receive, here we have the pay leg... 
     boost::shared_ptr<Libor> payIndexAsLibor = boost::dynamic_pointer_cast<Libor>(payIndex_);
     Calendar spotCalendar = payIndexAsLibor != NULL ? payIndexAsLibor->jointCalendar() : payIndex_->fixingCalendar();
     Natural spotDays = payIndex_->fixingDays();
