@@ -3,6 +3,8 @@ name: C/C++ CI Windows
 on:
   push:
     branches: [master]
+  release:
+   types: [published]
   pull_request:
     branches: [master]
     types: [ready_for_review, opened, synchronize, reopened]
@@ -23,6 +25,15 @@ jobs:
   build:
     name: building
     runs-on: windows-2022
+    strategy:
+      matrix:
+        include:
+          - arch: x86
+            platform: Win32
+            boost-lib: 32
+          - arch: AMD64
+            platform: x64
+            boost-lib: 64
     steps:
     - uses: actions/checkout@v3
     - name: get QuantLib
@@ -30,7 +41,7 @@ jobs:
         git submodule update --init
     - name: Set up Boost
       run: |
-        $Url = "https://boostorg.jfrog.io/artifactory/main/release/1.72.0/binaries/boost_1_72_0-msvc-14.2-64.exe"
+        $Url = "https://boostorg.jfrog.io/artifactory/main/release/1.72.0/binaries/boost_1_72_0-msvc-14.2-${{ matrix.boost-lib }}.exe"
         (New-Object System.Net.WebClient).DownloadFile($Url, "$env:TEMP\boost.exe")
         Start-Process -Wait -FilePath "$env:TEMP\boost.exe" "/SILENT","/SP-","/SUPPRESSMSGBOXES","/DIR=C:\local\boost"
         choco install -y ninja
@@ -44,3 +55,9 @@ jobs:
         call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Vc\Auxiliary\Build\vcvarsall.bat" amd64 -vcvars_ver=14.3 || exit 1
         cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DQL_BUILD_EXAMPLES=false -DQL_BUILD_TEST_SUITE=false -DQL_BUILD_BENCHMARK=false -DQL_ENABLE_SESSIONS=true -DORE_BUILD_DOC=false -DBOOST_INCLUDEDIR=C:\local\boost -DBOOST_LIBRARYDIR=C:\local\boost\lib64-msvc-14.3 -L
         cmake --build . -j 2 --verbose
+    - name: Save executables as artifacts
+      #if: startsWith(github.ref, 'refs/tags/v')
+      uses: actions/upload-artifact@v3
+      with:
+        name: ore-exe-windows
+        path: D:\a\Engine\Engine\build\App\ore.exe
