@@ -119,7 +119,7 @@ void DoubleOIBSHelper::initializeDates() {
                                 .forwards();
     swap_ = boost::shared_ptr<DoubleOvernightIndexedBasisSwap>(
         new DoubleOvernightIndexedBasisSwap(10000.0, // arbitrary
-                                      paySchedule, payIndex_, recSchedule, recIndex_, 0.0, 0.0, true));
+                                            paySchedule, payIndex_, recSchedule, recIndex_, 0.0, 0.0, true, true));
     boost::shared_ptr<PricingEngine> engine(
         new DiscountingSwapEngine(discount_.empty() ? discountRelinkableHandle_ : discount_));
     swap_->setPricingEngine(engine);

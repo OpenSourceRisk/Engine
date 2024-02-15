@@ -28,11 +28,11 @@ namespace QuantExt {
 OvernightIndexedBasisSwap::OvernightIndexedBasisSwap(Type type, Real nominal, const Schedule& oisSchedule,
                                                      const boost::shared_ptr<OvernightIndex>& overnightIndex,
                                                      const Schedule& iborSchedule,
-                                                     const boost::shared_ptr<IborIndex>& iborIndex, Spread oisSpread,
-                                                     Spread iborSpread, const bool telescopicValueDates)
+                                                     const boost::shared_ptr<IborIndex>& iborIndex, const bool spreadOnShort,
+                                                     Spread oisSpread, Spread iborSpread, const bool telescopicValueDates)
     : Swap(2), type_(type), nominals_(std::vector<Real>(1, nominal)), oisSchedule_(oisSchedule),
-      overnightIndex_(overnightIndex), iborSchedule_(iborSchedule), iborIndex_(iborIndex), oisSpread_(oisSpread),
-      iborSpread_(iborSpread), telescopicValueDates_(telescopicValueDates) {
+      overnightIndex_(overnightIndex), iborSchedule_(iborSchedule), iborIndex_(iborIndex), spreadOnShort_(spreadOnShort),
+      oisSpread_(oisSpread), iborSpread_(iborSpread), telescopicValueDates_(telescopicValueDates) {
 
     initialize();
 }
@@ -40,12 +40,11 @@ OvernightIndexedBasisSwap::OvernightIndexedBasisSwap(Type type, Real nominal, co
 OvernightIndexedBasisSwap::OvernightIndexedBasisSwap(Type type, std::vector<Real> nominals, const Schedule& oisSchedule,
                                                      const boost::shared_ptr<OvernightIndex>& overnightIndex,
                                                      const Schedule& iborSchedule,
-                                                     const boost::shared_ptr<QuantLib::IborIndex>& iborIndex,
-                                                     Spread oisSpread, Spread iborSpread,
-                                                     const bool telescopicValueDates)
+                                                     const boost::shared_ptr<QuantLib::IborIndex>& iborIndex, const bool spreadOnShort,
+                                                     Spread oisSpread, Spread iborSpread, const bool telescopicValueDates)
     : Swap(2), type_(type), nominals_(nominals), oisSchedule_(oisSchedule), overnightIndex_(overnightIndex),
-      iborSchedule_(iborSchedule), iborIndex_(iborIndex), oisSpread_(oisSpread), iborSpread_(iborSpread),
-      telescopicValueDates_(telescopicValueDates) {
+      iborSchedule_(iborSchedule), iborIndex_(iborIndex), spreadOnShort_(spreadOnShort),
+      oisSpread_(oisSpread), iborSpread_(iborSpread), telescopicValueDates_(telescopicValueDates) {
 
     initialize();
 }

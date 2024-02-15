@@ -125,6 +125,9 @@
 \newcommand{\SCVA}{\mathit{SCVA}}
 \newcommand{\bs}{\textbackslash}
 \newcommand{\REDY}{\color{red}Y}
+\newcommand{\IA}{\mathit{IA}}
+\newcommand{\Th}{\mathit{TH}}
+\newcommand{\CSA}{\mathit{CSA}}
 
 \begin{document}
 
@@ -5772,15 +5775,18 @@ within the enclosing tags {\tt <Market>} and {\tt </Market>}, as shown in the fo
 It should be noted that equity volatilities are taken to be a curve by default. To simulate an equity volatility surface with smile the xml node {\tt <Surface> } must be supplied.
 There are two methods in ORE for equity volatility simulation: 
 \begin{itemize}
-\item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this case set {\tt <SimulateATMOnly>} to true.
-\item Simulating the full volatility surface. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and explicit moneyness levels for simulation should be provided.
+\item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this
+  case set {\tt <SimulateATMOnly>} to true and no surface node is given.
+\item Simulating the full volatility surface. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and
+  explicit moneyness levels for simulation should be provided.
 \end{itemize}
 
 Swaption volatilities are taken to be a surface by default. To simulate a swaption volatility cube with smile the xml node {\tt <Cube> } must be supplied.
 There are two methods in ORE for swaption volatility cube simulation: 
 \begin{itemize}
 \item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this case set {\tt <SimulateATMOnly>} to true.
-\item Simulating the full volatility cube. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and explicit strike spreads for simulation should be provided.
+\item Simulating the full volatility cube. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and
+  explicit strike spreads for simulation should be provided.
 \end{itemize}
 
 FX volatilities are taken to be a curve by default. To simulate an FX volatility cube with smile the xml node {\tt <Surface> } must be supplied. The surface node contains the moneyness levels to be simulated.
@@ -5862,8 +5868,8 @@ StickyStrike.
     </Currencies>
     <Expiries>6M,1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Expiries>
     <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
+    <SimulateATMOnly>false</SimulateATMOnly>
     <Cube>
-     <SimulateATMOnly>false</SimulateATMOnly>
      <StrikeSpreads>-0.02,-0.01,0.0,0.01,0.02</StrikeSpreads>
     </Cube>
     <!-- Sets a new daycounter for just the EUR swaptionVolatility surface -->
@@ -5896,9 +5902,9 @@ StickyStrike.
         <Name>Lufthansa</Name>
       </Names>
       <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
+      <SimulateATMOnly>false</SimulateATMOnly>
       <Surface>
-        <SimulateATMOnly>false</SimulateATMOnly><!-- false -->
-        <Moneyness>0.1,0.5,1.0,1.5,2.0,3.0</Moneyness><!-- omitted if SimulateATMOnly true -->
+        <Moneyness>0.1,0.5,1.0,1.5,2.0,3.0</Moneyness>
       </Surface>
       <TimeExtrapolation>Flat</TimeExtrapolation>
       <StrikeExtrapolation>Flat</StrikeExtrapolation>
@@ -7546,28 +7552,31 @@ ORE computes the collateral requirement (aka \emph{Credit Support Amount}) throu
 \begin{align}\label{eq:CSA}
 CSA(t_m) &= 
 \begin{cases}
-\max(0, V_{set}(t_m) - I_A - T_{hold}),& V_{set}(t_m) - I_A \ge 0 \\
-\min(0, V_{set}(t_m) - I_A + T_{hold}),& V_{set}(t_m) - I_A < 0
+\max(0, \NPV(t_m) + \IA - \Th_{rec}),& \NPV(t_m) + \IA \ge 0 \\
+\min(0, \NPV(t_m) + \IA + \Th_{pay}),& \NPV(t_m) + \IA < 0
 \end{cases}
 \end{align}
 where
 \begin{itemize}
-\item $V_{set}(t_m)$ is the value of the netting set as of
-  time $t_m$,
-  \item $T_{hold}$ is the threshold exposure below which no collateral is
-  required (possibly asymmetric),
+\item $\NPV(t_m)$ is the value of the netting set as of
+  time $t_m$ from our persepctive,
+  \item $\Th_{rec}$ is the threshold exposure below which we do not 
+  require collateral, likewise $\TH_{pay}$ is the threshold that applies to collateral posted to the counterparty,
 %\item $MTA$ is the minimum transfer amount for collateral margin
 %  flow requests (possibly asymmetric)
-\item $I_A$ is the sum of all collateral independent amounts attached to
-  the underlying portfolio of trades (positive amounts imply that the bank
-  has received a net inflow of independent amounts from the
+\item $\IA$ is the sum of all collateral independent amounts attached to
+  the underlying portfolio of trades (positive amounts imply that we
+  have received a net inflow of independent amounts from the
   counterparty), assumed here to be cash.
 \end{itemize}
 
 As the collateral account already has a value of $C(t_m)$ at time $t_m$, the collateral shortfall is simply the
-difference between $C(t_m)$ and $CSA(t_m)$. However, we also need to account for the possibility that margin calls
+difference between $C(t_m)$ and $\CSA(t_m)$. However, we also need to account for the possibility that margin calls
 issued in the past have not yet been settled (for instance, because of disputes). If $M(t_m)$ denotes the net value of
-all outstanding margin calls at $t_m$, and $\Delta(t)$ is the difference $\Delta(t) = CSA(t_m) - C(t_m) - M(t_m)$
+all outstanding margin calls at $t_m$, and $\Delta(t)$ is the difference 
+$$
+\Delta(t) = \CSA(t_m) - C(t_m) - M(t_m)
+$$
 between the {\em Credit Support Amount} and the current and outstanding collateral, then the actual margin
 \emph{Delivery Amount} $D(t_m)$ is calculated as follows:
 \begin{align}\label{eq:DA}
@@ -7577,7 +7586,18 @@ D(t_m) &=
 0,& \left| \Delta(t) \right| < MTA
 \end{cases}
 \end{align}
-where $MTA$ is the minimum transfer amount.
+where $MTA$ is the minimum transfer amount. 
+
+Consider the upper case of \eqref{eq:CSA}: If the initial value of the netting set is zero ($\NPV(t_0)=0$) and 
+if $\Th_{rec}=0$, but the combined $\IA>0$, then the Credit Support Amount equals the Independent Amount, $\CSA(t_0)=\IA$.
+If moreover the initial collateral balance is zero (because the Independent Amount has not been received yet),
+then $\Delta(t_0)=\CSA(t_0)=\IA$, and the delivery amount $D(t_0)$ also matches the $\IA$ (assuming this exceeds the MTA),
+so that the next call leads to the transfer of the Independent Amount to us. For a positive $\Th_{rec}>0$, the transfer to us is reduced accordingly.
+In that case we can view the Independent Amount as an offset to the threshold.
+
+Consider the lower case of \eqref{eq:CSA}: If the netting set value is negative from our perspective and in absolute terms larger than the $\IA$, 
+then the Credit Support Amount is just the negative difference $\CSA=-|\NPV| + \IA + \Th_{pay}$ so that we need to post collateral, but only the amount 
+beyond the combined threshold $\IA + \Th_{pay}$.
 
 \subsubsection{Margin Period of Risk} \label{sec:mpor}
 After a counterparty defaults, it takes time to close out the portfolio. During this time period the portfolio value will change upon market conditions, therefore the portfolio's close-out value is subject to market risk, which is referred also as the close-out risk and the corresponding close-out period is called as the {\em Margin Period of Risk} (MPoR).  

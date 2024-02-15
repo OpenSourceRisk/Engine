@@ -75,8 +75,14 @@ public:
             path_ = nextPath();
             pathStep_ = 0;
         }
-        QL_REQUIRE(pathStep_ < dates_.size() && d == dates_[pathStep_], "step mismatch");
-        return path_[pathStep_++]; // post increment
+        QL_REQUIRE(pathStep_ < dates_.size(), "step mismatch");
+        if(d == dates_[pathStep_]){
+            return path_[pathStep_++]; // post increment
+        } else{
+            auto it = std::find(dates_.begin(), dates_.end(), d);
+            QL_REQUIRE(it != dates_.end(), "invalid date " << d);
+            return path_[std::distance(dates_.begin(), it)];
+        }
     }
 
 protected:
