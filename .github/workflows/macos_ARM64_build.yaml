@@ -37,9 +37,6 @@ jobs:
         ./bootstrap.sh
         ./b2 architecture=arm address-model=64 -s NO_LZMA=1 -s NO_ZSTD=1 abi=aapcs install
     - name: cmake configure and build
-      env:
-        BOOST_ROOT: C:\local\boost
-      shell: cmd
       run: |
         mkdir build
         cd build
