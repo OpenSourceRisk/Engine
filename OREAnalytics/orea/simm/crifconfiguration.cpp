@@ -20,8 +20,6 @@
     \brief CRIF configuration interface
 */
 
-#pragma once
-
 #include <boost/algorithm/string/predicate.hpp>
 #include <orea/simm/crifconfiguration.hpp>
 #include <qle/indexes/ibor/termrateindex.hpp>
@@ -52,13 +50,13 @@ string periodToLabels2(const QuantLib::Period& p) {
     }
 }
 
-std::string CrifConfiguration::labels2(const QuantLib::Period& p) const {
+std::string CrifConfiguration::label2(const QuantLib::Period& p) const {
     std::string label2 = periodToLabels2(p);
     QL_REQUIRE(!label2.empty(), "Could not determine SIMM Label2 for period " << p);
     return label2;
 }
 
-std::string CrifConfiguration::labels2(const boost::shared_ptr<QuantLib::InterestRateIndex>& irIndex) const {
+std::string CrifConfiguration::label2(const boost::shared_ptr<QuantLib::InterestRateIndex>& irIndex) const {
     std::string label2;
     if (boost::algorithm::starts_with(irIndex->name(), "BMA")) {
         // There was no municipal until later so override this in

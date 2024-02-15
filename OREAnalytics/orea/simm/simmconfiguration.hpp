@@ -127,12 +127,6 @@ public:
         return (less_than(pc1, pc2) ? pc2 : pc1);
     }
 
-    //! Returns the SIMM configuration name
-    virtual const std::string& name() const = 0;
-
-    //! Returns the SIMM configuration version
-    virtual const std::string& version() const = 0;
-
     //! Returns the SIMM bucket mapper used by the configuration
     virtual const boost::shared_ptr<SimmBucketMapper>& bucketMapper() const = 0;
 
@@ -142,6 +136,12 @@ public:
 
     //! Return true if the SIMM risk type \p rt has buckets
     virtual bool hasBuckets(const CrifRecord::RiskType& rt) const = 0;
+
+    //! Return true if the SIMM risk type \p rt has buckets
+    bool hasBucketMapping(const CrifRecord::RiskType& rt, const std::string& qualifier) const override {
+        return bucketMapper()->has(rt, qualifier);
+    }
+
 
     //! Return the list of SIMM <em>Label1</em> values for risk type \p rt
     //! An empty vector is returned if the risk type does not use <em>Label1</em>

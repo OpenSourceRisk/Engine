@@ -1298,14 +1298,14 @@ void SimmConfiguration_ISDA_V2_5A::addLabels2(const RiskType& rt, const string& 
     SimmConfigurationBase::addLabels2Impl(rt, label_2);
 }
 
-string SimmConfiguration_ISDA_V2_5A::labels2(const boost::shared_ptr<InterestRateIndex>& irIndex) const {
+string SimmConfiguration_ISDA_V2_5A::label2(const boost::shared_ptr<InterestRateIndex>& irIndex) const {
     // Special for BMA
     if (boost::algorithm::starts_with(irIndex->name(), "BMA")) {
         return "Municipal";
     }
 
     // Otherwise pass off to base class
-    return SimmConfigurationBase::labels2(irIndex);
+    return SimmConfigurationBase::label2(irIndex);
 }
 
 } // namespace analytics

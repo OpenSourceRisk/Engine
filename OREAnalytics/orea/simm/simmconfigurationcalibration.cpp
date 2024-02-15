@@ -360,14 +360,14 @@ void SimmConfigurationCalibration::addLabels2(const RiskType& rt, const string& 
     SimmConfigurationBase::addLabels2Impl(rt, label_2);
 }
 
-string SimmConfigurationCalibration::labels2(const boost::shared_ptr<InterestRateIndex>& irIndex) const {
+string SimmConfigurationCalibration::label2(const boost::shared_ptr<InterestRateIndex>& irIndex) const {
     // Special for BMA
     if (boost::algorithm::starts_with(irIndex->name(), "BMA")) {
         return "Municipal";
     }
 
     // Otherwise pass off to base class
-    return SimmConfigurationBase::labels2(irIndex);
+    return SimmConfigurationBase::label2(irIndex);
 }
 
 } // namespace analytics

@@ -23,6 +23,7 @@
 #pragma once
 
 #include <orea/scenario/scenario.hpp>
+#include <orea/simm/crifrecord.hpp>
 #include <ql/indexes/interestrateindex.hpp>
 #include <ql/time/period.hpp>
 #include <string>
@@ -31,17 +32,25 @@ namespace ore {
 namespace analytics {
 
 class CrifConfiguration {
-public:
-    virtual ~CrifConfiguration();
+public:    
+    virtual ~CrifConfiguration() {};
 
     //virtual bool isValidSensitivity(const ore::analytics::RiskFactorKey::KeyType& rfkey) const = 0;
+
+    //! Returns the SIMM configuration name
+    virtual const std::string& name() const = 0;    
+
+    //! Returns the SIMM configuration version
+    virtual const std::string& version() const = 0;
 
     /*! Return the CRIF <em>bucket</em> name for the given risk type \p rt
         and \p qualifier
 
         \warning Throws an error if there are no buckets for the risk type \p rt
     */
-    virtual std::string bucket(const CrifRecord::RiskType& rt, const std::string& qualifier) const = 0;
+    virtual std::string bucket(const ore::analytics::CrifRecord::RiskType& rt, const std::string& qualifier) const = 0;
+
+    virtual bool hasBucketMapping(const ore::analytics::CrifRecord::RiskType& rt, const std::string& qualifier) const = 0;
 
     /*! Return the CRIF <em>Label2</em> value for the given interest rate index
         \p irIndex. For interest rate indices, this is the CRIF sub curve name
@@ -52,7 +61,7 @@ public:
     /*! Return the CRIF <em>Label2</em> value for the given Libor tenor
         \p p. This is the CRIF sub curve name, e.g. 'Libor1m', 'Libor3m' etc.
     */
-    virtual std::string label2(const QuantLib::Period& p) const = 0;
+    virtual std::string label2(const QuantLib::Period& p) const;
 };
 } // namespace analytics
 } // namespace ore
