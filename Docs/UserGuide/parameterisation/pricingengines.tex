@@ -106,7 +106,7 @@ The parameters have the following meaning:
     </EngineParameters>
 </Product>
 \end{minted}
-\caption{Configuration for Product CommoditySpreadOption, Model BlackScholes, Engine CpiCapEngine}
+\caption{Configuration for Product CpiCapFloor, Model CpiCapModel, Engine CpiCapEngine}
 \label{lst:peconfig_CpiCapFloor_CpiCapModel_CpiCapEngine}
 \end{longlisting}
 
@@ -570,6 +570,83 @@ The parameters have the following meaning:
 \end{minted}
 \caption{Configuration for Product CommoditySpreadOption, Model BlackScholes, Engine CommoditySpreadOptionEngine}
 \label{lst:peconfig_CommoditySpreadOption_BlackScholes_CommoditySpreadOptionEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CommoditySwaption}
+%--------------------------------------------------------
+
+Used by trade type: CommoditySwaption
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item Black/AnalyticalApproximation
+\item Black/MonteCarlo
+\end{itemize}
+
+Engine description:
+
+Black/AnalyticalApproximation builds a CommoditySwaptionEngine using moment matching. The correlation between two future
+contracts is parametrized as
+
+$$\rho(s, t) = e^{-\beta |s-t|}$$
+
+where $s$ and $t$ are times to futures expiry. A sample configuration is shown in listing
+\ref{lst:peconfig_CommoditySwaption_Black_AnalyticalApproximation}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item beta: the parameter ``beta'' in the correlation parametrization
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommoditySwaption">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>AnalyticalApproximation</Engine>
+    <EngineParameters>
+        <Parameter name="beta">2.05</Parameter>
+        <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CommoditySwaption, Model Black, Engine AnalyticalApproximation}
+\label{lst:peconfig_CommoditySwaption_Black_AnalyticalApproximation}
+\end{longlisting}
+
+Black/MonteCarlo builds a CommoditySwaptionMonteCarloEngine using Sobol sequences. The same correlation parametrization
+as above is used. A sample configuration is shown in listing
+\ref{lst:peconfig_CommoditySwaption_Black_MonteCarlo}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item beta: the parameter ``beta'' in the correlation parametrization
+\item samples: the number of MC samples to use
+\item seed: the seed to use
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommoditySwaption">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>MonteCarlo</Engine>
+    <EngineParameters>
+        <Parameter name="beta">2.05</Parameter>
+        <Parameter name="samples">10000</Parameter>
+        <Parameter name="seed">42</Parameter>    
+        <Parameter name="SensitivityTemplate">COMM_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CommoditySwaption, Model Black, Engine MonteCarlo}
+\label{lst:peconfig_CommoditySwaption_Black_MonteCarlo}
 \end{longlisting}
     
 %--------------------------------------------------------
@@ -1689,6 +1766,7 @@ The parameters have the following meaning:
 \caption{Configuration for Product FxDigitalOptionEuropeanCS, Model GarmanKohlhagen, Engine AnalyticCashSettledEuropeanEngine}
 \label{lst:peconfig_FxDigitalOptionEuropeanCS_GarmanKohlhagen_AnalyticCashSettledEuropeanEngine}
 \end{longlisting}
+
 
 % ===================== template ========================
 
