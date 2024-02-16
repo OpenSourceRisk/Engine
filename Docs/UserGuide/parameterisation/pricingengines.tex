@@ -5,49 +5,72 @@
 
 The pricing engine configuration file is provided to select pricing models and pricing engines by product type.
 
-
 %--------------------------------------------------------
-\subsubsection{Product Type: CommoditySpreadOption}
+\subsubsection{Product Type: BondTRS}
 %--------------------------------------------------------
 
-Used by trade type: CommoditySpreadOption
+Used by trade type: BondTRS
 
-Available Model/Engine pairs: BlackScholes/CommoditySpreadOptionEngine
+Available Model/Engine pairs: DiscountedCashflows/DiscountingBondTRSEngine
 
 Engine description:
 
-BlackScholes/CommoditySpreadOptionEngine builds a CommoditySpreadOptionAnalyticalEngine, which uses the Kirk
-approximation described in Iain J. Clark, Commodity Option Pricing, Section 2.9. The correlation between two commodities
-resp. the intra-asset correlation between two future contracts is parametrized as
-
-$$\rho(s, t) = e^{-\beta |s-t|}$$
-
-where $s$ and $t$ are times to futures expiry. A sample configuration is shown in listing
-\ref{lst:peconfig_CommoditySpreadOption_BlackScholes_CommoditySpreadOptionEngine}.
+DiscountedCashflows/DiscountingBondTRSEngine builds a DisountingBondTRSEngine. A sample configuration is shown in listing \ref{lst:peconfig_BondTRS_DiscountedCashflows_DiscountedCashflows/DiscountingBondTRSEngine}.
 
 The parameters have the following meaning:
 
 \begin{itemize}
-\item beta: the parameter ``beta'' in the correlation parametrization
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \end{itemize}
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
-<Product type="CommoditySpreadOption">
-    <Model>BlackScholes</Model>
+<Product type="BondTRS">
+    <Model>DiscountedCashflows</Model>
     <ModelParameters/>
-    <Engine>CommoditySpreadOptionEngine</Engine>
+    <Engine>DiscountingBondTRSEngine</Engine>
     <EngineParameters>
-        <Parameter name="beta">2.05</Parameter>
-        <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
     </EngineParameters>
-    </Product>
+</Product>
 \end{minted}
-\caption{Configuration for Product CommoditySpreadOption, Model BlackScholes, Engine CommoditySpreadOptionEngine}
-\label{lst:peconfig_CommoditySpreadOption_BlackScholes_CommoditySpreadOptionEngine}
+\caption{Configuration for Product BondTRS , Model DiscountedCashflows, Engine DiscountingBondTRSEngine}
+\label{lst:peconfig_BondTRS_DiscountedCashflows_DiscountedCashflows/DiscountingBondTRSEngine}
 \end{longlisting}
-    
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CapFloor}
+%--------------------------------------------------------
+
+Used by trade type: CapFloor on underlying Ibor with subperiods (all other underlying use their respective coupon pricers)
+
+Available Model/Engine pairs: IborCapModel/IborCapEngine
+
+Engine description:
+
+IborCapModel/IborCapEngine builds a BlackCapFloorEngine or BachelierCapFloorEngine depending on the input volatility
+type. A sample configuration is shown in listing \ref{lst:peconfig_CapFloor_IborCapModel_IborCapEngine}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CapFloor">
+    <Model>IborCapModel</Model>
+    <ModelParameters/>
+    <Engine>IborCapEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CapFloor, Model IborCapModel, Engine IborCapEngine}
+\label{lst:peconfig_lst:peconfig_CapFloor_IborCapModel_IborCapEngine}
+\end{longlisting}
 
 %--------------------------------------------------------
 \subsubsection{Product Type: CpiCapFloor}
@@ -86,76 +109,6 @@ The parameters have the following meaning:
 \caption{Configuration for Product CommoditySpreadOption, Model BlackScholes, Engine CpiCapEngine}
 \label{lst:peconfig_CpiCapFloor_CpiCapModel_CpiCapEngine}
 \end{longlisting}
-
-
-%--------------------------------------------------------
-\subsubsection{Product Type: EquityFutureOption}
-%--------------------------------------------------------
-
-Used by trade type: EquityFuturesOption
-
-Available Model/Engine pairs: BlackScholes/AnalyticEuroepanForwardEngine
-
-Engine description:
-
-BlackScholes/AnalyticEuroepanForwardEngine builds a AnalyticEuropeanForwardEngine. A sample configuration is shown in
-listing \ref{lst:peconfig_EquityFutureOption_BlackScholes_AnalyticEuropeanForwardEngine}
-
-The parameters have the following meaning:
-
-\begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
-\end{itemize}
-
-\begin{longlisting}
-\begin{minted}[fontsize=\footnotesize]{xml}
-  <Product type="EquityFutureOption">
-    <Model>BlackScholes</Model>
-    <ModelParameters />
-    <Engine>AnalyticEuropeanForwardEngine</Engine>
-    <EngineParameters>
-        <Parameter name="SensitivityTemplate">COM_Analytical</Parameter>
-    </EngineParameters>
-  </Product>
-\end{minted}
-\caption{Configuration for Product EquiytFutureOption, Model BlackScholes, Engine AnalyticEuropeanForwardEngine}
-\label{lst:peconfig_EquityFutureOption_BlackScholes_AnalyticEuropeanForwardEngine}
-\end{longlisting}
-
-
-%--------------------------------------------------------
-\subsubsection{Product Type: BondTRS}
-%--------------------------------------------------------
-
-Used by trade type: BondTRS
-
-Available Model/Engine pairs: DiscountedCashflows/DiscountingBondTRSEngine
-
-Engine description:
-
-DiscountedCashflows/DiscountingBondTRSEngine builds a DisountingBondTRSEngine. A sample configuration is shown in listing \ref{lst:peconfig_BondTRS_DiscountedCashflows_DiscountedCashflows/DiscountingBondTRSEngine}.
-
-The parameters have the following meaning:
-
-\begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
-\end{itemize}
-
-\begin{longlisting}
-\begin{minted}[fontsize=\footnotesize]{xml}
-<Product type="BondTRS">
-    <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
-    <Engine>DiscountingBondTRSEngine</Engine>
-    <EngineParameters>
-        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
-    </EngineParameters>
-</Product>
-\end{minted}
-\caption{Configuration for Product BondTRS , Model DiscountedCashflows, Engine DiscountingBondTRSEngine}
-\label{lst:peconfig_BondTRS_DiscountedCashflows_DiscountedCashflows/DiscountingBondTRSEngine}
-\end{longlisting}
-
 
 %--------------------------------------------------------
 \subsubsection{Product Type: CommodityAsianOptionArithmeticPrice}
@@ -204,7 +157,7 @@ The parameters have the following meaning:
         <Parameter name="RequiredTolerance">0</Parameter>    
         <Parameter name="MaxSamples">0</Parameter>    
         <Parameter name="Seed">42</Parameter>    
-        <Parameter name="SensitivityTemplate">COM_MC</Parameter>
+        <Parameter name="SensitivityTemplate">COMM_MC</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -228,7 +181,7 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>TurnbullWakemanAsianEngine</Engine>
     <EngineParameters>
-        <Parameter name="SensitivityTemplate">COM_Analytical</Parameter>
+        <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -253,7 +206,7 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>ScriptedTrade</Engine>
     <EngineParameters>
-        <Parameter name="SensitivityTemplate">COM_MC</Parameter>
+        <Parameter name="SensitivityTemplate">COMM_MC</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -308,7 +261,7 @@ The parameters have the following meaning:
         <Parameter name="RequiredTolerance">0</Parameter>    
         <Parameter name="MaxSamples">0</Parameter>    
         <Parameter name="Seed">42</Parameter>    
-        <Parameter name="SensitivityTemplate">COM_MC</Parameter>
+        <Parameter name="SensitivityTemplate">COMM_MC</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -333,7 +286,7 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>ScriptedTrade</Engine>
     <EngineParameters>
-        <Parameter name="SensitivityTemplate">COM_MC</Parameter>
+        <Parameter name="SensitivityTemplate">COMM_MC</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -389,7 +342,7 @@ The parameters have the following meaning:
         <Parameter name="RequiredTolerance">0</Parameter>    
         <Parameter name="MaxSamples">0</Parameter>    
         <Parameter name="Seed">42</Parameter>    
-        <Parameter name="SensitivityTemplate">COM_MC</Parameter>
+        <Parameter name="SensitivityTemplate">COMM_MC</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -414,7 +367,7 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>AnalyticDiscreteGeometricAPEngine</Engine>
     <EngineParameters>
-        <Parameter name="SensitivityTemplate">COM_Analytical</Parameter>
+        <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -439,7 +392,7 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>AnalyticContinuousGeometricAPEngine</Engine>
     <EngineParameters>
-        <Parameter name="SensitivityTemplate">COM_Analytical</Parameter>
+        <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -464,7 +417,7 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>ScriptedTrade</Engine>
     <EngineParameters>
-        <Parameter name="SensitivityTemplate">COM_MC</Parameter>
+        <Parameter name="SensitivityTemplate">COMM_MC</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -519,7 +472,7 @@ The parameters have the following meaning:
         <Parameter name="RequiredTolerance">0</Parameter>    
         <Parameter name="MaxSamples">0</Parameter>    
         <Parameter name="Seed">42</Parameter>    
-        <Parameter name="SensitivityTemplate">COM_MC</Parameter>
+        <Parameter name="SensitivityTemplate">COMM_MC</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -544,7 +497,7 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>AnalyticDiscreteGeometricASEngine</Engine>
     <EngineParameters>
-        <Parameter name="SensitivityTemplate">COM_Analytical</Parameter>
+        <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -569,7 +522,7 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>ScriptedTrade</Engine>
     <EngineParameters>
-        <Parameter name="SensitivityTemplate">COM_MC</Parameter>
+        <Parameter name="SensitivityTemplate">COMM_MC</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -577,6 +530,48 @@ The parameters have the following meaning:
 \label{lst:peconfig_CommodityAsianOptionGeometricStrike_ScriptedTrade_ScriptedTrade}
 \end{longlisting}
 
+%--------------------------------------------------------
+\subsubsection{Product Type: CommoditySpreadOption}
+%--------------------------------------------------------
+
+Used by trade type: CommoditySpreadOption
+
+Available Model/Engine pairs: BlackScholes/CommoditySpreadOptionEngine
+
+Engine description:
+
+BlackScholes/CommoditySpreadOptionEngine builds a CommoditySpreadOptionAnalyticalEngine, which uses the Kirk
+approximation described in Iain J. Clark, Commodity Option Pricing, Section 2.9. The correlation between two commodities
+resp. the intra-asset correlation between two future contracts is parametrized as
+
+$$\rho(s, t) = e^{-\beta |s-t|}$$
+
+where $s$ and $t$ are times to futures expiry. A sample configuration is shown in listing
+\ref{lst:peconfig_CommoditySpreadOption_BlackScholes_CommoditySpreadOptionEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item beta: the parameter ``beta'' in the correlation parametrization
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommoditySpreadOption">
+    <Model>BlackScholes</Model>
+    <ModelParameters/>
+    <Engine>CommoditySpreadOptionEngine</Engine>
+    <EngineParameters>
+        <Parameter name="beta">2.05</Parameter>
+        <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+    </EngineParameters>
+    </Product>
+\end{minted}
+\caption{Configuration for Product CommoditySpreadOption, Model BlackScholes, Engine CommoditySpreadOptionEngine}
+\label{lst:peconfig_CommoditySpreadOption_BlackScholes_CommoditySpreadOptionEngine}
+\end{longlisting}
+    
 %--------------------------------------------------------
 \subsubsection{Product Type: EquityAsianOptionArithmeticPrice}
 %--------------------------------------------------------
@@ -998,6 +993,40 @@ The parameters have the following meaning:
 \end{longlisting}
 
 %--------------------------------------------------------
+\subsubsection{Product Type: EquityFutureOption}
+%--------------------------------------------------------
+
+Used by trade type: EquityFuturesOption
+
+Available Model/Engine pairs: BlackScholes/AnalyticEuroepanForwardEngine
+
+Engine description:
+
+BlackScholes/AnalyticEuroepanForwardEngine builds a AnalyticEuropeanForwardEngine. A sample configuration is shown in
+listing \ref{lst:peconfig_EquityFutureOption_BlackScholes_AnalyticEuropeanForwardEngine}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Product type="EquityFutureOption">
+    <Model>BlackScholes</Model>
+    <ModelParameters />
+    <Engine>AnalyticEuropeanForwardEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+\end{minted}
+\caption{Configuration for Product EquiytFutureOption, Model BlackScholes, Engine AnalyticEuropeanForwardEngine}
+\label{lst:peconfig_EquityFutureOption_BlackScholes_AnalyticEuropeanForwardEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
 \subsubsection{Product Type: FxAsianOptionArithmeticPrice}
 %--------------------------------------------------------
 
@@ -1415,6 +1444,250 @@ The parameters have the following meaning:
 \end{minted}
 \caption{Configuration for Product FxAsianOptionGeometricStrike, Model ScriptedTrade, Engine ScriptedTrade}
 \label{lst:peconfig_FxAsianOptionGeometricStrike_ScriptedTrade_ScriptedTrade}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CommodityOption}
+%--------------------------------------------------------
+
+Used by trade type: CommodityOption
+
+Available Model/Engine pairs: BlackScholes/AnalyticEuropeanEngine
+
+Engine description:
+
+BlackScholes/AnalyticEuropeanEngine builds a AnalyticEuropeanEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_CommodityOption_BlackScholes_AnalyticEuropeanEngine}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommodityOption">
+    <Model>BlackScholes</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CommodityOption, Model BlackScholes, Engine AnalyticEuropeanEngine}
+\label{lst:peconfig_CommodityOption_BlackScholes_AnalyticEuropeanEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CommodityOptionForward}
+%--------------------------------------------------------
+
+Used by trade type: CommodityOption if a future is referenced
+
+Available Model/Engine pairs: BlackScholes/AnalyticEuropeanForwardEngine
+
+Engine description:
+
+BlackScholes/AnalyticEuropeanForwardEngine builds a AnalyticEuropeanForwardEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_CommodityOptionForward_BlackScholes_AnalyticForwardEuropeanEngine}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommodityOptionForward">
+    <Model>BlackScholes</Model>
+    <ModelParameters/>
+    <Engine>AnalyticForwardEuropeanEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CommodityOptionForward, Model BlackScholes, Engine AnalyticForwardEuropeanEngine}
+\label{lst:peconfig_CommodityOptionForward_BlackScholes_AnalyticForwardEuropeanEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CommodityOptionEuropeanCS}
+%--------------------------------------------------------
+
+Used by trade type: CommodityOption if cash settled
+
+Available Model/Engine pairs: BlackScholes/AnalyticCashSettledEuropeanEngine
+
+Engine description:
+
+BlackScholes/AnalyticCashSettledEuropeanEngine builds a AnalyticCashSettledEuropeanEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_CommodityOptionEuropeanCS_BlackScholes_AnalyticCashSettledEuropeanEngine}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommodityOptionEuropeanCS">
+    <Model>BlackScholes</Model>
+    <ModelParameters/>
+    <Engine>AnalyticCashSettledEuropeanEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CommodityOptionEuropeanCS, Model BlackScholes, Engine AnalyticCashSettledEuropeanEngine}
+\label{lst:peconfig_CommodityOptionEuropeanCS_BlackScholes_AnalyticCashSettledEuropeanEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CommodityOptionAmerican}
+%--------------------------------------------------------
+
+Used by trade type: CommodityOption if exercise stly is american
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item BlackScholes/FdBlackScholesVanillaEngine
+\item BlackScholes/BaroneAdesiWhaleyApproximationEngine
+\end{itemize}
+
+Engine description:
+
+BlackScholes/FdBlackScholesVanillaEngine builds a FdBlackScholesVanillaEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_CommodityOptionAmerican_BlackScholes_FdBlackScholesVanillaEngine}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Scheme: The finite difference scheme to use
+\item TimeStepsPerYear: Time grid specification
+\item XGrid: State grid specification
+\item DampingSteps: Number of damping steps taken by FD solver
+\item EnforceMonotoneVariance [optional]: If true variance is modified to be monotone if needed, defaults to true
+\item TimeGridMinimumSize [optional]: Minimum number in resulting time grid, defaults to $1$ if not given
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommodityOptionAmerican">
+    <Model>BlackScholes</Model>
+    <ModelParameters/>
+    <Engine>FdBlackScholesVanillaEngine</Engine>
+    <EngineParameters>
+        <Parameter name="Scheme">Douglas</Parameter>
+        <Parameter name="TimeGridPerYear">100</Parameter>
+        <Parameter name="XGrid">100</Parameter>
+        <Parameter name="DampingSteps">0</Parameter>
+        <Parameter name="EnforceMonotoneVariance">true</Parameter>
+        <Parameter name="SensitivityTemplate">COMM_FD</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CommodityOptionAmerican, Model BlackScholes, Engine FdBlackScholesVanillaEngine}
+\label{lst:peconfig_CommodityOptionAmerican_BlackScholes_FdBlackScholesVanillaEngine}
+\end{longlisting}
+
+BlackScholes/BaroneAdesiWhaleyApproximationEngine builds a BaroneAdesiWhaleyApproximationEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_CommodityOptionAmerican_BlackScholes_BaroneAdesiWhaleyApproximationEngine}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommodityOptionAmerican">
+    <Model>BlackScholes</Model>
+    <ModelParameters/>
+    <Engine>BaroneAdesiWhaleyApproximationEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CommodityOptionAmerican, Model BlackScholes, Engine BaroneAdesiWhaleyApproximationEngine}
+\label{lst:peconfig_CommodityOptionAmerican_BlackScholes_BaroneAdesiWhaleyApproximationEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: FxDigitalOption}
+%--------------------------------------------------------
+
+Used by trade type: FxDigitalOption
+
+Available Model/Engine pairs: GarmanKohlhagen/AnalyticEuropeanEngine
+
+Engine description:
+
+GarmanKohlhagen/AnalyticEuropeanEngine builds a AnalyticEuropeanEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_FxDigitalOption_GarmanKohlhagen_AnalyticEuropeanEngine}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+ <Product type="FxDigitalOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product FxDigitalOption, Model GarmanKohlhagen, Engine AnalyticEuropeanEngine}
+\label{lst:peconfig_FxDigitalOption_GarmanKohlhagen_AnalyticEuropeanEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: FxDigitalOptionEuropeanCS}
+%--------------------------------------------------------
+
+Used by trade type: FxDigitalOption if cash settled, FxEuropeanBarrierOption
+
+Available Model/Engine pairs: GarmanKohlhagen/AnalyticCashSettledEuropeanEngine
+
+Engine description:
+
+GarmanKohlhagen/AnalyticCashSettledEuropeanEngine builds a AnalyticCashSettledEuropeanEngine. A sample configuration is
+shown in listing \ref{lst:peconfig_FxDigitalOptionEuropeanCS_GarmanKohlhagen_AnalyticCashSettledEuropeanEngine}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="FxDigitalOptionEuropeanCS">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticCashSettledEuropeanEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product FxDigitalOptionEuropeanCS, Model GarmanKohlhagen, Engine AnalyticCashSettledEuropeanEngine}
+\label{lst:peconfig_FxDigitalOptionEuropeanCS_GarmanKohlhagen_AnalyticCashSettledEuropeanEngine}
 \end{longlisting}
 
 % ===================== template ========================
