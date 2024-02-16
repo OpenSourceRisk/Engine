@@ -146,6 +146,7 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     instrument_ = boost::make_shared<VanillaInstrument>(commodityForward);
     npvCurrency_ = fixingDate_==Date() ? currency_ : payCcy_;
 
+    // notional_ = strike_ * quantity_;
     notional_ = strike_ * quantity_;
     notionalCurrency_ = currency_;
 
@@ -165,6 +166,8 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     // skip the transaction level mapping for now
     additionalData_["isdaTransaction"] = string("");  
 }
+
+Real CommodityForward::notional() const { return notional_; }
 
 std::map<AssetClass, std::set<std::string>>
 CommodityForward::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
