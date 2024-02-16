@@ -32,9 +32,6 @@ target_link_libraries(orea-test-suite ${ORED_LIB_NAME})
 target_link_libraries(orea-test-suite ${OREA_LIB_NAME})
 target_link_libraries(orea-test-suite ${Boost_LIBRARIES} ${RT_LIBRARY})
 
-# avoid ABI mismatch between boost.log (either pre-built or later than 1_73) and this compiler run...
-target_compile_definitions(orea-test-suite PUBLIC BOOST_USE_WINAPI_VERSION=0x0600)
-
 add_test(NAME orea-test-suite WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR} COMMAND orea-test-suite -- --base_data_path=.)
 
 install(TARGETS orea-test-suite
