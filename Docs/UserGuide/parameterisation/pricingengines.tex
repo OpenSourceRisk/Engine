@@ -573,6 +573,41 @@ The parameters have the following meaning:
 \end{longlisting}
 
 %--------------------------------------------------------
+\subsubsection{Product Type: CommoditySwap}
+%--------------------------------------------------------
+
+Used by trade type: CommoditySwap
+
+Available Model/Engine pairs: DiscountedCashflows/CommoditySwapEngine
+
+Engine description:
+
+DiscountedCashflows/CommoditySwapEngine builds a DiscountingSwapEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_CommoditySwap_DiscountedCashflows_CommoditySwapEngine}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item 
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommoditySwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>CommoditySwapEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CommoditySwap, Model DiscountedCashflows, Engine CommoditySwapEngine}
+\label{lst:peconfig_CommoditySwap_DiscountedCashflows_CommoditySwapEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
 \subsubsection{Product Type: CommoditySwaption}
 %--------------------------------------------------------
 
@@ -1765,6 +1800,49 @@ The parameters have the following meaning:
 \end{minted}
 \caption{Configuration for Product FxDigitalOptionEuropeanCS, Model GarmanKohlhagen, Engine AnalyticCashSettledEuropeanEngine}
 \label{lst:peconfig_FxDigitalOptionEuropeanCS_GarmanKohlhagen_AnalyticCashSettledEuropeanEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: FxDigitalBarrierOption}
+%--------------------------------------------------------
+
+Used by trade type: FxDigitalBarrierOption
+
+Available Model/Engine pairs: GarmanKohlhagen/FdBlackScholesBarrierEngine
+
+Engine description:
+
+GarmanKohlhagen/FdBlackScholesBarrierEngine builds a FdBlackScholesBarrierEngine. A sample configuration is shown in
+listing \ref{lst:peconfig_FxDigitalBarrierOption_GarmanKohlhagen_FdBlackScholesBarrierEngine}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Scheme: The finite difference scheme to use
+\item TimeStepsPerYear: Time grid specification
+\item XGrid: State grid specification
+\item DampingSteps: Number of damping steps taken by FD solver
+\item EnforceMonotoneVariance [optional]: If true variance is modified to be monotone if needed, defaults to true
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="FxDigitalBarrierOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>FdBlackScholesBarrierEngine</Engine>
+    <EngineParameters>
+        <Parameter name="Scheme">Douglas</Parameter>
+        <Parameter name="TimeGridPerYear">100</Parameter>
+        <Parameter name="XGrid">100</Parameter>
+        <Parameter name="DampingSteps">0</Parameter>
+        <Parameter name="SensitivityTemplate">FX_FD</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product FxDigitalBarrierOption, Model GarmanKohlhagen, Engine FdBlackScholesBarrierEngine}
+\label{lst:peconfig_FxDigitalBarrierOption_GarmanKohlhagen_FdBlackScholesBarrierEngine}
 \end{longlisting}
 
 
