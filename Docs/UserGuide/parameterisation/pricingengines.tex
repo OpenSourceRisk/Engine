@@ -1,0 +1,1657 @@
+%--------------------------------------------------------
+\subsection{Pricing Engines: {\tt pricingengine.xml}}
+%--------------------------------------------------------
+\label{sec:configuration_pricingengines}
+
+The pricing engine configuration file is provided to select pricing models and pricing engines by product type.
+
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CommoditySpreadOption}
+%--------------------------------------------------------
+
+Used by trade type: CommoditySpreadOption
+
+Available Model/Engine pairs: BlackScholes/CommoditySpreadOptionEngine
+
+Engine description:
+
+BlackScholes/CommoditySpreadOptionEngine builds a CommoditySpreadOptionAnalyticalEngine, which uses the Kirk
+approximation described in Iain J. Clark, Commodity Option Pricing, Section 2.9. The correlation between two commodities
+resp. the intra-asset correlation between two future contracts is parametrized as
+
+$$\rho(s, t) = e^{-\beta |s-t|}$$
+
+where $s$ and $t$ are times to futures expiry. A sample configuration is shown in listing
+\ref{lst:peconfig_CommoditySpreadOption_BlackScholes_CommoditySpreadOptionEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item beta: the parameter ``beta'' in the correlation parametrization
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommoditySpreadOption">
+    <Model>BlackScholes</Model>
+    <ModelParameters/>
+    <Engine>CommoditySpreadOptionEngine</Engine>
+    <EngineParameters>
+        <Parameter name="beta">2.05</Parameter>
+        <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+    </EngineParameters>
+    </Product>
+\end{minted}
+\caption{Configuration for Product CommoditySpreadOption, Model BlackScholes, Engine CommoditySpreadOptionEngine}
+\label{lst:peconfig_CommoditySpreadOption_BlackScholes_CommoditySpreadOptionEngine}
+\end{longlisting}
+    
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CpiCapFloor}
+%--------------------------------------------------------
+
+Used by trade type: CapFloor with underlying leg of leg type CPI.
+
+Available Model/Engine pairs: CpiCapModel/CpiCapEngine
+
+Engine description:
+
+CpiCapModel/CpiCapEngine builds a CPIBlackCapFloorEngine or CPIBachelierCapFloorEngine depneding on the volatility type
+of the market surface. A sample configuration is shown in listing
+\ref{lst:peconfig_CpiCapFloor_CpiCapModel_CpiCapEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item useLastFixingDate: if true, use the last known fixing date as the base date of the volatility structure, otherwise
+  use observation lag
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CpiCapFloor">
+    <Model>CpiCapModel</Model>
+    <ModelParameters/>
+    <Engine>CpiCapEngine</Engine>
+    <EngineParameters>
+        <Parameter name="useLastFixingDate">true</Parameter>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CommoditySpreadOption, Model BlackScholes, Engine CpiCapEngine}
+\label{lst:peconfig_CpiCapFloor_CpiCapModel_CpiCapEngine}
+\end{longlisting}
+
+
+%--------------------------------------------------------
+\subsubsection{Product Type: EquityFutureOption}
+%--------------------------------------------------------
+
+Used by trade type: EquityFuturesOption
+
+Available Model/Engine pairs: BlackScholes/AnalyticEuroepanForwardEngine
+
+Engine description:
+
+BlackScholes/AnalyticEuroepanForwardEngine builds a AnalyticEuropeanForwardEngine. A sample configuration is shown in
+listing \ref{lst:peconfig_EquityFutureOption_BlackScholes_AnalyticEuropeanForwardEngine}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Product type="EquityFutureOption">
+    <Model>BlackScholes</Model>
+    <ModelParameters />
+    <Engine>AnalyticEuropeanForwardEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">COM_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+\end{minted}
+\caption{Configuration for Product EquiytFutureOption, Model BlackScholes, Engine AnalyticEuropeanForwardEngine}
+\label{lst:peconfig_EquityFutureOption_BlackScholes_AnalyticEuropeanForwardEngine}
+\end{longlisting}
+
+
+%--------------------------------------------------------
+\subsubsection{Product Type: BondTRS}
+%--------------------------------------------------------
+
+Used by trade type: BondTRS
+
+Available Model/Engine pairs: DiscountedCashflows/DiscountingBondTRSEngine
+
+Engine description:
+
+DiscountedCashflows/DiscountingBondTRSEngine builds a DisountingBondTRSEngine. A sample configuration is shown in listing \ref{lst:peconfig_BondTRS_DiscountedCashflows_DiscountedCashflows/DiscountingBondTRSEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="BondTRS">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingBondTRSEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product BondTRS , Model DiscountedCashflows, Engine DiscountingBondTRSEngine}
+\label{lst:peconfig_BondTRS_DiscountedCashflows_DiscountedCashflows/DiscountingBondTRSEngine}
+\end{longlisting}
+
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CommodityAsianOptionArithmeticPrice}
+%--------------------------------------------------------
+
+Used by trade type: CommodityAsianOption if payoffType2 is Arithmetric and payoffType is Asian
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+  \item BlackScholesMerton/MCDiscreteArithmeticAPEngine
+  \item BlackScholesMerton/TurnbullWakemanAsianEngine
+  \item ScriptedTrade/ScriptedTrade
+\end{itemize}
+
+Engine description:
+
+BlackScholesMerton/MCDiscreteArithmeticAPEngine builds a MCDiscreteArithmeticAPEngine using Sobol sequences. A sample
+configuration is shown in listing
+\ref{lst:peconfig_CommodityAsianOptionArithmeticPrice_BlackScholesMerton_MCDiscreteArithmeticAPEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item BrownianBridge: whether to use Brownian Bridge for MC simulation
+\item AntitheticVariate: whether to use antithetic variates for MC simulation
+\item ControlVariate: whether to use control variate for MC simulation
+\item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
+\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item MaxSamples: max number of samples for MC simulation
+\item Seed: seed for random number generator
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommodityAsianOptionArithmeticPrice">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>MCDiscreteArithmeticAPEngine</Engine>
+    <EngineParameters>
+        <Parameter name="BrownianBridge">true</Parameter>    
+        <Parameter name="AntitheticVariate">true</Parameter>    
+        <Parameter name="ControlVariate">true</Parameter>    
+        <Parameter name="RequiredSamples">10000</Parameter>    
+        <Parameter name="RequiredTolerance">0</Parameter>    
+        <Parameter name="MaxSamples">0</Parameter>    
+        <Parameter name="Seed">42</Parameter>    
+        <Parameter name="SensitivityTemplate">COM_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CommodityAsianOptionArithmeticPrice, Model BlackScholesMerton, Engine MCDiscreteArithmeticAPEngine}
+\label{lst:peconfig_CommodityAsianOptionArithmeticPrice_BlackScholesMerton_MCDiscreteArithmeticAPEngine}
+\end{longlisting}
+
+BlackScholesMerton/TurnbullWakemanAsianEngine builds a TurnbullWakemanAsianEngine. A sample configuration is shown in
+listing \ref{lst:peconfig_CommodityAsianOptionArithmeticPrice_BlackScholesMerton_TurnbullWakemanAsianEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommodityAsianOptionArithmeticPrice">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>TurnbullWakemanAsianEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">COM_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CommodityAsianOptionArithmeticPrice, Model BlackScholesMerton, Engine TurnbullWakemanAsianEngine}
+\label{lst:peconfig_CommodityAsianOptionArithmeticPrice_BlackScholesMerton_TurnbullWakemanAsianEngine}
+\end{longlisting}
+
+ScriptedTrade/ScriptedTrade delegates to the scripted trade engine and the associated pricing engine configuration for
+Product Type ScriptedTrade, see there for details. A sample configuration is given in listing
+\ref{lst:peconfig_CommodityAsianOptionArithmeticPrice_ScriptedTrade_ScriptedTrade}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommodityAsianOptionArithmeticPrice">
+    <Model>ScriptedTrade</Model>
+    <ModelParameters/>
+    <Engine>ScriptedTrade</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">COM_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CommodityAsianOptionArithmeticPrice, Model ScriptedTrade, Engine ScriptedTrade}
+\label{lst:peconfig_CommodityAsianOptionArithmeticPrice_ScriptedTrade_ScriptedTrade}
+\end{longlisting}
+
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CommodityAsianOptionArithmeticStrike}
+%--------------------------------------------------------
+
+Used by trade type: CommodityAsianOption if payoffType2 is Arithmetric and payoffType is AverageStrike
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item BlackScholesMerton/MCDiscreteArithmeticASEngine
+\item ScriptedTrade/ScriptedTrade
+\end{itemize}
+  
+Engine description:
+
+BlackScholesMerton/MCDiscreteArithmeticASEngine builds a MCDiscreteArithmeticASEngine using Sobol sequences. A sample
+configuration is shown in listing
+\ref{lst:peconfig_CommodityAsianOptionArithmeticStrike_BlackScholesMerton_MCDiscreteArithmeticASEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item BrownianBridge: whether to use Brownian Bridge for MC simulation
+\item AntitheticVariate: whether to use antithetic variates for MC simulation
+\item ControlVariate: whether to use control variate for MC simulation
+\item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
+\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item MaxSamples: max number of samples for MC simulation
+\item Seed: seed for random number generator
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommodityAsianOptionArithmeticStrike">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>MCDiscreteArithmeticASEngine</Engine>
+    <EngineParameters>
+        <Parameter name="BrownianBridge">true</Parameter>    
+        <Parameter name="AntitheticVariate">true</Parameter>    
+        <Parameter name="ControlVariate">true</Parameter>    
+        <Parameter name="RequiredSamples">10000</Parameter>    
+        <Parameter name="RequiredTolerance">0</Parameter>    
+        <Parameter name="MaxSamples">0</Parameter>    
+        <Parameter name="Seed">42</Parameter>    
+        <Parameter name="SensitivityTemplate">COM_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CommodityAsianOptionArithmeticStrike, Model BlackScholesMerton, Engine MCDiscreteArithmeticASEngine}
+\label{lst:peconfig_CommodityAsianOptionArithmeticStrike_BlackScholesMerton_MCDiscreteArithmeticASEngine}
+\end{longlisting}
+
+ScriptedTrade/ScriptedTrade delegates to the scripted trade engine and the associated pricing engine configuration for
+Product Type ScriptedTrade, see there for details. A sample configuration is given in listing
+\ref{lst:peconfig_CommodityAsianOptionArithmeticStrike_ScriptedTrade_ScriptedTrade}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommodityAsianOptionArithmeticStrike">
+    <Model>ScriptedTrade</Model>
+    <ModelParameters/>
+    <Engine>ScriptedTrade</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">COM_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CommodityAsianOptionArithmeticStrike, Model ScriptedTrade, Engine ScriptedTrade}
+\label{lst:peconfig_CommodityAsianOptionArithmeticStrike_ScriptedTrade_ScriptedTrade}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CommodityAsianOptionGeometricPrice}
+%--------------------------------------------------------
+
+Used by trade type: CommodityAsianOption if payoffType2 is Geometric and payoffType is Asian
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+  \item BlackScholesMerton/MCDiscreteGeometricAPEngine
+  \item BlackScholesMerton/AnalyticDiscreteGeometricAPEngine
+  \item BlackScholesMerton/AnalyticContinuousGeometricAPEngine
+  \item ScriptedTrade/ScriptedTrade
+\end{itemize}
+
+Engine description:
+
+BlackScholesMerton/MCDiscreteGeometricAPEngine builds a MCDiscreteGeometricAPEngine using Sobol sequences. A sample
+configuration is shown in listing
+\ref{lst:peconfig_CommodityAsianOptionGeometricPrice_BlackScholesMerton_MCDiscreteGeomtetricAPEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item BrownianBridge: whether to use Brownian Bridge for MC simulation
+\item AntitheticVariate: whether to use antithetic variates for MC simulation
+\item ControlVariate: whether to use control variate for MC simulation
+\item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
+\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item MaxSamples: max number of samples for MC simulation
+\item Seed: seed for random number generator
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommodityAsianOptionGeometricPrice">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>MCDiscreteGeometricAPEngine</Engine>
+    <EngineParameters>
+        <Parameter name="BrownianBridge">true</Parameter>    
+        <Parameter name="AntitheticVariate">true</Parameter>    
+        <Parameter name="ControlVariate">true</Parameter>    
+        <Parameter name="RequiredSamples">10000</Parameter>    
+        <Parameter name="RequiredTolerance">0</Parameter>    
+        <Parameter name="MaxSamples">0</Parameter>    
+        <Parameter name="Seed">42</Parameter>    
+        <Parameter name="SensitivityTemplate">COM_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CommodityAsianOptionGeometricPrice, Model BlackScholesMerton, Engine MCDiscreteGeometricAPEngine}
+\label{lst:peconfig_CommodityAsianOptionGeometricPrice_BlackScholesMerton_MCDiscreteGeomtetricAPEngine}
+\end{longlisting}
+
+BlackScholesMerton/AnalyticDiscreteGeometricAPEngine builds a AnalyticDiscreteGeometricAveragePriceAsianEngine. A sample
+configuration is shown in listing
+\ref{lst:peconfig_CommodityAsianOptionGeometricPrice_BlackScholesMerton_AnalyticDiscreteGeomtetricAPEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommodityAsianOptionGeometricPrice">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>AnalyticDiscreteGeometricAPEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">COM_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CommodityAsianOptionGeometricPrice, Model BlackScholesMerton, Engine AnalyticDiscreteGeomtetricAPEngine}
+\label{lst:peconfig_CommodityAsianOptionGeometricPrice_BlackScholesMerton_AnalyticDiscreteGeomtetricAPEngine}
+\end{longlisting}
+
+BlackScholesMerton/AnalyticContinuousGeometricAPEngine builds a AnalyticContinuousGeometricAveragePriceAsianEngine. A sample
+configuration is shown in listing
+\ref{lst:peconfig_CommodityAsianOptionGeometricPrice_BlackScholesMerton_AnalyticContinuousGeomtetricAPEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommodityAsianOptionGeometricPrice">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>AnalyticContinuousGeometricAPEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">COM_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CommodityAsianOptionGeometricPrice, Model BlackScholesMerton, Engine AnalyticContinuousGeomtetricAPEngine}
+\label{lst:peconfig_CommodityAsianOptionGeometricPrice_BlackScholesMerton_AnalyticContinuousGeomtetricAPEngine}
+\end{longlisting}
+
+ScriptedTrade/ScriptedTrade delegates to the scripted trade engine and the associated pricing engine configuration for
+Product Type ScriptedTrade, see there for details. A sample configuration is given in listing
+\ref{lst:peconfig_CommodityAsianOptionGeometricPrice_ScriptedTrade_ScriptedTrade}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommodityAsianOptionGeometricPrice">
+    <Model>ScriptedTrade</Model>
+    <ModelParameters/>
+    <Engine>ScriptedTrade</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">COM_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CommodityAsianOptionGeometricPrice, Model ScriptedTrade, Engine ScriptedTrade}
+\label{lst:peconfig_CommodityAsianOptionGeometricPrice_ScriptedTrade_ScriptedTrade}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CommodityAsianOptionGeometricStrike}
+%--------------------------------------------------------
+
+Used by trade type: CommodityAsianOption if payoffType2 is Geometric and payoffType is AverageStrike
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+  \item BlackScholesMerton/MCDiscreteGeometricASEngine
+  \item BlackScholesMerton/AnalyticDiscreteGeometricASEngine
+  \item ScriptedTrade/ScriptedTrade
+\end{itemize}
+
+Engine description:
+
+BlackScholesMerton/MCDiscreteGeometricASEngine builds a MCDiscreteGeometricASEngine using Sobol sequences. A sample
+configuration is shown in listing
+\ref{lst:peconfig_CommodityAsianOptionGeometricStrike_BlackScholesMerton_MCDiscreteGeomtetricASEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item BrownianBridge: whether to use Brownian Bridge for MC simulation
+\item AntitheticVariate: whether to use antithetic variates for MC simulation
+\item ControlVariate: whether to use control variate for MC simulation
+\item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
+\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item MaxSamples: max number of samples for MC simulation
+\item Seed: seed for random number generator
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommodityAsianOptionGeometricStrike">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>MCDiscreteGeometricASEngine</Engine>
+    <EngineParameters>
+        <Parameter name="BrownianBridge">true</Parameter>    
+        <Parameter name="AntitheticVariate">true</Parameter>    
+        <Parameter name="ControlVariate">true</Parameter>    
+        <Parameter name="RequiredSamples">10000</Parameter>    
+        <Parameter name="RequiredTolerance">0</Parameter>    
+        <Parameter name="MaxSamples">0</Parameter>    
+        <Parameter name="Seed">42</Parameter>    
+        <Parameter name="SensitivityTemplate">COM_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CommodityAsianOptionGeometricStrike, Model BlackScholesMerton, Engine MCDiscreteGeometricASEngine}
+\label{lst:peconfig_CommodityAsianOptionGeometricStrike_BlackScholesMerton_MCDiscreteGeomtetricASEngine}
+\end{longlisting}
+
+BlackScholesMerton/AnalyticDiscreteGeometricASEngine builds a AnalyticDiscreteGeometricAverageStrikeAsianEngine. A sample
+configuration is shown in listing
+\ref{lst:peconfig_CommodityAsianOptionGeometricStrike_BlackScholesMerton_AnalyticDiscreteGeomtetricASEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommodityAsianOptionGeometricStrike">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>AnalyticDiscreteGeometricASEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">COM_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CommodityAsianOptionGeometricStrike, Model BlackScholesMerton, Engine AnalyticDiscreteGeomtetricASEngine}
+\label{lst:peconfig_CommodityAsianOptionGeometricStrike_BlackScholesMerton_AnalyticDiscreteGeomtetricASEngine}
+\end{longlisting}
+
+ScriptedTrade/ScriptedTrade delegates to the scripted trade engine and the associated pricing engine configuration for
+Product Type ScriptedTrade, see there for details. A sample configuration is given in listing
+\ref{lst:peconfig_CommodityAsianOptionGeometricStrike_ScriptedTrade_ScriptedTrade}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommodityAsianOptionGeometricStrike">
+    <Model>ScriptedTrade</Model>
+    <ModelParameters/>
+    <Engine>ScriptedTrade</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">COM_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CommodityAsianOptionGeometricStrike, Model ScriptedTrade, Engine ScriptedTrade}
+\label{lst:peconfig_CommodityAsianOptionGeometricStrike_ScriptedTrade_ScriptedTrade}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: EquityAsianOptionArithmeticPrice}
+%--------------------------------------------------------
+
+Used by trade type: EquityAsianOption if payoffType2 is Arithmetric and payoffType is Asian
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+  \item BlackScholesMerton/MCDiscreteArithmeticAPEngine
+  \item BlackScholesMerton/TurnbullWakemanAsianEngine
+  \item ScriptedTrade/ScriptedTrade
+\end{itemize}
+
+Engine description:
+
+BlackScholesMerton/MCDiscreteArithmeticAPEngine builds a MCDiscreteArithmeticAPEngine using Sobol sequences. A sample
+configuration is shown in listing
+\ref{lst:peconfig_EquityAsianOptionArithmeticPrice_BlackScholesMerton_MCDiscreteArithmeticAPEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item BrownianBridge: whether to use Brownian Bridge for MC simulation
+\item AntitheticVariate: whether to use antithetic variates for MC simulation
+\item ControlVariate: whether to use control variate for MC simulation
+\item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
+\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item MaxSamples: max number of samples for MC simulation
+\item Seed: seed for random number generator
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="EquityAsianOptionArithmeticPrice">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>MCDiscreteArithmeticAPEngine</Engine>
+    <EngineParameters>
+        <Parameter name="BrownianBridge">true</Parameter>    
+        <Parameter name="AntitheticVariate">true</Parameter>    
+        <Parameter name="ControlVariate">true</Parameter>    
+        <Parameter name="RequiredSamples">10000</Parameter>    
+        <Parameter name="RequiredTolerance">0</Parameter>    
+        <Parameter name="MaxSamples">0</Parameter>    
+        <Parameter name="Seed">42</Parameter>    
+        <Parameter name="SensitivityTemplate">EQ_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product EquityAsianOptionArithmeticPrice, Model BlackScholesMerton, Engine MCDiscreteArithmeticAPEngine}
+\label{lst:peconfig_EquityAsianOptionArithmeticPrice_BlackScholesMerton_MCDiscreteArithmeticAPEngine}
+\end{longlisting}
+
+BlackScholesMerton/TurnbullWakemanAsianEngine builds a TurnbullWakemanAsianEngine. A sample configuration is shown in
+listing \ref{lst:peconfig_EquityAsianOptionArithmeticPrice_BlackScholesMerton_TurnbullWakemanAsianEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="EquityAsianOptionArithmeticPrice">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>TurnbullWakemanAsianEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">EQ_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product EquityAsianOptionArithmeticPrice, Model BlackScholesMerton, Engine TurnbullWakemanAsianEngine}
+\label{lst:peconfig_EquityAsianOptionArithmeticPrice_BlackScholesMerton_TurnbullWakemanAsianEngine}
+\end{longlisting}
+
+ScriptedTrade/ScriptedTrade delegates to the scripted trade engine and the associated pricing engine configuration for
+Product Type ScriptedTrade, see there for details. A sample configuration is given in listing
+\ref{lst:peconfig_EquityAsianOptionArithmeticPrice_ScriptedTrade_ScriptedTrade}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="EquityAsianOptionArithmeticPrice">
+    <Model>ScriptedTrade</Model>
+    <ModelParameters/>
+    <Engine>ScriptedTrade</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">EQ_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product EquityAsianOptionArithmeticPrice, Model ScriptedTrade, Engine ScriptedTrade}
+\label{lst:peconfig_EquityAsianOptionArithmeticPrice_ScriptedTrade_ScriptedTrade}
+\end{longlisting}
+
+
+%--------------------------------------------------------
+\subsubsection{Product Type: EquityAsianOptionArithmeticStrike}
+%--------------------------------------------------------
+
+Used by trade type: EquityAsianOption if payoffType2 is Arithmetric and payoffType is AverageStrike
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item BlackScholesMerton/MCDiscreteArithmeticASEngine
+\item ScriptedTrade/ScriptedTrade
+\end{itemize}
+  
+Engine description:
+
+BlackScholesMerton/MCDiscreteArithmeticASEngine builds a MCDiscreteArithmeticASEngine using Sobol sequences. A sample
+configuration is shown in listing
+\ref{lst:peconfig_EquityAsianOptionArithmeticStrike_BlackScholesMerton_MCDiscreteArithmeticASEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item BrownianBridge: whether to use Brownian Bridge for MC simulation
+\item AntitheticVariate: whether to use antithetic variates for MC simulation
+\item ControlVariate: whether to use control variate for MC simulation
+\item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
+\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item MaxSamples: max number of samples for MC simulation
+\item Seed: seed for random number generator
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="EquityAsianOptionArithmeticStrike">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>MCDiscreteArithmeticASEngine</Engine>
+    <EngineParameters>
+        <Parameter name="BrownianBridge">true</Parameter>    
+        <Parameter name="AntitheticVariate">true</Parameter>    
+        <Parameter name="ControlVariate">true</Parameter>    
+        <Parameter name="RequiredSamples">10000</Parameter>    
+        <Parameter name="RequiredTolerance">0</Parameter>    
+        <Parameter name="MaxSamples">0</Parameter>    
+        <Parameter name="Seed">42</Parameter>    
+        <Parameter name="SensitivityTemplate">EQ_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product EquityAsianOptionArithmeticStrike, Model BlackScholesMerton, Engine MCDiscreteArithmeticASEngine}
+\label{lst:peconfig_EquityAsianOptionArithmeticStrike_BlackScholesMerton_MCDiscreteArithmeticASEngine}
+\end{longlisting}
+
+ScriptedTrade/ScriptedTrade delegates to the scripted trade engine and the associated pricing engine configuration for
+Product Type ScriptedTrade, see there for details. A sample configuration is given in listing
+\ref{lst:peconfig_EquityAsianOptionArithmeticStrike_ScriptedTrade_ScriptedTrade}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="EquityAsianOptionArithmeticStrike">
+    <Model>ScriptedTrade</Model>
+    <ModelParameters/>
+    <Engine>ScriptedTrade</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">EQ_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product EquityAsianOptionArithmeticStrike, Model ScriptedTrade, Engine ScriptedTrade}
+\label{lst:peconfig_EquityAsianOptionArithmeticStrike_ScriptedTrade_ScriptedTrade}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: EquityAsianOptionGeometricPrice}
+%--------------------------------------------------------
+
+Used by trade type: EquityAsianOption if payoffType2 is Geometric and payoffType is Asian
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+  \item BlackScholesMerton/MCDiscreteGeometricAPEngine
+  \item BlackScholesMerton/AnalyticDiscreteGeometricAPEngine
+  \item BlackScholesMerton/AnalyticContinuousGeometricAPEngine
+  \item ScriptedTrade/ScriptedTrade
+\end{itemize}
+
+Engine description:
+
+BlackScholesMerton/MCDiscreteGeometricAPEngine builds a MCDiscreteGeometricAPEngine using Sobol sequences. A sample
+configuration is shown in listing
+\ref{lst:peconfig_EquityAsianOptionGeometricPrice_BlackScholesMerton_MCDiscreteGeomtetricAPEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item BrownianBridge: whether to use Brownian Bridge for MC simulation
+\item AntitheticVariate: whether to use antithetic variates for MC simulation
+\item ControlVariate: whether to use control variate for MC simulation
+\item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
+\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item MaxSamples: max number of samples for MC simulation
+\item Seed: seed for random number generator
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="EquityAsianOptionGeometricPrice">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>MCDiscreteGeometricAPEngine</Engine>
+    <EngineParameters>
+        <Parameter name="BrownianBridge">true</Parameter>    
+        <Parameter name="AntitheticVariate">true</Parameter>    
+        <Parameter name="ControlVariate">true</Parameter>    
+        <Parameter name="RequiredSamples">10000</Parameter>    
+        <Parameter name="RequiredTolerance">0</Parameter>    
+        <Parameter name="MaxSamples">0</Parameter>    
+        <Parameter name="Seed">42</Parameter>    
+        <Parameter name="SensitivityTemplate">EQ_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product EquityAsianOptionGeometricPrice, Model BlackScholesMerton, Engine MCDiscreteGeometricAPEngine}
+\label{lst:peconfig_EquityAsianOptionGeometricPrice_BlackScholesMerton_MCDiscreteGeomtetricAPEngine}
+\end{longlisting}
+
+BlackScholesMerton/AnalyticDiscreteGeometricAPEngine builds a AnalyticDiscreteGeometricAveragePriceAsianEngine. A sample
+configuration is shown in listing
+\ref{lst:peconfig_EquityAsianOptionGeometricPrice_BlackScholesMerton_AnalyticDiscreteGeomtetricAPEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="EquityAsianOptionGeometricPrice">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>AnalyticDiscreteGeometricAPEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">EQ_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product EquityAsianOptionGeometricPrice, Model BlackScholesMerton, Engine AnalyticDiscreteGeomtetricAPEngine}
+\label{lst:peconfig_EquityAsianOptionGeometricPrice_BlackScholesMerton_AnalyticDiscreteGeomtetricAPEngine}
+\end{longlisting}
+
+BlackScholesMerton/AnalyticContinuousGeometricAPEngine builds a AnalyticContinuousGeometricAveragePriceAsianEngine. A sample
+configuration is shown in listing
+\ref{lst:peconfig_EquityAsianOptionGeometricPrice_BlackScholesMerton_AnalyticContinuousGeomtetricAPEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="EquityAsianOptionGeometricPrice">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>AnalyticContinuousGeometricAPEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">EQ_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product EquityAsianOptionGeometricPrice, Model BlackScholesMerton, Engine AnalyticContinuousGeomtetricAPEngine}
+\label{lst:peconfig_EquityAsianOptionGeometricPrice_BlackScholesMerton_AnalyticContinuousGeomtetricAPEngine}
+\end{longlisting}
+
+ScriptedTrade/ScriptedTrade delegates to the scripted trade engine and the associated pricing engine configuration for
+Product Type ScriptedTrade, see there for details. A sample configuration is given in listing
+\ref{lst:peconfig_EquityAsianOptionGeometricPrice_ScriptedTrade_ScriptedTrade}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="EquityAsianOptionGeometricPrice">
+    <Model>ScriptedTrade</Model>
+    <ModelParameters/>
+    <Engine>ScriptedTrade</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">EQ_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product EquityAsianOptionGeometricPrice, Model ScriptedTrade, Engine ScriptedTrade}
+\label{lst:peconfig_EquityAsianOptionGeometricPrice_ScriptedTrade_ScriptedTrade}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: EquityAsianOptionGeometricStrike}
+%--------------------------------------------------------
+
+Used by trade type: EquityAsianOption if payoffType2 is Geometric and payoffType is AverageStrike
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+  \item BlackScholesMerton/MCDiscreteGeometricASEngine
+  \item BlackScholesMerton/AnalyticDiscreteGeometricASEngine
+  \item ScriptedTrade/ScriptedTrade
+\end{itemize}
+
+Engine description:
+
+BlackScholesMerton/MCDiscreteGeometricASEngine builds a MCDiscreteGeometricASEngine using Sobol sequences. A sample
+configuration is shown in listing
+\ref{lst:peconfig_EquityAsianOptionGeometricStrike_BlackScholesMerton_MCDiscreteGeomtetricASEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item BrownianBridge: whether to use Brownian Bridge for MC simulation
+\item AntitheticVariate: whether to use antithetic variates for MC simulation
+\item ControlVariate: whether to use control variate for MC simulation
+\item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
+\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item MaxSamples: max number of samples for MC simulation
+\item Seed: seed for random number generator
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="EquityAsianOptionGeometricStrike">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>MCDiscreteGeometricASEngine</Engine>
+    <EngineParameters>
+        <Parameter name="BrownianBridge">true</Parameter>    
+        <Parameter name="AntitheticVariate">true</Parameter>    
+        <Parameter name="ControlVariate">true</Parameter>    
+        <Parameter name="RequiredSamples">10000</Parameter>    
+        <Parameter name="RequiredTolerance">0</Parameter>    
+        <Parameter name="MaxSamples">0</Parameter>    
+        <Parameter name="Seed">42</Parameter>    
+        <Parameter name="SensitivityTemplate">EQ_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product EquityAsianOptionGeometricStrike, Model BlackScholesMerton, Engine MCDiscreteGeometricASEngine}
+\label{lst:peconfig_EquityAsianOptionGeometricStrike_BlackScholesMerton_MCDiscreteGeomtetricASEngine}
+\end{longlisting}
+
+BlackScholesMerton/AnalyticDiscreteGeometricASEngine builds a AnalyticDiscreteGeometricAverageStrikeAsianEngine. A sample
+configuration is shown in listing
+\ref{lst:peconfig_EquityAsianOptionGeometricStrike_BlackScholesMerton_AnalyticDiscreteGeomtetricASEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="EquityAsianOptionGeometricStrike">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>AnalyticDiscreteGeometricASEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">EQ_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product EquityAsianOptionGeometricStrike, Model BlackScholesMerton, Engine AnalyticDiscreteGeomtetricASEngine}
+\label{lst:peconfig_EquityAsianOptionGeometricStrike_BlackScholesMerton_AnalyticDiscreteGeomtetricASEngine}
+\end{longlisting}
+
+ScriptedTrade/ScriptedTrade delegates to the scripted trade engine and the associated pricing engine configuration for
+Product Type ScriptedTrade, see there for details. A sample configuration is given in listing
+\ref{lst:peconfig_EquityAsianOptionGeometricStrike_ScriptedTrade_ScriptedTrade}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="EquityAsianOptionGeometricStrike">
+    <Model>ScriptedTrade</Model>
+    <ModelParameters/>
+    <Engine>ScriptedTrade</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">EQ_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product EquityAsianOptionGeometricStrike, Model ScriptedTrade, Engine ScriptedTrade}
+\label{lst:peconfig_EquityAsianOptionGeometricStrike_ScriptedTrade_ScriptedTrade}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: FxAsianOptionArithmeticPrice}
+%--------------------------------------------------------
+
+Used by trade type: FxAsianOption if payoffType2 is Arithmetric and payoffType is Asian
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+  \item BlackScholesMerton/MCDiscreteArithmeticAPEngine
+  \item BlackScholesMerton/TurnbullWakemanAsianEngine
+  \item ScriptedTrade/ScriptedTrade
+\end{itemize}
+
+Engine description:
+
+BlackScholesMerton/MCDiscreteArithmeticAPEngine builds a MCDiscreteArithmeticAPEngine using Sobol sequences. A sample
+configuration is shown in listing
+\ref{lst:peconfig_FxAsianOptionArithmeticPrice_BlackScholesMerton_MCDiscreteArithmeticAPEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item BrownianBridge: whether to use Brownian Bridge for MC simulation
+\item AntitheticVariate: whether to use antithetic variates for MC simulation
+\item ControlVariate: whether to use control variate for MC simulation
+\item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
+\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item MaxSamples: max number of samples for MC simulation
+\item Seed: seed for random number generator
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="FxAsianOptionArithmeticPrice">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>MCDiscreteArithmeticAPEngine</Engine>
+    <EngineParameters>
+        <Parameter name="BrownianBridge">true</Parameter>    
+        <Parameter name="AntitheticVariate">true</Parameter>    
+        <Parameter name="ControlVariate">true</Parameter>    
+        <Parameter name="RequiredSamples">10000</Parameter>    
+        <Parameter name="RequiredTolerance">0</Parameter>    
+        <Parameter name="MaxSamples">0</Parameter>    
+        <Parameter name="Seed">42</Parameter>    
+        <Parameter name="SensitivityTemplate">FX_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product FxAsianOptionArithmeticPrice, Model BlackScholesMerton, Engine MCDiscreteArithmeticAPEngine}
+\label{lst:peconfig_FxAsianOptionArithmeticPrice_BlackScholesMerton_MCDiscreteArithmeticAPEngine}
+\end{longlisting}
+
+BlackScholesMerton/TurnbullWakemanAsianEngine builds a TurnbullWakemanAsianEngine. A sample configuration is shown in
+listing \ref{lst:peconfig_FxAsianOptionArithmeticPrice_BlackScholesMerton_TurnbullWakemanAsianEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="FxAsianOptionArithmeticPrice">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>TurnbullWakemanAsianEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product FxAsianOptionArithmeticPrice, Model BlackScholesMerton, Engine TurnbullWakemanAsianEngine}
+\label{lst:peconfig_FxAsianOptionArithmeticPrice_BlackScholesMerton_TurnbullWakemanAsianEngine}
+\end{longlisting}
+
+ScriptedTrade/ScriptedTrade delegates to the scripted trade engine and the associated pricing engine configuration for
+Product Type ScriptedTrade, see there for details. A sample configuration is given in listing
+\ref{lst:peconfig_FxAsianOptionArithmeticPrice_ScriptedTrade_ScriptedTrade}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="FxAsianOptionArithmeticPrice">
+    <Model>ScriptedTrade</Model>
+    <ModelParameters/>
+    <Engine>ScriptedTrade</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">FX_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product FxAsianOptionArithmeticPrice, Model ScriptedTrade, Engine ScriptedTrade}
+\label{lst:peconfig_FxAsianOptionArithmeticPrice_ScriptedTrade_ScriptedTrade}
+\end{longlisting}
+
+
+%--------------------------------------------------------
+\subsubsection{Product Type: FxAsianOptionArithmeticStrike}
+%--------------------------------------------------------
+
+Used by trade type: FxAsianOption if payoffType2 is Arithmetric and payoffType is AverageStrike
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item BlackScholesMerton/MCDiscreteArithmeticASEngine
+\item ScriptedTrade/ScriptedTrade
+\end{itemize}
+  
+Engine description:
+
+BlackScholesMerton/MCDiscreteArithmeticASEngine builds a MCDiscreteArithmeticASEngine using Sobol sequences. A sample
+configuration is shown in listing
+\ref{lst:peconfig_FxAsianOptionArithmeticStrike_BlackScholesMerton_MCDiscreteArithmeticASEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item BrownianBridge: whether to use Brownian Bridge for MC simulation
+\item AntitheticVariate: whether to use antithetic variates for MC simulation
+\item ControlVariate: whether to use control variate for MC simulation
+\item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
+\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item MaxSamples: max number of samples for MC simulation
+\item Seed: seed for random number generator
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="FxAsianOptionArithmeticStrike">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>MCDiscreteArithmeticASEngine</Engine>
+    <EngineParameters>
+        <Parameter name="BrownianBridge">true</Parameter>    
+        <Parameter name="AntitheticVariate">true</Parameter>    
+        <Parameter name="ControlVariate">true</Parameter>    
+        <Parameter name="RequiredSamples">10000</Parameter>    
+        <Parameter name="RequiredTolerance">0</Parameter>    
+        <Parameter name="MaxSamples">0</Parameter>    
+        <Parameter name="Seed">42</Parameter>    
+        <Parameter name="SensitivityTemplate">FX_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product FxAsianOptionArithmeticStrike, Model BlackScholesMerton, Engine MCDiscreteArithmeticASEngine}
+\label{lst:peconfig_FxAsianOptionArithmeticStrike_BlackScholesMerton_MCDiscreteArithmeticASEngine}
+\end{longlisting}
+
+ScriptedTrade/ScriptedTrade delegates to the scripted trade engine and the associated pricing engine configuration for
+Product Type ScriptedTrade, see there for details. A sample configuration is given in listing
+\ref{lst:peconfig_FxAsianOptionArithmeticStrike_ScriptedTrade_ScriptedTrade}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="FxAsianOptionArithmeticStrike">
+    <Model>ScriptedTrade</Model>
+    <ModelParameters/>
+    <Engine>ScriptedTrade</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">FX_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product FxAsianOptionArithmeticStrike, Model ScriptedTrade, Engine ScriptedTrade}
+\label{lst:peconfig_FxAsianOptionArithmeticStrike_ScriptedTrade_ScriptedTrade}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: FxAsianOptionGeometricPrice}
+%--------------------------------------------------------
+
+Used by trade type: FxAsianOption if payoffType2 is Geometric and payoffType is Asian
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+  \item BlackScholesMerton/MCDiscreteGeometricAPEngine
+  \item BlackScholesMerton/AnalyticDiscreteGeometricAPEngine
+  \item BlackScholesMerton/AnalyticContinuousGeometricAPEngine
+  \item ScriptedTrade/ScriptedTrade
+\end{itemize}
+
+Engine description:
+
+BlackScholesMerton/MCDiscreteGeometricAPEngine builds a MCDiscreteGeometricAPEngine using Sobol sequences. A sample
+configuration is shown in listing
+\ref{lst:peconfig_FxAsianOptionGeometricPrice_BlackScholesMerton_MCDiscreteGeomtetricAPEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item BrownianBridge: whether to use Brownian Bridge for MC simulation
+\item AntitheticVariate: whether to use antithetic variates for MC simulation
+\item ControlVariate: whether to use control variate for MC simulation
+\item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
+\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item MaxSamples: max number of samples for MC simulation
+\item Seed: seed for random number generator
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="FxAsianOptionGeometricPrice">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>MCDiscreteGeometricAPEngine</Engine>
+    <EngineParameters>
+        <Parameter name="BrownianBridge">true</Parameter>    
+        <Parameter name="AntitheticVariate">true</Parameter>    
+        <Parameter name="ControlVariate">true</Parameter>    
+        <Parameter name="RequiredSamples">10000</Parameter>    
+        <Parameter name="RequiredTolerance">0</Parameter>    
+        <Parameter name="MaxSamples">0</Parameter>    
+        <Parameter name="Seed">42</Parameter>    
+        <Parameter name="SensitivityTemplate">FX_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product FxAsianOptionGeometricPrice, Model BlackScholesMerton, Engine MCDiscreteGeometricAPEngine}
+\label{lst:peconfig_FxAsianOptionGeometricPrice_BlackScholesMerton_MCDiscreteGeomtetricAPEngine}
+\end{longlisting}
+
+BlackScholesMerton/AnalyticDiscreteGeometricAPEngine builds a AnalyticDiscreteGeometricAveragePriceAsianEngine. A sample
+configuration is shown in listing
+\ref{lst:peconfig_FxAsianOptionGeometricPrice_BlackScholesMerton_AnalyticDiscreteGeomtetricAPEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="FxAsianOptionGeometricPrice">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>AnalyticDiscreteGeometricAPEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product FxAsianOptionGeometricPrice, Model BlackScholesMerton, Engine AnalyticDiscreteGeomtetricAPEngine}
+\label{lst:peconfig_FxAsianOptionGeometricPrice_BlackScholesMerton_AnalyticDiscreteGeomtetricAPEngine}
+\end{longlisting}
+
+BlackScholesMerton/AnalyticContinuousGeometricAPEngine builds a AnalyticContinuousGeometricAveragePriceAsianEngine. A sample
+configuration is shown in listing
+\ref{lst:peconfig_FxAsianOptionGeometricPrice_BlackScholesMerton_AnalyticContinuousGeomtetricAPEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="FxAsianOptionGeometricPrice">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>AnalyticContinuousGeometricAPEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product FxAsianOptionGeometricPrice, Model BlackScholesMerton, Engine AnalyticContinuousGeomtetricAPEngine}
+\label{lst:peconfig_FxAsianOptionGeometricPrice_BlackScholesMerton_AnalyticContinuousGeomtetricAPEngine}
+\end{longlisting}
+
+ScriptedTrade/ScriptedTrade delegates to the scripted trade engine and the associated pricing engine configuration for
+Product Type ScriptedTrade, see there for details. A sample configuration is given in listing
+\ref{lst:peconfig_FxAsianOptionGeometricPrice_ScriptedTrade_ScriptedTrade}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="FxAsianOptionGeometricPrice">
+    <Model>ScriptedTrade</Model>
+    <ModelParameters/>
+    <Engine>ScriptedTrade</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">FX_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product FxAsianOptionGeometricPrice, Model ScriptedTrade, Engine ScriptedTrade}
+\label{lst:peconfig_FxAsianOptionGeometricPrice_ScriptedTrade_ScriptedTrade}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: FxAsianOptionGeometricStrike}
+%--------------------------------------------------------
+
+Used by trade type: FxAsianOption if payoffType2 is Geometric and payoffType is AverageStrike
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+  \item BlackScholesMerton/MCDiscreteGeometricASEngine
+  \item BlackScholesMerton/AnalyticDiscreteGeometricASEngine
+  \item ScriptedTrade/ScriptedTrade
+\end{itemize}
+
+Engine description:
+
+BlackScholesMerton/MCDiscreteGeometricASEngine builds a MCDiscreteGeometricASEngine using Sobol sequences. A sample
+configuration is shown in listing
+\ref{lst:peconfig_FxAsianOptionGeometricStrike_BlackScholesMerton_MCDiscreteGeomtetricASEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item BrownianBridge: whether to use Brownian Bridge for MC simulation
+\item AntitheticVariate: whether to use antithetic variates for MC simulation
+\item ControlVariate: whether to use control variate for MC simulation
+\item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
+\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item MaxSamples: max number of samples for MC simulation
+\item Seed: seed for random number generator
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="FxAsianOptionGeometricStrike">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>MCDiscreteGeometricASEngine</Engine>
+    <EngineParameters>
+        <Parameter name="BrownianBridge">true</Parameter>    
+        <Parameter name="AntitheticVariate">true</Parameter>    
+        <Parameter name="ControlVariate">true</Parameter>    
+        <Parameter name="RequiredSamples">10000</Parameter>    
+        <Parameter name="RequiredTolerance">0</Parameter>    
+        <Parameter name="MaxSamples">0</Parameter>    
+        <Parameter name="Seed">42</Parameter>    
+        <Parameter name="SensitivityTemplate">FX_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product FxAsianOptionGeometricStrike, Model BlackScholesMerton, Engine MCDiscreteGeometricASEngine}
+\label{lst:peconfig_FxAsianOptionGeometricStrike_BlackScholesMerton_MCDiscreteGeomtetricASEngine}
+\end{longlisting}
+
+BlackScholesMerton/AnalyticDiscreteGeometricASEngine builds a AnalyticDiscreteGeometricAverageStrikeAsianEngine. A sample
+configuration is shown in listing
+\ref{lst:peconfig_FxAsianOptionGeometricStrike_BlackScholesMerton_AnalyticDiscreteGeomtetricASEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="FxAsianOptionGeometricStrike">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>AnalyticDiscreteGeometricASEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product FxAsianOptionGeometricStrike, Model BlackScholesMerton, Engine AnalyticDiscreteGeomtetricASEngine}
+\label{lst:peconfig_FxAsianOptionGeometricStrike_BlackScholesMerton_AnalyticDiscreteGeomtetricASEngine}
+\end{longlisting}
+
+ScriptedTrade/ScriptedTrade delegates to the scripted trade engine and the associated pricing engine configuration for
+Product Type ScriptedTrade, see there for details. A sample configuration is given in listing
+\ref{lst:peconfig_FxAsianOptionGeometricStrike_ScriptedTrade_ScriptedTrade}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="FxAsianOptionGeometricStrike">
+    <Model>ScriptedTrade</Model>
+    <ModelParameters/>
+    <Engine>ScriptedTrade</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">FX_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product FxAsianOptionGeometricStrike, Model ScriptedTrade, Engine ScriptedTrade}
+\label{lst:peconfig_FxAsianOptionGeometricStrike_ScriptedTrade_ScriptedTrade}
+\end{longlisting}
+
+% ===================== template ========================
+
+%--------------------------------------------------------
+\subsubsection{Product Type: }
+%--------------------------------------------------------
+
+Used by trade type:
+
+Available Model/Engine pairs:
+
+Engine description:
+
+ builds a . A sample configuration is shown in listing \ref{lst:peconfig_}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item 
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+
+\end{minted}
+\caption{Configuration for Product , Model , Engine }
+\label{lst:peconfig_}
+\end{longlisting}
+
+
+
+The
+following is an overview over the Example section's {\tt pricingengine.xml}. Further below we discuss the Bermudan Swaption engine parametrisation in more detail.
+
+\begin{longlisting}
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<PricingEngines>
+  <Product type="Swap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingSwapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CrossCurrencySwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingCrossCurrencySwapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="FxForward">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingFxForwardEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="FxOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="FxOptionAmerican">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>FdBlackScholesVanillaEngine</Engine>
+    <EngineParameters>
+      <Parameter name="Scheme">Douglas</Parameter>
+      <Parameter name="TimeGridPerYear">100</Parameter>
+      <Parameter name="XGrid">100</Parameter>
+      <Parameter name="DampingSteps">0</Parameter>
+      <!-- optional, prevents too small time grids for increased
+           Greek precision when expiry is near, set to 1 if omitted -->
+      <Parameter name="TimeGridMinimumSize">1</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="EuropeanSwaption">
+    <Model>BlackBachelier</Model> <!-- depends on input vol -->
+    <ModelParameters/>
+    <Engine>BlackBachelierSwaptionEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="Bond">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingRiskyBondEngine</Engine>
+    <EngineParameters>
+      <Parameter name="TimestepPeriod">6M</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="BermudanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters>
+      <Parameter name="Calibration">Bootstrap</Parameter>
+      <Parameter name="BermudanStrategy">CoterminalATM</Parameter>
+      <!-- ccy specific reversions -->
+      <Parameter name="Reversion_EUR">0.03</Parameter>
+      <Parameter name="Reversion_USD">0.04</Parameter>
+      <!-- reversion to use if no ccy specific value is given -->
+      <Parameter name="Reversion">0.02</Parameter>
+      <Parameter name="ReversionType">HullWhite</Parameter>
+      <Parameter name="Volatility">0.01</Parameter>
+      <Parameter name="VolatilityType">Hagan</Parameter>
+      <Parameter name="ShiftHorizon">0.5</Parameter>
+      <Parameter name="Tolerance">0.0001</Parameter>
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+      <Parameter name="sy">3.0</Parameter>
+      <Parameter name="ny">10</Parameter>
+      <Parameter name="sx">3.0</Parameter>
+      <Parameter name="nx">10</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CapFloor">
+    <Model>IborCapModel</Model>
+    <ModelParameters/>
+    <Engine>IborCapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CapFlooredIborLeg">
+    <Model>BlackOrBachelier</Model>
+    <ModelParameters/>
+    <Engine>BlackIborCouponPricer</Engine>
+    <EngineParameters>
+      <!-- Black76 or BivariateLognormal -->
+      <TimingAdjustment>Black76</TimingAdjustment>
+      <!-- Correlation Parameter for BivariateLognormal -->
+      <Correlation>1.0</Correlation>
+    </EngineParameters>
+  </Product>
+  <Product type="EquityForward">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingEquityForwardEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="EquityOption">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="Bond">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingRiskyBondEngine</Engine>
+    <EngineParameters>
+      <Parameter name="TimestepPeriod">6M</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CreditDefaultSwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>MidPointCdsEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CMS">
+    <Model>Hagan</Model><!-- or LinearTSR -->
+    <ModelParameters/>
+    <Engine>Analytic</Engine> <!-- or Numerical -->
+    <EngineParameters>
+      <!-- Alternative Yield Curve Models: ExactYield, ParallelShifts, NonParallelShifts -->
+      <Parameter name="YieldCurveModel">Standard</Parameter> 
+      <Parameter name="MeanReversion_EUR">0.01</Parameter>
+      <Parameter name="MeanReversion_USD">0.02</Parameter>
+      <Parameter name="MeanReversion">0.0</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CMSSpread">
+    <Model>BrigoMercurio</Model>
+    <ModelParameters/>
+    <Engine>Analytic</Engine>
+    <EngineParameters>
+      <Parameter name="IntegrationPoints">16</Parameter>
+    </EngineParameters>
+  </Product>
+  <GlobalParameters>
+    <Parameter name="ContinueOnCalibrationError">true</Parameter>
+    <!-- typically not present in a user configuration, but used internally -->
+    <Parameter name="Calibrate">true</Parameter>
+    <Parameter name="GenerateAdditionalResults">true</Parameter>
+    <Parameter name="RunType">NPV</Parameter>
+  </GlobalParameters>
+\end{minted}
+\caption{Pricing engine configuration}
+\label{lst:pricingengine_config}
+\end{longlisting}
+
+These settings will be taken into account when the engine factory is asked to build the respective pricing engines and required models, and to calibrate the required model.
+
+\medskip
+For example, in case of the Bermudan Swaption, the parameters are interpreted as follows:
+
+\begin{itemize}
+\item The only model currently supported for Bermudan Swaption pricing is the LGM selected here. 
+
+\item The first block of model parameters then provides initial values for the model (Reversion, Volatility) and chooses
+  the parametrisation of the LGM model with ReversionType and VolatilityType choices {\em HullWhite} and {\em
+    Hagan}. Notice the possibility to specify a currency-specific reversion. Calibration and BermudanStrategy can be set
+  to {\em None} in order to skip model calibration. Alternatively, Calibration is set to {\em Bootstrap} and
+  BermudanStrategy to {\em CoterminalATM} in order to calibrate to instrument-specific co-terminal ATM Swaptions,
+  i.e. chosen to match the instruments first expiry and final maturity.  If {\em CoterminalDealStrike} is chosen, the
+  co-terminal swaptions will match the fixed rate of the deal (if the deal has changing fixed rates, the first rate is
+  matched). Finally if the ShiftHorizon parameter is given, its value times the remaining maturity time of the deal is
+  chosen as the horizon shift parameter for the LGM model. If not given, this parameter defaults to $0.5$.
+
+\item The second block of engine parameters specifies the Numerical Swaption engine parameters which determine the
+  number of standard deviations covered in the probability density integrals (sy and sx), and the number of grid points
+  used per standard deviation (ny and nx).
+\end{itemize}
+
+To see the configuration options for the alternative CMS engines (Hagan Numerical, LinearTSR) or the Black Ibor coupon
+pricer (CapFlooredIborLeg), please refer to the commented parts in {\tt Examples/Input/pricingengine.xml}.
+
+\medskip
+This file is relevant in particular for structured products which are on the roadmap of future ORE releases. But it is also
+intended to allow the selection of optimised pricing engines for vanilla products such as Interest Rate Swaps.
+
+\medskip
+In addition to product specific settings there is also a block with global parameters with the following meaning:
+\begin{itemize}
+\item ContinueOnCalibrationError: If set to true an exceedence of a prescribed model calibration tolerance (for e.g. the
+  LGM model) will not cause the trade building to fail, instead a warning is logged and the trade is processed
+  anyway. Optional, defaults to false.
+\item Calibrate: If false, model calibration is disabled. This flag is usually not present in a user configuration, but
+  only used internally for certain workflows within ORE which do not require a model calibration. Optional, defaults to
+  true.
+\item GenerateAdditionalResults: If false, the generation of additional results within pricing engines will be
+  suppressed (for those pricing engines which support this). This flag is usually not present in a user configuration,
+  but only used internally to improve the performance for processes which only rely on the NPV as a result from pricing
+  engines, e.g. when repricing trades under sensitivity or stress scenarios. Option, defaults to false.
+\item RunType: Set automatically. One of NPV, SensitivityDelta, SensitivityDeltaGamma, Stress, Exposure, Capital,
+  TradeDetails, PortfolioAnalyser, HistoricalPnL, BondSpreadImply, AbsMaturityUpdate depending on the context for which
+  a portfolio was built. Might also be left empty. This is used by some pricing engines to adapt to certain run
+  types. E.g. a first order sensitivity pnl expansion might be used for a SensitivityDelta run by an engine which is
+  able to compute analytical or AAD first order sensitivities.
+\end{itemize}
