@@ -6,6 +6,379 @@
 The pricing engine configuration file is provided to select pricing models and pricing engines by product type.
 
 %--------------------------------------------------------
+\subsubsection{Product Type: EuropeanSwaption}
+%--------------------------------------------------------
+
+Used by trade type: Swaption, for European exercise on vanilla underlying coupon types
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item BlackBachelier/BlackBachelierSwaptionEngine
+\item LGM/Grid
+\item LGM/FD
+\end{itemize}
+
+Engine description:
+
+BlackBachelier/BlackBachelierSwaptionEngine builds a BlackMultiLegOptionEngine . A sample configuration is shown in
+listing \ref{lst:peconfig_EuropeanSwaption_BlackBachelier_BlackBachelierSwaptionEngine}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="EuropeanSwaption">
+    <Model>BlackBachelier</Model>
+    <ModelParameters/>
+    <Engine>BlackBachelierSwaptionEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product EuropeanSwaption, Model BlackBachelier, Engine BlackBachelierSwaptionEngine}
+\label{lst:peconfig_EuropeanSwaption_BlackBachelier_BlackBachelierSwaptionEngine}
+\end{longlisting}
+
+LGM/Grid builds a NumericLgmMultiLegOptionEngine using LgmConvoluationSolver as a solver. The rollback follows the paper
+``Hagan, P: Methodology for callable swaps and Bermudan exercise into swaptions''. A sample configuration is shown in
+listing \ref{lst:peconfig_EuropeanSwaption_LGM_Grid}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Calibration: Bootstrap, BestFit, None
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
+\item Reversion: The mean reversion
+\item ReversionType: Hagan, HullWhite
+\item Volatility: The volatility (start value for calibration if calibrated)
+\item VolatilityType: Hagan, HullWhite
+\item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
+\item Tolerance: Error tolerance for calibration
+\item sy, sx: Number of covered standard deviations (notation as in Hagan's paper)
+\item ny, nx: Number of grid points for numerical integration (notation as in Hagan's paper)
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="EuropeanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters>
+        <Parameter name="Calibration">Bootstrap</Parameter>
+        <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
+        <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+        <Parameter name="Reversion">0.0</Parameter>
+        <Parameter name="ReversionType">HullWhite</Parameter>
+        <Parameter name="Volatility">0.01</Parameter>
+        <Parameter name="VolatilityType">Hagan</Parameter>
+        <Parameter name="ShiftHorizon">0.5</Parameter>
+        <Parameter name="Tolerance">0.20</Parameter>
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+        <Parameter name="sy">5.0</Parameter>
+        <Parameter name="ny">30</Parameter>
+        <Parameter name="sx">5.0</Parameter>
+        <Parameter name="nx">30</Parameter>
+        <Parameter name="SensitivityTemplate">IR_FD</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product EuropeanSwaption, Model LGM, Engine Grid}
+\label{lst:peconfig_EuropeanSwaption_LGM_Grid}
+\end{longlisting}
+
+LGM/FD builds a NumericLgmMultiLegOptionEngine using LgmFdSolver as a solver using finite difference. A sample
+configuration is shown in listing \ref{lst:peconfig_EuropeanSwaption_LGM_FD}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Calibration: Bootstrap, BestFit, None
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
+\item Reversion: The mean reversion
+\item ReversionType: Hagan, HullWhite
+\item Volatility: The volatility (start value for calibration if calibrated)
+\item VolatilityType: Hagan, HullWhite
+\item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
+\item Tolerance: Error tolerance for calibration
+\item Scheme: The finite difference scheme to use
+\item StateGridPoints: The number of grid points in state direction
+\item TimeStepsPerYear: The number of time steps per year to use
+\item MesherEpsilon: determines the covered probability mass, mass outside state grid is $\Phi^{-1}(1-2\epsilon)$
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="EuropeanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters>
+        <Parameter name="Calibration">Bootstrap</Parameter>
+        <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
+        <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+        <Parameter name="Reversion">0.0</Parameter>
+        <Parameter name="ReversionType">HullWhite</Parameter>
+        <Parameter name="Volatility">0.01</Parameter>
+        <Parameter name="VolatilityType">Hagan</Parameter>
+        <Parameter name="ShiftHorizon">0.5</Parameter>
+        <Parameter name="Tolerance">0.20</Parameter>
+    </ModelParameters>
+    <Engine>FD</Engine>
+        <EngineParameters>
+            <Parameter name="Scheme">Douglas</Parameter>
+            <Parameter name="StateGridPoints">64</Parameter>
+            <Parameter name="TimeStepsPerYear">24</Parameter>
+            <Parameter name="MesherEpsilon">1E-4</Parameter>
+        </EngineParameters>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product EuropeanSwaption, Model LGM, Engine FD}
+\label{lst:peconfig_EuropeanSwaption_LGM_FD}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: BermudanSwaption}
+%--------------------------------------------------------
+
+Used by trade type: Swaption, for Bermudan exercise on vanilla underlying coupon types
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item LGM/Grid
+\item LGM/FD
+\end{itemize}
+
+Engine description:
+
+LGM/Grid builds a NumericLgmMultiLegOptionEngine using LgmConvoluationSolver as a solver. The rollback follows the paper
+``Hagan, P: Methodology for callable swaps and Bermudan exercise into swaptions''. A sample configuration is shown in
+listing \ref{lst:peconfig_BermudanSwaption_LGM_Grid}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Calibration: Bootstrap, BestFit, None
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
+\item Reversion: The mean reversion
+\item ReversionType: Hagan, HullWhite
+\item Volatility: The volatility (start value for calibration if calibrated)
+\item VolatilityType: Hagan, HullWhite
+\item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
+\item Tolerance: Error tolerance for calibration
+\item sy, sx: Number of covered standard deviations (notation as in Hagan's paper)
+\item ny, nx: Number of grid points for numerical integration (notation as in Hagan's paper)
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="BermudanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters>
+        <Parameter name="Calibration">Bootstrap</Parameter>
+        <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
+        <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+        <Parameter name="Reversion">0.0</Parameter>
+        <Parameter name="ReversionType">HullWhite</Parameter>
+        <Parameter name="Volatility">0.01</Parameter>
+        <Parameter name="VolatilityType">Hagan</Parameter>
+        <Parameter name="ShiftHorizon">0.5</Parameter>
+        <Parameter name="Tolerance">0.20</Parameter>
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+        <Parameter name="sy">5.0</Parameter>
+        <Parameter name="ny">30</Parameter>
+        <Parameter name="sx">5.0</Parameter>
+        <Parameter name="nx">30</Parameter>
+        <Parameter name="SensitivityTemplate">IR_FD</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product BermudanSwaption, Model LGM, Engine Grid}
+\label{lst:peconfig_BermudanSwaption_LGM_Grid}
+\end{longlisting}
+
+LGM/FD builds a NumericLgmMultiLegOptionEngine using LgmFdSolver as a solver using finite difference. A sample
+configuration is shown in listing \ref{lst:peconfig_BermudanSwaption_LGM_FD}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Calibration: Bootstrap, BestFit, None
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
+\item Reversion: The mean reversion
+\item ReversionType: Hagan, HullWhite
+\item Volatility: The volatility (start value for calibration if calibrated)
+\item VolatilityType: Hagan, HullWhite
+\item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
+\item Tolerance: Error tolerance for calibration
+\item Scheme: The finite difference scheme to use
+\item StateGridPoints: The number of grid points in state direction
+\item TimeStepsPerYear: The number of time steps per year to use
+\item MesherEpsilon: determines the covered probability mass, mass outside state grid is $\Phi^{-1}(1-2\epsilon)$
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="BermudanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters>
+        <Parameter name="Calibration">Bootstrap</Parameter>
+        <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
+        <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+        <Parameter name="Reversion">0.0</Parameter>
+        <Parameter name="ReversionType">HullWhite</Parameter>
+        <Parameter name="Volatility">0.01</Parameter>
+        <Parameter name="VolatilityType">Hagan</Parameter>
+        <Parameter name="ShiftHorizon">0.5</Parameter>
+        <Parameter name="Tolerance">0.20</Parameter>
+    </ModelParameters>
+    <Engine>FD</Engine>
+        <EngineParameters>
+            <Parameter name="Scheme">Douglas</Parameter>
+            <Parameter name="StateGridPoints">64</Parameter>
+            <Parameter name="TimeStepsPerYear">24</Parameter>
+            <Parameter name="MesherEpsilon">1E-4</Parameter>
+        </EngineParameters>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product BermudanSwaption, Model LGM, Engine FD}
+\label{lst:peconfig_BermudanSwaption_LGM_FD}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: AmericanSwaption}
+%--------------------------------------------------------
+
+Used by trade type: Swaption, for American exercise on vanilla underlying coupon types
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item LGM/FD
+\item LGM/Grid (Not recommended due to inferior performance)
+\end{itemize}
+
+Engine description:
+
+LGM/FD builds a NumericLgmMultiLegOptionEngine using LgmFdSolver as a solver using finite difference. A sample
+configuration is shown in listing \ref{lst:peconfig_AmericanSwaption_LGM_FD}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Calibration: Bootstrap, BestFit, None
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
+\item Reversion: The mean reversion
+\item ReversionType: Hagan, HullWhite
+\item Volatility: The volatility (start value for calibration if calibrated)
+\item VolatilityType: Hagan, HullWhite
+\item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
+\item Tolerance: Error tolerance for calibration
+\item Scheme: The finite difference scheme to use
+\item StateGridPoints: The number of grid points in state direction
+\item TimeStepsPerYear: The number of time steps per year to use
+\item MesherEpsilon: determines the covered probability mass, mass outside state grid is $\Phi^{-1}(1-2\epsilon)$
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="AmericanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters>
+        <Parameter name="Calibration">Bootstrap</Parameter>
+        <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
+        <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+        <Parameter name="Reversion">0.0</Parameter>
+        <Parameter name="ReversionType">HullWhite</Parameter>
+        <Parameter name="Volatility">0.01</Parameter>
+        <Parameter name="VolatilityType">Hagan</Parameter>
+        <Parameter name="ShiftHorizon">0.5</Parameter>
+        <Parameter name="Tolerance">0.20</Parameter>
+    </ModelParameters>
+    <Engine>FD</Engine>
+        <EngineParameters>
+            <Parameter name="Scheme">Douglas</Parameter>
+            <Parameter name="StateGridPoints">64</Parameter>
+            <Parameter name="TimeStepsPerYear">24</Parameter>
+            <Parameter name="MesherEpsilon">1E-4</Parameter>
+        </EngineParameters>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product AmericanSwaption, Model LGM, Engine FD}
+\label{lst:peconfig_AmericanSwaption_LGM_FD}
+\end{longlisting}
+
+LGM/Grid builds a NumericLgmMultiLegOptionEngine using LgmConvoluationSolver as a solver. The rollback follows the paper
+``Hagan, P: Methodology for callable swaps and American exercise into swaptions''. A sample configuration is shown in
+listing \ref{lst:peconfig_AmericanSwaption_LGM_Grid}. Not recommended due to inferior performance.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Calibration: Bootstrap, BestFit, None
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
+\item Reversion: The mean reversion
+\item ReversionType: Hagan, HullWhite
+\item Volatility: The volatility (start value for calibration if calibrated)
+\item VolatilityType: Hagan, HullWhite
+\item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
+\item Tolerance: Error tolerance for calibration
+\item sy, sx: Number of covered standard deviations (notation as in Hagan's paper)
+\item ny, nx: Number of grid points for numerical integration (notation as in Hagan's paper)
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="AmericanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters>
+        <Parameter name="Calibration">Bootstrap</Parameter>
+        <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
+        <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+        <Parameter name="Reversion">0.0</Parameter>
+        <Parameter name="ReversionType">HullWhite</Parameter>
+        <Parameter name="Volatility">0.01</Parameter>
+        <Parameter name="VolatilityType">Hagan</Parameter>
+        <Parameter name="ShiftHorizon">0.5</Parameter>
+        <Parameter name="Tolerance">0.20</Parameter>
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+        <Parameter name="sy">5.0</Parameter>
+        <Parameter name="ny">30</Parameter>
+        <Parameter name="sx">5.0</Parameter>
+        <Parameter name="nx">30</Parameter>
+        <Parameter name="SensitivityTemplate">IR_FD</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product AmericanSwaption, Model LGM, Engine Grid (Not recommended due to inferior performance)}
+\label{lst:peconfig_AmericanSwaption_LGM_Grid}
+\end{longlisting}
+
+%--------------------------------------------------------
 \subsubsection{Product Type: BondRepo}
 %--------------------------------------------------------
 
@@ -139,6 +512,114 @@ The parameters have the following meaning:
 \end{minted}
 \caption{Configuration for Product CapFloor, Model IborCapModel, Engine IborCapEngine}
 \label{lst:peconfig_lst:peconfig_CapFloor_IborCapModel_IborCapEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CapFlooredOvernightIndexedCouponLeg}
+%--------------------------------------------------------
+
+Used by trade type: any trade with a cap / floored OIS leg
+
+Available Model/Engine pairs: BlackOrBachelier/BlackOvernightIndexedCouponPricer
+
+Engine description:
+
+BlackOrBachelier/BlackOvernightIndexedCouponPricer builds a BlackOvernightIndexedCouponPricer. A sample configuration is
+shown in listing \ref{lst:peconfig_CapFlooredOvernightIndexedCouponLeg_BlackOrBachelier_BlackOvernightIndexedCouponPricer}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CapFlooredOvernightIndexedCouponLeg">
+    <Model>BlackOrBachelier</Model>
+    <ModelParameters/>
+    <Engine>BlackOvernightIndexedCouponPricer</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CapFlooredOvernightIndexedCouponLeg, Model BlackOrBachelier, Engine BlackOvernightIndexedCouponPricer}
+\label{lst:peconfig_CapFlooredOvernightIndexedCouponLeg_BlackOrBachelier_BlackOvernightIndexedCouponPricer}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CappedFlooredCpiLegCoupons}
+%--------------------------------------------------------
+
+Used by trade type: any trade with a cap / floored CPI leg (coupons)
+
+Available Model/Engine pairs: Black/BlackAnalytic
+
+Engine description:
+
+Black/BlackAnalytic builds a BlackCPICouponPricer or BachelierCPICouponPricer, depending on the volatility input. A sample configuration is
+shown in listing \ref{lst:peconfig_CapFlooredCpiLegCoupons_Black_BlackAnalytic}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item useLastFixingDate: if true, use the last known fixing date as the base date of the volatility structure, otherwise
+  use observation lag        
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CapFlooredCpiLegCoupons">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>BlackAnalytic</Engine>
+    <EngineParameters>
+          <Parameter name="useLastFixingDate">true</Parameter>
+      <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CapFlooredCpiLegCoupons, Model Black, Engine BlackAnalytic}
+\label{lst:peconfig_CapFlooredCpiLegCoupons_Black_BlackAnalytic}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CappedFlooredCpiLegCashFlows}
+%--------------------------------------------------------
+
+Used by trade type: any trade with a cap / floored CPI leg (cashflows)
+
+Available Model/Engine pairs: Black/BlackAnalytic
+
+Engine description:
+
+Black/BlackAnalytic builds a BlackCPICashFLowPricer or BachelierCPICashFlowPricer, depending on the volatility input. A sample configuration is
+shown in listing \ref{lst:peconfig_CappedFlooredCpiLegCashFlows_Black_BlackAnalytic}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item useLastFixingDate: if true, use the last known fixing date as the base date of the volatility structure, otherwise
+  use observation lag        
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CappedFlooredCpiLegCashFlows">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>BlackAnalytic</Engine>
+    <EngineParameters>
+          <Parameter name="useLastFixingDate">true</Parameter>
+      <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CapFlooredCpiLegCoupons, Model Black, Engine BlackAnalytic}
+\label{lst:peconfig_CappedFlooredCpiLegCashFlows_Black_BlackAnalytic}
 \end{longlisting}
 
 %--------------------------------------------------------
@@ -2281,6 +2762,41 @@ The parameters have the following meaning:
 \end{minted}
 \caption{Configuration for Product FxOptionAmerican, Model GarmanKohlhagen, Engine BaroneAdesiWhaleyApproximationEngine}
 \label{lst:peconfig_FxOptionAmerican_GarmanKohlhagen_BaroneAdesiWhaleyApproximationEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: FxTouchOption}
+%--------------------------------------------------------
+
+Used by trade type: FxTouchOption
+
+Available Model/Engine pairs: GarmanKohlhagen/AnalyticDigitalAmericanEngine
+
+Engine description:
+
+GarmanKohlhagen/AnalyticDigitalAmericanEngine builds a AnalyticDigitalAmericanEngine (one touch) or
+AnalyticDigitalAmericanKOEngine (no touch). A sample configuration is shown in listing
+\ref{lst:peconfig_FxTouchOption_GarmanKohlhagen_AnalyticDigitalAmericanEngine}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="FxTouchOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticDigitalAmericanEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product , Model , Engine }
+\label{lst:peconfig_FxTouchOption_GarmanKohlhagen_AnalyticDigitalAmericanEngine}
 \end{longlisting}
 
 % ===================== template ========================
