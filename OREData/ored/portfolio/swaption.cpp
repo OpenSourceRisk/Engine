@@ -292,18 +292,41 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     std::vector<Real> strikes(exerciseBuilder_->noticeDates().size(), Null<Real>());
     for (Size i = 0; i < exerciseBuilder_->noticeDates().size(); ++i) {
-        Real firstFixedRate = Null<Real>();
-        Real firstFloatSpread = Null<Real>();
+        Real firstFixedRate = Null<Real>(), lastFixedRate = Null<Real>();
+        Real firstFloatSpread = Null<Real>(), lastFloatSpread = Null<Real>();
         for (auto const& l : underlying_->legs()) {
             for (auto const& c : l) {
                 if (auto cpn = boost::dynamic_pointer_cast<FixedRateCoupon>(c)) {
                     if (cpn->accrualStartDate() >= exerciseBuilder_->noticeDates()[i] && firstFixedRate == Null<Real>())
                         firstFixedRate = cpn->rate();
+                    lastFixedRate = cpn->rate();
                 } else if (auto cpn = boost::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
-                    firstFloatSpread = cpn->spread();
+                    if (cpn->accrualStartDate() >= exerciseBuilder_->noticeDates()[i] &&
+                        firstFloatSpread == Null<Real>())
+                        firstFloatSpread = cpn->spread();
+                    lastFloatSpread = cpn->spread();
+                    if (index == nullptr) {
+                        if (auto tmp = boost::dynamic_pointer_cast<IborIndex>(cpn->index())) {
+                            DLOG("found ibor / ois index '" << tmp->name() << "'");
+                            index = tmp;
+                        } else if (auto tmp = boost::dynamic_pointer_cast<SwapIndex>(cpn->index())) {
+                            DLOG("found cms index " << tmp->name() << ", use key '" << tmp->iborIndex()->name()
+                                                    << "' to look up vol");
+                            index = tmp->iborIndex();
+                        } else if (auto tmp = boost::dynamic_pointer_cast<BMAIndex>(cpn->index())) {
+                            DLOG("found bma/sifma index '" << tmp->name() << "'");
+                            index = tmp;
+                        }
+                    }
                 }
             }
         }
+        // if no first fixed rate (float spread) was found, fall back on the last values
+        if(firstFixedRate == Null<Real>())
+            firstFixedRate = lastFixedRate;
+        if(firstFloatSpread == Null<Real>())
+            firstFloatSpread = lastFloatSpread;
+        // construct calibration strike
         if (firstFixedRate != Null<Real>()) {
             strikes[i] = firstFixedRate;
             if (firstFloatSpread != Null<Real>()) {

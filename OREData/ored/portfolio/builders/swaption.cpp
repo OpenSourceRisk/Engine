@@ -144,12 +144,14 @@ boost::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const string& i
         std::copy_if(grid.dates().begin(), grid.dates().end(), std::back_inserter(effExpiries),
                      [&expiries](const Date& d) { return d >= expiries[0] && d < expiries[1]; });
         // simple linear interpolation of calibration strikes between endpoints, this can be refined obviously
-        effStrikes.resize(effExpiries.size());
-        Real t0 = Actual365Fixed().yearFraction(today, expiries[0]);
-        Real t1 = Actual365Fixed().yearFraction(today, expiries[1]);
-        for (Size i = 0; i < effExpiries.size(); ++i) {
-            Real t = Actual365Fixed().yearFraction(today, effExpiries[i]);
-            effStrikes[i] = strikes[0] + (strikes[1] - strikes[0]) / (t1 - t0) * (t - t0);
+        effStrikes.resize(effExpiries.size(), Null<Real>());
+        if (strikes[0] != Null<Real>() && strikes[1] != Null<Real>()) {
+            Real t0 = Actual365Fixed().yearFraction(today, expiries[0]);
+            Real t1 = Actual365Fixed().yearFraction(today, expiries[1]);
+            for (Size i = 0; i < effExpiries.size(); ++i) {
+                Real t = Actual365Fixed().yearFraction(today, effExpiries[i]);
+                effStrikes[i] = strikes[0] + (strikes[1] - strikes[0]) / (t1 - t0) * (t - t0);
+            }
         }
     }
 
