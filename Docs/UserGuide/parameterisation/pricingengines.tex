@@ -1125,7 +1125,7 @@ The parameters have the following meaning:
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
-roduct type="CMS">
+<Prooduct type="CMS">
     <Model>LinearTSR</Model>
     <ModelParameters/>
     <Engine>LinearTSRPricer</Engine>
@@ -1141,12 +1141,99 @@ roduct type="CMS">
         <Parameter name="BsStdDev">3.0</Parameter>
         <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
     </EngineParameters>
-</Product>\end{minted}
+</Product>
+\end{minted}
 \caption{Configuration for Product CMS, Model LinearTSR, Engine LinearTSRPricer}
 \label{lst:peconfig_CMS_LinearTSR_LinearTSRPricer}
 \end{longlisting}
 
 Hagan/Analytic, Hagan/Numerical build AnalyticHaganPricer, NumericHaganPricer (TODO add parameters and sample config).
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CMSSpread}
+%--------------------------------------------------------
+
+Used by trade type: any trade referencing a CMSSpread leg
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+  \item BrigoMercurio/Analytic
+\end{itemize}
+
+Engine description:
+
+BrigoMercurio/Analytic builds a LognormalCmsSpreadPricer (following Brigo, Mercurio, Interest Rate Models - Theory and
+Practice, section 13.16.2). A sample configuration is shown in listing
+\ref{lst:peconfig_CMSSpread_BrigoMercurio_Analytic}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item IntegrationPoints: Number of points for Gauss-Hermite numerical integration
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CMSSpread">
+    <Model>BrigoMercurio</Model>
+    <ModelParameters/>
+    <Engine>Analytic</Engine>
+    <EngineParameters>
+        <Parameter name="IntegrationPoints">16</Parameter>
+        <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
+    </EngineParameters>
+</Product>\caption{Configuration for Product CMSSpread, Model BrigoMercurio, Engine Analytic}
+\end{minted}
+\label{lst:peconfig_CMSSpread_BrigoMercurio_Analytic}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: DurationAdjustedCMS}
+%--------------------------------------------------------
+
+Used by trade type: any trade referencing a DurationAdjustedCMS leg
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+  \item LinearTSR/LinearTSRPricer
+\end{itemize}
+
+Engine description:
+
+LinearTSR/LinearTSRPricer builds a DurationAdjustedCmsCouponTsrPricer with LinearAnnuityMapping. A sample configuration
+is shown in listing \ref{lst:peconfig_DurationAdjustedCMS_LinearTSR_LinearTSRPricer}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item MeanReversion: the mean reversion for the model
+\item LowerRateBoundLogNormal, UpperRateBoundLogNormal: rate bounds for ln / sln vol input
+\item LowerRateNormal, UpperRateNormal: rate bounds for normal vol input
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="DurationAdjustedCMS">
+    <Model>LinearTSR</Model>
+    <ModelParameters/>
+    <Engine>LinearTSRPricer</Engine>
+    <EngineParameters>
+        <Parameter name="MeanReversion">0.0</Parameter>
+        <Parameter name="LowerRateBoundLogNormal">0.0001</Parameter>
+        <Parameter name="UpperRateBoundLogNormal">2.0000</Parameter>
+        <Parameter name="LowerRateBoundNormal">-2.0000</Parameter>
+        <Parameter name="UpperRateBoundNormal">2.0000</Parameter>
+        <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product DurationAdjustedCMS, Model LinearTSR, Engine LinearTSRPricer}
+\label{lst:peconfig_DurationAdjustedCMS_LinearTSR_LinearTSRPricer}
+\end{longlisting}
 
 %--------------------------------------------------------
 \subsubsection{Product Type: CommodityAsianOptionArithmeticPrice}
