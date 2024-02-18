@@ -805,6 +805,74 @@ The parameters have the following meaning:
 \end{longlisting}
 
 %--------------------------------------------------------
+\subsubsection{Product Type: CapFlooredAverageONIndexedCouponLeg}
+%--------------------------------------------------------
+
+Used by trade type: any trade with a cap / floored OIS leg
+
+Available Model/Engine pairs: BlackOrBachelier/BlackAverageONIndexedCouponPricer
+
+Engine description:
+
+BlackOrBachelier/BlackAverageONIndexedCouponPricer builds a BlackAverageONIndexedCouponPricer. A sample configuration is
+shown in listing \ref{lst:peconfig_CapFlooredAverageONIndexedCouponLeg_BlackOrBachelier_BlackAverageONIndexedCouponPricer}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CapFlooredAverageONIndexedCouponLeg">
+    <Model>BlackOrBachelier</Model>
+    <ModelParameters/>
+    <Engine>BlackAverageONIndexedCouponPricer</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CapFlooredAverageONIndexedCouponLeg, Model BlackOrBachelier, Engine BlackAverageONIndexedCouponPricer}
+\label{lst:peconfig_CapFlooredAverageONIndexedCouponLeg_BlackOrBachelier_BlackAverageONIndexedCouponPricer}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CapFlooredAverageBMAIndexedCouponLeg}
+%--------------------------------------------------------
+
+Used by trade type: any trade with a cap / floored OIS leg
+
+Available Model/Engine pairs: BlackOrBachelier/BlackAverageBMAIndexedCouponPricer
+
+Engine description:
+
+BlackOrBachelier/BlackAverageBMAIndexedCouponPricer builds a BlackAverageBMAIndexedCouponPricer. A sample configuration is
+shown in listing \ref{lst:peconfig_CapFlooredAverageBMAIndexedCouponLeg_BlackOrBachelier_BlackAverageBMAIndexedCouponPricer}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CapFlooredAverageBMAIndexedCouponLeg">
+    <Model>BlackOrBachelier</Model>
+    <ModelParameters/>
+    <Engine>BlackAverageBMAIndexedCouponPricer</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CapFlooredAverageBMAIndexedCouponLeg, Model BlackOrBachelier, Engine BlackAverageBMAIndexedCouponPricer}
+\label{lst:peconfig_CapFlooredAverageBMAIndexedCouponLeg_BlackOrBachelier_BlackAverageBMAIndexedCouponPricer}
+\end{longlisting}
+
+%--------------------------------------------------------
 \subsubsection{Product Type: CappedFlooredCpiLegCoupons}
 %--------------------------------------------------------
 
@@ -1022,6 +1090,63 @@ The parameters have the following meaning:
   CapFlooredNonStdYYCouponPricer}
 \label{lst:peconfig_CapFlooredNonStdYYLeg_CapFlooredNonStdYYModel_CapFlooredNonStdYYCouponPricer}
 \end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CMS}
+%--------------------------------------------------------
+
+Used by trade type: any trade referencing a CMS leg, also used by CMS Spread coupon pricers
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+  \item LinearTSR/LinearTSRPricer
+  \item Hagan/Analytic
+  \item Hagan/Numerical
+\end{itemize}
+
+Engine description:
+
+LinearTSR/LinearTSRPricer builds a LinearTRSPricer. A sample configuration is shown in listing
+\ref{lst:peconfig_CMS_LinearTSR_LinearTSRPricer}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item MeanReversion: the mean reversion for the model
+\item Policy: RateBound, VegaRatio, PriceThreshold, BsStdDev
+\item LowerRateBoundLogNormal, UpperRateBoundLogNormal: rate bounds for ln / sln vol input
+\item LowerRateNormal, UpperRateNormal: rate bounds for normal vol input
+\item VegaRatio: vega ratio for policy
+\item PriceThreshold: price threshold for policy
+\item BsStdDev: std devs for BsStdDev
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+roduct type="CMS">
+    <Model>LinearTSR</Model>
+    <ModelParameters/>
+    <Engine>LinearTSRPricer</Engine>
+    <EngineParameters>
+        <Parameter name="MeanReversion">0.0</Parameter>
+        <Parameter name="Policy">RateBound</Parameter>
+        <Parameter name="LowerRateBoundLogNormal">0.0001</Parameter>
+        <Parameter name="UpperRateBoundLogNormal">2.0000</Parameter>
+        <Parameter name="LowerRateBoundNormal">-2.0000</Parameter>
+        <Parameter name="UpperRateBoundNormal">2.0000</Parameter>
+        <Parameter name="VegaRatio">0.01</Parameter>
+        <Parameter name="PriceThreshold">0.0000001</Parameter>
+        <Parameter name="BsStdDev">3.0</Parameter>
+        <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
+    </EngineParameters>
+</Product>\end{minted}
+\caption{Configuration for Product CMS, Model LinearTSR, Engine LinearTSRPricer}
+\label{lst:peconfig_CMS_LinearTSR_LinearTSRPricer}
+\end{longlisting}
+
+Hagan/Analytic, Hagan/Numerical build AnalyticHaganPricer, NumericHaganPricer (TODO add parameters and sample config).
 
 %--------------------------------------------------------
 \subsubsection{Product Type: CommodityAsianOptionArithmeticPrice}
@@ -3509,8 +3634,8 @@ The parameters have the following meaning:
     </EngineParameters>
 </Product>
 \end{minted}
-\caption{Configuration for Product MultiLegSwaption, Model BlackBachelier, Engine BlackBachelierSwaptionEngine}
-\label{lst:peconfig_MultiLegSwaption_LGM_MC}
+\caption{Configuration for Product MultiLegSwaption, Model CrossAssetModel, Engine MC}
+\label{lst:peconfig_MultiLegOption_CrossAssetModel_MC}
 \end{longlisting}
 
 LGM/AMC builds a McMultiLegOptionEngine for use in AMC simulations. We refer to the AMC module documentation for further
