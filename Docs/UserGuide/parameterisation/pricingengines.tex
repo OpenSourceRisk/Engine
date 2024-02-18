@@ -917,6 +917,113 @@ The parameters have the following meaning:
 \end{longlisting}
 
 %--------------------------------------------------------
+\subsubsection{Product Type: YYCapFloor}
+%--------------------------------------------------------
+
+Used by trade type: CapFloor with underlying leg of leg type YoY.
+
+Available Model/Engine pairs: YYCapModel/YYCapEngine
+
+Engine description:
+
+YYCapModel/YYCapEngine builds a YoYInflationBlackCapFloorEngine, YoYInflationUnitDisplacedBlackCapFloorEngine,
+YoYInflationBachelierCapFloorEngine depending on the volatility type of the market surface. A sample configuration is
+shown in listing \ref{lst:peconfig_YYCapFloor_YYCapModel_YYCapEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CpiCapFloor">
+    <Model>YYCapModel</Model>
+    <ModelParameters/>
+    <Engine>YYCapEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product YYCapFloor, Model YYCapModel, Engine YYCapEngine}
+\label{lst:peconfig_YYCapFloor_YYCapModel_YYCapEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CappedFlooredYYLeg}
+%--------------------------------------------------------
+
+Used by trade type: any trade with a cap / floored YY leg
+
+Available Model/Engine pairs: CapFlooredYYModel/CapFlooredYYCouponPricer
+
+Engine description:
+
+CapFlooredYYModel/CapFlooredYYCouponPricer builds a BlackYoYInflationCouponPricer,
+UnitDisplacedBlackYoYInflationCouponPricer, BachelierYoYInflationCouponPricer, depending on the volatility input. A
+sample configuration is shown in listing \ref{lst:peconfig_CapFlooredYYLeg_CapFlooredYYModel_CapFlooredYYCouponPricer}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CappedFlooredYYLeg">
+    <Model>CapFlooredYYModel</Model>
+    <ModelParameters/>
+    <Engine>CapFlooredYYCouponPricer</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CapFlooredYYLeg, Model CapFlooredYYModel, Engine CapFlooredYYCouponPricer}
+\label{lst:peconfig_CapFlooredYYLeg_CapFlooredYYModel_CapFlooredYYCouponPricer}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CappedFlooredNonStdYYLeg}
+%--------------------------------------------------------
+
+Used by trade type: any trade with a cap / floored YY leg if IrregularYoY is true in YoY leg data
+
+Available Model/Engine pairs: CapFlooredYNonStdYYModel/CapFlooredNonStdYYCouponPricer
+
+Engine description:
+
+CapFlooredYNonStdYYModel/CapFlooredNonStdYYCouponPricer builds a NonStandardBlackYoYInflationCouponPricer,
+NonStandardUnitDisplacedBlackYoYInflationCouponPricer, NonStandardBachelierYoYInflationCouponPricer, depending on the
+volatility input. A sample configuration is shown in listing
+\ref{lst:peconfig_CapFlooredNonStdYYLeg_CapFlooredNonStdYYModel_CapFlooredNonStdYYCouponPricer}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CappedFlooredNonStdYYLeg">
+    <Model>CapFlooredNonStdYYModel</Model>
+    <ModelParameters/>
+    <Engine>CapFlooredNonStdYYCouponPricer</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CapFlooredNonStdYYLeg, Model CapFlooredNonStdYYModel, Engine
+  CapFlooredNonStdYYCouponPricer}
+\label{lst:peconfig_CapFlooredNonStdYYLeg_CapFlooredNonStdYYModel_CapFlooredNonStdYYCouponPricer}
+\end{longlisting}
+
+%--------------------------------------------------------
 \subsubsection{Product Type: CommodityAsianOptionArithmeticPrice}
 %--------------------------------------------------------
 
