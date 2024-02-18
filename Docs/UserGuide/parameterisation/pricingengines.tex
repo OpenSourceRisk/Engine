@@ -17,6 +17,8 @@ Available Model/Engine pairs:
 \item BlackBachelier/BlackBachelierSwaptionEngine
 \item LGM/Grid
 \item LGM/FD
+\item LGM/MC
+\item LGM/AMC
 \end{itemize}
 
 Engine description:
@@ -146,6 +148,90 @@ The parameters have the following meaning:
 \label{lst:peconfig_EuropeanSwaption_LGM_FD}
 \end{longlisting}
 
+LGM/MC builds a McMultiLegOptionEngine. A sample configuration is shown in
+listing \ref{lst:peconfig_EuropeanSwaption_LGM_MC}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Calibration: Bootstrap, BestFit, None
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
+\item Reversion: The mean reversion
+\item ReversionType: Hagan, HullWhite
+\item Volatility: The volatility (start value for calibration if calibrated)
+\item VolatilityType: Hagan, HullWhite
+\item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
+\item Tolerance: Error tolerance for calibration
+\item Training.Sequence: The sequence type for the traning phase, can be MersenneTwister+, MersenneTwisterAntithetc+,
+  Sobol+, Burley2020Sobol+, SobolBrownianBridge+, Burley2020SobolBrownianBridge+
+\item Training.Seed: The seed for the random number generation in the training phase
+\item Training.Samples: The number of samples to be used for the training phase
+\item Pricing.Sequence: The sequence type for the pricing phase, same values allowed as for training
+\item Training.BasisFunction: The type of basis function system to be used for the regression analysis, can be
+  Monomial+, Laguerre+, Hermite+, Hyperbolic+, Legendre+, Chbyshev+, Chebyshev2nd+
+\item BasisFunctionOrder: The order of the basis function system to be used
+\item Pricing.Seed: The seed for the random number generation in the pricing
+\item Pricing.Samples: The number of samples to be used for the pricing phase. If this number is zero, no pricing run is
+  performed, instead the (T0) NPV is estimated from the training phase (this result is used to fill the T0 slice of the
+  NPV cube)
+\item BrownianBridgeOrdering: variate ordering for Brownian bridges, can be Steps+, Factors+, Diagonal+
+\item SobolDirectionIntegers: direction integers for Sobol generator, can be Unit+, Jaeckel+, SobolLevitan+,
+  SobolLevitanLemieux+, JoeKuoD5+, JoeKuoD6+, JoeKuoD7+, Kuo+, Kuo2+, Kuo3+
+\item MinObsDate: if true the conditional expectation of each cashflow is taken from the minimum possible observation
+  date (i.e. the latest exercise or simulation date before the cashflow's event date); recommended setting is true+
+\item RegressorModel: Simple, LaggedFX. If not given, it defaults to Simple. Depending on the choice the regressor is
+  built as follows:
+  \begin{itemize}
+    \item Simple: For an observation date the full model state observed on this date is included in the regressor. No
+      past states are included though.
+    \item LaggedFX: For an observation date the full model state observed on this date is included in the regressor. In
+      addition, past FX states that are relevant for future cashflows are included. For example, for a FX resettable
+      cashflow the FX state observed on the FX reset date is included.
+  \end{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="EuropeanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters>
+        <Parameter name="Calibration">Bootstrap</Parameter>
+        <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
+        <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+        <Parameter name="Reversion">0.0</Parameter>
+        <Parameter name="ReversionType">HullWhite</Parameter>
+        <Parameter name="Volatility">0.01</Parameter>
+        <Parameter name="VolatilityType">Hagan</Parameter>
+        <Parameter name="ShiftHorizon">0.5</Parameter>
+        <Parameter name="Tolerance">0.20</Parameter>
+    </ModelParameters>
+    <Engine>MC</Engine>
+    <EngineParameters>
+            <Parameter name="Training.Sequence">MersenneTwisterAntithetic</Parameter>
+            <Parameter name="Training.Seed">42</Parameter>
+            <Parameter name="Training.Samples">10000</Parameter>
+            <Parameter name="Training.BasisFunction">Monomial</Parameter>
+            <Parameter name="Training.BasisFunctionOrder">6</Parameter>
+            <Parameter name="Pricing.Sequence">SobolBrownianBridge</Parameter>
+            <Parameter name="Pricing.Seed">17</Parameter>
+            <Parameter name="Pricing.Samples">0</Parameter>
+            <Parameter name="BrownianBridgeOrdering">Steps</Parameter>
+            <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
+            <Parameter name="MinObsDate">true</Parameter>
+            <Parameter name="RegressorModel">Simple</Parameter>
+            <Parameter name="SensitivityTemplate">IR_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product EuropeanSwaption, Model BlackBachelier, Engine BlackBachelierSwaptionEngine}
+\label{lst:peconfig_EuropeanSwaption_LGM_MC}
+\end{longlisting}
+
+LGM/AMC builds a McMultiLegOptionEngine for use in AMC simulations. We refer to the AMC module documentation for further
+details.
+
 %--------------------------------------------------------
 \subsubsection{Product Type: BermudanSwaption}
 %--------------------------------------------------------
@@ -157,6 +243,8 @@ Available Model/Engine pairs:
 \begin{itemize}
 \item LGM/Grid
 \item LGM/FD
+\item LGM/MC
+\item LGM/AMC
 \end{itemize}
 
 Engine description:
@@ -262,6 +350,90 @@ The parameters have the following meaning:
 \label{lst:peconfig_BermudanSwaption_LGM_FD}
 \end{longlisting}
 
+LGM/MC builds a McMultiLegOptionEngine. A sample configuration is shown in
+listing \ref{lst:peconfig_BermudanSwaption_LGM_MC}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Calibration: Bootstrap, BestFit, None
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
+\item Reversion: The mean reversion
+\item ReversionType: Hagan, HullWhite
+\item Volatility: The volatility (start value for calibration if calibrated)
+\item VolatilityType: Hagan, HullWhite
+\item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
+\item Tolerance: Error tolerance for calibration
+\item Training.Sequence: The sequence type for the traning phase, can be MersenneTwister+, MersenneTwisterAntithetc+,
+  Sobol+, Burley2020Sobol+, SobolBrownianBridge+, Burley2020SobolBrownianBridge+
+\item Training.Seed: The seed for the random number generation in the training phase
+\item Training.Samples: The number of samples to be used for the training phase
+\item Pricing.Sequence: The sequence type for the pricing phase, same values allowed as for training
+\item Training.BasisFunction: The type of basis function system to be used for the regression analysis, can be
+  Monomial+, Laguerre+, Hermite+, Hyperbolic+, Legendre+, Chbyshev+, Chebyshev2nd+
+\item BasisFunctionOrder: The order of the basis function system to be used
+\item Pricing.Seed: The seed for the random number generation in the pricing
+\item Pricing.Samples: The number of samples to be used for the pricing phase. If this number is zero, no pricing run is
+  performed, instead the (T0) NPV is estimated from the training phase (this result is used to fill the T0 slice of the
+  NPV cube)
+\item BrownianBridgeOrdering: variate ordering for Brownian bridges, can be Steps+, Factors+, Diagonal+
+\item SobolDirectionIntegers: direction integers for Sobol generator, can be Unit+, Jaeckel+, SobolLevitan+,
+  SobolLevitanLemieux+, JoeKuoD5+, JoeKuoD6+, JoeKuoD7+, Kuo+, Kuo2+, Kuo3+
+\item MinObsDate: if true the conditional expectation of each cashflow is taken from the minimum possible observation
+  date (i.e. the latest exercise or simulation date before the cashflow's event date); recommended setting is true+
+\item RegressorModel: Simple, LaggedFX. If not given, it defaults to Simple. Depending on the choice the regressor is
+  built as follows:
+  \begin{itemize}
+    \item Simple: For an observation date the full model state observed on this date is included in the regressor. No
+      past states are included though.
+    \item LaggedFX: For an observation date the full model state observed on this date is included in the regressor. In
+      addition, past FX states that are relevant for future cashflows are included. For example, for a FX resettable
+      cashflow the FX state observed on the FX reset date is included.
+  \end{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="BermudanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters>
+        <Parameter name="Calibration">Bootstrap</Parameter>
+        <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
+        <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+        <Parameter name="Reversion">0.0</Parameter>
+        <Parameter name="ReversionType">HullWhite</Parameter>
+        <Parameter name="Volatility">0.01</Parameter>
+        <Parameter name="VolatilityType">Hagan</Parameter>
+        <Parameter name="ShiftHorizon">0.5</Parameter>
+        <Parameter name="Tolerance">0.20</Parameter>
+    </ModelParameters>
+    <Engine>MC</Engine>
+    <EngineParameters>
+            <Parameter name="Training.Sequence">MersenneTwisterAntithetic</Parameter>
+            <Parameter name="Training.Seed">42</Parameter>
+            <Parameter name="Training.Samples">10000</Parameter>
+            <Parameter name="Training.BasisFunction">Monomial</Parameter>
+            <Parameter name="Training.BasisFunctionOrder">6</Parameter>
+            <Parameter name="Pricing.Sequence">SobolBrownianBridge</Parameter>
+            <Parameter name="Pricing.Seed">17</Parameter>
+            <Parameter name="Pricing.Samples">0</Parameter>
+            <Parameter name="BrownianBridgeOrdering">Steps</Parameter>
+            <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
+            <Parameter name="MinObsDate">true</Parameter>
+            <Parameter name="RegressorModel">Simple</Parameter>
+            <Parameter name="SensitivityTemplate">IR_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product BermudanSwaption, Model BlackBachelier, Engine BlackBachelierSwaptionEngine}
+\label{lst:peconfig_BermudanSwaption_LGM_MC}
+\end{longlisting}
+
+LGM/AMC builds a McMultiLegOptionEngine for use in AMC simulations. We refer to the AMC module documentation for further
+details.
+
 %--------------------------------------------------------
 \subsubsection{Product Type: AmericanSwaption}
 %--------------------------------------------------------
@@ -273,6 +445,8 @@ Available Model/Engine pairs:
 \begin{itemize}
 \item LGM/FD
 \item LGM/Grid (Not recommended due to inferior performance)
+\item LGM/MC
+\item LGM/AMC
 \end{itemize}
 
 Engine description:
@@ -377,6 +551,90 @@ The parameters have the following meaning:
 \caption{Configuration for Product AmericanSwaption, Model LGM, Engine Grid (Not recommended due to inferior performance)}
 \label{lst:peconfig_AmericanSwaption_LGM_Grid}
 \end{longlisting}
+
+LGM/MC builds a McMultiLegOptionEngine. A sample configuration is shown in
+listing \ref{lst:peconfig_AmericanSwaption_LGM_MC}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Calibration: Bootstrap, BestFit, None
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
+\item Reversion: The mean reversion
+\item ReversionType: Hagan, HullWhite
+\item Volatility: The volatility (start value for calibration if calibrated)
+\item VolatilityType: Hagan, HullWhite
+\item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
+\item Tolerance: Error tolerance for calibration
+\item Training.Sequence: The sequence type for the traning phase, can be MersenneTwister+, MersenneTwisterAntithetc+,
+  Sobol+, Burley2020Sobol+, SobolBrownianBridge+, Burley2020SobolBrownianBridge+
+\item Training.Seed: The seed for the random number generation in the training phase
+\item Training.Samples: The number of samples to be used for the training phase
+\item Pricing.Sequence: The sequence type for the pricing phase, same values allowed as for training
+\item Training.BasisFunction: The type of basis function system to be used for the regression analysis, can be
+  Monomial+, Laguerre+, Hermite+, Hyperbolic+, Legendre+, Chbyshev+, Chebyshev2nd+
+\item BasisFunctionOrder: The order of the basis function system to be used
+\item Pricing.Seed: The seed for the random number generation in the pricing
+\item Pricing.Samples: The number of samples to be used for the pricing phase. If this number is zero, no pricing run is
+  performed, instead the (T0) NPV is estimated from the training phase (this result is used to fill the T0 slice of the
+  NPV cube)
+\item BrownianBridgeOrdering: variate ordering for Brownian bridges, can be Steps+, Factors+, Diagonal+
+\item SobolDirectionIntegers: direction integers for Sobol generator, can be Unit+, Jaeckel+, SobolLevitan+,
+  SobolLevitanLemieux+, JoeKuoD5+, JoeKuoD6+, JoeKuoD7+, Kuo+, Kuo2+, Kuo3+
+\item MinObsDate: if true the conditional expectation of each cashflow is taken from the minimum possible observation
+  date (i.e. the latest exercise or simulation date before the cashflow's event date); recommended setting is true+
+\item RegressorModel: Simple, LaggedFX. If not given, it defaults to Simple. Depending on the choice the regressor is
+  built as follows:
+  \begin{itemize}
+    \item Simple: For an observation date the full model state observed on this date is included in the regressor. No
+      past states are included though.
+    \item LaggedFX: For an observation date the full model state observed on this date is included in the regressor. In
+      addition, past FX states that are relevant for future cashflows are included. For example, for a FX resettable
+      cashflow the FX state observed on the FX reset date is included.
+  \end{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="AmericanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters>
+        <Parameter name="Calibration">Bootstrap</Parameter>
+        <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
+        <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+        <Parameter name="Reversion">0.0</Parameter>
+        <Parameter name="ReversionType">HullWhite</Parameter>
+        <Parameter name="Volatility">0.01</Parameter>
+        <Parameter name="VolatilityType">Hagan</Parameter>
+        <Parameter name="ShiftHorizon">0.5</Parameter>
+        <Parameter name="Tolerance">0.20</Parameter>
+    </ModelParameters>
+    <Engine>MC</Engine>
+    <EngineParameters>
+            <Parameter name="Training.Sequence">MersenneTwisterAntithetic</Parameter>
+            <Parameter name="Training.Seed">42</Parameter>
+            <Parameter name="Training.Samples">10000</Parameter>
+            <Parameter name="Training.BasisFunction">Monomial</Parameter>
+            <Parameter name="Training.BasisFunctionOrder">6</Parameter>
+            <Parameter name="Pricing.Sequence">SobolBrownianBridge</Parameter>
+            <Parameter name="Pricing.Seed">17</Parameter>
+            <Parameter name="Pricing.Samples">0</Parameter>
+            <Parameter name="BrownianBridgeOrdering">Steps</Parameter>
+            <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
+            <Parameter name="MinObsDate">true</Parameter>
+            <Parameter name="RegressorModel">Simple</Parameter>
+            <Parameter name="SensitivityTemplate">IR_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product AmericanSwaption, Model BlackBachelier, Engine BlackBachelierSwaptionEngine}
+\label{lst:peconfig_AmericanSwaption_LGM_MC}
+\end{longlisting}
+
+LGM/AMC builds a McMultiLegOptionEngine for use in AMC simulations. We refer to the AMC module documentation for further
+details.
 
 %--------------------------------------------------------
 \subsubsection{Product Type: BondRepo}
@@ -2798,6 +3056,114 @@ The parameters have the following meaning:
 \caption{Configuration for Product , Model , Engine }
 \label{lst:peconfig_FxTouchOption_GarmanKohlhagen_AnalyticDigitalAmericanEngine}
 \end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: MultiLegOption}
+%--------------------------------------------------------
+
+Used by trade type: MultiLegOption
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item CrossAssetModel/MC
+\item CrossAssetModel/AMC
+\end{itemize}
+
+Engine description:
+
+CrossAssetModel/MC builds a McMultiLegOptionEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_MultiLegOption_CrossAssetModel_MC}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item IrCalibration: Bootstrap, BestFit, None
+\item IrCalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
+\item IrReversion: The mean reversion (given per ccy)
+\item IrReversionType: Hagan, HullWhite (given per ccy)
+\item IrVolatility: The volatility (start value for calibration if calibrated, given per ccy)
+\item IrVolatilityType: Hagan, HullWhite (given per ccy)
+\item FxVolatility: The fx volatility (start value for calibration if calibrated, given per ccy)
+\item Corr\_Key1\_key2: The correlations for ir/fx keys (multiple entries possible)
+\item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
+\item Tolerance: Error tolerance for calibration
+\item Training.Sequence: The sequence type for the traning phase, can be MersenneTwister+, MersenneTwisterAntithetc+,
+  Sobol+, Burley2020Sobol+, SobolBrownianBridge+, Burley2020SobolBrownianBridge+
+\item Training.Seed: The seed for the random number generation in the training phase
+\item Training.Samples: The number of samples to be used for the training phase
+\item Pricing.Sequence: The sequence type for the pricing phase, same values allowed as for training
+\item Training.BasisFunction: The type of basis function system to be used for the regression analysis, can be
+  Monomial+, Laguerre+, Hermite+, Hyperbolic+, Legendre+, Chbyshev+, Chebyshev2nd+
+\item BasisFunctionOrder: The order of the basis function system to be used
+\item Pricing.Seed: The seed for the random number generation in the pricing
+\item Pricing.Samples: The number of samples to be used for the pricing phase. If this number is zero, no pricing run is
+  performed, instead the (T0) NPV is estimated from the training phase (this result is used to fill the T0 slice of the
+  NPV cube)
+\item BrownianBridgeOrdering: variate ordering for Brownian bridges, can be Steps+, Factors+, Diagonal+
+\item SobolDirectionIntegers: direction integers for Sobol generator, can be Unit+, Jaeckel+, SobolLevitan+,
+  SobolLevitanLemieux+, JoeKuoD5+, JoeKuoD6+, JoeKuoD7+, Kuo+, Kuo2+, Kuo3+
+\item MinObsDate: if true the conditional expectation of each cashflow is taken from the minimum possible observation
+  date (i.e. the latest exercise or simulation date before the cashflow's event date); recommended setting is true+
+\item RegressorModel: Simple, LaggedFX. If not given, it defaults to Simple. Depending on the choice the regressor is
+  built as follows:
+  \begin{itemize}
+    \item Simple: For an observation date the full model state observed on this date is included in the regressor. No
+      past states are included though.
+    \item LaggedFX: For an observation date the full model state observed on this date is included in the regressor. In
+      addition, past FX states that are relevant for future cashflows are included. For example, for a FX resettable
+      cashflow the FX state observed on the FX reset date is included.
+  \end{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="MultiLegOption">
+    <Model>CrossAssetModel</Model>
+    <ModelParameters>
+        <Parameter name="IrCalibration">Bootstrap</Parameter>
+        <Parameter name="IrCalibrationStrategy">CoterminalDealStrike</Parameter>
+        <Parameter name="FxCalibration">Bootstrap</Parameter>
+        <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+        <Parameter name="IrReversion_EUR">0.0</Parameter>
+        <Parameter name="IrReversionType_EUR">HullWhite</Parameter>
+        <Parameter name="IrVolatility_EUR">0.01</Parameter>
+        <Parameter name="IrVolatilityType_EUR">Hagan</Parameter>
+        <Parameter name="IrReversion_GBP">0.0</Parameter>
+        <Parameter name="IrReversionType_GBP">HullWhite</Parameter>
+        <Parameter name="IrVolatility_GBP">0.01</Parameter>
+        <Parameter name="IrVolatilityType_GBP">Hagan</Parameter>
+        <Parameter name="FxVolatility_GBP">0.08</Parameter>
+        <Parameter name="Corr_IR:EUR_FX:GBP">0.23</Parameter>
+        <Parameter name="ShiftHorizon">0.5</Parameter>
+        <Parameter name="Tolerance">0.20</Parameter>
+    </ModelParameters>
+    <Engine>MC</Engine>
+    <EngineParameters>
+            <Parameter name="Training.Sequence">MersenneTwisterAntithetic</Parameter>
+            <Parameter name="Training.Seed">42</Parameter>
+            <Parameter name="Training.Samples">10000</Parameter>
+            <Parameter name="Training.BasisFunction">Monomial</Parameter>
+            <Parameter name="Training.BasisFunctionOrder">6</Parameter>
+            <Parameter name="Pricing.Sequence">SobolBrownianBridge</Parameter>
+            <Parameter name="Pricing.Seed">17</Parameter>
+            <Parameter name="Pricing.Samples">0</Parameter>
+            <Parameter name="BrownianBridgeOrdering">Steps</Parameter>
+            <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
+            <Parameter name="MinObsDate">true</Parameter>
+            <Parameter name="RegressorModel">Simple</Parameter>
+            <Parameter name="SensitivityTemplate">IR_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product MultiLegSwaption, Model BlackBachelier, Engine BlackBachelierSwaptionEngine}
+\label{lst:peconfig_MultiLegSwaption_LGM_MC}
+\end{longlisting}
+
+LGM/AMC builds a McMultiLegOptionEngine for use in AMC simulations. We refer to the AMC module documentation for further
+details.
 
 % ===================== template ========================
 
