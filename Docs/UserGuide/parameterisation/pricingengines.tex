@@ -2087,6 +2087,154 @@ The parameters have the following meaning:
 \end{longlisting}
 
 %--------------------------------------------------------
+\subsubsection{Product Type: EquityBarrierOption, FxBarrierOption}
+%--------------------------------------------------------
+
+Used by trade type: EquityBarrierOption resp. FxBarrierOption
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item BlackScholesMerton/AnalyticBarrierEngine
+\item BlackScholesMerton/FdBlackScholesBarrierEngine
+\end{itemize}
+
+Engine description:
+
+BlackScholes/AnalyticBarrierEngine builds a AnalyticBarrierEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_EquityBarrierOption_BlackScholesMerton_AnalyticBarrierEngine} for equity. The configuration for fx is
+identical except the Model is set to GarmanKohlhagen.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="EquityBarrierOption">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>AnalyticBarrierEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">EQ_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product EquityBarrierOption, Model BlackScholesMertong Engine AnalyticBarrierEngine}
+\label{lst:peconfig_EquityBarrierOption_BlackScholesMerton_AnalyticBarrierEngine}
+\end{longlisting}
+
+BlackScholes/FdBlackScholesBarrierEngine builds a FdBlackScholesBarrierEngine. A sample configuration is shown in
+listing \ref{lst:peconfig_EquityBarrierOption_BlackScholesMerton_FdBlackScholesBarrierEngine} for equity. The
+configuration for fx is identical except the Model is set to GarmanKohlhagen.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Scheme: The finite difference scheme to use
+\item TimeStepsPerYear: Time grid specification
+\item XGrid: State grid specification
+\item DampingSteps: Number of damping steps taken by FD solver
+\item EnforceMonotoneVariance [optional]: If true variance is modified to be monotone if needed, defaults to true
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="EquityBarrierOption">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>FdBlackScholesBarrierEngine</Engine>
+    <EngineParameters>
+        <Parameter name="Scheme">Douglas</Parameter>
+        <Parameter name="TimeGridPerYear">100</Parameter>
+        <Parameter name="XGrid">100</Parameter>
+        <Parameter name="DampingSteps">0</Parameter>
+        <Parameter name="EnforceMonotoneVariance">true</Parameter>
+        <Parameter name="SensitivityTemplate">EQ_FD</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product EquityBarrierOption, Model BlackScholesMerton, Engine FdBlackScholesBarrierEngine}
+\label{lst:peconfig_EquityBarrierOption_BlackScholesMerton_FdBlackScholesBarrierEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: EquityDoubleBarrierOption, FxDoubleBarrierOption}
+%--------------------------------------------------------
+
+Used by trade type: EquityDoubleBarrierOption, FxDoubleBarrierOption
+
+Available Model/Engine pairs: GarmanKohlhagen/AnalyticDoubleBarrierEngine (both fx and equity)
+
+Engine description:
+
+GarmanKohlhagen/AnalyticDoubleBarrierEngine builds a AnalyticDoubleBarrierEngine. A sample configuration is shown in
+listing \ref{lst:peconfig_FxDoubleBarrierOption_GarmanKohlhagen_AnalyticDoubleBarrierEngine}. The configuration for equity
+is identical.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="FxDoubleBarrierOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticDoubleBarrierEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product FxDoubleBarrierOption, Model GarmanKohlhagen, Engine AnalyticDoubleBarrierBinaryEngine}
+\label{lst:peconfig_FxDoubleBarrierOption_GarmanKohlhagen_AnalyticDoubleBarrierEngine}
+\end{longlisting}
+
+
+%--------------------------------------------------------
+\subsubsection{Product Type: EquityDigitalOption, FxDigitalOption}
+%--------------------------------------------------------
+
+Used by trade type: EquityDigitalOption, FxDigitalOption
+
+Available Model/Engine pairs: BlackScholesMerton/AnalyticEuropeanEngine (equity)
+resp. GarmanKohlhagen/AnalyticEuropeanEngine (fx)
+
+Engine description:
+
+BlackScholesMerton/AnalyticEuropeanEngine (equity) resp. GarmanKohlhagen/AnalyticEuropeanEngine (fx) builds a
+AnalyticEuropeanEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_FxDigitalOption_GarmanKohlhagen_AnalyticEuropeanEngine} for fx. The configuration for equity is
+identical except the Model is set to BlackScholesMerton.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+ <Product type="FxDigitalOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product FxDigitalOption, Model GarmanKohlhagen, Engine AnalyticEuropeanEngine}
+\label{lst:peconfig_FxDigitalOption_GarmanKohlhagen_AnalyticEuropeanEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
 \subsubsection{Product Type: EquityEuropeanCompositeOption}
 %--------------------------------------------------------
 
@@ -2295,6 +2443,43 @@ The parameters have the following meaning:
 \end{minted}
 \caption{Configuration for Product EquityOptionAmerican, Model BlackScholesMerton, Engine BaroneAdesiWhaleyApproximationEngine}
 \label{lst:peconfig_EquityOptionAmerican_BlackScholesMerton_BaroneAdesiWhaleyApproximationEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: EquityTouchOption, FxTouchOption}
+%--------------------------------------------------------
+
+Used by trade type: EquityTouchOption, FxTouchOption
+
+Available Model/Engine pairs: BlackScholesMerton/AnalyticDigitalAmericanEngine for equity
+resp. GarmanKohlhagen/AnalyticDigitalAmericanEngine for fx
+
+Engine description:
+
+BlackScholesMerton/AnalyticDigitalAmericanEngine (equity) reps. GarmanKohlhagen/AnalyticDigitalAmericanEngine (fx)
+builds a AnalyticDigitalAmericanEngine (one touch) or AnalyticDigitalAmericanKOEngine (no touch). A sample configuration
+is shown in listing \ref{lst:peconfig_FxTouchOption_GarmanKohlhagen_AnalyticDigitalAmericanEngine} for fx. The
+configuration for equity is the same except the Model ist set to BlackScholesMerton.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="FxTouchOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticDigitalAmericanEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product , Model , Engine }
+\label{lst:peconfig_FxTouchOption_GarmanKohlhagen_AnalyticDigitalAmericanEngine}
 \end{longlisting}
 
 %--------------------------------------------------------
@@ -2814,40 +2999,6 @@ The parameters have the following meaning:
 \end{longlisting}
 
 %--------------------------------------------------------
-\subsubsection{Product Type: FxDigitalOption}
-%--------------------------------------------------------
-
-Used by trade type: FxDigitalOption
-
-Available Model/Engine pairs: GarmanKohlhagen/AnalyticEuropeanEngine
-
-Engine description:
-
-GarmanKohlhagen/AnalyticEuropeanEngine builds a AnalyticEuropeanEngine. A sample configuration is shown in listing
-\ref{lst:peconfig_FxDigitalOption_GarmanKohlhagen_AnalyticEuropeanEngine}
-
-The parameters have the following meaning:
-
-\begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
-\end{itemize}
-
-\begin{longlisting}
-\begin{minted}[fontsize=\footnotesize]{xml}
- <Product type="FxDigitalOption">
-    <Model>GarmanKohlhagen</Model>
-    <ModelParameters/>
-    <Engine>AnalyticEuropeanEngine</Engine>
-    <EngineParameters>
-        <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
-    </EngineParameters>
-</Product>
-\end{minted}
-\caption{Configuration for Product FxDigitalOption, Model GarmanKohlhagen, Engine AnalyticEuropeanEngine}
-\label{lst:peconfig_FxDigitalOption_GarmanKohlhagen_AnalyticEuropeanEngine}
-\end{longlisting}
-
-%--------------------------------------------------------
 \subsubsection{Product Type: FxDigitalOptionEuropeanCS}
 %--------------------------------------------------------
 
@@ -3117,41 +3268,6 @@ The parameters have the following meaning:
 \end{longlisting}
 
 %--------------------------------------------------------
-\subsubsection{Product Type: FxTouchOption}
-%--------------------------------------------------------
-
-Used by trade type: FxTouchOption
-
-Available Model/Engine pairs: GarmanKohlhagen/AnalyticDigitalAmericanEngine
-
-Engine description:
-
-GarmanKohlhagen/AnalyticDigitalAmericanEngine builds a AnalyticDigitalAmericanEngine (one touch) or
-AnalyticDigitalAmericanKOEngine (no touch). A sample configuration is shown in listing
-\ref{lst:peconfig_FxTouchOption_GarmanKohlhagen_AnalyticDigitalAmericanEngine}
-
-The parameters have the following meaning:
-
-\begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
-\end{itemize}
-
-\begin{longlisting}
-\begin{minted}[fontsize=\footnotesize]{xml}
-<Product type="FxTouchOption">
-    <Model>GarmanKohlhagen</Model>
-    <ModelParameters/>
-    <Engine>AnalyticDigitalAmericanEngine</Engine>
-    <EngineParameters>
-        <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
-    </EngineParameters>
-</Product>
-\end{minted}
-\caption{Configuration for Product , Model , Engine }
-\label{lst:peconfig_FxTouchOption_GarmanKohlhagen_AnalyticDigitalAmericanEngine}
-\end{longlisting}
-
-%--------------------------------------------------------
 \subsubsection{Product Type: FxDoubleTouchOption}
 %--------------------------------------------------------
 
@@ -3172,10 +3288,10 @@ The parameters have the following meaning:
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
-<Product type="FxDoubleBarrierOption">
+<Product type="FxDoubleTouchOption">
     <Model>GarmanKohlhagen</Model>
     <ModelParameters/>
-    <Engine>AnalyticDoubleBarrierEngine</Engine>
+    <Engine>AnalyticDoubleBarrierBinaryEngine</Engine>
     <EngineParameters>
         <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
     </EngineParameters>
