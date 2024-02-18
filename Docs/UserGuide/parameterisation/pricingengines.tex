@@ -3516,6 +3516,116 @@ The parameters have the following meaning:
 LGM/AMC builds a McMultiLegOptionEngine for use in AMC simulations. We refer to the AMC module documentation for further
 details.
 
+%--------------------------------------------------------
+\subsubsection{Product Type: Swap}
+%--------------------------------------------------------
+
+Used by trade type: Swap for single-currency swaps
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item DiscountedCashflows/DiscountingSwapEngine
+\item DiscountedCashflows/DiscountingSwapEngineOptimised  
+\item CrossAssetModel/AMC
+\end{itemize}
+
+Engine description:
+
+DiscountedCashflows/DiscountingSwapEngine builds a DiscountingSwapEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_Swap_DiscountedCashflows_DiscountingSwapEngine}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="Swap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingSwapEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product Swap, Model DiscountedCashflows, Engine DiscountingSwapEngine}
+\label{lst:peconfig_Swap_DiscountedCashflows_DiscountingSwapEngine}
+\end{longlisting}
+
+DiscountedCashflows/DiscountingSwapEngineOptimised builds a DiscountingSwapEngineOptimised. This is a speed-optimized
+version of the DiscountingSwapEngine. In general, results should be validated against DiscountingSwapEngine.A sample
+configuration is shown in listing \ref{lst:peconfig_Swap_DiscountedCashflows_DiscountingSwapEngineOptimised}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="Swap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingSwapEngineOptimised</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product Swap, Model DiscountedCashflows, Engine DiscountingSwapEngineOptimised}
+\label{lst:peconfig_Swap_DiscountedCashflows_DiscountingSwapEngineOptimised}
+\end{longlisting}
+
+CrossAssetModel/AMC builds a McLgmSwapEngine for use in AMC simulations. We refer to the AMC module documentation for
+further details.
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CurrencySwap}
+%--------------------------------------------------------
+
+Used by trade type: Swap for cross-currency swaps
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item DiscountedCashflows/DiscountingCrossCurrencySwapEngine
+\item CrossAssetModel/AMC
+\end{itemize}
+
+Engine description:
+
+DiscountedCashflows/DiscountingCrossCurrencySwapEngine builds a DiscountingCurrencySwapEngine. A sample configuration is
+shown in listing \ref{lst:peconfig_Swap_DiscountedCashflows_DiscountingCurrencySwapEngine}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CurrencySwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingCurrencySwapEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product Swap, Model DiscountedCashflows, Engine DiscountingCurrencySwapEngine}
+\label{lst:peconfig_Swap_DiscountedCashflows_DiscountingCurrencySwapEngine}
+\end{longlisting}
+
+CrossAssetModel/AMC builds a McCamCurrencySwapEngine for use in AMC simulations. We refer to the AMC module
+documentation for further details.
+
 % ===================== template ========================
 
 %--------------------------------------------------------
