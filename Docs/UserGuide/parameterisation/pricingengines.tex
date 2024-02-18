@@ -771,6 +771,40 @@ The parameters have the following meaning:
 \end{longlisting}
 
 %--------------------------------------------------------
+\subsubsection{Product Type: CapFlooredIborLeg}
+%--------------------------------------------------------
+
+Used by trade type: any trade with a cap / floored ibor / rfr term rate leg
+
+Available Model/Engine pairs: BlackOrBachelier/BlackIborCouponPricer
+
+Engine description:
+
+BlackOrBachelier/BlackIborCouponPricer builds a BlackIborCouponPricer. A sample configuration is
+shown in listing \ref{lst:peconfig_CapFlooredIborLeg_BlackOrBachelier_BlackIborCouponPricer}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CapFlooredIborCouponLeg">
+    <Model>BlackOrBachelier</Model>
+    <ModelParameters/>
+    <Engine>BlackIborCouponPricer</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CapFlooredIborLeg, Model BlackOrBachelier, Engine BlackIborCouponPricer}
+\label{lst:peconfig_CapFlooredIborLeg_BlackOrBachelier_BlackIborCouponPricer}
+\end{longlisting}
+
+%--------------------------------------------------------
 \subsubsection{Product Type: CapFlooredOvernightIndexedCouponLeg}
 %--------------------------------------------------------
 
