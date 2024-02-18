@@ -767,7 +767,7 @@ The parameters have the following meaning:
 </Product>
 \end{minted}
 \caption{Configuration for Product CapFloor, Model IborCapModel, Engine IborCapEngine}
-\label{lst:peconfig_lst:peconfig_CapFloor_IborCapModel_IborCapEngine}
+\label{lst:peconfig_CapFloor_IborCapModel_IborCapEngine}
 \end{longlisting}
 
 %--------------------------------------------------------
@@ -978,6 +978,363 @@ The parameters have the following meaning:
 \end{minted}
 \caption{Configuration for Product CapFlooredCpiLegCoupons, Model Black, Engine BlackAnalytic}
 \label{lst:peconfig_CappedFlooredCpiLegCashFlows_Black_BlackAnalytic}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CommodityAveragePriceOption}
+%--------------------------------------------------------
+
+Used by trade type: CommodityAveragePriceOption
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item Black/AnalyticalApproximation
+\item Black/MonteCarlo
+\end{itemize}
+
+Engine description:
+
+Black/AnalyticalApproximation builds a CommodityAveragePriceOptionAnalyticalEngine. The correlation between two future
+contracts is parametrized as
+
+$$\rho(s, t) = e^{-\beta |s-t|}$$
+
+where $s$ and $t$ are times to futures expiry. A sample configuration is shown in listing
+\ref{lst:peconfig_CommodityAveragePriceOption_Black_AnalyticalApproximation}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item beta: parameter in correlation parametrization
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommodityAveragePriceOption">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>AnalyticalApproximation</Engine>
+    <EngineParameters>
+        <Parameter name="beta">0</Parameter>
+        <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CommodityAveragePriceOption, Model Black, Engine AnalyticalApproximation}
+\label{lst:peconfig_CommodityAveragePriceOption_Black_AnalyticalApproximation}
+\end{longlisting}
+
+Black/MonteCarlo builds a CommodityAveragePriceOptionMonteCarloEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_CommodityAveragePriceOption_Black_MonteCarlo}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item samples: the number of Monte Carlo Samples
+\item beta: parameter in correlation parametrization
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommodityAveragePriceOption">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>MonteCarlo</Engine>
+    <EngineParameters>
+        <Parameter name="samples">10000</Parameter>
+        <Parameter name="beta">0</Parameter>
+        <Parameter name="SensitivityTemplate">COMM_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CommodityAveragePriceOption, Model Black, Engine MonteCarlo}
+\label{lst:peconfig_CommodityAveragePriceOption_Black_MonteCarlo}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CommodityAveragePriceBarrierOption}
+%--------------------------------------------------------
+
+Used by trade type: CommodityAveragePriceOption with BarrierData
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item Black/MonteCarlo
+\end{itemize}
+
+Engine description:
+
+Black/MonteCarlo builds a CommodityAveragePriceOptionAnalyticalEngine. The correlation between two future contracts is
+parametrized as
+
+$$\rho(s, t) = e^{-\beta |s-t|}$$
+
+where $s$ and $t$ are times to futures expiry. A sample configuration is shown in listing
+\ref{lst:peconfig_CommodityAveragePriceBarrierOption_Black_MonteCarlo}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item samples: the number of Monte Carlo Samples
+\item beta: parameter in correlation parametrization
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommodityAveragePriceBarrierOption">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>MonteCarlo</Engine>
+    <EngineParameters>
+        <Parameter name="samples">10000</Parameter>
+        <Parameter name="beta">0</Parameter>
+        <Parameter name="SensitivityTemplate">COMM_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CommodityAveragePriceBarrierOption, Model Black, Engine MonteCarlo}
+\label{lst:peconfig_CommodityAveragePriceBarrierOption_Black_MonteCarlo}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CommodityForward}
+%--------------------------------------------------------
+
+Used by trade type: CommodityForward
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item DiscountedCashflows/DiscountingCommodityForwardEngine
+\end{itemize}
+
+Engine description:
+
+DiscountedCashflows/DiscountingCommodityForwardEngine builds a DiscountingCommodityForwardEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_CommodityForward_DiscountedCashflows_DiscountingCommodityForwardEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CommodityForward">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingCommodityForwardEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CommodityForward, Model DiscountedCashflows, Engine DiscountingCommodityForwardEngine}
+\label{lst:peconfig_CommodityForward_DiscountedCashflows_DiscountingCommodityForwardEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CreditDefaultSwap}
+%--------------------------------------------------------
+
+Used by trade type: CreditDefaultSwap
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item DiscountedCashflows/MidPointCdsEngine
+\item DiscountedCashflows/MidPointCdsEngineMultiState
+\end{itemize}
+
+Engine description:
+
+DiscountedCashflows/MidPointCdsEngine builds a MidPointCdsEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_CreditDefaultSwap_DiscountedCashflows_MidPointCdsEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CreditDefaultSwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>MidPointCdsEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CreditDefaultSwap, Model DiscountedCashflows, Engine MidPointCdsEngine}
+\label{lst:peconfig_CreditDefaultSwap_DiscountedCashflows_MidPointCdsEngine}
+\end{longlisting}
+
+DiscountedCashflows/MidPointCdsEngineMultiState builds a MidPointCdsEngineMultiState. This engine is only used in the
+context of the Credit Model. We refer to the documentation of this module for further details.
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CreditDefaultSwapOption}
+%--------------------------------------------------------
+
+Used by trade type: CreditDefaultSwapOption
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item Black/BlackCdsOptionEngine
+\end{itemize}
+
+Engine description:
+
+Black/BlackCdsOptionEngine builds a BlackCdsOptionEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_CreditDefaultSwapOption_Black_BlackCdsOptionEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CreditDefaultSwapOption">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>BlackCdsOptionEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CreditDefaultSwap, Model DiscountedCashflows, Engine MidPointCdsEngine}
+\label{lst:peconfig_CreditDefaultSwapOption_Black_BlackCdsOptionEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: IndexCreditDefaultSwap}
+%--------------------------------------------------------
+
+Used by trade type: IndexCreditDefaultSwap
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item DiscountedCashflows/MidPointIndexCdsEngine
+\end{itemize}
+
+Engine description:
+
+DiscountedCashflows/MidPointIndexCdsEngine builds a MidPointIndexCdsEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_CreditDefaultSwap_DiscountedCashflows_MidPointIndexCdsEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Curve: Index, Underlying
+\item SensitivityDecomposition: Underlying, NotionalWeighted, LossWeighted, DeltaWeighted
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="IndexCreditDefaultSwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>MidPointIndexCdsEngine</Engine>
+    <EngineParameters>
+        <Parameter name="Curve">Index</Parameter>
+        <Parameter name="SensitivityDecomposition">DeltaWeighted</Parameter>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CreditDefaultSwap, Model DiscountedCashflows, Engine MidPointIndexCdsEngine}
+\label{lst:peconfig_CreditDefaultSwap_DiscountedCashflows_MidPointIndexCdsEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: IndexCreditDefaultSwapOption}
+%--------------------------------------------------------
+
+Used by trade type: IndexCreditDefaultSwapOption
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item Black/BlackIndexCdsOptionEngine
+\item LognormalAdjustedIndexSpread/NumericalIntegrationEngine
+\end{itemize}
+
+Engine description:
+
+Black/BlackIndexCdsOptionEngine builds a BlackIndexCdsOptionEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_CreditDefaultSwapOption_Black_BlackIndexCdsOptionEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Curve: Index, Underlying
+\item FepCurve: Index, Underlying
+\item SensitivityDecomposition: Underlying, NotionalWeighted, LossWeighted, DeltaWeighted
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="IndexCreditDefaultSwapOption">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>MidPointIndexCdsEngine</Engine>
+    <EngineParameters>
+        <Parameter name="Curve">Index</Parameter>
+        <Parameter name="FepCurve">Index</Parameter>
+        <Parameter name="SensitivityDecomposition">DeltaWeighted</Parameter>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CreditDefaultSwap, Model DiscountedCashflows, Engine MidPointIndexCdsEngine}
+\label{lst:peconfig_CreditDefaultSwapOption_Black_BlackIndexCdsOptionEngine}
+\end{longlisting}
+
+LognormalAdjustedIndexSpread/NumericalIntegrationEngine builds a NumericalIntegrationIndexCdsOptionEngine. A sample
+configuration is shown in listing
+\ref{lst:peconfig_CreditDefaultSwapOption_LognormalAdjustedIndexSpread_NumericalIntegrationEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Curve: Index, Underlying
+\item FepCurve: Index, Underlying
+\item SensitivityDecomposition: Underlying, NotionalWeighted, LossWeighted, DeltaWeighted
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="IndexCreditDefaultSwapOption">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>MidPointIndexCdsEngine</Engine>
+    <EngineParameters>
+        <Parameter name="Curve">Index</Parameter>
+        <Parameter name="FepCurve">Index</Parameter>
+        <Parameter name="SensitivityDecomposition">DeltaWeighted</Parameter>
+        <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CreditDefaultSwap, Model DiscountedCashflows, Engine MidPointIndexCdsEngine}
+\label{lst:peconfig_CreditDefaultSwapOption_LognormalAdjustedIndexSpread_NumericalIntegrationEngine}
 \end{longlisting}
 
 %--------------------------------------------------------
@@ -1220,6 +1577,7 @@ The parameters have the following meaning:
     </EngineParameters>
 </Product>\caption{Configuration for Product CMSSpread, Model BrigoMercurio, Engine Analytic}
 \end{minted}
+\caption{Configuration for Product CMSSpread, Model BrigoMercurio, Engine Analytic}
 \label{lst:peconfig_CMSSpread_BrigoMercurio_Analytic}
 \end{longlisting}
 
@@ -2623,6 +2981,40 @@ The parameters have the following meaning:
 \end{longlisting}
 
 %--------------------------------------------------------
+\subsubsection{Product Type: EquityForward}
+%--------------------------------------------------------
+
+Used by trade type: EquityForward
+
+Available Model/Engine pairs: DiscountedCashflows/DiscountingEquityForwardEngine
+
+Engine description:
+
+DiscountedCashflows/DiscountingEquityForwardEngine builds a DiscountingEquityForwardEngine. A sample configuration is
+shown in listing \ref{lst:peconfig_EquityForward_DiscountedCashflows_DiscountingEquityForwardEngine}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="EquityForward">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingEquityForwardEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">EQ_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product EquiytForward, Model DiscountedCashflows, Engine DiscountingEquityForwardEngine}
+\label{lst:peconfig_EquityForward_DiscountedCashflows_DiscountingEquityForwardEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
 \subsubsection{Product Type: EquityFutureOption}
 %--------------------------------------------------------
 
@@ -2643,14 +3035,14 @@ The parameters have the following meaning:
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
-  <Product type="EquityFutureOption">
-    <Model>BlackScholes</Model>
-    <ModelParameters />
-    <Engine>AnalyticEuropeanForwardEngine</Engine>
-    <EngineParameters>
-        <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
-    </EngineParameters>
-  </Product>
+<Product type="EquityFutureOption">
+  <Model>BlackScholes</Model>
+  <ModelParameters />
+  <Engine>AnalyticEuropeanForwardEngine</Engine>
+  <EngineParameters>
+      <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+  </EngineParameters>
+</Product>
 \end{minted}
 \caption{Configuration for Product EquiytFutureOption, Model BlackScholes, Engine AnalyticEuropeanForwardEngine}
 \label{lst:peconfig_EquityFutureOption_BlackScholes_AnalyticEuropeanForwardEngine}
