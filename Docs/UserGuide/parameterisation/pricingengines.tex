@@ -6,6 +6,298 @@
 The pricing engine configuration file is provided to select pricing models and pricing engines by product type.
 
 %--------------------------------------------------------
+\subsubsection{Product Type: Ascot}
+%--------------------------------------------------------
+
+Used by trade type: Ascot
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item BlackScholes/Intrinsic
+\end{itemize}
+
+Engine description:
+
+BlackScholes/Intrinsic builds a IntrinsicAscotEngine. A sample configuration is shown
+in listing \ref{lst:peconfig_Ascot_BlackScholes_Intrinsic}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+ <Product type="Ascot">
+    <Model>BlackScholes</Model>
+    <ModelParameters/>
+    <Engine>Intrinsic</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">EQ_FD</Parameter>
+     </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product Ascot, Model: BlackScholes, Engine: Intrinsic}
+\label{lst:peconfig_Ascot_BlackScholes_Intrinsic}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: Bond}
+%--------------------------------------------------------
+
+Used by trade type: Bond
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item DiscountedCashflows/DiscountingRiskyBondEngine
+\item DiscountedCashflows/DiscountingRiskyBondEngineMultiState
+\end{itemize}
+
+Engine description:
+
+DiscountedCashflows/DiscountingRiskyBondEngine builds a DiscountingRiskyBondEngine. A sample configuration is shown
+in listing \ref{lst:peconfig_Bond_DiscountedCashflows_DiscountingRiskyBondEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item TimestepPeriod: discretization interval for zero bond pricing
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="Bond">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingRiskyBondEngine</Engine>
+    <EngineParameters>
+        <Parameter name="TimestepPeriod">3M</Parameter>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product Bond, Model DiscountedCashflows, Engine DiscountingRiskyBondEngine}
+\label{lst:peconfig_Bond_DiscountedCashflows_DiscountingRiskyBondEngine}
+\end{longlisting}
+
+DiscountedCashflows/DiscountingRiskyBondEngineMultiState builds a DiscountingRiskyBondEngineMultiState for use in the
+Credit Model. We refer to the credit model documentation for further details.
+
+%--------------------------------------------------------
+\subsubsection{Product Type: BondOption}
+%--------------------------------------------------------
+
+Used by trade type: BondOption
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item Black/BlackBondOptionEngine
+\end{itemize}
+
+Engine description:
+
+Black/BlackBondOptionEngine builds a BlackBondOptionEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_BondOption_Black_BlackBondOptionEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item TimestepPeriod: discretization interval for zero bond pricing
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="BondOption">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>BlackBondOptionEngine</Engine>
+    <EngineParameters>
+        <Parameter name="TimestepPeriod">3M</Parameter>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product BondOption, Model Black, Engine BlackBondOptionEngine}
+\label{lst:peconfig_BondOption_Black_BlackBondOptionEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: ConvertibleBond}
+%--------------------------------------------------------
+
+Used by trade type: ConvertibleBond
+
+Available Model/Engine pairs: DefaultableEquityJumpDiffusion/FD
+
+\begin{itemize}
+\item DefaultableEquityJumpDiffusion/FD
+\end{itemize}
+
+Engine description:
+
+DefaultableEquityJumpDiffusion/FD builds a FdDefaultableEquityJumpDiffusionConvertibleBondEngine following Andersen, L.,
+and Buffum, D.: Calibration and Implementation of Convertible Bond Models (2002):
+
+The model dynamics for the stock price $S(t)$ is given by
+
+\begin{equation}
+  dS / S(t^-) = (r(t) - q(t) + \eta h(t, S(t^-))) dt + \sigma(t) dW(t) - \eta dN(t)
+\end{equation}
+
+with a risk free rate $r(t)$, a continuous dividend yield $q(t)$, a default intensity $h(t,S)$, a volatility
+$\sigma(t)$, a default loss fraction for the equity $\eta \in [0,1]$ and a Cox process $N(t)$ with
+
+\begin{equation}
+  E_t(dN(t)) = h(t,S(t^-)) dt
+\end{equation}
+
+The notation $S(t^-)$ is shorthand for $\lim_{\epsilon\downarrow 0} S(t-\epsilon)$. The first jump of $N(t)$ represents
+the default of the equity. See equation (1) in Andersen, Buffum. We support a local default intensity of the form
+
+\begin{equation}
+h(t,S(t)) = h_0(t) \left( \frac{S(0)}{S(t)} \right)^p
+\end{equation}
+
+with a deterministic function $h_0(t)$ that is independent from $S(t)$ and a parameter $p \geq 0$. The parameters $p$
+and $\eta$ can be set in the pricing engine configuration. More details on the pricing model is available in a separate
+model documentation. A sample configuration is shown in listing
+\ref{lst:peconfig_ConvertibleBond_DefaultableEquityJumpDiffusion_FD}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item p: the model parameter p
+\item eta: the model parameter eta
+\item AdjustEquityForward: If false, the term $\eta h(t,e^z)$ in the coefficient of $v_z$ in the convertible bond
+  pricing pde (see separate model documentation) is set to zero, i.e. the hazard rate $h$ is still used in the
+  discounting term, but the equity drift is not corrected upwards accordingly. The default value is true.
+\item AdjustEquityVolatility: If false, the market equity volatility input is not adjusted, but directly used in the
+  pricing model. This setting is only possible if $p=0$. It will then set the weighting with the market survival
+  probability $S(0,t_i)$ in the context of formula for the equity volatility match (see separate model documentation) to
+  zero, i.e. $V$ is taken as the market implied volatility without adjustment. The default value is true.
+\item AdjustDiscounting: If false, the adjustment of the discounting rate $r$ to the benchmark curve $b$ is suppressed,
+  i.e. the change of the bond pricing PDE to the bond pricing pde with benchmark curve (see separate model
+  documentation) is {\em not} made (see also section ``Curves used in practice'' in separate model documentation). The
+  default value is true.
+\item AdjustCreditSpreadToRR: If true, the credit curve $h(\cdot)$ is adjusted by a factor $\frac{1-R}{1-\rho}$ where
+  $R$ is the recovery rate associated to the market default curve and $\rho$ is the recovery rate of the bond. Usually,
+  $R=\rho$, i.e. the bond recovery rate is the same as the recovery rate of the associated credit curve. In this case,
+  the flag has no effect, since the multiplier is $1$. However, when $\rho$ is overwritten with zero due to the flag
+  ZeroRecoveryOverwrite set to true, the flag AdjustCreditSpreadToRR should also be set to true. The default value is
+  false.
+\item ZeroRecoveryOverwrite: If true, the recovery rate $\rho$ of the convertible bond is overwritten with zero. This
+  option is usually used in conjunction with AdjustCreditSpreadToRR set to true (see below). The default value is false.
+\item TreatSecuritySpreadAsCreditSpread: If true, the security spread is not incoroporated into the benchmark curve $b$
+  as described above, but rather added as a spread on top of the credit curve, i.e. it is added to $h(t,e^z)$. For
+  exchangeables, the security spread is added to {\em both} $h^B$ and $h^S$, i.e. it simultaneously increases the credit
+  pread of both the equity and the bond component. Since the security spread is understood as an effective discounting
+  spread, it is scaled by $s \rightarrow s / (1-\rho)$ before it is added to $h$, where $\rho$ is the recovery rate of
+  the bond.
+\item MesherIsStatic: whether to use the same finite-difference mesher under scenario / sensi calculations
+\item Bootstrp.CalibrationGrid: The model is calibrated on a configurable set of times . All tenors from the specified
+  grid before the maturity date of the convertible bond are kept and the maturity date itself is added to the resulting
+  grid to avoid calibration for times beyond the bond maturity and at the same time ensuring that we do not need to
+  extrapolate model functions beyond the last calibration point in the pricing.
+\item Bootstrap.StateGridPoints: The number of state grid points of the Fokker-Planck PDE in the calibration phase
+\item Bootstrap.MesherEpsilon: The mesher epsilon of the Fokker-Planck PDE in the calibration phase
+\item Bootstrap.MesherScaling: The mesher scaling multiplier of the Fokker-Planck PDE in the calibration phase
+\item Bootstrap.Mode: bootstrap strategy: ``Simultaneously'' or  ``Alternating'', see separate model docs for further details 
+\item Pricing.TimeStepsPerYear: The number of time steps per year to be used for the pricing PDE
+\item Pricing.StateGridPoints: The number of state grid points to be used for the pricing PDE
+\item Pricing.MesherEpsilon: The mesher epsilon for the pricing PDE
+\item Pricing.MesherScaling: The mesher scaling multiplier for the pricing PDE
+\item ConversionRatioDiscretizationGrid: Multipliers to be used for conversion ratio discretization in the presence of
+  conversion resets / adjustments. See separate model documentation for more details.
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+ <Product type="ConvertibleBond">
+    <Model>DefaultableEquityJumpDiffusion</Model>
+    <ModelParameters>
+        <Parameter name="p">0.0</Parameter>
+        <Parameter name="eta">1.0</Parameter>
+        <Parameter name="AdjustEquityForward">true</Parameter>
+        <Parameter name="AdjustEquityVolatility">false</Parameter>
+        <Parameter name="AdjustDiscounting">false</Parameter>
+        <Parameter name="AdjustCreditSpreadToRR">true</Parameter>
+        <Parameter name="ZeroRecoveryOverwrite">true</Parameter>
+        <Parameter name="TreatSecuritySpreadAsCreditSpread">true</Parameter>
+    </ModelParameters>
+    <Engine>FD</Engine>
+    <EngineParameters>
+        <Parameter name="MesherIsStatic">true</Parameter>
+        <Parameter name="Bootstrap.CalibrationGrid">
+          6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y,40Y,50Y
+        </Parameter>
+        <Parameter name="Bootstrap.TimeStepsPerYear">24</Parameter>
+        <Parameter name="Bootstrap.StateGridPoints">400</Parameter>
+        <Parameter name="Bootstrap.MesherEpsilon">1E-5</Parameter>
+        <Parameter name="Bootstrap.MesherScaling">1.5</Parameter>
+        <Parameter name="Bootstrap.Mode">Alternating</Parameter>
+        <Parameter name="Pricing.TimeStepsPerYear">24</Parameter>
+        <Parameter name="Pricing.StateGridPoints">100</Parameter>
+        <Parameter name="Pricing.MesherEpsilon">1E-4</Parameter>
+        <Parameter name="Pricing.MesherScaling">1.5</Parameter>
+        <Parameter name="Pricing.ConversionRatioDiscretisationGrid">
+          0.5,0.55,0.6,0.65,0.7,0.75,
+          0.8,0.85,0.9,0.95,1.0,1.05,
+          1.1,1.15,1.2,1.25,1.5,1.75,2.0
+        </Parameter>
+        <Parameter name="SensitivityTemplate">EQ_FD</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product ConvertibleBond, Model DefaultableEquityJumpDiffusion, Engine FD}
+\label{lst:peconfig_ConvertibleBond_DefaultableEquityJumpDiffusion_FD}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CreditLinkedSwap}
+%--------------------------------------------------------
+
+Used by trade type: CreditLinkedSwap
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item DiscountedCashflows/DiscountingCreditLinkedSwapEngine
+\end{itemize}
+
+Engine description:
+
+DiscountedCashflows/DiscountingCreditLinkedSwapEngine builds a DiscountingCreditLinkedSwapEngine. A sample configuration is shown
+in listing \ref{lst:peconfig_CreditLinkedSwap_DiscountedCashflows_DiscountingCreditLinkedSwapEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CreditLinkedSwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingCreditLinkedSwapEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CreditLinkedSwap, Model DiscountedCashflows, Engine DiscountingCreditLinkedSwapEngine}
+\label{lst:peconfig_CreditLinkedSwap_DiscountedCashflows_DiscountingCreditLinkedSwapEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
 \subsubsection{Product Type: EuropeanSwaption}
 %--------------------------------------------------------
 
@@ -236,7 +528,7 @@ details.
 \subsubsection{Product Type: BermudanSwaption}
 %--------------------------------------------------------
 
-Used by trade type: Swaption, for Bermudan exercise on vanilla underlying coupon types
+Used by trade type: Swaption, for Bermudan exercise or European exercise on non-vanilla underlying coupon types
 
 Available Model/Engine pairs:
 
@@ -1539,6 +1831,109 @@ The parameters have the following meaning:
 \end{longlisting}
 
 Hagan/Analytic, Hagan/Numerical build AnalyticHaganPricer, NumericHaganPricer (TODO add parameters and sample config).
+
+%--------------------------------------------------------
+\subsubsection{Product Type: SyntheticCDO}
+%--------------------------------------------------------
+
+Used by trade type: SyntheticCDO
+
+Available Model/Engine pairs: GaussCopula/Bucketing
+
+Engine description:
+
+GaussCopula/Bucketing builds a IndexCdsTrancheEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_SyntheticCDO_GaussCopula_Bucketing}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item min, max: min max std dev for Gauss copula
+\item steps: integration steps
+\item useStochasticRecovery: whether to use deterministic (false) or stochastic (true) recovery model
+\item recoveryRateGrid: Constant (flat market recovery rate R), Markit2020 (3-pillar recovery grid $[0.1, R, 2R-0.1]$
+\item reocveryRateProbabilities: recovery rate probabilities for the recovery rate grid
+\item buckets: number of buckets in Hull-White bucketing
+\item SensitivityDecomposition: Underlying, NotionalWeighted, LossWeighted, DeltaWeighted
+\item useLossDistWhenJustified: whether to use QuantLib::LossDist for determinisitc recovery instead of HulWhiteBucketing
+\item homogeneousPoolWhenJustified: whether to use homogeneous pool if possible, applies to QuantLib::LossDist
+\item useQuadrature: whether to use quadrature
+\item calibrateConstituentCurves: whether to calibrate constituent curves to index level
+\item calibrationIndexTerms: terms for constituent curve calibration
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+ <Product type="SyntheticCDO">
+    <Model>GaussCopula</Model>
+    <ModelParameters>
+        <Parameter name="min">-5.0</Parameter>
+        <Parameter name="max">5.0</Parameter>
+        <Parameter name="steps">64</Parameter>
+        <Parameter name="useStochasticRecovery">Y</Parameter>
+        <Parameter name="recoveryRateGrid">Markit2020</Parameter>
+        <Parameter name="recoveryRateProbabilities">0.35,0.3,0.35</Parameter>
+    </ModelParameters>
+    <Engine>Bucketing</Engine>
+    <EngineParameters>
+        <Parameter name="buckets">124</Parameter>
+        <Parameter name="SensitivityDecomposition">DeltaWeighted</Parameter>
+        <Parameter name="useLossDistWhenJustified">N</Parameter>
+        <Parameter name="homogeneousPoolWhenJustified">N</Parameter>
+        <Parameter name="calibrateConstituentCurves">N</Parameter>
+        <Parameter name="calibrationIndexTerms">3Y,5Y</Parameter>
+        <Parameter name="SensitivityTemplate">CR_Semianalytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product SyntheticCDO, Model GaussCopula, Engine Bucketing}
+\label{lst:peconfig_SyntheticCDO_GaussCopula_Bucketing}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: CBO}
+%--------------------------------------------------------
+
+Used by trade type: CBO
+
+Available Model/Engine pairs: OneFactorCopula/MonteCarloCBOEngine
+
+Engine description:
+
+OneFactorCopula/MonteCarloCBOEngine builds a MonteCarloCBOEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_CBO_OneFactorCopula_MonteCarloCBOEngine}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Samples: number of MC samples
+\item Bins: number of bins used for discretization
+\item Seed: seed for MC simulation
+\item LossDistributionPeriods:
+\item Correlation: correlation to use
+\item SensitivityTemplate [optional]: the sensitivity template to use   
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CBO">
+    <Model>OneFactorCopula</Model>
+    <ModelParameters/>
+    <Engine>MonteCarloCBOEngine</Engine>
+    <EngineParameters>
+        <Parameter name="Samples">1000</Parameter>
+        <Parameter name="Bins">20</Parameter>
+        <Parameter name="Seed">42</Parameter>
+        <Parameter name="LossDistributionPeriods"/>
+        <Parameter name="Correlation">0.2</Parameter>
+        <Parameter name="SensitivityTemplate">CR_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CBO, Model OneFactorCopula, Engine MonteCarloCBOEngine}
+\label{lst:peconfig_CBO_OneFactorCopula_MonteCarloCBOEngine}
+\end{longlisting}
 
 %--------------------------------------------------------
 \subsubsection{Product Type: CMSSpread}
@@ -3083,6 +3478,84 @@ The parameters have the following meaning:
 \end{longlisting}
 
 %--------------------------------------------------------
+\subsubsection{Product Type: EquityCliquetOption}
+%--------------------------------------------------------
+
+Used by trade type: EquityCliquetOption
+
+Available Model/Engine pairs: BlackScholes/MCScript
+
+Engine description:
+
+BlackScholes/MCScript builds a CliquetOptionMcScriptEngine which uses the scripted trade framework. A sample
+configuration is shown in listing \ref{lst:peconfig_EquityCliquetOption_BlackScholes_MCScript}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Samples: number of MC samples to use
+\item RegressionOrder: the regression order to use for conditional expectations (not used by this engine)
+\item Interactive: whether to enable the interactive debugger
+\item ScriptedLibraryOverride: whether to override a script 'EquityCliquetOption' in the script library with a hardcoded script
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="EquityCliquetOption">
+    <Model>BlackScholes</Model>
+    <ModelParameters/>
+    <Engine>MCScript</Engine>
+    <EngineParameters>
+        <Parameter name="Samples">10000</Parameter>
+        <Parameter name="RegressionOrder">6</Parameter>
+        <Parameter name="Interactive">false</Parameter>
+        <Parameter name="ScriptedLibraryOverride">false</Parameter>
+        <Parameter name="SensitivityTemplate">EQ_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product EquityCliquetOption, Model BlackScholes, Engine MCScript}
+\label{lst:peconfig_EquityCliquetOption_BlackScholes_MCScript}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: QuantoEquityOption}
+%--------------------------------------------------------
+
+Used by trade type: EquityOption with quanto payoff (pay currency does not match equity currency)
+
+Available Model/Engine pairs: BlackScholes/AnalyticEuropeanEngine
+
+Engine description:
+
+BlackScholes/AnalyticEuropeanEngine builds a AnalyticEuropeanEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_QuantoEquityOption_BlackScholes_AnalyticEuropeanEngine}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="QuantoEquityOption">
+    <Model>BlackScholes</Model>
+    <ModelParameters>
+        <Parameter name="FXSource">GENERIC</Parameter>
+    </ModelParameters>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">EQ_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product QuantoEquityOption, Model BlackScholes, Engine AnalyticEuropeanEngine}
+\label{lst:peconfig_QuantoEquityOption_BlackScholes_AnalyticEuropeanEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
 \subsubsection{Product Type: EquityOptionEuropeanCS}
 %--------------------------------------------------------
 
@@ -3223,8 +3696,44 @@ The parameters have the following meaning:
     </EngineParameters>
 </Product>
 \end{minted}
-\caption{Configuration for Product , Model , Engine }
+\caption{Configuration for Product FxTouchOption, Model GarmanKohlhagen, Engine AnalyticDigitalAmericanEngine}
 \label{lst:peconfig_FxTouchOption_GarmanKohlhagen_AnalyticDigitalAmericanEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: ForwardBond}
+%--------------------------------------------------------
+
+Used by trade type: ForwardBond
+
+Available Model/Engine pairs: DiscountedCashflows/DiscountingForwardBondEngine
+
+Engine description:
+
+DiscountedCashflows/DiscountingForwardBondEngine builds a DiscountingForwardBondEngine. A sample configuration is shown
+in listing \ref{lst:peconfig_ForwardBond_DiscountedCashflows_DiscountingForwardBondEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item TimestepPeriod: discretization interval for zero bond pricing
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="ForwardBond">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingForwardBondEngine</Engine>
+    <EngineParameters>
+        <Parameter name="TimestepPeriod">3M</Parameter>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product ForwardBond, Model DiscountedCashflows, Engine DiscountingForwardBondEngine}
+\label{lst:peconfig_ForwardBond_DiscountedCashflows_DiscountingForwardBondEngine}
 \end{longlisting}
 
 %--------------------------------------------------------
@@ -3821,6 +4330,55 @@ The parameters have the following meaning:
 \end{longlisting}
 
 %--------------------------------------------------------
+\subsubsection{Product Type: FormulaBasedCoupon}
+%--------------------------------------------------------
+
+Used by trade type: leg type FormulaBased (coupon pricer)
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item BrigoMercurio/MC
+\end{itemize}
+
+Engine description:
+
+BrigoMercurio/MC builds a MCGaussianFormulaBasedCouponPricer. A sample configuration is shown in listing
+\ref{lst:peconfig_FormulaBasedCoupon_BrigoMercurio_MC}. We refer to the formula based coupon module documentation for
+further details.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item FXSource: specifies the FX index tag to be used to look up FX-Ibor or FX-CMS correlations
+\item Samples: number of MC samples to use
+\item Sobol: whether to use Sobol numbers for simulation
+\item SalvageCorrelationMatrix: whether to make the input correlation matrix positive definite
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="FormulaBasedCoupon">
+    <Model>BrigoMercurio</Model>
+    <ModelParameters>
+        <Parameter name="FXSource">GENERIC</Parameter>
+    </ModelParameters>
+    <Engine>MC</Engine>
+    <EngineParameters>
+        <Parameter name="Samples">10000</Parameter>
+        <Parameter name="Seed">42</Parameter>
+        <Parameter name="Sobol">Y</Parameter>
+        <Parameter name="SalvageCorrelationMatrix">Y</Parameter>
+        <Parameter name="SensitivityTemplate">IR_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product FormulaBasedCoupon, Model BrigoMercurio, Engine MC}
+\label{lst:peconfig_FormulaBasedCoupon_BrigoMercurio_MC}
+\end{longlisting}
+
+%--------------------------------------------------------
 \subsubsection{Product Type: FxForward}
 %--------------------------------------------------------
 
@@ -4264,36 +4822,243 @@ The parameters have the following meaning:
 CrossAssetModel/AMC builds a McCamCurrencySwapEngine for use in AMC simulations. We refer to the AMC module
 documentation for further details.
 
-% ===================== template ========================
-
 %--------------------------------------------------------
-\subsubsection{Product Type: }
+\subsubsection{Product Type: RiskParticipationAgreement\_Vanilla}
 %--------------------------------------------------------
 
-Used by trade type:
+Used by trade type: RiskParticipationAgreement with
 
-Available Model/Engine pairs:
+\begin{itemize}
+\item exactly one fixed and one floating leg with opposite payer flags and
+\item only fixed, ibor, ois (comp, avg) coupons allowed, no cap / floors, no in arrears fixings for ibor
+\end{itemize}
+
+Available Model/Engine pairs: Black/Analytic
 
 Engine description:
 
- builds a . A sample configuration is shown in listing \ref{lst:peconfig_}
+Black/Analytic builds a AnalyticBlackRiskParticipationAgreementEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_RiskParticipationAgreement_Vanilla_Black_Analytic}
 
 The parameters have the following meaning:
 
 \begin{itemize}
-\item 
+\item Reversion: the mean reversion parameter to use for underlying matching in a HW1F model
+\item MatchUnderlyingTenor: whether to match the trade underlying tenor in scenario / sensi calculations
+\item AlwaysRecomputeOptionRepresentation: whether to recompute underlying representation on each scenario or keep the initial representation across all scenarios
+\item MaxGapDays: the maximum gap between option expiry dates used for the underlying representation
+\item MaxDiscretizationPoints: the maximum number of discretization points used for underlying representation
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \end{itemize}
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
-
+ <Product type="RiskParticipationAgreement_Vanilla">
+    <Model>Black</Model>
+    <ModelParameters>
+        <Parameter name="Reversion">0.0</Parameter>
+        <Parameter name="MatchUnderlyingTenor">true</Parameter>
+    </ModelParameters>
+    <Engine>Analytic</Engine>
+    <EngineParameters>
+        <Parameter name="AlwaysRecomputeOptionRepresentation">false</Parameter>
+        <Parameter name="MaxGapDays">400</Parameter>
+        <Parameter name="MaxDiscretisationPoints">20</Parameter>
+        <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
+    </EngineParameters>
+</Product>
 \end{minted}
-\caption{Configuration for Product , Model , Engine }
-\label{lst:peconfig_}
+\caption{Configuration for Product RiskParticipationAgreement\_Vanilla, Model Black, Engine Analytic}
+\label{lst:peconfig_RiskParticipationAgreement_Vanilla_Black_Analytic}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: RiskParticipationAgreement\_Vanilla\_XCcy}
+%--------------------------------------------------------
+
+Used by trade type: RiskParticipationAgreement with
+
+\begin{itemize}
+\item two legs in different currencies with arbitrary coupons allowed, no
+  optionData though (as in structured variant)
+\end{itemize}
+
+Available Model/Engine pairs: Black/Analytic
+
+Engine description:
+
+Black/Analytic builds a AnalyticXCcyBlackRiskParticipationAgreementEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_RiskParticipationAgreement_Vanilla_XCcy_Black_Analytic}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item AlwaysRecomputeOptionRepresentation: whether to recompute underlying representation on each scenario or keep the initial representation across all scenarios
+\item MaxGapDays: the maximum gap between option expiry dates used for the underlying representation
+\item MaxDiscretizationPoints: the maximum number of discretization points used for underlying representation
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="RiskParticipationAgreement_Vanilla_XCcy">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>Analytic</Engine>
+    <EngineParameters>
+        <Parameter name="AlwaysRecomputeOptionRepresentation">false</Parameter>
+        <Parameter name="MaxGapDays">400</Parameter>
+        <Parameter name="MaxDiscretisationPoints">20</Parameter>
+        <Parameter name="SensitivityTemplate">FX_Semianalytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product RiskParticipationAgreement\_Vanilla\_XCcy, Model Black, Engine Analytic}
+\label{lst:peconfig_RiskParticipationAgreement_Vanilla_XCcy_Black_Analytic}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: RiskParticipationAgreement\_Structured}
+%--------------------------------------------------------
+
+Used by trade type: RiskParticipationAgreement with
+
+\begin{itemize}
+\item arbitrary number of fixed, floating, cashflow legs
+\item only fixed, ibor coupons, ois (comp, avg), simple cashflows allowed, but possibly capped / floored,
+  as naked option, with in arrears fixing for ibor
+\item with optionData (i.e. callable underlying), as naked option (i.e. swaption)
+\end{itemize} 
+
+Available Model/Engine pairs: LGM/Grid
+
+Engine description:
+
+LGM/Grid builds a NumericLgmRiskParticipationAgreementEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_RiskParticipationAgreement_Structured_LGM_Grid}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Calibration: Bootstrap, BestFit, None
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
+\item Reversion: The mean reversion
+\item ReversionType: Hagan, HullWhite
+\item Volatility: The volatility (start value for calibration if calibrated)
+\item VolatilityType: Hagan, HullWhite
+\item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
+\item Tolerance: Error tolerance for calibration
+\item sy, sx: Number of covered standard deviations (notation as in Hagan's paper)
+\item ny, nx: Number of grid points for numerical integration (notation as in Hagan's paper)
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="RiskParticipationAgreement_Structured">
+    <Model>LGM</Model>
+    <ModelParameters>
+        <Parameter name="Calibration">Bootstrap</Parameter>
+        <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
+        <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+        <Parameter name="Reversion">0.0</Parameter>
+        <Parameter name="ReversionType">HullWhite</Parameter>
+        <Parameter name="Volatility">0.01</Parameter>
+        <Parameter name="VolatilityType">Hagan</Parameter>
+        <Parameter name="ShiftHorizon">0.5</Parameter>
+        <Parameter name="Tolerance">0.02</Parameter>
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+        <Parameter name="sy">5.0</Parameter>
+        <Parameter name="ny">30</Parameter>
+        <Parameter name="sx">5.0</Parameter>
+        <Parameter name="nx">30</Parameter>
+        <Parameter name="MaxGapDays">400</Parameter>
+        <Parameter name="MaxDiscretisationPoints">20</Parameter>
+        <Parameter name="SensitivityTemplate">IR_FD</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product RiskParticipationAgreement\_Structured, Model LGM, Engine Grid}
+\label{lst:peconfig_RiskParticipationAgreement_Structured_LGM_Grid}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: RiskParticipationAgreement\_TLock}
+%--------------------------------------------------------
+
+Used by trade type: RiskParticipationAgreement with TLock underlying.
+
+Available Model/Engine pairs: LGM/Grid
+
+Engine description:
+
+LGM/Grid builds a NumericLgmRiskParticipationAgreementEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_RiskParticipationAgreement_TLock_LGM_Grid}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Calibration: Bootstrap, BestFit, None
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
+\item Reversion: The mean reversion
+\item ReversionType: Hagan, HullWhite
+\item Volatility: The volatility (start value for calibration if calibrated)
+\item VolatilityType: Hagan, HullWhite
+\item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
+\item Tolerance: Error tolerance for calibration
+\item sy, sx: Number of covered standard deviations (notation as in Hagan's paper)
+\item ny, nx: Number of grid points for numerical integration (notation as in Hagan's paper)
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="RiskParticipationAgreement_TLock">
+    <Model>LGM</Model>
+    <ModelParameters>
+        <Parameter name="Calibration">Bootstrap</Parameter>
+        <Parameter name="CalibrationStrategy">CoterminalATM</Parameter>
+        <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+        <Parameter name="Reversion">0.0</Parameter>
+        <Parameter name="ReversionType">HullWhite</Parameter>
+        <Parameter name="Volatility">0.01</Parameter>
+        <Parameter name="VolatilityType">Hagan</Parameter>
+        <Parameter name="ShiftHorizon">0.5</Parameter>
+        <Parameter name="Tolerance">0.02</Parameter>
+        <Parameter name="CalibrationInstrumentSpacing">3M</Parameter>
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+        <Parameter name="sy">5.0</Parameter>
+        <Parameter name="ny">30</Parameter>
+        <Parameter name="sx">5.0</Parameter>
+        <Parameter name="nx">30</Parameter>
+        <Parameter name="TimeStepsPerYear">24</Parameter>
+        <Parameter name="SensitivityTemplate">IR_FD</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product RiskParticipationAgreement\_TLock, Model LGM, Engine Grid}
+\label{lst:peconfig_RiskParticipationAgreement_TLock_LGM_Grid}
 \end{longlisting}
 
 
+%--------------------------------------------------------
+\subsubsection{Product Type: ScriptedTrade}
+%--------------------------------------------------------
+
+Used by trade type: ScriptedTrade (and trades wrapped as scripted trade)
+
+Available Model/Engine pairs: ScriptedTrade/ScriptedTrade
+
+Engine description:
+
+ScriptedTrade/ScriptedTrade builds a ScriptedInstrumentPricingEngine (and variants). We refer to the scripted trade
+module documentation for a sample configuration and more details.
 
 %--------------------------------------------------------
 \subsubsection{Global Parameters}
