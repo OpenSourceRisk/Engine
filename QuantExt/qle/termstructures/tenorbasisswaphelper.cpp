@@ -86,7 +86,7 @@ TenorBasisSwapHelper::TenorBasisSwapHelper(Handle<Quote> spread, const Period& s
     } else if (payGiven && recGiven && !discountGiven) {
         // case 6
         //TODO this case won't work ... "empty Handle cannot be dereferenced"
-        discountRelinkableHandle_.linkTo(*termStructureHandle_, false);
+        //discountRelinkableHandle_.linkTo(*termStructureHandle_, false);
     } else if (payGiven && recGiven && discountGiven) {
         // case 7
         QL_FAIL("Both Index and the Discount curves are all given");
