@@ -180,7 +180,7 @@ void FdBlackScholesBase::performCalculations() const {
 
     std::vector<Real> times;
     for (auto const& d : effectiveSimulationDates_) {
-        times.push_back(curves_.front()->timeFromReference(d));
+        times.push_back(timeFromReference(d));
     }
 
     timeGrid_ = model_->discretisationTimeGrid();
@@ -330,7 +330,7 @@ RandomVariable FdBlackScholesBase::getIndexValue(const Size indexNo, const Date&
     }
 
     // set the observation time in the result random variable
-    res.setTime(curves_.front()->timeFromReference(d));
+    res.setTime(timeFromReference(d));
 
     // return the result
 
@@ -407,7 +407,7 @@ RandomVariable FdBlackScholesBase::npv(const RandomVariable& amount, const Date&
     calculate();
 
     Real t1 = amount.time();
-    Real t0 = curves_.front()->timeFromReference(obsdate);
+    Real t0 = timeFromReference(obsdate);
 
     // handle case when amount is deterministic
 
@@ -421,7 +421,6 @@ RandomVariable FdBlackScholesBase::npv(const RandomVariable& amount, const Date&
 
     QL_REQUIRE(t1 != Null<Real>(),
                "FdBlackScholesBase::npv(): can not roll back amount wiithout time attached (to t0=" << t0 << ")");
-    calculate();
 
     // might throw if t0, t1 are not found in timeGrid_
 
@@ -491,7 +490,7 @@ RandomVariable FdBlackScholesBase::pay(const RandomVariable& amount, const Date&
 
     if (!applyQuantoAdjustment_) {
         auto res = ModelImpl::pay(amount, obsdate, paydate, currency);
-        res.setTime(curves_.front()->timeFromReference(obsdate));
+        res.setTime(timeFromReference(obsdate));
         return res;
     }
 
@@ -502,7 +501,7 @@ RandomVariable FdBlackScholesBase::pay(const RandomVariable& amount, const Date&
     Date effectiveDate = std::max(obsdate, referenceDate());
 
     auto res = amount * getDiscount(quantoTargetCcyIndex_, effectiveDate, paydate) / getNumeraire(effectiveDate);
-    res.setTime(curves_.front()->timeFromReference(obsdate));
+    res.setTime(timeFromReference(obsdate));
     return res;
 }
 

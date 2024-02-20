@@ -47,11 +47,9 @@ public:
         \param configuration            Market configuration to use
         \param referenceCalibrationGrid The reference calibration grid
     */
-    InfJyBuilder(
-        const boost::shared_ptr<Market>& market,
-        const boost::shared_ptr<InfJyData>& data,
-        const std::string& configuration = Market::defaultConfiguration,
-        const std::string& referenceCalibrationGrid = "");
+    InfJyBuilder(const boost::shared_ptr<Market>& market, const boost::shared_ptr<InfJyData>& data,
+                 const std::string& configuration = Market::defaultConfiguration,
+                 const std::string& referenceCalibrationGrid = "", const bool donCalibrate = false);
 
     using Helpers = std::vector<boost::shared_ptr<QuantLib::CalibrationHelper>>;
     
@@ -69,11 +67,14 @@ public:
     bool requiresRecalibration() const override;
     //@}
 
+    void setCalibrationDone() const;
+
 private:
     boost::shared_ptr<Market> market_;
     std::string configuration_;
     boost::shared_ptr<InfJyData> data_;
     std::string referenceCalibrationGrid_;
+    bool dontCalibrate_;
     
     boost::shared_ptr<QuantExt::InfJyParameterization> parameterization_;
     boost::shared_ptr<QuantExt::MarketObserver> marketObserver_;
