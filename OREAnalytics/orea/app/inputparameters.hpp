@@ -128,6 +128,7 @@ public:
     void setOutputJacobi(bool b) { outputJacobi_ = b; }
     void setUseSensiSpreadedTermStructures(bool b) { useSensiSpreadedTermStructures_ = b; }
     void setSensiThreshold(Real r) { sensiThreshold_ = r; }
+    void setSensiRecalibrateModels(bool b) { sensiRecalibrateModels_ = b; }
     void setSensiSimMarketParams(const std::string& xml);
     void setSensiSimMarketParamsFromFile(const std::string& fileName);
     void setSensiScenarioData(const std::string& xml);
@@ -309,6 +310,7 @@ public:
     void setSimmResultCurrency(const std::string& s) { simmResultCurrency_ = s; }
     void setSimmReportingCurrency(const std::string& s) { simmReportingCurrency_ = s; }
     void setEnforceIMRegulations(bool b) { enforceIMRegulations_= b; }
+    void setWriteSimmIntermediateReports(bool b) { writeSimmIntermediateReports_ = b; }
 
     // Setters for ZeroToParSensiConversion
     void setParConversionXbsParConversion(bool b) { parConversionXbsParConversion_ = b; }
@@ -419,6 +421,7 @@ public:
     bool outputJacobi() const { return outputJacobi_; };
     bool useSensiSpreadedTermStructures() { return useSensiSpreadedTermStructures_; }
     QuantLib::Real sensiThreshold() const { return sensiThreshold_; }
+    bool sensiRecalibrateModels() const { return sensiRecalibrateModels_; }
     const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& sensiSimMarketParams() { return sensiSimMarketParams_; }
     const boost::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiScenarioData() { return sensiScenarioData_; }
     const boost::shared_ptr<ore::data::EngineData>& sensiPricingEngine() { return sensiPricingEngine_; }
@@ -570,6 +573,7 @@ public:
     const std::string& simmReportingCurrency() { return simmReportingCurrency_; }
     bool enforceIMRegulations() { return enforceIMRegulations_; }
     boost::shared_ptr<SimmConfiguration> getSimmConfiguration();
+    bool writeSimmIntermediateReports() { return writeSimmIntermediateReports_; }
 
     /**************************************************
      * Getters for Zero to Par Sensi conversion
@@ -686,6 +690,7 @@ protected:
     bool alignPillars_ = false;
     bool useSensiSpreadedTermStructures_ = true;
     QuantLib::Real sensiThreshold_ = 1e-6;
+    bool sensiRecalibrateModels_ = true;
     boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> sensiSimMarketParams_;
     boost::shared_ptr<ore::analytics::SensitivityScenarioData> sensiScenarioData_;
     boost::shared_ptr<ore::data::EngineData> sensiPricingEngine_;
@@ -824,6 +829,7 @@ protected:
     std::string simmReportingCurrency_ = "";
     bool enforceIMRegulations_ = false;
     bool useSimmParameters_ = true;
+    bool writeSimmIntermediateReports_ = true;
 
     /***************
      * Zero to Par Conversion analytic

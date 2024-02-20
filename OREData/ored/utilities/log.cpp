@@ -620,8 +620,10 @@ void EventMessage::emitLog() const {
     MLOG(oreSeverity::alert, msg());
 }
 
-ProgressMessage::ProgressMessage(const string& key, const Size progressCurrent, const Size progressTotal) {
+ProgressMessage::ProgressMessage(const string& key, const Size progressCurrent, const Size progressTotal, const string& detail) {
     data_["key"] = key;
+    if (!detail.empty())
+        data_["detail"] = detail;
     data_["progress"] = progressCurrent;
     data_["total"] = progressTotal;
     data_["@timestamp"] =

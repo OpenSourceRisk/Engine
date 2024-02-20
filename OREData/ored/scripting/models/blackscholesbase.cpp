@@ -123,7 +123,7 @@ void BlackScholesBase::performCalculations() const {
 
     std::vector<Real> times;
     for (auto const& d : effectiveSimulationDates_) {
-        times.push_back(curves_.front()->timeFromReference(d));
+        times.push_back(timeFromReference(d));
     }
 
     timeGrid_ = model_->discretisationTimeGrid();
