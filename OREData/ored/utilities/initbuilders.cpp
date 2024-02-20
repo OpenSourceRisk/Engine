@@ -198,8 +198,8 @@
 #include <ored/portfolio/windowbarrieroption.hpp>
 #include <ored/portfolio/worstofbasketswap.hpp>
 
-#include <qle/math/openclenvironment.hpp>
 #include <qle/math/basiccpuenvironment.hpp>
+#include <qle/math/openclenvironment.hpp>
 
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/shared_mutex.hpp>
@@ -357,7 +357,7 @@ void initBuilders() {
     ORE_REGISTER_TRADE_BUILDER("DoubleDigitalOption", DoubleDigitalOption, false)
     ORE_REGISTER_TRADE_BUILDER("PerformanceOption_01", PerformanceOption_01, false)
     ORE_REGISTER_TRADE_BUILDER("RiskParticipationAgreement", RiskParticipationAgreement, false)
-        
+
     ORE_REGISTER_LEGBUILDER("CommodityFixedLegBuilder", CommodityFixedLegBuilder, false)
     ORE_REGISTER_LEGBUILDER("CommodityFloatingLegBuilder", CommodityFloatingLegBuilder, false)
     ORE_REGISTER_LEGBUILDER("DurationAdjustedCmsLegBuilder", DurationAdjustedCmsLegBuilder, false)
@@ -381,6 +381,7 @@ void initBuilders() {
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcSwapEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcFxOptionEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcFxForwardEngineBuilder, false)
+    ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcMultiLegOptionEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(ScriptedTradeEngineBuilder, false)
 
     ORE_REGISTER_AMCCG_ENGINE_BUILDER(ScriptedTradeEngineBuilder, false)
@@ -487,6 +488,7 @@ void initBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(AscotIntrinsicEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(ConvertibleBondFDDefaultableEquityJumpDiffusionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CboMCEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(CamMcMultiLegOptionEngineBuilder, false)
 
     ORE_REGISTER_ENGINE_BUILDER(ScriptedTradeEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(AsianOptionScriptedEngineBuilder, false)

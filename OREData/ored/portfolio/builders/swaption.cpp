@@ -37,21 +37,24 @@ using namespace std;
 using namespace ore::data;
 
 namespace {
-boost::shared_ptr<PricingEngine> buildMcEngine(const std::function<string(string)>& engineParameters,
-                                               const boost::shared_ptr<LGM>& lgm,
-                                               const Handle<YieldTermStructure>& discountCurve,
-                                               const std::vector<Date>& simulationDates,
-                                               const std::vector<Size>& externalModelIndices) {
+boost::shared_ptr<PricingEngine> buildMcEngine(
+    const std::function<string(string, const std::vector<std::string>&, const bool, const string&)>& engineParameter,
+    const boost::shared_ptr<LGM>& lgm, const Handle<YieldTermStructure>& discountCurve,
+    const std::vector<Date>& simulationDates, const std::vector<Size>& externalModelIndices) {
 
     return boost::make_shared<QuantExt::McMultiLegOptionEngine>(
-        lgm, parseSequenceType(engineParameters("Training.Sequence")),
-        parseSequenceType(engineParameters("Pricing.Sequence")), parseInteger(engineParameters("Training.Samples")),
-        parseInteger(engineParameters("Pricing.Samples")), parseInteger(engineParameters("Training.Seed")),
-        parseInteger(engineParameters("Pricing.Seed")), parseInteger(engineParameters("Training.BasisFunctionOrder")),
-        parsePolynomType(engineParameters("Training.BasisFunction")),
-        parseSobolBrownianGeneratorOrdering(engineParameters("BrownianBridgeOrdering")),
-        parseSobolRsgDirectionIntegers(engineParameters("SobolDirectionIntegers")), discountCurve, simulationDates,
-        externalModelIndices, parseBool(engineParameters("MinObsDate")));
+        lgm, parseSequenceType(engineParameter("Training.Sequence", {}, false, "SobolBrownianBridge")),
+        parseSequenceType(engineParameter("Pricing.Sequence", {}, false, "SobolBrownianBridge")),
+        parseInteger(engineParameter("Training.Samples", {}, true, std::string())),
+        parseInteger(engineParameter("Pricing.Samples", {}, false, "0")),
+        parseInteger(engineParameter("Training.Seed", {}, true, std::string())),
+        parseInteger(engineParameter("Pricing.Seed", {}, false, "42")),
+        parseInteger(engineParameter("Training.BasisFunctionOrder", {}, true, std::string())),
+        parsePolynomType(engineParameter("Training.BasisFunction", {}, true, std::string())),
+        parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering", {}, false, "Steps")),
+        parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers", {}, false, "JoeKuoD7")), discountCurve,
+        simulationDates, externalModelIndices, parseBool(engineParameter("MinObsDate", {}, false, "true")),
+        parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")));
 }
 } // namespace
 
@@ -282,9 +285,10 @@ LGMMCSwaptionEngineBuilder::engineImpl(const string& id, const string& key, cons
     boost::shared_ptr<IborIndex> index;
     std::string ccy = tryParseIborIndex(key, index) ? index->currency().code() : key;
     auto discountCurve = market_->discountCurve(ccy, configuration(MarketContext::pricing));
-    return buildMcEngine([this](const std::string& p) { return this->engineParameter(p); }, lgm, discountCurve,
-                         std::vector<Date>(), std::vector<Size>());
-}
+    return buildMcEngine([this](const std::string& p, const std::vector<std::string>& q, const bool m,
+                                const std::string& d) { return this->engineParameter(p, q, m, d); },
+                         lgm, discountCurve, std::vector<Date>(), std::vector<Size>());
+} // LgmMc engineImpl()
 
 boost::shared_ptr<PricingEngine>
 LGMAmcSwaptionEngineBuilder::engineImpl(const string& id, const string& key, const std::vector<Date>& expiries,
@@ -304,9 +308,10 @@ LGMAmcSwaptionEngineBuilder::engineImpl(const string& id, const string& key, con
     DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
     // we assume that the given cam has pricing discount curves attached already
     Handle<YieldTermStructure> discountCurve;
-    return buildMcEngine([this](const std::string& p) { return this->engineParameter(p); }, lgm, discountCurve,
-                         simulationDates_, modelIndex);
-}
+    return buildMcEngine([this](const std::string& p, const std::vector<std::string>& q, const bool m,
+                                const std::string& d) { return this->engineParameter(p, q, m, d); },
+                         lgm, discountCurve, simulationDates_, modelIndex);
+} // LgmCam engineImpl
 
 } // namespace data
 } // namespace ore

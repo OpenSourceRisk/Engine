@@ -136,7 +136,7 @@ void GaussianCam::performCalculations() const {
 
     std::vector<Real> times;
     for (auto const& d : effectiveSimulationDates_) {
-        times.push_back(curves_.front()->timeFromReference(d));
+        times.push_back(timeFromReference(d));
     }
 
     Size steps = std::max(std::lround(timeStepsPerYear_ * times.back() + 0.5), 1l);
@@ -453,8 +453,8 @@ RandomVariable GaussianCam::getIrIndexValue(const Size indexNo, const Date& d, c
     // compute value, add to cache and return it
     Size currencyIdx = irIndexPositionInCam_[indexNo];
     LgmVectorised lgmv(cam_->irlgm1f(currencyIdx));
-    auto result = lgmv.fixing(irIndices_[indexNo].second, fixingDate, curves_.front()->timeFromReference(d),
-                              irStates_.at(d).at(currencyIdx));
+    auto result =
+        lgmv.fixing(irIndices_[indexNo].second, fixingDate, timeFromReference(d), irStates_.at(d).at(currencyIdx));
     irIndexValueCache_[std::make_tuple(indexNo, d, fixingDate)] = result;
     return result;
 }
@@ -512,7 +512,7 @@ RandomVariable GaussianCam::fwdCompAvg(const bool isAvg, const std::string& inde
                                return p.first.name() == indexInput;
                            });
     QL_REQUIRE(ir != irIndices_.end(),
-               "ModelImpl::fwdComp() ir index " << indexInput << " not found, this is unexpected");
+               "GaussianCam::fwdComp() ir index " << indexInput << " not found, this is unexpected");
     Size irIndexPos = irIndexPositionInCam_[std::distance(irIndices_.begin(), ir)];
     LgmVectorised lgmv(cam_->lgm(irIndexPos)->parametrization());
     auto on = boost::dynamic_pointer_cast<OvernightIndex>(ir->second);
@@ -524,7 +524,7 @@ RandomVariable GaussianCam::fwdCompAvg(const bool isAvg, const std::string& inde
     // get model time and state
     Date effobsdate = std::max(referenceDate(), obsdate);
     const auto& modelState = irStates_.at(effobsdate)[irIndexPos];
-    const auto& modelTime = curves_.front()->timeFromReference(effobsdate);
+    const auto& modelTime = timeFromReference(effobsdate);
     if (isAvg) {
         return lgmv.averagedOnRate(on, coupon->fixingDates(), coupon->valueDates(), coupon->dt(), rateCutoff,
                                    includeSpread, spread, gearing, lookback * Days, cap, floor, localCapFloor,
@@ -543,13 +543,13 @@ RandomVariable GaussianCam::getDiscount(const Size idx, const Date& s, const Dat
 RandomVariable GaussianCam::getDiscount(const Size idx, const Date& s, const Date& t,
                                         const Handle<YieldTermStructure>& targetCurve) const {
     LgmVectorised lgmv(cam_->lgm(currencyPositionInCam_[idx])->parametrization());
-    return lgmv.discountBond(curves_.front()->timeFromReference(s), curves_.front()->timeFromReference(t),
-                             irStates_.at(s)[idx], targetCurve);
+    return lgmv.discountBond(timeFromReference(s), curves_.front()->timeFromReference(t), irStates_.at(s)[idx],
+                             targetCurve);
 }
 
 RandomVariable GaussianCam::getNumeraire(const Date& s) const {
     LgmVectorised lgmv(cam_->lgm(currencyPositionInCam_[0])->parametrization());
-    return lgmv.numeraire(curves_.front()->timeFromReference(s), irStates_.at(s)[0]);
+    return lgmv.numeraire(timeFromReference(s), irStates_.at(s)[0]);
 }
 
 Real GaussianCam::getFxSpot(const Size idx) const { return fxSpots_.at(idx)->value(); }
