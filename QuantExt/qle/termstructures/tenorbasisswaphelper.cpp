@@ -22,7 +22,6 @@
 #include <ql/utilities/null_deleter.hpp>
 
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
-
 namespace QuantExt {
 
 TenorBasisSwapHelper::TenorBasisSwapHelper(Handle<Quote> spread, const Period& swapTenor,
@@ -41,27 +40,43 @@ TenorBasisSwapHelper::TenorBasisSwapHelper(Handle<Quote> spread, const Period& s
        x = curve is given
        . = curve is missing
 
-       Case | OI1 | OI2  | Discount | Action
+       Case | PAY | REC  | Discount | Action
        =========================================
          0  |  .  |   .  |    .     | throw exception
          1  |  .  |   .  |    x     | throw exception
-         2  |  .  |   x  |    .     | imply OI1 = Discount
-         3  |  .  |   x  |    x     | imply OI1
-         4  |  x  |   .  |    .     | imply OI2 = Discount
-         5  |  x  |   .  |    x     | imply OI2
+         2  |  .  |   x  |    .     | imply PAY = Discount
+         3  |  .  |   x  |    x     | imply PAY
+         4  |  x  |   .  |    .     | imply REC = Discount
+         5  |  x  |   .  |    x     | imply REC
          6  |  x  |   x  |    .     | imply Discount
          7  |  x  |   x  |    x     | throw exception
 
-    */
+        Overnight(ON) vs. IBOR CASE:
+        Case 2 from above:
+            if REC (given) is ON, REC = Discount = OIS, imply PAY only
+            else : PAY (missing) is ON, imply PAY = Discount = OIS (as before)
 
+        Case 4 from above:
+            if PAY (given) is ON, PAY = Discount = OIS , imply REC only
+            else : REC (missing) is ON, then imply REC = Discount = OIS (as before)
 
-    //TODO distinguish OIS/IBOR case ...
+        */
 
    setDiscountRelinkableHandle_ = false;
 
     bool payGiven = !payIndex_->forwardingTermStructure().empty();
     bool recGiven = !receiveIndex_->forwardingTermStructure().empty();
     bool discountGiven = !discountHandle_.empty();
+
+    bool payON = false;
+    boost::shared_ptr<OvernightIndex> payIndexON = boost::dynamic_pointer_cast<OvernightIndex>(payIndex_);
+    if(payIndexON)
+        payON = true;
+
+    bool recON = false;
+    boost::shared_ptr<OvernightIndex> recIndexON = boost::dynamic_pointer_cast<OvernightIndex>(receiveIndex_);
+    if(recIndexON)
+        recON = true;
 
     if (!payGiven && !recGiven && !discountGiven) {
         // case 0
@@ -73,9 +88,11 @@ TenorBasisSwapHelper::TenorBasisSwapHelper(Handle<Quote> spread, const Period& s
         // case 2
         payIndex_ = boost::static_pointer_cast<IborIndex>(payIndex_->clone(termStructureHandle_));
         payIndex_->unregisterWith(termStructureHandle_);
-        setDiscountRelinkableHandle_ = true;
-        //discountRelinkableHandle_.linkTo(*termStructureHandle_, false);
-        //discountRelinkableHandle_.linkTo(*receiveIndex_->forwardingTermStructure());
+        if(!payON && recON)
+            discountRelinkableHandle_.linkTo(*receiveIndex_->forwardingTermStructure());
+        else
+            setDiscountRelinkableHandle_ = true;
+        // discountRelinkableHandle_.linkTo(*termStructureHandle_, false);
     } else if (!payGiven && recGiven && discountGiven) {
         // case 3
         payIndex_ = boost::static_pointer_cast<IborIndex>(payIndex_->clone(termStructureHandle_));
@@ -84,8 +101,10 @@ TenorBasisSwapHelper::TenorBasisSwapHelper(Handle<Quote> spread, const Period& s
         // case 4
         receiveIndex_ = boost::static_pointer_cast<IborIndex>(receiveIndex_->clone(termStructureHandle_));
         receiveIndex_->unregisterWith(termStructureHandle_);
-        //discountRelinkableHandle_.linkTo(*payIndex_->forwardingTermStructure());
-        setDiscountRelinkableHandle_ = true;
+        if(payON && !recON)
+            discountRelinkableHandle_.linkTo(*payIndex_->forwardingTermStructure());
+        else
+            setDiscountRelinkableHandle_ = true;
     } else if (payGiven && !recGiven && discountGiven) {
         // case 5
         receiveIndex_ = boost::static_pointer_cast<IborIndex>(receiveIndex_->clone(termStructureHandle_));
@@ -93,8 +112,7 @@ TenorBasisSwapHelper::TenorBasisSwapHelper(Handle<Quote> spread, const Period& s
     } else if (payGiven && recGiven && !discountGiven) {
         // case 6
         setDiscountRelinkableHandle_ = true;
-        //TODO this case won't work ... "empty Handle cannot be dereferenced"
-        //discountRelinkableHandle_.linkTo(*termStructureHandle_, false);
+        // discountRelinkableHandle_.linkTo(*termStructureHandle_, false);
     } else if (payGiven && recGiven && discountGiven) {
         // case 7
         QL_FAIL("Both Index and the Discount curves are all given");
