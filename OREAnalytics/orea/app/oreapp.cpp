@@ -766,6 +766,10 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         tmp = params_->get("sensitivity", "outputSensitivityThreshold", false);
         if (tmp != "")
             inputs->setSensiThreshold(parseReal(tmp));
+
+        tmp = params_->get("sensitivity", "recalibrateModels", false);
+        if (tmp != "")
+            inputs->setSensiRecalibrateModels(parseBool(tmp));
     }
 
     
