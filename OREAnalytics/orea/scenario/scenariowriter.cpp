@@ -35,7 +35,7 @@ ScenarioWriter::ScenarioWriter(const std::string& filename, const char sep, cons
     open(filename, filemode);
 }
 
-    ScenarioWriter::ScenarioWriter(const boost::shared_ptr<ScenarioGenerator>& src, boost::shared_ptr<ore::data::InMemoryReport> report)
+ScenarioWriter::ScenarioWriter(const boost::shared_ptr<ScenarioGenerator>& src, boost::shared_ptr<ore::data::Report> report)
     : src_(src), report_(report), fp_(nullptr), i_(0), sep_(',') {}
 
 void ScenarioWriter::open(const std::string& filename, const std::string& filemode) {
@@ -67,7 +67,7 @@ boost::shared_ptr<Scenario> ScenarioWriter::next(const Date& d) {
     return s;
 }
 
-void ScenarioWriter::writeScenario(boost::shared_ptr<Scenario>& s, const bool writeHeader) {
+void ScenarioWriter::writeScenario(const boost::shared_ptr<Scenario>& s, const bool writeHeader) {
     const Date d = s->asof();
     // take a copy of the keys here to ensure the order is preserved
     keys_ = s->keys();
