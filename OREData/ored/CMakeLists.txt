@@ -317,6 +317,7 @@ scripting/models/blackscholesbase.cpp
 scripting/models/blackscholescg.cpp
 scripting/models/blackscholescgbase.cpp
 scripting/models/fdblackscholesbase.cpp
+scripting/models/fdgaussiancam.cpp
 scripting/models/gaussiancam.cpp
 scripting/models/gaussiancamcg.cpp
 scripting/models/hwcg.cpp
@@ -704,6 +705,7 @@ scripting/models/blackscholescg.hpp
 scripting/models/blackscholescgbase.hpp
 scripting/models/dummymodel.hpp
 scripting/models/fdblackscholesbase.hpp
+scripting/models/fdgaussiancam.hpp
 scripting/models/gaussiancam.hpp
 scripting/models/gaussiancamcg.hpp
 scripting/models/hwcg.hpp
