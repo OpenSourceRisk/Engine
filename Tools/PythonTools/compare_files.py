@@ -655,8 +655,8 @@ def validate_json_diff(json_diff: dict, config: dict, path: str) -> None:
                 if settings:
                     for s in settings:
                         names = s.get('names')
-                        abs_tol = s.get('abs_tol')
-                        rel_tol = s.get('rel_tol')
+                        abs_tol = s.get('abs_tol') or 0
+                        rel_tol = s.get('rel_tol') or 0
 
                         # Number diffs
                         for n in names:
@@ -676,7 +676,6 @@ def validate_json_diff(json_diff: dict, config: dict, path: str) -> None:
                                     abs_diff = abs(val_1 - val_2)
                                     abs_check = abs_diff <= abs_tol
                                     rel_check = abs_diff <= min(abs(val_1 * rel_tol), abs(val_2 * rel_tol))
-
                                     if abs_check or rel_check:
                                         diff.clear()
 

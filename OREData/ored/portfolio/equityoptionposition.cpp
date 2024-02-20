@@ -74,6 +74,8 @@ void EquityOptionPosition::build(const boost::shared_ptr<ore::data::EngineFactor
     currencies_.clear();
     fxConversion_.clear();
 
+    setSensitivityTemplate(std::string()); // default, will usually be overwritten below
+
     for (auto const& u : data_.underlyings()) {
 
         // get equity, populate weight, currency

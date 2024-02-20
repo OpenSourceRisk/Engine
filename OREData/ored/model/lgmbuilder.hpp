@@ -117,6 +117,7 @@ private:
     Handle<QuantLib::SwaptionVolatilityStructure> svts_;
     Handle<SwapIndex> swapIndex_, shortSwapIndex_;
     RelinkableHandle<YieldTermStructure> modelDiscountCurve_;
+    Handle<YieldTermStructure> calibrationDiscountCurve_;
 
     // TODO: Move CalibrationErrorType, optimizer and end criteria parameters to data
     boost::shared_ptr<OptimizationMethod> optimizationMethod_;
