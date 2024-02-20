@@ -180,13 +180,16 @@ bool InfDkBuilder::requiresRecalibration() const {
 
 void InfDkBuilder::performCalculations() const {
     if (requiresRecalibration()) {
-        // reset market observer updated flag
-        marketObserver_->hasUpdated(true);
         // build option basket
         buildCapFloorBasket();
-        // update vol cache
-        volSurfaceChanged(true);
     }
+}
+
+void InfDkBuilder::setCalibrationDone() const {
+    // reset market observer updated flag
+    marketObserver_->hasUpdated(true);
+    // update vol cache
+    volSurfaceChanged(true);
 }
 
 Date InfDkBuilder::optionMaturityDate(const Size j) const {
@@ -214,6 +217,8 @@ Real InfDkBuilder::optionStrikeValue(const Size j) const {
 
 bool InfDkBuilder::volSurfaceChanged(const bool updateCache) const {
     bool hasUpdated = false;
+    if(dontCalibrate_)
+        return false;
 
     boost::shared_ptr<QuantExt::CPICapFloorEngine> engine;
 

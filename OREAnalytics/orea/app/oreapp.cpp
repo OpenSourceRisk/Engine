@@ -805,6 +805,10 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("sensitivity", "outputSensitivityThreshold", false);
         if (tmp != "")
             setSensiThreshold(parseReal(tmp));
+
+        tmp = params_->get("sensitivity", "recalibrateModels", false);
+        if (tmp != "")
+            setSensiRecalibrateModels(parseBool(tmp));
     }
 
     /************

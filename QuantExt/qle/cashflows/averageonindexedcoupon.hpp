@@ -169,8 +169,8 @@ public:
 protected:
     Handle<OptionletVolatilityStructure> capletVol_;
     bool effectiveVolatilityInput_;
-    mutable Real effectiveCapletVolatility_;
-    mutable Real effectiveFloorletVolatility_;
+    mutable Real effectiveCapletVolatility_ = Null<Real>();
+    mutable Real effectiveFloorletVolatility_ = Null<Real>();
 };
 
 //! helper class building a sequence of overnight coupons

@@ -86,6 +86,9 @@ public:
         return ActualActual(ActualActual::ISDA).yearFraction(d1, d2);
     }
 
+    // time from reference date in this model
+    Real timeFromReference(const Date& d) const { return dt(referenceDate(), d); }
+
     // result must be as of max(refdate, obsdate); refdate < paydate and obsdate <= paydate required
     virtual RandomVariable pay(const RandomVariable& amount, const Date& obsdate, const Date& paydate,
                                const std::string& currency) const = 0;

@@ -158,7 +158,6 @@ void PricingAnalyticImpl::runAnalytic(
         else if (type == "SENSITIVITY") {
             CONSOLEW("Risk: Sensitivity Report");
             LOG("Sensi Analysis - Initialise");
-            bool recalibrateModels = true;
             bool ccyConv = false;
             std::string configuration = inputs_->marketConfig("pricing");
             boost::shared_ptr<SensitivityAnalysis> sensiAnalysis;
@@ -169,7 +168,7 @@ void PricingAnalyticImpl::runAnalytic(
                 sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
                     analytic()->portfolio(), analytic()->market(), configuration, inputs_->pricingEngine(),
                     analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
-                    recalibrateModels, analytic()->configurations().curveConfig,
+                    inputs_->sensiRecalibrateModels(), analytic()->configurations().curveConfig,
                     analytic()->configurations().todaysMarketParams, ccyConv, inputs_->refDataManager(),
                     *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
                 LOG("Single-threaded sensi analysis created");
@@ -182,9 +181,9 @@ void PricingAnalyticImpl::runAnalytic(
                 std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>()> extraEngineBuilders = {};
                 std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()> extraLegBuilders = {};
                 sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
-                    inputs_->nThreads(), inputs_->asof(), loader, analytic()->portfolio(), Market::defaultConfiguration,
+                    inputs_->nThreads(), inputs_->asof(), loader, analytic()->portfolio(), configuration,
                     inputs_->pricingEngine(), analytic()->configurations().simMarketParams,
-                    analytic()->configurations().sensiScenarioData, recalibrateModels,
+                    analytic()->configurations().sensiScenarioData, inputs_->sensiRecalibrateModels(),
                     analytic()->configurations().curveConfig, analytic()->configurations().todaysMarketParams, ccyConv,
                     inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
                 LOG("Multi-threaded sensi analysis created");
