@@ -106,5 +106,28 @@ XMLNode* Envelope::toXML(XMLDocument& doc) {
     return node;
 }
 
+const map<string, string> Envelope::additionalFields() const {
+    map<string, string> stringAddFields;
+    for (const auto& f : additionalFields_)
+        if (f.second.type() == typeid(string))
+            stringAddFields[f.first] = boost::any_cast<string>(f.second);
+    return stringAddFields;
+}
+
+string Envelope::additionalField(const std::string& name, const bool mandatory, const std::string& defaultValue) {
+    auto af = additionalFields();
+    auto it = af.find(name);
+    QL_REQUIRE(it != af.end() || !mandatory,
+               "Envelope::additionalField(): Mandatory field '" << name << "' not found.");
+    return it == af.end() ? defaultValue : it->second;
+}
+
+boost::any Envelope::additionalAnyField(const std::string& name, const bool mandatory, const boost::any& defaultValue) {
+    auto it = additionalFields_.find(name);
+    QL_REQUIRE(it != additionalFields_.end() || !mandatory,
+               "Envelope::additionalField(): Mandatory field '" << name << "' not found.");
+    return it == additionalFields_.end() ? defaultValue : it->second;
+}
+
 } // namespace data
 } // namespace ore

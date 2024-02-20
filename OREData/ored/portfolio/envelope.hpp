@@ -96,14 +96,12 @@ public:
     const string& nettingSetId() const { return nettingSetDetails_.nettingSetId(); }
     const NettingSetDetails nettingSetDetails() { return nettingSetDetails_; }
     const set<string>& portfolioIds() const { return portfolioIds_; }
-    const map<string, string> additionalFields() const {
-        map<string, string> stringAddFields;
-        for (const auto& f : additionalFields_)
-            if (f.second.type() == typeid(string))
-                stringAddFields[f.first] = boost::any_cast<string>(f.second);
-        return stringAddFields;
-    }
+    const map<string, string> additionalFields() const;
     const map<string, boost::any>& fullAdditionalFields() const { return additionalFields_; }
+    string additionalField(const std::string& name, const bool mandatory = true,
+                           const std::string& defaultValue = std::string());
+    boost::any additionalAnyField(const std::string& name, const bool mandatory = true,
+                                  const boost::any& defaultValue = boost::none);
     //@}
 
     //! \name Utility
