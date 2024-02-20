@@ -7210,9 +7210,6 @@ This sections lists known limitations of the AMC simulation engine.
 Some trade features are not yet supported by the multileg option engine:
 
 \begin{enumerate}
-\item legs with fx resetting feature
-\item legs with naked option = true
-\item coupon types are restricted to Ibor and CMS
 \item exercise flows (like a notional exchange common to cross currency swaptions) are not supported
 \end{enumerate}
 
@@ -7227,12 +7224,6 @@ During the simulation phase exercise times of a specific trade are not necessari
 grid. Therefore the model state required to take the exercise decision has in to be interpolated in general on the
 simulated path. Currently this is done using a simple linear interpolation while from a pure methodology point of view a
 Brownian Bridge would be preferable. In our tests we do not see a big impact of this approximation though.
-
-\subsubsection*{Missing recalibration of the MCMultiLegOptionEngine}
-
-The MC Multi Leg Option Engine builder uses the \verb+CrossAssetModelBuilder+ to set up the pricing model. This class
-does not implement the \verb+ModelBuidler+ interface meaning that the model is not recalibrated in a sensitivity
-analysis run. Therefore the sensitivities calculated by this engine are not valid.
 
 \subsubsection*{Basis Function Selection}
 
