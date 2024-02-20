@@ -125,13 +125,16 @@ bool FxBsBuilder::requiresRecalibration() const {
 
 void FxBsBuilder::performCalculations() const {
     if (requiresRecalibration()) {
-        // reset market observer updated flag
-        marketObserver_->hasUpdated(true);
         // build option basket
         buildOptionBasket();
-        // update vol cache
-        volSurfaceChanged(true);
     }
+}
+
+void FxBsBuilder::setCalibrationDone() const {
+    // reset market observer updated flag
+    marketObserver_->hasUpdated(true);
+    // update vol cache
+    volSurfaceChanged(true);
 }
 
 Real FxBsBuilder::optionStrike(const Size j) const {

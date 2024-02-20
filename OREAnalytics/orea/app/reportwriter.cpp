@@ -177,7 +177,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
         .addColumn("FloorStrike", double(), 6)
         .addColumn("CapStrike", double(), 6)
         .addColumn("FloorVolatility", double(), 6)
-        .addColumn("CapVolatility", double(), 6);
+        .addColumn("CapVolatility", double(), 6)
+        .addColumn("EffectiveFloorVolatility", double(), 6)
+        .addColumn("EffectiveCapVolatility", double(), 6);
 
     std::map<std::string, boost::shared_ptr<Trade>> trades = portfolio->trades();
 
@@ -362,6 +364,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                             Real capStrike = Null<Real>();
                             Real floorVolatility = Null<Real>();
                             Real capVolatility = Null<Real>();
+                            Real effectiveFloorVolatility = Null<Real>();
+                            Real effectiveCapVolatility = Null<Real>();
 
                             if (amount != Null<Real>())
                                 effectiveAmount = amount * multiplier;
@@ -408,7 +412,10 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                     volFixingDate = tmp->underlying()->fixingDates().front();
                                     qlIndexName = tmp->index()->name();
                                     usesCapVol = true;
-                                    // for now we output the stripped caplet vol, not the effective one
+                                    if (floorStrike != Null<Real>())
+                                        effectiveFloorVolatility = tmp->effectiveFloorletVolatility();
+                                    if (capStrike != Null<Real>())
+                                        effectiveCapVolatility = tmp->effectiveCapletVolatility();
                                 } else if (auto tmp =
                                                boost::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(c)) {
                                     floorStrike = tmp->effectiveFloor();
@@ -416,14 +423,20 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                     volFixingDate = tmp->underlying()->fixingDates().front();
                                     qlIndexName = tmp->index()->name();
                                     usesCapVol = true;
-                                    // for now we output the stripped caplet vol, not the effective one
-                                } else if (auto tmp =
-                                               boost::dynamic_pointer_cast<CappedFlooredAverageBMACoupon>(c)) {
+                                    if (floorStrike != Null<Real>())
+                                        effectiveFloorVolatility = tmp->effectiveFloorletVolatility();
+                                    if (capStrike != Null<Real>())
+                                        effectiveCapVolatility = tmp->effectiveCapletVolatility();
+                                } else if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredAverageBMACoupon>(c)) {
                                     floorStrike = tmp->effectiveFloor();
                                     capStrike = tmp->effectiveCap();
                                     volFixingDate = tmp->underlying()->fixingDates().front();
                                     qlIndexName = tmp->index()->name();
                                     usesCapVol = true;
+                                    if (floorStrike != Null<Real>())
+                                        effectiveFloorVolatility = tmp->effectiveFloorletVolatility();
+                                    if (capStrike != Null<Real>())
+                                        effectiveCapVolatility = tmp->effectiveCapletVolatility();
                                 }
 
                                 // get market volaility for cap / floor
@@ -488,7 +501,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                 .add(floorStrike)
                                 .add(capStrike)
                                 .add(floorVolatility)
-                                .add(capVolatility);
+                                .add(capVolatility)
+                                .add(effectiveFloorVolatility)
+                                .add(effectiveCapVolatility);
                         }
                     }
                 }
@@ -522,6 +537,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                     Real capStrike = Null<Real>();
                     Real floorVolatility = Null<Real>();
                     Real capVolatility = Null<Real>();
+                    Real effectiveFloorVolatility = Null<Real>();
+                    Real effectiveCapVolatility = Null<Real>();
 
                     if (cf.amount != Null<Real>())
                         effectiveAmount = cf.amount * multiplier;
@@ -558,6 +575,10 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                         floorVolatility = cf.floorVolatility;
                     if (cf.capVolatility != Null<Real>())
                         capVolatility = cf.capVolatility;
+                    if (cf.effectiveFloorVolatility != Null<Real>())
+                        floorVolatility = cf.effectiveFloorVolatility;
+                    if (cf.effectiveCapVolatility != Null<Real>())
+                        capVolatility = cf.effectiveCapVolatility;
 
                     report.next()
                         .add(trade->id())
@@ -584,7 +605,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                         .add(floorStrike)
                         .add(capStrike)
                         .add(floorVolatility)
-                        .add(capVolatility);
+                        .add(capVolatility)
+                        .add(effectiveFloorVolatility)
+                        .add(effectiveCapVolatility);
                 }
             }
 
