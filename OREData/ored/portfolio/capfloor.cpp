@@ -116,7 +116,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
                     boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
                 QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
-                qlInstrument->setPricingEngine(swapBuilder->engine(parseCurrency(legData_.currency())));
+                qlInstrument->setPricingEngine(swapBuilder->engine(parseCurrency(legData_.currency()), std::string()));
                 setSensitivityTemplate(*swapBuilder);
             } else {
                 qlInstrument->setPricingEngine(
@@ -193,7 +193,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
                 boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
             QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
-            qlInstrument->setPricingEngine(swapBuilder->engine(parseCurrency(legData_.currency())));
+            qlInstrument->setPricingEngine(swapBuilder->engine(parseCurrency(legData_.currency()), std::string()));
             setSensitivityTemplate(*swapBuilder);
         } else {
             qlInstrument->setPricingEngine(
@@ -222,7 +222,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
                 boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
             QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
-            qlInstrument->setPricingEngine(swapBuilder->engine(parseCurrency(legData_.currency())));
+            qlInstrument->setPricingEngine(swapBuilder->engine(parseCurrency(legData_.currency()), std::string()));
             setSensitivityTemplate(*swapBuilder);
         } else {
             qlInstrument->setPricingEngine(
@@ -252,7 +252,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
                 boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
             QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
-            qlInstrument->setPricingEngine(swapBuilder->engine(parseCurrency(legData_.currency())));
+            qlInstrument->setPricingEngine(swapBuilder->engine(parseCurrency(legData_.currency()), std::string()));
             setSensitivityTemplate(*swapBuilder);
         } else {
             qlInstrument->setPricingEngine(

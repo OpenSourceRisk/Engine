@@ -189,7 +189,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
             boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
         QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
-        swap->setPricingEngine(swapBuilder->engine(npvCcy));
+        swap->setPricingEngine(swapBuilder->engine(npvCcy, envelope().additionalField("discount_curve", false)));
         setSensitivityTemplate(*swapBuilder);
         instrument_.reset(new VanillaInstrument(swap));
     }

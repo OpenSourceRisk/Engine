@@ -41,13 +41,13 @@ namespace data {
 /*! Pricing engines are cached by currency
     \ingroup builders
 */
-class SwapEngineBuilderBase : public CachingPricingEngineBuilder<string, const Currency&> {
+class SwapEngineBuilderBase : public CachingPricingEngineBuilder<string, const Currency&, const std::string&> {
 public:
     SwapEngineBuilderBase(const std::string& model, const std::string& engine)
         : CachingEngineBuilder(model, engine, {"Swap"}) {}
 
 protected:
-    virtual string keyImpl(const Currency& ccy) override { return ccy.code(); }
+    virtual string keyImpl(const Currency& ccy, const std::string& name) override { return ccy.code() + name; }
 };
 
 //! Engine Builder for Single Currency Swaps
@@ -59,9 +59,10 @@ public:
     SwapEngineBuilder() : SwapEngineBuilderBase("DiscountedCashflows", "DiscountingSwapEngine") {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy) override {
-
-        Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
+    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const std::string& name) override {
+        Handle<YieldTermStructure> yts = name.empty()
+                                             ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
+                                             : indexOrYieldCurve(market_, name, configuration(MarketContext::pricing));
         return boost::make_shared<QuantLib::DiscountingSwapEngine>(yts);
     }
 };
@@ -75,9 +76,11 @@ public:
     SwapEngineBuilderOptimised() : SwapEngineBuilderBase("DiscountedCashflows", "DiscountingSwapEngineOptimised") {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy) override {
+    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const std::string& name) override {
 
-        Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
+        Handle<YieldTermStructure> yts = name.empty()
+                                             ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
+                                             : indexOrYieldCurve(market_, name, configuration(MarketContext::pricing));
         return boost::make_shared<QuantExt::DiscountingSwapEngineMultiCurve>(yts);
     }
 };
@@ -139,7 +142,7 @@ public:
 
 protected:
     // the pricing engine depends on the ccy only, can use the caching from SwapEngineBuilderBase
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy) override;
+    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const std::string& name) override;
 
 private:
     boost::shared_ptr<PricingEngine> buildMcEngine(const boost::shared_ptr<QuantExt::LGM>& lgm,
