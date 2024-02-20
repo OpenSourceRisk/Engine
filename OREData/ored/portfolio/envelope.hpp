@@ -23,13 +23,16 @@
 
 #pragma once
 
-#include <map>
+#include <ored/portfolio/nettingsetdetails.hpp>
 #include <ored/utilities/xmlutils.hpp>
+
+#include <boost/any.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
-#include <boost/any.hpp>
+#include <boost/none.hpp>
+
+#include <map>
 #include <set>
-#include <ored/portfolio/nettingsetdetails.hpp>
 
 using ore::data::XMLNode;
 using ore::data::XMLSerializable;
@@ -99,9 +102,9 @@ public:
     const map<string, string> additionalFields() const;
     const map<string, boost::any>& fullAdditionalFields() const { return additionalFields_; }
     string additionalField(const std::string& name, const bool mandatory = true,
-                           const std::string& defaultValue = std::string());
+                           const std::string& defaultValue = std::string()) const;
     boost::any additionalAnyField(const std::string& name, const bool mandatory = true,
-                                  const boost::any& defaultValue = boost::none);
+                                  const boost::any& defaultValue = boost::none) const;
     //@}
 
     //! \name Utility
