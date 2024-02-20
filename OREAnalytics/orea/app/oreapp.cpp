@@ -648,6 +648,15 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
             LOG("MarketContext::" << m.first << " = " << m.second);
     }
 
+    if (params_->has("setup", "csvCommentReportHeader"))
+        inputs->setCsvCommentCharacter(parseBool(params_->get("setup", "csvCommentReportHeader")));
+
+    if (params_->has("setup", "csvSeparator")) {
+        tmp = params_->get("setup", "csvSeparator");
+        QL_REQUIRE(tmp.size() == 1, "csvSeparator must be exactly one character");
+        inputs->setCsvSeparator(tmp[0]);
+    }
+
     /*************
      * NPV
      *************/
@@ -757,6 +766,10 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         tmp = params_->get("sensitivity", "outputSensitivityThreshold", false);
         if (tmp != "")
             inputs->setSensiThreshold(parseReal(tmp));
+
+        tmp = params_->get("sensitivity", "recalibrateModels", false);
+        if (tmp != "")
+            inputs->setSensiRecalibrateModels(parseBool(tmp));
     }
 
     
@@ -922,6 +935,10 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         tmp = params_->get("simm", "enforceIMRegulations", false);
         if (tmp != "")
             inputs->setEnforceIMRegulations(parseBool(tmp));
+
+        tmp = params_->get("simm", "writeIntermediateReports", false);
+        if (tmp != "")
+            inputs->setWriteSimmIntermediateReports(parseBool(tmp));
     }
     
     /************

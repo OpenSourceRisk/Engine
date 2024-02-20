@@ -76,6 +76,7 @@ CommoditySchwartzModelBuilder::CommoditySchwartzModelBuilder(
                                                                                       data->sigmaValue(), data->kappaValue(),
                                                                                       data->driftFreeState());
     model_ = boost::make_shared<QuantExt::CommoditySchwartzModel>(parametrization_);
+    params_ = model_->params();
 }
 
 boost::shared_ptr<QuantExt::CommoditySchwartzModel> CommoditySchwartzModelBuilder::model() const {
@@ -150,6 +151,9 @@ void CommoditySchwartzModelBuilder::performCalculations() const {
         LOG("CommoditySchwartzModel for name " << data_->name() << " before calibration:"
             << " sigma=" << parametrization_->sigmaParameter()
             << " kappa=" << parametrization_->kappaParameter());
+
+        // use identical start values for each calibration to ensure identical results for identical baskets
+        model_->setParams(params_);
 
         model_->calibrate(optionBasket_, *data_->optimizationMethod(), data_->endCriteria(), data_->constraint(), weights, fix);
 

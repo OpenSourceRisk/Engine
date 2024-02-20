@@ -78,6 +78,7 @@ public:
     Array params() const;
 
     virtual void setParams(const Array& params);
+    virtual void setParam(Size idx, const Real value);
 
 protected:
     virtual void generateArguments() {}

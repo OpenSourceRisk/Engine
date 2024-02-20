@@ -410,6 +410,13 @@ public:
 
     /* ... add more calibration procedures here ... */
 
+    /* calibration constraints */
+    /* move
+       - parameter "param" (e.g. vol, reversion, or all if null)
+       - of asset type component t / index
+       - at step i (or at all steps if i is null) */
+    std::vector<bool> MoveParameter(const AssetType t, const Size param, const Size index, const Size i);
+
 protected:
     /* ctor to be used in extensions, initialize is not called */
     CrossAssetModel(const std::vector<boost::shared_ptr<Parametrization>>& parametrizations, const Matrix& correlation,
@@ -493,14 +500,8 @@ protected:
     mutable boost::shared_ptr<Integrator> integrator_;
     mutable boost::shared_ptr<CrossAssetStateProcess> stateProcess_;
 
-    /* calibration constraints */
-
     void appendToFixedParameterVector(const AssetType t, const AssetType v, const Size param, const Size index,
                                       const Size i, std::vector<bool>& res);
-
-    // move parameter param (e.g. vol, reversion, or all if null) of asset type component t / index at step i (or at all
-    // steps if i is null)
-    std::vector<bool> MoveParameter(const AssetType t, const Size param, const Size index, const Size i);
 };
 
 //! Utility function to return a handle to the inflation term structure given the inflation index.
