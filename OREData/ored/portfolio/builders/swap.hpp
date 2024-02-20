@@ -72,8 +72,6 @@ protected:
         Handle<YieldTermStructure> yts =
             discountCurve.empty() ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
                                   : indexOrYieldCurve(market_, discountCurve, configuration(MarketContext::pricing));
-        std::cout << "discount_curve  = " << discountCurve << std::endl;
-        std::cout << "security_spread = " << securitySpread << std::endl;
         if (!securitySpread.empty())
             yts = Handle<YieldTermStructure>(boost::make_shared<ZeroSpreadedTermStructure>(
                 yts, market_->securitySpread(securitySpread, configuration(MarketContext::pricing))));
