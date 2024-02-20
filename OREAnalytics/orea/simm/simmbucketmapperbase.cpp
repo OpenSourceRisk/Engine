@@ -53,9 +53,14 @@ SimmBucketMapperBase::SimmBucketMapperBase(
     refDataManager_(refDataManager), nameMapper_(nameMapper){
 
     // Fill the set of risk types that have buckets
-    rtWithBuckets_ = {RiskType::IRCurve,       RiskType::CreditQ,   RiskType::CreditNonQ,   RiskType::Equity,
-                      RiskType::Commodity,     RiskType::IRVol,     RiskType::InflationVol, RiskType::CreditVol,
-                      RiskType::CreditVolNonQ, RiskType::EquityVol, RiskType::CommodityVol};
+    rtWithBuckets_ = {RiskType::IRCurve,       RiskType::CreditQ,      RiskType::CreditNonQ,   RiskType::Equity,
+                      RiskType::Commodity,     RiskType::IRVol,        RiskType::InflationVol, RiskType::CreditVol,
+                      RiskType::CreditVolNonQ, RiskType::EquityVol,    RiskType::CommodityVol, RiskType::GIRR_DELTA, 
+                      RiskType::GIRR_CURV,     RiskType::CSR_NS_DELTA, RiskType::CSR_NS_VEGA,  RiskType::CSR_NS_CURV, 
+                      RiskType::COMM_DELTA,    RiskType::COMM_VEGA,    RiskType::COMM_CURV,    RiskType::CSR_SC_CURV,
+                      RiskType::CSR_SC_DELTA,  RiskType::CSR_SC_VEGA,  RiskType::CSR_SNC_CURV, RiskType::CSR_SNC_DELTA,
+                      RiskType::CSR_SNC_VEGA,  RiskType::EQ_CURV,      RiskType::EQ_DELTA,     RiskType::EQ_VEGA,
+                      RiskType::FX_CURV,       RiskType::FX_DELTA};
 }
 
 std::string BucketMapping::name() const {
