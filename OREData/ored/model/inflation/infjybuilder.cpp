@@ -74,17 +74,12 @@ namespace data {
 
 using Helpers = InfJyBuilder::Helpers;
 
-InfJyBuilder::InfJyBuilder(
-    const boost::shared_ptr<Market>& market,
-    const boost::shared_ptr<InfJyData>& data,
-    const string& configuration,
-    const string& referenceCalibrationGrid)
-    : market_(market),
-    configuration_(configuration),
-    data_(data),
-    referenceCalibrationGrid_(referenceCalibrationGrid),
-    marketObserver_(boost::make_shared<MarketObserver>()),
-    zeroInflationIndex_(*market_->zeroInflationIndex(data_->index(), configuration_)) {
+InfJyBuilder::InfJyBuilder(const boost::shared_ptr<Market>& market, const boost::shared_ptr<InfJyData>& data,
+                           const string& configuration, const string& referenceCalibrationGrid,
+                           const bool dontCalibrate)
+    : market_(market), configuration_(configuration), data_(data), referenceCalibrationGrid_(referenceCalibrationGrid),
+      dontCalibrate_(dontCalibrate), marketObserver_(boost::make_shared<MarketObserver>()),
+      zeroInflationIndex_(*market_->zeroInflationIndex(data_->index(), configuration_)) {
 
     LOG("InfJyBuilder: building model for inflation index " << data_->index());
 
@@ -130,20 +125,20 @@ Helpers InfJyBuilder::indexBasket() const {
 }
 
 bool InfJyBuilder::requiresRecalibration() const {
-    return (data_->realRateVolatility().calibrate() ||
-        data_->realRateReversion().calibrate() ||
-        data_->indexVolatility().calibrate()) &&
-        (marketObserver_->hasUpdated(false) ||
-            forceCalibration_ ||
-            pricesChanged(false));
+    return (data_->realRateVolatility().calibrate() || data_->realRateReversion().calibrate() ||
+            data_->indexVolatility().calibrate()) &&
+           (marketObserver_->hasUpdated(false) || forceCalibration_ || pricesChanged(false));
 }
 
 void InfJyBuilder::performCalculations() const {
     if (requiresRecalibration()) {
-        marketObserver_->hasUpdated(true);
         buildCalibrationBaskets();
-        pricesChanged(true);
     }
+}
+
+void InfJyBuilder::setCalibrationDone() const {
+    marketObserver_->hasUpdated(true);
+    pricesChanged(true);
 }
 
 void InfJyBuilder::forceRecalculate() {
@@ -291,7 +286,7 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
     // Also some variables used in the loop below.
     auto calendar = zeroInflationIndex_->fixingCalendar();
     auto baseDate = zts->baseDate();
-    auto baseCpi = zeroInflationIndex_->fixing(baseDate);
+    auto baseCpi = dontCalibrate_ ? 100.0 : zeroInflationIndex_->fixing(baseDate);
     auto bdc = cpiVolatility_->businessDayConvention();
     auto obsLag = cpiVolatility_->observationLag();
     
@@ -340,7 +335,7 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
         inst->setPricingEngine(engine);
 
         // Build the helper using the NPV as the premium.
-        auto premium = inst->NPV();
+        auto premium = dontCalibrate_ ? 0.01 : inst->NPV();
         auto helper = boost::make_shared<CpiCapFloorHelper>(capfloor, baseCpi, maturity, calendar, bdc, calendar, bdc,
                                                             strikeValue, inflationIndex, obsLag, premium,
                                                             observationInterpolation);
@@ -459,7 +454,7 @@ Helpers InfJyBuilder::buildYoYCapFloorBasket(const CalibrationBasket& cb, vector
         helperInst->setPricingEngine(engine);
 
         // Update the helper's market quote with the fair rate.
-        quote->setValue(helperInst->NPV());
+        quote->setValue(dontCalibrate_ ? 0.1 : helperInst->NPV());
 
         // Add the helper's time to expiry.
         auto fixingDate = helperInst->lastYoYInflationCoupon()->fixingDate();
@@ -710,7 +705,8 @@ boost::shared_ptr<FxBsParametrization> InfJyBuilder::createIndexParam() const {
     boost::shared_ptr<QuantExt::FxBsParametrization> indexParam;
 
     Handle<Quote> baseCpiQuote(boost::make_shared<SimpleQuote>(
-        zeroInflationIndex_->fixing(zeroInflationIndex_->zeroInflationTermStructure()->baseDate())));
+        dontCalibrate_ ? 100
+                       : zeroInflationIndex_->fixing(zeroInflationIndex_->zeroInflationTermStructure()->baseDate())));
 
     // Index volatility parameter constraints
     const auto& cc = data_->calibrationConfiguration();
@@ -807,6 +803,8 @@ void InfJyBuilder::initialiseMarket() {
 }
 
 bool InfJyBuilder::pricesChanged(bool updateCache) const {
+    if(dontCalibrate_)
+        return false;
 
     // Build the calibration instruments again before checking the market price below.
     // Don't need to do this if updateCache is true, because only called above after buildCalibrationBaskets().

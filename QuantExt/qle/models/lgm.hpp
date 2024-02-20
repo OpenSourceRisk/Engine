@@ -263,6 +263,7 @@ inline void LinearGaussMarkovModel::calibrateVolatilitiesIterative(
         std::vector<boost::shared_ptr<BlackCalibrationHelper>> h(1, helpers[i]);
         calibrate(h, method, endCriteria, constraint, weights, MoveVolatility(i));
     }
+    update();
 }
 
 inline void LinearGaussMarkovModel::calibrateReversionsIterative(
@@ -272,6 +273,7 @@ inline void LinearGaussMarkovModel::calibrateReversionsIterative(
         std::vector<boost::shared_ptr<BlackCalibrationHelper>> h(1, helpers[i]);
         calibrate(h, method, endCriteria, constraint, weights, MoveReversion(i));
     }
+    update();
 }
 
 inline void
@@ -282,6 +284,7 @@ LinearGaussMarkovModel::calibrateVolatilities(const std::vector<boost::shared_pt
     for (Size i = 0; i < parametrization_->parameter(0)->size(); ++i)
         moveVols[i] = false;
     calibrate(helpers, method, endCriteria, constraint, weights, moveVols);
+    update();
 }
 
 inline void
@@ -292,6 +295,7 @@ LinearGaussMarkovModel::calibrateReversions(const std::vector<boost::shared_ptr<
     for (Size i = 0; i < parametrization_->parameter(1)->size(); ++i)
         moveRevs[parametrization_->parameter(0)->size() + i] = false;
     calibrate(helpers, method, endCriteria, constraint, weights, moveRevs);
+    update();
 }
 
 } // namespace QuantExt
