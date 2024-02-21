@@ -22,12 +22,12 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 
-#include <ql/methods/montecarlo/lsmbasissystem.hpp>
-#include <ql/pricingengines/swaption/blackswaptionengine.hpp>
-
 #include <qle/methods/multipathgeneratorbase.hpp>
+#include <qle/pricingengines/blackmultilegoptionengine.hpp>
 #include <qle/pricingengines/mcmultilegoptionengine.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
+
+#include <ql/methods/montecarlo/lsmbasissystem.hpp>
 
 #include <set>
 
@@ -61,30 +61,22 @@ boost::shared_ptr<PricingEngine> buildMcEngine(
 namespace ore {
 namespace data {
 
-boost::shared_ptr<PricingEngine> EuropeanSwaptionEngineBuilder::engineImpl(const string& key) {
+boost::shared_ptr<PricingEngine> EuropeanSwaptionEngineBuilder::engineImpl(const string& id, const string& key,
+                                                                           const std::vector<Date>& dates,
+                                                                           const Date& maturity,
+                                                                           const std::vector<Real>& strikes,
+                                                                           const bool isAmerican) {
     boost::shared_ptr<IborIndex> index;
     string ccyCode = tryParseIborIndex(key, index) ? index->currency().code() : key;
     Handle<YieldTermStructure> yts = market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
     Handle<SwaptionVolatilityStructure> svts = market_->swaptionVol(key, configuration(MarketContext::pricing));
-    switch (svts->volatilityType()) {
-    case ShiftedLognormal:
-        LOG("Build BlackSwaptionEngine for currency " << ccyCode);
-        return boost::make_shared<BlackSwaptionEngine>(yts, svts);
-    case Normal:
-        LOG("Build BachelierSwaptionEngine for currency " << ccyCode);
-        return boost::make_shared<BachelierSwaptionEngine>(yts, svts);
-    default:
-        QL_FAIL("Swaption volatility type " << svts->volatilityType() << "not covered in EngineFactory");
-        return nullptr; // avoid gcc warning
-        break;
-    }
+    return boost::make_shared<BlackMultiLegOptionEngine>(yts, svts);
 }
 
-boost::shared_ptr<QuantExt::LGM> LGMBermudanAmericanSwaptionEngineBuilder::model(const string& id, const string& key,
-                                                                                 const std::vector<Date>& expiries,
-                                                                                 const Date& maturity,
-                                                                                 const std::vector<Real>& strikes,
-                                                                                 const bool isAmerican) {
+boost::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const string& id, const string& key,
+                                                                 const std::vector<Date>& expiries,
+                                                                 const Date& maturity, const std::vector<Real>& strikes,
+                                                                 const bool isAmerican) {
     boost::shared_ptr<IborIndex> index;
     std::string ccy = tryParseIborIndex(key, index) ? index->currency().code() : key;
 
@@ -233,10 +225,11 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanAmericanSwaptionEngineBuilder::model
     return model;
 }
 
-boost::shared_ptr<PricingEngine>
-LGMGridBermudanAmericanSwaptionEngineBuilder::engineImpl(const string& id, const string& key,
-                                                         const std::vector<Date>& expiries, const Date& maturity,
-                                                         const std::vector<Real>& strikes, const bool isAmerican) {
+boost::shared_ptr<PricingEngine> LGMGridSwaptionEngineBuilder::engineImpl(const string& id, const string& key,
+                                                                          const std::vector<Date>& expiries,
+                                                                          const Date& maturity,
+                                                                          const std::vector<Real>& strikes,
+                                                                          const bool isAmerican) {
     DLOG("Building LGM Grid Bermudan/American Swaption engine for trade " << id);
 
     boost::shared_ptr<QuantExt::LGM> lgm = model(id, key, expiries, maturity, strikes, isAmerican);
@@ -257,9 +250,8 @@ LGMGridBermudanAmericanSwaptionEngineBuilder::engineImpl(const string& id, const
 }
 
 boost::shared_ptr<PricingEngine>
-LGMFDBermudanAmericanSwaptionEngineBuilder::engineImpl(const string& id, const string& key,
-                                                       const std::vector<Date>& expiries, const Date& maturity,
-                                                       const std::vector<Real>& strikes, const bool isAmerican) {
+LGMFDSwaptionEngineBuilder::engineImpl(const string& id, const string& key, const std::vector<Date>& expiries,
+                                       const Date& maturity, const std::vector<Real>& strikes, const bool isAmerican) {
     DLOG("Building LGM FD Bermudan/American Swaption engine for trade " << id);
 
     boost::shared_ptr<QuantExt::LGM> lgm = model(id, key, expiries, maturity, strikes, isAmerican);
@@ -282,9 +274,8 @@ LGMFDBermudanAmericanSwaptionEngineBuilder::engineImpl(const string& id, const s
 }
 
 boost::shared_ptr<PricingEngine>
-LgmMcBermudanAmericanSwaptionEngineBuilder::engineImpl(const string& id, const string& key,
-                                                       const std::vector<Date>& expiries, const Date& maturity,
-                                                       const std::vector<Real>& strikes, const bool isAmerican) {
+LGMMCSwaptionEngineBuilder::engineImpl(const string& id, const string& key, const std::vector<Date>& expiries,
+                                       const Date& maturity, const std::vector<Real>& strikes, const bool isAmerican) {
     DLOG("Building MC Bermudan/American Swaption engine for trade " << id);
 
     auto lgm = model(id, key, expiries, maturity, strikes, isAmerican);
@@ -300,9 +291,8 @@ LgmMcBermudanAmericanSwaptionEngineBuilder::engineImpl(const string& id, const s
 } // LgmMc engineImpl()
 
 boost::shared_ptr<PricingEngine>
-LgmAmcBermudanAmericanSwaptionEngineBuilder::engineImpl(const string& id, const string& key,
-                                                        const std::vector<Date>& expiries, const Date& maturity,
-                                                        const std::vector<Real>& strikes, const bool isAmerican) {
+LGMAmcSwaptionEngineBuilder::engineImpl(const string& id, const string& key, const std::vector<Date>& expiries,
+                                        const Date& maturity, const std::vector<Real>& strikes, const bool isAmerican) {
     boost::shared_ptr<IborIndex> index;
     std::string ccy = tryParseIborIndex(key, index) ? index->currency().code() : key;
     Currency curr = parseCurrency(ccy);

@@ -68,7 +68,7 @@ Real McMultiLegBaseEngine::time(const Date& d) const {
 }
 
 McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boost::shared_ptr<CashFlow> flow,
-                                                                            const Currency& payCcy, Real payer,
+                                                                            const Currency& payCcy, bool payer,
                                                                             Size legNo, Size cfNo) const {
 
     constexpr Real tinyTime = 1E-10;
@@ -682,7 +682,7 @@ RandomVariable McMultiLegBaseEngine::cashflowPathValue(const CashflowInfo& cf,
         amount *= exp(pathValues[simTimesPayIdx][model_->pIdx(CrossAssetModel::AssetType::FX, cf.payCcyIndex - 1)]);
     }
 
-    return amount * RandomVariable(n, cf.payer);
+    return amount * RandomVariable(n, cf.payer ? -1.0 : 1.0);
 }
 
 void McMultiLegBaseEngine::calculate() const {
@@ -717,7 +717,7 @@ void McMultiLegBaseEngine::calculate() const {
     Size legNo = 0;
     for (auto const& leg : leg_) {
         Currency currency = currency_[legNo];
-        Real payer = payer_[legNo];
+        bool payer = payer_[legNo];
         Size cashflowNo = 0;
         for (auto const& cashflow : leg) {
             // we can skip cashflows that are paid
