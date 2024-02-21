@@ -66,6 +66,11 @@ public:
     const std::vector<QuantLib::Real>& pnls() { return pnls_; };
     const std::vector<QuantLib::Real>& foPnls() { return foPnls_; };
 
+    void clear() { 
+        pnls_.clear();
+        foPnls_.clear();
+    }
+
 protected:
     std::vector<QuantLib::Real> pnls_;
     std::vector<QuantLib::Real> foPnls_;

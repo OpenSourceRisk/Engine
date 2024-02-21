@@ -91,6 +91,7 @@ protected:
     void buildLocalVol(const std::string& id, const IborFallbackConfig& iborFallbackConfig);
     void buildGaussianCam(const std::string& id, const IborFallbackConfig& iborFallbackConfig,
                           const std::vector<std::string>& conditionalExpectationModelStates);
+    void buildFdGaussianCam(const std::string& id, const IborFallbackConfig& iborFallbackConfig);
     void buildGaussianCamAMC(const std::string& id, const IborFallbackConfig& iborFallbackConfig,
                              const std::vector<std::string>& conditionalExpectationModelStates);
     void buildAMCCGModel(const std::string& id, const IborFallbackConfig& iborFallbackConfig,

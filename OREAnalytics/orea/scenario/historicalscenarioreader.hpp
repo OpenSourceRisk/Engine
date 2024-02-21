@@ -24,6 +24,8 @@
 #pragma once
 
 #include <orea/scenario/scenario.hpp>
+#include <orea/scenario/scenariosimmarketparameters.hpp>
+#include <ored/marketdata/todaysmarketparameters.hpp>
 
 namespace ore {
 namespace analytics {
@@ -39,6 +41,12 @@ public:
     virtual QuantLib::Date date() const = 0;
     //! Return the current scenario if reader is still valid and `nullptr` otherwise
     virtual boost::shared_ptr<ore::analytics::Scenario> scenario() const = 0;
+    // load the scenarios
+    virtual void load(
+        //! Simulation parameters - to provide list of curves to request
+        const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simParams,
+        //! Todays market params to provide the discount curves
+        const boost::shared_ptr<ore::data::TodaysMarketParameters>& marketParams){};
 };
 
 } // namespace analytics

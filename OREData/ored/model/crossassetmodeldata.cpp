@@ -614,7 +614,7 @@ void CrossAssetModelData::buildIrConfigs(std::map<std::string, boost::shared_ptr
                 QL_FAIL("Unexpected model data type,expect either HwModelData or IrLgmData");
             } 
         }
-        LOG("CrossAssetModelData: IR config added for ccy " << ccy << " " << irConfigs_[i]->ccy());
+        LOG("CrossAssetModelData: IR config added for ccy " << irConfigs_[i]->ccy());
     }
 }
 
