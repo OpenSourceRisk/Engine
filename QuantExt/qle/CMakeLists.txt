@@ -249,6 +249,7 @@ pricingengines/binomialconvertibleengine.cpp
 pricingengines/blackbondoptionengine.cpp
 pricingengines/blackcdsoptionengine.cpp
 pricingengines/blackindexcdsoptionengine.cpp
+pricingengines/blackmultilegoptionengine.cpp
 pricingengines/cboengine.cpp
 pricingengines/cbomcengine.cpp
 pricingengines/commodityapoengine.cpp
@@ -760,6 +761,7 @@ pricingengines/binomialconvertibleengine.hpp
 pricingengines/blackbondoptionengine.hpp
 pricingengines/blackcdsoptionengine.hpp
 pricingengines/blackindexcdsoptionengine.hpp
+pricingengines/blackmultilegoptionengine.hpp
 pricingengines/cboengine.hpp
 pricingengines/cbomcengine.hpp
 pricingengines/commodityapoengine.hpp

@@ -369,6 +369,7 @@
 #include <qle/pricingengines/blackbondoptionengine.hpp>
 #include <qle/pricingengines/blackcdsoptionengine.hpp>
 #include <qle/pricingengines/blackindexcdsoptionengine.hpp>
+#include <qle/pricingengines/blackmultilegoptionengine.hpp>
 #include <qle/pricingengines/cboengine.hpp>
 #include <qle/pricingengines/cbomcengine.hpp>
 #include <qle/pricingengines/commodityapoengine.hpp>
