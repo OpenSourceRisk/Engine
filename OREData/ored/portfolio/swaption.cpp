@@ -156,7 +156,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         auto builder = boost::dynamic_pointer_cast<SwapEngineBuilderBase>(engineFactory->builder("Swap"));
         QL_REQUIRE(builder, "could not get swap builder to build exercised swaption instrument.");
         auto swap = boost::make_shared<QuantLib::Swap>(legs_, legPayers_);
-        swap->setPricingEngine(builder->engine(parseCurrency(npvCurrency_)));
+        swap->setPricingEngine(builder->engine(parseCurrency(npvCurrency_), std::string(), std::string()));
         setSensitivityTemplate(*builder);
         instrument_ = boost::make_shared<VanillaInstrument>(swap, positionType_ == Position::Long ? 1.0 : -1.0,
                                                             additionalInstruments, additionalMultipliers);
@@ -182,7 +182,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         auto builder = boost::dynamic_pointer_cast<SwapEngineBuilderBase>(engineFactory->builder("Swap"));
         QL_REQUIRE(builder, "could not get swap builder to build expired swaption instrument.");
         auto swap = boost::make_shared<QuantLib::Swap>(legs_, legPayers_);
-        swap->setPricingEngine(builder->engine(parseCurrency(npvCurrency_)));
+        swap->setPricingEngine(builder->engine(parseCurrency(npvCurrency_), std::string(), std::string()));
         instrument_ = boost::make_shared<VanillaInstrument>(swap, positionType_ == Position::Long ? 1.0 : -1.0,
                                                             additionalInstruments, additionalMultipliers);
         setSensitivityTemplate(*builder);
@@ -354,7 +354,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // 9.4 build underlying swaps, add premiums, build option wrapper
 
-    auto swapEngine = swapBuilder->engine(parseCurrency(npvCurrency_));
+    auto swapEngine = swapBuilder->engine(parseCurrency(npvCurrency_), std::string(), std::string());
 
     std::vector<boost::shared_ptr<Instrument>> underlyingSwaps =
         buildUnderlyingSwaps(swapEngine, exerciseBuilder_->noticeDates());
