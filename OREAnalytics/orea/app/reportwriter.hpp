@@ -166,6 +166,25 @@ public:
                                             QuantLib::Size numPaths, const std::vector<QuantLib::Date>& dates,
                                             QuantLib::Size distSteps, ore::data::Report& report);
 
+    virtual void
+    writeHistoricalScenarioDetails(const boost::shared_ptr<ore::analytics::HistoricalScenarioGenerator>& generator,
+                                   ore::data::Report& report);
+
+    virtual void writeStockSplitReport(const boost::shared_ptr<ore::analytics::Scenario>& baseScenario,
+                                       const boost::shared_ptr<ore::analytics::HistoricalScenarioLoader>& hsloader,
+                                       const boost::shared_ptr<ore::data::AdjustmentFactors>& adjFactors,
+                                       const boost::shared_ptr<ore::data::Report>& report);
+
+    void writeHistoricalScenarios(const boost::shared_ptr<HistoricalScenarioLoader>& hsloader,
+                                  const boost::shared_ptr<ore::data::Report>& report);
+
+    void writeHistoricalScenarioDistributions(
+        boost::shared_ptr<HistoricalScenarioGenerator>& hsgen,
+        const boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
+        const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams,
+        boost::shared_ptr<ore::data::Report> histScenDetailsReport, boost::shared_ptr<ore::data::Report> statReport,
+        boost::shared_ptr<ore::data::Report> distReport, QuantLib::Size distSteps = Null<Size>());
+
 protected:
     std::string nullString_;
     void addMarketDatum(ore::data::Report& report, const ore::data::MarketDatum& md,

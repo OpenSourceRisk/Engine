@@ -66,13 +66,6 @@ private:
     OptionData optionData_;
     vector<LegData> legData_;
 
-    //! build European Vanilla Swaption
-    void buildEuropean(const boost::shared_ptr<EngineFactory>&);
-    boost::shared_ptr<VanillaSwap> buildVanillaSwap(const boost::shared_ptr<EngineFactory>&);
-
-    //! build all other types of Swaptions
-    void buildBermudanOrAmerican(const boost::shared_ptr<EngineFactory>&);
-
     //! build underlying swaps for exposure simulation
     std::vector<boost::shared_ptr<Instrument>> buildUnderlyingSwaps(const boost::shared_ptr<PricingEngine>&,
                                                                     const std::vector<Date>&);
@@ -84,5 +77,6 @@ private:
     Settlement::Type settlementType_;
     Settlement::Method settlementMethod_;
 };
+
 } // namespace data
 } // namespace ore

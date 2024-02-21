@@ -53,7 +53,7 @@ struct string_cmp {
 };
 
 // Ease the notation below
-template <typename T> using bm = boost::bimap<T, boost::bimaps::set_of<std::string, string_cmp>>;
+template <typename T> using bm = boost::bimap<T, boost::bimaps::set_of<string, string_cmp>>;
 
 // Initialise the bimaps
 const bm<SimmConfiguration::RiskClass> riskClassMap =
@@ -250,7 +250,6 @@ ostream& operator<<(ostream& out, const SimmConfiguration::MarginType& mt) {
     return out << marginTypeMap.left.at(mt);
 }
 
-
 ostream& operator<<(ostream& out, const SimmConfiguration::IMModel& model) {
     QL_REQUIRE(imModelMap.left.count(model) > 0, "Product class not a valid SimmConfiguration::IMModel");
     if (model == SimmConfiguration::IMModel::SIMM_P || model == SimmConfiguration::IMModel::SIMM_R)
@@ -285,8 +284,6 @@ SimmConfiguration::MarginType parseSimmMarginType(const string& mt) {
                "Margin type string " << mt << " does not correspond to a valid SimmConfiguration::MarginType");
     return marginTypeMap.right.at(mt);
 }
-
-
 
 SimmConfiguration::IMModel parseIMModel(const string& model) {
     for (auto it = imModelMap.right.begin(); it != imModelMap.right.end(); it++) {
