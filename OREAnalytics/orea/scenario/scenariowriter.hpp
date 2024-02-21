@@ -25,7 +25,7 @@
 
 #include <orea/scenario/scenario.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
-#include <ored/report/inmemoryreport.hpp>
+#include <ored/report/report.hpp>
 
 namespace ore {
 namespace analytics {
@@ -41,7 +41,7 @@ public:
     ScenarioWriter(const std::string& filename, const char sep = ',', const string& filemode = "w+");
 
     //! Constructor to write into an in-memory report for later io
-    ScenarioWriter(const boost::shared_ptr<ScenarioGenerator>& src, boost::shared_ptr<ore::data::InMemoryReport> report);
+    ScenarioWriter(const boost::shared_ptr<ScenarioGenerator>& src, boost::shared_ptr<ore::data::Report> report);
 
     //! Destructor
     virtual ~ScenarioWriter();
@@ -50,7 +50,7 @@ public:
     virtual boost::shared_ptr<Scenario> next(const Date& d) override;
 
     //! Write a single scenario
-    void writeScenario(boost::shared_ptr<Scenario>& s, const bool writeHeader);
+    void writeScenario(const boost::shared_ptr<Scenario>& s, const bool writeHeader);
 
     //! Reset the generator so calls to next() return the first scenario.
     virtual void reset() override;
@@ -63,7 +63,7 @@ private:
 
     boost::shared_ptr<ScenarioGenerator> src_;
     std::vector<RiskFactorKey> keys_;
-    boost::shared_ptr<ore::data::InMemoryReport> report_;
+    boost::shared_ptr<ore::data::Report> report_;
     FILE* fp_;
     Date firstDate_;
     Size i_;
