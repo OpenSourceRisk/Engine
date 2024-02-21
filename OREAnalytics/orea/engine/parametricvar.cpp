@@ -143,7 +143,7 @@ ParametricVarReport::ParametricVarReport(const std::string& baseCurrency, const 
                                          boost::optional<ore::data::TimePeriod> period,
                                          std::unique_ptr<SensiRunArgs> sensiArgs,
                                          const bool breakdown)
-    : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, nullptr, move(sensiArgs), nullptr, breakdown),
+    : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, nullptr, std::move(sensiArgs), nullptr, breakdown),
       parametricVarParams_(parametricVarParams), salvageCovarianceMatrix_(salvageCovarianceMatrix) {
     sensiBased_ = true;
 }
@@ -159,7 +159,7 @@ ParametricVarReport::ParametricVarReport(
     boost::optional<ore::data::TimePeriod> period,
     std::unique_ptr<SensiRunArgs> sensiArgs,
     const bool breakdown)
-    : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, hisScenGen, move(sensiArgs), nullptr, breakdown),
+    : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, hisScenGen, std::move(sensiArgs), nullptr, breakdown),
       parametricVarParams_(parametricVarParams), salvageCovarianceMatrix_(salvageCovarianceMatrix) {
     sensiBased_ = true;
 }

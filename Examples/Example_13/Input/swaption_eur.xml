@@ -18,7 +18,7 @@
         <Settlement>Physical</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
         <ExerciseDates>
-          <ExerciseDate>2026-03-07</ExerciseDate>
+          <ExerciseDate>2026-03-01</ExerciseDate>
         </ExerciseDates>
       </OptionData>
       <LegData>

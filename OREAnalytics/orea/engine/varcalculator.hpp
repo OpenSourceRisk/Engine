@@ -141,7 +141,6 @@ private:
     QuantLib::ext::shared_ptr<Portfolio> portfolio_;
     std::string portfolioFilter_;
     std::vector<Real> p_;
-    bool breakdown_ = false;
 };
 
 } // namespace analytics
