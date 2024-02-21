@@ -27,16 +27,16 @@
 #include <ored/utilities/xmlutils.hpp>
 
 #include <boost/any.hpp>
+#include <boost/none.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
-#include <boost/none.hpp>
 
 #include <map>
 #include <set>
 
+using ore::data::NettingSetDetails;
 using ore::data::XMLNode;
 using ore::data::XMLSerializable;
-using ore::data::NettingSetDetails;
 using std::map;
 using std::set;
 using std::string;
@@ -54,19 +54,19 @@ public:
     Envelope() {}
 
     //! Constructor with netting set id and portfolio ids, without additional fields
-    Envelope(const string& counterparty, const string& nettingSetId,
-             const set<string>& portfolioIds = set<string>())
-        : counterparty_(counterparty), nettingSetDetails_(NettingSetDetails(nettingSetId)),
-          portfolioIds_(portfolioIds) {}
+    Envelope(const string& counterparty, const string& nettingSetId, const set<string>& portfolioIds = set<string>())
+        : counterparty_(counterparty), nettingSetDetails_(NettingSetDetails(nettingSetId)), portfolioIds_(portfolioIds),
+          initialized_(true) {}
 
     //! Constructor with netting set details and portfolio ids, without additional fields
     Envelope(const string& counterparty, const NettingSetDetails& nettingSetDetails = NettingSetDetails(),
              const set<string>& portfolioIds = set<string>())
-        : counterparty_(counterparty), nettingSetDetails_(nettingSetDetails), portfolioIds_(portfolioIds) {}
+        : counterparty_(counterparty), nettingSetDetails_(nettingSetDetails), portfolioIds_(portfolioIds),
+          initialized_(true) {}
 
     //! Constructor without netting set / portfolio ids, with additional fields
     Envelope(const string& counterparty, const map<string, string>& additionalFields)
-        : counterparty_(counterparty), nettingSetDetails_(NettingSetDetails()) {
+        : counterparty_(counterparty), nettingSetDetails_(NettingSetDetails()), initialized_(true) {
         for (const auto& addField : additionalFields)
             additionalFields_[addField.first] = addField.second;
     }
@@ -74,7 +74,8 @@ public:
     //! Constructor with netting set, with additional fields
     Envelope(const string& counterparty, const string& nettingSetId, const map<string, string>& additionalFields,
              const set<string>& portfolioIds = set<string>())
-        : counterparty_(counterparty), nettingSetDetails_(NettingSetDetails(nettingSetId)), portfolioIds_(portfolioIds) {
+        : counterparty_(counterparty), nettingSetDetails_(NettingSetDetails(nettingSetId)), portfolioIds_(portfolioIds),
+          initialized_(true) {
         for (const auto& addField : additionalFields)
             additionalFields_[addField.first] = addField.second;
     }
@@ -82,7 +83,8 @@ public:
     //! Constructor with netting set details, with additional fields
     Envelope(const string& counterparty, const NettingSetDetails& nettingSetDetails,
              const map<string, string>& additionalFields, const set<string>& portfolioIds = set<string>())
-        : counterparty_(counterparty), nettingSetDetails_(nettingSetDetails), portfolioIds_(portfolioIds) {
+        : counterparty_(counterparty), nettingSetDetails_(nettingSetDetails), portfolioIds_(portfolioIds),
+          initialized_(true) {
         for (const auto& addField : additionalFields)
             additionalFields_[addField.first] = addField.second;
     }
@@ -109,8 +111,8 @@ public:
 
     //! \name Utility
     //@{
-    //! Check if the envelope has been populated
-    bool empty() const { return counterparty_ == ""; }
+    //! Check if the envelope is initialized
+    bool initialized() const { return initialized_; }
     //! Check if the netting set details have been populated
     bool hasNettingSetDetails() const { return !nettingSetDetails_.empty(); }
     //@}
@@ -120,6 +122,7 @@ private:
     NettingSetDetails nettingSetDetails_;
     set<string> portfolioIds_;
     map<string, boost::any> additionalFields_;
+    bool initialized_ = false;
 };
 
 } // namespace data

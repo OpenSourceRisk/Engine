@@ -26,7 +26,7 @@ namespace data {
 
 void Envelope::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Envelope");
-    counterparty_ = XMLUtils::getChildValue(node, "CounterParty", true);
+    counterparty_ = XMLUtils::getChildValue(node, "CounterParty", false);
 
     XMLNode* nettingSetDetailsNode = XMLUtils::getChildNode(node, "NettingSetDetails");
     if (nettingSetDetailsNode) {
@@ -69,6 +69,7 @@ void Envelope::fromXML(XMLNode* node) {
             additionalFields_[XMLUtils::getNodeName(child)] = getValue(child);
         }
     }
+    initialized_ = true;
 }
 
 XMLNode* Envelope::toXML(XMLDocument& doc) {
