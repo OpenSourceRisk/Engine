@@ -1,6 +1,7 @@
 /*
  Copyright (C) 2016-2022 Quaternion Risk Management Ltd
  Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
+ Copyright (C) 2023 Oleg Kulkov
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
