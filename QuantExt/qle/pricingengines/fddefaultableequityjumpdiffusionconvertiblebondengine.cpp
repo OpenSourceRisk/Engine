@@ -516,6 +516,12 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
                                 cr = events.getCallData(i).mwCr(S[j], cr0);
                             // compuate forced conversion value and update npv node
                             Real forcedConversionValue = S[j] * cr * notional(grid[i]) / N0 + accrual(grid[i]);
+                            if (forcedConversionValue > c && forcedConversionValue < value[plane][j]) {
+                                // conversion is forced -> update flags
+                                if (!conversionIndicator.empty())
+                                    conversionIndicator[plane][j] = 0.0;
+                                conversionExercised[plane][j] = false;
+                            }
                             value[plane][j] = std::min(std::max(forcedConversionValue, c), value[plane][j]);
                             if (!valueNoConversion.empty()) {
                                 valueNoConversion[plane][j] =
@@ -529,8 +535,13 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
             if (events.hasPut(i)) {
                 Real c = getCallPriceAmount(events.getPutData(i), notional(t_from), accrual(t_from));
                 for (Size j = 0; j < n; ++j) {
-                    if (!conversionExercised[plane][j])
-                        value[plane][j] = std::max(c, value[plane][j]);
+                    if (c > value[plane][j]) {
+                        // put is more favorable than conversion (if that happened above)
+                        value[plane][j] = c;
+                        if (!conversionIndicator.empty())
+                            conversionIndicator[plane][j] = 0.0;
+                        conversionExercised[plane][j] = false;
+                    }
                 }
                 if (!valueNoConversion.empty()) {
                     for (Size j = 0; j < n; ++j) {
