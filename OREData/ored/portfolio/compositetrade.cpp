@@ -150,14 +150,17 @@ void CompositeTrade::fromXML(XMLNode* node) {
         try {
             trade = TradeFactory::instance().build(tradeType);
             trade->id() = id;
-            trade->fromXML(nodes[i]);
-            // the component trade's envelope is the main trade's envelope with possibly overwritten add fields
+            Envelope componentEnvelope;
+            if (XMLNode* envNode = XMLUtils::getChildNode(nodes[i], "Envelope")) {
+                componentEnvelope.fromXML(envNode);
+            }
             Envelope env = this->envelope();
-            for (auto const& [k, v] : trade->envelope().fullAdditionalFields())
+            // the component trade's envelope is the main trade's envelope with possibly overwritten add fields
+            for (auto const& [k, v] : componentEnvelope.fullAdditionalFields())
                 env.setAdditionalField(k,v);
             trade->setEnvelope(env);
+            trade->fromXML(nodes[i]);
             trades_.push_back(trade);
-            auto tmpenv = trade->envelope();
             DLOG("Added Trade " << id << " (" << trade->id() << ")"
                                 << " type:" << tradeType << " to composite trade " << this->id() << ".");
         } catch (const std::exception& e) {
