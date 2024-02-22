@@ -65,7 +65,7 @@ void FxDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFa
     Calendar cal = ore::data::parseCalendar(calendar_);
 
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for FxOption");
-    QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of excercise dates");
+    QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of exercise dates");
     QL_REQUIRE(barrier_.levels().size() == 2, "Invalid number of barrier levels");
     QL_REQUIRE(barrier_.style().empty() || barrier_.style() == "American", "Only american barrier style suppported");
 
