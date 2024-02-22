@@ -17,12 +17,16 @@
 */
 
 #include <orea/app/analytics/varanalytic.hpp>
+#include <orea/engine/historicalsimulationvar.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/parametricvar.hpp>
 #include <ored/portfolio/trade.hpp>
+#include <ored/marketdata/adjustmentfactors.hpp>
+#include <ored/marketdata/adjustedinmemoryloader.hpp>
 
 using namespace ore::data;
 using namespace boost::filesystem;
+using namespace QuantLib::ext;
 
 namespace ore {
 namespace analytics {
@@ -35,7 +39,7 @@ void VarAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
 }
 
-void VarAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+void VarAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                               const std::set<std::string>& runTypes) {
     MEM_LOG;
     LOG("Running parametric VaR");
@@ -50,33 +54,116 @@ void VarAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
 
     CONSOLEW("Risk: Build Portfolio for VaR");
     analytic()->buildPortfolio();
+    CONSOLE("OK");      
+        
+    setVarReport(loader);
+    QL_REQUIRE(varReport_, "No Var Report created");
+    
+    LOG("Call VaR calculation");
+    CONSOLEW("Risk: VaR Calculation");
+    ext::shared_ptr<MarketRiskReport::Reports> reports = ext::make_shared<MarketRiskReport::Reports>();
+    QuantLib::ext::shared_ptr<InMemoryReport> varReport = QuantLib::ext::make_shared<InMemoryReport>();
+    reports->add(varReport);
+
+    varReport_->calculate(reports);
     CONSOLE("OK");
+        
+    analytic()->reports()[label_]["var"] = varReport;
 
-    LOG("Build trade to portfolio id mapping");
-    map<string, set<pair<string, Size>>> tradePortfolio;
-    for (auto const& [tradeId, trade] : analytic()->portfolio()->trades()) {
-        for (auto const& pId : trade->portfolioIds())
-            tradePortfolio[pId].insert(make_pair(tradeId, Null<Size>()));
+    LOG("VaR completed");
+    MEM_LOG;
+}
+
+void ParametricVarAnalyticImpl::setUpConfigurations() {
+    VarAnalyticImpl::setUpConfigurations();
+    if (inputs_->covarianceData().size() == 0) {
+        analytic()->configurations().sensiScenarioData = inputs_->sensiScenarioData();
+        analytic()->configurations().simMarketParams = inputs_->sensiSimMarketParams();
     }
+}
 
+void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
+    LOG("Build trade to portfolio id mapping");
     ParametricVarCalculator::ParametricVarParams varParams(inputs_->varMethod(), inputs_->mcVarSamples(),
                                                            inputs_->mcVarSeed());
 
+    boost::shared_ptr<SensitivityStream> ss = sensiStream(loader);
+
     LOG("Build VaR calculator");
-    auto calc = boost::make_shared<ParametricVarReport>(tradePortfolio, inputs_->portfolioFilter(), 
-        inputs_->sensitivityStream(), inputs_->covarianceData(), inputs_->varQuantiles(), 
-        varParams, inputs_->varBreakDown(), inputs_->salvageCovariance());
+    if (inputs_->covarianceData().size() > 0) {
+        std::unique_ptr<MarketRiskReport::SensiRunArgs> sensiArgs =
+            std::make_unique<MarketRiskReport::SensiRunArgs>(ss, nullptr, 0.01, inputs_->covarianceData());
 
-    boost::shared_ptr<InMemoryReport> report = boost::make_shared<InMemoryReport>();
-    analytic()->reports()["VAR"]["var"] = report;
+        varReport_ = ext::make_shared<ParametricVarReport>(
+            inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), inputs_->varQuantiles(),
+            varParams,
+            inputs_->salvageCovariance(), boost::none, std::move(sensiArgs), inputs_->varBreakDown());
+    } else {
+        TimePeriod benchmarkVarPeriod(parseListOfValues<Date>(inputs_->benchmarkVarPeriod(), &parseDate),
+                                      inputs_->mporDays(), inputs_->mporCalendar());
 
-    LOG("Call VaR calculation");
-    CONSOLEW("Risk: VaR Calculation");
-    calc->calculate(*report);
-    CONSOLE("OK");
+        boost::shared_ptr<ore::data::AdjustmentFactors> adjFactors;
+        if (auto adjLoader = boost::dynamic_pointer_cast<AdjustedInMemoryLoader>(loader))
+            adjFactors = boost::make_shared<ore::data::AdjustmentFactors>(adjLoader->adjustmentFactors());
 
-    LOG("Parametric VaR completed");
-    MEM_LOG;
+        auto scenarios = buildHistoricalScenarioGenerator(inputs_->historicalScenarioReader(), adjFactors,
+            benchmarkVarPeriod, inputs_->mporCalendar(), inputs_->mporDays(), analytic()->configurations().simMarketParams,
+            analytic()->configurations().todaysMarketParams, inputs_->mporOverlappingPeriods());
+
+        auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
+            analytic()->market(), analytic()->configurations().simMarketParams, Market::defaultConfiguration,
+            *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, true, false,
+            false, false, *inputs_->iborFallbackConfig());
+        simMarket->scenarioGenerator() = scenarios;
+        scenarios->baseScenario() = simMarket->baseScenario();
+
+        boost::shared_ptr<ScenarioShiftCalculator> shiftCalculator = boost::make_shared<ScenarioShiftCalculator>(
+            analytic()->configurations().sensiScenarioData, analytic()->configurations().simMarketParams);
+
+        std::unique_ptr<MarketRiskReport::SensiRunArgs> sensiArgs =
+            std::make_unique<MarketRiskReport::SensiRunArgs>(ss, shiftCalculator, 0.01, inputs_->covarianceData());
+
+        varReport_ = ext::make_shared<ParametricVarReport>(
+            inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), scenarios,
+            inputs_->varQuantiles(), varParams,
+            inputs_->salvageCovariance(), benchmarkVarPeriod, std::move(sensiArgs), inputs_->varBreakDown());
+    }
+}
+
+void HistoricalSimulationVarAnalyticImpl::setUpConfigurations() {
+    VarAnalyticImpl::setUpConfigurations();
+    analytic()->configurations().simMarketParams = inputs_->histVarSimMarketParams();
+}
+
+void HistoricalSimulationVarAnalyticImpl::setVarReport(
+    const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
+
+    LOG("Build VaR calculator");
+    TimePeriod benchmarkVarPeriod(parseListOfValues<Date>(inputs_->benchmarkVarPeriod(), &parseDate), inputs_->mporDays(), inputs_->mporCalendar());
+        
+    boost::shared_ptr<ore::data::AdjustmentFactors> adjFactors;
+    if (auto adjLoader = boost::dynamic_pointer_cast<AdjustedInMemoryLoader>(loader))
+        adjFactors = boost::make_shared<ore::data::AdjustmentFactors>(adjLoader->adjustmentFactors());
+        
+    auto scenarios =
+        buildHistoricalScenarioGenerator(inputs_->historicalScenarioReader(), adjFactors, benchmarkVarPeriod, inputs_->mporCalendar(),
+        inputs_->mporDays(), analytic()->configurations().simMarketParams,
+        analytic()->configurations().todaysMarketParams, inputs_->mporOverlappingPeriods());
+    
+    auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
+        analytic()->market(), analytic()->configurations().simMarketParams, Market::defaultConfiguration,
+        *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, true, false, false,
+        false, *inputs_->iborFallbackConfig());
+    simMarket->scenarioGenerator() = scenarios;
+    scenarios->baseScenario() = simMarket->baseScenario();
+
+    std::unique_ptr<MarketRiskReport::FullRevalArgs> fullRevalArgs = std::make_unique<MarketRiskReport::FullRevalArgs>(
+        analytic()->portfolio(), simMarket, inputs_->pricingEngine(), inputs_->refDataManager(), *inputs_->iborFallbackConfig());
+
+    varReport_ = ext::make_shared<HistoricalSimulationVarReport>(
+        inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), 
+        inputs_->varQuantiles(), benchmarkVarPeriod, scenarios, std::move(fullRevalArgs), inputs_->varBreakDown());
+
 }
 
 } // namespace analytics

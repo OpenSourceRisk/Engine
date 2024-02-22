@@ -48,7 +48,7 @@ void McCamFxForwardEngine::calculate() const {
 
     leg_ = {foreignLeg, domesticLeg};
     currency_ = {foreignCcy_, domesticCcy_};
-    payer_ = {1.0, -1.0};
+    payer_ = {false, true};
     exercise_ = nullptr;
 
     McMultiLegBaseEngine::calculate();
