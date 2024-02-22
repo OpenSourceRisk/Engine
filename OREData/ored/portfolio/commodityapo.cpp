@@ -370,7 +370,7 @@ void CommodityAveragePriceOption::buildApo(const boost::shared_ptr<EngineFactory
     Barrier::Type barrierType = Barrier::DownIn;
     Exercise::Type barrierStyle = Exercise::American;
     if (barrierData_.initialized()) {
-        QL_REQUIRE(barrierData_.levels().size() == 1, "Commodity APO: Excepted exactly one barrier level.");
+        QL_REQUIRE(barrierData_.levels().size() == 1, "Commodity APO: Expected exactly one barrier level.");
         barrierLevel = barrierData_.levels().front().value();
         barrierType = parseBarrierType(barrierData_.type());
         if (!barrierData_.style().empty()) {
