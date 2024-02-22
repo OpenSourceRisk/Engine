@@ -130,5 +130,10 @@ boost::any Envelope::additionalAnyField(const std::string& name, const bool mand
     return it == additionalFields_.end() ? defaultValue : it->second;
 }
 
+void Envelope::setAdditionalField(const std::string& key, const boost::any& value) {
+    additionalFields_[key] = value;
+}
+
+
 } // namespace data
 } // namespace ore
