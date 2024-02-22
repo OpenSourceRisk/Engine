@@ -94,7 +94,7 @@ void EquityOptionPosition::build(const boost::shared_ptr<ore::data::EngineFactor
 
         Option::Type optionType = parseOptionType(u.optionData().callPut());
         QuantLib::Exercise::Type exerciseType = parseExerciseType(u.optionData().style());
-        QL_REQUIRE(u.optionData().exerciseDates().size() == 1, "Invalid number of excercise dates");
+        QL_REQUIRE(u.optionData().exerciseDates().size() == 1, "Invalid number of exercise dates");
         Date optionExpiry = parseDate(u.optionData().exerciseDates().front());
         boost::shared_ptr<Exercise> exercise;
         switch (exerciseType) {
