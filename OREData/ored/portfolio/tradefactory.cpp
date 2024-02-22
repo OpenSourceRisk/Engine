@@ -41,8 +41,11 @@ boost::shared_ptr<AbstractTradeBuilder> TradeFactory::getBuilder(const std::stri
 void TradeFactory::addBuilder(const std::string& className, const boost::shared_ptr<AbstractTradeBuilder>& builder,
                               const bool allowOverwrite) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
-    QL_REQUIRE(builders_.insert(std::make_pair(className, builder)).second || allowOverwrite,
-               "TradeFactory: duplicate builder for className '" << className << "'.");
+    {
+        auto [it, ins] = builders_.try_emplace(className, builder);
+        if (!ins) QL_REQUIRE(allowOverwrite && (it->second = builder),
+                       "TradeFactory: duplicate builder for className '" << className << "'.");
+    }
 }
 
 boost::shared_ptr<Trade> TradeFactory::build(const string& className) const { return getBuilder(className)->build(); }
