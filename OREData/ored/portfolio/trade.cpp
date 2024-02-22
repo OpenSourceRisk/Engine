@@ -119,6 +119,10 @@ void Trade::validate() const {
     }
 }
 
+void Trade::setEnvelope(const Envelope& envelope) {
+    envelope_ = envelope;
+}
+
 void Trade::reset() {
     // save accumulated timings from wrapper to trade before resetting
     if (instrument_ != nullptr) {
