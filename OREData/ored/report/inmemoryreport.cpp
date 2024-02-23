@@ -18,6 +18,8 @@
 
 #include <ored/report/inmemoryreport.hpp>
 
+#include <boost/algorithm/string/join.hpp>
+
 namespace ore {
 namespace data {
 

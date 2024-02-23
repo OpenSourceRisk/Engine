@@ -76,7 +76,7 @@ private:
     Size version_ = 0;
     FILE* fp_;
     bool finalized_ = false;
-    vector<string> headers_;
+    std::vector<std::string> headers_;
 };
 } // namespace data
 } // namespace ore
