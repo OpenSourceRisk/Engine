@@ -659,7 +659,6 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
                 u.second = RandomVariable(gridSize(), 0.0);
             }
         }
-        
         // rollback swaption PV
 
         if (i < static_cast<int>(eventDates.size()) - 1) {

@@ -62,7 +62,6 @@ public:
     bool settlesAccrual() const { return settlesAccrual_; }
     Real fixedRecoveryRate() const { return fixedRecoveryRate_; }
     const boost::shared_ptr<Exercise>& exercise() const { return exercise_; }
-    // const std::vector<boost::shared_ptr<CashFlow>>& premium() const { return premium_; }
     const bool nakedOption() const { return nakedOption_; }
     //
     const Date& maturity() const { return maturity_; }

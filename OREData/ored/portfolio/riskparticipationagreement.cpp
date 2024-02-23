@@ -167,7 +167,8 @@ void RiskParticipationAgreement::buildWithSwapUnderlying(const boost::shared_ptr
             //auto test = (*optionData_).premiumData().premiumData();
             isPremium = true;      
             for (const auto& premium : (*optionData_).premiumData().premiumData()) {
-                QL_REQUIRE(premium.ccy == underlyingCcys[0], "premium currency must be the same than the swaption leg"); // I assume there is another check somewhere if both swap leg ccy are different, so I just need to check one of them
+                QL_REQUIRE((premium.ccy == underlyingCcys[0]) && (premium.ccy == underlyingCcys[1]),
+                           "premium currency must be the same than the swaption legs");
                 SimpleCashFlow cf(premium.amount, premium.payDate);
                 vectorPremium.push_back(boost::make_shared<SimpleCashFlow>(cf));
             }
