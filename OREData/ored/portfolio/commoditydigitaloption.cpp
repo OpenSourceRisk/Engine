@@ -51,7 +51,6 @@ CommodityDigitalOption::CommodityDigitalOption(const Envelope& env, const Option
 void CommodityDigitalOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // Checks
-    QL_REQUIRE(payoff_ > 0, "Commodity digital option requires a positive quatity");
     QL_REQUIRE(strike_ > 0, "Commodity digital option requires a positive strike");
     QL_REQUIRE(optionData_.exerciseDates().size() == 1, "Invalid number of exercise dates");
 
