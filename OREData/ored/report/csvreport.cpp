@@ -28,6 +28,7 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/variant/static_visitor.hpp>
+#include <boost/algorithm/string/join.hpp>
 
 using std::string;
 
