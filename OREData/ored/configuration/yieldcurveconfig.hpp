@@ -122,10 +122,6 @@ protected:
     //! Utility to build a quote, optional flag defaults to false
     pair<string, bool> quote(const string& name, bool opt = false) { return make_pair(name, opt); }
 
-    //! Utility method to read quotes from XML
-    void loadQuotesFromXML(XMLNode* node);
-    //! Utility method to write quotes to XML
-
 private:
     // TODO: why type and typeID?
     Type type_;
