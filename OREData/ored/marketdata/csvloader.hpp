@@ -92,6 +92,7 @@ public:
 private:
     enum class DataType { Market, Fixing, Dividend };
     void loadFile(const string&, DataType);
+    bool checkFxDuplicate(const ext::shared_ptr<MarketDatum>, const QuantLib::Date&);
 
     bool implyTodaysFixings_;
     std::map<QuantLib::Date, std::set<boost::shared_ptr<MarketDatum>, SharedPtrMarketDatumComparator>> data_;
