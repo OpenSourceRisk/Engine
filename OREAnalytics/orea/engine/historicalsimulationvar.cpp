@@ -37,7 +37,7 @@ HistoricalSimulationVarReport::HistoricalSimulationVarReport(
     const string& portfolioFilter, const vector<Real>& p, boost::optional<TimePeriod> period,
     const ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen, std::unique_ptr<FullRevalArgs> fullRevalArgs,
     const bool breakdown)
-    : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, hisScenGen, nullptr, move(fullRevalArgs)) {
+    : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, hisScenGen, nullptr, std::move(fullRevalArgs)) {
     fullReval_ = true;
 }
 

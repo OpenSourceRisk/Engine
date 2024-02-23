@@ -413,7 +413,7 @@ BOOST_DATA_TEST_CASE(testOptionAutomaticExerciseOnExpiry,
     // Set the pricing engine
     option.setPricingEngine(engine);
 
-    // We have not added a fixing for the index so it will be projected of the the price term structure above to
+    // We have not added a fixing for the index so it will be projected of the price term structure above to
     // give the payoff. So, we use that value here in our check initially.
     Real ptsPrice = pts->price(0.0);
     checkOptionValues(option, r, ptsPrice);
