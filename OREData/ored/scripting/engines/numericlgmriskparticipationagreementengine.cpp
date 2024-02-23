@@ -659,7 +659,7 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
                 u.second = RandomVariable(gridSize(), 0.0);
             }
         }
-
+        
         // rollback swaption PV
 
         if (i < static_cast<int>(eventDates.size()) - 1) {
@@ -790,6 +790,25 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
                                  callRebateValue);
         }
 
+        // Handle Premium
+        // If PremiumDate > EventDate we  include them in swaptionPv
+
+        if (arguments_.IsPremium) {
+            for (int j = 0; j < arguments_.premium.size(); j++) {
+                Real premiumAmount = 0;
+                if (arguments_.exerciseIsLong) {
+                    premiumAmount = - arguments_.premium[j]->amount();
+                } else {
+                    premiumAmount = arguments_.premium[j]->amount();
+                }
+                RandomVariable test(gridSize(), premiumAmount);
+                Date date = arguments_.premium[j]->date();
+                if (date > eventDates[i]) {
+                    swaptionPv += rollback(test, eventTimes[i], 0.0);
+                }
+            }
+        }
+        
         // compute positive pv as of event date
 
         RandomVariable tmp = swaptionPv;
@@ -828,18 +847,6 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
 
     swaptionPv = rollback(swaptionPv, eventTimes[0], 0.0);
 
-     if (arguments_.IsPremium) {
-        Real premium;
-        if (arguments_.protectionFeePayer) {
-            premium = arguments_.premium;
-        } else {
-            premium = -arguments_.premium;
-        }
-        for (int i = 0; i < optionPv.size(); i++) {
-            optionPv[i] += premium; 
-        }
-        
-     } 
     // compute a CVA using the option pvs
 
     QL_REQUIRE(!fxSpots_[arguments_.underlyingCcys[0]].empty(),
@@ -851,7 +858,7 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
         Real pd = defaultCurve_->defaultProbability(gridDates_[i], gridDates_[i + 1]);
         cva += pd * (1.0 - effectiveRecoveryRate_) * optionPv[i] * fxSpots_[arguments_.underlyingCcys[0]]->value();
     }
-    
+
     // set additional results (grid and option pvs)
 
     results_.additionalResults["OptionNpvs"] = optionPv;

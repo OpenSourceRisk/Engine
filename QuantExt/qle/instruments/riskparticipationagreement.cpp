@@ -28,7 +28,8 @@ RiskParticipationAgreement::RiskParticipationAgreement(
     const std::vector<std::string>& underlyingCcys, const std::vector<Leg>& protectionFee,
     const bool protectionFeePayer, const std::vector<std::string>& protectionFeeCcys, const Real participationRate,
     const Date& protectionStart, const Date& protectionEnd, const bool settlesAccrual, const Real fixedRecoveryRate,
-    const boost::shared_ptr<Exercise>& exercise, const bool exerciseIsLong, const bool IsPremium, const Real premium,const bool nakedOption)
+    const boost::shared_ptr<Exercise>& exercise, const bool exerciseIsLong, const bool IsPremium,
+    const std::vector<boost::shared_ptr<CashFlow>>& premium, const bool nakedOption)
     : underlying_(underlying), underlyingPayer_(underlyingPayer), underlyingCcys_(underlyingCcys),
       protectionFee_(protectionFee), protectionFeePayer_(protectionFeePayer), protectionFeeCcys_(protectionFeeCcys),
       participationRate_(participationRate), protectionStart_(protectionStart), protectionEnd_(protectionEnd),
