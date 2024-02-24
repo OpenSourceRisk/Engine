@@ -119,7 +119,7 @@ void ScenarioWriter::writeScenario(const boost::shared_ptr<Scenario>& s, const b
             if (s->has(k))
                 report_->add(s->get(k));
             else
-                report_->add(Null<Real>());
+                report_->add(QuantLib::Null<QuantLib::Real>());
         }
     }
 }
