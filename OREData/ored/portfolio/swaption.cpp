@@ -156,7 +156,9 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         auto builder = boost::dynamic_pointer_cast<SwapEngineBuilderBase>(engineFactory->builder("Swap"));
         QL_REQUIRE(builder, "could not get swap builder to build exercised swaption instrument.");
         auto swap = boost::make_shared<QuantLib::Swap>(legs_, legPayers_);
-        swap->setPricingEngine(builder->engine(parseCurrency(npvCurrency_)));
+        swap->setPricingEngine(builder->engine(parseCurrency(npvCurrency_),
+                                               envelope().additionalField("discount_curve", false),
+                                               envelope().additionalField("security_spread", false)));
         setSensitivityTemplate(*builder);
         instrument_ = boost::make_shared<VanillaInstrument>(swap, positionType_ == Position::Long ? 1.0 : -1.0,
                                                             additionalInstruments, additionalMultipliers);
@@ -182,7 +184,9 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         auto builder = boost::dynamic_pointer_cast<SwapEngineBuilderBase>(engineFactory->builder("Swap"));
         QL_REQUIRE(builder, "could not get swap builder to build expired swaption instrument.");
         auto swap = boost::make_shared<QuantLib::Swap>(legs_, legPayers_);
-        swap->setPricingEngine(builder->engine(parseCurrency(npvCurrency_)));
+        swap->setPricingEngine(builder->engine(parseCurrency(npvCurrency_),
+                                               envelope().additionalField("discount_curve", false),
+                                               envelope().additionalField("security_spread", false)));
         instrument_ = boost::make_shared<VanillaInstrument>(swap, positionType_ == Position::Long ? 1.0 : -1.0,
                                                             additionalInstruments, additionalMultipliers);
         setSensitivityTemplate(*builder);
@@ -346,7 +350,8 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // use ibor / ois index as key, if possible, otherwise the npv currency
     auto swaptionEngine = swaptionBuilder->engine(
         id(), index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name()),
-        exerciseBuilder_->noticeDates(), underlying_->maturity(), strikes, exerciseType_ == Exercise::American);
+        exerciseBuilder_->noticeDates(), underlying_->maturity(), strikes, exerciseType_ == Exercise::American,
+        envelope().additionalField("discount_curve", false), envelope().additionalField("security_spread", false));
     timer.stop();
     DLOG("Swaption model calibration time: " << timer.format(default_places, "%w") << " s");
     swaption->setPricingEngine(swaptionEngine);
@@ -354,7 +359,9 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // 9.4 build underlying swaps, add premiums, build option wrapper
 
-    auto swapEngine = swapBuilder->engine(parseCurrency(npvCurrency_));
+    auto swapEngine =
+        swapBuilder->engine(parseCurrency(npvCurrency_), envelope().additionalField("discount_curve", false),
+                            envelope().additionalField("security_spread", false));
 
     std::vector<boost::shared_ptr<Instrument>> underlyingSwaps =
         buildUnderlyingSwaps(swapEngine, exerciseBuilder_->noticeDates());
@@ -491,5 +498,14 @@ XMLNode* Swaption::toXML(XMLDocument& doc) {
 
     return node;
 }
+
+map<AssetClass, set<string>>
+Swaption::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+    map<AssetClass, set<string>> result;
+    if (auto s = envelope().additionalField("security_spread", false); !s.empty())
+        result[AssetClass::BOND] = {s};
+    return result;
+}
+
 } // namespace data
 } // namespace ore
