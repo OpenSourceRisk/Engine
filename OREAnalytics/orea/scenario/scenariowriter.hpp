@@ -35,13 +35,15 @@ class ScenarioWriter : public ScenarioGenerator {
 public:
     //! Constructor
     ScenarioWriter(const boost::shared_ptr<ScenarioGenerator>& src, const std::string& filename, const char sep = ',',
-                   const string& filemode = "w+");
+                   const string& filemode = "w+", const std::vector<RiskFactorKey>& headerKeys = {});
 
     //! Constructor to write single scenarios
-    ScenarioWriter(const std::string& filename, const char sep = ',', const string& filemode = "w+");
+    ScenarioWriter(const std::string& filename, const char sep = ',', const string& filemode = "w+",
+                   const std::vector<RiskFactorKey>& headerKeys = {});
 
     //! Constructor to write into an in-memory report for later io
-    ScenarioWriter(const boost::shared_ptr<ScenarioGenerator>& src, boost::shared_ptr<ore::data::Report> report);
+    ScenarioWriter(const boost::shared_ptr<ScenarioGenerator>& src, boost::shared_ptr<ore::data::Report> report,
+                   const std::vector<RiskFactorKey>& headerKeys = {});
 
     //! Destructor
     virtual ~ScenarioWriter();
@@ -68,6 +70,7 @@ private:
     Date firstDate_;
     Size i_;
     const char sep_ = ',';
+    std::vector<RiskFactorKey> headerKeys_;
 };
 } // namespace analytics
 } // namespace ore
