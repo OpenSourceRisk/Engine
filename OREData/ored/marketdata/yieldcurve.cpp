@@ -2154,17 +2154,17 @@ void YieldCurve::addTenorBasisSwaps(const boost::shared_ptr<YieldCurveSegment>& 
         boost::dynamic_pointer_cast<TenorBasisYieldCurveSegment>(segment);
 
     // If short index projection curve ID is not this curve.
-    string shortCurveID = basisSwapSegment->shortProjectionCurveID();
+    string receiveCurveID = basisSwapSegment->receiveProjectionCurveID();
     boost::shared_ptr<IborIndex> receiveIndex = basisSwapConvention->receiveIndex();
-    if (shortCurveID != curveConfig_->curveID() && !shortCurveID.empty()) {
-        shortCurveID = yieldCurveKey(currency_, shortCurveID, asofDate_);
+    if (receiveCurveID != curveConfig_->curveID() && !receiveCurveID.empty()) {
+        receiveCurveID = yieldCurveKey(currency_, receiveCurveID, asofDate_);
         boost::shared_ptr<YieldCurve> shortCurve;
         map<string, boost::shared_ptr<YieldCurve>>::iterator it;
-        it = requiredYieldCurves_.find(shortCurveID);
+        it = requiredYieldCurves_.find(receiveCurveID);
         if (it != requiredYieldCurves_.end()) {
             shortCurve = it->second;
         } else {
-            QL_FAIL("The short side projection curve, " << shortCurveID
+            QL_FAIL("The short side projection curve, " << receiveCurveID
                                                         << ", required in the building "
                                                            "of the curve, "
                                                         << curveSpec_.name() << ", was not found.");
@@ -2173,17 +2173,17 @@ void YieldCurve::addTenorBasisSwaps(const boost::shared_ptr<YieldCurveSegment>& 
     }
 
     // If long index projection curve ID is not this curve.
-    string longCurveID = basisSwapSegment->longProjectionCurveID();
+    string payCurveID = basisSwapSegment->payProjectionCurveID();
     boost::shared_ptr<IborIndex> payIndex = basisSwapConvention->payIndex();
-    if (longCurveID != curveConfig_->curveID() && !longCurveID.empty()) {
-        longCurveID = yieldCurveKey(currency_, longCurveID, asofDate_);
+    if (payCurveID != curveConfig_->curveID() && !payCurveID.empty()) {
+        payCurveID = yieldCurveKey(currency_, payCurveID, asofDate_);
         boost::shared_ptr<YieldCurve> longCurve;
         map<string, boost::shared_ptr<YieldCurve>>::iterator it;
-        it = requiredYieldCurves_.find(longCurveID);
+        it = requiredYieldCurves_.find(payCurveID);
         if (it != requiredYieldCurves_.end()) {
             longCurve = it->second;
         } else {
-            QL_FAIL("The long side projection curve, " << longCurveID
+            QL_FAIL("The long side projection curve, " << payCurveID
                                                        << ", required in the building "
                                                           "of the curve, "
                                                        << curveSpec_.name() << ", was not found.");
@@ -2238,7 +2238,7 @@ void YieldCurve::addTenorBasisTwoSwaps(const boost::shared_ptr<YieldCurveSegment
         boost::dynamic_pointer_cast<TenorBasisYieldCurveSegment>(segment);
 
     // If short index projection curve ID is not this curve.
-    string shortCurveID = basisSwapSegment->shortProjectionCurveID();
+    string shortCurveID = basisSwapSegment->receiveProjectionCurveID();
     boost::shared_ptr<IborIndex> shortIndex = basisSwapConvention->shortIndex();
     if (shortCurveID != curveConfig_->curveID() && !shortCurveID.empty()) {
         shortCurveID = yieldCurveKey(currency_, shortCurveID, asofDate_);
@@ -2257,7 +2257,7 @@ void YieldCurve::addTenorBasisTwoSwaps(const boost::shared_ptr<YieldCurveSegment
     }
 
     // If long index projection curve ID is not this curve.
-    string longCurveID = basisSwapSegment->longProjectionCurveID();
+    string longCurveID = basisSwapSegment->payProjectionCurveID();
     boost::shared_ptr<IborIndex> longIndex = basisSwapConvention->longIndex();
     if (longCurveID != curveConfig_->curveID() && !longCurveID.empty()) {
         longCurveID = yieldCurveKey(currency_, longCurveID, asofDate_);

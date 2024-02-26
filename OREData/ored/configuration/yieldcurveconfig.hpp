@@ -265,7 +265,7 @@ public:
     TenorBasisYieldCurveSegment() {}
     //! Detailed constructor
     TenorBasisYieldCurveSegment(const string& typeID, const string& conventionsID, const vector<string>& quotes,
-                                const string& shortProjectionCurveID, const string& longProjectionCurveID);
+                                const string& receiveProjectionCurveID, const string& payProjectionCurveID);
     //! Default destructor
     virtual ~TenorBasisYieldCurveSegment() {}
     //@}
@@ -278,8 +278,8 @@ public:
 
     //! \name Inspectors
     //@{
-    const string& shortProjectionCurveID() const { return shortProjectionCurveID_; }
-    const string& longProjectionCurveID() const { return longProjectionCurveID_; }
+    const string& receiveProjectionCurveID() const { return receiveProjectionCurveID_; }
+    const string& payProjectionCurveID() const { return payProjectionCurveID_; }
     //@}
 
     //! \name Visitability
@@ -288,8 +288,8 @@ public:
     //@}
 
 private:
-    string shortProjectionCurveID_;
-    string longProjectionCurveID_;
+    string receiveProjectionCurveID_;
+    string payProjectionCurveID_;
 };
 
 //! Cross Currency yield curve segment
