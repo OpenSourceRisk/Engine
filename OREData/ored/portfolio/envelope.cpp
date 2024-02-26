@@ -26,7 +26,7 @@ namespace data {
 
 void Envelope::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Envelope");
-    counterparty_ = XMLUtils::getChildValue(node, "CounterParty", true);
+    counterparty_ = XMLUtils::getChildValue(node, "CounterParty", false);
 
     XMLNode* nettingSetDetailsNode = XMLUtils::getChildNode(node, "NettingSetDetails");
     if (nettingSetDetailsNode) {
@@ -69,6 +69,7 @@ void Envelope::fromXML(XMLNode* node) {
             additionalFields_[XMLUtils::getNodeName(child)] = getValue(child);
         }
     }
+    initialized_ = true;
 }
 
 XMLNode* Envelope::toXML(XMLDocument& doc) {
@@ -105,6 +106,34 @@ XMLNode* Envelope::toXML(XMLDocument& doc) {
         addChild(additionalNode, it.first, it.second);
     return node;
 }
+
+const map<string, string> Envelope::additionalFields() const {
+    map<string, string> stringAddFields;
+    for (const auto& f : additionalFields_)
+        if (f.second.type() == typeid(string))
+            stringAddFields[f.first] = boost::any_cast<string>(f.second);
+    return stringAddFields;
+}
+
+string Envelope::additionalField(const std::string& name, const bool mandatory, const std::string& defaultValue) const {
+    auto af = additionalFields();
+    auto it = af.find(name);
+    QL_REQUIRE(it != af.end() || !mandatory,
+               "Envelope::additionalField(): Mandatory field '" << name << "' not found.");
+    return it == af.end() ? defaultValue : it->second;
+}
+
+boost::any Envelope::additionalAnyField(const std::string& name, const bool mandatory, const boost::any& defaultValue) const {
+    auto it = additionalFields_.find(name);
+    QL_REQUIRE(it != additionalFields_.end() || !mandatory,
+               "Envelope::additionalField(): Mandatory field '" << name << "' not found.");
+    return it == additionalFields_.end() ? defaultValue : it->second;
+}
+
+void Envelope::setAdditionalField(const std::string& key, const boost::any& value) {
+    additionalFields_[key] = value;
+}
+
 
 } // namespace data
 } // namespace ore
