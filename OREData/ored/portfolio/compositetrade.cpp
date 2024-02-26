@@ -150,14 +150,24 @@ void CompositeTrade::fromXML(XMLNode* node) {
         try {
             trade = TradeFactory::instance().build(tradeType);
             trade->id() = id;
-            // we prefer that the component trades don't have envelopes, but we need one for validation
-            trade->envelope() = this->envelope();
+            Envelope componentEnvelope;
+            if (XMLNode* envNode = XMLUtils::getChildNode(nodes[i], "Envelope")) {
+                componentEnvelope.fromXML(envNode);
+            }
+            Envelope env = this->envelope();
+            // the component trade's envelope is the main trade's envelope with possibly overwritten add fields
+            for (auto const& [k, v] : componentEnvelope.fullAdditionalFields())
+                env.setAdditionalField(k,v);
+            trade->setEnvelope(env);
             trade->fromXML(nodes[i]);
             trades_.push_back(trade);
             DLOG("Added Trade " << id << " (" << trade->id() << ")"
                                 << " type:" << tradeType << " to composite trade " << this->id() << ".");
-        } catch (std::exception& ex) {
-            ALOG("Failed to build subtrade with id '" << id << "' inside composite trade: " << ex.what());
+        } catch (const std::exception& e) {
+            StructuredTradeErrorMessage(
+                id, this->tradeType(),
+                "Failed to build subtrade with id '" + id + "' inside composite trade: ", e.what())
+                .log();
         }
     }
     LOG("Finished Parsing XML doc");
