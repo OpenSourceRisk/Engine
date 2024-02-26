@@ -62,74 +62,65 @@ TenorBasisSwapHelper::TenorBasisSwapHelper(Handle<Quote> spread, const Period& s
 
         */
 
-   setDiscountRelinkableHandle_ = false;
+       setDiscountRelinkableHandle_ = false;
 
-    bool payGiven = !payIndex_->forwardingTermStructure().empty();
-    bool recGiven = !receiveIndex_->forwardingTermStructure().empty();
-    bool discountGiven = !discountHandle_.empty();
+       bool payGiven = !payIndex_->forwardingTermStructure().empty();
+       bool recGiven = !receiveIndex_->forwardingTermStructure().empty();
+       bool discountGiven = !discountHandle_.empty();
 
-    bool payON = false;
-    boost::shared_ptr<OvernightIndex> payIndexON = boost::dynamic_pointer_cast<OvernightIndex>(payIndex_);
-    if(payIndexON)
-        payON = true;
+       boost::shared_ptr<OvernightIndex> payIndexON = boost::dynamic_pointer_cast<OvernightIndex>(payIndex_);
+       boost::shared_ptr<OvernightIndex> recIndexON = boost::dynamic_pointer_cast<OvernightIndex>(receiveIndex_);
 
-    bool recON = false;
-    boost::shared_ptr<OvernightIndex> recIndexON = boost::dynamic_pointer_cast<OvernightIndex>(receiveIndex_);
-    if(recIndexON)
-        recON = true;
+       if (!payGiven && !recGiven && !discountGiven) {
+           // case 0
+           QL_FAIL("no curve given");
+       } else if (!payGiven && !recGiven && discountGiven) {
+           // case 1
+           QL_FAIL("no index curve given");
+       } else if (!payGiven && recGiven && !discountGiven) {
+           // case 2
+           payIndex_ = boost::static_pointer_cast<IborIndex>(payIndex_->clone(termStructureHandle_));
+           payIndex_->unregisterWith(termStructureHandle_);
+           if (!payIndexON && recIndexON)
+               discountRelinkableHandle_.linkTo(*receiveIndex_->forwardingTermStructure());
+           else
+               setDiscountRelinkableHandle_ = true;
+       } else if (!payGiven && recGiven && discountGiven) {
+           // case 3
+           payIndex_ = boost::static_pointer_cast<IborIndex>(payIndex_->clone(termStructureHandle_));
+           payIndex_->unregisterWith(termStructureHandle_);
+       } else if (payGiven && !recGiven && !discountGiven) {
+           // case 4
+           receiveIndex_ = boost::static_pointer_cast<IborIndex>(receiveIndex_->clone(termStructureHandle_));
+           receiveIndex_->unregisterWith(termStructureHandle_);
+           if (payIndexON && !recIndexON)
+               discountRelinkableHandle_.linkTo(*payIndex_->forwardingTermStructure());
+           else
+               setDiscountRelinkableHandle_ = true;
+       } else if (payGiven && !recGiven && discountGiven) {
+           // case 5
+           receiveIndex_ = boost::static_pointer_cast<IborIndex>(receiveIndex_->clone(termStructureHandle_));
+           receiveIndex_->unregisterWith(termStructureHandle_);
+       } else if (payGiven && recGiven && !discountGiven) {
+           // case 6
+           setDiscountRelinkableHandle_ = true;
+       } else if (payGiven && recGiven && discountGiven) {
+           // case 7
+           QL_FAIL("Both Index and the Discount curves are all given");
+       }
 
-    if (!payGiven && !recGiven && !discountGiven) {
-        // case 0
-        QL_FAIL("no curve given");
-    } else if (!payGiven && !recGiven && discountGiven) {
-        // case 1
-        QL_FAIL("neither Index nor Discount curve is given");
-    } else if (!payGiven && recGiven && !discountGiven) {
-        // case 2
-        payIndex_ = boost::static_pointer_cast<IborIndex>(payIndex_->clone(termStructureHandle_));
-        payIndex_->unregisterWith(termStructureHandle_);
-        if(!payON && recON)
-            discountRelinkableHandle_.linkTo(*receiveIndex_->forwardingTermStructure());
-        else
-            setDiscountRelinkableHandle_ = true;
-        // discountRelinkableHandle_.linkTo(*termStructureHandle_, false);
-    } else if (!payGiven && recGiven && discountGiven) {
-        // case 3
-        payIndex_ = boost::static_pointer_cast<IborIndex>(payIndex_->clone(termStructureHandle_));
-        payIndex_->unregisterWith(termStructureHandle_);
-    } else if (payGiven && !recGiven && !discountGiven) {
-        // case 4
-        receiveIndex_ = boost::static_pointer_cast<IborIndex>(receiveIndex_->clone(termStructureHandle_));
-        receiveIndex_->unregisterWith(termStructureHandle_);
-        if(payON && !recON)
-            discountRelinkableHandle_.linkTo(*payIndex_->forwardingTermStructure());
-        else
-            setDiscountRelinkableHandle_ = true;
-    } else if (payGiven && !recGiven && discountGiven) {
-        // case 5
-        receiveIndex_ = boost::static_pointer_cast<IborIndex>(receiveIndex_->clone(termStructureHandle_));
-        receiveIndex_->unregisterWith(termStructureHandle_);
-    } else if (payGiven && recGiven && !discountGiven) {
-        // case 6
-        setDiscountRelinkableHandle_ = true;
-        // discountRelinkableHandle_.linkTo(*termStructureHandle_, false);
-    } else if (payGiven && recGiven && discountGiven) {
-        // case 7
-        QL_FAIL("Both Index and the Discount curves are all given");
-    }
+       payFrequency_ = payFrequency == Period() ? payIndex_->tenor() : payFrequency;
+       recFrequency_ = recFrequency == Period() ? receiveIndex_->tenor() : recFrequency;
 
-    payFrequency_ = payFrequency == Period() ? payIndex_->tenor() : payFrequency;
-    recFrequency_ = recFrequency == Period() ? receiveIndex_->tenor() : recFrequency;
-
-    registerWith(payIndex_);
-    registerWith(receiveIndex_);
-    registerWith(discountHandle_);
-    initializeDates();
+       registerWith(payIndex_);
+       registerWith(receiveIndex_);
+       registerWith(discountHandle_);
+       initializeDates();
 }
 
 void TenorBasisSwapHelper::initializeDates() {
 
-    //CHECK : should the spot shift be based on pay ore receive, here we have the pay leg... 
+    //CHECK : should the spot shift be based on pay ore receive, here we have the pay leg...
     boost::shared_ptr<Libor> payIndexAsLibor = boost::dynamic_pointer_cast<Libor>(payIndex_);
     Calendar spotCalendar = payIndexAsLibor != NULL ? payIndexAsLibor->jointCalendar() : payIndex_->fixingCalendar();
     Natural spotDays = payIndex_->fixingDays();
@@ -177,7 +168,7 @@ void TenorBasisSwapHelper::setTermStructure(YieldTermStructure* t) {
     boost::shared_ptr<YieldTermStructure> temp(t, null_deleter());
     termStructureHandle_.linkTo(temp, observer);
 
-    if (discountHandle_.empty() || setDiscountRelinkableHandle_)
+    if (setDiscountRelinkableHandle_)
         discountRelinkableHandle_.linkTo(temp, observer);
     else
         discountRelinkableHandle_.linkTo(*discountHandle_, observer);
