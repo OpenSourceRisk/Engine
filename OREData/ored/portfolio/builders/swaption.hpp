@@ -38,14 +38,15 @@ namespace data {
 //! Swaption engine builder base class
 class SwaptionEngineBuilder
     : public CachingPricingEngineBuilder<string, const string&, const string&, const std::vector<Date>&, const Date&,
-                                         const std::vector<Real>&, const bool> {
+                                         const std::vector<Real>&, const bool, const string&, const string&> {
 public:
     SwaptionEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes)
         : CachingEngineBuilder(model, engine, tradeTypes) {}
 
 protected:
     string keyImpl(const string& id, const string& key, const std::vector<Date>& dates, const Date& maturity,
-                   const std::vector<Real>& strikes, const bool isAmerican) override {
+                   const std::vector<Real>& strikes, const bool isAmerican, const std::string& discountCurve,
+                   const std::string& securitySpread) override {
         return id;
     }
 };
@@ -61,7 +62,8 @@ public:
 private:
     boost::shared_ptr<PricingEngine> engineImpl(const string& id, const string& key, const std::vector<Date>& dates,
                                                 const Date& maturity, const std::vector<Real>& strikes,
-                                                const bool isAmerican) override;
+                                                const bool isAmerican, const std::string& discountCurve,
+                                                const std::string& securitySpread) override;
 };
 
 //! Abstract LGMSwaptionEngineBuilder class
@@ -84,7 +86,8 @@ public:
 private:
     boost::shared_ptr<PricingEngine> engineImpl(const string& id, const string& key, const std::vector<Date>& dates,
                                                 const Date& maturity, const std::vector<Real>& strikes,
-                                                const bool isAmerican) override;
+                                                const bool isAmerican, const std::string& discountCurve,
+                                                const std::string& securitySpread) override;
 };
 
 //! Implementation of BermudanAmericanSwaptionEngineBuilder using LGM FD pricer
@@ -95,7 +98,8 @@ public:
 private:
     boost::shared_ptr<PricingEngine> engineImpl(const string& id, const string& key, const std::vector<Date>& dates,
                                                 const Date& maturity, const std::vector<Real>& strikes,
-                                                const bool isAmerican) override;
+                                                const bool isAmerican, const std::string& discountCurve,
+                                                const std::string& securitySpread) override;
 };
 
 //! Implementation of LGMBermudanAmericanSwaptionEngineBuilder using MC pricer
@@ -106,7 +110,8 @@ public:
 private:
     boost::shared_ptr<PricingEngine> engineImpl(const string& id, const string& key, const std::vector<Date>& dates,
                                                 const Date& maturity, const std::vector<Real>& strikes,
-                                                const bool isAmerican) override;
+                                                const bool isAmerican, const std::string& discountCurve,
+                                                const std::string& securitySpread) override;
 };
 
 // Implementation of BermudanAmericanSwaptionEngineBuilder for external cam, with additional simulation dates (AMC)
@@ -118,12 +123,14 @@ public:
 
 private:
     string keyImpl(const string& id, const string& ccy, const std::vector<Date>& dates, const Date& maturity,
-                   const std::vector<Real>& strikes, const bool isAmerican) override {
-        return ccy + "_" + std::to_string(isAmerican);
+                   const std::vector<Real>& strikes, const bool isAmerican, const std::string& discountCurve,
+                   const std::string& securitySpread) override {
+        return ccy + "_" + std::to_string(isAmerican) + discountCurve + securitySpread;
     }
     boost::shared_ptr<PricingEngine> engineImpl(const string& id, const string& key, const std::vector<Date>& dates,
                                                 const Date& maturity, const std::vector<Real>& strikes,
-                                                const bool isAmerican) override;
+                                                const bool isAmerican, const std::string& discountCurve,
+                                                const std::string& securitySpread) override;
 
     const boost::shared_ptr<QuantExt::CrossAssetModel> cam_;
     const std::vector<Date> simulationDates_;
