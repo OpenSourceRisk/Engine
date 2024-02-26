@@ -79,7 +79,7 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
                                                     << io::iso_date(tradeDate_) << ")");
     }
 
-    // Option trade notional. This is the full notional of the the index that is being traded not reduced by any
+    // Option trade notional. This is the full notional of the index that is being traded not reduced by any
     // defaults. The notional on the trade date will be a fraction of this if there are defaults by trade date.
     auto legData = swap_.leg();
     const auto& ntls = legData.notionals();

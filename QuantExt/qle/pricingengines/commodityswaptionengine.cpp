@@ -195,7 +195,7 @@ void CommoditySwaptionEngine::calculate() const {
     // Time to swaption expiry, t_e from the ORE+ Product Catalogue
     Time t_e = volStructure_->timeFromReference(exercise);
 
-    // sigma_X from the the ORE+ Product Catalogue
+    // sigma_X from the ORE+ Product Catalogue
     Real sigmaX = sqrt(log(EAA / (EA * EA)) / t_e);
 
     // We have used EA to get sigmaX so we can modify EA again now to remove the normalisation factor.
