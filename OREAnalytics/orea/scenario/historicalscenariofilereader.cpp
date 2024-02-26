@@ -75,8 +75,10 @@ boost::shared_ptr<ore::analytics::Scenario> HistoricalScenarioFileReader::scenar
         Real numeraire = parseReal(file_.get("Numeraire"));
         TLOG("Creating scenario for date " << io::iso_date(date));
         boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(date, "", numeraire);
+        Real value;
         for (Size k = 0; k < keys_.size(); ++k) {
-            scenario->add(keys_[k], parseReal(file_.get(k + 3)));
+            if (ore::data::tryParseReal(file_.get(k + 3), value))
+                scenario->add(keys_[k], value);
         }
         return scenario;
     }

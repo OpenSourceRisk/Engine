@@ -16,24 +16,94 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ored/utilities/to_string.hpp>
 #include <orea/engine/riskfilter.hpp>
 
 #include <ql/errors.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/assign.hpp>
+#include <boost/bimap.hpp>
 
 namespace ore {
 namespace analytics {
+    
+using std::string;
+using std::ostream;
+using boost::assign::list_of;
 
-const std::vector<std::string> RiskFilter::riskClassLabel_ = {"(all)",  "InterestRate", "Inflation",
-                                                              "Credit", "Equity",       "FX"};
-const std::vector<std::string> RiskFilter::riskTypeLabel_ = {"(all)", "DeltaGamma", "Vega", "BaseCorrelation"};
+// custom comparator for bimaps
+struct string_cmp {
+    bool operator()(const string& lhs, const string& rhs) const {
+        return ((boost::to_lower_copy(lhs)) < (boost::to_lower_copy(rhs)));
+    }
+};
 
-RiskFilter::RiskFilter(const Size riskClassIndex, const Size riskTypeIndex)
-    : riskClassIndex_(riskClassIndex), riskTypeIndex_(riskTypeIndex) {
+// Ease the notation below
+template <typename T> using bm = boost::bimap<T, boost::bimaps::set_of<string, string_cmp>>;
 
-    QL_REQUIRE(riskClassIndex_ < riskClassLabel_.size(),
-               "RiskFilter: riskClassIndex " << riskClassIndex_ << " not allowed.");
-    QL_REQUIRE(riskTypeIndex_ < riskTypeLabel_.size(),
-               "RiskFilter: riskTypeIndex " << riskTypeIndex_ << " not allowed.");
+// Initialise the bimaps
+const bm<VarConfiguration::RiskClass> riskClassMap = list_of<bm<VarConfiguration::RiskClass>::value_type>(
+    VarConfiguration::RiskClass::All, "All")
+        (VarConfiguration::RiskClass::InterestRate, "InterestRate")
+        (VarConfiguration::RiskClass::Inflation, "Inflation")
+        (VarConfiguration::RiskClass::Credit, "Credit")
+        (VarConfiguration::RiskClass::Equity, "Equity")
+        (VarConfiguration::RiskClass::FX, "FX");
+
+const bm<VarConfiguration::RiskType> riskTypeMap = list_of<bm<VarConfiguration::RiskType>::value_type>(
+    VarConfiguration::RiskType::All, "All")(
+    VarConfiguration::RiskType::DeltaGamma, "DeltaGamma")(VarConfiguration::RiskType::Vega, "Vega")(
+    VarConfiguration::RiskType::BaseCorrelation, "BaseCorrelation");
+
+ostream& operator<<(ostream& out, const VarConfiguration::RiskClass& rc) {
+    QL_REQUIRE(riskClassMap.left.count(rc) > 0,
+               "Risk class (" << static_cast<int>(rc) << ") not a valid VarConfiguration::RiskClass");
+    return out << riskClassMap.left.at(rc);
+}
+
+ostream& operator<<(ostream& out, const VarConfiguration::RiskType& mt) {
+    QL_REQUIRE(riskTypeMap.left.count(mt) > 0,
+               "Risk type (" << static_cast<int>(mt) << ") not a valid VarConfiguration::RiskType");
+    return out << riskTypeMap.left.at(mt);
+}
+
+VarConfiguration::RiskClass parseVarRiskClass(const string& rc) {
+    QL_REQUIRE(riskClassMap.right.count(rc) > 0,
+               "Risk class string " << rc << " does not correspond to a valid VarConfiguration::RiskClass");
+    return riskClassMap.right.at(rc);
+}
+
+VarConfiguration::RiskType parseVarMarginType(const string& mt) {
+    QL_REQUIRE(riskTypeMap.right.count(mt) > 0,
+               "Risk type string " << mt << " does not correspond to a valid VarConfiguration::RiskType");
+    return riskTypeMap.right.at(mt);
+}
+
+//! Give back a set containing the RiskClass values optionally excluding 'All'
+std::set<VarConfiguration::RiskClass> VarConfiguration::riskClasses(bool includeAll) {
+    Size numberOfRiskClasses = riskClassMap.size();
+
+    // Return the set of values
+    set<RiskClass> result;
+    for (Size i = includeAll ? 0 : 1; i < numberOfRiskClasses; ++i)
+        result.insert(RiskClass(i));
+    
+    return result;
+}
+
+//! Give back a set containing the RiskType values optionally excluding 'All'
+std::set<VarConfiguration::RiskType> VarConfiguration::riskTypes(bool includeAll) {
+    Size numberOfRiskTypes = riskTypeMap.size();
+
+    // Return the set of values
+    set<RiskType> result;
+    for (Size i = includeAll ? 0 : 1; i < numberOfRiskTypes; ++i)
+        result.insert(RiskType(i));
+    
+    return result;
+}
+
+RiskFilter::RiskFilter(const VarConfiguration::RiskClass& riskClass, const VarConfiguration::RiskType& riskType) {
 
     static const std::set<RiskFactorKey::KeyType> all = {RiskFactorKey::KeyType::DiscountCurve,
                                                          RiskFactorKey::KeyType::YieldCurve,
@@ -58,11 +128,11 @@ RiskFilter::RiskFilter(const Size riskClassIndex, const Size riskTypeIndex)
 
     std::set<RiskFactorKey::KeyType> allowed_type, allowed;
 
-    if (riskTypeIndex_ == 0) {
+    if (riskType == VarConfiguration::RiskType::All) {
         allowed_type = all;
     } else {
-        switch (riskTypeIndex_) {
-        case 1:
+        switch (riskType) {
+        case VarConfiguration::RiskType::DeltaGamma:
             allowed_type = {RiskFactorKey::KeyType::DiscountCurve,
                             RiskFactorKey::KeyType::YieldCurve,
                             RiskFactorKey::KeyType::IndexCurve,
@@ -76,7 +146,7 @@ RiskFilter::RiskFilter(const Size riskClassIndex, const Size riskTypeIndex)
                             RiskFactorKey::KeyType::YoYInflationCurve,
                             RiskFactorKey::KeyType::SecuritySpread};
             break;
-        case 2:
+        case VarConfiguration::RiskType::Vega:
             allowed_type = {RiskFactorKey::KeyType::SwaptionVolatility,
                             RiskFactorKey::KeyType::OptionletVolatility,
                             RiskFactorKey::KeyType::FXVolatility,
@@ -85,43 +155,43 @@ RiskFilter::RiskFilter(const Size riskClassIndex, const Size riskTypeIndex)
                             RiskFactorKey::KeyType::YieldVolatility,
                             RiskFactorKey::KeyType::YoYInflationCapFloorVolatility};
             break;
-        case 3:
+        case VarConfiguration::RiskType::BaseCorrelation:
             allowed_type = {RiskFactorKey::KeyType::BaseCorrelation};
             break;
         default:
-            QL_FAIL("unexpected riskTypeIndex " << riskTypeIndex_);
+            QL_FAIL("unexpected riskTypeIndex " << riskType);
         }
     }
 
-    if (riskClassIndex_ == 0) {
+    if (riskClass == VarConfiguration::RiskClass::All) {
         allowed = allowed_type;
     } else {
         std::set<RiskFactorKey::KeyType> allowed_class;
-        switch (riskClassIndex_) {
-        case 1:
+        switch (riskClass) {
+        case VarConfiguration::RiskClass::InterestRate:
             allowed_class = {
                 RiskFactorKey::KeyType::DiscountCurve,       RiskFactorKey::KeyType::YieldCurve,
                 RiskFactorKey::KeyType::IndexCurve,          RiskFactorKey::KeyType::SwaptionVolatility,
                 RiskFactorKey::KeyType::OptionletVolatility, RiskFactorKey::KeyType::SecuritySpread,
                 RiskFactorKey::KeyType::YieldVolatility,     RiskFactorKey::KeyType::YoYInflationCapFloorVolatility};
             break;
-        case 2:
+        case VarConfiguration::RiskClass::Inflation:
             allowed_class = {RiskFactorKey::KeyType::CPIIndex, RiskFactorKey::KeyType::ZeroInflationCurve,
                              RiskFactorKey::KeyType::YoYInflationCurve};
             break;
-        case 3:
+        case VarConfiguration::RiskClass::Credit:
             allowed_class = {RiskFactorKey::KeyType::SurvivalProbability, RiskFactorKey::KeyType::RecoveryRate,
                              RiskFactorKey::KeyType::CDSVolatility, RiskFactorKey::KeyType::BaseCorrelation};
             break;
-        case 4:
+        case VarConfiguration::RiskClass::Equity:
             allowed_class = {RiskFactorKey::KeyType::EquitySpot, RiskFactorKey::KeyType::EquityVolatility,
                              RiskFactorKey::KeyType::DividendYield};
             break;
-        case 5:
+        case VarConfiguration::RiskClass::FX:
             allowed_class = {RiskFactorKey::KeyType::FXSpot, RiskFactorKey::KeyType::FXVolatility};
             break;
         default:
-            QL_FAIL("unexpected riskClassIndex " << riskClassIndex_);
+            QL_FAIL("unexpected riskClassIndex " << riskClass);
         }
         std::set_intersection(allowed_type.begin(), allowed_type.end(), allowed_class.begin(), allowed_class.end(),
                               std::inserter(allowed, allowed.begin()));
