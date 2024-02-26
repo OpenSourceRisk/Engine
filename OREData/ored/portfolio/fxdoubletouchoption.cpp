@@ -152,7 +152,7 @@ void FxDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFa
     QL_REQUIRE(builder, "No builder found for Swap");
     boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
         boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
-    underlying->setPricingEngine(swapBuilder->engine(parseCurrency(payoffCurrency_)));
+    underlying->setPricingEngine(swapBuilder->engine(parseCurrency(payoffCurrency_), std::string(), std::string()));
 
     bool isLong = (positionType == Position::Long) ? true : false;
 

@@ -62,6 +62,20 @@ Handle<YieldTermStructure> xccyYieldCurve(const boost::shared_ptr<Market>& marke
     return curve;
 }
 
+Handle<YieldTermStructure> indexOrYieldCurve(const boost::shared_ptr<Market>& market, const std::string& name,
+                                             const std::string& configuration) {
+    try {
+        return market->iborIndex(name, configuration)->forwardingTermStructure();
+    } catch (...) {
+    }
+    try {
+        return market->yieldCurve(name, configuration);
+    } catch (...) {
+    }
+    QL_FAIL("Could not find index or yield curve with name '" << name << "' under configuration '" << configuration
+                                                              << "' or default configuration.");
+}
+
 std::string securitySpecificCreditCurveName(const std::string& securityId, const std::string& creditCurveId) {
     auto tmp = "__SECCRCRV_" + securityId + "_&_" + creditCurveId + "_&_";
     return tmp;
