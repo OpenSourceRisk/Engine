@@ -42,6 +42,7 @@
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/marketdata.hpp>
 
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
@@ -51,6 +52,7 @@
 #include <qle/termstructures/pricetermstructureadapter.hpp>
 
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
+#include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
 
 #include <boost/lexical_cast.hpp>
 
@@ -174,8 +176,18 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
 
     // 12 get the t0 curves for each model ccy
 
+    std::string externalDiscountCurve = scriptedTrade.envelope().additionalField("discount_curve", false);
+    std::string externalSecuritySpread = scriptedTrade.envelope().additionalField("security_spreads", false);
     for (auto const& c : modelCcys_) {
-        modelCurves_.push_back(market_->discountCurve(c, configuration(MarketContext::pricing)));
+        // for base ccy we account for an external discount curve and security spread if given
+        Handle<YieldTermStructure> yts =
+            externalDiscountCurve.empty() || c != baseCcy_
+                ? market_->discountCurve(c, configuration(MarketContext::pricing))
+                : indexOrYieldCurve(market_, externalDiscountCurve, configuration(MarketContext::pricing));
+        if (!externalSecuritySpread.empty() && c == baseCcy_)
+            yts = Handle<YieldTermStructure>(boost::make_shared<ZeroSpreadedTermStructure>(
+                yts, market_->securitySpread(externalSecuritySpread, configuration(MarketContext::pricing))));
+        modelCurves_.push_back(yts);
         DLOG("curve for " << c << " added.");
     }
 
