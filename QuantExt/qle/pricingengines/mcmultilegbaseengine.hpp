@@ -84,7 +84,7 @@ protected:
     // input data from the derived pricing engines, to be set in these engines
     mutable std::vector<Leg> leg_;
     mutable std::vector<Currency> currency_;
-    mutable std::vector<Real> payer_;
+    mutable std::vector<bool> payer_;
     mutable boost::shared_ptr<Exercise> exercise_; // may be empty, if underlying is the actual trade
     mutable Settlement::Type optionSettlement_ = Settlement::Physical;
 
@@ -115,7 +115,7 @@ private:
         Real payTime = Null<Real>();
         Real exIntoCriterionTime = Null<Real>();
         Size payCcyIndex = Null<Size>();
-        Real payer = 1.0;
+        bool payer = false;
         std::vector<Real> simulationTimes;
         std::vector<std::vector<Size>> modelIndices;
         std::function<RandomVariable(const Size n, const std::vector<std::vector<const RandomVariable*>>&)>
@@ -184,7 +184,7 @@ private:
     Real time(const Date& d) const;
 
     // create the info for a given flow
-    CashflowInfo createCashflowInfo(boost::shared_ptr<CashFlow> flow, const Currency& payCcy, Real payer, Size legNo,
+    CashflowInfo createCashflowInfo(boost::shared_ptr<CashFlow> flow, const Currency& payCcy, bool payer, Size legNo,
                                     Size cfNo) const;
 
     // get the index of a time in the given simulation times set

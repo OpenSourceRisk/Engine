@@ -906,14 +906,14 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output, const Sett
             QL_REQUIRE(err == CL_SUCCESS,
                        "OpenClContext::finalizeCalculation(): writing to output buffer fails: " << errorText(err));
         }
-        // copy from float to double
-        for (std::size_t i = 0; i < output.size(); ++i) {
-            std::copy(outputFloat[i].begin(), outputFloat[i].end(), output[i]);
-        }
         err = clWaitForEvents(outputBufferEvents.size(), outputBufferEvents.empty() ? nullptr : &outputBufferEvents[0]);
         QL_REQUIRE(
             err == CL_SUCCESS,
             "OpenClContext::finalizeCalculation(): wait for output buffer events to finish fails: " << errorText(err));
+        // copy from float to double
+        for (std::size_t i = 0; i < output.size(); ++i) {
+            std::copy(outputFloat[i].begin(), outputFloat[i].end(), output[i]);
+        }
     }
 
     if (debug_) {
