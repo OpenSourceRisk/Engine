@@ -52,7 +52,6 @@
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <boost/filesystem/path.hpp>
-#include <filesystem>
 
 namespace ore {
 namespace analytics {
@@ -92,7 +91,7 @@ public:
     void setTodaysMarketParams(const std::string& xml);
     void setTodaysMarketParamsFromFile(const std::string& fileName);
     void setPortfolio(const std::string& xml); 
-    void setPortfolioFromFile(const std::string& fileNameString, const std::filesystem::path& inputPath); 
+    void setPortfolioFromFile(const std::string& fileNameString, const std::string& inputPath); 
     void setMarketConfigs(const std::map<std::string, std::string>& m);
     void setThreads(int i) { nThreads_ = i; }
     void setEntireMarket(bool b) { entireMarket_ = b; }
@@ -862,7 +861,6 @@ inline const std::string& InputParameters::marketConfig(const std::string& conte
     auto it = marketConfigs_.find(context);
     return (it != marketConfigs_.end() ? it->second : Market::defaultConfiguration);
 }
-std::vector<std::string> getFileNames(const std::string& fileString, const std::filesystem::path& path);
     
 //! Traditional ORE input via ore.xml and various files, output into files
 class OutputParameters {
