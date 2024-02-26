@@ -16,7 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/report/inmemoryreport.hpp> 
+#include <ored/report/inmemoryreport.hpp>
+
+#include <boost/algorithm/string/join.hpp>
 
 namespace ore {
 namespace data {
@@ -31,7 +33,8 @@ Report& InMemoryReport::addColumn(const string& name, const ReportType& rt, Size
 }
 
 Report& InMemoryReport::next() {
-    QL_REQUIRE(i_ == headers_.size(), "Cannot go to next line, only " << i_ << " entires filled");
+    QL_REQUIRE(i_ == headers_.size(), "Cannot go to next line, only " << i_ << " entires filled, report headers are: "
+                                                                      << boost::join(headers_, ","));
     i_ = 0;
     return *this;
 }
@@ -39,9 +42,10 @@ Report& InMemoryReport::next() {
 Report& InMemoryReport::add(const ReportType& rt) {
     // check type is valid
     QL_REQUIRE(i_ < headers_.size(), "No column to add [" << rt << "] to.");
-    QL_REQUIRE(rt.which() == columnTypes_[i_].which(),
-                "Cannot add value " << rt << " of type " << rt.which() << " to column " << headers_[i_]
-                                    << " of type " << columnTypes_[i_].which());
+    QL_REQUIRE(rt.which() == columnTypes_[i_].which(), "Cannot add value "
+                                                           << rt << " of type " << rt.which() << " to column "
+                                                           << headers_[i_] << " of type " << columnTypes_[i_].which()
+                                                           << ", report headers are: " << boost::join(headers_, ","));
 
     data_[i_].push_back(rt);
     i_++;
@@ -49,13 +53,16 @@ Report& InMemoryReport::add(const ReportType& rt) {
 }
 
 Report& InMemoryReport::add(const InMemoryReport& report) {
-    QL_REQUIRE(columns() == report.columns(),
-                "Cannot combine reports of different sizes (" << columns() << " vs " << report.columns() << ").");
+    QL_REQUIRE(columns() == report.columns(), "Cannot combine reports of different sizes ("
+                                                  << columns() << " vs " << report.columns()
+                                                  << "), report headers are: " << boost::join(headers_, ","));
     end();
     for (Size i = 0; i < columns(); i++) {
         string h1 = headers_[i];
         string h2 = report.header(i);
-        QL_REQUIRE(h1 == h2, "Cannot combine reports with different headers (\"" << h1 << "\" and \"" << h2 << "\")");
+        QL_REQUIRE(h1 == h2, "Cannot combine reports with different headers (\""
+                                 << h1 << "\" and \"" << h2
+                                 << "\"), report headers are: " << boost::join(headers_, ","));
     }
 
     if (i_ == headers_.size())
@@ -72,19 +79,21 @@ Report& InMemoryReport::add(const InMemoryReport& report) {
 }
 
 void InMemoryReport::end() {
-    QL_REQUIRE(i_ == headers_.size() || i_ == 0,
-                "report is finalized with incomplete row, got data for " << i_ << " columns out of " << columns());
+    QL_REQUIRE(i_ == headers_.size() || i_ == 0, "report is finalized with incomplete row, got data for "
+                                                     << i_ << " columns out of " << columns()
+                                                     << ", report headers are: " << boost::join(headers_, ","));
 }
 
 const vector<Report::ReportType>& InMemoryReport::data(Size i) const {
     QL_REQUIRE(data_[i].size() == rows(), "internal error: report column "
-                                                << i << " (" << header(i) << ") contains " << data_[i].size()
-                                                << " rows, expected are " << rows() << " rows.");
+                                              << i << " (" << header(i) << ") contains " << data_[i].size()
+                                              << " rows, expected are " << rows()
+                                              << " rows, report headers are: " << boost::join(headers_, ","));
     return data_[i];
 }
 
 void InMemoryReport::toFile(const string& filename, const char sep, const bool commentCharacter, char quoteChar,
-            const string& nullString, bool lowerHeader) {
+                            const string& nullString, bool lowerHeader) {
 
     CSVFileReport cReport(filename, sep, commentCharacter, quoteChar, nullString, lowerHeader);
 

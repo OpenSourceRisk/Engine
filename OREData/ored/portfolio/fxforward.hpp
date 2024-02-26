@@ -38,7 +38,7 @@ public:
     //! Default constructor
     FxForward() : Trade("FxForward"), boughtAmount_(0.0), soldAmount_(0.0) {}
     //! Constructor
-    FxForward(Envelope& env, const string& maturityDate, const string& boughtCurrency, double boughtAmount,
+    FxForward(const Envelope& env, const string& maturityDate, const string& boughtCurrency, double boughtAmount,
               const string& soldCurrency, double soldAmount, const string& settlement = "Physical",
               const string& fxIndex = "", const string& payDate = "")
         : Trade("FxForward", env), maturityDate_(maturityDate), boughtCurrency_(boughtCurrency),
