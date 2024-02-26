@@ -812,7 +812,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("scenario", "simulationConfigFile", false);
         if (tmp != "") {
-            string simulationConfigFile = inputPath + "/" + tmp;
+            string simulationConfigFile = (inputPath / tmp).generic_string();
             LOG("Loading scenario simulation config from file" << simulationConfigFile);
             setScenarioSimMarketParamsFromFile(simulationConfigFile);
         } else {
@@ -923,12 +923,12 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("historicalSimulationVar", "historicalScenarioFile", false);
         QL_REQUIRE(tmp != "", "historicalScenarioFile not provided");
-        std::string scenarioFile = inputPath + "/" + tmp;
-        setHistoricalScenarioReader(scenarioFile);     
+        std::string scenarioFile = (inputPath / tmp).generic_string();
+        setHistoricalScenarioReader(scenarioFile);
 
         tmp = params_->get("historicalSimulationVar", "simulationConfigFile", false);
         QL_REQUIRE(tmp != "", "simulationConfigFile not provided");
-        string simulationConfigFile = inputPath + "/" + tmp;
+        string simulationConfigFile = (inputPath / tmp).generic_string();
         setHistVarSimMarketParamsFromFile(simulationConfigFile);
 
         tmp = params_->get("historicalSimulationVar", "historicalPeriod", false);
@@ -984,7 +984,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("simm", "simmCalibration", false);
         if (tmp != "") {
-            string file = inputPath + "/" + tmp;
+            string file = (inputPath / tmp).generic_string();
             if (boost::filesystem::exists(file))
                 setSimmCalibrationDataFromFile(file);
         }
@@ -1044,7 +1044,7 @@ void OREAppInputParameters::loadParameters() {
 
     tmp = params_->get("simulation", "xvaCgSensitivityConfigFile", false);
     if (tmp != "") {
-        string file = inputPath + "/" + tmp;
+        string file = (inputPath / tmp).generic_string();
         LOG("Load xva cg sensitivity scenario data from file" << file);
         setXvaCgSensiScenarioDataFromFile(file);
     }
@@ -1141,7 +1141,7 @@ void OREAppInputParameters::loadParameters() {
         setLoadCube(true);
         tmp = params_->get("xva", "cubeFile", false);
         if (tmp != "") {
-            string cubeFile = resultsPath().string() + "/" + tmp;
+            string cubeFile = (resultsPath() / tmp).generic_string();
             LOG("Load cube from file " << cubeFile);
             setCubeFromFile(cubeFile);
             LOG("Cube loading done: ids=" << cube()->numIds() << " dates=" << cube()->numDates()
@@ -1154,13 +1154,13 @@ void OREAppInputParameters::loadParameters() {
     if (analytics().find("XVA") != analytics().end()) {
         tmp = params_->get("xva", "csaFile", false);
         QL_REQUIRE(tmp != "", "Netting set manager is required for XVA");
-        string csaFile = inputPath + "/" + tmp;
+        string csaFile = (inputPath / tmp).generic_string();
         LOG("Loading netting and csa data from file " << csaFile);
         setNettingSetManagerFromFile(csaFile);
 
         tmp = params_->get("xva", "collateralBalancesFile", false);
         if (tmp != "") {
-            string collBalancesFile = inputPath + "/" + tmp;
+            string collBalancesFile = (inputPath / tmp).generic_string();
             LOG("Loading collateral balances from file " << collBalancesFile);
             setCollateralBalancesFromFile(collBalancesFile);
         }
@@ -1168,7 +1168,7 @@ void OREAppInputParameters::loadParameters() {
 
     tmp = params_->get("xva", "nettingSetCubeFile", false);
     if (loadCube() && tmp != "") {
-        string cubeFile = resultsPath().string() + "/" + tmp;
+        string cubeFile = (resultsPath() / tmp).generic_string();
         LOG("Load nettingset cube from file " << cubeFile);
         setNettingSetCubeFromFile(cubeFile);
         DLOG("NettingSetCube loading done: ids="
@@ -1435,7 +1435,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("zeroToParSensiConversion", "sensitivityInputFile", false);
         if (tmp != "") {
-            setParConversionInputFile(inputPath + "/" + tmp);
+            setParConversionInputFile((inputPath / tmp).generic_string());
         }
 
         tmp = params_->get("zeroToParSensiConversion", "idColumn", false);
