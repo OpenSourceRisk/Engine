@@ -39,7 +39,7 @@ public:
     FxSwap()
         : Trade("FxSwap"), nearBoughtAmount_(0.0), nearSoldAmount_(0.0), farBoughtAmount_(0.0), farSoldAmount_(0.0) {}
     //! Constructor
-    FxSwap(Envelope& env, const string& nearDate, const string& farDate, const string& nearBoughtCurrency,
+    FxSwap(const Envelope& env, const string& nearDate, const string& farDate, const string& nearBoughtCurrency,
            double nearBoughtAmount, const string& nearSoldCurrency, double nearSoldAmount, double farBoughtAmount,
            double farSoldAmount, const string& settlement = "Physical")
         : Trade("FxSwap", env), nearDate_(nearDate), farDate_(farDate), nearBoughtCurrency_(nearBoughtCurrency),
