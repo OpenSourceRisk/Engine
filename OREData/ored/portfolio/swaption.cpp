@@ -498,5 +498,14 @@ XMLNode* Swaption::toXML(XMLDocument& doc) {
 
     return node;
 }
+
+map<AssetClass, set<string>>
+Swaption::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+    map<AssetClass, set<string>> result;
+    if (auto s = envelope().additionalField("security_spread", false); !s.empty())
+        result[AssetClass::BOND] = {s};
+    return result;
+}
+
 } // namespace data
 } // namespace ore
