@@ -109,12 +109,39 @@ void InMemoryLoader::add(QuantLib::Date date, const string& name, QuantLib::Real
         WLOG("Failed to parse MarketDatum " << name << ": " << e.what());
     }
     if (md != nullptr) {
-        if (data_[date].insert(md).second) {
+        bool addFX = true;
+        if (md->instrumentType() == MarketDatum::InstrumentType::FX_SPOT &&
+            md->quoteType() == MarketDatum::QuoteType::RATE)
+				addFX = checkFxDuplicate(md, date);
+        if (addFX && data_[date].insert(md).second) {
             TLOG("Added MarketDatum " << name);
+        } else if (!addFX) {
+            WLOG("Skipped MarketDatum " << name << " - dominant FX already present.")
         } else {
             WLOG("Skipped MarketDatum " << name << " - this is already present.");
         }
     }
+}
+
+bool InMemoryLoader::checkFxDuplicate(const ext::shared_ptr<MarketDatum> md, const QuantLib::Date& d) {
+    string cc1 = ext::dynamic_pointer_cast<FXSpotQuote>(md)->unitCcy();
+    string cc2 = ext::dynamic_pointer_cast<FXSpotQuote>(md)->ccy();
+    string tmp = "FX/RATE/" + cc2 + "/" + cc1;
+    auto it = data_.find(d);
+    if (it != data_.end()) {
+        auto it2 = it->second.find(makeDummyMarketDatum(d, tmp));
+        if (it2 != it->second.end()) {
+            string dom = fxDominance(cc1, cc2);
+            if (dom == (cc1 + cc2)) {
+                LOG("Replacing " << tmp << " with " << md->name() << " due to FX dominance.");
+                it->second.erase(it2);
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 void InMemoryLoader::addFixing(QuantLib::Date date, const string& name, QuantLib::Real value) {

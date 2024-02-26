@@ -47,6 +47,8 @@ public:
     // add a dividend
     virtual void addDividend(const QuantExt::Dividend& dividend);
 
+	bool checkFxDuplicate(const ext::shared_ptr<MarketDatum>, const QuantLib::Date&);
+
     // clear data
     void reset();
 
