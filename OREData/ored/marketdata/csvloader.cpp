@@ -129,10 +129,16 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
                         WLOG("Failed to parse MarketDatum " << key << ": " << e.what());
                     }
                     if (md != nullptr) {
-                        if (data_[date].insert(md).second) {
-                            TLOG("Added MarketDatum " << key);
-                        } else {
-                            WLOG("Skipped MarketDatum " << key << " - this is already present.");
+                        bool addFX = true; 
+                        if (md->instrumentType() == MarketDatum::InstrumentType::FX_SPOT && md->quoteType() == MarketDatum::QuoteType::RATE)
+                            addFX = checkFxDuplicate(md, date);
+                        if (addFX && data_[date].insert(md).second) {
+                            LOG("Added MarketDatum " << key);
+                        } else if (!addFX) {
+                            LOG("Skipped MarketDatum " << key << " - dominant FX already present.")
+                        }
+						else {
+                            LOG("Skipped MarketDatum " << key << " - this is already present.");
                         }
                     }
                 } catch (std::exception& e) {
@@ -199,6 +205,27 @@ std::set<boost::shared_ptr<MarketDatum>> CSVLoader::get(const std::set<std::stri
             result.insert(*it2);
     }
     return result;
+}
+
+bool CSVLoader::checkFxDuplicate(const ext::shared_ptr<MarketDatum> md, const QuantLib::Date& d) {
+    string cc1 = ext::dynamic_pointer_cast<FXSpotQuote>(md)->unitCcy();
+    string cc2 = ext::dynamic_pointer_cast<FXSpotQuote>(md)->ccy();
+    string tmp = "FX/RATE/" + cc2 + "/" + cc1;
+    auto it = data_.find(d);
+    if (it != data_.end()) {
+        auto it2 = it->second.find(makeDummyMarketDatum(d, tmp));
+        if (it2 != it->second.end()) {
+            string dom = fxDominance(cc1, cc2);
+            if (dom == (cc1 + cc2)) {
+                LOG("Replacing " << tmp << " with " << md->name() << " due to FX dominance.");
+                it->second.erase(it2);
+                return true;
+            } else {
+                return false;
+            }
+        }
+	}
+	return true;
 }
 
 std::set<boost::shared_ptr<MarketDatum>> CSVLoader::get(const Wildcard& wildcard,
