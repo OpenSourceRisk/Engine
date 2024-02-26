@@ -165,23 +165,13 @@ Real OREApp::getRunTime() {
     return seconds.count();
 }
     
-vector<string> OREApp::getFileNames(const string& fileString, const string& path) {
-    vector<string> fileNames;
-    boost::split(fileNames, fileString, boost::is_any_of(",;"), boost::token_compress_on);
-    for (auto it = fileNames.begin(); it < fileNames.end(); it++) {
-        boost::trim(*it);
-        *it = path + "/" + *it;
-    }
-    return fileNames;
-}
-
 boost::shared_ptr<CSVLoader> OREApp::buildCsvLoader(const boost::shared_ptr<Parameters>& params) {
     bool implyTodaysFixings = false;
     vector<string> marketFiles = {};
     vector<string> fixingFiles = {};
     vector<string> dividendFiles = {};
 
-    std::string inputPath = params_->get("setup", "inputPath");
+    filesystem::path inputPath = params_->get("setup", "inputPath");
 
     std::string tmp = params_->get("setup", "implyTodaysFixings", false);
     if (tmp != "")
@@ -478,16 +468,16 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
 
     QL_REQUIRE(params_->hasGroup("setup"), "parameter group 'setup' missing");
 
-    std::string inputPath = params_->get("setup", "inputPath");
+    filesystem::path inputPath = params_->get("setup", "inputPath");
     std::string outputPath = params_->get("setup", "outputPath");
 
     // Load calendar adjustments
     std::string tmp =  params_->get("setup", "calendarAdjustment", false);
     if (tmp != "") {
         CalendarAdjustmentConfig calendarAdjustments;
-        string calendarAdjustmentFile = inputPath + "/" + tmp;
+        filesystem::path calendarAdjustmentFile = inputPath / tmp;
         LOG("Loading calendar adjustments from file: " << calendarAdjustmentFile);
-        calendarAdjustments.fromFile(calendarAdjustmentFile);
+        calendarAdjustments.fromFile(calendarAdjustmentFile.generic_string());
     } else {
         WLOG("Calendar adjustments not found, using defaults");
     }
@@ -496,9 +486,9 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     tmp = params_->get("setup", "currencyConfiguration", false);
     if (tmp != "") {
         CurrencyConfig currencyConfig;
-        string currencyConfigFile = inputPath + "/" + tmp;
+        filesystem::path currencyConfigFile = inputPath / tmp;
         LOG("Loading currency configurations from file: " << currencyConfigFile);
-        currencyConfig.fromFile(currencyConfigFile);
+        currencyConfig.fromFile(currencyConfigFile.generic_string());
     } else {
         WLOG("Currency configurations not found, using defaults");
     }
@@ -573,61 +563,61 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
 
     tmp = params_->get("setup", "referenceDataFile", false);
     if (tmp != "") {
-        string refDataFile = inputPath + "/" + tmp;
+        filesystem::path refDataFile = inputPath / tmp;
         LOG("Loading reference data from file: " << refDataFile);
-        inputs->setRefDataManagerFromFile(refDataFile);
+        inputs->setRefDataManagerFromFile(refDataFile.generic_string());
     } else {
         WLOG("Reference data not found");
     }
 
     tmp = params_->get("setup", "scriptLibrary", false);
     if (tmp != "") {
-        string scriptFile = inputPath + "/" + tmp;
+        filesystem::path scriptFile = inputPath / tmp;
         LOG("Loading script library from file: " << scriptFile);
-        inputs->setScriptLibraryFromFile(scriptFile);        
+        inputs->setScriptLibraryFromFile(scriptFile.generic_string());        
     }
     else {
         WLOG("Script library not loaded");
     }
     
     if (params_->has("setup", "conventionsFile") && params_->get("setup", "conventionsFile") != "") {
-        string conventionsFile = inputPath + "/" + params_->get("setup", "conventionsFile");
+        filesystem::path conventionsFile = inputPath / params_->get("setup", "conventionsFile");
         LOG("Loading conventions from file: " << conventionsFile);
-        inputs->setConventionsFromFile(conventionsFile);
+        inputs->setConventionsFromFile(conventionsFile.generic_string());
     } else {
         ALOG("Conventions not found");
     }
 
     if (params_->has("setup", "iborFallbackConfig") && params_->get("setup", "iborFallbackConfig") != "") {
-        std::string tmp = inputPath + "/" + params_->get("setup", "iborFallbackConfig");
+        filesystem::path tmp = inputPath / params_->get("setup", "iborFallbackConfig");
         LOG("Loading Ibor fallback config from file: " << tmp);
-        inputs->setIborFallbackConfigFromFile(tmp);
+        inputs->setIborFallbackConfigFromFile(tmp.generic_string());
     } else {
         WLOG("Using default Ibor fallback config");
     }
 
     if (params_->has("setup", "curveConfigFile") && params_->get("setup", "curveConfigFile") != "") {
-        string curveConfigFile = inputPath + "/" + params_->get("setup", "curveConfigFile");
+        filesystem::path curveConfigFile = inputPath / params_->get("setup", "curveConfigFile");
         LOG("Load curve configurations from file: ");
-        inputs->setCurveConfigsFromFile(curveConfigFile);
+        inputs->setCurveConfigsFromFile(curveConfigFile.generic_string());
     } else {
         ALOG("no curve configs loaded");
     }
     
     tmp = params_->get("setup", "pricingEnginesFile", false);
     if (tmp != "") {
-        string pricingEnginesFile = inputPath + "/" + tmp;
+        filesystem::path pricingEnginesFile = inputPath / tmp;
         LOG("Load pricing engine data from file: " << pricingEnginesFile);
-        inputs->setPricingEngineFromFile(pricingEnginesFile);
+        inputs->setPricingEngineFromFile(pricingEnginesFile.generic_string());
     } else {
         ALOG("Pricing engine data not found");
     }
     
     tmp = params_->get("setup", "marketConfigFile", false);
     if (tmp != "") {
-        string marketConfigFile = inputPath + "/" + tmp;
+        filesystem::path marketConfigFile = inputPath / tmp;
         LOG("Loading today's market parameters from file" << marketConfigFile);
-        inputs->setTodaysMarketParamsFromFile(marketConfigFile);
+        inputs->setTodaysMarketParamsFromFile(marketConfigFile.generic_string());
     } else {
         ALOG("Today's market parameters not found");
     }
@@ -736,7 +726,7 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
 
         tmp = params_->get("sensitivity", "marketConfigFile", false);
         if (tmp != "") {
-            string file = inputPath + "/" + tmp;
+            string file = (inputPath / tmp).generic_string();
             LOG("Loading sensitivity scenario sim market parameters from file" << file);
             inputs->setSensiSimMarketParamsFromFile(file);
         } else {
@@ -745,7 +735,7 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
 
         tmp = params_->get("sensitivity", "sensitivityConfigFile", false);
         if (tmp != "") {
-            string file = inputPath + "/" + tmp;
+            string file = (inputPath / tmp).generic_string();
             LOG("Load sensitivity scenario data from file" << file);
             inputs->setSensiScenarioDataFromFile(file);
         } else {
@@ -754,7 +744,7 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
 
         tmp = params_->get("sensitivity", "pricingEnginesFile", false);
         if (tmp != "") {
-            string file = inputPath + "/" + tmp;
+            string file = (inputPath / tmp).generic_string();
             LOG("Load pricing engine data from file: " << file);
             inputs->setSensiPricingEngineFromFile(file);
         } else {
@@ -805,7 +795,7 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         inputs->setStressPricingEngine(inputs->pricingEngine());
         tmp = params_->get("stress", "marketConfigFile", false);
         if (tmp != "") {
-            string file = inputPath + "/" + tmp;
+            string file = (inputPath / tmp).generic_string();
             LOG("Loading stress test scenario sim market parameters from file" << file);
             inputs->setStressSimMarketParamsFromFile(file);
         } else {
@@ -814,7 +804,7 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         
         tmp = params_->get("stress", "stressConfigFile", false);
         if (tmp != "") {
-            string file = inputPath + "/" + tmp;
+            string file = (inputPath / tmp).generic_string();
             LOG("Load stress test scenario data from file" << file);
             inputs->setStressScenarioDataFromFile(file);
         } else {
@@ -823,7 +813,7 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         
         tmp = params_->get("stress", "pricingEnginesFile", false);
         if (tmp != "") {
-            string file = inputPath + "/" + tmp;
+            string file = (inputPath / tmp).generic_string();
             LOG("Load pricing engine data from file: " << file);
             inputs->setStressPricingEngineFromFile(file);
         } else {
@@ -873,13 +863,13 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         
         tmp = params_->get("parametricVar", "covarianceInputFile", false);
         QL_REQUIRE(tmp != "", "covarianceInputFile not provided");
-        std::string covFile = inputPath + "/" + tmp;
+        std::string covFile = (inputPath / tmp).generic_string();
         LOG("Load Covariance Data from file " << covFile);
         inputs->setCovarianceDataFromFile(covFile);
         
         tmp = params_->get("parametricVar", "sensitivityInputFile", false);
         QL_REQUIRE(tmp != "", "sensitivityInputFile not provided");
-        std::string sensiFile = inputPath + "/" + tmp;
+        std::string sensiFile = (inputPath / tmp).generic_string();
         LOG("Get sensitivity data from file " << sensiFile);
         inputs->setSensitivityStreamFromFile(sensiFile);
     }
@@ -902,7 +892,7 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
 
         tmp = params_->get("simm", "crif", false);
         if (tmp != "") {
-            string file = inputPath + "/" + tmp;
+            string file = (inputPath / tmp).generic_string();
             inputs->setCrifFromFile(file, inputs->csvEolChar(), inputs->csvSeparator(), '\"', inputs->csvEscapeChar());
         }
 
@@ -986,7 +976,7 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         inputs->analytics().find("XVA") != inputs->analytics().end()) {
         tmp = params_->get("simulation", "simulationConfigFile", false) ;
         if (tmp != "") {
-            string simulationConfigFile = inputPath + "/" + tmp;
+            string simulationConfigFile = (inputPath / tmp).generic_string();
             LOG("Loading simulation config from file" << simulationConfigFile);
             inputs->setExposureSimMarketParamsFromFile(simulationConfigFile);
             inputs->setCrossAssetModelDataFromFile(simulationConfigFile);
@@ -1001,7 +991,7 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         
         tmp = params_->get("simulation", "pricingEnginesFile", false);
         if (tmp != "") {
-            string pricingEnginesFile = inputPath + "/" + tmp;
+            string pricingEnginesFile = (inputPath / tmp).generic_string();
             LOG("Load simulation pricing engine data from file: " << pricingEnginesFile);
             inputs->setSimulationPricingEngineFromFile(pricingEnginesFile);
         } else {
@@ -1010,7 +1000,7 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
 
         tmp = params_->get("simulation", "amcPricingEnginesFile", false);
         if (tmp != "") {
-            string pricingEnginesFile = inputPath + "/" + tmp;
+            string pricingEnginesFile = (inputPath / tmp).generic_string();            ;
             LOG("Load amc pricing engine data from file: " << pricingEnginesFile);
             inputs->setAmcPricingEngineFromFile(pricingEnginesFile);
         } else {
@@ -1084,8 +1074,8 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
     if (inputs->analytics().find("XVA") != inputs->analytics().end()) {
         tmp = params_->get("xva", "csaFile", false);
         QL_REQUIRE(tmp != "", "Netting set manager is required for XVA");
-        string csaFile = inputPath + "/" + tmp;
-        LOG("Loading netting and csa data from file " << csaFile);
+        string csaFile = (inputPath / tmp).generic_string();
+        LOG("Loading netting and csa data from file" << csaFile);
         inputs->setNettingSetManagerFromFile(csaFile);
 
         tmp = params_->get("xva", "collateralBalancesFile", false);
@@ -1252,7 +1242,7 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
 
     tmp = params_->get("xva", "deterministicInitialMarginFile", false);
     if (tmp != "") {
-        string imFile = inputPath + "/" + tmp;
+        string imFile = (inputPath / tmp).generic_string();
         LOG("Load initial margin evolution from file " << tmp);
         inputs->setDeterministicInitialMarginFromFile(imFile);
     }
@@ -1339,7 +1329,7 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
 
     tmp = params_->get("xva", "creditMigrationConfig", false);
     if (tmp != "") {
-        string file = inputPath + "/" + tmp;
+        string file = (inputPath / tmp).generic_string();
         LOG("Loading credit migration config from file" << file);
         inputs->setCreditSimulationParametersFromFile(file);
     }
@@ -1368,7 +1358,7 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
         
         tmp = params_->get("zeroToParSensiConversion", "sensitivityInputFile", false);
         if (tmp != "") {
-            inputs->setParConversionInputFile(inputPath + "/" + tmp);
+            inputs->setParConversionInputFile((inputPath / tmp).generic_string());
         }
 
         tmp = params_->get("zeroToParSensiConversion", "idColumn", false);
@@ -1403,7 +1393,7 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
 
         tmp = params_->get("zeroToParSensiConversion", "marketConfigFile", false);
         if (tmp != "") {
-            string file = inputPath + "/" + tmp;
+            string file = (inputPath / tmp).generic_string();
             LOG("Loading par converions scenario sim market parameters from file" << file);
             inputs->setParConversionSimMarketParamsFromFile(file);
         } else {
@@ -1412,7 +1402,7 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
 
         tmp = params_->get("zeroToParSensiConversion", "sensitivityConfigFile", false);
         if (tmp != "") {
-            string file = inputPath + "/" + tmp;
+            string file = (inputPath / tmp).generic_string();
             LOG("Load par conversion scenario data from file" << file);
             inputs->setParConversionScenarioDataFromFile(file);
         } else {
@@ -1421,7 +1411,7 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
 
         tmp = params_->get("zeroToParSensiConversion", "pricingEnginesFile", false);
         if (tmp != "") {
-            string file = inputPath + "/" + tmp;
+            string file = (inputPath / tmp).generic_string();
             LOG("Load pricing engine data from file: " << file);
             inputs->setParConversionPricingEngineFromFile(file);
         } else {
@@ -1455,7 +1445,7 @@ void OREApp::buildInputParameters(boost::shared_ptr<InputParameters> inputs,
 
         tmp = params_->get("scenarioStatistics", "simulationConfigFile", false);
         if (tmp != "") {
-            string simulationConfigFile = inputPath + "/" + tmp;
+            string simulationConfigFile = (inputPath / tmp).generic_string();
             LOG("Loading simulation config from file" << simulationConfigFile);
             inputs->setExposureSimMarketParamsFromFile(simulationConfigFile);
             inputs->setCrossAssetModelDataFromFile(simulationConfigFile);
