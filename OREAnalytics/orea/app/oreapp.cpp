@@ -911,6 +911,10 @@ void OREAppInputParameters::loadParameters() {
         std::string sensiFile = (inputPath / tmp).generic_string();
         LOG("Get sensitivity data from file " << sensiFile);
         setSensitivityStreamFromFile(sensiFile);
+        
+        tmp = params_->get("parametricVar", "outputHistoricalScenarios", false);
+        if (tmp != "")
+            setOutputHistoricalScenarios(parseBool(tmp));
     }
 
     /********************
@@ -958,6 +962,10 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("historicalSimulationVar", "portfolioFilter", false);
         if (tmp != "")
             setPortfolioFilter(tmp);
+
+        tmp = params_->get("historicalSimulationVar", "outputHistoricalScenarios", false);
+        if (tmp != "")
+            setOutputHistoricalScenarios(parseBool(tmp));
     }
 
     /****************
