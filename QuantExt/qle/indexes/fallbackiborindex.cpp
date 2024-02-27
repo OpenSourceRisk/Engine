@@ -45,8 +45,7 @@ FallbackIborIndex::FallbackIborIndex(const boost::shared_ptr<IborIndex> original
     : IborIndex(originalIndex->familyName(), originalIndex->tenor(), originalIndex->fixingDays(),
                 originalIndex->currency(), originalIndex->fixingCalendar(), originalIndex->businessDayConvention(),
                 originalIndex->endOfMonth(), originalIndex->dayCounter(), forwardingCurve),
-      originalIndex_(originalIndex), rfrIndex_(rfrIndex), spread_(spread), switchDate_(switchDate),
-      useRfrCurve_(false) {
+      originalIndex_(originalIndex), rfrIndex_(rfrIndex), spread_(spread), switchDate_(switchDate) {
     registerWith(originalIndex);
     registerWith(rfrIndex);
     registerWith(forwardingCurve);
@@ -119,7 +118,5 @@ boost::shared_ptr<OvernightIndex> FallbackIborIndex::rfrIndex() const { return r
 Real FallbackIborIndex::spread() const { return spread_; }
 
 const Date& FallbackIborIndex::switchDate() const { return switchDate_; }
-
-bool FallbackIborIndex::useRfrCurve() const { return useRfrCurve_; }
 
 } // namespace QuantExt
