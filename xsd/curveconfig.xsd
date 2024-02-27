@@ -945,8 +945,8 @@
       <xs:element type="xs:string" name="PillarChoice" minOccurs="0"/>
       <xs:element type="xs:nonNegativeInteger" name="Priority" minOccurs="0"/>
       <xs:element type="xs:nonNegativeInteger" name="MinDistance" minOccurs="0"/>
-      <xs:element type="xs:string" name="ProjectionCurveLong" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:string" name="ProjectionCurveShort" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="ProjectionCurvePay" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="ProjectionCurveReceive" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
