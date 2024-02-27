@@ -614,7 +614,7 @@ void TenorBasisSwapConvention::build() {
     auto tmpShort = parseIborIndex(strShortIndex_);
     includeSpread_ = strIncludeSpread_.empty() ? false : parseBool(strIncludeSpread_);
     if (includeSpread_ && (boost::dynamic_pointer_cast<OvernightIndex>(tmpLong) || boost::dynamic_pointer_cast<OvernightIndex>(tmpShort)))
-        QL_REQUIRE(!includeSpread_, "IncludeSpread must be false for overnight index legs.");
+        QL_FAIL("IncludeSpread must be false for overnight index legs.");
     shortPayTenor_ = strShortPayTenor_.empty() ? shortIndex()->tenor() : parsePeriod(strShortPayTenor_);
     longPayTenor_ = strLongPayTenor_.empty() ? longIndex()->tenor() : parsePeriod(strLongPayTenor_);
     spreadOnShort_ = strSpreadOnShort_.empty() ? true : parseBool(strSpreadOnShort_);
