@@ -800,10 +800,10 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
                 } else {
                     premiumAmount = arguments_.premium[j]->amount();
                 }
-                RandomVariable test(gridSize(), premiumAmount);
-                Date date = arguments_.premium[j]->date();
-                if (date > eventDates[i]) {
-                    swaptionPv += rollback(test, eventTimes[i], 0.0);
+
+                if (arguments_.premium[j]->date() > eventDates[i]) {
+                    swaptionPv += RandomVariable(gridSize(), premiumAmount) /
+                                  lgm.numeraire(eventTimes[i], states, discountCurves_[arguments_.underlyingCcys[0]]);
                 }
             }
         }
