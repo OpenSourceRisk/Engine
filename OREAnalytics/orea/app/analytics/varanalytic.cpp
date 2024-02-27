@@ -17,6 +17,7 @@
 */
 
 #include <orea/app/analytics/varanalytic.hpp>
+#include <orea/app/reportwriter.hpp>
 #include <orea/engine/historicalsimulationvar.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/parametricvar.hpp>
@@ -110,6 +111,12 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
             benchmarkVarPeriod, inputs_->mporCalendar(), inputs_->mporDays(), analytic()->configurations().simMarketParams,
             analytic()->configurations().todaysMarketParams, inputs_->mporOverlappingPeriods());
 
+        if (inputs_->outputHistoricalScenarios())
+            ReportWriter().writeHistoricalScenarios(
+                scenarios->scenarioLoader(),
+                boost::make_shared<CSVFileReport>(path(inputs_->resultsPath() / "backtest_histscenrios.csv").string(),
+                                                  ',', false, inputs_->csvQuoteChar(), inputs_->reportNaString()));
+
         auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
             analytic()->market(), analytic()->configurations().simMarketParams, Market::defaultConfiguration,
             *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, true, false,
@@ -150,6 +157,12 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
         inputs_->mporDays(), analytic()->configurations().simMarketParams,
         analytic()->configurations().todaysMarketParams, inputs_->mporOverlappingPeriods());
     
+    if (inputs_->outputHistoricalScenarios())
+        ore::analytics::ReportWriter().writeHistoricalScenarios(
+            scenarios->scenarioLoader(),
+            boost::make_shared<CSVFileReport>(path(inputs_->resultsPath() / "var_histscenarios.csv").string(), ',',
+                                              false, inputs_->csvQuoteChar(), inputs_->reportNaString()));
+
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams, Market::defaultConfiguration,
         *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, true, false, false,
