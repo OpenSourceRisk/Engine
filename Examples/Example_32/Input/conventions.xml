@@ -133,8 +133,8 @@
   </TenorBasisTwoSwap>
   <TenorBasisSwap>
     <Id>GBP-LIBOR-3M-6M-BASIS</Id>
-    <LongIndex>GBP-LIBOR-6M</LongIndex>
-    <ShortIndex>GBP-LIBOR-3M</ShortIndex>
+    <PayIndex>GBP-LIBOR-6M</PayIndex>
+    <ReceiveIndex>GBP-LIBOR-3M</ReceiveIndex>
   </TenorBasisSwap>
   <FX>
     <Id>GBP-EUR-FX</Id>
