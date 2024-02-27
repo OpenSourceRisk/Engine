@@ -50,7 +50,6 @@ public:
     boost::shared_ptr<OvernightIndex> rfrIndex() const;
     Real spread() const;
     const Date& switchDate() const;
-    bool useRfrCurve() const;
 
     boost::shared_ptr<OvernightIndexedCoupon> onCoupon(const Date& iborFixingDate,
                                                        const bool telescopicValueDates = false) const;
@@ -61,7 +60,6 @@ private:
     boost::shared_ptr<OvernightIndex> rfrIndex_;
     Real spread_;
     Date switchDate_;
-    bool useRfrCurve_;
 };
 
 } // namespace QuantExt
