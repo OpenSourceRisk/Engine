@@ -147,7 +147,7 @@ void BasketVarianceSwap::build(const boost::shared_ptr<EngineFactory>& factory) 
     // asset class set in the base class already
     std::string assetClass = boost::any_cast<std::string>(additionalData_["isdaAssetClass"]);
     if (assetClass == "Equity") {
-        additionalData_["isdaBaseProduct"] = string("Other");
+        additionalData_["isdaBaseProduct"] = string("Swap");
         additionalData_["isdaSubProduct"] =  string("Parameter Return Variance");  
     }
     else if (assetClass == "Foreign Exchange") {
@@ -156,7 +156,7 @@ void BasketVarianceSwap::build(const boost::shared_ptr<EngineFactory>& factory) 
     }
     else if (assetClass == "Commodity") {
         // isda taxonomy missing for this class, using the same as equity
-        additionalData_["isdaBaseProduct"] =  string("Other");
+        additionalData_["isdaBaseProduct"] =  string("Swap");
         additionalData_["isdaSubProduct"] =  string("Parameter Return Variance");  
     }
     else {
