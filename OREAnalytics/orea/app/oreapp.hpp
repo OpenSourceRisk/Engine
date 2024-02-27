@@ -84,7 +84,6 @@ protected:
     //! Populate InputParameters object from classic ORE key-value pairs in Parameters 
     void buildInputParameters(boost::shared_ptr<InputParameters> inputs,
                               const boost::shared_ptr<Parameters>& params);
-    vector<string> getFileNames(const string& fileString, const string& path);
     boost::shared_ptr<CSVLoader> buildCsvLoader(const boost::shared_ptr<Parameters>& params);
     //! set up logging
     void setupLog(const std::string& path, const std::string& file, QuantLib::Size mask,
@@ -102,6 +101,20 @@ protected:
     boost::shared_ptr<AnalyticsManager> analyticsManager_;
     boost::shared_ptr<StructuredLogger> structuredLogger_;
     boost::timer::cpu_timer runTimer_;
+};
+
+class OREAppInputParameters : virtual public InputParameters {
+public:
+    OREAppInputParameters(const boost::shared_ptr<Parameters>& params) : params_(params) {}
+
+     // load input parameters
+    virtual void loadParameters() override;
+
+    //! write out parameters
+    virtual void writeOutParameters() override{};
+
+private:
+    boost::shared_ptr<Parameters> params_;
 };
 
 } // namespace analytics

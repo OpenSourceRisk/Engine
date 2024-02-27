@@ -33,7 +33,7 @@ my_ore.run(ore_exe=r'D:\Apps\ORE-1.8\App\bin\x64\Release\ore.exe', delete_output
 my_ore.parse_output()
 print("Run produced output files: " + str(len(my_ore.output.locations)))
 
-# extract data from the the output file
+# extract data from the output file
 print(my_ore.output.csv['npv'][['#TradeId', 'TradeType', 'NPV(Base)']])
 print(my_ore.output.csv['xva'][['#TradeId', 'NettingSetId', 'BaselEEPE']])
 

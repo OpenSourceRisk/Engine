@@ -48,7 +48,9 @@ boost::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::buildMcEngine(const bo
         parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")));
 }
 
-boost::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::engineImpl(const Currency& ccy) {
+boost::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::engineImpl(const Currency& ccy,
+                                                                     const std::string& discountCurveName,
+                                                                     const std::string& securitySpread) {
     DLOG("Building AMC Swap engine for ccy " << ccy << " (from externally given CAM)");
 
     QL_REQUIRE(cam_ != nullptr, "LgmAmcSwapEngineBuilder::engineImpl: cam is null");

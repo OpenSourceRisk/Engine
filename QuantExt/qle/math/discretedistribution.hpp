@@ -168,7 +168,7 @@ public:
      */
     static Real leftstdev(const DiscreteDistribution& a);
     /*!
-     Print the distribution the the provided stream.
+     Print the distribution of the provided stream.
      */
     static Real print(const DiscreteDistribution& a, const ostringstream& o);
     /*!

@@ -20,6 +20,7 @@
 #include <ored/scripting/models/blackscholes.hpp>
 #include <ored/scripting/models/blackscholescg.hpp>
 #include <ored/scripting/models/fdblackscholesbase.hpp>
+#include <ored/scripting/models/fdgaussiancam.hpp>
 #include <ored/scripting/models/gaussiancam.hpp>
 #include <ored/scripting/models/gaussiancamcg.hpp>
 #include <ored/scripting/models/localvol.hpp>
@@ -41,6 +42,7 @@
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/marketdata.hpp>
 
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
@@ -50,6 +52,9 @@
 #include <qle/termstructures/pricetermstructureadapter.hpp>
 
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
+#include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
+
+#include <boost/lexical_cast.hpp>
 
 namespace ore {
 namespace data {
@@ -171,8 +176,18 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
 
     // 12 get the t0 curves for each model ccy
 
+    std::string externalDiscountCurve = scriptedTrade.envelope().additionalField("discount_curve", false);
+    std::string externalSecuritySpread = scriptedTrade.envelope().additionalField("security_spreads", false);
     for (auto const& c : modelCcys_) {
-        modelCurves_.push_back(market_->discountCurve(c, configuration(MarketContext::pricing)));
+        // for base ccy we account for an external discount curve and security spread if given
+        Handle<YieldTermStructure> yts =
+            externalDiscountCurve.empty() || c != baseCcy_
+                ? market_->discountCurve(c, configuration(MarketContext::pricing))
+                : indexOrYieldCurve(market_, externalDiscountCurve, configuration(MarketContext::pricing));
+        if (!externalSecuritySpread.empty() && c == baseCcy_)
+            yts = Handle<YieldTermStructure>(boost::make_shared<ZeroSpreadedTermStructure>(
+                yts, market_->securitySpread(externalSecuritySpread, configuration(MarketContext::pricing))));
+        modelCurves_.push_back(yts);
         DLOG("curve for " << c << " added.");
     }
 
@@ -233,6 +248,8 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
         } else {
             buildGaussianCam(id, iborFallbackConfig, script.conditionalExpectationModelStates());
         }
+    } else if (modelParam_ == "GaussianCam" && engineParam_ == "FD") {
+        buildFdGaussianCam(id, iborFallbackConfig);
     } else {
         QL_FAIL("model '" << modelParam_ << "' / engine '" << engineParam_
                           << "' not recognised, expected BlackScholes/[MC|FD], LocalVolDupire/MC, "
@@ -1507,6 +1524,104 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
             camBuilder->model()->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_,
             iborFallbackConfig, std::vector<Size>(), conditionalExpectationModelStates);
     }
+
+    modelBuilders_.insert(std::make_pair(id, camBuilder));
+}
+
+void ScriptedTradeEngineBuilder::buildFdGaussianCam(const std::string& id,
+                                                    const IborFallbackConfig& iborFallbackConfig) {
+
+    Date referenceDate = modelCurves_.front()->referenceDate();
+    std::vector<Date> calibrationDates;
+    std::vector<std::string> calibrationExpiries, calibrationTerms;
+
+    for (auto const& d : simulationDates_) {
+        if (d > referenceDate) {
+            calibrationDates.push_back(d);
+            calibrationExpiries.push_back(ore::data::to_string(d));
+            // make sure the underlying swap has at least 1M to run, QL will throw otherwise during calibration
+            calibrationTerms.push_back(ore::data::to_string(std::max(d + 1 * Months, lastRelevantDate_)));
+        }
+    }
+
+    // calibration times (need one less than calibration dates)
+    std::vector<Real> calibrationTimes;
+    for (Size i = 0; i + 1 < calibrationDates.size(); ++i) {
+        calibrationTimes.push_back(modelCurves_.front()->timeFromReference(calibrationDates[i]));
+    }
+
+    // determine calibration strike
+    std::string calibrationStrike = "ATM";
+    if(calibration_ == "Deal") {
+        // first model index found in calibration strike spec and first specified strike therein is used
+        for (auto const& m : modelIrIndices_) {
+            if (auto f = calibrationStrikes_.find(m.first); f != calibrationStrikes_.end()) {
+                if(!f->second.empty()) {
+                    calibrationStrike = boost::lexical_cast<std::string>(f->second.front());
+                }
+            }
+        }
+    }
+
+    // IR config
+    QL_REQUIRE(modelCcys_.size() == 1,
+               "ScriptedTradeEngineBuilder::buildFdGaussianCam(): only one ccy is supported, got "
+                   << modelCcys_.size());
+
+    auto config = boost::make_shared<IrLgmData>();
+    config->qualifier() = getFirstIrIndexOrCcy(modelCcys_.front(), irIndices_);
+    config->reversionType() = LgmData::ReversionType::HullWhite;
+    config->volatilityType() = LgmData::VolatilityType::Hagan;
+    config->calibrateH() = false;
+    config->hParamType() = ParamType::Constant;
+    config->hTimes() = std::vector<Real>();
+    config->shiftHorizon() =
+        modelCurves_.front()->timeFromReference(lastRelevantDate_) * 0.5; // TODO hardcode 0.5 here?
+    config->scaling() = 1.0;
+    std::string ccy = modelCcys_.front();
+    if (zeroVolatility_ ) {
+        DLOG("set up zero vol IrLgmData for currency '" << modelCcys_.front() << "'");
+        // zero vol
+        config->calibrationType() = CalibrationType::None;
+        config->hValues() = {0.0};
+        config->calibrateA() = false;
+        config->aParamType() = ParamType::Constant;
+        config->aTimes() = std::vector<Real>();
+        config->aValues() = {0.0};
+    } else {
+        DLOG("set up IrLgmData for currency '" << modelCcys_.front() << "'");
+        auto rev = irReversions_.find(modelCcys_.front());
+        QL_REQUIRE(rev != irReversions_.end(), "reversion for ccy " << modelCcys_.front() << " not found");
+        config->calibrationType() = CalibrationType::Bootstrap;
+        config->hValues() = {rev->second};
+        config->calibrateA() = true;
+        config->aParamType() = ParamType::Piecewise;
+        config->aTimes() = calibrationTimes;
+        config->aValues() = std::vector<Real>(calibrationTimes.size() + 1, 0.0030); // start value for optimiser
+        config->optionExpiries() = calibrationExpiries;
+        config->optionTerms() = calibrationTerms;
+        config->optionStrikes() = std::vector<std::string>(calibrationExpiries.size(), calibrationStrike);
+    }
+
+    std::string configurationInCcy = configuration(MarketContext::irCalibration);
+    std::string configurationXois = configuration(MarketContext::pricing);
+
+    auto camBuilder = boost::make_shared<CrossAssetModelBuilder>(
+        market_,
+        boost::make_shared<CrossAssetModelData>(
+            std::vector<boost::shared_ptr<IrModelData>>{config}, std::vector<boost::shared_ptr<FxBsData>>{},
+            std::vector<boost::shared_ptr<EqBsData>>{}, std::vector<boost::shared_ptr<InflationModelData>>{},
+            std::vector<boost::shared_ptr<CrLgmData>>{}, std::vector<boost::shared_ptr<CrCirData>>{},
+            std::vector<boost::shared_ptr<CommoditySchwartzData>>{}, 0,
+            std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>{}, bootstrapTolerance_, "LGM",
+            CrossAssetModel::Discretization::Exact),
+        configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
+        configurationXois, !calibrate_ || zeroVolatility_, continueOnCalibrationError_, referenceCalibrationGrid_,
+        SalvagingAlgorithm::Spectral, id);
+
+    model_ = boost::make_shared<FdGaussianCam>(camBuilder->model(), modelCcys_.front(), modelCurves_.front(),
+                                               modelIrIndices_, simulationDates_, modelSize_, timeStepsPerYear_,
+                                               mesherEpsilon_, iborFallbackConfig);
 
     modelBuilders_.insert(std::make_pair(id, camBuilder));
 }

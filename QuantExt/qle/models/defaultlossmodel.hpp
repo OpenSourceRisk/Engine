@@ -111,7 +111,7 @@ protected:
     pool to have defaulted by time d and at the same time be the Nth
     defaulting name to default in the basket. This method is oriented to
     default order dependent portfolio pricing (e.g. NTDs)
-        The the probabilities ordering in the vector coincides with the
+        The probabilities ordering in the vector coincides with the
         pool order.
     */
     virtual std::vector<Probability> probsBeingNthEvent(Size n, const Date& d) const {

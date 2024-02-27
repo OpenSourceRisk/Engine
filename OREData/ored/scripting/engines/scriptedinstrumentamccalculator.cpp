@@ -113,7 +113,7 @@ ScriptedInstrumentAmcCalculator::simulatePath(const std::vector<QuantLib::Real>&
 
     for (Size i = 0; i < resultSize; ++i) {
         QL_REQUIRE(s->second[i].which() == ValueTypeWhich::Number,
-                   "component #" << i << " in _AMC_NPV has wrong type, excepted Number");
+                   "component #" << i << " in _AMC_NPV has wrong type, expected Number");
         result[i + 1] = boost::get<RandomVariable>(s->second[i]);
     }
 

@@ -29,12 +29,14 @@
 #include <orea/engine/sensitivitystream.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
+#include <orea/scenario/historicalscenarioreader.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/stressscenariodata.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/engine/sensitivitystream.hpp>
+#include <orea/scenario/historicalscenariogenerator.hpp>
 #include <orea/simm/crifloader.hpp>
 #include <orea/simm/simmcalibration.hpp>
 #include <orea/simm/crif.hpp>
@@ -51,6 +53,8 @@
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/utilities/csvfilereader.hpp>
+#include <boost/filesystem/path.hpp>
+#include <filesystem>
 
 namespace ore {
 namespace analytics {
@@ -90,7 +94,7 @@ public:
     void setTodaysMarketParams(const std::string& xml);
     void setTodaysMarketParamsFromFile(const std::string& fileName);
     void setPortfolio(const std::string& xml); 
-    void setPortfolioFromFile(const std::string& fileNameString, const std::string& inputPath); 
+    void setPortfolioFromFile(const std::string& fileNameString, const std::filesystem::path& inputPath); 
     void setMarketConfigs(const std::map<std::string, std::string>& m);
     void setThreads(int i) { nThreads_ = i; }
     void setEntireMarket(bool b) { entireMarket_ = b; }
@@ -104,6 +108,7 @@ public:
     void setCsvCommentCharacter(const char& c) { csvCommentCharacter_ = c; }
     void setDryRun(bool b) { dryRun_ = b; }
     void setMporDays(Size s) { mporDays_ = s; }
+    void setMporOverlappingPeriods(bool b) { mporOverlappingPeriods_ = b; }
     void setMporDate(const QuantLib::Date& d) { mporDate_ = d; }
     void setMporCalendar(const std::string& s); 
     void setMporForward(bool b) { mporForward_ = b; }
@@ -128,6 +133,7 @@ public:
     void setOutputJacobi(bool b) { outputJacobi_ = b; }
     void setUseSensiSpreadedTermStructures(bool b) { useSensiSpreadedTermStructures_ = b; }
     void setSensiThreshold(Real r) { sensiThreshold_ = r; }
+    void setSensiRecalibrateModels(bool b) { sensiRecalibrateModels_ = b; }
     void setSensiSimMarketParams(const std::string& xml);
     void setSensiSimMarketParamsFromFile(const std::string& fileName);
     void setSensiScenarioData(const std::string& xml);
@@ -167,7 +173,10 @@ public:
     void setCovarianceDataFromFile(const std::string& fileName);
     void setCovarianceDataFromBuffer(const std::string& xml);
     void setSensitivityStreamFromFile(const std::string& fileName);
+    void setBenchmarkVarPeriod(const std::string& period);
+    void setHistoricalScenarioReader(const std::string& fileName);
     void setSensitivityStreamFromBuffer(const std::string& buffer);
+    void setHistVarSimMarketParamsFromFile(const std::string& fileName);
 
     // Setters for exposure simulation
     void setSalvageCorrelationMatrix(bool b) { salvageCorrelationMatrix_ = b; }
@@ -390,6 +399,7 @@ public:
         } else
             return mporCalendar_;
     }
+    bool mporOverlappingPeriods() { return mporOverlappingPeriods_; }
     bool mporForward() { return mporForward_; }
 
     /***************************
@@ -420,6 +430,7 @@ public:
     bool outputJacobi() const { return outputJacobi_; };
     bool useSensiSpreadedTermStructures() { return useSensiSpreadedTermStructures_; }
     QuantLib::Real sensiThreshold() const { return sensiThreshold_; }
+    bool sensiRecalibrateModels() const { return sensiRecalibrateModels_; }
     const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& sensiSimMarketParams() { return sensiSimMarketParams_; }
     const boost::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiScenarioData() { return sensiScenarioData_; }
     const boost::shared_ptr<ore::data::EngineData>& sensiPricingEngine() { return sensiPricingEngine_; }
@@ -451,6 +462,9 @@ public:
     long mcVarSeed() { return mcVarSeed_; }
     const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>& covarianceData() { return covarianceData_; }
     const boost::shared_ptr<SensitivityStream>& sensitivityStream() { return sensitivityStream_; }
+    std::string benchmarkVarPeriod() const { return benchmarkVarPeriod_; }
+    QuantLib::ext::shared_ptr<HistoricalScenarioReader> historicalScenarioReader() const { return historicalScenarioReader_;};
+    const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& histVarSimMarketParams() { return histVarSimMarketParams_; }
     
     /*********************************
      * Getters for exposure simulation 
@@ -605,8 +619,8 @@ public:
      *************************************/
     const std::set<std::string>& analytics() { return analytics_; }
 
-    virtual void loadParameters() {}
-    virtual void writeOutParameters() {}
+    virtual void loadParameters(){}
+    virtual void writeOutParameters(){}
 
 protected:
 
@@ -659,6 +673,7 @@ protected:
     bool dryRun_ = false;
     QuantLib::Date mporDate_;
     QuantLib::Size mporDays_ = 10;
+    bool mporOverlappingPeriods_ = true;
     QuantLib::Calendar mporCalendar_;
     bool mporForward_ = true;
 
@@ -688,6 +703,7 @@ protected:
     bool alignPillars_ = false;
     bool useSensiSpreadedTermStructures_ = true;
     QuantLib::Real sensiThreshold_ = 1e-6;
+    bool sensiRecalibrateModels_ = true;
     boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> sensiSimMarketParams_;
     boost::shared_ptr<ore::analytics::SensitivityScenarioData> sensiScenarioData_;
     boost::shared_ptr<ore::data::EngineData> sensiPricingEngine_;
@@ -715,11 +731,15 @@ protected:
     bool varBreakDown_ = false;
     std::string portfolioFilter_;
     // Delta, DeltaGammaNormal, MonteCarlo, Cornish-Fisher, Saddlepoint 
-    std::string varMethod_;
-    Size mcVarSamples_ = 0;
-    long mcVarSeed_ = 0;
+    std::string varMethod_ = "DeltaGammaNormal";
+    Size mcVarSamples_ = 1000000;
+    long mcVarSeed_ = 42;
     std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covarianceData_;
     boost::shared_ptr<SensitivityStream> sensitivityStream_;
+    std::string benchmarkVarPeriod_;
+    QuantLib::ext::shared_ptr<HistoricalScenarioReader> historicalScenarioReader_;
+    boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> histVarSimMarketParams_;
+    std::string baseScenarioLoc_;
     
     /*******************
      * EXPOSURE analytic
@@ -857,6 +877,7 @@ inline const std::string& InputParameters::marketConfig(const std::string& conte
     auto it = marketConfigs_.find(context);
     return (it != marketConfigs_.end() ? it->second : Market::defaultConfiguration);
 }
+std::vector<std::string> getFileNames(const std::string& fileString, const std::filesystem::path& path);
     
 //! Traditional ORE input via ore.xml and various files, output into files
 class OutputParameters {
