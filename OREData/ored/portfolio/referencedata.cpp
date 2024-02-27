@@ -408,7 +408,9 @@ void CreditReferenceDatum::fromXML(XMLNode* node) {
         parseDate(XMLUtils::getChildValue(innerNode, "SuccessorImplementationDate", false));
     creditData_.predecessorImplementationDate =
         parseDate(XMLUtils::getChildValue(innerNode, "PredecessorImplementationDate", false));
-    creditData_.entityType = XMLUtils::getChildValue(innerNode, "EntityType", false);
+    creditData_.entityType = XMLUtils::getChildValue(innerNode, "EntityType", false) == "Corp."
+                                 ? "Corporate"
+                                 : XMLUtils::getChildValue(innerNode, "EntityType", false);
 }
 
 XMLNode* CreditReferenceDatum::toXML(XMLDocument& doc) {
