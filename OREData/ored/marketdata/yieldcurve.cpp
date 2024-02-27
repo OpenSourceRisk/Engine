@@ -58,6 +58,7 @@
 #include <qle/termstructures/weightedyieldtermstructure.hpp>
 #include <qle/termstructures/yieldplusdefaultyieldtermstructure.hpp>
 #include <qle/termstructures/iborfallbackcurve.hpp>
+#include <qle/termstructures/overnightfallbackcurve.hpp>
 #include <qle/termstructures/bondyieldshiftedcurvetermstructure.hpp>
 
 #include <ored/marketdata/defaultcurve.hpp>
@@ -1041,7 +1042,11 @@ void YieldCurve::buildIborFallbackCurve() {
                              << rfrIndexName << "' could not be cast to OvernightIndex, is this index name correct?");
     DLOG("building ibor fallback curve for '" << segment->iborIndex() << "' with rfrIndex='" << rfrIndexName
                                               << "' and spread=" << spread);
-    p_ = boost::make_shared<IborFallbackCurve>(originalIndex, rfrIndex, spread, Date::minDate());
+    if (auto on = boost::dynamic_pointer_cast<OvernightIndex>(originalIndex)) {
+        p_ = boost::make_shared<OvernightFallbackCurve>(on, rfrIndex, spread, Date::minDate());
+    } else {
+        p_ = boost::make_shared<IborFallbackCurve>(originalIndex, rfrIndex, spread, Date::minDate());
+    }
 }
 
 void YieldCurve::buildDiscountCurve() {
