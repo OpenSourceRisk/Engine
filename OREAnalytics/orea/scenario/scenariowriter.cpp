@@ -104,8 +104,8 @@ void ScenarioWriter::writeScenario(const boost::shared_ptr<Scenario>& s, const b
             report_->addColumn("Date", string());
             report_->addColumn("Scenario", Size());
             report_->addColumn("Numeraire", double(), 8);
-            for (Size i = 0; i < keys_.size(); i++)
-                report_->addColumn(to_string(keys_[i]), double(), 8);
+            for (Size i = 0; i < headerKeys_.size(); i++)
+                report_->addColumn(to_string(headerKeys_[i]), double(), 8);
             // set the first date, this will bump i_ to 1 below
             firstDate_ = d;
         }
