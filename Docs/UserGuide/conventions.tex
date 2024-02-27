@@ -379,11 +379,11 @@ node is shown in Listing \ref{lst:tenor_basis_conventions}.
 \begin{minted}[fontsize=\footnotesize]{xml}
 <TenorBasisSwap>
   <Id> </Id>
-  <LongIndex> </LongIndex>
-  <LongPayTenor> </ShortPayTenor>
-  <ShortIndex> </ShortIndex>
-  <ShortPayTenor> </ShortPayTenor>
-  <SpreadOnShort> </SpreadOnShort>
+  <PayIndex> </PayIndex>
+  <PayFrequency> </PayFrequency>
+  <ReceiveIndex> </ReceiveIndex>
+  <ReceiveFrequency> </ReceiveFrequency>
+  <SpreadOnRec> </SpreadOnRec>
   <IncludeSpread> </IncludeSpread>
   <SubPeriodsCouponType> </SubPeriodsCouponType>
 </TenorBasisSwap>
@@ -395,27 +395,21 @@ node is shown in Listing \ref{lst:tenor_basis_conventions}.
 
 The meanings of the various elements in this node are as follows:
 \begin{itemize}
-\item LongIndex: The name of the long tenor Ibor index. In the case of basis swaps with equal tenor indexes (like overnight 
-indexed vs overnight indexed basis swaps) it should be interpreted as the index of the received leg.
-\item LongPayTenor [Optional]: The frequency of payments on the LongIndex leg. This is usually the same as the LongIndex's 
-tenor. However, it can also be longer, e.g. overnight indexed vs overnight indexed basis swaps that may be quarterly on 
-both legs. If not provided, this defaults to the LongIndex's tenor.
-\item ShortIndex: The name of the short tenor Ibor or overnight index.
-\item ShortPayTenor [Optional]: The frequency of payments on the ShortIndex leg. This is usually the same as the
-ShortIndex's tenor. However, it can also be longer e.g.\ USD tenor basis swaps where the short tenor Ibor
-index is compounded and paid on the same frequency as the long tenor Ibor index, or overnight indexed vs overnight 
-indexed basis swaps that may be quarterly on both legs. If not provided, this defaults to the ShortIndex's tenor.
-\item SpreadOnShort [Optional]: \emph{True} if the tenor basis swap quote has the spread on the short tenor Ibor index
-leg and \emph{False} if not. If not provided, this defaults to \emph{True}.
-\item IncludeSpread [Optional]: \emph{True} if the tenor basis swap spread is to be included when compounding is
-performed on the short tenor Ibor index leg and \emph{False} if not. If not provided, this defaults to \emph{False}.
-\item SubPeriodsCouponType [Optional]: This field can have the value \emph{Compounding} or \emph{Averaging}. It applies 
-to Ibor vs OI and Ibor vs Ibor basis swaps when the frequency of payments on the short tenor leg does not equal the 
-short tenor index's tenor. If \emph{Compounding} is specified, then the short tenor Ibor index is compounded and paid on
-the frequency specified in the \lstinline!ShortPayTenor! node. If \emph{Averaging} is specified, then the short tenor 
-Ibor index is averaged and paid on the frequency specified in the \lstinline!ShortPayTenor! node. If not provided, this 
-defaults to \emph{Compounding}. In the context of overnight indexed vs overnight indexed basis swaps this value will apply 
-to both legs.
+\item PayIndex: The name of Ibor/Overnight Index of the pay leg.
+\item PayFrequency [Optional]: The frequency of payments on the PayIndex leg. This is usually the same as the PayIndex's tenor. 
+However, it can also be longer, e.g. overnight indexed vs overnight indexed basis swaps that may be quarterly on both legs. 
+If not provided, this defaults to the PayIndex's tenor.
+\item ReceiveIndex: The name of Ibor/Overnight Index of the receive leg.
+\item ReceiveFrequency [Optional]: The frequency of payments on the ReceiveIndex leg. This is usually the same as the ReceiveIndex's tenor. 
+However, it can also be longer, e.g. overnight indexed vs overnight indexed basis swaps that may be quarterly on both legs. 
+If not provided, this defaults to the ReceiveIndex's tenor.
+\item SpreadOnRec [Optional]: \emph{True}  if the tenor basis swap quote has the spread on the pay index leg and \emph{False} if not. 
+If not provided, this defaults to \emph{True}.
+\item IncludeSpread [Optional]: \emph{True} if the tenor basis swap spread is to be included when compounding is performed on the spread leg and \emph{False} if not. 
+If not provided, this defaults to \emph{False}.
+\item SubPeriodsCouponType [Optional]: This field can have the value \emph{Compounding} or \emph{Averaging}. It applies to Ibor vs OI and Ibor vs Ibor basis swaps when the frequency of payments on the spread leg does not equal the spread leg index’s tenor. 
+If \emph{Compounding} is specified, then the spread tenor Ibor index is compounded and paid on the frequency specified in the corresponding node. 
+If \emph{Averaging} is specified, then the short tenor Ibor index is averaged and paid on the frequency specified in the corresponding node.
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
