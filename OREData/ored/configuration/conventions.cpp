@@ -640,6 +640,9 @@ void TenorBasisSwapConvention::build() {
 
     spreadOnRec_ = strSpreadOnRec_.empty() ? true : parseBool(strSpreadOnRec_);
     includeSpread_ = strIncludeSpread_.empty() ? false : parseBool(strIncludeSpread_);
+    if (includeSpread_ && (payON || recON))
+        QL_FAIL("IncludeSpread must be false for overnight index legs.");
+
     subPeriodsCouponType_ = strSubPeriodsCouponType_.empty() ? SubPeriodsCoupon1::Compounding
                                                              : parseSubPeriodsCouponType(strSubPeriodsCouponType_);
 }
