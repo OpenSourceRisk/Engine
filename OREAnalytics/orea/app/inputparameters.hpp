@@ -315,7 +315,8 @@ public:
         simmCalibrationData_ = s;
     }
     void setSimmCalibrationDataFromFile(const std::string& fileName);
-    void setSimmCalculationCurrency(const std::string& s) { simmCalculationCurrency_ = s; }
+    void setSimmCalculationCurrencyCall(const std::string& s) { simmCalculationCurrencyCall_ = s; }
+    void setSimmCalculationCurrencyPost(const std::string& s) { simmCalculationCurrencyPost_ = s; }
     void setSimmResultCurrency(const std::string& s) { simmResultCurrency_ = s; }
     void setSimmReportingCurrency(const std::string& s) { simmReportingCurrency_ = s; }
     void setEnforceIMRegulations(bool b) { enforceIMRegulations_= b; }
@@ -582,7 +583,8 @@ public:
     const boost::shared_ptr<ore::analytics::SimmBasicNameMapper>& simmNameMapper() { return simmNameMapper_; }
     const boost::shared_ptr<ore::analytics::SimmBucketMapper>& simmBucketMapper() { return simmBucketMapper_; }
     const boost::shared_ptr<ore::analytics::SimmCalibrationData>& simmCalibrationData() { return simmCalibrationData_; }
-    const std::string& simmCalculationCurrency() { return simmCalculationCurrency_; }
+    const std::string& simmCalculationCurrencyCall() { return simmCalculationCurrencyCall_; }
+    const std::string& simmCalculationCurrencyPost() { return simmCalculationCurrencyPost_; }
     const std::string& simmResultCurrency() { return simmResultCurrency_; }
     const std::string& simmReportingCurrency() { return simmReportingCurrency_; }
     bool enforceIMRegulations() { return enforceIMRegulations_; }
@@ -844,7 +846,8 @@ protected:
     boost::shared_ptr<ore::analytics::SimmBasicNameMapper> simmNameMapper_;
     boost::shared_ptr<ore::analytics::SimmBucketMapper> simmBucketMapper_;
     boost::shared_ptr<ore::analytics::SimmCalibrationData> simmCalibrationData_;
-    std::string simmCalculationCurrency_ = "";
+    std::string simmCalculationCurrencyCall_ = "";
+    std::string simmCalculationCurrencyPost_ = "";
     std::string simmResultCurrency_ = "";
     std::string simmReportingCurrency_ = "";
     bool enforceIMRegulations_ = false;
