@@ -26,6 +26,7 @@
 #include <ql/cashflows/cashflows.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/currencies/exchangeratemanager.hpp>
+#include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 namespace ore {
 namespace data {
@@ -630,11 +631,15 @@ void TRSWrapperAccrualEngine::calculate() const {
                     auto fixingValues = overnightCpn->indexFixings();
                     auto dts = overnightCpn->dt();
                     double accruedInterest = 0;
+                    double accruedSpreadInterest = 0;
+                    double gearing = overnightCpn->gearing();
+                    double spread = overnightCpn->spread();
                     for (size_t i = 0; i < valueDates.size() - 1; ++i) {
                         const Date& valueDate = valueDates[i];
                         double dt = dts[i];
                         double irFixing = fixingValues[i];
-                        irFixing += overnightCpn->spread();
+                        if (overnightCpn->includeSpread())
+                            irFixing += overnightCpn->spread();
                         if (valueDate < today) {
                             Date fixingDate =
                                 arguments_.underlyingIndex_[j]->fixingCalendar().adjust(valueDate, Preceding);
@@ -652,6 +657,45 @@ void TRSWrapperAccrualEngine::calculate() const {
                                                        ore::data::to_string(valueDate)] = dt;
                             localNotional *= localFxFactor;
                             accruedInterest = localNotional * irFixing * dt + accruedInterest * (1 + irFixing * dt);
+                            if (!overnightCpn->includeSpread()) {
+                                accruedSpreadInterest += localNotional * spread * dt;
+                            }
+                            results_.additionalResults["fundingLegAccruedInterest" + resultSuffix + resultSuffix2 +
+                                                       "_" + ore::data::to_string(valueDate)] = accruedInterest;
+                        }
+                    }
+                    fundingLegNotionalFactor = (gearing * accruedInterest + accruedSpreadInterest) / localFundingLegNpv;
+                } else if (arguments_.fundingNotionalTypes_[i] == TRS::FundingData::NotionalType::DailyReset &&
+                           boost::dynamic_pointer_cast<AverageONIndexedCoupon>(cpn) != nullptr) {
+                    auto overnightCpn = boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(cpn);
+                    auto valueDates = overnightCpn->valueDates();
+                    auto fixingValues = overnightCpn->indexFixings();
+                    auto dts = overnightCpn->dt();
+                    double accruedInterest = 0;
+                    double spread = overnightCpn->spread();
+                    double gearing = overnightCpn->gearing();
+                    for (size_t i = 0; i < valueDates.size() - 1; ++i) {
+                        const Date& valueDate = valueDates[i];
+                        double dt = dts[i];
+                        double irFixing = fixingValues[i];
+
+                        if (valueDate < today) {
+                            Date fixingDate =
+                                arguments_.underlyingIndex_[j]->fixingCalendar().adjust(valueDate, Preceding);
+                            Real localNotional =
+                                getUnderlyingFixing(j, fixingDate, false) * arguments_.underlyingMultiplier_[j];
+                            Real localFxFactor = getFxConversionRate(fixingDate, arguments_.assetCurrency_[j],
+                                                                     arguments_.fundingCurrency_, false);
+                            results_.additionalResults["fundingLegNotional" + resultSuffix + resultSuffix2 + "_" +
+                                                       ore::data::to_string(valueDate)] = localNotional;
+                            results_.additionalResults["fundingLegFxRate" + resultSuffix + resultSuffix2 + "_" +
+                                                       ore::data::to_string(valueDate)] = localFxFactor;
+                            results_.additionalResults["fundingLegOISRate" + resultSuffix + resultSuffix2 + "_" +
+                                                       ore::data::to_string(valueDate)] = irFixing;
+                            results_.additionalResults["fundingLegDCF" + resultSuffix + resultSuffix2 + "_" +
+                                                       ore::data::to_string(valueDate)] = dt;
+                            localNotional *= localFxFactor;
+                            accruedInterest += localNotional * (gearing * irFixing + spread) * dt;
                             results_.additionalResults["fundingLegAccruedInterest" + resultSuffix + resultSuffix2 +
                                                        "_" + ore::data::to_string(valueDate)] = accruedInterest;
                         }
