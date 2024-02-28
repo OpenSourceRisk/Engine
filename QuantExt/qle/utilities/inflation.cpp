@@ -115,6 +115,42 @@ Real inflationLinkedBondQuoteFactor(const boost::shared_ptr<QuantLib::Bond>& bon
     }
     return inflFactor;
 }
+
+void addInflationIndexToMap(
+    std::map<std::tuple<std::string, QuantLib::CPI::InterpolationType, QuantLib::Frequency, QuantLib::Period>,
+             boost::shared_ptr<QuantLib::ZeroInflationIndex>>& inflationIndices,
+    const boost::shared_ptr<QuantLib::Index>& index, QuantLib::CPI::InterpolationType interpolation,
+    Frequency couponFrequency, Period observationLag) {
+    if (index != nullptr) {
+        const auto zInfIndex = boost::dynamic_pointer_cast<QuantLib::ZeroInflationIndex>(index);
+        std::string name = index->name();
+        const auto key = std::make_tuple(name, interpolation, couponFrequency, observationLag);
+        if (zInfIndex != nullptr && inflationIndices.count(key) == 0) {
+            inflationIndices[key] = zInfIndex;
+        }
+    }
+};
+
+std::map<std::tuple<std::string, QuantLib::CPI::InterpolationType, QuantLib::Frequency, QuantLib::Period>,
+         boost::shared_ptr<QuantLib::ZeroInflationIndex>>
+extractAllInflationUnderlyingFromBond(const boost::shared_ptr<QuantLib::Bond>& bond) {
+
+    std::map<std::tuple<std::string, QuantLib::CPI::InterpolationType, Frequency, Period>,
+             boost::shared_ptr<QuantLib::ZeroInflationIndex>>
+        inflationIndices;
+    if (bond != nullptr) {
+        for (const auto& cf : bond->cashflows()) {
+            if (auto cp = boost::dynamic_pointer_cast<QuantLib::CPICoupon>(cf)) {
+                addInflationIndexToMap(inflationIndices, cp->index(), cp->observationInterpolation(),
+                                       cp->index()->frequency(), cp->observationLag());
+            } else if (auto cp = boost::dynamic_pointer_cast<QuantLib::CPICashFlow>(cf)) {
+                addInflationIndexToMap(inflationIndices, cp->index(), cp->interpolation(), cp->frequency(),
+                                       cp->observationLag());
+            }
+        }
+    }
+    return inflationIndices;
+}
 namespace ZeroInflation {
 
 QuantLib::Date lastAvailableFixing(const QuantLib::ZeroInflationIndex& index, const QuantLib::Date& asof) {
