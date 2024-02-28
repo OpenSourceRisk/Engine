@@ -998,18 +998,28 @@ void OREAppInputParameters::loadParameters() {
         }
 
         tmp = params_->get("simm", "calculationCurrency", false);
-        if (tmp != "")
-            setSimmCalculationCurrency(tmp);
-        else {
+        if (tmp != "") {
+            setSimmCalculationCurrencyCall(tmp);
+            setSimmCalculationCurrencyPost(tmp);
+        } else {
             QL_REQUIRE(baseCurrency() != "", "either base currency or calculation currency is required");
-            setSimmCalculationCurrency(baseCurrency());
+        }
+
+        tmp = params_->get("simm", "calculationCurrencyCall", false);
+        if (tmp != "") {
+            setSimmCalculationCurrencyCall(tmp);
+        }
+
+        tmp = params_->get("simm", "calculationCurrencyPost", false);
+        if (tmp != "") {
+            setSimmCalculationCurrencyPost(tmp);
         }
 
         tmp = params_->get("simm", "resultCurrency", false);
         if (tmp != "")
             setSimmResultCurrency(tmp);
         else
-            setSimmResultCurrency(simmCalculationCurrency());
+            setSimmResultCurrency(simmCalculationCurrencyCall());
 
         tmp = params_->get("simm", "reportingCurrency", false);
         if (tmp != "")
