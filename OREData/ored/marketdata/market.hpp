@@ -176,7 +176,7 @@ public:
     virtual Handle<YieldTermStructure> yieldCurve(const YieldCurveType& type, const string& name,
                                                   const string& configuration = Market::defaultConfiguration) const = 0;
     Handle<YieldTermStructure> discountCurve(const string& ccy,
-                                             const string& configuration = Market::defaultConfiguration ) const;
+                                             const string& configuration = Market::defaultConfiguration) const;
     virtual Handle<YieldTermStructure>
     discountCurveImpl(const string& ccy, const string& configuration = Market::defaultConfiguration) const = 0;
 
