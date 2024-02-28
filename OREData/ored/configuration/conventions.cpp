@@ -615,12 +615,29 @@ void TenorBasisSwapConvention::build() {
 
     boost::shared_ptr<OvernightIndex> payON = boost::dynamic_pointer_cast<OvernightIndex>(payIndex());
     boost::shared_ptr<OvernightIndex> recON = boost::dynamic_pointer_cast<OvernightIndex>(receiveIndex());
-    receiveFrequency_ = strReceiveFrequency_.empty() ? receiveIndex()->tenor() : parsePeriod(strReceiveFrequency_);
-    if(recON && receiveFrequency_ != 1*Years)
-        ALOG("Building " << id() << " : ReceiveIndex "  << strReceiveIndex_ << " is an overnight index, but frequency is " << receiveFrequency_);
-    payFrequency_ = strPayFrequency_.empty() ? payIndex()->tenor() : parsePeriod(strPayFrequency_);
-    if(payON && payFrequency_ != 1*Years)
-        ALOG("Building " << id() << " : PayIndex "  << strPayIndex_ << " is an overnight index, but frequency is " << payFrequency_);
+
+    if (strReceiveFrequency_.empty()) {
+        if (recON) {
+            receiveFrequency_ = 1 * Years;
+            WLOG("receiveFrequency_ empty and overnight, set to 1 Year");
+        } else {
+            receiveFrequency_ = receiveIndex()->tenor();
+            WLOG("receiveFrequency_ empty set to index tenor.");
+        }
+    } else
+        receiveFrequency_ = parsePeriod(strReceiveFrequency_);
+
+    if (strPayFrequency_.empty()) {
+        if (payON) {
+            payFrequency_ = 1 * Years;
+            WLOG("payFrequency_ empty and overnight, set to 1 Year");
+        } else {
+            payFrequency_ = payIndex()->tenor();
+            WLOG("payFrequency_ empty set to index tenor.");
+        }
+    } else
+        payFrequency_ = parsePeriod(strPayFrequency_);
+
     spreadOnRec_ = strSpreadOnRec_.empty() ? true : parseBool(strSpreadOnRec_);
     includeSpread_ = strIncludeSpread_.empty() ? false : parseBool(strIncludeSpread_);
     subPeriodsCouponType_ = strSubPeriodsCouponType_.empty() ? SubPeriodsCoupon1::Compounding
