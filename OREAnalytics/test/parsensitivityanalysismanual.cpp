@@ -400,9 +400,10 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
                         "Some trades not built correctly," << portfolio->size() << " vs. " << tradeCount);
     // build the sensitivity analysis object
     boost::shared_ptr<SensitivityAnalysis> zeroAnalysis =
-        boost::make_shared<SensitivityAnalysis>(portfolio, initMarket, "default", engineData, simMarketData, sensiData,
+        boost::make_shared<SensitivityAnalysis>(portfolio, initMarket, Market::defaultConfiguration, engineData,
+                                                simMarketData, sensiData,
                                                 false, nullptr, nullptr, false, nullptr);
-    ParSensitivityAnalysis parAnalysis(today, simMarketData, *sensiData, "default");
+    ParSensitivityAnalysis parAnalysis(today, simMarketData, *sensiData, Market::defaultConfiguration);
     parAnalysis.alignPillars();
     zeroAnalysis->overrideTenors(true);
     zeroAnalysis->generateSensitivities();

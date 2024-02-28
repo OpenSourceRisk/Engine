@@ -1152,10 +1152,10 @@ void testParConversion(ObservationMode::Mode om) {
 
     // build the sensitivity analysis object
     // first build the par analysis object, so that we can align the pillars for the zero sensi analysis
-    ParSensitivityAnalysis parAnalysis(today, simMarketData, *sensiData, "default");
+    ParSensitivityAnalysis parAnalysis(today, simMarketData, *sensiData, Market::defaultConfiguration);
     parAnalysis.alignPillars();
     boost::shared_ptr<SensitivityAnalysis> zeroAnalysis = boost::make_shared<SensitivityAnalysis>(
-        portfolio, initMarket, "default", engineData, simMarketData, sensiData, false);
+        portfolio, initMarket, Market::defaultConfiguration, engineData, simMarketData, sensiData, false);
     BOOST_TEST_MESSAGE("SensitivityAnalysis object built");
     zeroAnalysis->overrideTenors(true);
     zeroAnalysis->generateSensitivities();
