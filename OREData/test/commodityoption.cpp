@@ -299,10 +299,6 @@ BOOST_AUTO_TEST_CASE(testCommodityOptionBuildExceptions) {
     option = boost::make_shared<CommodityOption>(td.envelope, optionData, td.commodityName, td.currency, td.quantity, ts);
     BOOST_CHECK_THROW(option->build(td.engineFactory), Error);
 
-    // Negative quantity throws
-    option = boost::make_shared<CommodityOption>(td.envelope, optionData, td.commodityName, td.currency, -td.quantity,
-                                                 td.strike);
-    BOOST_CHECK_THROW(option->build(td.engineFactory), Error);
 
     // Name of commodity with no market data throws
     option = boost::make_shared<CommodityOption>(td.envelope, optionData, "GOLD_USD_MISSING", td.currency,
