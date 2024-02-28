@@ -661,7 +661,8 @@ void TRSWrapperAccrualEngine::calculate() const {
                                 accruedSpreadInterest += localNotional * spread * dt;
                             }
                             results_.additionalResults["fundingLegAccruedInterest" + resultSuffix + resultSuffix2 +
-                                                       "_" + ore::data::to_string(valueDate)] = accruedInterest;
+                                                       "_" + ore::data::to_string(valueDate)] =
+                                accruedInterest + accruedSpreadInterest;
                         }
                     }
                     fundingLegNotionalFactor = (gearing * accruedInterest + accruedSpreadInterest) / localFundingLegNpv;
