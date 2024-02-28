@@ -157,10 +157,22 @@ void RiskParticipationAgreement::buildWithSwapUnderlying(const boost::shared_ptr
 
     boost::shared_ptr<QuantLib::Exercise> exercise;
     bool exerciseIsLong = true;
+    bool isPremium = false;
+    std::vector<boost::shared_ptr<CashFlow>> vectorPremium;
     if (optionData_) {
         ExerciseBuilder eb(*optionData_, underlyingLegs);
         exercise = eb.exercise();
         exerciseIsLong = parsePositionType((*optionData_).longShort()) == QuantLib::Position::Long;
+        if ((*optionData_).premiumData().premiumData().empty() == false) {
+            //auto test = (*optionData_).premiumData().premiumData();
+            isPremium = true;      
+            for (const auto& premium : (*optionData_).premiumData().premiumData()) {
+                QL_REQUIRE((premium.ccy == underlyingCcys[0]) && (premium.ccy == underlyingCcys[1]),
+                           "premium currency must be the same than the swaption legs");
+                SimpleCashFlow cf(premium.amount, premium.payDate);
+                vectorPremium.push_back(boost::make_shared<SimpleCashFlow>(cf));
+            }
+        }
     }
 
     // build ql instrument
@@ -168,7 +180,7 @@ void RiskParticipationAgreement::buildWithSwapUnderlying(const boost::shared_ptr
     auto qleInstr = boost::make_shared<QuantExt::RiskParticipationAgreement>(
         underlyingLegs, underlyingPayer, underlyingCcys, protectionFeeLegs, protectionPayer.front(), protectionCcys,
         participationRate_, protectionStart_, protectionEnd_, settlesAccrual_, fixedRecoveryRate_, exercise,
-        exerciseIsLong, nakedOption_);
+        exerciseIsLong, isPremium, vectorPremium, nakedOption_);
 
     // wrap instrument
 
