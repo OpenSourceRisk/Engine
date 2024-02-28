@@ -792,19 +792,17 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
         // Handle Premium
         // If PremiumDate > EventDate we  include them in swaptionPv
 
-        if (arguments_.IsPremium) {
-            for (int j = 0; j < arguments_.premium.size(); j++) {
-                Real premiumAmount = 0;
-                if (arguments_.exerciseIsLong) {
-                    premiumAmount = - arguments_.premium[j]->amount();
-                } else {
-                    premiumAmount = arguments_.premium[j]->amount();
-                }
+        for (int j = 0; j < arguments_.premium.size(); j++) {
+            Real premiumAmount = 0;
+            if (arguments_.exerciseIsLong) {
+                premiumAmount = - arguments_.premium[j]->amount();
+            } else {
+                premiumAmount = arguments_.premium[j]->amount();
+            }
 
-                if (arguments_.premium[j]->date() > eventDates[i]) {
-                    swaptionPv += RandomVariable(gridSize(), premiumAmount) /
-                                  lgm.numeraire(eventTimes[i], states, discountCurves_[arguments_.underlyingCcys[0]]);
-                }
+            if (arguments_.premium[j]->date() > eventDates[i]) {
+                swaptionPv += RandomVariable(gridSize(), premiumAmount) /
+                             lgm.numeraire(eventTimes[i], states, discountCurves_[arguments_.underlyingCcys[0]]);
             }
         }
         
