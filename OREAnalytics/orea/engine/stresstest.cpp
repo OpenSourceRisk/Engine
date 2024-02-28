@@ -66,7 +66,7 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     auto ed = boost::make_shared<EngineData>(*engineData);
     ed->globalParameters()["RunType"] = "Stress";
     boost::shared_ptr<EngineFactory> factory =
-        boost::make_shared<EngineFactory>(ed, simMarket, configurations, referenceData, iborFallbackConfig);
+    boost::make_shared<EngineFactory>(ed, simMarket, configurations, referenceData, iborFallbackConfig);
 
     DLOG("Reset and Build Portfolio");
     portfolio->reset();
