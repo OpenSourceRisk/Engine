@@ -911,6 +911,10 @@ void OREAppInputParameters::loadParameters() {
         std::string sensiFile = (inputPath / tmp).generic_string();
         LOG("Get sensitivity data from file " << sensiFile);
         setSensitivityStreamFromFile(sensiFile);
+        
+        tmp = params_->get("parametricVar", "outputHistoricalScenarios", false);
+        if (tmp != "")
+            setOutputHistoricalScenarios(parseBool(tmp));
     }
 
     /********************
@@ -958,6 +962,10 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("historicalSimulationVar", "portfolioFilter", false);
         if (tmp != "")
             setPortfolioFilter(tmp);
+
+        tmp = params_->get("historicalSimulationVar", "outputHistoricalScenarios", false);
+        if (tmp != "")
+            setOutputHistoricalScenarios(parseBool(tmp));
     }
 
     /****************
@@ -990,18 +998,28 @@ void OREAppInputParameters::loadParameters() {
         }
 
         tmp = params_->get("simm", "calculationCurrency", false);
-        if (tmp != "")
-            setSimmCalculationCurrency(tmp);
-        else {
+        if (tmp != "") {
+            setSimmCalculationCurrencyCall(tmp);
+            setSimmCalculationCurrencyPost(tmp);
+        } else {
             QL_REQUIRE(baseCurrency() != "", "either base currency or calculation currency is required");
-            setSimmCalculationCurrency(baseCurrency());
+        }
+
+        tmp = params_->get("simm", "calculationCurrencyCall", false);
+        if (tmp != "") {
+            setSimmCalculationCurrencyCall(tmp);
+        }
+
+        tmp = params_->get("simm", "calculationCurrencyPost", false);
+        if (tmp != "") {
+            setSimmCalculationCurrencyPost(tmp);
         }
 
         tmp = params_->get("simm", "resultCurrency", false);
         if (tmp != "")
             setSimmResultCurrency(tmp);
         else
-            setSimmResultCurrency(simmCalculationCurrency());
+            setSimmResultCurrency(simmCalculationCurrencyCall());
 
         tmp = params_->get("simm", "reportingCurrency", false);
         if (tmp != "")
