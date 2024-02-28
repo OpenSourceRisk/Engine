@@ -59,7 +59,8 @@ Real ScriptedInstrumentPricingEngine::addMcErrorEstimate(const std::string& labe
         return Null<Real>();
     Real var = variance(boost::get<RandomVariable>(v)).at(0);
     Real errEst = std::sqrt(var / static_cast<double>(model_->size()));
-    results_.additionalResults[label] = errEst;
+    if(!label.empty())
+        results_.additionalResults[label] = errEst;
     return errEst;
 }
 
@@ -170,9 +171,12 @@ void ScriptedInstrumentPricingEngine::calculate() const {
                     QL_FAIL("got empty result vector for result variable '"
                             << r.first << "' referencing script variable '" << r.second << "', this is unexpected");
                 }
+                std::vector<double> errEst;
                 for (auto const& d : v->second) {
-                    addMcErrorEstimate(r.first + "_MCErrEst", d);
+                    errEst.push_back(addMcErrorEstimate(std::string(), d));
                 }
+                if (!errEst.empty() && errEst.front() != Null<Real>())
+                    results_.additionalResults[r.first + "_MCErrEst"] = errEst;
                 resultSet = true;
             }
             QL_REQUIRE(resultSet, "could not set additional result '" << r.first << "' referencing script variable '"

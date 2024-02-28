@@ -46,10 +46,12 @@ cube/sparsenpvcube.cpp
 engine/amcvaluationengine.cpp
 engine/bufferedsensitivitystream.cpp
 engine/cptycalculator.cpp
+engine/decomposedsensitivitystream.cpp
 engine/filteredsensitivitystream.cpp
 engine/historicalpnlgenerator.cpp
 engine/historicalsensipnlcalculator.cpp
 engine/historicalsimulationvar.cpp
+engine/marketriskreport.cpp
 engine/mporcalculator.cpp
 engine/multistatenpvcalculator.cpp
 engine/multithreadedvaluationengine.cpp
@@ -64,9 +66,11 @@ engine/sensitivitycubestream.cpp
 engine/sensitivityfilestream.cpp
 engine/sensitivityinmemorystream.cpp
 engine/sensitivityrecord.cpp
+engine/sensitivityreportstream.cpp
 engine/stresstest.cpp
 engine/valuationcalculator.cpp
 engine/valuationengine.cpp
+engine/varcalculator.cpp
 engine/xvaenginecg.cpp
 engine/zerotoparcube.cpp
 scenario/clonedscenariogenerator.cpp
@@ -187,10 +191,12 @@ cube/sparsenpvcube.hpp
 engine/amcvaluationengine.hpp
 engine/bufferedsensitivitystream.hpp
 engine/cptycalculator.hpp
+engine/decomposedsensitivitystream.hpp
 engine/filteredsensitivitystream.hpp
 engine/historicalpnlgenerator.hpp
 engine/historicalsensipnlcalculator.hpp
 engine/historicalsimulationvar.hpp
+engine/marketriskreport.hpp
 engine/mporcalculator.hpp
 engine/multistatenpvcalculator.hpp
 engine/multithreadedvaluationengine.hpp
@@ -206,6 +212,7 @@ engine/sensitivitycubestream.hpp
 engine/sensitivityfilestream.hpp
 engine/sensitivityinmemorystream.hpp
 engine/sensitivityrecord.hpp
+engine/sensitivityreportstream.hpp
 engine/sensitivitystream.hpp
 engine/stresstest.hpp
 engine/valuationcalculator.hpp

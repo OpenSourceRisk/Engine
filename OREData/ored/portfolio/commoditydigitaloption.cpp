@@ -51,9 +51,8 @@ CommodityDigitalOption::CommodityDigitalOption(const Envelope& env, const Option
 void CommodityDigitalOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // Checks
-    QL_REQUIRE(payoff_ > 0, "Commodity digital option requires a positive quatity");
-    QL_REQUIRE(strike_ > 0, "Commodity digital option requires a positive strike");
-    QL_REQUIRE(optionData_.exerciseDates().size() == 1, "Invalid number of excercise dates");
+    QL_REQUIRE((strike_ > 0 || close_enough(strike_, 0.0)), "Commodity digital option requires a positive strike");
+    QL_REQUIRE(optionData_.exerciseDates().size() == 1, "Invalid number of exercise dates");
 
     expiryDate_ = parseDate(optionData_.exerciseDates().front());
 
@@ -101,6 +100,8 @@ void CommodityDigitalOption::build(const boost::shared_ptr<EngineFactory>& engin
     opt2.build(engineFactory);
     boost::shared_ptr<Instrument> inst1 = opt1.instrument()->qlInstrument();
     boost::shared_ptr<Instrument> inst2 = opt2.instrument()->qlInstrument();
+
+    setSensitivityTemplate(opt1.sensitivityTemplate());
 
     boost::shared_ptr<CompositeInstrument> composite = boost::make_shared<CompositeInstrument>();
     // add and subtract such that the long call spread and long put spread have positive values

@@ -80,7 +80,7 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
         Option::Type type = parseOptionType(option_.callPut());
         boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike_.value()));
         QuantLib::Exercise::Type exerciseType = parseExerciseType(option_.style());
-        QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of excercise dates");
+        QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of exercise dates");
         expiryDate_ = parseDate(option_.exerciseDates().front());
         // Set the maturity date equal to the expiry date. It may get updated below if option is cash settled with
         // payment after expiry.
@@ -135,6 +135,7 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
         auto compositeBuilder = boost::dynamic_pointer_cast<EquityEuropeanCompositeEngineBuilder>(builder);
         vanilla->setPricingEngine(compositeBuilder->engine(assetName_, underlyingCurrency_, 
             parseCurrency(strike_.currency()), expiryDate_));
+        setSensitivityTemplate(*compositeBuilder);
 
         string configuration = Market::defaultConfiguration;
         Position::Type positionType = parsePositionType(option_.longShort());

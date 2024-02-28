@@ -52,7 +52,7 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
 
     // Only European Barrier supported for now
     QL_REQUIRE(option_.style() == "European", "Option Style unknown: " << option_.style());
-    QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of excercise dates");
+    QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of exercise dates");
     QL_REQUIRE(barriers_.size() == 2, "Invalid number of barriers");
     QL_REQUIRE(barriers_[0].levels().size() == 1, "Invalid number of barrier levels");
     QL_REQUIRE(barriers_[1].levels().size() == 1, "Invalid number of barrier levels");
@@ -188,6 +188,7 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
     boost::shared_ptr<FxBarrierOptionEngineBuilder> fxBarrierOptBuilder =
         boost::dynamic_pointer_cast<FxBarrierOptionEngineBuilder>(builder);
     barrier->setPricingEngine(fxBarrierOptBuilder->engine(boughtCcy, soldCcy, expiryDate, expiryDate));
+    setSensitivityTemplate(*fxBarrierOptBuilder);
     Settlement::Type settleType = parseSettlementType(option_.settlement());
 
     boost::shared_ptr<InstrumentWrapper> koInstrument =
@@ -227,6 +228,7 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
             boost::shared_ptr<Instrument> barrier2 =
                 boost::make_shared<QuantLib::BarrierOption>(knockOutType, knockInLevel, 0, payoff, exercise);
             barrier2->setPricingEngine(fxBarrierOptBuilder->engine(boughtCcy, soldCcy, expiryDate, expiryDate));
+            setSensitivityTemplate(*fxBarrierOptBuilder);
             boost::shared_ptr<InstrumentWrapper> koInstrument2 =
                 boost::shared_ptr<InstrumentWrapper>(new SingleBarrierOptionWrapper(
                     barrier2, positionType == Position::Long ? false : true, expiryDate,
@@ -250,6 +252,7 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
                 DoubleBarrier::Type::KnockOut, std::min(knockInLevel, knockOutLevel),
                 std::max(knockInLevel, knockOutLevel), 0, payoff, exercise);
             doubleBarrier->setPricingEngine(fxDoubleBarrierOptBuilder->engine(boughtCcy, soldCcy, expiryDate));
+            setSensitivityTemplate(*fxDoubleBarrierOptBuilder);
 
             boost::shared_ptr<InstrumentWrapper> dkoInstrument =
                 boost::shared_ptr<InstrumentWrapper>(new DoubleBarrierOptionWrapper(

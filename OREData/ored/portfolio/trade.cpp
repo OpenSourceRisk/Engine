@@ -16,9 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ored/portfolio/structuredtradewarning.hpp>
 #include <ored/portfolio/trade.hpp>
-#include <ored/utilities/to_string.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
+#include <ored/utilities/to_string.hpp>
 
 #include <qle/cashflows/equitycouponpricer.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
@@ -109,13 +110,17 @@ void Trade::validate() const {
     // QL_REQUIRE(notional_ != Null<Real>(), "Notional has not been set for trade " << id_ << ".");
     // QL_REQUIRE(notionalCurrency_ != "", "Notional currency has not been set for trade " << id_ << ".");
     QL_REQUIRE(maturity_ != Null<Date>(), "Maturity not set for trade " << id_ << ".");
-    QL_REQUIRE(!envelope_.empty(), "Envelope not set for trade " << id_ << ".");
+    QL_REQUIRE(envelope_.initialized(), "Envelope not set for trade " << id_ << ".");
     if (legs_.size() > 0) {
         QL_REQUIRE(legs_.size() == legPayers_.size(),
                    "Inconsistent number of pay/receive indicators for legs in trade " << id_ << ".");
         QL_REQUIRE(legs_.size() == legCurrencies_.size(),
                    "Inconsistent number of leg currencies for legs in trade " << id_ << ".");
     }
+}
+
+void Trade::setEnvelope(const Envelope& envelope) {
+    envelope_ = envelope;
 }
 
 void Trade::reset() {
@@ -129,12 +134,14 @@ void Trade::reset() {
     legs_.clear();
     legCurrencies_.clear();
     legPayers_.clear();
-    npvCurrency_ = "";
+    npvCurrency_.clear();
     notional_ = Null<Real>();
-    notionalCurrency_ = "";
+    notionalCurrency_.clear();
     maturity_ = Date();
-    issuer_ = "";
+    issuer_.clear();
     requiredFixings_.clear();
+    sensitivityTemplate_.clear();
+    sensitivityTemplateSet_ = false;
 }
     
 const std::map<std::string, boost::any>& Trade::additionalData() const { return additionalData_; }
@@ -254,10 +261,14 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                     }
                 }
                 additionalData_["initialQuantity[" + legID + "]"] = quantity;
-                
-                Real currentPrice = eqc->equityCurve()->fixing(asof);
-                if (currentPrice != Null<Real>() && originalNotional != Null<Real>())
+
+                Real currentPrice = Null<Real>();
+                if (eqc->equityCurve()->isValidFixingDate(asof)) {
+                    currentPrice = eqc->equityCurve()->equitySpot()->value();
+                }
+                if (currentPrice != Null<Real>() && originalNotional != Null<Real>()) {
                     additionalData_["currentQuantity" + legID + "]"] = originalNotional / currentPrice;
+                }
             }
         }
     }
@@ -275,6 +286,26 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
             }
         }
     }
+}
+
+void Trade::setSensitivityTemplate(const EngineBuilder& builder) {
+    sensitivityTemplate_ = builder.engineParameter("SensitivityTemplate", {}, false, std::string());
+    sensitivityTemplateSet_ = true;
+}
+
+void Trade::setSensitivityTemplate(const std::string& id) {
+    sensitivityTemplate_ = id;
+    sensitivityTemplateSet_ = true;
+}
+
+const std::string& Trade::sensitivityTemplate() const {
+    if (!sensitivityTemplateSet_) {
+        StructuredTradeWarningMessage(
+            id(), tradeType(), "No valid sensitivty template.",
+            "Either build() was not called, or the trade builder did not set the sensitivity template.")
+            .log();
+    }
+    return sensitivityTemplate_;
 }
 
 } // namespace data

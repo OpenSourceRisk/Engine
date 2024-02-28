@@ -29,6 +29,7 @@
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/historicalscenarioloader.hpp>
+#include <orea/scenario/historicalscenarioreader.hpp>
 #include <ored/marketdata/adjustmentfactors.hpp>
 
 #include <ql/math/randomnumbers/rngtraits.hpp>
@@ -273,15 +274,23 @@ private:
 class HistoricalScenarioGeneratorWithFilteredDates : public HistoricalScenarioGenerator {
 public:
     HistoricalScenarioGeneratorWithFilteredDates(const std::vector<ore::data::TimePeriod>& filter,
-                                                 const boost::shared_ptr<HistoricalScenarioGenerator>& gen);
+                                                 const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& gen);
     void reset() override;
-    boost::shared_ptr<Scenario> next(const QuantLib::Date& d) override;
+    QuantLib::ext::shared_ptr<Scenario> next(const QuantLib::Date& d) override;
 
 private:
-    boost::shared_ptr<HistoricalScenarioGenerator> gen_;
+    QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> gen_;
     std::vector<bool> isRelevantScenario_;
     QuantLib::Size i_orig_;
 };
+
+QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGenerator(
+    const QuantLib::ext::shared_ptr<HistoricalScenarioReader>& hsr,
+    const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors, const TimePeriod& period,
+    Calendar calendar, Size mporDays,
+    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParams,
+    const QuantLib::ext::shared_ptr<TodaysMarketParameters>& marketParam,
+    const bool overlapping = true);
 
 } // namespace analytics
 } // namespace ore

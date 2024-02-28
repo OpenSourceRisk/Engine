@@ -74,6 +74,8 @@ void EquityOptionPosition::build(const boost::shared_ptr<ore::data::EngineFactor
     currencies_.clear();
     fxConversion_.clear();
 
+    setSensitivityTemplate(std::string()); // default, will usually be overwritten below
+
     for (auto const& u : data_.underlyings()) {
 
         // get equity, populate weight, currency
@@ -92,7 +94,7 @@ void EquityOptionPosition::build(const boost::shared_ptr<ore::data::EngineFactor
 
         Option::Type optionType = parseOptionType(u.optionData().callPut());
         QuantLib::Exercise::Type exerciseType = parseExerciseType(u.optionData().style());
-        QL_REQUIRE(u.optionData().exerciseDates().size() == 1, "Invalid number of excercise dates");
+        QL_REQUIRE(u.optionData().exerciseDates().size() == 1, "Invalid number of exercise dates");
         Date optionExpiry = parseDate(u.optionData().exerciseDates().front());
         boost::shared_ptr<Exercise> exercise;
         switch (exerciseType) {
@@ -116,6 +118,7 @@ void EquityOptionPosition::build(const boost::shared_ptr<ore::data::EngineFactor
                 boost::dynamic_pointer_cast<VanillaOptionEngineBuilder>(engineFactory->builder(tradeTypeBuilder));
             QL_REQUIRE(builder, "EquityOptionPosition::build(): no engine builder for '" << tradeTypeBuilder << "'");
             options_.back()->setPricingEngine(builder->engine(u.underlying().name(), eq->currency(), optionExpiry));
+            setSensitivityTemplate(*builder);
         }
 
         // populate index for historical prices

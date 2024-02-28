@@ -347,7 +347,7 @@
   </xs:complexType>
 
   <xs:complexType name="forwardBondData">
-    <xs:sequence>
+    <xs:all>
       <xs:element type="bondData" name="BondData"/>
       <xs:element type="settlementData" name="SettlementData"/>
       <xs:element name="PremiumData" minOccurs="0">
@@ -359,7 +359,7 @@
         </xs:complexType>
       </xs:element>
       <xs:element type="xs:string" name="LongInForward"/>
-    </xs:sequence>
+    </xs:all>
   </xs:complexType>
 
   <xs:complexType name="varianceSwapData">
@@ -2002,14 +2002,14 @@
   </xs:complexType>
 
   <xs:complexType name="bondOptionData">
-    <xs:sequence>
+    <xs:all>
       <xs:element type="optionData" name="OptionData"/>
 	  <xs:element ref="strikeGroup"/>
-      <xs:element type="xs:string" name="Redemption" maxOccurs="unbounded" minOccurs="0"/>
-      <xs:element type="xs:string" name="PriceType" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="xs:string" name="Redemption" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="PriceType" maxOccurs="1" minOccurs="0"/>
       <xs:element type="bool" name="KnocksOut" maxOccurs="1" minOccurs="0"/>
       <xs:element type="bondData" name="BondData" minOccurs="1"/>
-    </xs:sequence>
+    </xs:all>
   </xs:complexType>
 
   <xs:complexType name="bondRepoData">

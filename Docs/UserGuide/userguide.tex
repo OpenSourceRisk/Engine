@@ -125,6 +125,9 @@
 \newcommand{\SCVA}{\mathit{SCVA}}
 \newcommand{\bs}{\textbackslash}
 \newcommand{\REDY}{\color{red}Y}
+\newcommand{\IA}{\mathit{IA}}
+\newcommand{\Th}{\mathit{TH}}
+\newcommand{\CSA}{\mathit{CSA}}
 
 \begin{document}
 
@@ -132,7 +135,7 @@
 \title{ORE User Guide}
 %\author{Quaternion Risk Management Ltd.}
 %\author{Acadia Inc.}
-\date{16 October 2023}
+\date{15 January 2024}
 \maketitle
 
 \newpage
@@ -156,6 +159,7 @@ Date & Author & Comment \\
 31 March 2023 & Acadia & updates for release 9\\
 16 June 2023 & Acadia & updates for release 10\\
 16 October 2023 & Acadia & updates for release 11\\
+15 January 2024 & Acadia & updates for release 12\\
 \hline
 \end{supertabular}
 \end{center}
@@ -1256,6 +1260,16 @@ Example & Description \\
 51 & Custom Trade Fixings\\
 \hline
 52 & Scripted Trades \\
+\hline
+53 & Curve Building using FRAs tailored to Central Bank Meeting Dates\\
+\hline
+54 & Scripted Trade Exposure with AMC: Bermudan Swaption and LPI Swap \\
+\hline
+55 & Scripted Trade Exposure with AMC: Fx TaRF \\
+\hline
+56 & CVA Sensitivity using AAD \\
+\hline
+57 & Base Scenario Analytic \\
 \hline
 \end{tabular}
 \caption{ORE examples.}
@@ -3537,12 +3551,75 @@ Though this initial Example\_52 shows only single-asset Equity cases, the script
   significantly more versatile, more examples and scripts to follow.
 
 %--------------------------------------------------------------------
-\subsection{GBP OIS Curve using MPC Swaps}% Example 53
+\subsection{Curve Building around Central Bank Meeting Dates}% Example 53
 \label{example:53}
 %--------------------------------------------------------------------
 
 This example demonstrates the build of a GBP OIS curve using MPC Swaps at the short end.
 
+%--------------------------------------------------------------------
+\subsection{Scripted Trade Exposure with AMC: Bermudan Swaption and LPI Swap}% Example 54
+\label{example:54}
+%--------------------------------------------------------------------
+
+This example demonstrates exposure simulation using AMC for selected scripted trade types
+\begin{itemize}
+\item Bermudan Swaption
+\item LPI Swap
+\end{itemize}
+Both payoffs are defined in {\tt scriptlibrary.xml} which is referenced in {\tt portfolio.xml}. \\
+
+To enable the AMC processing requires the following highlighted settings in {\tt ore.xml}.
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+    <Analytic type="simulation">
+      <Parameter name="active">Y</Parameter>
+      <!-- Set to Y to trigger AMC processing -->
+      <Parameter name="amc">Y</Parameter>
+      <Parameter name="simulationConfigFile">simulation.xml</Parameter>
+      <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+      <!-- Specify a separate pricing engine file for AMC engines -->
+      <Parameter name="amcPricingEnginesFile">pricingengine\_amc.xml</Parameter>
+      <!-- Specify trade types to be covered by the AMC processing -->
+      <Parameter name="amcTradeTypes">ScriptedTrade</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="storeScenarios">N</Parameter>
+      <Parameter name="cubeFile">cube.csv.gz</Parameter>
+      <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
+      <Parameter name="aggregationScenarioDataDump">scenariodata.csv</Parameter>
+    </Analytic>
+\end{minted}
+
+Note that ORE can handle a mix of trades covered by AMC simulation and covered by ``classic'' simulation.
+The respective NPV cubes are combined before generating results such as exposures or XVAs.
+
+%--------------------------------------------------------------------
+\subsection{Scripted Trade Exposure with AMC: Target Redemption Forward}% Example 55
+\label{example:55}
+%--------------------------------------------------------------------
+
+This example demonstrates exposure simulation and XVA for another scripted product, an
+FX Target Redemption Forward (TaRF). In contrast to the cases presented above, you won't see
+the payoff script library in the Input folder, nor is the script embedded into the trade XML file.
+The trade type in this case is {\tt FxTARF} which has its own implementation in OREData/ored/portfolio/tarf.xpp
+and a separate trade schema. However, the scipted trade framework is used under the hood, and the payoff
+script is embedded into the C++ code in OREData/ored/portfolio/tarf.cpp.
+
+%--------------------------------------------------------------------
+\subsection{CVA Sensitivity using AD}% Example 56
+\label{example:56}
+%--------------------------------------------------------------------
+
+This example demonstrates a prototype CVA sensitivity calculation applying Adjoint Algorithmic Differentiation (AAD)
+to a Swap instrument represented as scripted trade. 
+
+%--------------------------------------------------------------------
+\subsection{Base Scenario Analytic}% Example 57
+\label{example:57}
+%--------------------------------------------------------------------
+
+Demonstration of the {\tt Scenario} analytic which has been added to export the simulation market's base scenario
+as a file.
 
 \clearpage
 %========================================================
@@ -3701,7 +3778,7 @@ Example/Example\_\#/Input/}.
 
 Parameter {\tt logMask} determines the verbosity of log file output. Log messages are 
 internally labelled as Alert, Critical, Error, Warning, Notice, Debug, associated with logMask values 1, 2, 4, 8, ..., 64. 
-The logMask allows filtering subsets of these categories and controlling the verbosity of log file output\footnote{by bitwise comparison of the the external logMask value with each message's log level}. LogMask 255 ensures maximum verbosity. \\
+The logMask allows filtering subsets of these categories and controlling the verbosity of log file output\footnote{by bitwise comparison of the external logMask value with each message's log level}. LogMask 255 ensures maximum verbosity. \\
 
 When ORE starts, it will initialise today's market, i.e. load market data, fixings and dividends, and build all term
 structures as specified in {\tt todaysmarket.xml}.  Moreover, ORE will load the trades in {\tt portfolio.xml} and link
@@ -4240,7 +4317,7 @@ shows an example.
 \label{lst:ore_zerotoparconversion}
 \end{listing}
 
-The parameters have the same interpretation as for the sensitivity analytic. There is one new parameter *sensitivityInputFile* which points to a csv file with the raw (zero)sensitivites. Those raw sensitivites will be converted into par sensitivities, using the the same methodology described in \ref{app:par_sensi} and the configuration is described in \ref{sec:sensitivity}.
+The parameters have the same interpretation as for the sensitivity analytic. There is one new parameter *sensitivityInputFile* which points to a csv file with the raw (zero)sensitivites. Those raw sensitivites will be converted into par sensitivities, using the same methodology described in \ref{app:par_sensi} and the configuration is described in \ref{sec:sensitivity}.
 
 The raw sensitivites csv input file *sensitivityInputFile* needs to have at least six columns, the column names can be user configured in the master input file. Here is a description of each of the columns:
 
@@ -4869,219 +4946,8 @@ section (see \ref{sec:master_input}) where four market configuration IDs have to
 
 \medskip The configuration ID concept extends across all curve and volatility objects though currently used only to
 distinguish discounting.
- 
-%--------------------------------------------------------
-\subsection{Pricing Engines: {\tt pricingengine.xml}}
-%--------------------------------------------------------
-\label{sec:configuration_pricingengines}
 
-The pricing engine configuration file is provided to select pricing models and pricing engines by product type. The
-following is an overview over the Example section's {\tt pricingengine.xml}. Further below we discuss the Bermudan Swaption engine parametrisation in more detail.
-
-\begin{longlisting}
-%\hrule\medskip
-\begin{minted}[fontsize=\footnotesize]{xml}
-<PricingEngines>
-  <Product type="Swap">
-    <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
-    <Engine>DiscountingSwapEngine</Engine>
-    <EngineParameters/>
-  </Product>
-  <Product type="CrossCurrencySwap">
-    <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
-    <Engine>DiscountingCrossCurrencySwapEngine</Engine>
-    <EngineParameters/>
-  </Product>
-  <Product type="FxForward">
-    <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
-    <Engine>DiscountingFxForwardEngine</Engine>
-    <EngineParameters/>
-  </Product>
-  <Product type="FxOption">
-    <Model>GarmanKohlhagen</Model>
-    <ModelParameters/>
-    <Engine>AnalyticEuropeanEngine</Engine>
-    <EngineParameters/>
-  </Product>
-  <Product type="FxOptionAmerican">
-    <Model>GarmanKohlhagen</Model>
-    <ModelParameters/>
-    <Engine>FdBlackScholesVanillaEngine</Engine>
-    <EngineParameters>
-      <Parameter name="Scheme">Douglas</Parameter>
-      <Parameter name="TimeGridPerYear">100</Parameter>
-      <Parameter name="XGrid">100</Parameter>
-      <Parameter name="DampingSteps">0</Parameter>
-      <!-- optional, prevents too small time grids for increased
-           Greek precision when expiry is near, set to 1 if omitted -->
-      <Parameter name="TimeGridMinimumSize">1</Parameter>
-    </EngineParameters>
-  </Product>
-  <Product type="EuropeanSwaption">
-    <Model>BlackBachelier</Model> <!-- depends on input vol -->
-    <ModelParameters/>
-    <Engine>BlackBachelierSwaptionEngine</Engine>
-    <EngineParameters/>
-  </Product>
-  <Product type="Bond">
-    <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
-    <Engine>DiscountingRiskyBondEngine</Engine>
-    <EngineParameters>
-      <Parameter name="TimestepPeriod">6M</Parameter>
-    </EngineParameters>
-  </Product>
-  <Product type="BermudanSwaption">
-    <Model>LGM</Model>
-    <ModelParameters>
-      <Parameter name="Calibration">Bootstrap</Parameter>
-      <Parameter name="BermudanStrategy">CoterminalATM</Parameter>
-      <!-- ccy specific reversions -->
-      <Parameter name="Reversion_EUR">0.03</Parameter>
-      <Parameter name="Reversion_USD">0.04</Parameter>
-      <!-- reversion to use if no ccy specific value is given -->
-      <Parameter name="Reversion">0.02</Parameter>
-      <Parameter name="ReversionType">HullWhite</Parameter>
-      <Parameter name="Volatility">0.01</Parameter>
-      <Parameter name="VolatilityType">Hagan</Parameter>
-      <Parameter name="ShiftHorizon">0.5</Parameter>
-      <Parameter name="Tolerance">0.0001</Parameter>
-    </ModelParameters>
-    <Engine>Grid</Engine>
-    <EngineParameters>
-      <Parameter name="sy">3.0</Parameter>
-      <Parameter name="ny">10</Parameter>
-      <Parameter name="sx">3.0</Parameter>
-      <Parameter name="nx">10</Parameter>
-    </EngineParameters>
-  </Product>
-  <Product type="CapFloor">
-    <Model>IborCapModel</Model>
-    <ModelParameters/>
-    <Engine>IborCapEngine</Engine>
-    <EngineParameters/>
-  </Product>
-  <Product type="CapFlooredIborLeg">
-    <Model>BlackOrBachelier</Model>
-    <ModelParameters/>
-    <Engine>BlackIborCouponPricer</Engine>
-    <EngineParameters>
-      <!-- Black76 or BivariateLognormal -->
-      <TimingAdjustment>Black76</TimingAdjustment>
-      <!-- Correlation Parameter for BivariateLognormal -->
-      <Correlation>1.0</Correlation>
-    </EngineParameters>
-  </Product>
-  <Product type="EquityForward">
-    <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
-    <Engine>DiscountingEquityForwardEngine</Engine>
-    <EngineParameters/>
-  </Product>
-  <Product type="EquityOption">
-    <Model>BlackScholesMerton</Model>
-    <ModelParameters/>
-    <Engine>AnalyticEuropeanEngine</Engine>
-    <EngineParameters/>
-  </Product>
-  <Product type="Bond">
-    <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
-    <Engine>DiscountingRiskyBondEngine</Engine>
-    <EngineParameters>
-      <Parameter name="TimestepPeriod">6M</Parameter>
-    </EngineParameters>
-  </Product>
-  <Product type="CreditDefaultSwap">
-    <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
-    <Engine>MidPointCdsEngine</Engine>
-    <EngineParameters/>
-  </Product>
-  <Product type="CMS">
-    <Model>Hagan</Model><!-- or LinearTSR -->
-    <ModelParameters/>
-    <Engine>Analytic</Engine> <!-- or Numerical -->
-    <EngineParameters>
-      <!-- Alternative Yield Curve Models: ExactYield, ParallelShifts, NonParallelShifts -->
-      <Parameter name="YieldCurveModel">Standard</Parameter> 
-      <Parameter name="MeanReversion_EUR">0.01</Parameter>
-      <Parameter name="MeanReversion_USD">0.02</Parameter>
-      <Parameter name="MeanReversion">0.0</Parameter>
-    </EngineParameters>
-  </Product>
-  <Product type="CMSSpread">
-    <Model>BrigoMercurio</Model>
-    <ModelParameters/>
-    <Engine>Analytic</Engine>
-    <EngineParameters>
-      <Parameter name="IntegrationPoints">16</Parameter>
-    </EngineParameters>
-  </Product>
-  <GlobalParameters>
-    <Parameter name="ContinueOnCalibrationError">true</Parameter>
-    <!-- typically not present in a user configuration, but used internally -->
-    <Parameter name="Calibrate">true</Parameter>
-    <Parameter name="GenerateAdditionalResults">true</Parameter>
-    <Parameter name="RunType">NPV</Parameter>
-  </GlobalParameters>
-\end{minted}
-\caption{Pricing engine configuration}
-\label{lst:pricingengine_config}
-\end{longlisting}
-
-These settings will be taken into account when the engine factory is asked to build the respective pricing engines and required models, and to calibrate the required model.
-
-\medskip
-For example, in case of the Bermudan Swaption, the parameters are interpreted as follows:
-
-\begin{itemize}
-\item The only model currently supported for Bermudan Swaption pricing is the LGM selected here. 
-
-\item The first block of model parameters then provides initial values for the model (Reversion, Volatility) and chooses
-  the parametrisation of the LGM model with ReversionType and VolatilityType choices {\em HullWhite} and {\em
-    Hagan}. Notice the possibility to specify a currency-specific reversion. Calibration and BermudanStrategy can be set
-  to {\em None} in order to skip model calibration. Alternatively, Calibration is set to {\em Bootstrap} and
-  BermudanStrategy to {\em CoterminalATM} in order to calibrate to instrument-specific co-terminal ATM Swaptions,
-  i.e. chosen to match the instruments first expiry and final maturity.  If {\em CoterminalDealStrike} is chosen, the
-  co-terminal swaptions will match the fixed rate of the deal (if the deal has changing fixed rates, the first rate is
-  matched). Finally if the ShiftHorizon parameter is given, its value times the remaining maturity time of the deal is
-  chosen as the horizon shift parameter for the LGM model. If not given, this parameter defaults to $0.5$.
-
-\item The second block of engine parameters specifies the Numerical Swaption engine parameters which determine the
-  number of standard deviations covered in the probability density integrals (sy and sx), and the number of grid points
-  used per standard deviation (ny and nx).
-\end{itemize}
-
-To see the configuration options for the alternative CMS engines (Hagan Numerical, LinearTSR) or the Black Ibor coupon
-pricer (CapFlooredIborLeg), please refer to the commented parts in {\tt Examples/Input/pricingengine.xml}.
-
-\medskip
-This file is relevant in particular for structured products which are on the roadmap of future ORE releases. But it is also
-intended to allow the selection of optimised pricing engines for vanilla products such as Interest Rate Swaps.
-
-\medskip
-In addition to product specific settings there is also a block with global parameters with the following meaning:
-\begin{itemize}
-\item ContinueOnCalibrationError: If set to true an exceedence of a prescribed model calibration tolerance (for e.g. the
-  LGM model) will not cause the trade building to fail, instead a warning is logged and the trade is processed
-  anyway. Optional, defaults to false.
-\item Calibrate: If false, model calibration is disabled. This flag is usually not present in a user configuration, but
-  only used internally for certain workflows within ORE which do not require a model calibration. Optional, defaults to
-  true.
-\item GenerateAdditionalResults: If false, the generation of additional results within pricing engines will be
-  suppressed (for those pricing engines which support this). This flag is usually not present in a user configuration,
-  but only used internally to improve the performance for processes which only rely on the NPV as a result from pricing
-  engines, e.g. when repricing trades under sensitivity or stress scenarios. Option, defaults to false.
-\item RunType: Set automatically. One of NPV, SensitivityDelta, SensitivityDeltaGamma, Stress, Exposure, Capital,
-  TradeDetails, PortfolioAnalyser, HistoricalPnL, BondSpreadImply, AbsMaturityUpdate depending on the context for which
-  a portfolio was built. Might also be left empty. This is used by some pricing engines to adapt to certain run
-  types. E.g. a first order sensitivity pnl expansion might be used for a SensitivityDelta run by an engine which is
-  able to compute analytical or AAD first order sensitivities.
-\end{itemize}
+\include{parameterisation/pricingengines}
 
 %--------------------------------------------------------
 \subsection{Simulation: {\tt simulation.xml}}\label{sec:simulation}
@@ -5698,15 +5564,18 @@ within the enclosing tags {\tt <Market>} and {\tt </Market>}, as shown in the fo
 It should be noted that equity volatilities are taken to be a curve by default. To simulate an equity volatility surface with smile the xml node {\tt <Surface> } must be supplied.
 There are two methods in ORE for equity volatility simulation: 
 \begin{itemize}
-\item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this case set {\tt <SimulateATMOnly>} to true.
-\item Simulating the full volatility surface. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and explicit moneyness levels for simulation should be provided.
+\item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this
+  case set {\tt <SimulateATMOnly>} to true and no surface node is given.
+\item Simulating the full volatility surface. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and
+  explicit moneyness levels for simulation should be provided.
 \end{itemize}
 
 Swaption volatilities are taken to be a surface by default. To simulate a swaption volatility cube with smile the xml node {\tt <Cube> } must be supplied.
 There are two methods in ORE for swaption volatility cube simulation: 
 \begin{itemize}
 \item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this case set {\tt <SimulateATMOnly>} to true.
-\item Simulating the full volatility cube. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and explicit strike spreads for simulation should be provided.
+\item Simulating the full volatility cube. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and
+  explicit strike spreads for simulation should be provided.
 \end{itemize}
 
 FX volatilities are taken to be a curve by default. To simulate an FX volatility cube with smile the xml node {\tt <Surface> } must be supplied. The surface node contains the moneyness levels to be simulated.
@@ -5788,8 +5657,8 @@ StickyStrike.
     </Currencies>
     <Expiries>6M,1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Expiries>
     <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
+    <SimulateATMOnly>false</SimulateATMOnly>
     <Cube>
-     <SimulateATMOnly>false</SimulateATMOnly>
      <StrikeSpreads>-0.02,-0.01,0.0,0.01,0.02</StrikeSpreads>
     </Cube>
     <!-- Sets a new daycounter for just the EUR swaptionVolatility surface -->
@@ -5822,9 +5691,9 @@ StickyStrike.
         <Name>Lufthansa</Name>
       </Names>
       <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
+      <SimulateATMOnly>false</SimulateATMOnly>
       <Surface>
-        <SimulateATMOnly>false</SimulateATMOnly><!-- false -->
-        <Moneyness>0.1,0.5,1.0,1.5,2.0,3.0</Moneyness><!-- omitted if SimulateATMOnly true -->
+        <Moneyness>0.1,0.5,1.0,1.5,2.0,3.0</Moneyness>
       </Surface>
       <TimeExtrapolation>Flat</TimeExtrapolation>
       <StrikeExtrapolation>Flat</StrikeExtrapolation>
@@ -5926,6 +5795,7 @@ The general structure is shown in listing \ref{lst:sensitivity_config}, for a mo
 \item {\tt ShiftType:} Both absolute or relative shifts can be used to compute a sensitivity, specified by the key words
   {\tt Absolute} resp. {\tt Relative}.
 \item {\tt ShiftSize:} The size of the shift to apply.
+\item {\tt ShiftScheme:} The finite difference scheme to use ({\tt Forward}, {\tt Backward}, {\tt Central}), if not given, this parameter defaults to {\tt Forward}
 \item {\tt ShiftTenors:} For curves, the tenor buckets to apply shifts to, given as a comma separated list of periods.
 \item {\tt ShiftExpiries:} For volatility surfaces, the option expiry buckets to apply shifts to, given as a comma
   separated list of periods.
@@ -5937,6 +5807,53 @@ The general structure is shown in listing \ref{lst:sensitivity_config}, for a mo
   list of absolute strikes
 \item {\tt CurveType:} In the context of Yield Curves used to identify an equity ``risk free'' rate forecasting curve; set to {\tt EquityForecast} in this case
 \end{itemize}
+
+The ShiftType, ShiftSize, ShiftScheme nodes take an optional attribute key that allows to configure different values for
+different sensitivity templates. The sensitivity templates are defined in the pricing engine configuration. This is best
+explained by an example: In Example 15 the product type BermudanSwaption has a sensitivity template \verb+IR_FD+
+attached, see \ref{lst:sensi_template}. This can be used to specify different shifts for trades that were built against
+this engine configuration, see \ref{lst:sensi_config_template}: For Bermudan swaptions a larger shift size of 10bp and a
+central difference scheme is used to compute discount curve sensitivities in EUR. Since no separate shift type is
+specified, the default shift type {\tt Absolute} is used. Note regarding the reports:
+
+\begin{itemize}
+\item the sensi scenario report contains scenario NPVs related to the possibly product specific configured shift sizes
+\item the sensi report contains renormalized sensitivities, i.e. sensitivities are always expressed w.r.t. the default shift sizes
+\item the sensi config report only contains the default configuration
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\scriptsize]{xml}
+  <Product type="BermudanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters>
+      ...
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+      ...
+      <Parameter name="SensitivityTemplate">IR_FD</Parameter>
+    </EngineParameters>
+  </Product>
+\end{minted}
+\caption{Sensitivity template definition}
+\label{lst:sensi_template}
+\end{longlisting}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\scriptsize]{xml}
+    <DiscountCurve ccy="EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
+      <ShiftSize key="IR_FD">0.001</ShiftSize>
+      <ShiftScheme key="IR_FD">Central</ShiftScheme>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </DiscountCurve>
+\end{minted}
+\caption{Sensitivity template definition}
+\label{lst:lst:sensi_config_template}
+\end{longlisting}
 
 The cross gamma filter section contains a list of pairs of sensitivity keys. For each possible pair of sensitivity keys
 matching the given strings, a cross gamma sensitivity is computed. The given pair of keys can be (and usually are)
@@ -7082,9 +6999,6 @@ This sections lists known limitations of the AMC simulation engine.
 Some trade features are not yet supported by the multileg option engine:
 
 \begin{enumerate}
-\item legs with fx resetting feature
-\item legs with naked option = true
-\item coupon types are restricted to Ibor and CMS
 \item exercise flows (like a notional exchange common to cross currency swaptions) are not supported
 \end{enumerate}
 
@@ -7099,12 +7013,6 @@ During the simulation phase exercise times of a specific trade are not necessari
 grid. Therefore the model state required to take the exercise decision has in to be interpolated in general on the
 simulated path. Currently this is done using a simple linear interpolation while from a pure methodology point of view a
 Brownian Bridge would be preferable. In our tests we do not see a big impact of this approximation though.
-
-\subsubsection*{Missing recalibration of the MCMultiLegOptionEngine}
-
-The MC Multi Leg Option Engine builder uses the \verb+CrossAssetModelBuilder+ to set up the pricing model. This class
-does not implement the \verb+ModelBuidler+ interface meaning that the model is not recalibrated in a sensitivity
-analysis run. Therefore the sensitivities calculated by this engine are not valid.
 
 \subsubsection*{Basis Function Selection}
 
@@ -7424,28 +7332,31 @@ ORE computes the collateral requirement (aka \emph{Credit Support Amount}) throu
 \begin{align}\label{eq:CSA}
 CSA(t_m) &= 
 \begin{cases}
-\max(0, V_{set}(t_m) - I_A - T_{hold}),& V_{set}(t_m) - I_A \ge 0 \\
-\min(0, V_{set}(t_m) - I_A + T_{hold}),& V_{set}(t_m) - I_A < 0
+\max(0, \NPV(t_m) + \IA - \Th_{rec}),& \NPV(t_m) + \IA \ge 0 \\
+\min(0, \NPV(t_m) + \IA + \Th_{pay}),& \NPV(t_m) + \IA < 0
 \end{cases}
 \end{align}
 where
 \begin{itemize}
-\item $V_{set}(t_m)$ is the value of the netting set as of
-  time $t_m$,
-  \item $T_{hold}$ is the threshold exposure below which no collateral is
-  required (possibly asymmetric),
+\item $\NPV(t_m)$ is the value of the netting set as of
+  time $t_m$ from our persepctive,
+  \item $\Th_{rec}$ is the threshold exposure below which we do not 
+  require collateral, likewise $\TH_{pay}$ is the threshold that applies to collateral posted to the counterparty,
 %\item $MTA$ is the minimum transfer amount for collateral margin
 %  flow requests (possibly asymmetric)
-\item $I_A$ is the sum of all collateral independent amounts attached to
-  the underlying portfolio of trades (positive amounts imply that the bank
-  has received a net inflow of independent amounts from the
+\item $\IA$ is the sum of all collateral independent amounts attached to
+  the underlying portfolio of trades (positive amounts imply that we
+  have received a net inflow of independent amounts from the
   counterparty), assumed here to be cash.
 \end{itemize}
 
 As the collateral account already has a value of $C(t_m)$ at time $t_m$, the collateral shortfall is simply the
-difference between $C(t_m)$ and $CSA(t_m)$. However, we also need to account for the possibility that margin calls
+difference between $C(t_m)$ and $\CSA(t_m)$. However, we also need to account for the possibility that margin calls
 issued in the past have not yet been settled (for instance, because of disputes). If $M(t_m)$ denotes the net value of
-all outstanding margin calls at $t_m$, and $\Delta(t)$ is the difference $\Delta(t) = CSA(t_m) - C(t_m) - M(t_m)$
+all outstanding margin calls at $t_m$, and $\Delta(t)$ is the difference 
+$$
+\Delta(t) = \CSA(t_m) - C(t_m) - M(t_m)
+$$
 between the {\em Credit Support Amount} and the current and outstanding collateral, then the actual margin
 \emph{Delivery Amount} $D(t_m)$ is calculated as follows:
 \begin{align}\label{eq:DA}
@@ -7455,7 +7366,18 @@ D(t_m) &=
 0,& \left| \Delta(t) \right| < MTA
 \end{cases}
 \end{align}
-where $MTA$ is the minimum transfer amount.
+where $MTA$ is the minimum transfer amount. 
+
+Consider the upper case of \eqref{eq:CSA}: If the initial value of the netting set is zero ($\NPV(t_0)=0$) and 
+if $\Th_{rec}=0$, but the combined $\IA>0$, then the Credit Support Amount equals the Independent Amount, $\CSA(t_0)=\IA$.
+If moreover the initial collateral balance is zero (because the Independent Amount has not been received yet),
+then $\Delta(t_0)=\CSA(t_0)=\IA$, and the delivery amount $D(t_0)$ also matches the $\IA$ (assuming this exceeds the MTA),
+so that the next call leads to the transfer of the Independent Amount to us. For a positive $\Th_{rec}>0$, the transfer to us is reduced accordingly.
+In that case we can view the Independent Amount as an offset to the threshold.
+
+Consider the lower case of \eqref{eq:CSA}: If the netting set value is negative from our perspective and in absolute terms larger than the $\IA$, 
+then the Credit Support Amount is just the negative difference $\CSA=-|\NPV| + \IA + \Th_{pay}$ so that we need to post collateral, but only the amount 
+beyond the combined threshold $\IA + \Th_{pay}$.
 
 \subsubsection{Margin Period of Risk} \label{sec:mpor}
 After a counterparty defaults, it takes time to close out the portfolio. During this time period the portfolio value will change upon market conditions, therefore the portfolio's close-out value is subject to market risk, which is referred also as the close-out risk and the corresponding close-out period is called as the {\em Margin Period of Risk} (MPoR).  

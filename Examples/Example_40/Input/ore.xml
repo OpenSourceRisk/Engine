@@ -5,14 +5,14 @@
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
-    <Parameter name="logMask">31</Parameter>
+    <Parameter name="logMask">255</Parameter>
     <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>
     <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
     <Parameter name="implyTodaysFixings">N</Parameter>
     <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
     <Parameter name="conventionsFile">../..//Input/conventions.xml</Parameter>
     <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
-    <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+    <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
     <Parameter name="portfolioFile">portfolio.xml</Parameter>
     <Parameter name="observationModel">None</Parameter>
   </Setup>
@@ -42,7 +42,7 @@
     <Analytic type="simulation">
       <Parameter name="active">N</Parameter>
       <Parameter name="simulationConfigFile">mcsimulation.xml</Parameter>
-      <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+      <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="storeScenarios">N</Parameter>
       <Parameter name="cubeFile">cube.csv.gz</Parameter>
@@ -76,28 +76,22 @@
       <Parameter name="active">Y</Parameter>
       <Parameter name="marketConfigFile">simulation.xml</Parameter>
       <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
-      <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+      <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
       <Parameter name="scenarioOutputFile">sensi_scenarios.csv</Parameter>
       <Parameter name="sensitivityOutputFile">sensitivity.csv</Parameter>
       <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
       <Parameter name="parSensitivity">Y</Parameter>
+      <Parameter name="optimiseRiskFactors">Y</Parameter>
       <Parameter name="parSensitivityOutputFile">parsensitivity.csv</Parameter>
       <Parameter name="outputJacobi">Y</Parameter>
       <Parameter name="jacobiOutputFile">jacobi.csv</Parameter>
       <Parameter name="jacobiInverseOutputFile">jacobi_inverse.csv</Parameter>
     </Analytic>
-    <!--
-    <Analytic type="parSensitivity">
-      <Parameter name="active">Y</Parameter>
-      <Parameter name="parRateSensitivityOutputFile">par_sensi.csv</Parameter>
-      <Parameter name="parConversionMatrixOutputFile">par_jacobi.csv</Parameter>
-    </Analytic>
-    -->
     <Analytic type="stress">
       <Parameter name="active">N</Parameter>
       <Parameter name="marketConfigFile">simulation.xml</Parameter>
       <Parameter name="stressConfigFile">stresstest.xml</Parameter>
-      <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+      <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
       <Parameter name="scenarioOutputFile">stresstest.csv</Parameter>
       <Parameter name="outputThreshold">0.000001</Parameter>
     </Analytic>

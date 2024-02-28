@@ -117,6 +117,8 @@ private:
     boost::shared_ptr<QuantExt::MarketObserver> marketObserver_;
 
     mutable std::vector<Real> calibrationErrors_;
+
+    mutable Array params_;
 };
 } // namespace data
 } // namespace ore

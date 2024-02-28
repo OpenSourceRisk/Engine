@@ -139,7 +139,7 @@ public:
     virtual Real getDirectDiscountT0(const Date& paydate, const std::string& currency) const = 0;
 
     // calculate the model
-    void calculate() const { LazyObject::calculate(); }
+    void calculate() const override { LazyObject::calculate(); }
 
 protected:
     // map with additional results provided by this model instance

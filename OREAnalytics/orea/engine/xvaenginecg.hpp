@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file engine/xvacgengine.hpp
+/*! \file orea/engine/xvaenginecg.hpp
     \brief xva engine using cg infrastructure
     \ingroup engine
 */
@@ -70,7 +70,6 @@ private:
                                  const std::vector<std::pair<std::size_t, double>>& modelParameters) const;
 
     // input parameters
-    Size nThreads_;
     Date asof_;
     boost::shared_ptr<ore::data::Loader> loader_;
     boost::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;

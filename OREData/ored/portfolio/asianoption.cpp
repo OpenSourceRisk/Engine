@@ -51,7 +51,7 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     else if (option_.payoffType2() == "Geometric")
         tradeTypeBuilder += "Geometric";
     else {
-        QL_FAIL("payoff type 2 must be 'Arithmetic' or 'Geomtetric'");
+        QL_FAIL("payoff type 2 must be 'Arithmetic' or 'Geometric'");
     }
 
     // Add Price/Strike
@@ -80,6 +80,7 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         npvCurrency_ = delegatingBuilderTrade_->npvCurrency();
         additionalData_ = delegatingBuilderTrade_->additionalData();
 	requiredFixings_ = delegatingBuilderTrade_->requiredFixings();
+        setSensitivityTemplate(delegatingBuilderTrade_->sensitivityTemplate());
 
         // notional and notional currency are defined in overriden methods!
 
@@ -158,6 +159,7 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     string configuration = asianOptionBuilder->configuration(MarketContext::pricing);
     if (!asian->isExpired()) {
         asian->setPricingEngine(asianOptionBuilder->engine(assetName_, payCcy, expiryDate));
+        setSensitivityTemplate(*asianOptionBuilder);
     } else {
         DLOG("No engine attached for option on trade " << id() << " with expiry date " << io::iso_date(expiryDate)
                                                        << " because it is expired.");

@@ -42,9 +42,6 @@ using std::make_pair;
 namespace ore {
 namespace data {
 
-
-
-
 void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Swap::build() called for trade " << id());
     
@@ -181,6 +178,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             boost::dynamic_pointer_cast<CrossCurrencySwapEngineBuilderBase>(builder);
         QL_REQUIRE(swapBuilder, "No Builder found for CrossCurrencySwap " << id());
         swap->setPricingEngine(swapBuilder->engine(currenciesForMcSimulation, npvCcy));
+        setSensitivityTemplate(*swapBuilder);
         // take the first legs currency as the npv currency (arbitrary choice)
         instrument_.reset(new VanillaInstrument(swap));
     } else {
@@ -188,7 +186,9 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
             boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
         QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
-        swap->setPricingEngine(swapBuilder->engine(npvCcy));
+        swap->setPricingEngine(swapBuilder->engine(npvCcy, envelope().additionalField("discount_curve", false),
+                                                   envelope().additionalField("security_spread", false)));
+        setSensitivityTemplate(*swapBuilder);
         instrument_.reset(new VanillaInstrument(swap));
     }
 
@@ -309,6 +309,9 @@ Swap::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& reference
             }
         }
     }
+
+    if (auto s = envelope().additionalField("security_spread", false); !s.empty())
+        result[AssetClass::BOND] = {s};
 
     return result;
 }

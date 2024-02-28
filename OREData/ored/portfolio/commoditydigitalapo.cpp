@@ -57,7 +57,6 @@ void CommodityDigitalAveragePriceOption::build(const boost::shared_ptr<EngineFac
 
     DLOG("CommodityDigitalAveragePriceOption::build() called for trade " << id());
 
-    QL_REQUIRE(digitalCashPayoff_ > 0, "Commodity digital option requires a positive quatity");
     QL_REQUIRE(optionData_.exerciseDates().size() == 1, "Invalid number of excercise dates");
     Date exDate = parseDate(optionData_.exerciseDates().front());
 
@@ -77,6 +76,8 @@ void CommodityDigitalAveragePriceOption::build(const boost::shared_ptr<EngineFac
 
     opt1.build(engineFactory);
     opt2.build(engineFactory);
+
+    setSensitivityTemplate(opt1.sensitivityTemplate());
 
     boost::shared_ptr<Instrument> inst1 = opt1.instrument()->qlInstrument();
     boost::shared_ptr<Instrument> inst2 = opt2.instrument()->qlInstrument();

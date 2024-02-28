@@ -301,6 +301,7 @@ void CommodityAveragePriceOption::buildStandardOption(const boost::shared_ptr<En
     CommodityOption commOption(envelope(), optionData_, name_, currency_, effectiveQuantity, effectiveStrike,
                                flow->index()->isFuturesIndex(), flow->pricingDate());
     commOption.build(engineFactory);
+    setSensitivityTemplate(commOption.sensitivityTemplate());
     instrument_ = commOption.instrument();
     maturity_ = commOption.maturity();
 }
@@ -369,7 +370,7 @@ void CommodityAveragePriceOption::buildApo(const boost::shared_ptr<EngineFactory
     Barrier::Type barrierType = Barrier::DownIn;
     Exercise::Type barrierStyle = Exercise::American;
     if (barrierData_.initialized()) {
-        QL_REQUIRE(barrierData_.levels().size() == 1, "Commodity APO: Excepted exactly one barrier level.");
+        QL_REQUIRE(barrierData_.levels().size() == 1, "Commodity APO: Expected exactly one barrier level.");
         barrierLevel = barrierData_.levels().front().value();
         barrierType = parseBarrierType(barrierData_.type());
         if (!barrierData_.style().empty()) {
@@ -390,6 +391,7 @@ void CommodityAveragePriceOption::buildApo(const boost::shared_ptr<EngineFactory
     auto engineBuilder = boost::dynamic_pointer_cast<CommodityApoBaseEngineBuilder>(builder);
     boost::shared_ptr<PricingEngine> engine = engineBuilder->engine(ccy, name_, id(), apo);
     apo->setPricingEngine(engine);
+    setSensitivityTemplate(*engineBuilder);
 
     // position type and trade multiplier
     Position::Type positionType = parsePositionType(optionData_.longShort());
