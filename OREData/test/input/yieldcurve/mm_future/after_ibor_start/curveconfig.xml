@@ -2,7 +2,7 @@
   <YieldCurves>
     <YieldCurve>
       <CurveId>USD-LIBOR-3M</CurveId>
-      <CurveDescription />
+      <CurveDescription/>
       <Currency>USD</Currency>
       <DiscountCurve>USD-LIBOR-3M</DiscountCurve>
       <Segments>

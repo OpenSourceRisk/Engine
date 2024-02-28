@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(testTenorBasisSwapHelperLastRelevantDate) {
     boost::shared_ptr<IborIndex> usdLibor1m = boost::make_shared<USDLibor>(1 * Months);
 
     boost::shared_ptr<RateHelper> helper = boost::make_shared<QuantExt::TenorBasisSwapHelper>(
-        Handle<Quote>(boost::make_shared<SimpleQuote>(0.0)), 30 * Years, usdLibor6m, usdLibor1m, 6 * Months);
+        Handle<Quote>(boost::make_shared<SimpleQuote>(0.0)), 30 * Years, usdLibor6m, usdLibor1m, Handle<YieldTermStructure>(), true, false, 6 * Months);
 
     PiecewiseYieldCurve<Discount, LogLinear> curve(today, std::vector<boost::shared_ptr<RateHelper> >(1, helper),
                                                    Actual365Fixed());
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(testTenorBasisSwapHelperDegenerateSchedule) {
     boost::shared_ptr<IborIndex> usdLibor3m = boost::make_shared<USDLibor>(3 * Months);
 
     boost::shared_ptr<RateHelper> helper = boost::make_shared<QuantExt::TenorBasisSwapHelper>(
-        Handle<Quote>(boost::make_shared<SimpleQuote>(0.0)), 18 * Months, usdLibor6m, usdLibor3m, 6 * Months);
+        Handle<Quote>(boost::make_shared<SimpleQuote>(0.0)), 18 * Months, usdLibor6m, usdLibor3m, Handle<YieldTermStructure>(), true, false, 6 * Months);
 
     PiecewiseYieldCurve<Discount, LogLinear> curve(today, std::vector<boost::shared_ptr<RateHelper> >(1, helper),
                                                    Actual365Fixed());
