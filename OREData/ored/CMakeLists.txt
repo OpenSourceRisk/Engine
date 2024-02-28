@@ -22,6 +22,7 @@ configuration/onedimsolverconfig.cpp
 configuration/reportconfig.cpp
 configuration/volatilityconfig.cpp
 configuration/yieldcurveconfig.cpp
+marketdata/adjustedinmemoryloader.cpp
 marketdata/adjustmentfactors.cpp
 marketdata/basecorrelationcurve.cpp
 marketdata/capfloorvolcurve.cpp
@@ -158,6 +159,7 @@ portfolio/builders/equityforward.cpp
 portfolio/builders/equityfuturesoption.cpp
 portfolio/builders/equityoption.cpp
 portfolio/builders/equitytouchoption.cpp
+portfolio/builders/formulabasedcoupon.cpp
 portfolio/builders/forwardbond.cpp
 portfolio/builders/fxasianoption.cpp
 portfolio/builders/fxbarrieroption.cpp
@@ -182,6 +184,7 @@ portfolio/capfloor.cpp
 portfolio/cbo.cpp
 portfolio/cdo.cpp
 portfolio/cliquetoption.cpp
+portfolio/collateralbalance.cpp
 portfolio/commodityapo.cpp
 portfolio/commoditydigitalapo.cpp
 portfolio/commoditydigitaloption.cpp
@@ -227,6 +230,9 @@ portfolio/equitytouchoption.cpp
 portfolio/europeanoptionbarrier.cpp
 portfolio/failedtrade.cpp
 portfolio/fixingdates.cpp
+portfolio/formulabasedindexbuilder.cpp
+portfolio/formulabasedlegbuilder.cpp
+portfolio/formulabasedlegdata.cpp
 portfolio/forwardbond.cpp
 portfolio/forwardrateagreement.cpp
 portfolio/fxaverageforward.cpp
@@ -291,6 +297,7 @@ portfolio/varianceswap.cpp
 portfolio/windowbarrieroption.cpp
 portfolio/worstofbasketswap.cpp
 report/csvreport.cpp
+report/inmemoryreport.cpp
 scripting/ast.cpp
 scripting/astprinter.cpp
 scripting/astresetter.cpp
@@ -312,6 +319,7 @@ scripting/models/blackscholesbase.cpp
 scripting/models/blackscholescg.cpp
 scripting/models/blackscholescgbase.cpp
 scripting/models/fdblackscholesbase.cpp
+scripting/models/fdgaussiancam.cpp
 scripting/models/gaussiancam.cpp
 scripting/models/gaussiancamcg.cpp
 scripting/models/hwcg.cpp
@@ -340,6 +348,7 @@ utilities/currencyparser.cpp
 utilities/dategrid.cpp
 utilities/fileio.cpp
 utilities/flowanalysis.cpp
+utilities/formulaparser.cpp
 utilities/indexnametranslator.cpp
 utilities/indexparser.cpp
 utilities/inflationstartdate.cpp
@@ -384,6 +393,7 @@ configuration/swaptionvolcurveconfig.hpp
 configuration/volatilityconfig.hpp
 configuration/yieldcurveconfig.hpp
 configuration/yieldvolcurveconfig.hpp
+marketdata/adjustedinmemoryloader.hpp
 marketdata/adjustmentfactors.hpp
 marketdata/basecorrelationcurve.hpp
 marketdata/capfloorvolcurve.hpp
@@ -525,6 +535,7 @@ portfolio/builders/equityforward.hpp
 portfolio/builders/equityfuturesoption.hpp
 portfolio/builders/equityoption.hpp
 portfolio/builders/equitytouchoption.hpp
+portfolio/builders/formulabasedcoupon.hpp
 portfolio/builders/forwardbond.hpp
 portfolio/builders/fxasianoption.hpp
 portfolio/builders/fxbarrieroption.hpp
@@ -551,6 +562,7 @@ portfolio/capfloor.hpp
 portfolio/cbo.hpp
 portfolio/cdo.hpp
 portfolio/cliquetoption.hpp
+portfolio/collateralbalance.hpp
 portfolio/commodityapo.hpp
 portfolio/commoditydigitalapo.hpp
 portfolio/commoditydigitaloption.hpp
@@ -597,6 +609,9 @@ portfolio/equitytouchoption.hpp
 portfolio/europeanoptionbarrier.hpp
 portfolio/failedtrade.hpp
 portfolio/fixingdates.hpp
+portfolio/formulabasedindexbuilder.hpp
+portfolio/formulabasedlegbuilder.hpp
+portfolio/formulabasedlegdata.hpp
 portfolio/forwardbond.hpp
 portfolio/forwardrateagreement.hpp
 portfolio/fxaverageforward.hpp
@@ -693,6 +708,7 @@ scripting/models/blackscholescg.hpp
 scripting/models/blackscholescgbase.hpp
 scripting/models/dummymodel.hpp
 scripting/models/fdblackscholesbase.hpp
+scripting/models/fdgaussiancam.hpp
 scripting/models/gaussiancam.hpp
 scripting/models/gaussiancamcg.hpp
 scripting/models/hwcg.hpp
@@ -723,6 +739,7 @@ utilities/currencyparser.hpp
 utilities/dategrid.hpp
 utilities/fileio.hpp
 utilities/flowanalysis.hpp
+utilities/formulaparser.hpp
 utilities/indexnametranslator.hpp
 utilities/indexparser.hpp
 utilities/inflationstartdate.hpp

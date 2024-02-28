@@ -206,6 +206,7 @@ void RiskParticipationAgreement::buildWithSwapUnderlying(const boost::shared_ptr
 
     // set pricing engine
     qleInstr->setPricingEngine(builder->engine(id(), this));
+    setSensitivityTemplate(*builder);
 }
 
 namespace {
@@ -297,6 +298,7 @@ void RiskParticipationAgreement::buildWithTlockUnderlying(const boost::shared_pt
     // set pricing engine
 
     qleInstr->setPricingEngine(builder->engine(id(), this));
+    setSensitivityTemplate(*builder);
 }
 
 void RiskParticipationAgreement::fromXML(XMLNode* node) {

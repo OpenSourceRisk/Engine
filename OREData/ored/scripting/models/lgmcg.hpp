@@ -39,7 +39,7 @@ public:
           const std::function<boost::shared_ptr<IrLgm1fParametrization>()>& p,
           std::vector<std::pair<std::size_t, std::function<double(void)>>>& modelParameters,
           const bool sloppySimDates = false, const std::set<Date>& effSimDates = {})
-        : qualifier_(qualifier), g_(g), p_(p), modelParameters_(modelParameters), sloppySimDates_(sloppySimDates),
+        : qualifier_(qualifier), g_(g), p_(p), modelParameters_(modelParameters),
           effSimDates_(effSimDates) {}
 
     boost::shared_ptr<IrLgm1fParametrization> parametrization() const { return p_(); }
@@ -65,7 +65,6 @@ private:
     QuantExt::ComputationGraph& g_;
     std::function<boost::shared_ptr<IrLgm1fParametrization>()> p_;
     std::vector<std::pair<std::size_t, std::function<double(void)>>>& modelParameters_;
-    bool sloppySimDates_;
     std::set<Date> effSimDates_;
 };
 

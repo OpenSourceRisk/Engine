@@ -186,7 +186,7 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
         } else {
             QL_REQUIRE(exerciseType == QuantLib::Exercise::Type::European, "Only European Forward Options currently supported");
             LOG("Built VanillaForwardOption for trade " << id());
-            vanilla = boost::make_shared<QuantExt::VanillaForwardOption>(payoff, exercise, forwardDate_);
+            vanilla = boost::make_shared<QuantExt::VanillaForwardOption>(payoff, exercise, forwardDate_, paymentDate_);
             if (assetClassUnderlying_ == AssetClass::COM)
                 tradeTypeBuilder = tradeType_ + "Forward";
         }
@@ -212,7 +212,12 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
                 boost::dynamic_pointer_cast<VanillaOptionEngineBuilder>(builder);
 	QL_REQUIRE(vanillaOptionBuilder != nullptr, "No engine builder found for trade type " << tradeTypeBuilder);
 
-	vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate_));
+    if (forwardDate_ != Date()) {
+        vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate_, false));
+    } else {
+        vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate_, true));
+    }
+    setSensitivityTemplate(*vanillaOptionBuilder);
 
 	configuration = vanillaOptionBuilder->configuration(MarketContext::pricing);
     } else {
@@ -222,6 +227,7 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
                                                                 << tradeTypeBuilder);
 
 	vanilla->setPricingEngine(quantoVanillaOptionBuilder->engine(assetName_, underlyingCurrency, ccy, expiryDate_));
+        setSensitivityTemplate(*quantoVanillaOptionBuilder);
 
 	configuration = quantoVanillaOptionBuilder->configuration(MarketContext::pricing);
     }

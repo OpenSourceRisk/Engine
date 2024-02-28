@@ -482,6 +482,11 @@ LoggerStream::~LoggerStream() {
     }
 }
 
+void JSONMessage::log() const {
+    if (!ore::data::Log::instance().checkExcludeFilters(msg()))
+        emitLog();
+}
+
 string JSONMessage::jsonify(const boost::any& obj) {
     if (obj.type() == typeid(map<string, boost::any>)) {
         string jsonStr = "{ ";
@@ -562,7 +567,7 @@ StructuredMessage::StructuredMessage(const Category& category, const Group& grou
     }
 }
 
-void StructuredMessage::log() const {
+void StructuredMessage::emitLog() const {
     lsrc::severity_logger_mt<oreSeverity> lg;
     lg.add_attribute(messageType.get_name(), lattr::constant<string>(name));
     
@@ -608,22 +613,24 @@ void StructuredMessage::addSubFields(const map<string, string>& subFields) {
     }
 }
 
-void EventMessage::log() const {
+void EventMessage::emitLog() const {
     lsrc::severity_logger_mt<oreSeverity> lg;
     lg.add_attribute(messageType.get_name(), lattr::constant<string>(name));
     BOOST_LOG_SEV(lg, oreSeverity::alert) << json();
     MLOG(oreSeverity::alert, msg());
 }
 
-ProgressMessage::ProgressMessage(const string& key, const Size progressCurrent, const Size progressTotal) {
+ProgressMessage::ProgressMessage(const string& key, const Size progressCurrent, const Size progressTotal, const string& detail) {
     data_["key"] = key;
+    if (!detail.empty())
+        data_["detail"] = detail;
     data_["progress"] = progressCurrent;
     data_["total"] = progressTotal;
     data_["@timestamp"] =
         boost::posix_time::to_iso_extended_string(boost::posix_time::microsec_clock::universal_time());
 }
 
-void ProgressMessage::log() const {
+void ProgressMessage::emitLog() const {
     lsrc::severity_logger_mt<oreSeverity> lg;
     lg.add_attribute(messageType.get_name(), lattr::constant<string>(name));
     BOOST_LOG_SEV(lg, oreSeverity::notice) << json();

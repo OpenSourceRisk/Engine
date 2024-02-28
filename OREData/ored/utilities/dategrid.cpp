@@ -205,6 +205,7 @@ void DateGrid::truncate(Size len) {
 }
 
 void DateGrid::addCloseOutDates(const QuantLib::Period& p) {
+    closeOutToValuation_.clear();
     if (p == QuantLib::Period(0, QuantLib::Days)) {
         for (Size i = 0; i < dates_.size(); ++i) {
             if (i == 0) {
@@ -217,39 +218,36 @@ void DateGrid::addCloseOutDates(const QuantLib::Period& p) {
                 isCloseOutDate_[i] = true;
                 isValuationDate_[i] = true;
             }
+            if (isCloseOutDate_[i] && i > 0)
+                closeOutToValuation_[dates_[i]] = dates_[i - 1];
         }
     } else {
-        std::vector<Date> tmpDates;
-        std::vector<bool> tmpIsCloseOutDate, tmpIsValuationDate;
+        std::set<QuantLib::Date> tmpDates;
+        std::set<QuantLib::Date> tmpValueDates;
         for (Size i = 0; i < dates_.size(); ++i) {
             Date c;
             if (p.units() == Days)
                 c = calendar_.adjust(dates_[i] + p);
             else
                 c = calendar_.advance(dates_[i], p, Following, false);
-            if (i < dates_.size() - 1) {
-                // adjust the grid to ensure no overlap in valuation and closeout dates
-                if (c >= dates_[i + 1]) {
-                    dates_[i + 1] = calendar_.advance(c, QuantLib::Period(1, QuantLib::Days));
-                    // check that the grid is still monotonic
-                    if ((i + 2) < dates_.size()) {
-                        QL_REQUIRE(dates_[i + 1] < dates_[i + 2],
-                                   "date grid is no longer monotonic: " << dates_[i + 1] << ", " << dates_[i + 2]);
-                    }
-                }
-                QL_REQUIRE(c < dates_[i + 1],
-                           "close out date " << c << " does not lie before next grid date " << dates_[i + 1]);
-            }
-            tmpDates.push_back(dates_[i]);
-            tmpDates.push_back(c);
-            tmpIsCloseOutDate.push_back(false);
-            tmpIsCloseOutDate.push_back(true);
-            tmpIsValuationDate.push_back(true);
-            tmpIsValuationDate.push_back(false);
+            closeOutToValuation_[c] = dates_[i];
+            tmpDates.insert(dates_[i]);
+            tmpDates.insert(c);
+            tmpValueDates.insert(dates_[i]);
         }
-        dates_ = tmpDates;
-        isCloseOutDate_ = tmpIsCloseOutDate;
-        isValuationDate_ = tmpIsValuationDate;
+        dates_.clear();
+        dates_.assign(tmpDates.begin(), tmpDates.end());
+        isCloseOutDate_ = std::vector<bool>(dates_.size(), false);
+        isValuationDate_ = std::vector<bool>(dates_.size(), true);
+        for(size_t i = 0; i < dates_.size(); ++i){
+            Date d = dates_[i];
+            if(closeOutToValuation_.count(d) == 1){
+                isCloseOutDate_[i] = true;
+            }
+            if(tmpValueDates.count(d) == 0){
+                isValuationDate_[i] = false;
+            }
+        }
         // FIXME ... (is that needed anywhere ?)
         tenors_ = std::vector<QuantLib::Period>(dates_.size(), 0 * Days);
         times_.resize(dates_.size());
@@ -299,6 +297,12 @@ QuantLib::TimeGrid DateGrid::closeOutTimeGrid() const {
             times.push_back(dayCounter_.yearFraction(today, dates_[i]));
     }
     return TimeGrid(times.begin(), times.end());
+}
+
+QuantLib::Date DateGrid::valuationDateFromCloseOutDate(const QuantLib::Date& closeOutDate) const {
+    auto it = closeOutToValuation_.find(closeOutDate);
+    QL_REQUIRE(it != closeOutToValuation_.end(), "close out date " << closeOutDate << " not found in dategrid");
+    return it->second;
 }
 
 boost::shared_ptr<DateGrid> generateShiftedDateGrid(const boost::shared_ptr<DateGrid>& dg,

@@ -18,10 +18,10 @@
 
 #include <qle/indexes/compositeindex.hpp>
 
-#include <qle/calendars/largejointcalendar.hpp>
 #include <qle/indexes/bondindex.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/genericindex.hpp>
+#include <ql/time/calendars/jointcalendar.hpp>
 
 namespace QuantExt {
 
@@ -46,7 +46,7 @@ CompositeIndex::CompositeIndex(const std::string& name, const std::vector<boost:
         cals.push_back(i->fixingCalendar());
     }
 
-    fixingCalendar_ = LargeJointCalendar(cals);
+    fixingCalendar_ = JointCalendar(cals);
 }
 
 std::string CompositeIndex::name() const { return name_; }

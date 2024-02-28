@@ -114,7 +114,7 @@ map<Date, HelperValues> jyHelperValues(const vector<boost::shared_ptr<Calibratio
         if (ctr < times.size())
             kv.second.maturity = times[ctr++];
         else
-            kv.second.maturity = times.back();
+            kv.second.maturity = times.empty() ? 0.0 : times.back();
     }
 
     return result;

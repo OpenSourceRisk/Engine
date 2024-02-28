@@ -107,6 +107,7 @@ void CommodityPosition::build(const boost::shared_ptr<ore::data::EngineFactory>&
     auto qlInstr =
         boost::make_shared<CommodityPositionInstrumentWrapper>(data_.quantity(), indices_, weights_, fxConversion_);
     qlInstr->setPricingEngine(boost::make_shared<CommodityPositionInstrumentWrapperEngine>());
+    setSensitivityTemplate(std::string());
     instrument_ = boost::make_shared<VanillaInstrument>(qlInstr);
 
     // no sensible way to set these members
@@ -145,7 +146,7 @@ std::map<AssetClass, std::set<std::string>>
 CommodityPosition::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<AssetClass, std::set<std::string>> result;
     for (auto const& u : data_.underlyings()) {
-        result[AssetClass::EQ].insert(u.name());
+        result[AssetClass::COM].insert(u.name());
     }
     return result;
 }

@@ -100,7 +100,7 @@ public:
     virtual void writeAggregationScenarioData(ore::data::Report& report, const AggregationScenarioData& data);
 
     virtual void writeScenarioReport(ore::data::Report& report,
-                                     const boost::shared_ptr<SensitivityCube>& sensitivityCube,
+                                     const std::vector<boost::shared_ptr<SensitivityCube>>& sensitivityCubes,
                                      QuantLib::Real outputThreshold = 0.0);
 
     virtual void writeSensitivityReport(ore::data::Report& report, const boost::shared_ptr<SensitivityStream>& ss,
@@ -165,6 +165,25 @@ public:
                                             const std::vector<ore::analytics::RiskFactorKey>& keys,
                                             QuantLib::Size numPaths, const std::vector<QuantLib::Date>& dates,
                                             QuantLib::Size distSteps, ore::data::Report& report);
+
+    virtual void
+    writeHistoricalScenarioDetails(const boost::shared_ptr<ore::analytics::HistoricalScenarioGenerator>& generator,
+                                   ore::data::Report& report);
+
+    virtual void writeStockSplitReport(const boost::shared_ptr<ore::analytics::Scenario>& baseScenario,
+                                       const boost::shared_ptr<ore::analytics::HistoricalScenarioLoader>& hsloader,
+                                       const boost::shared_ptr<ore::data::AdjustmentFactors>& adjFactors,
+                                       const boost::shared_ptr<ore::data::Report>& report);
+
+    void writeHistoricalScenarios(const boost::shared_ptr<HistoricalScenarioLoader>& hsloader,
+                                  const boost::shared_ptr<ore::data::Report>& report);
+
+    void writeHistoricalScenarioDistributions(
+        boost::shared_ptr<HistoricalScenarioGenerator>& hsgen,
+        const boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
+        const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams,
+        boost::shared_ptr<ore::data::Report> histScenDetailsReport, boost::shared_ptr<ore::data::Report> statReport,
+        boost::shared_ptr<ore::data::Report> distReport, QuantLib::Size distSteps = Null<Size>());
 
 protected:
     std::string nullString_;

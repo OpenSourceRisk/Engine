@@ -310,7 +310,7 @@ private:
   - IR_SWAP
 
   Specific data comprise currency, fwdStart, tenor, term, startDate, maturityDate
-  The constructoir accepts either fwdStart/term or startDate/maturityDate
+  The constructor accepts either fwdStart/term or startDate/maturityDate
 
   \ingroup marketdata
 */

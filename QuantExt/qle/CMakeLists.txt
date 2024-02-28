@@ -15,7 +15,6 @@ calendars/ice.cpp
 calendars/ireland.cpp
 calendars/islamicweekendsonly.cpp
 calendars/israel.cpp
-calendars/largejointcalendar.cpp
 calendars/luxembourg.cpp
 calendars/malaysia.cpp
 calendars/mauritius.cpp
@@ -52,11 +51,13 @@ cashflows/equitymargincouponpricer.cpp
 cashflows/fixedratefxlinkednotionalcoupon.cpp
 cashflows/floatingannuitycoupon.cpp
 cashflows/floatingannuitynominal.cpp
+cashflows/formulabasedcoupon.cpp
 cashflows/fxlinkedcashflow.cpp
 cashflows/iborfracoupon.cpp
 cashflows/indexedcoupon.cpp
 cashflows/jyyoyinflationcouponpricer.cpp
 cashflows/lognormalcmsspreadpricer.cpp
+cashflows/mcgaussianformulabasedcouponpricer.cpp
 cashflows/nonstandardcapflooredyoyinflationcoupon.cpp
 cashflows/nonstandardinflationcouponpricer.cpp
 cashflows/nonstandardyoyinflationcoupon.cpp
@@ -84,6 +85,7 @@ indexes/dividendmanager.cpp
 indexes/equityindex.cpp
 indexes/fallbackiborindex.cpp
 indexes/fallbackovernightindex.cpp
+indexes/formulabasedindex.cpp
 indexes/fxindex.cpp
 indexes/genericiborindex.cpp
 indexes/ibor/ameribor.cpp
@@ -147,6 +149,7 @@ instruments/varianceswap.cpp
 math/basiccpuenvironment.cpp
 math/blockmatrixinverse.cpp
 math/bucketeddistribution.cpp
+math/compiledformula.cpp
 math/computeenvironment.cpp
 math/deltagammavar.cpp
 math/differentialevolution_mt.cpp
@@ -163,6 +166,7 @@ methods/fdmblackscholesmesher.cpp
 methods/fdmblackscholesop.cpp
 methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.cpp
 methods/fdmdefaultableequityjumpdiffusionop.cpp
+methods/fdmlgmop.cpp
 methods/fdmquantohelper.cpp
 methods/multipathgeneratorbase.cpp
 methods/multipathvariategenerator.cpp
@@ -205,6 +209,7 @@ models/jyimpliedzeroinflationtermstructure.cpp
 models/lgm.cpp
 models/lgmcalibrationinfo.cpp
 models/lgmconvolutionsolver2.cpp
+models/lgmfdsolver.cpp
 models/lgmimplieddefaulttermstructure.cpp
 models/lgmimpliedyieldtermstructure.cpp
 models/lgmvectorised.cpp
@@ -244,6 +249,7 @@ pricingengines/binomialconvertibleengine.cpp
 pricingengines/blackbondoptionengine.cpp
 pricingengines/blackcdsoptionengine.cpp
 pricingengines/blackindexcdsoptionengine.cpp
+pricingengines/blackmultilegoptionengine.cpp
 pricingengines/cboengine.cpp
 pricingengines/cbomcengine.cpp
 pricingengines/commodityapoengine.cpp
@@ -409,7 +415,6 @@ calendars/ice.hpp
 calendars/ireland.hpp
 calendars/islamicweekendsonly.hpp
 calendars/israel.hpp
-calendars/largejointcalendar.hpp
 calendars/luxembourg.hpp
 calendars/malaysia.hpp
 calendars/mauritius.hpp
@@ -447,11 +452,13 @@ cashflows/fixedratefxlinkednotionalcoupon.hpp
 cashflows/floatingannuitycoupon.hpp
 cashflows/floatingannuitynominal.hpp
 cashflows/floatingratefxlinkednotionalcoupon.hpp
+cashflows/formulabasedcoupon.hpp
 cashflows/fxlinkedcashflow.hpp
 cashflows/iborfracoupon.hpp
 cashflows/indexedcoupon.hpp
 cashflows/jyyoyinflationcouponpricer.hpp
 cashflows/lognormalcmsspreadpricer.hpp
+cashflows/mcgaussianformulabasedcouponpricer.hpp
 cashflows/nonstandardcapflooredyoyinflationcoupon.hpp
 cashflows/nonstandardinflationcouponpricer.hpp
 cashflows/nonstandardyoyinflationcoupon.hpp
@@ -488,6 +495,7 @@ indexes/equityindex.hpp
 indexes/escpi.hpp
 indexes/fallbackiborindex.hpp
 indexes/fallbackovernightindex.hpp
+indexes/formulabasedindex.hpp
 indexes/frcpi.hpp
 indexes/fxindex.hpp
 indexes/genericiborindex.hpp
@@ -605,6 +613,7 @@ interpolators/optioninterpolator2d.hpp
 math/basiccpuenvironment.hpp
 math/blockmatrixinverse.hpp
 math/bucketeddistribution.hpp
+math/compiledformula.hpp
 math/computeenvironment.hpp
 math/constantinterpolation.hpp
 math/covariancesalvage.hpp
@@ -634,6 +643,7 @@ methods/fdmblackscholesmesher.hpp
 methods/fdmblackscholesop.hpp
 methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.hpp
 methods/fdmdefaultableequityjumpdiffusionop.hpp
+methods/fdmlgmop.hpp
 methods/fdmquantohelper.hpp
 methods/multipathgeneratorbase.hpp
 methods/multipathvariategenerator.hpp
@@ -702,8 +712,10 @@ models/irmodel.hpp
 models/jyimpliedyoyinflationtermstructure.hpp
 models/jyimpliedzeroinflationtermstructure.hpp
 models/lgm.hpp
+models/lgmbackwardsolver.hpp
 models/lgmcalibrationinfo.hpp
 models/lgmconvolutionsolver2.hpp
+models/lgmfdsolver.hpp
 models/lgmimplieddefaulttermstructure.hpp
 models/lgmimpliedyieldtermstructure.hpp
 models/lgmvectorised.hpp
@@ -749,6 +761,7 @@ pricingengines/binomialconvertibleengine.hpp
 pricingengines/blackbondoptionengine.hpp
 pricingengines/blackcdsoptionengine.hpp
 pricingengines/blackindexcdsoptionengine.hpp
+pricingengines/blackmultilegoptionengine.hpp
 pricingengines/cboengine.hpp
 pricingengines/cbomcengine.hpp
 pricingengines/commodityapoengine.hpp

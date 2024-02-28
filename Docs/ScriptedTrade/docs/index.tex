@@ -61,7 +61,7 @@ For additional information on the equity name conventions see \ref{tab:equity_cr
 general the equity name can be represented using the string representation {IdentifierType}:{Name}:{Currency}:{Exchange}
 for the underlying. \\
 For additional information on the fx index format see \ref{tab:fxindex_data}. \\
-For additional information on the commondity names see \ref{tab:commodity_data}.
+For additional information on the commodity names see \ref{tab:commodity_data}.
 \fi
 
 Within the scripting framework there are additional ways to reference commodity indices in a more dynamical fashion:
@@ -76,7 +76,7 @@ for
 \begin{itemize}
 \item a variable of the form \verb+COMM-{Name}#N+, the index will be resolved to the $N+1$th future with expiry greater than
   ObservationDate for the given commodity underlying, $N\geq0$. The parameter $N$ corresponds to the field
-  \verb+FutureMonthOffset+ commonly used in coomodity trade xml schemas
+  \verb+FutureMonthOffset+ commonly used in commodity trade xml schemas
 \item the above form can take one or two additional parameters \verb+COMM-{Name}#N#D+ or \verb+COMM-{Name}#N#D#{Cal}+ where
   $D$ corresponds to \verb+DeliveryRollDays+ and \verb+Cal+ is the calendar used to roll the observation date forward
   before the next future expiry is looked up. If \verb+Cal+ is not given, it defaults to the null calendar (no

@@ -113,6 +113,7 @@ void BondOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         bondOptionBuilder->engine(id(), currency, bondData_.creditCurveId(), bondData_.hasCreditRisk(),
                                   bondData_.securityId(), bondData_.referenceCurveId(), bondData_.volatilityCurveId()));
     bondoption->setPricingEngine(blackEngine);
+    setSensitivityTemplate(*bondOptionBuilder);
 
     Real multiplier =
         bondData_.bondNotional() * (parsePositionType(optionData_.longShort()) == Position::Long ? 1.0 : -1.0);

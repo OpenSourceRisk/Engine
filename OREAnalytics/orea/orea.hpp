@@ -58,10 +58,12 @@
 #include <orea/engine/amcvaluationengine.hpp>
 #include <orea/engine/bufferedsensitivitystream.hpp>
 #include <orea/engine/cptycalculator.hpp>
+#include <orea/engine/decomposedsensitivitystream.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
 #include <orea/engine/historicalpnlgenerator.hpp>
 #include <orea/engine/historicalsensipnlcalculator.hpp>
 #include <orea/engine/historicalsimulationvar.hpp>
+#include <orea/engine/marketriskreport.hpp>
 #include <orea/engine/mporcalculator.hpp>
 #include <orea/engine/multistatenpvcalculator.hpp>
 #include <orea/engine/multithreadedvaluationengine.hpp>
@@ -77,6 +79,7 @@
 #include <orea/engine/sensitivityfilestream.hpp>
 #include <orea/engine/sensitivityinmemorystream.hpp>
 #include <orea/engine/sensitivityrecord.hpp>
+#include <orea/engine/sensitivityreportstream.hpp>
 #include <orea/engine/sensitivitystream.hpp>
 #include <orea/engine/stresstest.hpp>
 #include <orea/engine/valuationcalculator.hpp>

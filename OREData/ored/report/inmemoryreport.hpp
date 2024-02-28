@@ -27,6 +27,7 @@
 #include <ored/report/report.hpp>
 #include <ql/errors.hpp>
 #include <vector>
+
 namespace ore {
 namespace data {
 using std::string;
@@ -40,60 +41,11 @@ class InMemoryReport : public Report {
 public:
     InMemoryReport() : i_(0) {}
 
-    Report& addColumn(const string& name, const ReportType& rt, Size precision = 0) override {
-        headers_.push_back(name);
-        columnTypes_.push_back(rt);
-        columnPrecision_.push_back(precision);
-        data_.push_back(vector<ReportType>()); // Initialise vector for
-        i_++;
-        return *this;
-    }
-
-    Report& next() override {
-        QL_REQUIRE(i_ == headers_.size(), "Cannot go to next line, only " << i_ << " entires filled");
-        i_ = 0;
-        return *this;
-    }
-
-    Report& add(const ReportType& rt) override {
-        // check type is valid
-        QL_REQUIRE(i_ < headers_.size(), "No column to add [" << rt << "] to.");
-        QL_REQUIRE(rt.which() == columnTypes_[i_].which(),
-                   "Cannot add value " << rt << " of type " << rt.which() << " to column " << headers_[i_]
-                                       << " of type " << columnTypes_[i_].which());
-
-        data_[i_].push_back(rt);
-        i_++;
-        return *this;
-    }
-
-    Report& add(const InMemoryReport& report) {
-        QL_REQUIRE(columns() == report.columns(),
-                   "Cannot combine reports of different sizes (" << columns() << " vs " << report.columns() << ").");
-        end();
-        for (Size i = 0; i < columns(); i++) {
-            string h1 = headers_[i];
-            string h2 = report.header(i);
-            QL_REQUIRE(h1 == h2, "Cannot combine reports with different headers (\"" << h1 << "\" and \"" << h2 << "\")");
-        }
-
-        if (i_ == headers_.size())
-            next();
-        
-        for (Size rowIdx = 0; rowIdx < report.rows(); rowIdx++) {
-            for (Size columnIdx = 0; columnIdx < report.columns(); columnIdx++) {
-                add(report.data(columnIdx)[rowIdx]);
-            }
-            next();
-        }
-        
-        return *this;
-    }
-
-    void end() override {
-        QL_REQUIRE(i_ == headers_.size() || i_ == 0,
-                   "report is finalized with incomplete row, got data for " << i_ << " columns out of " << columns());
-    }
+    Report& addColumn(const string& name, const ReportType& rt, Size precision = 0) override;
+    Report& next() override;
+    Report& add(const ReportType& rt) override;
+    Report& add(const InMemoryReport& report);
+    void end() override;
 
     // InMemoryInterface
     Size columns() const { return headers_.size(); }
@@ -103,36 +55,9 @@ public:
     ReportType columnType(Size i) const { return columnTypes_[i]; }
     Size columnPrecision(Size i) const { return columnPrecision_[i]; }
     //! Returns the data
-    const vector<ReportType>& data(Size i) const {
-        QL_REQUIRE(data_[i].size() == rows(), "internal error: report column "
-                                                  << i << " (" << header(i) << ") contains " << data_[i].size()
-                                                  << " rows, expected are " << rows() << " rows.");
-        return data_[i];
-    }
-
+    const vector<ReportType>& data(Size i) const;
     void toFile(const string& filename, const char sep = ',', const bool commentCharacter = true, char quoteChar = '\0',
-                const string& nullString = "#N/A", bool lowerHeader = false) {
-
-        CSVFileReport cReport(filename, sep, commentCharacter, quoteChar, nullString, lowerHeader);
-
-        for (Size i = 0; i < headers_.size(); i++) {
-            cReport.addColumn(headers_[i], columnTypes_[i], columnPrecision_[i]);
-        }
-
-        auto numColumns = columns();
-        if (numColumns > 0) {
-            auto numRows = data_[0].size();
-
-            for (Size i = 0; i < numRows; i++) {
-                cReport.next();
-                for (Size j = 0; j < numColumns; j++) {
-                    cReport.add(data_[j][i]);
-                }
-            }
-        }
-
-        cReport.end();
-    }
+                const string& nullString = "#N/A", bool lowerHeader = false);
 
 private:
     Size i_;
@@ -176,7 +101,10 @@ private:
         return tmp;
     }
     vector<int> sizeToInt(const vector<Size>& v) const {
-        return std::vector<int>(std::begin(v), std::end(v));
+        std::vector<int> vi;
+        for (auto s : v)
+            vi.push_back(int(s));
+        return vi;
     }
     boost::shared_ptr<InMemoryReport> imReport_;
 };

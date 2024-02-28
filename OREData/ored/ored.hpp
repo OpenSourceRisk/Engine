@@ -31,6 +31,7 @@
 #include <ored/configuration/volatilityconfig.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
 #include <ored/configuration/yieldvolcurveconfig.hpp>
+#include <ored/marketdata/adjustedinmemoryloader.hpp>
 #include <ored/marketdata/adjustmentfactors.hpp>
 #include <ored/marketdata/basecorrelationcurve.hpp>
 #include <ored/marketdata/capfloorvolcurve.hpp>
@@ -172,6 +173,7 @@
 #include <ored/portfolio/builders/equityfuturesoption.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
 #include <ored/portfolio/builders/equitytouchoption.hpp>
+#include <ored/portfolio/builders/formulabasedcoupon.hpp>
 #include <ored/portfolio/builders/forwardbond.hpp>
 #include <ored/portfolio/builders/fxasianoption.hpp>
 #include <ored/portfolio/builders/fxbarrieroption.hpp>
@@ -198,6 +200,7 @@
 #include <ored/portfolio/cbo.hpp>
 #include <ored/portfolio/cdo.hpp>
 #include <ored/portfolio/cliquetoption.hpp>
+#include <ored/portfolio/collateralbalance.hpp>
 #include <ored/portfolio/commodityapo.hpp>
 #include <ored/portfolio/commoditydigitalapo.hpp>
 #include <ored/portfolio/commoditydigitaloption.hpp>
@@ -244,6 +247,9 @@
 #include <ored/portfolio/europeanoptionbarrier.hpp>
 #include <ored/portfolio/failedtrade.hpp>
 #include <ored/portfolio/fixingdates.hpp>
+#include <ored/portfolio/formulabasedindexbuilder.hpp>
+#include <ored/portfolio/formulabasedlegbuilder.hpp>
+#include <ored/portfolio/formulabasedlegdata.hpp>
 #include <ored/portfolio/forwardbond.hpp>
 #include <ored/portfolio/forwardrateagreement.hpp>
 #include <ored/portfolio/fxaverageforward.hpp>
@@ -340,6 +346,7 @@
 #include <ored/scripting/models/blackscholescgbase.hpp>
 #include <ored/scripting/models/dummymodel.hpp>
 #include <ored/scripting/models/fdblackscholesbase.hpp>
+#include <ored/scripting/models/fdgaussiancam.hpp>
 #include <ored/scripting/models/gaussiancam.hpp>
 #include <ored/scripting/models/gaussiancamcg.hpp>
 #include <ored/scripting/models/hwcg.hpp>
@@ -370,6 +377,7 @@
 #include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/fileio.hpp>
 #include <ored/utilities/flowanalysis.hpp>
+#include <ored/utilities/formulaparser.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/inflationstartdate.hpp>

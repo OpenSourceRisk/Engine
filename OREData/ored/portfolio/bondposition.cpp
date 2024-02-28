@@ -74,7 +74,11 @@ void BondPosition::build(const boost::shared_ptr<ore::data::EngineFactory>& engi
 
     maturity_ = Date::minDate();
     for (auto const& u : data_.underlyings()) {
-        bonds_.push_back(BondFactory::instance().build(engineFactory, engineFactory->referenceData(), u.name()));
+        try {
+            bonds_.push_back(BondFactory::instance().build(engineFactory, engineFactory->referenceData(), u.name()));
+        } catch (const std::exception& e) {
+            QL_FAIL("Build failed for underlying " << u.type() << " (" << u.name() << "): " << e.what());
+        }
         weights_.push_back(u.weight());
         bidAskAdjustments_.push_back(u.bidAskAdjustment());
         maturity_ = std::max(bonds_.back().bond->maturityDate(), maturity_);
@@ -108,6 +112,8 @@ void BondPosition::build(const boost::shared_ptr<ore::data::EngineFactory>& engi
     additionalData_["isdaBaseProduct"] = string("");
     additionalData_["isdaSubProduct"] = string("");
     additionalData_["isdaTransaction"] = string("");
+
+    setSensitivityTemplate(std::string());
 }
 
 void BondPosition::setNpvCurrencyConversion(const std::string& ccy, const Handle<Quote>& conversion) {

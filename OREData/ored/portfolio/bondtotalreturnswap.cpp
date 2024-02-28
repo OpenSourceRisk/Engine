@@ -17,20 +17,20 @@
 */
 
 #include <ored/portfolio/bondtotalreturnswap.hpp>
-#include <ored/portfolio/builders/bondtotalreturnswap.hpp>
-#include <qle/cashflows/bondtrscashflow.hpp>
-#include <qle/instruments/bondtotalreturnswap.hpp>
-
 #include <ored/portfolio/bondutils.hpp>
 #include <ored/portfolio/builders/bond.hpp>
+#include <ored/portfolio/builders/bondtotalreturnswap.hpp>
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/utilities/bondindexbuilder.hpp>
+#include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
-
+#include <qle/cashflows/bondtrscashflow.hpp>
 #include <qle/indexes/bondindex.hpp>
+#include <qle/instruments/bondtotalreturnswap.hpp>
+#include <qle/utilities/inflation.hpp>
 
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/instruments/bond.hpp>
@@ -186,6 +186,7 @@ void BondTRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         boost::dynamic_pointer_cast<BondTRSEngineBuilder>(builder_trs);
     QL_REQUIRE(trsBondBuilder, "No Builder found for BondTRS: " << id());
     bondTRS->setPricingEngine(trsBondBuilder->engine(fundingLegData_.currency()));
+    setSensitivityTemplate(*trsBondBuilder);
     instrument_.reset(new VanillaInstrument(bondTRS));
 
     npvCurrency_ = fundingLegData_.currency();
@@ -212,11 +213,27 @@ void BondTRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         }
     }
 
+    if (bondData_.isInflationLinked() && useDirtyPrices()) {
+        auto inflationIndices = extractAllInflationUnderlyingFromBond(bondIndex->bond());
+        for (const auto& cf : bondTRS->returnLeg()) {
+            auto tcf = boost::dynamic_pointer_cast<TRSCashFlow>(cf);
+            if (tcf != nullptr) {
+                for (const auto& [key, index] : inflationIndices) {
+                    auto [name, interpolation, couponFrequency, observationLag] = key;
+                    std::string oreName = IndexNameTranslator::instance().oreName(name);
+                    requiredFixings_.addZeroInflationFixingDate(
+                        tcf->fixingStartDate() - observationLag, oreName, false, index->frequency(),
+                        index->availabilityLag(), interpolation, couponFrequency, Date::maxDate(), false, false);
+                }
+            }
+        }
+    }
+
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Credit");
     additionalData_["isdaBaseProduct"] = string("Total Return Swap");
-    additionalData_["isdaSubProduct"] = string("");  
-    additionalData_["isdaTransaction"] = string("");  
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");
 }
 
 void BondTRS::fromXML(XMLNode* node) {

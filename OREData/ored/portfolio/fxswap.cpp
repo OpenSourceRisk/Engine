@@ -51,7 +51,7 @@ void FxSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         boost::shared_ptr<FxForwardEngineBuilderBase> fxBuilder =
             boost::dynamic_pointer_cast<FxForwardEngineBuilderBase>(builder);
         instNear_->setPricingEngine(fxBuilder->engine(nearSoldCcy, nearBoughtCcy));
-        //boost::shared_ptr<QuantLib::Instrument> instFar;
+        setSensitivityTemplate(*fxBuilder);
         instFar_.reset(
             new QuantExt::FxForward(farBoughtAmount_, nearSoldCcy, farSoldAmount_, nearBoughtCcy, farDate, false));
         instFar_->setPricingEngine(fxBuilder->engine(nearSoldCcy, nearBoughtCcy));
