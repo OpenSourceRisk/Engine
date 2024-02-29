@@ -484,6 +484,10 @@ std::vector<std::vector<std::size_t>> OpenClContext::createInputVariates(const s
     QL_REQUIRE(currentState_ == ComputeState::createInput || currentState_ == ComputeState::createVariates,
                "OpenClContext::createInputVariable(): not in state createInput or createVariates ("
                    << static_cast<int>(currentState_) << ")");
+    QL_REQUIRE(currentId_ > 0, "OpenClContext::applyOperation(): current id is not set");
+    QL_REQUIRE(!hasKernel_[currentId_ - 1], "OpenClContext::createInputVariates(): id ("
+                                                << currentId_ << ") in version " << version_[currentId_ - 1]
+                                                << " has a kernel already, input variates can not be regenerated.");
     currentState_ = ComputeState::createVariates;
     std::vector<std::vector<std::size_t>> resultIds(dim, std::vector<std::size_t>(steps));
     std::uint32_t currentSeed = seed;

@@ -290,7 +290,7 @@ The following order of calls to a \verb+ComputeContext+ from top to bottom is gu
 \begin{enumerate}
 \item \verb+initiateCalculation()+: once
 \item \verb+createInputVariable()+: never, once, or several times
-\item \verb+createInputVariates()+: never, once, or several times
+\item \verb+createInputVariates()+: called if the current calculation is not replayed from a previous calculation, then can be called never, once or several times
 \item \verb+applyOperation()+: only called if the current calculation is not replayed from a previous calculation, then can be called never, once, or several times
 \item \verb+freeVariable()+: only called if the current calculation is not replayed, then can be called never, once, or several times
 \item \verb+declareOutputVariable()+: only called if the current calculation is not replayed, then can be called never, once, or several times
@@ -417,16 +417,17 @@ external random variable.
 
 \subsection{Populating the input variates}
 
-The next step is the creating of random variates
+The next step is the creating of random variates (if this is a new calculation and not replayed):
 
 \begin{minted}[fontsize=\footnotesize]{xml}
-auto gen = ComputeEnvironment::instance().context()
-                                  .createInputVariates(rv.size(),
-                                                       rv.front().size(),
-                                                       42);
-for (Size k = 0; k < rv.size(); ++k) {
-  for (Size j = 0; j < rv.front().size(); ++j)
-      valuesExternal[rv[k][j]] = ExternalRandomVariable(gen[k][j]);
+if (useExternalComputeFramework_ && newExternalCalc) {
+    auto gen =
+        ComputeEnvironment::instance().context().
+                   createInputVariates(rv.size(), rv.front().size(), 42);
+    for (Size k = 0; k < rv.size(); ++k) {
+        for (Size j = 0; j < rv.front().size(); ++j)
+            valuesExternal[rv[k][j]] = ExternalRandomVariable(gen[k][j]);
+    }
 }
 \end{minted}
 
