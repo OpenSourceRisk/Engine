@@ -659,7 +659,6 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
                 u.second = RandomVariable(gridSize(), 0.0);
             }
         }
-
         // rollback swaption PV
 
         if (i < static_cast<int>(eventDates.size()) - 1) {
@@ -790,6 +789,23 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
                                  callRebateValue);
         }
 
+        // Handle Premium
+        // If PremiumDate > EventDate we  include them in swaptionPv
+
+        for (int j = 0; j < arguments_.premium.size(); j++) {
+            Real premiumAmount = 0;
+            if (arguments_.exerciseIsLong) {
+                premiumAmount = - arguments_.premium[j]->amount();
+            } else {
+                premiumAmount = arguments_.premium[j]->amount();
+            }
+
+            if (arguments_.premium[j]->date() > eventDates[i]) {
+                swaptionPv += RandomVariable(gridSize(), premiumAmount) /
+                             lgm.numeraire(eventTimes[i], states, discountCurves_[arguments_.underlyingCcys[0]]);
+            }
+        }
+        
         // compute positive pv as of event date
 
         RandomVariable tmp = swaptionPv;
