@@ -152,8 +152,8 @@
             <Quote optional="true">BASIS_SWAP/BASIS_SPREAD/3M/6M/EUR/30Y</Quote>
           </Quotes>
           <Conventions>EURIBOR-3M-6M-BASIS</Conventions>
-          <ProjectionCurveLong>EUR-EURIBOR-6M</ProjectionCurveLong>
-          <ProjectionCurveShort>EUR-EURIBOR-3M</ProjectionCurveShort>
+          <ProjectionCurvePay>EUR-EURIBOR-6M</ProjectionCurvePay>
+          <ProjectionCurveReceive>EUR-EURIBOR-3M</ProjectionCurveReceive>
         </TenorBasis>
       </Segments>
       <InterpolationVariable>Discount</InterpolationVariable>
@@ -588,8 +588,8 @@
             <Quote optional="true">BASIS_SWAP/BASIS_SPREAD/3M/6M/USD/30Y</Quote>
           </Quotes>
           <Conventions>USD-LIBOR-3M-6M-BASIS</Conventions>
-          <ProjectionCurveLong>USD-LIBOR-6M</ProjectionCurveLong>
-          <ProjectionCurveShort>USD-LIBOR-3M</ProjectionCurveShort>
+          <ProjectionCurvePay>USD-LIBOR-6M</ProjectionCurvePay>
+          <ProjectionCurveReceive>USD-LIBOR-3M</ProjectionCurveReceive>
         </TenorBasis>
       </Segments>
       <InterpolationVariable>Discount</InterpolationVariable>
