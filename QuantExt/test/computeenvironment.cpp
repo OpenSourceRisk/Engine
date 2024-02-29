@@ -19,6 +19,7 @@
 #include <qle/math/basiccpuenvironment.hpp>
 #include <qle/math/computeenvironment.hpp>
 #include <qle/math/openclenvironment.hpp>
+#include <qle/math/cudaenvironment.hpp>
 #include <qle/math/randomvariable.hpp>
 #include <qle/math/randomvariable_io.hpp>
 #include <qle/math/randomvariable_opcodes.hpp>
@@ -44,6 +45,8 @@ struct ComputeEnvironmentFixture {
             .add("OpenCL", &QuantExt::createComputeFrameworkCreator<QuantExt::OpenClFramework>, true);
                 QuantExt::ComputeFrameworkRegistry::instance()
             .add("BasicCpu", &QuantExt::createComputeFrameworkCreator<QuantExt::BasicCpuFramework>, true);
+		QuantExt::ComputeFrameworkRegistry::instance().add(
+            "Cuda", &QuantExt::createComputeFrameworkCreator<QuantExt::CudaFramework>, true);
     }
     ~ComputeEnvironmentFixture() { ComputeEnvironment::instance().reset(); }
 };
