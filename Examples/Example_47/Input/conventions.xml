@@ -14,10 +14,10 @@
   </Deposit>
   <TenorBasisSwap>
     <Id>JPY-LIBOR-3M-6M-BASIS</Id>
-    <LongIndex>JPY-LIBOR-6M</LongIndex>
-    <ShortIndex>JPY-LIBOR-3M</ShortIndex>
-    <ShortPayTenor/>
-    <SpreadOnShort/>
+    <PayIndex>JPY-LIBOR-6M</PayIndex>
+    <ReceiveIndex>JPY-LIBOR-3M</ReceiveIndex>
+    <ReceiveFrequency/>
+    <SpreadOnRec/>
     <IncludeSpread/>
   </TenorBasisSwap>
   <Swap>
