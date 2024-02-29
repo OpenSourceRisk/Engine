@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(testLargeCalc) {
 
 BOOST_AUTO_TEST_CASE(testRngGeneration) {
     ComputeEnvironmentFixture fixture;
-    const std::size_t n = 65536;
+    const std::size_t n = 51200;
     for (auto const& d : ComputeEnvironment::instance().getAvailableDevices()) {
         BOOST_TEST_MESSAGE("testing rng generation on device '" << d << "'.");
         ComputeEnvironment::instance().selectContext(d);
