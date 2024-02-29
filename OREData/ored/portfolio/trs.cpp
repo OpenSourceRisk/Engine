@@ -19,6 +19,8 @@
 #include <ored/portfolio/trs.hpp>
 #include <ored/portfolio/trsunderlyingbuilder.hpp>
 #include <ored/portfolio/trswrapper.hpp>
+#include <qle/cashflows/averageonindexedcoupon.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/indexes/compositeindex.hpp>
 
 #include <ored/utilities/indexnametranslator.hpp>
@@ -579,8 +581,11 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         if (fundingNotionalTypes[i] == TRS::FundingData::NotionalType::DailyReset) {
             for (auto const& c : fundingLegs[i]) {
                 if (auto cpn = boost::dynamic_pointer_cast<QuantLib::Coupon>(c)) {
-                    QL_REQUIRE(boost::dynamic_pointer_cast<QuantLib::FixedRateCoupon>(c),
-                               "daily reset funding legs support fixed rate coupons only");
+                    QL_REQUIRE(boost::dynamic_pointer_cast<QuantLib::FixedRateCoupon>(c) ||
+                                   boost::dynamic_pointer_cast<QuantLib::IborCoupon>(c) ||
+                                   boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c) ||
+                                   boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c),
+                               "daily reset funding legs support fixed rate, ibor and overnight indexed coupons only");
                     for (QuantLib::Date d = cpn->accrualStartDate(); d < cpn->accrualEndDate(); ++d) {
                         for (Size j = 0; j < underlying_.size(); ++j) {
                             Date fixingDate = underlyingIndex[j]->fixingCalendar().adjust(d, Preceding);
