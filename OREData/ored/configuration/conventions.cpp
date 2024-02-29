@@ -599,25 +599,50 @@ boost::shared_ptr<OvernightIndex> AverageOisConvention::index() const {
     return tmp;
 }
 
-TenorBasisSwapConvention::TenorBasisSwapConvention(const string& id, const string& longIndex, const string& shortIndex,
-                                                   const string& shortPayTenor, const string& longPayTenor,
-                                                   const string& spreadOnShort, const string& includeSpread, 
+TenorBasisSwapConvention::TenorBasisSwapConvention(const string& id, const string& payIndex, const string& receiveIndex,
+                                                   const string& receiveFrequency, const string& payFrequency,
+                                                   const string& spreadOnRec, const string& includeSpread, 
                                                    const string& subPeriodsCouponType)
-    : Convention(id, Type::TenorBasisSwap), strLongIndex_(longIndex), strShortIndex_(shortIndex),
-      strShortPayTenor_(shortPayTenor), strLongPayTenor_(longPayTenor), strSpreadOnShort_(spreadOnShort),
+    : Convention(id, Type::TenorBasisSwap), strPayIndex_(payIndex), strReceiveIndex_(receiveIndex),
+      strReceiveFrequency_(receiveFrequency), strPayFrequency_(payFrequency), strSpreadOnRec_(spreadOnRec),
       strIncludeSpread_(includeSpread), strSubPeriodsCouponType_(subPeriodsCouponType) {
     build();
 }
 
 void TenorBasisSwapConvention::build() {
-    auto tmpLong = parseIborIndex(strLongIndex_);
-    auto tmpShort = parseIborIndex(strShortIndex_);
+    parseIborIndex(strPayIndex_);
+    parseIborIndex(strReceiveIndex_);
+
+    boost::shared_ptr<OvernightIndex> payON = boost::dynamic_pointer_cast<OvernightIndex>(payIndex());
+    boost::shared_ptr<OvernightIndex> recON = boost::dynamic_pointer_cast<OvernightIndex>(receiveIndex());
+
+    if (strReceiveFrequency_.empty()) {
+        if (recON) {
+            receiveFrequency_ = 1 * Years;
+            WLOG("receiveFrequency_ empty and overnight, set to 1 Year");
+        } else {
+            receiveFrequency_ = receiveIndex()->tenor();
+            WLOG("receiveFrequency_ empty set to index tenor.");
+        }
+    } else
+        receiveFrequency_ = parsePeriod(strReceiveFrequency_);
+
+    if (strPayFrequency_.empty()) {
+        if (payON) {
+            payFrequency_ = 1 * Years;
+            WLOG("payFrequency_ empty and overnight, set to 1 Year");
+        } else {
+            payFrequency_ = payIndex()->tenor();
+            WLOG("payFrequency_ empty set to index tenor.");
+        }
+    } else
+        payFrequency_ = parsePeriod(strPayFrequency_);
+
+    spreadOnRec_ = strSpreadOnRec_.empty() ? true : parseBool(strSpreadOnRec_);
     includeSpread_ = strIncludeSpread_.empty() ? false : parseBool(strIncludeSpread_);
-    if (includeSpread_ && (boost::dynamic_pointer_cast<OvernightIndex>(tmpLong) || boost::dynamic_pointer_cast<OvernightIndex>(tmpShort)))
+    if (includeSpread_ && (payON || recON))
         QL_FAIL("IncludeSpread must be false for overnight index legs.");
-    shortPayTenor_ = strShortPayTenor_.empty() ? shortIndex()->tenor() : parsePeriod(strShortPayTenor_);
-    longPayTenor_ = strLongPayTenor_.empty() ? longIndex()->tenor() : parsePeriod(strLongPayTenor_);
-    spreadOnShort_ = strSpreadOnShort_.empty() ? true : parseBool(strSpreadOnShort_);
+
     subPeriodsCouponType_ = strSubPeriodsCouponType_.empty() ? SubPeriodsCoupon1::Compounding
                                                              : parseSubPeriodsCouponType(strSubPeriodsCouponType_);
 }
@@ -629,13 +654,49 @@ void TenorBasisSwapConvention::fromXML(XMLNode* node) {
     id_ = XMLUtils::getChildValue(node, "Id", true);
 
     // Get string values from xml
-    strLongIndex_ = XMLUtils::getChildValue(node, "LongIndex", true);
-    strShortIndex_ = XMLUtils::getChildValue(node, "ShortIndex", true);
-    strShortPayTenor_ = XMLUtils::getChildValue(node, "ShortPayTenor", false);
-    strLongPayTenor_ = XMLUtils::getChildValue(node, "LongPayTenor", false);
-    strSpreadOnShort_ = XMLUtils::getChildValue(node, "SpreadOnShort", false);
+    strPayIndex_ = XMLUtils::getChildValue(node, "PayIndex", true);
+    strReceiveIndex_ = XMLUtils::getChildValue(node, "ReceiveIndex", true);
+    strReceiveFrequency_ = XMLUtils::getChildValue(node, "ReceiveFrequency", false);
+    strPayFrequency_ = XMLUtils::getChildValue(node, "PayFrequency", false);
+    strSpreadOnRec_ = XMLUtils::getChildValue(node, "SpreadOnRec", false);
     strIncludeSpread_ = XMLUtils::getChildValue(node, "IncludeSpread", false);
     strSubPeriodsCouponType_ = XMLUtils::getChildValue(node, "SubPeriodsCouponType", false);
+
+    //handle deprecated fields...
+    XMLNode* longIndex = XMLUtils::getChildNode(node, "LongIndex");
+    if(longIndex){
+        ALOG("TenorBasisSwapConvention: LongIndex is deprecated, fill empty PayIndex");
+        if(strPayIndex_.empty())
+            strPayIndex_ = XMLUtils::getNodeValue(longIndex);
+    }
+
+    XMLNode* longPayTenor = XMLUtils::getChildNode(node, "LongPayTenor");
+    if(longPayTenor){
+        ALOG("TenorBasisSwapConvention: LongPayTenor is deprecated, fill empty PayFrequency");
+        if(strPayFrequency_.empty())
+            strPayFrequency_ = XMLUtils::getNodeValue(longPayTenor);
+    }
+
+    XMLNode* shortIndex = XMLUtils::getChildNode(node, "ShortIndex");
+    if(shortIndex){
+        ALOG("TenorBasisSwapConvention: ShortIndex is deprecated, fill empty ReceiveIndex");
+        if(strReceiveIndex_.empty())
+            strReceiveIndex_ = XMLUtils::getNodeValue(shortIndex);
+    }
+
+    XMLNode* shortPayTenor = XMLUtils::getChildNode(node, "ShortPayTenor");
+    if(shortPayTenor){
+        ALOG("TenorBasisSwapConvention: ShortPayTenor is deprecated, fill empty ReceiveFrequency");
+        if(strReceiveFrequency_.empty())
+            strReceiveFrequency_ = XMLUtils::getNodeValue(shortPayTenor);
+    }
+
+    XMLNode* spreadOnShort = XMLUtils::getChildNode(node, "SpreadOnShort");
+    if(spreadOnShort){
+        ALOG("TenorBasisSwapConvention: SpreadOnShort is deprecated, fill empty SpreadOnRec");
+        if(strSpreadOnRec_.empty())
+            strSpreadOnRec_ = XMLUtils::getNodeValue(spreadOnShort);
+    }
 
     build();
 }
@@ -644,14 +705,14 @@ XMLNode* TenorBasisSwapConvention::toXML(XMLDocument& doc) {
 
     XMLNode* node = doc.allocNode("TenorBasisSwap");
     XMLUtils::addChild(doc, node, "Id", id_);
-    XMLUtils::addChild(doc, node, "LongIndex", strLongIndex_);
-    XMLUtils::addChild(doc, node, "ShortIndex", strShortIndex_);
-    if (!strShortPayTenor_.empty())
-        XMLUtils::addChild(doc, node, "ShortPayTenor", strShortPayTenor_);
-    if (!strLongPayTenor_.empty())
-        XMLUtils::addChild(doc, node, "LongPayTenor", strLongPayTenor_);
-    if (!strSpreadOnShort_.empty())
-        XMLUtils::addChild(doc, node, "SpreadOnShort", strSpreadOnShort_);
+    XMLUtils::addChild(doc, node, "PayIndex", strPayIndex_);
+    XMLUtils::addChild(doc, node, "ReceiveIndex", strReceiveIndex_);
+    if (!strReceiveFrequency_.empty())
+        XMLUtils::addChild(doc, node, "ReceiveFrequency", strReceiveFrequency_);
+    if (!strPayFrequency_.empty())
+        XMLUtils::addChild(doc, node, "PayFrequency", strPayFrequency_);
+    if (!strSpreadOnRec_.empty())
+        XMLUtils::addChild(doc, node, "SpreadOnRec", strSpreadOnRec_);
     if (!strIncludeSpread_.empty())
         XMLUtils::addChild(doc, node, "IncludeSpread", strIncludeSpread_);
     if (!strSubPeriodsCouponType_.empty())
@@ -659,8 +720,8 @@ XMLNode* TenorBasisSwapConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
-boost::shared_ptr<IborIndex> TenorBasisSwapConvention::longIndex() const { return parseIborIndex(strLongIndex_); }
-boost::shared_ptr<IborIndex> TenorBasisSwapConvention::shortIndex() const { return parseIborIndex(strShortIndex_); }
+boost::shared_ptr<IborIndex> TenorBasisSwapConvention::payIndex() const { return parseIborIndex(strPayIndex_); }
+boost::shared_ptr<IborIndex> TenorBasisSwapConvention::receiveIndex() const { return parseIborIndex(strReceiveIndex_); }
 
 TenorBasisTwoSwapConvention::TenorBasisTwoSwapConvention(
     const string& id, const string& calendar, const string& longFixedFrequency, const string& longFixedConvention,
