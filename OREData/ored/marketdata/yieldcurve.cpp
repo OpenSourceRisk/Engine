@@ -50,16 +50,15 @@
 #include <qle/termstructures/crossccyfixfloatmtmresetswaphelper.hpp>
 #include <qle/termstructures/crossccyfixfloatswaphelper.hpp>
 #include <qle/termstructures/discountratiomodifiedcurve.hpp>
-#include <qle/termstructures/doubleoibasisswaphelper.hpp>
 #include <qle/termstructures/immfraratehelper.hpp>
 #include <qle/termstructures/iterativebootstrap.hpp>
-#include <qle/termstructures/oibasisswaphelper.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
 #include <qle/termstructures/weightedyieldtermstructure.hpp>
 #include <qle/termstructures/yieldplusdefaultyieldtermstructure.hpp>
 #include <qle/termstructures/iborfallbackcurve.hpp>
+#include <qle/termstructures/overnightfallbackcurve.hpp>
 #include <qle/termstructures/bondyieldshiftedcurvetermstructure.hpp>
 
 #include <ored/marketdata/defaultcurve.hpp>
@@ -1043,7 +1042,11 @@ void YieldCurve::buildIborFallbackCurve() {
                              << rfrIndexName << "' could not be cast to OvernightIndex, is this index name correct?");
     DLOG("building ibor fallback curve for '" << segment->iborIndex() << "' with rfrIndex='" << rfrIndexName
                                               << "' and spread=" << spread);
-    p_ = boost::make_shared<IborFallbackCurve>(originalIndex, rfrIndex, spread, Date::minDate());
+    if (auto on = boost::dynamic_pointer_cast<OvernightIndex>(originalIndex)) {
+        p_ = boost::make_shared<OvernightFallbackCurve>(on, rfrIndex, spread, Date::minDate());
+    } else {
+        p_ = boost::make_shared<IborFallbackCurve>(originalIndex, rfrIndex, spread, Date::minDate());
+    }
 }
 
 void YieldCurve::buildDiscountCurve() {
@@ -2156,41 +2159,41 @@ void YieldCurve::addTenorBasisSwaps(const boost::shared_ptr<YieldCurveSegment>& 
         boost::dynamic_pointer_cast<TenorBasisYieldCurveSegment>(segment);
 
     // If short index projection curve ID is not this curve.
-    string shortCurveID = basisSwapSegment->shortProjectionCurveID();
-    boost::shared_ptr<IborIndex> shortIndex = basisSwapConvention->shortIndex();
-    if (shortCurveID != curveConfig_->curveID() && !shortCurveID.empty()) {
-        shortCurveID = yieldCurveKey(currency_, shortCurveID, asofDate_);
+    string receiveCurveID = basisSwapSegment->receiveProjectionCurveID();
+    boost::shared_ptr<IborIndex> receiveIndex = basisSwapConvention->receiveIndex();
+    if (receiveCurveID != curveConfig_->curveID() && !receiveCurveID.empty()) {
+        receiveCurveID = yieldCurveKey(currency_, receiveCurveID, asofDate_);
         boost::shared_ptr<YieldCurve> shortCurve;
         map<string, boost::shared_ptr<YieldCurve>>::iterator it;
-        it = requiredYieldCurves_.find(shortCurveID);
+        it = requiredYieldCurves_.find(receiveCurveID);
         if (it != requiredYieldCurves_.end()) {
             shortCurve = it->second;
         } else {
-            QL_FAIL("The short side projection curve, " << shortCurveID
+            QL_FAIL("The short side projection curve, " << receiveCurveID
                                                         << ", required in the building "
                                                            "of the curve, "
                                                         << curveSpec_.name() << ", was not found.");
         }
-        shortIndex = shortIndex->clone(shortCurve->handle());
+        receiveIndex = receiveIndex->clone(shortCurve->handle());
     }
 
     // If long index projection curve ID is not this curve.
-    string longCurveID = basisSwapSegment->longProjectionCurveID();
-    boost::shared_ptr<IborIndex> longIndex = basisSwapConvention->longIndex();
-    if (longCurveID != curveConfig_->curveID() && !longCurveID.empty()) {
-        longCurveID = yieldCurveKey(currency_, longCurveID, asofDate_);
+    string payCurveID = basisSwapSegment->payProjectionCurveID();
+    boost::shared_ptr<IborIndex> payIndex = basisSwapConvention->payIndex();
+    if (payCurveID != curveConfig_->curveID() && !payCurveID.empty()) {
+        payCurveID = yieldCurveKey(currency_, payCurveID, asofDate_);
         boost::shared_ptr<YieldCurve> longCurve;
         map<string, boost::shared_ptr<YieldCurve>>::iterator it;
-        it = requiredYieldCurves_.find(longCurveID);
+        it = requiredYieldCurves_.find(payCurveID);
         if (it != requiredYieldCurves_.end()) {
             longCurve = it->second;
         } else {
-            QL_FAIL("The long side projection curve, " << longCurveID
+            QL_FAIL("The long side projection curve, " << payCurveID
                                                        << ", required in the building "
                                                           "of the curve, "
                                                        << curveSpec_.name() << ", was not found.");
         }
-        longIndex = longIndex->clone(longCurve->handle());
+        payIndex = payIndex->clone(longCurve->handle());
     }
 
     QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
@@ -2209,32 +2212,14 @@ void YieldCurve::addTenorBasisSwaps(const boost::shared_ptr<YieldCurveSegment>& 
             // Create a tenor basis swap helper if we do.
             Period basisSwapTenor = basisSwapQuote->maturity();
             boost::shared_ptr<RateHelper> basisSwapHelper;
-            if (boost::dynamic_pointer_cast<OvernightIndex>(shortIndex) != nullptr) {
-                if (boost::dynamic_pointer_cast<OvernightIndex>(longIndex) != nullptr) {
-                    // is it OI vs OI...
-                    basisSwapHelper.reset(
-                        new DoubleOIBSHelper(longIndex->fixingDays(), basisSwapTenor, basisSwapQuote->quote(),
-                            boost::static_pointer_cast<OvernightIndex>(shortIndex), boost::static_pointer_cast<OvernightIndex>(longIndex),
-                            discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), basisSwapConvention->spreadOnShort(), 
-                            basisSwapConvention->shortPayTenor(), basisSwapConvention->longPayTenor(), true));
-                }
-                else {
-                    // is it OI vs Libor...
-                    basisSwapHelper.reset(
-                        new OIBSHelper(longIndex->fixingDays(), basisSwapTenor, basisSwapQuote->quote(),
-                            boost::static_pointer_cast<OvernightIndex>(shortIndex), longIndex,
-                            discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true));
-                }
-            }
-            else {
-                // ...or Libor vs Libor?
-                basisSwapHelper.reset(
-                    new TenorBasisSwapHelper(basisSwapQuote->quote(), basisSwapTenor, longIndex, shortIndex,
-                        basisSwapConvention->shortPayTenor(),
-                        discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(),
-                        basisSwapConvention->spreadOnShort(), basisSwapConvention->includeSpread(),
-                        basisSwapConvention->subPeriodsCouponType()));
-            }
+            bool telescopicValueDates = true;
+            basisSwapHelper.reset(
+                new TenorBasisSwapHelper(basisSwapQuote->quote(), basisSwapTenor, payIndex, receiveIndex,
+                                         discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(),
+                                         basisSwapConvention->spreadOnRec(), basisSwapConvention->includeSpread(),
+                                         basisSwapConvention->payFrequency(), basisSwapConvention->receiveFrequency(),
+                                         telescopicValueDates, basisSwapConvention->subPeriodsCouponType()));
+
             instruments.push_back(basisSwapHelper);
         }
     }
@@ -2258,7 +2243,7 @@ void YieldCurve::addTenorBasisTwoSwaps(const boost::shared_ptr<YieldCurveSegment
         boost::dynamic_pointer_cast<TenorBasisYieldCurveSegment>(segment);
 
     // If short index projection curve ID is not this curve.
-    string shortCurveID = basisSwapSegment->shortProjectionCurveID();
+    string shortCurveID = basisSwapSegment->receiveProjectionCurveID();
     boost::shared_ptr<IborIndex> shortIndex = basisSwapConvention->shortIndex();
     if (shortCurveID != curveConfig_->curveID() && !shortCurveID.empty()) {
         shortCurveID = yieldCurveKey(currency_, shortCurveID, asofDate_);
@@ -2277,7 +2262,7 @@ void YieldCurve::addTenorBasisTwoSwaps(const boost::shared_ptr<YieldCurveSegment
     }
 
     // If long index projection curve ID is not this curve.
-    string longCurveID = basisSwapSegment->longProjectionCurveID();
+    string longCurveID = basisSwapSegment->payProjectionCurveID();
     boost::shared_ptr<IborIndex> longIndex = basisSwapConvention->longIndex();
     if (longCurveID != curveConfig_->curveID() && !longCurveID.empty()) {
         longCurveID = yieldCurveKey(currency_, longCurveID, asofDate_);

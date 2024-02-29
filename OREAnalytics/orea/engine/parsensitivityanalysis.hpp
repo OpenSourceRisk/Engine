@@ -128,8 +128,8 @@ private:
 
     //! Create Basis Swap for implying par rate sensitivity from zero rate sensitivity
     std::pair<boost::shared_ptr<QuantLib::Instrument>, Date>
-    makeTenorBasisSwap(const boost::shared_ptr<ore::data::Market>& market, string ccy, string shortIndexName,
-                       string longIndexName, string yieldCurveName, string equityForecastCurveName, Period term,
+    makeTenorBasisSwap(const boost::shared_ptr<ore::data::Market>& market, string ccy, string receiveIndexName,
+                       string payIndexName, string yieldCurveName, string equityForecastCurveName, Period term,
                        const boost::shared_ptr<Convention>& conventions, const bool singleCurve,
                        std::set<ore::analytics::RiskFactorKey>& parHelperDependencies,
                        const std::string& expDiscountCurve = "");

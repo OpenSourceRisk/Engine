@@ -53,6 +53,8 @@
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/utilities/csvfilereader.hpp>
+#include <boost/filesystem/path.hpp>
+#include <filesystem>
 
 namespace ore {
 namespace analytics {
@@ -92,7 +94,7 @@ public:
     void setTodaysMarketParams(const std::string& xml);
     void setTodaysMarketParamsFromFile(const std::string& fileName);
     void setPortfolio(const std::string& xml); 
-    void setPortfolioFromFile(const std::string& fileNameString, const std::string& inputPath); 
+    void setPortfolioFromFile(const std::string& fileNameString, const std::filesystem::path& inputPath); 
     void setMarketConfigs(const std::map<std::string, std::string>& m);
     void setThreads(int i) { nThreads_ = i; }
     void setEntireMarket(bool b) { entireMarket_ = b; }
@@ -175,6 +177,7 @@ public:
     void setHistoricalScenarioReader(const std::string& fileName);
     void setSensitivityStreamFromBuffer(const std::string& buffer);
     void setHistVarSimMarketParamsFromFile(const std::string& fileName);
+    void setOutputHistoricalScenarios(const bool b) { outputHistoricalScenarios_ = b; }
 
     // Setters for exposure simulation
     void setSalvageCorrelationMatrix(bool b) { salvageCorrelationMatrix_ = b; }
@@ -312,7 +315,8 @@ public:
         simmCalibrationData_ = s;
     }
     void setSimmCalibrationDataFromFile(const std::string& fileName);
-    void setSimmCalculationCurrency(const std::string& s) { simmCalculationCurrency_ = s; }
+    void setSimmCalculationCurrencyCall(const std::string& s) { simmCalculationCurrencyCall_ = s; }
+    void setSimmCalculationCurrencyPost(const std::string& s) { simmCalculationCurrencyPost_ = s; }
     void setSimmResultCurrency(const std::string& s) { simmResultCurrency_ = s; }
     void setSimmReportingCurrency(const std::string& s) { simmReportingCurrency_ = s; }
     void setEnforceIMRegulations(bool b) { enforceIMRegulations_= b; }
@@ -463,6 +467,7 @@ public:
     std::string benchmarkVarPeriod() const { return benchmarkVarPeriod_; }
     QuantLib::ext::shared_ptr<HistoricalScenarioReader> historicalScenarioReader() const { return historicalScenarioReader_;};
     const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& histVarSimMarketParams() { return histVarSimMarketParams_; }
+    bool outputHistoricalScenarios() { return outputHistoricalScenarios_; }
     
     /*********************************
      * Getters for exposure simulation 
@@ -578,7 +583,8 @@ public:
     const boost::shared_ptr<ore::analytics::SimmBasicNameMapper>& simmNameMapper() { return simmNameMapper_; }
     const boost::shared_ptr<ore::analytics::SimmBucketMapper>& simmBucketMapper() { return simmBucketMapper_; }
     const boost::shared_ptr<ore::analytics::SimmCalibrationData>& simmCalibrationData() { return simmCalibrationData_; }
-    const std::string& simmCalculationCurrency() { return simmCalculationCurrency_; }
+    const std::string& simmCalculationCurrencyCall() { return simmCalculationCurrencyCall_; }
+    const std::string& simmCalculationCurrencyPost() { return simmCalculationCurrencyPost_; }
     const std::string& simmResultCurrency() { return simmResultCurrency_; }
     const std::string& simmReportingCurrency() { return simmReportingCurrency_; }
     bool enforceIMRegulations() { return enforceIMRegulations_; }
@@ -738,6 +744,7 @@ protected:
     QuantLib::ext::shared_ptr<HistoricalScenarioReader> historicalScenarioReader_;
     boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> histVarSimMarketParams_;
     std::string baseScenarioLoc_;
+    bool outputHistoricalScenarios_ = false;
     
     /*******************
      * EXPOSURE analytic
@@ -839,7 +846,8 @@ protected:
     boost::shared_ptr<ore::analytics::SimmBasicNameMapper> simmNameMapper_;
     boost::shared_ptr<ore::analytics::SimmBucketMapper> simmBucketMapper_;
     boost::shared_ptr<ore::analytics::SimmCalibrationData> simmCalibrationData_;
-    std::string simmCalculationCurrency_ = "";
+    std::string simmCalculationCurrencyCall_ = "";
+    std::string simmCalculationCurrencyPost_ = "";
     std::string simmResultCurrency_ = "";
     std::string simmReportingCurrency_ = "";
     bool enforceIMRegulations_ = false;
@@ -875,6 +883,7 @@ inline const std::string& InputParameters::marketConfig(const std::string& conte
     auto it = marketConfigs_.find(context);
     return (it != marketConfigs_.end() ? it->second : Market::defaultConfiguration);
 }
+std::vector<std::string> getFileNames(const std::string& fileString, const std::filesystem::path& path);
     
 //! Traditional ORE input via ore.xml and various files, output into files
 class OutputParameters {

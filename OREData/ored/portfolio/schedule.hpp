@@ -95,6 +95,7 @@ private:
     bool adjustEndDateToPreviousMonthEnd_{false};
     bool removeFirstDate_ = false;
     bool removeLastDate_ = false;
+    bool was1T_ = false;
 };
 
 //! Serializable object holding schedule Dates data
@@ -138,6 +139,7 @@ private:
     string tenor_;
     string endOfMonth_;
     vector<string> dates_;
+    bool was1T_ = false;
 };
 
 //! Serializable object holding Derived schedule data
