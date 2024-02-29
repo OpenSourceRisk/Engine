@@ -24,6 +24,7 @@
 
 #include <orea/scenario/scenario.hpp>
 #include <orea/simm/crifrecord.hpp>
+#include <orea/simm/simmbucketmapper.hpp>
 #include <ql/indexes/interestrateindex.hpp>
 #include <ql/time/period.hpp>
 #include <string>
@@ -51,6 +52,9 @@ public:
     virtual std::string bucket(const ore::analytics::CrifRecord::RiskType& rt, const std::string& qualifier) const = 0;
 
     virtual bool hasBucketMapping(const ore::analytics::CrifRecord::RiskType& rt, const std::string& qualifier) const = 0;
+
+    //! Returns the SIMM bucket mapper used by the configuration
+    virtual const boost::shared_ptr<SimmBucketMapper>& bucketMapper() const = 0;
 
     /*! Return the CRIF <em>Label2</em> value for the given interest rate index
         \p irIndex. For interest rate indices, this is the CRIF sub curve name

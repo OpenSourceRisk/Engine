@@ -29,7 +29,6 @@
 #include <boost/optional.hpp>
 #include <orea/simm/crifconfiguration.hpp>
 #include <orea/simm/crifrecord.hpp>
-#include <orea/simm/simmbucketmapper.hpp>
 #include <ql/indexes/interestrateindex.hpp>
 #include <ql/types.hpp>
 
@@ -126,9 +125,6 @@ public:
                    "Cannot define worse product type if even one of the product classes is indeterminate.");
         return (less_than(pc1, pc2) ? pc2 : pc1);
     }
-
-    //! Returns the SIMM bucket mapper used by the configuration
-    virtual const boost::shared_ptr<SimmBucketMapper>& bucketMapper() const = 0;
 
     //! Return the SIMM <em>bucket</em> names for the given risk type \p rt
     //! An empty vector is returned if the risk type has no buckets
