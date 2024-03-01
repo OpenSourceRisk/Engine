@@ -428,14 +428,16 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
     inputVarPtr_.clear();
     inputVarPtrVal_.clear();
 
-    freedVariables_.clear();
-    outputVariables_.clear();
+    if (newCalc) {
+        freedVariables_.clear();
+        outputVariables_.clear();
 
-    variateSeed_.clear();
+        variateSeed_.clear();
 
-    // reset ssa
+        // reset ssa
 
-    currentSsa_.clear();
+        currentSsa_.clear();
+    }
 
     // set state
 
@@ -546,7 +548,6 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
 
     switch (randomVariableOpCode) {
     case RandomVariableOpCode::None: {
-        ssaLine += argStr[0];
         break;
     }
     case RandomVariableOpCode::Add: {
@@ -632,6 +633,10 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
 void OpenClContext::freeVariable(const std::size_t id) {
     QL_REQUIRE(currentState_ == ComputeState::calc,
                "OpenClContext::free(): not in state calc (" << static_cast<int>(currentState_) << ")");
+    QL_REQUIRE(currentId_ > 0, "OpenClContext::freeVariable(): current id is not set");
+    QL_REQUIRE(!hasKernel_[currentId_ - 1], "OpenClContext::freeVariable(): id ("
+                                                << currentId_ << ") in version " << version_[currentId_ - 1]
+                                                << " has a kernel already, variables can not be freed.");
 
     // we do not free input variables, only variables that were added during the calc
 
@@ -644,6 +649,9 @@ void OpenClContext::freeVariable(const std::size_t id) {
 void OpenClContext::declareOutputVariable(const std::size_t id) {
     QL_REQUIRE(currentState_ != ComputeState::idle, "OpenClContext::declareOutputVariable(): state is idle");
     QL_REQUIRE(currentId_ > 0, "OpenClContext::declareOutputVariable(): current id not set");
+    QL_REQUIRE(!hasKernel_[currentId_ - 1], "OpenClContext::declareOutputVariable(): id ("
+                                                << currentId_ << ") in version " << version_[currentId_ - 1]
+                                                << " has a kernel already, output variables can not be declared.");
     outputVariables_.push_back(id);
     nOutputVars_[currentId_ - 1]++;
 }

@@ -101,6 +101,7 @@ private:
     std::size_t currentId_ = 0;
     ComputeState currentState_ = ComputeState::idle;
     bool debug_;
+    bool newCalc_;
 
     std::vector<RandomVariable> values_;
     std::vector<std::size_t> freedVariables_;
@@ -143,7 +144,7 @@ std::pair<std::size_t, bool> BasicCpuContext::initiateCalculation(const std::siz
 
     QL_REQUIRE(n > 0, "BasicCpuContext::initiateCalculation(): n must not be zero");
 
-    bool newCalc = false;
+    newCalc_ = false;
     debug_ = debug;
 
     if (id == 0) {
@@ -159,7 +160,7 @@ std::pair<std::size_t, bool> BasicCpuContext::initiateCalculation(const std::siz
         outputVars_.push_back({});
 
         currentId_ = size_.size();
-        newCalc = true;
+        newCalc_ = true;
 
     } else {
 
@@ -178,7 +179,7 @@ std::pair<std::size_t, bool> BasicCpuContext::initiateCalculation(const std::siz
             numberOfVariates_[id - 1] = 0;
             numberOfVars_[id - 1] = 0;
             outputVars_[id - 1].clear();
-            newCalc = true;
+            newCalc_ = true;
         }
 
         currentId_ = id;
@@ -189,7 +190,8 @@ std::pair<std::size_t, bool> BasicCpuContext::initiateCalculation(const std::siz
     numberOfInputVars_[currentId_ - 1] = 0;
 
     values_.clear();
-    freedVariables_.clear();
+    if(newCalc_)
+        freedVariables_.clear();
 
     // set state
 
@@ -197,7 +199,7 @@ std::pair<std::size_t, bool> BasicCpuContext::initiateCalculation(const std::siz
 
     // return calc id
 
-    return std::make_pair(currentId_, newCalc);
+    return std::make_pair(currentId_, newCalc_);
 }
 
 std::size_t BasicCpuContext::createInputVariable(double v) {
@@ -223,6 +225,9 @@ BasicCpuContext::createInputVariates(const std::size_t dim, const std::size_t st
     QL_REQUIRE(currentState_ == ComputeState::createInput || currentState_ == ComputeState::createVariates,
                "BasicCpuContext::createInputVariable(): not in state createInput or createVariates ("
                    << static_cast<int>(currentState_) << ")");
+    QL_REQUIRE(currentId_ > 0, "BasicCpuContext::freeVariable(): current id is not set");
+    QL_REQUIRE(newCalc_, "BasicCpuContext::createInputVariates(): id (" << currentId_ << ") in version "
+                                                                        << version_[currentId_ - 1] << " is replayed.");
     currentState_ = ComputeState::createVariates;
 
     if (rng_ == nullptr) {
@@ -257,6 +262,8 @@ std::size_t BasicCpuContext::applyOperation(const std::size_t randomVariableOpCo
                    << static_cast<int>(currentState_) << ")");
     currentState_ = ComputeState::calc;
     QL_REQUIRE(currentId_ > 0, "BasicCpuContext::applyOperation(): current id is not set");
+    QL_REQUIRE(newCalc_, "BasicCpuContext::applyOperation(): id (" << currentId_ << ") in version "
+                                                                   << version_[currentId_ - 1] << " is replayed.");
 
     // determine variable id to use for result
 
@@ -286,6 +293,9 @@ std::size_t BasicCpuContext::applyOperation(const std::size_t randomVariableOpCo
 void BasicCpuContext::freeVariable(const std::size_t id) {
     QL_REQUIRE(currentState_ == ComputeState::calc,
                "BasicCpuContext::free(): not in state calc (" << static_cast<int>(currentState_) << ")");
+    QL_REQUIRE(currentId_ > 0, "BasicCpuContext::freeVariable(): current id is not set");
+    QL_REQUIRE(newCalc_, "BasicCpuContext::freeVariable(): id (" << currentId_ << ") in version "
+                                                                 << version_[currentId_ - 1] << " is replayed.");
 
     // we do not free variates, since they are shared
 
@@ -299,6 +309,8 @@ void BasicCpuContext::freeVariable(const std::size_t id) {
 void BasicCpuContext::declareOutputVariable(const std::size_t id) {
     QL_REQUIRE(currentState_ != ComputeState::idle, "BasicCpuContext::declareOutputVariable(): state is idle");
     QL_REQUIRE(currentId_ > 0, "BasicCpuContext::declareOutputVariable(): current id not set");
+    QL_REQUIRE(newCalc_, "BasicCpuContext::declareOutputVariable(): id ("
+                             << currentId_ << ") in version " << version_[currentId_ - 1] << " is replayed.");
     outputVars_[currentId_ - 1].push_back(id);
 }
 
