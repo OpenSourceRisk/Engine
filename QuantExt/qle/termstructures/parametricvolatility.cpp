@@ -18,6 +18,8 @@
 
 #include <qle/termstructures/parametricvolatility.hpp>
 
+#include <ql/math/comparison.hpp>
+
 namespace QuantExt {
 
 using namespace QuantLib;
