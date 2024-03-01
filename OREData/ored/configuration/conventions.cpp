@@ -654,47 +654,51 @@ void TenorBasisSwapConvention::fromXML(XMLNode* node) {
     id_ = XMLUtils::getChildValue(node, "Id", true);
 
     // Get string values from xml
-    strPayIndex_ = XMLUtils::getChildValue(node, "PayIndex", true);
-    strReceiveIndex_ = XMLUtils::getChildValue(node, "ReceiveIndex", true);
+    strPayIndex_ = XMLUtils::getChildValue(node, "PayIndex", false);
+    strReceiveIndex_ = XMLUtils::getChildValue(node, "ReceiveIndex", false);
     strReceiveFrequency_ = XMLUtils::getChildValue(node, "ReceiveFrequency", false);
     strPayFrequency_ = XMLUtils::getChildValue(node, "PayFrequency", false);
     strSpreadOnRec_ = XMLUtils::getChildValue(node, "SpreadOnRec", false);
     strIncludeSpread_ = XMLUtils::getChildValue(node, "IncludeSpread", false);
     strSubPeriodsCouponType_ = XMLUtils::getChildValue(node, "SubPeriodsCouponType", false);
 
-    //handle deprecated fields...
-    XMLNode* longIndex = XMLUtils::getChildNode(node, "LongIndex");
-    if(longIndex){
-        ALOG("TenorBasisSwapConvention: LongIndex is deprecated, fill empty PayIndex");
-        if(strPayIndex_.empty())
+    // handle deprecated fields...
+    if (strPayIndex_.empty()) {
+        XMLNode* longIndex = XMLUtils::getChildNode(node, "LongIndex");
+        if (longIndex) {
+            ALOG("TenorBasisSwapConvention: LongIndex is deprecated, fill empty PayIndex");
             strPayIndex_ = XMLUtils::getNodeValue(longIndex);
+        } else
+            QL_FAIL("TenorBasisSwapConvention : PayIndex field missing.");
+    }
+
+    if (strReceiveIndex_.empty()) {
+        XMLNode* shortIndex = XMLUtils::getChildNode(node, "ShortIndex");
+        if (shortIndex) {
+            ALOG("TenorBasisSwapConvention: ShortIndex is deprecated, fill empty ReceiveIndex");
+            strReceiveIndex_ = XMLUtils::getNodeValue(shortIndex);
+        } else
+            QL_FAIL("TenorBasisSwapConvention : ReceiveIndex field missing.");
     }
 
     XMLNode* longPayTenor = XMLUtils::getChildNode(node, "LongPayTenor");
-    if(longPayTenor){
+    if (longPayTenor) {
         ALOG("TenorBasisSwapConvention: LongPayTenor is deprecated, fill empty PayFrequency");
-        if(strPayFrequency_.empty())
+        if (strPayFrequency_.empty())
             strPayFrequency_ = XMLUtils::getNodeValue(longPayTenor);
     }
 
-    XMLNode* shortIndex = XMLUtils::getChildNode(node, "ShortIndex");
-    if(shortIndex){
-        ALOG("TenorBasisSwapConvention: ShortIndex is deprecated, fill empty ReceiveIndex");
-        if(strReceiveIndex_.empty())
-            strReceiveIndex_ = XMLUtils::getNodeValue(shortIndex);
-    }
-
     XMLNode* shortPayTenor = XMLUtils::getChildNode(node, "ShortPayTenor");
-    if(shortPayTenor){
+    if (shortPayTenor) {
         ALOG("TenorBasisSwapConvention: ShortPayTenor is deprecated, fill empty ReceiveFrequency");
-        if(strReceiveFrequency_.empty())
+        if (strReceiveFrequency_.empty())
             strReceiveFrequency_ = XMLUtils::getNodeValue(shortPayTenor);
     }
 
     XMLNode* spreadOnShort = XMLUtils::getChildNode(node, "SpreadOnShort");
-    if(spreadOnShort){
+    if (spreadOnShort) {
         ALOG("TenorBasisSwapConvention: SpreadOnShort is deprecated, fill empty SpreadOnRec");
-        if(strSpreadOnRec_.empty())
+        if (strSpreadOnRec_.empty())
             strSpreadOnRec_ = XMLUtils::getNodeValue(spreadOnShort);
     }
 
