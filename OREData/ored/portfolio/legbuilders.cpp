@@ -22,6 +22,7 @@
 #include <ored/utilities/marketdata.hpp>
 
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
+#include <qle/cashflows/fixedratefxlinkednotionalcoupon.hpp>
 #include <qle/indexes/iborindexfixingoverride.hpp>
 
 using namespace QuantExt;
@@ -35,6 +36,34 @@ Leg FixedLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<Engin
     Leg leg = makeFixedLeg(data, openEndDateReplacement);
     applyIndexing(leg, data, engineFactory, requiredFixings, openEndDateReplacement, useXbsCurves);
     addToRequiredFixings(leg, boost::make_shared<FixingDateGetter>(requiredFixings));
+    if (data.legType() == "Fixed" && !data.isNotResetXCCY()) {
+
+        QL_REQUIRE(!data.fxIndex().empty(), "FixedLegBuilder: need fx index for fx resetting leg");
+        auto fxIndex = buildFxIndex(data.fxIndex(), data.currency(), data.foreignCurrency(), engineFactory->market(),
+                                    configuration, true);
+
+        // If no initial notional is given, all coupons including the first period will be FX linked (i.e resettable)
+        Size j = 0;
+        if (data.notionals().size() == 0) {
+            DLOG("Building FX Resettable with unspecified domestic notional");
+        } else {
+            // given an initial amount (not a resettable period)
+            LOG("Building FX Resettable with first domestic notional specified explicitly");
+            j = 1;
+        }
+
+        for (; j < leg.size(); ++j) {
+            boost::shared_ptr<FixedRateCoupon> coupon = boost::dynamic_pointer_cast<FixedRateCoupon>(leg[j]);
+            Date fixingDate = fxIndex->fixingCalendar().advance(coupon->accrualStartDate(),
+                                                                -static_cast<Integer>(fxIndex->fixingDays()), Days);
+            boost::shared_ptr<FixedRateFXLinkedNotionalCoupon> fxLinkedCoupon =
+                boost::make_shared<FixedRateFXLinkedNotionalCoupon>(fixingDate, data.foreignAmount(), fxIndex, coupon);
+            leg[j] = fxLinkedCoupon;
+
+            // Add the FX fixing to the required fixings
+            requiredFixings.addFixingDate(fixingDate, data.fxIndex(), fxLinkedCoupon->date());
+        }
+    }
     return leg;
 }
 
