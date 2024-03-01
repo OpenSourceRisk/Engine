@@ -347,8 +347,8 @@
             <Quote>BASIS_SWAP/BASIS_SPREAD/1M/3M/USD/30Y</Quote>
           </Quotes>
           <Conventions>USD-LIBOR-1M-3M-BASIS-CONVENTIONS</Conventions>
-          <ProjectionCurveLong>USD3M</ProjectionCurveLong>
-          <ProjectionCurveShort>USD1M</ProjectionCurveShort>
+          <ProjectionCurvePay>USD3M</ProjectionCurvePay>
+          <ProjectionCurveReceive>USD1M</ProjectionCurveReceive>
         </TenorBasis>
       </Segments>
     </YieldCurve>     
@@ -1055,8 +1055,8 @@
             <Quote>BASIS_SWAP/BASIS_SPREAD/6M/12M/EUR/30Y</Quote>
           </Quotes>
           <Conventions>EUR-EURIBOR-6M-12M-BASIS-CONVENTIONS</Conventions>
-          <ProjectionCurveLong>EUR12M</ProjectionCurveLong>
-          <ProjectionCurveShort>EUR6M</ProjectionCurveShort>
+          <ProjectionCurvePay>EUR12M</ProjectionCurvePay>
+          <ProjectionCurveReceive>EUR6M</ProjectionCurveReceive>
         </TenorBasis>
       </Segments>
     </YieldCurve>
@@ -1359,8 +1359,8 @@
             <Quote>BASIS_SWAP/BASIS_SPREAD/3M/6M/USD/30Y</Quote>
           </Quotes>
           <Conventions>USD-LIBOR-3M-6M-BASIS-CONVENTIONS</Conventions>
-          <ProjectionCurveLong>USD6M</ProjectionCurveLong>
-          <ProjectionCurveShort>USD3M</ProjectionCurveShort>
+          <ProjectionCurvePay>USD6M</ProjectionCurvePay>
+          <ProjectionCurveReceive>USD3M</ProjectionCurveReceive>
         </TenorBasis>
       </Segments>
     </YieldCurve>
@@ -1539,8 +1539,8 @@
             <Quote>BASIS_SWAP/BASIS_SPREAD/6M/3M/GBP/70Y</Quote>
           </Quotes>
           <Conventions>GBP-LIBOR-3M-6M-BASIS-CONVENTIONS</Conventions>
-          <ProjectionCurveLong>GBP6M</ProjectionCurveLong>
-          <ProjectionCurveShort/>
+          <ProjectionCurvePay>GBP6M</ProjectionCurvePay>
+          <ProjectionCurveReceive/>
         </TenorBasis>
       </Segments>
     </YieldCurve>
@@ -2511,7 +2511,7 @@
       <CurveId>BOND_YIELD_EUR</CurveId>
       <CurveDescription>Bond yield curve EUR</CurveDescription>
       <Currency>EUR</Currency>
-      <DiscountCurve></DiscountCurve>
+      <DiscountCurve/>
       <Segments>
 	    <Direct>
 	      <Type>Zero</Type>
