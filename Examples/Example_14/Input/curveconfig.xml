@@ -2,7 +2,7 @@
   <FXVolatilities>    
     <FXVolatility>
       <CurveId>EURGBP</CurveId>
-      <CurveDescription />
+      <CurveDescription/>
       <Dimension>ATM</Dimension>
       <Expiries>
         1Y
@@ -98,7 +98,7 @@
       <CurveId>EUR1D</CurveId>
       <CurveDescription>EUR discount curve bootstrapped from EONIA swap rates</CurveDescription>
       <Currency>EUR</Currency>
-      <DiscountCurve />
+      <DiscountCurve/>
       <Segments>
         <Direct>
           <Type>Zero</Type>
@@ -116,9 +116,9 @@
     </YieldCurve>
     <YieldCurve>
       <CurveId>EUR6M</CurveId>
-      <CurveDescription />
+      <CurveDescription/>
       <Currency>EUR</Currency>
-      <DiscountCurve />
+      <DiscountCurve/>
       <Segments>
         <Direct>
           <Type>Zero</Type>
@@ -135,9 +135,9 @@
     </YieldCurve>
     <YieldCurve>
       <CurveId>GBP1D</CurveId>
-      <CurveDescription />
+      <CurveDescription/>
       <Currency>GBP</Currency>
-      <DiscountCurve />
+      <DiscountCurve/>
       <Segments>
         <Direct>
           <Type>Zero</Type>
@@ -150,9 +150,9 @@
     </YieldCurve>
     <YieldCurve>
       <CurveId>GBP6M</CurveId>
-      <CurveDescription />
+      <CurveDescription/>
       <Currency>GBP</Currency>
-      <DiscountCurve />
+      <DiscountCurve/>
       <Segments>
         <Direct>
           <Type>Zero</Type>
@@ -164,4 +164,4 @@
       </Segments>
     </YieldCurve>
   </YieldCurves>
-</CurveConfiguration> 
+</CurveConfiguration>

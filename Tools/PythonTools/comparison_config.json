@@ -586,7 +586,6 @@
               "AmberUpTo",
               "Zone",
               "Currency",
-              "SIMMResultCurrency",
               "SIMMCalculationCurrency"
             ],
             "abs_tol": null,
