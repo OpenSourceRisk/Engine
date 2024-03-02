@@ -24,12 +24,11 @@
 #define quantext_inflation_hpp
 
 #include <ql/indexes/inflationindex.hpp>
-#include <ql/termstructures/inflationtermstructure.hpp>
 #include <ql/instruments/bond.hpp>
-#include <ql/time/period.hpp>
 #include <ql/termstructures/inflation/inflationhelpers.hpp>
+#include <ql/termstructures/inflationtermstructure.hpp>
 #include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
-
+#include <ql/time/period.hpp>
 namespace QuantExt {
 
 /*! Utility function for calculating the time to a given \p date based on a given inflation index,
@@ -61,6 +60,11 @@ QuantLib::Real inflationGrowth(const QuantLib::Handle<QuantLib::ZeroInflationTer
    I(t_s)/I(t_0) with I(t_s) the CPI at settlement date and I(t_0) the bond's base CPI
 */
 QuantLib::Real inflationLinkedBondQuoteFactor(const boost::shared_ptr<QuantLib::Bond>& bond);
+
+/*! Iterates over all bond cashflows, and extract all inflation underlyings */
+std::map<std::tuple<std::string, QuantLib::CPI::InterpolationType, QuantLib::Frequency, QuantLib::Period>,
+         boost::shared_ptr<QuantLib::ZeroInflationIndex>>
+extractAllInflationUnderlyingFromBond(const boost::shared_ptr<QuantLib::Bond>& bond);
 
 namespace ZeroInflation {
 
@@ -108,6 +112,6 @@ bool isCPIVolSurfaceLogNormal(const boost::shared_ptr<QuantLib::CPIVolatilitySur
 
 }
 
-}
+} // namespace QuantExt
 
 #endif
