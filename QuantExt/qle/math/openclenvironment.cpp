@@ -806,7 +806,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output, const Sett
                          (inputVarIsScalar_[outputVariables_[i]] ? "]" : " + i] ");
             else
                 output = "v" + std::to_string(outputVariables_[i]);
-            std::string ssaLine = "  output[" + std::to_string(offset) + "UL + i] = " + output;
+            std::string ssaLine = "  output[" + std::to_string(offset) + "UL + i] = " + output + ";";
             kernelSource += ssaLine + "\n";
         }
 
