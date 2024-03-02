@@ -222,8 +222,8 @@
             <Quote>BASIS_SWAP/BASIS_SPREAD/3M/1M/USD/10Y</Quote>
           </Quotes>
           <Conventions>USD-LIBOR-1M-3M-BASIS</Conventions>
-          <ProjectionCurveLong>USD-LIBOR-3M</ProjectionCurveLong>
-          <ProjectionCurveShort>USD-LIBOR-1M</ProjectionCurveShort>
+          <ProjectionCurvePay>USD-LIBOR-3M</ProjectionCurvePay>
+          <ProjectionCurveReceive>USD-LIBOR-1M</ProjectionCurveReceive>
         </TenorBasis>
       </Segments>
     </YieldCurve>
