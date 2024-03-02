@@ -43,7 +43,8 @@ public:
                                const Real participationRate, const Date& protectionStart, const Date& protectionEnd,
                                const bool settlesAccrual, const Real fixedRecoveryRate = Null<Real>(),
                                const boost::shared_ptr<QuantLib::Exercise>& exercise = nullptr,
-                               const bool exerciseIsLong = false, const bool nakedOption = false);
+                               const bool exerciseIsLong = false, const std::vector<boost::shared_ptr<CashFlow>>& premium = std::vector<boost::shared_ptr<CashFlow>>(),
+                               const bool nakedOption = false);
     //! Instrument interface
     bool isExpired() const override;
 
@@ -82,6 +83,7 @@ private:
     const Real fixedRecoveryRate_;
     const boost::shared_ptr<Exercise> exercise_;
     const bool exerciseIsLong_;
+    const std::vector<boost::shared_ptr<CashFlow>> premium_;
     const bool nakedOption_;
 
     //
@@ -110,6 +112,7 @@ public:
     Real fixedRecoveryRate;
     boost::shared_ptr<Exercise> exercise;
     bool exerciseIsLong;
+    std::vector<boost::shared_ptr<CashFlow>> premium;
     bool nakedOption;
     std::vector<boost::shared_ptr<Instrument>> optionRepresentation;
     std::vector<Real> optionMultiplier;
