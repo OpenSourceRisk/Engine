@@ -90,6 +90,11 @@ CSVLoader::CSVLoader(const vector<string>& marketFiles, const vector<string>& fi
     LOG("CSVLoader complete.");
 }
 
+boost::shared_ptr<MarketDatum> makeDummyMarketDatum(const Date& d, const std::string& name) {
+    return boost::make_shared<MarketDatum>(0.0, d, name, MarketDatum::QuoteType::NONE,
+                                           MarketDatum::InstrumentType::NONE);
+}
+
 void CSVLoader::loadFile(const string& filename, DataType dataType) {
     LOG("CSVLoader loading from " << filename);
 
@@ -129,10 +134,25 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
                         WLOG("Failed to parse MarketDatum " << key << ": " << e.what());
                     }
                     if (md != nullptr) {
-                        if (data_[date].insert(md).second) {
-                            TLOG("Added MarketDatum " << key);
-                        } else {
-                            WLOG("Skipped MarketDatum " << key << " - this is already present.");
+                        std::pair<bool, string> addFX = {true, ""};
+                        if (md->instrumentType() == MarketDatum::InstrumentType::FX_SPOT &&
+                            md->quoteType() == MarketDatum::QuoteType::RATE) {
+                            addFX = checkFxDuplicate(md, date);
+                            if (!addFX.second.empty()) {
+                                auto it2 = data_[date].find(makeDummyMarketDatum(date, addFX.second));
+                                TLOG("Replacing MarketDatum " << addFX.second << " with " << key
+                                                                  << " due to FX Dominance.");
+                                if (it2 != data_[date].end())
+                                    data_[date].erase(it2);
+                            }
+                        }
+                        if (addFX.first && data_[date].insert(md).second) {
+                            LOG("Added MarketDatum " << key);
+                        } else if (!addFX.first) {
+                            LOG("Skipped MarketDatum " << key << " - dominant FX already present.")
+                        }
+						else {
+                            LOG("Skipped MarketDatum " << key << " - this is already present.");
                         }
                     }
                 } catch (std::exception& e) {
@@ -172,12 +192,6 @@ vector<boost::shared_ptr<MarketDatum>> CSVLoader::loadQuotes(const QuantLib::Dat
         return {};
     return std::vector<boost::shared_ptr<MarketDatum>>(it->second.begin(), it->second.end());
 }
-
-boost::shared_ptr<MarketDatum> makeDummyMarketDatum(const Date& d, const std::string& name) {
-    return boost::make_shared<MarketDatum>(0.0, d, name, MarketDatum::QuoteType::NONE,
-                                           MarketDatum::InstrumentType::NONE);
-}
-
 
 boost::shared_ptr<MarketDatum> CSVLoader::get(const string& name, const QuantLib::Date& d) const {
     auto it = data_.find(d);

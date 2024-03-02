@@ -94,6 +94,8 @@ public:
     void setActualDate(const QuantLib::Date& d) { actualDate_ = d; }
     const Date& actualDate() const { return actualDate_; }
 
+	std::pair<bool, string> checkFxDuplicate(const ext::shared_ptr<MarketDatum>, const QuantLib::Date&);
+
 private:
     //! Serialization
     friend class boost::serialization::access;

@@ -109,8 +109,21 @@ void InMemoryLoader::add(QuantLib::Date date, const string& name, QuantLib::Real
         WLOG("Failed to parse MarketDatum " << name << ": " << e.what());
     }
     if (md != nullptr) {
-        if (data_[date].insert(md).second) {
+        std::pair<bool, string> addFX = {true, ""};
+        if (md->instrumentType() == MarketDatum::InstrumentType::FX_SPOT &&
+            md->quoteType() == MarketDatum::QuoteType::RATE) {
+            addFX = checkFxDuplicate(md, date);
+            if (!addFX.second.empty()) {
+                auto it = data_[date].find(makeDummyMarketDatum(date, addFX.second));
+                TLOG("Replacing MarketDatum " << addFX.second << " with " << name << " due to FX Dominance.");
+                if (it != data_[date].end())
+					data_[date].erase(it);
+			}
+		}
+        if (addFX.first && data_[date].insert(md).second) {
             TLOG("Added MarketDatum " << name);
+        } else if (!addFX.first) {
+            WLOG("Skipped MarketDatum " << name << " - dominant FX already present.")
         } else {
             WLOG("Skipped MarketDatum " << name << " - this is already present.");
         }
