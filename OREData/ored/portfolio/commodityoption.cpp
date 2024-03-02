@@ -50,6 +50,13 @@ CommodityOption::CommodityOption(const Envelope& env, const OptionData& optionDa
 
 void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
+    // ISDA taxonomy, assuming Commodity follows the Equity template
+    additionalData_["isdaAssetClass"] = std::string("Commodity");
+    additionalData_["isdaBaseProduct"] = std::string("Option");
+    additionalData_["isdaSubProduct"] = std::string("Price Return Basic Performance");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = std::string("");
+
     // Checks
     QL_REQUIRE((strike_.value() > 0) || close_enough(strike_.value(),0.0), "Commodity option requires a non-negative strike");
     if (close_enough(strike_.value(), 0.0)) {
@@ -102,13 +109,6 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
     additionalData_["quantity"] = quantity_;
     additionalData_["strike"] = strike_.value();
     additionalData_["strikeCurrency"] = currency_;    
-
-    // ISDA taxonomy, assuming Commodity follows the Equity template
-    additionalData_["isdaAssetClass"] = std::string("Commodity");
-    additionalData_["isdaBaseProduct"] = std::string("Option");
-    additionalData_["isdaSubProduct"] = std::string("Price Return Basic Performance");
-    // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = std::string("");
 }
 
 std::map<AssetClass, std::set<std::string>>

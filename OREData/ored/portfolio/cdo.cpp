@@ -76,6 +76,24 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
 
     DLOG("SyntheticCDO::build() called for trade " << id());
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Credit");
+    additionalData_["isdaBaseProduct"] = string("Index Tranche");
+    boost::shared_ptr<ReferenceDataManager> refData = engineFactory->referenceData();
+    if (refData && refData->hasData("CreditIndex", qualifier_)) {
+        auto refDatum = refData->getData("CreditIndex", qualifier_);
+        boost::shared_ptr<CreditIndexReferenceDatum> creditIndexRefDatum =
+            boost::dynamic_pointer_cast<CreditIndexReferenceDatum>(refDatum);
+        additionalData_["isdaSubProduct"] = creditIndexRefDatum->indexFamily();
+        if (creditIndexRefDatum->indexFamily() == "") {
+            ALOG("IndexFamily is blank in credit index reference data for entity " << qualifier_);
+        }
+    } else {
+        ALOG("Credit index reference data missing for entity " << qualifier_ << ", isdaSubProduct left blank");
+    }
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");  
+
     Date protectionStartDate = protectionStart_ == "" ? Date() : parseDate(protectionStart_);
     Date upfrontDate = upfrontDate_ == "" ? Date() : parseDate(upfrontDate_);
     Leg leg = makeFixedLeg(legData_);
@@ -630,23 +648,6 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
 
     additionalData_["originalNotional"] = origTrancheNtl;
     additionalData_["currentNotional"] = currTrancheNtl;
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Credit");
-    additionalData_["isdaBaseProduct"] = string("Index Tranche");
-    boost::shared_ptr<ReferenceDataManager> refData = engineFactory->referenceData();
-    if (refData && refData->hasData("CreditIndex", qualifier_)) {
-        auto refDatum = refData->getData("CreditIndex", qualifier_);
-        boost::shared_ptr<CreditIndexReferenceDatum> creditIndexRefDatum = boost::dynamic_pointer_cast<CreditIndexReferenceDatum>(refDatum);
-        additionalData_["isdaSubProduct"] = creditIndexRefDatum->indexFamily();
-        if (creditIndexRefDatum->indexFamily() == "") {
-            ALOG("IndexFamily is blank in credit index reference data for entity " << qualifier_);
-        }
-    } else {
-        ALOG("Credit index reference data missing for entity " << qualifier_ << ", isdaSubProduct left blank");
-    }
-    // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = string("");  
 
     DLOG("CDO instrument built");
 }

@@ -38,6 +38,12 @@ void RiskParticipationAgreement::build(const boost::shared_ptr<EngineFactory>& e
 
     LOG("RiskParticipationAgreement::build() for id \"" << id() << "\" called.");
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Interest Rate");
+    additionalData_["isdaBaseProduct"] = string("Exotic");
+    additionalData_["isdaSubProduct"] = string("");  
+    additionalData_["isdaTransaction"] = string("");  
+
     // do some checks
 
     QL_REQUIRE(!protectionFee_.empty(), "protection fees must not be empty");
@@ -56,12 +62,6 @@ void RiskParticipationAgreement::build(const boost::shared_ptr<EngineFactory>& e
 
     // set start date
     additionalData_["startDate"] = to_string(protectionStart_);
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Interest Rate");
-    additionalData_["isdaBaseProduct"] = string("Exotic");
-    additionalData_["isdaSubProduct"] = string("");  
-    additionalData_["isdaTransaction"] = string("");  
 }
 
 void RiskParticipationAgreement::buildWithSwapUnderlying(const boost::shared_ptr<EngineFactory>& engineFactory) {

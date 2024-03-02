@@ -64,6 +64,12 @@ FxTouchOption::FxTouchOption(Envelope& env, OptionData option, BarrierData barri
 
 void FxTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
+    additionalData_["isdaSubProduct"] = string("Barrier");
+    additionalData_["isdaTransaction"] = string("");  
+
     const boost::shared_ptr<Market> market = engineFactory->market();
 
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for FxOption");
@@ -241,12 +247,6 @@ void FxTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
 
     additionalData_["payoffAmount"] = payoffAmount_;
     additionalData_["payoffCurrency"] = payoffCurrency_;
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
-    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
-    additionalData_["isdaSubProduct"] = string("Barrier");
-    additionalData_["isdaTransaction"] = string("");  
 }
 
 bool FxTouchOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {
