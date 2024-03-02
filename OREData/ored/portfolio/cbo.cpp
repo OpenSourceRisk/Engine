@@ -36,6 +36,13 @@ namespace data {
 void CBO::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("CBO::build() called for trade " << id());
 
+    // ISDA taxonomy: not a derivative, but define the asset class at least
+    // so that we can determine a TRS asset class that has CBO underlyings
+    additionalData_["isdaAssetClass"] = string("Credit");
+    additionalData_["isdaBaseProduct"] = string("");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");
+
     requiredFixings_.clear();
 
     const boost::shared_ptr<Market> market = engineFactory->market();
@@ -135,13 +142,6 @@ void CBO::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     std::map<string, boost::shared_ptr<QuantExt::FxIndex>>::iterator it;
     for (it = fxIndexMap.begin(); it != fxIndexMap.end(); ++it)
         cbo->registerWith(it->second);
-
-    // ISDA taxonomy: not a derivative, but define the asset class at least
-    // so that we can determine a TRS asset class that has CBO underlyings
-    additionalData_["isdaAssetClass"] = string("Credit");
-    additionalData_["isdaBaseProduct"] = string("");
-    additionalData_["isdaSubProduct"] = string("");
-    additionalData_["isdaTransaction"] = string("");
 }
 
 void CBO::populateFromCboReferenceData(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager){

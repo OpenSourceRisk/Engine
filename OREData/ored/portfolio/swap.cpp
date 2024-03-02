@@ -44,6 +44,8 @@ namespace data {
 
 void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Swap::build() called for trade " << id());
+
+    setIsdaTaxonomyFields();
     
     QL_REQUIRE(legData_.size() >= 1, "Swap must have at least 1 leg");
     const boost::shared_ptr<Market> market = engineFactory->market();
@@ -213,12 +215,14 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     }
 
     additionalData_["startDate"] = to_string(startDate);
+}
 
+void Swap::setIsdaTaxonomyFields() {
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Interest Rate");
     additionalData_["isdaBaseProduct"] = string(isXCCY_ ? "Cross Currency" : "IR Swap");
     additionalData_["isdaSubProduct"] = isdaSubProductSwap(id(), legData_);
-    additionalData_["isdaTransaction"] = string("");  
+    additionalData_["isdaTransaction"] = string("");
 }
 
 const std::map<std::string,boost::any>& Swap::additionalData() const {
