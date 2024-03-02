@@ -46,6 +46,14 @@ XMLNode* EquityPositionData::toXML(XMLDocument& doc) {
 }
 
 void EquityPosition::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
+
+    // ISDA taxonomy: not a derivative, but define the asset class at least
+    // so that we can determine a TRS asset class that has an EQ position underlying
+    additionalData_["isdaAssetClass"] = string("Equity");
+    additionalData_["isdaBaseProduct"] = string("");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");
+
     DLOG("EquityPosition::build() called for " << id());
     QL_REQUIRE(!data_.underlyings().empty(), "EquityPosition::build(): no underlyings given");
     indices_.clear();
@@ -86,13 +94,6 @@ void EquityPosition::build(const boost::shared_ptr<ore::data::EngineFactory>& en
     maturity_ = Date::maxDate();
     notional_ = Null<Real>();
     notionalCurrency_ = "";
-
-    // ISDA taxonomy: not a derivative, but define the asset class at least
-    // so that we can determine a TRS asset class that has an EQ position underlying
-    additionalData_["isdaAssetClass"] = string("Equity");
-    additionalData_["isdaBaseProduct"] = string("");
-    additionalData_["isdaSubProduct"] = string("");
-    additionalData_["isdaTransaction"] = string("");
     
     // leave legs empty
 }
