@@ -47,10 +47,10 @@
   </Swap>
   <TenorBasisSwap>
     <Id>USD-LIBOR-1M-3M-BASIS</Id>
-    <LongIndex>USD-LIBOR-3M</LongIndex>
-    <ShortIndex>USD-LIBOR-1M</ShortIndex>
-    <ShortPayTenor>3M</ShortPayTenor>
-    <SpreadOnShort>true</SpreadOnShort>
+    <PayIndex>USD-LIBOR-3M</PayIndex>
+    <ReceiveIndex>USD-LIBOR-1M</ReceiveIndex>
+    <ReceiveFrequency>3M</ReceiveFrequency>
+    <SpreadOnRec>true</SpreadOnRec>
     <IncludeSpread>false</IncludeSpread>
     <SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
   </TenorBasisSwap>
