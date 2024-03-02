@@ -39,6 +39,25 @@ namespace data {
 void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("IndexCreditDefaultSwap::build() called for trade " << id());
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Credit");
+    additionalData_["isdaBaseProduct"] = string("Index");
+    string entity = swap_.creditCurveId();
+    boost::shared_ptr<ReferenceDataManager> refData = engineFactory->referenceData();
+    if (refData && refData->hasData("CreditIndex", entity)) {
+        auto refDatum = refData->getData("CreditIndex", entity);
+        boost::shared_ptr<CreditIndexReferenceDatum> creditIndexRefDatum =
+            boost::dynamic_pointer_cast<CreditIndexReferenceDatum>(refDatum);
+        additionalData_["isdaSubProduct"] = creditIndexRefDatum->indexFamily();
+        if (creditIndexRefDatum->indexFamily() == "") {
+            ALOG("IndexFamily is blank in credit index reference data for entity " << entity);
+        }
+    } else {
+        ALOG("Credit index reference data missing for entity " << entity << ", isdaSubProduct left blank");
+    }
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");  
+
     const boost::shared_ptr<Market> market = engineFactory->market();
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("IndexCreditDefaultSwap");
 
@@ -214,25 +233,6 @@ void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engin
         additionalData_["startDate"] = to_string(schedule.dates().front());
 
     sensitivityDecomposition_ = cdsBuilder->sensitivityDecomposition();
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Credit");
-    additionalData_["isdaBaseProduct"] = string("Index");
-    string entity = swap_.creditCurveId();   
-    boost::shared_ptr<ReferenceDataManager> refData = engineFactory->referenceData();
-    if (refData && refData->hasData("CreditIndex", entity)) {
-        auto refDatum = refData->getData("CreditIndex", entity);
-        boost::shared_ptr<CreditIndexReferenceDatum> creditIndexRefDatum = boost::dynamic_pointer_cast<CreditIndexReferenceDatum>(refDatum);
-        additionalData_["isdaSubProduct"] = creditIndexRefDatum->indexFamily();
-        if (creditIndexRefDatum->indexFamily() == "") {
-            ALOG("IndexFamily is blank in credit index reference data for entity " << entity);
-        }
-    } else {
-        ALOG("Credit index reference data missing for entity " << entity << ", isdaSubProduct left blank");
-    }
-    // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = string("");  
-
 }
 
 const std::map<std::string, boost::any>& IndexCreditDefaultSwap::additionalData() const {

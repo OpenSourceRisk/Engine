@@ -124,6 +124,14 @@ boost::shared_ptr<OptionPaymentDateAdjuster> makeOptionPaymentDateAdjuster(Commo
 void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
 
     DLOG("CommoditySpreadOption::build() called for trade " << id());
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = std::string("Commodity");
+    additionalData_["isdaBaseProduct"] = std::string("Other");
+    additionalData_["isdaSubProduct"] = std::string("");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = std::string("");
+
     reset();
     auto legData_ = csoData_.legData();
     auto optionData_ = csoData_.optionData();
@@ -290,13 +298,6 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
 
     instrument_ = boost::make_shared<VanillaInstrument>(firstInstrument, firstMultiplier, additionalInstruments,
                                                         additionalMultipliers);
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = std::string("Commodity");
-    additionalData_["isdaBaseProduct"] = std::string("Other");
-    additionalData_["isdaSubProduct"] = std::string("");
-    // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = std::string("");
     if (!optionData_.premiumData().premiumData().empty()) {
         auto premium = optionData_.premiumData().premiumData().front();
         additionalData_["premiumAmount"] = -bsInd * premium.amount;
