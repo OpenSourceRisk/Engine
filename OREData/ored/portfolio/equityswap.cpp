@@ -117,6 +117,10 @@ void EquitySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // just underlying security, notionals and currencies are covered by the Swap class already
     additionalData_["underlyingSecurityId"] = eqLegData->eqName();
+}
+
+void EquitySwap::setIsdaTaxonomyFields() {
+    Swap::setIsdaTaxonomyFields();
 
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Equity");

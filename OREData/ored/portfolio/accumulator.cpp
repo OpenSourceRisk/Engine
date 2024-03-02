@@ -412,6 +412,10 @@ void Accumulator::build(const boost::shared_ptr<EngineFactory>& factory) {
     // build trade
 
     ScriptedTrade::build(factory);
+}
+
+void Accumulator::setIsdaTaxonomyFields() {
+    ScriptedTrade::setIsdaTaxonomyFields();
 
     // ISDA taxonomy, asset class set in the base class build
     // asset class set in the base class already

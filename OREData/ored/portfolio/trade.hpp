@@ -120,6 +120,8 @@ public:
     //! Set the envelope with counterparty and portfolio info
     void setEnvelope(const Envelope& envelope);
 
+    void setAdditionalData(const std::map<std::string, boost::any>& additionalData);
+
     //! Set the trade actions
     TradeActions& tradeActions() { return tradeActions_; }
     //@}
