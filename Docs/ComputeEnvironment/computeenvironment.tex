@@ -277,9 +277,7 @@ interface requires the implementation of the following methods:
   operations is described in \ref{randomVariableOpCodes}
 \item \verb+freeVariable()+: indicate that the variable with the given id will no longer be referenced in subsequent
   calculations. The variable id can be reused as a new variable.
-\item \verb+declareOutputVariable()+: declare a variable with given id as part of the output vector. An input variable
-  should not be declared as an output variable, this might work for certain implementations, but is generally not
-  guaranteed to work.
+\item \verb+declareOutputVariable()+: declare a variable with given id as part of the output vector.
 \item \verb+finalizeCalculation()+: execute the calculation and populate the given vector of vector of floats with the
   result. The inner vector is given as a raw pointer and must have the size of the calculation. The outer vector matches
   the output variables in the order they were declared before.
