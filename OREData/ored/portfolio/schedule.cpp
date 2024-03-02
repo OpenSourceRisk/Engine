@@ -82,7 +82,8 @@ void ScheduleRules::fromXML(XMLNode* node) {
         while(!Date::isEndOfMonth(ed))ed--;
         endDate_ = to_string(ed);
     }
-    tenor_ = XMLUtils::getChildValue(node, "Tenor");
+    tenor_ = XMLUtils::getChildValue(node, "Tenor") == "1T" ? "0D" : XMLUtils::getChildValue(node, "Tenor");
+    was1T_ = XMLUtils::getChildValue(node, "Tenor") == "1T" ? true : false;
     calendar_ = XMLUtils::getChildValue(node, "Calendar");
     convention_ = XMLUtils::getChildValue(node, "Convention");
     termConvention_ = XMLUtils::getChildValue(node, "TermConvention", false);
@@ -102,7 +103,7 @@ XMLNode* ScheduleRules::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, rules, "StartDate", startDate_);
     if (!endDate_.empty())
         XMLUtils::addChild(doc, rules, "EndDate", endDate_);
-    XMLUtils::addChild(doc, rules, "Tenor", tenor_);
+    XMLUtils::addChild(doc, rules, "Tenor", was1T_ ? "1T" : tenor_);
     XMLUtils::addChild(doc, rules, "Calendar", calendar_);
     XMLUtils::addChild(doc, rules, "Convention", convention_);
     XMLUtils::addChild(doc, rules, "TermConvention", termConvention_);
@@ -121,7 +122,8 @@ void ScheduleDates::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Dates");
     calendar_ = XMLUtils::getChildValue(node, "Calendar");
     convention_ = XMLUtils::getChildValue(node, "Convention");
-    tenor_ = XMLUtils::getChildValue(node, "Tenor");
+    tenor_ = XMLUtils::getChildValue(node, "Tenor") == "1T" ? "0D" : XMLUtils::getChildValue(node, "Tenor");
+    was1T_ = XMLUtils::getChildValue(node, "Tenor") == "1T" ? true : false;
     endOfMonth_ = XMLUtils::getChildValue(node, "EndOfMonth");
     dates_ = XMLUtils::getChildrenValues(node, "Dates", "Date");
 }
@@ -131,7 +133,7 @@ XMLNode* ScheduleDates::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Calendar", calendar_);
     if (convention_ != "")
         XMLUtils::addChild(doc, node, "Convention", convention_);
-    XMLUtils::addChild(doc, node, "Tenor", tenor_);
+    XMLUtils::addChild(doc, node, "Tenor", was1T_ ? "1T" : tenor_);
     if (endOfMonth_ != "")
         XMLUtils::addChild(doc, node, "EndOfMonth", endOfMonth_);
     XMLUtils::addChildren(doc, node, "Dates", "Date", dates_);
