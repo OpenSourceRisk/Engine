@@ -143,8 +143,10 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
 
         Date d = start;
         while (d < today && !knockedIn && !knockedOut) {
-            Real fixing = fxIndex->pastFixing(d);
-
+            Real fixing = Null<Real>();
+            if (fxIndex->fixingCalendar().isBusinessDay(d)) {
+                 fixing = fxIndex->pastFixing(d);
+            } 
             if (fixing == 0.0 || fixing == Null<Real>()) {
                 ALOG("Got invalid FX fixing for index " << fxIndex_ << " on " << d
                                                         << "Skipping this date, assuming no trigger");
