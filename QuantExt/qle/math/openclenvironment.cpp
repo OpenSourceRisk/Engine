@@ -800,8 +800,13 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output, const Sett
 
         for (std::size_t i = 0; i < nOutputVars_[currentId_ - 1]; ++i) {
             std::size_t offset = i * size_[currentId_ - 1];
-            std::string ssaLine =
-                "  output[" + std::to_string(offset) + "UL + i] = v" + std::to_string(outputVariables_[i]) + ";";
+            std::string output;
+            if (outputVariables_[i] < inputVarOffset_.size())
+                output = "input[" + std::to_string(outputVariables_[i]) + "UL" +
+                         (inputVarIsScalar_[outputVariables_[i]] ? "]" : " + i] ");
+            else
+                output = "v" + std::to_string(outputVariables_[i]);
+            std::string ssaLine = "  output[" + std::to_string(offset) + "UL + i] = " + output;
             kernelSource += ssaLine + "\n";
         }
 
