@@ -48,6 +48,12 @@ namespace data {
 
 void BondOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Building Bond Option: " << id());
+    
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Interest Rate");
+    additionalData_["isdaBaseProduct"] = string("Option");
+    additionalData_["isdaSubProduct"] = string("Debt Option");
+    additionalData_["isdaTransaction"] = string("");  
 
     const boost::shared_ptr<Market> market = engineFactory->market();
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("BondOption");
@@ -136,12 +142,6 @@ void BondOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // the required fixings are (at most) those of the underlying
     requiredFixings_ = underlying_->requiredFixings();
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Interest Rate");
-    additionalData_["isdaBaseProduct"] = string("Option");
-    additionalData_["isdaSubProduct"] = string("Debt Option");  
-    additionalData_["isdaTransaction"] = string("");  
 }
 
 void BondOption::fromXML(XMLNode* node) {

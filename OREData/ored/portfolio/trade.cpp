@@ -123,6 +123,10 @@ void Trade::setEnvelope(const Envelope& envelope) {
     envelope_ = envelope;
 }
 
+void Trade::setAdditionalData(const std::map<std::string, boost::any>& additionalData) {
+    additionalData_ = additionalData;
+}
+
 void Trade::reset() {
     // save accumulated timings from wrapper to trade before resetting
     if (instrument_ != nullptr) {
