@@ -324,7 +324,7 @@ void BlackMultiLegOptionEngineBase::calculate() const {
     additionalResults_["weightedFixedRate"] = weightedFixedRate;
     additionalResults_["floatingNpv"] = floatingNpv;
     additionalResults_["floatingBps"] = floatingBps;
-    additionalResults_["weightedFloatingSpread"] = weightedFixedRate;
+    additionalResults_["weightedFloatingSpread"] = weightedFloatingSpread;
     additionalResults_["simpleCfNpv"] = simpleCfNpv;
 }
 
