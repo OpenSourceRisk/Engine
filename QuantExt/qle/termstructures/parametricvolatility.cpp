@@ -89,20 +89,31 @@ Real ParametricVolatility::convert(const MarketPoint& p, const MarketQuoteType i
     }
 };
 
-SabrParametricVolatility::SabrParametricVolatility(const ModelVariant modelVariant,
-                                                   const std::vector<MarketPoint> marketPoints,
-                                                   const MarketModelType marketModelType,
-                                                   const MarketQuoteType inputMarketQuoteType,
-                                                   const Handle<YieldTermStructure> discountCurve)
+SabrParametricVolatility::SabrParametricVolatility(
+    const ModelVariant modelVariant, const std::vector<MarketPoint> marketPoints, const MarketModelType marketModelType,
+    const MarketQuoteType inputMarketQuoteType, const Handle<YieldTermStructure> discountCurve,
+    const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, bool>>> modelParameters)
     : ParametricVolatility(marketPoints, marketModelType, inputMarketQuoteType, discountCurve),
-      modelVariant_(modelVariant) {}
+      modelVariant_(modelVariant), modelParameters_(std::move(modelParameters)) {}
 
-void SabrParametricVolatility::performCalculations() const {}
+void SabrParametricVolatility::performCalculations() const {
+
+    // 1 collect the available (tte, underlyingLength) pairs
+
+    // 2 for each (tte, underlyingLength) pair calibrate the SABR variant
+
+    // 2.1 convert the market quote to the preferred output quote type of the SABR variant
+
+    // 2.2 perform the calibration
+
+    // 2.3 store the calibrated model parameters
+}
 
 Real SabrParametricVolatility::evaluate(const Real timeToExpiry, const Real strike, const Real underlyingLength,
                                         const MarketQuoteType outputMarketQuoteType,
                                         const Real outputLognormalShift) const {
     calculate();
+
     return 0.0;
 }
 

@@ -25,9 +25,9 @@
 #include <ql/handle.hpp>
 #include <ql/option.hpp>
 #include <ql/patterns/lazyobject.hpp>
+#include <ql/pricingengines/blackformula.hpp>
 #include <ql/quote.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
-#include <ql/pricingengines/blackformula.hpp>
 #include <qle/models/exactbachelierimpliedvolatility.hpp>
 
 namespace QuantExt {
@@ -75,9 +75,12 @@ public:
         Antonov2015FreeBoundaryNormal
     };
 
-    SabrParametricVolatility(const ModelVariant modelVariant, const std::vector<MarketPoint> marketPoints,
-                             const MarketModelType marketModelType, const MarketQuoteType inputMarketQuoteType,
-                             const QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve);
+    //! modelParameters are given by (tte, underlyingLen) as a vector of parameter value and whether this value is fixed
+    SabrParametricVolatility(
+        const ModelVariant modelVariant, const std::vector<MarketPoint> marketPoints,
+        const MarketModelType marketModelType, const MarketQuoteType inputMarketQuoteType,
+        const QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve,
+        const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, bool>>> modelParameters);
 
     QuantLib::Real evaluate(const QuantLib::Real timeToExpiry, const QuantLib::Real strike,
                             const QuantLib::Real underlyingLength, const MarketQuoteType outputMarketQuoteType,
@@ -86,6 +89,7 @@ public:
 private:
     void performCalculations() const override;
     ModelVariant modelVariant_;
+    std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, bool>>> modelParameters_;
 };
 
 } // namespace QuantExt
