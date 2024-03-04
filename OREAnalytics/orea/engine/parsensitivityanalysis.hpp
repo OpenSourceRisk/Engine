@@ -61,7 +61,8 @@ public:
     ParSensitivityAnalysis(const QuantLib::Date& asof,
                            const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams,
                            const ore::analytics::SensitivityScenarioData& sensitivityData,
-                           const string& marketConfiguration = "", const bool continueOnError = false,
+                           const string& marketConfiguration = Market::defaultConfiguration,
+                           const bool continueOnError = false,
                            const std::set<ore::analytics::RiskFactorKey::KeyType>& typesDisabled = {});
 
     virtual ~ParSensitivityAnalysis() {}

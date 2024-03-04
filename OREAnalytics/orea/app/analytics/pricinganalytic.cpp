@@ -194,7 +194,7 @@ void PricingAnalyticImpl::runAnalytic(
             if (inputs_->parSensi() || inputs_->alignPillars()) {
                 parAnalysis= boost::make_shared<ParSensitivityAnalysis>(
                     inputs_->asof(), analytic()->configurations().simMarketParams,
-                    *analytic()->configurations().sensiScenarioData, "",
+                    *analytic()->configurations().sensiScenarioData, Market::defaultConfiguration,
                     true, typesDisabled);
                 if (inputs_->alignPillars()) {
                     LOG("Sensi analysis - align pillars (for the par conversion or because alignPillars is enabled)");
