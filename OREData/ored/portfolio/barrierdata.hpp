@@ -37,9 +37,11 @@ public:
     BarrierData() : initialized_(false), rebate_(0.0) {}
     //! Constructor
     BarrierData(std::string barrierType, std::vector<double> levels, double rebate,
-                std::vector<ore::data::TradeBarrier> tradeBarriers, std::string style = "")
+                std::vector<ore::data::TradeBarrier> tradeBarriers,
+                const boost::optional<string>& strictComparison = boost::none, std::string style = ""
+                )
         : initialized_(true), type_(barrierType), levels_(levels), rebate_(rebate), tradeBarriers_(tradeBarriers),
-          style_(style) {}
+          strictComparison_(strictComparison), style_(style) {}
 
     //! \name Inspectors
     //@{
@@ -50,6 +52,7 @@ public:
     std::vector<ore::data::TradeBarrier> levels() const { return tradeBarriers_; }
     const std::string& style() const { return style_; }
     bool initialized() const { return initialized_; }
+    const boost::optional<string>& strictComparison() const { return strictComparison_; }
     //@}
 
     //! \name Serialisation
@@ -66,6 +69,7 @@ private:
     std::vector<ore::data::TradeBarrier> tradeBarriers_;
     std::string rebateCurrency_;
     std::string rebatePayTime_;
+    boost::optional<std::string> strictComparison_;
     std::string style_;
 };
 } // namespace data

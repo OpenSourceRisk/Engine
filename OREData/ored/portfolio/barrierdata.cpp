@@ -26,6 +26,10 @@ void BarrierData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "BarrierData");
     type_ = XMLUtils::getChildValue(node, "Type", true);
     style_ = XMLUtils::getChildValue(node, "Style", false);
+    strictComparison_ = boost::none;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "StrictComparison")) {
+        strictComparison_ = XMLUtils::getNodeValue(n);
+    }    
     XMLNode* levelData = XMLUtils::getChildNode(node, "LevelData");
     if (levelData) {
         vector<XMLNode*> lvls = XMLUtils::getChildrenNodes(levelData, "Level");
@@ -51,6 +55,8 @@ XMLNode* BarrierData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Type", type_);
     if (!style_.empty())
         XMLUtils::addChild(doc, node, "Style", style_);
+    if (strictComparison_)
+        XMLUtils::addChild(doc, node, "StrictComparison", *strictComparison_);
     XMLUtils::addChild(doc, node, "Rebate", rebate_);
     XMLUtils::addChildren(doc, node, "Levels", "Level", levels_);
     if (!rebateCurrency_.empty())
