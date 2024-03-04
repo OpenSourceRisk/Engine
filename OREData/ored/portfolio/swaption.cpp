@@ -252,10 +252,16 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             QuantExt::NumericLgmMultiLegOptionEngineBase::instrumentIsHandled(*swaption, builderPrecheckMessages),
             "Swaption::build(): instrument is not handled by the available engines: " +
                 boost::join(builderPrecheckMessages, ", "));
-        if (exerciseType_ == Exercise::Bermudan)
+        if (exerciseType_ == Exercise::European || exerciseType_ == Exercise::Bermudan)
             builderType = "BermudanSwaption";
         else if (exerciseType_ == Exercise::American)
             builderType = "AmericanSwaption";
+    }
+
+    DLOG("Getting builder for '" << builderType << "', got " << builderPrecheckMessages.size()
+                                 << " builder precheck messages:");
+    for (auto const& m : builderPrecheckMessages) {
+        DLOG(m);
     }
 
     auto swaptionBuilder = boost::dynamic_pointer_cast<SwaptionEngineBuilder>(engineFactory->builder(builderType));
