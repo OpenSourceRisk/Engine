@@ -246,6 +246,7 @@ public:
     void setColvaAnalytic(bool b) { colvaAnalytic_ = b; }
     void setCollateralFloorAnalytic(bool b) { collateralFloorAnalytic_ = b; }
     void setDimAnalytic(bool b) { dimAnalytic_ = b; }
+    void setDimModel(const std::string& s) { dimModel_ = s; }
     void setMvaAnalytic(bool b) { mvaAnalytic_ = b; }
     void setKvaAnalytic(bool b) { kvaAnalytic_ = b; }
     void setDynamicCredit(bool b) { dynamicCredit_ = b; }
@@ -520,6 +521,7 @@ public:
     bool colvaAnalytic() { return colvaAnalytic_; }
     bool collateralFloorAnalytic() { return collateralFloorAnalytic_; }
     bool dimAnalytic() { return dimAnalytic_; }
+    const std::string& dimModel() { return dimModel_; }
     bool mvaAnalytic() { return mvaAnalytic_; }
     bool kvaAnalytic() { return kvaAnalytic_; }
     bool dynamicCredit() { return dynamicCredit_; }
@@ -795,6 +797,7 @@ protected:
     bool colvaAnalytic_ = false;
     bool collateralFloorAnalytic_ = false;
     bool dimAnalytic_ = false;
+    std::string dimModel_ = "Regression";
     bool mvaAnalytic_= false;
     bool kvaAnalytic_= false;
     bool dynamicCredit_ = false;
