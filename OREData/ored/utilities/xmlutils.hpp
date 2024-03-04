@@ -266,6 +266,9 @@ public:
 
     // helper routine to convert a value of an arbitrary type to string
     static string convertToString(const Real value);
+
+	template <class T> static string convertToString(const T& value);
+
 };
 
 } // namespace data
