@@ -82,6 +82,21 @@ boost::shared_ptr<MarketDatum> Loader::get(const std::pair<std::string, bool>& n
     }
 }
 
+std::pair<bool, string> Loader::checkFxDuplicate(const ext::shared_ptr<MarketDatum> md, const QuantLib::Date& d) {
+    string cc1 = ext::dynamic_pointer_cast<FXSpotQuote>(md)->unitCcy();
+    string cc2 = ext::dynamic_pointer_cast<FXSpotQuote>(md)->ccy();
+    string tmp = "FX/RATE/" + cc2 + "/" + cc1;
+    if (Loader::has(tmp, d)) {
+        string dom = fxDominance(cc1, cc2);
+        if (dom == (cc1 + cc2)) {
+            return {true, tmp};
+        } else {
+            return {false, ""};
+        }
+    }
+    return {true, ""};
+}
+
 bool Loader::hasFixing(const string& name, const QuantLib::Date& d) const {
     try {
         return !getFixing(name, d).empty();
