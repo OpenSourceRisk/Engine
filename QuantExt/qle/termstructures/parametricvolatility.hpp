@@ -66,6 +66,7 @@ protected:
     QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
 };
 
+// strict weak ordering on MarketPoint by lexicographic comparison (timeToExpiry1, strike1) < (timeToExpiry2, strike2)
 bool operator<(const ParametricVolatility::MarketPoint& p, const ParametricVolatility::MarketPoint& q);
 
 class SabrParametricVolatility final : public ParametricVolatility {
