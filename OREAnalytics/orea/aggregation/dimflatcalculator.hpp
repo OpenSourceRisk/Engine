@@ -52,8 +52,8 @@ public:
 
     map<string, Real> unscaledCurrentDIM() override { return currentIM_; }
     void build() override;
-    void exportDimEvolution(ore::data::Report& dimEvolutionReport) override;
-    const vector<Real>& dimResults(const std::string& nettingSet);
+    void exportDimEvolution(ore::data::Report& dimEvolutionReport) const override;
+    const vector<Real>& dimResults(const std::string& nettingSet) const;
 };
 
 } // namespace analytics
