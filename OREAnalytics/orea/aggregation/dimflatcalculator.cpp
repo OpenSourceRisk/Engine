@@ -38,9 +38,10 @@ FlatDynamicInitialMarginCalculator::FlatDynamicInitialMarginCalculator(
 }
 
 
-const vector<Real>& FlatDynamicInitialMarginCalculator::dimResults(const std::string& nettingSet) {
-    if (nettingSetExpectedDIM_.find(nettingSet) != nettingSetExpectedDIM_.end())
-        return nettingSetExpectedDIM_[nettingSet];
+const vector<Real>& FlatDynamicInitialMarginCalculator::dimResults(const std::string& nettingSet) const {
+    auto it = nettingSetExpectedDIM_.find(nettingSet);
+    if (it != nettingSetExpectedDIM_.end())
+        return it->second;
     else
         QL_FAIL("netting set " << nettingSet << " not found in expected DIM results");
 }
@@ -56,7 +57,7 @@ void FlatDynamicInitialMarginCalculator::build() {
         ALOG("collateral balances not set");
     }
     
-    for (auto n : nettingSetIds_) {
+    for (const auto& n : nettingSetIds_) {
         LOG("Process netting set " << n);
 
         Real currentIM = 0;
@@ -68,8 +69,7 @@ void FlatDynamicInitialMarginCalculator::build() {
         for (Size j = 0; j < stopDatesLoop; ++j) {
             nettingSetExpectedDIM_[n][j] = currentIM;
             for (Size k = 0; k < samples; ++k)
-                nettingSetDIM_[n][j][k] = currentIM;
-                
+                nettingSetDIM_[n][j][k] = currentIM;                
         }
 
         nettingSetCount++;
@@ -77,7 +77,7 @@ void FlatDynamicInitialMarginCalculator::build() {
     LOG("DIM by flat extraplation of initial IM done");
 }
 
-void FlatDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& dimEvolutionReport) {
+void FlatDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& dimEvolutionReport) const {
 
     // Size samples = dimCube_->samples();
     Size stopDatesLoop = datesLoopSize_;
@@ -100,7 +100,8 @@ void FlatDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& d
             Date defaultDate = dimCube_->dates()[i];
             Time t = ActualActual(ActualActual::ISDA).yearFraction(asof, defaultDate);
             Size days = cubeInterpretation_->getMporCalendarDays(dimCube_, i);
-            Real dim = nettingSetExpectedDIM_[nettingSet][i];
+            auto it = nettingSetExpectedDIM_.find(nettingSet);
+            Real dim = it->second.at(i);
             dimEvolutionReport.next()
                 .add(i)
                 .add(defaultDate)
