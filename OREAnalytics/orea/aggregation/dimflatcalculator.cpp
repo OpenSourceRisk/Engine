@@ -86,7 +86,10 @@ void FlatDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& d
     dimEvolutionReport.addColumn("TimeStep", Size())
         .addColumn("Date", Date())
         .addColumn("DaysInPeriod", Size())
-        .addColumn("DIM", Real(), 6)
+        .addColumn("ZeroOrderDIM", Real(), 6)
+        .addColumn("AverageDIM", Real(), 6)
+        .addColumn("AverageFLOW", Real(), 6)
+        .addColumn("SimpleDIM", Real(), 6)
         .addColumn("NettingSet", string())
         .addColumn("Time", Real(), 6);
 
@@ -97,11 +100,15 @@ void FlatDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& d
             Date defaultDate = dimCube_->dates()[i];
             Time t = ActualActual(ActualActual::ISDA).yearFraction(asof, defaultDate);
             Size days = cubeInterpretation_->getMporCalendarDays(dimCube_, i);
+            Real dim = nettingSetExpectedDIM_[nettingSet][i];
             dimEvolutionReport.next()
                 .add(i)
                 .add(defaultDate)
                 .add(days)
-                .add(nettingSetExpectedDIM_[nettingSet][i])
+                .add(dim)
+                .add(dim)
+                .add(0.0)
+                .add(dim)
                 .add(nettingSet)
                 .add(t);
         }
