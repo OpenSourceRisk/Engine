@@ -63,13 +63,20 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("Swaption::build() for " << id());
 
-    // 1 build underlying swap and copy its required fixings
+    // 1 ISDA taxonomy
+
+    additionalData_["isdaAssetClass"] = string("Interest Rate");
+    additionalData_["isdaBaseProduct"] = string("Option");
+    additionalData_["isdaSubProduct"] = string("Swaption");
+    additionalData_["isdaTransaction"] = string("");
+
+    // 2 build underlying swap and copy its required fixings
 
     underlying_ = boost::make_shared<ore::data::Swap>(Envelope(), legData_);
     underlying_->build(engineFactory);
     requiredFixings_.addData(underlying_->requiredFixings());
 
-    // 2 build the exercise and parse some fields
+    // 3 build the exercise and parse some fields
 
     DLOG("Swaption::build() for " << id() << ": build exercise");
 
@@ -81,7 +88,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                                                              : parseSettlementMethod(optionData_.settlementMethod());
     positionType_ = parsePositionType(optionData_.longShort());
 
-    // 3 fill currencies and set notional to null (will be retrieved via notional())
+    // 4 fill currencies and set notional to null (will be retrieved via notional())
 
     npvCurrency_ = notionalCurrency_ = "USD"; // only if no legs are given, not relevant in this case
 
@@ -93,7 +100,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     Date today = Settings::instance().evaluationDate();
 
-    // 4 if the swaption is exercised (as per option data / exercise data), build the cashflows that remain to be paid
+    // 5 if the swaption is exercised (as per option data / exercise data), build the cashflows that remain to be paid
 
     if (exerciseBuilder_->isExercised()) {
         Date exerciseDate = exerciseBuilder_->exerciseDate();
@@ -101,7 +108,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
         if (optionData_.settlement() == "Physical") {
 
-            // 4.1 if physical exercise, inlcude the "exercise-into" cashflows of the underlying
+            // 5.1 if physical exercise, inlcude the "exercise-into" cashflows of the underlying
 
             for (Size i = 0; i < underlying_->legs().size(); ++i) {
                 legs_.push_back(Leg());
@@ -124,7 +131,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
         } else {
 
-            // 4.2 if cash exercise, include the cashSettlement payment
+            // 5.2 if cash exercise, include the cashSettlement payment
 
             if (exerciseBuilder_->cashSettlement()) {
                 legs_.push_back(Leg());
@@ -135,7 +142,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             }
         }
 
-        // 4.3 include the exercise fee payment
+        // 5.3 include the exercise fee payment
 
         if (exerciseBuilder_->feeSettlement()) {
             legs_.push_back(Leg());
@@ -145,7 +152,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             maturity_ = std::max(maturity_, exerciseBuilder_->feeSettlement()->date());
         }
 
-        // 4.4 add unconditional premiums, build instrument (as swap) and exit
+        // 5.4 add unconditional premiums, build instrument (as swap) and exit
 
         std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
         std::vector<Real> additionalMultipliers;
@@ -167,7 +174,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         return;
     }
 
-    // 5 if we do not have an active exercise as of today, or no underlying legs we only build unconditional premiums
+    // 6 if we do not have an active exercise as of today, or no underlying legs we only build unconditional premiums
 
     if (exerciseBuilder_->exercise() == nullptr || exerciseBuilder_->exercise()->dates().empty() ||
         exerciseBuilder_->exercise()->dates().back() <= today || legData_.empty()) {
@@ -195,7 +202,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         return;
     }
 
-    // 6 fill legs, only include coupons after first exercise
+    // 7 fill legs, only include coupons after first exercise
 
     legCurrencies_ = underlying_->legCurrencies();
     legPayers_ = underlying_->legPayers();
@@ -213,13 +220,6 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             }
         }
     }
-
-    // 7 ISDA taxonomy
-
-    additionalData_["isdaAssetClass"] = string("Interest Rate");
-    additionalData_["isdaBaseProduct"] = string("Option");
-    additionalData_["isdaSubProduct"] = string("Swaption");
-    additionalData_["isdaTransaction"] = string("");
 
     // 8 build swaption
 
