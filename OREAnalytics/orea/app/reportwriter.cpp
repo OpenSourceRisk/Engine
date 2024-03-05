@@ -1536,7 +1536,8 @@ typedef SimmConfiguration::SimmSide SimmSide;
 void ReportWriter::writeSIMMReport(
     const map<SimmSide, map<NettingSetDetails, pair<string, SimmResults>>>& finalSimmResultsMap,
     const boost::shared_ptr<Report> report, const bool hasNettingSetDetails, const string& simmResultCcy,
-    const string& simmCalcCcy, const string& reportCcy, Real fxSpot, Real outputThreshold) {
+    const string& simmCalcCcyCall, const string& simmCalcCcyPost, const string& reportCcy, Real fxSpot,
+    Real outputThreshold) {
 
 
     // Transform final SIMM results
@@ -1552,14 +1553,15 @@ void ReportWriter::writeSIMMReport(
         }
     }
 
-    writeSIMMReport(finalSimmResults, report, hasNettingSetDetails, simmResultCcy, simmCalcCcy, reportCcy, true, fxSpot,
-                    outputThreshold);
+    writeSIMMReport(finalSimmResults, report, hasNettingSetDetails, simmResultCcy, simmCalcCcyCall, simmCalcCcyPost,
+                    reportCcy, true, fxSpot, outputThreshold);
 }
 
 void ReportWriter::writeSIMMReport(
     const map<SimmSide, map<NettingSetDetails, map<string, SimmResults>>>& simmResultsMap,
     const boost::shared_ptr<Report> report, const bool hasNettingSetDetails, const string& simmResultCcy,
-    const string& simmCalcCcy, const string& reportCcy, const bool isFinalSimm, Real fxSpot, Real outputThreshold) {
+    const string& simmCalcCcyCall, const string& simmCalcCcyPost, const string& reportCcy, const bool isFinalSimm, Real fxSpot,
+    Real outputThreshold) {
 
     if (isFinalSimm) {
         LOG("Writing SIMM results report.");
@@ -1684,7 +1686,7 @@ void ReportWriter::writeSIMMReport(
                 .add(finalWinningReg)
                 .add(sumSidePortfolios)
                 .add(simmResultCcy)
-                .add(simmCalcCcy);
+                .add(side == SimmSide::Call ? simmCalcCcyCall : simmCalcCcyPost);
 
             // Write out SIMM in reporting currency if we can
             if (!reportCcy.empty())
@@ -2152,10 +2154,14 @@ void ReportWriter::writeHistoricalScenarioDistributions(
 
 void ReportWriter::writeHistoricalScenarios(const boost::shared_ptr<HistoricalScenarioLoader>& hsloader,
                                             const boost::shared_ptr<ore::data::Report>& report) {
-    ScenarioWriter sw(nullptr, report);
-    auto scenarios = hsloader->historicalScenarios();
+    // each scenario might have a different set of keys, so we collect the union of all keys
+    // and write them out (missing keys will be written as NA to the report)
+    std::set<RiskFactorKey> allKeys;
+    for (const auto& s : hsloader->historicalScenarios())
+        allKeys.insert(s->keys().begin(), s->keys().end());
+    ScenarioWriter sw(nullptr, report, std::vector<RiskFactorKey>(allKeys.begin(), allKeys.end()));
     bool writeHeader = true;
-    for (const auto& s : scenarios) {
+    for (const auto& s : hsloader->historicalScenarios()) {
         sw.writeScenario(s, writeHeader);
         writeHeader = false;
     }

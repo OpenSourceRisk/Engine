@@ -25,7 +25,7 @@ The TotalReturnSwapData (ContractForDifferenceData) block is comprised of four s
       coupon, this price is converted to the funding currency using the FX rate on this same valuation date for compo /
       cross currency swaps (see below)
     \item ``DailyReset'': the underlying price on each day of the accrual period, again converted to the funding
-      currency using the FX rate the the same date for compo / cross currency swaps. This notional type is only
+      currency using the FX rate of the same date for compo / cross currency swaps. This notional type is only
       supported for fixed rate funding legs.
     \item ``Fixed'': a fixed notional given explicitly in the funding leg
   \end{itemize}
@@ -151,7 +151,7 @@ indices.
         of the bond worth (say) $50.0$ USD.
       \end{itemize}
       \item the weighted price of one unit of the bond underlying basket, notice that this is always a ``percentage of
-        par'' price regardless of the quotation style of the the single bonds in the basket
+        par'' price regardless of the quotation style of the single bonds in the basket
       \item the (weighted) price of (one unit of) the equity underlying (basket)
       \item the (weighted) price of (one unit of) the equity option underlying (basket)
       \item an {\em absolute amount in the initial price ccy (``dollar amount'')} if more than one underlying is
@@ -233,7 +233,7 @@ indices.
       date before or on the accrual start date of the relevant funding coupon, this price is converted to the funding
       currency using the FX rate on this same valuation date for compo / cross currency swaps.
     \item ``DailyReset'': the notional of a funding period is determined by the underlying price on each day of the
-      accrual period, again converted to the funding currency using the FX rate the the same date for compo / cross
+      accrual period, again converted to the funding currency using the FX rate of the same date for compo / cross
       currency swaps. This notional type is only supported for fixed rate funding legs.
     \item ``Fixed'': The notional is explicitly given in the leg data.
   \end{itemize}

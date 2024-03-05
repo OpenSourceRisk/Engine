@@ -52,7 +52,7 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
 
     // Only European Barrier supported for now
     QL_REQUIRE(option_.style() == "European", "Option Style unknown: " << option_.style());
-    QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of excercise dates");
+    QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of exercise dates");
     QL_REQUIRE(barriers_.size() == 2, "Invalid number of barriers");
     QL_REQUIRE(barriers_[0].levels().size() == 1, "Invalid number of barrier levels");
     QL_REQUIRE(barriers_[1].levels().size() == 1, "Invalid number of barrier levels");
@@ -143,8 +143,10 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
 
         Date d = start;
         while (d < today && !knockedIn && !knockedOut) {
-            Real fixing = fxIndex->pastFixing(d);
-
+            Real fixing = Null<Real>();
+            if (fxIndex->fixingCalendar().isBusinessDay(d)) {
+                 fixing = fxIndex->pastFixing(d);
+            } 
             if (fixing == 0.0 || fixing == Null<Real>()) {
                 ALOG("Got invalid FX fixing for index " << fxIndex_ << " on " << d
                                                         << "Skipping this date, assuming no trigger");

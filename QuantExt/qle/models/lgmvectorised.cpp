@@ -168,12 +168,12 @@ RandomVariable LgmVectorised::fixing(const boost::shared_ptr<InterestRateIndex>&
                 }
                 numerator += tmp * reducedDiscountBond(t, T3, x, swapDiscountCurve);
             } else {
-                QL_FAIL("LgmVectorised::fixing(): excepted ibor coupon");
+                QL_FAIL("LgmVectorised::fixing(): expected ibor coupon");
             }
         }
         for (auto const& c : fixedLeg) {
             auto cpn = boost::dynamic_pointer_cast<FixedRateCoupon>(c);
-            QL_REQUIRE(cpn, "LgmVectorised::fixing(): excepted fixed coupon");
+            QL_REQUIRE(cpn, "LgmVectorised::fixing(): expected fixed coupon");
             Date d = cpn->date();
             Time T = std::max(t, p_->termStructure()->timeFromReference(d));
             denominator +=

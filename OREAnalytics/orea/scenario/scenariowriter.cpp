@@ -25,18 +25,21 @@ namespace ore {
 namespace analytics {
 
 ScenarioWriter::ScenarioWriter(const boost::shared_ptr<ScenarioGenerator>& src, const std::string& filename,
-                               const char sep, const string& filemode)
-    : src_(src), fp_(nullptr), i_(0), sep_(sep) {
+                               const char sep, const string& filemode, const std::vector<RiskFactorKey>& headerKeys)
+    : src_(src), fp_(nullptr), i_(0), sep_(sep), headerKeys_(headerKeys) {
     open(filename, filemode);
 }
 
-ScenarioWriter::ScenarioWriter(const std::string& filename, const char sep, const string& filemode)
-    : fp_(nullptr), i_(0), sep_(sep) {
+ScenarioWriter::ScenarioWriter(const std::string& filename, const char sep, const string& filemode,
+                               const std::vector<RiskFactorKey>& headerKeys)
+    : fp_(nullptr), i_(0), sep_(sep), headerKeys_(headerKeys) {
     open(filename, filemode);
 }
 
-ScenarioWriter::ScenarioWriter(const boost::shared_ptr<ScenarioGenerator>& src, boost::shared_ptr<ore::data::Report> report)
-    : src_(src), report_(report), fp_(nullptr), i_(0), sep_(',') {}
+ScenarioWriter::ScenarioWriter(const boost::shared_ptr<ScenarioGenerator>& src,
+                               boost::shared_ptr<ore::data::Report> report,
+                               const std::vector<RiskFactorKey>& headerKeys)
+    : src_(src), report_(report), fp_(nullptr), i_(0), sep_(','), headerKeys_(headerKeys) {}
 
 void ScenarioWriter::open(const std::string& filename, const std::string& filemode) {
     fp_ = fopen(filename.c_str(), filemode.c_str());
@@ -96,11 +99,13 @@ void ScenarioWriter::writeScenario(const boost::shared_ptr<Scenario>& s, const b
     if (report_) {
         if (writeHeader) {
             QL_REQUIRE(keys_.size() > 0, "No keys in scenario");
+            if (headerKeys_.empty())
+                headerKeys_ = keys_;
             report_->addColumn("Date", string());
             report_->addColumn("Scenario", Size());
             report_->addColumn("Numeraire", double(), 8);
-            for (Size i = 0; i < keys_.size(); i++)
-                report_->addColumn(to_string(keys_[i]), double(), 8);
+            for (Size i = 0; i < headerKeys_.size(); i++)
+                report_->addColumn(to_string(headerKeys_[i]), double(), 8);
             // set the first date, this will bump i_ to 1 below
             firstDate_ = d;
         }
@@ -110,8 +115,12 @@ void ScenarioWriter::writeScenario(const boost::shared_ptr<Scenario>& s, const b
         report_->add(to_string(d));
         report_->add(i_);
         report_->add(s->getNumeraire());
-        for (auto k : keys_)
-            report_->add(s->get(k));
+        for (auto k : headerKeys_) {
+            if (s->has(k))
+                report_->add(s->get(k));
+            else
+                report_->add(QuantLib::Null<QuantLib::Real>());
+        }
     }
 }
 

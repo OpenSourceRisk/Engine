@@ -122,10 +122,6 @@ protected:
     //! Utility to build a quote, optional flag defaults to false
     pair<string, bool> quote(const string& name, bool opt = false) { return make_pair(name, opt); }
 
-    //! Utility method to read quotes from XML
-    void loadQuotesFromXML(XMLNode* node);
-    //! Utility method to write quotes to XML
-
 private:
     // TODO: why type and typeID?
     Type type_;
@@ -265,7 +261,7 @@ public:
     TenorBasisYieldCurveSegment() {}
     //! Detailed constructor
     TenorBasisYieldCurveSegment(const string& typeID, const string& conventionsID, const vector<string>& quotes,
-                                const string& shortProjectionCurveID, const string& longProjectionCurveID);
+                                const string& receiveProjectionCurveID, const string& payProjectionCurveID);
     //! Default destructor
     virtual ~TenorBasisYieldCurveSegment() {}
     //@}
@@ -278,8 +274,8 @@ public:
 
     //! \name Inspectors
     //@{
-    const string& shortProjectionCurveID() const { return shortProjectionCurveID_; }
-    const string& longProjectionCurveID() const { return longProjectionCurveID_; }
+    const string& receiveProjectionCurveID() const { return receiveProjectionCurveID_; }
+    const string& payProjectionCurveID() const { return payProjectionCurveID_; }
     //@}
 
     //! \name Visitability
@@ -288,8 +284,8 @@ public:
     //@}
 
 private:
-    string shortProjectionCurveID_;
-    string longProjectionCurveID_;
+    string receiveProjectionCurveID_;
+    string payProjectionCurveID_;
 };
 
 //! Cross Currency yield curve segment
