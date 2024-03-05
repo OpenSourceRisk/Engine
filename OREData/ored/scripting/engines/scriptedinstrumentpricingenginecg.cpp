@@ -218,7 +218,7 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
 
         auto const& rv = model_->randomVariates();
         if (!rv.empty()) {
-            if (useExternalComputeFramework_) {
+            if (useExternalComputeFramework_ && newExternalCalc) {
                 auto gen =
                     ComputeEnvironment::instance().context().createInputVariates(rv.size(), rv.front().size(), 42);
                 for (Size k = 0; k < rv.size(); ++k) {
