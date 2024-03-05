@@ -66,6 +66,8 @@ protected:
     QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
 };
 
+bool operator<(const ParametricVolatility::MarketPoint& p, const ParametricVolatility::MarketPoint& q);
+
 class SabrParametricVolatility final : public ParametricVolatility {
 public:
     enum class ModelVariant {
@@ -75,7 +77,7 @@ public:
         Antonov2015FreeBoundaryNormal
     };
 
-    //! modelParameters are given by (tte, underlyingLen) as a vector of parameter value and whether this value is fixed
+    //! modelParameters are given by (tte, underlyingLen) as a vector of parameter values and whether the values are fixed
     SabrParametricVolatility(
         const ModelVariant modelVariant, const std::vector<MarketPoint> marketPoints,
         const MarketModelType marketModelType, const MarketQuoteType inputMarketQuoteType,
@@ -88,8 +90,16 @@ public:
 
 private:
     void performCalculations() const override;
+
+    ParametricVolatility::MarketQuoteType preferredOutputQuoteType() const;
+    std::vector<Real> calibrateModelParameters(const Real timeToExpiry, const Real underlyingLength,
+                                               const std::set<MarketPoint>& marketPoints,
+                                               const std::vector<std::pair<Real, bool>>& params) const;
+
     ModelVariant modelVariant_;
     std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, bool>>> modelParameters_;
+
+    mutable std::map<std::pair<Real, Real>, std::vector<Real>> calibratedSabrParams_;
 };
 
 } // namespace QuantExt

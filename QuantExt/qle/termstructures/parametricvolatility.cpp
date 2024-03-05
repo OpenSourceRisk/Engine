@@ -89,6 +89,18 @@ Real ParametricVolatility::convert(const MarketPoint& p, const MarketQuoteType i
     }
 };
 
+bool operator<(const ParametricVolatility::MarketPoint& p, const ParametricVolatility::MarketPoint& q) {
+    if(p.timeToExpiry < q.timeToExpiry)
+        return true;
+    if(p.timeToExpiry > q.timeToExpiry)
+        return false;
+    if(p.strike < q.strike)
+        return true;
+    if(p.strike > q.strike)
+        return false;
+    return false;
+}
+
 SabrParametricVolatility::SabrParametricVolatility(
     const ModelVariant modelVariant, const std::vector<MarketPoint> marketPoints, const MarketModelType marketModelType,
     const MarketQuoteType inputMarketQuoteType, const Handle<YieldTermStructure> discountCurve,
@@ -96,17 +108,80 @@ SabrParametricVolatility::SabrParametricVolatility(
     : ParametricVolatility(marketPoints, marketModelType, inputMarketQuoteType, discountCurve),
       modelVariant_(modelVariant), modelParameters_(std::move(modelParameters)) {}
 
+ParametricVolatility::MarketQuoteType SabrParametricVolatility::preferredOutputQuoteType() const {
+    switch (modelVariant_) {
+    case ModelVariant::Hagan2002Lognormal:
+        return MarketQuoteType::ShiftedLognormalVolatility;
+    case ModelVariant::Hagan2002Normal:
+        return MarketQuoteType::NormalVolatility;
+    case ModelVariant::Hagan2002NormalZeroBeta:
+        return MarketQuoteType::NormalVolatility;
+    case ModelVariant::Antonov2015FreeBoundaryNormal:
+        return MarketQuoteType::Price;
+    default:
+        QL_FAIL("SabrParametricVolatility::preferredOutputQuoteType(): model variant ("
+                << static_cast<int>(modelVariant_) << ") not handled.");
+    }
+}
+
+std::vector<Real>
+SabrParametricVolatility::calibrateModelParameters(const Real timeToExpiry, const Real underlyingLength,
+                                                   const std::set<MarketPoint>& marketPoints,
+                                                   const std::vector<std::pair<Real, bool>>& params) const {
+
+    // check that all market points have the same lognormal shift
+
+    Real smileLognormalShift = Null<Real>();
+    bool smileLognormalShiftSet = false;
+    for (auto const& p : marketPoints) {
+        if (!smileLognormalShiftSet) {
+            smileLognormalShift = p.lognormalShift;
+            smileLognormalShiftSet = true;
+        } else {
+            QL_REQUIRE(p.lognormalShift == smileLognormalShift,
+                       "SabrParametricVolatility::calibrateModelParameters("
+                           << timeToExpiry << "," << underlyingLength
+                           << "): got different lognormal shifts for this smile which is not allowed: "
+                           << p.lognormalShift << ", " << smileLognormalShift);
+        }
+
+        // build set of (strike, market quote), the latter are converted to the preferred output quote type of the SABR
+        // variant here as well
+
+        std::set<std::pair<Real, Real>> marketQuotes;
+
+        for (auto const& p : marketPoints) {
+            marketQuotes.insert(std::make_pair(
+                p.strike, convert(p, inputMarketQuoteType_, preferredOutputQuoteType(), smileLognormalShift)));
+        }
+
+        // perform the calibration
+    }
+
+    return {};
+}
+
 void SabrParametricVolatility::performCalculations() const {
 
-    // 1 collect the available (tte, underlyingLength) pairs
+    // collect the available (tte, underlyingLength) pairs
 
-    // 2 for each (tte, underlyingLength) pair calibrate the SABR variant
+    std::map<std::pair<Real, Real>, std::set<MarketPoint>> smiles;
+    for (auto const& p : marketPoints_) {
+        smiles[std::make_pair(p.timeToExpiry, p.underlyingLength)].insert(p);
+    }
 
-    // 2.1 convert the market quote to the preferred output quote type of the SABR variant
+    // for each (tte, underlyingLength) pair calibrate the SABR variant
 
-    // 2.2 perform the calibration
-
-    // 2.3 store the calibrated model parameters
+    calibratedSabrParams_.clear();
+    for (auto const & [ s, m ] : smiles) {
+        auto param = modelParameters_.find(s);
+        QL_REQUIRE(param != modelParameters_.end(),
+                   "SabrParametricVolatility::performCalculations(): no model parameter given for ("
+                       << s.first << ", " << s.second
+                       << "). All (timeToExpiry, underlyingLength) pairs that are given as market points must be "
+                          "covered by the given model parameters.");
+        calibratedSabrParams_[s] = calibrateModelParameters(s.first, s.second, m, param->second);
+    }
 }
 
 Real SabrParametricVolatility::evaluate(const Real timeToExpiry, const Real strike, const Real underlyingLength,
