@@ -140,7 +140,7 @@ void BondOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Interest Rate");
     additionalData_["isdaBaseProduct"] = string("Option");
-    additionalData_["isdaSubProduct"] = string("Debt");  
+    additionalData_["isdaSubProduct"] = string("Debt Option");  
     additionalData_["isdaTransaction"] = string("");  
 }
 
