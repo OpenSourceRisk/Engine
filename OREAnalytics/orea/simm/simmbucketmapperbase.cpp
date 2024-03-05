@@ -49,7 +49,7 @@ const map<RiskType, RiskType> nonVolRiskTypeMap = {{RiskType::IRVol, RiskType::I
                                                    {RiskType::EquityVol, RiskType::Equity},
                                                    {RiskType::CommodityVol, RiskType::Commodity},
                                                    {RiskType::CSR_NS_VEGA, RiskType::CSR_NS_DELTA},
-                                                   {RiskType::CSR_SC_VEGA, RiskType::CSR_SC_VEGA},
+                                                   {RiskType::CSR_SC_VEGA, RiskType::CSR_SC_DELTA},
                                                    {RiskType::CSR_SNC_VEGA, RiskType::CSR_SNC_DELTA},
                                                    {RiskType::EQ_VEGA, RiskType::EQ_DELTA},
                                                    {RiskType::COMM_VEGA, RiskType::COMM_DELTA},
