@@ -147,7 +147,7 @@ public:
     //! \name Serialisation
     //@{0
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
 private:
@@ -219,7 +219,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 
@@ -276,7 +276,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 
@@ -325,7 +325,7 @@ public:
     //! Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override {}
     //@}
 
@@ -358,7 +358,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override {}
     //@}
 
@@ -404,7 +404,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 
@@ -451,7 +451,7 @@ public:
     const bool endOfMonth() const { return endOfMonth_; }
 
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
 
 private:
@@ -478,7 +478,7 @@ public:
     const Size settlementDays() const { return settlementDays_; }
 
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
 
 private:
@@ -500,7 +500,7 @@ public:
     const string& fixingCalendar() const { return fixingCalendar_; }
 
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override {};
 
 private:
@@ -542,7 +542,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 
@@ -600,7 +600,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 private:
@@ -660,7 +660,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 
@@ -716,7 +716,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 
@@ -768,7 +768,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 
@@ -809,7 +809,7 @@ public:
     //! \name Serialisation
     //
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 
@@ -893,7 +893,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 private:
@@ -982,7 +982,7 @@ public:
     //! \name Serialisation interface
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Convention interface
@@ -1052,7 +1052,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node0) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 private:
@@ -1112,7 +1112,7 @@ public:
     const Schedule& publicationSchedule() const { return publicationSchedule_; }
 
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
 
 private:
@@ -1184,7 +1184,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 
@@ -1240,7 +1240,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 private:
@@ -1292,7 +1292,7 @@ public:
     //! \name Serialisation
     //
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 
@@ -1406,7 +1406,7 @@ public:
         //! Serialisation
         //@{
         void fromXML(XMLNode* node) override;
-        XMLNode* toXML(XMLDocument& doc) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
         //@}
 
     private:
@@ -1445,7 +1445,7 @@ public:
         const QuantLib::Calendar& peakCalendar() const { return peakCalendar_; }
 
         void fromXML(XMLNode* node) override;
-        XMLNode* toXML(XMLDocument& doc) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
         void build();
 
     private:
@@ -1477,7 +1477,7 @@ public:
         QuantLib::BusinessDayConvention optionBdc() const { return optionBdc_; }
 
         void fromXML(XMLNode* node) override;
-        XMLNode* toXML(XMLDocument& doc) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
 
     private:
         QuantLib::Date expiry_;
@@ -1608,7 +1608,7 @@ public:
     //! Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! Implementation
@@ -1721,7 +1721,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 private:
@@ -1766,7 +1766,7 @@ public:
     const QuantLib::Currency& currency() const { return currency_; }
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     void build() override;
 
 private:
@@ -1810,7 +1810,7 @@ public:
     QuantLib::Real guess() const { return guess_; }
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     void build() override;
 
 private:

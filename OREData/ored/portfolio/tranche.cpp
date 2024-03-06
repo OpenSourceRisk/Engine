@@ -55,7 +55,7 @@ void TrancheData::fromXML(XMLNode* node) {
 }
 
 
-XMLNode* TrancheData::toXML(ore::data::XMLDocument& doc) {
+XMLNode* TrancheData::toXML(ore::data::XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("Tranche");
 

@@ -55,7 +55,7 @@ public:
     const vector<ConfigurableCurrency>& getCurrencies() const { return currencies_; }
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
 private:
     vector<ConfigurableCurrency> currencies_;

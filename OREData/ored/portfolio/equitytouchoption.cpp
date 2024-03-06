@@ -219,7 +219,7 @@ void EquityTouchOption::fromXML(XMLNode* node) {
     eqIndex_ = XMLUtils::getChildValue(eqNode, "EQIndex", false);
 }
 
-XMLNode* EquityTouchOption::toXML(XMLDocument& doc) {
+XMLNode* EquityTouchOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* eqNode = doc.allocNode("EquityTouchOptionData");
     XMLUtils::appendNode(node, eqNode);

@@ -57,7 +57,7 @@ void IrLgmData::fromXML(XMLNode* node) {
     LgmData::fromXML(node);
 }
 
-XMLNode* IrLgmData::toXML(XMLDocument& doc) {
+XMLNode* IrLgmData::toXML(XMLDocument& doc) const {
     XMLNode* node = LgmData::toXML(doc);
     XMLUtils::addAttribute(doc, node, "key", qualifier_);
 
