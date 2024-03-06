@@ -70,7 +70,7 @@ public:
 
     //! XMLSerializable interface
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
     //! Remove specified trade from the portfolio
     bool remove(const std::string& tradeID);
