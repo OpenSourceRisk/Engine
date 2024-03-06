@@ -156,11 +156,10 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 }
 
 bool FxForward::isExpired(const Date& date) {
-    Date payDate = parseDate(payDate_);
     if (includeSettlementDateFlows_)
-        return date > payDate;
+        return date > maturity_;
     else
-        return date >= payDate;
+        return date >= maturity_;
 }
     
 QuantLib::Real FxForward::notional() const {
