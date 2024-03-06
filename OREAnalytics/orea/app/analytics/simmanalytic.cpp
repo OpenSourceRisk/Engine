@@ -67,9 +67,12 @@ void SimmAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLo
     if (inputs_->simmCalibrationData())
         inputs_->simmCalibrationData()->toFile((inputs_->resultsPath() / "simmcalibration.xml").string());
 
+    auto simmConfig = inputs_->getSimmConfiguration();
+    simmConfig->bucketMapper()->updateFromCrif(simmAnalytic->crif());
+
     // Calculate SIMM
     auto simm = boost::make_shared<SimmCalculator>(simmAnalytic->crif(),
-                                                   inputs_->getSimmConfiguration(),
+                                                   simmConfig,
                                                    inputs_->simmCalculationCurrency(),
                                                    inputs_->simmResultCurrency(),
                                                    analytic()->market(),
