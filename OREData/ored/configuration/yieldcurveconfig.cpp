@@ -332,7 +332,7 @@ void YieldCurveConfig::fromXML(XMLNode* node) {
     populateRequiredCurveIds();
 }
 
-XMLNode* YieldCurveConfig::toXML(XMLDocument& doc) const const {
+XMLNode* YieldCurveConfig::toXML(XMLDocument& doc) const {
     // Allocate a node.
     XMLNode* node = doc.allocNode("YieldCurve");
 
