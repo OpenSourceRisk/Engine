@@ -97,7 +97,7 @@ FxForward::FxForward(const Money& nominal1, const Handle<Quote>& fxForwardQuote,
     }
 }
 
-bool FxForward::isExpired() const { return detail::simple_event(payDate_).hasOccurred(); }
+bool FxForward::isExpired() const { return detail::simple_event(payDate_ + 1*Days).hasOccurred(); }
 
 void FxForward::setupExpired() const {
     Instrument::setupExpired();

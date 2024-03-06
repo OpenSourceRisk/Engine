@@ -70,6 +70,12 @@ boost::shared_ptr<PricingEngine> CamAmcFxForwardEngineBuilder::engineImpl(const 
 
     // build the pricing engine
 
+    string tmp = engineParameter("includeSettlementDateFlows", {}, false, "");
+    bool includeSettlementDateFlows = tmp == "" ? false : parseBool(tmp);
+    if (includeSettlementDateFlows) {
+        LOG("CamAmcFxForwardEngineBuilder: including settlement date flows");
+    }
+
     // NPV should be in domCcy, consistent with the npv currency of an ORE FX Forward Trade
     auto engine = boost::make_shared<McCamFxForwardEngine>(
         model, domCcy, forCcy, domCcy, parseSequenceType(engineParameter("Training.Sequence")),
