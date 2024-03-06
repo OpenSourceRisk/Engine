@@ -56,6 +56,9 @@ SensitivityCubeStream::SensitivityCubeStream(const std::vector<boost::shared_ptr
 
 SensitivityRecord SensitivityCubeStream::next() {
 
+    if (cubes_.size() == 0)
+        return SensitivityRecord();
+
     while (tradeIdx_ != cubes_[currentCubeIdx_]->tradeIdx().end() && currentDeltaKey_ == currentDeltaKeys_.end() &&
            currentCrossGammaKey_ == currentCrossGammaKeys_.end()) {
         ++tradeIdx_;
@@ -143,8 +146,10 @@ void SensitivityCubeStream::updateForNewTrade() {
 
 void SensitivityCubeStream::reset() {
     currentCubeIdx_ = 0;
-    tradeIdx_ = cubes_[currentCubeIdx_]->tradeIdx().begin();
-    updateForNewTrade();
+    if (cubes_.size() > 0) {
+        tradeIdx_ = cubes_[currentCubeIdx_]->tradeIdx().begin();
+        updateForNewTrade();
+    }
 }
 
 } // namespace analytics
