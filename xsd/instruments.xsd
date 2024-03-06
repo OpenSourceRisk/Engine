@@ -1915,7 +1915,6 @@
   <xs:complexType name="indexCreditDefaultSwapOptionData">
     <xs:all>
       <xs:element type="xs:float" name="Strike" minOccurs="0"/>
-      <xs:element type="bool" name="KnockOut" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="IndexTerm" minOccurs="0" maxOccurs="1"/>
       <xs:element type="cdsOptionstrikeType" name="StrikeType" minOccurs="0"/>
       <xs:element type="date" name="TradeDate" minOccurs="0"/>
