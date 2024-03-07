@@ -81,7 +81,7 @@ public:
 
     void build(const boost::shared_ptr<ore::data::EngineFactory>&) override;
     virtual void fromXML(ore::data::XMLNode* node) override;
-    virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
 private:
     void buildWithSwapUnderlying(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory);

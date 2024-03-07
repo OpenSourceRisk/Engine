@@ -74,7 +74,7 @@ void CurrencyConfig::fromXML(XMLNode* baseNode) {
     }
 }
 
-XMLNode* CurrencyConfig::toXML(XMLDocument& doc) {
+XMLNode* CurrencyConfig::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("CurrencyConfig");
     for (auto ccy : currencies_) {
         XMLNode* ccyNode = XMLUtils::addChild(doc, node, "Currency");

@@ -57,7 +57,7 @@ public:
     const boost::optional<std::vector<Period>>& underlyingTenors() const { return underlyingTenors_; }
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
 private:
     boost::optional<bool> reportOnDeltaGrid_;

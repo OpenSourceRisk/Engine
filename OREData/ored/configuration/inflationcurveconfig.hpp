@@ -56,7 +56,7 @@ public:
                          const vector<double>& overrideSeasonalityFactors = std::vector<double>());
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
     // Inspectors
     const string& nominalTermStructure() const { return nominalTermStructure_; }

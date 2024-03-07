@@ -113,7 +113,7 @@ void IrModelData::fromXML(XMLNode* node) {
     LOG(name_ + " with calibrationType_ = " << qualifier_);
 }
 
-XMLNode* IrModelData::toXML(XMLDocument& doc) {
+XMLNode* IrModelData::toXML(XMLDocument& doc) const {
 
     XMLNode* irModelNode = doc.allocNode(name_);
 

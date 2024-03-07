@@ -371,7 +371,7 @@ void ScriptedTrade::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* ScriptedTrade::toXML(XMLDocument& doc) {
+XMLNode* ScriptedTrade::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* tradeDataNode = doc.allocNode("ScriptedTradeData");
     XMLUtils::appendNode(node, tradeDataNode);
@@ -434,7 +434,7 @@ void ScriptedTradeEventData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* ScriptedTradeEventData::toXML(XMLDocument& doc) {
+XMLNode* ScriptedTradeEventData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("Event");
     XMLUtils::addChild(doc, n, "Name", name_);
     if (type_ == Type::Value) {
@@ -481,7 +481,7 @@ void ScriptedTradeValueTypeData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* ScriptedTradeValueTypeData::toXML(XMLDocument& doc) {
+XMLNode* ScriptedTradeValueTypeData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode(nodeName_);
     XMLUtils::addChild(doc, n, "Name", name_);
     if (!isArray_) {
@@ -499,7 +499,7 @@ void ScriptedTradeScriptData::NewScheduleData::fromXML(XMLNode* node) {
     sourceSchedules_ = XMLUtils::getChildrenValues(node, "Schedules", "Schedule");
 }
 
-XMLNode* ScriptedTradeScriptData::NewScheduleData::toXML(XMLDocument& doc) {
+XMLNode* ScriptedTradeScriptData::NewScheduleData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("NewSchedule");
     XMLUtils::addChild(doc, n, "Name", name_);
     XMLUtils::addChild(doc, n, "Operation", operation_);
@@ -513,7 +513,7 @@ void ScriptedTradeScriptData::CalibrationData::fromXML(XMLNode* node) {
     strikes_ = XMLUtils::getChildrenValues(node, "Strikes", "Strike", true);
 }
 
-XMLNode* ScriptedTradeScriptData::CalibrationData::toXML(XMLDocument& doc) {
+XMLNode* ScriptedTradeScriptData::CalibrationData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("Calibration");
     XMLUtils::addChild(doc, n, "Index", index_);
     XMLUtils::addChildren(doc, n, "Strikes", "Strike", strikes_);
@@ -555,7 +555,7 @@ void ScriptedTradeScriptData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* ScriptedTradeScriptData::toXML(XMLDocument& doc) {
+XMLNode* ScriptedTradeScriptData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("Script");
     XMLUtils::addChildAsCdata(doc, n, "Code", code_);
     XMLUtils::addChild(doc, n, "NPV", npv_);
@@ -656,7 +656,7 @@ void ScriptLibraryData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* ScriptLibraryData::toXML(XMLDocument& doc) {
+XMLNode* ScriptLibraryData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("ScriptLibrary");
     for (auto& s : scripts_) {
         XMLNode* c = XMLUtils::addChild(doc, n, "Script");

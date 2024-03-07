@@ -340,7 +340,7 @@ void RiskParticipationAgreement::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* RiskParticipationAgreement::toXML(XMLDocument& doc) {
+XMLNode* RiskParticipationAgreement::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* n = doc.allocNode("RiskParticipationAgreementData");
     XMLUtils::appendNode(node, n);

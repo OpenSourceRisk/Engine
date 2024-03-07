@@ -527,7 +527,7 @@ XMLNode* writeEventData(XMLDocument& doc, ScriptedTradeEventData& eventData) {
     return n;
 }
 
-XMLNode* WorstOfBasketSwap::toXML(XMLDocument& doc) {
+XMLNode* WorstOfBasketSwap::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* tradeNode = doc.allocNode(tradeType() + "Data");
     XMLUtils::appendNode(node, tradeNode);
