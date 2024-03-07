@@ -52,7 +52,6 @@ void FlatDynamicInitialMarginCalculator::build() {
     Size stopDatesLoop = datesLoopSize_;
     Size samples = cube_->samples();
 
-    Size nettingSetCount = 0;
     if (!inputs_->collateralBalances()) {
         ALOG("collateral balances not set");
     }
@@ -71,8 +70,6 @@ void FlatDynamicInitialMarginCalculator::build() {
             for (Size k = 0; k < samples; ++k)
                 nettingSetDIM_[n][j][k] = currentIM;                
         }
-
-        nettingSetCount++;
     }
     LOG("DIM by flat extraplation of initial IM done");
 }
