@@ -10,7 +10,7 @@ OreExample = ore_helpers['OreExample']
 import sys
 oreex = OreExample(sys.argv[1] if len(sys.argv)>1 else False)
 
-# Case A
+ Case A
 oreex.print_headline("Run ORE (case A (swap eur), 1st order regression)")
 oreex.run("Input/ore_A1.xml")
 oreex.get_times("Output/log_1.txt")
@@ -29,6 +29,12 @@ oreex.run("Input/ore_A0.xml")
 oreex.save_output_to_subdir(
     "case_A_eur_swap",
     ["log_0.txt", "dim_evolution_0.txt", "dim_regression_0.txt"]
+)
+oreex.print_headline("Run ORE (case A (swap eur), flat extrapolation of t0 IM)")
+oreex.run("Input/ore_A4.xml")
+oreex.save_output_to_subdir(
+    "case_A_eur_swap",
+    ["log_4.txt", "dim_evolution_4.csv", "exposure_nettingset_CPTY_A.csv"]
 )
 
 oreex.print_headline("Plot results")
