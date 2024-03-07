@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2024 Oleg Kulkov
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -381,7 +382,8 @@ public:
                   const string& fixedCalendar, const string& paymentLag = "", const string& eom = "",
                   const string& fixedFrequency = "", const string& fixedConvention = "",
                   const string& fixedPaymentConvention = "", const string& rule = "",
-                  const std::string& paymentCalendar = "");
+                  const std::string& paymentCalendar = "",
+                  const std::string& rateCutoff = "");
     //@}
 
     //! \name Inspectors
@@ -399,6 +401,7 @@ public:
     BusinessDayConvention fixedPaymentConvention() const { return fixedPaymentConvention_; }
     DateGeneration::Rule rule() const { return rule_; }
     QuantLib::Calendar paymentCalendar() const { return paymentCal_; }
+    Natural rateCutoff() const { return rateCutoff_; }
     //@}
 
     //! \name Serialisation
@@ -419,6 +422,7 @@ private:
     BusinessDayConvention fixedPaymentConvention_;
     DateGeneration::Rule rule_;
     QuantLib::Calendar paymentCal_;
+    Natural rateCutoff_;
 
     // Strings to store the inputs
     string strSpotLag_;
@@ -432,6 +436,7 @@ private:
     string strFixedPaymentConvention_;
     string strRule_;
     std::string strPaymentCal_;
+    string strRateCutoff_;
 };
 
 //! Container for storing Ibor Index conventions
