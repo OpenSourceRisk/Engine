@@ -4070,6 +4070,7 @@ to txt or csv in which case an uncompressed version of the file is written to di
     <Parameter name="csaFile">netting.xml</Parameter>
     <Parameter name="cubeFile">cube.csv.gz</Parameter>
     <Parameter name="scenarioFile">scenariodata.csv.gz</Parameter>
+    <Parameter name="collateralBalancesFile">collateralbalances.xml</Parameter>
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="exposureProfiles">Y</Parameter>
     <Parameter name="exposureProfilesByTrade">Y</Parameter>
@@ -4097,6 +4098,7 @@ to txt or csv in which case an uncompressed version of the file is written to di
     <Parameter name="kvaOurCvaRiskWeight">0.005</Parameter>
     <Parameter name="kvaTheirCvaRiskWeight">0.05</Parameter>
     <Parameter name="dim">Y</Parameter>
+    <Parameter name="dimModel">Regression</Parameter>
     <Parameter name="mva">Y</Parameter>
     <Parameter name="dimQuantile">0.99</Parameter>
     <Parameter name="dimHorizonCalendarDays">14</Parameter>
@@ -4130,6 +4132,7 @@ transfer amounts, margin period of risk
 \item {\tt cubeFile:} NPV cube file previously generated and to be post-processed here
 \item {\tt scenarioFile:} Scenario data previously generated and used in the post-processor (simulated index fixings and
 FX rates)
+\item {\tt collateralBalancesFile:} References an xml file that contains current VM and IM balances by netting set
 \item {\tt baseCurrency:} Expression currency for all NPVs, value adjustments, exposures
 \item {\tt exposureProfiles:} Flag to enable/disable exposure output for each netting set
 \item {\tt exposureProfilesByTrade:} Flag to enable/disable stand-alone exposure output for each trade
@@ -4187,7 +4190,10 @@ absolute netting set value falls below this limit and switches to equal distribu
 \item {\tt exerciseNextBreak:} Flag to terminate all trades at their next break date before aggregation and the
 subsequent analytics
 \item {\tt cva, dva, fva, colva, collateralFloor, dim, mva:} Flags to enable/disable these analytics. \todo[inline]{Add
-collateral rates floor to the collateral model file (netting.xml)}
+  collateral rates floor to the collateral model file (netting.xml)}
+\item {\tt dimModel:} Type of dynamic initial margin model to be applied -- {\em Regression} or {\em Flat}. {\em Regression} is applied by default
+  when the dimModel node is omitted (see appendix and further settings related to the regression DIM model below); {\em Flat} means a simple flat
+  projection of todays's IM amount on each path (this requires providing today's IM using the {\tt collateralBalancesFile} parameter, see above)
 \item {\tt dvaName:} Credit name to look up the own default probability curve and recovery rate for DVA calculation
 \item {\tt fvaBorrowingCurve:} Identifier of the borrowing yield curve
 \item {\tt fvaLendingCurve:} Identifier of the lending yield curve
