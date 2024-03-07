@@ -66,6 +66,7 @@
 #include <ored/portfolio/builders/creditdefaultswapoption.hpp>
 #include <ored/portfolio/builders/creditlinkedswap.hpp>
 #include <ored/portfolio/builders/currencyswap.hpp>
+#include <ored/portfolio/builders/deltagammaengines.hpp>
 #include <ored/portfolio/builders/durationadjustedcms.hpp>
 #include <ored/portfolio/builders/equityasianoption.hpp>
 #include <ored/portfolio/builders/equitybarrieroption.hpp>
@@ -499,6 +500,12 @@ void initBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(EquityCliquetOptionMcScriptEngineBuilder, false)
 
     ORE_REGISTER_ENGINE_BUILDER(FormulaBasedCouponPricerBuilder, false)
+
+    ORE_REGISTER_ENGINE_BUILDER(SwapEngineBuilderDeltaGamma, false)
+    ORE_REGISTER_ENGINE_BUILDER(CurrencySwapEngineBuilderDeltaGamma, false)
+    ORE_REGISTER_ENGINE_BUILDER(FxEuropeanOptionEngineBuilderDeltaGamma, false)
+    ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanOptionEngineBuilderDeltaGamma, false)
+    ORE_REGISTER_ENGINE_BUILDER(FxForwardEngineBuilderDeltaGamma, false)
 
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("Bond", BondTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("ForwardBond", ForwardBondTrsUnderlyingBuilder, false)

@@ -148,6 +148,7 @@ portfolio/builders/creditdefaultswap.cpp
 portfolio/builders/creditdefaultswapoption.cpp
 portfolio/builders/creditlinkedswap.cpp
 portfolio/builders/currencyswap.cpp
+portfolio/builders/deltagammaengines.cpp
 portfolio/builders/durationadjustedcms.cpp
 portfolio/builders/equityasianoption.cpp
 portfolio/builders/equitybarrieroption.cpp
@@ -524,6 +525,7 @@ portfolio/builders/creditdefaultswap.hpp
 portfolio/builders/creditdefaultswapoption.hpp
 portfolio/builders/creditlinkedswap.hpp
 portfolio/builders/currencyswap.hpp
+portfolio/builders/deltagammaengines.hpp
 portfolio/builders/durationadjustedcms.hpp
 portfolio/builders/equityasianoption.hpp
 portfolio/builders/equitybarrieroption.hpp
