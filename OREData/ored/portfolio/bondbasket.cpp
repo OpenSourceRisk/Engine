@@ -273,7 +273,7 @@ void BondBasket::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* BondBasket::toXML(ore::data::XMLDocument& doc) {
+XMLNode* BondBasket::toXML(ore::data::XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("BondBasketData");
     for (Size i = 0; i < bonds_.size(); i++) {
         XMLUtils::appendNode(node, bonds_[i]->toXML(doc));

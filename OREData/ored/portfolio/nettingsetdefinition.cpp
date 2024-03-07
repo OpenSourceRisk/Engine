@@ -219,7 +219,7 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
     validate();
 }
 
-XMLNode* NettingSetDefinition::toXML(XMLDocument& doc) {
+XMLNode* NettingSetDefinition::toXML(XMLDocument& doc) const {
     // Allocate a node.
     XMLNode* node = doc.allocNode("NettingSet");
 
