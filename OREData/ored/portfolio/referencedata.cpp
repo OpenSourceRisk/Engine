@@ -38,7 +38,7 @@ void ReferenceDatum::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* ReferenceDatum::toXML(XMLDocument& doc) {
+XMLNode* ReferenceDatum::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("ReferenceDatum");
     QL_REQUIRE(node, "Failed to create ReferenceDatum node");
     XMLUtils::addAttribute(doc, node, "id", id_);
@@ -74,7 +74,7 @@ void BondReferenceDatum::BondData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* BondReferenceDatum::BondData::toXML(XMLDocument& doc) {
+XMLNode* BondReferenceDatum::BondData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("BondData");
     XMLUtils::addChild(doc, node, "IssuerId", issuerId);
     XMLUtils::addChild(doc, node, "CreditCurveId", creditCurveId);
@@ -98,7 +98,7 @@ void BondReferenceDatum::fromXML(XMLNode* node) {
     bondData_.fromXML(XMLUtils::getChildNode(node, "BondReferenceData"));
 }
 
-XMLNode* BondReferenceDatum::toXML(XMLDocument& doc) {
+XMLNode* BondReferenceDatum::toXML(XMLDocument& doc) const {
     XMLNode* node = ReferenceDatum::toXML(doc);
     XMLNode* dataNode = bondData_.toXML(doc);
     XMLUtils::setNodeName(doc, dataNode, "BondReferenceData");
@@ -148,7 +148,7 @@ void CreditIndexConstituent::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* CreditIndexConstituent::toXML(ore::data::XMLDocument& doc) {
+XMLNode* CreditIndexConstituent::toXML(ore::data::XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("Underlying");
 
@@ -222,7 +222,7 @@ void CreditIndexReferenceDatum::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* CreditIndexReferenceDatum::toXML(ore::data::XMLDocument& doc) {
+XMLNode* CreditIndexReferenceDatum::toXML(ore::data::XMLDocument& doc) const {
 
     XMLNode* node = ReferenceDatum::toXML(doc);
     XMLNode* cird = XMLUtils::addChild(doc, node, "CreditIndexReferenceData");
@@ -267,7 +267,7 @@ void IndexReferenceDatum::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* IndexReferenceDatum::toXML(XMLDocument& doc) {
+XMLNode* IndexReferenceDatum::toXML(XMLDocument& doc) const {
     XMLNode* node = ReferenceDatum::toXML(doc);
     XMLNode* rdNode = XMLUtils::addChild(doc, node, type() + "ReferenceData");
 
@@ -361,7 +361,7 @@ void CurrencyHedgedEquityIndexReferenceDatum::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* CurrencyHedgedEquityIndexReferenceDatum::toXML(XMLDocument& doc) {
+XMLNode* CurrencyHedgedEquityIndexReferenceDatum::toXML(XMLDocument& doc) const {
     XMLNode* node = ReferenceDatum::toXML(doc);
     XMLNode* rdNode = XMLUtils::addChild(doc, node, type() + "ReferenceData");
 
@@ -413,7 +413,7 @@ void CreditReferenceDatum::fromXML(XMLNode* node) {
                                  : XMLUtils::getChildValue(innerNode, "EntityType", false);
 }
 
-XMLNode* CreditReferenceDatum::toXML(XMLDocument& doc) {
+XMLNode* CreditReferenceDatum::toXML(XMLDocument& doc) const {
     XMLNode* node = ReferenceDatum::toXML(doc);
     XMLNode* creditNode = doc.allocNode("CreditReferenceData");
     XMLUtils::appendNode(node, creditNode);
@@ -450,7 +450,7 @@ void EquityReferenceDatum::fromXML(XMLNode* node) {
     equityData_.proxyVolatilityId = XMLUtils::getChildValue(innerNode, "ProxyVolatilityId", true);
 }
 
-XMLNode* EquityReferenceDatum::toXML(ore::data::XMLDocument& doc) {
+XMLNode* EquityReferenceDatum::toXML(ore::data::XMLDocument& doc) const {
     XMLNode* node = ReferenceDatum::toXML(doc);
     XMLNode* equityNode = doc.allocNode("EquityReferenceData");
     XMLUtils::appendNode(node, equityNode);
@@ -481,7 +481,7 @@ void BondBasketReferenceDatum::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* BondBasketReferenceDatum::toXML(ore::data::XMLDocument& doc) {
+XMLNode* BondBasketReferenceDatum::toXML(ore::data::XMLDocument& doc) const {
     XMLNode* res = ReferenceDatum::toXML(doc);
     XMLNode* node = doc.allocNode("BondBasketData");
     XMLUtils::appendNode(res, node);
@@ -568,7 +568,7 @@ boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::buildReferenceDatum
     return refData;
 }
 
-XMLNode* BasicReferenceDataManager::toXML(XMLDocument& doc) {
+XMLNode* BasicReferenceDataManager::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("ReferenceData");
     for (const auto& kv : data_) {
         for (const auto& [_, refData] : kv.second) {

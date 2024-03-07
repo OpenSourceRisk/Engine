@@ -41,7 +41,7 @@ void TreasuryLockData::fromXML(XMLNode* node) {
     empty_ = false;
 }
 
-XMLNode* TreasuryLockData::toXML(XMLDocument& doc) {
+XMLNode* TreasuryLockData::toXML(XMLDocument& doc) const {
     XMLNode* tlockNode = doc.allocNode("TreasuryLockData");
     XMLUtils::addChild(doc, tlockNode, "Payer", payer_);
     XMLUtils::appendNode(tlockNode, originalBondData_.toXML(doc));

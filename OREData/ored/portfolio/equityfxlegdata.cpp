@@ -66,7 +66,7 @@ void EquityMarginLegData::fromXML(XMLNode* node) {
 
 }
 
-XMLNode* EquityMarginLegData::toXML(XMLDocument& doc) {
+XMLNode* EquityMarginLegData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Rates", "Rate", rates_, "startDate", rateDates_);
     XMLUtils::addChild(doc, node, "InitialMarginFactor", initialMarginFactor_);
