@@ -177,7 +177,7 @@ void CommodityAveragePriceOption::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* CommodityAveragePriceOption::toXML(XMLDocument& doc) {
+XMLNode* CommodityAveragePriceOption::toXML(XMLDocument& doc) const {
 
     XMLNode* node = Trade::toXML(doc);
 
