@@ -718,7 +718,7 @@ void McMultiLegBaseEngine::calculate() const {
         Size cashflowNo = 0;
         for (auto const& cashflow : leg) {
             // we can skip cashflows that are paid
-            if (cashflow->date() < today_ || (!includeSettlementDateFlows_ && cashflow->date() == today))
+            if (cashflow->date() < today_ || (!includeSettlementDateFlows_ && cashflow->date() == today_))
                 continue;
             // for an alive cashflow, populate the data
             cashflowInfo.push_back(createCashflowInfo(cashflow, currency, payer, legNo, cashflowNo));
