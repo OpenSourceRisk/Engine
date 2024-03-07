@@ -228,7 +228,7 @@ void FxDoubleTouchOption::fromXML(XMLNode* node) {
     payoffAmount_ = XMLUtils::getChildValueAsDouble(fxNode, "PayoffAmount", true);
 }
 
-XMLNode* FxDoubleTouchOption::toXML(XMLDocument& doc) {
+XMLNode* FxDoubleTouchOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fxNode = doc.allocNode("FxDoubleTouchOptionData");
     XMLUtils::appendNode(node, fxNode);

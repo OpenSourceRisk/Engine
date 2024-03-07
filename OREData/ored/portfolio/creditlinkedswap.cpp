@@ -73,7 +73,7 @@ void CreditLinkedSwap::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* CreditLinkedSwap::toXML(ore::data::XMLDocument& doc) {
+XMLNode* CreditLinkedSwap::toXML(ore::data::XMLDocument& doc) const {
     XMLNode* n = Trade::toXML(doc);
     XMLNode* d = doc.allocNode("CreditLinkedSwapData");
     XMLUtils::appendNode(n, d);

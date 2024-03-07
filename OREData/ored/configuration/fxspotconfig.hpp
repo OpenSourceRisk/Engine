@@ -65,7 +65,7 @@ public:
         curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
     }
 
-    XMLNode* toXML(XMLDocument& doc) override {
+    XMLNode* toXML(XMLDocument& doc) const override {
         XMLNode* node = doc.allocNode("FXSpot");
         XMLUtils::addChild(doc, node, "CurveId", curveID_);
         XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);

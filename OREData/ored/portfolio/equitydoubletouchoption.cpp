@@ -196,7 +196,7 @@ void EquityDoubleTouchOption::fromXML(XMLNode* node) {
     payoffAmount_ = XMLUtils::getChildValueAsDouble(eqNode, "PayoffAmount", true);
 }
 
-XMLNode* EquityDoubleTouchOption::toXML(XMLDocument& doc) {
+XMLNode* EquityDoubleTouchOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* eqNode = doc.allocNode("EquityDoubleTouchOptionData");
     XMLUtils::appendNode(node, eqNode);

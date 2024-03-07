@@ -87,7 +87,7 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
     populateRequiredCurveIds();
 }
 
-XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) {
+XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("EquityCurve");
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);

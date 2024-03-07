@@ -44,7 +44,7 @@ public:
     void build(const boost::shared_ptr<EngineFactory>& engineFactory) override;
 
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     const string& index() const { return index_; }
 
 private:

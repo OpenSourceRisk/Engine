@@ -93,7 +93,7 @@ void InfJyData::fromXML(XMLNode* node) {
         calibrationConfiguration_.fromXML(ccNode);
 }
 
-XMLNode* InfJyData::toXML(XMLDocument& doc) {
+XMLNode* InfJyData::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("JarrowYildirim");
     InflationModelData::append(doc, node);
