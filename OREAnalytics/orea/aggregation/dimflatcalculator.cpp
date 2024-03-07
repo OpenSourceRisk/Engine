@@ -70,7 +70,6 @@ void FlatDynamicInitialMarginCalculator::build() {
             for (Size k = 0; k < samples; ++k)
                 nettingSetDIM_[n][j][k] = currentIM;                
         }
-
     }
     LOG("DIM by flat extraplation of initial IM done");
 }
