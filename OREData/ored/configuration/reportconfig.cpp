@@ -89,7 +89,7 @@ void ReportConfig::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* ReportConfig::toXML(XMLDocument& doc) {
+XMLNode* ReportConfig::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Report");
     if (reportOnDeltaGrid_)
         XMLUtils::addChild(doc, node, "ReportOnDeltaGrid", *reportOnDeltaGrid_);

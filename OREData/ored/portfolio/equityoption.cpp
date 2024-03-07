@@ -190,7 +190,7 @@ void EquityOption::fromXML(XMLNode* node) {
     quantity_ = XMLUtils::getChildValueAsDouble(eqNode, "Quantity", true);
 }
 
-XMLNode* EquityOption::toXML(XMLDocument& doc) {
+XMLNode* EquityOption::toXML(XMLDocument& doc) const {
     XMLNode* node = VanillaOptionTrade::toXML(doc);
     XMLNode* eqNode = doc.allocNode("EquityOptionData");
     XMLUtils::appendNode(node, eqNode);

@@ -123,7 +123,7 @@ void Parameters::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* Parameters::toXML(XMLDocument& doc) {
+XMLNode* Parameters::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("ORE");
     QL_FAIL("Parameters::toXML not implemented yet");
     return node;

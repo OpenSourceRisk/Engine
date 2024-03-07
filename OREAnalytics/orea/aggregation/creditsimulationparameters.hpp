@@ -85,7 +85,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual XMLNode* toXML(XMLDocument& doc)const ;
     //@}
 
     //! \Equality Operators
