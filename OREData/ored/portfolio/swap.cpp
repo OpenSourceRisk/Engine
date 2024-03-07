@@ -378,7 +378,7 @@ void Swap::fromXML(XMLNode* node) {
 
 boost::shared_ptr<LegData> Swap::createLegData() const { return boost::make_shared<LegData>(); }
 
-XMLNode* Swap::toXML(XMLDocument& doc) {
+XMLNode* Swap::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* swapNode = doc.allocNode(tradeType() + "Data");
     XMLUtils::appendNode(node, swapNode);

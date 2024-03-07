@@ -146,7 +146,7 @@ void ZeroRateConvention::fromXML(XMLNode* node) {
     build();
 }
 
-XMLNode* ZeroRateConvention::toXML(XMLDocument& doc) {
+XMLNode* ZeroRateConvention::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("Zero");
     XMLUtils::addChild(doc, node, "Id", id_);
@@ -203,7 +203,7 @@ void DepositConvention::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* DepositConvention::toXML(XMLDocument& doc) {
+XMLNode* DepositConvention::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("Deposit");
     XMLUtils::addChild(doc, node, "Id", id_);
@@ -246,7 +246,7 @@ void FutureConvention::fromXML(XMLNode* node) {
         dateGenerationStr.empty() ? DateGenerationRule::IMM : parseFutureDateGenerationRule(dateGenerationStr);
 }
 
-XMLNode* FutureConvention::toXML(XMLDocument& doc) {
+XMLNode* FutureConvention::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("Future");
     XMLUtils::addChild(doc, node, "Id", id_);
@@ -271,7 +271,7 @@ void FraConvention::fromXML(XMLNode* node) {
     parseIborIndex(strIndex_);
 }
 
-XMLNode* FraConvention::toXML(XMLDocument& doc) {
+XMLNode* FraConvention::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("FRA");
     XMLUtils::addChild(doc, node, "Id", id_);
@@ -331,7 +331,7 @@ void OisConvention::fromXML(XMLNode* node) {
     build();
 }
 
-XMLNode* OisConvention::toXML(XMLDocument& doc) {
+XMLNode* OisConvention::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("OIS");
     XMLUtils::addChild(doc, node, "Id", id_);
@@ -384,7 +384,7 @@ void IborIndexConvention::fromXML(XMLNode* node) {
     build();
 }
 
-XMLNode* IborIndexConvention::toXML(XMLDocument& doc) {
+XMLNode* IborIndexConvention::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("IborIndex");
     XMLUtils::addChild(doc, node, "Id", localId_);
     XMLUtils::addChild(doc, node, "FixingCalendar", strFixingCalendar_);
@@ -424,7 +424,7 @@ void OvernightIndexConvention::fromXML(XMLNode* node) {
     build();
 }
 
-XMLNode* OvernightIndexConvention::toXML(XMLDocument& doc) {
+XMLNode* OvernightIndexConvention::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("OvernightIndex");
     XMLUtils::addChild(doc, node, "Id", id_);
     XMLUtils::addChild(doc, node, "FixingCalendar", strFixingCalendar_);
@@ -454,7 +454,7 @@ void SwapIndexConvention::fromXML(XMLNode* node) {
     fixingCalendar_ = XMLUtils::getChildValue(node, "FixingCalendar", false);
 }
 
-XMLNode* SwapIndexConvention::toXML(XMLDocument& doc) {
+XMLNode* SwapIndexConvention::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("SwapIndex");
     XMLUtils::addChild(doc, node, "Id", id_);
@@ -509,7 +509,7 @@ void IRSwapConvention::fromXML(XMLNode* node) {
     build();
 }
 
-XMLNode* IRSwapConvention::toXML(XMLDocument& doc) {
+XMLNode* IRSwapConvention::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("Swap");
     XMLUtils::addChild(doc, node, "Id", id_);
@@ -574,7 +574,7 @@ void AverageOisConvention::fromXML(XMLNode* node) {
     build();
 }
 
-XMLNode* AverageOisConvention::toXML(XMLDocument& doc) {
+XMLNode* AverageOisConvention::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("AverageOIS");
     XMLUtils::addChild(doc, node, "Id", id_);
@@ -705,7 +705,7 @@ void TenorBasisSwapConvention::fromXML(XMLNode* node) {
     build();
 }
 
-XMLNode* TenorBasisSwapConvention::toXML(XMLDocument& doc) {
+XMLNode* TenorBasisSwapConvention::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("TenorBasisSwap");
     XMLUtils::addChild(doc, node, "Id", id_);
@@ -777,7 +777,7 @@ void TenorBasisTwoSwapConvention::fromXML(XMLNode* node) {
 boost::shared_ptr<IborIndex> TenorBasisTwoSwapConvention::longIndex() const { return parseIborIndex(strLongIndex_); }
 boost::shared_ptr<IborIndex> TenorBasisTwoSwapConvention::shortIndex() const { return parseIborIndex(strShortIndex_); }
 
-XMLNode* TenorBasisTwoSwapConvention::toXML(XMLDocument& doc) {
+XMLNode* TenorBasisTwoSwapConvention::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("TenorBasisTwoSwap");
     XMLUtils::addChild(doc, node, "Id", id_);
@@ -817,7 +817,7 @@ void BMABasisSwapConvention::fromXML(XMLNode* node) {
     build();
 }
 
-XMLNode* BMABasisSwapConvention::toXML(XMLDocument& doc) {
+XMLNode* BMABasisSwapConvention::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("BMABasisSwap");
     XMLUtils::addChild(doc, node, "Id", id_);
@@ -874,7 +874,7 @@ void FXConvention::fromXML(XMLNode* node) {
     build();
 }
 
-XMLNode* FXConvention::toXML(XMLDocument& doc) {
+XMLNode* FXConvention::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("FX");
     XMLUtils::addChild(doc, node, "Id", id_);
@@ -1015,7 +1015,7 @@ void CrossCcyBasisSwapConvention::fromXML(XMLNode* node) {
     build();
 }
 
-XMLNode* CrossCcyBasisSwapConvention::toXML(XMLDocument& doc) {
+XMLNode* CrossCcyBasisSwapConvention::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("CrossCurrencyBasis");
     XMLUtils::addChild(doc, node, "Id", id_);
@@ -1121,7 +1121,7 @@ void CrossCcyFixFloatSwapConvention::fromXML(XMLNode* node) {
     build();
 }
 
-XMLNode* CrossCcyFixFloatSwapConvention::toXML(XMLDocument& doc) {
+XMLNode* CrossCcyFixFloatSwapConvention::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("CrossCurrencyFixFloat");
     XMLUtils::addChild(doc, node, "Id", id_);
@@ -1204,7 +1204,7 @@ void CdsConvention::fromXML(XMLNode* node) {
     build();
 }
 
-XMLNode* CdsConvention::toXML(XMLDocument& doc) {
+XMLNode* CdsConvention::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("CDS");
     XMLUtils::addChild(doc, node, "Id", id_);
@@ -1293,7 +1293,7 @@ void InflationSwapConvention::fromXML(XMLNode* node) {
     build();
 }
 
-XMLNode* InflationSwapConvention::toXML(XMLDocument& doc) {
+XMLNode* InflationSwapConvention::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("InflationSwap");
     XMLUtils::addChild(doc, node, "Id", id_);
@@ -1377,7 +1377,7 @@ void SecuritySpreadConvention::fromXML(XMLNode* node) {
     build();
 }
 
-XMLNode* SecuritySpreadConvention::toXML(XMLDocument& doc) {
+XMLNode* SecuritySpreadConvention::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("BondSpread");
     XMLUtils::addChild(doc, node, "Id", id_);
@@ -1439,7 +1439,7 @@ void CmsSpreadOptionConvention::build() {
     rollConvention_ = parseBusinessDayConvention(strRollConvention_);
 }
 
-XMLNode* CmsSpreadOptionConvention::toXML(XMLDocument& doc) {
+XMLNode* CmsSpreadOptionConvention::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("CmsSpreadOption");
     XMLUtils::addChild(doc, node, "Id", id_);
@@ -1494,7 +1494,7 @@ void CommodityForwardConvention::fromXML(XMLNode* node) {
     build();
 }
 
-XMLNode* CommodityForwardConvention::toXML(XMLDocument& doc) {
+XMLNode* CommodityForwardConvention::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("CommodityForward");
     XMLUtils::addChild(doc, node, "Id", id_);
@@ -1595,7 +1595,7 @@ void CommodityFutureConvention::AveragingData::fromXML(XMLNode* node) {
     build();
 }
 
-XMLNode* CommodityFutureConvention::AveragingData::toXML(XMLDocument& doc) {
+XMLNode* CommodityFutureConvention::AveragingData::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("AveragingData");
     XMLUtils::addChild(doc, node, "CommodityName", commodityName_);
@@ -1649,7 +1649,7 @@ void CommodityFutureConvention::OffPeakPowerIndexData::fromXML(XMLNode* node) {
     build();
 }
 
-XMLNode* CommodityFutureConvention::OffPeakPowerIndexData::toXML(XMLDocument& doc) {
+XMLNode* CommodityFutureConvention::OffPeakPowerIndexData::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("OffPeakPowerIndexData");
     XMLUtils::addChild(doc, node, "OffPeakIndex", offPeakIndex_);
@@ -1684,7 +1684,7 @@ void CommodityFutureConvention::ProhibitedExpiry::fromXML(XMLNode* node) {
     optionBdc_ = tmp.empty() ? Preceding : parseBusinessDayConvention(tmp);
 }
 
-XMLNode* CommodityFutureConvention::ProhibitedExpiry::toXML(XMLDocument& doc) {
+XMLNode* CommodityFutureConvention::ProhibitedExpiry::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("Date", to_string(expiry_));
     XMLUtils::addAttribute(doc, node, "forFuture", to_string(forFuture_));
@@ -2057,7 +2057,7 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
     build();
 }
 
-XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
+XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("CommodityFuture");
     XMLUtils::addChild(doc, node, "Id", id_);
@@ -2344,7 +2344,7 @@ void FxOptionConvention::fromXML(XMLNode* node) {
     build();
 }
 
-XMLNode* FxOptionConvention::toXML(XMLDocument& doc) {
+XMLNode* FxOptionConvention::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("FxOption");
     XMLUtils::addChild(doc, node, "Id", id_);
@@ -2405,7 +2405,7 @@ void BondYieldConvention::fromXML(XMLNode* node) {
     build();
 }
 
-XMLNode* BondYieldConvention::toXML(XMLDocument& doc) {
+XMLNode* BondYieldConvention::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("BondYield");
     XMLUtils::addChild(doc, node, "Id", id_);
@@ -2467,7 +2467,7 @@ void ZeroInflationIndexConvention::fromXML(XMLNode* node) {
     build();
 }
 
-XMLNode* ZeroInflationIndexConvention::toXML(XMLDocument& doc) {
+XMLNode* ZeroInflationIndexConvention::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("ZeroInflationIndex");
     XMLUtils::addChild(doc, node, "Id", id_);
@@ -2533,7 +2533,7 @@ void Conventions::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* Conventions::toXML(XMLDocument& doc) {
+XMLNode* Conventions::toXML(XMLDocument& doc) const {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
 
     XMLNode* conventionsNode = doc.allocNode("Conventions");

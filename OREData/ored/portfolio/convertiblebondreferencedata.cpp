@@ -47,7 +47,7 @@ void ConvertibleBondReferenceDatum::fromXML(XMLNode* node) {
     detachable_ = XMLUtils::getChildValue(innerNode, "Detachable", false);
 }
 
-XMLNode* ConvertibleBondReferenceDatum::toXML(ore::data::XMLDocument& doc) {
+XMLNode* ConvertibleBondReferenceDatum::toXML(ore::data::XMLDocument& doc) const {
     XMLNode* node0 = ReferenceDatum::toXML(doc);
     XMLNode* node = XMLUtils::addChild(doc, node0, "ConvertibleBondReferenceData");
     XMLUtils::appendNode(node, bondData_.toXML(doc));

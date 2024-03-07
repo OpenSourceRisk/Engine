@@ -37,7 +37,7 @@ void PriceSegment::OffPeakDaily::fromXML(XMLNode* node) {
     peakQuotes_ = XMLUtils::getChildrenValues(node, "PeakQuotes", "Quote", true);
 }
 
-XMLNode* PriceSegment::OffPeakDaily::toXML(XMLDocument& doc) {
+XMLNode* PriceSegment::OffPeakDaily::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("OffPeakDaily");
     XMLUtils::addChildren(doc, node, "OffPeakQuotes", "Quote", offPeakQuotes_);
@@ -127,7 +127,7 @@ void PriceSegment::populateQuotes() {
     quotes_.assign(quotes.begin(), quotes.end());
 }
 
-XMLNode* PriceSegment::toXML(XMLDocument& doc) {
+XMLNode* PriceSegment::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("PriceSegment");
     XMLUtils::addChild(doc, node, "Type", strType_);
@@ -267,7 +267,7 @@ void CommodityCurveConfig::fromXML(XMLNode* node) {
     populateRequiredCurveIds();
 }
 
-XMLNode* CommodityCurveConfig::toXML(XMLDocument& doc) {
+XMLNode* CommodityCurveConfig::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("CommodityCurve");
 
