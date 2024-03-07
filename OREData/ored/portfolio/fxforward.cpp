@@ -202,7 +202,7 @@ void FxForward::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* FxForward::toXML(XMLDocument& doc) {
+XMLNode* FxForward::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fxNode = doc.allocNode("FxForwardData");
     XMLUtils::appendNode(node, fxNode);

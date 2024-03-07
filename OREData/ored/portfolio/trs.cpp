@@ -72,7 +72,7 @@ void TRS::ReturnData::fromXML(XMLNode* node) {
     fxTerms_ = XMLUtils::getChildrenValues(node, "FXTerms", "FXIndex", false);
 }
 
-XMLNode* TRS::ReturnData::toXML(XMLDocument& doc) {
+XMLNode* TRS::ReturnData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("ReturnData");
     XMLUtils::addChild(doc, n, "Payer", payer_);
     XMLUtils::addChild(doc, n, "Currency", currency_);
@@ -117,7 +117,7 @@ void TRS::FundingData::fromXML(XMLNode* node) {
     fundingResetGracePeriod_ = XMLUtils::getChildValueAsInt(node, "FundingResetGracePeriod", false, 0);
 }
 
-XMLNode* TRS::FundingData::toXML(XMLDocument& doc) {
+XMLNode* TRS::FundingData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("FundingData");
     for (auto& l : legData_) {
         XMLUtils::appendNode(n, l.toXML(doc));
@@ -140,7 +140,7 @@ void TRS::AdditionalCashflowData::fromXML(XMLNode* node) {
         legData_ = LegData();
 }
 
-XMLNode* TRS::AdditionalCashflowData::toXML(XMLDocument& doc) {
+XMLNode* TRS::AdditionalCashflowData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("AdditionalCashflowData");
     if (legData_.concreteLegData())
         XMLUtils::appendNode(n, legData_.toXML(doc));
@@ -231,7 +231,7 @@ void TRS::fromXML(XMLNode* node) {
         additionalCashflowData_ = AdditionalCashflowData();
 }
 
-XMLNode* TRS::toXML(XMLDocument& doc) {
+XMLNode* TRS::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* dataNode = doc.allocNode(tradeType_ + "Data");
     XMLUtils::appendNode(node, dataNode);

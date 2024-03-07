@@ -47,7 +47,7 @@ public:
         Amount(const std::tuple<std::string, std::string, std::string>& key, const std::string& value);
         Amount(ore::data::XMLNode* node) { fromXML(node); }
 
-        ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+        ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
         void fromXML(ore::data::XMLNode* node) override;
 
         const std::tuple<std::string, std::string, std::string> key() const;
@@ -76,7 +76,7 @@ public:
 
             //! \name Serialisation
             //@{
-            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
             void fromXML(ore::data::XMLNode* node) override;
             //@}
 
@@ -98,7 +98,7 @@ public:
             IRRiskWeights(ore::data::XMLNode* node);
             //! \name Serialisation
             //@{
-            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
             void fromXML(ore::data::XMLNode* node) override;
             //@}
             virtual const std::map<CrifRecord::RiskType, std::map<QuantLib::Size, boost::shared_ptr<Amount>>>
@@ -118,7 +118,7 @@ public:
             CreditQRiskWeights(ore::data::XMLNode* node);
             //! \name Serialisation
             //@{
-            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
             void fromXML(ore::data::XMLNode* node) override;
             //@}
             virtual const std::map<CrifRecord::RiskType, std::map<QuantLib::Size, boost::shared_ptr<Amount>>>
@@ -132,7 +132,7 @@ public:
             FXRiskWeights(ore::data::XMLNode* node);
             //! \name Serialisation
             //@{
-            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
             void fromXML(ore::data::XMLNode* node) override;
             //@}
             const CurrencyLists& currencyLists() const { return currencyLists_; }
@@ -147,7 +147,7 @@ public:
             Correlations(ore::data::XMLNode* node) { fromXML(node); }
             //! \name Serialisation
             //@{
-            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
             void fromXML(ore::data::XMLNode* node) override;
             //@}
             const Amounts& intraBucketCorrelations() const { return intraBucketCorrelations_; }
@@ -162,7 +162,7 @@ public:
             IRCorrelations(ore::data::XMLNode* node) { fromXML(node); }
             //! \name Serialisation
             //@{
-            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
             void fromXML(ore::data::XMLNode* node) override;
             //@}
             const boost::shared_ptr<Amount>& subCurves() const { return subCurves_; }
@@ -181,7 +181,7 @@ public:
             CreditQCorrelations(ore::data::XMLNode* node) { fromXML(node); }
             //! \name Serialisation
             //@{
-            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
             void fromXML(ore::data::XMLNode* node) override;
             //@}
             const boost::shared_ptr<Amount>& baseCorrelation() const { return baseCorrelation_; }
@@ -194,7 +194,7 @@ public:
             FXCorrelations(ore::data::XMLNode* node) { fromXML(node); }
             //! \name Serialisation
             //@{
-            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
             void fromXML(ore::data::XMLNode* node) override;
             //@}
             const boost::shared_ptr<Amount>& volatility() const { return volatility_; }
@@ -209,7 +209,7 @@ public:
             ConcentrationThresholds(ore::data::XMLNode* node) { fromXML(node); }
             //! \name Serialisation
             //@{
-            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
             void fromXML(ore::data::XMLNode* node) override;
             //@}
 
@@ -226,7 +226,7 @@ public:
             IRFXConcentrationThresholds(ore::data::XMLNode* node) { fromXML(node); }
             //! \name Serialisation
             //@{
-            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
             void fromXML(ore::data::XMLNode* node) override;
             //@}
 
@@ -241,7 +241,7 @@ public:
 
         //! \name Serialisation
         //@{
-        ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+        ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
         void fromXML(ore::data::XMLNode* node) override;
         //@}
 
@@ -273,7 +273,7 @@ public:
 
     //! \name Serialisation
     //@{
-    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     void fromXML(ore::data::XMLNode* node) override;
     //@}
     const std::map<SimmConfiguration::RiskClass, boost::shared_ptr<RiskClassData>>& riskClassData() const {
@@ -301,7 +301,7 @@ public:
 
     //! \name Serialisation
     //@{
-    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     void fromXML(ore::data::XMLNode* node) override;
     //@}
 

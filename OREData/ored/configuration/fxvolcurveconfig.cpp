@@ -196,7 +196,7 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
     populateRequiredCurveIds();
 }
 
-XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) {
+XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("FXVolatility");
 
     XMLUtils::addChild(doc, node, "CurveId", curveID_);

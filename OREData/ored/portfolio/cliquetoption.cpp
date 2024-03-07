@@ -146,7 +146,7 @@ void CliquetOption::fromXML(XMLNode* node) {
     premiumPayDate_ = XMLUtils::getChildValue(clNode, "PremiumPaymentDate", false);
 }
 
-XMLNode* CliquetOption::toXML(XMLDocument& doc) {
+XMLNode* CliquetOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* clNode = doc.allocNode(tradeType() + "Data");
     XMLUtils::appendNode(node, clNode);

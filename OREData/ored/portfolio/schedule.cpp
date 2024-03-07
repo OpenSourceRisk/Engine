@@ -98,7 +98,7 @@ void ScheduleRules::fromXML(XMLNode* node) {
     removeLastDate_ = XMLUtils::getChildValueAsBool(node, "RemoveLastDate", false, false);
 }
 
-XMLNode* ScheduleRules::toXML(XMLDocument& doc) {
+XMLNode* ScheduleRules::toXML(XMLDocument& doc) const {
     XMLNode* rules = doc.allocNode("Rules");
     XMLUtils::addChild(doc, rules, "StartDate", startDate_);
     if (!endDate_.empty())
@@ -128,7 +128,7 @@ void ScheduleDates::fromXML(XMLNode* node) {
     dates_ = XMLUtils::getChildrenValues(node, "Dates", "Date");
 }
 
-XMLNode* ScheduleDates::toXML(XMLDocument& doc) {
+XMLNode* ScheduleDates::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Dates");
     XMLUtils::addChild(doc, node, "Calendar", calendar_);
     if (convention_ != "")
@@ -150,7 +150,7 @@ void ScheduleDerived::fromXML(XMLNode* node) {
     removeLastDate_ = XMLUtils::getChildValueAsBool(node, "RemoveLastDate", false, false);
 }
 
-XMLNode* ScheduleDerived::toXML(XMLDocument& doc) {
+XMLNode* ScheduleDerived::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Derived");
     XMLUtils::addChild(doc, node, "BaseSchedule", baseSchedule_);
     if (!shift_.empty())
@@ -192,7 +192,7 @@ void ScheduleData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* ScheduleData::toXML(XMLDocument& doc) {
+XMLNode* ScheduleData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("ScheduleData");
     for (auto& r : rules_)
         XMLUtils::appendNode(node, r.toXML(doc));
