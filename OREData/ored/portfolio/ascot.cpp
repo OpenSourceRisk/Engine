@@ -38,6 +38,12 @@ Ascot::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenc
 void Ascot::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
     DLOG("Ascot::build() called for trade " << id());
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Credit");
+    additionalData_["isdaBaseProduct"] = string("Exotic");
+    additionalData_["isdaSubProduct"] = string("Other");  
+    additionalData_["isdaTransaction"] = string("");  
+
     // build underlying convertible bond
     bond_.reset();
     // we need to do set the id manually because it otherwise remains blank
@@ -85,12 +91,6 @@ void Ascot::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFacto
 
     notional_ = bond_.data().bondData().bondNotional();
     maturity_ = bond_.maturity();
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Credit");
-    additionalData_["isdaBaseProduct"] = string("Exotic");
-    additionalData_["isdaSubProduct"] = string("Other");  
-    additionalData_["isdaTransaction"] = string("");  
 }
 
 void Ascot::fromXML(XMLNode* node) {
@@ -111,7 +111,7 @@ void Ascot::fromXML(XMLNode* node) {
     fundingLegData_.fromXML(legNode);
 }
 
-XMLNode* Ascot::toXML(XMLDocument& doc) {
+XMLNode* Ascot::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* dataNode = doc.allocNode("AscotData");
     XMLUtils::appendNode(node, dataNode);

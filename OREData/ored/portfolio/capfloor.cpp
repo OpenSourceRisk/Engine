@@ -50,6 +50,12 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("CapFloor::build() called for trade " << id() << ", leg type is " << legData_.legType());
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Interest Rate");
+    additionalData_["isdaBaseProduct"] = string("CapFloor");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");  
+
     QL_REQUIRE((legData_.legType() == "Floating") || (legData_.legType() == "CMS") ||
                    (legData_.legType() == "DurationAdjustedCMS") || (legData_.legType() == "CMSSpread") ||
                    (legData_.legType() == "CPI") || (legData_.legType() == "YY"),
@@ -497,12 +503,6 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     }
 
     additionalData_["startDate"] = to_string(startDate);
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Interest Rate");
-    additionalData_["isdaBaseProduct"] = string("CapFloor");
-    additionalData_["isdaSubProduct"] = string("");  
-    additionalData_["isdaTransaction"] = string("");  
 }
 
 const std::map<std::string, boost::any>& CapFloor::additionalData() const {
@@ -773,7 +773,7 @@ void CapFloor::fromXML(XMLNode* node) {
     premiumData_.fromXML(capFloorNode);
 }
 
-XMLNode* CapFloor::toXML(XMLDocument& doc) {
+XMLNode* CapFloor::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* capFloorNode = doc.allocNode("CapFloorData");
     XMLUtils::appendNode(node, capFloorNode);

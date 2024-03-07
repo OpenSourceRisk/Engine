@@ -31,6 +31,13 @@ namespace ore {
 namespace data {
 
 void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string(settlement_ == "Cash" ? "NDF" : "Forward");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");  
+
     // If you Buy EURUSD forward, then you buy EUR and sell USD.
     // EUR = foreign, USD = Domestic.
     // You pay in USD, so the Domestic / Sold ccy is the "payer" currency
@@ -141,12 +148,6 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     }
     additionalData_["payDate"] = payDate;
     additionalData_["settlement"] = settlement_;
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
-    additionalData_["isdaBaseProduct"] = string(settlement_ == "Cash" ? "NDF" : "Forward");
-    additionalData_["isdaSubProduct"] = string("");
-    additionalData_["isdaTransaction"] = string("");  
 }
 
 QuantLib::Real FxForward::notional() const {
@@ -201,7 +202,7 @@ void FxForward::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* FxForward::toXML(XMLDocument& doc) {
+XMLNode* FxForward::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fxNode = doc.allocNode("FxForwardData");
     XMLUtils::appendNode(node, fxNode);

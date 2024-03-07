@@ -35,7 +35,7 @@ void CommodityPositionData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* CommodityPositionData::toXML(XMLDocument& doc) {
+XMLNode* CommodityPositionData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("CommodityPositionData");
     XMLUtils::addChild(doc, n, "Quantity", quantity_);
     for (auto& u : underlyings_) {
@@ -45,6 +45,14 @@ XMLNode* CommodityPositionData::toXML(XMLDocument& doc) {
 }
 
 void CommodityPosition::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
+
+    // ISDA taxonomy: not a derivative, but define the asset class at least
+    // so that we can determine a TRS asset class that has an EQ position underlying
+    additionalData_["isdaAssetClass"] = string("Commodity");
+    additionalData_["isdaBaseProduct"] = string("");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");
+
     DLOG("CommodityPosition::build() called for " << id());
     QL_REQUIRE(!data_.underlyings().empty(), "CommodityPosition::build(): no underlyings given");
     indices_.clear();
@@ -114,13 +122,6 @@ void CommodityPosition::build(const boost::shared_ptr<ore::data::EngineFactory>&
     maturity_ = Date::maxDate();
     notional_ = Null<Real>();
     notionalCurrency_ = "";
-
-    // ISDA taxonomy: not a derivative, but define the asset class at least
-    // so that we can determine a TRS asset class that has an EQ position underlying
-    additionalData_["isdaAssetClass"] = string("Commodity");
-    additionalData_["isdaBaseProduct"] = string("");
-    additionalData_["isdaSubProduct"] = string("");
-    additionalData_["isdaTransaction"] = string("");
     
     // leave legs empty
 }
@@ -136,7 +137,7 @@ void CommodityPosition::fromXML(XMLNode* node) {
     data_.fromXML(XMLUtils::getChildNode(node, "CommodityPositionData"));
 }
 
-XMLNode* CommodityPosition::toXML(XMLDocument& doc) {
+XMLNode* CommodityPosition::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLUtils::appendNode(node, data_.toXML(doc));
     return node;

@@ -43,7 +43,7 @@ void Trade::fromXML(XMLNode* node) {
         tradeActions_.fromXML(taNode);
 }
 
-XMLNode* Trade::toXML(XMLDocument& doc) {
+XMLNode* Trade::toXML(XMLDocument& doc) const {
     // Crete Trade Node with Id attribute.
     XMLNode* node = doc.allocNode("Trade");
     QL_REQUIRE(node, "Failed to create trade node");
@@ -121,6 +121,10 @@ void Trade::validate() const {
 
 void Trade::setEnvelope(const Envelope& envelope) {
     envelope_ = envelope;
+}
+
+void Trade::setAdditionalData(const std::map<std::string, boost::any>& additionalData) {
+    additionalData_ = additionalData;
 }
 
 void Trade::reset() {

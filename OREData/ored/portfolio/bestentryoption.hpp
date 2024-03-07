@@ -37,8 +37,10 @@ public:
         initIndices();
     }
     void build(const boost::shared_ptr<EngineFactory>&) override;
+    // This is called within ScriptedTrade::build()
+    void setIsdaTaxonomyFields() override;
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
 private:
     void initIndices();

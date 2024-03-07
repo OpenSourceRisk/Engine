@@ -47,6 +47,13 @@ void CommoditySwaption::build(const boost::shared_ptr<EngineFactory>& engineFact
 
     DLOG("CommoditySwaption::build() called for trade " << id());
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = std::string("Commodity");
+    additionalData_["isdaBaseProduct"] = std::string("Other");
+    additionalData_["isdaSubProduct"] = std::string("");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = std::string("");
+
     // Swaption details
     Settlement::Type settleType = parseSettlementType(option_.settlement());
 
@@ -98,13 +105,6 @@ void CommoditySwaption::build(const boost::shared_ptr<EngineFactory>& engineFact
     }
     // use underlying maturity independent of settlement type, following ISDA GRID/AANA guidance
     maturity_ = swap->maturityDate();
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = std::string("Commodity");
-    additionalData_["isdaBaseProduct"] = std::string("Other");
-    additionalData_["isdaSubProduct"] = std::string("");
-    // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = std::string("");
 }
 
 QuantLib::Real CommoditySwaption::notional() const {
@@ -194,7 +194,7 @@ void CommoditySwaption::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* CommoditySwaption::toXML(XMLDocument& doc) {
+XMLNode* CommoditySwaption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
 
     // Add the root CommoditySwaptionData node

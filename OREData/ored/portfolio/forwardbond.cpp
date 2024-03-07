@@ -48,6 +48,14 @@ namespace data {
 void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("ForwardBond::build() called for trade " << id());
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Interest Rate");
+    additionalData_["isdaBaseProduct"] = string("Forward");
+    additionalData_["isdaSubProduct"] = string("Debt");
+    additionalData_["isdaTransaction"] = string("");
+
+    additionalData_["currency"] = currency_;
+
     const boost::shared_ptr<Market> market = engineFactory->market();
 
     boost::shared_ptr<EngineBuilder> builder_fwd = engineFactory->builder("ForwardBond");
@@ -154,13 +162,6 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     additionalData_["currentNotional"] = currentNotional(bond->cashflows()) * bondData_.bondNotional();
     additionalData_["originalNotional"] = originalNotional(bond->cashflows()) * bondData_.bondNotional();
-    additionalData_["currency"] = currency_;
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Interest Rate");
-    additionalData_["isdaBaseProduct"] = string("Forward");
-    additionalData_["isdaSubProduct"] = string("Debt");
-    additionalData_["isdaTransaction"] = string("");
 }
 
 void ForwardBond::fromXML(XMLNode* node) {
@@ -194,7 +195,7 @@ void ForwardBond::fromXML(XMLNode* node) {
     longInForward_ = XMLUtils::getChildValue(fwdBondNode, "LongInForward", true);
 }
 
-XMLNode* ForwardBond::toXML(XMLDocument& doc) {
+XMLNode* ForwardBond::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fwdBondNode = doc.allocNode("ForwardBondData");
     XMLUtils::appendNode(node, fwdBondNode);

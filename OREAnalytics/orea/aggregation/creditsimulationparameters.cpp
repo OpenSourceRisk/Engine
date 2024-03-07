@@ -82,7 +82,7 @@ void CreditSimulationParameters::fromXML(XMLNode* root) {
     nettingSetIds_ = parseListOfValues(XMLUtils::getChildValue(sim, "NettingSetIds", true));
 }
 
-XMLNode* CreditSimulationParameters::toXML(XMLDocument& doc) {
+XMLNode* CreditSimulationParameters::toXML(XMLDocument& doc) const {
     QL_FAIL("CreditSimulationParameters::toXML() not implemented");
 }
 

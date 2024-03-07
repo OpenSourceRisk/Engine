@@ -71,7 +71,7 @@ public:
     virtual const QuantLib::Handle<QuantLib::Quote>& spotQuote() = 0;
 
     virtual void additionalFromXml(ore::data::XMLNode* node) = 0;
-    virtual void additionalToXml(ore::data::XMLDocument& doc, ore::data::XMLNode* node) = 0;
+    virtual void additionalToXml(ore::data::XMLDocument& doc, ore::data::XMLNode* node) const = 0;
     virtual std::string indexFixingName() = 0;
 
     //! \name Inspectors
@@ -85,7 +85,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(ore::data::XMLNode* node) override;
-    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
 
 private:
@@ -124,7 +124,7 @@ public:
     //! \name Serialisation
     //@{
     void additionalFromXml(ore::data::XMLNode* node) override;
-    void additionalToXml(ore::data::XMLDocument& doc, ore::data::XMLNode* node) override;
+    void additionalToXml(ore::data::XMLDocument& doc, ore::data::XMLNode* node) const override;
     //@}
 
     boost::shared_ptr<QuantLib::Index> getIndex() override { return boost::dynamic_pointer_cast<Index>(fxIndex_); }
@@ -135,7 +135,7 @@ public:
     std::string indexFixingName() override;
 
     void fromXML(ore::data::XMLNode* node) override { BarrierOption::fromXML(node); }
-    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override { return BarrierOption::toXML(doc); }
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override { return BarrierOption::toXML(doc); }
 
 private:
     std::string fxIndexStr_;
@@ -169,7 +169,7 @@ public:
     //! \name Serialisation
     //@{
     void additionalFromXml(ore::data::XMLNode* node) override;
-    void additionalToXml(ore::data::XMLDocument& doc, ore::data::XMLNode* node) override;
+    void additionalToXml(ore::data::XMLDocument& doc, ore::data::XMLNode* node) const override;
     //@}
 
     boost::shared_ptr<QuantLib::Index> getIndex() override { return boost::dynamic_pointer_cast<Index>(eqIndex_); }
@@ -180,7 +180,7 @@ public:
     std::string indexFixingName() override { return "EQ-" + eqIndex_->name(); };
 
     void fromXML(ore::data::XMLNode* node) override { BarrierOption::fromXML(node); }
-    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override { return BarrierOption::toXML(doc); }
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override { return BarrierOption::toXML(doc); }
 
 private:
     boost::shared_ptr<QuantExt::EquityIndex2> eqIndex_;

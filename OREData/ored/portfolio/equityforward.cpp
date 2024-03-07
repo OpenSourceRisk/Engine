@@ -37,6 +37,14 @@ namespace ore {
 namespace data {
 
 void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Equity");
+    additionalData_["isdaBaseProduct"] = string("Forward");
+    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");
+
     Currency ccy = parseCurrencyWithMinors(currency_);
 
     // get the equity currency from the market
@@ -87,13 +95,6 @@ void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     additionalData_["strike"] = strike;
     additionalData_["strikeCurrency"] = strikeCurrency_;
     additionalData_["quantity"] = quantity_;
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Equity");
-    additionalData_["isdaBaseProduct"] = string("Forward");
-    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
-    // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = string("");
 }
     
 void EquityForward::fromXML(XMLNode* node) {
@@ -112,7 +113,7 @@ void EquityForward::fromXML(XMLNode* node) {
     quantity_ = XMLUtils::getChildValueAsDouble(eNode, "Quantity", true);
 }
 
-XMLNode* EquityForward::toXML(XMLDocument& doc) {
+XMLNode* EquityForward::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* eNode = doc.allocNode("EquityForwardData");
     XMLUtils::appendNode(node, eNode);

@@ -95,7 +95,7 @@ void Portfolio::fromXML(XMLNode* node) {
     LOG("Finished Parsing XML doc");
 }
 
-XMLNode* Portfolio::toXML(XMLDocument& doc) {
+XMLNode* Portfolio::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Portfolio");
     for (auto& t : trades_)
         XMLUtils::appendNode(node, t.second->toXML(doc));
@@ -288,6 +288,11 @@ std::pair<boost::shared_ptr<Trade>, bool> buildTrade(boost::shared_ptr<Trade>& t
             failed->setEnvelope(trade->envelope());
             failed->build(engineFactory);
             failed->resetPricingStats(trade->getNumberOfPricings(), trade->getCumulativePricingTime());
+            try {
+                failed->setAdditionalData(trade->additionalData());
+            } catch (...) {
+                // We try to get the additional fields, but only if it is possible
+            }
             LOG("Built failed trade with id " << failed->id());
             return std::make_pair(failed, false);
         } else {

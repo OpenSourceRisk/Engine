@@ -45,6 +45,12 @@ namespace data {
 
 void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
+    additionalData_["isdaSubProduct"] = string("Barrier");  
+    additionalData_["isdaTransaction"] = string("");  
+
     Date today = Settings::instance().evaluationDate();
     const boost::shared_ptr<Market> market = engineFactory->market();
     Date start = ore::data::parseDate(startDate_);
@@ -283,13 +289,6 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
     additionalData_["boughtCurrency"] = boughtCurrency_;
     additionalData_["soldAmount"] = soldAmount_;
     additionalData_["soldCurrency"] = soldCurrency_;
-
-    // ISDA taxonomy
-   // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
-    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
-    additionalData_["isdaSubProduct"] = string("Barrier");  
-    additionalData_["isdaTransaction"] = string("");  
 }
 
 bool FxKIKOBarrierOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {
@@ -328,7 +327,7 @@ void FxKIKOBarrierOption::fromXML(XMLNode* node) {
     soldAmount_ = XMLUtils::getChildValueAsDouble(fxNode, "SoldAmount", true);
 }
 
-XMLNode* FxKIKOBarrierOption::toXML(XMLDocument& doc) {
+XMLNode* FxKIKOBarrierOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fxNode = doc.allocNode("FxKIKOBarrierOptionData");
     XMLUtils::appendNode(node, fxNode);

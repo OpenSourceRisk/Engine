@@ -46,14 +46,14 @@ public:
 
     //! \name Inspectors
     //@{
-    const OptionData& optionData() { return optionData_; }
+    const OptionData& optionData() const { return optionData_; }
     const vector<LegData>& legData() { return legData_; }
     //@}
 
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     QuantLib::Real notional() const override;
