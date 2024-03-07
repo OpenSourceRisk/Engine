@@ -192,7 +192,7 @@ void CreditDefaultSwap::fromXML(XMLNode* node) {
     swap_.fromXML(cdsNode);
 }
 
-XMLNode* CreditDefaultSwap::toXML(XMLDocument& doc) {
+XMLNode* CreditDefaultSwap::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLUtils::appendNode(node, swap_.toXML(doc));
     return node;

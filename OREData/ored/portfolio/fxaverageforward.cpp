@@ -120,7 +120,7 @@ void FxAverageForward::fromXML(XMLNode* node) {
         settlement_ = "Cash";
 }
 
-XMLNode* FxAverageForward::toXML(XMLDocument& doc) {
+XMLNode* FxAverageForward::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fxNode = doc.allocNode("FxAverageForwardData");
     XMLUtils::appendNode(node, fxNode);

@@ -105,7 +105,7 @@ void CashflowData::fromXML(XMLNode* node) {
     apply_permutation_in_place(amounts_, p);
 }
 
-XMLNode* CashflowData::toXML(XMLDocument& doc) {
+XMLNode* CashflowData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Cashflow", "Amount", amounts_, "date", dates_);
     return node;
@@ -117,7 +117,7 @@ void FixedLegData::fromXML(XMLNode* node) {
                                                              true);
 }
 
-XMLNode* FixedLegData::toXML(XMLDocument& doc) {
+XMLNode* FixedLegData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Rates", "Rate", rates_, "startDate", rateDates_);
     return node;
@@ -141,7 +141,7 @@ void ZeroCouponFixedLegData::fromXML(XMLNode* node) {
         subtractNotional_ = true;
 }
 
-XMLNode* ZeroCouponFixedLegData::toXML(XMLDocument& doc) {
+XMLNode* ZeroCouponFixedLegData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Rates", "Rate", rates_, "startDate", rateDates_);
     XMLUtils::addChild(doc, node, "Compounding", compounding_);
@@ -215,7 +215,7 @@ void FloatingLegData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
+XMLNode* FloatingLegData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::addChild(doc, node, "Index", index_);
     if (isInArrears_)
@@ -314,7 +314,7 @@ void CPILegData::fromXML(XMLNode* node) {
         nakedOption_ = false;
 }
 
-XMLNode* CPILegData::toXML(XMLDocument& doc) {
+XMLNode* CPILegData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::addChild(doc, node, "Index", index_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Rates", "Rate", rates_, "startDate", rateDates_);
@@ -367,7 +367,7 @@ void YoYLegData::fromXML(XMLNode* node) {
         irregularYoY_ = false;
 }
 
-XMLNode* YoYLegData::toXML(XMLDocument& doc) {
+XMLNode* YoYLegData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::addChild(doc, node, "Index", index_);
     if (!observationLag_.empty()) {
@@ -385,7 +385,7 @@ XMLNode* YoYLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
-XMLNode* CMSLegData::toXML(XMLDocument& doc) {
+XMLNode* CMSLegData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::addChild(doc, node, "Index", swapIndex_);
     XMLUtils::addChild(doc, node, "IsInArrears", isInArrears_);
@@ -427,7 +427,7 @@ void CMSLegData::fromXML(XMLNode* node) {
         nakedOption_ = false;
 }
 
-XMLNode* CMBLegData::toXML(XMLDocument& doc) {
+XMLNode* CMBLegData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::addChild(doc, node, "Index", genericBond_);
     XMLUtils::addChild(doc, node, "IsInArrears", isInArrears_);
@@ -471,7 +471,7 @@ void CMBLegData::fromXML(XMLNode* node) {
         hasCreditRisk_ = true;
 }
 
-XMLNode* DigitalCMSLegData::toXML(XMLDocument& doc) {
+XMLNode* DigitalCMSLegData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::appendNode(node, underlying_->toXML(doc));
 
@@ -521,7 +521,7 @@ void DigitalCMSLegData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* CMSSpreadLegData::toXML(XMLDocument& doc) {
+XMLNode* CMSSpreadLegData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::addChild(doc, node, "Index1", swapIndex1_);
     XMLUtils::addChild(doc, node, "Index2", swapIndex2_);
@@ -566,7 +566,7 @@ void CMSSpreadLegData::fromXML(XMLNode* node) {
         nakedOption_ = false;
 }
 
-XMLNode* DigitalCMSSpreadLegData::toXML(XMLDocument& doc) {
+XMLNode* DigitalCMSSpreadLegData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::appendNode(node, underlying_->toXML(doc));
 
@@ -663,7 +663,7 @@ void EquityLegData::fromXML(XMLNode* node) {
         quantity_ = Null<Real>();
 }
 
-XMLNode* EquityLegData::toXML(XMLDocument& doc) {
+XMLNode* EquityLegData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode(legNodeName());
     if (quantity_ != Null<Real>())
         XMLUtils::addChild(doc, node, "Quantity", quantity_);
@@ -708,7 +708,7 @@ void AmortizationData::fromXML(XMLNode* node) {
     validate();
 }
 
-XMLNode* AmortizationData::toXML(XMLDocument& doc) {
+XMLNode* AmortizationData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("AmortizationData");
     XMLUtils::addChild(doc, node, "Type", type_);
     if (value_ != Null<Real>())
@@ -853,7 +853,7 @@ boost::shared_ptr<LegAdditionalData> LegData::initialiseConcreteLegData(const st
     return legData;
 }
 
-XMLNode* LegData::toXML(XMLDocument& doc) {
+XMLNode* LegData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("LegData");
     QL_REQUIRE(node, "Failed to create LegData node");
     XMLUtils::addChild(doc, node, "LegType", legType());

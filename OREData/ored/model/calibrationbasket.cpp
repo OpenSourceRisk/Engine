@@ -94,7 +94,7 @@ void CalibrationBasket::fromXML(XMLNode* node) {
     parameter_ = XMLUtils::getAttribute(node, "parameter");
 }
 
-XMLNode* CalibrationBasket::toXML(XMLDocument& doc) {
+XMLNode* CalibrationBasket::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("CalibrationBasket");
 
