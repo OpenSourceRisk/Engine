@@ -423,7 +423,7 @@ void CdsReferenceInformation::fromXML(XMLNode* node) {
     populateId();
 }
 
-XMLNode* CdsReferenceInformation::toXML(XMLDocument& doc) {
+XMLNode* CdsReferenceInformation::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("ReferenceInformation");
     XMLUtils::addChild(doc, node, "ReferenceEntityId", referenceEntityId_);
     XMLUtils::addChild(doc, node, "Tier", to_string(tier_));
@@ -596,7 +596,7 @@ void CreditDefaultSwapData::fromXML(XMLNode* node) {
     leg_.fromXML(XMLUtils::getChildNode(node, "LegData"));
 }
 
-XMLNode* CreditDefaultSwapData::toXML(XMLDocument& doc) {
+XMLNode* CreditDefaultSwapData::toXML(XMLDocument& doc) const {
 
     XMLNode* node = alloc(doc);
 

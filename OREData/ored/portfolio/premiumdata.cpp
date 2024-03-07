@@ -64,7 +64,7 @@ void PremiumData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* PremiumData::toXML(XMLDocument& doc) {
+XMLNode* PremiumData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Premiums");
     for (auto const& d : premiumData_) {
         XMLNode* p = XMLUtils::addChild(doc, node, "Premium");

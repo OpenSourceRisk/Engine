@@ -263,7 +263,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
     LOG("Loading stress tests done");
 }
 
-XMLNode* StressTestScenarioData::toXML(ore::data::XMLDocument& doc) {
+XMLNode* StressTestScenarioData::toXML(ore::data::XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("StressTesting");
     QL_FAIL("toXML not implemented for stress testing data");
     return node;
