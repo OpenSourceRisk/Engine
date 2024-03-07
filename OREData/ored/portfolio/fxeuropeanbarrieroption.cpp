@@ -333,7 +333,7 @@ void FxEuropeanBarrierOption::fromXML(XMLNode* node) {
     fxIndex_ = XMLUtils::getChildValue(fxNode, "FXIndex", false, "");
 }
 
-XMLNode* FxEuropeanBarrierOption::toXML(XMLDocument& doc) {
+XMLNode* FxEuropeanBarrierOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fxNode = doc.allocNode("FxEuropeanBarrierOptionData");
     XMLUtils::appendNode(node, fxNode);

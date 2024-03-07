@@ -73,7 +73,7 @@ public:
     //! Populate members from XML
     virtual void fromXML(XMLNode* node) override;
     //! Write class members to XML
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Getters
@@ -264,7 +264,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Operators

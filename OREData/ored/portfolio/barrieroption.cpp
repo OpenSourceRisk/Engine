@@ -186,7 +186,7 @@ void BarrierOption::fromXML(XMLNode* node) {
     additionalFromXml(dataNode);
 }
 
-XMLNode* BarrierOption::toXML(XMLDocument& doc) {
+XMLNode* BarrierOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* barNode = doc.allocNode(tradeType_ + "Data");
     XMLUtils::appendNode(node, barNode);
@@ -240,7 +240,7 @@ void FxOptionWithBarrier::additionalFromXml(XMLNode* node) {
     soldAmount_ = XMLUtils::getChildValueAsDouble(node, "SoldAmount", true);
 }
 
-void FxOptionWithBarrier::additionalToXml(XMLDocument& doc, XMLNode* node) {
+void FxOptionWithBarrier::additionalToXml(XMLDocument& doc, XMLNode* node) const {
     if (!fxIndexStr_.empty())
         XMLUtils::addChild(doc, node, "FXIndex", fxIndexStr_);
     XMLUtils::addChild(doc, node, "BoughtCurrency", boughtCurrency_);
@@ -287,7 +287,7 @@ void EquityOptionWithBarrier::additionalFromXml(XMLNode* node) {
     quantity_ = XMLUtils::getChildValueAsDouble(node, "Quantity", true);
 }
 
-void EquityOptionWithBarrier::additionalToXml(XMLDocument& doc, XMLNode* node) {
+void EquityOptionWithBarrier::additionalToXml(XMLDocument& doc, XMLNode* node) const {
     XMLUtils::appendNode(node, equityUnderlying_.toXML(doc));
     XMLUtils::appendNode(node, tradeStrike_.toXML(doc));
     XMLUtils::addChild(doc, node, "Currency", currencyStr_);

@@ -113,7 +113,7 @@ void EquityForward::fromXML(XMLNode* node) {
     quantity_ = XMLUtils::getChildValueAsDouble(eNode, "Quantity", true);
 }
 
-XMLNode* EquityForward::toXML(XMLDocument& doc) {
+XMLNode* EquityForward::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* eNode = doc.allocNode("EquityForwardData");
     XMLUtils::appendNode(node, eNode);
