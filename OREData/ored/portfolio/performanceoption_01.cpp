@@ -127,7 +127,7 @@ void PerformanceOption_01::fromXML(XMLNode* node) {
     initIndices();
 }
 
-XMLNode* PerformanceOption_01::toXML(XMLDocument& doc) {
+XMLNode* PerformanceOption_01::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* tradeNode = doc.allocNode("PerformanceOption01Data");
     XMLUtils::appendNode(node, tradeNode);

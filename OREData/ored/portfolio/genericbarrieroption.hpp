@@ -63,7 +63,7 @@ public:
     }
     void build(const boost::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
     //! \name Inspectors
     //@{

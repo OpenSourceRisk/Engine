@@ -153,7 +153,7 @@ void DoubleDigitalOption::fromXML(XMLNode* node) {
     initIndices();
 }
 
-XMLNode* DoubleDigitalOption::toXML(XMLDocument& doc) {
+XMLNode* DoubleDigitalOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* tradeNode = doc.allocNode("DoubleDigitalOptionData");
     XMLUtils::appendNode(node, tradeNode);

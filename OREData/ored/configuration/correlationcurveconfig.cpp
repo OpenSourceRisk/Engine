@@ -181,7 +181,7 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
     populateRequiredCurveIds();
 }
 
-XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) {
+XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Correlation");
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);

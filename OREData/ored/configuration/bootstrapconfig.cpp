@@ -76,7 +76,7 @@ void BootstrapConfig::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* BootstrapConfig::toXML(XMLDocument& doc) {
+XMLNode* BootstrapConfig::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("BootstrapConfig");
     XMLUtils::addChild(doc, node, "Accuracy", accuracy_);
