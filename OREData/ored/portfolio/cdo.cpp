@@ -703,7 +703,7 @@ void SyntheticCDO::fromXML(XMLNode* node) {
         basketData_.fromXML(basketNode);
 }
 
-XMLNode* SyntheticCDO::toXML(XMLDocument& doc) {
+XMLNode* SyntheticCDO::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* cdoNode = doc.allocNode("CdoData");
     XMLUtils::appendNode(node, cdoNode);

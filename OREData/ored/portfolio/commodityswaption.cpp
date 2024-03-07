@@ -194,7 +194,7 @@ void CommoditySwaption::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* CommoditySwaption::toXML(XMLDocument& doc) {
+XMLNode* CommoditySwaption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
 
     // Add the root CommoditySwaptionData node

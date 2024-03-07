@@ -54,7 +54,7 @@ public:
          : nettingSetId_(""), nettingSetDetails_(nettingSetDetails), currency_(currency), im_(im), vm_(vm) {}
 
     void fromXML(ore::data::XMLNode* node) override;
-    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     // Getters
     const std::string& nettingSetId() const {
@@ -126,7 +126,7 @@ public:
     void currentIM(const std::string& baseCurrency, std::map<std::string, QuantLib::Real>& currentIM);
     
     void fromXML(ore::data::XMLNode* node) override;
-    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     const std::map<NettingSetDetails, boost::shared_ptr<CollateralBalance>>& collateralBalances();
 
 private:
