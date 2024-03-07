@@ -165,7 +165,7 @@ void CalendarAdjustmentConfig::fromXML(XMLNode* node) {
 
 }
 
-XMLNode* CalendarAdjustmentConfig::toXML(XMLDocument& doc) {
+XMLNode* CalendarAdjustmentConfig::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("CalendarAdjustments");
     for (auto cal : getCalendars()) {
         XMLNode* calendarNode = XMLUtils::addChild(doc, node, "Calendar");

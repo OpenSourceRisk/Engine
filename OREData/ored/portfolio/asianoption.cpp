@@ -229,7 +229,7 @@ void AsianOption::fromXML(XMLNode* node) {
     observationDates_.fromXML(XMLUtils::getChildNode(n, "ObservationDates"));
 }
 
-XMLNode* AsianOption::toXML(XMLDocument& doc) {
+XMLNode* AsianOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* n = doc.allocNode(tradeType() + "Data");
     XMLUtils::appendNode(node, n);
