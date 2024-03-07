@@ -87,6 +87,7 @@ protected:
     mutable std::vector<bool> payer_;
     mutable boost::shared_ptr<Exercise> exercise_; // may be empty, if underlying is the actual trade
     mutable Settlement::Type optionSettlement_ = Settlement::Physical;
+    mutable bool includeSettlementDateFlows_ = false;
 
     // data members
     Handle<CrossAssetModel> model_;
@@ -101,7 +102,6 @@ protected:
     std::vector<Size> externalModelIndices_;
     bool minimalObsDate_;
     RegressorModel regressorModel_;
-    mutable bool includeSettlementDateFlows_ = false;
 
     // the generated amc calculator
     mutable boost::shared_ptr<AmcCalculator> amcCalculator_;
@@ -110,6 +110,8 @@ protected:
     mutable Real resultUnderlyingNpv_, resultValue_;
 
 private:
+    static constexpr Real tinyTime = 1E-10;
+
     // data structure storing info needed to generate the amount for a cashflow
     struct CashflowInfo {
         Size legNo = Null<Size>(), cfNo = Null<Size>();

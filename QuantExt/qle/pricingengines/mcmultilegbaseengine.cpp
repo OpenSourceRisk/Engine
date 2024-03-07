@@ -70,9 +70,6 @@ Real McMultiLegBaseEngine::time(const Date& d) const {
 McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boost::shared_ptr<CashFlow> flow,
                                                                             const Currency& payCcy, bool payer,
                                                                             Size legNo, Size cfNo) const {
-
-    constexpr Real tinyTime = 1E-10;
-
     CashflowInfo info;
 
     // set some common info: pay time, pay ccy index in the model, payer, exercise into decision time
@@ -91,7 +88,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
                        << "), which breaks an assumption in the engine. This situation is unexpected.");
         info.exIntoCriterionTime = time(cpn->accrualStartDate()) + tinyTime;
     } else {
-        info.exIntoCriterionTime = info.payTime;
+        info.exIntoCriterionTime = info.payTime + tinyTime;
     }
 
     // Handle SimpleCashflow
@@ -851,8 +848,8 @@ void McMultiLegBaseEngine::calculate() const {
 
         for (Size i = 0; i < cashflowInfo.size(); ++i) {
 
-            /* we assume here that exIntoCriterionTime > t implies payTime > t
-               this must be ensured by the createCashflowInfo method */
+            /* we assume here that exIntoCriterionTime > t implies payTime > t (or payTime >= t if
+               includeSettlementDateFlows = true) - this must be ensured by the createCashflowInfo method */
 
             if (cfStatus[i] == CfStatus::open) {
                 if (cashflowInfo[i].exIntoCriterionTime > *t) {
@@ -860,7 +857,7 @@ void McMultiLegBaseEngine::calculate() const {
                     pathValueUndDirty += tmp;
                     pathValueUndExInto += tmp;
                     cfStatus[i] = CfStatus::done;
-                } else if (cashflowInfo[i].payTime > *t) {
+                } else if (cashflowInfo[i].payTime > *t - (includeSettlementDateFlows_ ? tinyTime : 0.0)) {
                     auto tmp = cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
                     pathValueUndDirty += tmp;
                     amountCache[i] = tmp;
