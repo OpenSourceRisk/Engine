@@ -62,6 +62,13 @@ void BondPositionData::populateFromBondBasketReferenceData(const boost::shared_p
 void BondPosition::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
     DLOG("BondPosition::build() called for " << id());
 
+    // ISDA taxonomy: not a derivative, but define the asset class at least
+    // so that we can determine a TRS asset class that has a Bond position underlying
+    additionalData_["isdaAssetClass"] = string("Credit");
+    additionalData_["isdaBaseProduct"] = string("");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");
+
     bonds_.clear();
     weights_.clear();
     bidAskAdjustments_.clear();
@@ -105,13 +112,6 @@ void BondPosition::build(const boost::shared_ptr<ore::data::EngineFactory>& engi
     // leave legs empty, leave notional empty for the time being
     notional_ = Null<Real>();
     notionalCurrency_ = "";
-
-    // ISDA taxonomy: not a derivative, but define the asset class at least
-    // so that we can determine a TRS asset class that has a Bond position underlying
-    additionalData_["isdaAssetClass"] = string("Credit");
-    additionalData_["isdaBaseProduct"] = string("");
-    additionalData_["isdaSubProduct"] = string("");
-    additionalData_["isdaTransaction"] = string("");
 
     setSensitivityTemplate(std::string());
 }

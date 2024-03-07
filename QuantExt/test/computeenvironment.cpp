@@ -174,12 +174,29 @@ BOOST_AUTO_TEST_CASE(testLargeCalc) {
     t1 = timer.elapsed().wall;
     BOOST_TEST_MESSAGE("  testing large calc locally (benchmark)");
     BOOST_TEST_MESSAGE("  result = " << res.at(0));
-    BOOST_TEST_MESSAGE("  " << 2.0 * (double)m * (double)n / (double)(t1)*1.0E3 << " MFlops");
+    BOOST_TEST_MESSAGE("  " << 2.0 * (double)m * (double)n / (double)(t1) * 1.0E3 << " MFlops");
 
     for (auto const& r : results) {
         BOOST_CHECK_CLOSE(res.at(0), r, 1E-3);
     }
 }
+
+namespace {
+void checkRngOutput(const std::vector<std::vector<double>>& output) {
+    for (auto const& o : output) {
+        boost::accumulators::accumulator_set<
+            double, boost::accumulators::stats<boost::accumulators::tag::mean, boost::accumulators::tag::variance>>
+            acc;
+        for (auto const& v : o) {
+            acc(v);
+        }
+        BOOST_TEST_MESSAGE("  mean = " << boost::accumulators::mean(acc)
+                                       << ", variance = " << boost::accumulators::variance(acc));
+        BOOST_CHECK_SMALL(boost::accumulators::mean(acc), 0.05);
+        BOOST_CHECK_CLOSE(boost::accumulators::variance(acc), 1.0, 1.0);
+    }
+}
+} // namespace
 
 BOOST_AUTO_TEST_CASE(testRngGeneration) {
     ComputeEnvironmentFixture fixture;
@@ -188,7 +205,7 @@ BOOST_AUTO_TEST_CASE(testRngGeneration) {
         BOOST_TEST_MESSAGE("testing rng generation on device '" << d << "'.");
         ComputeEnvironment::instance().selectContext(d);
         auto& c = ComputeEnvironment::instance().context();
-        c.initiateCalculation(n, 0, 0, true);
+        auto [id, _] = c.initiateCalculation(n, 0, 0, true);
         auto vs = c.createInputVariates(3, 2, 42);
         for (auto const& d : vs) {
             for (auto const& r : d) {
@@ -198,18 +215,42 @@ BOOST_AUTO_TEST_CASE(testRngGeneration) {
         std::vector<std::vector<double>> output(6, std::vector<double>(n));
         c.finalizeCalculation(output, {});
         outputTimings(c);
-        for (auto const& o : output) {
-            boost::accumulators::accumulator_set<
-                double, boost::accumulators::stats<boost::accumulators::tag::mean, boost::accumulators::tag::variance>>
-                acc;
-            for (auto const& v : o) {
-                acc(v);
-            }
-            BOOST_TEST_MESSAGE("  mean = " << boost::accumulators::mean(acc)
-                                           << ", variance = " << boost::accumulators::variance(acc));
-            BOOST_CHECK_SMALL(boost::accumulators::mean(acc), 0.05);
-            BOOST_CHECK_CLOSE(boost::accumulators::variance(acc), 1.0, 1.0);
-        }
+        checkRngOutput(output);
+
+        BOOST_TEST_MESSAGE("test to replay same calc");
+        auto [id2, newCalc2] = c.initiateCalculation(n, id, 0, false);
+        BOOST_CHECK(!newCalc2);
+        BOOST_CHECK_EQUAL(id, id2);
+        c.finalizeCalculation(output, {});
+        outputTimings(c);
+        checkRngOutput(output);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(testReplayFlowError) {
+    ComputeEnvironmentFixture fixture;
+    const std::size_t n = 42;
+    std::vector<std::vector<double>> output;
+    for (auto const& d : ComputeEnvironment::instance().getAvailableDevices()) {
+        BOOST_TEST_MESSAGE("testing replay flow error on device '" << d << "'.");
+        ComputeEnvironment::instance().selectContext(d);
+        auto& c = ComputeEnvironment::instance().context();
+        auto [id, newCalc] = c.initiateCalculation(n, 0, 0, true);
+        BOOST_CHECK(newCalc);
+        BOOST_CHECK(id > 0);
+        auto v1 = c.createInputVariable(1.0);
+        auto v2 = c.createInputVariable(1.0);
+        c.finalizeCalculation(output, {});
+        auto [id2, newCalc2] = c.initiateCalculation(n, id, 0, true);
+        BOOST_CHECK(!newCalc2);
+        BOOST_CHECK_EQUAL(id, id2);
+        c.createInputVariable(1.0);
+        c.createInputVariable(1.0);
+        BOOST_CHECK_THROW(c.createInputVariates(1, 1, 42), std::exception);
+        BOOST_CHECK_THROW(c.applyOperation(RandomVariableOpCode::Add, {v1, v2}), std::exception);
+        BOOST_CHECK_THROW(c.freeVariable(v1), std::exception);
+        BOOST_CHECK_THROW(c.declareOutputVariable(v1), std::exception);
+        BOOST_CHECK_NO_THROW(c.finalizeCalculation(output, {}));
     }
 }
 

@@ -68,27 +68,28 @@ void PerformanceOption_01::build(const boost::shared_ptr<EngineFactory>& factory
     // build trade
 
     ScriptedTrade::build(factory);
+}
+
+void PerformanceOption_01::setIsdaTaxonomyFields() {
+    ScriptedTrade::setIsdaTaxonomyFields();
 
     // ISDA taxonomy
     // asset class set in the base class already
     std::string assetClass = boost::any_cast<std::string>(additionalData_["isdaAssetClass"]);
     if (assetClass == "Equity") {
         additionalData_["isdaBaseProduct"] = string("Other");
-        additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");  
-    }
-    else if (assetClass == "Commodity") {
+        additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    } else if (assetClass == "Commodity") {
         // isda taxonomy missing for this class, using the same as equity
         additionalData_["isdaBaseProduct"] = string("Other");
-        additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");  
-    }
-    else if (assetClass == "Foreign Exchange") {
+        additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    } else if (assetClass == "Foreign Exchange") {
         additionalData_["isdaBaseProduct"] = string("Complex Exotic");
-        additionalData_["isdaSubProduct"] = string("Generic");  
-    }
-    else {
+        additionalData_["isdaSubProduct"] = string("Generic");
+    } else {
         WLOG("ISDA taxonomy incomplete for trade " << id());
-    }        
-    additionalData_["isdaTransaction"] = string("Basket");  
+    }
+    additionalData_["isdaTransaction"] = string("Basket");
 }
 
 void PerformanceOption_01::initIndices() {

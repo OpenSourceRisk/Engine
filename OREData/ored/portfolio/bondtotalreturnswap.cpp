@@ -50,6 +50,12 @@ namespace data {
 void BondTRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("BondTRS::build() called for trade " << id());
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Credit");
+    additionalData_["isdaBaseProduct"] = string("Total Return Swap");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");
+
     const boost::shared_ptr<Market> market = engineFactory->market();
     boost::shared_ptr<EngineBuilder> builder_trs = engineFactory->builder("BondTRS");
     bondData_ = originalBondData_;
@@ -228,12 +234,6 @@ void BondTRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             }
         }
     }
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Credit");
-    additionalData_["isdaBaseProduct"] = string("Total Return Swap");
-    additionalData_["isdaSubProduct"] = string("");
-    additionalData_["isdaTransaction"] = string("");
 }
 
 void BondTRS::fromXML(XMLNode* node) {

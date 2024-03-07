@@ -71,7 +71,7 @@ void ParConversionAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::I
 
         auto parAnalysis = boost::make_shared<ParSensitivityAnalysis>(
             inputs_->asof(), analytic()->configurations().simMarketParams,
-            *analytic()->configurations().sensiScenarioData, "", true, typesDisabled);
+            *analytic()->configurations().sensiScenarioData, Market::defaultConfiguration, true, typesDisabled);
 
         if (inputs_->parConversionAlignPillars()) {
             LOG("Sensi analysis - align pillars (for the par conversion or because alignPillars is enabled)");
