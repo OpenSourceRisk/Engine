@@ -1275,6 +1275,13 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setDimAnalytic(parseBool(tmp));
 
+    tmp = params_->get("xva", "dimModel", false);
+    if (tmp != "") {
+        QL_REQUIRE(tmp == "Regression" || tmp == "Flat",
+                   "DIM model " << tmp << " not supported, expected Regression or Flat");
+        setDimModel(tmp);
+    }
+    
     tmp = params_->get("xva", "mva", false);
     if (tmp != "")
         setMvaAnalytic(parseBool(tmp));

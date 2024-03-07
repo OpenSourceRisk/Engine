@@ -76,13 +76,13 @@ public:
     virtual map<string, Real> unscaledCurrentDIM() = 0;
 
     //! t0 IM by netting set, as provided as an arguments
-    map<string, Real> currentIM() { return currentIM_; }
+    const map<string, Real>& currentIM() const { return currentIM_; }
 
     //! Compute dynamic initial margin along all paths and fill result structures
     virtual void build() = 0;
 
     //! DIM evolution report
-    virtual void exportDimEvolution(ore::data::Report& dimEvolutionReport);
+    virtual void exportDimEvolution(ore::data::Report& dimEvolutionReport) const;
 
     //! DIM by nettingSet, date, sample returned as a regular NPV cube
     const boost::shared_ptr<NPVCube>& dimCube() { return dimCube_; }
