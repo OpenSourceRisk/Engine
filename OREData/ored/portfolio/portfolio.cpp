@@ -95,7 +95,7 @@ void Portfolio::fromXML(XMLNode* node) {
     LOG("Finished Parsing XML doc");
 }
 
-XMLNode* Portfolio::toXML(XMLDocument& doc) {
+XMLNode* Portfolio::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Portfolio");
     for (auto& t : trades_)
         XMLUtils::appendNode(node, t.second->toXML(doc));

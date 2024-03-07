@@ -53,13 +53,13 @@ void ModelData::fromXML(XMLNode* node) {
     }
 }
 
-void ModelData::append(XMLDocument& doc, XMLNode* node) {
+void ModelData::append(XMLDocument& doc, XMLNode* node) const {
     
     XMLUtils::addGenericChild(doc, node, "CalibrationType", calibrationType_);
     
     if (!calibrationBaskets_.empty()) {
         XMLNode* cbsNode = doc.allocNode("CalibrationBaskets");
-        for (CalibrationBasket& cb : calibrationBaskets_) {
+        for (const CalibrationBasket& cb : calibrationBaskets_) {
             XMLUtils::appendNode(cbsNode, cb.toXML(doc));
         }
         XMLUtils::appendNode(node, cbsNode);
