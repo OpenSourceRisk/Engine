@@ -23,7 +23,7 @@
 namespace ore {
 namespace data {
 
-XMLNode* DurationAdjustedCmsLegData::toXML(XMLDocument& doc) {
+XMLNode* DurationAdjustedCmsLegData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::addChild(doc, node, "Index", swapIndex_);
     XMLUtils::addChild(doc, node, "Duration", static_cast<int>(duration_));

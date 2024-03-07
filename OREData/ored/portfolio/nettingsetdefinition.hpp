@@ -197,7 +197,7 @@ public:
     /*!
       writes object to XML
     */
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
     /*!
       validate the netting set definition including CSA details

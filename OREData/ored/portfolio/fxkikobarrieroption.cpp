@@ -327,7 +327,7 @@ void FxKIKOBarrierOption::fromXML(XMLNode* node) {
     soldAmount_ = XMLUtils::getChildValueAsDouble(fxNode, "SoldAmount", true);
 }
 
-XMLNode* FxKIKOBarrierOption::toXML(XMLDocument& doc) {
+XMLNode* FxKIKOBarrierOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fxNode = doc.allocNode("FxKIKOBarrierOptionData");
     XMLUtils::appendNode(node, fxNode);

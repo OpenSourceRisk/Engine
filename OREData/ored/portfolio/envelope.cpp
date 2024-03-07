@@ -72,7 +72,7 @@ void Envelope::fromXML(XMLNode* node) {
     initialized_ = true;
 }
 
-XMLNode* Envelope::toXML(XMLDocument& doc) {
+XMLNode* Envelope::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Envelope");
     XMLUtils::addChild(doc, node, "CounterParty", counterparty_);
     if (nettingSetDetails_.emptyOptionalFields()) {
