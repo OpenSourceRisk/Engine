@@ -200,18 +200,18 @@ Rate CappedFlooredAverageONIndexedCoupon::effectiveCap() const {
     */
     if (localCapFloor_) {
         if (includeSpread()) {
-            // A = \cdot \frac{\prod (1 + \tau_i \min ( \max ( f_i + s , F), C)) - 1}{\tau}
+            // A = \cdot \frac{\sum (\tau_i \min ( \max ( f_i + s , F), C))}{\tau}
             return cap_ - underlying_->spread();
         } else {
-            // A = g \cdot \frac{\prod (1 + \tau_i \min ( \max ( f_i , F), C)) - 1}{\tau} + s
+            // A = g \cdot \frac{\sum (\tau_i \min ( \max ( f_i , F), C))}{\tau} + s
             return cap_;
         }
     } else {
         if (includeSpread()) {
-            // A = \min \left( \max \left( \cdot \frac{\prod (1 + \tau_i(f_i + s)) - 1}{\tau}, F \right), C \right)
+            // A = \min \left( \max \left( \frac{\sum (\tau_i f_i)}{\tau} + s, F \right), C \right)
             return (cap_ / gearing() - underlying_->spread());
         } else {
-            // A = \min \left( \max \left( g \cdot \frac{\prod (1 + \tau_i f_i) - 1}{\tau} + s, F \right), C \right)
+            // A = \min \left( \max \left( g \cdot \frac{\sum (\tau_i f_i)}{\tau} + s, F \right), C \right)
             return (cap_ - underlying_->spread()) / gearing();
         }
     }
