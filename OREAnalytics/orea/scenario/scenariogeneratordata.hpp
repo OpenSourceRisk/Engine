@@ -72,7 +72,7 @@ public:
     virtual void fromXML(XMLNode* node) override;
 
     //! Write members to XML
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
 
     //! \name Inspectors
     //@{

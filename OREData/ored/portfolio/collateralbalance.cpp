@@ -108,7 +108,7 @@ void CollateralBalance::fromXML(XMLNode* node) {
     DLOG("Initial Margin:     " << initialMargin());
 }
 
-XMLNode* CollateralBalance::toXML(XMLDocument& doc) {
+XMLNode* CollateralBalance::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("CollateralBalance");
     XMLUtils::addChild(doc, node, "Currency", currency_);
     if (nettingSetDetails_.empty()) {
@@ -138,7 +138,7 @@ void CollateralBalances::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* CollateralBalances::toXML(XMLDocument& doc) {
+XMLNode* CollateralBalances::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("CollateralBalances");
     for (auto it = collateralBalances_.begin(); it != collateralBalances_.end(); ++it) {
         XMLUtils::appendNode(node, it->second->toXML(doc)); 

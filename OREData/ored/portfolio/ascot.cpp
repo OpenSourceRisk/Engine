@@ -111,7 +111,7 @@ void Ascot::fromXML(XMLNode* node) {
     fundingLegData_.fromXML(legNode);
 }
 
-XMLNode* Ascot::toXML(XMLDocument& doc) {
+XMLNode* Ascot::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* dataNode = doc.allocNode("AscotData");
     XMLUtils::appendNode(node, dataNode);

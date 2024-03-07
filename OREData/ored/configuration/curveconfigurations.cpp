@@ -41,7 +41,7 @@ void addMinimalCurves(const char* nodeName, const map<string, boost::shared_ptr<
     }
 }
 
-void CurveConfigurations::addNodes(XMLDocument& doc, XMLNode* parent, const char* nodeName) {
+void CurveConfigurations::addNodes(XMLDocument& doc, XMLNode* parent, const char* nodeName) const {
     const auto& ct = parseCurveConfigurationType(nodeName);
     const auto& it = configs_.find(ct);
     if (it != configs_.end()) {
@@ -566,7 +566,7 @@ void CurveConfigurations::fromXML(XMLNode* node) {
     getNode(node, "Correlations", "Correlation");
 }
 
-XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
+XMLNode* CurveConfigurations::toXML(XMLDocument& doc) const {
     XMLNode* parent = doc.allocNode("CurveConfiguration");
 
     addNodes(doc, parent, "FXSpots");

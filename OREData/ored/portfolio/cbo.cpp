@@ -207,7 +207,7 @@ void CBO::fromXML(XMLNode* node) {
 
 }
 
-XMLNode* CBO::toXML(ore::data::XMLDocument& doc) {
+XMLNode* CBO::toXML(ore::data::XMLDocument& doc) const {
 
     XMLNode* node = Trade::toXML(doc);
     XMLNode* cboData = doc.allocNode("CBOData");
@@ -320,7 +320,7 @@ void CboReferenceDatum::CboStructure::fromXML(XMLNode* node) {
 
 }
 
-XMLNode* CboReferenceDatum::CboStructure::toXML(XMLDocument& doc) {
+XMLNode* CboReferenceDatum::CboStructure::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("CboStructure");
 
@@ -351,7 +351,7 @@ void CboReferenceDatum::fromXML(XMLNode* node) {
 
 }
 
-XMLNode* CboReferenceDatum::toXML(XMLDocument& doc) {
+XMLNode* CboReferenceDatum::toXML(XMLDocument& doc) const {
 
     XMLNode* node = ReferenceDatum::toXML(doc);
     XMLNode* dataNode = cboStructure_.toXML(doc);
