@@ -60,7 +60,7 @@ For currencies with available ibor indices: \\
 An alphanumeric string of the form [CCY]-[INDEX]-[TERM]. CCY, INDEX and TERM must be separated by dashes (-). CCY and INDEX must be among the supported currency and index combinations. TERM must be an integer followed by D, W, M or Y. See Table \ref{tab:indices}. 
 
 For currencies without available ibor indices:  \\
-An alphanumeric string of the form [CCY]BENCHMARK-[CCY]-TERM, matching a benchmark curve set up in the market data configuration.
+An alphanumeric string, matching a benchmark curve set up in the market data configuration in {\tt  todaysmarket.xml} Yield curves section.
 
 Examples: IDRBENCHMARK-IDR-3M, EGPBENCHMARK-EGP-3M, UAHBENCHMARK-UAH-3M, NGNBENCHMARK-NGN-3M
  
