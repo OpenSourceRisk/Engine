@@ -89,7 +89,7 @@ void InstantaneousCorrelations::fromXML(XMLNode* node) {
     correlations_ = cmb.correlations();
 }
 
-XMLNode* InstantaneousCorrelations::toXML(XMLDocument& doc) {
+XMLNode* InstantaneousCorrelations::toXML(XMLDocument& doc) const {
 
     XMLNode* instantaneousCorrelationsNode = doc.allocNode("InstantaneousCorrelations");
 
@@ -773,7 +773,7 @@ void CrossAssetModelData::buildComConfigs(std::map<std::string, boost::shared_pt
     }
 }
     
-XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
+XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) const {
 
     XMLNode* crossAssetModelNode = doc.allocNode("CrossAssetModel");
 

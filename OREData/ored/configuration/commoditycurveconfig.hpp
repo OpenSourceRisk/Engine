@@ -53,7 +53,7 @@ public:
         const std::vector<std::string>& peakQuotes() const { return peakQuotes_; }
 
         void fromXML(XMLNode* node) override;
-        XMLNode* toXML(XMLDocument& doc) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
 
     private:
         std::vector<std::string> offPeakQuotes_;
@@ -89,7 +89,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
 private:
@@ -157,7 +157,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Inspectors
