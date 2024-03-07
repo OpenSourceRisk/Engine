@@ -172,7 +172,7 @@ void BestEntryOption::fromXML(XMLNode* node) {
     initIndices();
 }
 
-XMLNode* BestEntryOption::toXML(XMLDocument& doc) {
+XMLNode* BestEntryOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* tradeNode = doc.allocNode(tradeType() + "Data");
     XMLUtils::appendNode(node, tradeNode);

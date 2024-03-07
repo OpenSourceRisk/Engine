@@ -197,7 +197,7 @@ void EquityEuropeanBarrierOption::fromXML(XMLNode* node) {
     quantity_ = XMLUtils::getChildValueAsDouble(eqNode, "Quantity", true);
 }
 
-XMLNode* EquityEuropeanBarrierOption::toXML(XMLDocument& doc) {
+XMLNode* EquityEuropeanBarrierOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* eqNode = doc.allocNode("EquityEuropeanBarrierOptionData");
     XMLUtils::appendNode(node, eqNode);

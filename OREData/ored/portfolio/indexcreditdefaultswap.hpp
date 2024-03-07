@@ -40,7 +40,7 @@ public:
     QuantLib::Real notional() const override;
 
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    virtual XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     const IndexCreditDefaultSwapData& swap() const { return swap_; }
 

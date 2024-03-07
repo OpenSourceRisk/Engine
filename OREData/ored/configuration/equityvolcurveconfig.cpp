@@ -173,7 +173,7 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
     populateRequiredCurveIds();
 }
 
-XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {
+XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("EquityVolatility");
 

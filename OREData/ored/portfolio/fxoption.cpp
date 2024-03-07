@@ -145,7 +145,7 @@ void FxOption::fromXML(XMLNode* node) {
     QL_REQUIRE(soldAmount > 0.0, "positive SoldAmount required");
 }
 
-XMLNode* FxOption::toXML(XMLDocument& doc) {
+XMLNode* FxOption::toXML(XMLDocument& doc) const {
     // TODO: Should call parent class to xml?
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fxNode = doc.allocNode("FxOptionData");
