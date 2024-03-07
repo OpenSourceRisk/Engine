@@ -31,6 +31,13 @@ namespace ore {
 namespace data {
 
 void FxAverageForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string(settlement_ == "Cash" ? "NDF" : "Forward");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");  
+
     LOG("FxAverageForward::build() called");
     QL_REQUIRE(!settlementCurrency_.empty(), "settlement currency must not be blank");
     QL_REQUIRE(!referenceCurrency_.empty(), "reference currency must not be blank");
@@ -64,7 +71,7 @@ void FxAverageForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("Swap");
     boost::shared_ptr<SwapEngineBuilderBase> swapBuilder = boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
     QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
-    swap->setPricingEngine(swapBuilder->engine(payCcy));
+    swap->setPricingEngine(swapBuilder->engine(payCcy, std::string(), std::string()));
     setSensitivityTemplate(*swapBuilder);
     instrument_.reset(new VanillaInstrument(swap));
     
@@ -72,12 +79,6 @@ void FxAverageForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     notional_ = settlementNotional_;
     notionalCurrency_ = settlementCurrency_;
     maturity_ = payDate;
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
-    additionalData_["isdaBaseProduct"] = string(settlement_ == "Cash" ? "NDF" : "Forward");
-    additionalData_["isdaSubProduct"] = string("");
-    additionalData_["isdaTransaction"] = string("");  
 
     LOG("FxAverageForward::build() done");
 }

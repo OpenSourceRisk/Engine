@@ -38,6 +38,12 @@ void RiskParticipationAgreement::build(const boost::shared_ptr<EngineFactory>& e
 
     LOG("RiskParticipationAgreement::build() for id \"" << id() << "\" called.");
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Interest Rate");
+    additionalData_["isdaBaseProduct"] = string("Exotic");
+    additionalData_["isdaSubProduct"] = string("");  
+    additionalData_["isdaTransaction"] = string("");  
+
     // do some checks
 
     QL_REQUIRE(!protectionFee_.empty(), "protection fees must not be empty");
@@ -56,12 +62,6 @@ void RiskParticipationAgreement::build(const boost::shared_ptr<EngineFactory>& e
 
     // set start date
     additionalData_["startDate"] = to_string(protectionStart_);
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Interest Rate");
-    additionalData_["isdaBaseProduct"] = string("Exotic");
-    additionalData_["isdaSubProduct"] = string("");  
-    additionalData_["isdaTransaction"] = string("");  
 }
 
 void RiskParticipationAgreement::buildWithSwapUnderlying(const boost::shared_ptr<EngineFactory>& engineFactory) {
@@ -157,10 +157,16 @@ void RiskParticipationAgreement::buildWithSwapUnderlying(const boost::shared_ptr
 
     boost::shared_ptr<QuantLib::Exercise> exercise;
     bool exerciseIsLong = true;
+    std::vector<boost::shared_ptr<CashFlow>> vectorPremium;
     if (optionData_) {
         ExerciseBuilder eb(*optionData_, underlyingLegs);
         exercise = eb.exercise();
-        exerciseIsLong = parsePositionType((*optionData_).longShort()) == QuantLib::Position::Long;
+        exerciseIsLong = parsePositionType((*optionData_).longShort()) == QuantLib::Position::Long;      
+        for (const auto& premium : (*optionData_).premiumData().premiumData()) {
+            QL_REQUIRE((premium.ccy == underlyingCcys[0]) && (premium.ccy == underlyingCcys[1]),
+                           "premium currency must be the same than the swaption legs");
+            vectorPremium.push_back(boost::make_shared<SimpleCashFlow>(premium.amount, premium.payDate));
+        }
     }
 
     // build ql instrument
@@ -168,7 +174,7 @@ void RiskParticipationAgreement::buildWithSwapUnderlying(const boost::shared_ptr
     auto qleInstr = boost::make_shared<QuantExt::RiskParticipationAgreement>(
         underlyingLegs, underlyingPayer, underlyingCcys, protectionFeeLegs, protectionPayer.front(), protectionCcys,
         participationRate_, protectionStart_, protectionEnd_, settlesAccrual_, fixedRecoveryRate_, exercise,
-        exerciseIsLong, nakedOption_);
+        exerciseIsLong, vectorPremium, nakedOption_);
 
     // wrap instrument
 

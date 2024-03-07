@@ -428,14 +428,16 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
     inputVarPtr_.clear();
     inputVarPtrVal_.clear();
 
-    freedVariables_.clear();
-    outputVariables_.clear();
+    if (newCalc) {
+        freedVariables_.clear();
+        outputVariables_.clear();
 
-    variateSeed_.clear();
+        variateSeed_.clear();
 
-    // reset ssa
+        // reset ssa
 
-    currentSsa_.clear();
+        currentSsa_.clear();
+    }
 
     // set state
 
@@ -484,6 +486,10 @@ std::vector<std::vector<std::size_t>> OpenClContext::createInputVariates(const s
     QL_REQUIRE(currentState_ == ComputeState::createInput || currentState_ == ComputeState::createVariates,
                "OpenClContext::createInputVariable(): not in state createInput or createVariates ("
                    << static_cast<int>(currentState_) << ")");
+    QL_REQUIRE(currentId_ > 0, "OpenClContext::applyOperation(): current id is not set");
+    QL_REQUIRE(!hasKernel_[currentId_ - 1], "OpenClContext::createInputVariates(): id ("
+                                                << currentId_ << ") in version " << version_[currentId_ - 1]
+                                                << " has a kernel already, input variates can not be regenerated.");
     currentState_ = ComputeState::createVariates;
     std::vector<std::vector<std::size_t>> resultIds(dim, std::vector<std::size_t>(steps));
     std::uint32_t currentSeed = seed;
@@ -542,7 +548,6 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
 
     switch (randomVariableOpCode) {
     case RandomVariableOpCode::None: {
-        ssaLine += argStr[0];
         break;
     }
     case RandomVariableOpCode::Add: {
@@ -628,6 +633,10 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
 void OpenClContext::freeVariable(const std::size_t id) {
     QL_REQUIRE(currentState_ == ComputeState::calc,
                "OpenClContext::free(): not in state calc (" << static_cast<int>(currentState_) << ")");
+    QL_REQUIRE(currentId_ > 0, "OpenClContext::freeVariable(): current id is not set");
+    QL_REQUIRE(!hasKernel_[currentId_ - 1], "OpenClContext::freeVariable(): id ("
+                                                << currentId_ << ") in version " << version_[currentId_ - 1]
+                                                << " has a kernel already, variables can not be freed.");
 
     // we do not free input variables, only variables that were added during the calc
 
@@ -640,6 +649,9 @@ void OpenClContext::freeVariable(const std::size_t id) {
 void OpenClContext::declareOutputVariable(const std::size_t id) {
     QL_REQUIRE(currentState_ != ComputeState::idle, "OpenClContext::declareOutputVariable(): state is idle");
     QL_REQUIRE(currentId_ > 0, "OpenClContext::declareOutputVariable(): current id not set");
+    QL_REQUIRE(!hasKernel_[currentId_ - 1], "OpenClContext::declareOutputVariable(): id ("
+                                                << currentId_ << ") in version " << version_[currentId_ - 1]
+                                                << " has a kernel already, output variables can not be declared.");
     outputVariables_.push_back(id);
     nOutputVars_[currentId_ - 1]++;
 }
@@ -788,8 +800,13 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output, const Sett
 
         for (std::size_t i = 0; i < nOutputVars_[currentId_ - 1]; ++i) {
             std::size_t offset = i * size_[currentId_ - 1];
-            std::string ssaLine =
-                "  output[" + std::to_string(offset) + "UL + i] = v" + std::to_string(outputVariables_[i]) + ";";
+            std::string output;
+            if (outputVariables_[i] < inputVarOffset_.size())
+                output = "input[" + std::to_string(outputVariables_[i]) + "UL" +
+                         (inputVarIsScalar_[outputVariables_[i]] ? "]" : " + i] ");
+            else
+                output = "v" + std::to_string(outputVariables_[i]);
+            std::string ssaLine = "  output[" + std::to_string(offset) + "UL + i] = " + output + ";";
             kernelSource += ssaLine + "\n";
         }
 
@@ -906,14 +923,14 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output, const Sett
             QL_REQUIRE(err == CL_SUCCESS,
                        "OpenClContext::finalizeCalculation(): writing to output buffer fails: " << errorText(err));
         }
-        // copy from float to double
-        for (std::size_t i = 0; i < output.size(); ++i) {
-            std::copy(outputFloat[i].begin(), outputFloat[i].end(), output[i]);
-        }
         err = clWaitForEvents(outputBufferEvents.size(), outputBufferEvents.empty() ? nullptr : &outputBufferEvents[0]);
         QL_REQUIRE(
             err == CL_SUCCESS,
             "OpenClContext::finalizeCalculation(): wait for output buffer events to finish fails: " << errorText(err));
+        // copy from float to double
+        for (std::size_t i = 0; i < output.size(); ++i) {
+            std::copy(outputFloat[i].begin(), outputFloat[i].end(), output[i]);
+        }
     }
 
     if (debug_) {

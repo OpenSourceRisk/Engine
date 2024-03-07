@@ -134,18 +134,20 @@ public:
         container for that portfolio. Similarly, the parameter \p additionalMargin contains
         the additional margin element for each portfolio.
     */
-    virtual void writeSIMMReport(
-        const std::map<SimmConfiguration::SimmSide, std::map<NettingSetDetails, std::pair<std::string, SimmResults>>>&
-            simmResultsMap,
-        const boost::shared_ptr<ore::data::Report> report, const bool hasNettingSetDetails = false,
-        const std::string& simmResultCcy = "", const std::string& simmCalcCcy = "", const std::string& reportCcy = "",
-        QuantLib::Real fxSpot = 1.0, QuantLib::Real outputThreshold = 0.005);
-    virtual void writeSIMMReport(
-        const std::map<SimmConfiguration::SimmSide, std::map<NettingSetDetails, std::map<std::string, SimmResults>>>&
-            simmResultsMap,
-        const boost::shared_ptr<ore::data::Report> report, const bool hasNettingSetDetails = false,
-        const std::string& simmResultCcy = "", const std::string& simmCalcCcy = "", const std::string& reportCcy = "",
-        const bool isFinalSimm = true, QuantLib::Real fxSpot = 1.0, QuantLib::Real outputThreshold = 0.005);
+    virtual void
+    writeSIMMReport(const std::map<SimmConfiguration::SimmSide,
+                                   std::map<NettingSetDetails, std::pair<std::string, SimmResults>>>& simmResultsMap,
+                    const boost::shared_ptr<ore::data::Report> report, const bool hasNettingSetDetails = false,
+                    const std::string& simmResultCcy = "", const std::string& simmCalcCcyCall = "",
+                    const std::string& simmCalcCcyPost = "", const std::string& reportCcy = "",
+                    QuantLib::Real fxSpot = 1.0, QuantLib::Real outputThreshold = 0.005);
+    virtual void
+    writeSIMMReport(const std::map<SimmConfiguration::SimmSide,
+                                   std::map<NettingSetDetails, std::map<std::string, SimmResults>>>& simmResultsMap,
+                    const boost::shared_ptr<ore::data::Report> report, const bool hasNettingSetDetails = false,
+                    const std::string& simmResultCcy = "", const std::string& simmCalcCcyCall = "",
+                    const std::string& simmCalcCcyPost = "", const std::string& reportCcy = "",
+                    const bool isFinalSimm = true, QuantLib::Real fxSpot = 1.0, QuantLib::Real outputThreshold = 0.005);
 
     //! Write the SIMM data report i.e. the netted CRIF records used in a SIMM calculation
     virtual void writeSIMMData(const ore::analytics::Crif& simmData,
@@ -165,6 +167,25 @@ public:
                                             const std::vector<ore::analytics::RiskFactorKey>& keys,
                                             QuantLib::Size numPaths, const std::vector<QuantLib::Date>& dates,
                                             QuantLib::Size distSteps, ore::data::Report& report);
+
+    virtual void
+    writeHistoricalScenarioDetails(const boost::shared_ptr<ore::analytics::HistoricalScenarioGenerator>& generator,
+                                   ore::data::Report& report);
+
+    virtual void writeStockSplitReport(const boost::shared_ptr<ore::analytics::Scenario>& baseScenario,
+                                       const boost::shared_ptr<ore::analytics::HistoricalScenarioLoader>& hsloader,
+                                       const boost::shared_ptr<ore::data::AdjustmentFactors>& adjFactors,
+                                       const boost::shared_ptr<ore::data::Report>& report);
+
+    void writeHistoricalScenarios(const boost::shared_ptr<HistoricalScenarioLoader>& hsloader,
+                                  const boost::shared_ptr<ore::data::Report>& report);
+
+    void writeHistoricalScenarioDistributions(
+        boost::shared_ptr<HistoricalScenarioGenerator>& hsgen,
+        const boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
+        const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams,
+        boost::shared_ptr<ore::data::Report> histScenDetailsReport, boost::shared_ptr<ore::data::Report> statReport,
+        boost::shared_ptr<ore::data::Report> distReport, QuantLib::Size distSteps = Null<Size>());
 
 protected:
     std::string nullString_;

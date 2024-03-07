@@ -60,6 +60,12 @@ FxDoubleTouchOption::FxDoubleTouchOption(Envelope& env, OptionData option, Barri
 
 void FxDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
+    additionalData_["isdaSubProduct"] = string("Barrier");  
+    additionalData_["isdaTransaction"] = string("");  
+
     const boost::shared_ptr<Market> market = engineFactory->market();
     Date start = ore::data::parseDate(startDate_);
     Calendar cal = ore::data::parseCalendar(calendar_);
@@ -152,7 +158,7 @@ void FxDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFa
     QL_REQUIRE(builder, "No builder found for Swap");
     boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
         boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
-    underlying->setPricingEngine(swapBuilder->engine(parseCurrency(payoffCurrency_)));
+    underlying->setPricingEngine(swapBuilder->engine(parseCurrency(payoffCurrency_), std::string(), std::string()));
 
     bool isLong = (positionType == Position::Long) ? true : false;
 
@@ -180,12 +186,6 @@ void FxDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFa
 
     additionalData_["payoffAmount"] = payoffAmount_;
     additionalData_["payoffCurrency"] = payoffCurrency_;
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
-    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
-    additionalData_["isdaSubProduct"] = string("Barrier");  
-    additionalData_["isdaTransaction"] = string("");  
 }
 
 bool FxDoubleTouchOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {

@@ -82,7 +82,7 @@ void Portfolio::fromXML(XMLNode* node) {
                 // copy id and envelope
                 failedTrade->id() = id;
                 failedTrade->setUnderlyingTradeType(tradeType);
-                failedTrade->envelope() = trade->envelope();
+                failedTrade->setEnvelope(trade->envelope());
                 // and add it to the portfolio
                 add(failedTrade);
                 WLOG("Added trade id " << failedTrade->id() << " type " << failedTrade->tradeType()
@@ -285,9 +285,14 @@ std::pair<boost::shared_ptr<Trade>, bool> buildTrade(boost::shared_ptr<Trade>& t
             boost::shared_ptr<FailedTrade> failed = boost::make_shared<FailedTrade>();
             failed->id() = trade->id();
             failed->setUnderlyingTradeType(trade->tradeType());
-            failed->envelope() = trade->envelope();
+            failed->setEnvelope(trade->envelope());
             failed->build(engineFactory);
             failed->resetPricingStats(trade->getNumberOfPricings(), trade->getCumulativePricingTime());
+            try {
+                failed->setAdditionalData(trade->additionalData());
+            } catch (...) {
+                // We try to get the additional fields, but only if it is possible
+            }
             LOG("Built failed trade with id " << failed->id());
             return std::make_pair(failed, false);
         } else {

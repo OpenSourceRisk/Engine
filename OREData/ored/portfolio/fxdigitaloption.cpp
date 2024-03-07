@@ -33,6 +33,12 @@ namespace data {
 
 void FxDigitalOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
+    additionalData_["isdaSubProduct"] = string("Digital");  
+    additionalData_["isdaTransaction"] = string("");  
+
     // Only European Vanilla supported for now
     QL_REQUIRE(option_.style() == "European", "Option Style unknown: " << option_.style());
     QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of exercise dates");
@@ -102,12 +108,6 @@ void FxDigitalOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
 
     additionalData_["payoffAmount"] = payoffAmount_;
     additionalData_["payoffCurrency"] = payoffCurrency_;
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
-    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
-    additionalData_["isdaSubProduct"] = string("Digital");  
-    additionalData_["isdaTransaction"] = string("");  
 }
 
 void FxDigitalOption::fromXML(XMLNode* node) {

@@ -17,17 +17,42 @@
 */
 
 #include <orea/engine/historicalsimulationvar.hpp>
+#include <orea/engine/historicalpnlgenerator.hpp>
+#include <orea/cube/inmemorycube.hpp>
+#include <ored/utilities/to_string.hpp>
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics.hpp>
 #include <boost/accumulators/statistics/tail_quantile.hpp>
 
 using namespace boost::accumulators;
+using namespace ore::data;
+using namespace QuantLib;
 
 namespace ore {
 namespace analytics {
 
-QuantLib::Real HistoricalSimulationVarCalculator::var(QuantLib::Real confidence, const bool isCall, 
+HistoricalSimulationVarReport::HistoricalSimulationVarReport(
+    const std::string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+    const string& portfolioFilter, const vector<Real>& p, boost::optional<TimePeriod> period,
+    const ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen, std::unique_ptr<FullRevalArgs> fullRevalArgs,
+    const bool breakdown)
+    : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, hisScenGen, nullptr, std::move(fullRevalArgs)) {
+    fullReval_ = true;
+}
+
+void HistoricalSimulationVarReport::createVarCalculator() {
+    varCalculator_ = QuantLib::ext::make_shared<HistoricalSimulationVarCalculator>(pnls_);
+}
+
+void HistoricalSimulationVarReport::handleFullRevalResults(const ext::shared_ptr<MarketRiskReport::Reports>& reports,
+                                                           const ext::shared_ptr<MarketRiskGroup>& riskGroup,
+                                                           const ext::shared_ptr<TradeGroup>& tradeGroup) {
+    pnls_ = histPnlGen_->pnl(period_.get(), tradeIdIdxPairs_);
+    writeVarResults(reports, riskGroup, tradeGroup);
+}
+
+Real HistoricalSimulationVarCalculator::var(Real confidence, const bool isCall, 
     const set<pair<string, Size>>& tradeIds) {
 
     // Use boost to calculate the quantile based on confidence_

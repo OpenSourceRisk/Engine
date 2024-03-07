@@ -191,7 +191,6 @@
 #include <qle/instruments/crossccyswap.hpp>
 #include <qle/instruments/currencyswap.hpp>
 #include <qle/instruments/deposit.hpp>
-#include <qle/instruments/doubleoibasisswap.hpp>
 #include <qle/instruments/equityforward.hpp>
 #include <qle/instruments/fixedbmaswap.hpp>
 #include <qle/instruments/forwardbond.hpp>
@@ -206,7 +205,6 @@
 #include <qle/instruments/multiccycompositeinstrument.hpp>
 #include <qle/instruments/multilegoption.hpp>
 #include <qle/instruments/nullinstrument.hpp>
-#include <qle/instruments/oibasisswap.hpp>
 #include <qle/instruments/oiccbasisswap.hpp>
 #include <qle/instruments/payment.hpp>
 #include <qle/instruments/rebatedexercise.hpp>
@@ -369,6 +367,7 @@
 #include <qle/pricingengines/blackbondoptionengine.hpp>
 #include <qle/pricingengines/blackcdsoptionengine.hpp>
 #include <qle/pricingengines/blackindexcdsoptionengine.hpp>
+#include <qle/pricingengines/blackmultilegoptionengine.hpp>
 #include <qle/pricingengines/cboengine.hpp>
 #include <qle/pricingengines/cbomcengine.hpp>
 #include <qle/pricingengines/commodityapoengine.hpp>
@@ -471,7 +470,6 @@
 #include <qle/termstructures/datedstrippedoptionletadapter.hpp>
 #include <qle/termstructures/datedstrippedoptionletbase.hpp>
 #include <qle/termstructures/discountratiomodifiedcurve.hpp>
-#include <qle/termstructures/doubleoibasisswaphelper.hpp>
 #include <qle/termstructures/dynamicblackvoltermstructure.hpp>
 #include <qle/termstructures/dynamiccpivolatilitystructure.hpp>
 #include <qle/termstructures/dynamicoptionletvolatilitystructure.hpp>
@@ -506,7 +504,6 @@
 #include <qle/termstructures/iterativebootstrap.hpp>
 #include <qle/termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp>
 #include <qle/termstructures/multisectiondefaultcurve.hpp>
-#include <qle/termstructures/oibasisswaphelper.hpp>
 #include <qle/termstructures/oiccbasisswaphelper.hpp>
 #include <qle/termstructures/oiscapfloorhelper.hpp>
 #include <qle/termstructures/oisratehelper.hpp>

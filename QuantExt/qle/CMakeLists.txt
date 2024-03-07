@@ -122,7 +122,6 @@ instruments/crossccyfixfloatswap.cpp
 instruments/crossccyswap.cpp
 instruments/currencyswap.cpp
 instruments/deposit.cpp
-instruments/doubleoibasisswap.cpp
 instruments/equityforward.cpp
 instruments/fixedbmaswap.cpp
 instruments/forwardbond.cpp
@@ -136,7 +135,6 @@ instruments/makecds.cpp
 instruments/makeoiscapfloor.cpp
 instruments/multiccycompositeinstrument.cpp
 instruments/multilegoption.cpp
-instruments/oibasisswap.cpp
 instruments/oiccbasisswap.cpp
 instruments/payment.cpp
 instruments/rebatedexercise.cpp
@@ -249,6 +247,7 @@ pricingengines/binomialconvertibleengine.cpp
 pricingengines/blackbondoptionengine.cpp
 pricingengines/blackcdsoptionengine.cpp
 pricingengines/blackindexcdsoptionengine.cpp
+pricingengines/blackmultilegoptionengine.cpp
 pricingengines/cboengine.cpp
 pricingengines/cbomcengine.cpp
 pricingengines/commodityapoengine.cpp
@@ -334,7 +333,6 @@ termstructures/crosscurrencypricetermstructure.cpp
 termstructures/datedstrippedoptionlet.cpp
 termstructures/datedstrippedoptionletadapter.cpp
 termstructures/discountratiomodifiedcurve.cpp
-termstructures/doubleoibasisswaphelper.cpp
 termstructures/dynamiccpivolatilitystructure.cpp
 termstructures/dynamicoptionletvolatilitystructure.cpp
 termstructures/dynamicswaptionvolmatrix.cpp
@@ -352,7 +350,6 @@ termstructures/iborfallbackcurve.cpp
 termstructures/immfraratehelper.cpp
 termstructures/inflation/constantcpivolatility.cpp
 termstructures/inflation/cpivolatilitystructure.cpp
-termstructures/oibasisswaphelper.cpp
 termstructures/oiccbasisswaphelper.cpp
 termstructures/oiscapfloorhelper.cpp
 termstructures/oisratehelper.cpp
@@ -582,7 +579,6 @@ instruments/crossccyfixfloatswap.hpp
 instruments/crossccyswap.hpp
 instruments/currencyswap.hpp
 instruments/deposit.hpp
-instruments/doubleoibasisswap.hpp
 instruments/equityforward.hpp
 instruments/fixedbmaswap.hpp
 instruments/forwardbond.hpp
@@ -597,7 +593,6 @@ instruments/makeoiscapfloor.hpp
 instruments/multiccycompositeinstrument.hpp
 instruments/multilegoption.hpp
 instruments/nullinstrument.hpp
-instruments/oibasisswap.hpp
 instruments/oiccbasisswap.hpp
 instruments/payment.hpp
 instruments/rebatedexercise.hpp
@@ -760,6 +755,7 @@ pricingengines/binomialconvertibleengine.hpp
 pricingengines/blackbondoptionengine.hpp
 pricingengines/blackcdsoptionengine.hpp
 pricingengines/blackindexcdsoptionengine.hpp
+pricingengines/blackmultilegoptionengine.hpp
 pricingengines/cboengine.hpp
 pricingengines/cbomcengine.hpp
 pricingengines/commodityapoengine.hpp
@@ -862,7 +858,6 @@ termstructures/datedstrippedoptionlet.hpp
 termstructures/datedstrippedoptionletadapter.hpp
 termstructures/datedstrippedoptionletbase.hpp
 termstructures/discountratiomodifiedcurve.hpp
-termstructures/doubleoibasisswaphelper.hpp
 termstructures/dynamicblackvoltermstructure.hpp
 termstructures/dynamiccpivolatilitystructure.hpp
 termstructures/dynamicoptionletvolatilitystructure.hpp
@@ -897,7 +892,6 @@ termstructures/interpolatedyoycapfloortermpricesurface.hpp
 termstructures/iterativebootstrap.hpp
 termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp
 termstructures/multisectiondefaultcurve.hpp
-termstructures/oibasisswaphelper.hpp
 termstructures/oiccbasisswaphelper.hpp
 termstructures/oiscapfloorhelper.hpp
 termstructures/oisratehelper.hpp

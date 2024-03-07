@@ -29,12 +29,14 @@
 #include <orea/engine/sensitivitystream.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
+#include <orea/scenario/historicalscenarioreader.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/stressscenariodata.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/engine/sensitivitystream.hpp>
+#include <orea/scenario/historicalscenariogenerator.hpp>
 #include <orea/simm/crifloader.hpp>
 #include <orea/simm/simmcalibration.hpp>
 #include <orea/simm/crif.hpp>
@@ -52,6 +54,7 @@
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <boost/filesystem/path.hpp>
+#include <filesystem>
 
 namespace ore {
 namespace analytics {
@@ -91,7 +94,7 @@ public:
     void setTodaysMarketParams(const std::string& xml);
     void setTodaysMarketParamsFromFile(const std::string& fileName);
     void setPortfolio(const std::string& xml); 
-    void setPortfolioFromFile(const std::string& fileNameString, const std::string& inputPath); 
+    void setPortfolioFromFile(const std::string& fileNameString, const std::filesystem::path& inputPath); 
     void setMarketConfigs(const std::map<std::string, std::string>& m);
     void setThreads(int i) { nThreads_ = i; }
     void setEntireMarket(bool b) { entireMarket_ = b; }
@@ -105,6 +108,7 @@ public:
     void setCsvCommentCharacter(const char& c) { csvCommentCharacter_ = c; }
     void setDryRun(bool b) { dryRun_ = b; }
     void setMporDays(Size s) { mporDays_ = s; }
+    void setMporOverlappingPeriods(bool b) { mporOverlappingPeriods_ = b; }
     void setMporDate(const QuantLib::Date& d) { mporDate_ = d; }
     void setMporCalendar(const std::string& s); 
     void setMporForward(bool b) { mporForward_ = b; }
@@ -169,7 +173,11 @@ public:
     void setCovarianceDataFromFile(const std::string& fileName);
     void setCovarianceDataFromBuffer(const std::string& xml);
     void setSensitivityStreamFromFile(const std::string& fileName);
+    void setBenchmarkVarPeriod(const std::string& period);
+    void setHistoricalScenarioReader(const std::string& fileName);
     void setSensitivityStreamFromBuffer(const std::string& buffer);
+    void setHistVarSimMarketParamsFromFile(const std::string& fileName);
+    void setOutputHistoricalScenarios(const bool b) { outputHistoricalScenarios_ = b; }
 
     // Setters for exposure simulation
     void setSalvageCorrelationMatrix(bool b) { salvageCorrelationMatrix_ = b; }
@@ -307,7 +315,8 @@ public:
         simmCalibrationData_ = s;
     }
     void setSimmCalibrationDataFromFile(const std::string& fileName);
-    void setSimmCalculationCurrency(const std::string& s) { simmCalculationCurrency_ = s; }
+    void setSimmCalculationCurrencyCall(const std::string& s) { simmCalculationCurrencyCall_ = s; }
+    void setSimmCalculationCurrencyPost(const std::string& s) { simmCalculationCurrencyPost_ = s; }
     void setSimmResultCurrency(const std::string& s) { simmResultCurrency_ = s; }
     void setSimmReportingCurrency(const std::string& s) { simmReportingCurrency_ = s; }
     void setEnforceIMRegulations(bool b) { enforceIMRegulations_= b; }
@@ -392,6 +401,7 @@ public:
         } else
             return mporCalendar_;
     }
+    bool mporOverlappingPeriods() { return mporOverlappingPeriods_; }
     bool mporForward() { return mporForward_; }
 
     /***************************
@@ -454,6 +464,10 @@ public:
     long mcVarSeed() { return mcVarSeed_; }
     const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>& covarianceData() { return covarianceData_; }
     const boost::shared_ptr<SensitivityStream>& sensitivityStream() { return sensitivityStream_; }
+    std::string benchmarkVarPeriod() const { return benchmarkVarPeriod_; }
+    QuantLib::ext::shared_ptr<HistoricalScenarioReader> historicalScenarioReader() const { return historicalScenarioReader_;};
+    const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& histVarSimMarketParams() { return histVarSimMarketParams_; }
+    bool outputHistoricalScenarios() { return outputHistoricalScenarios_; }
     
     /*********************************
      * Getters for exposure simulation 
@@ -569,7 +583,8 @@ public:
     const boost::shared_ptr<ore::analytics::SimmBasicNameMapper>& simmNameMapper() { return simmNameMapper_; }
     const boost::shared_ptr<ore::analytics::SimmBucketMapper>& simmBucketMapper() { return simmBucketMapper_; }
     const boost::shared_ptr<ore::analytics::SimmCalibrationData>& simmCalibrationData() { return simmCalibrationData_; }
-    const std::string& simmCalculationCurrency() { return simmCalculationCurrency_; }
+    const std::string& simmCalculationCurrencyCall() { return simmCalculationCurrencyCall_; }
+    const std::string& simmCalculationCurrencyPost() { return simmCalculationCurrencyPost_; }
     const std::string& simmResultCurrency() { return simmResultCurrency_; }
     const std::string& simmReportingCurrency() { return simmReportingCurrency_; }
     bool enforceIMRegulations() { return enforceIMRegulations_; }
@@ -608,8 +623,8 @@ public:
      *************************************/
     const std::set<std::string>& analytics() { return analytics_; }
 
-    virtual void loadParameters() {}
-    virtual void writeOutParameters() {}
+    virtual void loadParameters(){}
+    virtual void writeOutParameters(){}
 
 protected:
 
@@ -662,6 +677,7 @@ protected:
     bool dryRun_ = false;
     QuantLib::Date mporDate_;
     QuantLib::Size mporDays_ = 10;
+    bool mporOverlappingPeriods_ = true;
     QuantLib::Calendar mporCalendar_;
     bool mporForward_ = true;
 
@@ -719,11 +735,16 @@ protected:
     bool varBreakDown_ = false;
     std::string portfolioFilter_;
     // Delta, DeltaGammaNormal, MonteCarlo, Cornish-Fisher, Saddlepoint 
-    std::string varMethod_;
-    Size mcVarSamples_ = 0;
-    long mcVarSeed_ = 0;
+    std::string varMethod_ = "DeltaGammaNormal";
+    Size mcVarSamples_ = 1000000;
+    long mcVarSeed_ = 42;
     std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covarianceData_;
     boost::shared_ptr<SensitivityStream> sensitivityStream_;
+    std::string benchmarkVarPeriod_;
+    QuantLib::ext::shared_ptr<HistoricalScenarioReader> historicalScenarioReader_;
+    boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> histVarSimMarketParams_;
+    std::string baseScenarioLoc_;
+    bool outputHistoricalScenarios_ = false;
     
     /*******************
      * EXPOSURE analytic
@@ -825,7 +846,8 @@ protected:
     boost::shared_ptr<ore::analytics::SimmBasicNameMapper> simmNameMapper_;
     boost::shared_ptr<ore::analytics::SimmBucketMapper> simmBucketMapper_;
     boost::shared_ptr<ore::analytics::SimmCalibrationData> simmCalibrationData_;
-    std::string simmCalculationCurrency_ = "";
+    std::string simmCalculationCurrencyCall_ = "";
+    std::string simmCalculationCurrencyPost_ = "";
     std::string simmResultCurrency_ = "";
     std::string simmReportingCurrency_ = "";
     bool enforceIMRegulations_ = false;
@@ -861,6 +883,7 @@ inline const std::string& InputParameters::marketConfig(const std::string& conte
     auto it = marketConfigs_.find(context);
     return (it != marketConfigs_.end() ? it->second : Market::defaultConfiguration);
 }
+std::vector<std::string> getFileNames(const std::string& fileString, const std::filesystem::path& path);
     
 //! Traditional ORE input via ore.xml and various files, output into files
 class OutputParameters {

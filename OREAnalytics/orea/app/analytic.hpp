@@ -202,10 +202,11 @@ public:
 protected:
     QuantLib::ext::shared_ptr<InputParameters> inputs_;
 
-private:
-    Analytic* analytic_;
     //! label for logging purposes primarily
     std::string label_;
+
+private:
+    Analytic* analytic_;
     bool generateAdditionalResults_ = false;
 };
 

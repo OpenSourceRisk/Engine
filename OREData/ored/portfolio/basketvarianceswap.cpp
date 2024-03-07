@@ -142,27 +142,28 @@ void BasketVarianceSwap::build(const boost::shared_ptr<EngineFactory>& factory) 
     // build trade
 
     ScriptedTrade::build(factory);
+}
+
+void BasketVarianceSwap::setIsdaTaxonomyFields() {
+    ScriptedTrade::setIsdaTaxonomyFields();
 
     // ISDA taxonomy
     // asset class set in the base class already
     std::string assetClass = boost::any_cast<std::string>(additionalData_["isdaAssetClass"]);
     if (assetClass == "Equity") {
-        additionalData_["isdaBaseProduct"] = string("Other");
-        additionalData_["isdaSubProduct"] =  string("Parameter Return Variance");  
-    }
-    else if (assetClass == "Foreign Exchange") {
-        additionalData_["isdaBaseProduct"] =  string("Complex Exotic");
-        additionalData_["isdaSubProduct"] =  string("Generic");  
-    }
-    else if (assetClass == "Commodity") {
+        additionalData_["isdaBaseProduct"] = string("Swap");
+        additionalData_["isdaSubProduct"] = string("Parameter Return Variance");
+    } else if (assetClass == "Foreign Exchange") {
+        additionalData_["isdaBaseProduct"] = string("Complex Exotic");
+        additionalData_["isdaSubProduct"] = string("Generic");
+    } else if (assetClass == "Commodity") {
         // isda taxonomy missing for this class, using the same as equity
-        additionalData_["isdaBaseProduct"] =  string("Other");
-        additionalData_["isdaSubProduct"] =  string("Parameter Return Variance");  
-    }
-    else {
+        additionalData_["isdaBaseProduct"] = string("Other");
+        additionalData_["isdaSubProduct"] = string("Parameter Return Variance");
+    } else {
         WLOG("ISDA taxonomy incomplete for trade " << id());
-    }        
-    additionalData_["isdaTransaction"] = string("Basket");  
+    }
+    additionalData_["isdaTransaction"] = string("Basket");
 }
 
 void BasketVarianceSwap::initIndices() {

@@ -29,6 +29,13 @@ namespace ore {
 namespace data {
 
 void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Interest Rate");
+    additionalData_["isdaBaseProduct"] = string("FRA");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");
+
     const boost::shared_ptr<Market> market = engineFactory->market();
 
     Date startDate = parseDate(startDate_);
@@ -62,16 +69,10 @@ void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineF
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("Swap");
     boost::shared_ptr<SwapEngineBuilderBase> swapBuilder = boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
     QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
-    swap->setPricingEngine(swapBuilder->engine(npvCcy));
+    swap->setPricingEngine(swapBuilder->engine(npvCcy, std::string(), std::string()));
     setSensitivityTemplate(*swapBuilder);
     instrument_.reset(new VanillaInstrument(swap));
     maturity_ = endDate;
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Interest Rate");
-    additionalData_["isdaBaseProduct"] = string("FRA");
-    additionalData_["isdaSubProduct"] = string("");
-    additionalData_["isdaTransaction"] = string("");
 }
 
 void ForwardRateAgreement::fromXML(XMLNode* node) {

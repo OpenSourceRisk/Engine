@@ -45,6 +45,12 @@ namespace data {
 
 void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
+    additionalData_["isdaSubProduct"] = string("Barrier");  
+    additionalData_["isdaTransaction"] = string("");  
+
     Date today = Settings::instance().evaluationDate();
     const boost::shared_ptr<Market> market = engineFactory->market();
     Date start = ore::data::parseDate(startDate_);
@@ -143,8 +149,10 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
 
         Date d = start;
         while (d < today && !knockedIn && !knockedOut) {
-            Real fixing = fxIndex->pastFixing(d);
-
+            Real fixing = Null<Real>();
+            if (fxIndex->fixingCalendar().isBusinessDay(d)) {
+                 fixing = fxIndex->pastFixing(d);
+            } 
             if (fixing == 0.0 || fixing == Null<Real>()) {
                 ALOG("Got invalid FX fixing for index " << fxIndex_ << " on " << d
                                                         << "Skipping this date, assuming no trigger");
@@ -281,13 +289,6 @@ void FxKIKOBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFa
     additionalData_["boughtCurrency"] = boughtCurrency_;
     additionalData_["soldAmount"] = soldAmount_;
     additionalData_["soldCurrency"] = soldCurrency_;
-
-    // ISDA taxonomy
-   // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
-    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
-    additionalData_["isdaSubProduct"] = string("Barrier");  
-    additionalData_["isdaTransaction"] = string("");  
 }
 
 bool FxKIKOBarrierOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {

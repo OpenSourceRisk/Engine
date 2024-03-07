@@ -138,11 +138,11 @@ void SegmentIDGetter::visit(AverageOISYieldCurveSegment& s) {
 }
 
 void SegmentIDGetter::visit(TenorBasisYieldCurveSegment& s) {
-    string aCurveID = s.shortProjectionCurveID();
+    string aCurveID = s.receiveProjectionCurveID();
     if (curveID_ != aCurveID && !aCurveID.empty()) {
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(aCurveID);
     }
-    aCurveID = s.longProjectionCurveID();
+    aCurveID = s.payProjectionCurveID();
     if (curveID_ != aCurveID && !aCurveID.empty()) {
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(aCurveID);
     }
@@ -559,25 +559,40 @@ void AverageOISYieldCurveSegment::accept(AcyclicVisitor& v) {
 
 TenorBasisYieldCurveSegment::TenorBasisYieldCurveSegment(const string& typeID, const string& conventionsID,
                                                          const vector<string>& quotes,
-                                                         const string& shortProjectionCurveID,
-                                                         const string& longProjectionCurveID)
-    : YieldCurveSegment(typeID, conventionsID, quotes), shortProjectionCurveID_(shortProjectionCurveID),
-      longProjectionCurveID_(longProjectionCurveID) {}
+                                                         const string& receiveProjectionCurveID,
+                                                         const string& payProjectionCurveID)
+    : YieldCurveSegment(typeID, conventionsID, quotes), receiveProjectionCurveID_(receiveProjectionCurveID),
+      payProjectionCurveID_(payProjectionCurveID) {}
 
 void TenorBasisYieldCurveSegment::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "TenorBasis");
     YieldCurveSegment::fromXML(node);
-    shortProjectionCurveID_ = XMLUtils::getChildValue(node, "ProjectionCurveShort", false);
-    longProjectionCurveID_ = XMLUtils::getChildValue(node, "ProjectionCurveLong", false);
+    receiveProjectionCurveID_ = XMLUtils::getChildValue(node, "ProjectionCurveReceive", false);
+    payProjectionCurveID_ = XMLUtils::getChildValue(node, "ProjectionCurvePay", false);
+
+    // handle deprecated fields...
+    XMLNode* projectionCurveShort = XMLUtils::getChildNode(node, "ProjectionCurveShort");
+    if (projectionCurveShort) {
+        ALOG("TenorBasisYieldCurveSegment: ProjectionCurveShort is deprecated, fill empty receiveProjectionCurveID");
+        if (receiveProjectionCurveID_.empty())
+            receiveProjectionCurveID_ = XMLUtils::getNodeValue(projectionCurveShort);
+    }
+
+    XMLNode* projectionCurveLong = XMLUtils::getChildNode(node, "ProjectionCurveLong");
+    if (projectionCurveLong) {
+        ALOG("TenorBasisYieldCurveSegment: projectionCurveLong is deprecated, fill empty payProjectionCurveID");
+        if (payProjectionCurveID_.empty())
+            payProjectionCurveID_ = XMLUtils::getNodeValue(projectionCurveLong);
+    }
 }
 
 XMLNode* TenorBasisYieldCurveSegment::toXML(XMLDocument& doc) {
     XMLNode* node = YieldCurveSegment::toXML(doc);
     XMLUtils::setNodeName(doc, node, "TenorBasis");
-    if (!longProjectionCurveID_.empty())
-        XMLUtils::addChild(doc, node, "ProjectionCurveLong", longProjectionCurveID_);
-    if (!shortProjectionCurveID_.empty())
-        XMLUtils::addChild(doc, node, "ProjectionCurveShort", shortProjectionCurveID_);
+    if (!payProjectionCurveID_.empty())
+        XMLUtils::addChild(doc, node, "ProjectionCurvePay", payProjectionCurveID_);
+    if (!receiveProjectionCurveID_.empty())
+        XMLUtils::addChild(doc, node, "ProjectionCurveReceive", receiveProjectionCurveID_);
     return node;
 }
 

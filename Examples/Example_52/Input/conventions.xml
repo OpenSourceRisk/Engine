@@ -337,28 +337,28 @@
   </TenorBasisTwoSwap>
   <TenorBasisSwap>
     <Id>USD-LIBOR-3M-12M-BASIS</Id>
-    <LongIndex>USD-LIBOR-12M</LongIndex>
-    <ShortIndex>USD-LIBOR-3M</ShortIndex>
-    <ShortPayTenor>12M</ShortPayTenor>
-    <SpreadOnShort>true</SpreadOnShort>
+    <PayIndex>USD-LIBOR-12M</PayIndex>
+    <ReceiveIndex>USD-LIBOR-3M</ReceiveIndex>
+    <ReceiveFrequency>12M</ReceiveFrequency>
+    <SpreadOnRec>true</SpreadOnRec>
     <IncludeSpread>false</IncludeSpread>
     <SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
   </TenorBasisSwap>
   <TenorBasisSwap>
     <Id>USD-LIBOR-3M-6M-BASIS</Id>
-    <LongIndex>USD-LIBOR-6M</LongIndex>
-    <ShortIndex>USD-LIBOR-3M</ShortIndex>
-    <ShortPayTenor>6M</ShortPayTenor>
-    <SpreadOnShort>true</SpreadOnShort>
+    <PayIndex>USD-LIBOR-6M</PayIndex>
+    <ReceiveIndex>USD-LIBOR-3M</ReceiveIndex>
+    <ReceiveFrequency>6M</ReceiveFrequency>
+    <SpreadOnRec>true</SpreadOnRec>
     <IncludeSpread>false</IncludeSpread>
     <SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
   </TenorBasisSwap>
   <TenorBasisSwap>
     <Id>USD-LIBOR-1M-3M-BASIS</Id>
-    <LongIndex>USD-LIBOR-3M</LongIndex>
-    <ShortIndex>USD-LIBOR-1M</ShortIndex>
-    <ShortPayTenor>3M</ShortPayTenor>
-    <SpreadOnShort>true</SpreadOnShort>
+    <PayIndex>USD-LIBOR-3M</PayIndex>
+    <ReceiveIndex>USD-LIBOR-1M</ReceiveIndex>
+    <ReceiveFrequency>3M</ReceiveFrequency>
+    <SpreadOnRec>true</SpreadOnRec>
     <IncludeSpread>false</IncludeSpread>
     <SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
   </TenorBasisSwap>

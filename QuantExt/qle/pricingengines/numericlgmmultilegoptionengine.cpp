@@ -32,6 +32,8 @@
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/payoff.hpp>
 
+#include <boost/algorithm/string/join.hpp>
+
 namespace QuantExt {
 
 using namespace QuantLib;
@@ -76,7 +78,7 @@ NumericLgmMultiLegOptionEngineBase::buildCashflowInfo(const Size i, const Size j
     CashflowInfo info;
     auto const& ts = solver_->model()->parametrization()->termStructure();
     auto const& c = legs_[i][j];
-    Real payrec = payer_[i];
+    Real payrec = payer_[i] ? -1.0 : 1.0;
 
     Real T = solver_->model()->parametrization()->termStructure()->timeFromReference(c->date());
 
@@ -269,42 +271,96 @@ NumericLgmMultiLegOptionEngineBase::NumericLgmMultiLegOptionEngineBase(
     : solver_(solver), discountCurve_(discountCurve),
       americanExerciseTimeStepsPerYear_(americanExerciseTimeStepsPerYear) {}
 
-void NumericLgmMultiLegOptionEngineBase::calculate() const {
+bool NumericLgmMultiLegOptionEngineBase::instrumentIsHandled(const MultiLegOption& m,
+                                                             std::vector<std::string>& messages) {
+    return instrumentIsHandled(m.legs(), m.payer(), m.currency(), m.exercise(), m.settlementType(),
+                               m.settlementMethod(), messages);
+}
 
-    /* TODO ParYieldCurve cash-settled swaptions are priced as if CollateralizedCashPrice, this can be refined. */
+bool NumericLgmMultiLegOptionEngineBase::instrumentIsHandled(
+    const std::vector<Leg>& legs, const std::vector<bool>& payer, const std::vector<Currency>& currency,
+    const boost::shared_ptr<Exercise>& exercise, const Settlement::Type& settlementType,
+    const Settlement::Method& settlementMethod, std::vector<std::string>& messages) {
 
-    /* The reference date of the valuation. Exercise dates <= refDate are treated as if not present, i.e. it is
-       assumed that these rights were not exercised.
-       TODO we should add exercise data to indicate past exercises and value outstanding cash settlement amounts,
-       or - possibly (?) - the physical underlying in that we exercised into? Or would that be a separate trade? */
+    bool isHandled = true;
 
-    auto const& ts = solver_->model()->parametrization()->termStructure();
-    Date refDate = ts->referenceDate();
+    // is there a unique pay currency and all interest rate indices are in this same currency?
 
-    /* we might have to handle an exercise with rebate, init a variable for that (null if not applicable) */
-
-    auto rebatedExercise = boost::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_);
-
-    /* Check that the engine can handle the instrument, i.e. that there is a unique pay currency and all interest rate
-       indices are in this same currency. */
-
-    for (Size i = 1; i < currency_.size(); ++i) {
-        QL_REQUIRE(currency_[i] == currency_[0],
-                   "NumericLgmMultilegOptionEngine: can only handle single currency underlyings, got at least two pay "
-                   "currencies: "
-                       << currency_[0] << "; " << currency_[i]);
+    for (Size i = 1; i < currency.size(); ++i) {
+        if (currency[0] != currency[i]) {
+            messages.push_back("NumericLgmMultilegOptionEngine: can only handle single currency underlyings, got " +
+                               currency[0].code() + " on leg #1 and " + currency[i].code() + " on leg #" +
+                               std::to_string(i + 1));
+            isHandled = false;
+        }
     }
 
-    for (Size i = 0; i < legs_.size(); ++i) {
-        for (Size j = 0; j < legs_[i].size(); ++j) {
-            if (auto cpn = boost::dynamic_pointer_cast<FloatingRateCoupon>(legs_[i][j])) {
-                QL_REQUIRE(cpn->index()->currency() == currency_[0],
-                           "NumericLgmMultilegOptionEngine: can only handle indices ("
-                               << cpn->index()->name() << ") with same currency as unqiue pay currency ("
-                               << currency_[0]);
+    for (Size i = 0; i < legs.size(); ++i) {
+        for (Size j = 0; j < legs[i].size(); ++j) {
+            if (auto cpn = boost::dynamic_pointer_cast<FloatingRateCoupon>(legs[i][j])) {
+                if (cpn->index()->currency() != currency[0]) {
+                    messages.push_back("NumericLgmMultilegOptionEngine: can only handle indices (" +
+                                       cpn->index()->name() + ") with same currency as unqiue pay currency (" +
+                                       currency[0].code());
+                }
             }
         }
     }
+
+    // check coupon types
+
+    for (Size i = 0; i < legs.size(); ++i) {
+        for (Size j = 0; j < legs[i].size(); ++j) {
+            if (auto c = boost::dynamic_pointer_cast<Coupon>(legs[i][j])) {
+                if (!(boost::dynamic_pointer_cast<IborCoupon>(c) || boost::dynamic_pointer_cast<FixedRateCoupon>(c) ||
+                      boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c) ||
+                      boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c) ||
+                      boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(c) ||
+                      boost::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCoupon>(c) ||
+                      boost::dynamic_pointer_cast<QuantExt::CappedFlooredAverageONIndexedCoupon>(c) ||
+                      boost::dynamic_pointer_cast<QuantExt::CappedFlooredAverageBMACoupon>(c) ||
+                      boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(c) ||
+                      (boost::dynamic_pointer_cast<QuantLib::CappedFlooredCoupon>(c) &&
+                       boost::dynamic_pointer_cast<QuantLib::IborCoupon>(
+                           boost::dynamic_pointer_cast<QuantLib::CappedFlooredCoupon>(c)->underlying())))) {
+                    messages.push_back(
+                        "NumericLgmMultilegOptionEngine: coupon type not handled, supported coupon types: Fix, "
+                        "(capfloored) Ibor, (capfloored) ON comp, (capfloored) ON avg, BMA/SIFMA, subperiod. leg = " +
+                        std::to_string(i) + " cf = " + std::to_string(j));
+                    isHandled = false;
+                }
+            }
+        }
+    }
+
+    return isHandled;
+}
+
+void NumericLgmMultiLegOptionEngineBase::calculate() const {
+
+    std::vector<std::string> messages;
+    QL_REQUIRE(
+        instrumentIsHandled(legs_, payer_, currency_, exercise_, settlementType_, settlementMethod_, messages),
+        "NumericLgmMultiLegOptionEngineBase::calculate(): instrument is not handled: " << boost::join(messages, ", "));
+
+    // handle empty exercise
+
+    if (exercise_ == nullptr) {
+        npv_ = 0.0;
+        for (Size i = 0; i < legs_.size(); ++i) {
+            for (Size j = 0; j < legs_[i].size(); ++j) {
+                npv_ += legs_[i][j]->amount() * discountCurve_->discount(legs_[i][j]->date());
+            }
+        }
+        underlyingNpv_ = npv_;
+        return;
+    }
+
+    // we have a non-empty exercise
+
+    auto rebatedExercise = boost::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_);
+    auto const& ts = solver_->model()->parametrization()->termStructure();
+    Date refDate = ts->referenceDate();
 
     /* Build the cashflow info */
 
@@ -529,7 +585,10 @@ NumericLgmSwaptionEngine::NumericLgmSwaptionEngine(const boost::shared_ptr<Linea
 
 void NumericLgmSwaptionEngine::calculate() const {
     legs_ = arguments_.legs;
-    payer_ = arguments_.payer;
+    payer_.resize(arguments_.payer.size());
+    for (Size i = 0; i < arguments_.payer.size(); ++i) {
+        payer_[i] = QuantLib::close_enough(arguments_.payer[i], -1.0);
+    }
     currency_ = std::vector<Currency>(legs_.size(), arguments_.swap->iborIndex()->currency());
     exercise_ = arguments_.exercise;
     settlementType_ = arguments_.settlementType;
@@ -564,7 +623,10 @@ NumericLgmNonstandardSwaptionEngine::NumericLgmNonstandardSwaptionEngine(
 
 void NumericLgmNonstandardSwaptionEngine::calculate() const {
     legs_ = arguments_.legs;
-    payer_ = arguments_.payer;
+    payer_.resize(arguments_.payer.size());
+    for (Size i = 0; i < arguments_.payer.size(); ++i) {
+        payer_[i] = QuantLib::close_enough(arguments_.payer[i], -1.0);
+    }
     currency_ = std::vector<Currency>(legs_.size(), arguments_.swap->iborIndex()->currency());
     exercise_ = arguments_.exercise;
     settlementType_ = arguments_.settlementType;
