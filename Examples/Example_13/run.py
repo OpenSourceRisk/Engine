@@ -27,6 +27,12 @@ oreex.save_output_to_subdir(
     "case_A_eur_swap",
     ["log_0.txt", "dim_evolution_0.csv", "dim_regression_0.csv"]
 )
+oreex.print_headline("Run ORE (case A (swap eur), flat extrapolation of t0 IM)")
+oreex.run("Input/ore_A4.xml")
+oreex.save_output_to_subdir(
+    "case_A_eur_swap",
+    ["log_4.txt", "dim_evolution_4.csv", "exposure_nettingset_CPTY_A.csv"]
+)
 
 oreex.print_headline("Plot results")
 
