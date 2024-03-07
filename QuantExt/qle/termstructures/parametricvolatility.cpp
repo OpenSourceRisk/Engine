@@ -90,13 +90,13 @@ Real ParametricVolatility::convert(const MarketPoint& p, const MarketQuoteType i
 };
 
 bool operator<(const ParametricVolatility::MarketPoint& p, const ParametricVolatility::MarketPoint& q) {
-    if(p.timeToExpiry < q.timeToExpiry)
+    if (p.timeToExpiry < q.timeToExpiry)
         return true;
-    if(p.timeToExpiry > q.timeToExpiry)
+    if (p.timeToExpiry > q.timeToExpiry)
         return false;
-    if(p.strike < q.strike)
+    if (p.strike < q.strike)
         return true;
-    if(p.strike > q.strike)
+    if (p.strike > q.strike)
         return false;
     return false;
 }
@@ -144,19 +144,19 @@ SabrParametricVolatility::calibrateModelParameters(const Real timeToExpiry, cons
                            << "): got different lognormal shifts for this smile which is not allowed: "
                            << p.lognormalShift << ", " << smileLognormalShift);
         }
-
-        // build set of (strike, market quote), the latter are converted to the preferred output quote type of the SABR
-        // variant here as well
-
-        std::set<std::pair<Real, Real>> marketQuotes;
-
-        for (auto const& p : marketPoints) {
-            marketQuotes.insert(std::make_pair(
-                p.strike, convert(p, inputMarketQuoteType_, preferredOutputQuoteType(), smileLognormalShift)));
-        }
-
-        // perform the calibration
     }
+
+    // build set of (strike, market quote), the latter are converted to the preferred output quote type of the SABR
+    // variant here as well
+
+    std::set<std::pair<Real, Real>> marketQuotes;
+
+    for (auto const& p : marketPoints) {
+        marketQuotes.insert(std::make_pair(
+            p.strike, convert(p, inputMarketQuoteType_, preferredOutputQuoteType(), smileLognormalShift)));
+    }
+
+    // perform the calibration
 
     return {};
 }
@@ -173,7 +173,7 @@ void SabrParametricVolatility::performCalculations() const {
     // for each (tte, underlyingLength) pair calibrate the SABR variant
 
     calibratedSabrParams_.clear();
-    for (auto const & [ s, m ] : smiles) {
+    for (auto const& [s, m] : smiles) {
         auto param = modelParameters_.find(s);
         QL_REQUIRE(param != modelParameters_.end(),
                    "SabrParametricVolatility::performCalculations(): no model parameter given for ("
