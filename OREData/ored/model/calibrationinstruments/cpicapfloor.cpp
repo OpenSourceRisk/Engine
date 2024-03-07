@@ -54,7 +54,7 @@ void CpiCapFloor::fromXML(XMLNode* node) {
     strike_ = parseBaseStrike(XMLUtils::getChildValue(node, "Strike", true));
 }
 
-XMLNode* CpiCapFloor::toXML(XMLDocument& doc) {
+XMLNode* CpiCapFloor::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode(instrumentType_);
     XMLUtils::addChild(doc, node, "Type", to_string(type_));
     XMLUtils::addChild(doc, node, "Maturity", to_string(maturity_));

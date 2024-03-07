@@ -94,7 +94,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Setters/Getters
@@ -111,9 +111,9 @@ public:
     std::vector<Real>& aValues() { return aValues_; }
     Real& shiftHorizon() { return shiftHorizon_; }
     Real& scaling() { return scaling_; }
-    std::vector<std::string>& optionExpiries() { return optionExpiries_; }
-    std::vector<std::string>& optionTerms() { return optionTerms_; }
-    std::vector<std::string>& optionStrikes() { return optionStrikes_; }
+    std::vector<std::string>& optionExpiries() const { return optionExpiries_; }
+    std::vector<std::string>& optionTerms() const { return optionTerms_; }
+    std::vector<std::string>& optionStrikes() const { return optionStrikes_; }
     //@}
 
     //! \name Operators
@@ -134,9 +134,9 @@ private:
     std::vector<Time> aTimes_;
     std::vector<Real> aValues_;
     Real shiftHorizon_, scaling_;
-    std::vector<std::string> optionExpiries_;
-    std::vector<std::string> optionTerms_;
-    std::vector<std::string> optionStrikes_;
+    mutable std::vector<std::string> optionExpiries_;
+    mutable std::vector<std::string> optionTerms_;
+    mutable std::vector<std::string> optionStrikes_;
 };
 
 //! Enum parsers used in CrossAssetModelBuilder's fromXML
@@ -171,7 +171,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
 private:

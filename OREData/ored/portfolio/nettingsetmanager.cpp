@@ -105,10 +105,10 @@ void NettingSetManager::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* NettingSetManager::toXML(XMLDocument& doc) {
+XMLNode* NettingSetManager::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("NettingSetDefinitions");
-    map<NettingSetDetails, const boost::shared_ptr<NettingSetDefinition>>::iterator it;
-    for (it = data_.begin(); it != data_.end(); ++it)
+    // map<NettingSetDetails, const boost::shared_ptr<NettingSetDefinition>>::iterator it;
+    for (auto it = data_.begin(); it != data_.end(); ++it)
         XMLUtils::appendNode(node, it->second->toXML(doc));
     return node;
 }

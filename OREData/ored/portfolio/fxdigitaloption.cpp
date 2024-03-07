@@ -122,7 +122,7 @@ void FxDigitalOption::fromXML(XMLNode* node) {
     domesticCurrency_ = XMLUtils::getChildValue(fxNode, "DomesticCurrency", true);
 }
 
-XMLNode* FxDigitalOption::toXML(XMLDocument& doc) {
+XMLNode* FxDigitalOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fxNode = doc.allocNode("FxDigitalOptionData");
     XMLUtils::appendNode(node, fxNode);
