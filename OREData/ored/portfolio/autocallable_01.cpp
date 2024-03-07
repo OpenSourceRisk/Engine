@@ -124,7 +124,7 @@ void Autocallable_01::fromXML(XMLNode* node) {
     initIndices();
 }
 
-XMLNode* Autocallable_01::toXML(XMLDocument& doc) {
+XMLNode* Autocallable_01::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* tradeNode = doc.allocNode("Autocallable01Data");
     XMLUtils::appendNode(node, tradeNode);

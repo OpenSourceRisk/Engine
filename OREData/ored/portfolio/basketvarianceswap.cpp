@@ -210,7 +210,7 @@ void BasketVarianceSwap::fromXML(XMLNode* node) {
     initIndices();
 }
 
-XMLNode* BasketVarianceSwap::toXML(XMLDocument& doc) {
+XMLNode* BasketVarianceSwap::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* tradeNode = doc.allocNode(tradeType() + "Data");
     XMLUtils::appendNode(node, tradeNode);

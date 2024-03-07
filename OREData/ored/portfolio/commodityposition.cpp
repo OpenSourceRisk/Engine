@@ -35,7 +35,7 @@ void CommodityPositionData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* CommodityPositionData::toXML(XMLDocument& doc) {
+XMLNode* CommodityPositionData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("CommodityPositionData");
     XMLUtils::addChild(doc, n, "Quantity", quantity_);
     for (auto& u : underlyings_) {
@@ -137,7 +137,7 @@ void CommodityPosition::fromXML(XMLNode* node) {
     data_.fromXML(XMLUtils::getChildNode(node, "CommodityPositionData"));
 }
 
-XMLNode* CommodityPosition::toXML(XMLDocument& doc) {
+XMLNode* CommodityPosition::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLUtils::appendNode(node, data_.toXML(doc));
     return node;

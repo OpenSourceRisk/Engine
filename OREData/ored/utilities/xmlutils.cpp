@@ -111,17 +111,17 @@ void XMLDocument::fromXMLString(const string& xmlString) {
     }
 }
 
-XMLNode* XMLDocument::getFirstNode(const string& name) { return _doc->first_node(name == "" ? NULL : name.c_str()); }
+XMLNode* XMLDocument::getFirstNode(const string& name) const { return _doc->first_node(name == "" ? NULL : name.c_str()); }
 
 void XMLDocument::appendNode(XMLNode* node) { _doc->append_node(node); }
 
-void XMLDocument::toFile(const string& fileName) {
+void XMLDocument::toFile(const string& fileName) const {
     std::ofstream ofs(fileName.c_str());
     ofs << *_doc;
     ofs.close();
 }
 
-string XMLDocument::toString() {
+string XMLDocument::toString() const {
     ostringstream oss;
     oss << *_doc;
     return oss.str();
@@ -150,7 +150,7 @@ void XMLSerializable::fromFile(const string& filename) {
     fromXML(doc.getFirstNode(""));
 }
 
-void XMLSerializable::toFile(const string& filename) {
+void XMLSerializable::toFile(const string& filename) const {
     XMLDocument doc;
     XMLNode* node = toXML(doc);
     doc.appendNode(node);
@@ -163,7 +163,7 @@ void XMLSerializable::fromXMLString(const string& xml) {
     fromXML(doc.getFirstNode(""));
 }
 
-string XMLSerializable::toXMLString() {
+string XMLSerializable::toXMLString() const {
     XMLDocument doc;
     XMLNode* node = toXML(doc);
     doc.appendNode(node);
