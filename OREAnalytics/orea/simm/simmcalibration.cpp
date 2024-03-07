@@ -62,7 +62,7 @@ SimmCalibration::Amount::Amount(const tuple<string, string, string>& key, const 
     value_ = value;
 }
 
-XMLNode* SimmCalibration::Amount::toXML(XMLDocument& doc) {
+XMLNode* SimmCalibration::Amount::toXML(XMLDocument& doc) const {
     auto amountNode = doc.allocNode("Amount", value_);
     if (!bucket_.empty())
         XMLUtils::addAttribute(doc, amountNode, "bucket", bucket_);
@@ -88,7 +88,7 @@ SimmCalibration::RiskClassData::RiskWeights::RiskWeights(const RC& riskClass, XM
     fromXML(node);
 }
 
-XMLNode* SimmCalibration::RiskClassData::RiskWeights::toXML(XMLDocument& doc) {
+XMLNode* SimmCalibration::RiskClassData::RiskWeights::toXML(XMLDocument& doc) const {
     auto riskWeightsNode = doc.allocNode("RiskWeights");
 
     // Delta and Vega risk weights
@@ -150,7 +150,7 @@ SimmCalibration::RiskClassData::IRRiskWeights::IRRiskWeights(XMLNode* node) : Ri
     fromXML(node);
 }
 
-XMLNode* SimmCalibration::RiskClassData::IRRiskWeights::toXML(XMLDocument& doc) {
+XMLNode* SimmCalibration::RiskClassData::IRRiskWeights::toXML(XMLDocument& doc) const {
     auto riskWeightsNode = RiskWeights::toXML(doc);
 
     // Inflation and XCcyBasis
@@ -218,7 +218,7 @@ SimmCalibration::RiskClassData::FXRiskWeights::FXRiskWeights(XMLNode* node) : Ri
     fromXML(node);
 }
 
-XMLNode* SimmCalibration::RiskClassData::FXRiskWeights::toXML(XMLDocument& doc) {
+XMLNode* SimmCalibration::RiskClassData::FXRiskWeights::toXML(XMLDocument& doc) const {
     auto riskWeightsNode = RiskWeights::toXML(doc);
 
     // Currency lists
@@ -253,7 +253,7 @@ SimmCalibration::RiskClassData::CreditQRiskWeights::CreditQRiskWeights(XMLNode* 
     fromXML(node);
 }
 
-XMLNode* SimmCalibration::RiskClassData::CreditQRiskWeights::toXML(XMLDocument& doc) {
+XMLNode* SimmCalibration::RiskClassData::CreditQRiskWeights::toXML(XMLDocument& doc) const {
     auto riskWeightsNode = RiskWeights::toXML(doc);
 
     // Base correlation
@@ -289,7 +289,7 @@ SimmCalibration::RiskClassData::CreditQRiskWeights::uniqueRiskWeights() const {
     return urwMap;
 }
 
-XMLNode* SimmCalibration::RiskClassData::Correlations::toXML(XMLDocument& doc) {
+XMLNode* SimmCalibration::RiskClassData::Correlations::toXML(XMLDocument& doc) const {
     auto correlationsNode = doc.allocNode("Correlations");
 
     // Intra- and Inter-bucket correlations
@@ -329,7 +329,7 @@ void SimmCalibration::RiskClassData::Correlations::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* SimmCalibration::RiskClassData::IRCorrelations::toXML(XMLDocument& doc) {
+XMLNode* SimmCalibration::RiskClassData::IRCorrelations::toXML(XMLDocument& doc) const {
     auto correlationsNode = Correlations::toXML(doc);
 
     auto corrTypes = map<string, boost::shared_ptr<Amount>>(
@@ -356,7 +356,7 @@ void SimmCalibration::RiskClassData::IRCorrelations::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* SimmCalibration::RiskClassData::CreditQCorrelations::toXML(XMLDocument& doc) {
+XMLNode* SimmCalibration::RiskClassData::CreditQCorrelations::toXML(XMLDocument& doc) const {
     auto correlationsNode = Correlations::toXML(doc);
 
     auto baseCorrelationNode = baseCorrelation_->toXML(doc);
@@ -373,7 +373,7 @@ void SimmCalibration::RiskClassData::CreditQCorrelations::fromXML(XMLNode* node)
     baseCorrelation_ = boost::make_shared<Amount>(baseCorrelationNode);
 }
 
-XMLNode* SimmCalibration::RiskClassData::FXCorrelations::toXML(XMLDocument& doc) {
+XMLNode* SimmCalibration::RiskClassData::FXCorrelations::toXML(XMLDocument& doc) const {
     auto correlationsNode = Correlations::toXML(doc);
 
     auto volatilityNode = volatility_->toXML(doc);
@@ -390,7 +390,7 @@ void SimmCalibration::RiskClassData::FXCorrelations::fromXML(XMLNode* node) {
     volatility_ = boost::make_shared<Amount>(volatilityNode);
 }
 
-XMLNode* SimmCalibration::RiskClassData::ConcentrationThresholds::toXML(XMLDocument& doc) {
+XMLNode* SimmCalibration::RiskClassData::ConcentrationThresholds::toXML(XMLDocument& doc) const {
     auto concThresholdsNode = doc.allocNode("ConcentrationThresholds");
 
     // Delta and Vega risk weights
@@ -429,7 +429,7 @@ void SimmCalibration::RiskClassData::ConcentrationThresholds::fromXML(XMLNode* n
 
 }
 
-XMLNode* SimmCalibration::RiskClassData::IRFXConcentrationThresholds::toXML(XMLDocument& doc) {
+XMLNode* SimmCalibration::RiskClassData::IRFXConcentrationThresholds::toXML(XMLDocument& doc) const {
     auto concThresholdsNode = ConcentrationThresholds::toXML(doc);
 
     // Currency lists
@@ -459,7 +459,7 @@ void SimmCalibration::RiskClassData::IRFXConcentrationThresholds::fromXML(XMLNod
     }
 }
 
-XMLNode* SimmCalibration::RiskClassData::toXML(XMLDocument& doc) {
+XMLNode* SimmCalibration::RiskClassData::toXML(XMLDocument& doc) const {
     auto riskClassNode = doc.allocNode(ore::data::to_string(riskClass_));
 
     // Risk weights
@@ -520,7 +520,7 @@ void SimmCalibration::RiskClassData::fromXML(XMLNode* node) {
 
 const string& SimmCalibration::version() const { return versionNames_.front(); }
 
-XMLNode* SimmCalibration::toXML(XMLDocument& doc) {
+XMLNode* SimmCalibration::toXML(XMLDocument& doc) const {
     XMLNode* simmCalibrationNode = doc.allocNode("SIMMCalibration");
     XMLUtils::addAttribute(doc, simmCalibrationNode, "id", id_);
 
@@ -593,7 +593,7 @@ void SimmCalibration::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* SimmCalibrationData::toXML(XMLDocument& doc) {
+XMLNode* SimmCalibrationData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("SIMMCalibrationData");
     for (const auto& [simmCalibrationId, simmCalibration] : data_) {
         XMLUtils::appendNode(node, simmCalibration->toXML(doc));

@@ -48,7 +48,7 @@
 namespace ore {
 namespace data {
 
-XMLNode* FormulaBasedLegData::toXML(XMLDocument& doc) {
+XMLNode* FormulaBasedLegData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::addChild(doc, node, "Index", formulaBasedIndex_);
     XMLUtils::addChild(doc, node, "IsInArrears", isInArrears_);
