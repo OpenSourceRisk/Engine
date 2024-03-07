@@ -155,7 +155,7 @@ void FxSwap::fromXML(XMLNode* node) {
         settlement_ = "Physical";
 }
 
-XMLNode* FxSwap::toXML(XMLDocument& doc) {
+XMLNode* FxSwap::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fxNode = doc.allocNode("FxSwapData");
     XMLUtils::appendNode(node, fxNode);

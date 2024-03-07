@@ -257,7 +257,7 @@ void GenericYieldVolatilityCurveConfig::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* GenericYieldVolatilityCurveConfig::toXML(XMLDocument& doc) {
+XMLNode* GenericYieldVolatilityCurveConfig::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode(rootNodeLabel_);
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);

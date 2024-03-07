@@ -164,7 +164,7 @@ void BondOption::fromXML(XMLNode* node) {
     bondData_ = originalBondData_;
 }
 
-XMLNode* BondOption::toXML(XMLDocument& doc) {
+XMLNode* BondOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
 
     XMLNode* bondOptionNode = doc.allocNode("BondOptionData");

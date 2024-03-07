@@ -239,7 +239,7 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
+XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("CapFloorVolatility");
     XMLUtils::addChild(doc, node, "CurveId", curveID_);

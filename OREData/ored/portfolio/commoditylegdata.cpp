@@ -152,7 +152,7 @@ void CommodityFixedLegData::fromXML(XMLNode* node) {
     tag_ = XMLUtils::getChildValue(node, "Tag", false);
 }
 
-XMLNode* CommodityFixedLegData::toXML(XMLDocument& doc) {
+XMLNode* CommodityFixedLegData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("CommodityFixedLegData");
 
     if (!quantities_.empty()) {
@@ -289,7 +289,7 @@ void CommodityFloatingLegData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* CommodityFloatingLegData::toXML(XMLDocument& doc) {
+XMLNode* CommodityFloatingLegData::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("CommodityFloatingLegData");
 

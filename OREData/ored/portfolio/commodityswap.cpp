@@ -331,7 +331,7 @@ void CommoditySwap::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* CommoditySwap::toXML(XMLDocument& doc) {
+XMLNode* CommoditySwap::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* swapNode = doc.allocNode("SwapData");
     XMLUtils::appendNode(node, swapNode);

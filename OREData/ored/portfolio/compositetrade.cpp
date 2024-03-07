@@ -173,7 +173,7 @@ void CompositeTrade::fromXML(XMLNode* node) {
     LOG("Finished Parsing XML doc");
 }
 
-XMLNode* CompositeTrade::toXML(XMLDocument& doc) {
+XMLNode* CompositeTrade::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* compNode = doc.allocNode("CompositeTradeData");
     XMLUtils::appendNode(node, compNode);

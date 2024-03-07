@@ -393,7 +393,7 @@ void IndexCreditDefaultSwapOption::fromXML(XMLNode* node) {
     option_.fromXML(optionData);
 }
 
-XMLNode* IndexCreditDefaultSwapOption::toXML(XMLDocument& doc) {
+XMLNode* IndexCreditDefaultSwapOption::toXML(XMLDocument& doc) const {
 
     // Trade node
     XMLNode* node = Trade::toXML(doc);
