@@ -178,7 +178,7 @@ void LgmData::fromXML(XMLNode* node) {
     LOG("LgmData done");
 }
 
-XMLNode* LgmData::toXML(XMLDocument& doc) {
+XMLNode* LgmData::toXML(XMLDocument& doc) const {
 
     XMLNode* lgmNode = IrModelData::toXML(doc);
 
@@ -232,7 +232,7 @@ void LgmReversionTransformation::fromXML(XMLNode* node) {
     scaling_ = XMLUtils::getChildValueAsDouble(node, "Scaling", true);
 }
 
-XMLNode* LgmReversionTransformation::toXML(XMLDocument& doc) {
+XMLNode* LgmReversionTransformation::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("ParameterTransformation");
     XMLUtils::addChild(doc, node, "ShiftHorizon", horizon_);
     XMLUtils::addChild(doc, node, "Scaling", scaling_);
