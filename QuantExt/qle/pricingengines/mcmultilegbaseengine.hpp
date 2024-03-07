@@ -101,6 +101,7 @@ protected:
     std::vector<Size> externalModelIndices_;
     bool minimalObsDate_;
     RegressorModel regressorModel_;
+    mutable bool includeSettlementDateFlows_ = false;
 
     // the generated amc calculator
     mutable boost::shared_ptr<AmcCalculator> amcCalculator_;
