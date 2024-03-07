@@ -78,7 +78,7 @@ void InfDkData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* InfDkData::toXML(XMLDocument& doc) {
+XMLNode* InfDkData::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("DodgsonKainth");
     InflationModelData::append(doc, node);

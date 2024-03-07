@@ -34,7 +34,7 @@ void BondPositionData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* BondPositionData::toXML(XMLDocument& doc) {
+XMLNode* BondPositionData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("BondBasketData");
     XMLUtils::addChild(doc, n, "Quantity", quantity_);
     XMLUtils::addChild(doc, n, "Identifier", identifier_);
@@ -127,7 +127,7 @@ void BondPosition::fromXML(XMLNode* node) {
     data_ = originalData_;
 }
 
-XMLNode* BondPosition::toXML(XMLDocument& doc) {
+XMLNode* BondPosition::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLUtils::appendNode(node, originalData_.toXML(doc));
     return node;

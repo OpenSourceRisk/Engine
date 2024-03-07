@@ -493,7 +493,7 @@ void Swaption::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* Swaption::toXML(XMLDocument& doc) {
+XMLNode* Swaption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* swaptionNode = doc.allocNode("SwaptionData");
     XMLUtils::appendNode(node, swaptionNode);
