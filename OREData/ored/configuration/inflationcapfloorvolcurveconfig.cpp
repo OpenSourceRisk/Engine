@@ -201,7 +201,7 @@ void InflationCapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     populateRequiredCurveIds();
 }
 
-XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
+XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("InflationCapFloorVolatility");
 
     XMLUtils::addChild(doc, node, "CurveId", curveID_);

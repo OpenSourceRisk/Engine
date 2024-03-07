@@ -484,7 +484,7 @@ void Accumulator::fromXML(XMLNode* node) {
     initIndices();
 }
 
-XMLNode* Accumulator::toXML(XMLDocument& doc) {
+XMLNode* Accumulator::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* dataNode = doc.allocNode(tradeType() + "Data");
     XMLUtils::appendNode(node, dataNode);

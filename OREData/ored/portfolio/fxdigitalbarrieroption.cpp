@@ -207,7 +207,7 @@ void FxDigitalBarrierOption::fromXML(XMLNode* node) {
     domesticCurrency_ = XMLUtils::getChildValue(fxNode, "DomesticCurrency", true);
 }
 
-XMLNode* FxDigitalBarrierOption::toXML(XMLDocument& doc) {
+XMLNode* FxDigitalBarrierOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fxNode = doc.allocNode("FxDigitalBarrierOptionData");
     XMLUtils::appendNode(node, fxNode);
