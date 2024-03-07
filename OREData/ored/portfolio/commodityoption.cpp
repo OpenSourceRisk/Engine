@@ -139,7 +139,7 @@ void CommodityOption::fromXML(XMLNode* node) {
         futureExpiryDate_ = parseDate(XMLUtils::getNodeValue(n));
 }
 
-XMLNode* CommodityOption::toXML(XMLDocument& doc) {
+XMLNode* CommodityOption::toXML(XMLDocument& doc) const {
 
     XMLNode* node = Trade::toXML(doc);
 

@@ -157,7 +157,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
  private:
@@ -177,7 +177,7 @@ public:
     void getNode(XMLNode* node, const char* parentName, const char* childName);
 
     // add to XML doc
-    void addNodes(XMLDocument& doc, XMLNode* parent, const char* nodeName);
+    void addNodes(XMLDocument& doc, XMLNode* parent, const char* nodeName) const;
 };
 
 class CurveConfigurationsManager {

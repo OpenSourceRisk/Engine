@@ -52,7 +52,7 @@ void CreditDefaultSwapOption::AuctionSettlementInformation::fromXML(XMLNode* nod
     auctionFinalPrice_ = XMLUtils::getChildValueAsDouble(node, "AuctionFinalPrice", true);
 }
 
-XMLNode* CreditDefaultSwapOption::AuctionSettlementInformation::toXML(XMLDocument& doc) {
+XMLNode* CreditDefaultSwapOption::AuctionSettlementInformation::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("AuctionSettlementInformation");
     XMLUtils::addChild(doc, node, "AuctionSettlementDate", to_string(auctionSettlementDate_));
     XMLUtils::addChild(doc, node, "AuctionFinalPrice", auctionFinalPrice_);
@@ -169,7 +169,7 @@ void CreditDefaultSwapOption::fromXML(XMLNode* node) {
     option_.fromXML(optionData);
 }
 
-XMLNode* CreditDefaultSwapOption::toXML(XMLDocument& doc) {
+XMLNode* CreditDefaultSwapOption::toXML(XMLDocument& doc) const {
 
     // Trade node
     XMLNode* node = Trade::toXML(doc);

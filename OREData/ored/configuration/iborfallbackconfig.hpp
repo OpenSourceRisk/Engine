@@ -50,7 +50,7 @@ public:
     const FallbackData& fallbackData(const string& iborIndex) const;
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
     void clear();
     static IborFallbackConfig defaultConfig();
