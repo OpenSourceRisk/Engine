@@ -298,7 +298,7 @@ void BasketOption::fromXML(XMLNode* node) {
     initIndices();
 }
 
-XMLNode* BasketOption::toXML(XMLDocument& doc) {
+XMLNode* BasketOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* dataNode = doc.allocNode(tradeType() + "Data");
     XMLUtils::appendNode(node, dataNode);

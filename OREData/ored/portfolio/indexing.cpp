@@ -58,7 +58,7 @@ void Indexing::fromXML(XMLNode* node) {
     hasData_ = true;
 }
 
-XMLNode* Indexing::toXML(XMLDocument& doc) {
+XMLNode* Indexing::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Indexing");
     XMLUtils::addChild(doc, node, "Quantity", quantity_);
     XMLUtils::addChild(doc, node, "Index", index_);

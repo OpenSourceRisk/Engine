@@ -187,7 +187,7 @@ void MultiLegOption::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* MultiLegOption::toXML(XMLDocument& doc) {
+XMLNode* MultiLegOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* n0 = doc.allocNode("MultiLegOptionData");
     XMLUtils::appendNode(node, n0);

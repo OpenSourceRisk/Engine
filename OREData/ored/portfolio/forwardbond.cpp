@@ -195,7 +195,7 @@ void ForwardBond::fromXML(XMLNode* node) {
     longInForward_ = XMLUtils::getChildValue(fwdBondNode, "LongInForward", true);
 }
 
-XMLNode* ForwardBond::toXML(XMLDocument& doc) {
+XMLNode* ForwardBond::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fwdBondNode = doc.allocNode("ForwardBondData");
     XMLUtils::appendNode(node, fwdBondNode);

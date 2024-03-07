@@ -65,7 +65,7 @@ public:
     const QuantLib::Date& validFrom() const { return validFrom_; }
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
 private:
     std::string type_;
@@ -108,7 +108,7 @@ public:
         std::vector<LegData> legData;
         string subType;
         void fromXML(XMLNode* node) override;
-        XMLNode* toXML(ore::data::XMLDocument& doc) override;
+        XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     };
 
     BondReferenceDatum() { setType(TYPE); }
@@ -123,7 +123,7 @@ public:
         : ReferenceDatum(TYPE, id, validFrom), bondData_(bondData) {}
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     const BondData& bondData() const { return bondData_; }
     void setBondData(const BondData& bondData) { bondData_ = bondData; }
@@ -154,7 +154,7 @@ public:
                            const QuantLib::Date& eventDeterminationDate = QuantLib::Date());
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     const std::string& name() const;
     QuantLib::Real weight() const;
@@ -191,7 +191,7 @@ public:
     CreditIndexReferenceDatum(const string& id, const QuantLib::Date& validFrom);
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     //! Add a constituent. The constituent is not added if already present.
     void add(const CreditIndexConstituent& c);
@@ -231,7 +231,7 @@ protected:
 
 public:
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     // Get all underlyings (names and weights)
     const map<string, double> underlyings() const { return data_; }
@@ -329,7 +329,7 @@ public:
     Date rebalancingDate(const Date& asof);
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
 private:
     std::string underlyingIndexName_;
@@ -369,7 +369,7 @@ public:
         : ReferenceDatum(TYPE, id, validFrom), creditData_(creditData) {}
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     const CreditData& creditData() const { return creditData_; }
     void setCreditData(const CreditData& creditData) { creditData_ = creditData; }
@@ -412,7 +412,7 @@ public:
 
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) const override;
    
     const EquityData& equityData() const { return equityData_; }
     void setEquityData(const EquityData& equityData) { equityData_ = equityData; }
@@ -440,7 +440,7 @@ public:
         : ReferenceDatum(TYPE, id, validFrom), underlyingData_(underlyingData) {}
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     const std::vector<BondUnderlying>& underlyingData() const { return underlyingData_; }
 
@@ -488,7 +488,7 @@ public:
     boost::shared_ptr<ReferenceDatum> buildReferenceDatum(const string& refDataType);
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     // clear this ReferenceData manager, note that we can load multiple files
     void clear() { data_.clear(); }

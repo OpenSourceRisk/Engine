@@ -134,7 +134,7 @@ void BasketConstituent::fromXML(XMLNode* node) {
     
 }
 
-XMLNode* BasketConstituent::toXML(ore::data::XMLDocument& doc) {
+XMLNode* BasketConstituent::toXML(ore::data::XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("Name");
 
@@ -274,7 +274,7 @@ void BasketData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* BasketData::toXML(ore::data::XMLDocument& doc) {
+XMLNode* BasketData::toXML(ore::data::XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("BasketData");
 

@@ -77,7 +77,7 @@ void EquityFutureOption::fromXML(XMLNode* node) {
     forwardDate_ = parseDate(XMLUtils::getChildValue(eqNode, "FutureExpiryDate", true));
 }
 
-XMLNode* EquityFutureOption::toXML(XMLDocument& doc) {
+XMLNode* EquityFutureOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* eqNode = doc.allocNode("EquityFutureOptionData");
     XMLUtils::appendNode(node, eqNode);

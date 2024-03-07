@@ -46,7 +46,7 @@ void BarrierData::fromXML(XMLNode* node) {
     initialized_ = true;
 }
 
-XMLNode* BarrierData::toXML(XMLDocument& doc) {
+XMLNode* BarrierData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("BarrierData");
     XMLUtils::addChild(doc, node, "Type", type_);
     if (!style_.empty())

@@ -47,7 +47,7 @@ public:
     Real strike() const { return strike_; }
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
 private:
     EquityUnderlying underlying_;
@@ -66,7 +66,7 @@ public:
     const std::vector<EquityOptionUnderlyingData>& underlyings() const { return underlyings_; }
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
 private:
     Real quantity_ = QuantLib::Null<Real>();
@@ -83,7 +83,7 @@ public:
     // trade interface
     void build(const boost::shared_ptr<ore::data::EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     std::map<AssetClass, std::set<std::string>>
     underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
