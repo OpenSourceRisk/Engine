@@ -104,7 +104,7 @@ public:
 
     //! XMLSerializable interface
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
 
     //! populate data from reference datum and check data for completeness
     void populateFromBondReferenceData(const boost::shared_ptr<BondReferenceDatum>& referenceDatum,
@@ -171,7 +171,7 @@ public:
 
     //! XMLSerializable interface
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
 
 private:
     BondData originalBondData_, bondData_;

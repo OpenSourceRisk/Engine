@@ -652,7 +652,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     }
 }
 
-XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
+XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) const {
 
     XMLNode* root = doc.allocNode("SensitivityAnalysis");
 
@@ -756,7 +756,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
         for (const auto& kv : creditCurveShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "CreditCurve");
             XMLUtils::addAttribute(doc, node, "name", kv.first);
-            XMLUtils::addChild(doc, node, "Currency", creditCcys_[kv.first]);
+            XMLUtils::addChild(doc, node, "Currency", creditCcys_.find(kv.first)->second);
             curveShiftDataToXML(doc, node, *kv.second);
         }
     }
@@ -850,7 +850,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
         for (const auto& kv : commodityCurveShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "CommodityCurve");
             XMLUtils::addAttribute(doc, node, "name", kv.first);
-            XMLUtils::addChild(doc, node, "Currency", commodityCurrencies_[kv.first]);
+            XMLUtils::addChild(doc, node, "Currency", commodityCurrencies_.find(kv.first)->second);
             curveShiftDataToXML(doc, node, *kv.second);
         }
     }
@@ -910,7 +910,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
         for (XMLNode* child = XMLUtils::getChildNode(discountCurves, "DiscountCurve"); child;
              child = XMLUtils::getNextSibling(child)) {
             string ccy = XMLUtils::getAttribute(child, "ccy");
-            XMLNode* parNode = parDataToXML(doc, discountCurveShiftData_[ccy]);
+            XMLNode* parNode = parDataToXML(doc, discountCurveShiftData_.find(ccy)->second);
             XMLUtils::appendNode(child, parNode);
         }
     }
@@ -921,7 +921,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
         for (XMLNode* child = XMLUtils::getChildNode(indexCurves, "IndexCurve"); child;
              child = XMLUtils::getNextSibling(child)) {
             string index = XMLUtils::getAttribute(child, "index");
-            XMLNode* parNode = parDataToXML(doc, indexCurveShiftData_[index]);
+            XMLNode* parNode = parDataToXML(doc, indexCurveShiftData_.find(index)->second);
             XMLUtils::appendNode(child, parNode);
         }
     }
@@ -947,7 +947,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
         for (XMLNode* child = XMLUtils::getChildNode(creditCurves, "CreditCurve"); child;
              child = XMLUtils::getNextSibling(child)) {
             string name = XMLUtils::getAttribute(child, "name");
-            XMLNode* parNode = parDataToXML(doc, creditCurveShiftData_[name]);
+            XMLNode* parNode = parDataToXML(doc, creditCurveShiftData_.find(name)->second);
             XMLUtils::appendNode(child, parNode);
         }
     }
@@ -958,7 +958,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
         for (XMLNode* child = XMLUtils::getChildNode(zeroInflation, "ZeroInflationIndexCurve"); child;
              child = XMLUtils::getNextSibling(child)) {
             string index = XMLUtils::getAttribute(child, "index");
-            XMLNode* parNode = parDataToXML(doc, zeroInflationCurveShiftData_[index]);
+            XMLNode* parNode = parDataToXML(doc, zeroInflationCurveShiftData_.find(index)->second);
             XMLUtils::appendNode(child, parNode);
         }
     }
@@ -969,7 +969,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
         for (XMLNode* child = XMLUtils::getChildNode(yoyInflation, "YYInflationIndexCurve"); child;
              child = XMLUtils::getNextSibling(child)) {
             string index = XMLUtils::getAttribute(child, "index");
-            XMLNode* parNode = parDataToXML(doc, yoyInflationCurveShiftData_[index]);
+            XMLNode* parNode = parDataToXML(doc, yoyInflationCurveShiftData_.find(index)->second);
             XMLUtils::appendNode(child, parNode);
         }
     }
@@ -980,7 +980,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
         for (XMLNode* child = XMLUtils::getChildNode(capFloor, "CapFloorVolatility"); child;
              child = XMLUtils::getNextSibling(child)) {
             string key = XMLUtils::getAttribute(child, "key");
-            auto data = boost::dynamic_pointer_cast<CapFloorVolShiftParData>(capFloorVolShiftData_[key]);
+            auto data = boost::dynamic_pointer_cast<CapFloorVolShiftParData>(capFloorVolShiftData_.find(key)->second);
             if (data) {
                 XMLNode* parNode = doc.allocNode("ParConversion");
                 if (!data->discountCurve.empty())
@@ -996,7 +996,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
         for (XMLNode* child = XMLUtils::getChildNode(yoyCapFloor, "YYCapFloorVolatility"); child;
              child = XMLUtils::getNextSibling(child)) {
             string index = XMLUtils::getAttribute(child, "index");
-            auto data = boost::dynamic_pointer_cast<CapFloorVolShiftParData>(yoyInflationCapFloorVolShiftData_[index]);
+            auto data = boost::dynamic_pointer_cast<CapFloorVolShiftParData>(yoyInflationCapFloorVolShiftData_.find(index)->second);
             if (data) {
                 XMLNode* parNode = doc.allocNode("ParConversion");
                 XMLUtils::addGenericChildAsList(doc, parNode, "Instruments", data->parInstruments);

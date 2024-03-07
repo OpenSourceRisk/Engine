@@ -592,7 +592,7 @@ void ConvertibleBond::fromXML(XMLNode* node) {
     data_ = originalData_;
 }
 
-XMLNode* ConvertibleBond::toXML(XMLDocument& doc) {
+XMLNode* ConvertibleBond::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLUtils::appendNode(node, originalData_.toXML(doc));
     return node;

@@ -490,7 +490,7 @@ void TaRF::fromXML(XMLNode* node) {
     initIndices();
 }
 
-XMLNode* TaRF::toXML(XMLDocument& doc) {
+XMLNode* TaRF::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* dataNode = doc.allocNode(tradeType() + "Data");
     XMLUtils::appendNode(node, dataNode);
