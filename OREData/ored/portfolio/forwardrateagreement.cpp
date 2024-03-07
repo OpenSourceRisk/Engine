@@ -87,7 +87,7 @@ void ForwardRateAgreement::fromXML(XMLNode* node) {
     amount_ = XMLUtils::getChildValueAsDouble(fNode, "Notional", true);
 }
 
-XMLNode* ForwardRateAgreement::toXML(XMLDocument& doc) {
+XMLNode* ForwardRateAgreement::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fNode = doc.allocNode("ForwardRateAgreementData");
     XMLUtils::appendNode(node, fNode);

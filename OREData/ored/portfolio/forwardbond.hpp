@@ -46,7 +46,7 @@ public:
     virtual void build(const boost::shared_ptr<EngineFactory>&) override;
 
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
 
     //! Add underlying Bond names
     std::map<AssetClass, std::set<std::string>>

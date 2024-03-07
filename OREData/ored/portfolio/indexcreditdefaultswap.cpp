@@ -274,7 +274,7 @@ void IndexCreditDefaultSwap::fromXML(XMLNode* node) {
     swap_.fromXML(cdsNode);
 }
 
-XMLNode* IndexCreditDefaultSwap::toXML(XMLDocument& doc) {
+XMLNode* IndexCreditDefaultSwap::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLUtils::appendNode(node, swap_.toXML(doc));
     return node;
