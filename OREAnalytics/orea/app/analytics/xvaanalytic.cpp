@@ -17,6 +17,7 @@
 */
 
 #include <orea/aggregation/dimregressioncalculator.hpp>
+#include <orea/aggregation/dimflatcalculator.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
@@ -550,12 +551,19 @@ void XvaAnalyticImpl::runPostProcessor() {
     bool fullInitialCollateralisation = inputs_->fullInitialCollateralisation();
 
     checkConfigurations(analytic()->portfolio());
-        
+
     if (!dimCalculator_ && (analytics["mva"] || analytics["dim"])) {
-        ALOG("dim calculator not set, create RegressionDynamicInitialMarginCalculator");
-        dimCalculator_ = boost::make_shared<RegressionDynamicInitialMarginCalculator>(
-            inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, *scenarioData_, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder,
-            dimRegressors, dimLocalRegressionEvaluations, dimLocalRegressionBandwidth);
+        if (inputs_->dimModel() == "Regression") {
+            LOG("dim calculator not set, create RegressionDynamicInitialMarginCalculator");
+            dimCalculator_ = boost::make_shared<RegressionDynamicInitialMarginCalculator>(
+                inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, *scenarioData_, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder,
+                dimRegressors, dimLocalRegressionEvaluations, dimLocalRegressionBandwidth);
+        }
+        else {
+            LOG("dim calculator not set, create FlatDynamicInitialMarginCalculator");
+            dimCalculator_ = boost::make_shared<FlatDynamicInitialMarginCalculator>(
+                inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, *scenarioData_);
+        }
     }
 
     std::vector<Period> cvaSensiGrid = inputs_->cvaSensiGrid();
