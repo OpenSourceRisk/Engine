@@ -60,6 +60,12 @@ FxDoubleTouchOption::FxDoubleTouchOption(Envelope& env, OptionData option, Barri
 
 void FxDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
+    additionalData_["isdaSubProduct"] = string("Barrier");  
+    additionalData_["isdaTransaction"] = string("");  
+
     const boost::shared_ptr<Market> market = engineFactory->market();
     Date start = ore::data::parseDate(startDate_);
     Calendar cal = ore::data::parseCalendar(calendar_);
@@ -180,12 +186,6 @@ void FxDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFa
 
     additionalData_["payoffAmount"] = payoffAmount_;
     additionalData_["payoffCurrency"] = payoffCurrency_;
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
-    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
-    additionalData_["isdaSubProduct"] = string("Barrier");  
-    additionalData_["isdaTransaction"] = string("");  
 }
 
 bool FxDoubleTouchOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {
@@ -228,7 +228,7 @@ void FxDoubleTouchOption::fromXML(XMLNode* node) {
     payoffAmount_ = XMLUtils::getChildValueAsDouble(fxNode, "PayoffAmount", true);
 }
 
-XMLNode* FxDoubleTouchOption::toXML(XMLDocument& doc) {
+XMLNode* FxDoubleTouchOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fxNode = doc.allocNode("FxDoubleTouchOptionData");
     XMLUtils::appendNode(node, fxNode);

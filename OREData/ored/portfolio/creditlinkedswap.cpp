@@ -73,7 +73,7 @@ void CreditLinkedSwap::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* CreditLinkedSwap::toXML(ore::data::XMLDocument& doc) {
+XMLNode* CreditLinkedSwap::toXML(ore::data::XMLDocument& doc) const {
     XMLNode* n = Trade::toXML(doc);
     XMLNode* d = doc.allocNode("CreditLinkedSwapData");
     XMLUtils::appendNode(n, d);
@@ -115,6 +115,13 @@ XMLNode* CreditLinkedSwap::toXML(ore::data::XMLDocument& doc) {
 void CreditLinkedSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("Building credit linked swap " << id());
+
+    // ISDA taxonomy
+
+    additionalData_["isdaAssetClass"] = string("Interest Rate");
+    additionalData_["isdaBaseProduct"] = string("Exotic");
+    additionalData_["isdaSubProduct"] = string("");  
+    additionalData_["isdaTransaction"] = string("");  
 
     // checks, set npv currency (= single currency allowed in all legs)
 
@@ -180,13 +187,6 @@ void CreditLinkedSwap::build(const boost::shared_ptr<EngineFactory>& engineFacto
 
     qlInstr->setPricingEngine(builder->engine(npvCurrency_, creditCurveId_));
     setSensitivityTemplate(*builder);
-
-    // ISDA taxonomy
-
-    additionalData_["isdaAssetClass"] = string("Interest Rate");
-    additionalData_["isdaBaseProduct"] = string("Exotic");
-    additionalData_["isdaSubProduct"] = string("");  
-    additionalData_["isdaTransaction"] = string("");  
 
     // log
 

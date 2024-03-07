@@ -51,7 +51,7 @@ public:
     const bool addPastDividends() { return addPastDividends_; }
 
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    virtual XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
 protected:
     VarSwap(AssetClass assetClassUnderlying)

@@ -60,6 +60,13 @@ EquityDoubleTouchOption::EquityDoubleTouchOption(Envelope& env, OptionData optio
 
 void EquityDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Equity");
+    additionalData_["isdaBaseProduct"] = string("Other");
+    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");
+
     const boost::shared_ptr<Market> market = engineFactory->market();
     Date start = ore::data::parseDate(startDate_);
     Calendar cal = ore::data::parseCalendar(calendar_);
@@ -146,13 +153,6 @@ void EquityDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engi
 
     additionalData_["payoffAmount"] = payoffAmount_;
     additionalData_["payoffCurrency"] = payoffCurrency_;
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Equity");
-    additionalData_["isdaBaseProduct"] = string("Other");
-    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
-    // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = string("");
 }
 
 bool EquityDoubleTouchOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {
@@ -196,7 +196,7 @@ void EquityDoubleTouchOption::fromXML(XMLNode* node) {
     payoffAmount_ = XMLUtils::getChildValueAsDouble(eqNode, "PayoffAmount", true);
 }
 
-XMLNode* EquityDoubleTouchOption::toXML(XMLDocument& doc) {
+XMLNode* EquityDoubleTouchOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* eqNode = doc.allocNode("EquityDoubleTouchOptionData");
     XMLUtils::appendNode(node, eqNode);

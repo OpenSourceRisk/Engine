@@ -417,6 +417,13 @@ buildDividendProtectionData(const ConvertibleBondData::DividendProtectionData& d
 void ConvertibleBond::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
     DLOG("ConvertibleBond::build() called for trade " << id());
 
+    // ISDA taxonomy: not a derivative, but define the asset class at least
+    // so that we can determine a TRS asset class that has Convertible Bond underlyings
+    additionalData_["isdaAssetClass"] = string("Credit");
+    additionalData_["isdaBaseProduct"] = string("");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");
+
     auto builder = boost::dynamic_pointer_cast<ConvertibleBondEngineBuilder>(engineFactory->builder("ConvertibleBond"));
     QL_REQUIRE(builder, "ConvertibleBond::build(): could not cast to ConvertibleBondBuilder, this is unexpected");
 
@@ -577,14 +584,6 @@ void ConvertibleBond::build(const boost::shared_ptr<ore::data::EngineFactory>& e
     legs_ = {qlUnderlyingBond->cashflows()};
     legCurrencies_ = {npvCurrency_};
     legPayers_ = {data_.bondData().isPayer()};
-
-    // ISDA taxonomy: not a derivative, but define the asset class at least
-    // so that we can determine a TRS asset class that has Convertible Bond underlyings
-    additionalData_["isdaAssetClass"] = string("Credit");
-    additionalData_["isdaBaseProduct"] = string("");
-    additionalData_["isdaSubProduct"] = string("");
-    additionalData_["isdaTransaction"] = string("");
-
 }
 
 void ConvertibleBond::fromXML(XMLNode* node) {
@@ -593,7 +592,7 @@ void ConvertibleBond::fromXML(XMLNode* node) {
     data_ = originalData_;
 }
 
-XMLNode* ConvertibleBond::toXML(XMLDocument& doc) {
+XMLNode* ConvertibleBond::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLUtils::appendNode(node, originalData_.toXML(doc));
     return node;

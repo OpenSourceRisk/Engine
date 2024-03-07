@@ -37,6 +37,13 @@ namespace data {
 
 void EquityEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Equity");
+    additionalData_["isdaBaseProduct"] = string("Other");
+    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");
+
     const boost::shared_ptr<Market> market = engineFactory->market();
 
     // Only European Single Barrier supported for now
@@ -168,13 +175,6 @@ void EquityEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& 
     additionalData_["quantity"] = quantity_;
     additionalData_["strike"] = strike_.value();
     additionalData_["strikeCurrency"] = strike_.currency();
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Equity");
-    additionalData_["isdaBaseProduct"] = string("Other");
-    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
-    // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = string("");
 }
 
 void EquityEuropeanBarrierOption::fromXML(XMLNode* node) {
@@ -197,7 +197,7 @@ void EquityEuropeanBarrierOption::fromXML(XMLNode* node) {
     quantity_ = XMLUtils::getChildValueAsDouble(eqNode, "Quantity", true);
 }
 
-XMLNode* EquityEuropeanBarrierOption::toXML(XMLDocument& doc) {
+XMLNode* EquityEuropeanBarrierOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* eqNode = doc.allocNode("EquityEuropeanBarrierOptionData");
     XMLUtils::appendNode(node, eqNode);

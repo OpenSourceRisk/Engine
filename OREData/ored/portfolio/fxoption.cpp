@@ -40,6 +40,12 @@ namespace data {
 
 void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string("Vanilla Option");
+    additionalData_["isdaSubProduct"] = string("");  
+    additionalData_["isdaTransaction"] = string("");  
+
     QuantLib::Date today = Settings::instance().evaluationDate();
     const boost::shared_ptr<Market>& market = engineFactory->market();
 
@@ -121,12 +127,6 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     additionalData_["boughtAmount"] = quantity_;
     additionalData_["soldCurrency"] = currency_;
     additionalData_["soldAmount"] = quantity_ * strike_.value();
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
-    additionalData_["isdaBaseProduct"] = string("Vanilla Option");
-    additionalData_["isdaSubProduct"] = string("");  
-    additionalData_["isdaTransaction"] = string("");  
 }
 
 void FxOption::fromXML(XMLNode* node) {
@@ -145,7 +145,7 @@ void FxOption::fromXML(XMLNode* node) {
     QL_REQUIRE(soldAmount > 0.0, "positive SoldAmount required");
 }
 
-XMLNode* FxOption::toXML(XMLDocument& doc) {
+XMLNode* FxOption::toXML(XMLDocument& doc) const {
     // TODO: Should call parent class to xml?
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fxNode = doc.allocNode("FxOptionData");

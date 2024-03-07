@@ -29,6 +29,13 @@ namespace ore {
 namespace data {
 
 void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Interest Rate");
+    additionalData_["isdaBaseProduct"] = string("FRA");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");
+
     const boost::shared_ptr<Market> market = engineFactory->market();
 
     Date startDate = parseDate(startDate_);
@@ -66,12 +73,6 @@ void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineF
     setSensitivityTemplate(*swapBuilder);
     instrument_.reset(new VanillaInstrument(swap));
     maturity_ = endDate;
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Interest Rate");
-    additionalData_["isdaBaseProduct"] = string("FRA");
-    additionalData_["isdaSubProduct"] = string("");
-    additionalData_["isdaTransaction"] = string("");
 }
 
 void ForwardRateAgreement::fromXML(XMLNode* node) {
@@ -86,7 +87,7 @@ void ForwardRateAgreement::fromXML(XMLNode* node) {
     amount_ = XMLUtils::getChildValueAsDouble(fNode, "Notional", true);
 }
 
-XMLNode* ForwardRateAgreement::toXML(XMLDocument& doc) {
+XMLNode* ForwardRateAgreement::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fNode = doc.allocNode("ForwardRateAgreementData");
     XMLUtils::appendNode(node, fNode);

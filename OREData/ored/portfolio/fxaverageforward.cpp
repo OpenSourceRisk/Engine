@@ -31,6 +31,13 @@ namespace ore {
 namespace data {
 
 void FxAverageForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string(settlement_ == "Cash" ? "NDF" : "Forward");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");  
+
     LOG("FxAverageForward::build() called");
     QL_REQUIRE(!settlementCurrency_.empty(), "settlement currency must not be blank");
     QL_REQUIRE(!referenceCurrency_.empty(), "reference currency must not be blank");
@@ -73,12 +80,6 @@ void FxAverageForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     notionalCurrency_ = settlementCurrency_;
     maturity_ = payDate;
 
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
-    additionalData_["isdaBaseProduct"] = string(settlement_ == "Cash" ? "NDF" : "Forward");
-    additionalData_["isdaSubProduct"] = string("");
-    additionalData_["isdaTransaction"] = string("");  
-
     LOG("FxAverageForward::build() done");
 }
 
@@ -119,7 +120,7 @@ void FxAverageForward::fromXML(XMLNode* node) {
         settlement_ = "Cash";
 }
 
-XMLNode* FxAverageForward::toXML(XMLDocument& doc) {
+XMLNode* FxAverageForward::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fxNode = doc.allocNode("FxAverageForwardData");
     XMLUtils::appendNode(node, fxNode);

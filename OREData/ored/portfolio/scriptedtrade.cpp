@@ -42,8 +42,14 @@ void ScriptedTrade::build(const boost::shared_ptr<EngineFactory>& engineFactory,
     DLOG("ScriptedTrade::build() called for trade " << id());
 
     auto builder = boost::dynamic_pointer_cast<ScriptedTradeEngineBuilder>(engineFactory->builder("ScriptedTrade"));
+
     QL_REQUIRE(builder, "no builder found for ScriptedTrade");
     auto engine = builder->engine(id(), *this, engineFactory->referenceData(), engineFactory->iborFallbackConfig());
+
+    simmProductClass_ = builder->simmProductClass();
+    scheduleProductClass_ = builder->scheduleProductClass();
+
+    setIsdaTaxonomyFields();
 
     auto qleInstr = boost::make_shared<ScriptedInstrument>(builder->lastRelevantDate());
     qleInstr->setPricingEngine(engine);
@@ -63,45 +69,6 @@ void ScriptedTrade::build(const boost::shared_ptr<EngineFactory>& engineFactory,
                                                 builder->configuration(MarketContext::pricing)));
 
     instrument_ = boost::make_shared<VanillaInstrument>(qleInstr, 1.0, additionalInstruments, additionalMultipliers);
-
-    simmProductClass_ = builder->simmProductClass();
-    scheduleProductClass_ = builder->scheduleProductClass();
-
-    // ISDA taxonomy, can be overwritten in derived classes
-    if (scheduleProductClass_ == "FX") {
-        additionalData_["isdaAssetClass"] = string("Foreign Exchange");
-        additionalData_["isdaBaseProduct"] = string("Complex Exotic");
-        additionalData_["isdaSubProduct"] = string("Generic");  
-        additionalData_["isdaTransaction"] = string("");
-    }
-    else if (scheduleProductClass_ == "Rates") {
-        additionalData_["isdaAssetClass"] = string("Interest Rate");
-        additionalData_["isdaBaseProduct"] = string("Exotic");
-        additionalData_["isdaSubProduct"] = string("");  
-        additionalData_["isdaTransaction"] = string("");
-    }
-    else if (scheduleProductClass_ == "Equity") {
-        additionalData_["isdaAssetClass"] = string("Equity");
-        additionalData_["isdaBaseProduct"] = string("Other");
-        additionalData_["isdaSubProduct"] = string("");  
-        additionalData_["isdaTransaction"] = string("");
-    }
-    else if (scheduleProductClass_ == "Credit") {
-        additionalData_["isdaAssetClass"] = string("Credit");
-        additionalData_["isdaBaseProduct"] = string("Exotic");
-        additionalData_["isdaSubProduct"] = string("Other");  
-        additionalData_["isdaTransaction"] = string("");
-    }
-    else if (scheduleProductClass_ == "Commodity") {
-        WLOG("ISDA taxonomy for trade " << id() << " and product class " << scheduleProductClass_ << " follows the Equity template");
-        additionalData_["isdaAssetClass"] = string("Commodity");
-        additionalData_["isdaBaseProduct"] = string("Other");
-        additionalData_["isdaSubProduct"] = string("");
-        additionalData_["isdaTransaction"] = string("");
-    }
-    else {
-        ALOG("ISDA taxonomy not set for trade " << id() << " and product class " << scheduleProductClass_);
-    }
     
     // add required fixings
     for (auto const& f : builder->fixings()) {
@@ -129,6 +96,40 @@ void ScriptedTrade::build(const boost::shared_ptr<EngineFactory>& engineFactory,
 
 void ScriptedTrade::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     ScriptedTrade::build(engineFactory, PremiumData(), 1.0);
+}
+
+void ScriptedTrade::setIsdaTaxonomyFields() {
+    // ISDA taxonomy, can be overwritten in derived classes
+    if (scheduleProductClass_ == "FX") {
+        additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+        additionalData_["isdaBaseProduct"] = string("Complex Exotic");
+        additionalData_["isdaSubProduct"] = string("Generic");
+        additionalData_["isdaTransaction"] = string("");
+    } else if (scheduleProductClass_ == "Rates") {
+        additionalData_["isdaAssetClass"] = string("Interest Rate");
+        additionalData_["isdaBaseProduct"] = string("Exotic");
+        additionalData_["isdaSubProduct"] = string("");
+        additionalData_["isdaTransaction"] = string("");
+    } else if (scheduleProductClass_ == "Equity") {
+        additionalData_["isdaAssetClass"] = string("Equity");
+        additionalData_["isdaBaseProduct"] = string("Other");
+        additionalData_["isdaSubProduct"] = string("");
+        additionalData_["isdaTransaction"] = string("");
+    } else if (scheduleProductClass_ == "Credit") {
+        additionalData_["isdaAssetClass"] = string("Credit");
+        additionalData_["isdaBaseProduct"] = string("Exotic");
+        additionalData_["isdaSubProduct"] = string("Other");
+        additionalData_["isdaTransaction"] = string("");
+    } else if (scheduleProductClass_ == "Commodity") {
+        WLOG("ISDA taxonomy for trade " << id() << " and product class " << scheduleProductClass_
+                                        << " follows the Equity template");
+        additionalData_["isdaAssetClass"] = string("Commodity");
+        additionalData_["isdaBaseProduct"] = string("Other");
+        additionalData_["isdaSubProduct"] = string("");
+        additionalData_["isdaTransaction"] = string("");
+    } else {
+        ALOG("ISDA taxonomy not set for trade " << id() << " and product class " << scheduleProductClass_);
+    }
 }
 
 QuantLib::Real ScriptedTrade::notional() const {
@@ -370,7 +371,7 @@ void ScriptedTrade::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* ScriptedTrade::toXML(XMLDocument& doc) {
+XMLNode* ScriptedTrade::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* tradeDataNode = doc.allocNode("ScriptedTradeData");
     XMLUtils::appendNode(node, tradeDataNode);
@@ -433,7 +434,7 @@ void ScriptedTradeEventData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* ScriptedTradeEventData::toXML(XMLDocument& doc) {
+XMLNode* ScriptedTradeEventData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("Event");
     XMLUtils::addChild(doc, n, "Name", name_);
     if (type_ == Type::Value) {
@@ -480,7 +481,7 @@ void ScriptedTradeValueTypeData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* ScriptedTradeValueTypeData::toXML(XMLDocument& doc) {
+XMLNode* ScriptedTradeValueTypeData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode(nodeName_);
     XMLUtils::addChild(doc, n, "Name", name_);
     if (!isArray_) {
@@ -498,7 +499,7 @@ void ScriptedTradeScriptData::NewScheduleData::fromXML(XMLNode* node) {
     sourceSchedules_ = XMLUtils::getChildrenValues(node, "Schedules", "Schedule");
 }
 
-XMLNode* ScriptedTradeScriptData::NewScheduleData::toXML(XMLDocument& doc) {
+XMLNode* ScriptedTradeScriptData::NewScheduleData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("NewSchedule");
     XMLUtils::addChild(doc, n, "Name", name_);
     XMLUtils::addChild(doc, n, "Operation", operation_);
@@ -512,7 +513,7 @@ void ScriptedTradeScriptData::CalibrationData::fromXML(XMLNode* node) {
     strikes_ = XMLUtils::getChildrenValues(node, "Strikes", "Strike", true);
 }
 
-XMLNode* ScriptedTradeScriptData::CalibrationData::toXML(XMLDocument& doc) {
+XMLNode* ScriptedTradeScriptData::CalibrationData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("Calibration");
     XMLUtils::addChild(doc, n, "Index", index_);
     XMLUtils::addChildren(doc, n, "Strikes", "Strike", strikes_);
@@ -554,7 +555,7 @@ void ScriptedTradeScriptData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* ScriptedTradeScriptData::toXML(XMLDocument& doc) {
+XMLNode* ScriptedTradeScriptData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("Script");
     XMLUtils::addChildAsCdata(doc, n, "Code", code_);
     XMLUtils::addChild(doc, n, "NPV", npv_);
@@ -655,7 +656,7 @@ void ScriptLibraryData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* ScriptLibraryData::toXML(XMLDocument& doc) {
+XMLNode* ScriptLibraryData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("ScriptLibrary");
     for (auto& s : scripts_) {
         XMLNode* c = XMLUtils::addChild(doc, n, "Script");

@@ -60,6 +60,13 @@ EquityTouchOption::EquityTouchOption(Envelope& env, OptionData option, BarrierDa
 
 void EquityTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Equity");
+    additionalData_["isdaBaseProduct"] = string("Other");
+    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");
+
     Date today = Settings::instance().evaluationDate();
     const boost::shared_ptr<Market> market = engineFactory->market();
 
@@ -166,13 +173,6 @@ void EquityTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFact
 
     additionalData_["payoffAmount"] = payoffAmount_;
     additionalData_["payoffCurrency"] = payoffCurrency_;
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Equity");
-    additionalData_["isdaBaseProduct"] = string("Other");
-    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
-    // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = string("");
 }
 
 bool EquityTouchOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {
@@ -219,7 +219,7 @@ void EquityTouchOption::fromXML(XMLNode* node) {
     eqIndex_ = XMLUtils::getChildValue(eqNode, "EQIndex", false);
 }
 
-XMLNode* EquityTouchOption::toXML(XMLDocument& doc) {
+XMLNode* EquityTouchOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* eqNode = doc.allocNode("EquityTouchOptionData");
     XMLUtils::appendNode(node, eqNode);

@@ -56,6 +56,25 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
 
     DLOG("IndexCreditDefaultSwapOption::build() called for trade " << id());
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Credit");
+    additionalData_["isdaBaseProduct"] = string("Swaptions");
+    string entity = swap_.creditCurveId();
+    boost::shared_ptr<ReferenceDataManager> refData = engineFactory->referenceData();
+    if (refData && refData->hasData("CreditIndex", entity)) {
+        auto refDatum = refData->getData("CreditIndex", entity);
+        boost::shared_ptr<CreditIndexReferenceDatum> creditIndexRefDatum =
+            boost::dynamic_pointer_cast<CreditIndexReferenceDatum>(refDatum);
+        additionalData_["isdaSubProduct"] = creditIndexRefDatum->indexFamily();
+        if (creditIndexRefDatum->indexFamily() == "") {
+            ALOG("IndexFamily is blank in credit index reference data for entity " << entity);
+        }
+    } else {
+        ALOG("Credit index reference data missing for entity " << entity << ", isdaSubProduct left blank");
+    }
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");  
+
     // Dates
     const boost::shared_ptr<Market>& market = engineFactory->market();
     Date asof = market->asofDate();
@@ -334,24 +353,6 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
     }
 
     sensitivityDecomposition_ = iCdsOptionEngineBuilder->sensitivityDecomposition();
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Credit");
-    additionalData_["isdaBaseProduct"] = string("Swaptions");
-    string entity = swap_.creditCurveId();   
-    boost::shared_ptr<ReferenceDataManager> refData = engineFactory->referenceData();
-    if (refData && refData->hasData("CreditIndex", entity)) {
-        auto refDatum = refData->getData("CreditIndex", entity);
-        boost::shared_ptr<CreditIndexReferenceDatum> creditIndexRefDatum = boost::dynamic_pointer_cast<CreditIndexReferenceDatum>(refDatum);
-        additionalData_["isdaSubProduct"] = creditIndexRefDatum->indexFamily();
-        if (creditIndexRefDatum->indexFamily() == "") {
-            ALOG("IndexFamily is blank in credit index reference data for entity " << entity);
-        }
-    } else {
-        ALOG("Credit index reference data missing for entity " << entity << ", isdaSubProduct left blank");
-    }
-    // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = string("");  
 }
 
 Real IndexCreditDefaultSwapOption::notional() const {
@@ -392,7 +393,7 @@ void IndexCreditDefaultSwapOption::fromXML(XMLNode* node) {
     option_.fromXML(optionData);
 }
 
-XMLNode* IndexCreditDefaultSwapOption::toXML(XMLDocument& doc) {
+XMLNode* IndexCreditDefaultSwapOption::toXML(XMLDocument& doc) const {
 
     // Trade node
     XMLNode* node = Trade::toXML(doc);

@@ -52,6 +52,7 @@ public:
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     virtual void build(const boost::shared_ptr<EngineFactory>&) override;
+    virtual void setIsdaTaxonomyFields();
     QuantLib::Real notional() const override;
     std::string notionalCurrency() const override;
 
@@ -65,7 +66,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Inspectors
