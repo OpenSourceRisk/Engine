@@ -134,7 +134,7 @@ void BondRepo::fromXML(XMLNode* node) {
     cashLegData_.fromXML(legNode);
 }
 
-XMLNode* BondRepo::toXML(XMLDocument& doc) {
+XMLNode* BondRepo::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* dataNode = doc.allocNode("BondRepoData");
     XMLUtils::appendNode(node, dataNode);

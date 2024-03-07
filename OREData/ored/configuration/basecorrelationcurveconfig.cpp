@@ -100,7 +100,7 @@ void BaseCorrelationCurveConfig::fromXML(XMLNode* node) {
         adjustForLosses_ = parseBool(XMLUtils::getNodeValue(n));
 }
 
-XMLNode* BaseCorrelationCurveConfig::toXML(XMLDocument& doc) {
+XMLNode* BaseCorrelationCurveConfig::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("BaseCorrelation");
 
     XMLUtils::addChild(doc, node, "CurveId", curveID_);

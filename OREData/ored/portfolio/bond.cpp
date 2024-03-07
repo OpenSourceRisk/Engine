@@ -92,7 +92,7 @@ void BondData::fromXML(XMLNode* node) {
     initialise();
 }
 
-XMLNode* BondData::toXML(XMLDocument& doc) {
+XMLNode* BondData::toXML(XMLDocument& doc) const {
     XMLNode* bondNode = doc.allocNode("BondData");
     if (!subType_.empty())
         XMLUtils::addChild(doc, bondNode, "SubType", subType_);
@@ -299,7 +299,7 @@ void Bond::fromXML(XMLNode* node) {
     bondData_ = originalBondData_;
 }
 
-XMLNode* Bond::toXML(XMLDocument& doc) {
+XMLNode* Bond::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLUtils::appendNode(node, originalBondData_.toXML(doc));
     return node;

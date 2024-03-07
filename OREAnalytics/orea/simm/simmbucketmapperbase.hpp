@@ -77,7 +77,7 @@ public:
 
     //! \name Serialisation
     //@{
-    ore::data::XMLNode* toXML(ore::data::XMLDocument&) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument&) const override;
     void fromXML(ore::data::XMLNode* node) override;
     //@}
 
