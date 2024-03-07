@@ -68,7 +68,7 @@ void IndexCreditDefaultSwapData::fromXML(XMLNode* node) {
     indexStartDateHint_ = parseDate(XMLUtils::getChildValue(node, "IndexStartDateHint", false));
 }
 
-XMLNode* IndexCreditDefaultSwapData::toXML(XMLDocument& doc) {
+XMLNode* IndexCreditDefaultSwapData::toXML(XMLDocument& doc) const {
 
     XMLNode* node = CreditDefaultSwapData::toXML(doc);
     XMLUtils::appendNode(node, basket_.toXML(doc));

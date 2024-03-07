@@ -109,7 +109,7 @@ void InflationCurveConfig::fromXML(XMLNode* node) {
     populateRequiredCurveIds();
 }
 
-XMLNode* InflationCurveConfig::toXML(XMLDocument& doc) {
+XMLNode* InflationCurveConfig::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("InflationCurve");
 
     XMLUtils::addChild(doc, node, "CurveId", curveID_);

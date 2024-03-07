@@ -151,7 +151,7 @@ void VarSwap::fromXML(XMLNode* node) {
     initIndexName();
 }
 
-XMLNode* VarSwap::toXML(ore::data::XMLDocument& doc) {
+XMLNode* VarSwap::toXML(ore::data::XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* vNode;
     if (oldXml_) {
