@@ -88,7 +88,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
                        << "), which breaks an assumption in the engine. This situation is unexpected.");
         info.exIntoCriterionTime = time(cpn->accrualStartDate()) + tinyTime;
     } else {
-        info.exIntoCriterionTime = info.payTime + tinyTime;
+        info.exIntoCriterionTime = info.payTime;
     }
 
     // Handle SimpleCashflow
@@ -848,8 +848,8 @@ void McMultiLegBaseEngine::calculate() const {
 
         for (Size i = 0; i < cashflowInfo.size(); ++i) {
 
-            /* we assume here that exIntoCriterionTime > t implies payTime > t (or payTime >= t if
-               includeSettlementDateFlows = true) - this must be ensured by the createCashflowInfo method */
+            /* we assume here that exIntoCriterionTime > t implies payTime > t, this must be ensured by the
+               createCashflowInfo method */
 
             if (cfStatus[i] == CfStatus::open) {
                 if (cashflowInfo[i].exIntoCriterionTime > *t) {
