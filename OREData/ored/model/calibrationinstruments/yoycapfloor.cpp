@@ -56,7 +56,7 @@ void YoYCapFloor::fromXML(XMLNode* node) {
     strike_ = parseBaseStrike(XMLUtils::getChildValue(node, "Strike", true));
 }
 
-XMLNode* YoYCapFloor::toXML(XMLDocument& doc) {
+XMLNode* YoYCapFloor::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode(instrumentType_);
     if (type_ == YoYInflationCapFloor::Cap)
         XMLUtils::addChild(doc, node, "Type", "Cap");

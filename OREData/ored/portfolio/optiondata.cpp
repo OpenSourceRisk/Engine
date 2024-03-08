@@ -83,7 +83,7 @@ void OptionData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* OptionData::toXML(XMLDocument& doc) {
+XMLNode* OptionData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("OptionData");
     XMLUtils::addChild(doc, node, "LongShort", longShort_);
     if (callPut_ != "")

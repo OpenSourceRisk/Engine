@@ -284,7 +284,7 @@ void BondTRS::fromXML(XMLNode* node) {
     fundingLegData_.fromXML(fLegNode);
 }
 
-XMLNode* BondTRS::toXML(XMLDocument& doc) {
+XMLNode* BondTRS::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* bondTRSNode = doc.allocNode("BondTRSData");
     XMLUtils::appendNode(node, bondTRSNode);

@@ -62,7 +62,7 @@ void OptionPaymentData::fromXML(XMLNode* node) {
     init();
 }
 
-XMLNode* OptionPaymentData::toXML(XMLDocument& doc) {
+XMLNode* OptionPaymentData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("PaymentData");
 
     if (rulesBased_) {

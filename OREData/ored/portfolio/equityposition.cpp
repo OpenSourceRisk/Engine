@@ -36,7 +36,7 @@ void EquityPositionData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* EquityPositionData::toXML(XMLDocument& doc) {
+XMLNode* EquityPositionData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("EquityPositionData");
     XMLUtils::addChild(doc, n, "Quantity", quantity_);
     for (auto& u : underlyings_) {
@@ -109,7 +109,7 @@ void EquityPosition::fromXML(XMLNode* node) {
     data_.fromXML(XMLUtils::getChildNode(node, "EquityPositionData"));
 }
 
-XMLNode* EquityPosition::toXML(XMLDocument& doc) {
+XMLNode* EquityPosition::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLUtils::appendNode(node, data_.toXML(doc));
     return node;

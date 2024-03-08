@@ -58,7 +58,7 @@ public:
     string strikeCurrency() { return strikeCurrency_; }
 
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
 
 private:
     string longShort_;
