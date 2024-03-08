@@ -91,9 +91,15 @@ public:
                             const QuantLib::Real outputLognormalShift) const override;
 
 private:
+    static constexpr double eps1 = .0000001;
+    static constexpr double eps2 = .9999;
+
     void performCalculations() const override;
 
     ParametricVolatility::MarketQuoteType preferredOutputQuoteType() const;
+    std::vector<Real> direct(const std::vector<Real>& x) const;
+    std::vector<Real> inverse(const std::vector<ReaL>& y) const;
+    std::vector<Real> evaluateSabr(const std::vector<Real>& params, const std::vector<Real>& strikes) const;
     std::vector<Real> calibrateModelParameters(const Real timeToExpiry, const Real underlyingLength,
                                                const std::set<MarketPoint>& marketPoints,
                                                const std::vector<std::pair<Real, bool>>& params) const;

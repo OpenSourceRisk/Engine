@@ -126,15 +126,57 @@ ParametricVolatility::MarketQuoteType SabrParametricVolatility::preferredOutputQ
     }
 }
 
+std::vector<Real> SabrParametricVolatility::direct(const std::vector<Real>& x, const Real lognormalShift) const {
+    std::vector<Real> y(4);
+    // beta as in QuantLib::SABRSpecs
+    y[1] = std::fabs(x[1]) < std::sqrt(-std::log(eps1)) ? std::exp(-(x[1] * x[1])) : eps1;
+    // max 0.02 normal vol equivalent
+    Real fbeta = std::pow(forward + lognormalShift, y[1]);
+    y[0] =
+        (std::fabs(x[0]) < std::sqrt(-std::log(fbeta * eps1 / 0.02)) ? 0.02 * std::exp(-(x[0] * x[0])) / fbeta : eps1);
+    // nu max 5.0
+    y[2] = (std::fabs(x[2]) < std::sqrt(-std::log(2.0 * eps1)) ? 2.0 * std::exp(-(x[2] * x[2])) : eps1);
+    // rho as in QuantLib::SABRSpecs
+    y[3] = std::fabs(x[3]) < 2.5 * M_PI ? eps2 * std::sin(x[3]) : eps2 * (x[3] > 0.0 ? 1.0 : (-1.0));
+    return y;
+}
+
+std::vector<Real> SabrParametricVolatility::inverse(const std::vector<ReaL>& y, const Real lognormalShift) const {
+    std::vector<Real> x(4);
+    x[1] = std::sqrt(-std::log(y[1]));
+    Real fbeta = std::pow(forward + lognormalShift, y[1]);
+    x[0] = std::sqrt(-std::log(y[0] * fbeta / 0.02));
+    x[2] = std::sqrt(-std::log(y[2] / 2.0));
+    x[3] = std::asin(y[3] / eps2());
+    return x;
+}
+
+std::vector<Real> SabrParametricVolatility::evaluateSabr(const std::vector<Real>& params,
+                                                         const std::vector<Real>& strikes) const {
+    switch (modelVariant_) {
+    case ModelVariant::Hagan2002Lognormal:
+        return MarketQuoteType::ShiftedLognormalVolatility;
+    case ModelVariant::Hagan2002Normal:
+        return MarketQuoteType::NormalVolatility;
+    case ModelVariant::Hagan2002NormalZeroBeta:
+        return MarketQuoteType::NormalVolatility;
+    case ModelVariant::Antonov2015FreeBoundaryNormal:
+        return MarketQuoteType::Price;
+    case ModelVariant::KienitzLawsonSwaynePde:
+        return default : QL_FAIL("SabrParametricVolatility::preferredOutputQuoteType(): model variant ("
+                                 << static_cast<int>(modelVariant_) << ") not handled.");
+    }
+}
+
 std::vector<Real>
 SabrParametricVolatility::calibrateModelParameters(const Real timeToExpiry, const Real underlyingLength,
                                                    const std::set<MarketPoint>& marketPoints,
                                                    const std::vector<std::pair<Real, bool>>& params) const {
 
-    // check that all market points have the same lognormal shift
+    // check that all market points have the same lognormal shift and forward
 
-    Real smileLognormalShift = Null<Real>();
-    bool smileLognormalShiftSet = false;
+    Real smileLognormalShift = Null<Real>(), smileForward = Null<Real>();
+    bool smileLognormalShiftSet = false, smileForwardSet = false;
     for (auto const& p : marketPoints) {
         if (!smileLognormalShiftSet) {
             smileLognormalShift = p.lognormalShift;
@@ -146,19 +188,62 @@ SabrParametricVolatility::calibrateModelParameters(const Real timeToExpiry, cons
                            << "): got different lognormal shifts for this smile which is not allowed: "
                            << p.lognormalShift << ", " << smileLognormalShift);
         }
+        if (!smileForwardSet) {
+            smileForward = p.lognormalShift;
+            smileForwardSet = true;
+        } else {
+            QL_REQUIRE(p.lognormalShift == smileForward,
+                       "SabrParametricVolatility::calibrateModelParameters("
+                           << timeToExpiry << "," << underlyingLength
+                           << "): got different lognormal shifts for this smile which is not allowed: "
+                           << p.lognormalShift << ", " << smileForward);
+        }
     }
 
-    // build set of (strike, market quote), the latter are converted to the preferred output quote type of the SABR
-    // variant here as well
+    // check the number of free parameters vs. the number of given market points
 
-    std::set<std::pair<Real, Real>> marketQuotes;
+    // define the target function
+
+    struct TargetFunction : public QuantLib::CostFunction {
+        std::vector<Real> strikes_;
+        std::vector<Real> marketQuotes_;
+        std::function<std::vector<Real>(const std::vector<Real>&)> evalSabr_;
+        std::function<Real(const Size i, const Real y)> transformInverse_;
+
+        Array values(const Array& x) const override {
+            Array result(strikes_.size());
+            std::vector<Real> params(4);
+            for (Size i = 0, j = 0; i < params.size(); ++i) {
+                if (params_[i].second)
+                    params[i] = params_[i];
+                else
+                    params[i] = transformInverse_(i, x[j++]);
+            }
+            auto sabr = evalSabr_(params, strikes_);
+            for (Size i = 0; i < strikes_.size(); ++i) {
+                return (marketQuotes_[i] - sabr[i]) / marketQuotes_[i];
+            }
+        }
+    };
+
+    /* build the target function and populate the members:
+       strikes, marketQuotes  : the latter are converted to the preferred output quote type of the SABR
+       evalSabr               : the function to produce SABR values of the quote type for a given vector of strikes */
+
+    TargetFunction t;
+
+    t.evalSabr_ = [this](const std::vector<Real>& params, const std::vector<Real>& strikes) {
+        return evaluateSabr(params, strikes, forward);
+    };
+
+    t.transformInverse_ = [this](const Size i, const Real y) { return transformInverse(i, y); }
 
     for (auto const& p : marketPoints) {
-        marketQuotes.insert(std::make_pair(
-            p.strike, convert(p, inputMarketQuoteType_, preferredOutputQuoteType(), smileLognormalShift)));
+        t.strikes.push_back(p.strike);
+        t.marketQuotes_.push_back(convert(p, inputMarketQuoteType_, preferredOutputQuoteType(), smileLognormalShift));
     }
 
-    // perform the calibration
+    // perform the calibration and return the result
 
     return {};
 }
