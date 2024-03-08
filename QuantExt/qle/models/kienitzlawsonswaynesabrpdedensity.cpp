@@ -18,6 +18,8 @@
 
 #include <qle/models/kienitzlawsonswaynesabrpdedensity.hpp>
 
+#include <ql/math/comparison.hpp>
+
 namespace QuantExt {
 
 KienitzLawsonSwayneSabrPdeDensity::KienitzLawsonSwayneSabrPdeDensity(const Real alpha, const Real beta, const Real nu,
