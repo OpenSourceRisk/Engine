@@ -110,10 +110,24 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Build FxForward with maturity date " << QuantLib::io::iso_date(maturityDate) << " and pay date "
                                                << QuantLib::io::iso_date(payDate));
 
+    // get pricing engine builder
+    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
+    QL_REQUIRE(builder, "No builder found for " << tradeType_);
+    boost::shared_ptr<FxForwardEngineBuilderBase> fxBuilder =
+        boost::dynamic_pointer_cast<FxForwardEngineBuilderBase>(builder);
+
+    string tmp = fxBuilder->engineParameter("includeSettlementDateFlows", {}, false, "");
+    includeSettlementDateFlows_ = tmp == "" ? false : parseBool(tmp);    
+    
     boost::shared_ptr<QuantLib::Instrument> instrument =
         boost::make_shared<QuantExt::FxForward>(boughtAmount_, boughtCcy, soldAmount_, soldCcy, maturityDate, false,
-                                                settlement_ == "Physical", payDate, payCcy, fixingDate, fxIndex);
+                                                settlement_ == "Physical", payDate, payCcy, fixingDate, fxIndex,
+                                                includeSettlementDateFlows_);
     instrument_.reset(new VanillaInstrument(instrument));
+
+    // set pricing engine
+    instrument_->qlInstrument()->setPricingEngine(fxBuilder->engine(boughtCcy, soldCcy));
+    setSensitivityTemplate(*fxBuilder);
 
     npvCurrency_ = payCcy.code();
     notional_ = Null<Real>(); // soldAmount_;
@@ -125,15 +139,6 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
              {boost::make_shared<SimpleCashFlow>(soldAmount_, payDate)}};
     legCurrencies_ = {boughtCurrency_, soldCurrency_};
     legPayers_ = {false, true};
-
-    // set Pricing engine
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
-    QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    boost::shared_ptr<FxForwardEngineBuilderBase> fxBuilder =
-        boost::dynamic_pointer_cast<FxForwardEngineBuilderBase>(builder);
-
-    instrument_->qlInstrument()->setPricingEngine(fxBuilder->engine(boughtCcy, soldCcy));
-    setSensitivityTemplate(*fxBuilder);
 
     additionalData_["soldCurrency"] = soldCurrency_;
     additionalData_["boughtCurrency"] = boughtCurrency_;
@@ -150,6 +155,13 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     additionalData_["settlement"] = settlement_;
 }
 
+bool FxForward::isExpired(const Date& date) {
+    if (includeSettlementDateFlows_)
+        return date > maturity_;
+    else
+        return date >= maturity_;
+}
+    
 QuantLib::Real FxForward::notional() const {
     // try to get the notional from the additional results of the instrument
     try {
