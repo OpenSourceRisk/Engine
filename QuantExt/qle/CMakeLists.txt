@@ -204,6 +204,7 @@ models/infdkvectorised.cpp
 models/infjyparameterization.cpp
 models/jyimpliedyoyinflationtermstructure.cpp
 models/jyimpliedzeroinflationtermstructure.cpp
+models/kienitzlawsonswaynesabrpdedensity.cpp
 models/lgm.cpp
 models/lgmcalibrationinfo.cpp
 models/lgmconvolutionsolver2.cpp
@@ -706,6 +707,7 @@ models/irlgm1fpiecewiselinearparametrization.hpp
 models/irmodel.hpp
 models/jyimpliedyoyinflationtermstructure.hpp
 models/jyimpliedzeroinflationtermstructure.hpp
+models/kienitzlawsonswaynesabrpdedensity.hpp
 models/lgm.hpp
 models/lgmbackwardsolver.hpp
 models/lgmcalibrationinfo.hpp

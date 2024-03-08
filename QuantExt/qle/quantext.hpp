@@ -317,6 +317,7 @@
 #include <qle/models/irmodel.hpp>
 #include <qle/models/jyimpliedyoyinflationtermstructure.hpp>
 #include <qle/models/jyimpliedzeroinflationtermstructure.hpp>
+#include <qle/models/kienitzlawsonswaynesabrpdedensity.hpp>
 #include <qle/models/lgm.hpp>
 #include <qle/models/lgmbackwardsolver.hpp>
 #include <qle/models/lgmcalibrationinfo.hpp>
