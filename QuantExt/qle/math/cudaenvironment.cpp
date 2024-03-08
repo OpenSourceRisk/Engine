@@ -26,6 +26,9 @@
 
 #include <iostream>
 
+#define _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+
 #ifdef ORE_ENABLE_CUDA
 #include <cuda.h>
 #include <cuda_runtime.h>
@@ -155,6 +158,7 @@ private:
 };
 
 CudaFramework::CudaFramework() {
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
     std::set<std::string> tmp;
     int nDevices;
     cudaGetDeviceCount(&nDevices);
@@ -178,11 +182,18 @@ CudaContext::~CudaContext() {
     if (initialized_) {
         CUresult err;
 
+        for (auto& state : mersenneTwisterStates_) {
+            auto cudaErr = cudaFree(state);
+            QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::~CudaContext(): free memory for mersenneTwisterStates_ fails: "
+                                                   << cudaGetErrorString(cudaErr));
+        }
+
         for (auto& m : module_) {
             releaseModule(m);
         }
 
-        if (err = cuCtxDestroy(context_); err != CUDA_SUCCESS) {
+        err = cuCtxDestroy(context_);
+        if (err != CUDA_SUCCESS) {
             const char* errorStr;
             cuGetErrorString(err, &errorStr);
             std::cerr << "CudaContext: error during cuCtxDestroy: " << errorStr << std::endl;
@@ -446,7 +457,7 @@ std::size_t CudaContext::applyOperation(const std::size_t randomVariableOpCode,
         freedVariables_.pop_back();
         //resultIdNeedsDeclaration = false;
     } else {
-        resultId = nInputVars_ + nOperations_[currentId_ - 1];
+        resultId = nInputVars_ + nRandomVariables_[currentId_ - 1] + nOperations_[currentId_ - 1];
         nOperations_[currentId_ - 1]++;
         //resultIdNeedsDeclaration = true;
     }
@@ -557,6 +568,9 @@ std::size_t CudaContext::applyOperation(const std::size_t randomVariableOpCode,
 void CudaContext::freeVariable(const std::size_t id) {
     QL_REQUIRE(currentState_ == ComputeState::calc,
                "CudaContext::free(): not in state calc (" << static_cast<int>(currentState_) << ")");
+    QL_REQUIRE(!hasKernel_[currentId_ - 1], "CudaContext::freeVariable(): id ("
+                                                << currentId_ << ") in version " << version_[currentId_ - 1]
+                                                << " has a kernel already, free variable cannot be called.");
 
     // we do not free input variables, only variables that were added during the calc
 
@@ -569,6 +583,9 @@ void CudaContext::freeVariable(const std::size_t id) {
 void CudaContext::declareOutputVariable(const std::size_t id) {
     QL_REQUIRE(currentState_ != ComputeState::idle, "CudaContext::declareOutputVariable(): state is idle");
     QL_REQUIRE(currentId_ > 0, "CudaContext::declareOutputVariable(): current id not set");
+    QL_REQUIRE(!hasKernel_[currentId_ - 1], "CudaContext::declareOutputVariable(): id ("
+                                                << currentId_ << ") in version " << version_[currentId_ - 1]
+                                                << " has a kernel already, output variables cannot be redeclared.");
     nOutputVariables_[currentId_ - 1].push_back(id);
 }
 
@@ -604,22 +621,43 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output, const Settin
     QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory allocate for deviceVarList_ fails: " << cudaGetErrorString(cudaErr));
     size_t size_scalar = sizeof(double);
     size_t size_vector = sizeof(double) * size_[currentId_ - 1];
+    size_t size_var;
+    double* pinned_scalar;
+    cudaErr = cudaMallocHost((void**)&pinned_scalar, size_scalar);
+    QL_REQUIRE(cudaErr == cudaSuccess,
+               "CudaContext::finalizeCalculation(): host pinned memory allocation for pinned_scalar fails: "
+                   << cudaGetErrorString(cudaErr));
+    double* pinned_vector;
+    cudaErr = cudaMallocHost((void**)&pinned_vector, size_vector);
+    QL_REQUIRE(cudaErr == cudaSuccess,
+               "CudaContext::finalizeCalculation(): host pinned memory allocation for pinned_vector fails: "
+                   << cudaGetErrorString(cudaErr));
+
     for (size_t i = 0; i < hostVarList_.size(); i++) {
+        size_var = inputVarIsScalar_[i] ? size_scalar : size_vector;
         // Allocate memory in device
-        cudaErr = cudaMalloc(&deviceVarList_[i], inputVarIsScalar_[i] ? size_scalar : size_vector);
+        cudaErr = cudaMalloc(&deviceVarList_[i], size_var);
         QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory allocate for deviceVarList_["
                                                << i << "] fails: " << cudaGetErrorString(cudaErr));
         //Copy vector from host to device
         if (hostVarList_[i] != nullptr) {
-            cudaErr = cudaMemcpy(deviceVarList_[i], hostVarList_[i], inputVarIsScalar_[i] ? size_scalar : size_vector,
-                                 cudaMemcpyHostToDevice);
+            // Allocate pinned memory on device
+            if (inputVarIsScalar_[i]) {
+                memcpy(pinned_scalar, hostVarList_[i], size_scalar);
+                cudaErr = cudaMemcpyAsync(deviceVarList_[i], pinned_scalar, size_scalar, cudaMemcpyHostToDevice);
+            } else {
+                memcpy(pinned_vector, hostVarList_[i], size_vector);
+                cudaErr = cudaMemcpyAsync(deviceVarList_[i], pinned_vector, size_vector, cudaMemcpyHostToDevice);
+            }
             QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory copy for deviceVarList_["
                                                    << i << "] fails: " << cudaGetErrorString(cudaErr));
         }
-        cudaErr = cudaMemcpy(&input[i], &deviceVarList_[i], sizeof(double*), cudaMemcpyHostToDevice);
+        cudaErr = cudaMemcpyAsync(&input[i], &deviceVarList_[i], sizeof(double*), cudaMemcpyHostToDevice);
         QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory copy for &deviceVarList_["
                                                << i << "] fails: " << cudaGetErrorString(cudaErr));
     }
+    cudaFreeHost(pinned_scalar);
+    cudaFreeHost(pinned_vector);
     for (size_t i = hostVarList_.size(); i < (nInputVars_ + nRandomVariables_[currentId_ - 1] + nOperations_[currentId_ - 1]); i++) {
         double* dMem;
         deviceVarList_.push_back(dMem);
@@ -628,7 +666,7 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output, const Settin
         QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory allocate for deviceVarList_["
                                                << i << "] fails: " << cudaGetErrorString(cudaErr));
         // Copy vector from host to device
-        cudaErr = cudaMemcpy(&input[i], &deviceVarList_[i], sizeof(double*), cudaMemcpyHostToDevice);
+        cudaErr = cudaMemcpyAsync(&input[i], &deviceVarList_[i], sizeof(double*), cudaMemcpyHostToDevice);
         QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory copy for &deviceVarList_["
                                                << i << "] fails: " << cudaGetErrorString(cudaErr));
     }
@@ -636,6 +674,7 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output, const Settin
     //std::cout << "nRandomVariables_ = " << nRandomVariables_[currentId_ - 1] << std::endl;
     //std::cout << "nOperations_ = " << nOperations_[currentId_ - 1] << std::endl;
     if (debug_) {
+        std::cout << "datacopy = " << timer.elapsed().wall - timerBase << std::endl;
         debugInfo_.nanoSecondsDataCopy += timer.elapsed().wall - timerBase;
     }
 
@@ -681,7 +720,7 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output, const Settin
         kernelSource += source_;
         kernelSource += "   }\n"
                         "}\n";
-        //std::cout << kernelSource << std::endl;
+        std::cout << kernelSource << std::endl;
         if (debug_) {
             timerBase = timer.elapsed().wall;
         }
@@ -699,8 +738,8 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output, const Settin
         //    (std::string("--gpu-architecture=") + getGPUArchitecture[device_prop.name]).c_str(), " - std = c++ 17 ", nullptr};
         const char* compileOptions[] = {
             "--include-path=C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.3/include",
-            "--gpu-architecture=compute_75", "-std=c++17", nullptr};
-        nvrtcErr = nvrtcCompileProgram(nvrtcProgram, 3, compileOptions);
+            "--gpu-architecture=compute_75", "-std=c++17", "-dopt=on", "--time=D:/GitHub/Engine/build/QuantExt/test/Debug/time.txt", nullptr};
+        nvrtcErr = nvrtcCompileProgram(nvrtcProgram, 5, compileOptions);
         QL_REQUIRE(nvrtcErr == NVRTC_SUCCESS, "CudaContext::finalizeCalculation(): error during nvrtcCompileProgram(): "
                                                   << nvrtcGetErrorString(nvrtcErr));
 
@@ -730,10 +769,12 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output, const Settin
             cuGetErrorString(cuErr, &errStr);
             std::cerr << "CudaContext::finalizeCalculation(): error during cuModuleGetFunction(): " << errStr << std::endl;
         }
+        delete[] ptx;
 
         hasKernel_[currentId_ - 1] = true;
         
         if (debug_) {
+            std::cout << "nvrtc build = " << timer.elapsed().wall - timerBase << std::endl;
             debugInfo_.nanoSecondsProgramBuild += timer.elapsed().wall - timerBase;
         }
     }
@@ -766,14 +807,28 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output, const Settin
     }
 
     size_t i = 0;
+    cudaDeviceSynchronize();
     for (auto const& out : nOutputVariables_[currentId_ - 1]) {
-        cudaErr =
-            cudaMemcpy(output[i], deviceVarList_[out], sizeof(double) * size_[currentId_ - 1], cudaMemcpyDeviceToHost);
+        cudaErr = cudaMemcpyAsync(output[i], deviceVarList_[out], sizeof(double) * size_[currentId_ - 1],
+                                  cudaMemcpyDeviceToHost);
         QL_REQUIRE(cudaErr == cudaSuccess,
                    "CudaContext::finalizeCalculation(): memory copy from device to host for deviceVarList_["
                        << out << "] fails: " << cudaGetErrorString(cudaErr));
         i++;
     }
+
+    // clear memory
+    for (size_t i = 0; i < hostVarList_.size(); ++i) {
+        if (inputVarIsScalar_[i])
+            delete hostVarList_[i];
+    }
+
+    for (auto ptr : deviceVarList_) {
+        releaseMem(ptr);
+    }
+    cudaErr = cudaFree(input);
+    QL_REQUIRE(cudaErr == cudaSuccess,
+               "CudaContext::finalizeCalculation(): free memory for input fails: " << cudaGetErrorString(cudaErr));
 
     if (debug_) {
         debugInfo_.nanoSecondsDataCopy += timer.elapsed().wall - timerBase;
