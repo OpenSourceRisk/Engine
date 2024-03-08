@@ -118,6 +118,8 @@ ParametricVolatility::MarketQuoteType SabrParametricVolatility::preferredOutputQ
         return MarketQuoteType::NormalVolatility;
     case ModelVariant::Antonov2015FreeBoundaryNormal:
         return MarketQuoteType::Price;
+    case ModelVariant::KienitzLawsonSwaynePde:
+        return MarketQuoteType::Price;
     default:
         QL_FAIL("SabrParametricVolatility::preferredOutputQuoteType(): model variant ("
                 << static_cast<int>(modelVariant_) << ") not handled.");

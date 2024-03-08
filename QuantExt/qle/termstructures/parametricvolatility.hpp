@@ -75,7 +75,8 @@ public:
         Hagan2002Lognormal,
         Hagan2002Normal,
         Hagan2002NormalZeroBeta,
-        Antonov2015FreeBoundaryNormal
+        Antonov2015FreeBoundaryNormal,
+        KienitzLawsonSwaynePde
     };
 
     //! modelParameters are given by (tte, underlyingLen) as a vector of parameter values and whether the values are fixed
