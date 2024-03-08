@@ -50,7 +50,8 @@ void McCamFxForwardEngine::calculate() const {
     currency_ = {foreignCcy_, domesticCcy_};
     payer_ = {false, true};
     exercise_ = nullptr;
-
+    includeSettlementDateFlows_ = arguments_.includeSettlementDateFlows;
+        
     McMultiLegBaseEngine::calculate();
 
     // convert base ccy result from McMultiLegbaseEngine to desired npv currency
