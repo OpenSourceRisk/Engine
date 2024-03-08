@@ -4410,6 +4410,7 @@ The parameters have the following meaning:
     <Engine>DiscountingFxForwardEngine</Engine>
     <EngineParameters>
         <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+        <Parameter name="IncludeSettlementDateFlows">true</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -4419,6 +4420,10 @@ The parameters have the following meaning:
 
 CrossAssetModel/AMC builds a McCamFxForwardEngine for use in AMC simulations. We refer to the AMC module documentation
 for further details.
+
+Parameter IncludeSettlementDateFlows is set to false by default, i.e. cash flows on the maturity date of the trade are
+not taken into account when pricing as of maturity date so that the trade has zero value on maturity. In case of true
+we do take the final flows into account while the trade is ``maturing''.
 
 %--------------------------------------------------------
 \subsubsection{Product Type: FxOption}
