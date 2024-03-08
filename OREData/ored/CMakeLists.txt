@@ -103,6 +103,7 @@ portfolio/accumulator.cpp
 portfolio/ascot.cpp
 portfolio/asianoption.cpp
 portfolio/autocallable_01.cpp
+portfolio/balanceguaranteedswap.cpp
 portfolio/barrierdata.cpp
 portfolio/barrieroption.cpp
 portfolio/barrieroptionwrapper.cpp
@@ -119,6 +120,7 @@ portfolio/bondtotalreturnswap.cpp
 portfolio/bondutils.cpp
 portfolio/builders/ascot.cpp
 portfolio/builders/asianoption.cpp
+portfolio/builders/balanceguaranteedswap.cpp
 portfolio/builders/bond.cpp
 portfolio/builders/bondoption.cpp
 portfolio/builders/bondrepo.cpp
@@ -163,6 +165,7 @@ portfolio/builders/equityfuturesoption.cpp
 portfolio/builders/equityoption.cpp
 portfolio/builders/equityoutperformanceoption.cpp
 portfolio/builders/equitytouchoption.cpp
+portfolio/builders/flexiswap.cpp
 portfolio/builders/formulabasedcoupon.cpp
 portfolio/builders/forwardbond.cpp
 portfolio/builders/fxasianoption.cpp
@@ -185,6 +188,7 @@ portfolio/builders/swap.cpp
 portfolio/builders/swaption.cpp
 portfolio/builders/varianceswap.cpp
 portfolio/builders/yoycapfloor.cpp
+portfolio/callableswap.cpp
 portfolio/capfloor.cpp
 portfolio/cbo.cpp
 portfolio/cdo.cpp
@@ -236,6 +240,7 @@ portfolio/equitytouchoption.cpp
 portfolio/europeanoptionbarrier.cpp
 portfolio/failedtrade.cpp
 portfolio/fixingdates.cpp
+portfolio/flexiswap.cpp
 portfolio/formulabasedindexbuilder.cpp
 portfolio/formulabasedlegbuilder.cpp
 portfolio/formulabasedlegdata.cpp
@@ -485,6 +490,7 @@ portfolio/accumulator.hpp
 portfolio/ascot.hpp
 portfolio/asianoption.hpp
 portfolio/autocallable_01.hpp
+portfolio/balanceguaranteedswap.hpp
 portfolio/barrierdata.hpp
 portfolio/barrieroption.hpp
 portfolio/barrieroptionwrapper.hpp
@@ -501,6 +507,7 @@ portfolio/bondtotalreturnswap.hpp
 portfolio/bondutils.hpp
 portfolio/builders/ascot.hpp
 portfolio/builders/asianoption.hpp
+portfolio/builders/balanceguaranteedswap.hpp
 portfolio/builders/bond.hpp
 portfolio/builders/bondoption.hpp
 portfolio/builders/bondrepo.hpp
@@ -546,6 +553,7 @@ portfolio/builders/equityfuturesoption.hpp
 portfolio/builders/equityoption.hpp
 portfolio/builders/equityoutperformanceoption.hpp
 portfolio/builders/equitytouchoption.hpp
+portfolio/builders/flexiswap.hpp
 portfolio/builders/formulabasedcoupon.hpp
 portfolio/builders/forwardbond.hpp
 portfolio/builders/fxasianoption.hpp
@@ -570,6 +578,7 @@ portfolio/builders/swaption.hpp
 portfolio/builders/vanillaoption.hpp
 portfolio/builders/varianceswap.hpp
 portfolio/builders/yoycapfloor.hpp
+portfolio/callableswap.hpp
 portfolio/capfloor.hpp
 portfolio/cbo.hpp
 portfolio/cdo.hpp
@@ -622,6 +631,7 @@ portfolio/equitytouchoption.hpp
 portfolio/europeanoptionbarrier.hpp
 portfolio/failedtrade.hpp
 portfolio/fixingdates.hpp
+portfolio/flexiswap.hpp
 portfolio/formulabasedindexbuilder.hpp
 portfolio/formulabasedlegbuilder.hpp
 portfolio/formulabasedlegdata.hpp

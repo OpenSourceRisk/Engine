@@ -60,6 +60,8 @@ index.cpp
 inflationcurve.cpp
 inflationvol.cpp
 interpolatedyoycapfloortermpricesurface.cpp
+lgmbgsflexiswapengine.cpp
+lgmflexiswapengine.cpp
 logquote.cpp
 mclgmswaptionengine.cpp
 multilegoption.cpp
@@ -76,6 +78,7 @@ quadraticinterpolation.cpp
 randomvariable.cpp
 randomvariablelsmbasissystem.cpp
 ratehelpers.cpp
+stoplightbounds.cpp
 stabilisedglls.cpp
 staticallycorrectedyieldtermstructure.cpp
 strippedoptionletadapter.cpp

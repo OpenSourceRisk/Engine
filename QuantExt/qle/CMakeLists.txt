@@ -99,6 +99,7 @@ indexes/offpeakpowerindex.cpp
 indexes/region.cpp
 instruments/ascot.cpp
 instruments/averageois.cpp
+instruments/balanceguaranteedswap.cpp
 instruments/bondbasket.cpp
 instruments/bondoption.cpp
 instruments/bondrepo.cpp
@@ -124,6 +125,7 @@ instruments/currencyswap.cpp
 instruments/deposit.cpp
 instruments/equityforward.cpp
 instruments/fixedbmaswap.cpp
+instruments/flexiswap.cpp
 instruments/forwardbond.cpp
 instruments/fxforward.cpp
 instruments/genericswaption.cpp
@@ -161,6 +163,7 @@ math/randomvariable.cpp
 math/randomvariable_io.cpp
 math/randomvariable_ops.cpp
 math/randomvariablelsmbasissystem.cpp
+math/stoplightbounds.cpp
 methods/brownianbridgepathinterpolator.cpp
 methods/fdmblackscholesmesher.cpp
 methods/fdmblackscholesop.cpp
@@ -297,6 +300,8 @@ pricingengines/midpointcdoengine.cpp
 pricingengines/midpointcdsenginemultistate.cpp
 pricingengines/midpointindexcdsengine.cpp
 pricingengines/numericalintegrationindexcdsoptionengine.cpp
+pricingengines/numericlgmbgsflexiswapengine.cpp
+pricingengines/numericlgmflexiswapengine.cpp
 pricingengines/numericlgmmultilegoptionengine.cpp
 pricingengines/oiccbasisswapengine.cpp
 pricingengines/pairwisevarianceswapengine.cpp
@@ -565,6 +570,7 @@ indexes/region.hpp
 indexes/secpi.hpp
 instruments/ascot.hpp
 instruments/averageois.hpp
+instruments/balanceguaranteedswap.hpp
 instruments/bondbasket.hpp
 instruments/bondoption.hpp
 instruments/bondrepo.hpp
@@ -590,6 +596,7 @@ instruments/currencyswap.hpp
 instruments/deposit.hpp
 instruments/equityforward.hpp
 instruments/fixedbmaswap.hpp
+instruments/flexiswap.hpp
 instruments/forwardbond.hpp
 instruments/fxforward.hpp
 instruments/genericswaption.hpp
@@ -642,6 +649,7 @@ math/randomvariable_opcodes.hpp
 math/randomvariable_ops.hpp
 math/randomvariablelsmbasissystem.hpp
 math/stabilisedglls.hpp
+math/stoplightbounds.hpp
 math/trace.hpp
 methods/brownianbridgepathinterpolator.hpp
 methods/fdmblackscholesmesher.hpp
@@ -814,6 +822,8 @@ pricingengines/midpointcdoengine.hpp
 pricingengines/midpointcdsenginemultistate.hpp
 pricingengines/midpointindexcdsengine.hpp
 pricingengines/numericalintegrationindexcdsoptionengine.hpp
+pricingengines/numericlgmbgsflexiswapengine.hpp
+pricingengines/numericlgmflexiswapengine.hpp
 pricingengines/numericlgmmultilegoptionengine.hpp
 pricingengines/oiccbasisswapengine.hpp
 pricingengines/pairwisevarianceswapengine.hpp

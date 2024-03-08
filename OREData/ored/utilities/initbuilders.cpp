@@ -25,6 +25,7 @@
 
 #include <ored/portfolio/ascot.hpp>
 #include <ored/portfolio/asianoption.hpp>
+#include <ored/portfolio/balanceguaranteedswap.hpp>
 #include <ored/portfolio/barrieroption.hpp>
 #include <ored/portfolio/barrieroptionwrapper.hpp>
 #include <ored/portfolio/bond.hpp>
@@ -34,6 +35,7 @@
 #include <ored/portfolio/bondtotalreturnswap.hpp>
 #include <ored/portfolio/builders/ascot.hpp>
 #include <ored/portfolio/builders/asianoption.hpp>
+#include <ored/portfolio/builders/balanceguaranteedswap.hpp>
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/bondoption.hpp>
 #include <ored/portfolio/builders/bondrepo.hpp>
@@ -79,6 +81,7 @@
 #include <ored/portfolio/builders/equityoption.hpp>
 #include <ored/portfolio/builders/equityoutperformanceoption.hpp>
 #include <ored/portfolio/builders/equitytouchoption.hpp>
+#include <ored/portfolio/builders/flexiswap.hpp>
 #include <ored/portfolio/builders/formulabasedcoupon.hpp>
 #include <ored/portfolio/builders/forwardbond.hpp>
 #include <ored/portfolio/builders/fxasianoption.hpp>
@@ -102,6 +105,7 @@
 #include <ored/portfolio/builders/varianceswap.hpp>
 #include <ored/portfolio/builders/yoycapfloor.hpp>
 #include <ored/portfolio/capfloor.hpp>
+#include <ored/portfolio/callableswap.hpp>
 #include <ored/portfolio/cbo.hpp>
 #include <ored/portfolio/cdo.hpp>
 #include <ored/portfolio/cliquetoption.hpp>
@@ -144,6 +148,7 @@
 #include <ored/portfolio/equityswap.hpp>
 #include <ored/portfolio/equitytouchoption.hpp>
 #include <ored/portfolio/failedtrade.hpp>
+#include <ored/portfolio/flexiswap.hpp>
 #include <ored/portfolio/formulabasedlegbuilder.hpp>
 #include <ored/portfolio/formulabasedlegdata.hpp>
 #include <ored/portfolio/forwardbond.hpp>
@@ -244,7 +249,7 @@ void initBuilders() {
     ORE_REGISTER_CALIBRATION_INSTRUMENT("CpiCapFloor", CpiCapFloor, false)
     ORE_REGISTER_CALIBRATION_INSTRUMENT("YoYCapFloor", YoYCapFloor, false)
     ORE_REGISTER_CALIBRATION_INSTRUMENT("YoYSwap", YoYSwap, false)
-
+        
     ORE_REGISTER_REFERENCE_DATUM("Bond", BondReferenceDatum, false)
     ORE_REGISTER_REFERENCE_DATUM("CreditIndex", CreditIndexReferenceDatum, false)
     ORE_REGISTER_REFERENCE_DATUM("EquityIndex", EquityIndexReferenceDatum, false)
@@ -365,6 +370,10 @@ void initBuilders() {
     ORE_REGISTER_TRADE_BUILDER("EquityOutperformanceOption", EquityOutperformanceOption, false)
     ORE_REGISTER_TRADE_BUILDER("EquityPairwiseVarianceSwap", EqPairwiseVarSwap, false)
     ORE_REGISTER_TRADE_BUILDER("FxPairwiseVarianceSwap", FxPairwiseVarSwap, false)
+
+    ORE_REGISTER_TRADE_BUILDER("BalanceGuaranteedSwap", BalanceGuaranteedSwap, false)
+    ORE_REGISTER_TRADE_BUILDER("CallableSwap", CallableSwap, false)
+    ORE_REGISTER_TRADE_BUILDER("FlexiSwap", FlexiSwap, false)
 
     ORE_REGISTER_LEGBUILDER("CommodityFixedLegBuilder", CommodityFixedLegBuilder, false)
     ORE_REGISTER_LEGBUILDER("CommodityFloatingLegBuilder", CommodityFloatingLegBuilder, false)
@@ -516,6 +525,11 @@ void initBuilders() {
 
     ORE_REGISTER_ENGINE_BUILDER(EquityOutperformanceOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(PairwiseVarSwapEngineBuilder, false)
+
+    ORE_REGISTER_ENGINE_BUILDER(FlexiSwapDiscountingEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(FlexiSwapLGMGridEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(BalanceGuaranteedSwapDiscountingEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(BalanceGuaranteedSwapFlexiSwapLGMGridEngineBuilder, false)
 
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("Bond", BondTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("ForwardBond", ForwardBondTrsUnderlyingBuilder, false)
