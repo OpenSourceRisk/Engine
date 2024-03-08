@@ -77,6 +77,7 @@
 #include <ored/portfolio/builders/equityforward.hpp>
 #include <ored/portfolio/builders/equityfuturesoption.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
+#include <ored/portfolio/builders/equityoutperformanceoption.hpp>
 #include <ored/portfolio/builders/equitytouchoption.hpp>
 #include <ored/portfolio/builders/formulabasedcoupon.hpp>
 #include <ored/portfolio/builders/forwardbond.hpp>
@@ -92,6 +93,7 @@
 #include <ored/portfolio/builders/indexcreditdefaultswap.hpp>
 #include <ored/portfolio/builders/indexcreditdefaultswapoption.hpp>
 #include <ored/portfolio/builders/multilegoption.hpp>
+#include <ored/portfolio/builders/pairwisevarianceswap.hpp>
 #include <ored/portfolio/builders/quantoequityoption.hpp>
 #include <ored/portfolio/builders/quantovanillaoption.hpp>
 #include <ored/portfolio/builders/swap.hpp>
@@ -137,6 +139,7 @@
 #include <ored/portfolio/equityfxlegdata.hpp>
 #include <ored/portfolio/equityoption.hpp>
 #include <ored/portfolio/equityoptionposition.hpp>
+#include <ored/portfolio/equityoutperformanceoption.hpp>
 #include <ored/portfolio/equityposition.hpp>
 #include <ored/portfolio/equityswap.hpp>
 #include <ored/portfolio/equitytouchoption.hpp>
@@ -168,6 +171,7 @@
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/legdatafactory.hpp>
 #include <ored/portfolio/multilegoption.hpp>
+#include <ored/portfolio/pairwisevarianceswap.hpp>
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/portfolio/referencedatafactory.hpp>
 #include <ored/portfolio/swap.hpp>
@@ -358,6 +362,9 @@ void initBuilders() {
     ORE_REGISTER_TRADE_BUILDER("DoubleDigitalOption", DoubleDigitalOption, false)
     ORE_REGISTER_TRADE_BUILDER("PerformanceOption_01", PerformanceOption_01, false)
     ORE_REGISTER_TRADE_BUILDER("RiskParticipationAgreement", RiskParticipationAgreement, false)
+    ORE_REGISTER_TRADE_BUILDER("EquityOutperformanceOption", EquityOutperformanceOption, false)
+    ORE_REGISTER_TRADE_BUILDER("EquityPairwiseVarianceSwap", EqPairwiseVarSwap, false)
+    ORE_REGISTER_TRADE_BUILDER("FxPairwiseVarianceSwap", FxPairwiseVarSwap, false)
 
     ORE_REGISTER_LEGBUILDER("CommodityFixedLegBuilder", CommodityFixedLegBuilder, false)
     ORE_REGISTER_LEGBUILDER("CommodityFloatingLegBuilder", CommodityFloatingLegBuilder, false)
@@ -506,6 +513,9 @@ void initBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanOptionEngineBuilderDeltaGamma, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanOptionEngineBuilderDeltaGamma, false)
     ORE_REGISTER_ENGINE_BUILDER(FxForwardEngineBuilderDeltaGamma, false)
+
+    ORE_REGISTER_ENGINE_BUILDER(EquityOutperformanceOptionEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(PairwiseVarSwapEngineBuilder, false)
 
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("Bond", BondTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("ForwardBond", ForwardBondTrsUnderlyingBuilder, false)
