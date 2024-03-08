@@ -22,6 +22,8 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <ql/time/daycounters/simpledaycounter.hpp>
+#include <ql/time/businessdayconvention.hpp>
 #include <qle/cashflows/cpicoupon.hpp>
 
 using namespace QuantLib;
@@ -67,6 +69,55 @@ BOOST_AUTO_TEST_CASE(testCpiLegPaymentLag) {
         else if (auto cpiNotionalCashflow = ext::dynamic_pointer_cast<CPICashFlow>(coupon))
             // and one of these flows
             BOOST_CHECK_EQUAL(cpiNotionalCashflow->date(), fixedSchedule.endDate() + 2 * Days);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(testCpiLegNegativePaymentLag) {
+
+    BOOST_TEST_MESSAGE("Testing QuantExt::CPILeg for negative payment lag...");
+
+    Date evaluationDate(6, October, 2023);
+    Settings::instance().evaluationDate() = evaluationDate;
+    Calendar calendar = WeekendsOnly();
+    DayCounter dayCounter = SimpleDayCounter();
+    BusinessDayConvention dayConvention = ModifiedFollowing;
+
+    Date startDate(6, October, 2023);
+    Date endDate(6, October, 2024);
+    Schedule fixedSchedule = MakeSchedule()
+                                 .from(startDate)
+                                 .to(endDate)
+                                 .withTenor(Period(6, Months))
+                                 .withCalendar(calendar)
+                                 .withConvention(dayConvention)
+                                 .backwards();
+
+    auto flatYts = ext::shared_ptr<YieldTermStructure>(new FlatForward(evaluationDate, 0.025, dayCounter));
+    RelinkableHandle<YieldTermStructure> yTS(flatYts);
+
+    auto ukrpi = ext::make_shared<UKRPI>();
+
+    Integer paymentLag = -2;
+    Leg cpiLeg = QuantExt::CPILeg(fixedSchedule, ukrpi, yTS, 100, Period(3, Months))
+                     .withNotionals(1e6)
+                     .withFixedRates(0.01)
+                     .withPaymentCalendar(calendar)
+                     .withPaymentDayCounter(dayCounter)
+                     .withPaymentAdjustment(dayConvention)
+                     .withPaymentLag(paymentLag);
+
+
+    for (auto& coupon : cpiLeg) {
+        if (auto cpiCoupon = ext::dynamic_pointer_cast<CPICoupon>(coupon)) {
+            // The setup leg will have six regular coupons
+            Date testPaymentLag = calendar.advance(cpiCoupon->accrualEndDate(), paymentLag, Days, dayConvention);
+            
+            BOOST_CHECK_EQUAL(cpiCoupon->date(), testPaymentLag);
+        } else if (auto cpiNotionalCashflow = ext::dynamic_pointer_cast<CPICashFlow>(coupon)) {
+            // and one of these flows
+            Date testPaymentLag = calendar.advance(fixedSchedule.endDate(), paymentLag, Days, dayConvention);
+            BOOST_CHECK_EQUAL(cpiNotionalCashflow->date(), testPaymentLag);
+        }
     }
 }
 
