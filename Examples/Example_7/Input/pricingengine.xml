@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<PricingEngines>
+  <Product type="FxForward">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingFxForwardEngine</Engine>
+    <EngineParameters>
+      <Parameter name="includeSettlementDateFlows">true</Parameter>      
+    </EngineParameters>
+  </Product>
+  <Product type="FxOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters/>
+  </Product>
+</PricingEngines>
