@@ -87,6 +87,7 @@ protected:
     mutable std::vector<bool> payer_;
     mutable boost::shared_ptr<Exercise> exercise_; // may be empty, if underlying is the actual trade
     mutable Settlement::Type optionSettlement_ = Settlement::Physical;
+    mutable bool includeSettlementDateFlows_ = false;
 
     // data members
     Handle<CrossAssetModel> model_;
@@ -109,6 +110,8 @@ protected:
     mutable Real resultUnderlyingNpv_, resultValue_;
 
 private:
+    static constexpr Real tinyTime = 1E-10;
+
     // data structure storing info needed to generate the amount for a cashflow
     struct CashflowInfo {
         Size legNo = Null<Size>(), cfNo = Null<Size>();
