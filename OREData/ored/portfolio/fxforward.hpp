@@ -45,6 +45,8 @@ public:
           boughtAmount_(boughtAmount), soldCurrency_(soldCurrency), soldAmount_(soldAmount), settlement_(settlement),
           fxIndex_(fxIndex), payDate_(payDate) {}
 
+    bool isExpired(const Date& d) override;
+    
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const boost::shared_ptr<EngineFactory>&) override;
     QuantLib::Real notional() const override;
@@ -80,6 +82,8 @@ private:
     string payDate_;
     string payLag_;
     string payCalendar_;
-    string payConvention_;};
+    string payConvention_;
+    bool includeSettlementDateFlows_;
+};
 } // namespace data
 } // namespace ore
