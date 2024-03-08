@@ -161,6 +161,7 @@ portfolio/builders/equitydoubletouchoption.cpp
 portfolio/builders/equityforward.cpp
 portfolio/builders/equityfuturesoption.cpp
 portfolio/builders/equityoption.cpp
+portfolio/builders/equityoutperformanceoption.cpp
 portfolio/builders/equitytouchoption.cpp
 portfolio/builders/formulabasedcoupon.cpp
 portfolio/builders/forwardbond.cpp
@@ -176,6 +177,7 @@ portfolio/builders/fxtouchoption.cpp
 portfolio/builders/indexcreditdefaultswap.cpp
 portfolio/builders/indexcreditdefaultswapoption.cpp
 portfolio/builders/multilegoption.cpp
+portfolio/builders/pairwisevarianceswap.cpp
 portfolio/builders/quantoequityoption.cpp
 portfolio/builders/riskparticipationagreement.cpp
 portfolio/builders/scriptedtrade.cpp
@@ -227,6 +229,7 @@ portfolio/equityfxlegbuilder.cpp
 portfolio/equityfxlegdata.cpp
 portfolio/equityoption.cpp
 portfolio/equityoptionposition.cpp
+portfolio/equityoutperformanceoption.cpp
 portfolio/equityposition.cpp
 portfolio/equityswap.cpp
 portfolio/equitytouchoption.cpp
@@ -270,6 +273,7 @@ portfolio/optiondata.cpp
 portfolio/optionexercisedata.cpp
 portfolio/optionpaymentdata.cpp
 portfolio/optionwrapper.cpp
+portfolio/pairwisevarianceswap.cpp
 portfolio/performanceoption_01.cpp
 portfolio/portfolio.cpp
 portfolio/premiumdata.cpp
@@ -540,6 +544,7 @@ portfolio/builders/equitydoubletouchoption.hpp
 portfolio/builders/equityforward.hpp
 portfolio/builders/equityfuturesoption.hpp
 portfolio/builders/equityoption.hpp
+portfolio/builders/equityoutperformanceoption.hpp
 portfolio/builders/equitytouchoption.hpp
 portfolio/builders/formulabasedcoupon.hpp
 portfolio/builders/forwardbond.hpp
@@ -555,6 +560,7 @@ portfolio/builders/fxtouchoption.hpp
 portfolio/builders/indexcreditdefaultswap.hpp
 portfolio/builders/indexcreditdefaultswapoption.hpp
 portfolio/builders/multilegoption.hpp
+portfolio/builders/pairwisevarianceswap.hpp
 portfolio/builders/quantoequityoption.hpp
 portfolio/builders/quantovanillaoption.hpp
 portfolio/builders/riskparticipationagreement.hpp
@@ -608,6 +614,7 @@ portfolio/equityfuturesoption.hpp
 portfolio/equityfxlegbuilder.hpp
 portfolio/equityfxlegdata.hpp
 portfolio/equityoption.hpp
+portfolio/equityoutperformanceoption.hpp
 portfolio/equityoptionposition.hpp
 portfolio/equityposition.hpp
 portfolio/equityswap.hpp
@@ -653,6 +660,7 @@ portfolio/optiondata.hpp
 portfolio/optionexercisedata.hpp
 portfolio/optionpaymentdata.hpp
 portfolio/optionwrapper.hpp
+portfolio/pairwisevarianceswap.hpp
 portfolio/performanceoption_01.hpp
 portfolio/portfolio.hpp
 portfolio/premiumdata.hpp
