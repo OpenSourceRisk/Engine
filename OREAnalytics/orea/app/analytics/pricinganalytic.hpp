@@ -50,4 +50,4 @@ public:
 };
  
 } // namespace analytics
-} // namespace oreplus
+} // namespace ore
