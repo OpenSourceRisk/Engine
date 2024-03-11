@@ -98,9 +98,9 @@ void ScenarioWriter::writeScenario(const boost::shared_ptr<Scenario>& s, const b
             QL_REQUIRE(keys_.size() > 0, "No keys in scenario");
             report_->addColumn("Date", string());
             report_->addColumn("Scenario", Size());
-            report_->addColumn("Numeraire", double(), 8);
+            report_->addColumn("Numeraire", double(), 16);
             for (Size i = 0; i < keys_.size(); i++)
-                report_->addColumn(to_string(keys_[i]), double(), 8);
+                report_->addColumn(to_string(keys_[i]), double(), 16);
             // set the first date, this will bump i_ to 1 below
             firstDate_ = d;
         }

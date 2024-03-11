@@ -169,11 +169,5 @@ void ParametricVarReport::createVarCalculator() {
         parametricVarParams_, covarianceMatrix_, deltas_, gammas_, salvage_, includeGammaMargin_, includeDeltaMargin_);
 }
 
-void ParametricVarReport::handleSensiResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
-    const QuantLib::ext::shared_ptr<MarketRiskGroup>& riskGroup,
-    const QuantLib::ext::shared_ptr<TradeGroup>& tradeGroup) {
-    writeVarResults(reports, riskGroup, tradeGroup);
-}
-
 } // namespace analytics
 } // namespace ore

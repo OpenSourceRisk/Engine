@@ -140,8 +140,12 @@ public:
 
     bool hasDependentAnalytic(const std::string& key) {  return dependentAnalytics_.find(key) != dependentAnalytics_.end(); }
     template <class T> QuantLib::ext::shared_ptr<T> dependentAnalytic(const std::string& key) const;
+    QuantLib::ext::shared_ptr<Analytic> dependentAnalytic(const std::string& key) const;
     const std::map<std::string, QuantLib::ext::shared_ptr<Analytic>>& dependentAnalytics() const {
         return dependentAnalytics_;
+    }
+    void addDependentAnalytic(const std::string& key, const QuantLib::ext::shared_ptr<Analytic>& analytic) {
+        dependentAnalytics_[key] = analytic;
     }
     std::vector<QuantLib::ext::shared_ptr<Analytic>> allDependentAnalytics() const;
 

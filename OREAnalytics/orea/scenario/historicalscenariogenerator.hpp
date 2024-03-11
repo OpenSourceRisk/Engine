@@ -118,6 +118,20 @@ public:
         //! string prepended to label of all scenarios generated
         const std::string& labelPrefix = "");
 
+    
+    //! Constructor with no mporDays/Calendar, construct historical shift scenario between each scneario
+    HistoricalScenarioGenerator(
+        //! Historical Scenario Loader containing all scenarios
+        const boost::shared_ptr<HistoricalScenarioLoader>& historicalScenarioLoader,
+        //! Scenario factory to use
+        const boost::shared_ptr<ScenarioFactory>& scenarioFactory,
+        //! optional adjustment factors for stock splits etc
+        const boost::shared_ptr<ore::data::AdjustmentFactors>& adjFactors = nullptr,
+        //! return configuration
+        const ReturnConfiguration& returnConfiguration = ReturnConfiguration(),
+        //! string prepended to label of all scenarios generated
+        const std::string& labelPrefix = "");
+
     //! Set base scenario, this also defines the asof date
     boost::shared_ptr<Scenario>& baseScenario() { return baseScenario_; }
     //! Get base scenario
@@ -203,11 +217,11 @@ protected:
 
 protected:
     QuantLib::Calendar cal_;
-    QuantLib::Size mporDays_;
+    QuantLib::Size mporDays_ = 10;
 
 private:
     boost::shared_ptr<ore::data::AdjustmentFactors> adjFactors_;
-    bool overlapping_;
+    bool overlapping_ = true;
     ReturnConfiguration returnConfiguration_;
     std::string labelPrefix_;
 };
@@ -291,6 +305,12 @@ QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGe
     const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParams,
     const QuantLib::ext::shared_ptr<TodaysMarketParameters>& marketParam,
     const bool overlapping = true);
+
+QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGenerator(
+    const QuantLib::ext::shared_ptr<HistoricalScenarioReader>& hsr,
+    const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors, const std::set<QuantLib::Date>& dates,
+    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParams,
+    const QuantLib::ext::shared_ptr<TodaysMarketParameters>& marketParam);
 
 } // namespace analytics
 } // namespace ore

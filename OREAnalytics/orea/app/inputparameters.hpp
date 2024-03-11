@@ -174,6 +174,9 @@ public:
     void setHistoricalScenarioReader(const std::string& fileName);
     void setSensitivityStreamFromBuffer(const std::string& buffer);
     void setHistVarSimMarketParamsFromFile(const std::string& fileName);
+    
+    // Setters for PNL Explain
+    void setPNLDate(const std::string& s) { pnlDate_ = parseDate(s); }
 
     // Setters for exposure simulation
     void setSalvageCorrelationMatrix(bool b) { salvageCorrelationMatrix_ = b; }
@@ -461,6 +464,11 @@ public:
     std::string benchmarkVarPeriod() const { return benchmarkVarPeriod_; }
     QuantLib::ext::shared_ptr<HistoricalScenarioReader> historicalScenarioReader() const { return historicalScenarioReader_;};
     const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& histVarSimMarketParams() { return histVarSimMarketParams_; }
+
+    /*************************
+     * Getters for PNL Explain
+     *************************/    
+    const QuantLib::Date& pnlDate() { return pnlDate_; }
     
     /*********************************
      * Getters for exposure simulation 
@@ -736,6 +744,12 @@ protected:
     boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> histVarSimMarketParams_;
     std::string baseScenarioLoc_;
     
+    /*****************
+     * PNL Explain analytics
+     *****************/
+
+    QuantLib::Date pnlDate_;
+
     /*******************
      * EXPOSURE analytic
      *******************/

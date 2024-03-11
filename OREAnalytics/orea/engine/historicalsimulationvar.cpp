@@ -46,10 +46,9 @@ void HistoricalSimulationVarReport::createVarCalculator() {
 }
 
 void HistoricalSimulationVarReport::handleFullRevalResults(const ext::shared_ptr<MarketRiskReport::Reports>& reports,
-                                                           const ext::shared_ptr<MarketRiskGroup>& riskGroup,
-                                                           const ext::shared_ptr<TradeGroup>& tradeGroup) {
+                                                           const ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
+                                                           const ext::shared_ptr<TradeGroupBase>& tradeGroup) {
     pnls_ = histPnlGen_->pnl(period_.get(), tradeIdIdxPairs_);
-    writeVarResults(reports, riskGroup, tradeGroup);
 }
 
 Real HistoricalSimulationVarCalculator::var(Real confidence, const bool isCall, 

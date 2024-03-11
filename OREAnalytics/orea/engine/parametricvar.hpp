@@ -125,10 +125,6 @@ protected:
     //! The parameters to use for calculating the parametric VAR benchmark
     ParametricVarCalculator::ParametricVarParams parametricVarParams_;
     bool salvageCovarianceMatrix_ = true;
-
-    void handleSensiResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
-                            const QuantLib::ext::shared_ptr<MarketRiskGroup>& riskGroup,
-                            const QuantLib::ext::shared_ptr<TradeGroup>& tradeGroup) override;
 };
 
 ParametricVarCalculator::ParametricVarParams::Method parseParametricVarMethod(const std::string& method);

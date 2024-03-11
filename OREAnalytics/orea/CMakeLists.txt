@@ -17,6 +17,7 @@ aggregation/staticcreditxvacalculator.cpp
 aggregation/xvacalculator.cpp
 app/analytic.cpp
 app/analytics/parconversionanalytic.cpp
+app/analytics/pnlexplainanalytic.cpp
 app/analytics/pricinganalytic.cpp
 app/analytics/scenarioanalytic.cpp
 app/analytics/scenariostatisticsanalytic.cpp
@@ -59,6 +60,7 @@ engine/npvrecord.cpp
 engine/parametricvar.cpp
 engine/parsensitivityanalysis.cpp
 engine/parsensitivitycubestream.cpp
+engine/pnlexplainreport.cpp
 engine/riskfilter.cpp
 engine/sensitivityaggregator.cpp
 engine/sensitivityanalysis.cpp
@@ -154,6 +156,7 @@ aggregation/staticcreditxvacalculator.hpp
 aggregation/xvacalculator.hpp
 app/analytic.hpp
 app/analytics/parconversionanalytic.hpp
+app/analytics/pnlexplainanalytic.hpp
 app/analytics/pricinganalytic.hpp
 app/analytics/scenarioanalytic.hpp
 app/analytics/scenariostatisticsanalytic.hpp
@@ -205,6 +208,7 @@ engine/observationmode.hpp
 engine/parametricvar.hpp
 engine/parsensitivityanalysis.hpp
 engine/parsensitivitycubestream.hpp
+engine/pnlexplainreport.hpp
 engine/riskfilter.hpp
 engine/sensitivityaggregator.hpp
 engine/sensitivityanalysis.hpp
@@ -292,7 +296,7 @@ simulation/simmarket.hpp
 version.hpp)
 
 writeAll("orea" "orea.hpp" "auto_link.hpp" "${OREAnalytics_HDR}")
-add_library(${OREA_LIB_NAME} ${OREAnalytics_SRC})
+add_library(${OREA_LIB_NAME} ${OREAnalytics_SRC} "engine/pnlexplainreport.cpp")
 target_link_libraries(${OREA_LIB_NAME} ${QL_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${QLE_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${ORED_LIB_NAME})

@@ -966,6 +966,17 @@ void OREAppInputParameters::loadParameters() {
     }
 
     /****************
+     * PNL Explain
+     ****************/
+    tmp = params_->get("pnlExplain", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        insertAnalytic("PNL_EXPLAIN");
+        
+        tmp = params_->get("pnlExplain", "pnlDate", false);
+        if (tmp != "")
+            setPNLDate(tmp);
+    }
+    /****************
      * SIMM
      ****************/
 
