@@ -54,6 +54,11 @@ jobs:
                             -L
     - name: cmake build
       run: cd build/; pwd; cmake --build . -j $(nproc)
+    - name: Debug
+      run: |
+        ls ${GITHUB_WORKSPACE}/build
+        ls ${GITHUB_WORKSPACE}/build/OREData
+        ls ${GITHUB_WORKSPACE}/build/OREData/test
     - name: Save tests artifacts
       uses: actions/upload-artifact@v3
       with:
