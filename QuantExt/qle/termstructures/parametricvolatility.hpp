@@ -37,37 +37,43 @@ public:
     enum class MarketModelType { Black76 };
     enum class MarketQuoteType { Price, NormalVolatility, ShiftedLognormalVolatility };
 
-    struct MarketPoint {
+    struct MarketSmile {
         QuantLib::Real timeToExpiry;
-        QuantLib::Real strike;
+        // not mandatory, used e.g. for swaptions, but not cap / floors
+        QuantLib::Real underlyingLength = Null<Real>();
         QuantLib::Handle<QuantLib::Quote> forward;
-        QuantLib::Real underlyingLength;
-        QuantLib::Handle<QuantLib::Quote> marketQuote;
-        QuantLib::Real lognormalShift;
-        QuantLib::Option::Type optionType;
+        // this is also used as output lognormal shift for lnvol - type model variants
+        QuantLib::Real lognormalShift = 0.0;
+        // if empty, otm strikes are used
+        std::vector<QuantLib::Option::Type> optionTypes;
+        std::vector<QuantLib::Real> strikes;
+        std::vector<QuantLib::Handle<QuantLib::Quote>> marketQuotes;
     };
 
-    ParametricVolatility(const std::vector<MarketPoint> marketPoints, const MarketModelType marketModelType,
+    ParametricVolatility(const std::vector<MarketSmile> marketSmiles, const MarketModelType marketModelType,
                          const MarketQuoteType inputMarketQuoteType,
                          const QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve);
 
-    QuantLib::Real convert(const MarketPoint& p, const MarketQuoteType inputMarketQuoteType,
-                           const MarketQuoteType outputMarketQuoteType,
-                           const QuantLib::Real outputLognormalShift) const;
-
-    virtual QuantLib::Real evaluate(const QuantLib::Real timeToExpiry, const QuantLib::Real strike,
-                                    const QuantLib::Real underlyingLength, const MarketQuoteType outputMarketQuoteType,
-                                    const QuantLib::Real outputLognormalShift) const = 0;
+    // if outputOptionType is empty, otm strikes are used (call for atm)
+    std::vector<QuantLib::Real> convert(const MarketSmile& p, const MarketQuoteType outputMarketQuoteType,
+                                        const QuantLib::Real outputLognormalShift,
+                                        const std::vector<QuantLib::Option::Type>& outputOptionTypes = {}) const;
+    // if outputOptionType is none, otm strike is used
+    virtual QuantLib::Real
+    evaluate(const QuantLib::Real timeToExpiry, const QuantLib::Real underlyingLength, const QuantLib::Real strike,
+             const MarketQuoteType outputMarketQuoteType, const QuantLib::Real outputLognormalShift,
+             const boost::optional<QuantLib::Option::Type> outputOptionType = boost::none) const = 0;
 
 protected:
-    std::vector<MarketPoint> marketPoints_;
+    std::vector<MarketSmile> marketSmiles_;
     MarketModelType marketModelType_;
     MarketQuoteType inputMarketQuoteType_;
     QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
 };
 
-// strict weak ordering on MarketPoint by lexicographic comparison (timeToExpiry1, strike1) < (timeToExpiry2, strike2)
-bool operator<(const ParametricVolatility::MarketPoint& p, const ParametricVolatility::MarketPoint& q);
+/* strict weak ordering on MarketPoint by lexicographic comparison, i.e.
+   (timeToExpiry1, underlyingLength1) < (timeToExpiry2, underlyingLength2)*/
+bool operator<(const ParametricVolatility::MarketSmile& s, const ParametricVolatility::MarketSmile& t);
 
 class SabrParametricVolatility final : public ParametricVolatility {
 public:
@@ -76,19 +82,22 @@ public:
         Hagan2002Normal,
         Hagan2002NormalZeroBeta,
         Antonov2015FreeBoundaryNormal,
-        KienitzLawsonSwaynePde
+        KienitzLawsonSwaynePde,
+        FlochKennedy
     };
 
-    //! modelParameters are given by (tte, underlyingLen) as a vector of parameter values and whether the values are fixed
+    /*! modelParameters are given by (tte, underlyingLen) as a vector of parameter values and
+        whether the values are fixed */
     SabrParametricVolatility(
-        const ModelVariant modelVariant, const std::vector<MarketPoint> marketPoints,
+        const ModelVariant modelVariant, const std::vector<MarketSmile> marketSmiles,
         const MarketModelType marketModelType, const MarketQuoteType inputMarketQuoteType,
         const QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve,
         const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, bool>>> modelParameters);
 
-    QuantLib::Real evaluate(const QuantLib::Real timeToExpiry, const QuantLib::Real strike,
-                            const QuantLib::Real underlyingLength, const MarketQuoteType outputMarketQuoteType,
-                            const QuantLib::Real outputLognormalShift) const override;
+    QuantLib::Real
+    evaluate(const QuantLib::Real timeToExpiry, const QuantLib::Real underlyingLength, const QuantLib::Real strike,
+             const MarketQuoteType outputMarketQuoteType, const QuantLib::Real outputLognormalShift,
+             const boost::optional<QuantLib::Option::Type> outputOptionType = boost::none) const override;
 
 private:
     static constexpr double eps1 = .0000001;
@@ -97,11 +106,11 @@ private:
     void performCalculations() const override;
 
     ParametricVolatility::MarketQuoteType preferredOutputQuoteType() const;
-    std::vector<Real> direct(const std::vector<Real>& x) const;
-    std::vector<Real> inverse(const std::vector<ReaL>& y) const;
-    std::vector<Real> evaluateSabr(const std::vector<Real>& params, const std::vector<Real>& strikes) const;
-    std::vector<Real> calibrateModelParameters(const Real timeToExpiry, const Real underlyingLength,
-                                               const std::set<MarketPoint>& marketPoints,
+    std::vector<Real> direct(const std::vector<Real>& x, const Real forward, const Real lognormalShift) const;
+    std::vector<Real> inverse(const std::vector<Real>& y, const Real forward, const Real lognormalShift) const;
+    std::vector<Real> evaluateSabr(const std::vector<Real>& params, const Real forward, const Real timeToExpiry,
+                                   const Real lognormalShift, const std::vector<Real>& strikes) const;
+    std::vector<Real> calibrateModelParameters(const MarketSmile& marketSmile,
                                                const std::vector<std::pair<Real, bool>>& params) const;
 
     ModelVariant modelVariant_;
