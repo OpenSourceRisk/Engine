@@ -35,7 +35,7 @@ jobs:
             platform: x64
             boost-lib: 64
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: get QuantLib
       run: |
         git submodule update --init
