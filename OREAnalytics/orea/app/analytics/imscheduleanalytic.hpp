@@ -56,11 +56,18 @@ public:
     virtual void loadCrifRecords(const boost::shared_ptr<ore::data::InMemoryLoader>& loader);
 
     const Crif& crif() const { return crif_; }
-    bool hasNettingSetDetails() { return hasNettingSetDetails_; }
-
-private:
+    bool hasNettingSetDetails() const { return hasNettingSetDetails_; }
+    const std::map<SimmConfiguration::SimmSide, std::set<ore::data::NettingSetDetails>>& hasSEC() const {
+        return hasSEC_;
+    }
+    const std::map<SimmConfiguration::SimmSide, std::set<ore::data::NettingSetDetails>>& hasCFTC() const {
+        return hasCFTC_;
+    }
+ private:
     Crif crif_;
-    bool hasNettingSetDetails_;
+    bool hasNettingSetDetails_ = false;
+    std::map<SimmConfiguration::SimmSide, std::set<ore::data::NettingSetDetails>> hasSEC_;
+    std::map<SimmConfiguration::SimmSide, std::set<ore::data::NettingSetDetails>> hasCFTC_;
     boost::shared_ptr<IMScheduleCalculator> imSchedule_;
 };
 

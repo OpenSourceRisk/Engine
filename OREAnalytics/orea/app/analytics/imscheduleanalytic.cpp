@@ -17,6 +17,8 @@
 */
 
 #include <orea/app/analytics/imscheduleanalytic.hpp>
+#include <orea/simm/simmconfiguration.hpp>
+#include <orea/app/reportwriter.hpp>
 
 using namespace ore::data;
 using namespace boost::filesystem;
@@ -31,6 +33,33 @@ void IMScheduleAnalytic::loadCrifRecords(const boost::shared_ptr<ore::data::InMe
     crif_ = inputs_->crif();
     crif_.fillAmountUsd(market());
     hasNettingSetDetails_ = crif_.hasNettingSetDetails();
+
+    // Keep record of which netting sets have SEC and CFTC
+    map<string, bool> hasSECCache, hasCFTCCache;
+    for (const CrifRecord& cr : crif_) {
+        const NettingSetDetails& nsd = cr.nettingSetDetails;
+
+        for (const SimmConfiguration::SimmSide& side : {SimmConfiguration::SimmSide::Call, SimmConfiguration::SimmSide::Post}) {
+            const string& crifRegs = side == SimmConfiguration::SimmSide::Call ? cr.collectRegulations : cr.postRegulations;
+            for (const string& reg : {"SEC", "CFTC"}) {
+                map<string, bool>& regCache = reg == "SEC" ? hasSECCache : hasCFTCCache;
+                auto& hasRegMap = reg == "SEC" ? hasSEC_ : hasCFTC_;
+
+                if (hasRegMap[side].find(nsd) == hasRegMap[side].end()) {
+                    bool hasReg = false;
+                    if (regCache.find(crifRegs) != regCache.end()) {
+                        hasReg = regCache.at(crifRegs);
+                    } else {
+                        set<string> regs = parseRegulationString(crifRegs);
+                        hasReg = regs.find(reg) != regs.end();
+                        regCache[crifRegs] = hasReg;
+                    }
+                    if (hasReg)
+                        hasRegMap[side].insert(nsd);
+                }
+            }
+        }
+    }
 }
 
 void IMScheduleAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -46,60 +75,47 @@ void IMScheduleAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMe
     auto imAnalytic = static_cast<IMScheduleAnalytic*>(analytic());
     QL_REQUIRE(imAnalytic, "Analytic must be of type IMScheduleAnalytic");
 
-    /*
+    
     imAnalytic->loadCrifRecords(loader);
 
     // Calculate IMSchedule
     LOG("Calculating Schedule IM")
     auto imSchedule = boost::make_shared<IMScheduleCalculator>(
-        imAnalytic->crif().get_value_or(Crif()), inputs->simmResultCurrency(), analytic()->market(),
-        imAnalytic->imScheduleOnly(), plusInputs->enforceIMRegulations(), false, imAnalytic->hasSEC(),
+        imAnalytic->crif(), inputs_->simmResultCurrency(), analytic()->market(),
+        true, inputs_->enforceIMRegulations(), false, imAnalytic->hasSEC(),
         imAnalytic->hasCFTC());
     imAnalytic->setImSchedule(imSchedule);
 
-    if (imAnalytic->imScheduleOnly()) {
-        Real fxSpotReport = 1.0;
-        if (!plusInputs->simmReportingCurrency().empty()) {
-            fxSpotReport = analytic()
-                               ->market()
-                               ->fxRate(plusInputs->simmResultCurrency() + plusInputs->simmReportingCurrency())
-                               ->value();
-            DLOG("SIMM reporting currency is " << plusInputs->simmReportingCurrency() << " with fxSpot "
-                                               << fxSpotReport);
-        }
+    Real fxSpotReport = 1.0;
+    if (!inputs_->simmReportingCurrency().empty()) {
+        fxSpotReport = analytic()
+                ->market()
+                ->fxRate(inputs_->simmResultCurrency() + inputs_->simmReportingCurrency())
+                ->value();
+        DLOG("SIMM reporting currency is " << inputs_->simmReportingCurrency() << " with fxSpot "
+                                            << fxSpotReport);
+    }
 
-        boost::shared_ptr<InMemoryReport> imScheduleSummaryReport = boost::make_shared<InMemoryReport>();
-        boost::shared_ptr<InMemoryReport> imScheduleTradeReport = boost::make_shared<InMemoryReport>();
+    boost::shared_ptr<InMemoryReport> imScheduleSummaryReport = boost::make_shared<InMemoryReport>();
+    boost::shared_ptr<InMemoryReport> imScheduleTradeReport = boost::make_shared<InMemoryReport>();
 
-        // Populate the trade-level IM Schedule report
-        LOG("Generating Schedule IM reports")
-        oreplus::analytics::ReportWriter(inputs_->reportNaString())
+    // Populate the trade-level IM Schedule report
+    LOG("Generating Schedule IM reports")
+    ore::analytics::ReportWriter(inputs_->reportNaString())
             .writeIMScheduleTradeReport(imSchedule->imScheduleTradeResults(), imScheduleTradeReport,
                                         imAnalytic->hasNettingSetDetails());
 
-        // Populate the netting set level IM Schedule report
-        oreplus::analytics::ReportWriter(inputs_->reportNaString())
+    // Populate the netting set level IM Schedule report
+    ore::analytics::ReportWriter(inputs_->reportNaString())
             .writeIMScheduleSummaryReport(imSchedule->finalImScheduleSummaryResults(), imScheduleSummaryReport,
-                                          imAnalytic->hasNettingSetDetails(), plusInputs->simmResultCurrency(),
-                                          plusInputs->simmReportingCurrency(), fxSpotReport);
+                                          imAnalytic->hasNettingSetDetails(), inputs_->simmResultCurrency(),
+                                          inputs_->simmReportingCurrency(), fxSpotReport);
 
-        // Write out reports
-        if (analytic()->getWriteIntermediateReports()) {
-            path imScheduleTradePath = inputs_->resultsPath() / "imschedule_detail.csv";
-            imScheduleTradeReport->toFile(imScheduleTradePath.string(), ',', false, inputs_->csvQuoteChar(),
-                                          inputs_->reportNaString());
-            LOG("Trade-level IM Schedule report generated.")
+    LOG("Schedule IM reports generated");
+    MEM_LOG;
 
-            path imScheduleSummaryPath = inputs_->resultsPath() / "imschedule.csv";
-            imScheduleSummaryReport->toFile(imScheduleSummaryPath.string(), ',', false, inputs_->csvQuoteChar(),
-                                            inputs_->reportNaString());
-            LOG("Netting set level IM Schedule report generated.")
-        }
-        LOG("Schedule IM reports generated");
-        MEM_LOG;
-
-        analytic()->reports()["IM_SCHEDULE"]["im_schedule"] = imScheduleSummaryReport;
-    */
+    analytic()->reports()["IM_SCHEDULE"]["im_schedule"] = imScheduleSummaryReport;
+    analytic()->reports()["IM_SCHEDULE"]["im_schedule_trade"] = imScheduleTradeReport;
 }
 
 } // namespace analytics
