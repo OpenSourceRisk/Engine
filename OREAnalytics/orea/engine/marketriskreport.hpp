@@ -160,9 +160,7 @@ public:
         const bool requireTradePnl = false)
         : baseCurrency_(baseCurrency), period_(period), hisScenGen_(hisScenGen), sensiArgs_(std::move(sensiArgs)),
           fullRevalArgs_(std::move(fullRevalArgs)),  multiThreadArgs_(std::move(multiThreadArgs)), breakdown_(breakdown), 
-          requireTradePnl_(requireTradePnl) {
-        init();
-    }
+          requireTradePnl_(requireTradePnl) {}
     virtual ~MarketRiskReport() {}
 
     virtual void init();
@@ -259,7 +257,7 @@ protected:
     virtual bool runFullReval(const QuantLib::ext::shared_ptr<MarketRiskGroup>& riskGroup) const { return true; }
     virtual bool generateCube(const QuantLib::ext::shared_ptr<MarketRiskGroup>& riskGroup) const { return true; }
     virtual std::string cubeFilePath(const QuantLib::ext::shared_ptr<MarketRiskGroup>& riskGroup) const { return std::string(); }
-    virtual std::vector<ore::data::TimePeriod> timePeriods() { return {period_.get()}; }
+    virtual std::vector<ore::data::TimePeriod> timePeriods() = 0;
     virtual void writeSummary(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
                               const QuantLib::ext::shared_ptr<ore::analytics::MarketRiskGroup>& riskGroup,
                               const QuantLib::ext::shared_ptr<ore::analytics::TradeGroup>& tradeGroup) {}
