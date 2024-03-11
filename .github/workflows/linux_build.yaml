@@ -28,7 +28,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Debug
-        run: |
+      run: |
         echo ${GITHUB_WORKSPACE}
     - name: get QuantLib
       run: |
