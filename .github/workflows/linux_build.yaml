@@ -61,7 +61,7 @@ jobs:
       run: |
         ls ${{ github.workspace }}
     - name: Save tests artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: test-suites
         path: |
@@ -83,7 +83,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Download Artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: test-suites
           path: ${{ github.workspace }}/test-suites
