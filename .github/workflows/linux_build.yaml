@@ -95,4 +95,5 @@ jobs:
         run: |
           ls -ltrha
           pwd
+          ls -ltrha ./Engine/OREData/test
           ${{ github.workspace }}/test-suites/OREData/test/ored-test-suite -- --base_data_path=./Engine/OREData/test
