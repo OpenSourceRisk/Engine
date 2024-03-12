@@ -83,6 +83,9 @@ jobs:
         with:
           name: ored-test-suite
           path: ${{ github.workspace }}/build/OREData/test/ored-test-suite
+      - name: Debug
+        run: |
+          ls -ltrha ${{ github.workspace }}/build/OREData/test/ored-test-suite
       - name: run OREData tests
         run: |
           ${{ github.workspace }}/build/OREData/test/ored-test-suite -- --base_data_path=OREData/test
