@@ -27,9 +27,6 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v3
-    - name: Debug
-      run: |
-        echo ${GITHUB_WORKSPACE}
     - name: get QuantLib
       run: |
         git submodule update --init
@@ -86,16 +83,8 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: test-suites
-          path: ${{ github.workspace }}/test-suites         
-      - name: Debug
-        run: |
-          pwd
-          ls -ltrha ./OREData/test
-          ls -ltrha ./OREAnalytics/test
-          ls -ltrha ./QuantExt/test
+          path: ${{ github.workspace }}/test-suites
       - name: run OREData tests
         run: |
-          pwd
-          ls -ltrha ./OREData/test
-          chmod +x ${{ github.workspace }}/test-suites/OREData/test/ored-test-suite
-          ${{ github.workspace }}/test-suites/OREData/test/ored-test-suite -- --base_data_path=./OREData/test
+          chmod +x ./test-suites/OREData/test/ored-test-suite
+          ./test-suites/OREData/test/ored-test-suite -- --base_data_path=./OREData/test
