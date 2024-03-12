@@ -86,16 +86,16 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: test-suites
-          path: ${{ github.workspace }}/test-suites
+          path: ${{ github.workspace }}/test-suites         
       - name: Debug
         run: |
-          ls -ltrha ${{ github.workspace }}/test-suites
-          ls -ltrha ${{ github.workspace }}/test-suites/OREData
-          ls -ltrha ${{ github.workspace }}/test-suites/OREData/test
-          chmod +x ${{ github.workspace }}/test-suites/OREData/test/ored-test-suite
+          pwd
+          ls -ltrha ./OREData/test
+          ls -ltrha ./OREAnalytics/test
+          ls -ltrha ./QuantExt/test
       - name: run OREData tests
         run: |
-          ls -ltrha
           pwd
-          ls -ltrha ./Engine/OREData/test
-          ${{ github.workspace }}/test-suites/OREData/test/ored-test-suite -- --base_data_path=./Engine/OREData/test
+          ls -ltrha ./OREData/test
+          chmod +x ${{ github.workspace }}/test-suites/OREData/test/ored-test-suite
+          ${{ github.workspace }}/test-suites/OREData/test/ored-test-suite -- --base_data_path=./OREData/test
