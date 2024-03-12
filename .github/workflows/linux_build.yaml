@@ -87,6 +87,8 @@ jobs:
       - name: Debug
         run: |
           ls -ltrha ${{ github.workspace }}/test-suites
+          ls -ltrha ${{ github.workspace }}/test-suites/OREData
+          ls -ltrha ${{ github.workspace }}/test-suites/OREData/test
       - name: run OREData tests
         run: |
-          ${{ github.workspace }}/test-suites/ored-test-suite -- --base_data_path=Engine/OREData/test
+          ${{ github.workspace }}/test-suites/OREData/test/ored-test-suite -- --base_data_path=Engine/OREData/test
