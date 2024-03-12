@@ -81,7 +81,15 @@ jobs:
         with:
           name: test-suites
           path: ${{ github.workspace }}/test-suites
+      - name: run QuantExt tests
+        run: |
+          chmod +x ./test-suites/QuantExt/test/quantext-test-suite
+          ./test-suites/QuantExt/test/quantext-test-suite
       - name: run OREData tests
         run: |
           chmod +x ./test-suites/OREData/test/ored-test-suite
           ./test-suites/OREData/test/ored-test-suite -- --base_data_path=./OREData/test
+      - name: run OREAnalytics tests
+        run: |
+          chmod +x ./test-suites/OREAnalytics/test/orea-test-suite
+          ./test-suites/OREAnalytics/test/orea-test-suite
