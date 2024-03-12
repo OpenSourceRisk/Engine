@@ -23,6 +23,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/strike.hpp>
 #include <oret/toplevelfixture.hpp>
+#include <ql/currencies/america.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/time/calendars/austria.hpp>
 #include <ql/time/calendars/chile.hpp>
@@ -1101,6 +1102,17 @@ BOOST_AUTO_TEST_CASE(testParseBoostAny) {
     BOOST_REQUIRE_NO_THROW(result = ore::data::parseBoostAny(any_array, 0));
     BOOST_CHECK_EQUAL(result.first, "array");
     BOOST_CHECK_EQUAL(result.second, "[ 3; 3; 3; 3; 3 ]");
+}
+
+BOOST_AUTO_TEST_CASE(testParseBoostAnyWithCurrency) {
+
+    BOOST_TEST_MESSAGE("Testing parsing of Boost::Any...");
+
+    Currency usd = USDCurrency();
+    std::pair<std::string, std::string> result;
+    BOOST_REQUIRE_NO_THROW(result = ore::data::parseBoostAny(usd));
+    BOOST_CHECK_EQUAL(result.first, "currency");
+    BOOST_CHECK_EQUAL(result.second, "USD");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
