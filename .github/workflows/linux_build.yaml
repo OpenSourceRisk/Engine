@@ -54,7 +54,9 @@ jobs:
                             -DBUILD_SHARED_LIBS=false \
                             -L
     - name: cmake build
-      run: cd build/; pwd; cmake --build . -j $(nproc)
+      run: |
+        cd build
+        cmake --build . -j $(nproc)
     - name: Debug
       run: |
         ls ${{ github.workspace }}
