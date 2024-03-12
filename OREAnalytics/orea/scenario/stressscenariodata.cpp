@@ -231,7 +231,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
 		string ccyAttr = XMLUtils::getAttribute(child, "ccy");
 		if(!ccyAttr.empty()) {
 		    key = ccyAttr;
-		    ALOG("StressScenarioData: 'ccy' is deprecated as an attribute for CapFloorVolatilities, use 'key' instead.");
+		    WLOG("StressScenarioData: 'ccy' is deprecated as an attribute for CapFloorVolatilities, use 'key' instead.");
 		}
 	    }
             CapFloorVolShiftData data;
