@@ -60,7 +60,7 @@ jobs:
     - name: Save tests artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: ored-test-suite
+        name: test-suites
         path: |
           ${{ github.workspace }}/build/OREData/test/ored-test-suite
           ${{ github.workspace }}/build/OREAnalytics/test/orea-test-suite
@@ -78,14 +78,15 @@ jobs:
     runs-on: ubuntu-22.04
     needs: build
     steps:
+      - uses: actions/checkout@v4
       - name: Download Artifact
         uses: actions/download-artifact@v3
         with:
-          name: ored-test-suite
-          path: ${{ github.workspace }}/build/OREData/test/ored-test-suite
+          name: test-suites
+          path: ${{ github.workspace }}/test-suites
       - name: Debug
         run: |
-          ls -ltrha ${{ github.workspace }}/build/OREData/test/ored-test-suite
+          ls -ltrha ${{ github.workspace }}/test-suites
       - name: run OREData tests
         run: |
-          ${{ github.workspace }}/build/OREData/test/ored-test-suite -- --base_data_path=OREData/test
+          ${{ github.workspace }}/test-suites/ored-test-suite -- --base_data_path=Engine/OREData/test
