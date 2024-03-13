@@ -73,7 +73,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: ore-windows-${{ matrix.arch }}
-        path: D:\a\Engine\Engine\build\App\ore.exe
+        path: ${{ github.workspace }}\build\App\ore.exe
 
   tests:
     name: testing
@@ -85,7 +85,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: test-suites
-          path: ${{ github.workspace }}/test-suites
+          path: ${{ github.workspace }}\test-suites
       - name: run QuantExt tests
         run: |
           .\test-suites\QuantExt\test\quantext-test-suite
