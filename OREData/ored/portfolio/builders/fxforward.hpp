@@ -58,10 +58,13 @@ public:
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override {
         string pair = keyImpl(forCcy, domCcy);
+        string tmp = engineParameter("includeSettlementDateFlows", {}, false, "");
+        bool includeSettlementDateFlows = tmp == "" ? false : parseBool(tmp);
         return boost::make_shared<QuantExt::DiscountingFxForwardEngine>(
             domCcy, market_->discountCurve(domCcy.code(), configuration(MarketContext::pricing)), forCcy,
             market_->discountCurve(forCcy.code(), configuration(MarketContext::pricing)),
-            market_->fxRate(pair, configuration(MarketContext::pricing)));
+            market_->fxRate(pair, configuration(MarketContext::pricing)),
+            includeSettlementDateFlows);
     }
 };
 
