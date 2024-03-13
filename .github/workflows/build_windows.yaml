@@ -53,22 +53,35 @@ jobs:
         mkdir build
         cd build
         call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Vc\Auxiliary\Build\vcvarsall.bat" ${{ matrix.arch }} -vcvars_ver=14.3 || exit 1
-        cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release \
-                         -DQL_BUILD_EXAMPLES=false \
-                         -DQL_BUILD_TEST_SUITE=false \
-                         -DQL_BUILD_BENCHMARK=false \
-                         -DQL_ENABLE_SESSIONS=true \
-                         -DORE_BUILD_DOC=false \
-                         -DORE_BUILD_EXAMPLES=false \
-                         -DORE_BUILD_APP=true \
-                         -DORE_BUILD_TESTS=true \
-                         -DBOOST_INCLUDEDIR=C:\local\boost \
-                         -DBOOST_LIBRARYDIR=C:\local\boost\lib64-msvc-14.3 \
+        cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release `
+                         -DQL_BUILD_EXAMPLES=false `
+                         -DQL_BUILD_TEST_SUITE=false `
+                         -DQL_BUILD_BENCHMARK=false `
+                         -DQL_ENABLE_SESSIONS=true `
+                         -DORE_BUILD_DOC=false `
+                         -DORE_BUILD_EXAMPLES=false `
+                         -DORE_BUILD_APP=true `
+                         -DORE_BUILD_TESTS=true `
+                         -DBOOST_INCLUDEDIR=C:\local\boost `
+                         -DBOOST_LIBRARYDIR=C:\local\boost\lib64-msvc-14.3 `
                          -L
     - name: cmake build
       run: |
         cd build
         cmake --build . -j 2 --verbose
+    - name: Debug
+      run: |
+        pwd
+        ls -ltrha ./build
+        echo ${{ github.workspace }}
+    - name: Save tests artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-suites
+        path: |
+          ${{ github.workspace }}/build/OREData/test/ored-test-suite
+          ${{ github.workspace }}/build/OREAnalytics/test/orea-test-suite
+          ${{ github.workspace }}/build/QuantExt/test/quantext-test-suite
     - name: Save executables as artifacts
       #if: startsWith(github.ref, 'refs/tags/v')
       uses: actions/upload-artifact@v3
