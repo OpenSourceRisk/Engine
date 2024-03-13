@@ -58,7 +58,7 @@ jobs:
     - name: Debug
       run: |
         pwd
-        ls -ltrha ./build
+        ls ./build
         echo ${{ github.workspace }}
     - name: Save tests artifacts
       uses: actions/upload-artifact@v4
