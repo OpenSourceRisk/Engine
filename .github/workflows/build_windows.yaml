@@ -74,3 +74,24 @@ jobs:
       with:
         name: ore-windows-${{ matrix.arch }}
         path: D:\a\Engine\Engine\build\App\ore.exe
+
+  tests:
+    name: testing
+    runs-on: windows-2022
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: test-suites
+          path: ${{ github.workspace }}/test-suites
+      - name: run QuantExt tests
+        run: |
+          .\test-suites\QuantExt\test\quantext-test-suite
+      - name: run OREData tests
+        run: |
+          .\test-suites\OREData\test\ored-test-suite -- --base_data_path=.\OREData\test
+      - name: run OREAnalytics tests
+        run: |
+          .\test-suites\OREAnalytics\test\orea-test-suite
