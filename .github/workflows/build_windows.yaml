@@ -65,9 +65,9 @@ jobs:
       with:
         name: test-suites
         path: |
-          ${{ github.workspace }}\build\OREData\test\ored-test-suite
-          ${{ github.workspace }}\build\OREAnalytics\test\orea-test-suite
-          ${{ github.workspace }}\build\QuantExt\test\quantext-test-suite
+          ${{ github.workspace }}\build\OREData\test\ored-test-suite.exe
+          ${{ github.workspace }}\build\OREAnalytics\test\orea-test-suite.exe
+          ${{ github.workspace }}\build\QuantExt\test\quantext-test-suite.exe
     - name: Save executables as artifacts
       #if: startsWith(github.ref, 'refs/tags/v')
       uses: actions/upload-artifact@v3
@@ -88,10 +88,10 @@ jobs:
           path: ${{ github.workspace }}\test-suites
       - name: run QuantExt tests
         run: |
-          .\test-suites\QuantExt\test\quantext-test-suite
+          .\test-suites\QuantExt\test\quantext-test-suite.exe
       - name: run OREData tests
         run: |
-          .\test-suites\OREData\test\ored-test-suite -- --base_data_path=.\OREData\test
+          .\test-suites\OREData\test\ored-test-suite.exe -- --base_data_path=.\OREData\test
       - name: run OREAnalytics tests
         run: |
-          .\test-suites\OREAnalytics\test\orea-test-suite
+          .\test-suites\OREAnalytics\test\orea-test-suite.exe
