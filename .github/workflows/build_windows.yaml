@@ -45,7 +45,7 @@ jobs:
         (New-Object System.Net.WebClient).DownloadFile($Url, "$env:TEMP\boost.exe")
         Start-Process -Wait -FilePath "$env:TEMP\boost.exe" "/SILENT","/SP-","/SUPPRESSMSGBOXES","/DIR=C:\local\boost"
         choco install -y ninja
-    - name: cmake configure and build
+    - name: cmake configure
       env:
         BOOST_ROOT: C:\local\boost
       shell: cmd
@@ -65,6 +65,9 @@ jobs:
                          -DBOOST_INCLUDEDIR=C:\local\boost \
                          -DBOOST_LIBRARYDIR=C:\local\boost\lib64-msvc-14.3 \
                          -L
+    - name: cmake build
+      run: |
+        cd build
         cmake --build . -j 2 --verbose
     - name: Save executables as artifacts
       #if: startsWith(github.ref, 'refs/tags/v')
