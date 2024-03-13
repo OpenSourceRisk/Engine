@@ -62,6 +62,7 @@ jobs:
         echo ${{ github.workspace }}
     - name: Save tests artifacts
       uses: actions/upload-artifact@v4
+      if: ${{ matrix.arch == 'AMD64' }}
       with:
         name: test-suites
         path: |
