@@ -48,7 +48,6 @@ jobs:
                             -DORE_BUILD_EXAMPLES=false \
                             -DORE_BUILD_APP=true \
                             -DORE_BUILD_TESTS=true \
-                            -DBUILD_SHARED_LIBS=false \
                             -L
     - name: cmake build
       run: |
