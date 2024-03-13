@@ -58,16 +58,16 @@ jobs:
     - name: Debug
       run: |
         pwd
-        ls ./build
+        ls .\build\OREData\test
         echo ${{ github.workspace }}
     - name: Save tests artifacts
       uses: actions/upload-artifact@v4
       with:
         name: test-suites
         path: |
-          ${{ github.workspace }}/build/OREData/test/ored-test-suite
-          ${{ github.workspace }}/build/OREAnalytics/test/orea-test-suite
-          ${{ github.workspace }}/build/QuantExt/test/quantext-test-suite
+          ${{ github.workspace }}\build\OREData\test\ored-test-suite
+          ${{ github.workspace }}\build\OREAnalytics\test\orea-test-suite
+          ${{ github.workspace }}\build\QuantExt\test\quantext-test-suite
     - name: Save executables as artifacts
       #if: startsWith(github.ref, 'refs/tags/v')
       uses: actions/upload-artifact@v3
