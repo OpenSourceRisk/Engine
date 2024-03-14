@@ -104,7 +104,7 @@ Allowable values: A string where the last character must be \emph{D} or \emph{W}
 \emph{M} or \emph{Y}.  The characters before that must be a positive integer. \\ \emph{D}
 $=$ Day, \emph{W} $=$ Week, \emph{M} $=$ Month, \emph{Y} $=$ Year
 
-Note that \emph{0D} is a valid value, and causes there to be no intermediate dates between \lstinline!StartDate! and \lstinline!EndDate!.
+Note that \emph{0D} and \emph{1T} are equivalent valid values, and both cause there to be no intermediate dates between \lstinline!StartDate! and \lstinline!EndDate!.
 
 \item \lstinline!Calendar!: The calendar used to generate schedule  dates. Also used to determine payment dates (except for compounding OIS index legs, which use the index calendar to determine payment dates).
 
