@@ -18,4 +18,5 @@ for orexml in orexmls:
 	oreex.print_headline(f"Run ORE SIMM; version={orexml[1]}; MPOR days={orexml[2]}")
 	oreex.run(orexml[0])
 
+oreex.print_headline(f"Run ORE for IM Schedule")
 oreex.run("Input/ore_schedule.xml")
