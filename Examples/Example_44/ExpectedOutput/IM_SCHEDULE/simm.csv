@@ -1,0 +1,3 @@
+#Portfolio,ProductClass,RiskClass,MarginType,Bucket,SimmSide,Regulation,InitialMargin,Currency,CalculationCurrency
+All,All,All,All,All,Call,,0.00,USD,USD
+All,All,All,All,All,Post,,0.00,USD,USD
