@@ -458,7 +458,8 @@ std::size_t OpenClContext::createInputVariable(double v) {
     }
     inputVarOffset_.push_back(nextOffset);
     inputVarIsScalar_.push_back(true);
-    inputVarValue_.push_back((float)v);
+    inputVarValue_.push_back((float)std::max(std::min(v, (double)std::numeric_limits<float>::max()),
+                                             -(double)std::numeric_limits<float>::max()));
     inputVarPtr_.push_back(nullptr);
     inputVarPtrVal_.push_back({});
     return nVars_++;
@@ -476,6 +477,9 @@ std::size_t OpenClContext::createInputVariable(double* v) {
     inputVarIsScalar_.push_back(false);
     inputVarValue_.push_back(0.0f);
     inputVarPtrVal_.push_back(std::vector<float>(size_[currentId_-1]));
+    for (std::size_t i = 0; i < size_[currentId_ - 1]; ++i)
+        v[i] = (float)std::max(std::min(v[i], (double)std::numeric_limits<float>::max()),
+                               -(double)std::numeric_limits<float>::max());
     std::copy(v, v + size_[currentId_ - 1], inputVarPtrVal_.back().begin());
     inputVarPtr_.push_back(&inputVarPtrVal_.back()[0]);
     return nVars_++;
