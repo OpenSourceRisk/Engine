@@ -28,9 +28,11 @@
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/quote.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
-#include <qle/models/exactbachelierimpliedvolatility.hpp>
 
 namespace QuantExt {
+
+using QuantLib::Real;
+using QuantLib::Null;
 
 class ParametricVolatility : public QuantLib::LazyObject {
 public:
@@ -74,49 +76,5 @@ protected:
 /* strict weak ordering on MarketPoint by lexicographic comparison, i.e.
    (timeToExpiry1, underlyingLength1) < (timeToExpiry2, underlyingLength2)*/
 bool operator<(const ParametricVolatility::MarketSmile& s, const ParametricVolatility::MarketSmile& t);
-
-class SabrParametricVolatility final : public ParametricVolatility {
-public:
-    enum class ModelVariant {
-        Hagan2002Lognormal,
-        Hagan2002Normal,
-        Hagan2002NormalZeroBeta,
-        Antonov2015FreeBoundaryNormal,
-        KienitzLawsonSwaynePde,
-        FlochKennedy
-    };
-
-    /*! modelParameters are given by (tte, underlyingLen) as a vector of parameter values and
-        whether the values are fixed */
-    SabrParametricVolatility(
-        const ModelVariant modelVariant, const std::vector<MarketSmile> marketSmiles,
-        const MarketModelType marketModelType, const MarketQuoteType inputMarketQuoteType,
-        const QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve,
-        const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, bool>>> modelParameters);
-
-    QuantLib::Real
-    evaluate(const QuantLib::Real timeToExpiry, const QuantLib::Real underlyingLength, const QuantLib::Real strike,
-             const MarketQuoteType outputMarketQuoteType, const QuantLib::Real outputLognormalShift,
-             const boost::optional<QuantLib::Option::Type> outputOptionType = boost::none) const override;
-
-private:
-    static constexpr double eps1 = .0000001;
-    static constexpr double eps2 = .9999;
-
-    void performCalculations() const override;
-
-    ParametricVolatility::MarketQuoteType preferredOutputQuoteType() const;
-    std::vector<Real> direct(const std::vector<Real>& x, const Real forward, const Real lognormalShift) const;
-    std::vector<Real> inverse(const std::vector<Real>& y, const Real forward, const Real lognormalShift) const;
-    std::vector<Real> evaluateSabr(const std::vector<Real>& params, const Real forward, const Real timeToExpiry,
-                                   const Real lognormalShift, const std::vector<Real>& strikes) const;
-    std::vector<Real> calibrateModelParameters(const MarketSmile& marketSmile,
-                                               const std::vector<std::pair<Real, bool>>& params) const;
-
-    ModelVariant modelVariant_;
-    std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, bool>>> modelParameters_;
-
-    mutable std::map<std::pair<Real, Real>, std::vector<Real>> calibratedSabrParams_;
-};
 
 } // namespace QuantExt
