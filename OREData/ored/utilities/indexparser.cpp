@@ -262,7 +262,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
     vector<string> tokens;
     split(tokens, s, boost::is_any_of("-"));
     QL_REQUIRE(tokens.size() == 2 || tokens.size() == 3,
-               "Two or three tokens required in " << s << ": CCY-INDEX or CCY-INDEX-TERM");
+               "Two or three \"-\"-delimited tokens required in interest rate index \"" << s << "\": CCY-INDEX or CCY-INDEX-TERM");
 
     // Variables used below
     string indexStem = tokens[0] + "-" + tokens[1];
