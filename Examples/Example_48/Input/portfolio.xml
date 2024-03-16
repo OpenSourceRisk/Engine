@@ -52,7 +52,7 @@
             <Index>EUR-EURIBOR-3M</Index>
             <!-- The recall spread goes here. -->
             <Spreads>
-              <Spread>0.02</Spread>
+              <Spread>0.025</Spread>
             </Spreads>
           </FloatingLegData>
           <ScheduleData>
@@ -143,7 +143,7 @@
             <Index>EUR-EURIBOR-3M</Index>
             <!-- The recall spread goes here. -->
             <Spreads>
-              <Spread>0.02</Spread>
+              <Spread>0.025</Spread>
             </Spreads>
           </FloatingLegData>
           <ScheduleData>
