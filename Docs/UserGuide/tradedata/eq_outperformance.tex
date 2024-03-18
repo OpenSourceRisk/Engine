@@ -1,0 +1,142 @@
+\subsubsection{Equity Outperformance Option}
+
+The \lstinline!EquityOutperformanceOptionData! node is the trade data container for the \emph{EquityOutperformanceOption} trade type. The \lstinline!EquityOutperformanceOptionData!  node includes one  \lstinline!OptionData! trade component sub-node plus elements
+specific to the Equity Outperformance Option. 
+
+An Equity Outperformance option has a payoff that depends on the `outperformance' of two equity indices (i.e. the difference between 
+their returns) against a strike return. The buyer has the right but not the obligation to receive the outperformance in 
+exchange for the strike rate at a predetermined time in the future.
+
+The trade may optionally have a knockIn or knockOut price (or both). 
+Only if the price of Underlying2 is above the knockIn value or below the knockOut value is the payoff paid.
+
+The structure of an example \lstinline!EquityOutperformanceOptionData! node for an Equity Outperformace Option is shown in Listing
+\ref{lst:eqoutperformaceoption_data}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+        <EquityOutperformanceOptionData>
+            <OptionData>
+              <LongShort>Long</LongShort>
+              <OptionType>Call</OptionType>
+              <Style>European</Style>
+              <Settlement>Cash</Settlement>
+              <ExerciseDates>
+                <ExerciseDate>2022-09-21</ExerciseDate>
+              </ExerciseDates>
+              ...
+            </OptionData>
+          <Currency>USD</Currency>
+          <Notional>500000</Notional>
+          <Underlying1>
+            <Type>Equity</Type>
+            <Name>RIC:.SPX</Name>
+          </Underlying1>
+          <Underlying2>
+            <Type>Equity</Type>
+            <Name>RIC:.NDX</Name>
+          </Underlying2>
+          <InitialPrice1>2140</InitialPrice1>
+          <InitialPrice2>13000</InitialPrice2>
+          <StrikeReturn>0.01</StrikeReturn>
+          <KnockInPrice>12500</KnockInPrice>
+          <KnockOutPrice>14000</KnockOutPrice>
+        </EquityOutperformanceOptionData>
+\end{minted}
+\caption{Equity Outperformance Option Data}
+\label{lst:eqoutperformaceoption_data}
+\end{listing}
+
+The Payoff is:
+$$
+N\cdot \max(0,R_1-R_2 - K)
+$$
+where:
+\begin{itemize}
+  \item $N$ is the notional amount
+  \item $R_1$ is the return of \lstinline!Underlying1!
+  \item $R_2$ is the return of \lstinline!Underlying2!
+  \item $K$ is the \lstinline!StrikeReturn!.
+\end{itemize}
+The meanings and allowable values of the elements in the \lstinline!EquityOutperformaceOptionData!  node follow below.
+
+\begin{itemize}
+\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data}. The relevant fields in the \lstinline!OptionData! node for an EquityOutperformanceOption are:
+
+\begin{itemize}
+\item \lstinline!LongShort! The allowable values are \emph{Long} or \emph{Short}.
+
+\item \lstinline!OptionType! The allowable values are \emph{Call} or \emph{Put}.  \emph{Call} means that the holder has the right but not obligation to receive the Outperformance and pay the StrikeReturn. \emph{Put} means that the holder has the right but not obligation to pay the Outperformance and receive the StrikeReturn.
+
+\item  \lstinline!Style! The allowable value is \emph{European}. Note that the Equity Outperformance Option type allows for \emph{European} option style only. 
+
+\item  \lstinline!Settlement! The allowable values are \emph{Cash} or \emph{Physical}.
+
+%\item \lstinline!PayoffatExpiry! The allowable values are \emph{true} for payoff at expiry, or \emph{false} for payoff at knockout. 
+%(relevant for \emph{American} style FxOptions).
+
+\item An \lstinline!ExerciseDates! node where exactly one ExerciseDate date element must be given. 
+
+\item Premiums [Optional]: Option premium amounts paid by the option buyer to the option seller.
+
+Allowable values:  See section \ref{ss:premiums}
+
+\end{itemize}
+
+
+
+\item Currency: The currency of the equity outperformance option.
+
+Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.
+    
+\item Underlying1:  Specifies the first underlying equity.  This in turn defines the equity curve used for pricing. The \lstinline!Underlying! node is described in further detail in Section \ref{ss:underlying}. Note that the node name is \lstinline!Underlying1!.
+
+\item Underlying2:  Specifies the second underlying equity. This in turn defines the equity curve used for pricing. The \lstinline!Underlying! node is described in further detail in Section \ref{ss:underlying}. Note that the node name is \lstinline!Underlying2!.
+
+Also note that the equities in Underlying1 and Underlying2 must be quoted in the same currency.
+
+\item InitialPrice1:  Specifies the initial price for first underlying equity.
+
+Allowable values:  Any positive real number.	
+    
+\item InitialPrice2:  Specifies the initial price for second underlying equity.
+
+Allowable values:  Any positive real number.	
+    
+\item StrikeReturn: The option strike return.
+    
+Allowable values:  Any positive real number.	
+    
+\item Notional: The notional amount for the trade.
+    
+Allowable values:  Any positive real number.
+
+\item KnockInPrice[Optional]: The payoff is only paid if on the settlement date the price of underlying2 is above this value.
+    
+Allowable values:  Any positive real number.
+
+\item KnockOutPrice[Optional]: The payoff is only paid if on the settlement date the price of underlying2 is below this value.
+    
+Allowable values:  Any positive real number.
+
+\item InitialPriceCurrency1 [Optional]: Only relevant if InitialPrice1 is given in a currency other than Underlying1's currency.
+
+Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.
+
+\item InitialPriceCurrency2 [Optional]: Only relevant if InitialPrice1 is given in a currency other than Underlying2's currency.
+
+Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.
+
+\item InitialPriceFXTerms1 [Mandatory when InitialPriceCurrency1 is provided]: The node must be given if and only if the underlying currency is different from the initialPrice currency. The node contains the following sub nodes:
+\begin{itemize}
+  \item FXIndex: The fx index to use for the conversion, this must contain the underlying asset currency and the funding leg
+    currency (in the order defined in table \ref{tab:fxindex_data}, i.e. it does not matter which one is the asset currency and which is the funding currency)
+    
+    Allowable values: see \ref{tab:fxindex_data}
+	
+\item InitialPriceFXTerms2 [Mandatory when InitialPriceCurrency2 is provided]: The node must be given if and only if the underlying currency is different from the initialPrice currency. Contains the same subnodes as InitialPriceFXTerms1.
+
+    Allowable values: Any valid calendar, see Table \ref{tab:calendar} Calendar. Defaults to the \emph{NullCalendar} (no holidays) if left blank or omitted.
+\end{itemize}
+\end{itemize}
