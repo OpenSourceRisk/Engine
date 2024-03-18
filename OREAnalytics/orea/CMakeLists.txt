@@ -59,6 +59,8 @@ engine/npvrecord.cpp
 engine/parametricvar.cpp
 engine/parsensitivityanalysis.cpp
 engine/parsensitivitycubestream.cpp
+engine/parsensitivityinstrumentbuilder.cpp
+engine/parsensitivityutilities.cpp
 engine/riskfilter.cpp
 engine/sensitivityaggregator.cpp
 engine/sensitivityanalysis.cpp
@@ -205,6 +207,8 @@ engine/observationmode.hpp
 engine/parametricvar.hpp
 engine/parsensitivityanalysis.hpp
 engine/parsensitivitycubestream.hpp
+engine/parsensitivityinstrumentbuilder.hpp
+engine/parsensitivityutilities.hpp
 engine/riskfilter.hpp
 engine/sensitivityaggregator.hpp
 engine/sensitivityanalysis.hpp
