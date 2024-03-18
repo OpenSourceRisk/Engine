@@ -45,7 +45,7 @@ jobs:
         cmake --install .
     - name: Save executables as artifacts
       if: startsWith(github.ref, 'refs/tags/v')
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ore-macos-arm64
         path: /Users/runner/work/Engine/Engine/build/App/ore
