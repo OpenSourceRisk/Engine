@@ -72,6 +72,8 @@
 #include <orea/engine/parametricvar.hpp>
 #include <orea/engine/parsensitivityanalysis.hpp>
 #include <orea/engine/parsensitivitycubestream.hpp>
+#include <orea/engine/parsensitivityinstrumentbuilder.hpp>
+#include <orea/engine/parsensitivityutilities.hpp>
 #include <orea/engine/riskfilter.hpp>
 #include <orea/engine/sensitivityaggregator.hpp>
 #include <orea/engine/sensitivityanalysis.hpp>
