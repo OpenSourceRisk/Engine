@@ -218,12 +218,14 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
 
         auto const& rv = model_->randomVariates();
         if (!rv.empty()) {
-            if (useExternalComputeFramework_ && newExternalCalc) {
-                auto gen =
-                    ComputeEnvironment::instance().context().createInputVariates(rv.size(), rv.front().size(), 42);
-                for (Size k = 0; k < rv.size(); ++k) {
-                    for (Size j = 0; j < rv.front().size(); ++j)
-                        valuesExternal[rv[k][j]] = ExternalRandomVariable(gen[k][j]);
+            if (useExternalComputeFramework_) {
+                if (newExternalCalc) {
+                    auto gen =
+                        ComputeEnvironment::instance().context().createInputVariates(rv.size(), rv.front().size(), 42);
+                    for (Size k = 0; k < rv.size(); ++k) {
+                        for (Size j = 0; j < rv.front().size(); ++j)
+                            valuesExternal[rv[k][j]] = ExternalRandomVariable(gen[k][j]);
+                    }
                 }
             } else {
                 auto gen =

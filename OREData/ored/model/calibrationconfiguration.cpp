@@ -102,7 +102,7 @@ void CalibrationConfiguration::fromXML(XMLNode* node) {
 
 }
 
-XMLNode* CalibrationConfiguration::toXML(XMLDocument& doc) {
+XMLNode* CalibrationConfiguration::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("CalibrationConfiguration");
 

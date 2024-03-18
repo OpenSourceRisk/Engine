@@ -205,7 +205,7 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
     } // while(n)
 }
 
-XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) {
+XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) const {
 
     XMLNode* todaysMarketNode = doc.allocNode("TodaysMarket");
 

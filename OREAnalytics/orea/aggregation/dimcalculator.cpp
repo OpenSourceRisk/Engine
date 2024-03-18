@@ -127,7 +127,7 @@ const vector<vector<Real>>& DynamicInitialMarginCalculator::cashFlow(const std::
         QL_FAIL("netting set " << nettingSet << " not found in DIM results");
 }
 
-void DynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& dimEvolutionReport) {
+void DynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& dimEvolutionReport) const {
 
     Size samples = dimCube_->samples();
     Size stopDatesLoop = datesLoopSize_;
@@ -147,7 +147,7 @@ void DynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& dimEv
         for (Size i = 0; i < stopDatesLoop; ++i) {
             Real expectedFlow = 0.0;
             for (Size j = 0; j < samples; ++j) {
-                expectedFlow += nettingSetFLOW_[nettingSet][i][j] / samples;
+                expectedFlow += nettingSetFLOW_.find(nettingSet)->second[i][j] / samples;
             }
 
             Date defaultDate = dimCube_->dates()[i];
@@ -157,7 +157,7 @@ void DynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& dimEv
                 .add(i)
                 .add(defaultDate)
                 .add(days)
-                .add(nettingSetExpectedDIM_[nettingSet][i])
+                .add(nettingSetExpectedDIM_.find(nettingSet)->second[i])
                 .add(expectedFlow)
                 .add(nettingSet)
 	        .add(t);

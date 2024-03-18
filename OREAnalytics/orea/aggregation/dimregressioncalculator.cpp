@@ -402,7 +402,7 @@ map<string, Real> RegressionDynamicInitialMarginCalculator::unscaledCurrentDIM()
     return t0dimReg;
 }
 
-void RegressionDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& dimEvolutionReport) {
+void RegressionDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& dimEvolutionReport) const {
 
     Size samples = dimCube_->samples();
     Size stopDatesLoop = datesLoopSize_;
@@ -424,7 +424,7 @@ void RegressionDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Rep
         for (Size i = 0; i < stopDatesLoop; ++i) {
             Real expectedFlow = 0.0;
             for (Size j = 0; j < samples; ++j) {
-                expectedFlow += nettingSetFLOW_[nettingSet][i][j] / samples;
+                expectedFlow += nettingSetFLOW_.find(nettingSet)->second[i][j] / samples;
             }
 
             Date defaultDate = dimCube_->dates()[i];
@@ -434,10 +434,10 @@ void RegressionDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Rep
                 .add(i)
                 .add(defaultDate)
                 .add(days)
-                .add(nettingSetZeroOrderDIM_[nettingSet][i])
-                .add(nettingSetExpectedDIM_[nettingSet][i])
+                .add(nettingSetZeroOrderDIM_.find(nettingSet)->second[i])
+                .add(nettingSetExpectedDIM_.find(nettingSet)->second[i])
                 .add(expectedFlow)
-                .add(nettingSetSimpleDIMh_[nettingSet][i])
+                .add(nettingSetSimpleDIMh_.find(nettingSet)->second[i])
                 .add(nettingSet)
                 .add(t);
         }

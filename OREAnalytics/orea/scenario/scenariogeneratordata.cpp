@@ -134,7 +134,7 @@ void ScenarioGeneratorData::fromXML(XMLNode* root) {
     LOG("ScenarioGeneratorData done.");
 }
 
-XMLNode* ScenarioGeneratorData::toXML(XMLDocument& doc) {
+XMLNode* ScenarioGeneratorData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Simulation");
     XMLNode* pNode = XMLUtils::addChild(doc, node, "Parameters");
 

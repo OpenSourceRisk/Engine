@@ -254,7 +254,7 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
 
 void VanillaOptionTrade::fromXML(XMLNode* node) { Trade::fromXML(node); }
 
-XMLNode* VanillaOptionTrade::toXML(XMLDocument& doc) {
+XMLNode* VanillaOptionTrade::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     return node;
 }

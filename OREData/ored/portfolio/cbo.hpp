@@ -51,7 +51,7 @@ public:
         std::string paymentConvention;
 
         void fromXML(XMLNode* node) override;
-        XMLNode* toXML(ore::data::XMLDocument& doc) override;
+        XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     };
 
     CboReferenceDatum() { setType(TYPE); }
@@ -59,7 +59,7 @@ public:
     CboReferenceDatum(const string& id, const CboStructure& cboStructure) : ReferenceDatum(TYPE, id), cboStructure_(cboStructure) {}
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     const CboStructure& cbostructure() const { return cboStructure_; }
     void setCboStructure(const CboStructure& cboStructure) { cboStructure_ = cboStructure; }
@@ -79,7 +79,7 @@ public:
     // Trade interface
     void build(const boost::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     QuantLib::Real notional() const override { return notional_; }
     std::string notionalCurrency() const override { return ccy_; }
 
