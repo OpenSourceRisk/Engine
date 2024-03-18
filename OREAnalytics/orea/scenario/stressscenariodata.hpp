@@ -50,6 +50,7 @@ public:
         ShiftType shiftType;
         vector<Real> shifts;
         vector<Period> shiftTenors;
+        bool isParShift;
     };
 
     struct SpotShiftData {
@@ -61,12 +62,14 @@ public:
         ShiftType shiftType;
         vector<Period> shiftExpiries;
         vector<Real> shifts;
+       
     };
 
     struct CapFloorVolShiftData {
         ShiftType shiftType;
         vector<Period> shiftExpiries;
         vector<Real> shifts;
+        bool isParShift;
     };
 
     struct SwaptionVolShiftData {

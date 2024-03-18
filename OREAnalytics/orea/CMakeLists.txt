@@ -21,6 +21,7 @@ app/analytics/parconversionanalytic.cpp
 app/analytics/pricinganalytic.cpp
 app/analytics/scenarioanalytic.cpp
 app/analytics/scenariostatisticsanalytic.cpp
+app/analytics/sensitivityanalytic.cpp
 app/analytics/simmanalytic.cpp
 app/analytics/varanalytic.cpp
 app/analytics/xvaanalytic.cpp
@@ -62,6 +63,7 @@ engine/parsensitivityanalysis.cpp
 engine/parsensitivitycubestream.cpp
 engine/parsensitivityinstrumentbuilder.cpp
 engine/parsensitivityutilities.cpp
+engine/partozeroscenario.cpp
 engine/riskfilter.cpp
 engine/sensitivityaggregator.cpp
 engine/sensitivityanalysis.cpp
@@ -161,6 +163,7 @@ app/analytics/parconversionanalytic.hpp
 app/analytics/pricinganalytic.hpp
 app/analytics/scenarioanalytic.hpp
 app/analytics/scenariostatisticsanalytic.hpp
+app/analytics/sensitivityanalytic.hpp
 app/analytics/simmanalytic.hpp
 app/analytics/varanalytic.hpp
 app/analytics/xvaanalytic.hpp
@@ -211,6 +214,7 @@ engine/parsensitivityanalysis.hpp
 engine/parsensitivitycubestream.hpp
 engine/parsensitivityinstrumentbuilder.hpp
 engine/parsensitivityutilities.hpp
+engine/partozeroscenario.hpp
 engine/riskfilter.hpp
 engine/sensitivityaggregator.hpp
 engine/sensitivityanalysis.hpp
