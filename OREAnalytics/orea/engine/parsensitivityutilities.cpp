@@ -231,7 +231,7 @@ Volatility impliedVolatilityWrapper(const CapFloorType& cap, Real targetValue, c
 }
 } // namespace
 
-Real ParSensitivityUtilities::impliedQuote(const boost::shared_ptr<Instrument>& i) const {
+Real impliedQuote(const boost::shared_ptr<Instrument>& i) {
     if (boost::dynamic_pointer_cast<VanillaSwap>(i))
         return boost::dynamic_pointer_cast<VanillaSwap>(i)->fairRate();
     if (boost::dynamic_pointer_cast<Deposit>(i))
@@ -266,17 +266,19 @@ Real ParSensitivityUtilities::impliedQuote(const boost::shared_ptr<Instrument>& 
                                                                                 << ")");
 }
 
-Volatility ParSensitivityUtilities::impliedVolatility(const QuantLib::CapFloor& cap, Real targetValue,
-                                                      const Handle<YieldTermStructure>& d, Volatility guess,
-                                                      VolatilityType type, Real displacement) {
+Volatility impliedVolatility(const QuantLib::CapFloor& cap, Real targetValue, const Handle<YieldTermStructure>& d,
+                             Volatility guess, VolatilityType type, Real displacement) {
     return impliedVolatilityWrapper(cap, targetValue, d, guess, type, displacement, Handle<Index>());
 }
 
-Volatility ParSensitivityUtilities::impliedVolatility(const QuantLib::YoYInflationCapFloor& cap, Real targetValue,
-                                                      const Handle<YieldTermStructure>& d, Volatility guess,
-                                                      VolatilityType type, Real displacement,
-                                                      const Handle<YoYInflationIndex>& index) {
+Volatility impliedVolatility(const QuantLib::YoYInflationCapFloor& cap, Real targetValue,
+                             const Handle<YieldTermStructure>& d, Volatility guess, VolatilityType type,
+                             Real displacement, const Handle<YoYInflationIndex>& index) {
     return impliedVolatilityWrapper(cap, targetValue, d, guess, type, displacement, index);
+}
+
+bool riskFactorKeysAreSimilar(const ore::analytics::RiskFactorKey& x, const ore::analytics::RiskFactorKey& y) {
+    return x.keytype == y.keytype && x.name == y.name;
 }
 
 } // namespace analytics

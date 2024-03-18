@@ -31,24 +31,20 @@
 namespace ore {
 namespace analytics {
 
-class ParSensitivityUtilities {
-public:
-    //! Computes the implied quote
-    Real impliedQuote(const boost::shared_ptr<QuantLib::Instrument>& i) const;
+//! Computes the implied quote
+Real impliedQuote(const boost::shared_ptr<QuantLib::Instrument>& i);
 
-    //! true if key type and name are equal, do not care about the index though
-    bool riskFactorKeysAreSimilar(const ore::analytics::RiskFactorKey& x, const ore::analytics::RiskFactorKey& y) {
-        return x.keytype == y.keytype && x.name == y.name;
-    }
+//! true if key type and name are equal, do not care about the index though
+bool riskFactorKeysAreSimilar(const ore::analytics::RiskFactorKey& x, const ore::analytics::RiskFactorKey& y);
 
-    double impliedVolatility(const QuantLib::CapFloor& cap, double targetValue,
-                             const QuantLib::Handle<QuantLib::YieldTermStructure>& d, double guess,
-                             QuantLib::VolatilityType type, double displacement);
+double impliedVolatility(const QuantLib::CapFloor& cap, double targetValue,
+                         const QuantLib::Handle<QuantLib::YieldTermStructure>& d, double guess,
+                         QuantLib::VolatilityType type, double displacement);
 
-    double impliedVolatility(const QuantLib::YoYInflationCapFloor& cap, double targetValue,
-                             const QuantLib::Handle<QuantLib::YieldTermStructure>& d, double guess,
-                             QuantLib::VolatilityType type, double displacement,
-                             const Handle<YoYInflationIndex>& index = {});
-};
+double impliedVolatility(const QuantLib::YoYInflationCapFloor& cap, double targetValue,
+                         const QuantLib::Handle<QuantLib::YieldTermStructure>& d, double guess,
+                         QuantLib::VolatilityType type, double displacement,
+                         const Handle<YoYInflationIndex>& index = {});
+
 } // namespace analytics
 } // namespace ore

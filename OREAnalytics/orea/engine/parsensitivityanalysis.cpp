@@ -85,58 +85,6 @@ using boost::numeric::ublas::element_prod;
 namespace ore {
 namespace analytics {
 
-namespace {
-
-Real impliedQuote(const boost::shared_ptr<Instrument>& i) {
-    if (boost::dynamic_pointer_cast<VanillaSwap>(i))
-        return boost::dynamic_pointer_cast<VanillaSwap>(i)->fairRate();
-    if (boost::dynamic_pointer_cast<Deposit>(i))
-        return boost::dynamic_pointer_cast<Deposit>(i)->fairRate();
-    if (boost::dynamic_pointer_cast<QuantLib::ForwardRateAgreement>(i))
-        return boost::dynamic_pointer_cast<QuantLib::ForwardRateAgreement>(i)->forwardRate();
-    if (boost::dynamic_pointer_cast<OvernightIndexedSwap>(i))
-        return boost::dynamic_pointer_cast<OvernightIndexedSwap>(i)->fairRate();
-    if (boost::dynamic_pointer_cast<CrossCcyBasisMtMResetSwap>(i))
-        return boost::dynamic_pointer_cast<CrossCcyBasisMtMResetSwap>(i)->fairSpread();
-    if (boost::dynamic_pointer_cast<CrossCcyBasisSwap>(i))
-        return boost::dynamic_pointer_cast<CrossCcyBasisSwap>(i)->fairPaySpread();
-    if (boost::dynamic_pointer_cast<FxForward>(i))
-        return boost::dynamic_pointer_cast<FxForward>(i)->fairForwardRate().rate();
-    if (boost::dynamic_pointer_cast<QuantExt::CreditDefaultSwap>(i))
-        return boost::dynamic_pointer_cast<QuantExt::CreditDefaultSwap>(i)->fairSpreadClean();
-    if (boost::dynamic_pointer_cast<ZeroCouponInflationSwap>(i))
-        return boost::dynamic_pointer_cast<ZeroCouponInflationSwap>(i)->fairRate();
-    if (boost::dynamic_pointer_cast<YearOnYearInflationSwap>(i))
-        return boost::dynamic_pointer_cast<YearOnYearInflationSwap>(i)->fairRate();
-    if (boost::dynamic_pointer_cast<TenorBasisSwap>(i)) {
-        if (boost::dynamic_pointer_cast<TenorBasisSwap>(i)->spreadOnRec())
-            return boost::dynamic_pointer_cast<TenorBasisSwap>(i)->fairRecLegSpread();
-        else
-            return boost::dynamic_pointer_cast<TenorBasisSwap>(i)->fairPayLegSpread();
-    }
-    if (boost::dynamic_pointer_cast<FixedBMASwap>(i))
-        return boost::dynamic_pointer_cast<FixedBMASwap>(i)->fairRate();
-    if (boost::dynamic_pointer_cast<SubPeriodsSwap>(i))
-        return boost::dynamic_pointer_cast<SubPeriodsSwap>(i)->fairRate();
-    QL_FAIL("SensitivityAnalysis: impliedQuote: unknown instrument (is null = " << std::boolalpha << (i == nullptr)
-                                                                                << ")");
-}
-
-// true if key type and name are equal, do not care about the index though
-bool similar(const ore::analytics::RiskFactorKey& x, const ore::analytics::RiskFactorKey& y) {
-    return x.keytype == y.keytype && x.name == y.name;
-}
-
-} // anonymous namespace
-
-/*! Utility for implying a flat volatility which reproduces the provided Cap/Floor price
-    IR: CapFloorType = CapFloor, IndexType not used
-    YY: CapFloorType = YoYInflationCapFloor, IndexType = YoYInflationIndex */
-template <typename CapFloorType, typename IndexType = QuantLib::Index>
-Volatility impliedVolatility(const CapFloorType& cap, Real targetValue, const Handle<YieldTermStructure>& d,
-                             Volatility guess, VolatilityType type, Real displacement,
-                             const Handle<IndexType>& index = Handle<IndexType>());
-
 //! Constructor
 ParSensitivityAnalysis::ParSensitivityAnalysis(const Date& asof,
                                                const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketParams,
@@ -160,7 +108,7 @@ void ParSensitivityAnalysis::augmentRelevantRiskFactors() {
         for (auto const& r : addFactors1) {
             // DLOG("candidate risk factor " << r);
             for (auto const& s : instruments_.parHelpers_) {
-                if (similar(s.first, r)) {
+                if (riskFactorKeysAreSimilar(s.first, r)) {
                     tmp.insert(s.first);
                     // DLOG("factor " << r << ": found similar risk factor " << s.first);
                     for (auto const& d : instruments_.parHelperDependencies_[s.first]) {
@@ -171,7 +119,7 @@ void ParSensitivityAnalysis::augmentRelevantRiskFactors() {
                 }
             }
             for (auto const& s : instruments_.parCaps_) {
-                if (similar(s.first, r)) {
+                if (riskFactorKeysAreSimilar(s.first, r)) {
                     tmp.insert(s.first);
                     // DLOG("factor " << r << ": found similar risk factor " << s.first);
                     for (auto const& d : instruments_.parHelperDependencies_[s.first]) {
@@ -286,7 +234,7 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const boost::shar
                    "computeParInstrumentSensitivities(): no cap vts found for key " << c.first);
 
         Real price = c.second->NPV();
-        Volatility parVol = impliedVolatility<QuantLib::CapFloor>(
+        Volatility parVol = impliedVolatility(
             *c.second, price, instruments_.parCapsYts_.at(c.first), 0.01,
             instruments_.parCapsVts_.at(c.first)->volatilityType(), instruments_.parCapsVts_.at(c.first)->displacement());
         parCapVols[c.first] = parVol;
@@ -307,7 +255,7 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const boost::shar
                    "computeParInstrumentSensitivities(): no cap vts found for key " << c.first);
 
         Real price = c.second->NPV();
-        Volatility parVol = impliedVolatility<QuantLib::YoYInflationCapFloor, QuantLib::YoYInflationIndex>(
+        Volatility parVol = impliedVolatility(
             *c.second, price, instruments_.parYoYCapsYts_.at(c.first), 0.01,
             instruments_.parYoYCapsVts_.at(c.first)->volatilityType(),
             instruments_.parYoYCapsVts_.at(c.first)->displacement(), instruments_.parYoYCapsIndex_.at(c.first));
@@ -448,7 +396,7 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const boost::shar
                        "internal error: did not find parCapYts[" << p.first << "]");
 
             Real price = p.second->NPV();
-            Real fair = impliedVolatility<QuantLib::CapFloor>(*p.second, price, yts->second, 0.01,
+            Real fair = impliedVolatility(*p.second, price, yts->second, 0.01,
                                                               ovs->volatilityType(), ovs->displacement());
             auto base = parCapVols.find(p.first);
             QL_REQUIRE(base != parCapVols.end(), "internal error: did not find parCapVols[" << p.first << "]");
@@ -487,7 +435,7 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const boost::shar
                        "internal error: did not find parYoYCapsIndex[" << p.first << "]");
 
             Real price = p.second->NPV();
-            Real fair = impliedVolatility<QuantLib::YoYInflationCapFloor, QuantLib::YoYInflationIndex>(
+            Real fair = impliedVolatility(
                 *p.second, price, yts->second, 0.01, ovs->volatilityType(), ovs->displacement(), index->second);
             auto base = parCapVols.find(p.first);
             QL_REQUIRE(base != parCapVols.end(), "internal error: did not find parCapVols[" << p.first << "]");
