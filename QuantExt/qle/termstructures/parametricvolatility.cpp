@@ -44,7 +44,7 @@ std::vector<Real> ParametricVolatility::convert(const MarketSmile& s, const Mark
                                                 const Real outputLognormalShift,
                                                 const std::vector<QuantLib::Option::Type>& outputOptionTypes) const {
 
-    std::vector<Real> result;
+    std::vector<Real> result(s.marketQuotes.size(), 0.0);
 
     for (Size i = 0; i < s.marketQuotes.size(); ++i) {
 
@@ -74,8 +74,13 @@ std::vector<Real> ParametricVolatility::convert(const MarketSmile& s, const Mark
                 forwardPremium = bachelierBlackFormula(inputOptionType, s.strikes[i], s.forward->value(),
                                                        s.marketQuotes[i]->value() * std::sqrt(s.timeToExpiry));
             } else if (inputMarketQuoteType_ == MarketQuoteType::ShiftedLognormalVolatility) {
-                forwardPremium = blackFormula(inputOptionType, s.strikes[i], s.forward->value(),
-                                              s.marketQuotes[i]->value() * std::sqrt(s.timeToExpiry), s.lognormalShift);
+                if (s.strikes[i] < -s.lognormalShift)
+                    forwardPremium =
+                        inputOptionType == QuantLib::Option::Call ? s.forward->value() - s.strikes[i] : 0.0;
+                else
+                    forwardPremium =
+                        blackFormula(inputOptionType, s.strikes[i], s.forward->value(),
+                                     s.marketQuotes[i]->value() * std::sqrt(s.timeToExpiry), s.lognormalShift);
             } else {
                 QL_FAIL("ParametricVolatility::convert(): MarketQuoteType ("
                         << static_cast<int>(inputMarketQuoteType_) << ") not handled. Internal error, contact dev.");
@@ -96,8 +101,9 @@ std::vector<Real> ParametricVolatility::convert(const MarketSmile& s, const Mark
                 result[i] = exactBachelierImpliedVolatility(outputOptionType, s.strikes[i], s.forward->value(),
                                                             s.timeToExpiry, forwardPremium);
             } else if (outputMarketQuoteType == MarketQuoteType::ShiftedLognormalVolatility) {
-                result[i] = blackFormulaImpliedStdDev(outputOptionType, s.strikes[i], s.forward->value(),
-                                                      forwardPremium, 1.0, outputLognormalShift);
+                if (s.strikes[i] > -outputLognormalShift)
+                    result[i] = blackFormulaImpliedStdDev(outputOptionType, s.strikes[i], s.forward->value(),
+                                                          forwardPremium, 1.0, outputLognormalShift);
             } else {
                 QL_FAIL("ParametricVolatility::convert(): MarketQuoteType ("
                         << static_cast<int>(outputMarketQuoteType) << ") not handled. Internal error, contact dev.");

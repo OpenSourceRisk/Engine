@@ -20,6 +20,7 @@
 #include <qle/models/normalsabr.hpp>
 #include <qle/termstructures/sabrparametricvolatility.hpp>
 
+#include <ql/experimental/math/laplaceinterpolation.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/math/optimization/costfunction.hpp>
 #include <ql/math/optimization/levenbergmarquardt.hpp>
@@ -275,8 +276,58 @@ void SabrParametricVolatility::performCalculations() const {
                           "covered by the given model parameters.");
         auto [params, error] = calibrateModelParameters(s, param->second);
         calibratedSabrParams_[key] = params;
-        // handle error TODO !!!
+        // handle calibration error TODO !!! we want to remove those exceeding an error threshold
     }
+
+    // build the timeToExpiry, underlyingLength vectors
+
+    std::set<Real> tmpTimeToExpiries, tmpUnderlyingLengths;
+
+    for (auto const& s : marketSmiles_) {
+        tmpTimeToExpiries.insert(s.timeToExpiry);
+        tmpUnderlyingLengths.insert(s.underlyingLength);
+    }
+
+    std::vector<Real> timeToExpiries(tmpTimeToExpiries.begin(), tmpTimeToExpiries.end());
+    std::vector<Real> underlyingLengths(tmpUnderlyingLengths.begin(), tmpUnderlyingLengths.end());
+
+    // build a matrix of calibrated SABR parameters, possibly with null values
+
+    Size m = underlyingLengths.size();
+    Size n = timeToExpiries.size();
+    Matrix alpha(m, n, Null<Real>()), beta(m, n, Null<Real>()), nu(m, n, Null<Real>()), rho(m, n, Null<Real>());
+
+    for (Size i = 0; i < m; ++i) {
+        for (Size j = 0; j < n; ++j) {
+            auto key = std::make_pair(timeToExpiries[i], underlyingLengths[j]);
+            if (auto p = calibratedSabrParams_.find(key); p != calibratedSabrParams_.end()) {
+                alpha(i, j) = p->second[0];
+                beta(i, j) = p->second[1];
+                nu(i, j) = p->second[2];
+                rho(i, j) = p->second[3];
+            }
+        }
+    }
+
+    // interpolate the null values
+
+    laplaceInterpolation(alpha);
+    laplaceInterpolation(beta);
+    laplaceInterpolation(nu);
+    laplaceInterpolation(rho);
+
+    // sanitize values that are not allowed
+
+    for (Size i = 0; i < m; ++i) {
+        for (Size j = 0; j < n; ++j) {
+            alpha(i, j) = std::max(alpha(i, j), 0.0);
+            beta(i, j) = std::max(beta(i, j), 0.0);
+            nu(i, j) = std::max(nu(i, j), 0.0);
+            rho(i, j) = std::max(std::min(rho(i, j), 1.0), -1.0);
+        }
+    }
+
+    // set up the parameter interpolations
 }
 
 Real SabrParametricVolatility::evaluate(const Real timeToExpiry, const Real underlyingLength, const Real strike,
