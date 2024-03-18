@@ -1,0 +1,50 @@
+\subsubsection{Knock Out Swap}
+
+A Knock Out Swap is represented using the TradeType \emph{KnockOutSwap} and a KnockOutSwapData block as shown in listing
+\ref{lst:knock_out_swap}. It must have one \lstinline!BarrierData! node, and two legs, one fixed and one floating, each represented by a \lstinline!LegData! trade component. 
+
+A Knock Out Swap is a Swap with one Fixed and one Floating leg, where the Swap is terminated if the Floating leg Index hits a barrier. The barrier is monitored on all floating leg fixing dates after the BarrierStartDate.
+
+The meanings and allowable values in this block are as follows:
+
+\begin{itemize}
+\item BarrierData: This node specifies the barrier Type and Level. The Type must be \emph{UpAndOut} or
+  \emph{DownAndOut}. Exactly one Level must be specified. All other values of the barrier data block are not relevant. \\
+  Allowable values: See \ref{ss:barrier_data}.
+
+\item BarrierStartDate: The barrier is monitored on all floating leg fixing dates that are on or after the barrier start date. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item LegData: This specifies the swap terms. Exactly two LegData nodes must be given, one of type Fixed and one of type Floating. \\
+    Allowable values: See \ref{ss:leg_data}.
+\end{itemize}
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Trade id="194837232">
+  <TradeType>KnockOutSwap</TradeType>
+  <Envelope>...</Envelope>
+  <KnockOutSwapData>
+    <!-- BarrierData and BarrierStartDate specify the knock out terms -->
+    <BarrierData>
+      <Type>UpAndOut</Type>
+      <Levels>
+        <Level>0.05</Level>
+      </Levels>
+    </BarrierData>
+    <BarrierStartDate>2024-10-01</BarrierStartDate>
+    <!-- we require exactly one Floating and one Fixed Leg -->
+    <LegData>
+      <LegType>Floating</LegType>
+      ...
+    </LegData>
+    <LegData>
+      <LegType>Fixed</LegType>
+      ...
+    </LegData>
+  </KnockOutSwapData>
+</Trade>
+\end{minted}
+\caption{Knock Out Swap}
+\label{lst:knock_out_swap}
+\end{listing}
