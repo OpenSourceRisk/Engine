@@ -83,225 +83,10 @@ using boost::numeric::ublas::element_prod;
 namespace ore {
 namespace analytics {
 
-namespace {
-
-Real ParSensitivityHelperFunctions::impliedQuote(const boost::shared_ptr<Instrument>& i) const {
-    if (boost::dynamic_pointer_cast<VanillaSwap>(i))
-        return boost::dynamic_pointer_cast<VanillaSwap>(i)->fairRate();
-    if (boost::dynamic_pointer_cast<Deposit>(i))
-        return boost::dynamic_pointer_cast<Deposit>(i)->fairRate();
-    if (boost::dynamic_pointer_cast<QuantLib::ForwardRateAgreement>(i))
-        return boost::dynamic_pointer_cast<QuantLib::ForwardRateAgreement>(i)->forwardRate();
-    if (boost::dynamic_pointer_cast<OvernightIndexedSwap>(i))
-        return boost::dynamic_pointer_cast<OvernightIndexedSwap>(i)->fairRate();
-    if (boost::dynamic_pointer_cast<CrossCcyBasisMtMResetSwap>(i))
-        return boost::dynamic_pointer_cast<CrossCcyBasisMtMResetSwap>(i)->fairSpread();
-    if (boost::dynamic_pointer_cast<CrossCcyBasisSwap>(i))
-        return boost::dynamic_pointer_cast<CrossCcyBasisSwap>(i)->fairPaySpread();
-    if (boost::dynamic_pointer_cast<FxForward>(i))
-        return boost::dynamic_pointer_cast<FxForward>(i)->fairForwardRate().rate();
-    if (boost::dynamic_pointer_cast<QuantExt::CreditDefaultSwap>(i))
-        return boost::dynamic_pointer_cast<QuantExt::CreditDefaultSwap>(i)->fairSpreadClean();
-    if (boost::dynamic_pointer_cast<ZeroCouponInflationSwap>(i))
-        return boost::dynamic_pointer_cast<ZeroCouponInflationSwap>(i)->fairRate();
-    if (boost::dynamic_pointer_cast<YearOnYearInflationSwap>(i))
-        return boost::dynamic_pointer_cast<YearOnYearInflationSwap>(i)->fairRate();
-    if (boost::dynamic_pointer_cast<TenorBasisSwap>(i)) {
-        if (boost::dynamic_pointer_cast<TenorBasisSwap>(i)->spreadOnRec())
-            return boost::dynamic_pointer_cast<TenorBasisSwap>(i)->fairRecLegSpread();
-        else
-            return boost::dynamic_pointer_cast<TenorBasisSwap>(i)->fairPayLegSpread();
-    }
-    if (boost::dynamic_pointer_cast<FixedBMASwap>(i))
-        return boost::dynamic_pointer_cast<FixedBMASwap>(i)->fairRate();
-    if (boost::dynamic_pointer_cast<SubPeriodsSwap>(i))
-        return boost::dynamic_pointer_cast<SubPeriodsSwap>(i)->fairRate();
-    QL_FAIL("SensitivityAnalysis: impliedQuote: unknown instrument (is null = " << std::boolalpha << (i == nullptr)
-                                                                                << ")");
-}
-
-/* Helper class for implying the fair flat cap/floor volatility
-   This class is copied from QuantLib's capfloor.cpp and generalised to cover both normal and lognormal volatilities */
-class ImpliedCapFloorVolHelper {
-public:
-    ImpliedCapFloorVolHelper(const QuantLib::Instrument& cap,
-                             const std::function<boost::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator,
-                             const Real targetValue);
-    Real operator()(Volatility x) const;
-    Real derivative(Volatility x) const;
-
-private:
-    Real targetValue_;
-    boost::shared_ptr<PricingEngine> engine_;
-    boost::shared_ptr<SimpleQuote> vol_;
-    const Instrument::results* results_;
-};
-
-ImpliedCapFloorVolHelper::ImpliedCapFloorVolHelper(
-    const QuantLib::Instrument& cap,
-    const std::function<boost::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator, const Real targetValue)
-    : targetValue_(targetValue) {
-    // set an implausible value, so that calculation is forced
-    // at first ImpliedCapFloorVolHelper::operator()(Volatility x) call
-    vol_ = boost::shared_ptr<SimpleQuote>(new SimpleQuote(-1));
-    engine_ = engineGenerator(Handle<Quote>(vol_));
-    cap.setupArguments(engine_->getArguments());
-    results_ = dynamic_cast<const Instrument::results*>(engine_->getResults());
-}
-
-Real ImpliedCapFloorVolHelper::operator()(Volatility x) const {
-    if (x != vol_->value()) {
-        vol_->setValue(x);
-        engine_->calculate();
-    }
-    return results_->value - targetValue_;
-}
-
-Real ImpliedCapFloorVolHelper::derivative(Volatility x) const {
-    if (x != vol_->value()) {
-        vol_->setValue(x);
-        engine_->calculate();
-    }
-    std::map<std::string, boost::any>::const_iterator vega_ = results_->additionalResults.find("vega");
-    QL_REQUIRE(vega_ != results_->additionalResults.end(), "vega not provided");
-    return boost::any_cast<Real>(vega_->second);
-}
-
-Volatility impliedVolatility(const CapFloor& cap, Real targetValue, const Handle<YieldTermStructure>& d,
-                             Volatility guess, VolatilityType type, Real displacement, Real accuracy,
-                             Natural maxEvaluations, Volatility minVolLognormal, Volatility maxVolLognormal,
-                             Volatility minVolNormal, Volatility maxVolNormal, const Handle<Index>& notUsed) {
-    QL_REQUIRE(!cap.isExpired(), "instrument expired");
-    std::function<boost::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator;
-    if (type == ShiftedLognormal)
-        engineGenerator = [&d, displacement](const Handle<Quote>& h) {
-            return boost::make_shared<BlackCapFloorEngine>(d, h, Actual365Fixed(), displacement);
-        };
-    else if (type == Normal)
-        engineGenerator = [&d](const Handle<Quote>& h) {
-            return boost::make_shared<BachelierCapFloorEngine>(d, h, Actual365Fixed());
-        };
-    else
-        QL_FAIL("volatility type " << type << " not implemented");
-    ImpliedCapFloorVolHelper f(cap, engineGenerator, targetValue);
-    NewtonSafe solver;
-    solver.setMaxEvaluations(maxEvaluations);
-    Real minVol = type == Normal ? minVolNormal : minVolLognormal;
-    Real maxVol = type == Normal ? maxVolNormal : maxVolLognormal;
-    return solver.solve(f, accuracy, guess, minVol, maxVol);
-}
-
-Volatility impliedVolatility(const QuantLib::YoYInflationCapFloor& cap, Real targetValue,
-                             const Handle<YieldTermStructure>& d, Volatility guess, VolatilityType type,
-                             Real displacement, Real accuracy, Natural maxEvaluations, Volatility minVolLognormal,
-                             Volatility maxVolLognormal, Volatility minVolNormal, Volatility maxVolNormal,
-                             const Handle<YoYInflationIndex>& index) {
-    QL_REQUIRE(!cap.isExpired(), "instrument expired");
-    std::function<boost::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator;
-    if (type == ShiftedLognormal) {
-        if (close_enough(displacement, 0.0))
-            engineGenerator = [&d, &index](const Handle<Quote>& h) {
-                // hardcode A365F as for ir caps, or should we use the dc from the original market vol ts ?
-                // calendar, bdc not needed here, settlement days should be zero so that the
-                // reference date is = evaluation date
-                auto c = Handle<QuantLib::YoYOptionletVolatilitySurface>(
-                    boost::make_shared<QuantExt::ConstantYoYOptionletVolatility>(
-                        h, 0, NullCalendar(), Unadjusted, Actual365Fixed(),
-                        index->yoyInflationTermStructure()->observationLag(), index->frequency(),
-                        index->interpolated()));
-                return boost::make_shared<QuantExt::YoYInflationBlackCapFloorEngine>(*index, c, d);
-            };
-        else
-            engineGenerator = [&d, &index](const Handle<Quote>& h) {
-                auto c = Handle<QuantLib::YoYOptionletVolatilitySurface>(
-                    boost::make_shared<QuantExt::ConstantYoYOptionletVolatility>(
-                        h, 0, NullCalendar(), Unadjusted, Actual365Fixed(),
-                        index->yoyInflationTermStructure()->observationLag(), index->frequency(),
-                        index->interpolated()));
-                return boost::make_shared<QuantExt::YoYInflationUnitDisplacedBlackCapFloorEngine>(*index, c, d);
-            };
-    } else if (type == Normal)
-        engineGenerator = [&d, &index](const Handle<Quote>& h) {
-            auto c = Handle<QuantLib::YoYOptionletVolatilitySurface>(
-                boost::make_shared<QuantExt::ConstantYoYOptionletVolatility>(
-                    h, 0, NullCalendar(), Unadjusted, Actual365Fixed(),
-                    index->yoyInflationTermStructure()->observationLag(), index->frequency(), index->interpolated()));
-            return boost::make_shared<QuantExt::YoYInflationBachelierCapFloorEngine>(*index, c, d);
-        };
-    else
-        QL_FAIL("volatility type " << type << " not implemented");
-    ImpliedCapFloorVolHelper f(cap, engineGenerator, targetValue);
-    NewtonSafe solver;
-    solver.setMaxEvaluations(maxEvaluations);
-    Real minVol = type == Normal ? minVolNormal : minVolLognormal;
-    Real maxVol = type == Normal ? maxVolNormal : maxVolLognormal;
-    return solver.solve(f, accuracy, guess, minVol, maxVol);
-}
-
-// wrapper function, does not throw
-template <typename CapFloorType, typename IndexType>
-Volatility impliedVolatility(const CapFloorType& cap, Real targetValue, const Handle<YieldTermStructure>& d,
-                             Volatility guess, VolatilityType type, Real displacement, const Handle<IndexType>& index) {
-
-    string strikeStr = "?";
-
-    try {
-
-        Real accuracy = 1.0e-6;
-        Natural maxEvaluations = 100;
-        Volatility minVolLognormal = 1.0e-7;
-        Volatility maxVolLognormal = 4.0;
-        Volatility minVolNormal = 1.0e-7;
-        Volatility maxVolNormal = 0.05;
-
-        // 1. Get strike for logging
-        std::ostringstream oss;
-        if (!cap.capRates().empty()) {
-            oss << "Cap: " << cap.capRates().size() << " strikes, starting with " << cap.capRates().front()
-                << "."; // they are probably all the same here
-        }
-        if (!cap.floorRates().empty()) {
-            oss << "Floor: " << cap.floorRates().size() << " strikes, starting with " << cap.floorRates().front()
-                << "."; // they are probably all the same here
-        }
-        strikeStr = oss.str();
-
-        // 2. Try to get implied Vol with defaults
-        TLOG("Getting impliedVolatility for cap (" << cap.maturityDate() << " strike " << strikeStr << ")");
-        try {
-            Volatility vol = impliedVolatility(cap, targetValue, d, guess, type, displacement, accuracy, maxEvaluations,
-                                               minVolLognormal, maxVolLognormal, minVolNormal, maxVolNormal, index);
-            TLOG("Got vol " << vol << " on first attempt");
-            return vol;
-        } catch (std::exception& e) {
-            ALOG("Exception getting implied Vol for Cap (" << cap.maturityDate() << " strike " << strikeStr << ") "
-                                                           << e.what());
-        }
-
-        // 3. Try with bigger bounds
-        try {
-            Volatility vol = impliedVolatility(cap, targetValue, d, guess, type, displacement, accuracy, maxEvaluations,
-                                               minVolLognormal / 100.0, maxVolLognormal * 100.0, minVolNormal / 100.0,
-                                               maxVolNormal * 100.0, index);
-            TLOG("Got vol " << vol << " on second attempt");
-            return vol;
-        } catch (std::exception& e) {
-            ALOG("Exception getting implied Vol for Cap (" << cap.maturityDate() << " strike " << strikeStr << ") "
-                                                           << e.what());
-        }
-
-    } catch (...) {
-        // pass through to below
-    }
-
-    ALOG("Cap impliedVolatility() failed for Cap (" << cap.type() << ", maturity " << cap.maturityDate() << ", strike "
-                                                    << strikeStr << " for target " << targetValue
-                                                    << ". Returning Initial guess " << guess << " and continuing");
-    return guess;
-}
-
-ParSensitivityInstrumentBuilder::Instruments ParSensitivityInstrumentBuilder::createParInstruments(
-    const QuantLib::Date& asof, const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams,
+void ParSensitivityInstrumentBuilder::createParInstruments(
+    ParSensitivityInstrumentBuilder::Instruments &instruments,
+    const QuantLib::Date& asof,
+    const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams,
     const ore::analytics::SensitivityScenarioData& sensitivityData,
     const std::set<ore::analytics::RiskFactorKey::KeyType>& typesDisabled,
     const std::set<ore::analytics::RiskFactorKey::KeyType>& parTypes,
@@ -323,8 +108,6 @@ ParSensitivityInstrumentBuilder::Instruments ParSensitivityInstrumentBuilder::cr
     }
 
     LOG("Build par instruments...");
-    ParSensitivityInstrumentBuilder::Instruments instruments;
-
     auto& parHelpers_ = instruments.parHelpers_;
     auto& parCaps_ = instruments.parCaps_;
     auto& parYoYCaps_ = instruments.parYoYCaps_;
@@ -336,6 +119,11 @@ ParSensitivityInstrumentBuilder::Instruments ParSensitivityInstrumentBuilder::cr
     auto& cdsPillars_ = instruments.cdsPillars_;
     auto& yoyCapFloorPillars_ = instruments.yoyCapFloorPillars_;
     auto& zeroInflationPillars_ = instruments.zeroInflationPillars_;
+
+    parHelpers_.clear();
+    parCaps_.clear();
+    parYoYCaps_.clear();
+
     const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
     QL_REQUIRE(conventions != nullptr, "conventions are empty");
 
@@ -489,8 +277,8 @@ ParSensitivityInstrumentBuilder::Instruments ParSensitivityInstrumentBuilder::cr
                         string otherCurrency =
                             data.otherCurrency.empty() ? simMarketParams->baseCcy() : data.otherCurrency;
                         ret = makeCrossCcyBasisSwap(simMarket, otherCurrency, ccy, term, convention,
-                                                    parHelperDependencies_[key],
-                                                    instruments.removeTodaysFixingIndices_, marketConfiguration);
+                                                    parHelperDependencies_[key], instruments.removeTodaysFixingIndices_,
+                                                    marketConfiguration);
                     } else
                         recognised = false;
                 } catch (const std::exception& e) {
@@ -875,7 +663,6 @@ ParSensitivityInstrumentBuilder::Instruments ParSensitivityInstrumentBuilder::cr
 
     LOG("Par instrument building done, got " << parHelpers_.size() + parCaps_.size() + parYoYCaps_.size()
                                              << " instruments");
-    return instruments;
 } // createParInstruments
 
 std::pair<boost::shared_ptr<Instrument>, Date> ParSensitivityInstrumentBuilder::makeSwap(
@@ -1878,188 +1665,6 @@ void ParSensitivityInstrumentBuilder::makeYoYCapFloor(ParSensitivityInstrumentBu
     instruments.parYoYCapsYts_[key] = discountCurve;
     instruments.parYoYCapsIndex_[key] = Handle<YoYInflationIndex>(index);
     instruments.parYoYCapsVts_[key] = ovs;
-}
-
-/* Helper class for implying the fair flat cap/floor volatility
-   This class is copied from QuantLib's capfloor.cpp and generalised to cover both normal and lognormal volatilities */
-class ImpliedCapFloorVolHelper {
-public:
-    ImpliedCapFloorVolHelper(const QuantLib::Instrument& cap,
-                             const std::function<boost::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator,
-                             const Real targetValue);
-    Real operator()(Volatility x) const;
-    Real derivative(Volatility x) const;
-
-private:
-    Real targetValue_;
-    boost::shared_ptr<PricingEngine> engine_;
-    boost::shared_ptr<SimpleQuote> vol_;
-    const Instrument::results* results_;
-};
-
-ImpliedCapFloorVolHelper::ImpliedCapFloorVolHelper(
-    const QuantLib::Instrument& cap,
-    const std::function<boost::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator, const Real targetValue)
-    : targetValue_(targetValue) {
-    // set an implausible value, so that calculation is forced
-    // at first ImpliedCapFloorVolHelper::operator()(Volatility x) call
-    vol_ = boost::shared_ptr<SimpleQuote>(new SimpleQuote(-1));
-    engine_ = engineGenerator(Handle<Quote>(vol_));
-    cap.setupArguments(engine_->getArguments());
-    results_ = dynamic_cast<const Instrument::results*>(engine_->getResults());
-}
-
-Real ImpliedCapFloorVolHelper::operator()(Volatility x) const {
-    if (x != vol_->value()) {
-        vol_->setValue(x);
-        engine_->calculate();
-    }
-    return results_->value - targetValue_;
-}
-
-Real ImpliedCapFloorVolHelper::derivative(Volatility x) const {
-    if (x != vol_->value()) {
-        vol_->setValue(x);
-        engine_->calculate();
-    }
-    std::map<std::string, boost::any>::const_iterator vega_ = results_->additionalResults.find("vega");
-    QL_REQUIRE(vega_ != results_->additionalResults.end(), "vega not provided");
-    return boost::any_cast<Real>(vega_->second);
-}
-
-Volatility impliedVolatility(const CapFloor& cap, Real targetValue, const Handle<YieldTermStructure>& d,
-                             Volatility guess, VolatilityType type, Real displacement, Real accuracy,
-                             Natural maxEvaluations, Volatility minVolLognormal, Volatility maxVolLognormal,
-                             Volatility minVolNormal, Volatility maxVolNormal, const Handle<Index>& notUsed) {
-    QL_REQUIRE(!cap.isExpired(), "instrument expired");
-    std::function<boost::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator;
-    if (type == ShiftedLognormal)
-        engineGenerator = [&d, displacement](const Handle<Quote>& h) {
-            return boost::make_shared<BlackCapFloorEngine>(d, h, Actual365Fixed(), displacement);
-        };
-    else if (type == Normal)
-        engineGenerator = [&d](const Handle<Quote>& h) {
-            return boost::make_shared<BachelierCapFloorEngine>(d, h, Actual365Fixed());
-        };
-    else
-        QL_FAIL("volatility type " << type << " not implemented");
-    ImpliedCapFloorVolHelper f(cap, engineGenerator, targetValue);
-    NewtonSafe solver;
-    solver.setMaxEvaluations(maxEvaluations);
-    Real minVol = type == Normal ? minVolNormal : minVolLognormal;
-    Real maxVol = type == Normal ? maxVolNormal : maxVolLognormal;
-    return solver.solve(f, accuracy, guess, minVol, maxVol);
-}
-
-Volatility impliedVolatility(const QuantLib::YoYInflationCapFloor& cap, Real targetValue,
-                             const Handle<YieldTermStructure>& d, Volatility guess, VolatilityType type,
-                             Real displacement, Real accuracy, Natural maxEvaluations, Volatility minVolLognormal,
-                             Volatility maxVolLognormal, Volatility minVolNormal, Volatility maxVolNormal,
-                             const Handle<YoYInflationIndex>& index) {
-    QL_REQUIRE(!cap.isExpired(), "instrument expired");
-    std::function<boost::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator;
-    if (type == ShiftedLognormal) {
-        if (close_enough(displacement, 0.0))
-            engineGenerator = [&d, &index](const Handle<Quote>& h) {
-                // hardcode A365F as for ir caps, or should we use the dc from the original market vol ts ?
-                // calendar, bdc not needed here, settlement days should be zero so that the
-                // reference date is = evaluation date
-                auto c = Handle<QuantLib::YoYOptionletVolatilitySurface>(
-                    boost::make_shared<QuantExt::ConstantYoYOptionletVolatility>(
-                        h, 0, NullCalendar(), Unadjusted, Actual365Fixed(),
-                        index->yoyInflationTermStructure()->observationLag(), index->frequency(),
-                        index->interpolated()));
-                return boost::make_shared<QuantExt::YoYInflationBlackCapFloorEngine>(*index, c, d);
-            };
-        else
-            engineGenerator = [&d, &index](const Handle<Quote>& h) {
-                auto c = Handle<QuantLib::YoYOptionletVolatilitySurface>(
-                    boost::make_shared<QuantExt::ConstantYoYOptionletVolatility>(
-                        h, 0, NullCalendar(), Unadjusted, Actual365Fixed(),
-                        index->yoyInflationTermStructure()->observationLag(), index->frequency(),
-                        index->interpolated()));
-                return boost::make_shared<QuantExt::YoYInflationUnitDisplacedBlackCapFloorEngine>(*index, c, d);
-            };
-    } else if (type == Normal)
-        engineGenerator = [&d, &index](const Handle<Quote>& h) {
-            auto c = Handle<QuantLib::YoYOptionletVolatilitySurface>(
-                boost::make_shared<QuantExt::ConstantYoYOptionletVolatility>(
-                    h, 0, NullCalendar(), Unadjusted, Actual365Fixed(),
-                    index->yoyInflationTermStructure()->observationLag(), index->frequency(), index->interpolated()));
-            return boost::make_shared<QuantExt::YoYInflationBachelierCapFloorEngine>(*index, c, d);
-        };
-    else
-        QL_FAIL("volatility type " << type << " not implemented");
-    ImpliedCapFloorVolHelper f(cap, engineGenerator, targetValue);
-    NewtonSafe solver;
-    solver.setMaxEvaluations(maxEvaluations);
-    Real minVol = type == Normal ? minVolNormal : minVolLognormal;
-    Real maxVol = type == Normal ? maxVolNormal : maxVolLognormal;
-    return solver.solve(f, accuracy, guess, minVol, maxVol);
-}
-
-// wrapper function, does not throw
-template <typename CapFloorType, typename IndexType>
-Volatility ParSensitivityHelperFunctions::impliedVolatility(const CapFloorType& cap, Real targetValue,
-                                                          const Handle<YieldTermStructure>& d, Volatility guess,
-                                                          VolatilityType type, Real displacement,
-                                                          const Handle<IndexType>& index) {
-
-    string strikeStr = "?";
-
-    try {
-
-        Real accuracy = 1.0e-6;
-        Natural maxEvaluations = 100;
-        Volatility minVolLognormal = 1.0e-7;
-        Volatility maxVolLognormal = 4.0;
-        Volatility minVolNormal = 1.0e-7;
-        Volatility maxVolNormal = 0.05;
-
-        // 1. Get strike for logging
-        std::ostringstream oss;
-        if (!cap.capRates().empty()) {
-            oss << "Cap: " << cap.capRates().size() << " strikes, starting with " << cap.capRates().front()
-                << "."; // they are probably all the same here
-        }
-        if (!cap.floorRates().empty()) {
-            oss << "Floor: " << cap.floorRates().size() << " strikes, starting with " << cap.floorRates().front()
-                << "."; // they are probably all the same here
-        }
-        strikeStr = oss.str();
-
-        // 2. Try to get implied Vol with defaults
-        TLOG("Getting impliedVolatility for cap (" << cap.maturityDate() << " strike " << strikeStr << ")");
-        try {
-            Volatility vol = impliedVolatility(cap, targetValue, d, guess, type, displacement, accuracy, maxEvaluations,
-                                               minVolLognormal, maxVolLognormal, minVolNormal, maxVolNormal, index);
-            TLOG("Got vol " << vol << " on first attempt");
-            return vol;
-        } catch (std::exception& e) {
-            ALOG("Exception getting implied Vol for Cap (" << cap.maturityDate() << " strike " << strikeStr << ") "
-                                                           << e.what());
-        }
-
-        // 3. Try with bigger bounds
-        try {
-            Volatility vol = impliedVolatility(cap, targetValue, d, guess, type, displacement, accuracy, maxEvaluations,
-                                               minVolLognormal / 100.0, maxVolLognormal * 100.0, minVolNormal / 100.0,
-                                               maxVolNormal * 100.0, index);
-            TLOG("Got vol " << vol << " on second attempt");
-            return vol;
-        } catch (std::exception& e) {
-            ALOG("Exception getting implied Vol for Cap (" << cap.maturityDate() << " strike " << strikeStr << ") "
-                                                           << e.what());
-        }
-
-    } catch (...) {
-        // pass through to below
-    }
-
-    ALOG("Cap impliedVolatility() failed for Cap (" << cap.type() << ", maturity " << cap.maturityDate() << ", strike "
-                                                    << strikeStr << " for target " << targetValue
-                                                    << ". Returning Initial guess " << guess << " and continuing");
-    return guess;
 }
 
 } // namespace analytics
