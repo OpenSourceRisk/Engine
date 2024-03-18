@@ -972,7 +972,7 @@ void OREAppInputParameters::loadParameters() {
      * SIMM and IM Schedule
      **********************/
 
-    LOG("SIMM and IMSCHEDULE");
+    LOG("SIMM");
     tmp = params_->get("simm", "active", false);
     bool doSimm = !tmp.empty() ? parseBool(tmp) : false;
     if (doSimm) {
@@ -1037,9 +1037,6 @@ void OREAppInputParameters::loadParameters() {
     }
 
     LOG("IM SCHEDULE");
-    //tmp = params_->get("imschedule", "active", false);
-    //bool doSchedule = !tmp.empty() ? parseBool(tmp) : false;
-    //if (doSchedule) {
     tmp = params_->get("imschedule", "active", false);
     if (!tmp.empty() && parseBool(tmp)) {
         insertAnalytic("IM_SCHEDULE");
