@@ -3302,7 +3302,15 @@ The related input file is {\tt Input/ore\_schedule.xml}. It is also run when cal
 {\tt Output/IM\_SCHEDULE}.
 The basic input is provided in CRIF file format where ORE expects two lines per trade, one with RiskClass = PV and one with RiskClass = Notional, 
 so that the  amounts in these CRIF lines are interpeted as NPV respectively notional. 
-Further required columns are product class and end date, as shown in the example {\tt Input/crif\_schedule.csv}.
+Further required columns are product class and end date, as shown in the example {\tt Input/crif\_schedule.csv}. Note that the product class has to be in
+\begin{itemize}
+  \item Rates
+  \item FX
+  \item Equity
+  \item Credit
+  \item Commodity
+\end{itemize}
+in contrast to SIMM where we use the combined RatesFX.
 
 To run the IM Schedule analytic, the following minimal addition to {\tt Input/ore\_schedule.xml} is required.
 \begin{minted}[fontsize=\scriptsize]{xml}
@@ -4509,6 +4517,16 @@ The input CRIF file here has two lines per trade, for RiskClass = PV respectivel
 Additonally required columns are product class and end date, see example 44. 
 The idea is that the inputs can be externally provided. Therefore the IM Schedule analytic does not require a portfolio.
 The alternative -- ORE uses a portfolio to compute NPV, imply product class and end date -- has not been implemented yet.
+
+Note that the IM Schedule product class has to be in 
+\begin{itemize}
+  \item Rates
+  \item FX
+  \item Equity
+  \item Credit
+  \item Commodity
+\end{itemize}
+in contrast to SIMM where we use the combined RatesFX product class.
 
 %--------------------------------------------------------
 \subsection{Market: {\tt todaysmarket.xml}}\label{sec:market}
