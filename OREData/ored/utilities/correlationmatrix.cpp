@@ -56,14 +56,15 @@ ostream& operator<<(ostream& out, const CorrelationFactor& f) {
 }
 
 CorrelationFactor parseCorrelationFactor(const string& name) {
-    
-    Size pos = name.find(':');
-    QL_REQUIRE(pos != string::npos, "Expected the factor to be of the form 'type:name'");
 
-    CrossAssetModel::AssetType factorType = parseCamAssetType(name.substr(0, pos));
-    string factorName = name.substr(pos + 1);
+    vector<string> tokens;
+    boost::split(tokens, name, boost::is_any_of(":"));
 
-    return { factorType, factorName, 0 };
+    QL_REQUIRE(tokens.size() == 2 || tokens.size() == 3,
+               "parseCorrelationFactor(" << name
+                                         << "): expected 2 or 3 tokens separated by :, e.g. IR:USD or INF:UKRPI:0");
+
+    return {parseCamAssetType(tokens[0]), tokens[1], tokens.size() == 3 ? parseInteger(tokens(3)) : 0};
 }
 
 void CorrelationMatrixBuilder::reset() {
