@@ -147,22 +147,28 @@ void BlackMultiLegOptionEngineBase::calculate() const {
     Date earliestAccrualStartDate = Date::maxDate();
     Date latestAccrualEndDate = Date::minDate();
 
+    Size numFixed = 0, numFloat = 0;
+
     for (Size i = 0; i < legs_.size(); ++i) {
         for (Size j = 0; j < legs_[i].size(); ++j) {
             Real payer = payer_[i] ? -1.0 : 1.0;
             if (auto c = boost::dynamic_pointer_cast<Coupon>(legs_[i][j])) {
+                auto fixedCoupon = boost::dynamic_pointer_cast<FixedRateCoupon>(c);
+                if (fixedCoupon)
+                    fixedDayCount = c->dayCounter();
                 if (c->accrualStartDate() >= exerciseDate) {
                     cfInfo.push_back(CfInfo());
                     earliestAccrualStartDate = std::min(earliestAccrualStartDate, c->accrualStartDate());
                     latestAccrualEndDate = std::max(latestAccrualEndDate, c->accrualEndDate());
-                    if (auto f = boost::dynamic_pointer_cast<FixedRateCoupon>(c)) {
-                        cfInfo.back().fixedRate = f->rate();
+                    if (fixedCoupon) {
+                        cfInfo.back().fixedRate = fixedCoupon->rate();
                         cfInfo.back().nominal = c->nominal() * payer;
-                        fixedDayCount = c->dayCounter();
+                        ++numFixed;
                     } else if (auto f = boost::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
                         cfInfo.back().floatingSpread = f->spread();
                         cfInfo.back().floatingGearing = f->gearing();
                         cfInfo.back().nominal = f->nominal() * payer;
+                        ++numFloat;
                     }
                     cfInfo.back().accrual = c->accrualPeriod();
                     cfInfo.back().discountFactor = discountCurve_->discount(c->date());
@@ -174,6 +180,22 @@ void BlackMultiLegOptionEngineBase::calculate() const {
                 cfInfo.back().discountFactor = discountCurve_->discount(legs_[i][j]->date());
                 cfInfo.back().amount = legs_[i][j]->amount() * payer;
                 cfInfo.back().payDate = legs_[i][j]->date();
+            }
+        }
+    }
+
+    // if there are future floating coupons, but no fixed, we add a dummy fixed with 0 fixed rate to 
+    // ensure we can calculate the ATM rate
+    if (numFloat > 0 && numFixed == 0) {
+        for (auto const& c : cfInfo) {
+            if (c.floatingSpread != Null<Real>()) {
+                cfInfo.push_back(CfInfo());
+                cfInfo.back().fixedRate = 0.0;
+                cfInfo.back().nominal = c.nominal * -1; // assume opposite direction
+                cfInfo.back().accrual = c.accrual;
+                cfInfo.back().discountFactor = c.discountFactor;
+                cfInfo.back().amount = 0.0;
+                cfInfo.back().payDate = c.payDate;
             }
         }
     }

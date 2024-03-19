@@ -52,7 +52,7 @@ void CreditDefaultSwapOption::AuctionSettlementInformation::fromXML(XMLNode* nod
     auctionFinalPrice_ = XMLUtils::getChildValueAsDouble(node, "AuctionFinalPrice", true);
 }
 
-XMLNode* CreditDefaultSwapOption::AuctionSettlementInformation::toXML(XMLDocument& doc) {
+XMLNode* CreditDefaultSwapOption::AuctionSettlementInformation::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("AuctionSettlementInformation");
     XMLUtils::addChild(doc, node, "AuctionSettlementDate", to_string(auctionSettlementDate_));
     XMLUtils::addChild(doc, node, "AuctionFinalPrice", auctionFinalPrice_);
@@ -77,6 +77,28 @@ void CreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>& engi
 
     DLOG("CreditDefaultSwapOption::build() called for trade " << id());
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Credit");
+    additionalData_["isdaBaseProduct"] = string("Swaptions");
+    // set isdaSubProduct to entityType in credit reference data
+    additionalData_["isdaSubProduct"] = string("");
+    string entity =
+        swap_.referenceInformation() ? swap_.referenceInformation()->referenceEntityId() : swap_.creditCurveId();
+    boost::shared_ptr<ReferenceDataManager> refData = engineFactory->referenceData();
+    if (refData && refData->hasData("Credit", entity)) {
+        auto refDatum = refData->getData("Credit", entity);
+        boost::shared_ptr<CreditReferenceDatum> creditRefDatum =
+            boost::dynamic_pointer_cast<CreditReferenceDatum>(refDatum);
+        additionalData_["isdaSubProduct"] = creditRefDatum->creditData().entityType;
+        if (creditRefDatum->creditData().entityType == "") {
+            ALOG("EntityType is blank in credit reference data for entity " << entity);
+        }
+    } else {
+        ALOG("Credit reference data missing for entity " << entity << ", isdaSubProduct left blank");
+    }
+    // Skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");
+
     // Notionals
     const auto& legData = swap_.leg();
     const auto& ntls = legData.notionals();
@@ -90,28 +112,6 @@ void CreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>& engi
     } else {
         buildNoDefault(engineFactory);
     }
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Credit");
-    additionalData_["isdaBaseProduct"] = string("Swaptions");
-    // set isdaSubProduct to entityType in credit reference data 
-    additionalData_["isdaSubProduct"] = string("");
-    string entity = swap_.referenceInformation() ?
-        swap_.referenceInformation()->referenceEntityId() :
-        swap_.creditCurveId();   
-    boost::shared_ptr<ReferenceDataManager> refData = engineFactory->referenceData();
-    if (refData && refData->hasData("Credit", entity)) {
-        auto refDatum = refData->getData("Credit", entity);
-        boost::shared_ptr<CreditReferenceDatum> creditRefDatum = boost::dynamic_pointer_cast<CreditReferenceDatum>(refDatum);
-        additionalData_["isdaSubProduct"] = creditRefDatum->creditData().entityType;
-        if (creditRefDatum->creditData().entityType == "") {
-            ALOG("EntityType is blank in credit reference data for entity " << entity);
-        }
-    } else {
-        ALOG("Credit reference data missing for entity " << entity << ", isdaSubProduct left blank");
-    }
-    // Skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = string("");
 }
 
 const OptionData& CreditDefaultSwapOption::option() const {
@@ -169,7 +169,7 @@ void CreditDefaultSwapOption::fromXML(XMLNode* node) {
     option_.fromXML(optionData);
 }
 
-XMLNode* CreditDefaultSwapOption::toXML(XMLDocument& doc) {
+XMLNode* CreditDefaultSwapOption::toXML(XMLDocument& doc) const {
 
     // Trade node
     XMLNode* node = Trade::toXML(doc);

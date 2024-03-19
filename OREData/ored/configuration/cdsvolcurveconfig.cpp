@@ -159,7 +159,7 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
     populateRequiredCurveIds();
 }
 
-XMLNode* CDSVolatilityCurveConfig::toXML(XMLDocument& doc) {
+XMLNode* CDSVolatilityCurveConfig::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("CDSVolatility");
 

@@ -123,7 +123,7 @@ void VolatilityParameter::fromXML(XMLNode* node) {
     ModelParameter::fromXML(node);
 }
 
-XMLNode* VolatilityParameter::toXML(XMLDocument& doc) {
+XMLNode* VolatilityParameter::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Volatility");
     if (volatilityType_)
         XMLUtils::addChild(doc, node, "VolatilityType", to_string(*volatilityType_));
@@ -158,7 +158,7 @@ void ReversionParameter::fromXML(XMLNode* node) {
     ModelParameter::fromXML(node);
 }
 
-XMLNode* ReversionParameter::toXML(XMLDocument& doc) {
+XMLNode* ReversionParameter::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Reversion");
     XMLUtils::addChild(doc, node, "ReversionType", to_string(reversionType_));
     ModelParameter::append(doc, node);

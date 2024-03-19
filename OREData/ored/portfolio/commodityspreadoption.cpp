@@ -124,6 +124,14 @@ boost::shared_ptr<OptionPaymentDateAdjuster> makeOptionPaymentDateAdjuster(Commo
 void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
 
     DLOG("CommoditySpreadOption::build() called for trade " << id());
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = std::string("Commodity");
+    additionalData_["isdaBaseProduct"] = std::string("Other");
+    additionalData_["isdaSubProduct"] = std::string("");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = std::string("");
+
     reset();
     auto legData_ = csoData_.legData();
     auto optionData_ = csoData_.optionData();
@@ -290,13 +298,6 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
 
     instrument_ = boost::make_shared<VanillaInstrument>(firstInstrument, firstMultiplier, additionalInstruments,
                                                         additionalMultipliers);
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = std::string("Commodity");
-    additionalData_["isdaBaseProduct"] = std::string("Other");
-    additionalData_["isdaSubProduct"] = std::string("");
-    // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = std::string("");
     if (!optionData_.premiumData().premiumData().empty()) {
         auto premium = optionData_.premiumData().premiumData().front();
         additionalData_["premiumAmount"] = -bsInd * premium.amount;
@@ -328,7 +329,7 @@ void CommoditySpreadOption::fromXML(XMLNode* node) {
     XMLNode* csoNode = XMLUtils::getChildNode(node, "CommoditySpreadOptionData");
     csoData_.fromXML(csoNode);
 }
-XMLNode* CommoditySpreadOption::toXML(XMLDocument& doc) {
+XMLNode* CommoditySpreadOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     auto csoNode = csoData_.toXML(doc);
     XMLUtils::appendNode(node, csoNode);
@@ -362,7 +363,7 @@ void CommoditySpreadOptionData::fromXML(XMLNode* csoNode) {
                "CommoditySpreadOption: both a long and a short Assets are required.");
 }
 
-XMLNode* CommoditySpreadOptionData::toXML(XMLDocument& doc) {
+XMLNode* CommoditySpreadOptionData::toXML(XMLDocument& doc) const {
     XMLNode* csoNode = doc.allocNode("CommoditySpreadOptionData");
     for (size_t i = 0; i < legData_.size(); ++i) {
         XMLUtils::appendNode(csoNode, legData_[i].toXML(doc));
@@ -386,7 +387,7 @@ void CommoditySpreadOptionData::OptionStripData::fromXML(XMLNode* node) {
     bdc_ = parseBusinessDayConvention(XMLUtils::getChildValue(node, "PaymentConvention", false, "MF"));
 }
 
-XMLNode* CommoditySpreadOptionData::OptionStripData::toXML(XMLDocument& doc) {
+XMLNode* CommoditySpreadOptionData::OptionStripData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("OptionStripPaymentDates");
     auto tmp = schedule_.toXML(doc);
     XMLUtils::setNodeName(doc, tmp, "OptionStripDefinition");

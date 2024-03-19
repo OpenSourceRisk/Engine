@@ -97,7 +97,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! Reset trade, clear all base class data. This does not reset accumulated timings for this trade.
@@ -119,6 +119,8 @@ public:
 
     //! Set the envelope with counterparty and portfolio info
     void setEnvelope(const Envelope& envelope);
+
+    void setAdditionalData(const std::map<std::string, boost::any>& additionalData);
 
     //! Set the trade actions
     TradeActions& tradeActions() { return tradeActions_; }
@@ -153,6 +155,8 @@ public:
     virtual string notionalCurrency() const { return notionalCurrency_; }
 
     const Date& maturity() const { return maturity_; }
+
+    virtual bool isExpired(const Date& d) { return d >= maturity_; }
 
     const string& issuer() const { return issuer_; }
 

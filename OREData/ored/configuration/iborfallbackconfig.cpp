@@ -87,7 +87,7 @@ void IborFallbackConfig::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* IborFallbackConfig::toXML(XMLDocument& doc) {
+XMLNode* IborFallbackConfig::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("IborFallbackConfig");
     XMLNode* global = XMLUtils::addChild(doc, node, "GlobalSettings");
     XMLUtils::addChild(doc, global, "EnableIborFallbacks", enableIborFallbacks_);

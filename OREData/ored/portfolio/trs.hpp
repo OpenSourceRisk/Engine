@@ -67,7 +67,7 @@ public:
         boost::optional<bool> payUnderlyingCashFlowsImmediately() const { return payUnderlyingCashFlowsImmediately_; }
 
         void fromXML(XMLNode* node) override;
-        XMLNode* toXML(XMLDocument& doc) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
 
     private:
         bool payer_;
@@ -98,7 +98,7 @@ public:
         QuantLib::Size& fundingResetGracePeriod() { return fundingResetGracePeriod_; }
 
         void fromXML(XMLNode* node) override;
-        XMLNode* toXML(XMLDocument& doc) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
 
     private:
         std::vector<LegData> legData_;
@@ -115,7 +115,7 @@ public:
         LegData& legData() { return legData_; }
 
         void fromXML(XMLNode* node) override;
-        XMLNode* toXML(XMLDocument& doc) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
 
     private:
         LegData legData_;
@@ -153,7 +153,7 @@ public:
     underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
     QuantLib::Real notional() const override;
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
 protected:

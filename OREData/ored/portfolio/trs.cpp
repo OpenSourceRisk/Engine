@@ -72,7 +72,7 @@ void TRS::ReturnData::fromXML(XMLNode* node) {
     fxTerms_ = XMLUtils::getChildrenValues(node, "FXTerms", "FXIndex", false);
 }
 
-XMLNode* TRS::ReturnData::toXML(XMLDocument& doc) {
+XMLNode* TRS::ReturnData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("ReturnData");
     XMLUtils::addChild(doc, n, "Payer", payer_);
     XMLUtils::addChild(doc, n, "Currency", currency_);
@@ -117,7 +117,7 @@ void TRS::FundingData::fromXML(XMLNode* node) {
     fundingResetGracePeriod_ = XMLUtils::getChildValueAsInt(node, "FundingResetGracePeriod", false, 0);
 }
 
-XMLNode* TRS::FundingData::toXML(XMLDocument& doc) {
+XMLNode* TRS::FundingData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("FundingData");
     for (auto& l : legData_) {
         XMLUtils::appendNode(n, l.toXML(doc));
@@ -140,7 +140,7 @@ void TRS::AdditionalCashflowData::fromXML(XMLNode* node) {
         legData_ = LegData();
 }
 
-XMLNode* TRS::AdditionalCashflowData::toXML(XMLDocument& doc) {
+XMLNode* TRS::AdditionalCashflowData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("AdditionalCashflowData");
     if (legData_.concreteLegData())
         XMLUtils::appendNode(n, legData_.toXML(doc));
@@ -231,7 +231,7 @@ void TRS::fromXML(XMLNode* node) {
         additionalCashflowData_ = AdditionalCashflowData();
 }
 
-XMLNode* TRS::toXML(XMLDocument& doc) {
+XMLNode* TRS::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* dataNode = doc.allocNode(tradeType_ + "Data");
     XMLUtils::appendNode(node, dataNode);
@@ -296,6 +296,48 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // clear trade members
 
     reset();
+
+    // ISDA taxonomy
+    bool assetClassIsUnique = true;
+    std::string assetClass;
+    for (auto u : underlying_) {
+        auto it = u->additionalData().find("isdaAssetClass");
+        if (it != u->additionalData().end()) {
+            std::string ac = boost::any_cast<std::string>(it->second);
+            if (assetClass == "")
+                assetClass = ac;
+            else if (ac != assetClass)
+                assetClassIsUnique = false;
+        }
+    }
+
+    additionalData_["isdaAssetClass"] = string("");
+    additionalData_["isdaBaseProduct"] = string("");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");
+
+    if (assetClass == "") {
+        ALOG("ISDA asset class not found for TRS " << id() << ", ISDA taxonomy undefined");
+    } else {
+        additionalData_["isdaAssetClass"] = assetClass;
+        if (!assetClassIsUnique) {
+            WLOG("ISDA asset class not unique in TRS " << id() << " using first hit: " << assetClass);
+        }
+        additionalData_["isdaBaseProduct"] = string("Total Return Swap");
+        if (assetClass == "Equity") {
+            if (tradeType_ == "ContractForDifference")
+                additionalData_["isdaBaseProduct"] = string("Contract For Difference");
+            else
+                additionalData_["isdaBaseProduct"] = string("Swap");
+            additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+        } else if (assetClass == "Credit") {
+            additionalData_["isdaBaseProduct"] = string("Total Return Swap");
+            additionalData_["isdaSubProduct"] = string("");
+        } else {
+            WLOG("ISDA asset class " << assetClass << " not explicitly covered for TRS trade " << id()
+                                     << " using default BaseProduct 'Total Retuen Swap' and leaving sub-product blank");
+        }
+    }
 
     creditRiskCurrency_.clear();
     creditQualifierMapping_.clear();
@@ -720,51 +762,6 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     for (Size i = 0; i < underlying_.size(); ++i) {
         for (auto const& [key, value] : underlying_[i]->additionalData()) {
             additionalData_["und_ad_" + std::to_string(i + 1) + "_" + key] = value;
-        }
-    }
-
-    // ISDA taxonomy
-    bool assetClassIsUnique = true;
-    std::string assetClass;
-    for (auto u : underlying_) {
-        auto it = u->additionalData().find("isdaAssetClass");
-        if (it != u->additionalData().end()) {
-            std::string ac = boost::any_cast<std::string>(it->second);
-            if (assetClass == "")
-                assetClass = ac;
-            else if (ac != assetClass)
-                assetClassIsUnique = false;
-        }
-    }
-
-    additionalData_["isdaAssetClass"] = string("");
-    additionalData_["isdaBaseProduct"] = string("");
-    additionalData_["isdaSubProduct"] = string("");
-    additionalData_["isdaTransaction"] = string("");  
-
-    if (assetClass == "") {
-        ALOG("ISDA asset class not found for TRS " << id() << ", ISDA taxonomy undefined");
-    }
-    else {
-        additionalData_["isdaAssetClass"] = assetClass;
-        if (!assetClassIsUnique) {
-            WLOG("ISDA asset class not unique in TRS " << id() << " using first hit: " << assetClass);
-        }
-        additionalData_["isdaBaseProduct"] = string("Total Return Swap");
-        if (assetClass == "Equity") {
-            if (tradeType_ == "ContractForDifference")
-                additionalData_["isdaBaseProduct"] = string("Contract For Difference");
-            else
-                additionalData_["isdaBaseProduct"] = string("Swap");
-            additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");            
-        }
-        else if (assetClass == "Credit") {
-            additionalData_["isdaBaseProduct"] = string("Total Return Swap");
-            additionalData_["isdaSubProduct"] = string("");
-        }
-        else {
-            WLOG("ISDA asset class " << assetClass << " not explicitly covered for TRS trade " << id()
-                 << " using default BaseProduct 'Total Retuen Swap' and leaving sub-product blank");  
         }
     }
 }

@@ -1,0 +1,40 @@
+\subsubsection{Formula Based Leg Data}
+\label{ss:formulalegdata}
+
+The formula based leg data allows to use complex formulas to describe coupon payoffs. Its {\tt LegType} is {\tt
+  FormulaBased}, and it has the data section {\tt FormulaBasedLegData}. It supports IBOR and CMS based payoffs with
+quanto and digital features. The following examples shows the definition of a coupon paying a capped / floored cross
+currency EUR-GBP CMS Spread contingent on a USD CMS barrier.
+
+The {\tt Index} field supports operations of the following kind:
+\begin{itemize}
+\item indices like IBOR and CMS indices, and constants as factors,
+  spreads and/or cap/floor values;
+\item basic operations: $+$, $-$, $\cdot$, $/$;
+\item operators gtZero() (greater than zero) and geqZero() (greater than or equal zero) yielding $1$ if the argument is
+  $>0$ (resp. $\geq 0$) and zero otherwise
+\item functions: abs(), exp(), log(), min(), max(), pow()
+\end{itemize}
+%
+In listing \ref{lst:FBLegdata}, we present the {\tt
+  FormulaBasedLegData} of the payoff in section \ref{products:ir_formulacouponirs}.
+%
+\begin{listing}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<LegData>
+  <LegType>FormulaBased</LegType>
+  <Payer>true</Payer>
+  <Currency>EUR</Currency>
+   ...
+  <FormulaBasedLegData>
+    <Index>gtZero({USD-CMS-5Y}-0.03)*
+              max(min(9.0*({EUR-CMS-10Y}-{GBP-CMS-2Y})+0.02,0.08),0.0)</Index>
+    <IsInArrears>false</IsInArrears>
+    <FixingDays>2</FixingDays>
+  </FormulaBasedLegData>
+   ...
+</LegData>
+\end{minted}
+\caption{FormulaBasedLegData configuration.}
+\label{lst:FBLegdata}
+\end{listing}

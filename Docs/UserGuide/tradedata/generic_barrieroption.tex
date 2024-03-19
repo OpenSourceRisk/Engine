@@ -1,0 +1,256 @@
+\subsubsection{Generic Barrier Option}
+\label{input:generic_barrieroption}
+
+Generic Barrier Options are defined using one of the trade types \emph{FxGenericBarrierOption}, \emph{EquityGenericBarrierOption},
+\emph{CommodityGenericBarrierOption} depending on the underlying asset class and an associated node FxGenericBarrierOptionData,
+EquityGenericBarrierOptionData, CommodityGenericBarrierOptionData. Listing \ref{lst:generic_barrieroption_data} shows an
+example for an FX Underlying. Generic Barrier Option can have one or multiple underlyings. In the case of multiple underlyings, there must be one level per underlying provided in each barrier, see \ref{lst:multiasset_generic_barrieroption_data}. The nodes have the following meaning:
+
+\begin{itemize}
+\item Underlying: The underlying definition. Note that for FX underlyings the order of the currencies defines the
+  observed underlying value, i.e. for EUR-USD the domestic currency is USD (the observed value is e.g. $1.2$ USD per
+  EUR) while for USD-EUR the domestic currency is EUR (the observed value is e.g. $0.8$ EUR per USD).
+
+  Allowable Values: See \ref{ss:underlying}
+  
+\item Underlyings: An alternative to \emph{Underlying} - only one can be present. Can contain multiple \emph{Underlying} nodes.
+  Allowable Values: A list of \emph{Underlying} nodes, with each node given by \ref{ss:underlying}
+
+\item PayCurrency: The payment currency. This is required for all Payoff Types and is usually
+
+  \begin{itemize}
+  \item the domestic currency if underlying = FX
+  \item the eq / comm currency if underlying = Equity, Commodity
+  \end{itemize}
+
+  But we allow for quanto payoffs as well, i.e.
+
+  \begin{itemize}
+  \item the foreign currency if underlying = FX or also
+  \item a third currency if underlying = FX and
+  \item  a currency not equal to the equity, commodity currency for these underlying types.
+  \end{itemize}
+
+  See payoff description which amount is paid in which currency dependent on the type.
+
+  Allowable Values: See \lstinline!Currency!  in Table \ref{tab:allow_stand_data}.
+
+\item OptionData: The option descripting, see \ref{ss:option_data} Relevant sub nodes are:
+  \begin{itemize}
+    \item LongShort (allowable values: \emph{Long} or  \emph{Short})
+    \item PayoffType, with S = Underlying Value and K = Strike this is:
+      \begin{itemize}
+      \item \emph{Vanilla}: $\max(0, S-K)$ for a call or $\max(0, K-S)$ for a put, this is paid in PayCurrency
+      \item \emph{AssetOrNothing}: $S$ paid in PayCurrency
+      \item \emph{CashOrNothing}: Amount paid in PayCurrency
+      \end{itemize}
+    \item OptionType: Required for PayoffType = \emph{Vanilla}, \emph{Call} or \emph{Put}.
+    \item ExerciseDate: The exercise date
+    \item Premiums [Optional]: Option premiums to be paid unconditionally. See section \ref{ss:premiums}
+  \end{itemize}
+
+\item SettlementDate [Optional]: The date on which the option payoff is settled. The SettlementDate is used unadjusted
+  as given. Instead of the SettlementDate, a settlement lag, convention and calendar relative to the ExerciseDate can be
+  specified, see below. If the SettlementDate is given on the other hand, SettlementLag, SettlementCalendar and
+  SettlementConvention must {\em not} be given.
+
+  Allowable Values: any valid date greater or equal to the exercise date
+
+\item SettlementLag [Optional]: Alternative specification of the option settlement date via a lag, see the explanation
+  under SettlementDate. Defaults to 0D if not given.
+
+  Allowable Values: any valid period (1D, 2W, 3M, ...)
+
+\item SettlementCalendar [Optional]: Alternative specification of the option settlement date via a lag, see the
+  explanation under SettlementDate. Defaults to the underlying calendar, if not given.
+
+  Allowable values: See Table \ref{tab:calendar} Calendar.
+
+\item SettlementConvention [Optional]: Alternative specification of the option settlement date via a lag, see the
+  explanation under SettlementDate. Defaults to Following if not given.
+
+Allowable values: See Table \ref{tab:convention} Roll Convention.
+
+\item Quantity: The option quantity. Required for PayoffType = \emph{AssetOrNothing}, \emph{Vanilla}. For FX this is the amount in
+  foreign currency. For Equity, Commodity this is the number of equities, commodities.
+
+  Allowable Values: any real number
+
+\item Strike: Required for PayoffType = \emph{Vanilla}.
+
+  Allowable Values: any real number
+
+\item Amount: Required for PayoffType = \emph{CashOrNothing}.
+
+  Allowable Values: any real number
+
+\item Barriers. The barrier definition. Subnodes are:
+
+  \begin{itemize}
+  \item ScheduleData [Optional]: the observation schedule for the barrier (see \ref{ss:schedule_data}. Instead of the ScheduleData,
+    a daily schedule w.r.t. the underlying calendar can be specified by populating the StartDate and EndDate nodes.
+  \item StartDate [Optional]: Start date of the observation schedule, see the explanation under ScheduleData.
+  \item EndDate [Optional]: End date of the observation schedule, see the explanation under ScheduleData.
+  \item BarrierData [Optional]: a sequence of barrier definitions. See \ref{ss:barrier_data}. Relevant fields are:
+    \begin{itemize}
+    \item Type: The barrier type (allowed values are \emph{UpAndIn}, \emph{UpAndOut}, \emph{DownAndIn}, \emph{DownAndOut})
+    \item Levels: Exactly one barrier level per BarrierData block must be given.
+    \item Rebate [Optional]: The rebate amount. Defaults to zero. Rebate amounts and currencies can be different across barriers
+          if only ``out'' barriers are defined, but must be identical as soon as at least one ``in'' barrier is defined.
+    \item RebateCurrency [Optional]: The currency in which the rebate is paid. Defaults to PayCurrency.
+    \item RebatePayTime [Optional]: \emph{atExpiry} ar \emph{atHit}. For ``in'' barriers only \emph{atExpiry} is allowed.
+    \end{itemize}
+  \item KikoType: Required if both a KI and KO barriers are defined. Allowable values are \emph{KoAlways}, \emph{KoBeforeKi},
+    \emph{KoAfterKi}.
+  \end{itemize}
+
+\item TransatlanticBarrier [Optional]: An additional barrier to be checked on option expiry. May contain exactly one
+  BarrierData block with number of levels equal to the number of underlyings or contain same amount of BarrierData blocks with
+  the number of underlyings, exactly one level is allowed in each block for each underlying. The type (\emph{UpAndIn, UpAndOut, DownAndIn, DownAndOut}), the (unqiue) level and the rebate are relevant fields. \\
+  For  \emph{CashOrNothing}, the payoff occurs if the underlying at expiry is equal to or below the level of transatlantic barrier type \emph{DownAndIn}, or equal to or above  barrier type \emph{UpAndIn}, or equal to or above barrier type \emph{DownAndOut}, or equal to or below barrier type \emph{UpAndOut}. I.e. the barrier checks use $<=$, $>=$ to check In-barriers and $<$, $>$ to check Out-barriers. \\
+  The rebate is paid if there is no knock-out from the American barriers and no payoff from the Transatlantic barrier. 
+  %See \ref{ss:barrier_data} for the complete definition.
+
+\end{itemize}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <FxGenericBarrierOptionData>
+    <Underlying>
+      <Type>FX</Type>
+      <Name>ECB-EUR-USD</Name>
+    </Underlying>
+    <PayCurrency>USD</PayCurrency>
+    <OptionData>
+      <LongShort>Long</LongShort>
+      <PayoffType>Vanilla</PayoffType>
+      <OptionType>Call</OptionType>
+      <ExerciseDates>
+        <ExerciseDate>2023-06-06</ExerciseDate>
+      </ExerciseDates>
+    </OptionData>
+    <SettlementDate>2023-06-08</SettlementDate>
+    <Quantity>100000000</Quantity>
+    <Strike>1.2</Strike>
+    <Barriers>
+      <ScheduleData>
+        <Rules>
+          <StartDate>2021-07-10</StartDate>
+          <EndDate>2023-06-06</EndDate>
+          <Tenor>1D</Tenor>
+          <Calendar>TGT,US</Calendar>
+          <Convention>F</Convention>
+          <TermConvention>F</TermConvention>
+          <Rule>Forward</Rule>
+        </Rules>
+      </ScheduleData>
+      <BarrierData>
+        <Type>DownAndOut</Type>
+        <Levels>
+          <Level>1.1</Level>
+        </Levels>
+        <Rebate>1000000</Rebate>
+        <RebateCurrency>USD</RebateCurrency>
+        <RebatePayTime>atExpiry</RebatePayTime>
+      </BarrierData>
+      <BarrierData>
+        <Type>UpAndIn</Type>
+        <Levels>
+          <Level>1.3</Level>
+        </Levels>
+        <Rebate>1000000</Rebate>
+        <RebateCurrency>USD</RebateCurrency>
+        <RebatePayTime>atExpiry</RebatePayTime>
+      </BarrierData>
+      <KikoType>KoAfterKi</KikoType>
+    </Barriers>
+    <TransatlanticBarrier>
+      <BarrierData>
+        <Type>UpAndOut</Type>
+        <Levels>
+          <Level>1.3</Level>
+        </Levels>
+        <Rebate>2000000</Rebate>
+        <RebateCurrency>USD</RebateCurrency>
+      </BarrierData>
+    </TransatlanticBarrier>
+  </FxGenericBarrierOptionData>
+\end{minted}
+\caption{Generic Barrier Option data (FX Underlying)}
+\label{lst:generic_barrieroption_data}
+\end{listing}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <FxGenericBarrierOptionData>
+    <Underlyings>
+      <Underlying>
+        <Type>FX</Type>
+        <Name>ECB-EUR-USD</Name>
+      </Underlying>
+      <Underlying>
+        <Type>FX</Type>
+        <Name>ECB-USD-JPY</Name>
+      </Underlying>
+    </Underlyings>
+    <PayCurrency>USD</PayCurrency>
+    <OptionData>
+      <LongShort>Long</LongShort>
+      <PayoffType>Vanilla</PayoffType>
+      <OptionType>Call</OptionType>
+      <ExerciseDates>
+        <ExerciseDate>2023-06-06</ExerciseDate>
+      </ExerciseDates>
+    </OptionData>
+    <Amount>1500000</Amount>
+    <SettlementDate>2023-06-08</SettlementDate>
+    <Barriers>
+      <ScheduleData>
+        <Rules>
+          <StartDate>2021-07-10</StartDate>
+          <EndDate>2023-06-06</EndDate>
+          <Tenor>1D</Tenor>
+          <Calendar>TGT,US</Calendar>
+          <Convention>F</Convention>
+          <TermConvention>F</TermConvention>
+          <Rule>Forward</Rule>
+        </Rules>
+      </ScheduleData>
+      <BarrierData>
+        <Type>DownAndOut</Type>
+        <Levels>
+          <Level>1.1</Level>
+          <Level>125</Level>
+        </Levels>
+        <Rebate>1000000</Rebate>
+        <RebateCurrency>USD</RebateCurrency>
+        <RebatePayTime>atExpiry</RebatePayTime>
+      </BarrierData>
+      <BarrierData>
+        <Type>UpAndIn</Type>
+        <Levels>
+          <Level>1.3</Level>
+          <Level>135</Level>
+        </Levels>
+        <Rebate>1000000</Rebate>
+        <RebateCurrency>USD</RebateCurrency>
+        <RebatePayTime>atExpiry</RebatePayTime>
+      </BarrierData>
+      <KikoType>KoAfterKi</KikoType>
+    </Barriers>
+    <TransatlanticBarrier>
+      <BarrierData>
+        <Type>UpAndOut</Type>
+        <Levels>
+          <Level>1.3</Level>
+          <Level>135</Level>
+        </Levels>
+        <Rebate>2000000</Rebate>
+        <RebateCurrency>USD</RebateCurrency>
+      </BarrierData>
+    </TransatlanticBarrier>
+  </FxGenericBarrierOptionData>
+\end{minted}
+\caption{Multi Asset Generic Barrier Option data (FX Underlyings)}
+\label{lst:multiasset_generic_barrieroption_data}
+\end{listing}

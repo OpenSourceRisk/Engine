@@ -34,7 +34,7 @@ void BondPositionData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* BondPositionData::toXML(XMLDocument& doc) {
+XMLNode* BondPositionData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("BondBasketData");
     XMLUtils::addChild(doc, n, "Quantity", quantity_);
     XMLUtils::addChild(doc, n, "Identifier", identifier_);
@@ -61,6 +61,13 @@ void BondPositionData::populateFromBondBasketReferenceData(const boost::shared_p
 
 void BondPosition::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
     DLOG("BondPosition::build() called for " << id());
+
+    // ISDA taxonomy: not a derivative, but define the asset class at least
+    // so that we can determine a TRS asset class that has a Bond position underlying
+    additionalData_["isdaAssetClass"] = string("Credit");
+    additionalData_["isdaBaseProduct"] = string("");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");
 
     bonds_.clear();
     weights_.clear();
@@ -106,13 +113,6 @@ void BondPosition::build(const boost::shared_ptr<ore::data::EngineFactory>& engi
     notional_ = Null<Real>();
     notionalCurrency_ = "";
 
-    // ISDA taxonomy: not a derivative, but define the asset class at least
-    // so that we can determine a TRS asset class that has a Bond position underlying
-    additionalData_["isdaAssetClass"] = string("Credit");
-    additionalData_["isdaBaseProduct"] = string("");
-    additionalData_["isdaSubProduct"] = string("");
-    additionalData_["isdaTransaction"] = string("");
-
     setSensitivityTemplate(std::string());
 }
 
@@ -127,7 +127,7 @@ void BondPosition::fromXML(XMLNode* node) {
     data_ = originalData_;
 }
 
-XMLNode* BondPosition::toXML(XMLDocument& doc) {
+XMLNode* BondPosition::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLUtils::appendNode(node, originalData_.toXML(doc));
     return node;

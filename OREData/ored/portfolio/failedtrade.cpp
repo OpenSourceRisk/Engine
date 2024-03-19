@@ -57,7 +57,7 @@ void FailedTrade::fromXML(XMLNode* node) {
     Trade::fromXML(node);
 }
 
-XMLNode* FailedTrade::toXML(XMLDocument& doc) {
+XMLNode* FailedTrade::toXML(XMLDocument& doc) const {
     return Trade::toXML(doc);
 }
 

@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<CollateralBalances>
+
+  <CollateralBalance>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <Currency>EUR</Currency>
+    <InitialMargin>500000</InitialMargin>
+    <VariationMargin>0</VariationMargin>
+  </CollateralBalance>
+    
+</CollateralBalances>

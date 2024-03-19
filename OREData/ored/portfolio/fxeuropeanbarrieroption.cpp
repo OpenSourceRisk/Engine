@@ -40,6 +40,12 @@ namespace data {
 
 void FxEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
+    additionalData_["isdaSubProduct"] = string("Barrier");  
+    additionalData_["isdaTransaction"] = string("");  
+
     const boost::shared_ptr<Market> market = engineFactory->market();
 
     // Only European Single Barrier supported for now
@@ -312,13 +318,6 @@ void FxEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& engi
     additionalData_["soldAmount"] = soldAmount_;
     if (!fxIndex_.empty())
         additionalData_["FXIndex"] = fxIndex_;
-
-    // ISDA taxonomy
-   // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
-    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
-    additionalData_["isdaSubProduct"] = string("Barrier");  
-    additionalData_["isdaTransaction"] = string("");  
 }
 
 void FxEuropeanBarrierOption::fromXML(XMLNode* node) {
@@ -334,7 +333,7 @@ void FxEuropeanBarrierOption::fromXML(XMLNode* node) {
     fxIndex_ = XMLUtils::getChildValue(fxNode, "FXIndex", false, "");
 }
 
-XMLNode* FxEuropeanBarrierOption::toXML(XMLDocument& doc) {
+XMLNode* FxEuropeanBarrierOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fxNode = doc.allocNode("FxEuropeanBarrierOptionData");
     XMLUtils::appendNode(node, fxNode);

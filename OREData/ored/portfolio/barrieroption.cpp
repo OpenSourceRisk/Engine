@@ -186,7 +186,7 @@ void BarrierOption::fromXML(XMLNode* node) {
     additionalFromXml(dataNode);
 }
 
-XMLNode* BarrierOption::toXML(XMLDocument& doc) {
+XMLNode* BarrierOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* barNode = doc.allocNode(tradeType_ + "Data");
     XMLUtils::appendNode(node, barNode);
@@ -210,6 +210,12 @@ std::string FxOptionWithBarrier::indexFixingName() {
 }
 
 void FxOptionWithBarrier::build(const boost::shared_ptr<ore::data::EngineFactory>& ef) { 
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
+    additionalData_["isdaSubProduct"] = string("Barrier");    
+    additionalData_["isdaTransaction"] = string("");  
     
     spotQuote_ = ef->market()->fxSpot(boughtCurrency_ + soldCurrency_);
     fxIndex_ = ef->market()->fxIndex(indexFixingName(), ef->configuration(MarketContext::pricing)).currentLink();
@@ -224,12 +230,6 @@ void FxOptionWithBarrier::build(const boost::shared_ptr<ore::data::EngineFactory
     additionalData_["boughtCurrency"] = boughtCurrency_;
     additionalData_["soldAmount"] = soldAmount_;
     additionalData_["soldCurrency"] = soldCurrency_;
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
-    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
-    additionalData_["isdaSubProduct"] = string("Barrier");    
-    additionalData_["isdaTransaction"] = string("");  
 }
 
 void FxOptionWithBarrier::additionalFromXml(XMLNode* node) {
@@ -240,7 +240,7 @@ void FxOptionWithBarrier::additionalFromXml(XMLNode* node) {
     soldAmount_ = XMLUtils::getChildValueAsDouble(node, "SoldAmount", true);
 }
 
-void FxOptionWithBarrier::additionalToXml(XMLDocument& doc, XMLNode* node) {
+void FxOptionWithBarrier::additionalToXml(XMLDocument& doc, XMLNode* node) const {
     if (!fxIndexStr_.empty())
         XMLUtils::addChild(doc, node, "FXIndex", fxIndexStr_);
     XMLUtils::addChild(doc, node, "BoughtCurrency", boughtCurrency_);
@@ -251,6 +251,11 @@ void FxOptionWithBarrier::additionalToXml(XMLDocument& doc, XMLNode* node) {
 
 
 void EquityOptionWithBarrier::build(const boost::shared_ptr<ore::data::EngineFactory>& ef) {
+
+    additionalData_["isdaAssetClass"] = string("Equity");
+    additionalData_["isdaBaseProduct"] = string("Option");
+    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");  
+    additionalData_["isdaTransaction"] = string("");  
 
     eqIndex_ = ef->market()->equityCurve(equityName()).currentLink();
 
@@ -269,11 +274,6 @@ void EquityOptionWithBarrier::build(const boost::shared_ptr<ore::data::EngineFac
     additionalData_["quantity"] = quantity_;
     additionalData_["strike"] = tradeStrike_.value();
     additionalData_["strikeCurrency"] = tradeStrike_.currency();
-
-    additionalData_["isdaAssetClass"] = string("Equity");
-    additionalData_["isdaBaseProduct"] = string("Option");
-    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");  
-    additionalData_["isdaTransaction"] = string("");  
 }
 
 void EquityOptionWithBarrier::additionalFromXml(XMLNode* node) {
@@ -287,7 +287,7 @@ void EquityOptionWithBarrier::additionalFromXml(XMLNode* node) {
     quantity_ = XMLUtils::getChildValueAsDouble(node, "Quantity", true);
 }
 
-void EquityOptionWithBarrier::additionalToXml(XMLDocument& doc, XMLNode* node) {
+void EquityOptionWithBarrier::additionalToXml(XMLDocument& doc, XMLNode* node) const {
     XMLUtils::appendNode(node, equityUnderlying_.toXML(doc));
     XMLUtils::appendNode(node, tradeStrike_.toXML(doc));
     XMLUtils::addChild(doc, node, "Currency", currencyStr_);

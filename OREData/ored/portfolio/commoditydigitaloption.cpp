@@ -50,6 +50,13 @@ CommodityDigitalOption::CommodityDigitalOption(const Envelope& env, const Option
 
 void CommodityDigitalOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
+    // ISDA taxonomy, assuming Commodity follows the Equity template
+    additionalData_["isdaAssetClass"] = std::string("Commodity");
+    additionalData_["isdaBaseProduct"] = std::string("Option");
+    additionalData_["isdaSubProduct"] = std::string("Price Return Basic Performance");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = std::string("");
+
     // Checks
     QL_REQUIRE((strike_ > 0 || close_enough(strike_, 0.0)), "Commodity digital option requires a positive strike");
     QL_REQUIRE(optionData_.exerciseDates().size() == 1, "Invalid number of exercise dates");
@@ -146,13 +153,6 @@ void CommodityDigitalOption::build(const boost::shared_ptr<EngineFactory>& engin
     additionalData_["strike"] = strike_;
     additionalData_["optionType"] = optionData_.callPut();
     additionalData_["strikeCurrency"] = currency_;    
-
-    // ISDA taxonomy, assuming Commodity follows the Equity template
-    additionalData_["isdaAssetClass"] = std::string("Commodity");
-    additionalData_["isdaBaseProduct"] = std::string("Option");
-    additionalData_["isdaSubProduct"] = std::string("Price Return Basic Performance");
-    // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = std::string("");
 }
 
 std::map<AssetClass, std::set<std::string>>
@@ -183,7 +183,7 @@ void CommodityDigitalOption::fromXML(XMLNode* node) {
         futureExpiryDate_ = parseDate(XMLUtils::getNodeValue(n));
 }
 
-XMLNode* CommodityDigitalOption::toXML(XMLDocument& doc) {
+XMLNode* CommodityDigitalOption::toXML(XMLDocument& doc) const {
 
     XMLNode* node = Trade::toXML(doc);
 

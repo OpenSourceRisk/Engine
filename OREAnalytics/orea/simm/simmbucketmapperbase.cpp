@@ -304,7 +304,7 @@ void SimmBucketMapperBase::fromXML(XMLNode* node) {
     LOG("Finished parsing SIMMBucketMappings");
 }
 
-XMLNode* SimmBucketMapperBase::toXML(ore::data::XMLDocument& doc) {
+XMLNode* SimmBucketMapperBase::toXML(ore::data::XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("SIMMBucketMappings");
     for (auto const& b : bucketMapping_) {
         XMLNode* n = doc.allocNode(ore::data::to_string(b.first));

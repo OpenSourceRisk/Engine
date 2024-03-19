@@ -66,6 +66,13 @@ CommodityForward::CommodityForward(const Envelope& envelope, const string& posit
 
 void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Commodity");
+    additionalData_["isdaBaseProduct"] = string("Forward");
+    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");  
+
     // Create the underlying commodity index for the forward
     const boost::shared_ptr<Market>& market = engineFactory->market();
     boost::shared_ptr<QuantExt::FxIndex> fxIndex = nullptr;
@@ -159,13 +166,6 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
         additionalData_["fixingDate"] = fixingDate_;
         additionalData_["fxIndex"] = fxIndex;
     }
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Commodity");
-    additionalData_["isdaBaseProduct"] = string("Forward");
-    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
-    // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = string("");  
 }
 
 Real CommodityForward::notional() const { return notional_; }
@@ -223,7 +223,7 @@ void CommodityForward::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* CommodityForward::toXML(XMLDocument& doc) {
+XMLNode* CommodityForward::toXML(XMLDocument& doc) const {
 
     XMLNode* node = Trade::toXML(doc);
     XMLNode* commodityDataNode = doc.allocNode("CommodityForwardData");

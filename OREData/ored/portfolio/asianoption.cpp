@@ -34,6 +34,26 @@ namespace data {
 
 void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
+    // ISDA taxonomy
+    if (underlying_->type() == "Equity") {
+        additionalData_["isdaAssetClass"] = string("Equity");
+        additionalData_["isdaBaseProduct"] = string("Option");
+        additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");  
+    } else if (underlying_->type() == "FX") {
+        additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+        additionalData_["isdaBaseProduct"] = string("Vanilla Option");
+        additionalData_["isdaSubProduct"] = string("");
+    } else if (underlying_->type() == "Commodity") {
+        // guessing that Commodities are treated like Equity
+        additionalData_["isdaAssetClass"] = string("Commodity");
+        additionalData_["isdaBaseProduct"] = string("Option");
+        additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");  
+    }
+    else {
+        WLOG("ISDA taxonomy not set for trade " << id());
+    }
+    additionalData_["isdaTransaction"] = string("");  
+
     Currency payCcy = parseCurrency(currency_);
 
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for AsianOption");
@@ -182,26 +202,6 @@ void AsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     npvCurrency_ = currency_;
     notional_ = tradeStrike_.value() * quantity_;
     notionalCurrency_ = currency_;
-
-    // ISDA taxonomy
-    if (underlying_->type() == "Equity") {
-        additionalData_["isdaAssetClass"] = string("Equity");
-        additionalData_["isdaBaseProduct"] = string("Option");
-        additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");  
-    } else if (underlying_->type() == "FX") {
-        additionalData_["isdaAssetClass"] = string("Foreign Exchange");
-        additionalData_["isdaBaseProduct"] = string("Vanilla Option");
-        additionalData_["isdaSubProduct"] = string("");
-    } else if (underlying_->type() == "Commodity") {
-        // guessing that Commodities are treated like Equity
-        additionalData_["isdaAssetClass"] = string("Commodity");
-        additionalData_["isdaBaseProduct"] = string("Option");
-        additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");  
-    }
-    else {
-        WLOG("ISDA taxonomy not set for trade " << id());
-    }
-    additionalData_["isdaTransaction"] = string("");  
 }
 
 void AsianOption::fromXML(XMLNode* node) {
@@ -229,7 +229,7 @@ void AsianOption::fromXML(XMLNode* node) {
     observationDates_.fromXML(XMLUtils::getChildNode(n, "ObservationDates"));
 }
 
-XMLNode* AsianOption::toXML(XMLDocument& doc) {
+XMLNode* AsianOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* n = doc.allocNode(tradeType() + "Data");
     XMLUtils::appendNode(node, n);

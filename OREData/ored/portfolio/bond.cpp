@@ -92,7 +92,7 @@ void BondData::fromXML(XMLNode* node) {
     initialise();
 }
 
-XMLNode* BondData::toXML(XMLDocument& doc) {
+XMLNode* BondData::toXML(XMLDocument& doc) const {
     XMLNode* bondNode = doc.allocNode("BondData");
     if (!subType_.empty())
         XMLUtils::addChild(doc, bondNode, "SubType", subType_);
@@ -228,6 +228,13 @@ std::string BondData::isdaBaseProduct() const {
 void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Bond::build() called for trade " << id());
 
+    // ISDA taxonomy: not a derivative, but define the asset class at least
+    // so that we can determine a TRS asset class that has Bond underlyings
+    additionalData_["isdaAssetClass"] = string("Credit");
+    additionalData_["isdaBaseProduct"] = string("");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");
+
     const boost::shared_ptr<Market> market = engineFactory->market();
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("Bond");
     QL_REQUIRE(builder, "Bond::build(): internal error, builder is null");
@@ -283,13 +290,6 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     legCurrencies_ = {npvCurrency_};
     legPayers_ = {bondData_.isPayer()};
 
-    // ISDA taxonomy: not a derivative, but define the asset class at least
-    // so that we can determine a TRS asset class that has Bond underlyings
-    additionalData_["isdaAssetClass"] = string("Credit");
-    additionalData_["isdaBaseProduct"] = string("");
-    additionalData_["isdaSubProduct"] = string("");
-    additionalData_["isdaTransaction"] = string("");
-
     DLOG("Bond::build() finished for trade " << id());
 }
 
@@ -299,7 +299,7 @@ void Bond::fromXML(XMLNode* node) {
     bondData_ = originalBondData_;
 }
 
-XMLNode* Bond::toXML(XMLDocument& doc) {
+XMLNode* Bond::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLUtils::appendNode(node, originalBondData_.toXML(doc));
     return node;

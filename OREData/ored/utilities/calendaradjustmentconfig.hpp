@@ -66,7 +66,7 @@ public:
     const string& getBaseCalendar(const string& calname) const;
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
     //! add all holidays and business days from c to this instance
     void append(const CalendarAdjustmentConfig& c);
