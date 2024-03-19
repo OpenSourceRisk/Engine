@@ -62,7 +62,7 @@ CorrelationFactor parseCorrelationFactor(const string& name) {
 
     QL_REQUIRE(tokens.size() == 2 || tokens.size() == 3,
                "parseCorrelationFactor(" << name
-                                         << "): expected 2 or 3 tokens separated by :, e.g. IR:USD or INF:UKRPI:0");
+                                         << "): expected 2 or 3 tokens separated by ':', e.g. 'IR:USD' or 'INF:UKRPI:0'");
 
     return {parseCamAssetType(tokens[0]), tokens[1], tokens.size() == 3 ? parseInteger(tokens(3)) : 0};
 }
