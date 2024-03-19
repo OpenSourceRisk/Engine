@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ored/utilities/log.hpp>
 #include <ored/utilities/osutils.hpp>
 #include <ored/version.hpp>
 
@@ -44,6 +45,16 @@
 #include <sys/resource.h> // getrusage()
 #include <sys/utsname.h>  // uname()
 #include <unistd.h>
+#endif
+
+#if defined(_WIN32) || defined(_WIN64)
+#include <boost/version.hpp>
+#if BOOST_VERSION > 106500
+#include <boost/stacktrace.hpp>
+#endif
+#else
+#include <execinfo.h>
+#include <signal.h>
 #endif
 
 using namespace std;
@@ -342,6 +353,70 @@ string getMemoryRAM() { return parseProcFile("/proc/meminfo", "MemTotal"); }
 
 #endif
 
+// So boost stacktrace is nice, but it needs boost 1.65.1 or higher and it needs linker flags on linux (-rdynamic and
+// -ldl) and one windows we need even more on OSX "Boost.Stacktrace requires `_Unwind_Backtrace` function. Define
+// `_GNU_SOURCE` macro
+//
+// So for now we just use old unix functions backtrace() and backtrace_symbols()
+void dumpStacktrace() {
+
+    // we overload st here...
+#if defined(_WIN32) || defined(_WIN64)
+#if BOOST_VERSION > 106500
+    boost::stacktrace::stacktrace st = boost::stacktrace::stacktrace();
+    unsigned st_size = st.size();
+#else
+    char** st = NULL;
+    unsigned st_size = 0;
+#endif
+#else
+    char** st;
+    unsigned st_size = 0;
+    void* callstack[1024];
+    st_size = backtrace(callstack, 1024);
+    st = backtrace_symbols(callstack, st_size);
+#endif
+
+    // Write st_size and st[] to both std::cerr and ALOG
+    std::cerr << "Stacktrace " << st_size << " frames:" << std::endl;
+    ALOG("Stacktrace " << st_size << " frames:")
+    for (unsigned int i = 0; i < st_size; i++) {
+        std::cerr << "#" << i << "  " << st[i] << std::endl;
+        ALOG("#" << i << "  " << st[i]);
+    }
+
+#if defined(_WIN32) || defined(_WIN64)
+#else
+    if (st)
+        free(st);
+#endif
+}
+
+#if defined(_WIN32) || defined(_WIN64)
+void setAssertHandler() { LOG("oreplus::data::setAssertHandler() not defined for Windows") }
+
+#else // apple and linux
+
+static void _oreplus_handler(int sig) {
+    ALOG("Received Signal " << sig)
+    dumpStacktrace();
+}
+
+void setAssertHandler() {
+    ALOG("Setting ORE+ SigAction handler to intercept SIGABRT signals");
+
+    // Just in case someone calls this twice
+    static bool sigaction_is_set = false;
+    if (!sigaction_is_set) {
+        struct sigaction psa;
+        psa.sa_handler = _oreplus_handler;
+        sigaction(SIGABRT, &psa, NULL);
+        sigaction(SIGSEGV, &psa, NULL);
+        sigaction_is_set = true;
+    }
+}
+#endif
+    
 } // end namespace os
 } // end namespace data
 } // end namespace ore

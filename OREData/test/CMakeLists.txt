@@ -40,6 +40,7 @@ fixings.cpp
 formulaparser.cpp
 fxaccumulator.cpp
 fxasianoption.cpp
+fxdom.cpp
 fxexotics.cpp
 fxoption.cpp
 fxswap.cpp
