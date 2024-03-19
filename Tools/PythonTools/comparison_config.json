@@ -1,6 +1,56 @@
 {
   "csv_settings": {
     "files": {
+      "im_schedule.csv": {
+        "keys": [
+            "Portfolio",
+            "ProductClass",
+            "Side",
+            "Currency"
+        ],
+        "column_settings": [
+          {
+            "names": [
+                "GrossIM",
+                "GrossCurrentRC",
+                "NetCurrentRC",
+                "NetToGrossRatio",
+                "ScheduleIM"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "im_schedule_trade.csv": {
+        "keys": [
+            "TradeId",
+            "Portfolio",
+            "ProductClass",
+            "EndDate",
+            "Label",
+            "NotionalCurrency",
+            "PVCurrency",
+            "BaseCurrency",
+            "CollectRegulations",
+            "PostRegulations"
+        ],
+        "column_settings": [
+          {
+            "names": [
+                "Maturity",
+                "Multiplier",
+                "Notional",
+                "PV",
+                "Notional(Base)",
+                "PV(Base)",
+                "GrossIM(Base)"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
       "simm_margin_data\\.csv": {
         "keys": [
           "Portfolio",
