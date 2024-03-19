@@ -241,5 +241,12 @@ template <class T> inline QuantLib::ext::shared_ptr<T> Analytic::dependentAnalyt
     return analytic;
 }
 
+boost::shared_ptr<ore::data::Loader> implyBondSpreads(const Date& asof,
+                 const boost::shared_ptr<InputParameters>& params,
+                 const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
+                 const boost::shared_ptr<ore::data::Loader>& loader,
+                 const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
+                 const std::string& excludeRegex);
+
 } // namespace analytics
 } // namespace oreplus
