@@ -22,6 +22,8 @@
 
 #include <ql/experimental/math/laplaceinterpolation.hpp>
 #include <ql/math/comparison.hpp>
+#include <ql/math/interpolations/bilinearinterpolation.hpp>
+#include <ql/math/interpolations/flatextrapolation2d.hpp>
 #include <ql/math/optimization/costfunction.hpp>
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/termstructures/volatility/sabr.hpp>
@@ -231,7 +233,13 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
     };
 
     t.strikes_ = marketSmile.strikes;
-    t.marketQuotes_ = convert(marketSmile, preferredOutputQuoteType(), marketSmile.lognormalShift);
+    for (Size i = 0; i < marketSmile.marketQuotes.size(); ++i) {
+        t.marketQuotes_.push_back(convert(
+            marketSmile.marketQuotes[i]->value(), inputMarketQuoteType_, marketSmile.lognormalShift,
+            marketSmile.optionTypes.empty() ? boost::none : boost::optional<Option::Type>(marketSmile.optionTypes[i]),
+            marketSmile.timeToExpiry, marketSmile.strikes[i], marketSmile.forward->value(), preferredOutputQuoteType(),
+            marketSmile.lognormalShift, boost::none));
+    }
 
     // perform the calibration (this step might throw if the minimization goes wrong)
 
@@ -277,6 +285,7 @@ void SabrParametricVolatility::performCalculations() const {
         auto [params, error] = calibrateModelParameters(s, param->second);
         calibratedSabrParams_[key] = params;
         // handle calibration error TODO !!! we want to remove those exceeding an error threshold
+        lognormalShifts_[key] = s.lognormalShift;
     }
 
     // build the timeToExpiry, underlyingLength vectors
@@ -288,54 +297,85 @@ void SabrParametricVolatility::performCalculations() const {
         tmpUnderlyingLengths.insert(s.underlyingLength);
     }
 
-    std::vector<Real> timeToExpiries(tmpTimeToExpiries.begin(), tmpTimeToExpiries.end());
-    std::vector<Real> underlyingLengths(tmpUnderlyingLengths.begin(), tmpUnderlyingLengths.end());
+    timeToExpiries_ = std::vector<Real>(tmpTimeToExpiries.begin(), tmpTimeToExpiries.end());
+    underlyingLengths_ = std::vector<Real>(tmpUnderlyingLengths.begin(), tmpUnderlyingLengths.end());
 
     // build a matrix of calibrated SABR parameters, possibly with null values
 
-    Size m = underlyingLengths.size();
-    Size n = timeToExpiries.size();
-    Matrix alpha(m, n, Null<Real>()), beta(m, n, Null<Real>()), nu(m, n, Null<Real>()), rho(m, n, Null<Real>());
+    Size m = underlyingLengths_.size();
+    Size n = timeToExpiries_.size();
+
+    alpha_ = Matrix(m, n, Null<Real>());
+    beta_ = Matrix(m, n, Null<Real>());
+    nu_ = Matrix(m, n, Null<Real>());
+    rho_ = Matrix(m, n, Null<Real>());
+    lognormalShift_ = Matrix(m, n, Null<Real>());
 
     for (Size i = 0; i < m; ++i) {
         for (Size j = 0; j < n; ++j) {
-            auto key = std::make_pair(timeToExpiries[i], underlyingLengths[j]);
+            auto key = std::make_pair(timeToExpiries_[i], underlyingLengths_[j]);
             if (auto p = calibratedSabrParams_.find(key); p != calibratedSabrParams_.end()) {
-                alpha(i, j) = p->second[0];
-                beta(i, j) = p->second[1];
-                nu(i, j) = p->second[2];
-                rho(i, j) = p->second[3];
+                alpha_(i, j) = p->second[0];
+                beta_(i, j) = p->second[1];
+                nu_(i, j) = p->second[2];
+                rho_(i, j) = p->second[3];
+            }
+            if (auto s = lognormalShifts_.find(key); s != lognormalShifts_.end()) {
+                lognormalShift_(i, j) = s->second;
             }
         }
     }
 
     // interpolate the null values
 
-    laplaceInterpolation(alpha);
-    laplaceInterpolation(beta);
-    laplaceInterpolation(nu);
-    laplaceInterpolation(rho);
+    laplaceInterpolation(alpha_);
+    laplaceInterpolation(beta_);
+    laplaceInterpolation(nu_);
+    laplaceInterpolation(rho_);
 
-    // sanitize values that are not allowed
+    // sanitize values produced by the the interpolation that are not allowed
 
     for (Size i = 0; i < m; ++i) {
         for (Size j = 0; j < n; ++j) {
-            alpha(i, j) = std::max(alpha(i, j), 0.0);
-            beta(i, j) = std::max(beta(i, j), 0.0);
-            nu(i, j) = std::max(nu(i, j), 0.0);
-            rho(i, j) = std::max(std::min(rho(i, j), 1.0), -1.0);
+            alpha_(i, j) = std::max(alpha_(i, j), 0.0);
+            beta_(i, j) = std::max(beta_(i, j), 0.0);
+            nu_(i, j) = std::max(nu_(i, j), 0.0);
+            rho_(i, j) = std::max(std::min(rho_(i, j), 1.0), -1.0);
         }
     }
 
     // set up the parameter interpolations
+
+    alphaInterpolation_ = FlatExtrapolator2D(boost::make_shared<BilinearInterpolation>(
+        timeToExpiries_.begin(), timeToExpiries_.end(), underlyingLengths_.begin(), underlyingLengths_.end(), alpha_));
+    betaInterpolation_ = FlatExtrapolator2D(boost::make_shared<BilinearInterpolation>(
+        timeToExpiries_.begin(), timeToExpiries_.end(), underlyingLengths_.begin(), underlyingLengths_.end(), beta_));
+    nuInterpolation_ = FlatExtrapolator2D(boost::make_shared<BilinearInterpolation>(
+        timeToExpiries_.begin(), timeToExpiries_.end(), underlyingLengths_.begin(), underlyingLengths_.end(), nu_));
+    rhoInterpolation_ = FlatExtrapolator2D(boost::make_shared<BilinearInterpolation>(
+        timeToExpiries_.begin(), timeToExpiries_.end(), underlyingLengths_.begin(), underlyingLengths_.end(), rho_));
+    lognormalShiftInterpolation_ = FlatExtrapolator2D(boost::make_shared<BilinearInterpolation>(
+        timeToExpiries_.begin(), timeToExpiries_.end(), underlyingLengths_.begin(), underlyingLengths_.end(),
+        lognormalShift_));
 }
 
 Real SabrParametricVolatility::evaluate(const Real timeToExpiry, const Real underlyingLength, const Real strike,
-                                        const MarketQuoteType outputMarketQuoteType, const Real outputLognormalShift,
+                                        const Real forward, const MarketQuoteType outputMarketQuoteType,
+                                        const Real outputLognormalShift,
                                         const boost::optional<QuantLib::Option::Type> outputOptionType) const {
     calculate();
 
-    return 0.0;
+    // TODO add caching
+
+    Real alpha = alphaInterpolation_(timeToExpiry, underlyingLength);
+    Real beta = betaInterpolation_(timeToExpiry, underlyingLength);
+    Real nu = nuInterpolation_(timeToExpiry, underlyingLength);
+    Real rho = rhoInterpolation_(timeToExpiry, underlyingLength);
+    Real lognormalShift = lognormalShiftInterpolation_(timeToExpiry, underlyingLength);
+
+    Real result = evaluateSabr({alpha, beta, nu, rho}, forward, timeToExpiry, lognormalShift, {strike}).front();
+    return convert(result, preferredOutputQuoteType(), lognormalShift, boost::none, timeToExpiry, strike, forward,
+                   outputMarketQuoteType, outputLognormalShift, outputOptionType);
 }
 
 } // namespace QuantExt

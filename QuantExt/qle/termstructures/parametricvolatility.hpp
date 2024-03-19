@@ -31,8 +31,8 @@
 
 namespace QuantExt {
 
-using QuantLib::Real;
 using QuantLib::Null;
+using QuantLib::Real;
 
 class ParametricVolatility : public QuantLib::LazyObject {
 public:
@@ -56,14 +56,18 @@ public:
                          const MarketQuoteType inputMarketQuoteType,
                          const QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve);
 
-    // if outputOptionType is empty, otm strikes are used (call for atm)
-    std::vector<QuantLib::Real> convert(const MarketSmile& p, const MarketQuoteType outputMarketQuoteType,
-                                        const QuantLib::Real outputLognormalShift,
-                                        const std::vector<QuantLib::Option::Type>& outputOptionTypes = {}) const;
+    // if outputOptionType is none, otm strike is used (and call for atm)
+    Real convert(const Real inputQuote, const MarketQuoteType inputMarketQuoteType,
+                 const QuantLib::Real inputLognormalShift, const boost::optional<Option::Type> inputOptionType,
+                 const QuantLib::Real timeToExpiry, const QuantLib::Real strike, const QuantLib::Real forward,
+                 const MarketQuoteType outputMarketQuoteType, const QuantLib::Real outputLognormalShift,
+                 const boost::optional<QuantLib::Option::Type> outputOptionType = boost::none) const;
+
     // if outputOptionType is none, otm strike is used
     virtual QuantLib::Real
     evaluate(const QuantLib::Real timeToExpiry, const QuantLib::Real underlyingLength, const QuantLib::Real strike,
-             const MarketQuoteType outputMarketQuoteType, const QuantLib::Real outputLognormalShift,
+             const QuantLib::Real forward, const MarketQuoteType outputMarketQuoteType,
+             const QuantLib::Real outputLognormalShift,
              const boost::optional<QuantLib::Option::Type> outputOptionType = boost::none) const = 0;
 
 protected:

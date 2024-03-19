@@ -24,6 +24,8 @@
 
 #include <qle/termstructures/parametricvolatility.hpp>
 
+#include <ql/math/interpolations/interpolation2d.hpp>
+
 namespace QuantExt {
 
 class SabrParametricVolatility final : public ParametricVolatility {
@@ -47,7 +49,8 @@ public:
 
     QuantLib::Real
     evaluate(const QuantLib::Real timeToExpiry, const QuantLib::Real underlyingLength, const QuantLib::Real strike,
-             const MarketQuoteType outputMarketQuoteType, const QuantLib::Real outputLognormalShift,
+             const QuantLib::Real forward, const MarketQuoteType outputMarketQuoteType,
+             const QuantLib::Real outputLognormalShift,
              const boost::optional<QuantLib::Option::Type> outputOptionType = boost::none) const override;
 
 private:
@@ -68,6 +71,12 @@ private:
     std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, bool>>> modelParameters_;
 
     mutable std::map<std::pair<Real, Real>, std::vector<Real>> calibratedSabrParams_;
+    mutable std::map<std::pair<Real, Real>, Real> lognormalShifts_;
+
+    mutable std::vector<Real> underlyingLengths_, timeToExpiries_;
+    mutable Matrix alpha_, beta_, nu_, rho_, lognormalShift_;
+    mutable Interpolation2D alphaInterpolation_, betaInterpolation_, nuInterpolation_, rhoInterpolation_,
+        lognormalShiftInterpolation_;
 };
 
 } // namespace QuantExt
