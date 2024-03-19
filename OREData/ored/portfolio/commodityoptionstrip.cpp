@@ -191,7 +191,7 @@ void CommodityOptionStrip::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* CommodityOptionStrip::toXML(XMLDocument& doc) {
+XMLNode* CommodityOptionStrip::toXML(XMLDocument& doc) const {
 
     XMLNode* node = Trade::toXML(doc);
 

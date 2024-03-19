@@ -70,9 +70,6 @@ Real McMultiLegBaseEngine::time(const Date& d) const {
 McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boost::shared_ptr<CashFlow> flow,
                                                                             const Currency& payCcy, bool payer,
                                                                             Size legNo, Size cfNo) const {
-
-    constexpr Real tinyTime = 1E-10;
-
     CashflowInfo info;
 
     // set some common info: pay time, pay ccy index in the model, payer, exercise into decision time
@@ -721,7 +718,7 @@ void McMultiLegBaseEngine::calculate() const {
         Size cashflowNo = 0;
         for (auto const& cashflow : leg) {
             // we can skip cashflows that are paid
-            if (cashflow->date() <= today_)
+            if (cashflow->date() < today_ || (!includeSettlementDateFlows_ && cashflow->date() == today_))
                 continue;
             // for an alive cashflow, populate the data
             cashflowInfo.push_back(createCashflowInfo(cashflow, currency, payer, legNo, cashflowNo));
@@ -850,8 +847,8 @@ void McMultiLegBaseEngine::calculate() const {
 
         for (Size i = 0; i < cashflowInfo.size(); ++i) {
 
-            /* we assume here that exIntoCriterionTime > t implies payTime > t
-               this must be ensured by the createCashflowInfo method */
+            /* we assume here that exIntoCriterionTime > t implies payTime > t, this must be ensured by the
+               createCashflowInfo method */
 
             if (cfStatus[i] == CfStatus::open) {
                 if (cashflowInfo[i].exIntoCriterionTime > *t) {
@@ -859,7 +856,7 @@ void McMultiLegBaseEngine::calculate() const {
                     pathValueUndDirty += tmp;
                     pathValueUndExInto += tmp;
                     cfStatus[i] = CfStatus::done;
-                } else if (cashflowInfo[i].payTime > *t) {
+                } else if (cashflowInfo[i].payTime > *t - (includeSettlementDateFlows_ ? tinyTime : 0.0)) {
                     auto tmp = cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
                     pathValueUndDirty += tmp;
                     amountCache[i] = tmp;

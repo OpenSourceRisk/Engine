@@ -773,7 +773,7 @@ void CapFloor::fromXML(XMLNode* node) {
     premiumData_.fromXML(capFloorNode);
 }
 
-XMLNode* CapFloor::toXML(XMLDocument& doc) {
+XMLNode* CapFloor::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* capFloorNode = doc.allocNode("CapFloorData");
     XMLUtils::appendNode(node, capFloorNode);

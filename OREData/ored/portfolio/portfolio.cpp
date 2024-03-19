@@ -95,7 +95,7 @@ void Portfolio::fromXML(XMLNode* node) {
     LOG("Finished Parsing XML doc");
 }
 
-XMLNode* Portfolio::toXML(XMLDocument& doc) {
+XMLNode* Portfolio::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Portfolio");
     for (auto& t : trades_)
         XMLUtils::appendNode(node, t.second->toXML(doc));
@@ -109,7 +109,7 @@ bool Portfolio::remove(const std::string& tradeID) {
 
 void Portfolio::removeMatured(const Date& asof) {
     for (auto it = trades_.begin(); it != trades_.end(); /* manual */) {
-        if ((*it).second->maturity() <= asof) {
+        if ((*it).second->isExpired(asof)) {
             StructuredTradeErrorMessage((*it).second, "", "Trade is Matured").log();
             it=trades_.erase(it);
         } else {

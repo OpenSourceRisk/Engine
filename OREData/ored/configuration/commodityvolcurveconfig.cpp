@@ -151,7 +151,7 @@ void CommodityVolatilityConfig::fromXML(XMLNode* node) {
     populateRequiredCurveIds();
 }
 
-XMLNode* CommodityVolatilityConfig::toXML(XMLDocument& doc) {
+XMLNode* CommodityVolatilityConfig::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("CommodityVolatility");
 

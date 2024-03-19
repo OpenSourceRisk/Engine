@@ -53,7 +53,7 @@ void CrLgmData::fromXML(XMLNode* node) {
     LgmData::fromXML(node);
 }
 
-XMLNode* CrLgmData::toXML(XMLDocument& doc) {
+XMLNode* CrLgmData::toXML(XMLDocument& doc) const {
     XMLNode* node = LgmData::toXML(doc);
     XMLUtils::addAttribute(doc, node, "name", name_);
 
