@@ -17,6 +17,7 @@ aggregation/postprocess.cpp
 aggregation/staticcreditxvacalculator.cpp
 aggregation/xvacalculator.cpp
 app/analytic.cpp
+app/analytics/imscheduleanalytic.cpp
 app/analytics/parconversionanalytic.cpp
 app/analytics/pricinganalytic.cpp
 app/analytics/scenarioanalytic.cpp
@@ -52,6 +53,7 @@ engine/filteredsensitivitystream.cpp
 engine/historicalpnlgenerator.cpp
 engine/historicalsensipnlcalculator.cpp
 engine/historicalsimulationvar.cpp
+engine/marketriskbacktest.cpp
 engine/marketriskreport.cpp
 engine/mporcalculator.cpp
 engine/multistatenpvcalculator.cpp
@@ -71,6 +73,7 @@ engine/sensitivityreportstream.cpp
 engine/stresstest.cpp
 engine/valuationcalculator.cpp
 engine/valuationengine.cpp
+engine/varbacktest.cpp
 engine/varcalculator.cpp
 engine/xvaenginecg.cpp
 engine/zerotoparcube.cpp
@@ -101,6 +104,8 @@ scenario/stressscenariogenerator.cpp
 simm/crif.cpp
 simm/crifloader.cpp
 simm/crifrecord.cpp
+simm/imschedulecalculator.cpp
+simm/imscheduleresults.cpp
 simm/simmbasicnamemapper.cpp
 simm/simmbucketmapperbase.cpp
 simm/simmcalculator.cpp
@@ -155,6 +160,7 @@ aggregation/postprocess.hpp
 aggregation/staticcreditxvacalculator.hpp
 aggregation/xvacalculator.hpp
 app/analytic.hpp
+app/analytics/imscheduleanalytic.hpp
 app/analytics/parconversionanalytic.hpp
 app/analytics/pricinganalytic.hpp
 app/analytics/scenarioanalytic.hpp
@@ -198,6 +204,7 @@ engine/filteredsensitivitystream.hpp
 engine/historicalpnlgenerator.hpp
 engine/historicalsensipnlcalculator.hpp
 engine/historicalsimulationvar.hpp
+engine/marketriskbacktest.hpp
 engine/marketriskreport.hpp
 engine/mporcalculator.hpp
 engine/multistatenpvcalculator.hpp
@@ -219,6 +226,7 @@ engine/sensitivitystream.hpp
 engine/stresstest.hpp
 engine/valuationcalculator.hpp
 engine/valuationengine.hpp
+engine/varbacktest.hpp
 engine/varcalculator.hpp
 engine/xvaenginecg.hpp
 engine/zerotoparcube.hpp
@@ -255,6 +263,8 @@ scenario/stressscenariogenerator.hpp
 simm/crif.hpp
 simm/crifloader.hpp
 simm/crifrecord.hpp
+simm/imschedulecalculator.hpp
+simm/imscheduleresults.hpp
 simm/simmbasicnamemapper.hpp
 simm/simmbucketmapper.hpp
 simm/simmbucketmapperbase.hpp
