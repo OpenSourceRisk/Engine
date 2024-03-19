@@ -33,6 +33,7 @@
 #include <orea/simm/crifrecord.hpp>
 #include <orea/simm/simmresults.hpp>
 #include <orea/simm/crif.hpp>
+#include <orea/simm/imschedulecalculator.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
@@ -186,6 +187,17 @@ public:
         const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams,
         boost::shared_ptr<ore::data::Report> histScenDetailsReport, boost::shared_ptr<ore::data::Report> statReport,
         boost::shared_ptr<ore::data::Report> distReport, QuantLib::Size distSteps = Null<Size>());
+
+    virtual void writeIMScheduleSummaryReport(
+        const std::map<SimmConfiguration::SimmSide,
+                       std::map<NettingSetDetails, std::pair<std::string, IMScheduleResults>>>& finalResultsMap,
+        const boost::shared_ptr<Report> report, const bool hasNettingSetDetails = false,
+        const std::string& simmResultCcy = "", const std::string& reportCcy = "", QuantLib::Real fxSpot = 1.0,
+        QuantLib::Real outputThreshold = 0.005);
+
+    virtual void writeIMScheduleTradeReport(const std::map<std::string, std::vector<IMScheduleCalculator::IMScheduleTradeData>>& tradeResults,
+                                            const boost::shared_ptr<ore::data::Report> report,
+                                            const bool hasNettingSetDetails = false);
 
 protected:
     std::string nullString_;
