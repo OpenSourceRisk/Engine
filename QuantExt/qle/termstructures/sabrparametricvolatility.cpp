@@ -328,10 +328,10 @@ void SabrParametricVolatility::performCalculations() const {
 
     // interpolate the null values
 
-    laplaceInterpolation(alpha_);
-    laplaceInterpolation(beta_);
-    laplaceInterpolation(nu_);
-    laplaceInterpolation(rho_);
+    laplaceInterpolation(alpha_, timeToExpiries_, underlyingLengths_);
+    laplaceInterpolation(beta_, timeToExpiries_, underlyingLengths_);
+    laplaceInterpolation(nu_, timeToExpiries_, underlyingLengths_);
+    laplaceInterpolation(rho_, timeToExpiries_, underlyingLengths_);
 
     // sanitize values produced by the the interpolation that are not allowed
 
