@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2022 Quaternion Risk Management Ltd
+ Copyright (C) 2024 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,38 +16,35 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/app/analytic.hpp
-    \brief ORE Analytics Manager
+/*! \file orea/app/analytics/stresstestanalytic.hpp
+    \brief ORE Stresstest Analytic
 */
-
 #pragma once
 
 #include <orea/app/analytic.hpp>
-
+#include <orea/engine/parsensitivityanalysis.hpp>
 namespace ore {
 namespace analytics {
-
-/*! Pricing-type analytics
-  \todo align pillars for par sensitivity analysis
-*/
-class PricingAnalyticImpl : public Analytic::Impl {
+class StressTestAnalyticImpl : public Analytic::Impl {
 public:
-    static constexpr const char* LABEL = "PRICING";
+    static constexpr const char* LABEL = "STRESS";
 
-    PricingAnalyticImpl(const boost::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) { setLabel(LABEL); }
-    void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader, 
-        const std::set<std::string>& runTypes = {}) override;
+    StressTestAnalyticImpl(const boost::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+        setLabel(LABEL);
+    }
+
+    void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+                     const std::set<std::string>& runTypes = {}) override;
 
     void setUpConfigurations() override;
 };
 
-class PricingAnalytic : public Analytic {
+class StressTestAnalytic : public Analytic {
 public:
-    PricingAnalytic(const boost::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<PricingAnalyticImpl>(inputs),
-            {"NPV", "CASHFLOW", "CASHFLOWNPV"},
-                   inputs) {}
+    StressTestAnalytic(const boost::shared_ptr<InputParameters>& inputs)
+        : Analytic(std::make_unique<StressTestAnalyticImpl>(inputs), {"STRESS"}, inputs, false, false, false,
+                   false) {}
 };
- 
+
 } // namespace analytics
-} // namespace oreplus
+} // namespace ore

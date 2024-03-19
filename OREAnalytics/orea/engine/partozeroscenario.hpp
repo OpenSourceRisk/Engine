@@ -33,11 +33,11 @@
 
 namespace ore {
 namespace analytics {
-
+/*
 class ParToZeroScenario{
 public:
     ParToZeroScenario();
-    
+
     boost::shared_ptr<ore::analytics::StressTestScenarioData> convertParScenarioToZeroScenarioData(
         const boost::shared_ptr<Market>& market, boost::shared_ptr<ScenarioSimMarketParameters>& simMarketParameters,
         boost::shared_ptr<StressTestScenarioData>& stressTestData, boost::shared_ptr<SensitivityScenarioData> sensiData,
@@ -53,9 +53,9 @@ public:
             market, simMarketParameters, curveConfigs, todaysMarketParams, continueOnError, useSpreadedTermStructures,
             cacheSimData, allowPartialScenarios, iborFallbackConfig, handlePseudoCurrencies);
         // Dont build a scenario generator, we modify the simData directly,
-        
+
         // Check if we have a IR par scenario
-        
+
         for (const auto& scenario : stressTestData->data()) {
             // Rate shifts
             bool irCurveParScenario = false;
@@ -81,7 +81,7 @@ public:
             }
             if(irCurveParScenario){
                 // Perform ParSensiAnalysis
-                
+
 
                 // Compute Target Par Rate
                 // Modify ZeroRates to match Par-Rate
@@ -91,6 +91,6 @@ public:
         // Rates
     }
 }
-
+*/
 } // namespace analytics
 } // namespace ore

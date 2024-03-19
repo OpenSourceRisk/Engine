@@ -17,13 +17,12 @@
 */
 
 /*! \file orea/app/analytics/sensitivityanalytic.hpp
-    \brief ORE SIMM Analytic
+    \brief ORE Sensitivity Analytic
 */
 #pragma once
 
 #include <orea/app/analytic.hpp>
-#include <orea/app/zerosensitivityloader.hpp>
-
+#include <orea/engine/parsensitivityanalysis.hpp>
 namespace ore {
 namespace analytics {
 class SensitivityAnalyticImpl : public Analytic::Impl {
@@ -36,7 +35,7 @@ public:
 
     void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
-    
+
     void setUpConfigurations() override;
 };
 
@@ -46,7 +45,12 @@ public:
         : Analytic(std::make_unique<SensitivityAnalyticImpl>(inputs), {"SENSITIVITY"}, inputs, false, false, false,
                    false) {}
 
+    const ParSensitivityAnalysis::ParContainer& parSensitivities() const { return parSensitivities_; }
+    void setParSensitivities(const ParSensitivityAnalysis::ParContainer& sensitivities) { parSensitivities_ = sensitivities; }
+
 private:
+    ParSensitivityAnalysis::ParContainer parSensitivities_;
+
 };
 
 } // namespace analytics
