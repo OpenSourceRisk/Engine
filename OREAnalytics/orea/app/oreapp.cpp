@@ -968,12 +968,14 @@ void OREAppInputParameters::loadParameters() {
             setOutputHistoricalScenarios(parseBool(tmp));
     }
 
-    /****************
-     * SIMM
-     ****************/
+    /**********************
+     * SIMM and IM Schedule
+     **********************/
 
+    LOG("SIMM");
     tmp = params_->get("simm", "active", false);
-    if (!tmp.empty() && parseBool(tmp)) {
+    bool doSimm = !tmp.empty() ? parseBool(tmp) : false;
+    if (doSimm) {
         insertAnalytic("SIMM");
 
         tmp = params_->get("simm", "version", false);
@@ -1032,6 +1034,77 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("simm", "writeIntermediateReports", false);
         if (tmp != "")
             setWriteSimmIntermediateReports(parseBool(tmp));
+    }
+
+    LOG("IM SCHEDULE");
+    tmp = params_->get("imschedule", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        insertAnalytic("IM_SCHEDULE");
+
+        tmp = params_->get("imschedule", "version", false);
+        if (tmp != "") {
+            string tmpSimm = params_->get("simm", "version", false);
+            QL_REQUIRE(!doSimm || tmp == tmpSimm, "version for imschedule and simm should match");
+            setSimmVersion(tmp);
+        } else if (simmVersion() == "") {
+            LOG("set SIMM version for IM Schedule to 2.6, required to load CRIF")
+            setSimmVersion("2.6");
+        }
+
+        tmp = params_->get("imschedule", "crif", false);
+        if (tmp != "") {
+            string tmpSimm = params_->get("simm", "crif", false);
+            QL_REQUIRE(!doSimm || tmp == tmpSimm, "crif files for imschedule and simm should match");
+            string file = (inputPath / tmp).generic_string();
+            setCrifFromFile(file, csvEolChar(), csvSeparator(), '\"', csvEscapeChar());
+        }
+        
+        tmp = params_->get("imschedule", "calculationCurrency", false);
+        if (tmp != "") {
+            string tmpSimm = params_->get("simm", "calculationCurrency", false);
+            QL_REQUIRE(!doSimm || tmp == tmpSimm, "calculation currency for for imschedule and simm should match");
+            setSimmCalculationCurrencyCall(tmp);
+            setSimmCalculationCurrencyPost(tmp);
+        } else {
+            QL_REQUIRE(baseCurrency() != "", "either base currency or calculation currency is required");
+        }
+
+        tmp = params_->get("imschedule", "calculationCurrencyCall", false);
+        if (tmp != "") {
+            string tmpSimm = params_->get("simm", "calculationCurrencyCall", false);
+            QL_REQUIRE(!doSimm || tmp == tmpSimm, "calculation currency for imschedule and simm should match");
+            setSimmCalculationCurrencyCall(tmp);
+        }
+
+        tmp = params_->get("imschedule", "calculationCurrencyPost", false);
+        if (tmp != "") {
+            string tmpSimm = params_->get("simm", "calculationCurrencyPost", false);
+            QL_REQUIRE(!doSimm || tmp == tmpSimm, "calculation currency for imschedule and simm should match");
+            setSimmCalculationCurrencyPost(tmp);
+        }
+
+        tmp = params_->get("imschedule", "resultCurrency", false);
+        if (tmp != "") {
+            string tmpSimm = params_->get("simm", "resultCurrency", false);
+            QL_REQUIRE(!doSimm || tmp == tmpSimm, "result currency for imschedule and simm should match");
+            setSimmResultCurrency(tmp);
+        }
+        else
+            setSimmResultCurrency(simmCalculationCurrencyCall());
+
+        tmp = params_->get("imschedule", "reportingCurrency", false);
+        if (tmp != "") {
+            string tmpSimm = params_->get("simm", "reportingCurrency", false);
+            QL_REQUIRE(!doSimm || tmp == tmpSimm, "reporting currency for imschedule and simm should match");
+            setSimmReportingCurrency(tmp);
+        }
+
+        tmp = params_->get("imschedule", "enforceIMRegulations", false);
+        if (tmp != "") {
+            string tmpSimm = params_->get("simm", "enforceIMRegulations", false);
+            QL_REQUIRE(!doSimm || tmp == tmpSimm, "enforceIMRegulations for imschedule and simm should match");
+            setEnforceIMRegulations(parseBool(tmp));
+        }
     }
 
     /************
@@ -1570,6 +1643,10 @@ void OREAppInputParameters::loadParameters() {
             LOG("Lazy market build being overridden to \"false\" for MARKETDATA analytic.")
         setLazyMarketBuilding(false);
     }
+
+    LOG("analytics: " << analytics().size());
+    for (auto a: analytics())
+        LOG("analytic: " << a);
 
     LOG("buildInputParameters done");
 }
