@@ -138,9 +138,9 @@ instruments/makeoiscapfloor.cpp
 instruments/multiccycompositeinstrument.cpp
 instruments/multilegoption.cpp
 instruments/oiccbasisswap.cpp
-instruments/payment.cpp
 instruments/outperformanceoption.cpp
 instruments/pairwisevarianceswap.cpp
+instruments/payment.cpp
 instruments/rebatedexercise.cpp
 instruments/riskparticipationagreement.cpp
 instruments/riskparticipationagreement_tlock.cpp
@@ -241,6 +241,7 @@ pricingengines/analyticdkcpicapfloorengine.cpp
 pricingengines/analyticdoublebarrierbinaryengine.cpp
 pricingengines/analyticdoublebarrierengine.cpp
 pricingengines/analyticeuropeanengine.cpp
+pricingengines/analyticeuropeanenginedeltagamma.cpp
 pricingengines/analyticeuropeanforwardengine.cpp
 pricingengines/analyticjycpicapfloorengine.cpp
 pricingengines/analyticjyyoycapfloorengine.cpp
@@ -266,7 +267,6 @@ pricingengines/cpiblackcapfloorengine.cpp
 pricingengines/cpicapfloorengines.cpp
 pricingengines/crossccyswapengine.cpp
 pricingengines/depositengine.cpp
-pricingengines/analyticeuropeanenginedeltagamma.cpp
 pricingengines/discountingbondrepoengine.cpp
 pricingengines/discountingbondtrsengine.cpp
 pricingengines/discountingcommodityforwardengine.cpp
@@ -801,8 +801,8 @@ pricingengines/discountingfxforwardengine.hpp
 pricingengines/discountingfxforwardenginedeltagamma.hpp
 pricingengines/discountingriskybondengine.hpp
 pricingengines/discountingriskybondenginemultistate.hpp
-pricingengines/discountingswapenginemulticurve.hpp
 pricingengines/discountingswapenginedeltagamma.hpp
+pricingengines/discountingswapenginemulticurve.hpp
 pricingengines/discretizedconvertible.hpp
 pricingengines/fdconvertiblebondevents.hpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.hpp
