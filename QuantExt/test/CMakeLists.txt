@@ -7,12 +7,12 @@ analyticlgmswaptionengine.cpp
 basecorrelationcurve.cpp
 bfrrvolsurface.cpp
 blackswaptionenginedeltagamma.cpp
+blacktriangulation.cpp
 blackvariancecurve.cpp
 blackvariancesurfacesparse.cpp
 blackvariancesurfacestddevs.cpp
 blackvolsurfacedelta.cpp
 blackvolsurfaceproxy.cpp
-blacktriangulation.cpp
 blockmatrixinverse.cpp
 bondoption.cpp
 bonds.cpp
@@ -78,9 +78,9 @@ quadraticinterpolation.cpp
 randomvariable.cpp
 randomvariablelsmbasissystem.cpp
 ratehelpers.cpp
-stoplightbounds.cpp
 stabilisedglls.cpp
 staticallycorrectedyieldtermstructure.cpp
+stoplightbounds.cpp
 strippedoptionletadapter.cpp
 strippedoptionletadapter2.cpp
 survivalprobabilitycurve.cpp
