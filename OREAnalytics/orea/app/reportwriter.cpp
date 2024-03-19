@@ -2167,5 +2167,201 @@ void ReportWriter::writeHistoricalScenarios(const boost::shared_ptr<HistoricalSc
     }
 }
 
+// Ease notation again
+typedef CrifRecord::ProductClass ProductClass;
+typedef SimmConfiguration::RiskClass RiskClass;
+typedef SimmConfiguration::MarginType MarginType;
+typedef SimmConfiguration::SimmSide SimmSide;
+typedef IMScheduleCalculator::IMScheduleTradeData IMScheduleTradeData;
+
+void ReportWriter::writeIMScheduleSummaryReport(
+    const map<SimmSide, map<NettingSetDetails, pair<string, IMScheduleResults>>>& finalResultsMap,
+    const boost::shared_ptr<Report> report, const bool hasNettingSetDetails, const string& simmResultCcy,
+    const string& reportCcy, Real fxSpot, Real outputThreshold) {
+
+    LOG("Writing IM Schedule results summary report.");
+
+    // netting set headers
+    report->addColumn("Portfolio", string());
+    if (hasNettingSetDetails) {
+        for (const string& field : NettingSetDetails::optionalFieldNames())
+            report->addColumn(field, string());
+    }
+
+    report->addColumn("ProductClass", string())
+        .addColumn("GrossIM", double(), 2)
+        .addColumn("GrossCurrentRC", double(), 2)
+        .addColumn("NetCurrentRC", double(), 2)
+        .addColumn("NetToGrossRatio", double(), 6)
+        .addColumn("Side", string())
+        .addColumn("Regulation", string())
+        .addColumn("ScheduleIM", double(), 2)
+        .addColumn("Currency", string());
+    if (!reportCcy.empty()) {
+        report->addColumn("ScheduleIM(Report)", double(), 2).addColumn("ReportCurrency", string());
+    }
+
+    const vector<SimmSide> sides({SimmSide::Call, SimmSide::Post});
+    for (const SimmSide side : sides) {
+        const string& sideString = to_string(side);
+
+        // Variable to hold sum of schedule IM over all portfolios
+        Real sumSideScheduleIM = 0.0;
+        Real sumSideScheduleIMReporting = 0.0;
+
+        std::set<std::string> winningRegs;
+        if (finalResultsMap.find(side) != finalResultsMap.end()) {
+            for (const auto& nv : finalResultsMap.at(side)) {
+                const NettingSetDetails& portfolioId = nv.first;
+                const string& regulation = nv.second.first;
+                const IMScheduleResults& results = nv.second.second;
+
+                winningRegs.insert(regulation);
+
+                QL_REQUIRE(results.currency() == simmResultCcy,
+                           "writeIMScheduleSummaryReport(): IMSchedule results ("
+                               << results.currency() << ") should be denominated in the SIMM result currency ("
+                               << simmResultCcy << ").");
+
+                // Loop over the results for this portfolio
+                for (const auto& imScheduleResult : results.data()) {
+                    ProductClass pc = imScheduleResult.first;
+                    IMScheduleResult result = imScheduleResult.second;
+
+                    Real im = pc == ProductClass::All ? result.scheduleIM : result.grossIM;
+
+                    report->next();
+                    const map<string, string> nettingSetMap = portfolioId.mapRepresentation();
+                    for (const string& field : NettingSetDetails::fieldNames(hasNettingSetDetails)) {
+                        report->add(nettingSetMap.at(field));
+                    }
+                    report->add(to_string(pc))
+                        .add(result.grossIM)
+                        .add(result.grossRC)
+                        .add(result.netRC)
+                        .add(result.NGR)
+                        .add(sideString)
+                        .add(regulation)
+                        .add(im)
+                        .add(results.currency());
+
+                    if (!reportCcy.empty()) {
+                        Real scheduleIMReporting = im * fxSpot;
+                        report->add(scheduleIMReporting).add(reportCcy);
+
+                        if (pc == ProductClass::All)
+                            sumSideScheduleIMReporting += scheduleIMReporting;
+                    }
+
+                    if (pc == ProductClass::All)
+                        sumSideScheduleIM += result.scheduleIM;
+                }
+            }
+        }
+
+        // Write out a row for the aggregate IM over all portfolios
+        // We only write out this row if either reporting ccy was provided or if currency of all the results is the same
+        string finalWinningReg = winningRegs.size() == 1 ? *(winningRegs.begin()) : "";
+
+        // Write out common columns
+        report->next();
+        Size numNettingSetFields = NettingSetDetails::fieldNames(hasNettingSetDetails).size();
+        for (Size t = 0; t < numNettingSetFields; t++)
+            report->add("All");
+        report->add(to_string(ProductClass::All))
+            .add(Null<Real>())
+            .add(Null<Real>())
+            .add(Null<Real>())
+            .add(Null<Real>())
+            .add(sideString)
+            .add(finalWinningReg)
+            .add(sumSideScheduleIM)
+            .add(simmResultCcy);
+
+        // Write out schedule IM in reporting currency if we can
+        if (!reportCcy.empty())
+            report->add(sumSideScheduleIMReporting).add(reportCcy);
+    }
+
+    report->end();
+
+    LOG("IM Schedule results summary report written.");
+}
+
+void ReportWriter::writeIMScheduleTradeReport(const map<string, vector<IMScheduleTradeData>>& tradeResults,
+                                              const boost::shared_ptr<ore::data::Report> report,
+                                              const bool hasNettingSetDetails) {
+
+    LOG("Writing IM Schedule trade results report.");
+
+    report->addColumn("TradeId", string());
+
+    // netting set headers
+    report->addColumn("Portfolio", string());
+    if (hasNettingSetDetails) {
+        for (const string& field : NettingSetDetails::optionalFieldNames())
+            report->addColumn(field, string());
+    }
+
+    report->addColumn("ProductClass", string())
+        .addColumn("EndDate", string())
+        .addColumn("Maturity", double(), 5)
+        .addColumn("Label", string())
+        .addColumn("Multiplier", double(), 2)
+        .addColumn("Notional", double(), 2)
+        .addColumn("NotionalCurrency", string())
+        .addColumn("PV", double(), 2)
+        .addColumn("PVCurrency", string())
+        .addColumn("Notional(Base)", double(), 2)
+        .addColumn("PV(Base)", double(), 2)
+        .addColumn("BaseCurrency", string())
+        .addColumn("GrossIM(Base)", double(), 2)
+        .addColumn("CollectRegulations", string())
+        .addColumn("PostRegulations", string());
+
+    // Variable to hold sum of schedule IM over all portfolios
+    for (const auto& kv : tradeResults) {
+        const string& tradeId = kv.first;
+
+        for (const IMScheduleTradeData& tradeData : kv.second) {
+            const NettingSetDetails& portfolioId = tradeData.nettingSetDetails;
+
+            // Write row if IM not negligible relative to outputThreshold.
+            report->next();
+            report->add(tradeId);
+
+            const map<string, string> nettingSetMap = portfolioId.mapRepresentation();
+            for (const string& field : NettingSetDetails::fieldNames(hasNettingSetDetails)) {
+                report->add(nettingSetMap.at(field));
+            }
+            const string collectRegsString = tradeData.collectRegulations.find(',') == string::npos
+                                                 ? tradeData.collectRegulations
+                                                 : '\"' + tradeData.collectRegulations + '\"';
+            const string postRegsString = tradeData.postRegulations.find(',') == string::npos
+                                              ? tradeData.postRegulations
+                                              : '\"' + tradeData.postRegulations + '\"';
+            report->add(to_string(tradeData.productClass))
+                .add(to_string(tradeData.endDate))
+                .add(tradeData.maturity)
+                .add(tradeData.labelString)
+                .add(tradeData.multiplier)
+                .add(tradeData.notional)
+                .add(tradeData.notionalCcy)
+                .add(tradeData.presentValue)
+                .add(tradeData.presentValueCcy)
+                .add(tradeData.notionalCalc)
+                .add(tradeData.presentValueCalc)
+                .add(tradeData.calculationCcy)
+                .add(tradeData.grossMarginCalc)
+                .add(collectRegsString)
+                .add(postRegsString);
+        }
+    }
+
+    report->end();
+
+    LOG("IM Schedule trade results report written.");
+}
+
 } // namespace analytics
 } // namespace ore
