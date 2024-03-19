@@ -67,6 +67,12 @@ void CommodityAveragePriceOption::build(const boost::shared_ptr<EngineFactory>& 
 
     DLOG("CommodityAveragePriceOption::build() called for trade " << id());
 
+    // ISDA taxonomy, assuming Commodity follows the Equity template
+    additionalData_["isdaAssetClass"] = std::string("Commodity");
+    additionalData_["isdaBaseProduct"] = std::string("Option");
+    additionalData_["isdaSubProduct"] = std::string("Price Return Basic Performance");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = std::string();
 
     QL_REQUIRE(gearing_ > 0.0, "Gearing (" << gearing_ << ") should be positive.");
     QL_REQUIRE(spread_ < strike_ || QuantLib::close_enough(spread_, strike_),
@@ -109,13 +115,6 @@ void CommodityAveragePriceOption::build(const boost::shared_ptr<EngineFactory>& 
     additionalData_["quantity"] = quantity_;
     additionalData_["strike"] = strike_;
     additionalData_["strikeCurrency"] = currency_;
-
-    // ISDA taxonomy, assuming Commodity follows the Equity template
-    additionalData_["isdaAssetClass"] = std::string("Commodity");
-    additionalData_["isdaBaseProduct"] = std::string("Option");
-    additionalData_["isdaSubProduct"] = std::string("Price Return Basic Performance");
-    // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = std::string();
 }
 
 std::map<AssetClass, std::set<std::string>> CommodityAveragePriceOption::underlyingIndices(

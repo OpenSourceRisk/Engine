@@ -49,6 +49,7 @@ public:
 
     //! Trade interface
     virtual void build(const boost::shared_ptr<EngineFactory>&) override;
+    void setIsdaTaxonomyFields() override;
     QuantLib::Real notional() const override;
 
 private:

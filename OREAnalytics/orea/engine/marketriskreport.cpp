@@ -66,7 +66,7 @@ void MarketRiskReport::init() {
             ext::make_shared<HistoricalSensiPnlCalculator>(hisScenGen_, sensiArgs_->sensitivityStream_);
 
     if (fullRevalArgs_) {
-        LOG("Build the portfolio for full reval bt.")
+        LOG("Build the portfolio for full reval bt.");
 
         if (!multiThreadArgs_) {
             factory_ = boost::make_shared<EngineFactory>(fullRevalArgs_->engineData_, fullRevalArgs_->simMarket_,

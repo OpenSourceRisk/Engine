@@ -242,6 +242,9 @@ public:
     std::map<ore::data::AssetClass, std::set<std::string>>
     underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
+    // Add ISDA taxonomy classification to additional data
+    virtual void setIsdaTaxonomyFields();
+
     // Inspectors
     const std::vector<ScriptedTradeEventData>& events() const { return events_; }
     const std::vector<ScriptedTradeValueTypeData>& numbers() const { return numbers_; }

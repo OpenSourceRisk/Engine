@@ -56,6 +56,13 @@ void CommodityDigitalAveragePriceOption::build(const boost::shared_ptr<EngineFac
     reset();
 
     DLOG("CommodityDigitalAveragePriceOption::build() called for trade " << id());
+    
+    // ISDA taxonomy, assuming Commodity follows the Equity template
+    additionalData_["isdaAssetClass"] = std::string("Commodity");
+    additionalData_["isdaBaseProduct"] = std::string("Option");
+    additionalData_["isdaSubProduct"] = std::string("Price Return Basic Performance");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = std::string("");
 
     QL_REQUIRE(optionData_.exerciseDates().size() == 1, "Invalid number of excercise dates");
     Date exDate = parseDate(optionData_.exerciseDates().front());
@@ -125,13 +132,6 @@ void CommodityDigitalAveragePriceOption::build(const boost::shared_ptr<EngineFac
     additionalData_["strike"] = strike_;
     additionalData_["optionType"] = optionData_.callPut();
     additionalData_["strikeCurrency"] = currency_;
-
-    // ISDA taxonomy, assuming Commodity follows the Equity template
-    additionalData_["isdaAssetClass"] = std::string("Commodity");
-    additionalData_["isdaBaseProduct"] = std::string("Option");
-    additionalData_["isdaSubProduct"] = std::string("Price Return Basic Performance");
-    // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = std::string("");
 }
 
 std::map<AssetClass, std::set<std::string>> CommodityDigitalAveragePriceOption::underlyingIndices(
