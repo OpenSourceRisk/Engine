@@ -1924,6 +1924,7 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     Calendar paymentCalendar;
+    PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
 
     if (data.paymentCalendar().empty())
         paymentCalendar = schedule.calendar();
@@ -1946,6 +1947,7 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
                         .withPaymentCalendar(paymentCalendar)
                         .withPaymentDayCounter(dc)
                         .withPaymentAdjustment(bdc)
+                        .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
                         .withFixingDays(fixingDays)
                         .inArrears(cmsData->isInArrears());
 
