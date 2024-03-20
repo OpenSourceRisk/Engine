@@ -48,16 +48,14 @@ public:
     InfJyData();
 
     //! Detailed constructor
-    InfJyData(CalibrationType calibrationType,
-        const std::vector<CalibrationBasket>& calibrationBaskets,
-        const std::string& currency,
-        const std::string& index,
-        const ReversionParameter& realRateReversion,
-        const VolatilityParameter& realRateVolatility,
-        const VolatilityParameter& indexVolatility,
-        const LgmReversionTransformation& reversionTransformation = LgmReversionTransformation(),
-        const CalibrationConfiguration& calibrationConfiguration = CalibrationConfiguration(),
-        const bool ignoreDuplicateCalibrationExpiryTimes = false);
+    InfJyData(CalibrationType calibrationType, const std::vector<CalibrationBasket>& calibrationBaskets,
+              const std::string& currency, const std::string& index, const ReversionParameter& realRateReversion,
+              const VolatilityParameter& realRateVolatility, const VolatilityParameter& indexVolatility,
+              const LgmReversionTransformation& reversionTransformation = LgmReversionTransformation(),
+              const CalibrationConfiguration& calibrationConfiguration = CalibrationConfiguration(),
+              const bool ignoreDuplicateCalibrationExpiryTimes = false, const bool linkRealToNominalRateParams = false,
+              const Real linkedRealRateVolatilityScaling = 1.0, const ReversionParameter& nominalRateReversion = {},
+              const VolatilityParameter& nominalRateVolatility = {});
 
     //! \name Inspectors
     //@{
@@ -66,6 +64,7 @@ public:
     const VolatilityParameter& indexVolatility() const;
     const LgmReversionTransformation& reversionTransformation() const;
     const CalibrationConfiguration& calibrationConfiguration() const;
+    bool linkRealRateParamsToNominalRateParams() const;
     //@}
 
     //! \name Serialisation
@@ -80,6 +79,10 @@ private:
     VolatilityParameter indexVolatility_;
     LgmReversionTransformation reversionTransformation_;
     CalibrationConfiguration calibrationConfiguration_;
+    bool linkRealToNominalRateParams_;
+    Real linkedRealRateVolatilityScaling_;
+    ReversionParameter nominalRateReversion_;
+    VolatilityParameter nominalRateVolatility_;
 };
 
 }
