@@ -1295,6 +1295,58 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
         DLOG("added correlation for " << c.first.first << "/" << c.first.second << ": " << q->value());
     }
 
+    // correlation overwrite from pricing engine parameters
+
+    std::set<CorrelationFactor> allCorrRiskFactors;
+
+    for (auto const& m : modelIndices_)
+        allCorrRiskFactors.insert(parseCorrelationFactor(convertIndexToCamCorrelationEntry(m).first));
+    for (auto const& m : modelIrIndices_)
+        allCorrRiskFactors.insert(parseCorrelationFactor(convertIndexToCamCorrelationEntry(m.first).first));
+    for (auto const& m : modelInfIndices_)
+        allCorrRiskFactors.insert(parseCorrelationFactor(convertIndexToCamCorrelationEntry(m.first).first));
+    for (auto const& ccy : modelCcys_)
+        allCorrRiskFactors.insert({CrossAssetModel::AssetType::IR, ccy, 0});
+
+    for (auto const& c1 : allCorrRiskFactors) {
+        for (auto const& c2 : allCorrRiskFactors) {
+            // determine the number of driving factors for f_1 and f_2
+            Size nf_1 = c1.type == CrossAssetModel::AssetType::INF && infModelType_ == "JY" ? 2 : 1;
+            Size nf_2 = c2.type == CrossAssetModel::AssetType::INF && infModelType_ == "JY" ? 2 : 1;
+            for (Size k = 0; k < nf_1; ++k) {
+                for (Size l = 0; l < nf_2; ++l) {
+                    auto f_1 = c1;
+                    auto f_2 = c2;
+                    f_1.index = k;
+                    f_2.index = l;
+                    if (f_1 == f_2)
+                        continue;
+                    // lookup names are IR:GBP:0 and IR:GBP whenever the index is zero
+                    auto s_1 = ore::data::to_string(f_1);
+                    auto s_2 = ore::data::to_string(f_2);
+                    std::set<std::string> lookupnames1, lookupnames2;
+                    lookupnames1.insert(s_1);
+                    lookupnames2.insert(s_2);
+                    if (k == 0)
+                        lookupnames1.insert(s_1.substr(0, s_1.size() - 2));
+                    if (l == 0)
+                        lookupnames2.insert(s_2.substr(0, s_2.size() - 2));
+                    for (auto const& l1 : lookupnames1) {
+                        for (auto const& l2 : lookupnames2) {
+                            std::cout << "lookup: " << l1 << " " << l2 << std::endl;
+                            if (auto overwrite = modelParameter(
+                                    "Correlation", {resolvedProductTag_ + "_" + l1 + "_" + l2, l1 + "_" + l2}, false);
+                                !overwrite.empty()) {
+                                camCorrelations[std::make_pair(f_1, f_2)] =
+                                    Handle<Quote>(boost::make_shared<SimpleQuote>(parseReal(overwrite)));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // set up the cam and calibrate it using the cam builder
     // if for a non-base currency no fx index is given, we set up a zero vol FX process for this
     // if fullDynamicIr is false, we set up a zero vol IR process for currencies that are not irIndex currencies
