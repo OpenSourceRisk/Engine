@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <qle/utilities/savedobservablesettings.hpp>
+#include <orea/engine/observationmode.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/calendarparser.hpp>
 #include <ored/utilities/currencyparser.hpp>
@@ -26,6 +26,7 @@
 #include <qle/math/computeenvironment.hpp>
 #include <qle/math/randomvariable.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
+#include <qle/utilities/savedobservablesettings.hpp>
 
 namespace {
 
