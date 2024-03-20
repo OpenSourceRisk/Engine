@@ -134,8 +134,10 @@ public:
     //! is risk factor key simulated by this sim market instance?
     virtual bool isSimulated(const RiskFactorKey::KeyType& factor) const;
 
-protected:
     void applyScenario(const boost::shared_ptr<Scenario>& scenario);
+
+protected:
+    
 
     void writeSimData(std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>>& simDataTmp,
                       std::map<RiskFactorKey, Real>& absoluteSimDataTmp);

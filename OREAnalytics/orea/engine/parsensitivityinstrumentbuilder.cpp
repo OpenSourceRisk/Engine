@@ -91,7 +91,7 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
     const std::set<ore::analytics::RiskFactorKey::KeyType>& typesDisabled,
     const std::set<ore::analytics::RiskFactorKey::KeyType>& parTypes,
     const std::set<ore::analytics::RiskFactorKey>& relevantRiskFactors, const bool continueOnError,
-    const string& marketConfiguration, const boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket) const {
+    const string& marketConfiguration, const boost::shared_ptr<Market>& simMarket) const {
 
     QL_REQUIRE(typesDisabled != parTypes, "At least one par risk factor type must be enabled "
                                               << "for a valid ParSensitivityAnalysis.");

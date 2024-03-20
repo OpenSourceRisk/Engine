@@ -35,6 +35,8 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
     useSpreadedTermStructures_ =
         ore::data::parseBool(XMLUtils::getChildValue(node, "UseSpreadedTermStructures", false, "false"));
 
+
+
     for (XMLNode* testCase = XMLUtils::getChildNode(node, "StressTest"); testCase;
          testCase = XMLUtils::getNextSibling(testCase)) {
 
@@ -43,6 +45,16 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
         // XMLUtils::getChildValue(testCase, "Label", true);
 
         LOG("Load stress test label " << test.label);
+
+        XMLNode* parShiftsNode = XMLUtils::getChildNode(testCase, "ParShifts");
+        if (parShiftsNode) {
+            std::cout << "Found ParShiftsNode" << std::endl;
+            test.irCurveParShifts = XMLUtils::getChildValueAsBool(parShiftsNode, "IRCurves", false, false);
+            test.irCapFloorParShifts =
+                XMLUtils::getChildValueAsBool(parShiftsNode, "CapFloorVolatilities", false, false);
+            test.irCapFloorParShifts =
+                XMLUtils::getChildValueAsBool(parShiftsNode, "SurvivalProbability", false, false);
+        }
 
         LOG("Get recovery rate shift parameters");
         
@@ -63,6 +75,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
         XMLNode* survivalProbability = XMLUtils::getChildNode(testCase, "SurvivalProbabilities");
         QL_REQUIRE(survivalProbability, "Survival Probabilities node not found");
         test.survivalProbabilityShifts.clear();
+        test.creditCurveParShifts = XMLUtils::getChildValueAsBool(survivalProbability, "ParShift", false, false);
         for (XMLNode* child = XMLUtils::getChildNode(survivalProbability, "SurvivalProbability"); child;
              child = XMLUtils::getNextSibling(child)) {
             string name = XMLUtils::getAttribute(child, "name");
@@ -71,7 +84,6 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
             data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
             data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
-            data.isParShift = ore::data::parseBool(XMLUtils::getChildValue(child, "ParShift", false, "true"));
             QL_REQUIRE(data.shifts.size() == data.shiftTenors.size(),
                        "number of tenors and shifts does not match in survival probability stress data");
             QL_REQUIRE(data.shifts.size() > 0, "no shifts provided in survival probability stress data");
@@ -90,7 +102,6 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
             data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
             data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
-            data.isParShift = ore::data::parseBool(XMLUtils::getChildValue(child, "ParShift", false, "true"));
             QL_REQUIRE(data.shifts.size() == data.shiftTenors.size(),
                        "number of tenors and shifts does not match in discount curve stress data");
             QL_REQUIRE(data.shifts.size() > 0, "no shifts provided in discount curve stress data");
@@ -110,7 +121,6 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
             data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
             data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
-            data.isParShift = ore::data::parseBool(XMLUtils::getChildValue(child, "ParShift", false, "true"));
             QL_REQUIRE(data.shifts.size() == data.shiftTenors.size(),
                        "number of tenors and shifts does not match in index curve stress data");
             QL_REQUIRE(data.shifts.size() > 0, "no shifts provided in index curve stress data");
@@ -130,7 +140,6 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
             data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
             data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
-            data.isParShift = ore::data::parseBool(XMLUtils::getChildValue(child, "ParShift", false, "true"));
             QL_REQUIRE(data.shifts.size() == data.shiftTenors.size(),
                        "number of tenors and shifts does not match in yield curve stress data");
             QL_REQUIRE(data.shifts.size() > 0, "no shifts provided in yield curve stress data");
@@ -230,6 +239,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
         LOG("Get cap/floor vol stress parameters");
         XMLNode* capVols = XMLUtils::getChildNode(testCase, "CapFloorVolatilities");
         QL_REQUIRE(capVols, "CapVols node not found");
+        test.capVolShifts.clear();
         for (XMLNode* child = XMLUtils::getChildNode(capVols, "CapFloorVolatility"); child;
              child = XMLUtils::getNextSibling(child)) {
             string key = XMLUtils::getAttribute(child, "key");
@@ -244,7 +254,6 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
             data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
             data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
-            data.isParShift = ore::data::parseBool(XMLUtils::getChildValue(child, "ParShift", false, "true"));
             test.capVolShifts[key] = data;
         }
 

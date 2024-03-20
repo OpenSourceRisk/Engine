@@ -23,6 +23,7 @@
 
 #include <orea/app/analytic.hpp>
 #include <orea/engine/parsensitivityanalysis.hpp>
+#include <orea/scenario/stressscenariodata.hpp>
 namespace ore {
 namespace analytics {
 class StressTestAnalyticImpl : public Analytic::Impl {
@@ -41,9 +42,11 @@ public:
 
 class StressTestAnalytic : public Analytic {
 public:
-    StressTestAnalytic(const boost::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<StressTestAnalyticImpl>(inputs), {"STRESS"}, inputs, false, false, false,
-                   false) {}
+    StressTestAnalytic(const boost::shared_ptr<InputParameters>& inputs);
+
+    bool hasParRateScenario(const boost::shared_ptr<StressTestScenarioData>& data) const;
+
+    static constexpr const char* sensiAnalyticLookupKey = "SENSITIVITY";
 };
 
 } // namespace analytics

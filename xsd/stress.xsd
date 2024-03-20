@@ -11,6 +11,13 @@
 
   <xs:complexType name="stresstest">
     <xs:all>
+      <xs:complexType name="ParShifts" minOccurs="0"/>
+        <xs:sequence>
+          <xs:element type="bool" name="IrCurves" minOccurs="0"/>
+          <xs:element type="bool" name="CapFloorVolatilities" minOccurs="0"/>
+          <xs:element type="bool" name="SurvivalProbabilities" minOccurs="0"/>
+        </xs:sequence>
+      </xs:complexType>
       <xs:element type="discountcurves" name="DiscountCurves"/>
       <xs:element type="indexcurves" name="IndexCurves"/>
       <xs:element type="yieldcurves" name="YieldCurves"/>
@@ -23,7 +30,6 @@
       <xs:element type="securityspreads" name="SecuritySpreads"/>
       <xs:element type="recoveryrates" name="RecoveryRates"/>
       <xs:element type="survivalprobabilities" name="SurvivalProbabilities"/>
-	  
     </xs:all>
     <xs:attribute type="xs:string" name="id" use="required"/>
   </xs:complexType>

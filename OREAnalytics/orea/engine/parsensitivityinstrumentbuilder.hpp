@@ -68,7 +68,7 @@ public:
                               const std::set<ore::analytics::RiskFactorKey>& relevantRiskFactors = {},
                               const bool continueOnError = false,
                               const std::string& marketConfiguration = ore::data::Market::defaultConfiguration,
-                              const boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket = nullptr) const;
+                              const boost::shared_ptr<ore::analytics::Market>& simMarket = nullptr) const;
 
 private:
     //! Create Deposit for implying par rate sensitivity from zero rate sensitivity

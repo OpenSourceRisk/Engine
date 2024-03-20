@@ -41,16 +41,17 @@ public:
 
 class SensitivityAnalytic : public Analytic {
 public:
-    SensitivityAnalytic(const boost::shared_ptr<InputParameters>& inputs)
+    SensitivityAnalytic(const boost::shared_ptr<InputParameters>& inputs, boost::optional<bool> parSensiRun = {})
         : Analytic(std::make_unique<SensitivityAnalyticImpl>(inputs), {"SENSITIVITY"}, inputs, false, false, false,
-                   false) {}
+                   false),
+          parSensiRun_(parSensiRun) {}
 
     const ParSensitivityAnalysis::ParContainer& parSensitivities() const { return parSensitivities_; }
     void setParSensitivities(const ParSensitivityAnalysis::ParContainer& sensitivities) { parSensitivities_ = sensitivities; }
 
 private:
+    boost::optional<bool> parSensiRun_;
     ParSensitivityAnalysis::ParContainer parSensitivities_;
-
 };
 
 } // namespace analytics

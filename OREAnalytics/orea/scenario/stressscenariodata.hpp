@@ -50,7 +50,6 @@ public:
         ShiftType shiftType;
         vector<Real> shifts;
         vector<Period> shiftTenors;
-        bool isParShift;
     };
 
     struct SpotShiftData {
@@ -69,7 +68,6 @@ public:
         ShiftType shiftType;
         vector<Period> shiftExpiries;
         vector<Real> shifts;
-        bool isParShift;
     };
 
     struct SwaptionVolShiftData {
@@ -94,6 +92,9 @@ public:
         map<string, SpotShiftData> securitySpreadShifts;       // by bond/security
         map<string, SpotShiftData> recoveryRateShifts;         // by underlying name
         map<string, CurveShiftData> survivalProbabilityShifts; // by underlying name
+        bool irCurveParShifts = false;
+        bool irCapFloorParShifts = false;
+        bool creditCurveParShifts = false;
     };
 
     //! Default constructor

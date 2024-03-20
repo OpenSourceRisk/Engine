@@ -17,6 +17,8 @@
 */
 
 #include <orea/app/analytics/stresstestanalytic.hpp>
+#include <orea/app/analytics/sensitivityanalytic.hpp>
+#include <orea/engine/partozeroscenario.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/stresstest.hpp>
@@ -31,7 +33,7 @@ void StressTestAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().simulationConfigRequired = true;
     analytic()->configurations().sensitivityConfigRequired = true;
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
-    analytic()->configurations().simMarketParams = inputs_->sensiSimMarketParams();
+    analytic()->configurations().simMarketParams = inputs_->stressSimMarketParams();
     analytic()->configurations().sensiScenarioData = inputs_->sensiScenarioData();
     setGenerateAdditionalResults(true);
 }
@@ -41,6 +43,7 @@ void StressTestAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMe
     if (!analytic()->match(runTypes))
         return;
 
+    StressTestAnalytic* stressAnalytic = static_cast<StressTestAnalytic*>(analytic());
     LOG("StressTestAnalytic::runAnalytic called");
 
     Settings::instance().evaluationDate() = inputs_->asof();
@@ -60,7 +63,24 @@ void StressTestAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMe
     analytic()->modifyPortfolio();
     CONSOLEW("Risk: Stress Test Report");
     LOG("Stress Test Analysis called");
+    boost::shared_ptr<StressTestScenarioData> scenarioData = inputs_->stressScenarioData();
+    if (stressAnalytic->hasParRateScenario(scenarioData)) {
+        LOG("Convert PAR rate scenario into zero rate scenario");
+        QL_REQUIRE(stressAnalytic->hasDependentAnalytic(stressAnalytic->sensiAnalyticLookupKey),
+                   "Internal error, need to build par Conversion analytic");
+        auto sensiAnalytic = stressAnalytic->dependentAnalytic<SensitivityAnalytic>(stressAnalytic->sensiAnalyticLookupKey);
+        sensiAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
+        sensiAnalytic->configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
+        sensiAnalytic->runAnalytic(loader);
+        CONSOLEW("Start conversion ");
+        std::cout << " Start new" << std::endl;
+        scenarioData = ParToZeroScenario().convertParScenarioToZeroScenarioData(
+            inputs_->asof(), analytic()->market(), inputs_->stressSimMarketParams(), scenarioData, inputs_->sensiScenarioData(),
+            sensiAnalytic->parSensitivities());
+    }
+
     Settings::instance().evaluationDate() = inputs_->asof();
+    
     std::string marketConfig = inputs_->marketConfig("pricing");
     std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders;
     std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;
@@ -72,6 +92,21 @@ void StressTestAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMe
     stressTest->writeReport(report, inputs_->stressThreshold());
     analytic()->reports()[label()]["stress"] = report;
     CONSOLE("OK");
+}
+
+StressTestAnalytic::StressTestAnalytic(const boost::shared_ptr<InputParameters>& inputs)
+    : Analytic(std::make_unique<StressTestAnalyticImpl>(inputs), {"STRESS"}, inputs, false, false, false, false) {
+    
+    // Should only be settable for CRIF analytic
+    if(hasParRateScenario(inputs->stressScenarioData())){
+        auto sensitivityAnalytic = boost::make_shared<SensitivityAnalytic>(inputs);
+        dependentAnalytics_[sensiAnalyticLookupKey] = sensitivityAnalytic;
+    }
+    
+}
+
+bool StressTestAnalytic::hasParRateScenario(const boost::shared_ptr<StressTestScenarioData>& data) const {
+    return true;
 }
 
 } // namespace analytics
