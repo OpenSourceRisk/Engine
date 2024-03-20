@@ -142,7 +142,9 @@ The relevant fields in the \lstinline!OptionData! node for a Swaption are:
 \item \lstinline!ExerciseFeeSettlementConvention![Optional]: The roll convention used to compute the exercise fee settlement date from
   the exercise date. Defaults to \emph{Unadjusted} if not given. Allowable values: See Table \ref{tab:convention} Roll Convention.
 
-\item An \lstinline!ExerciseDates! node where for \emph{European} style swaptions exactly one \lstinline!ExerciseDate! date element must be given, and for \emph{American} style swaptions  exactly two \lstinline!ExerciseDate! date element must be given, defining the start and the end of the American exercise period.  \emph{Bermudan} style swaptions can have \lstinline!ExerciseDate! elements given directly (at least two  \lstinline!ExerciseDate! elements must be given), or Rules or Dates based exercise dates. See Listings \ref{lst:bermudan_swaption_exercisedates}, \ref{lst:bermudan_swaption_rules} and \ref{lst:bermudan_swaption_dates}.
+\item An \lstinline!ExerciseDates! node where for \emph{European} style swaptions exactly one \lstinline!ExerciseDate! date element must be given, and for \emph{American} style swaptions  exactly two \lstinline!ExerciseDate! date element must be given, defining the start and the end of the American exercise period.  \emph{Bermudan} style swaptions can have \lstinline!ExerciseDate! elements given directly (at least two  \lstinline!ExerciseDate! elements must be given). See Listing \ref{lst:bermudan_swaption_exercisedates}
+
+\item  \emph{Bermudan} style swaptions can also have Rules or Dates based exercise dates using an  \lstinline!ExerciseSchedule! node instead of  \lstinline!ExerciseDates!. See Listings \ref{lst:bermudan_swaption_rules} and \ref{lst:bermudan_swaption_dates}.
 
 
 \begin{listing}[H]
@@ -172,15 +174,15 @@ The relevant fields in the \lstinline!OptionData! node for a Swaption are:
         <LongShort>Long</LongShort>
         <Style>Bermudan</Style>
         <Settlement>Physical</Settlement>
-        <ExerciseDates>
+        <ExerciseSchedule>
          <Rules>
           <StartDate>2027-03-02</StartDate>
           <EndDate>2029-03-02</EndDate>
           <Tenor>1Y</Tenor>
           <Calendar>US</Calendar>
           <Convention>MF</Convention>
-         <Rules>                    
-        </ExerciseDates>
+         </Rules>                    
+        </ExerciseSchedule>
         ...
     </OptionData>
    ...
@@ -196,7 +198,7 @@ The relevant fields in the \lstinline!OptionData! node for a Swaption are:
         <LongShort>Long</LongShort>
         <Style>Bermudan</Style>
         <Settlement>Physical</Settlement>
-        <ExerciseDates>
+        <ExerciseSchedule>
          <Dates>
           <Calendar>NullCalendar</Calendar>
           <Convention>Unadjusted</Convention>
@@ -204,9 +206,9 @@ The relevant fields in the \lstinline!OptionData! node for a Swaption are:
            <Date>2027-03-02</Date>
            <Date>2028-03-02</Date>
            <Date>2029-03-02</Date>
-          <Dates>
-         <Dates>                    
-        </ExerciseDates>
+          </Dates>
+         </Dates>                    
+        </ExerciseSchedule>
         ...
     </OptionData>
    ...
