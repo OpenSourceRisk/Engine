@@ -52,7 +52,7 @@ bool operator!=(const CorrelationFactor& lhs, const CorrelationFactor& rhs) {
 }
 
 ostream& operator<<(ostream& out, const CorrelationFactor& f) {
-    return out << "{" << f.type << "," << f.name << "," << f.index << "}";
+    return out << f.type << ":" << f.name << ":" << f.index;
 }
 
 CorrelationFactor parseCorrelationFactor(const string& name) {
@@ -99,8 +99,6 @@ void CorrelationMatrixBuilder::addCorrelation(const CorrelationFactor& f_1, cons
 
     // Store the correlation.
     CorrelationKey ck = createKey(f_1, f_2);
-    QL_REQUIRE(corrs_.find(ck) == corrs_.end(), "Correlation for key [" <<
-        ck.first << "," << ck.second << "] already set");
     QL_REQUIRE(correlation->value() >= -1.0 && correlation->value() <= 1.0, "Correlation value, " <<
         correlation->value() << ", for key [" << ck.first << "," << ck.second << "] should be in [-1.0,1.0]");
     corrs_[ck] = correlation;
