@@ -46,6 +46,13 @@ struct McEngineStats : public QuantLib::Singleton<McEngineStats> {
         calc_timer.start();
         calc_timer.stop();
     }
+
+    void reset() {
+        other_timer.stop();
+        path_timer.stop();
+        calc_timer.stop();
+    }
+
     boost::timer::cpu_timer other_timer;
     boost::timer::cpu_timer path_timer;
     boost::timer::cpu_timer calc_timer;

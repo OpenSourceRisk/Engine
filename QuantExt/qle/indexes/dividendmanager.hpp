@@ -74,6 +74,8 @@ public:
     void setHistory(const std::string& name, const std::set<Dividend>&);
     //! observer notifying of changes in the index fixings
     boost::shared_ptr<QuantLib::Observable> notifier(const std::string& name);
+    void clearHistory(const std::string& name);
+    void clearHistories();
 
 private:
     typedef std::map<std::string, QuantLib::ObservableValue<std::set<Dividend>>> history_map;
