@@ -172,6 +172,7 @@
           "collect_regulations",
           "post_regulations"
         ],
+        "require_equal_optional_cols": false,
         "col_types" : {
           "ProductClass" : "str",
           "RiskType" : "str",
