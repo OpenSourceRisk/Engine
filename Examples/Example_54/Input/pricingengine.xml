@@ -13,6 +13,10 @@
       <Parameter name="FullDynamicIr">true</Parameter>
       <!-- DK or JY -->
       <Parameter name="InfModelType">JY</Parameter>
+      <!-- explicit overwrite of cam correlations -->
+      <Parameter name="Correlation_IR:GBP_INF:UKRPI:0">0.0</Parameter>
+      <Parameter name="Correlation_IR:GBP_INF:UKRPI:1">0.0</Parameter>
+      <Parameter name="Correlation_INF:UKRPI:0_INF:UKRPI:1">0.0</Parameter>
     </ModelParameters>
     <Engine>Generic</Engine>
     <EngineParameters>
