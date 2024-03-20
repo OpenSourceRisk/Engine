@@ -555,8 +555,6 @@ std::size_t CudaContext::applyOperation(const std::size_t randomVariableOpCode,
     }
     }
 
-    //source_ += "     if (tid == 0) printf(\"input[3][0] = %.1f \", input[3][0]);\n";
-
     // update num of ops in debug info
     if (debug_)
         debugInfo_.numberOfOperations += 1 * size_[currentId_ - 1];
@@ -622,16 +620,6 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output, const Settin
     size_t size_scalar = sizeof(double);
     size_t size_vector = sizeof(double) * size_[currentId_ - 1];
     size_t size_var;
-    double* pinned_scalar;
-    cudaErr = cudaMallocHost((void**)&pinned_scalar, size_scalar);
-    QL_REQUIRE(cudaErr == cudaSuccess,
-               "CudaContext::finalizeCalculation(): host pinned memory allocation for pinned_scalar fails: "
-                   << cudaGetErrorString(cudaErr));
-    double* pinned_vector;
-    cudaErr = cudaMallocHost((void**)&pinned_vector, size_vector);
-    QL_REQUIRE(cudaErr == cudaSuccess,
-               "CudaContext::finalizeCalculation(): host pinned memory allocation for pinned_vector fails: "
-                   << cudaGetErrorString(cudaErr));
 
     for (size_t i = 0; i < hostVarList_.size(); i++) {
         size_var = inputVarIsScalar_[i] ? size_scalar : size_vector;
@@ -643,11 +631,9 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output, const Settin
         if (hostVarList_[i] != nullptr) {
             // Allocate pinned memory on device
             if (inputVarIsScalar_[i]) {
-                memcpy(pinned_scalar, hostVarList_[i], size_scalar);
-                cudaErr = cudaMemcpyAsync(deviceVarList_[i], pinned_scalar, size_scalar, cudaMemcpyHostToDevice);
+                cudaErr = cudaMemcpyAsync(deviceVarList_[i], hostVarList_[i], size_scalar, cudaMemcpyHostToDevice);
             } else {
-                memcpy(pinned_vector, hostVarList_[i], size_vector);
-                cudaErr = cudaMemcpyAsync(deviceVarList_[i], pinned_vector, size_vector, cudaMemcpyHostToDevice);
+                cudaErr = cudaMemcpyAsync(deviceVarList_[i], hostVarList_[i], size_vector, cudaMemcpyHostToDevice);
             }
             QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory copy for deviceVarList_["
                                                    << i << "] fails: " << cudaGetErrorString(cudaErr));
@@ -656,8 +642,6 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output, const Settin
         QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory copy for &deviceVarList_["
                                                << i << "] fails: " << cudaGetErrorString(cudaErr));
     }
-    cudaFreeHost(pinned_scalar);
-    cudaFreeHost(pinned_vector);
     for (size_t i = hostVarList_.size(); i < (nInputVars_ + nRandomVariables_[currentId_ - 1] + nOperations_[currentId_ - 1]); i++) {
         double* dMem;
         deviceVarList_.push_back(dMem);
@@ -670,11 +654,8 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output, const Settin
         QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory copy for &deviceVarList_["
                                                << i << "] fails: " << cudaGetErrorString(cudaErr));
     }
-    //std::cout << "nInputVars_ = " << nInputVars_ << std::endl;
-    //std::cout << "nRandomVariables_ = " << nRandomVariables_[currentId_ - 1] << std::endl;
-    //std::cout << "nOperations_ = " << nOperations_[currentId_ - 1] << std::endl;
     if (debug_) {
-        std::cout << "datacopy = " << timer.elapsed().wall - timerBase << std::endl;
+        //std::cout << "datacopy = " << timer.elapsed().wall - timerBase << std::endl;
         debugInfo_.nanoSecondsDataCopy += timer.elapsed().wall - timerBase;
     }
 
@@ -706,8 +687,6 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output, const Settin
         std::string kernelSource = includeSource + "extern \"C\" __global__ void " + kernelName +
                                    "(double** input, curandStateMtgp32 *mtStates, int n) {\n"
                                    "    int tid = blockIdx.x * blockDim.x + threadIdx.x;\n"
-                                   //"    if (tid == 0) printf(\"input[0][0] = %.1f \", input[0][0]);\n"
-                                   //"    if (tid == 0) printf(\"input[1][0] = %.1f \", input[1][0]);\n"
                                    "    if (tid < n) {\n";
 
         for (size_t id = nInputVars_; id < nInputVars_ + nRandomVariables_[currentId_ - 1]; ++id) {
@@ -720,7 +699,7 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output, const Settin
         kernelSource += source_;
         kernelSource += "   }\n"
                         "}\n";
-        std::cout << kernelSource << std::endl;
+        //std::cout << kernelSource << std::endl;
         if (debug_) {
             timerBase = timer.elapsed().wall;
         }
@@ -736,10 +715,18 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output, const Settin
         //const char* compileOptions[] = {
         //    "--include-path=C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.3/include",
         //    (std::string("--gpu-architecture=") + getGPUArchitecture[device_prop.name]).c_str(), " - std = c++ 17 ", nullptr};
+        //const char* compileOptions[] = {
+        //    "--include-path=C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.3/include",
+        //    "--gpu-architecture=compute_75", "-std=c++17", "-dopt=on", "--time=D:/GitHub/Engine/build/QuantExt/test/Debug/time.txt", nullptr};
+        //nvrtcErr = nvrtcCompileProgram(nvrtcProgram, 5, compileOptions);
         const char* compileOptions[] = {
             "--include-path=C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.3/include",
-            "--gpu-architecture=compute_75", "-std=c++17", "-dopt=on", "--time=D:/GitHub/Engine/build/QuantExt/test/Debug/time.txt", nullptr};
-        nvrtcErr = nvrtcCompileProgram(nvrtcProgram, 5, compileOptions);
+            "--gpu-architecture=compute_75",
+            "-std=c++17",
+            "-dopt=on",
+            //"--time=D:/GitHub/Engine/build/QuantExt/test/Debug/time.txt",
+            nullptr};
+        nvrtcErr = nvrtcCompileProgram(nvrtcProgram, 4, compileOptions);
         QL_REQUIRE(nvrtcErr == NVRTC_SUCCESS, "CudaContext::finalizeCalculation(): error during nvrtcCompileProgram(): "
                                                   << nvrtcGetErrorString(nvrtcErr));
 
@@ -774,7 +761,7 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output, const Settin
         hasKernel_[currentId_ - 1] = true;
         
         if (debug_) {
-            std::cout << "nvrtc build = " << timer.elapsed().wall - timerBase << std::endl;
+            //std::cout << "nvrtc build = " << timer.elapsed().wall - timerBase << std::endl;
             debugInfo_.nanoSecondsProgramBuild += timer.elapsed().wall - timerBase;
         }
     }
