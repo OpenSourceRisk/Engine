@@ -975,6 +975,13 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
     }
 
     // Log the calibration details.
+    TLOG("INF (JY) " << data.index() << " model parameters after calibration:");
+    TLOG("Real    rate vol times   : " << inflationParam->parameterTimes(0));
+    TLOG("Real    rate vol values  : " << inflationParam->parameterValues(0));
+    TLOG("Real    rate rev times   : " << inflationParam->parameterTimes(1));
+    TLOG("Real    rate rev values  : " << inflationParam->parameterValues(1));
+    TLOG("R/N conversion   times   : " << inflationParam->parameterTimes(2));
+    TLOG("R/N conversion   values  : " << inflationParam->parameterValues(2));
     DLOG("INF (JY) " << data.index() << " calibration errors:");
     inflationCalibrationErrors_[modelIdx] = getCalibrationError(allHelpers);
     if (data.calibrationType() == CalibrationType::Bootstrap) {
