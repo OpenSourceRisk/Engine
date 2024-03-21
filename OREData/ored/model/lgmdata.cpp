@@ -17,6 +17,7 @@
 */
 
 #include <ored/model/lgmdata.hpp>
+#include <ored/model/modelparameter.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -178,7 +179,7 @@ void LgmData::fromXML(XMLNode* node) {
     LOG("LgmData done");
 }
 
-XMLNode* LgmData::toXML(XMLDocument& doc) {
+XMLNode* LgmData::toXML(XMLDocument& doc) const {
 
     XMLNode* lgmNode = IrModelData::toXML(doc);
 
@@ -212,19 +213,22 @@ XMLNode* LgmData::toXML(XMLDocument& doc) {
     return lgmNode;
 }
 
-LgmReversionTransformation::LgmReversionTransformation()
-    : horizon_(0.0), scaling_(1.0) {}
+ReversionParameter LgmData::reversionParameter() const {
+    return ReversionParameter(revType_, calibrateH_, hType_, hTimes_, hValues_);
+}
+
+VolatilityParameter LgmData::volatilityParameter() const {
+    return VolatilityParameter(volType_, calibrateA_, aType_, aTimes_, aValues_);
+}
+
+LgmReversionTransformation::LgmReversionTransformation() : horizon_(0.0), scaling_(1.0) {}
 
 LgmReversionTransformation::LgmReversionTransformation(Time horizon, Real scaling)
     : horizon_(horizon), scaling_(scaling) {}
 
-Time LgmReversionTransformation::horizon() const {
-    return horizon_;
-}
+Time LgmReversionTransformation::horizon() const { return horizon_; }
 
-Real LgmReversionTransformation::scaling() const {
-    return scaling_;
-}
+Real LgmReversionTransformation::scaling() const { return scaling_; }
 
 void LgmReversionTransformation::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "ParameterTransformation");
@@ -232,7 +236,7 @@ void LgmReversionTransformation::fromXML(XMLNode* node) {
     scaling_ = XMLUtils::getChildValueAsDouble(node, "Scaling", true);
 }
 
-XMLNode* LgmReversionTransformation::toXML(XMLDocument& doc) {
+XMLNode* LgmReversionTransformation::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("ParameterTransformation");
     XMLUtils::addChild(doc, node, "ShiftHorizon", horizon_);
     XMLUtils::addChild(doc, node, "Scaling", scaling_);

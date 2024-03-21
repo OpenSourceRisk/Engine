@@ -223,7 +223,7 @@ void CommodityForward::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* CommodityForward::toXML(XMLDocument& doc) {
+XMLNode* CommodityForward::toXML(XMLDocument& doc) const {
 
     XMLNode* node = Trade::toXML(doc);
     XMLNode* commodityDataNode = doc.allocNode("CommodityForwardData");

@@ -41,7 +41,7 @@ void OptionExerciseData::fromXML(XMLNode* node) {
     init();
 }
 
-XMLNode* OptionExerciseData::toXML(XMLDocument& doc) {
+XMLNode* OptionExerciseData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("ExerciseData");
     XMLUtils::addChild(doc, node, "Date", strDate_);
     if (!strPrice_.empty())

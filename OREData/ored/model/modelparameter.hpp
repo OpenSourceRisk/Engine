@@ -54,6 +54,13 @@ public:
     const std::vector<QuantLib::Real>& values() const;
     //@}
 
+    //! \name Setters / Modifiers
+
+    //@{
+    void mult(const Real f);
+    void setCalibrate(const bool b);
+    //@}
+
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
@@ -115,7 +122,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
 private:
@@ -154,7 +161,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
 private:

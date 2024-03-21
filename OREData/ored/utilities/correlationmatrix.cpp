@@ -52,18 +52,20 @@ bool operator!=(const CorrelationFactor& lhs, const CorrelationFactor& rhs) {
 }
 
 ostream& operator<<(ostream& out, const CorrelationFactor& f) {
-    return out << "{" << f.type << "," << f.name << "," << f.index << "}";
+    return out << f.type << ":" << f.name << ":" << f.index;
 }
 
 CorrelationFactor parseCorrelationFactor(const string& name) {
-    
-    Size pos = name.find(':');
-    QL_REQUIRE(pos != string::npos, "Expected the factor to be of the form 'type:name'");
 
-    CrossAssetModel::AssetType factorType = parseCamAssetType(name.substr(0, pos));
-    string factorName = name.substr(pos + 1);
+    vector<string> tokens;
+    boost::split(tokens, name, boost::is_any_of(":"));
 
-    return { factorType, factorName, 0 };
+    QL_REQUIRE(tokens.size() == 2 || tokens.size() == 3,
+               "parseCorrelationFactor(" << name
+                                         << "): expected 2 or 3 tokens separated by ':', e.g. 'IR:USD' or 'INF:UKRPI:0'");
+
+    return {parseCamAssetType(tokens[0]), tokens[1],
+            static_cast<Size>(tokens.size() == 3 ? parseInteger(tokens[3]) : 0)};
 }
 
 void CorrelationMatrixBuilder::reset() {
@@ -97,8 +99,6 @@ void CorrelationMatrixBuilder::addCorrelation(const CorrelationFactor& f_1, cons
 
     // Store the correlation.
     CorrelationKey ck = createKey(f_1, f_2);
-    QL_REQUIRE(corrs_.find(ck) == corrs_.end(), "Correlation for key [" <<
-        ck.first << "," << ck.second << "] already set");
     QL_REQUIRE(correlation->value() >= -1.0 && correlation->value() <= 1.0, "Correlation value, " <<
         correlation->value() << ", for key [" << ck.first << "," << ck.second << "] should be in [-1.0,1.0]");
     corrs_[ck] = correlation;

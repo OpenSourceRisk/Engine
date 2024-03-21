@@ -111,6 +111,9 @@ private:
     void performCalculations() const override;
     void buildModel() const;
     void resetModelParams(const CrossAssetModel::AssetType t, const Size param, const Size index, const Size i) const;
+    void copyModelParams(const CrossAssetModel::AssetType t0, const Size param0, const Size index0, const Size i0,
+                         const CrossAssetModel::AssetType t1, const Size param1, const Size index1, const Size i1,
+                         const Real mult) const;
 
     mutable std::vector<std::vector<boost::shared_ptr<BlackCalibrationHelper>>> swaptionBaskets_;
     mutable std::vector<std::vector<boost::shared_ptr<BlackCalibrationHelper>>> fxOptionBaskets_;

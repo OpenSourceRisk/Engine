@@ -71,7 +71,7 @@ public:
         setQuotes();
     }
 
-    XMLNode* toXML(XMLDocument& doc) override {
+    XMLNode* toXML(XMLDocument& doc) const override {
         XMLNode* node = doc.allocNode("Security");
 
         XMLUtils::addChild(doc, node, "CurveId", curveID_);
