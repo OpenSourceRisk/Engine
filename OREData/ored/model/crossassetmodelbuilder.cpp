@@ -874,10 +874,10 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
     // if we link the real rate params to the nominal rate params, we copy them over now (ir calibration is done at this point)
     if(data.linkRealRateParamsToNominalRateParams()) {
         Size irIdx = model_->ccyIndex(model_->infjy(modelIdx)->currency());
-        copyModelParams(CrossAssetModel::AssetType::INF, 0, modelIdx, Null<Size>(), CrossAssetModel::AssetType::IR, 0,
-                        irIdx, Null<Size>(), data.linkedRealRateVolatilityScaling());
-        copyModelParams(CrossAssetModel::AssetType::INF, 1, modelIdx, Null<Size>(), CrossAssetModel::AssetType::IR, 1,
-                        irIdx, Null<Size>(), 1.0);
+        copyModelParams(CrossAssetModel::AssetType::IR, 0, irIdx, Null<Size>(), CrossAssetModel::AssetType::INF, 0,
+                        modelIdx, Null<Size>(), data.linkedRealRateVolatilityScaling());
+        copyModelParams(CrossAssetModel::AssetType::IR, 1, irIdx, Null<Size>(), CrossAssetModel::AssetType::INF, 1,
+                        modelIdx, Null<Size>(), 1.0);
     }
 
     if (data.calibrationType() == CalibrationType::BestFit) {
