@@ -1442,12 +1442,18 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
                 VolatilityParameter(LgmData::VolatilityType::Hagan, false, ParamType::Constant, {}, {0.00}),
                 LgmReversionTransformation(), true);
         } else {
-            // build calibration basket (ATM CPI Floors)
+            // build calibration basket (CPI Floors at calibration strike or if that is not given, ATM strike)
+            boost::shared_ptr<BaseStrike> calibrationStrike;
+            if (auto k = calibrationStrikes_.find(modelInfIndices_[i].first);
+                k != calibrationStrikes_.end() && k->second.empty()) {
+                calibrationStrike = boost::make_shared<AbsoluteStrike>(k->second.front());
+            } else {
+                calibrationStrike = boost::make_shared<AtmStrike>(QuantLib::DeltaVolQuote::AtmType::AtmFwd);
+            }
             std::vector<boost::shared_ptr<CalibrationInstrument>> calInstr;
             for (auto const& d : calibrationDates)
-                calInstr.push_back(boost::make_shared<CpiCapFloor>(
-                    QuantLib::CapFloor::Type::Floor, d,
-                    boost::make_shared<AtmStrike>(QuantLib::DeltaVolQuote::AtmType::AtmFwd)));
+                calInstr.push_back(
+                    boost::make_shared<CpiCapFloor>(QuantLib::CapFloor::Type::Floor, d, calibrationStrike));
             std::vector<CalibrationBasket> calBaskets(1, CalibrationBasket(calInstr));
             if (infModelType_ == "DK") {
                 // build DK config
