@@ -35,14 +35,12 @@ InfJyData::InfJyData(CalibrationType calibrationType, const vector<CalibrationBa
                      const LgmReversionTransformation& reversionTransformation,
                      const CalibrationConfiguration& calibrationConfiguration,
                      const bool ignoreDuplicateCalibrationExpiryTimes, const bool linkRealToNominalRateParams,
-                     const Real linkedRealRateVolatilityScaling, const ReversionParameter& nominalRateReversion,
-                     const VolatilityParameter& nominalRateVolatility)
+                     const Real linkedRealRateVolatilityScaling)
     : InflationModelData(calibrationType, calibrationBaskets, currency, index, ignoreDuplicateCalibrationExpiryTimes),
       realRateReversion_(realRateReversion), realRateVolatility_(realRateVolatility), indexVolatility_(indexVolatility),
       reversionTransformation_(reversionTransformation), calibrationConfiguration_(calibrationConfiguration),
       linkRealToNominalRateParams_(linkRealToNominalRateParams),
-      linkedRealRateVolatilityScaling_(linkedRealRateVolatilityScaling), nominalRateReversion_(nominalRateReversion),
-      nominalRateVolatility_(nominalRateVolatility) {}
+      linkedRealRateVolatilityScaling_(linkedRealRateVolatilityScaling) {}
 
 const ReversionParameter& InfJyData::realRateReversion() const {
     return realRateReversion_;
@@ -65,6 +63,8 @@ const CalibrationConfiguration& InfJyData::calibrationConfiguration() const {
 }
 
 bool InfJyData::linkRealRateParamsToNominalRateParams() const { return linkRealToNominalRateParams_; }
+
+Real InfJyData::linkedRealRateVolatilityScaling() const { return linkedRealRateVolatilityScaling_; }
 
 void InfJyData::fromXML(XMLNode* node) {
     
@@ -97,12 +97,6 @@ void InfJyData::fromXML(XMLNode* node) {
     if (linkRealToNominalRateParams_) {
         linkedRealRateVolatilityScaling_ =
             parseReal(XMLUtils::getChildValue(node, "LinkedRealRateVolatilityScaling", false, "1.0"));
-        if (XMLNode* n = XMLUtils::getChildNode(node, "NominalRateReversion")) {
-            nominalRateReversion_.fromXML(n);
-        }
-        if (XMLNode* n = XMLUtils::getChildNode(node, "NominalRateVolatility")) {
-            nominalRateVolatility_.fromXML(n);
-        }
     }
 }
 
@@ -125,12 +119,7 @@ XMLNode* InfJyData::toXML(XMLDocument& doc) const {
 
     if (linkRealToNominalRateParams_) {
         XMLUtils::addChild(doc, node, "LinkRealToNominalRateParams", linkRealToNominalRateParams_);
-        XMLNode* rn = doc.allocNode("NominalRateReversion");
-        XMLUtils::appendNode(rn, nominalRateReversion_.toXML(doc));
-        XMLUtils::appendNode(node, rn);
-        XMLNode* rv = doc.allocNode("NominalRateVolatility");
-        XMLUtils::appendNode(rv, nominalRateVolatility_.toXML(doc));
-        XMLUtils::appendNode(node, rv);
+        XMLUtils::addChild(doc, node, "LinkedRealRateVolatilityScaling", linkedRealRateVolatilityScaling_);
     }
 
     return node;
