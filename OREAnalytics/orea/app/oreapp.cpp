@@ -392,7 +392,6 @@ void OREApp::run() {
     runTimer_.start();
     
     try {
-        analyticsManager_->clear();
         structuredLogger_->clear();
         analytics();
     } catch (std::exception& e) {
