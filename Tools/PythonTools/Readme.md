@@ -64,6 +64,16 @@ Each object under a given key, `file_name`, has the following format (note that 
             "key2",
             "key3/subkey1"
           ],
+          "keys": {
+            "key1/": [
+              "subkey1",
+              "subkey2"
+            ],
+            "": [
+              "subkey1",
+              "subkey2"
+            ]
+          },
           "settings": [
             {
               "names": [
@@ -100,6 +110,7 @@ For `csv_settings`:
 For `json_settings`:
   - Any key value (i.e. in `ignore_keys`, `settings.names`, etc.) must include the parent, if any. Using the sample comparison_config.json template above, we would ignore "key1" and "key2" at the top level in a JSON file comparison, and "subkey1" only if it appears inside of "key3".
   - The `ignore_keys` is an array of strings, each string being a key in the JSON file. If the key is found in one or both of the files, any diffs will be ignored for this key and its children (i.e. if the value is itself a nested object).
+  - The `keys` is a dictionary whose keys consist of paths, and the values **must consist of** arrays. This will allow for a fallback comparison using `datacompy.core.Compare()` (which is already used for CSV comparisons) and will allow a JSON diff to still pass if the only reason for the diff is that the results are not given in the same order. A blank key ("") means that we expect the whole JSON file consists of an array of unnested JSON objects (and is usually a CSV report that was converted directly to a JSON report). Hence, it would never make sense to have a blank ("") key along with other non-blank keys for the same file comparison config. **NOTE:** A non-blank key must end in a "/".
   - The `settings` object works the same as the `column_settings` file in `csv_settings`, except that the keys must include the parent in the JSON `settings`.
   - **NOTE:** In order for a JSON check to be applied, a comp config must be provided for the filename, even if the config is empty (see e.g. `all_string_filename` in the template above). Otherwise a direct file comparison will be done.
   - **NOTE:** String diffs are automatically processed (i.e. unless they are in `ignore_keys`, then a string diff will be a failing diff) (see e.g. `all_string_filename` in the template above). Only numerical differences need to be handled in `settings`.
