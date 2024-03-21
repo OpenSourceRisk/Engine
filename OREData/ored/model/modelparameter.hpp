@@ -54,6 +54,13 @@ public:
     const std::vector<QuantLib::Real>& values() const;
     //@}
 
+    //! \name Setters / Modifiers
+
+    //@{
+    void mult(const Real f);
+    void setCalibrate(const bool b);
+    //@}
+
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
