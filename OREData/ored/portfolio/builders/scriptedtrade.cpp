@@ -1333,7 +1333,6 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
                         lookupnames2.insert(s_2.substr(0, s_2.size() - 2));
                     for (auto const& l1 : lookupnames1) {
                         for (auto const& l2 : lookupnames2) {
-                            std::cout << "lookup: " << l1 << " " << l2 << std::endl;
                             if (auto overwrite = modelParameter(
                                     "Correlation",
                                     {resolvedProductTag_ + "_" + l1 + "_" + l2, l1 + "_" + l2, resolvedProductTag_},
