@@ -71,6 +71,9 @@ BOOST_AUTO_TEST_CASE(testEnvironmentInit) {
             ComputeEnvironment::instance().selectContext(d);
             ComputeEnvironment::instance().context().init();
             BOOST_TEST_MESSAGE("  device '" << d << "' initialized.");
+            for (auto const& [field, value] : ComputeEnvironment::instance().context().deviceInfo()) {
+                BOOST_TEST_MESSAGE("      " << std::left << std::setw(30) << field << ": " << value);
+            }
         }
     };
     BOOST_CHECK_NO_THROW(init());

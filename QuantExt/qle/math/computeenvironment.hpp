@@ -89,6 +89,10 @@ public:
 
     virtual void finalizeCalculation(std::vector<double*>& output, const Settings& settings) = 0;
 
+    // get device info
+
+    virtual std::vector<std::pair<std::string, std::string>> deviceInfo() const { return {}; }
+
     // debug info
 
     virtual const DebugInfo& debugInfo() const = 0;
