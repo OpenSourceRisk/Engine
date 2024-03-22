@@ -1840,7 +1840,7 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<InflationIndex>& ind
                 boost::dynamic_pointer_cast<CapFlooredYoYLegEngineBuilder>(builder);
             string indexname = yoyLegData->index();
             boost::shared_ptr<InflationCouponPricer> couponPricer =
-                cappedFlooredYoYBuilder->engine(indexname.replace(indexname.find(" ", 0), 1, ""));
+                cappedFlooredYoYBuilder->engine(IndexNameTranslator::instance().oreName(indexname));
 
             // set coupon pricer for the leg
 
@@ -1893,7 +1893,7 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<InflationIndex>& ind
                 boost::dynamic_pointer_cast<CapFlooredNonStandardYoYLegEngineBuilder>(builder);
             string indexname = zcIndex->name();
             boost::shared_ptr<InflationCouponPricer> couponPricer =
-                cappedFlooredYoYBuilder->engine(indexname.replace(indexname.find(" ", 0), 1, ""));
+                cappedFlooredYoYBuilder->engine(IndexNameTranslator::instance().oreName(indexname));
 
             // set coupon pricer for the leg
 
