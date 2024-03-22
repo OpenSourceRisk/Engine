@@ -35,12 +35,60 @@ jobs:
         sudo apt update
         sudo apt install -y libboost-all-dev libboost-test-dev ninja-build
     - name: cmake configure
-      run : mkdir build; cd build; cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=false -DQL_BUILD_EXAMPLES=false -DQL_BUILD_TEST_SUITE=false -DQL_BUILD_BENCHMARK=false -DQL_ENABLE_SESSIONS=true -DORE_BUILD_DOC=false -G "Ninja" ..
+      run : |
+        mkdir build
+        cd build
+        cmake .. -G "Ninja" -DCMAKE_BUILD_TYPE=Release \
+                            -DBUILD_SHARED_LIBS=false \
+                            -DQL_BUILD_EXAMPLES=false \
+                            -DQL_BUILD_TEST_SUITE=false \
+                            -DQL_BUILD_BENCHMARK=false \
+                            -DQL_ENABLE_SESSIONS=true \
+                            -DORE_BUILD_DOC=false \
+                            -DORE_BUILD_EXAMPLES=false \
+                            -DORE_BUILD_APP=true \
+                            -DORE_BUILD_TESTS=true \
+                            -L
     - name: cmake build
-      run: cd build/; pwd; cmake --build . -j $(nproc)
+      run: |
+        cd build
+        cmake --build . -j $(nproc)
+    - name: Save tests artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-suites
+        path: |
+          ${{ github.workspace }}/build/OREData/test/ored-test-suite
+          ${{ github.workspace }}/build/OREAnalytics/test/orea-test-suite
+          ${{ github.workspace }}/build/QuantExt/test/quantext-test-suite
     - name: Save executables as artifacts
       if: startsWith(github.ref, 'refs/tags/v')
       uses: actions/upload-artifact@v3
       with:
         name: ore-exe-linux
-        path: /home/runner/work/Engine/Engine/build/App/ore
+        path: ${{ github.workspace }}/build/App/ore
+
+# Run tests
+  tests:
+    name: testing
+    runs-on: ubuntu-22.04
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: test-suites
+          path: ${{ github.workspace }}/test-suites
+      - name: run QuantExt tests
+        run: |
+          chmod +x ./test-suites/QuantExt/test/quantext-test-suite
+          ./test-suites/QuantExt/test/quantext-test-suite
+      - name: run OREData tests
+        run: |
+          chmod +x ./test-suites/OREData/test/ored-test-suite
+          ./test-suites/OREData/test/ored-test-suite -- --base_data_path=./OREData/test
+      - name: run OREAnalytics tests
+        run: |
+          chmod +x ./test-suites/OREAnalytics/test/orea-test-suite
+          ./test-suites/OREAnalytics/test/orea-test-suite
