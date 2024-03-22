@@ -412,6 +412,23 @@ void OREApp::run() {
 
 void OREApp::run(const std::vector<std::string>& marketData,
                  const std::vector<std::string>& fixingData) {
+
+    // only one thread at a time should call run
+    static std::mutex _s_mutex;
+    std::lock_guard<std::mutex> lock(_s_mutex);
+
+    // clean up after finishing the run
+    CleanUpSingletons cleanupSingletons;
+
+    if (inputs_ == nullptr)
+        initFromParams();
+    else if (params_ == nullptr)
+        initFromInputs();
+    else {
+        ALOG("both inputs are empty");
+        return;      
+    }
+
     runTimer_.start();
 
     try {
