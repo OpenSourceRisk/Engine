@@ -313,7 +313,7 @@ void runBacktest(const std::string &d, const std::size_t id, const std::vector<S
     std::vector<std::vector<double>> externalOutput_ = std::vector<std::vector<double>>(1, std::vector<double>(n));
     std::vector<double*> externalOutputPtr_ = std::vector<double*>(1, &externalOutput_.front()[0]);
     std::size_t regressionOrder = 2;
-    ComputeEnvironment::instance().context().finalizeCalculation(externalOutputPtr_, {regressionOrder});
+    ComputeEnvironment::instance().context().finalizeCalculation(externalOutputPtr_, {false, regressionOrder});
     auto baseNpv_ = externalAverage(externalOutput_[0]);
     BOOST_CHECK_CLOSE(baseNpv_, expected, 1E-3);
 }

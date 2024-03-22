@@ -60,6 +60,7 @@ public:
 class ComputeContext {
 public:
     struct Settings {
+        bool useDoublePrecision = false;
         std::size_t regressionOrder = 4;
     };
 
