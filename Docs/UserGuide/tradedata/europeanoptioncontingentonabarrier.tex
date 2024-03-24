@@ -1,0 +1,104 @@
+\subsubsection{European Option Contingent on a Barrier}
+
+European exercise, American or European barrier, multi-asset
+
+This is a plain vanilla European option on a given underlying, whose final payoff is contingent on the
+price level of another underlying (forming the barrier). Both underlyings can be of multiple asset classes.
+
+The trade container for this product is the \verb+EuropeanOptionBarrierData+ node, and the corresponding
+trade type is EuropeanOptionBarrier. The barrier can be continuously monitored (American) or only be
+monitored on the option expiry date (European). Currently, we support Equity, FX, Commodity and InterestRate
+for the option underlying. For the barrier underlying, we support Equity, FX, Commodity and InterestRate
+for European-style barriers, but not InterestRate for an American-style barrier.
+
+Listing \ref{lst:european_option_american_barrier} shows the structure of an Equity European option with
+an American-style FX barrier. For a European-style barrier, the \lstinline!BarrierType! must be set
+to \emph{European} and the \lstinline!BarrierSchedule! can be omitted.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml} 
+<Trade id="Equity_EuropeanOptionWithAmericanFxBarrier">
+  <TradeType>EuropeanOptionBarrier</TradeType>
+  <Envelope>
+    .....
+  </Envelope>
+  <EuropeanOptionBarrierData>
+    <Quantity>8523</Quantity>
+    <PutCall>Call</PutCall>
+    <LongShort>Short</LongShort>
+    <Strike>3520</Strike>
+    <PremiumAmount>114.40</PremiumAmount>
+    <PremiumCurrency>EUR</PremiumCurrency>
+    <PremiumDate>2019-12-13</PremiumDate>
+    <OptionExpiry>2020-06-19</OptionExpiry>
+    <OptionUnderlying>
+      <Type>Equity</Type>
+      <Name>RIC:.STOXX50E</Name>
+    </OptionUnderlying>
+    <BarrierUnderlying>
+      <Type>FX</Type>
+      <Name>ECB-EUR-USD</Name>
+    </BarrierUnderlying>
+    <BarrierLevel>1.09335</BarrierLevel>
+    <BarrierType>DownAndIn</BarrierType>
+    <BarrierStyle>American</BarrierStyle>
+    <BarrierSchedule>
+      <Rules>
+        <StartDate>2019-12-11</StartDate>
+        <EndDate>2020-06-19</EndDate>
+        <Tenor>1D</Tenor>
+        <Calendar>USA</Calendar>
+        <Convention>Following</Convention>
+        <TermConvention>Following</TermConvention>
+        <Rule>Forward</Rule>
+      </Rules>
+    </BarrierSchedule>
+    <SettlementDate>2020-06-24</SettlementDate>
+    <PayCcy>USD</PayCcy>
+  </EuropeanOptionBarrierData>
+</Trade>
+\end{minted}
+\caption{European Option Barrier data (continuous barrier)}
+\label{lst:european_option_american_barrier}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!EuropeanOptionBarrierData! node follow below.
+ 
+\begin{itemize} 
+  \item Quantity: Number of option contracts. \\
+  Allowable values: Any non-negative number.
+  \item PutCall: Option type. \\
+  Allowable values: \emph{Call, Put}
+  \item LongShort: Own party position. \\
+  Allowable values: \emph{Long, Short}
+  \item Strike: Option strike price. \\
+  Allowable values: Any positive number.
+  \item PremiumAmount: Premium amount per option. \\
+  Allowable values: Any number.
+  \item PremiumCurrency: Currency of the option premium. \\
+  Allowable values: See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
+  \item PremiumDate: The option premium payment date. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item OptionExpiry: Option expiry date. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item OptionUnderlying: The option underlying. \\
+  Allowable values: A node of the same form as \lstinline!Underlying!, (see \ref{ss:underlying}). The supported types
+  are \emph{Equity}, \emph{FX}, \emph{Commodity} and \emph{InterestRate}. \\
+  \item BarrierUnderlying: The underlying monitored against the barrier level. \\
+  Allowable values: A node of the same form as \lstinline!Underlying!, (see \ref{ss:underlying}). The supported types
+  are \emph{Equity}, \emph{FX}, \emph{Commodity} and \emph{InterestRate} if \lstinline!BarrierStyle! is \emph{European}. For \lstinline!BarrierStyle!
+  \emph{American}, we only support \emph{Equity}, \emph{FX} and \emph{Commodity}.
+  \item BarrierLevel: Knock-in/knock-out barrier level. \\
+  Allowable values: Any number.
+  \item BarrierType: The type of knock-in or knock-out barrier. \\
+  Allowable values: \emph{DownIn, UpIn, DownOut, UpOut}
+  \item BarrierStyle: Whether the barrier is continuously monitored or only at the option expiry date. \\
+  Allowable values: \emph{American, European}
+  \item BarrierSchedule [Optional]: The schedule specifying the schedule of trading days over which the continuous
+  barrier will be monitored. This is required only when \lstinline!BarrierStyle! is \emph{American}. \\
+  Allowable values: A node of the same form as \lstinline!ScheduleData!, (see \ref{ss:schedule_data}).
+  \item SettlementDate: Settlement date of the option exercise payoff. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}. The Settlement date must be on or after the Option expiry date.
+  \item PayCcy: Settlement currency. \\
+  Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+\end{itemize}

@@ -233,9 +233,7 @@ private:
     // 2a indexed by var id
     std::vector<std::size_t> inputVarOffset_;
     std::vector<bool> inputVarIsScalar_;
-    std::vector<float> inputVarValue_;
-    std::vector<float*> inputVarPtr_;
-    std::vector<std::vector<float>> inputVarPtrVal_;
+    std::vector<float> inputVarValues_;
 
     // 2b collection of variable ids
     std::vector<std::size_t> freedVariables_;
@@ -424,9 +422,7 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
 
     inputVarOffset_.clear();
     inputVarIsScalar_.clear();
-    inputVarValue_.clear();
-    inputVarPtr_.clear();
-    inputVarPtrVal_.clear();
+    inputVarValues_.clear();
 
     if (newCalc) {
         freedVariables_.clear();
@@ -458,9 +454,8 @@ std::size_t OpenClContext::createInputVariable(double v) {
     }
     inputVarOffset_.push_back(nextOffset);
     inputVarIsScalar_.push_back(true);
-    inputVarValue_.push_back((float)v);
-    inputVarPtr_.push_back(nullptr);
-    inputVarPtrVal_.push_back({});
+    inputVarValues_.push_back((float)std::max(std::min(v, (double)std::numeric_limits<float>::max()),
+                                              -(double)std::numeric_limits<float>::max()));
     return nVars_++;
 }
 
@@ -474,10 +469,9 @@ std::size_t OpenClContext::createInputVariable(double* v) {
     }
     inputVarOffset_.push_back(nextOffset);
     inputVarIsScalar_.push_back(false);
-    inputVarValue_.push_back(0.0f);
-    inputVarPtrVal_.push_back(std::vector<float>(size_[currentId_-1]));
-    std::copy(v, v + size_[currentId_ - 1], inputVarPtrVal_.back().begin());
-    inputVarPtr_.push_back(&inputVarPtrVal_.back()[0]);
+    for (std::size_t i = 0; i < size_[currentId_ - 1]; ++i)
+        inputVarValues_.push_back((float)std::max(std::min(v[i], (double)std::numeric_limits<float>::max()),
+                                                  -(double)std::numeric_limits<float>::max()));
     return nVars_++;
 }
 
@@ -856,17 +850,12 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output, const Sett
         timerBase = timer.elapsed().wall;
     }
 
-    std::vector<cl_event> inputBufferEvents;
+    cl_event inputBufferEvent;
     if (inputBufferSize > 0) {
-        for (std::size_t i = 0; i < inputVarOffset_.size(); ++i) {
-            inputBufferEvents.push_back(cl_event());
-            err = clEnqueueWriteBuffer(queue_, inputBuffer, CL_FALSE, sizeof(float) * inputVarOffset_[i],
-                                       sizeof(float) * (inputVarIsScalar_[i] ? 1 : size_[currentId_ - 1]),
-                                       inputVarIsScalar_[i] ? &inputVarValue_[i] : inputVarPtr_[i], 0, NULL,
-                                       &inputBufferEvents.back());
-            QL_REQUIRE(err == CL_SUCCESS,
-                       "OpenClContext::finalizeCalculation(): writing to input buffer fails: " << errorText(err));
-        }
+        err = clEnqueueWriteBuffer(queue_, inputBuffer, CL_FALSE, 0, sizeof(float) * inputBufferSize,
+                                   &inputVarValues_[0], 0, NULL, &inputBufferEvent);
+        QL_REQUIRE(err == CL_SUCCESS,
+                   "OpenClContext::finalizeCalculation(): writing to input buffer fails: " << errorText(err));
     }
 
     if (debug_) {
@@ -891,13 +880,14 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output, const Sett
     // execute kernel
 
     if (debug_) {
+        err = clFinish(queue_);
         timerBase = timer.elapsed().wall;
     }
 
     cl_event runEvent;
-    err = clEnqueueNDRangeKernel(queue_, kernel_[currentId_ - 1], 1, NULL, &size_[currentId_ - 1], NULL,
-                                 inputBufferEvents.size(), inputBufferEvents.empty() ? nullptr : &inputBufferEvents[0],
-                                 &runEvent);
+    err =
+        clEnqueueNDRangeKernel(queue_, kernel_[currentId_ - 1], 1, NULL, &size_[currentId_ - 1], NULL,
+                               inputBufferSize > 0 ? 1 : 0, inputBufferSize > 0 ? &inputBufferEvent : NULL, &runEvent);
     QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::finalizeCalculation(): enqueue kernel fails: " << errorText(err));
 
     if (debug_) {

@@ -6,7 +6,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0040</Strike>
       <StrikeType>Spread</StrikeType>
@@ -65,7 +64,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0050</Strike>
       <StrikeType>Spread</StrikeType>
@@ -124,7 +122,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0060</Strike>
       <StrikeType>Spread</StrikeType>
@@ -183,7 +180,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0070</Strike>
       <StrikeType>Spread</StrikeType>
@@ -242,7 +238,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0080</Strike>
       <StrikeType>Spread</StrikeType>
@@ -301,7 +296,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0090</Strike>
       <StrikeType>Spread</StrikeType>
@@ -360,7 +354,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0100</Strike>
       <StrikeType>Spread</StrikeType>
@@ -419,7 +412,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0110</Strike>
       <StrikeType>Spread</StrikeType>
@@ -478,7 +470,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0120</Strike>
       <StrikeType>Spread</StrikeType>
@@ -537,7 +528,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0040</Strike>
       <StrikeType>Spread</StrikeType>
@@ -596,7 +586,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0050</Strike>
       <StrikeType>Spread</StrikeType>
@@ -655,7 +644,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0060</Strike>
       <StrikeType>Spread</StrikeType>
@@ -714,7 +702,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0070</Strike>
       <StrikeType>Spread</StrikeType>
@@ -773,7 +760,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0080</Strike>
       <StrikeType>Spread</StrikeType>
@@ -832,7 +818,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0090</Strike>
       <StrikeType>Spread</StrikeType>
@@ -891,7 +876,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0100</Strike>
       <StrikeType>Spread</StrikeType>
@@ -950,7 +934,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0110</Strike>
       <StrikeType>Spread</StrikeType>
@@ -1009,7 +992,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0120</Strike>
       <StrikeType>Spread</StrikeType>
@@ -1068,7 +1050,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0040</Strike>
       <StrikeType>Spread</StrikeType>
@@ -1127,7 +1108,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0050</Strike>
       <StrikeType>Spread</StrikeType>
@@ -1186,7 +1166,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0060</Strike>
       <StrikeType>Spread</StrikeType>
@@ -1245,7 +1224,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0070</Strike>
       <StrikeType>Spread</StrikeType>
@@ -1304,7 +1282,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0080</Strike>
       <StrikeType>Spread</StrikeType>
@@ -1363,7 +1340,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0090</Strike>
       <StrikeType>Spread</StrikeType>
@@ -1422,7 +1398,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0100</Strike>
       <StrikeType>Spread</StrikeType>
@@ -1481,7 +1456,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0110</Strike>
       <StrikeType>Spread</StrikeType>
@@ -1540,7 +1514,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0120</Strike>
       <StrikeType>Spread</StrikeType>
@@ -1599,7 +1572,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0040</Strike>
       <StrikeType>Spread</StrikeType>
@@ -1658,7 +1630,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0050</Strike>
       <StrikeType>Spread</StrikeType>
@@ -1717,7 +1688,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0060</Strike>
       <StrikeType>Spread</StrikeType>
@@ -1776,7 +1746,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0070</Strike>
       <StrikeType>Spread</StrikeType>
@@ -1835,7 +1804,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0080</Strike>
       <StrikeType>Spread</StrikeType>
@@ -1894,7 +1862,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0090</Strike>
       <StrikeType>Spread</StrikeType>
@@ -1953,7 +1920,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0100</Strike>
       <StrikeType>Spread</StrikeType>
@@ -2012,7 +1978,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0110</Strike>
       <StrikeType>Spread</StrikeType>
@@ -2071,7 +2036,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0120</Strike>
       <StrikeType>Spread</StrikeType>
@@ -2130,7 +2094,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0040</Strike>
       <StrikeType>Spread</StrikeType>
@@ -2189,7 +2152,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0050</Strike>
       <StrikeType>Spread</StrikeType>
@@ -2248,7 +2210,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0060</Strike>
       <StrikeType>Spread</StrikeType>
@@ -2307,7 +2268,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0070</Strike>
       <StrikeType>Spread</StrikeType>
@@ -2366,7 +2326,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0080</Strike>
       <StrikeType>Spread</StrikeType>
@@ -2425,7 +2384,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0090</Strike>
       <StrikeType>Spread</StrikeType>
@@ -2484,7 +2442,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0100</Strike>
       <StrikeType>Spread</StrikeType>
@@ -2543,7 +2500,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0110</Strike>
       <StrikeType>Spread</StrikeType>
@@ -2602,7 +2558,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0120</Strike>
       <StrikeType>Spread</StrikeType>
@@ -2661,7 +2616,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0040</Strike>
       <StrikeType>Spread</StrikeType>
@@ -2720,7 +2674,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0050</Strike>
       <StrikeType>Spread</StrikeType>
@@ -2779,7 +2732,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0060</Strike>
       <StrikeType>Spread</StrikeType>
@@ -2838,7 +2790,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0070</Strike>
       <StrikeType>Spread</StrikeType>
@@ -2897,7 +2848,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0080</Strike>
       <StrikeType>Spread</StrikeType>
@@ -2956,7 +2906,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0090</Strike>
       <StrikeType>Spread</StrikeType>
@@ -3015,7 +2964,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0100</Strike>
       <StrikeType>Spread</StrikeType>
@@ -3074,7 +3022,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0110</Strike>
       <StrikeType>Spread</StrikeType>
@@ -3133,7 +3080,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0120</Strike>
       <StrikeType>Spread</StrikeType>
@@ -3192,7 +3138,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0040</Strike>
       <StrikeType>Spread</StrikeType>
@@ -3251,7 +3196,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0050</Strike>
       <StrikeType>Spread</StrikeType>
@@ -3310,7 +3254,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0060</Strike>
       <StrikeType>Spread</StrikeType>
@@ -3369,7 +3312,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0070</Strike>
       <StrikeType>Spread</StrikeType>
@@ -3428,7 +3370,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0080</Strike>
       <StrikeType>Spread</StrikeType>
@@ -3487,7 +3428,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0090</Strike>
       <StrikeType>Spread</StrikeType>
@@ -3546,7 +3486,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0100</Strike>
       <StrikeType>Spread</StrikeType>
@@ -3605,7 +3544,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0110</Strike>
       <StrikeType>Spread</StrikeType>
@@ -3664,7 +3602,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0120</Strike>
       <StrikeType>Spread</StrikeType>
@@ -3723,7 +3660,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0040</Strike>
       <StrikeType>Spread</StrikeType>
@@ -3782,7 +3718,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0050</Strike>
       <StrikeType>Spread</StrikeType>
@@ -3841,7 +3776,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0060</Strike>
       <StrikeType>Spread</StrikeType>
@@ -3900,7 +3834,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0070</Strike>
       <StrikeType>Spread</StrikeType>
@@ -3959,7 +3892,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0080</Strike>
       <StrikeType>Spread</StrikeType>
@@ -4018,7 +3950,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0090</Strike>
       <StrikeType>Spread</StrikeType>
@@ -4077,7 +4008,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0100</Strike>
       <StrikeType>Spread</StrikeType>
@@ -4136,7 +4066,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0110</Strike>
       <StrikeType>Spread</StrikeType>
@@ -4195,7 +4124,6 @@
       <NettingSetId>NS</NettingSetId>
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
       <IndexTerm>5Y</IndexTerm>
       <Strike>0.0120</Strike>
       <StrikeType>Spread</StrikeType>
