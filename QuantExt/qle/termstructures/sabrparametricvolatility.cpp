@@ -375,7 +375,8 @@ Real SabrParametricVolatility::evaluate(const Real timeToExpiry, const Real unde
 
     Real result = evaluateSabr({alpha, beta, nu, rho}, forward, timeToExpiry, lognormalShift, {strike}).front();
     return convert(result, preferredOutputQuoteType(), lognormalShift, boost::none, timeToExpiry, strike, forward,
-                   outputMarketQuoteType, outputLognormalShift, outputOptionType);
+                   outputMarketQuoteType, outputLognormalShift == Null<Real>() ? lognormalShift : outputLognormalShift,
+                   outputOptionType);
 }
 
 } // namespace QuantExt

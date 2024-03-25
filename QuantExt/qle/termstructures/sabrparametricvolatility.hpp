@@ -50,7 +50,7 @@ public:
     QuantLib::Real
     evaluate(const QuantLib::Real timeToExpiry, const QuantLib::Real underlyingLength, const QuantLib::Real strike,
              const QuantLib::Real forward, const MarketQuoteType outputMarketQuoteType,
-             const QuantLib::Real outputLognormalShift,
+             const QuantLib::Real outputLognormalShift = QuantLib::Null<QuantLib::Real>(),
              const boost::optional<QuantLib::Option::Type> outputOptionType = boost::none) const override;
 
 private:

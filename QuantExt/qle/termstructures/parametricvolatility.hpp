@@ -63,11 +63,14 @@ public:
                  const MarketQuoteType outputMarketQuoteType, const QuantLib::Real outputLognormalShift,
                  const boost::optional<QuantLib::Option::Type> outputOptionType = boost::none) const;
 
-    // if outputOptionType is none, otm strike is used
+    /* - if outputOptionType is none, otm strike is used
+       - the outputMarketQuoteType must always be given and can be different from input market quote type
+       - if outputLognormalShift is null, the input data = model's lognormal shift is used (only for
+         outputMarketQuoteType = ShiftedLognormalVolatility) */
     virtual QuantLib::Real
     evaluate(const QuantLib::Real timeToExpiry, const QuantLib::Real underlyingLength, const QuantLib::Real strike,
              const QuantLib::Real forward, const MarketQuoteType outputMarketQuoteType,
-             const QuantLib::Real outputLognormalShift,
+             const QuantLib::Real outputLognormalShift = QuantLib::Null<QuantLib::Real>(),
              const boost::optional<QuantLib::Option::Type> outputOptionType = boost::none) const = 0;
 
 protected:
