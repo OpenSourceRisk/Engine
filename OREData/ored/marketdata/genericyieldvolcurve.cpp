@@ -207,13 +207,15 @@ GenericYieldVolCurve::GenericYieldVolCurve(
             if (quotesRead > 1) {
                 atm = boost::shared_ptr<SwaptionVolatilityStructure>(new SwaptionVolatilityMatrix(
                     asof, config->calendar(), config->businessDayConvention(), optionTenors, underlyingTenors, vols,
-                    config->dayCounter(), config->flatExtrapolation(),
+                    config->dayCounter(),
+                    config->extrapolation() == GenericYieldVolatilityCurveConfig::Extrapolation::Flat,
                     config->volatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
                         ? QuantLib::Normal
                         : QuantLib::ShiftedLognormal,
                     isSln ? shifts : Matrix(vols.rows(), vols.columns(), 0.0)));
 
-                atm->enableExtrapolation(config->extrapolate());
+                atm->enableExtrapolation(config->extrapolation() ==
+                                         GenericYieldVolatilityCurveConfig::Extrapolation::Flat);
                 TLOG("built atm surface with vols:");
                 TLOGGERSTREAM(vols);
                 if (isSln) {
@@ -349,7 +351,8 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                 Handle<SwaptionVolatilityStructure> hATM(atm);
                 boost::shared_ptr<QuantExt::SwaptionVolCube2> cube = boost::make_shared<QuantExt::SwaptionVolCube2>(
                     hATM, smileOptionTenors, smileUnderlyingTenors, spreads, volSpreadHandles, swapIndexBase,
-                    shortSwapIndexBase, vegaWeighedSmileFit, config->flatExtrapolation());
+                    shortSwapIndexBase, vegaWeighedSmileFit,
+                    config->extrapolation() == GenericYieldVolatilityCurveConfig::Extrapolation::Flat);
                 cube->enableExtrapolation();
 
                 // Wrap it in a SwaptionVolCubeWithATM
