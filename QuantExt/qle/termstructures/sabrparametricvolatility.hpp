@@ -31,12 +31,12 @@ namespace QuantExt {
 class SabrParametricVolatility final : public ParametricVolatility {
 public:
     enum class ModelVariant {
-        Hagan2002Lognormal,
-        Hagan2002Normal,
-        Hagan2002NormalZeroBeta,
-        Antonov2015FreeBoundaryNormal,
-        KienitzLawsonSwaynePde,
-        FlochKennedy
+        Hagan2002Lognormal = 0,
+        Hagan2002Normal = 1,
+        Hagan2002NormalZeroBeta = 2,
+        Antonov2015FreeBoundaryNormal = 3,
+        KienitzLawsonSwaynePde = 4 ,
+        FlochKennedy = 5
     };
 
     /*! modelParameters are given by (tte, underlyingLen) as a vector of parameter values and
