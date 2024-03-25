@@ -16,21 +16,26 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <algorithm>
 #include <ored/configuration/genericyieldvolcurveconfig.hpp>
 #include <ored/configuration/reportconfig.hpp>
 #include <ored/marketdata/genericyieldvolcurve.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+
+#include <qle/models/carrmadanarbitragecheck.hpp>
+#include <qle/termstructures/proxyswaptionvolatility.hpp>
+#include <qle/termstructures/swaptionsabrcube.hpp>
+#include <qle/termstructures/swaptionvolcube2.hpp>
+#include <qle/termstructures/swaptionvolcubewithatm.hpp>
+#include <qle/termstructures/swaptionsabrcube.hpp>
+
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
-#include <qle/models/carrmadanarbitragecheck.hpp>
-#include <qle/termstructures/proxyswaptionvolatility.hpp>
-#include <qle/termstructures/swaptionvolcube2.hpp>
-#include <qle/termstructures/swaptionvolcubewithatm.hpp>
+
+#include <algorithm>
 
 using namespace QuantLib;
 using namespace std;
@@ -346,14 +351,22 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                 QL_REQUIRE(swapIndexBase, "Unable to find SwapIndex " << config->swapIndexBase());
                 QL_REQUIRE(shortSwapIndexBase, "Unable to find ShortSwapIndex " << config->shortSwapIndexBase());
 
-                bool vegaWeighedSmileFit = false; // TODO
-
                 Handle<SwaptionVolatilityStructure> hATM(atm);
-                boost::shared_ptr<QuantExt::SwaptionVolCube2> cube = boost::make_shared<QuantExt::SwaptionVolCube2>(
-                    hATM, smileOptionTenors, smileUnderlyingTenors, spreads, volSpreadHandles, swapIndexBase,
-                    shortSwapIndexBase, vegaWeighedSmileFit,
-                    config->extrapolation() == GenericYieldVolatilityCurveConfig::Extrapolation::Flat);
-                cube->enableExtrapolation();
+                boost::shared_ptr<QuantLib::SwaptionVolatilityCube> cube;
+                if (config->interpolation() == GenericYieldVolatilityCurveConfig::Interpolation::Linear) {
+                    cube = boost::make_shared<QuantExt::SwaptionVolCube2>(
+                        hATM, smileOptionTenors, smileUnderlyingTenors, spreads, volSpreadHandles, swapIndexBase,
+                        shortSwapIndexBase, false,
+                        config->extrapolation() == GenericYieldVolatilityCurveConfig::Extrapolation::Flat);
+                    cube->enableExtrapolation();
+                } else {
+                    cube = boost::make_shared<QuantExt::SwaptionSabrCube>(
+                        hATM, smileOptionTenors, smileUnderlyingTenors, spreads, volSpreadHandles, swapIndexBase,
+                        shortSwapIndexBase, QuantExt::SabrParametricVolatility::ModelVariant(config->interpolation()),
+                        config->outputVolatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
+                            ? QuantLib::Normal
+                            : QuantLib::ShiftedLognormal);
+                }
 
                 // Wrap it in a SwaptionVolCubeWithATM
                 vol_ = boost::make_shared<QuantExt::SwaptionVolCubeWithATM>(cube);

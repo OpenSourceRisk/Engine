@@ -58,7 +58,7 @@ public:
 
     // if outputOptionType is none, otm strike is used (and call for atm)
     Real convert(const Real inputQuote, const MarketQuoteType inputMarketQuoteType,
-                 const QuantLib::Real inputLognormalShift, const boost::optional<Option::Type> inputOptionType,
+                 const QuantLib::Real inputLognormalShift, const boost::optional<QuantLib::Option::Type> inputOptionType,
                  const QuantLib::Real timeToExpiry, const QuantLib::Real strike, const QuantLib::Real forward,
                  const MarketQuoteType outputMarketQuoteType, const QuantLib::Real outputLognormalShift,
                  const boost::optional<QuantLib::Option::Type> outputOptionType = boost::none) const;
