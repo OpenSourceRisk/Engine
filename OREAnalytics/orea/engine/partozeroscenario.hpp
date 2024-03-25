@@ -37,31 +37,74 @@
 namespace ore {
 namespace analytics {
 
-std::map<RiskFactorKey, double>
-buildTargetValues(const StressTestScenarioData::StressTestData& stressScenario,
-                  const std::map<RiskFactorKey, boost::shared_ptr<Instrument>>& parHelpers,
-                  const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketParameters) {
-    std::map<RiskFactorKey, double> results;
-    for (const auto& [ccy, data] : stressScenario.discountCurveShifts) {
-        DayCounter dc;
+struct TodaysImpliedQuotes {
+    std::map<RiskFactorKey, double> baseValues;
+    std::map<RiskFactorKey, double> targetValues;
+    std::map<RiskFactorKey, double> zeroValues;
+    std::map<RiskFactorKey, double> zeroBaseScenarioValue;
+    //! ZeroFactor to time
+    std::map<RiskFactorKey, double> times;
+};
 
-        auto simTenors = simMarketParameters->yieldCurveTenors(ccy);
-        size_t nTenors = simTenors.size();
-        std::vector<Period> shiftTenors = data.shiftTenors;
-        QL_REQUIRE(shiftTenors.size() > 0, "Discount shift tenors not specified");
-        QL_REQUIRE(shiftTenors.size() == nTenors, "Discount shift tenors not specified");
-        std::vector<Real> shifts = data.shifts;
+void addTargetValueToResults(TodaysImpliedQuotes& results, const RiskFactorKey& key,
+                             const StressTestScenarioData::CurveShiftData& data,
+                             const std::vector<QuantLib::Period>& simulationTenors) {
+    std::vector<Period> shiftTenors = data.shiftTenors;
+    std::vector<Real> shifts = data.shifts;
+    QL_REQUIRE(shiftTenors.size() > 0, "Discount shift tenors not specified");
+    QL_REQUIRE(shiftTenors.size() == simulationTenors.size(), "Discount shift doesn't match sim market tenors, got "
+                                                                  << simulationTenors.size() << " SimulationMarket Tenors and "
+                                                                  << shiftTenors.size() << " ScenarioShiftTenors");
+    QL_REQUIRE(simulationTenors.size() == shifts.size(), "shift tenor and shift size vectors do not match");
+    size_t i = key.index;
+    Real fairParRate = results.baseValues[key];
+    Real shiftedRate = fairParRate;
+    if (data.shiftType == ShiftType::Absolute) {
+        shiftedRate += shifts[i];
+    } else {
+        shiftedRate *= (1.0 + shifts[i]);
+    }
+    results.targetValues[key] = shiftedRate;
+}
 
-        QL_REQUIRE(shiftTenors.size() == shifts.size(), "shift tenor and shift size vectors do not match");
-        for (size_t i = 0; i < nTenors; ++i) {
-            // How to handle the allign tenor function
-            // QL_REQUIRE(shiftTenors[i] == simTenors[i], "Tenor mismatch");
-            RiskFactorKey key(RiskFactorKey::KeyType::DiscountCurve, ccy, i);
-            Real fairParRate = impliedQuote(parHelpers.at(key));
-            if (data.shiftType == ShiftType::Absolute) {
-                results[key] = fairParRate + shifts[i];
-            } else {
-                results[key] = fairParRate * (1.0 + shifts[i]);
+void addZeroRateToResults(TodaysImpliedQuotes& results, const RiskFactorKey& key, const QuantLib::Date& asof,
+                             const boost::shared_ptr<YieldTermStructure>& ts,
+                             const std::vector<QuantLib::Period>& simulationTenors) {
+    size_t i = key.index;
+    double t = ts->dayCounter().yearFraction(asof, asof + simulationTenors[i]);
+    results.times[key] = t;
+    results.zeroValues[key] = ts->discount(t);
+}
+
+TodaysImpliedQuotes getTodaysImpliedQuotes(const Date& asof, const boost::shared_ptr<ScenarioSimMarket>& market,
+                                           const StressTestScenarioData::StressTestData& stressScenario,
+                                           const std::map<RiskFactorKey, boost::shared_ptr<Instrument>>& parHelpers,
+                                           const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketParameters) {
+
+    TodaysImpliedQuotes results;
+    for (const auto& [key, helper] : parHelpers) {
+        double fairRate = impliedQuote(helper);
+        results.zeroBaseScenarioValue[key] = market->baseScenarioAbsolute()->get(key);
+        results.baseValues[key] = fairRate;
+        results.targetValues[key] = fairRate;
+        if (key.keytype == RiskFactorKey::KeyType::DiscountCurve) {
+            const std::string& ccy = key.name;
+            std::cout << "discountCurveShifts " << ccy << std::endl;
+            addZeroRateToResults(results, key, asof, *market->discountCurve(ccy),
+                                 simMarketParameters->yieldCurveTenors(ccy));
+
+            if (auto it = stressScenario.discountCurveShifts.find(ccy);
+                it != stressScenario.discountCurveShifts.end()) {
+                addTargetValueToResults(results, key, it->second, simMarketParameters->yieldCurveTenors(ccy));
+            }
+        } else if (key.keytype == RiskFactorKey::KeyType::IndexCurve) {
+            const std::string& indexName = key.name;
+            std::cout << "discountCurveShifts " << indexName << std::endl;
+            addZeroRateToResults(results, key, asof, *market->iborIndex(indexName)->forwardingTermStructure(),
+                                 simMarketParameters->yieldCurveTenors(indexName));
+            if (auto it = stressScenario.indexCurveShifts.find(indexName);
+                it != stressScenario.indexCurveShifts.end()) {
+                addTargetValueToResults(results, key, it->second, simMarketParameters->yieldCurveTenors(indexName));
             }
         }
     }
@@ -78,13 +121,16 @@ struct TargetFunction : public QuantLib::CostFunction {
     QuantLib::Array values(const QuantLib::Array& x) const override {
         simMarket->reset();
         auto trialScenario = simMarket->baseScenario()->clone();
+
         for (size_t i = 0; i < zeroKeys.size(); ++i) {
-            trialScenario->add(zeroKeys[i], x[i]);
+            double delta = x[i];
+            trialScenario->add(zeroKeys[i], delta);
         }
         simMarket->applyScenario(trialScenario);
         vector<double> mse;
         for (size_t i = 0; i < parKeys.size(); ++i) {
-            mse.push_back(goal[i] - impliedQuote(parHelpers.at(parKeys[i])));
+            double fairParRate = impliedQuote(parHelpers.at(parKeys[i]));
+            mse.push_back((goal[i] - fairParRate)*1e6);
         }
         return QuantLib::Array(mse.begin(), mse.end());
     }
@@ -135,7 +181,6 @@ public:
             {}, continueOnError, Market::defaultConfiguration, simMarket);
 
         simMarket->reset();
-
         for (const auto& scenario : stressTestData->data()) {
             std::cout << "Convert scenario " << scenario.label << std::endl;
             std::cout << scenario.irCurveParShifts << std::endl;
@@ -151,8 +196,6 @@ public:
                 for (const auto& [key, value] : parSensitivities) {
                     const auto& [parKey, zeroKey] = key;
                     if (!QuantLib::close_enough(value, 0.0)) {
-                        std::cout << "Par " << parKey << " derivided with respect to zero " << zeroKey << " " << value
-                                  << std::endl;
                         parToZeroEdges[parKey].insert(zeroKey);
                         zeroToParEdges[zeroKey].insert(parKey);
                     }
@@ -164,18 +207,18 @@ public:
                 std::vector<std::set<RiskFactorKey>> connectedComponents;
                 // Collect all connected parQuotes
                 for (const auto& [parKey, _] : parToZeroEdges) {
-                    std::cout << "Par Node " << parKey << std::endl;
+                    
                     std::set<RiskFactorKey> connectedParRates;
                     if (parNodeVisited.count(parKey) == 0) {
-                        std::cout << "Is not visited yet, so add it to queue" << std::endl;
+                    
                         queue.push(parKey);
                     } else {
-                        std::cout << "Skip node, already visited" << std::endl;
+                    
                     }
                     while (!queue.empty()) {
                         auto currentNode = queue.front();
                         queue.pop();
-                        std::cout << "Visit " << currentNode << std::endl;
+                    
                         connectedParRates.insert(currentNode);
                         parNodeVisited.insert(currentNode);
                         // Breadth-first-Search
@@ -183,19 +226,17 @@ public:
                             // If that zeroNode hasn't been visited yet, add all non visited connectedParNotes to the
                             // Queue
                             if (zeroNodeVisited.count(zeroNode) == 0) {
-                                std::cout << "visit zero rate " << zeroNode << std::endl;
+                    
                                 zeroNodeVisited.insert(zeroNode);
                                 for (const auto& connectedParNode : zeroToParEdges[zeroNode]) {
                                     if (parNodeVisited.count(connectedParNode) == 0) {
-                                        std::cout << "Add connected par node " << connectedParNode << "to queue"
-                                                  << std::endl;
+                    
                                         queue.push(connectedParNode);
                                     } else {
-                                        std::cout << "Skip connected par node " << connectedParNode << std::endl;
+                    
                                     }
                                 }
                             } else {
-                                std::cout << "skip zero rate " << zeroNode << std::endl;
                             }
                         }
                     }
@@ -205,39 +246,72 @@ public:
                 }
                 std::cout << "Found " << connectedComponents.size() << " connected components" << std::endl;
 
-                auto targetParRates = buildTargetValues(scenario, instruments.parHelpers_, simMarketParameters);
+                auto targetParRates = getTodaysImpliedQuotes(asof, simMarket, scenario, instruments.parHelpers_, simMarketParameters);
 
-                for (const auto& [key, perHelper] : instruments.parHelpers_) {
-                    std::cout << key << " Helper " << perHelper << " " << impliedQuote(perHelper) << " Target "
-                              << targetParRates[key] << std::endl;
-                }
 
                 size_t i = 0;
                 for (const auto& component : connectedComponents) {
-                    std::cout << i << "th componentent with size " << component.size() << std::endl;
+                    std::cout << i++ << "th componentent with size " << component.size() << std::endl;
 
                     std::vector<RiskFactorKey> parKeys;
                     std::vector<double> goal;
                     std::set<RiskFactorKey> zeroRatesSet;
 
                     for (const auto& parKey : component) {
-                        std::cout << "Par Key " << parKey << std::endl;
-                        goal.push_back(targetParRates[parKey]);
+                        std::cout << "Par Key " << parKey << "Fair Par Rate " << targetParRates.baseValues[parKey]
+                                  << " Target " << targetParRates.targetValues[parKey] << std::endl;
+                        goal.push_back(targetParRates.targetValues[parKey]);
                         parKeys.push_back(parKey);
                         zeroRatesSet.insert(parToZeroEdges[parKey].begin(), parToZeroEdges[parKey].end());
                     }
-                    std::vector<RiskFactorKey> zeroRates(zeroRatesSet.begin(), zeroRatesSet.end());
+                    std::vector<RiskFactorKey> zeroKeys(zeroRatesSet.begin(), zeroRatesSet.end());
                     std::cout << "All relevant zeroKeys" << std::endl;
-                    for (const auto& z : zeroRates) {
-                        std::cout << "Zero Key " << z << std::endl;
+                    simMarket->reset();
+                    for (const auto& z : zeroKeys) {
+                        std::cout << "Zero Key " << z << "Base Scenario Value " << targetParRates.zeroValues[z] << " "
+                                  << targetParRates.zeroBaseScenarioValue[z] <<  " " << targetParRates.times[z] << std::endl;
                     }
 
-                    std::vector<double> initialGuess;
-                    for (size_t i = 0; i < zeroRates.size(); ++i) {
-                        initialGuess.push_back(0.001);
+                    QuantLib::Array initialGuess(zeroKeys.size(), 1.0);
+
+                    PositiveConstraint noConstraint;
+                    LevenbergMarquardt lm;
+                    EndCriteria endCriteria(150, 15, 1e-8, 1e-8, 1e-8);
+                    TargetFunction target(simMarket, goal, parKeys, zeroKeys, instruments.parHelpers_);
+                    Problem problem(target, noConstraint, initialGuess);
+                    lm.minimize(problem, endCriteria);
+                    auto solution = problem.currentValue();
+
+                    std::cout << "Found solution " << problem.functionValue() << std::endl;
+                    for (size_t i = 0; i < zeroKeys.size(); ++i) {
+                        std::cout << i << " " << zeroKeys[i] << " " << solution[i] << std::endl;
                     }
 
-                }
+
+                    // Convert result into a zero shift
+                    simMarket->reset();
+                    auto targetScenario = simMarket->baseScenario()->clone();
+                    for (size_t i = 0; i < zeroKeys.size(); ++i) {
+                        const auto key = zeroKeys[i];
+                        double zeroShift = 0;
+                        targetScenario->add(key, solution[i]);
+                        if (!stressTestData->useSpreadedTermStructures()) {
+                            zeroShift =
+                                -std::log(solution[i] / targetParRates.zeroBaseScenarioValue[key]) / targetParRates.times[key];
+                        } else {
+                            zeroShift =
+                                -std::log(solution[i]) / targetParRates.times[key];
+                        }
+                        std::cout << i << " " << zeroKeys[i] << " " << solution[i] << " " << zeroShift << std::endl;
+                    }
+                    simMarket->applyScenario(targetScenario);
+                    std::cout << "key;fairrate;target;error" << std::endl;
+                    for (const auto& [key, parHelper] : instruments.parHelpers_) {
+                        double tgt = targetParRates.targetValues[key];
+                        double rate = impliedQuote(parHelper);
+                        std::cout << key << ";" << rate << ";" << tgt << ";" << tgt - rate << std::endl;
+                    }
+                                }
                 // Build ScenarioSimMarket
 
                 // Build Scenario
