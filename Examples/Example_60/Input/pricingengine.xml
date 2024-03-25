@@ -1,0 +1,24 @@
+<PricingEngines>
+  <Product type="Swap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters />
+    <Engine>DiscountingSwapEngine</Engine>
+    <EngineParameters />
+  </Product>
+  <Product type="EuropeanSwaption">
+    <Model>BlackBachelier</Model>
+    <ModelParameters />
+    <Engine>BlackBachelierSwaptionEngine</Engine>
+    <EngineParameters />
+  </Product>
+  <GlobalParameters>
+    <Parameter name="ContinueOnCalibrationError">true</Parameter>
+    <Parameter name="PseudoCurrency.TreatAsFX">false</Parameter>
+    <Parameter name="PseudoCurrency.BaseCurrency">USD</Parameter>
+    <Parameter name="PseudoCurrency.FXIndexTag">GENERIC</Parameter>
+    <Parameter name="PseudoCurrency.Curve.XAU">PM:XAUUSD</Parameter>
+    <Parameter name="PseudoCurrency.Curve.XAG">PM:XAGUSD</Parameter>
+    <Parameter name="PseudoCurrency.Curve.XPT">PM:XPTUSD</Parameter>
+    <Parameter name="PseudoCurrency.Curve.XPD">PM:XPDUSD</Parameter>
+  </GlobalParameters>
+</PricingEngines>
