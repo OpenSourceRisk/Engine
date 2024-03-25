@@ -42,20 +42,22 @@ public:
     SwaptionVolatilityCurveConfig()
         : GenericYieldVolatilityCurveConfig("Swap", "SwaptionVolatility", "SWAPTION", "", true, true) {}
     //! Detailed constructor
-    SwaptionVolatilityCurveConfig(const string& curveID, const string& curveDescription, const Dimension& dimension,
-                                  const VolatilityType& volatilityType, const bool extrapolate,
-                                  const bool flatExtrapolation, const vector<string>& optionTenors,
-                                  const vector<string>& swapTenors, const DayCounter& dayCounter,
-                                  const Calendar& calendar, const BusinessDayConvention& businessDayConvention,
-                                  const string& shortSwapIndexBase, const string& swapIndexBase,
+    SwaptionVolatilityCurveConfig(const string& curveID, const string& curveDescription, const Dimension dimension,
+                                  const VolatilityType volatilityType, const VolatilityType outputVolatilityType,
+                                  const Interpolation interpolation, const Extrapolation extrapolation,
+                                  const vector<string>& optionTenors, const vector<string>& swapTenors,
+                                  const DayCounter& dayCounter, const Calendar& calendar,
+                                  const BusinessDayConvention& businessDayConvention, const string& shortSwapIndexBase,
+                                  const string& swapIndexBase,
                                   // Only required for smile
                                   const vector<string>& smileOptionTenors = vector<string>(),
                                   const vector<string>& smileSwapTenors = vector<string>(),
                                   const vector<string>& smileSpreads = vector<string>())
         : GenericYieldVolatilityCurveConfig("Swap", "SwaptionVolatility", "SWAPTION", "", curveID, curveDescription, "",
-                                            dimension, volatilityType, extrapolate, flatExtrapolation, optionTenors,
-                                            swapTenors, dayCounter, calendar, businessDayConvention, shortSwapIndexBase,
-                                            swapIndexBase, smileOptionTenors, smileSwapTenors, smileSpreads) {}
+                                            dimension, volatilityType, outputVolatilityType, interpolation,
+                                            extrapolation, optionTenors, swapTenors, dayCounter, calendar,
+                                            businessDayConvention, shortSwapIndexBase, swapIndexBase, smileOptionTenors,
+                                            smileSwapTenors, smileSpreads) {}
     //! Detailled constructor for proxy config
     SwaptionVolatilityCurveConfig(const string& curveID, const string& curveDescription,
                                   const string& proxySourceCurveId, const string& proxySourceShortSwapIndexBase,
