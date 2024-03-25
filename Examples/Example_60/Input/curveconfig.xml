@@ -6,23 +6,26 @@
       <CurveDescription>USD-SOFR normal swaption volatilities</CurveDescription>
       <Dimension>Smile</Dimension>
       <VolatilityType>Normal</VolatilityType>
-      <!-- Linear,
+      <!-- Optional, defaults to Linear. Possible values:
+           Linear,
            Hagan2002Lognormal,
            Hagan2002Normal,
            Hagan2002NormalZeroBeta,
            Antonov2015FreeBoundaryNormal,
            KienitzLawsonSwaynePde,
            FlochKennedy -->
-      <Interpolation>Linear</Interpolation>
-      <!-- Only applies to Interpolation = Linear, i.e. it is ignored for the SABR interpolations
+      <Interpolation>Hagan2002ZeroBeta</Interpolation>
+      <!-- Optional, defaults to Flat, applies to Interpolation = Linear only, it is ignored for the SABR interpolations
            None,
            Flat,
            Linear -->
       <Extrapolation>Flat</Extrapolation>
-      <!-- Supported for SABR variants, if not given, a 'natural" default per model is used
+      <!-- Optional, defaults to a 'naturual' default value per model choice, applies to SABR variants only, for Linear it
+           must be set to the input VolatilityType or (better) omitted.
            - Normal
-           - ShiftedLognormal -->
-      <OutputMarketQuoteType>Normal</OutputMarketQuoteType>
+           - Lognormal (alias for ShiftedLognormal, shift is always implied from input data)
+           - ShiftedLognormal-->
+      <OutputVolatilityType>Normal</OutputVolatilityType>
       <DayCounter>Actual/365 (Fixed)</DayCounter>
       <Calendar>JoinHolidays(US settlement, UK settlement)</Calendar>
       <BusinessDayConvention>Following</BusinessDayConvention>
