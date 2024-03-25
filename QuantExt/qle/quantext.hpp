@@ -562,6 +562,7 @@
 #include <qle/termstructures/strippedyoyinflationoptionletvol.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/survivalprobabilitycurve.hpp>
+#include <qle/termstructures/swaptionsabrcube.hpp>
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
 #include <qle/termstructures/swaptionvolconstantspread.hpp>
 #include <qle/termstructures/swaptionvolcube2.hpp>
