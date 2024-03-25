@@ -2,9 +2,12 @@
 
 set(QuantExt-Test_SRC ad.cpp
 analyticcashsettledeuropeanengine.cpp
+analyticeuropeanenginedeltagamma.cpp
 analyticlgmswaptionengine.cpp
 basecorrelationcurve.cpp
 bfrrvolsurface.cpp
+blackswaptionenginedeltagamma.cpp
+blacktriangulation.cpp
 blackvariancecurve.cpp
 blackvariancesurfacesparse.cpp
 blackvariancesurfacestddevs.cpp
@@ -39,6 +42,8 @@ deltagammavar.cpp
 deposit.cpp
 discountcurve.cpp
 discountingcommodityforwardengine.cpp
+discountingcurrencyswapenginedeltagamma.cpp
+discountingswapenginedeltagamma.cpp
 discountratiomodifiedcurve.cpp
 durationadjustedcmscoupon.cpp
 dynamicblackvoltermstructure.cpp
@@ -55,6 +60,8 @@ index.cpp
 inflationcurve.cpp
 inflationvol.cpp
 interpolatedyoycapfloortermpricesurface.cpp
+lgmbgsflexiswapengine.cpp
+lgmflexiswapengine.cpp
 logquote.cpp
 mclgmswaptionengine.cpp
 multilegoption.cpp
@@ -73,6 +80,7 @@ randomvariablelsmbasissystem.cpp
 ratehelpers.cpp
 stabilisedglls.cpp
 staticallycorrectedyieldtermstructure.cpp
+stoplightbounds.cpp
 strippedoptionletadapter.cpp
 strippedoptionletadapter2.cpp
 survivalprobabilitycurve.cpp

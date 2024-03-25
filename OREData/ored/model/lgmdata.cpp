@@ -17,6 +17,7 @@
 */
 
 #include <ored/model/lgmdata.hpp>
+#include <ored/model/modelparameter.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -212,19 +213,22 @@ XMLNode* LgmData::toXML(XMLDocument& doc) const {
     return lgmNode;
 }
 
-LgmReversionTransformation::LgmReversionTransformation()
-    : horizon_(0.0), scaling_(1.0) {}
+ReversionParameter LgmData::reversionParameter() const {
+    return ReversionParameter(revType_, calibrateH_, hType_, hTimes_, hValues_);
+}
+
+VolatilityParameter LgmData::volatilityParameter() const {
+    return VolatilityParameter(volType_, calibrateA_, aType_, aTimes_, aValues_);
+}
+
+LgmReversionTransformation::LgmReversionTransformation() : horizon_(0.0), scaling_(1.0) {}
 
 LgmReversionTransformation::LgmReversionTransformation(Time horizon, Real scaling)
     : horizon_(horizon), scaling_(scaling) {}
 
-Time LgmReversionTransformation::horizon() const {
-    return horizon_;
-}
+Time LgmReversionTransformation::horizon() const { return horizon_; }
 
-Real LgmReversionTransformation::scaling() const {
-    return scaling_;
-}
+Real LgmReversionTransformation::scaling() const { return scaling_; }
 
 void LgmReversionTransformation::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "ParameterTransformation");
