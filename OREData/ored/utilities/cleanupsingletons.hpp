@@ -47,18 +47,7 @@ public:
         QuantExt::RandomVariableStats::instance().reset();
         QuantExt::McEngineStats::instance().reset();
 
-        // Clear the structured logger in Log
-        if (ore::data::Log::instance().hasIndependentLogger(ore::data::StructuredLogger::name)) {
-            const auto& structuredLogger =
-                ore::data::Log::instance().independentLogger(ore::data::StructuredLogger::name);
-            structuredLogger->clear();
-        }
-
-        // Clear the progress logger in Log
-        if (ore::data::Log::instance().hasIndependentLogger(ore::data::ProgressLogger::name)) {
-            const auto& progressLogger = ore::data::Log::instance().independentLogger(ore::data::ProgressLogger::name);
-            progressLogger->clear();
-        }
+	ore::data::Log::instance().removeAllLoggers();
     }
 };
 
