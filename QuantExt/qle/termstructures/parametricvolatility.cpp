@@ -66,7 +66,7 @@ Real ParametricVolatility::convert(const Real inputQuote, const MarketQuoteType 
     switch (marketModelType_) {
     case MarketModelType::Black76:
         if (inputMarketQuoteType_ == MarketQuoteType::Price) {
-            forwardPremium = inputQuote / discountCurve_->discount(timeToExpiry);
+            forwardPremium = inputQuote / discountCurve_.empty() ? 1.0 : discountCurve_->discount(timeToExpiry);
         } else if (inputMarketQuoteType_ == MarketQuoteType::NormalVolatility) {
             forwardPremium =
                 bachelierBlackFormula(inputOptionType, strike, forward, inputQuote * std::sqrt(timeToExpiry));
@@ -91,7 +91,7 @@ Real ParametricVolatility::convert(const Real inputQuote, const MarketQuoteType 
     switch (marketModelType_) {
     case MarketModelType::Black76: {
         if (outputMarketQuoteType == MarketQuoteType::Price) {
-            return forwardPremium * discountCurve_->discount(timeToExpiry);
+            return forwardPremium * discountCurve_.empty() ? 1.0 : discountCurve_->discount(timeToExpiry);
         } else if (outputMarketQuoteType == MarketQuoteType::NormalVolatility) {
             return exactBachelierImpliedVolatility(outputOptionType, strike, forward, timeToExpiry, forwardPremium);
         } else if (outputMarketQuoteType == MarketQuoteType::ShiftedLognormalVolatility) {
