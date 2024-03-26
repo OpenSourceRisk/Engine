@@ -68,9 +68,9 @@ private:
 IndexCdsOption::IndexCdsOption(const boost::shared_ptr<IndexCreditDefaultSwap>& swap,
                                const boost::shared_ptr<Exercise>& exercise, Real strike,
                                CdsOption::StrikeType strikeType, const Settlement::Type settlementType,
-                               Real tradeDateNtl, Real realisedFep, bool knocksOut, const QuantLib::Period& indexTerm)
+                               Real tradeDateNtl, Real realisedFep, const QuantLib::Period& indexTerm)
     : Option(boost::make_shared<NullPayoff>(), exercise), swap_(swap), strike_(strike), strikeType_(strikeType),
-      settlementType_(settlementType), tradeDateNtl_(tradeDateNtl), realisedFep_(realisedFep), knocksOut_(knocksOut),
+      settlementType_(settlementType), tradeDateNtl_(tradeDateNtl), realisedFep_(realisedFep),
       indexTerm_(indexTerm), riskyAnnuity_(0.0) {
     registerWith(swap_);
 }
@@ -96,7 +96,6 @@ void IndexCdsOption::setupArguments(PricingEngine::arguments* args) const {
     arguments->settlementType = settlementType_;
     arguments->tradeDateNtl = tradeDateNtl_;
     arguments->realisedFep = realisedFep_;
-    arguments->knocksOut = knocksOut_;
     arguments->indexTerm = indexTerm_;
 }
 

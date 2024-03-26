@@ -34,7 +34,7 @@ public:
 
     //! Detailed constructor
     IndexCreditDefaultSwapOption(const ore::data::Envelope& env, const IndexCreditDefaultSwapData& swap,
-                                 const ore::data::OptionData& option, QuantLib::Real strike, bool knockOut = false,
+                                 const ore::data::OptionData& option, QuantLib::Real strike,
                                  const std::string& indexTerm = "", const std::string& strikeType = "Spread",
                                  const QuantLib::Date& tradeDate = Date(), const QuantLib::Date& fepStartDate = Date());
 
@@ -55,7 +55,6 @@ public:
     const IndexCreditDefaultSwapData& swap() const;
     const ore::data::OptionData& option() const;
     const std::string& indexTerm() const;
-    bool knockOut() const;
     QuantLib::Real strike() const;
     const std::string& strikeType() const;
     const QuantLib::Date& tradeDate() const;
@@ -74,7 +73,6 @@ private:
     IndexCreditDefaultSwapData swap_;
     ore::data::OptionData option_;
     QuantLib::Real strike_;
-    bool knockOut_;
     std::string indexTerm_;
     std::string strikeType_;
     QuantLib::Date tradeDate_;

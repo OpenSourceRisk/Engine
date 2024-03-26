@@ -39,6 +39,9 @@ namespace ore {
 namespace data {
 using namespace QuantLib;
 
+class VolatilityParameter;
+class ReversionParameter;
+
 //! Linear Gauss Markov Model Parameters
 /*!
   This class contains the description of a Linear Gauss Markov interest rate model
@@ -114,6 +117,8 @@ public:
     std::vector<std::string>& optionExpiries() const { return optionExpiries_; }
     std::vector<std::string>& optionTerms() const { return optionTerms_; }
     std::vector<std::string>& optionStrikes() const { return optionStrikes_; }
+    ReversionParameter reversionParameter() const;
+    VolatilityParameter volatilityParameter() const;
     //@}
 
     //! \name Operators
