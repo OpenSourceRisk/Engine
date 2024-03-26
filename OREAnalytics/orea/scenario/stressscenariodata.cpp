@@ -18,6 +18,7 @@
 
 #include <orea/scenario/stressscenariodata.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
 using namespace QuantLib;
@@ -52,7 +53,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             test.irCurveParShifts = XMLUtils::getChildValueAsBool(parShiftsNode, "IRCurves", false, false);
             test.irCapFloorParShifts =
                 XMLUtils::getChildValueAsBool(parShiftsNode, "CapFloorVolatilities", false, false);
-            test.irCapFloorParShifts =
+            test.creditCurveParShifts =
                 XMLUtils::getChildValueAsBool(parShiftsNode, "SurvivalProbability", false, false);
         }
 
@@ -75,7 +76,6 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
         XMLNode* survivalProbability = XMLUtils::getChildNode(testCase, "SurvivalProbabilities");
         QL_REQUIRE(survivalProbability, "Survival Probabilities node not found");
         test.survivalProbabilityShifts.clear();
-        test.creditCurveParShifts = XMLUtils::getChildValueAsBool(survivalProbability, "ParShift", false, false);
         for (XMLNode* child = XMLUtils::getChildNode(survivalProbability, "SurvivalProbability"); child;
              child = XMLUtils::getNextSibling(child)) {
             string name = XMLUtils::getAttribute(child, "name");
@@ -250,7 +250,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
 		    ALOG("StressScenarioData: 'ccy' is deprecated as an attribute for CapFloorVolatilities, use 'key' instead.");
 		}
 	    }
-            CapFloorVolShiftData data;
+            VolShiftData data;
             data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
             data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
             data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
@@ -279,9 +279,76 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
     LOG("Loading stress tests done");
 }
 
+void curveShiftDataToXml(ore::data::XMLDocument& doc, XMLNode* node,
+                         const std::map<std::string, StressTestScenarioData::CurveShiftData>& data,
+                         const std::string& identifier, const std::string& nodeName, const std::string& parentNodeName=std::string()) {
+    std::string name = parentNodeName.empty() ?  nodeName + "s" : parentNodeName;
+    auto parentNode = XMLUtils::addChild(doc, node, name);
+    for (const auto& [key, data] : data) {
+        auto childNode = XMLUtils::addChild(doc, parentNode, nodeName);
+        XMLUtils::addAttribute(doc, childNode, identifier, key);
+        XMLUtils::addChild(doc, childNode, "ShiftType", ore::data::to_string(data.shiftType));
+        XMLUtils::addGenericChildAsList(doc, childNode, "Shifts", data.shifts);
+        XMLUtils::addGenericChildAsList(doc, childNode, "ShiftTenors", data.shiftTenors);
+    }
+}
+
+void volShiftDataToXml(ore::data::XMLDocument& doc, XMLNode* node,
+                       const std::map<std::string, StressTestScenarioData::VolShiftData>& data,
+                       const std::string& identifier, const std::string& nodeName, const std::string& parentNodeName) {
+    auto parentNode = XMLUtils::addChild(doc, node, parentNodeName);
+    for (const auto& [key, data] : data) {
+        auto childNode = XMLUtils::addChild(doc, parentNode, nodeName);
+        XMLUtils::addAttribute(doc, childNode, identifier, key);
+        XMLUtils::addChild(doc, childNode, "ShiftType", ore::data::to_string(data.shiftType));
+        XMLUtils::addGenericChildAsList(doc, childNode, "Shifts", data.shifts);
+        XMLUtils::addGenericChildAsList(doc, childNode, "ShiftExpiries", data.shiftExpiries);
+    }
+}
+
+void spotShiftDataToXml(ore::data::XMLDocument& doc, XMLNode* node,
+                        const std::map<std::string, StressTestScenarioData::SpotShiftData>& data,
+                        const std::string& identifier, const std::string& nodeName) {
+    auto parentNode = XMLUtils::addChild(doc, node, nodeName + "s");
+    for (const auto& [key, data] : data) {
+        auto childNode = XMLUtils::addChild(doc, parentNode, nodeName);
+        XMLUtils::addAttribute(doc, childNode, identifier, key);
+        XMLUtils::addChild(doc, childNode, "ShiftType", ore::data::to_string(data.shiftType));
+        XMLUtils::addChild(doc, childNode, "ShiftSize", data.shiftSize);
+    }
+}
 XMLNode* StressTestScenarioData::toXML(ore::data::XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("StressTesting");
-    QL_FAIL("toXML not implemented for stress testing data");
+
+    XMLUtils::addChild(doc, node, "UseSpreadedTermStructures", ore::data::to_string(useSpreadedTermStructures_));
+    for (const auto& test : data_) {
+        // Add test node
+        auto testNode = XMLUtils::addChild(doc, node, "StressTest");
+        XMLUtils::addAttribute(doc, testNode, "id", test.label);
+        // Add Par Shifts node
+        auto parShiftsNode = XMLUtils::addChild(doc, testNode, "ParShifts");
+        XMLUtils::addChild(doc, parShiftsNode, "IRCurves", test.irCurveParShifts);
+        XMLUtils::addChild(doc, parShiftsNode, "CapFloorVolatilities", test.irCapFloorParShifts);
+        XMLUtils::addChild(doc, parShiftsNode, "SurvivalProbability", test.creditCurveParShifts);
+        // IR
+        curveShiftDataToXml(doc, testNode, test.discountCurveShifts, "ccy", "DiscountCurve");
+        curveShiftDataToXml(doc, testNode, test.indexCurveShifts, "index", "IndexCurve");
+        curveShiftDataToXml(doc, testNode, test.yieldCurveShifts, "name", "YieldCurve");
+        volShiftDataToXml(doc, testNode, test.capVolShifts, "key", "CapFloorVolatilitiy", "CapFloorVolatilities");
+        // SwaptionVolData
+        // TODO: SwaptionVolData Missing    
+        // Credit
+        curveShiftDataToXml(doc, testNode, test.survivalProbabilityShifts, "ccy", "SurvivalProbability",
+                            "SurvivalProbabilities");
+        spotShiftDataToXml(doc, testNode, test.recoveryRateShifts, "id", "RecoveryRate");
+        spotShiftDataToXml(doc, testNode, test.securitySpreadShifts, "security", "SecuritySpread");
+        // Equity
+        spotShiftDataToXml(doc, testNode, test.equityShifts, "equity", "EquitySpot");
+        volShiftDataToXml(doc, testNode, test.equityVolShifts, "equity", "EquityVolatility", "EquityVolatilities");
+        // FX
+        spotShiftDataToXml(doc, testNode, test.fxShifts, "ccypair", "FxSpot");
+        volShiftDataToXml(doc, testNode, test.fxVolShifts, "ccypair", "FXVolatility", "FXVolatilities");
+    }
     return node;
 }
 } // namespace analytics

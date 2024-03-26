@@ -612,7 +612,7 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
         vector<Real> volExpiryTimes(n_cfvol_exp, 0.0);
         vector<vector<Real>> shiftedVolData(n_cfvol_exp, vector<Real>(n_cfvol_strikes, 0.0));
 
-        StressTestScenarioData::CapFloorVolShiftData data = d.second;
+        StressTestScenarioData::VolShiftData data = d.second;
 
         ShiftType shiftType = data.shiftType;
         vector<Real> shifts = data.shifts;

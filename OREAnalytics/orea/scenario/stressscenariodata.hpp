@@ -64,12 +64,6 @@ public:
        
     };
 
-    struct CapFloorVolShiftData {
-        ShiftType shiftType;
-        vector<Period> shiftExpiries;
-        vector<Real> shifts;
-    };
-
     struct SwaptionVolShiftData {
         ShiftType shiftType;
         Real parallelShiftSize;
@@ -87,7 +81,7 @@ public:
         map<string, VolShiftData> fxVolShifts;                 // by currency pair
         map<string, SpotShiftData> equityShifts;               // by equity
         map<string, VolShiftData> equityVolShifts;             // by equity
-        map<string, CapFloorVolShiftData> capVolShifts;        // by currency
+        map<string, VolShiftData> capVolShifts;                // by currency
         map<string, SwaptionVolShiftData> swaptionVolShifts;   // by currency
         map<string, SpotShiftData> securitySpreadShifts;       // by bond/security
         map<string, SpotShiftData> recoveryRateShifts;         // by underlying name
