@@ -43,13 +43,13 @@ namespace ore {
 namespace data {
 
 IndexCreditDefaultSwapOption::IndexCreditDefaultSwapOption()
-    : Trade("IndexCreditDefaultSwapOption"), strike_(Null<Real>()), knockOut_(false) {}
+    : Trade("IndexCreditDefaultSwapOption"), strike_(Null<Real>()) {}
 
 IndexCreditDefaultSwapOption::IndexCreditDefaultSwapOption(const Envelope& env, const IndexCreditDefaultSwapData& swap,
-                                                           const OptionData& option, Real strike, bool knockOut,
+                                                           const OptionData& option, Real strike,
                                                            const string& indexTerm, const string& strikeType,
                                                            const Date& tradeDate, const Date& fepStartDate)
-    : Trade("IndexCreditDefaultSwapOption", env), swap_(swap), option_(option), strike_(strike), knockOut_(knockOut),
+    : Trade("IndexCreditDefaultSwapOption", env), swap_(swap), option_(option), strike_(strike),
       indexTerm_(indexTerm), strikeType_(strikeType), tradeDate_(tradeDate), fepStartDate_(fepStartDate) {}
 
 void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
@@ -308,7 +308,7 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
 
     // Build the option
     auto option = boost::make_shared<QuantExt::IndexCdsOption>(cds, exercise, effectiveStrike_, strikeType, settleType,
-                                                               notionals_.tradeDate, notionals_.realisedFep, knockOut_,
+                                                               notionals_.tradeDate, notionals_.realisedFep,
                                                                effectiveIndexTerm_);
     // the vol curve id is the credit curve id stripped by a term, if the credit curve id should contain one
     auto p = splitCurveIdWithTenor(swap_.creditCurveId());
@@ -372,7 +372,6 @@ void IndexCreditDefaultSwapOption::fromXML(XMLNode* node) {
     XMLNode* iCdsOptionData = XMLUtils::getChildNode(node, "IndexCreditDefaultSwapOptionData");
     QL_REQUIRE(iCdsOptionData, "Expected IndexCreditDefaultSwapOptionData node on trade " << id() << ".");
     strike_ = XMLUtils::getChildValueAsDouble(iCdsOptionData, "Strike", false, Null<Real>());
-    knockOut_ = XMLUtils::getChildValueAsBool(iCdsOptionData, "KnockOut", false, false);
     indexTerm_ = XMLUtils::getChildValue(iCdsOptionData, "IndexTerm", false);
     strikeType_ = XMLUtils::getChildValue(iCdsOptionData, "StrikeType", false);
     tradeDate_ = Date();
@@ -402,7 +401,6 @@ XMLNode* IndexCreditDefaultSwapOption::toXML(XMLDocument& doc) const {
     XMLNode* iCdsOptionData = doc.allocNode("IndexCreditDefaultSwapOptionData");
     if (strike_ != Null<Real>())
         XMLUtils::addChild(doc, iCdsOptionData, "Strike", strike_);
-    XMLUtils::addChild(doc, iCdsOptionData, "KnockOut", knockOut_);
     if (!indexTerm_.empty())
         XMLUtils::addChild(doc, iCdsOptionData, "IndexTerm", indexTerm_);
     if (strikeType_ != "")
@@ -426,8 +424,6 @@ const IndexCreditDefaultSwapData& IndexCreditDefaultSwapOption::swap() const { r
 const OptionData& IndexCreditDefaultSwapOption::option() const { return option_; }
 
 const std::string& IndexCreditDefaultSwapOption::indexTerm() const { return indexTerm_; }
-
-bool IndexCreditDefaultSwapOption::knockOut() const { return knockOut_; }
 
 Real IndexCreditDefaultSwapOption::strike() const { return strike_; }
 
