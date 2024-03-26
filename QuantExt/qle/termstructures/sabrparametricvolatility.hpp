@@ -53,12 +53,14 @@ public:
              const QuantLib::Real outputLognormalShift = QuantLib::Null<QuantLib::Real>(),
              const boost::optional<QuantLib::Option::Type> outputOptionType = boost::none) const override;
 
+
 private:
     static constexpr double eps1 = .0000001;
     static constexpr double eps2 = .9999;
 
-    void performCalculations() const override;
+    void calculate();
 
+    std::vector<std::pair<Real, bool>> defaultModelParameters() const;
     ParametricVolatility::MarketQuoteType preferredOutputQuoteType() const;
     std::vector<Real> direct(const std::vector<Real>& x, const Real forward, const Real lognormalShift) const;
     std::vector<Real> inverse(const std::vector<Real>& y, const Real forward, const Real lognormalShift) const;

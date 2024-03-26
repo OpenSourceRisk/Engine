@@ -37,7 +37,9 @@ SabrParametricVolatility::SabrParametricVolatility(
     const MarketQuoteType inputMarketQuoteType, const Handle<YieldTermStructure> discountCurve,
     const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, bool>>> modelParameters)
     : ParametricVolatility(marketSmiles, marketModelType, inputMarketQuoteType, discountCurve),
-      modelVariant_(modelVariant), modelParameters_(std::move(modelParameters)) {}
+      modelVariant_(modelVariant), modelParameters_(std::move(modelParameters)) {
+    calculate();
+}
 
 ParametricVolatility::MarketQuoteType SabrParametricVolatility::preferredOutputQuoteType() const {
     switch (modelVariant_) {
@@ -56,6 +58,26 @@ ParametricVolatility::MarketQuoteType SabrParametricVolatility::preferredOutputQ
     default:
         QL_FAIL("SabrParametricVolatility::preferredOutputQuoteType(): model variant ("
                 << static_cast<int>(modelVariant_) << ") not handled.");
+    }
+}
+
+std::vector<std::pair<Real, bool>> SabrParametricVolatility::defaultModelParameters() const {
+    switch (modelVariant_) {
+    case ModelVariant::Hagan2002Lognormal:
+        return {{0.0050, false}, {0.8, false}, {0.080, false}, {0.0, false}};
+    case ModelVariant::Hagan2002Normal:
+        return {{0.0050, false}, {0.8, false}, {0.080, false}, {0.0, false}};
+    case ModelVariant::Hagan2002NormalZeroBeta:
+        return {{0.0050, false}, {0.0, true}, {0.080, false}, {0.0, false}};
+    case ModelVariant::Antonov2015FreeBoundaryNormal:
+        return {{0.0050, false}, {0.0, false}, {0.080, false}, {0.0, false}};
+    case ModelVariant::KienitzLawsonSwaynePde:
+        return {{0.0050, false}, {0.8, false}, {0.080, false}, {0.0, false}};
+    case ModelVariant::FlochKennedy:
+        return {{0.0050, false}, {0.8, false}, {0.080, false}, {0.0, false}};
+    default:
+        QL_FAIL("SabrParametricVolatility::defaultModelParameters(): model variant (" << static_cast<int>(modelVariant_)
+                                                                                      << ") not handled.");
     }
 }
 
@@ -211,7 +233,7 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
 
     TargetFunction t;
 
-    t.forward_ = marketSmile.forward->value();
+    t.forward_ = marketSmile.forward;
     t.timeToExpiry_ = marketSmile.timeToExpiry;
     t.lognormalShift_ = marketSmile.lognormalShift;
 
@@ -223,21 +245,21 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
     t.params_ = params;
     for (Size i = 0; i < params.size(); ++i)
         t.invParams_.push_back(params[i].first);
-    t.invParams_ = inverse(t.invParams_, marketSmile.forward->value(), marketSmile.lognormalShift);
+    t.invParams_ = inverse(t.invParams_, marketSmile.forward, marketSmile.lognormalShift);
 
     t.inverse_ = [this, &marketSmile](const std::vector<Real>& y) {
-        return inverse(y, marketSmile.forward->value(), marketSmile.lognormalShift);
+        return inverse(y, marketSmile.forward, marketSmile.lognormalShift);
     };
     t.direct_ = [this, &marketSmile](const std::vector<Real>& x) {
-        return direct(x, marketSmile.forward->value(), marketSmile.lognormalShift);
+        return direct(x, marketSmile.forward, marketSmile.lognormalShift);
     };
 
     t.strikes_ = marketSmile.strikes;
     for (Size i = 0; i < marketSmile.marketQuotes.size(); ++i) {
         t.marketQuotes_.push_back(convert(
-            marketSmile.marketQuotes[i]->value(), inputMarketQuoteType_, marketSmile.lognormalShift,
+            marketSmile.marketQuotes[i], inputMarketQuoteType_, marketSmile.lognormalShift,
             marketSmile.optionTypes.empty() ? boost::none : boost::optional<Option::Type>(marketSmile.optionTypes[i]),
-            marketSmile.timeToExpiry, marketSmile.strikes[i], marketSmile.forward->value(), preferredOutputQuoteType(),
+            marketSmile.timeToExpiry, marketSmile.strikes[i], marketSmile.forward, preferredOutputQuoteType(),
             marketSmile.lognormalShift, boost::none));
     }
 
@@ -269,13 +291,18 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
     return std::make_pair(result, problem.functionValue());
 }
 
-void SabrParametricVolatility::performCalculations() const {
+void SabrParametricVolatility::calculate() {
 
     // for each market smile calibrate the SABR variant
 
     calibratedSabrParams_.clear();
     for (auto const& s : marketSmiles_) {
+
         auto key = std::make_pair(s.timeToExpiry, s.underlyingLength);
+
+        if (modelParameters_.empty())
+            modelParameters_[key] = defaultModelParameters();
+
         auto param = modelParameters_.find(key);
         QL_REQUIRE(param != modelParameters_.end(),
                    "SabrParametricVolatility::performCalculations(): no model parameter given for ("
@@ -363,7 +390,6 @@ Real SabrParametricVolatility::evaluate(const Real timeToExpiry, const Real unde
                                         const Real forward, const MarketQuoteType outputMarketQuoteType,
                                         const Real outputLognormalShift,
                                         const boost::optional<QuantLib::Option::Type> outputOptionType) const {
-    calculate();
 
     // TODO add caching
 

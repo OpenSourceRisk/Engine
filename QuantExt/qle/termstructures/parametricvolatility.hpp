@@ -24,7 +24,6 @@
 
 #include <ql/handle.hpp>
 #include <ql/option.hpp>
-#include <ql/patterns/lazyobject.hpp>
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/quote.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
@@ -34,7 +33,7 @@ namespace QuantExt {
 using QuantLib::Null;
 using QuantLib::Real;
 
-class ParametricVolatility : public QuantLib::LazyObject {
+class ParametricVolatility {
 public:
     enum class MarketModelType { Black76 };
     enum class MarketQuoteType { Price, NormalVolatility, ShiftedLognormalVolatility };
@@ -43,15 +42,16 @@ public:
         QuantLib::Real timeToExpiry;
         // not mandatory, used e.g. for swaptions, but not cap / floors
         QuantLib::Real underlyingLength = Null<Real>();
-        QuantLib::Handle<QuantLib::Quote> forward;
+        QuantLib::Real forward;
         // this is also used as output lognormal shift for lnvol - type model variants
         QuantLib::Real lognormalShift = 0.0;
         // if empty, otm strikes are used
         std::vector<QuantLib::Option::Type> optionTypes;
         std::vector<QuantLib::Real> strikes;
-        std::vector<QuantLib::Handle<QuantLib::Quote>> marketQuotes;
+        std::vector<QuantLib::Real> marketQuotes;
     };
 
+    virtual ~ParametricVolatility() {}
     ParametricVolatility(const std::vector<MarketSmile> marketSmiles, const MarketModelType marketModelType,
                          const MarketQuoteType inputMarketQuoteType,
                          const QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve);

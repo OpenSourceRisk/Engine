@@ -30,15 +30,7 @@ ParametricVolatility::ParametricVolatility(const std::vector<MarketSmile> market
                                            const MarketQuoteType inputMarketQuoteType,
                                            const Handle<YieldTermStructure> discountCurve)
     : marketSmiles_(std::move(marketSmiles)), marketModelType_(marketModelType),
-      inputMarketQuoteType_(inputMarketQuoteType), discountCurve_(std::move(discountCurve)) {
-    for (auto const& s : marketSmiles_) {
-        registerWith(s.forward);
-        for (auto const& p : s.marketQuotes) {
-            registerWith(p);
-        }
-    }
-    registerWith(discountCurve);
-}
+      inputMarketQuoteType_(inputMarketQuoteType), discountCurve_(std::move(discountCurve)) {}
 
 Real ParametricVolatility::convert(const Real inputQuote, const MarketQuoteType inputMarketQuoteType,
                                    const Real inputLognormalShift,
@@ -66,7 +58,7 @@ Real ParametricVolatility::convert(const Real inputQuote, const MarketQuoteType 
     switch (marketModelType_) {
     case MarketModelType::Black76:
         if (inputMarketQuoteType_ == MarketQuoteType::Price) {
-            forwardPremium = inputQuote / discountCurve_.empty() ? 1.0 : discountCurve_->discount(timeToExpiry);
+            forwardPremium = inputQuote / (discountCurve_.empty() ? 1.0 : discountCurve_->discount(timeToExpiry));
         } else if (inputMarketQuoteType_ == MarketQuoteType::NormalVolatility) {
             forwardPremium =
                 bachelierBlackFormula(inputOptionType, strike, forward, inputQuote * std::sqrt(timeToExpiry));
@@ -91,7 +83,7 @@ Real ParametricVolatility::convert(const Real inputQuote, const MarketQuoteType 
     switch (marketModelType_) {
     case MarketModelType::Black76: {
         if (outputMarketQuoteType == MarketQuoteType::Price) {
-            return forwardPremium * discountCurve_.empty() ? 1.0 : discountCurve_->discount(timeToExpiry);
+            return forwardPremium * (discountCurve_.empty() ? 1.0 : discountCurve_->discount(timeToExpiry));
         } else if (outputMarketQuoteType == MarketQuoteType::NormalVolatility) {
             return exactBachelierImpliedVolatility(outputOptionType, strike, forward, timeToExpiry, forwardPremium);
         } else if (outputMarketQuoteType == MarketQuoteType::ShiftedLognormalVolatility) {

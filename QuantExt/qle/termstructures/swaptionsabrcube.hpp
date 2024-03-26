@@ -34,12 +34,18 @@ using namespace QuantLib;
 
 class ParametricVolatilitySmileSection : public QuantLib::SmileSection {
 public:
-    virtual Real minStrike() const override { return -QL_MAX_REAL; }
-    virtual Real maxStrike() const override { return QL_MAX_REAL; }
-    virtual Real atmLevel() const override { return 0.0; }
+    ParametricVolatilitySmileSection(const Real optionTime, const Real swapLength, const Real atmLevel,
+                                     const boost::shared_ptr<ParametricVolatility> parametricVolatility,
+                                     const ParametricVolatility::MarketQuoteType outputMarketQuoteType);
+    Real minStrike() const override { return -QL_MAX_REAL; }
+    Real maxStrike() const override { return QL_MAX_REAL; }
+    Real atmLevel() const override;
 
 private:
-    virtual Volatility volatilityImpl(Rate strike) const override { return 0.0; }
+    Volatility volatilityImpl(Rate strike) const override;
+    Real optionTime_, swapLength_, atmLevel_;
+    boost::shared_ptr<ParametricVolatility> parametricVolatility_;
+    ParametricVolatility::MarketQuoteType outputMarketQuoteType_;
 };
 
 class SwaptionSabrCube : public SwaptionVolatilityCube {
@@ -50,8 +56,9 @@ public:
                      const std::vector<std::vector<Handle<Quote>>>& volSpreads,
                      const boost::shared_ptr<SwapIndex>& swapIndexBase,
                      const boost::shared_ptr<SwapIndex>& shortSwapIndexBase,
-                     QuantExt::SabrParametricVolatility::ModelVariant modelVariant,
-                     boost::optional<QuantLib::VolatilityType> outputVolatilityType = boost::none);
+                     const QuantExt::SabrParametricVolatility::ModelVariant modelVariant,
+                     const boost::optional<QuantLib::VolatilityType> outputVolatilityType = boost::none,
+                     const std::vector<std::pair<Real, bool>>& initialModelParameters = {});
     void performCalculations() const override;
     boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const override;
 
@@ -60,6 +67,7 @@ private:
     mutable boost::shared_ptr<ParametricVolatility> parametricVolatility_;
     QuantExt::SabrParametricVolatility::ModelVariant modelVariant_;
     boost::optional<QuantLib::VolatilityType> outputVolatilityType_;
+    std::vector<std::pair<Real, bool>> initialModelParameters_;
 };
 
 } // namespace QuantExt
