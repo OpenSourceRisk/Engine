@@ -34,12 +34,33 @@ SwaptionSabrCube::SwaptionSabrCube(const Handle<SwaptionVolatilityStructure>& at
                                    QuantExt::SabrParametricVolatility::ModelVariant modelVariant,
                                    boost::optional<QuantLib::VolatilityType> outputVolatilityType)
     : SwaptionVolatilityCube(atmVolStructure, optionTenors, swapTenors, strikeSpreads, volSpreads, swapIndexBase,
-                             shortSwapIndexBase, false) {}
+                             shortSwapIndexBase, false),
+      modelVariant_(modelVariant), outputVolatilityType_(outputVolatilityType) {
 
-void SwaptionSabrCube::performCalculations() const {}
+    registerWith(atmVolStructure);
+
+    for (auto const& v : volSpreads)
+        for (auto const& s : v)
+            registerWith(s);
+}
+
+void SwaptionSabrCube::performCalculations() const {
+    cache_.clear();
+    std::vector<ParametricVolatility::MarketSmile> marketSmiles;
+    parametricVolatility_ = boost::make_shared<SabrParametricVolatility>(
+        modelVariant_, marketSmiles, ParametricVolatility::MarketModelType::Black76,
+        volatilityType() == QuantLib::Normal ? ParametricVolatility::MarketQuoteType::NormalVolatility
+                                             : ParametricVolatility::MarketQuoteType::ShiftedLognormalVolatility,
+        Handle<YieldTermStructure>(),
+        std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, bool>>>());
+}
 
 boost::shared_ptr<SmileSection> SwaptionSabrCube::smileSectionImpl(Time optionTime, Time swapLength) const {
-    return {};
+    if (auto c = cache_.find(std::make_pair(optionTime, swapLength)); c != cache_.end())
+        return c->second;
+    auto tmp = boost::make_shared<ParametricVolatilitySmileSection>();//optionTime, swapLength, parametricVolatility_);
+    cache_[std::make_pair(optionTime, swapLength)] = tmp;
+    return tmp;
 }
 
 } // namespace QuantExt

@@ -32,6 +32,16 @@
 namespace QuantExt {
 using namespace QuantLib;
 
+class ParametricVolatilitySmileSection : public QuantLib::SmileSection {
+public:
+    virtual Real minStrike() const override { return -QL_MAX_REAL; }
+    virtual Real maxStrike() const override { return QL_MAX_REAL; }
+    virtual Real atmLevel() const override { return 0.0; }
+
+private:
+    virtual Volatility volatilityImpl(Rate strike) const override { return 0.0; }
+};
+
 class SwaptionSabrCube : public SwaptionVolatilityCube {
 public:
     SwaptionSabrCube(const Handle<SwaptionVolatilityStructure>& atmVolStructure,
@@ -46,6 +56,10 @@ public:
     boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const override;
 
 private:
+    mutable std::map<std::pair<Real, Real>, boost::shared_ptr<ParametricVolatilitySmileSection>> cache_;
+    mutable boost::shared_ptr<ParametricVolatility> parametricVolatility_;
+    QuantExt::SabrParametricVolatility::ModelVariant modelVariant_;
+    boost::optional<QuantLib::VolatilityType> outputVolatilityType_;
 };
 
 } // namespace QuantExt
