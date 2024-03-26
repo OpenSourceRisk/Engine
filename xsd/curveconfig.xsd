@@ -245,7 +245,9 @@
       </xs:element>
       <xs:element type="dimensionType" name="Dimension" minOccurs="0"/>
       <xs:element type="volatilityType" name="VolatilityType" minOccurs="0"/>
-      <xs:element type="extrapolationType" name="Extrapolation" minOccurs="0"/>
+      <xs:element type="xs:string" name="Interpolation" minOccurs="0"/>
+      <xs:element type="xs:string" name="Extrapolation" minOccurs="0"/>
+      <xs:element type="xs:string" name="OutputVolatilityType" minOccurs="0"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0"/>
       <xs:element type="calendar" name="Calendar" minOccurs="0"/>
       <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="0"/>
