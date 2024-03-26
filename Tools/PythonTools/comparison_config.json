@@ -168,6 +168,7 @@
           "IMModel",
           "TradeType"
         ],
+        "require_equal_optional_cols": false,
         "optional_cols": [
           "collect_regulations",
           "post_regulations"
