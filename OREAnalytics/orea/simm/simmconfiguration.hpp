@@ -27,9 +27,8 @@
 #include <vector>
 
 #include <boost/optional.hpp>
-
+#include <orea/simm/crifconfiguration.hpp>
 #include <orea/simm/crifrecord.hpp>
-#include <orea/simm/simmbucketmapper.hpp>
 #include <ql/indexes/interestrateindex.hpp>
 #include <ql/types.hpp>
 
@@ -37,7 +36,7 @@ namespace ore {
 namespace analytics {
 
 //! Abstract base class defining the interface for a SIMM configuration
-class SimmConfiguration {
+class SimmConfiguration : public CrifConfiguration {
 public:
     virtual ~SimmConfiguration() {}
 
@@ -127,15 +126,6 @@ public:
         return (less_than(pc1, pc2) ? pc2 : pc1);
     }
 
-    //! Returns the SIMM configuration name
-    virtual const std::string& name() const = 0;
-
-    //! Returns the SIMM configuration version
-    virtual const std::string& version() const = 0;
-
-    //! Returns the SIMM bucket mapper used by the configuration
-    virtual const boost::shared_ptr<SimmBucketMapper>& bucketMapper() const = 0;
-
     //! Return the SIMM <em>bucket</em> names for the given risk type \p rt
     //! An empty vector is returned if the risk type has no buckets
     virtual std::vector<std::string> buckets(const CrifRecord::RiskType& rt) const = 0;
@@ -143,12 +133,11 @@ public:
     //! Return true if the SIMM risk type \p rt has buckets
     virtual bool hasBuckets(const CrifRecord::RiskType& rt) const = 0;
 
-    /*! Return the SIMM <em>bucket</em> name for the given risk type \p rt
-        and \p qualifier
+    //! Return true if the SIMM risk type \p rt has buckets
+    bool hasBucketMapping(const CrifRecord::RiskType& rt, const std::string& qualifier) const override {
+        return bucketMapper()->has(rt, qualifier);
+    }
 
-        \warning Throws an error if there are no buckets for the risk type \p rt
-    */
-    virtual std::string bucket(const CrifRecord::RiskType& rt, const std::string& qualifier) const = 0;
 
     //! Return the list of SIMM <em>Label1</em> values for risk type \p rt
     //! An empty vector is returned if the risk type does not use <em>Label1</em>
@@ -157,17 +146,6 @@ public:
     //! Return the list of SIMM <em>Label2</em> values for risk type \p rt
     //! An empty vector is returned if the risk type does not use <em>Label2</em>
     virtual std::vector<std::string> labels2(const CrifRecord::RiskType& rt) const = 0;
-
-    /*! Return the SIMM <em>Label2</em> value for the given interest rate index
-        \p irIndex. For interest rate indices, this is the SIMM sub curve name
-        e.g. 'Libor1m', 'Libor3m' etc.
-    */
-    virtual std::string labels2(const boost::shared_ptr<QuantLib::InterestRateIndex>& irIndex) const = 0;
-
-    /*! Return the SIMM <em>Label2</em> value for the given Libor tenor
-        \p p. This is the SIMM sub curve name, e.g. 'Libor1m', 'Libor3m' etc.
-    */
-    virtual std::string labels2(const QuantLib::Period& p) const = 0;
 
     /*! Add SIMM <em>Label2</em> values under certain circumstances.
 
