@@ -1,6 +1,7 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
  Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
+ Copyright (C) 2024 Oleg Kulkov
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -31,10 +32,12 @@
 #include <ql/termstructures/yield/piecewisezerospreadedtermstructure.hpp>
 #include <ql/termstructures/yield/ratehelpers.hpp>
 #include <ql/termstructures/yield/overnightindexfutureratehelper.hpp>
+#include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/time/imm.hpp>
 #include <ql/version.hpp>
+#include <ql/interestrate.hpp>
 
 #include <ql/indexes/ibor/all.hpp>
 #include <ql/math/interpolations/convexmonotoneinterpolation.hpp>
@@ -61,6 +64,7 @@
 #include <qle/termstructures/yieldplusdefaultyieldtermstructure.hpp>
 #include <qle/termstructures/iborfallbackcurve.hpp>
 #include <qle/termstructures/bondyieldshiftedcurvetermstructure.hpp>
+#include <qle/termstructures/cheapesttodelivercurve.hpp>
 
 #include <ored/marketdata/defaultcurve.hpp>
 #include <ored/marketdata/fittedbondcurvehelpermarket.hpp>
@@ -341,6 +345,9 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
         } else if (curveSegments_[0]->type() == YieldCurveSegment::Type::BondYieldShifted) {
             DLOG("Building BondYieldShiftedCurve " << curveSpec_);
             buildBondYieldShiftedCurve();
+        } else if (curveSegments_[0]->type() == YieldCurveSegment::Type::CheapestToDeliver) {
+            DLOG("Building CheapestToDeliverCurve " << curveSpec_);
+            buildCheapestToDeliverCurve();
         } else {
             DLOG("Bootstrapping YieldCurve " << curveSpec_);
             buildBootstrappedCurve();
@@ -1340,6 +1347,162 @@ boost::shared_ptr<YieldCurve> YieldCurve::getYieldCurve(const string& ccy, const
     } else {
         return nullptr;
     }
+}
+
+void YieldCurve::buildCheapestToDeliverCurve() {
+
+    QL_REQUIRE(curveSegments_.size() == 1, "Only one ctd curve segment is supported yet.");
+    QL_REQUIRE(curveSegments_[0]->type() == YieldCurveSegment::Type::CheapestToDeliver, "The curve segment is not of type Cheapest To Deliver.");
+
+    boost::shared_ptr<CheapestToDeliverCurveSegment> segment =
+        boost::dynamic_pointer_cast<CheapestToDeliverCurveSegment>(curveSegments_[0]);
+    QL_REQUIRE(segment != nullptr, "expected CheapestToDeliverCurveSegment, this is unexpected");
+
+    const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
+
+    boost::shared_ptr<Convention> convention = conventions->get(segment->conventionsID());
+    QL_REQUIRE(convention, "No conventions found with ID: " << segment->conventionsID());
+    QL_REQUIRE(convention->type() == Convention::Type::Zero, "Conventions ID does not give zero rate conventions.");
+    boost::shared_ptr<ZeroRateConvention> zeroConvention = boost::dynamic_pointer_cast<ZeroRateConvention>(convention);
+    zeroDayCounter_ = zeroConvention->dayCounter();
+    Compounding comp = zeroConvention->compounding();
+    Frequency freq = zeroConvention->compoundingFrequency();
+
+    std::vector<Handle<YieldTermStructure>> ctdCurves;
+    std::vector<Handle<YieldTermStructure>> origAltCurves;
+    std::vector<QuantLib::Period> ctdCurvePillars;
+    std::vector<QuantLib::Date> ctdDates;
+    std::vector<Handle<Quote>> ctdDfs;
+    //std::vector<Rate> ctdZrs;
+
+    map<std::string, std::string> ctdCurveNames = segment->ctdCurves();
+    map<std::string, Real> ctdCurveSpreads = segment->ctdSpreads();
+
+    string ccyCTDs("");
+    // Find the underlying curves in the reference curves and make spreaded from these
+    // using corresponding spreads
+    for (auto const& crv : ctdCurveNames) {
+        ccyCTDs.append(" " + crv.first);
+        auto key = yieldCurveKey(currency_, crv.second, asofDate_);
+        auto tmpYldCrv = requiredYieldCurves_.find(key);
+        QL_REQUIRE(tmpYldCrv != requiredYieldCurves_.end(), "could not find the ctd curve '" << crv.second << "'");
+        auto sprCTD = ctdCurveSpreads.find(crv.first);
+        if (sprCTD != ctdCurveSpreads.end()) {
+            DLOG("constructing ctd curve from " << crv.second << " and spread of " << std::to_string(sprCTD->second) << ".");
+            //ctdCals.push_back(tmpYldCrv->second->handle()->calendar());
+            origAltCurves.push_back(tmpYldCrv->second->handle());
+            //TODO: use correct conventions
+            ctdCurves.push_back(Handle<YieldTermStructure>
+                                (boost::make_shared<ZeroSpreadedTermStructure>(tmpYldCrv->second->handle(),
+                                                                               Handle<Quote>(boost::make_shared<SimpleQuote>(sprCTD->second)),
+                                                                               comp,
+                                                                               freq,
+                                                                               tmpYldCrv->second->handle()->dayCounter())));
+        } else {
+            DLOG("spread in " << crv.first << " has not been found. Use zero spread instead.");
+            ctdCurves.push_back(tmpYldCrv->second->handle());
+        }
+
+    }
+
+
+    ctdDates.push_back(asofDate_);
+    // pull dates defined in default calibration and in the schedule if any
+    if (segment->getRule()) {
+
+        std::vector<pair<Period, Period>> periods = segment->getPeriods();
+        sort(periods.begin(),periods.end(),[](pair<Period, Period> &left, pair<Period, Period> &right) { return left.second < right.second; });
+        std::vector<QuantLib::Date> tmpDates;
+        QuantLib::Date tmpDate;
+        for (auto const& p : periods) {
+            do {
+                if (tmpDate != Null<Date>()) {
+                    ctdDates.push_back(NullCalendar().adjust(tmpDate));
+                }
+                tmpDate = ctdDates.back() + p.second;
+            } while (tmpDate < asofDate_ + p.first);
+            ctdDates.push_back(NullCalendar().adjust(asofDate_ + p.first));
+        }
+    } else {
+        //adding the pillars
+        for (Period const& p : segment->pillars()) {
+            //ctdCurvePillars.push_back(p);
+            ctdDates.push_back(NullCalendar().adjust(asofDate_ + p));
+        }
+    }
+
+    if (ctdDates.size() < 1) {
+        DLOG("no dates/pillars for the curve have been added from the curve configuration. Use default grid instead.");
+    }
+
+    // add default calibration pillars
+    for (Period const& p : YieldCurveCalibrationInfo::defaultPeriods) {
+        ctdDates.push_back(NullCalendar().adjust(asofDate_ + p));
+    }
+
+    //remove duplicates and sort
+    sort(ctdDates.begin(), ctdDates.end());
+    ctdDates.erase(unique(ctdDates.begin(),
+                          ctdDates.end()),
+                   ctdDates.end());
+
+    //set calibration dates in the calibration info
+    if (calibrationInfo_ == nullptr)
+        calibrationInfo_ = boost::make_shared<YieldCurveCalibrationInfo>();
+    for (auto const& p : ctdDates)
+        calibrationInfo_->pillarDates.push_back(p);
+
+    //initialize as of discount factor equal to 1.0
+    auto q = boost::make_shared<SimpleQuote>(1.0);
+    ctdDfs.push_back(Handle<Quote>(q));
+
+    // calculate discount factors via daily forward rate comparison
+    for (Size l = 1; l < ctdDates.size(); ++l) {
+        Date pillarStartDate(ctdDates[l - 1]);
+        Date pillarEndDate(ctdDates[l]);
+        QL_REQUIRE(pillarStartDate != pillarEndDate,"equal dates in the tenor sequence. This is unexpected.");
+        QuantLib::Date runningDate(pillarStartDate);
+        QuantLib::DiscountFactor minDcf = ctdDfs[l - 1]->value();
+        while (runningDate < pillarEndDate) {
+            //TODO: use correct conventions
+            QuantLib::InterestRate maxFwd(QL_MIN_REAL, zeroDayCounter_, comp, freq);
+            for (auto const& c : ctdCurves) {
+                    QuantLib::InterestRate altFwd =
+                        c->forwardRate(runningDate, NullCalendar().advance(runningDate, 1 * Days, Following, false), zeroDayCounter_, comp, freq, extrapolation_);
+                    if (maxFwd < altFwd) {
+                        maxFwd = altFwd;
+                    }
+            }
+            //calculate new ctd discount factor using previous discount factor anf current forward rate
+            minDcf = minDcf * maxFwd.discountFactor(runningDate,NullCalendar().advance(runningDate, 1 * Days, Following, false));
+            runningDate = NullCalendar().advance(runningDate, 1 * Days, Following, false);
+        }
+
+        ctdDfs.push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(minDcf)));
+
+    }
+
+    DLOG("building " << currency_.code() << " cash flow ctd curve based on currencies: " << ccyCTDs);
+
+    switch (interpolationMethod_) {
+
+    case InterpolationMethod::LogLinear: {
+
+        p_ = boost::make_shared<CheapestToDeliverTermStructure>(ctdCurves, ctdDates, ctdDfs, QuantExt::CheapestToDeliverTermStructure::Interpolation::logLinear);
+    }
+    break;
+
+    case InterpolationMethod::Linear: {
+
+        p_ = boost::make_shared<CheapestToDeliverTermStructure>(ctdCurves, ctdDates, ctdDfs, QuantExt::CheapestToDeliverTermStructure::Interpolation::linearZero);
+    }
+    break;
+
+    default:
+        DLOG("Interpolation method not supported. Using LogLinear instead.");
+        p_ = boost::make_shared<CheapestToDeliverTermStructure>(ctdCurves, ctdDates, ctdDfs, QuantExt::CheapestToDeliverTermStructure::Interpolation::logLinear);
+    }
+
 }
 
 void YieldCurve::buildFittedBondCurve() {

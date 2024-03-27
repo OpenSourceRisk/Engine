@@ -1,6 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
- Copyright (C) 2023 Oleg Kulkov
+ Copyright (C) 2023,2024 Oleg Kulkov
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -72,6 +72,8 @@ YieldCurveSegment::Type parseYieldCurveSegment(const string& s) {
         return YieldCurveSegment::Type::DiscountRatio;
     else if (iequals(s, "FittedBond"))
         return YieldCurveSegment::Type::FittedBond;
+    else if (iequals(s, "Cheapest To Deliver"))
+        return YieldCurveSegment::Type::CheapestToDeliver;
     else if (iequals(s, "Yield Plus Default"))
         return YieldCurveSegment::Type::YieldPlusDefault;
     else if (iequals(s, "Weighted Average"))
@@ -93,6 +95,7 @@ class SegmentIDGetter : public AcyclicVisitor,
                         public Visitor<DiscountRatioYieldCurveSegment>,
                         public Visitor<FittedBondYieldCurveSegment>,
                         public Visitor<WeightedAverageYieldCurveSegment>,
+                        public Visitor<CheapestToDeliverCurveSegment>,
                         public Visitor<YieldPlusDefaultYieldCurveSegment>,
                         public Visitor<BondYieldShiftedYieldCurveSegment>,
                         public Visitor<IborFallbackCurveSegment> {
@@ -112,6 +115,7 @@ public:
     void visit(WeightedAverageYieldCurveSegment& s) override;
     void visit(YieldPlusDefaultYieldCurveSegment& s) override;
     void visit(BondYieldShiftedYieldCurveSegment& s) override;
+    void visit(CheapestToDeliverCurveSegment& s) override;
     void visit(IborFallbackCurveSegment& s) override;
 
 private:
@@ -191,6 +195,15 @@ void SegmentIDGetter::visit(BondYieldShiftedYieldCurveSegment& s) {
     for (auto const& c : s.iborIndexCurves())
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(c.second);
     requiredCurveIds_[CurveSpec::CurveType::Yield].insert(s.referenceCurveID());
+}
+
+void SegmentIDGetter::visit(CheapestToDeliverCurveSegment& s) {
+    for (auto const& c : s.ctdCurves()) {
+        string cname = c.second;
+        if (curveID_ != cname && !cname.empty()) {
+            requiredCurveIds_[CurveSpec::CurveType::Yield].insert(cname);
+        }
+    }
 }
 
 void SegmentIDGetter::visit(WeightedAverageYieldCurveSegment& s) {
@@ -281,6 +294,8 @@ void YieldCurveConfig::fromXML(XMLNode* node) {
                 segment.reset(new BondYieldShiftedYieldCurveSegment());
             } else if (childName == "WeightedAverage") {
                 segment.reset(new WeightedAverageYieldCurveSegment());
+            } else if (childName == "CheapestToDeliver") {
+                segment.reset(new CheapestToDeliverCurveSegment());
             } else if (childName == "YieldPlusDefault") {
                 segment.reset(new YieldPlusDefaultYieldCurveSegment());
             } else if(childName == "IborFallback"){
@@ -399,7 +414,8 @@ void YieldCurveSegment::fromXML(XMLNode* node) {
         {"WeightedAverage", {"Weighted Average"}},
         {"DiscountRatio", {"Discount Ratio"}},
         {"IborFallback", {"Ibor Fallback"}},
-        {"BondYieldShifted", {"Bond Yield Shifted"}}
+        {"BondYieldShifted", {"Bond Yield Shifted"}},
+        {"CheapestToDeliver", {"Cheapest To Deliver"}}
         };
 
     std::list<std::string> validTypes = validSegmentTypes.at(name);
@@ -814,6 +830,76 @@ XMLNode* YieldPlusDefaultYieldCurveSegment::toXML(XMLDocument& doc) {
 
 void YieldPlusDefaultYieldCurveSegment::accept(AcyclicVisitor& v) {
     Visitor<YieldPlusDefaultYieldCurveSegment>* v1 = dynamic_cast<Visitor<YieldPlusDefaultYieldCurveSegment>*>(&v);
+    if (v1 != 0)
+        v1->visit(*this);
+    else
+        YieldCurveSegment::accept(v);
+}
+
+void CheapestToDeliverCurveSegment::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "CheapestToDeliver");
+    YieldCurveSegment::fromXML(node);
+    vector<string> ctdCurveCcys;
+    vector<string> ctdCurves = XMLUtils::getChildrenValuesWithAttributes(
+        node, "CollateralCurves", "CollateralCurve", "currency", ctdCurveCcys, true);
+    for (Size i = 0; i < ctdCurveCcys.size(); ++i) {
+        ctdCurves_[ctdCurveCcys[i]] = ctdCurves[i];
+    }
+
+    vector<string> ctSpreadsCcy;
+    vector<string> ctdSpreads = XMLUtils::getChildrenValuesWithAttributes(
+        node, "CollateralSpreads", "CollateralSpread", "currency", ctSpreadsCcy, true);
+
+    //collect information on the schedule for the final curve grid
+    XMLNode* pillarGenNode = XMLUtils::getChildNode(node, "PillarsGeneration");
+    rule_ = parseBool(XMLUtils::getChildValue(pillarGenNode, "Rule", false, "false"));
+
+    if (rule_) {
+
+        vector<string> grid;
+        vector<string> tenors = XMLUtils::getChildrenValuesWithAttributes(
+            pillarGenNode, "Periods", "Period", "maxTenor", grid, true);
+        for (Size i = 0; i < grid.size(); ++i) {
+            Period tmpMaxPeriod = parsePeriod(grid[i]);
+            Period tmpTenor = parsePeriod(tenors[i]);
+            if (tmpMaxPeriod > tmpTenor) {
+                periods_.push_back(std::make_pair(tmpMaxPeriod,tmpTenor));
+            } else {
+                ALOG("Period " << tmpMaxPeriod << " must not be longer than maximum tenor " << tmpTenor);
+            }
+        }
+    } else {
+        vector<std::string> pillars = XMLUtils::getChildrenValuesAsStrings(pillarGenNode, "Pillars", true);
+        pillars_ = parseVectorOfValues<Period>(pillars, &parsePeriod);
+
+    }
+
+    for (Size i = 0; i < ctdSpreads.size(); ++i) {
+        ctdSpreads_[ctSpreadsCcy[i]] = parseReal(ctdSpreads[i]);
+        auto it = ctdCurves_.find(ctSpreadsCcy[i]);
+        if (it == ctdCurves_.end()) {
+            QL_FAIL("CTD spread for currency " << ctdCurveCcys[i] << " is not defined in Spreads.");
+        }
+    }
+
+    QL_REQUIRE(ctdCurves_.size() == ctdSpreads_.size(), "size of ctd spreads " << ctdSpreads_.size() << " does not correspond to size of ctd curves " << ctdCurves_.size());
+
+}
+
+XMLNode* CheapestToDeliverCurveSegment::toXML(XMLDocument& doc) {
+    XMLNode* node = YieldCurveSegment::toXML(doc);
+    XMLUtils::setNodeName(doc, node, "CheapestToDeliver");
+    //XMLUtils::addChild(doc, node, "CCBasisIncluded", ccBasisIncluded_);
+    XMLUtils::addChild(doc, node, "CollateralCurves");
+    XMLUtils::addChild(doc, node, "CollateralSpreads");
+    XMLUtils::addGenericChildAsList(doc, node, "Pillars", pillars_);
+    XMLUtils::addChild(doc, node, "Conventions");
+    XMLUtils::addChild(doc, node, "PillarsGeneration");
+    return node;
+}
+
+void CheapestToDeliverCurveSegment::accept(AcyclicVisitor& v) {
+    Visitor<CheapestToDeliverCurveSegment>* v1 = dynamic_cast<Visitor<CheapestToDeliverCurveSegment>*>(&v);
     if (v1 != 0)
         v1->visit(*this);
     else
