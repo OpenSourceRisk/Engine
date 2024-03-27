@@ -408,7 +408,8 @@ void CreditReferenceDatum::fromXML(XMLNode* node) {
         parseDate(XMLUtils::getChildValue(innerNode, "SuccessorImplementationDate", false));
     creditData_.predecessorImplementationDate =
         parseDate(XMLUtils::getChildValue(innerNode, "PredecessorImplementationDate", false));
-    creditData_.entityType = XMLUtils::getChildValue(innerNode, "EntityType", false) == "Corp."
+    creditData_.entityType = (XMLUtils::getChildValue(innerNode, "EntityType", false) == "Corp."|| 
+                              XMLUtils::getChildValue(innerNode, "EntityType", false) == "Corp")
                                  ? "Corporate"
                                  : XMLUtils::getChildValue(innerNode, "EntityType", false);
 }
@@ -497,7 +498,7 @@ void BasicReferenceDataManager::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "ReferenceData");
     for (XMLNode* child = XMLUtils::getChildNode(node, "ReferenceDatum"); child;
          child = XMLUtils::getNextSibling(child, "ReferenceDatum")) {
-	    addFromXMLNode(child);
+        addFromXMLNode(child);
     }
 }
 
