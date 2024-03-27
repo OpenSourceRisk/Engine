@@ -56,7 +56,7 @@ MarketRiskBacktest::MarketRiskBacktest(
     const bool requireTradePnl)
     : MarketRiskReport(baseCurrency, btArgs->backtestPeriod_, hisScenGen, std::move(sensiArgs), std::move(revalArgs),
                        std::move(mtArgs), breakdown, requireTradePnl),
-      btArgs_(std::move(btArgs)) {    
+      btArgs_(std::move(btArgs)) {
     init();
 }
 
@@ -68,6 +68,12 @@ void MarketRiskBacktest::init() {
     requireTradePnl_ = callTradeIds_ != postTradeIds_;
 
     MarketRiskReport::init();
+}
+
+
+std::vector<ore::data::TimePeriod> MarketRiskBacktest::timePeriods() { 
+    std::vector<TimePeriod> tps{btArgs_->benchmarkPeriod_, btArgs_->backtestPeriod_};
+    return tps;
 }
 
 bool MarketRiskBacktest::runTradeDetail(const ext::shared_ptr<MarketRiskReport::Reports>& reports) {
