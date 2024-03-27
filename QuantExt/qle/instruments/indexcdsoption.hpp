@@ -43,7 +43,7 @@ public:
                    CdsOption::StrikeType strikeType_ = CdsOption::Spread,
                    Settlement::Type settlementType = Settlement::Cash,
                    QuantLib::Real tradeDateNtl = QuantLib::Null<QuantLib::Real>(),
-                   QuantLib::Real realisedFep = QuantLib::Null<QuantLib::Real>(), bool knocksOut = false,
+                   QuantLib::Real realisedFep = QuantLib::Null<QuantLib::Real>(),
                    const QuantLib::Period& indexTerm = 5 * Years);
 
     //! \name Instrument interface
@@ -77,7 +77,6 @@ private:
     Settlement::Type settlementType_;
     QuantLib::Real tradeDateNtl_;
     QuantLib::Real realisedFep_;
-    bool knocksOut_;
     QuantLib::Period indexTerm_;
 
     mutable QuantLib::Real riskyAnnuity_;
@@ -94,8 +93,7 @@ class IndexCdsOption::arguments : public IndexCreditDefaultSwap::arguments, publ
 public:
     arguments()
         : strike(QuantLib::Null<QuantLib::Real>()), strikeType(CdsOption::Spread), settlementType(Settlement::Cash),
-          tradeDateNtl(QuantLib::Null<QuantLib::Real>()), realisedFep(QuantLib::Null<QuantLib::Real>()),
-          knocksOut(false) {}
+          tradeDateNtl(QuantLib::Null<QuantLib::Real>()), realisedFep(QuantLib::Null<QuantLib::Real>()) {}
 
     boost::shared_ptr<IndexCreditDefaultSwap> swap;
     QuantLib::Real strike;
@@ -103,7 +101,6 @@ public:
     Settlement::Type settlementType;
     QuantLib::Real tradeDateNtl;
     QuantLib::Real realisedFep;
-    bool knocksOut;
     QuantLib::Period indexTerm;
 
     void validate() const override;
