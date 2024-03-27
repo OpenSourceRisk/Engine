@@ -289,6 +289,12 @@ void Log::registerIndependentLogger(const boost::shared_ptr<IndependentLogger>& 
     independentLoggers_[logger->name()] = logger;
 }
 
+void Log::clearAllIndependentLoggers() {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    for (auto& [_, l] : independentLoggers_)
+        l->clear();
+}
+
 const bool Log::hasLogger(const string& name) const {
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     return loggers_.find(name) != loggers_.end();
