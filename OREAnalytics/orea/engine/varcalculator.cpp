@@ -100,7 +100,8 @@ VarReport::VarReport(const std::string& baseCurrency, const QuantLib::ext::share
                      const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
                      std::unique_ptr<SensiRunArgs> sensiArgs, std::unique_ptr<FullRevalArgs> fullRevalArgs, const bool breakdown) 
     : MarketRiskReport(baseCurrency, period, hisScenGen, std::move(sensiArgs), std::move(fullRevalArgs), nullptr, breakdown), portfolio_(portfolio), 
-      portfolioFilter_(portfolioFilter), p_(p) {   
+      portfolioFilter_(portfolioFilter), p_(p) {
+    init();
 
     riskGroups_ = QuantLib::ext::make_shared<VarRiskGroupContainer>();
     tradeGroups_ = QuantLib::ext::make_shared<VarTradeGroupContainer>();
