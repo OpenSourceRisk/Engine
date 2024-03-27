@@ -25,6 +25,7 @@
 #pragma warning(disable : 4503)
 #endif
 
+#include <orea/app/cleanupsingletons.hpp>
 #include <orea/app/marketdatacsvloader.hpp>
 #include <orea/app/marketdatainmemoryloader.hpp>
 #include <orea/app/oreapp.hpp>
@@ -39,6 +40,7 @@
 #include <ored/portfolio/collateralbalance.hpp>
 
 #include <qle/version.hpp>
+
 
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/time/calendars/all.hpp>
@@ -157,7 +159,7 @@ boost::shared_ptr<AggregationScenarioData> OREApp::getMarketCube(std::string cub
 }
 
 std::vector<std::string> OREApp::getErrors() {
-    return structuredLogger_->messages();
+    return errorMessages_;
 }
 
 Real OREApp::getRunTime() {
@@ -287,60 +289,57 @@ void OREApp::analytics() {
     LOG("ORE analytics done");
 }
 
-OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console, 
-               const boost::filesystem::path& logRootPath)
-    : params_(params), inputs_(nullptr) {
 
-    if (console) {
+void OREApp::initFromParams() {
+    if (console_) {
         ConsoleLog::instance().switchOn();
     }
 
-    string outputPath = params_->get("setup", "outputPath");
-    string logFile = outputPath + "/" + params_->get("setup", "logFile");
-    Size logMask = 15;
+    outputPath_ = params_->get("setup", "outputPath");
+    logFile_ = outputPath_ + "/" + params_->get("setup", "logFile");
+    logMask_ = 15;
     // Get log mask if available
     if (params_->has("setup", "logMask")) {
-        logMask = static_cast<Size>(parseInteger(params_->get("setup", "logMask")));
+        logMask_ = static_cast<Size>(parseInteger(params_->get("setup", "logMask")));
     }
 
-    string progressLogFile, structuredLogFile;
-    Size progressLogRotationSize = 0;
-    bool progressLogToConsole = false;
-    Size structuredLogRotationSize = 0;
+    progressLogRotationSize_ = 0;
+    progressLogToConsole_ = false;
+    structuredLogRotationSize_ = 0;
     
     if (params_->hasGroup("logging")) {
-        string logFileOverride = params_->get("logging", "logFile", false);
-        if (!logFileOverride.empty()) {
-            logFile = outputPath + '/' + logFileOverride;
-        }
-        string logMaskOverride = params_->get("logging", "logMask", false);
-        if (!logMaskOverride.empty()) {
-            logMask = static_cast<Size>(parseInteger(logMaskOverride));
-        }
-        progressLogFile = params_->get("logging", "progressLogFile", false);
-        if (!progressLogFile.empty()) {
-            progressLogFile = outputPath + '/' + progressLogFile;
-        }
-        string tmp = params_->get("logging", "progressLogRotationSize", false);
+        string tmp = params_->get("logging", "logFile", false);
         if (!tmp.empty()) {
-            progressLogRotationSize = static_cast<Size>(parseInteger(tmp));
+            logFile_ = outputPath_ + '/' + tmp;
+        }
+        tmp = params_->get("logging", "logMask", false);
+        if (!tmp.empty()) {
+            logMask_ = static_cast<Size>(parseInteger(tmp));
+        }
+        tmp = params_->get("logging", "progressLogFile", false);
+        if (!tmp.empty()) {
+            progressLogFile_ = outputPath_ + '/' + tmp;
+        }
+        tmp = params_->get("logging", "progressLogRotationSize", false);
+        if (!tmp.empty()) {
+            progressLogRotationSize_ = static_cast<Size>(parseInteger(tmp));
         }
         tmp = params_->get("logging", "progressLogToConsole", false);
         if (!tmp.empty()) {
-            progressLogToConsole = ore::data::parseBool(tmp);
+            progressLogToConsole_ = ore::data::parseBool(tmp);
         }
-        structuredLogFile = params_->get("logging", "structuredLogFile", false);
-        if (!structuredLogFile.empty()) {
-            structuredLogFile = outputPath + '/' + structuredLogFile;
+        tmp = params_->get("logging", "structuredLogFile", false);
+        if (!tmp.empty()) {
+            structuredLogFile_ = outputPath_ + '/' + tmp;
         }
         tmp = params_->get("logging", "structuredLogRotationSize", false);
         if (!tmp.empty()) {
-            structuredLogRotationSize = static_cast<Size>(parseInteger(tmp));
+            structuredLogRotationSize_ = static_cast<Size>(parseInteger(tmp));
         }
     }
     
-    setupLog(outputPath, logFile, logMask, logRootPath, progressLogFile, progressLogRotationSize, progressLogToConsole,
-             structuredLogFile, structuredLogRotationSize);
+    setupLog(outputPath_, logFile_, logMask_, logRootPath_, progressLogFile_, progressLogRotationSize_, progressLogToConsole_,
+             structuredLogFile_, structuredLogRotationSize_);
 
     // Log the input parameters
     params_->log();
@@ -353,20 +352,18 @@ OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console,
     CONSOLE("OK");
         
     Settings::instance().evaluationDate() = inputs_->asof();
-}
-
-OREApp::OREApp(const boost::shared_ptr<InputParameters>& inputs, const std::string& logFile, Size logLevel,
-               bool console, const boost::filesystem::path& logRootPath)
-    : params_(nullptr), inputs_(inputs) {
-
+} 
+  
+void OREApp::initFromInputs() {
     // Initialise Singletons
     Settings::instance().evaluationDate() = inputs_->asof();
     InstrumentConventions::instance().setConventions(inputs_->conventions());
-    if (console) {
+    if (console_) {
         ConsoleLog::instance().switchOn();
     }
 
-    setupLog(inputs_->resultsPath().string(), logFile, logLevel, logRootPath);
+    outputPath_ = inputs_->resultsPath().string();
+    setupLog(outputPath_, logFile_, logMask_, logRootPath_);
 }
 
 OREApp::~OREApp() {
@@ -376,6 +373,24 @@ OREApp::~OREApp() {
 
 void OREApp::run() {
 
+    // only one thread at a time should call run
+    static std::mutex _s_mutex;
+    std::lock_guard<std::mutex> lock(_s_mutex);
+
+    // clean up after finishing the run
+    CleanUpThreadLocalSingletons cleanupThreadLocalSingletons;
+    CleanUpThreadGlobalSingletons cleanupThreadGloablSingletons;
+    CleanUpLogSingleton cleanupLogSingleton(true, true);
+
+    if (inputs_ == nullptr)
+        initFromParams();
+    else if (params_ == nullptr)
+        initFromInputs();
+    else {
+        ALOG("both inputs are empty");
+        return;      
+    }
+    
     runTimer_.start();
     
     try {
@@ -389,6 +404,9 @@ void OREApp::run() {
 
     runTimer_.stop();
 
+    // cache the error messages because we reset the loggers 
+    errorMessages_ = structuredLogger_->messages();
+
     CONSOLE("run time: " << runTimer_.format(default_places, "%w") << " sec");
     CONSOLE("ORE done.");
     LOG("ORE done.");
@@ -396,6 +414,25 @@ void OREApp::run() {
 
 void OREApp::run(const std::vector<std::string>& marketData,
                  const std::vector<std::string>& fixingData) {
+
+    // only one thread at a time should call run
+    static std::mutex _s_mutex;
+    std::lock_guard<std::mutex> lock(_s_mutex);
+
+    // clean up after finishing the run
+    CleanUpThreadLocalSingletons cleanupThreadLocalSingletons;
+    CleanUpThreadGlobalSingletons cleanupThreadGloablSingletons;
+    CleanUpLogSingleton cleanupLogSingleton(true, true);
+
+    if (inputs_ == nullptr)
+        initFromParams();
+    else if (params_ == nullptr)
+        initFromInputs();
+    else {
+        ALOG("both inputs are empty");
+        return;      
+    }
+
     runTimer_.start();
 
     try {
