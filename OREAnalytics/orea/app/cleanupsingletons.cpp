@@ -23,6 +23,7 @@
 #include <ored/utilities/calendarparser.hpp>
 #include <ored/utilities/currencyparser.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
+#include <ored/utilities/log.hpp>
 
 #include <qle/math/computeenvironment.hpp>
 #include <qle/math/randomvariable.hpp>
