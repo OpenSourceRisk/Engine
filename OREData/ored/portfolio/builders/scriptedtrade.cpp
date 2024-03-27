@@ -1295,6 +1295,59 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
         DLOG("added correlation for " << c.first.first << "/" << c.first.second << ": " << q->value());
     }
 
+    // correlation overwrite from pricing engine parameters
+
+    std::set<CorrelationFactor> allCorrRiskFactors;
+
+    for (auto const& m : modelIndices_)
+        allCorrRiskFactors.insert(parseCorrelationFactor(convertIndexToCamCorrelationEntry(m).first));
+    for (auto const& m : modelIrIndices_)
+        allCorrRiskFactors.insert(parseCorrelationFactor(convertIndexToCamCorrelationEntry(m.first).first));
+    for (auto const& m : modelInfIndices_)
+        allCorrRiskFactors.insert(parseCorrelationFactor(convertIndexToCamCorrelationEntry(m.first).first));
+    for (auto const& ccy : modelCcys_)
+        allCorrRiskFactors.insert({CrossAssetModel::AssetType::IR, ccy, 0});
+
+    for (auto const& c1 : allCorrRiskFactors) {
+        for (auto const& c2 : allCorrRiskFactors) {
+            // determine the number of driving factors for f_1 and f_2
+            Size nf_1 = c1.type == CrossAssetModel::AssetType::INF && infModelType_ == "JY" ? 2 : 1;
+            Size nf_2 = c2.type == CrossAssetModel::AssetType::INF && infModelType_ == "JY" ? 2 : 1;
+            for (Size k = 0; k < nf_1; ++k) {
+                for (Size l = 0; l < nf_2; ++l) {
+                    auto f_1 = c1;
+                    auto f_2 = c2;
+                    f_1.index = k;
+                    f_2.index = l;
+                    if (f_1 == f_2)
+                        continue;
+                    // lookup names are IR:GBP:0 and IR:GBP whenever the index is zero
+                    auto s_1 = ore::data::to_string(f_1);
+                    auto s_2 = ore::data::to_string(f_2);
+                    std::set<std::string> lookupnames1, lookupnames2;
+                    lookupnames1.insert(s_1);
+                    lookupnames2.insert(s_2);
+                    if (k == 0)
+                        lookupnames1.insert(s_1.substr(0, s_1.size() - 2));
+                    if (l == 0)
+                        lookupnames2.insert(s_2.substr(0, s_2.size() - 2));
+                    for (auto const& l1 : lookupnames1) {
+                        for (auto const& l2 : lookupnames2) {
+                            if (auto overwrite = modelParameter(
+                                    "Correlation",
+                                    {resolvedProductTag_ + "_" + l1 + "_" + l2, l1 + "_" + l2, resolvedProductTag_},
+                                    false);
+                                !overwrite.empty()) {
+                                camCorrelations[std::make_pair(f_1, f_2)] =
+                                    Handle<Quote>(boost::make_shared<SimpleQuote>(parseReal(overwrite)));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // set up the cam and calibrate it using the cam builder
     // if for a non-base currency no fx index is given, we set up a zero vol FX process for this
     // if fullDynamicIr is false, we set up a zero vol IR process for currencies that are not irIndex currencies
@@ -1388,12 +1441,18 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
                 VolatilityParameter(LgmData::VolatilityType::Hagan, false, ParamType::Constant, {}, {0.00}),
                 LgmReversionTransformation(), true);
         } else {
-            // build calibration basket (ATM CPI Floors)
+            // build calibration basket (CPI Floors at calibration strike or if that is not given, ATM strike)
+            boost::shared_ptr<BaseStrike> calibrationStrike;
+            if (auto k = calibrationStrikes_.find(modelInfIndices_[i].first);
+                k != calibrationStrikes_.end() && !k->second.empty()) {
+                calibrationStrike = boost::make_shared<AbsoluteStrike>(k->second.front());
+            } else {
+                calibrationStrike = boost::make_shared<AtmStrike>(QuantLib::DeltaVolQuote::AtmType::AtmFwd);
+            }
             std::vector<boost::shared_ptr<CalibrationInstrument>> calInstr;
             for (auto const& d : calibrationDates)
-                calInstr.push_back(boost::make_shared<CpiCapFloor>(
-                    QuantLib::CapFloor::Type::Floor, d,
-                    boost::make_shared<AtmStrike>(QuantLib::DeltaVolQuote::AtmType::AtmFwd)));
+                calInstr.push_back(
+                    boost::make_shared<CpiCapFloor>(QuantLib::CapFloor::Type::Floor, d, calibrationStrike));
             std::vector<CalibrationBasket> calBaskets(1, CalibrationBasket(calInstr));
             if (infModelType_ == "DK") {
                 // build DK config
@@ -1407,20 +1466,38 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
                     true);
             } else if (infModelType_ == "JY") {
                 // build JY config
-                // we calibrate the index ("fx") process to CPI cap/floors and set the real rate process parameters
-                // to hardcoded values; TODO is this reasonable? (at least it seems simple and robust...)
+                // we calibrate the index ("fx") process to CPI cap/floors and set the real rate process reversion equal to
+                // the nominal process reversion. The real rate vol is set to a fixed multiple of nominal rate vol, the
+                // multiplier is taken from the pe config model parameter "InfJyRealToNominalVolRatio"
+                std::string infName = IndexInfo(modelInfIndices_[i].first).infName();
+                Size ccyIndex =
+                    std::distance(modelCcys_.begin(), std::find(modelCcys_.begin(), modelCcys_.end(),
+                                                                modelInfIndices_[i].second->currency().code()));
+                ReversionParameter realRateRev = boost::static_pointer_cast<LgmData>(irConfigs[ccyIndex])->reversionParameter();
+                VolatilityParameter realRateVol = boost::static_pointer_cast<LgmData>(irConfigs[ccyIndex])->volatilityParameter();
+                realRateRev.setCalibrate(false);
+                realRateVol.setCalibrate(false);
+                Real realRateToNominalRateRatio = parseReal(
+                    modelParameter("InfJyRealToNominalVolRatio",
+                                   {resolvedProductTag_ + "_" + infName, infName, resolvedProductTag_}, false, "1.0"));
+                QL_REQUIRE(ccyIndex < modelCcys_.size(),
+                           "ScriptedTrade::buildGaussianCam(): internal error, inflation index currency "
+                               << modelInfIndices_[i].second->currency().code() << " not found in model ccy list.");
+                realRateVol.mult(realRateToNominalRateRatio);
                 config = boost::make_shared<InfJyData>(
-                    CalibrationType::Bootstrap, calBaskets, modelInfIndices_[i].second->currency().code(),
-                    IndexInfo(modelInfIndices_[i].first).infName(),
-                    // hardcoded real rate reversion 0.0, vol 0.0030, no calibration
-                    ReversionParameter(LgmData::ReversionType::HullWhite, false, ParamType::Piecewise, {}, {0.0}),
-                    VolatilityParameter(LgmData::VolatilityType::Hagan, false, ParamType::Piecewise, {}, {0.0030}),
+                    CalibrationType::Bootstrap, calBaskets, modelInfIndices_[i].second->currency().code(), infName,
+                    // real rate reversion and vol
+                    realRateRev, realRateVol,
                     // index ("fx") vol, start value 0.10 for calibration
                     VolatilityParameter(true, ParamType::Piecewise, {}, {0.10}),
                     // no parameter trafo, no optimisation constraints (TODO do we need boundaries?)
                     LgmReversionTransformation(), CalibrationConfiguration(),
                     // ignore duplicate expiry times among calibration instruments
-                    true);
+                    true,
+                    // link real to nominal rate params
+                    true,
+                    // real rate to nominal rate ratio
+                    realRateToNominalRateRatio);
             } else {
                 QL_FAIL("invalid infModelType '" << infModelType_ << "', expected DK or JY");
             }

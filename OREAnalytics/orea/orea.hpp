@@ -31,6 +31,7 @@
 #include <orea/app/analytics/varanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/app/analyticsmanager.hpp>
+#include <orea/app/cleanupsingletons.hpp>
 #include <orea/app/inputparameters.hpp>
 #include <orea/app/marketcalibrationreport.hpp>
 #include <orea/app/marketdatacsvloader.hpp>
