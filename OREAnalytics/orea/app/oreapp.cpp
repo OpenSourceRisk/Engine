@@ -378,7 +378,9 @@ void OREApp::run() {
     std::lock_guard<std::mutex> lock(_s_mutex);
 
     // clean up after finishing the run
-    CleanUpAllSingletons cleanupSingletons;
+    CleanUpThreadLocalSingletons cleanupThreadLocalSingletons;
+    CleanUpThreadGlobalSingletons cleanupThreadGloablSingletons;
+    CleanUpLogSingleton cleanupLogSingleton(true, true);
 
     if (inputs_ == nullptr)
         initFromParams();
@@ -418,7 +420,9 @@ void OREApp::run(const std::vector<std::string>& marketData,
     std::lock_guard<std::mutex> lock(_s_mutex);
 
     // clean up after finishing the run
-    CleanUpAllSingletons cleanupSingletons;
+    CleanUpThreadLocalSingletons cleanupThreadLocalSingletons;
+    CleanUpThreadGlobalSingletons cleanupThreadGloablSingletons;
+    CleanUpLogSingleton cleanupLogSingleton(true, true);
 
     if (inputs_ == nullptr)
         initFromParams();

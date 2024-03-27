@@ -35,10 +35,13 @@ public:
     ~CleanUpThreadGlobalSingletons();
 };
 
-class CleanUpAllSingletons {
+class CleanUpLogSingleton {
 public:
-    CleanUpThreadLocalSingletons localCleanup;
-    CleanUpThreadGlobalSingletons globalCleanup;
+    CleanUpLogSingleton(const bool removeLoggers = false, const bool clearIndependentLoggers = true);
+    ~CleanUpLogSingleton();
+
+private:
+    bool removeLoggers_, clearIndependentLoggers_;
 };
 
 } // namespace ore::analytics
