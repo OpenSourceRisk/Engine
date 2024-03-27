@@ -174,7 +174,7 @@ Leg makeNonStandardIborLeg(const boost::shared_ptr<IborIndex>& index, const std:
 
         Date endDate = *std::next(startDate, 1);
 
-        if (endDate >= calcDates.back())
+        if (endDate > calcDates.back())
             continue;
 
         // determine pay date
