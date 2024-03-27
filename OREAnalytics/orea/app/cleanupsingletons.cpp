@@ -54,9 +54,9 @@ CleanUpLogSingleton::CleanUpLogSingleton(const bool removeLoggers, const bool cl
 
 CleanUpLogSingleton::~CleanUpLogSingleton() {
     if (clearIndependentLoggers_)
-        Log::instance().clearAllIndependentLoggers();
+        ore::data::Log::instance().clearAllIndependentLoggers();
     if (removeLoggers_)
-        Log::instance().removeAllLoggers();
+        ore::data::Log::instance().removeAllLoggers();
 }
 
 } // namespace ore::data
