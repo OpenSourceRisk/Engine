@@ -1424,6 +1424,11 @@
         ]
       },
       "curves\\.json": {
+        "keys": {
+          "data/": [
+            "dates"
+          ]
+        },
         "settings": [
           {
             "names": [
@@ -1440,6 +1445,16 @@
         "ignore_keys": [
           "simmResultsPath"
         ],
+        "keys": {
+          "": [
+            "portfolio",
+            "product_class",
+            "risk_class",
+            "margin_type",
+            "bucket",
+            "side"
+          ]
+        },
         "settings": [
           {
             "names": [
@@ -1454,6 +1469,66 @@
         ]
       },
       "im_impact\\.json": {
+        "keys": {
+          "impact/schedule_impact_report/": [
+            "portfolio",
+            "agreement_type",
+            "product_class",
+            "call_type",
+            "initial_margin_type",
+            "legal_entity_id",
+            "side"
+          ],
+          "impact/simm_impact_report/": [
+            "portfolio",
+            "agreement_type",
+            "call_type",
+            "initial_margin_type",
+            "legal_entity_id",
+            "product_class",
+            "risk_class",
+            "margin_type",
+            "bucket",
+            "side"
+          ],
+          "impact/total_impact_report/": [
+            "portfolio",
+            "agreement_type",
+            "call_type",
+            "initial_margin_type",
+            "legal_entity_id",
+            "side"
+          ],
+          "impact/standalone_im_schedule_report/": [
+            "portfolio",
+            "agreement_type",
+            "call_type",
+            "initial_margin_type",
+            "legal_entity_id",
+            "product_class",
+            "side"
+          ],
+          "impact/standalone_simm_report/": [
+            "portfolio",
+            "agreement_type",
+            "call_type",
+            "initial_margin_type",
+            "legal_entity_id",
+            "product_class",
+            "risk_class",
+            "margin_type",
+            "bucket",
+            "side"
+          ],
+          "impact/standalone_total_im_report/": [
+            "portfolio",
+            "agreement_type",
+            "call_type",
+            "initial_margin_type",
+            "legal_entity_id",
+            "side"
+          ]
+        },
         "settings": [
           {
             "names": [
@@ -1465,6 +1540,7 @@
               "impact/simm_impact_report/initial_margin_impact",
               "impact/standalone_im_schedule_report/gross_im",
               "impact/standalone_im_schedule_report/schedule_im",
+              "impact/standalone_im_schedule_report/gross_current_rc",
               "impact/standalone_im_schedule_report/net_current_rc",
               "impact/standalone_im_schedule_report/net_to_gross_ratio",
               "impact/standalone_simm_report/initial_margin",
@@ -1491,6 +1567,14 @@
         ]
       },
       "frtb\\.json": {
+        "keys": {
+          "": [
+            "bucket",
+            "capitalRequirement",
+            "risk_class",
+            "correlationScenario"
+          ]
+        },
         "settings": [
           {
             "names": [
@@ -1502,6 +1586,12 @@
         ]
       },
       "total_im\\.json": {
+        "keys": {
+          "": [
+            "side",
+            "portfolio"
+          ]
+        },
         "settings": [
           {
             "names": [
@@ -1517,9 +1607,98 @@
         "ignore_keys": [
           "simmResultsPath"
         ],
+        "keys": {
+          "additionalResults/": [
+            "tradeId",
+            "resultId",
+            "resultType"
+          ],
+          "bacva/": [
+            "analytic",
+            "counterparty",
+            "nettingSetId"
+          ],
+          "frtb/": [
+            "bucket",
+            "capitalRequirement",
+            "risk_class",
+            "correlationScenario"
+          ],
+          "impact/schedule_impact_report/": [
+            "portfolio",
+            "agreement_type",
+            "product_class",
+            "call_type",
+            "initial_margin_type",
+            "legal_entity_id",
+            "side"
+          ],
+          "impact/simm_impact_report/": [
+            "portfolio",
+            "agreement_type",
+            "call_type",
+            "initial_margin_type",
+            "legal_entity_id",
+            "product_class",
+            "risk_class",
+            "margin_type",
+            "bucket",
+            "side"
+          ],
+          "impact/total_impact_report/": [
+            "portfolio",
+            "agreement_type",
+            "call_type",
+            "initial_margin_type",
+            "legal_entity_id",
+            "side"
+          ],
+          "impact/standalone_im_schedule_report/": [
+            "portfolio",
+            "agreement_type",
+            "call_type",
+            "initial_margin_type",
+            "legal_entity_id",
+            "product_class",
+            "side"
+          ],
+          "impact/standalone_simm_report/": [
+            "portfolio",
+            "agreement_type",
+            "call_type",
+            "initial_margin_type",
+            "legal_entity_id",
+            "product_class",
+            "risk_class",
+            "margin_type",
+            "bucket",
+            "side"
+          ],
+          "impact/standalone_total_im_report/": [
+            "portfolio",
+            "agreement_type",
+            "call_type",
+            "initial_margin_type",
+            "legal_entity_id",
+            "side"
+          ],
+          "simmReport/": [
+            "portfolio",
+            "product_class",
+            "risk_class",
+            "margin_type",
+            "bucket",
+            "side"
+          ],
+          "totalIMReport/": [
+            "side",
+            "portfolio"
+          ]
+        },
         "settings": [
           {
             "names": [
+              "additionalResults/resultValue",
               "bacva/value",
               "cashflow/accrual",
               "cashflow/accruedAmount",
