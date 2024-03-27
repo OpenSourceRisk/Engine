@@ -123,6 +123,7 @@
 #include <orea/scenario/stressscenariodata.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
 #include <orea/simm/crif.hpp>
+#include <orea/simm/crifconfiguration.hpp>
 #include <orea/simm/crifloader.hpp>
 #include <orea/simm/crifrecord.hpp>
 #include <orea/simm/imschedulecalculator.hpp>
