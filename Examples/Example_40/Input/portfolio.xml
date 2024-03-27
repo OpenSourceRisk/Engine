@@ -267,7 +267,6 @@
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
       <Strike>0.0060</Strike>
-      <KnockOut>N</KnockOut>
       <OptionData>
         <LongShort>Long</LongShort>
         <OptionType>Call</OptionType>

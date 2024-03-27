@@ -48,16 +48,18 @@ public:
     InfJyData();
 
     //! Detailed constructor
-    InfJyData(CalibrationType calibrationType,
-        const std::vector<CalibrationBasket>& calibrationBaskets,
-        const std::string& currency,
-        const std::string& index,
-        const ReversionParameter& realRateReversion,
-        const VolatilityParameter& realRateVolatility,
-        const VolatilityParameter& indexVolatility,
-        const LgmReversionTransformation& reversionTransformation = LgmReversionTransformation(),
-        const CalibrationConfiguration& calibrationConfiguration = CalibrationConfiguration(),
-        const bool ignoreDuplicateCalibrationExpiryTimes = false);
+    /* Note: If linkRealRateToNominalRateParams == true, the realRateVolatility and realRateReversion should be set to
+       the nominal rate parameters and the calibrate flag in these new parameters should be set to false. Also, the
+       scaling linkRealRateVolatilityScaling should have been applied to the new parameters. All this is not automatic
+       neither cheked in this class (lack of info on the nominal parameters, but required to ensure a calibration of the
+       jy model as part of the cam to work consistently. */
+    InfJyData(CalibrationType calibrationType, const std::vector<CalibrationBasket>& calibrationBaskets,
+              const std::string& currency, const std::string& index, const ReversionParameter& realRateReversion,
+              const VolatilityParameter& realRateVolatility, const VolatilityParameter& indexVolatility,
+              const LgmReversionTransformation& reversionTransformation = LgmReversionTransformation(),
+              const CalibrationConfiguration& calibrationConfiguration = CalibrationConfiguration(),
+              const bool ignoreDuplicateCalibrationExpiryTimes = false, const bool linkRealToNominalRateParams = false,
+              const Real linkedRealRateVolatilityScaling = 1.0);
 
     //! \name Inspectors
     //@{
@@ -66,6 +68,8 @@ public:
     const VolatilityParameter& indexVolatility() const;
     const LgmReversionTransformation& reversionTransformation() const;
     const CalibrationConfiguration& calibrationConfiguration() const;
+    bool linkRealRateParamsToNominalRateParams() const;
+    Real linkedRealRateVolatilityScaling() const;
     //@}
 
     //! \name Serialisation
@@ -80,6 +84,8 @@ private:
     VolatilityParameter indexVolatility_;
     LgmReversionTransformation reversionTransformation_;
     CalibrationConfiguration calibrationConfiguration_;
+    bool linkRealToNominalRateParams_;
+    Real linkedRealRateVolatilityScaling_;
 };
 
 }
