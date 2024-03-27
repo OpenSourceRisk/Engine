@@ -46,7 +46,16 @@ CleanUpThreadGlobalSingletons::~CleanUpThreadGlobalSingletons() {
     ore::data::CalendarParser::instance().reset();
     ore::data::CurrencyParser::instance().reset();
     ore::data::ScriptLibraryStorage::instance().clear();
-    ore::data::Log::instance().removeAllLoggers();
+}
+
+CleanUpLogSingleton::CleanUpLogSingleton(const bool removeLoggers, const bool clearIndependentLoggers)
+    : removeLoggers_(removeLoggers), clearIndependentLoggers_(clearIndependentLoggers) {}
+
+CleanUpLogSingleton::~CleanUpLogSingleton() {
+    if (clearIndependentLoggers_)
+        Log::instance().clearAllIndependentLoggers();
+    if (removeLoggers_)
+        Log::instance().removeAllLoggers();
 }
 
 } // namespace ore::data
