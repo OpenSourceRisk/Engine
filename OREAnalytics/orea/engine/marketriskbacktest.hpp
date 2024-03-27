@@ -215,6 +215,8 @@ protected:
                       const QuantLib::ext::shared_ptr<ore::analytics::MarketRiskGroup>& riskGroup,
                       const QuantLib::ext::shared_ptr<ore::analytics::TradeGroup>& tradeGroup) override;
 
+   std::vector<ore::data::TimePeriod> timePeriods() override;
+
  private:
     /*! Calculate the number of exceptions given the current \p data and the associated
     P&L vector \p pnls for both call and post sides. The parameter

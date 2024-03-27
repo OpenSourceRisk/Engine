@@ -68,4 +68,8 @@ void DividendManager::setHistory(const string& name, const std::set<Dividend>& h
 
 boost::shared_ptr<Observable> DividendManager::notifier(const string& name) { return data_[to_upper_copy(name)]; }
 
+void DividendManager::clearHistory(const std::string& name) { data_.erase(name); }
+
+void DividendManager::clearHistories() { data_.clear(); }
+  
 }
