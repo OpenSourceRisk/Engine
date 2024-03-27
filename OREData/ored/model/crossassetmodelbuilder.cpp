@@ -169,15 +169,15 @@ void CrossAssetModelBuilder::copyModelParams(const CrossAssetModel::AssetType t0
     auto mp1 = model_->MoveParameter(t1, param1, index1, i1);
     auto s0 = 0, s1 = 0;
     for (Size i = 0; i < mp0.size(); ++i)
-        if (mp0[i])
+        if (!mp0[i])
             s0++;
     for (Size i = 0; i < mp1.size(); ++i)
-        if (mp1[i])
+        if (!mp1[i])
             s1++;
     QL_REQUIRE(s0 == s1, "CrossAssetModelBuilder::copyModelParams(): source range size ("
-                             << s0 << ") does not match target range size (" << s1 << ") when copying (" << t0 << ", "
-                             << param0 << "," << index0 << "," << i0 << ") -> (" << t0 << ", " << param0 << ","
-                             << index0 << "," << i0 << ")");
+                             << s0 << ") does not match target range size (" << s1 << ") when copying (" << t0 << ","
+                             << param0 << "," << index0 << "," << i0 << ") -> (" << t1 << "," << param1 << "," << index1
+                             << "," << i1 << ")");
     std::vector<Real> sourceValues(s0);
     for (Size idx0 = 0, count = 0; idx0 < mp0.size(); ++idx0) {
         if (!mp0[idx0]) {
@@ -380,7 +380,9 @@ void CrossAssetModelBuilder::buildModel() const {
         processInfo[CrossAssetModel::AssetType::EQ].emplace_back(eqName, 1);
     }
 
-    // Build the INF parametrizations and calibration baskets
+    /*******************************************************
+     * Build the INF parametrizations and calibration baskets
+     */
     vector<boost::shared_ptr<Parametrization>> infParameterizations;
     for (Size i = 0; i < config_->infConfigs().size(); i++) {
         boost::shared_ptr<InflationModelData> imData = config_->infConfigs()[i];
@@ -396,6 +398,27 @@ void CrossAssetModelBuilder::buildModel() const {
             processInfo[CrossAssetModel::AssetType::INF].emplace_back(dkData->index(), 1);
         } else if (auto jyData = boost::dynamic_pointer_cast<InfJyData>(imData)) {
             if (!buildersAreInitialized) {
+                // for linked real rate params we have to resize the real rate params here again, because their time grid
+                // might have been overwritten in the ir calibration step
+                if (jyData->linkRealRateParamsToNominalRateParams()) {
+                    Size ccyIndex = std::distance(currencies.begin(),
+                                                  std::find(currencies.begin(), currencies.end(), jyData->currency()));
+                    VolatilityParameter rrVol = jyData->realRateVolatility();
+                    ReversionParameter rrRev = jyData->realRateReversion();
+                    rrVol.setCalibrate(false);
+                    rrRev.setCalibrate(false);
+                    auto volTimes = irParametrizations[ccyIndex]->parameterTimes(0);
+                    auto volValues = irParametrizations[ccyIndex]->parameterValues(0);
+                    auto revTimes = irParametrizations[ccyIndex]->parameterTimes(1);
+                    auto revValues = irParametrizations[ccyIndex]->parameterValues(1);
+                    rrVol.setTimes(std::vector<Real>(volTimes.begin(), volTimes.end()));
+                    rrRev.setTimes(std::vector<Real>(revTimes.begin(), revTimes.end()));
+                    rrVol.setValues(std::vector<Real>(volValues.begin(), volValues.end()));
+                    rrRev.setValues(std::vector<Real>(revValues.begin(), revValues.end()));
+                    rrVol. mult(jyData->linkedRealRateVolatilityScaling());
+                    jyData->setRealRateReversion(rrRev);
+                    jyData->setRealRateVolatility(rrVol);
+                }
                 subBuilders_[CrossAssetModel::AssetType::INF][i] = boost::make_shared<InfJyBuilder>(
                     market_, jyData, configurationInfCalibration_, referenceCalibrationGrid_, dontCalibrate_);
             }

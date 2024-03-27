@@ -1444,7 +1444,7 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
             // build calibration basket (CPI Floors at calibration strike or if that is not given, ATM strike)
             boost::shared_ptr<BaseStrike> calibrationStrike;
             if (auto k = calibrationStrikes_.find(modelInfIndices_[i].first);
-                k != calibrationStrikes_.end() && k->second.empty()) {
+                k != calibrationStrikes_.end() && !k->second.empty()) {
                 calibrationStrike = boost::make_shared<AbsoluteStrike>(k->second.front());
             } else {
                 calibrationStrike = boost::make_shared<AtmStrike>(QuantLib::DeltaVolQuote::AtmType::AtmFwd);
