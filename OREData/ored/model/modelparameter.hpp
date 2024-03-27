@@ -41,10 +41,8 @@ public:
     ModelParameter();
 
     //! Detailed constructor
-    ModelParameter(bool calibrate,
-        ParamType type,
-        const std::vector<QuantLib::Time>& times,
-        const std::vector<QuantLib::Real>& values);
+    ModelParameter(bool calibrate, ParamType type, std::vector<QuantLib::Time> times,
+                   std::vector<QuantLib::Real> values);
 
     //! \name Inspectors
     //@{
@@ -57,9 +55,11 @@ public:
     //! \name Setters / Modifiers
 
     //@{
+    void setTimes(std::vector<Real> times);
+    void setValues(std::vector<Real> values);
     void mult(const Real f);
     void setCalibrate(const bool b);
-    //@}
+   //@}
 
     //! \name Serialisation
     //@{
@@ -93,11 +93,8 @@ public:
     VolatilityParameter();
 
     //! Constructor for piecewise volatility with an explicit volatility type.
-    VolatilityParameter(LgmData::VolatilityType volatilityType,
-        bool calibrate,
-        ParamType type,
-        const std::vector<QuantLib::Time>& times,
-        const std::vector<QuantLib::Real>& values);
+    VolatilityParameter(LgmData::VolatilityType volatilityType, bool calibrate, ParamType type,
+                        std::vector<QuantLib::Time> times, std::vector<QuantLib::Real> values);
 
     //! Constructor for constant volatility with an explicit volatility type.
     VolatilityParameter(LgmData::VolatilityType volatilityType,
@@ -105,14 +102,11 @@ public:
         QuantLib::Real value);
 
     //! Constructor for piecewise volatility without an explicit volatility type.
-    VolatilityParameter(bool calibrate,
-        ParamType type,
-        const std::vector<QuantLib::Time>& times,
-        const std::vector<QuantLib::Real>& values);
+    VolatilityParameter(bool calibrate, ParamType type, std::vector<QuantLib::Real> times,
+                        std::vector<QuantLib::Real> values);
 
     //! Constructor for constant volatility without an explicit volatility type.
-    VolatilityParameter(bool calibrate,
-        QuantLib::Real value);
+    VolatilityParameter(bool calibrate, QuantLib::Real value);
 
     //! \name Inspectors
     //@{
@@ -142,16 +136,11 @@ public:
     ReversionParameter();
 
     //! Constructor for piecewise reversion
-    ReversionParameter(LgmData::ReversionType reversionType,
-        bool calibrate,
-        ParamType type,
-        const std::vector<QuantLib::Time>& times,
-        const std::vector<QuantLib::Real>& values);
+    ReversionParameter(LgmData::ReversionType reversionType, bool calibrate, ParamType type,
+                       std::vector<QuantLib::Time> times, std::vector<QuantLib::Real> values);
 
     //! Constructor for constant reversion
-    ReversionParameter(LgmData::ReversionType reversionType,
-        bool calibrate,
-        QuantLib::Real value);
+    ReversionParameter(LgmData::ReversionType reversionType, bool calibrate, QuantLib::Real value);
 
     //! \name Inspectors
     //@{

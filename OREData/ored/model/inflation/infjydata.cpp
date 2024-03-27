@@ -62,6 +62,10 @@ const CalibrationConfiguration& InfJyData::calibrationConfiguration() const {
     return calibrationConfiguration_;
 }
 
+void InfJyData::setRealRateReversion(ReversionParameter p) { realRateReversion_ = std::move(p); }
+
+void InfJyData::setRealRateVolatility(VolatilityParameter p) { realRateVolatility_ = std::move(p); }
+
 bool InfJyData::linkRealRateParamsToNominalRateParams() const { return linkRealToNominalRateParams_; }
 
 Real InfJyData::linkedRealRateVolatilityScaling() const { return linkedRealRateVolatilityScaling_; }
