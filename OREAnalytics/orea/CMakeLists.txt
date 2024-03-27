@@ -103,6 +103,7 @@ scenario/simplescenario.cpp
 scenario/stressscenariodata.cpp
 scenario/stressscenariogenerator.cpp
 simm/crif.cpp
+simm/crifconfiguration.cpp
 simm/crifloader.cpp
 simm/crifrecord.cpp
 simm/imschedulecalculator.cpp
@@ -263,6 +264,7 @@ scenario/simplescenariofactory.hpp
 scenario/stressscenariodata.hpp
 scenario/stressscenariogenerator.hpp
 simm/crif.hpp
+simm/crifconfiguration.hpp
 simm/crifloader.hpp
 simm/crifrecord.hpp
 simm/imschedulecalculator.hpp
