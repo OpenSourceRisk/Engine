@@ -754,7 +754,6 @@ scripting/value.hpp
 utilities/bondindexbuilder.hpp
 utilities/calendaradjustmentconfig.hpp
 utilities/calendarparser.hpp
-utilities/cleanupsingletons.hpp
 utilities/conventionsbasedfutureexpiry.hpp
 utilities/correlationmatrix.hpp
 utilities/csvfilereader.hpp
