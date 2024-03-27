@@ -623,8 +623,8 @@ portfolio/equityfuturesoption.hpp
 portfolio/equityfxlegbuilder.hpp
 portfolio/equityfxlegdata.hpp
 portfolio/equityoption.hpp
-portfolio/equityoutperformanceoption.hpp
 portfolio/equityoptionposition.hpp
+portfolio/equityoutperformanceoption.hpp
 portfolio/equityposition.hpp
 portfolio/equityswap.hpp
 portfolio/equitytouchoption.hpp
