@@ -399,6 +399,7 @@ public:
      */
     void registerLogger(const boost::shared_ptr<Logger>& logger);
     void registerIndependentLogger(const boost::shared_ptr<IndependentLogger>& logger);
+    void clearAllIndependentLoggers();
 
     //! Check if logger exists
     const bool hasLogger(const std::string& name) const;
