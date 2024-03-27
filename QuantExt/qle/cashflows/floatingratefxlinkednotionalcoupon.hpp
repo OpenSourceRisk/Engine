@@ -43,7 +43,9 @@ public:
                              underlying->gearing(), underlying->spread(), underlying->referencePeriodStart(),
                              underlying->referencePeriodEnd(), underlying->dayCounter(), underlying->isInArrears()),
           FXLinked(fxFixingDate, foreignAmount, fxIndex), underlying_(underlying) {
-        fixingDays_ = index_ ? index_->fixingDays() : 0;
+        fixingDays_ = underlying->fixingDays() == Null<Natural>()
+                          ? (underlying->index() ? underlying->index()->fixingDays() : 0)
+                                                                  : underlying->fixingDays();
         registerWith(FXLinked::fxIndex());
         registerWith(underlying_);
     }
