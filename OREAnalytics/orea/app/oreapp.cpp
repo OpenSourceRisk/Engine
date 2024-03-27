@@ -25,6 +25,7 @@
 #pragma warning(disable : 4503)
 #endif
 
+#include <orea/app/cleanupsingletons.hpp>
 #include <orea/app/marketdatacsvloader.hpp>
 #include <orea/app/marketdatainmemoryloader.hpp>
 #include <orea/app/oreapp.hpp>
@@ -37,7 +38,6 @@
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/utilities/currencyconfig.hpp>
 #include <ored/portfolio/collateralbalance.hpp>
-#include <ored/utilities/cleanupsingletons.hpp>
 
 #include <qle/version.hpp>
 
@@ -378,7 +378,7 @@ void OREApp::run() {
     std::lock_guard<std::mutex> lock(_s_mutex);
 
     // clean up after finishing the run
-    CleanUpSingletons cleanupSingletons;
+    CleanUpAllSingletons cleanupSingletons;
 
     if (inputs_ == nullptr)
         initFromParams();
@@ -418,7 +418,7 @@ void OREApp::run(const std::vector<std::string>& marketData,
     std::lock_guard<std::mutex> lock(_s_mutex);
 
     // clean up after finishing the run
-    CleanUpSingletons cleanupSingletons;
+    CleanUpAllSingletons cleanupSingletons;
 
     if (inputs_ == nullptr)
         initFromParams();

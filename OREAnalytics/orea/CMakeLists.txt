@@ -26,6 +26,7 @@ app/analytics/simmanalytic.cpp
 app/analytics/varanalytic.cpp
 app/analytics/xvaanalytic.cpp
 app/analyticsmanager.cpp
+app/cleanupsingletons.cpp
 app/inputparameters.cpp
 app/marketcalibrationreport.cpp
 app/marketdatacsvloader.cpp
@@ -169,6 +170,7 @@ app/analytics/simmanalytic.hpp
 app/analytics/varanalytic.hpp
 app/analytics/xvaanalytic.hpp
 app/analyticsmanager.hpp
+app/cleanupsingletons.hpp
 app/inputparameters.hpp
 app/marketcalibrationreport.hpp
 app/marketdatacsvloader.hpp
