@@ -660,7 +660,7 @@ void ReportWriter::writeCashflowNpv(ore::data::Report& report, const ore::data::
         string ccy = boost::get<string>(cashflowReport.data(ccyColumn).at(i));
         Real pv = boost::get<Real>(cashflowReport.data(pvColumn).at(i));
         Real fx = 1.0;
-    // There shouldn't be entries in the cf report without ccy. We assume ccy = baseCcy in this case and log an error.
+	// There shouldn't be entries in the cf report without ccy. We assume ccy = baseCcy in this case and log an error.
         if (ccy.empty()) {
             StructuredTradeErrorMessage(tradeId, tradeType, "Error during CashflowNpv calculation.",
                                         "Cashflow in row " + std::to_string(i) +
