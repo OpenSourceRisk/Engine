@@ -325,7 +325,7 @@ XMLNode* StressTestScenarioData::toXML(ore::data::XMLDocument& doc) const {
         // Add test node
         auto testNode = XMLUtils::addChild(doc, node, "StressTest");
         XMLUtils::addAttribute(doc, testNode, "id", test.label);
-        // Add Par Shifts node
+    // Add Par Shifts node
         auto parShiftsNode = XMLUtils::addChild(doc, testNode, "ParShifts");
         XMLUtils::addChild(doc, parShiftsNode, "IRCurves", test.irCurveParShifts);
         XMLUtils::addChild(doc, parShiftsNode, "CapFloorVolatilities", test.irCapFloorParShifts);
@@ -336,7 +336,30 @@ XMLNode* StressTestScenarioData::toXML(ore::data::XMLDocument& doc) const {
         curveShiftDataToXml(doc, testNode, test.yieldCurveShifts, "name", "YieldCurve");
         volShiftDataToXml(doc, testNode, test.capVolShifts, "key", "CapFloorVolatilitiy", "CapFloorVolatilities");
         // SwaptionVolData
-        // TODO: SwaptionVolData Missing    
+        // TODO: SwaptionVolData Missing
+        LOG("Get swaption vol stress parameters");
+        XMLNode* swaptionVolsNode = XMLUtils::addChild(doc, testNode, "SwaptionVolatilities");
+        const std::vector<std::string> swaptionAttributeNames = {"expiry", "term"};
+        for (const auto& [key, data] : test.swaptionVolShifts) {
+            XMLNode* swaptionVolNode = XMLUtils::addChild(doc, swaptionVolsNode, "SwaptionVolatility");
+            XMLUtils::addAttribute(doc, swaptionVolNode, "ccy", key);
+            XMLUtils::addChild(doc, swaptionVolNode, "ShiftType", ore::data::to_string(data.shiftType));
+            XMLUtils::addGenericChildAsList(doc, swaptionVolNode, "ShiftTerms", data.shiftTerms);
+            XMLUtils::addGenericChildAsList(doc, swaptionVolNode, "ShiftExpiries", data.shiftExpiries);
+            XMLNode* shiftSizesNode = XMLUtils::addChild(doc, swaptionVolNode, "Shifts");
+            
+            if(data.shifts.empty()){
+                XMLUtils::addChild(doc, shiftSizesNode, "Shift", ore::data::to_string(data.parallelShiftSize),
+                                   swaptionAttributeNames, {"", ""});
+            } else {
+                for(const auto& [key, shift] : data.shifts){
+                    const auto& [expiry, term] = key;
+                    std::vector<std::string> attributeValues = {ore::data::to_string(expiry),
+                                                                ore::data::to_string(term)};
+                    XMLUtils::addChild(doc, shiftSizesNode, "Shift", ore::data::to_string(shift), swaptionAttributeNames, attributeValues);
+                }
+            }
+        }
         // Credit
         curveShiftDataToXml(doc, testNode, test.survivalProbabilityShifts, "ccy", "SurvivalProbability",
                             "SurvivalProbabilities");

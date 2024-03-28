@@ -181,8 +181,12 @@ public:
             {}, continueOnError, Market::defaultConfiguration, simMarket);
 
         simMarket->reset();
-        for (const auto& scenario : stressTestData->data()) {
+        boost::shared_ptr<StressTestScenarioData> convertedScenarios = boost::make_shared<StressTestScenarioData>();
+        for (const StressTestScenarioData::StressTestData& scenario : stressTestData->data()) {
+
             std::cout << "Convert scenario " << scenario.label << std::endl;
+            StressTestScenarioData::StressTestData upDatedScenario = scenario;
+
             std::cout << scenario.irCurveParShifts << std::endl;
             // Rate shifts
             bool irCurveParScenario = scenario.irCurveParShifts;
@@ -250,6 +254,7 @@ public:
 
 
                 size_t i = 0;
+                map<RiskFactorKey, double> solutions;
                 for (const auto& component : connectedComponents) {
                     std::cout << i++ << "th componentent with size " << component.size() << std::endl;
 
@@ -276,7 +281,7 @@ public:
 
                     PositiveConstraint noConstraint;
                     LevenbergMarquardt lm;
-                    EndCriteria endCriteria(150, 15, 1e-8, 1e-8, 1e-8);
+                    EndCriteria endCriteria(250, 15, 1e-8, 1e-8, 1e-8);
                     TargetFunction target(simMarket, goal, parKeys, zeroKeys, instruments.parHelpers_);
                     Problem problem(target, noConstraint, initialGuess);
                     lm.minimize(problem, endCriteria);
@@ -285,33 +290,46 @@ public:
                     std::cout << "Found solution " << problem.functionValue() << std::endl;
                     for (size_t i = 0; i < zeroKeys.size(); ++i) {
                         std::cout << i << " " << zeroKeys[i] << " " << solution[i] << std::endl;
+                        if(solutions.count(zeroKeys[i])>0){
+                            std::cout << "Duplicate Key, the components arent disjunct" << std::endl;
+                        }
+                        solutions[zeroKeys[i]] = solution[i];
                     }
 
-
-                    // Convert result into a zero shift
-                    simMarket->reset();
-                    auto targetScenario = simMarket->baseScenario()->clone();
                     for (size_t i = 0; i < zeroKeys.size(); ++i) {
                         const auto key = zeroKeys[i];
                         double zeroShift = 0;
-                        targetScenario->add(key, solution[i]);
                         if (!stressTestData->useSpreadedTermStructures()) {
-                            zeroShift =
-                                -std::log(solution[i] / targetParRates.zeroBaseScenarioValue[key]) / targetParRates.times[key];
+                            zeroShift = -std::log(solution[i] / targetParRates.zeroBaseScenarioValue[key]) /
+                                        targetParRates.times[key];
                         } else {
-                            zeroShift =
-                                -std::log(solution[i]) / targetParRates.times[key];
+                            zeroShift = -std::log(solution[i]) / targetParRates.times[key];
                         }
                         std::cout << i << " " << zeroKeys[i] << " " << solution[i] << " " << zeroShift << std::endl;
+                        if(key.keytype == RiskFactorKey::KeyType::DiscountCurve){
+                            upDatedScenario.discountCurveShifts.at(key.name).shifts[key.index] = zeroShift;
+                        }
+                        else if (key.keytype == RiskFactorKey::KeyType::IndexCurve) {
+                            upDatedScenario.indexCurveShifts.at(key.name).shifts[key.index] = zeroShift;
+                        }
                     }
-                    simMarket->applyScenario(targetScenario);
-                    std::cout << "key;fairrate;target;error" << std::endl;
-                    for (const auto& [key, parHelper] : instruments.parHelpers_) {
-                        double tgt = targetParRates.targetValues[key];
-                        double rate = impliedQuote(parHelper);
-                        std::cout << key << ";" << rate << ";" << tgt << ";" << tgt - rate << std::endl;
-                    }
-                                }
+                    // Convert result into a zero shift
+                }
+                
+                
+                 std::cout << "Finales Scenario " << std::endl;
+                simMarket->reset();
+                auto targetScenario = simMarket->baseScenario()->clone();
+                for (const auto& [key, zeroValue] : solutions) {
+                    targetScenario->add(key, zeroValue);
+                }
+                simMarket->applyScenario(targetScenario);
+                std::cout << "key;fairrate;target;error" << std::endl;
+                for (const auto& [key, parHelper] : instruments.parHelpers_) {
+                    double tgt = targetParRates.targetValues[key];
+                    double rate = impliedQuote(parHelper);
+                    std::cout << key << ";" << rate << ";" << tgt << ";" << tgt - rate << std::endl;
+                }
                 // Build ScenarioSimMarket
 
                 // Build Scenario
@@ -319,13 +337,21 @@ public:
                 // Build TargetFunction
 
                 // Optimization
-
+                std::cout << "Spreaded Termstructures new Data " << stressTestData->useSpreadedTermStructures()
+                          << std::endl;
+                std::cout << "Spreaded Termstructures new Data "<<convertedScenarios->useSpreadedTermStructures() << std::endl;
                 // Compute Target Par Rate
                 // Modify ZeroRates to match Par-Rate
-            }
-            std::cout << "finished " << std::endl;
-        }
+                std::cout << "finished scenario " << scenario.label << std::endl;
 
+                upDatedScenario.irCurveParShifts = false;
+                upDatedScenario.creditCurveParShifts = false;
+                upDatedScenario.irCapFloorParShifts = false;
+                convertedScenarios->data().push_back(upDatedScenario);
+            }
+        }
+        convertedScenarios->useSpreadedTermStructures() = stressTestData->useSpreadedTermStructures();
+        convertedScenarios->toFile("./Input/convertedStressTest.xml");
         return stressTestData;
     }
 };

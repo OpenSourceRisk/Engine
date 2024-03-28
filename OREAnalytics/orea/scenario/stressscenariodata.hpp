@@ -97,12 +97,13 @@ public:
     //! \name Inspectors
     //@{
     const vector<StressTestData>& data() const { return data_; }
-    bool useSpreadedTermStructures() const { return useSpreadedTermStructures_; }
+    const bool useSpreadedTermStructures() const { return useSpreadedTermStructures_; }
     //@}
 
     //! \name Setters
     //@{
     vector<StressTestData>& data() { return data_; }
+    bool& useSpreadedTermStructures() { return useSpreadedTermStructures_; }
     //@}
 
     //! \name Serialisation
