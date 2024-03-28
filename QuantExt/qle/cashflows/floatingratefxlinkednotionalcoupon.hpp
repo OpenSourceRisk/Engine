@@ -39,10 +39,13 @@ public:
     FloatingRateFXLinkedNotionalCoupon(const Date& fxFixingDate, Real foreignAmount, boost::shared_ptr<FxIndex> fxIndex,
                                        const boost::shared_ptr<FloatingRateCoupon>& underlying)
         : FloatingRateCoupon(underlying->date(), Null<Real>(), underlying->accrualStartDate(),
-                             underlying->accrualEndDate(), underlying->fixingDays(), underlying->index(),
+                             underlying->accrualEndDate(), underlying->fixingDate(), underlying->index(),
                              underlying->gearing(), underlying->spread(), underlying->referencePeriodStart(),
                              underlying->referencePeriodEnd(), underlying->dayCounter(), underlying->isInArrears()),
           FXLinked(fxFixingDate, foreignAmount, fxIndex), underlying_(underlying) {
+        fixingDays_ = underlying->fixingDays() == Null<Natural>()
+                          ? (underlying->index() ? underlying->index()->fixingDays() : 0)
+                                                                  : underlying->fixingDays();
         registerWith(FXLinked::fxIndex());
         registerWith(underlying_);
     }
