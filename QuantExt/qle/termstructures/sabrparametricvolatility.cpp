@@ -319,11 +319,14 @@ void SabrParametricVolatility::calculate() {
                        << s.timeToExpiry << ", " << s.underlyingLength
                        << "). All (timeToExpiry, underlyingLength) pairs that are given as market points must be "
                           "covered by the given model parameters.");
-        auto [params, error] = calibrateModelParameters(s, param->second);
-        calibratedSabrParams_[key] = params;
+        try {
+            auto [params, error] = calibrateModelParameters(s, param->second);
+            calibratedSabrParams_[key] = params;
+            calibrationErrors_[key] = error;
+        } catch (...) {
+        }
         // handle calibration error TODO !!! we want to remove those exceeding an error threshold
         lognormalShifts_[key] = s.lognormalShift;
-        calibrationErrors_[key] = error;
     }
 
     // build the timeToExpiry, underlyingLength vectors
