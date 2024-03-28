@@ -278,7 +278,7 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
     Problem problem(t, noConstraint, guess);
     lm.minimize(problem, endCriteria);
 
-    // perform the calibration and return the result
+    // return the result
 
     std::vector<Real> result(params.size());
     for (Size i = 0, j = 0; i < result.size(); ++i) {
@@ -351,7 +351,7 @@ void SabrParametricVolatility::calculate() {
 
     for (Size i = 0; i < m; ++i) {
         for (Size j = 0; j < n; ++j) {
-            auto key = std::make_pair(timeToExpiries_[i], underlyingLengths_[j]);
+            auto key = std::make_pair(timeToExpiries_[j], underlyingLengths_[i]);
             if (auto p = calibratedSabrParams_.find(key); p != calibratedSabrParams_.end()) {
                 alpha_(i, j) = p->second[0];
                 beta_(i, j) = p->second[1];
