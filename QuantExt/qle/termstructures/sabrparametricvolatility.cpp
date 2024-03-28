@@ -293,16 +293,19 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
 
 void SabrParametricVolatility::calculate() {
 
+    // if no model parameters are given, we provide the default ones
+
+    if (modelParameters_.empty()) {
+        for (auto const& s : marketSmiles_) {
+            modelParameters_[std::make_pair(s.timeToExpiry, s.underlyingLength)] = defaultModelParameters();
+        }
+    }
+
     // for each market smile calibrate the SABR variant
 
     calibratedSabrParams_.clear();
     for (auto const& s : marketSmiles_) {
-
         auto key = std::make_pair(s.timeToExpiry, s.underlyingLength);
-
-        if (modelParameters_.empty())
-            modelParameters_[key] = defaultModelParameters();
-
         auto param = modelParameters_.find(key);
         QL_REQUIRE(param != modelParameters_.end(),
                    "SabrParametricVolatility::performCalculations(): no model parameter given for ("

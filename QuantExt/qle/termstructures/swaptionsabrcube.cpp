@@ -60,6 +60,9 @@ SwaptionSabrCube::SwaptionSabrCube(const Handle<SwaptionVolatilityStructure>& at
 }
 
 void SwaptionSabrCube::performCalculations() const {
+
+    SwaptionVolatilityCube::performCalculations();
+
     cache_.clear();
 
     std::vector<ParametricVolatility::MarketSmile> marketSmiles;
@@ -91,8 +94,10 @@ void SwaptionSabrCube::performCalculations() const {
 }
 
 boost::shared_ptr<SmileSection> SwaptionSabrCube::smileSectionImpl(Time optionTime, Time swapLength) const {
-    if (auto c = cache_.find(std::make_pair(optionTime, swapLength)); c != cache_.end())
+    calculate();
+    if (auto c = cache_.find(std::make_pair(optionTime, swapLength)); c != cache_.end()) {
         return c->second;
+    }
     Real forward =
         atmStrike(optionDateFromTime(optionTime), std::max<int>(1, static_cast<int>(swapLength * 12.0 + 0.5)) * Months);
     QuantLib::VolatilityType outVolType = outputVolatilityType_ ? *outputVolatilityType_ : volatilityType();

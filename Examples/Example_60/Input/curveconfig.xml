@@ -14,7 +14,7 @@
            Antonov2015FreeBoundaryNormal,
            KienitzLawsonSwaynePde,
            FlochKennedy -->
-      <Interpolation>Hagan2002ZeroBeta</Interpolation>
+      <Interpolation>Hagan2002NormalZeroBeta</Interpolation>
       <!-- Optional, defaults to Flat, applies to Interpolation = Linear only, it is ignored for the SABR interpolations
            None,
            Flat,
