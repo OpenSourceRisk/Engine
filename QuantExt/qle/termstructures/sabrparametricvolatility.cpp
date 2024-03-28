@@ -185,7 +185,7 @@ std::vector<Real> SabrParametricVolatility::evaluateSabr(const std::vector<Real>
         for (Size i = 0; i < strikes.size(); ++i) {
             result[i] = QuantExt::normalFreeBoundarySabrPrice(strikes[i], forward, timeToExpiry, params[0], params[2],
                                                               params[3]) *
-                        discountCurve_->discount(timeToExpiry);
+                        (discountCurve_.empty() ? 1.0 : discountCurve_->discount(timeToExpiry));
             if (strikes[i] < forward)
                 result[i] = result[i] - forward + strikes[i];
         }
@@ -199,7 +199,7 @@ std::vector<Real> SabrParametricVolatility::evaluateSabr(const std::vector<Real>
         for (Size i = 0; i < strikes.size(); ++i) {
             if (strikes[i] < forward)
                 result[i] = result[i] - forward + strikes[i];
-            result[i] *= discountCurve_->discount(timeToExpiry);
+            result[i] *= discountCurve_.empty() ? 1.0 : discountCurve_->discount(timeToExpiry);
         }
         return result;
     }
