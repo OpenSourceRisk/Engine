@@ -51,6 +51,7 @@ void FxDigitalOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
     bool flipResults = false;
     if (payoffCurrency_ == "") {
         DLOG("PayoffCurrency defaulting to " << domesticCurrency_ << " for FxDigitalOption " << id());
+        payoffCurrency_ = domesticCurrency_;
     } else if (payoffCurrency_ == foreignCurrency_) {
         // Invert the trade, switch dom and for and flip Put/Call
         strike = 1.0 / strike;
