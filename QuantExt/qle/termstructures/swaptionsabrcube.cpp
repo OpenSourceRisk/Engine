@@ -38,19 +38,20 @@ Real ParametricVolatilitySmileSection::volatilityImpl(Rate strike) const {
     return parametricVolatility_->evaluate(optionTime_, swapLength_, strike, atmLevel_, outputMarketQuoteType_);
 }
 
-SwaptionSabrCube::SwaptionSabrCube(const Handle<SwaptionVolatilityStructure>& atmVolStructure,
-                                   const std::vector<Period>& optionTenors, const std::vector<Period>& swapTenors,
-                                   const std::vector<Spread>& strikeSpreads,
-                                   const std::vector<std::vector<Handle<Quote>>>& volSpreads,
-                                   const boost::shared_ptr<SwapIndex>& swapIndexBase,
-                                   const boost::shared_ptr<SwapIndex>& shortSwapIndexBase,
-                                   const QuantExt::SabrParametricVolatility::ModelVariant modelVariant,
-                                   const boost::optional<QuantLib::VolatilityType> outputVolatilityType,
-                                   const std::vector<std::pair<Real, bool>>& initialModelParameters)
+SwaptionSabrCube::SwaptionSabrCube(
+    const Handle<SwaptionVolatilityStructure>& atmVolStructure, const std::vector<Period>& optionTenors,
+    const std::vector<Period>& swapTenors, const std::vector<Spread>& strikeSpreads,
+    const std::vector<std::vector<Handle<Quote>>>& volSpreads, const boost::shared_ptr<SwapIndex>& swapIndexBase,
+    const boost::shared_ptr<SwapIndex>& shortSwapIndexBase,
+    const QuantExt::SabrParametricVolatility::ModelVariant modelVariant,
+    const boost::optional<QuantLib::VolatilityType> outputVolatilityType,
+    const std::vector<std::pair<Real, bool>>& initialModelParameters, const QuantLib::Size maxCalibrationAttempts,
+    const QuantLib::Real exitEarlyErrorThreshold, const QuantLib::Real maxAcceptableError)
     : SwaptionVolatilityCube(atmVolStructure, optionTenors, swapTenors, strikeSpreads, volSpreads, swapIndexBase,
                              shortSwapIndexBase, false),
       modelVariant_(modelVariant), outputVolatilityType_(outputVolatilityType),
-      initialModelParameters_(initialModelParameters) {
+      initialModelParameters_(initialModelParameters), maxCalibrationAttempts_(maxCalibrationAttempts),
+      exitEarlyErrorThreshold_(exitEarlyErrorThreshold), maxAcceptableError_(maxAcceptableError) {
 
     registerWith(atmVolStructure);
 
@@ -90,7 +91,8 @@ void SwaptionSabrCube::performCalculations() const {
         modelVariant_, marketSmiles, ParametricVolatility::MarketModelType::Black76,
         volatilityType() == QuantLib::Normal ? ParametricVolatility::MarketQuoteType::NormalVolatility
                                              : ParametricVolatility::MarketQuoteType::ShiftedLognormalVolatility,
-        Handle<YieldTermStructure>(), modelParameters);
+        Handle<YieldTermStructure>(), modelParameters, maxCalibrationAttempts_, exitEarlyErrorThreshold_,
+        maxAcceptableError_);
 }
 
 boost::shared_ptr<SmileSection> SwaptionSabrCube::smileSectionImpl(Time optionTime, Time swapLength) const {

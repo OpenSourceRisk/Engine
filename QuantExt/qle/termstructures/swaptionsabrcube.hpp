@@ -58,7 +58,10 @@ public:
                      const boost::shared_ptr<SwapIndex>& shortSwapIndexBase,
                      const QuantExt::SabrParametricVolatility::ModelVariant modelVariant,
                      const boost::optional<QuantLib::VolatilityType> outputVolatilityType = boost::none,
-                     const std::vector<std::pair<Real, bool>>& initialModelParameters = {});
+                     const std::vector<std::pair<Real, bool>>& initialModelParameters = {},
+                     const QuantLib::Size maxCalibrationAttempts = 10,
+                     const QuantLib::Real exitEarlyErrorThreshold = 0.005,
+                     const QuantLib::Real maxAcceptableError = 0.05);
     void performCalculations() const override;
     boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const override;
 
@@ -68,6 +71,9 @@ private:
     QuantExt::SabrParametricVolatility::ModelVariant modelVariant_;
     boost::optional<QuantLib::VolatilityType> outputVolatilityType_;
     std::vector<std::pair<Real, bool>> initialModelParameters_;
+    QuantLib::Size maxCalibrationAttempts_;
+    QuantLib::Real exitEarlyErrorThreshold_;
+    QuantLib::Real maxAcceptableError_;
 };
 
 } // namespace QuantExt

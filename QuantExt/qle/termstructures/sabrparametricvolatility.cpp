@@ -26,6 +26,7 @@
 #include <ql/math/interpolations/flatextrapolation2d.hpp>
 #include <ql/math/optimization/costfunction.hpp>
 #include <ql/math/optimization/levenbergmarquardt.hpp>
+#include <ql/math/randomnumbers/haltonrsg.hpp>
 #include <ql/termstructures/volatility/sabr.hpp>
 
 namespace QuantExt {
@@ -35,9 +36,12 @@ using namespace QuantLib;
 SabrParametricVolatility::SabrParametricVolatility(
     const ModelVariant modelVariant, const std::vector<MarketSmile> marketSmiles, const MarketModelType marketModelType,
     const MarketQuoteType inputMarketQuoteType, const Handle<YieldTermStructure> discountCurve,
-    const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, bool>>> modelParameters)
+    const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, bool>>> modelParameters,
+    const Size maxCalibrationAttempts, const Real exitEarlyErrorThreshold, const Real maxAcceptableError)
     : ParametricVolatility(marketSmiles, marketModelType, inputMarketQuoteType, discountCurve),
-      modelVariant_(modelVariant), modelParameters_(std::move(modelParameters)) {
+      modelVariant_(modelVariant), modelParameters_(std::move(modelParameters)),
+      maxCalibrationAttempts_(maxCalibrationAttempts), exitEarlyErrorThreshold_(exitEarlyErrorThreshold),
+      maxAcceptableError_(maxAcceptableError) {
     calculate();
 }
 
@@ -59,6 +63,40 @@ ParametricVolatility::MarketQuoteType SabrParametricVolatility::preferredOutputQ
         QL_FAIL("SabrParametricVolatility::preferredOutputQuoteType(): model variant ("
                 << static_cast<int>(modelVariant_) << ") not handled.");
     }
+}
+
+std::vector<Real> SabrParametricVolatility::getGuess(const std::vector<std::pair<Real, bool>>& params,
+                                                     const std::vector<Real>& randomSeq, const Real forward,
+                                                     const Real lognormalShift) const {
+    std::vector<Real> result(4);
+    for (Size i = 0; i < 4; ++i) {
+        if (params[i].second) {
+            result[i] = params[i].first;
+        } else {
+            switch (i) {
+            case 0: {
+                Real fbeta = std::pow(forward + lognormalShift, params[1].first);
+                result[0] = (eps1 + randomSeq[0] * 0.01) / fbeta;
+                break;
+            }
+            case 1: {
+                result[1] = eps1 + randomSeq[1] * eps2;
+                break;
+            }
+            case 2: {
+                result[2] = eps1 + randomSeq[2] * 5.0;
+                break;
+            }
+            case 3: {
+                result[3] = (randomSeq[3] * 2.0 - 1.0) * eps2;
+                break;
+            }
+            default:
+                break;
+            }
+        }
+    }
+    return result;
 }
 
 std::vector<std::pair<Real, bool>> SabrParametricVolatility::defaultModelParameters() const {
@@ -263,34 +301,65 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
             marketSmile.lognormalShift, boost::none));
     }
 
-    // perform the calibration (this step might throw if the minimization goes wrong)
+    // perform the calibration (this step might throw if all minimizations go wrong)
 
     NoConstraint noConstraint;
     LevenbergMarquardt lm;
     EndCriteria endCriteria(100, 10, 1E-8, 1E-8, 1E-8);
 
+    std::vector<Real> bestResult(params.size());
+    Real bestError = QL_MAX_REAL;
+
+    HaltonRsg haltonRsg(noFreeParams, 42);
+
     Array guess(noFreeParams);
-    for (Size i = 0, j = 0; i < t.invParams_.size(); ++i) {
-        if (!params[i].second)
-            guess[j++] = t.invParams_[i];
+
+    for (Size attempt = 0; attempt < maxCalibrationAttempts_; ++attempt) {
+
+        if (attempt == 0) {
+            // first attempt uses given initial model parameters
+            for (Size i = 0, j = 0; i < t.invParams_.size(); ++i) {
+                if (!params[i].second) {
+                    guess[j++] = t.invParams_[i];
+                }
+            }
+        } else {
+            // subsequent attempts use randomized guess
+            auto g = inverse(getGuess(params, haltonRsg.nextSequence().value, t.forward_, t.lognormalShift_),
+                             t.forward_, t.lognormalShift_);
+            for (Size i = 0, j = 0; i < g.size(); ++i) {
+                if (!params[i].second) {
+                    guess[j++] = g[i];
+                }
+            }
+        }
+
+        Problem problem(t, noConstraint, guess);
+        try {
+            lm.minimize(problem, endCriteria);
+        } catch (...) {
+            continue;
+        }
+
+        Real thisError = problem.functionValue();
+        if (thisError < bestError) {
+            bestError = thisError;
+            for (Size i = 0, j = 0; i < bestResult.size(); ++i) {
+                if (params[i].second)
+                    bestResult[i] = t.invParams_[i];
+                else
+                    bestResult[i] = problem.currentValue()[j++];
+            }
+            bestResult = direct(bestResult, t.forward_, t.lognormalShift_);
+        }
+
+        if (bestError < exitEarlyErrorThreshold_)
+            break;
     }
 
-    Problem problem(t, noConstraint, guess);
-    lm.minimize(problem, endCriteria);
+    QL_REQUIRE(bestError < QL_MAX_REAL, "internal: all calibrations failed");
 
-    // extract the result and return it
-
-    std::vector<Real> result(params.size());
-    for (Size i = 0, j = 0; i < result.size(); ++i) {
-        if (params[i].second)
-            result[i] = t.invParams_[i];
-        else
-            result[i] = problem.currentValue()[j++];
-    }
-
-    result = direct(result, t.forward_, t.lognormalShift_);
-
-    return std::make_pair(result, problem.functionValue());
+    return std::make_pair(bestResult, bestError);
 }
 
 void SabrParametricVolatility::calculate() {
@@ -321,7 +390,8 @@ void SabrParametricVolatility::calculate() {
                           "covered by the given model parameters.");
         try {
             auto [params, error] = calibrateModelParameters(s, param->second);
-            calibratedSabrParams_[key] = params;
+            if (error < maxAcceptableError_)
+                calibratedSabrParams_[key] = params;
             calibrationErrors_[key] = error;
         } catch (...) {
         }

@@ -366,7 +366,8 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                         shortSwapIndexBase, QuantExt::SabrParametricVolatility::ModelVariant(config->interpolation()),
                         config->outputVolatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
                             ? QuantLib::Normal
-                            : QuantLib::ShiftedLognormal);
+                            : QuantLib::ShiftedLognormal,
+                        std::vector<std::pair<Real, bool>>{}, 10, 0.005, 0.05);
                 }
 
                 // Wrap it in a SwaptionVolCubeWithATM

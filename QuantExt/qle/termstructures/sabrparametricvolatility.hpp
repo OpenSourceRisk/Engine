@@ -45,7 +45,10 @@ public:
         const ModelVariant modelVariant, const std::vector<MarketSmile> marketSmiles,
         const MarketModelType marketModelType, const MarketQuoteType inputMarketQuoteType,
         const QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve,
-        const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, bool>>> modelParameters);
+        const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, bool>>> modelParameters =
+            {},
+        const QuantLib::Size maxCalibrationAttempts = 10, const QuantLib::Real exitEarlyErrorThreshold = 0.005,
+        const QuantLib::Real maxAcceptableError = 0.05);
 
     QuantLib::Real
     evaluate(const QuantLib::Real timeToExpiry, const QuantLib::Real underlyingLength, const QuantLib::Real strike,
@@ -75,6 +78,8 @@ private:
     void calculate();
 
     std::vector<std::pair<Real, bool>> defaultModelParameters() const;
+    std::vector<Real> getGuess(const std::vector<std::pair<Real, bool>>& params, const std::vector<Real>& randomSeq,
+                               const Real forward, const Real lognormalShift) const;
     ParametricVolatility::MarketQuoteType preferredOutputQuoteType() const;
     std::vector<Real> direct(const std::vector<Real>& x, const Real forward, const Real lognormalShift) const;
     std::vector<Real> inverse(const std::vector<Real>& y, const Real forward, const Real lognormalShift) const;
@@ -85,6 +90,9 @@ private:
 
     ModelVariant modelVariant_;
     std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, bool>>> modelParameters_;
+    QuantLib::Size maxCalibrationAttempts_;
+    QuantLib::Real exitEarlyErrorThreshold_;
+    QuantLib::Real maxAcceptableError_;
 
     mutable std::map<std::pair<Real, Real>, std::vector<Real>> calibratedSabrParams_;
     mutable std::map<std::pair<Real, Real>, Real> lognormalShifts_;
