@@ -198,13 +198,15 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
 
             auto addResults = trade->instrument()->additionalResults();
 
+            auto cashFlowResults = addResults.find("cashFlowResults");
+
             // ensures all cashFlowResults from composite trades are being accounted for
             auto lower = addResults.lower_bound("cashFlowResults");
             auto upper = addResults.lower_bound("cashFlowResults_a");
 
             const Real multiplier = trade->instrument()->multiplier() * trade->instrument()->multiplier2();
 
-            if (trade->legs().size() >= 1) {
+            if (trade->legs().size() >= 1 && cashFlowResults == addResults.end()) {
 
                 // leg based cashflow reporting
 
