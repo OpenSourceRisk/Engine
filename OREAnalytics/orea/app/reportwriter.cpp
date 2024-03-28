@@ -377,8 +377,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
 
                             if (market) {
                                 discountFactor = ptrFlow->hasOccurred(asof) ? 0.0 : discountCurve->discount(payDate);
-                if(effectiveAmount != Null<Real>())
-                    presentValue = discountFactor * effectiveAmount;
+				if(effectiveAmount != Null<Real>())
+				    presentValue = discountFactor * effectiveAmount;
                                 try {
                                     fxRateLocalBase = market->fxRate(ccy + baseCurrency)->value();
                                     presentValueBase = presentValue * fxRateLocalBase;
