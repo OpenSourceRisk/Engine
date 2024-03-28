@@ -278,15 +278,17 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
     Problem problem(t, noConstraint, guess);
     lm.minimize(problem, endCriteria);
 
-    // return the result
+    // extract the result and return it
 
     std::vector<Real> result(params.size());
     for (Size i = 0, j = 0; i < result.size(); ++i) {
         if (params[i].second)
-            result[i] = params[i].first;
+            result[i] = t.invParams_[i];
         else
             result[i] = problem.currentValue()[j++];
     }
+
+    result = direct(result, t.forward_, t.lognormalShift_);
 
     return std::make_pair(result, problem.functionValue());
 }
@@ -346,7 +348,7 @@ void SabrParametricVolatility::calculate() {
     nu_ = Matrix(m, n, Null<Real>());
     rho_ = Matrix(m, n, Null<Real>());
     lognormalShift_ = Matrix(m, n, Null<Real>());
-    calibrationError_ = Matrix(m,n,Null<Real>());
+    calibrationError_ = Matrix(m, n, Null<Real>());
     isInterpolated_ = Matrix(m, n, 1.0);
 
     for (Size i = 0; i < m; ++i) {
