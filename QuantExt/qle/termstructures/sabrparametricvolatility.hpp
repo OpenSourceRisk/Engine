@@ -53,6 +53,20 @@ public:
              const QuantLib::Real outputLognormalShift = QuantLib::Null<QuantLib::Real>(),
              const boost::optional<QuantLib::Option::Type> outputOptionType = boost::none) const override;
 
+    // the calculated grid of option expiries and the underlying lenghts
+    const std::vector<Real>& timeToEpiries() const;
+    const std::vector<Real>& underlyingLenghts() const;
+    // calibrated or interpolated model parameters (rows = underlying lenghts, cols = option expiries) 
+    const QuantLib::Matrix& alpha() const;
+    const QuantLib::Matrix& beta() const;
+    const QuantLib::Matrix& nu() const;
+    const QuantLib::Matrix& rho() const;
+    const QuantLib::Matrix& lognormalShift() const;
+    // calibration error
+    const QuantLib::Matrix& calibrationError() const;
+    // indicator whether smile params were interpolated (1) or calibrated (0)
+    const QuantLib::Matrix& isInterpolated() const;
+
 
 private:
     static constexpr double eps1 = .0000001;
@@ -74,9 +88,10 @@ private:
 
     mutable std::map<std::pair<Real, Real>, std::vector<Real>> calibratedSabrParams_;
     mutable std::map<std::pair<Real, Real>, Real> lognormalShifts_;
+    mutable std::map<std::pair<Real, Real>, Real> calibrationErrors_;
 
     mutable std::vector<Real> underlyingLengths_, timeToExpiries_;
-    mutable QuantLib::Matrix alpha_, beta_, nu_, rho_, lognormalShift_;
+    mutable QuantLib::Matrix alpha_, beta_, nu_, rho_, lognormalShift_, calibrationError_, isInterpolated_;
     mutable QuantLib::Interpolation2D alphaInterpolation_, betaInterpolation_, nuInterpolation_, rhoInterpolation_,
         lognormalShiftInterpolation_;
 };

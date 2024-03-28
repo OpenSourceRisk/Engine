@@ -301,9 +301,14 @@ void SabrParametricVolatility::calculate() {
         }
     }
 
-    // for each market smile calibrate the SABR variant
+    // clear stored data
 
     calibratedSabrParams_.clear();
+    lognormalShifts_.clear();
+    calibrationErrors_.clear();
+
+    // for each market smile calibrate the SABR variant
+
     for (auto const& s : marketSmiles_) {
         auto key = std::make_pair(s.timeToExpiry, s.underlyingLength);
         auto param = modelParameters_.find(key);
@@ -316,6 +321,7 @@ void SabrParametricVolatility::calculate() {
         calibratedSabrParams_[key] = params;
         // handle calibration error TODO !!! we want to remove those exceeding an error threshold
         lognormalShifts_[key] = s.lognormalShift;
+        calibrationErrors_[key] = error;
     }
 
     // build the timeToExpiry, underlyingLength vectors
@@ -340,6 +346,8 @@ void SabrParametricVolatility::calculate() {
     nu_ = Matrix(m, n, Null<Real>());
     rho_ = Matrix(m, n, Null<Real>());
     lognormalShift_ = Matrix(m, n, Null<Real>());
+    calibrationError_ = Matrix(m,n,Null<Real>());
+    isInterpolated_ = Matrix(m, n, 1.0);
 
     for (Size i = 0; i < m; ++i) {
         for (Size j = 0; j < n; ++j) {
@@ -349,9 +357,13 @@ void SabrParametricVolatility::calculate() {
                 beta_(i, j) = p->second[1];
                 nu_(i, j) = p->second[2];
                 rho_(i, j) = p->second[3];
+                isInterpolated_(i, j) = 0.0;
             }
             if (auto s = lognormalShifts_.find(key); s != lognormalShifts_.end()) {
                 lognormalShift_(i, j) = s->second;
+            }
+            if (auto e = calibrationErrors_.find(key); e != calibrationErrors_.end()) {
+                calibrationError_(i, j) = e->second;
             }
         }
     }
