@@ -64,17 +64,17 @@ ParametricVolatility::MarketQuoteType SabrParametricVolatility::preferredOutputQ
 std::vector<std::pair<Real, bool>> SabrParametricVolatility::defaultModelParameters() const {
     switch (modelVariant_) {
     case ModelVariant::Hagan2002Lognormal:
-        return {{0.0050, false}, {0.8, false}, {0.080, false}, {0.0, false}};
+        return {{0.0050, false}, {0.8, false}, {0.30, false}, {0.0, false}};
     case ModelVariant::Hagan2002Normal:
-        return {{0.0050, false}, {0.8, false}, {0.080, false}, {0.0, false}};
+        return {{0.0050, false}, {0.8, false}, {0.30, false}, {0.0, false}};
     case ModelVariant::Hagan2002NormalZeroBeta:
-        return {{0.0050, false}, {0.0, true}, {0.080, false}, {0.0, false}};
+        return {{0.0050, false}, {0.0, true}, {0.30, false}, {0.0, false}};
     case ModelVariant::Antonov2015FreeBoundaryNormal:
-        return {{0.0050, false}, {0.0, false}, {0.080, false}, {0.0, false}};
+        return {{0.0050, false}, {0.0, false}, {0.30, false}, {0.0, false}};
     case ModelVariant::KienitzLawsonSwaynePde:
-        return {{0.0050, false}, {0.8, false}, {0.080, false}, {0.0, false}};
+        return {{0.0050, false}, {0.8, false}, {0.30, false}, {0.0, false}};
     case ModelVariant::FlochKennedy:
-        return {{0.0050, false}, {0.8, false}, {0.080, false}, {0.0, false}};
+        return {{0.0050, false}, {0.8, false}, {0.30, false}, {0.0, false}};
     default:
         QL_FAIL("SabrParametricVolatility::defaultModelParameters(): model variant (" << static_cast<int>(modelVariant_)
                                                                                       << ") not handled.");
