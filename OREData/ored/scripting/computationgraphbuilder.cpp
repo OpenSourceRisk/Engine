@@ -185,7 +185,7 @@ public:
         checkpoint(v);
         if (v.isCached) {
             if (v.isScalar) {
-                return std::make_pair(boost::ref(*v.cachedScalar), 0);
+                return std::make_pair(QuantLib::ext::ref(*v.cachedScalar), 0);
             } else {
                 QL_REQUIRE(v.args[0], "array subscript required for variable '" << v.name << "'");
                 v.args[0]->accept(*this);
@@ -198,7 +198,7 @@ public:
                 long il = std::lround(i.at(0));
                 QL_REQUIRE(static_cast<long>(v.cachedVector->size()) >= il && il >= 1,
                            "array index " << il << " out of bounds 1..." << v.cachedVector->size());
-                return std::make_pair(boost::ref(v.cachedVector->operator[](il - 1)), il - 1);
+                return std::make_pair(QuantLib::ext::ref(v.cachedVector->operator[](il - 1)), il - 1);
             }
         } else {
             auto scalar = context_.scalars.find(v.name);
@@ -207,7 +207,7 @@ public:
                 v.isCached = true;
                 v.isScalar = true;
                 v.cachedScalar = &scalar->second;
-                return std::make_pair(boost::ref(scalar->second), 0);
+                return std::make_pair(QuantLib::ext::ref(scalar->second), 0);
             }
             auto array = context_.arrays.find(v.name);
             if (array != context_.arrays.end()) {

@@ -263,7 +263,7 @@ void AnalyticLgmSwaptionEngine::calculate() const {
     Brent b;
     Real yStar;
     try {
-        yStar = b.solve(boost::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, boost::placeholders::_1), 1.0E-6,
+        yStar = b.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-6,
                         0.0, 0.01);
     } catch (const std::exception& e) {
         std::ostringstream os;

@@ -196,9 +196,9 @@ public:
         if (pUncond < 1.e-10)
             return 0.;
 
-        return integratedExpectedValue(boost::function<Real(const std::vector<Real>& v1)>(
-            boost::bind(&DefaultLatentModel<copulaPolicy>::conditionalDefaultProbabilityInvP, this,
-                        inverseCumulativeY(pUncond, iName), iName, boost::placeholders::_1)));
+        return integratedExpectedValue(QuantLib::ext::function<Real(const std::vector<Real>& v1)>(
+            QuantLib::ext::bind(&DefaultLatentModel<copulaPolicy>::conditionalDefaultProbabilityInvP, this,
+                        inverseCumulativeY(pUncond, iName), iName, QuantLib::ext::placeholders::_1)));
     }
     /*! Pearsons' default probability correlation.
         Users should consider specialization on the copula type for specific
@@ -212,8 +212,8 @@ public:
     defaults in the basket portfolio at a given time.
     */
     Probability probAtLeastNEvents(Size n, const Date& date) const {
-        return integratedExpectedValue(boost::function<Real(const std::vector<Real>& v1)>(boost::bind(
-            &DefaultLatentModel<copulaPolicy>::conditionalProbAtLeastNEvents, this, n, boost::cref(date), boost::placeholders::_1)));
+        return integratedExpectedValue(QuantLib::ext::function<Real(const std::vector<Real>& v1)>(QuantLib::ext::bind(
+            &DefaultLatentModel<copulaPolicy>::conditionalProbAtLeastNEvents, this, n, QuantLib::ext::cref(date), QuantLib::ext::placeholders::_1)));
     }
 };
 
@@ -234,8 +234,8 @@ template <class CP> Real DefaultLatentModel<CP>::defaultCorrelation(const Date& 
     // avoid repetitive calls when i=j?
     Real E1i1j; // joint default covariance term
     if (iNamei != iNamej) {
-        E1i1j = integratedExpectedValue(boost::function<Real(const std::vector<Real>& v1)>(
-            boost::bind(&DefaultLatentModel<CP>::condProbProduct, this, invPi, invPj, iNamei, iNamej, boost::placeholders::_1)));
+        E1i1j = integratedExpectedValue(QuantLib::ext::function<Real(const std::vector<Real>& v1)>(
+            QuantLib::ext::bind(&DefaultLatentModel<CP>::condProbProduct, this, invPi, invPj, iNamei, iNamej, QuantLib::ext::placeholders::_1)));
     } else {
         E1i1j = pi;
     }

@@ -113,7 +113,7 @@ void RegressionDynamicInitialMarginCalculator::build() {
     std::vector<ext::function<Real(Array)>> v(
         LsmBasisSystem::multiPathBasisSystem(regressionDimension, polynomOrder, polynomType));
 #else // QL 1.14 and below
-    std::vector<boost::function1<Real, Array>> v(
+    std::vector<QuantLib::ext::function1<Real, Array>> v(
         LsmBasisSystem::multiPathBasisSystem(regressionDimension, polynomOrder, polynomType));
 #endif
     Real confidenceLevel = QuantLib::InverseCumulativeNormal()(quantile_);

@@ -26,7 +26,7 @@
 #include <ql/patterns/singleton.hpp>
 #include <ql/types.hpp>
 
-#include <boost/function.hpp>
+#include <ql/functional.hpp>
 #include <boost/timer/timer.hpp>
 
 #include <initializer_list>
