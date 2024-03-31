@@ -105,8 +105,8 @@ class ASTRunner : public AcyclicVisitor,
                   public Visitor<IfThenElseNode>,
                   public Visitor<LoopNode> {
 public:
-    ASTRunner(const boost::shared_ptr<Model> model, const std::string& script, bool& interactive, Context& context,
-              ASTNode*& lastVisitedNode, boost::shared_ptr<PayLog> paylog)
+    ASTRunner(const QuantLib::ext::shared_ptr<Model> model, const std::string& script, bool& interactive, Context& context,
+              ASTNode*& lastVisitedNode, QuantLib::ext::shared_ptr<PayLog> paylog)
         : model_(model), size_(model ? model->size() : 1), script_(script), interactive_(interactive), paylog_(paylog),
           context_(context), lastVisitedNode_(lastVisitedNode) {
         filter.emplace(size_, true);
@@ -178,7 +178,7 @@ public:
 
     void declareVariable(const ASTNodePtr arg, const ValueType& val) {
         checkpoint(*arg);
-        auto v = boost::dynamic_pointer_cast<VariableNode>(arg);
+        auto v = QuantLib::ext::dynamic_pointer_cast<VariableNode>(arg);
         QL_REQUIRE(v, "invalid declaration");
         if (context_.ignoreAssignments.find(v->name) != context_.ignoreAssignments.end()) {
             TRACE("declare(" << v->name << " ignored, because listed in ignoreAssignment variables set", *arg);
@@ -329,7 +329,7 @@ public:
         auto array = context_.arrays.find(n.name);
         QL_REQUIRE(array != context_.arrays.end(),
                    "DATEINDEX: second argument event array '" << n.name << "' not found");
-        auto v = boost::dynamic_pointer_cast<VariableNode>(n.args[0]);
+        auto v = QuantLib::ext::dynamic_pointer_cast<VariableNode>(n.args[0]);
         QL_REQUIRE(v, "DATEINDEX: first argument must be a variable expression");
         auto ref = getVariableRef(*v);
         checkpoint(n);
@@ -365,7 +365,7 @@ public:
         n.args[1]->accept(*this);
         auto right = value.pop();
         checkpoint(n);
-        auto v = boost::dynamic_pointer_cast<VariableNode>(n.args[0]);
+        auto v = QuantLib::ext::dynamic_pointer_cast<VariableNode>(n.args[0]);
         QL_REQUIRE(v, "expected variable identifier on LHS of assignment");
         if (context_.ignoreAssignments.find(v->name) != context_.ignoreAssignments.end()) {
             TRACE("assign(" << v->name << ") ignored, because variable is  listed in context's ignoreAssignment set",
@@ -542,7 +542,7 @@ public:
         std::vector<RandomVariable*> x, y, p;
 
         if (n.args[0]) {
-            auto xname = boost::dynamic_pointer_cast<VariableNode>(n.args[0]);
+            auto xname = QuantLib::ext::dynamic_pointer_cast<VariableNode>(n.args[0]);
             QL_REQUIRE(xname, "x must be a variable");
             QL_REQUIRE(!xname->args[0], "x must not be indexed");
             auto xv = context_.arrays.find(xname->name);
@@ -554,7 +554,7 @@ public:
         }
 
         if (n.args[1]) {
-            auto yname = boost::dynamic_pointer_cast<VariableNode>(n.args[1]);
+            auto yname = QuantLib::ext::dynamic_pointer_cast<VariableNode>(n.args[1]);
             QL_REQUIRE(yname, "y must be a variable");
             QL_REQUIRE(!yname->args[0], "y must not be indexed");
             auto yv = context_.arrays.find(yname->name);
@@ -566,7 +566,7 @@ public:
         }
 
         if (n.args[2]) {
-            auto pname = boost::dynamic_pointer_cast<VariableNode>(n.args[2]);
+            auto pname = QuantLib::ext::dynamic_pointer_cast<VariableNode>(n.args[2]);
             QL_REQUIRE(pname, "p must be a variable");
             QL_REQUIRE(!pname->args[0], "p must not be indexed");
             auto pv = context_.arrays.find(pname->name);
@@ -640,7 +640,7 @@ public:
         std::vector<RandomVariable*> x, y, p;
 
         if (n.args[0]) {
-            auto xname = boost::dynamic_pointer_cast<VariableNode>(n.args[0]);
+            auto xname = QuantLib::ext::dynamic_pointer_cast<VariableNode>(n.args[0]);
             QL_REQUIRE(xname, "x must be a variable");
             QL_REQUIRE(!xname->args[0], "x must not be indexed");
             auto xv = context_.arrays.find(xname->name);
@@ -652,7 +652,7 @@ public:
         }
 
         if (n.args[1]) {
-            auto yname = boost::dynamic_pointer_cast<VariableNode>(n.args[1]);
+            auto yname = QuantLib::ext::dynamic_pointer_cast<VariableNode>(n.args[1]);
             QL_REQUIRE(yname, "y must be a variable");
             QL_REQUIRE(!yname->args[0], "y must not be indexed");
             auto yv = context_.arrays.find(yname->name);
@@ -664,7 +664,7 @@ public:
         }
 
         if (n.args[2]) {
-            auto pname = boost::dynamic_pointer_cast<VariableNode>(n.args[2]);
+            auto pname = QuantLib::ext::dynamic_pointer_cast<VariableNode>(n.args[2]);
             QL_REQUIRE(pname, "p must be a variable");
             QL_REQUIRE(!pname->args[0], "p must not be indexed");
             auto pv = context_.arrays.find(pname->name);
@@ -804,7 +804,7 @@ public:
                     legno = std::lround(sv.at(0));
                     QL_REQUIRE(slot >= 0, " legNo must be >= 0");
                     QL_REQUIRE(pn.args[5], "expected cashflow type argument when legno is given");
-                    auto cftname = boost::dynamic_pointer_cast<VariableNode>(n.args[5]);
+                    auto cftname = QuantLib::ext::dynamic_pointer_cast<VariableNode>(n.args[5]);
                     QL_REQUIRE(cftname, "cashflow type must be a variable name");
                     QL_REQUIRE(!cftname->args[0], "cashflow type must not be indexed");
                     cftype = cftname->name;
@@ -1140,11 +1140,11 @@ public:
     }
 
     // inputs
-    const boost::shared_ptr<Model> model_;
+    const QuantLib::ext::shared_ptr<Model> model_;
     const Size size_;
     const std::string script_;
     bool& interactive_;
-    boost::shared_ptr<PayLog> paylog_; // cashflow log
+    QuantLib::ext::shared_ptr<PayLog> paylog_; // cashflow log
     // working variables
     Context& context_;
     ASTNode*& lastVisitedNode_;
@@ -1155,7 +1155,7 @@ public:
 
 } // namespace
 
-void ScriptEngine::run(const std::string& script, bool interactive, boost::shared_ptr<PayLog> paylog) {
+void ScriptEngine::run(const std::string& script, bool interactive, QuantLib::ext::shared_ptr<PayLog> paylog) {
 
     ASTNode* loc;
     ASTRunner runner(model_, script, interactive, *context_, loc, paylog);

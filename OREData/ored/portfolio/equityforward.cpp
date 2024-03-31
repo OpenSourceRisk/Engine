@@ -36,7 +36,7 @@ using namespace std;
 namespace ore {
 namespace data {
 
-void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void EquityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Equity");
@@ -71,19 +71,19 @@ void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory)
 
     string name = eqName();
 
-    boost::shared_ptr<Instrument> inst =
-        boost::make_shared<QuantExt::EquityForward>(name, ccy, longShort, quantity_, maturity, strike);
+    QuantLib::ext::shared_ptr<Instrument> inst =
+        QuantLib::ext::make_shared<QuantExt::EquityForward>(name, ccy, longShort, quantity_, maturity, strike);
 
     // Pricing engine
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    boost::shared_ptr<EquityForwardEngineBuilder> eqFwdBuilder =
-        boost::dynamic_pointer_cast<EquityForwardEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<EquityForwardEngineBuilder> eqFwdBuilder =
+        QuantLib::ext::dynamic_pointer_cast<EquityForwardEngineBuilder>(builder);
     inst->setPricingEngine(eqFwdBuilder->engine(name, ccy));
     setSensitivityTemplate(*eqFwdBuilder);
 
     // set up other Trade details
-    instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(inst));
+    instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(new VanillaInstrument(inst));
     npvCurrency_ = ccy.code();
     maturity_ = maturity;
     // Notional - we really need todays spot to get the correct notional.
@@ -130,7 +130,7 @@ XMLNode* EquityForward::toXML(XMLDocument& doc) const {
 }
 
 std::map<AssetClass, std::set<std::string>>
-EquityForward::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+EquityForward::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     return {{AssetClass::EQ, std::set<std::string>({eqName()})}};
 }
 

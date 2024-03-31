@@ -62,8 +62,8 @@ public:
        - historical fixings are retrieved in eval() only; there they override today's spot if given
      */
     ModelImpl(const DayCounter& dayCounter, const Size size, const std::vector<std::string>& currencies,
-              const std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>>& irIndices,
-              const std::vector<std::pair<std::string, boost::shared_ptr<ZeroInflationIndex>>>& infIndices,
+              const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
+              const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
               const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
               const std::set<Date>& simulationDates, 
               const IborFallbackConfig& iborFallbackConfig);
@@ -109,14 +109,14 @@ protected:
     const std::set<Date> simulationDates_;
     const IborFallbackConfig iborFallbackConfig_;
 
-    std::vector<std::pair<IndexInfo, boost::shared_ptr<InterestRateIndex>>> irIndices_;
-    std::vector<std::pair<IndexInfo, boost::shared_ptr<ZeroInflationIndex>>> infIndices_;
+    std::vector<std::pair<IndexInfo, QuantLib::ext::shared_ptr<InterestRateIndex>>> irIndices_;
+    std::vector<std::pair<IndexInfo, QuantLib::ext::shared_ptr<ZeroInflationIndex>>> infIndices_;
     std::vector<IndexInfo> indices_;
 
 private:
     // helper method to handle inflation fixings and their interpolation
     RandomVariable getInflationIndexFixing(const bool returnMissingFixingAsNull, const std::string& indexInput,
-                                           const boost::shared_ptr<ZeroInflationIndex>& infIndex, const Size indexNo,
+                                           const QuantLib::ext::shared_ptr<ZeroInflationIndex>& infIndex, const Size indexNo,
                                            const Date& limDate, const Date& obsdate, const Date& fwddate,
                                            const Date& baseDate) const;
 };

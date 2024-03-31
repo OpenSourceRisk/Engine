@@ -77,8 +77,8 @@ typedef std::map<Currency, std::vector<Real>, CurrencyComparator> result_type_ve
 typedef std::map<Currency, Real, CurrencyComparator> result_type_scalar;
 
 void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCurrency,
-                            boost::shared_ptr<Market> market, const std::string& configuration,
-                            boost::shared_ptr<Portfolio> portfolio) {
+                            QuantLib::ext::shared_ptr<Market> market, const std::string& configuration,
+                            QuantLib::ext::shared_ptr<Portfolio> portfolio) {
     LOG("portfolio valuation");
     DayCounter dc = ActualActual(ActualActual::ISDA);
     Date today = Settings::instance().evaluationDate();
@@ -146,8 +146,8 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
 }
 
 void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& baseCurrency,
-                                 boost::shared_ptr<ore::data::Portfolio> portfolio,
-                                 boost::shared_ptr<ore::data::Market> market, const std::string& configuration,
+                                 QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio,
+                                 QuantLib::ext::shared_ptr<ore::data::Market> market, const std::string& configuration,
                                  const bool includePastCashflows) {
 
     Date asof = Settings::instance().evaluationDate();
@@ -181,7 +181,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
         .addColumn("EffectiveFloorVolatility", double(), 6)
         .addColumn("EffectiveCapVolatility", double(), 6);
 
-    std::map<std::string, boost::shared_ptr<Trade>> trades = portfolio->trades();
+    std::map<std::string, QuantLib::ext::shared_ptr<Trade>> trades = portfolio->trades();
 
     for (auto [tradeId, trade]: trades) {
 
@@ -214,7 +214,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                     if (market)
                         discountCurve = market->discountCurve(ccy, configuration);
                     for (size_t j = 0; j < leg.size(); j++) {
-                        boost::shared_ptr<QuantLib::CashFlow> ptrFlow = leg[j];
+                        QuantLib::ext::shared_ptr<QuantLib::CashFlow> ptrFlow = leg[j];
                         Date payDate = ptrFlow->date();
                         if (!ptrFlow->hasOccurred(asof) || includePastCashflows) {
                             Real amount = ptrFlow->amount();
@@ -223,10 +223,10 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                 amount *= -1.0;
                             std::string ccy = trade->legCurrencies()[i];
 
-                            boost::shared_ptr<QuantLib::Coupon> ptrCoupon =
-                                boost::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow);
-                            boost::shared_ptr<QuantExt::CommodityCashFlow> ptrCommCf =
-                                boost::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(ptrFlow);
+                            QuantLib::ext::shared_ptr<QuantLib::Coupon> ptrCoupon =
+                                QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow);
+                            QuantLib::ext::shared_ptr<QuantExt::CommodityCashFlow> ptrCommCf =
+                                QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(ptrFlow);
 
                             Real coupon;
                             Real accrual;
@@ -261,20 +261,20 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                 flowType = "Notional";
                             }
 
-                            if (auto cpn = boost::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow)) {
+                            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow)) {
                                 ptrFlow = unpackIndexedCoupon(cpn);
                             }
 
-                            boost::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
-                                boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
-                            boost::shared_ptr<QuantLib::InflationCoupon> ptrInfl =
-                                boost::dynamic_pointer_cast<QuantLib::InflationCoupon>(ptrFlow);
-                            boost::shared_ptr<QuantLib::IndexedCashFlow> ptrIndCf =
-                                boost::dynamic_pointer_cast<QuantLib::IndexedCashFlow>(ptrFlow);
-                            boost::shared_ptr<QuantExt::FXLinkedCashFlow> ptrFxlCf =
-                                boost::dynamic_pointer_cast<QuantExt::FXLinkedCashFlow>(ptrFlow);
-                            boost::shared_ptr<QuantExt::EquityCoupon> ptrEqCp =
-                                boost::dynamic_pointer_cast<QuantExt::EquityCoupon>(ptrFlow);
+                            QuantLib::ext::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
+                                QuantLib::ext::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
+                            QuantLib::ext::shared_ptr<QuantLib::InflationCoupon> ptrInfl =
+                                QuantLib::ext::dynamic_pointer_cast<QuantLib::InflationCoupon>(ptrFlow);
+                            QuantLib::ext::shared_ptr<QuantLib::IndexedCashFlow> ptrIndCf =
+                                QuantLib::ext::dynamic_pointer_cast<QuantLib::IndexedCashFlow>(ptrFlow);
+                            QuantLib::ext::shared_ptr<QuantExt::FXLinkedCashFlow> ptrFxlCf =
+                                QuantLib::ext::dynamic_pointer_cast<QuantExt::FXLinkedCashFlow>(ptrFlow);
+                            QuantLib::ext::shared_ptr<QuantExt::EquityCoupon> ptrEqCp =
+                                QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityCoupon>(ptrFlow);
 
                             Date fixingDate;
                             Real fixingValue = Null<Real>();
@@ -288,18 +288,18 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                 } catch (...) {
                                 }
 
-                                if (auto c = boost::dynamic_pointer_cast<QuantLib::IborCoupon>(ptrFloat)) {
+                                if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantLib::IborCoupon>(ptrFloat)) {
                                     fixingValue = (c->rate() - c->spread()) / c->gearing();
                                 }
 
-                                if (auto c = boost::dynamic_pointer_cast<QuantLib::CappedFlooredIborCoupon>(ptrFloat)) {
+                                if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantLib::CappedFlooredIborCoupon>(ptrFloat)) {
                                     fixingValue = (c->underlying()->rate() - c->underlying()->spread()) /
                                                   c->underlying()->gearing();
                                 }
 
                                 if (auto sc =
-                                        boost::dynamic_pointer_cast<QuantLib::StrippedCappedFlooredCoupon>(ptrFloat)) {
-                                    if (auto c = boost::dynamic_pointer_cast<QuantLib::CappedFlooredIborCoupon>(
+                                        QuantLib::ext::dynamic_pointer_cast<QuantLib::StrippedCappedFlooredCoupon>(ptrFloat)) {
+                                    if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantLib::CappedFlooredIborCoupon>(
                                             sc->underlying())) {
                                         fixingValue = (c->underlying()->rate() - c->underlying()->spread()) /
                                                       c->underlying()->gearing();
@@ -309,28 +309,28 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                 // for (capped-floored) BMA / ON / subperiod coupons the fixing value is the
                                 // compounded / averaged rate, not a single index fixing
 
-                                if (auto on = boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(ptrFloat)) {
+                                if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(ptrFloat)) {
                                     fixingValue = (on->rate() - on->spread()) / on->gearing();
-                                } else if (auto on = boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(
+                                } else if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(
                                                ptrFloat)) {
                                     fixingValue = (on->rate() - on->effectiveSpread()) / on->gearing();
-                                } else if (auto c = boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(ptrFloat)) {
+                                } else if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(ptrFloat)) {
                                     fixingValue = (c->rate() - c->spread()) / c->gearing();
-                                } else if (auto c = boost::dynamic_pointer_cast<
+                                } else if (auto c = QuantLib::ext::dynamic_pointer_cast<
                                                QuantExt::CappedFlooredAverageONIndexedCoupon>(ptrFloat)) {
                                     fixingValue = (c->underlying()->rate() - c->underlying()->spread()) /
                                                   c->underlying()->gearing();
-                                } else if (auto c = boost::dynamic_pointer_cast<
+                                } else if (auto c = QuantLib::ext::dynamic_pointer_cast<
                                                QuantExt::CappedFlooredOvernightIndexedCoupon>(ptrFloat)) {
                                     fixingValue = (c->underlying()->rate() - c->underlying()->effectiveSpread()) /
                                                   c->underlying()->gearing();
                                 } else if (auto c =
-                                               boost::dynamic_pointer_cast<QuantExt::CappedFlooredAverageBMACoupon>(
+                                               QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredAverageBMACoupon>(
                                                    ptrFloat)) {
                                     fixingValue = (c->underlying()->rate() - c->underlying()->spread()) /
                                                   c->underlying()->gearing();
                                 } else if (auto sp =
-                                               boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(ptrFloat)) {
+                                               QuantLib::ext::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(ptrFloat)) {
                                     fixingValue = (sp->rate() - sp->spread()) / sp->gearing();
                                 }
                             } else if (ptrInfl) {
@@ -384,29 +384,29 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                 // date
 
                                 // unpack stripped cap/floor coupon
-                                boost::shared_ptr<CashFlow> c = ptrFlow;
-                                if (auto tmp = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(ptrFlow)) {
+                                QuantLib::ext::shared_ptr<CashFlow> c = ptrFlow;
+                                if (auto tmp = QuantLib::ext::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(ptrFlow)) {
                                     c = tmp->underlying();
                                 }
                                 Date volFixingDate;
                                 std::string qlIndexName; // index used to retrieve vol
                                 bool usesCapVol = false, usesSwaptionVol = false;
                                 Period swaptionTenor;
-                                if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredCoupon>(c)) {
+                                if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CappedFlooredCoupon>(c)) {
                                     floorStrike = tmp->effectiveFloor();
                                     capStrike = tmp->effectiveCap();
                                     volFixingDate = tmp->fixingDate();
                                     qlIndexName = tmp->index()->name();
-                                    if (auto cms = boost::dynamic_pointer_cast<CmsCoupon>(tmp->underlying())) {
+                                    if (auto cms = QuantLib::ext::dynamic_pointer_cast<CmsCoupon>(tmp->underlying())) {
                                         swaptionTenor = cms->swapIndex()->tenor();
                                         qlIndexName = cms->swapIndex()->iborIndex()->name();
                                         usesSwaptionVol = true;
-                                    } else if (auto ibor = boost::dynamic_pointer_cast<IborCoupon>(tmp->underlying())) {
+                                    } else if (auto ibor = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(tmp->underlying())) {
                                         qlIndexName = ibor->index()->name();
                                         usesCapVol = true;
                                     }
                                 } else if (auto tmp =
-                                               boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(c)) {
+                                               QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(c)) {
                                     floorStrike = tmp->effectiveFloor();
                                     capStrike = tmp->effectiveCap();
                                     volFixingDate = tmp->underlying()->fixingDates().front();
@@ -417,7 +417,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                     if (capStrike != Null<Real>())
                                         effectiveCapVolatility = tmp->effectiveCapletVolatility();
                                 } else if (auto tmp =
-                                               boost::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(c)) {
+                                               QuantLib::ext::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(c)) {
                                     floorStrike = tmp->effectiveFloor();
                                     capStrike = tmp->effectiveCap();
                                     volFixingDate = tmp->underlying()->fixingDates().front();
@@ -427,7 +427,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                         effectiveFloorVolatility = tmp->effectiveFloorletVolatility();
                                     if (capStrike != Null<Real>())
                                         effectiveCapVolatility = tmp->effectiveCapletVolatility();
-                                } else if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredAverageBMACoupon>(c)) {
+                                } else if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CappedFlooredAverageBMACoupon>(c)) {
                                     floorStrike = tmp->effectiveFloor();
                                     capStrike = tmp->effectiveCap();
                                     volFixingDate = tmp->underlying()->fixingDates().front();
@@ -622,7 +622,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
 }
 
 void ReportWriter::writeCashflowNpv(ore::data::Report& report, const ore::data::InMemoryReport& cashflowReport,
-                                    boost::shared_ptr<ore::data::Market> market, const std::string& configuration,
+                                    QuantLib::ext::shared_ptr<ore::data::Market> market, const std::string& configuration,
                                     const std::string& baseCcy, const Date& horizon) {
     // Pick the following fields form the in memory report:
     // - tradeId 
@@ -683,7 +683,7 @@ void ReportWriter::writeCashflowNpv(ore::data::Report& report, const ore::data::
 }
 
 void ReportWriter::writeCurves(ore::data::Report& report, const std::string& configID, const DateGrid& grid,
-                               const TodaysMarketParameters& marketConfig, const boost::shared_ptr<Market>& market,
+                               const TodaysMarketParameters& marketConfig, const QuantLib::ext::shared_ptr<Market>& market,
                                const bool continueOnError) {
     LOG("Write curves... ");
 
@@ -783,7 +783,7 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
     report.end();
 }
 
-void ReportWriter::writeTradeExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+void ReportWriter::writeTradeExposures(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess,
                                        const string& tradeId) {
     const vector<Date> dates = postProcess->cube()->dates();
     Date today = Settings::instance().evaluationDate();
@@ -834,7 +834,7 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, boost::shared_
     report.end();
 }
 
-void addNettingSetExposure(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+void addNettingSetExposure(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess,
                            const string& nettingSetId) {
     const vector<Date> dates = postProcess->cube()->dates();
     Date today = Settings::instance().evaluationDate();
@@ -871,7 +871,7 @@ void addNettingSetExposure(ore::data::Report& report, boost::shared_ptr<PostProc
     }
 }
 
-void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+void ReportWriter::writeNettingSetExposures(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess,
                                             const string& nettingSetId) {
     report.addColumn("NettingSet", string())
         .addColumn("Date", Date())
@@ -886,7 +886,7 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::sh
     report.end();
 }
 
-void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess) {
+void ReportWriter::writeNettingSetExposures(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess) {
     report.addColumn("NettingSet", string())
         .addColumn("Date", Date())
         .addColumn("Time", double(), 6)
@@ -904,7 +904,7 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::sh
 }
 
 void ReportWriter::writeNettingSetCvaSensitivities(ore::data::Report& report,
-                                                   boost::shared_ptr<PostProcess> postProcess,
+                                                   QuantLib::ext::shared_ptr<PostProcess> postProcess,
                                                    const string& nettingSetId) {
     const vector<Real> grid = postProcess->spreadSensitivityTimes();
     const vector<Real>& sensiHazardRate = postProcess->netCvaHazardRateSensitivity(nettingSetId);
@@ -924,7 +924,7 @@ void ReportWriter::writeNettingSetCvaSensitivities(ore::data::Report& report,
 }
 
 void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationMethod,
-                            boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<PostProcess> postProcess) {
+                            QuantLib::ext::shared_ptr<Portfolio> portfolio, QuantLib::ext::shared_ptr<PostProcess> postProcess) {
     const vector<Date> dates = postProcess->cube()->dates();
     DayCounter dc = ActualActual(ActualActual::ISDA);
     Size precision = 2;
@@ -1023,7 +1023,7 @@ void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationM
     report.end();
 }
 
-void ReportWriter::writeNettingSetColva(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+void ReportWriter::writeNettingSetColva(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess,
                                         const string& nettingSetId) {
     const vector<Date> dates = postProcess->cube()->dates();
     Date today = Settings::instance().evaluationDate();
@@ -1090,7 +1090,7 @@ void ReportWriter::writeAggregationScenarioData(ore::data::Report& report, const
 }
 
 void ReportWriter::writeScenarioReport(ore::data::Report& report,
-                                       const std::vector<boost::shared_ptr<SensitivityCube>>& sensitivityCubes,
+                                       const std::vector<QuantLib::ext::shared_ptr<SensitivityCube>>& sensitivityCubes,
                                        Real outputThreshold) {
 
     LOG("Writing Scenario report");
@@ -1145,7 +1145,7 @@ void ReportWriter::writeScenarioReport(ore::data::Report& report,
     LOG("Scenario report finished");
 }
 
-void ReportWriter::writeSensitivityReport(Report& report, const boost::shared_ptr<SensitivityStream>& ss,
+void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::shared_ptr<SensitivityStream>& ss,
                                           Real outputThreshold, Size outputPrecision) {
 
     LOG("Writing Sensitivity report");
@@ -1227,8 +1227,8 @@ void addMapResults(boost::any resultMap, const std::string& tradeId, const std::
     }
 }
 
-void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_ptr<Portfolio> portfolio,
-                                                boost::shared_ptr<Market> market, const std::string& baseCurrency) {
+void ReportWriter::writeAdditionalResultsReport(Report& report, QuantLib::ext::shared_ptr<Portfolio> portfolio,
+                                                QuantLib::ext::shared_ptr<Market> market, const std::string& baseCurrency) {
 
     LOG("Writing AdditionalResults report");
 
@@ -1360,7 +1360,7 @@ void ReportWriter::addMarketDatum(Report& report, const ore::data::MarketDatum& 
     report.next().add(d).add(md.name()).add(md.quote()->value());
 }
 
-void ReportWriter::writeMarketData(Report& report, const boost::shared_ptr<Loader>& loader, const Date& asof,
+void ReportWriter::writeMarketData(Report& report, const QuantLib::ext::shared_ptr<Loader>& loader, const Date& asof,
                                    const set<string>& quoteNames, bool returnAll) {
 
     LOG("Writing MarketData report");
@@ -1405,7 +1405,7 @@ void ReportWriter::writeMarketData(Report& report, const boost::shared_ptr<Loade
     LOG("MarketData report written");
 }
 
-void ReportWriter::writeFixings(Report& report, const boost::shared_ptr<Loader>& loader) {
+void ReportWriter::writeFixings(Report& report, const QuantLib::ext::shared_ptr<Loader>& loader) {
 
     LOG("Writing Fixings report");
 
@@ -1419,7 +1419,7 @@ void ReportWriter::writeFixings(Report& report, const boost::shared_ptr<Loader>&
     LOG("Fixings report written");
 }
 
-void ReportWriter::writeDividends(Report& report, const boost::shared_ptr<Loader>& loader) {
+void ReportWriter::writeDividends(Report& report, const QuantLib::ext::shared_ptr<Loader>& loader) {
 
     LOG("Writing Dividends report");
 
@@ -1436,7 +1436,7 @@ void ReportWriter::writeDividends(Report& report, const boost::shared_ptr<Loader
     LOG("Dividends report written");
 }
 
-void ReportWriter::writePricingStats(ore::data::Report& report, const boost::shared_ptr<Portfolio>& portfolio) {
+void ReportWriter::writePricingStats(ore::data::Report& report, const QuantLib::ext::shared_ptr<Portfolio>& portfolio) {
 
     LOG("Writing Pricing stats report");
 
@@ -1457,7 +1457,7 @@ void ReportWriter::writePricingStats(ore::data::Report& report, const boost::sha
     LOG("Pricing stats report written");
 }
 
-void ReportWriter::writeCube(ore::data::Report& report, const boost::shared_ptr<NPVCube>& cube,
+void ReportWriter::writeCube(ore::data::Report& report, const QuantLib::ext::shared_ptr<NPVCube>& cube,
                              const std::map<std::string, std::string>& nettingSetMap) {
     LOG("Writing cube report");
 
@@ -1535,7 +1535,7 @@ typedef SimmConfiguration::SimmSide SimmSide;
 
 void ReportWriter::writeSIMMReport(
     const map<SimmSide, map<NettingSetDetails, pair<string, SimmResults>>>& finalSimmResultsMap,
-    const boost::shared_ptr<Report> report, const bool hasNettingSetDetails, const string& simmResultCcy,
+    const QuantLib::ext::shared_ptr<Report> report, const bool hasNettingSetDetails, const string& simmResultCcy,
     const string& simmCalcCcyCall, const string& simmCalcCcyPost, const string& reportCcy, Real fxSpot,
     Real outputThreshold) {
 
@@ -1559,7 +1559,7 @@ void ReportWriter::writeSIMMReport(
 
 void ReportWriter::writeSIMMReport(
     const map<SimmSide, map<NettingSetDetails, map<string, SimmResults>>>& simmResultsMap,
-    const boost::shared_ptr<Report> report, const bool hasNettingSetDetails, const string& simmResultCcy,
+    const QuantLib::ext::shared_ptr<Report> report, const bool hasNettingSetDetails, const string& simmResultCcy,
     const string& simmCalcCcyCall, const string& simmCalcCcyPost, const string& reportCcy, const bool isFinalSimm, Real fxSpot,
     Real outputThreshold) {
 
@@ -1699,7 +1699,7 @@ void ReportWriter::writeSIMMReport(
     }
 }
 
-void ReportWriter::writeSIMMData(const ore::analytics::Crif& simmData, const boost::shared_ptr<Report>& dataReport,
+void ReportWriter::writeSIMMData(const ore::analytics::Crif& simmData, const QuantLib::ext::shared_ptr<Report>& dataReport,
                                  const bool hasNettingSetDetails) {
 
     LOG("Writing SIMM data report.");
@@ -1782,7 +1782,7 @@ void ReportWriter::writeSIMMData(const ore::analytics::Crif& simmData, const boo
     LOG("SIMM data report written.");
 }
 
-void ReportWriter::writeCrifReport(const boost::shared_ptr<Report>& report, const Crif& crif) {
+void ReportWriter::writeCrifReport(const QuantLib::ext::shared_ptr<Report>& report, const Crif& crif) {
 
     // If we have SIMM parameters, check if at least one of them uses netting set details optional field/s
     // It is easier to check here than to pass the flag from other places, since otherwise we'd have to handle certain edge cases
@@ -1921,7 +1921,7 @@ void ReportWriter::writeCrifReport(const boost::shared_ptr<Report>& report, cons
     report->end();
 }
 
-void ReportWriter::writeScenarioStatistics(const boost::shared_ptr<ScenarioGenerator>& generator,
+void ReportWriter::writeScenarioStatistics(const QuantLib::ext::shared_ptr<ScenarioGenerator>& generator,
     const std::vector<RiskFactorKey>& keys, const Size numPaths,
     const std::vector<Date>& dates, ore::data::Report& report) {
     report.addColumn("Date", Date())
@@ -1941,7 +1941,7 @@ void ReportWriter::writeScenarioStatistics(const boost::shared_ptr<ScenarioGener
 
     for (Size i = 0; i < numPaths; ++i) {
         for (Size d = 0; d < dates.size(); ++d) {
-            boost::shared_ptr<Scenario> currentScenario = generator->next(dates[d]);
+            QuantLib::ext::shared_ptr<Scenario> currentScenario = generator->next(dates[d]);
             for (Size k = 0; k < keys.size(); ++k) {
                 acc[d * keys.size() + k](currentScenario->get(keys[k]));
             }
@@ -1992,7 +1992,7 @@ void distributionCount(I begin, I end, const Size steps, std::vector<Real>& boun
 } // distributionCount
 } // namespace
 
-void ReportWriter::writeScenarioDistributions(const boost::shared_ptr<ScenarioGenerator>& generator,
+void ReportWriter::writeScenarioDistributions(const QuantLib::ext::shared_ptr<ScenarioGenerator>& generator,
                                               const std::vector<RiskFactorKey>& keys, const Size numPaths,
                                               const std::vector<Date>& dates, const Size distSteps,
                                               ore::data::Report& report) {
@@ -2006,7 +2006,7 @@ void ReportWriter::writeScenarioDistributions(const boost::shared_ptr<ScenarioGe
 
     for (Size i = 0; i < numPaths; ++i) {
         for (Size d = 0; d < dates.size(); ++d) {
-            boost::shared_ptr<Scenario> currentScenario = generator->next(dates[d]);
+            QuantLib::ext::shared_ptr<Scenario> currentScenario = generator->next(dates[d]);
             for (Size k = 0; k < keys.size(); ++k) {
                 values[d][k][i] = currentScenario->get(keys[k]);
             }
@@ -2027,7 +2027,7 @@ void ReportWriter::writeScenarioDistributions(const boost::shared_ptr<ScenarioGe
 }
 
 void ReportWriter::writeHistoricalScenarioDetails(
-    const boost::shared_ptr<ore::analytics::HistoricalScenarioGenerator>& generator, ore::data::Report& report) {
+    const QuantLib::ext::shared_ptr<ore::analytics::HistoricalScenarioGenerator>& generator, ore::data::Report& report) {
 
     report.addColumn("PLDate1", Date())
         .addColumn("PLDate2", Date())
@@ -2062,10 +2062,10 @@ void ReportWriter::writeHistoricalScenarioDetails(
     report.end();
 }
 
-void ReportWriter::writeStockSplitReport(const boost::shared_ptr<Scenario>& baseScenario,
-                                         const boost::shared_ptr<ore::analytics::HistoricalScenarioLoader>& hsloader,
-                                         const boost::shared_ptr<ore::data::AdjustmentFactors>& adjFactors,
-                                         const boost::shared_ptr<ore::data::Report>& report) {
+void ReportWriter::writeStockSplitReport(const QuantLib::ext::shared_ptr<Scenario>& baseScenario,
+                                         const QuantLib::ext::shared_ptr<ore::analytics::HistoricalScenarioLoader>& hsloader,
+                                         const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors,
+                                         const QuantLib::ext::shared_ptr<ore::data::Report>& report) {
 
     report->addColumn("EquityId", string())
         .addColumn("Date", Date())
@@ -2110,11 +2110,11 @@ void ReportWriter::writeStockSplitReport(const boost::shared_ptr<Scenario>& base
 }
 
 void ReportWriter::writeHistoricalScenarioDistributions(
-    boost::shared_ptr<HistoricalScenarioGenerator>& hsgen,
-    const boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
-    const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams,
-    boost::shared_ptr<ore::data::Report> histScenDetailsReport, boost::shared_ptr<ore::data::Report> statReport,
-    boost::shared_ptr<ore::data::Report> distReport, Size distSteps) {
+    QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hsgen,
+    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
+    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams,
+    QuantLib::ext::shared_ptr<ore::data::Report> histScenDetailsReport, QuantLib::ext::shared_ptr<ore::data::Report> statReport,
+    QuantLib::ext::shared_ptr<ore::data::Report> distReport, Size distSteps) {
 
     // Don't leave it up to the caller to do this
     simMarket->scenarioGenerator() = hsgen;
@@ -2125,7 +2125,7 @@ void ReportWriter::writeHistoricalScenarioDistributions(
         return;
 
     // Make a transformed generator i.e. discount -> zero etc.
-    auto hsgent = boost::make_shared<HistoricalScenarioGeneratorTransform>(hsgen, simMarket, simMarketParams);
+    auto hsgent = QuantLib::ext::make_shared<HistoricalScenarioGeneratorTransform>(hsgen, simMarket, simMarketParams);
 
     const vector<RiskFactorKey>& keys = hsgen->baseScenario()->keys();
     Size numScen = hsgen->numScenarios();
@@ -2152,8 +2152,8 @@ void ReportWriter::writeHistoricalScenarioDistributions(
     }
 }
 
-void ReportWriter::writeHistoricalScenarios(const boost::shared_ptr<HistoricalScenarioLoader>& hsloader,
-                                            const boost::shared_ptr<ore::data::Report>& report) {
+void ReportWriter::writeHistoricalScenarios(const QuantLib::ext::shared_ptr<HistoricalScenarioLoader>& hsloader,
+                                            const QuantLib::ext::shared_ptr<ore::data::Report>& report) {
     // each scenario might have a different set of keys, so we collect the union of all keys
     // and write them out (missing keys will be written as NA to the report)
     std::set<RiskFactorKey> allKeys;
@@ -2176,7 +2176,7 @@ typedef IMScheduleCalculator::IMScheduleTradeData IMScheduleTradeData;
 
 void ReportWriter::writeIMScheduleSummaryReport(
     const map<SimmSide, map<NettingSetDetails, pair<string, IMScheduleResults>>>& finalResultsMap,
-    const boost::shared_ptr<Report> report, const bool hasNettingSetDetails, const string& simmResultCcy,
+    const QuantLib::ext::shared_ptr<Report> report, const bool hasNettingSetDetails, const string& simmResultCcy,
     const string& reportCcy, Real fxSpot, Real outputThreshold) {
 
     LOG("Writing IM Schedule results summary report.");
@@ -2289,7 +2289,7 @@ void ReportWriter::writeIMScheduleSummaryReport(
 }
 
 void ReportWriter::writeIMScheduleTradeReport(const map<string, vector<IMScheduleTradeData>>& tradeResults,
-                                              const boost::shared_ptr<ore::data::Report> report,
+                                              const QuantLib::ext::shared_ptr<ore::data::Report> report,
                                               const bool hasNettingSetDetails) {
 
     LOG("Writing IM Schedule trade results report.");

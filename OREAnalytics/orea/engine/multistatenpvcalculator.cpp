@@ -28,10 +28,10 @@
 namespace ore {
 namespace analytics {
 
-void MultiStateNPVCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
-                                        const boost::shared_ptr<SimMarket>& simMarket,
-                                        boost::shared_ptr<NPVCube>& outputCube,
-                                        boost::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date,
+void MultiStateNPVCalculator::calculate(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
+                                        const QuantLib::ext::shared_ptr<SimMarket>& simMarket,
+                                        QuantLib::ext::shared_ptr<NPVCube>& outputCube,
+                                        QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date,
                                         Size dateIndex, Size sample, bool isCloseOut) {
     if (!isCloseOut) {
         std::vector<Real> stateNpvs = multiStateNpv(tradeIndex, trade, simMarket);
@@ -41,18 +41,18 @@ void MultiStateNPVCalculator::calculate(const boost::shared_ptr<Trade>& trade, S
     }
 }
 
-void MultiStateNPVCalculator::calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
-                                          const boost::shared_ptr<SimMarket>& simMarket,
-                                          boost::shared_ptr<NPVCube>& outputCube,
-                                          boost::shared_ptr<NPVCube>& outputCubeNettingSet) {
+void MultiStateNPVCalculator::calculateT0(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
+                                          const QuantLib::ext::shared_ptr<SimMarket>& simMarket,
+                                          QuantLib::ext::shared_ptr<NPVCube>& outputCube,
+                                          QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet) {
     std::vector<Real> stateNpvs = multiStateNpv(tradeIndex, trade, simMarket);
     for (Size i = 0; i < stateNpvs.size(); ++i) {
         outputCube->setT0(stateNpvs[i], tradeIndex, index_ + i);
     }
 }
 
-std::vector<Real> MultiStateNPVCalculator::multiStateNpv(Size tradeIndex, const boost::shared_ptr<Trade>& trade,
-                                                         const boost::shared_ptr<SimMarket>& simMarket) {
+std::vector<Real> MultiStateNPVCalculator::multiStateNpv(Size tradeIndex, const QuantLib::ext::shared_ptr<Trade>& trade,
+                                                         const QuantLib::ext::shared_ptr<SimMarket>& simMarket) {
     // handle expired trades
 
     if (trade->instrument()->qlInstrument()->isExpired()) {

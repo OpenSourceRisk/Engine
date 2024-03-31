@@ -43,7 +43,7 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-void BarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) { 
+void BarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) { 
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for FxBarrierOption");
 
     checkBarriers();
@@ -76,20 +76,20 @@ void BarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     // fx base
     // Payoff
     Option::Type type = parseOptionType(option_.callPut());
-    boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike()));
+    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike()));
 
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(expiryDate);
+    QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(expiryDate);
     // QL does not have an FXBarrierOption, so we add a barrier option and a vanilla option here and wrap
     // it in a composite to get the notional in.
 
-    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
     Settlement::Type settleType = parseSettlementType(option_.settlement());
     Position::Type positionType = parsePositionType(option_.longShort());
 
-    boost::shared_ptr<Instrument> vanilla;
-    boost::shared_ptr<Instrument> barrier;
-    boost::shared_ptr<InstrumentWrapper> instWrapper;
+    QuantLib::ext::shared_ptr<Instrument> vanilla;
+    QuantLib::ext::shared_ptr<Instrument> barrier;
+    QuantLib::ext::shared_ptr<InstrumentWrapper> instWrapper;
 
     bool exercised = false;
     Real exercisePrice = Null<Real>();
@@ -106,48 +106,48 @@ void BarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
             exercisePrice = oed->price();
         }
 
-        boost::shared_ptr<Index> index;
+        QuantLib::ext::shared_ptr<Index> index;
         if (option_.isAutomaticExercise()) {
             index = getIndex();
             QL_REQUIRE(index, "Barrier option trade with delayed payment "
                                   << id() << ": the FXIndex node needs to be populated.");
             requiredFixings_.addFixingDate(expiryDate, index->name(), payDate);
         }
-        vanilla = boost::make_shared<CashSettledEuropeanOption>(payoff->optionType(), payoff->strike(), expiryDate,
+        vanilla = QuantLib::ext::make_shared<CashSettledEuropeanOption>(payoff->optionType(), payoff->strike(), expiryDate,
                                                                 payDate, option_.isAutomaticExercise(), index,
                                                                 exercised, exercisePrice);
     } else {
-        vanilla = boost::make_shared<VanillaOption>(payoff, exercise);
+        vanilla = QuantLib::ext::make_shared<VanillaOption>(payoff, exercise);
     }
     
     boost::variant<Barrier::Type, DoubleBarrier::Type> barrierType;
     if (barrier_.levels().size() < 2) {
         barrierType = parseBarrierType(barrier_.type());
-        barrier = boost::make_shared<QuantLib::BarrierOption>(boost::get<Barrier::Type>(barrierType), barrier_.levels()[0].value(), 
+        barrier = QuantLib::ext::make_shared<QuantLib::BarrierOption>(boost::get<Barrier::Type>(barrierType), barrier_.levels()[0].value(), 
             rebate, payoff, exercise);
     } else {
         barrierType = parseDoubleBarrierType(barrier_.type());
-        barrier = boost::make_shared<QuantLib::DoubleBarrierOption>(boost::get<DoubleBarrier::Type>(barrierType),
+        barrier = QuantLib::ext::make_shared<QuantLib::DoubleBarrierOption>(boost::get<DoubleBarrier::Type>(barrierType),
             barrier_.levels()[0].value(), barrier_.levels()[1].value(), rebate, payoff, exercise);
     }
 
-    boost::shared_ptr<QuantLib::PricingEngine> barrierEngine = barrierPricingEngine(engineFactory, expiryDate, payDate);
-    boost::shared_ptr<QuantLib::PricingEngine> vanillaEngine = vanillaPricingEngine(engineFactory, expiryDate, payDate);
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine> barrierEngine = barrierPricingEngine(engineFactory, expiryDate, payDate);
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine> vanillaEngine = vanillaPricingEngine(engineFactory, expiryDate, payDate);
    
     // set pricing engines
     barrier->setPricingEngine(barrierEngine);
     vanilla->setPricingEngine(vanillaEngine);
 
-    boost::shared_ptr<QuantLib::Index> index = getIndex();
+    QuantLib::ext::shared_ptr<QuantLib::Index> index = getIndex();
     const QuantLib::Handle<QuantLib::Quote>& spot = spotQuote();
     if (barrier_.levels().size() < 2)
-        instWrapper = boost::make_shared<SingleBarrierOptionWrapper>(
+        instWrapper = QuantLib::ext::make_shared<SingleBarrierOptionWrapper>(
             barrier, positionType == Position::Long ? true : false, expiryDate,
             settleType == Settlement::Physical ? true : false, vanilla, boost::get<Barrier::Type>(barrierType),
             spot, barrier_.levels()[0].value(), rebate, tradeCurrency(), startDate_, index, calendar_,
             tradeMultiplier(), tradeMultiplier(), additionalInstruments, additionalMultipliers);
     else
-        instWrapper = boost::make_shared<DoubleBarrierOptionWrapper>(
+        instWrapper = QuantLib::ext::make_shared<DoubleBarrierOptionWrapper>(
             barrier, positionType == Position::Long ? true : false, expiryDate,
             settleType == Settlement::Physical ? true : false, vanilla, boost::get<DoubleBarrier::Type>(barrierType),
             spot, barrier_.levels()[0].value(), barrier_.levels()[1].value(), rebate, tradeCurrency(), startDate_, index, calendar_,
@@ -209,7 +209,7 @@ std::string FxOptionWithBarrier::indexFixingName() {
         return fxIndexStr_;
 }
 
-void FxOptionWithBarrier::build(const boost::shared_ptr<ore::data::EngineFactory>& ef) { 
+void FxOptionWithBarrier::build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& ef) { 
 
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Foreign Exchange");
@@ -250,7 +250,7 @@ void FxOptionWithBarrier::additionalToXml(XMLDocument& doc, XMLNode* node) const
 }
 
 
-void EquityOptionWithBarrier::build(const boost::shared_ptr<ore::data::EngineFactory>& ef) {
+void EquityOptionWithBarrier::build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& ef) {
 
     additionalData_["isdaAssetClass"] = string("Equity");
     additionalData_["isdaBaseProduct"] = string("Option");

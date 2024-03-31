@@ -38,7 +38,7 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void FxOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Foreign Exchange");
@@ -47,7 +47,7 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     additionalData_["isdaTransaction"] = string("");  
 
     QuantLib::Date today = Settings::instance().evaluationDate();
-    const boost::shared_ptr<Market>& market = engineFactory->market();
+    const QuantLib::ext::shared_ptr<Market>& market = engineFactory->market();
 
     // If automatic exercise, check that we have a non-empty FX index string, parse it and attach curves from market.
     if (option_.isAutomaticExercise()) {

@@ -48,12 +48,12 @@ public:
 
         // add fx rates
         std::map<std::string, QuantLib::Handle<QuantLib::Quote>> quotes;
-        quotes["EURUSD"] = Handle<Quote>(boost::make_shared<SimpleQuote>(1.2));
-        fx_ = boost::make_shared<FXTriangulation>(quotes);
+        quotes["EURUSD"] = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.2));
+        fx_ = QuantLib::ext::make_shared<FXTriangulation>(quotes);
 
         // add fx conventions
-        auto conventions = boost::make_shared<Conventions>();
-        conventions->add(boost::make_shared<FXConvention>("EUR-USD-FX", "0", "EUR", "USD", "10000", "EUR,USD"));
+        auto conventions = QuantLib::ext::make_shared<Conventions>();
+        conventions->add(QuantLib::ext::make_shared<FXConvention>("EUR-USD-FX", "0", "EUR", "USD", "10000", "EUR,USD"));
         InstrumentConventions::instance().setConventions(conventions);
 
         // build fx vols
@@ -70,12 +70,12 @@ public:
 
         // add fx rates
         std::map<std::string, QuantLib::Handle<QuantLib::Quote>> quotes;
-        quotes["JPYEUR"] = Handle<Quote>(boost::make_shared<SimpleQuote>(spot));
-        fx_ = boost::make_shared<FXTriangulation>(quotes);
+        quotes["JPYEUR"] = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(spot));
+        fx_ = QuantLib::ext::make_shared<FXTriangulation>(quotes);
 
         // add fx conventions
-        auto conventions = boost::make_shared<Conventions>();
-        conventions->add(boost::make_shared<FXConvention>("EUR-JPY-FX", "0", "EUR", "JPY", "10000", "EUR,JPY"));
+        auto conventions = QuantLib::ext::make_shared<Conventions>();
+        conventions->add(QuantLib::ext::make_shared<FXConvention>("EUR-JPY-FX", "0", "EUR", "JPY", "10000", "EUR,JPY"));
         InstrumentConventions::instance().setConventions(conventions);
 
         // build fx vols
@@ -92,11 +92,11 @@ public:
 
 private:
     Handle<YieldTermStructure> flatRateYts(Real forward, const DayCounter& dc = ActualActual(ActualActual::ISDA)) {
-        boost::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, dc));
+        QuantLib::ext::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, dc));
         return Handle<YieldTermStructure>(yts);
     }
     Handle<BlackVolTermStructure> flatRateFxv(Volatility forward, const DayCounter& dc = ActualActual(ActualActual::ISDA)) {
-        boost::shared_ptr<BlackVolTermStructure> fxv(new BlackConstantVol(0, NullCalendar(), forward, dc));
+        QuantLib::ext::shared_ptr<BlackVolTermStructure> fxv(new BlackConstantVol(0, NullCalendar(), forward, dc));
         return Handle<BlackVolTermStructure>(fxv);
     }
 };
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(testFXOptionPrice) {
     Date today = Settings::instance().evaluationDate();
 
     // build market
-    boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
+    QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>();
     Settings::instance().evaluationDate() = market->asofDate();
 
     // build FXOption - expiry in 1 Year
@@ -137,10 +137,10 @@ BOOST_AUTO_TEST_CASE(testFXOptionPrice) {
     Real expectedNPV_USD_Premium_EUR = 17496.4;
 
     // Build and price
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("FxOption") = "GarmanKohlhagen";
     engineData->engine("FxOption") = "AnalyticEuropeanEngine";
-    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
     fxOption.build(engineFactory);
     fxOptionPremiumUSD.build(engineFactory);
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(testFXAmericanOptionPrice) {
 
     for (auto& f : fxd) {
         // build market
-        boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
+        QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
         Date today = Settings::instance().evaluationDate();
         Settings::instance().evaluationDate() = market->asofDate();
 
@@ -246,11 +246,11 @@ BOOST_AUTO_TEST_CASE(testFXAmericanOptionPrice) {
         Real expectedNPV = f.result;
 
         // Build and price
-        boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+        QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
         engineData->model("FxOptionAmerican") = "GarmanKohlhagen";
         engineData->engine("FxOptionAmerican") = "BaroneAdesiWhaleyApproximationEngine";
 
-        boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+        QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
         fxOption.build(engineFactory);
 
@@ -347,7 +347,7 @@ BOOST_AUTO_TEST_CASE(testFdValues) {
 
     for (auto& f : juValues) {
         // build market
-        boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
+        QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
         Date today = Settings::instance().evaluationDate();
         Settings::instance().evaluationDate() = market->asofDate();
 
@@ -362,13 +362,13 @@ BOOST_AUTO_TEST_CASE(testFdValues) {
         Real expectedNPV = f.result;
 
         // Build and price
-        boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+        QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
         engineData->model("FxOptionAmerican") = "GarmanKohlhagen";
         engineData->engine("FxOptionAmerican") = "FdBlackScholesVanillaEngine";
         engineData->engineParameters("FxOptionAmerican") = {
             {"Scheme", "Douglas"}, {"TimeGridPerYear", "100"}, {"XGrid", "100"}, {"DampingSteps", "0"}};
 
-        boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+        QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
         fxOption.build(engineFactory);
 

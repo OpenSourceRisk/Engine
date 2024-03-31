@@ -33,15 +33,15 @@ namespace data {
 class CamAmcCurrencySwapEngineBuilder : public CrossCurrencySwapEngineBuilderBase {
 public:
     // for external cam, with additional simulation dates (AMC)
-    CamAmcCurrencySwapEngineBuilder(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
+    CamAmcCurrencySwapEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
                                     const std::vector<Date>& simulationDates)
         : CrossCurrencySwapEngineBuilderBase("CrossAssetModel", "AMC"), cam_(cam), simulationDates_(simulationDates) {}
 
 protected:
-    boost::shared_ptr<PricingEngine> engineImpl(const std::vector<Currency>& ccys, const Currency& base) override;
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const std::vector<Currency>& ccys, const Currency& base) override;
 
 private:
-    const boost::shared_ptr<QuantExt::CrossAssetModel> cam_;
+    const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
     const std::vector<Date> simulationDates_;
 };
 

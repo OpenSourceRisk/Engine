@@ -42,7 +42,7 @@ namespace data {
 void addTRSRequiredFixings(RequiredFixings& fixings, const std::vector<Leg>& returnLegs, 
     const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& ind = nullptr) {
     QL_REQUIRE(returnLegs.size() > 0, "TrsUnderlyingBuilder: No returnLeg built");
-    auto fdg = boost::make_shared<FixingDateGetter>(fixings);
+    auto fdg = QuantLib::ext::make_shared<FixingDateGetter>(fixings);
     fdg->setAdditionalFxIndex(ind);
     for (const auto& rl : returnLegs)
         addToRequiredFixings(rl, fdg);
@@ -148,7 +148,7 @@ XMLNode* TRS::AdditionalCashflowData::toXML(XMLDocument& doc) const {
 }
 
 std::map<AssetClass, std::set<std::string>>
-TRS::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+TRS::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<AssetClass, std::set<std::string>> result;
     for (Size i = 0; i < underlying_.size(); ++i) {
         QL_REQUIRE(underlying_[i], "TRS::underlyingIndices(): underlying trade is null");
@@ -186,7 +186,7 @@ void TRS::fromXML(XMLNode* node) {
     underlyingDerivativeId_.clear();
     for (auto const n : underlyingTradeNodes) {
         std::string tradeType = XMLUtils::getChildValue(n, "TradeType", true);
-        boost::shared_ptr<Trade> u;
+        QuantLib::ext::shared_ptr<Trade> u;
         try {
             u = TradeFactory::instance().build(tradeType);
         } catch (const std::exception& e) {
@@ -258,9 +258,9 @@ XMLNode* TRS::toXML(XMLDocument& doc) const {
     return node;
 }
 
-boost::shared_ptr<QuantExt::FxIndex>
-TRS::getFxIndex(const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
-                const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices,
+QuantLib::ext::shared_ptr<QuantExt::FxIndex>
+TRS::getFxIndex(const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
+                const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices,
                 std::set<std::string>& missingFxIndexPairs) const {
     if (domestic == foreign)
         return nullptr;
@@ -289,7 +289,7 @@ TRS::getFxIndex(const boost::shared_ptr<Market> market, const std::string& confi
     return fx;
 }
 
-void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("TRS::build() called for id = " << id());
 
@@ -434,7 +434,7 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // build indices corresponding to underlying trades and populate necessary data
 
     std::map<std::string, double> indexNamesAndQty;
-    std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>> initialFxIndices, fxIndices, fxIndicesDummy;
+    std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>> initialFxIndices, fxIndices, fxIndicesDummy;
 
     // get fx indices for conversion return and add cf ccy to funding ccy
 
@@ -451,10 +451,10 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     Real initialPrice = returnData_.initialPrice();
 
-    std::vector<boost::shared_ptr<QuantLib::Index>> underlyingIndex(underlying_.size(), nullptr);
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::Index>> underlyingIndex(underlying_.size(), nullptr);
     std::vector<Real> underlyingMultiplier(underlying_.size(), Null<Real>());
     std::vector<std::string> assetCurrency(underlying_.size(), fundingCurrency);
-    std::vector<boost::shared_ptr<QuantExt::FxIndex>> fxIndexAsset(underlying_.size(), nullptr);
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::FxIndex>> fxIndexAsset(underlying_.size(), nullptr);
 
     maturity_ = Date::minDate();
 
@@ -465,7 +465,7 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         std::string localCreditRiskCurrency;
         Date localMaturity;
         std::map<std::string, double> localIndexNamesAndQuantities;
-        std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>> localFxIndices = initialFxIndices;
+        std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>> localFxIndices = initialFxIndices;
         Real dummyInitialPrice = 1.0; // initial price is only updated if we have one underlying
         
         std::vector<Leg> returnLegs;
@@ -604,7 +604,7 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
         // update credit risk currency and credit qualifier mapping for CMB leg
         if (ld.legType() == "CMB") {
-            auto cmbData = boost::dynamic_pointer_cast<ore::data::CMBLegData>(ld.concreteLegData());
+            auto cmbData = QuantLib::ext::dynamic_pointer_cast<ore::data::CMBLegData>(ld.concreteLegData());
             QL_REQUIRE(cmbData, "TRS::build(): internal error, could to cast to CMBLegData.");
             if(creditRiskCurrency_.empty())
                 creditRiskCurrency_ = getCmbLegCreditRiskCurrency(*cmbData, engineFactory->referenceData());
@@ -622,11 +622,11 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     for (Size i = 0; i < fundingLegs.size(); ++i) {
         if (fundingNotionalTypes[i] == TRS::FundingData::NotionalType::DailyReset) {
             for (auto const& c : fundingLegs[i]) {
-                if (auto cpn = boost::dynamic_pointer_cast<QuantLib::Coupon>(c)) {
-                    QL_REQUIRE(boost::dynamic_pointer_cast<QuantLib::FixedRateCoupon>(c) ||
-                                   boost::dynamic_pointer_cast<QuantLib::IborCoupon>(c) ||
-                                   boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c) ||
-                                   boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c),
+                if (auto cpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(c)) {
+                    QL_REQUIRE(QuantLib::ext::dynamic_pointer_cast<QuantLib::FixedRateCoupon>(c) ||
+                                   QuantLib::ext::dynamic_pointer_cast<QuantLib::IborCoupon>(c) ||
+                                   QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c) ||
+                                   QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c),
                                "daily reset funding legs support fixed rate, ibor and overnight indexed coupons only");
                     for (QuantLib::Date d = cpn->accrualStartDate(); d < cpn->accrualEndDate(); ++d) {
                         for (Size j = 0; j < underlying_.size(); ++j) {
@@ -643,7 +643,7 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             }
         }  else if (fundingNotionalTypes[i] == TRS::FundingData::NotionalType::PeriodReset) {
             for (auto const& c : fundingLegs[i]) {
-                if (auto cpn = boost::dynamic_pointer_cast<QuantLib::Coupon>(c)) {
+                if (auto cpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(c)) {
                     for (Size j = 0; j < underlying_.size(); ++j) {
                         Date fundingStartDate = cpn->accrualStartDate();
                         Size currentIdx = std::distance(valuationDates.begin(),
@@ -670,7 +670,7 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Date startDate = Date::maxDate();
     for (auto const& l : fundingLegs) {
         for (auto const& cf : l) {
-            boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(cf);
+            QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(cf);
             if (coupon)
                 startDate = std::min(startDate, coupon->accrualStartDate());
         }
@@ -716,20 +716,20 @@ void TRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         includeUnderlyingCashflowsInReturn = tradeType_ != "ContractForDifference";
     }
 
-    auto wrapper = boost::make_shared<TRSWrapper>(
+    auto wrapper = QuantLib::ext::make_shared<TRSWrapper>(
         underlying_, underlyingIndex, underlyingMultiplier, includeUnderlyingCashflowsInReturn, initialPrice,
         parseCurrencyWithMinors(initialPriceCurrency), parsedAssetCurrencies, parseCurrency(returnData_.currency()),
         valuationDates, paymentDates, fundingLegs, fundingNotionalTypes, parseCurrency(fundingCurrency),
         fundingData_.fundingResetGracePeriod(), returnData_.payer(), fundingLegPayer, additionalCashflowLeg,
         additionalCashflowLegPayer, parseCurrency(additionalCashflowLegCurrency), fxIndexAsset, fxIndexReturn,
         fxIndexAdditionalCashflows, fxIndices);
-    wrapper->setPricingEngine(boost::make_shared<TRSWrapperAccrualEngine>());
-    instrument_ = boost::make_shared<VanillaInstrument>(wrapper);
+    wrapper->setPricingEngine(QuantLib::ext::make_shared<TRSWrapperAccrualEngine>());
+    instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(wrapper);
 
     // if the first valuation date is > today, we potentially need fixings for fx conversion as of "today"
 
     if (Date today = Settings::instance().evaluationDate(); !valuationDates.empty() && valuationDates.front() > today) {
-        std::set<boost::shared_ptr<QuantExt::FxIndex>> tmp;
+        std::set<QuantLib::ext::shared_ptr<QuantExt::FxIndex>> tmp;
         auto fxIndicesVal = fxIndices | boost::adaptors::map_values;
         tmp.insert(fxIndicesVal.begin(), fxIndicesVal.end());
         tmp.insert(fxIndexAsset.begin(), fxIndexAsset.end());

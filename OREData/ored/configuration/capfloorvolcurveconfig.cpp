@@ -321,7 +321,7 @@ void CapFloorVolatilityCurveConfig::populateRequiredCurveIds() {
 
 string CapFloorVolatilityCurveConfig::indexTenor() const {
     string tenor;
-    boost::shared_ptr<IborIndex> index = parseIborIndex(index_, tenor);
+    QuantLib::ext::shared_ptr<IborIndex> index = parseIborIndex(index_, tenor);
     // for ON indices we get back an empty string
     if (tenor.empty())
         tenor = "1D";

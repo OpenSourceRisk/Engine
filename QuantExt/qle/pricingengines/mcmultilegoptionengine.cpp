@@ -38,16 +38,16 @@ McMultiLegOptionEngine::McMultiLegOptionEngine(
 }
 
 McMultiLegOptionEngine::McMultiLegOptionEngine(
-    const boost::shared_ptr<LinearGaussMarkovModel>& model, const SequenceType calibrationPathGenerator,
+    const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const SequenceType calibrationPathGenerator,
     const SequenceType pricingPathGenerator, const Size calibrationSamples, const Size pricingSamples,
     const Size calibrationSeed, const Size pricingSeed, const Size polynomOrder,
     const LsmBasisSystem::PolynomialType polynomType, const SobolBrownianGenerator::Ordering ordering,
     const SobolRsg::DirectionIntegers directionIntegers, const Handle<YieldTermStructure>& discountCurve,
     const std::vector<Date>& simulationDates, const std::vector<Size>& externalModelIndices, const bool minimalObsDate,
     const RegressorModel regressorModel)
-    : McMultiLegOptionEngine(Handle<CrossAssetModel>(boost::make_shared<CrossAssetModel>(
-                                 std::vector<boost::shared_ptr<IrModel>>(1, model),
-                                 std::vector<boost::shared_ptr<FxBsParametrization>>())),
+    : McMultiLegOptionEngine(Handle<CrossAssetModel>(QuantLib::ext::make_shared<CrossAssetModel>(
+                                 std::vector<QuantLib::ext::shared_ptr<IrModel>>(1, model),
+                                 std::vector<QuantLib::ext::shared_ptr<FxBsParametrization>>())),
                              calibrationPathGenerator, pricingPathGenerator, calibrationSamples, pricingSamples,
                              calibrationSeed, pricingSeed, polynomOrder, polynomType, ordering, directionIntegers,
                              {discountCurve}, simulationDates, externalModelIndices, minimalObsDate, regressorModel) {}

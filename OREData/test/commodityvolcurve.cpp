@@ -58,7 +58,7 @@ Real testTolerance = 1e-10;
 class MockLoader : public Loader {
 public:
     MockLoader();
-    vector<boost::shared_ptr<MarketDatum>> loadQuotes(const Date&) const override { return data_; }
+    vector<QuantLib::ext::shared_ptr<MarketDatum>> loadQuotes(const Date&) const override { return data_; }
     set<Fixing> loadFixings() const override { return dummyFixings_; }
     set<QuantExt::Dividend> loadDividends() const override { return dummyDividends_; }
     void add(QuantLib::Date date, const string& name, QuantLib::Real value) {}
@@ -66,8 +66,8 @@ public:
     void addDividend(const QuantExt::Dividend& dividend) {}
 
 private:
-    vector<boost::shared_ptr<MarketDatum>> data_;
-    boost::shared_ptr<MarketDatum> dummyDatum_;
+    vector<QuantLib::ext::shared_ptr<MarketDatum>> data_;
+    QuantLib::ext::shared_ptr<MarketDatum> dummyDatum_;
     set<Fixing> dummyFixings_;
     set<QuantExt::Dividend> dummyDividends_;
 };
@@ -75,57 +75,57 @@ private:
 MockLoader::MockLoader() {
     Date asof(5, Feb, 2016);
     data_ = {
-        boost::make_shared<CommodityOptionQuote>(0.11, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATM/AtmFwd",
+        QuantLib::ext::make_shared<CommodityOptionQuote>(0.11, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATM/AtmFwd",
                                                  MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD",
-                                                 boost::make_shared<ExpiryPeriod>(1 * Years),
-                                                 boost::make_shared<AtmStrike>(DeltaVolQuote::AtmFwd)),
-        boost::make_shared<CommodityOptionQuote>(0.10, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/2Y/ATM/AtmFwd",
+                                                 QuantLib::ext::make_shared<ExpiryPeriod>(1 * Years),
+                                                 QuantLib::ext::make_shared<AtmStrike>(DeltaVolQuote::AtmFwd)),
+        QuantLib::ext::make_shared<CommodityOptionQuote>(0.10, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/2Y/ATM/AtmFwd",
                                                  MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD",
-                                                 boost::make_shared<ExpiryPeriod>(2 * Years),
-                                                 boost::make_shared<AtmStrike>(DeltaVolQuote::AtmFwd)),
-        boost::make_shared<CommodityOptionQuote>(0.09, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/5Y/ATM/AtmFwd",
+                                                 QuantLib::ext::make_shared<ExpiryPeriod>(2 * Years),
+                                                 QuantLib::ext::make_shared<AtmStrike>(DeltaVolQuote::AtmFwd)),
+        QuantLib::ext::make_shared<CommodityOptionQuote>(0.09, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/5Y/ATM/AtmFwd",
                                                  MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD",
-                                                 boost::make_shared<ExpiryPeriod>(5 * Years),
-                                                 boost::make_shared<AtmStrike>(DeltaVolQuote::AtmFwd)),
-        boost::make_shared<CommodityOptionQuote>(
+                                                 QuantLib::ext::make_shared<ExpiryPeriod>(5 * Years),
+                                                 QuantLib::ext::make_shared<AtmStrike>(DeltaVolQuote::AtmFwd)),
+        QuantLib::ext::make_shared<CommodityOptionQuote>(
             0.105, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD_USD_VOLS/USD/1Y/1150", MarketDatum::QuoteType::RATE_LNVOL,
-            "GOLD", "USD", boost::make_shared<ExpiryPeriod>(1 * Years), boost::make_shared<AbsoluteStrike>(1150)),
-        boost::make_shared<CommodityOptionQuote>(
+            "GOLD", "USD", QuantLib::ext::make_shared<ExpiryPeriod>(1 * Years), QuantLib::ext::make_shared<AbsoluteStrike>(1150)),
+        QuantLib::ext::make_shared<CommodityOptionQuote>(
             0.115, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD_USD_VOLS/USD/1Y/1190", MarketDatum::QuoteType::RATE_LNVOL,
-            "GOLD", "USD", boost::make_shared<ExpiryPeriod>(1 * Years), boost::make_shared<AbsoluteStrike>(1190)),
-        boost::make_shared<CommodityOptionQuote>(
+            "GOLD", "USD", QuantLib::ext::make_shared<ExpiryPeriod>(1 * Years), QuantLib::ext::make_shared<AbsoluteStrike>(1190)),
+        QuantLib::ext::make_shared<CommodityOptionQuote>(
             0.095, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD_USD_VOLS/USD/2Y/1150", MarketDatum::QuoteType::RATE_LNVOL,
-            "GOLD", "USD", boost::make_shared<ExpiryPeriod>(2 * Years), boost::make_shared<AbsoluteStrike>(1150)),
-        boost::make_shared<CommodityOptionQuote>(
+            "GOLD", "USD", QuantLib::ext::make_shared<ExpiryPeriod>(2 * Years), QuantLib::ext::make_shared<AbsoluteStrike>(1150)),
+        QuantLib::ext::make_shared<CommodityOptionQuote>(
             0.105, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD_USD_VOLS/USD/2Y/1190", MarketDatum::QuoteType::RATE_LNVOL,
-            "GOLD", "USD", boost::make_shared<ExpiryPeriod>(2 * Years), boost::make_shared<AbsoluteStrike>(1190)),
-        boost::make_shared<CommodityOptionQuote>(
+            "GOLD", "USD", QuantLib::ext::make_shared<ExpiryPeriod>(2 * Years), QuantLib::ext::make_shared<AbsoluteStrike>(1190)),
+        QuantLib::ext::make_shared<CommodityOptionQuote>(
             0.085, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD_USD_VOLS/USD/5Y/1150", MarketDatum::QuoteType::RATE_LNVOL,
-            "GOLD", "USD", boost::make_shared<ExpiryPeriod>(5 * Years), boost::make_shared<AbsoluteStrike>(1150)),
-        boost::make_shared<CommodityOptionQuote>(
+            "GOLD", "USD", QuantLib::ext::make_shared<ExpiryPeriod>(5 * Years), QuantLib::ext::make_shared<AbsoluteStrike>(1150)),
+        QuantLib::ext::make_shared<CommodityOptionQuote>(
             0.095, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD_USD_VOLS/USD/5Y/1190", MarketDatum::QuoteType::RATE_LNVOL,
-            "GOLD", "USD", boost::make_shared<ExpiryPeriod>(5 * Years), boost::make_shared<AbsoluteStrike>(1190))};
+            "GOLD", "USD", QuantLib::ext::make_shared<ExpiryPeriod>(5 * Years), QuantLib::ext::make_shared<AbsoluteStrike>(1190))};
 }
 
-boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const string& inputDir,
+QuantLib::ext::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const string& inputDir,
                                                    const string& curveConfigFile,
                                                    const string& marketFile = "market.txt",
                                                    const string& fixingsFile = "fixings.txt") {
 
-    auto conventions = boost::make_shared<Conventions>();
+    auto conventions = QuantLib::ext::make_shared<Conventions>();
     conventions->fromFile(TEST_INPUT_FILE(string(inputDir + "/conventions.xml")));
     InstrumentConventions::instance().setConventions(conventions);
     
-    auto curveConfigs = boost::make_shared<CurveConfigurations>();
+    auto curveConfigs = QuantLib::ext::make_shared<CurveConfigurations>();
     curveConfigs->fromFile(TEST_INPUT_FILE(string(inputDir + "/" + curveConfigFile)));
 
-    auto todaysMarketParameters = boost::make_shared<TodaysMarketParameters>();
+    auto todaysMarketParameters = QuantLib::ext::make_shared<TodaysMarketParameters>();
     todaysMarketParameters->fromFile(TEST_INPUT_FILE(string(inputDir + "/todaysmarket.xml")));
 
-    auto loader = boost::make_shared<CSVLoader>(TEST_INPUT_FILE(string(inputDir + "/" + marketFile)),
+    auto loader = QuantLib::ext::make_shared<CSVLoader>(TEST_INPUT_FILE(string(inputDir + "/" + marketFile)),
                                                 TEST_INPUT_FILE(string(inputDir + "/" + fixingsFile)), false);
 
-    return boost::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs);
+    return QuantLib::ext::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs);
 }
 
 // clang-format off
@@ -173,12 +173,12 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeConstant) {
     Date asof(5, Feb, 2016);
 
     // Constant volatility config
-    vector<boost::shared_ptr<VolatilityConfig>> cvc;
-    cvc.push_back(boost::make_shared<ConstantVolatilityConfig>("COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/2Y/ATM/AtmFwd"));
+    vector<QuantLib::ext::shared_ptr<VolatilityConfig>> cvc;
+    cvc.push_back(QuantLib::ext::make_shared<ConstantVolatilityConfig>("COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/2Y/ATM/AtmFwd"));
 
     // Volatility configuration with a single quote
-    boost::shared_ptr<CommodityVolatilityConfig> curveConfig =
-        boost::make_shared<CommodityVolatilityConfig>("GOLD_USD_VOLS", "", "USD", cvc, "A365", "NullCalendar");
+    QuantLib::ext::shared_ptr<CommodityVolatilityConfig> curveConfig =
+        QuantLib::ext::make_shared<CommodityVolatilityConfig>("GOLD_USD_VOLS", "", "USD", cvc, "A365", "NullCalendar");
 
     // Curve configurations
     CurveConfigurations curveConfigs;
@@ -194,12 +194,12 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeConstant) {
     Conventions conventions;
 
     // Check commodity volatility construction works
-    boost::shared_ptr<CommodityVolCurve> curve;
-    BOOST_CHECK_NO_THROW(curve = boost::make_shared<CommodityVolCurve>(asof, curveSpec, loader, curveConfigs));
+    QuantLib::ext::shared_ptr<CommodityVolCurve> curve;
+    BOOST_CHECK_NO_THROW(curve = QuantLib::ext::make_shared<CommodityVolCurve>(asof, curveSpec, loader, curveConfigs));
 
     // Check volatilities are all equal to the configured volatility regardless of strike and expiry
     Real configuredVolatility = 0.10;
-    boost::shared_ptr<BlackVolTermStructure> volatility = curve->volatility();
+    QuantLib::ext::shared_ptr<BlackVolTermStructure> volatility = curve->volatility();
     BOOST_CHECK_CLOSE(volatility->blackVol(0.25, 1000.0), configuredVolatility, testTolerance);
     BOOST_CHECK_CLOSE(volatility->blackVol(0.25, 1200.0), configuredVolatility, testTolerance);
     BOOST_CHECK_CLOSE(volatility->blackVol(asof + 3 * Months, 1000.0), configuredVolatility, testTolerance);
@@ -223,12 +223,12 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeCurve) {
                           "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/5Y/ATM/AtmFwd"};
 
     // Volatility curve config with linear interpolation and flat extrapolation.
-    vector<boost::shared_ptr<VolatilityConfig>> vcc;
-    vcc.push_back(boost::make_shared<VolatilityCurveConfig>(quotes, "Linear", "Flat"));
+    vector<QuantLib::ext::shared_ptr<VolatilityConfig>> vcc;
+    vcc.push_back(QuantLib::ext::make_shared<VolatilityCurveConfig>(quotes, "Linear", "Flat"));
 
     // Commodity volatility configuration with time dependent volatilities
-    boost::shared_ptr<CommodityVolatilityConfig> curveConfig =
-        boost::make_shared<CommodityVolatilityConfig>("GOLD_USD_VOLS", "", "USD", vcc, "A365", "NullCalendar");
+    QuantLib::ext::shared_ptr<CommodityVolatilityConfig> curveConfig =
+        QuantLib::ext::make_shared<CommodityVolatilityConfig>("GOLD_USD_VOLS", "", "USD", vcc, "A365", "NullCalendar");
 
     // Curve configurations
     CurveConfigurations curveConfigs;
@@ -244,11 +244,11 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeCurve) {
     Conventions conventions;
 
     // Check commodity volatility construction works
-    boost::shared_ptr<CommodityVolCurve> curve;
-    BOOST_CHECK_NO_THROW(curve = boost::make_shared<CommodityVolCurve>(asof, curveSpec, loader, curveConfigs));
+    QuantLib::ext::shared_ptr<CommodityVolCurve> curve;
+    BOOST_CHECK_NO_THROW(curve = QuantLib::ext::make_shared<CommodityVolCurve>(asof, curveSpec, loader, curveConfigs));
 
     // Check time depending volatilities are as expected
-    boost::shared_ptr<BlackVolTermStructure> volatility = curve->volatility();
+    QuantLib::ext::shared_ptr<BlackVolTermStructure> volatility = curve->volatility();
     Real configuredVolatility;
 
     // Check configured pillar points: { (1Y, 0.11), (2Y, 0.10), (5Y, 0.09) }
@@ -292,13 +292,13 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeSurface) {
     vector<string> strikes{"1150", "1190"};
     vector<string> expiries{"1Y", "2Y", "5Y"};
 
-    vector<boost::shared_ptr<VolatilityConfig>> vssc;
+    vector<QuantLib::ext::shared_ptr<VolatilityConfig>> vssc;
     vssc.push_back(
-        boost::make_shared<VolatilityStrikeSurfaceConfig>(strikes, expiries, "Linear", "Linear", true, "Flat", "Flat"));
+        QuantLib::ext::make_shared<VolatilityStrikeSurfaceConfig>(strikes, expiries, "Linear", "Linear", true, "Flat", "Flat"));
 
     // Commodity volatility configuration
-    boost::shared_ptr<CommodityVolatilityConfig> curveConfig =
-        boost::make_shared<CommodityVolatilityConfig>("GOLD_USD_VOLS", "", "USD", vssc, "A365", "NullCalendar");
+    QuantLib::ext::shared_ptr<CommodityVolatilityConfig> curveConfig =
+        QuantLib::ext::make_shared<CommodityVolatilityConfig>("GOLD_USD_VOLS", "", "USD", vssc, "A365", "NullCalendar");
 
     // Curve configurations
     CurveConfigurations curveConfigs;
@@ -314,11 +314,11 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeSurface) {
     Conventions conventions;
 
     // Check commodity volatility construction works
-    boost::shared_ptr<CommodityVolCurve> curve;
-    BOOST_CHECK_NO_THROW(curve = boost::make_shared<CommodityVolCurve>(asof, curveSpec, loader, curveConfigs));
+    QuantLib::ext::shared_ptr<CommodityVolCurve> curve;
+    BOOST_CHECK_NO_THROW(curve = QuantLib::ext::make_shared<CommodityVolCurve>(asof, curveSpec, loader, curveConfigs));
 
     // Check time and strike depending volatilities are as expected
-    boost::shared_ptr<BlackVolTermStructure> volatility = curve->volatility();
+    QuantLib::ext::shared_ptr<BlackVolTermStructure> volatility = curve->volatility();
 
     // Check configured pillar points
     BOOST_CHECK_CLOSE(volatility->blackVol(asof + 1 * Years, 1150.0), 0.105, testTolerance);
@@ -344,10 +344,10 @@ BOOST_AUTO_TEST_CASE(testCommodityVolSurfaceWildcardExpiriesWildcardStrikes) {
 
     // Wildcards in configuration so we know that a BlackVarianceSurfaceSparse has been created and fed to a
     // BlackVolatilityWithATM surface in TodaysMarket
-    auto tmSurface = boost::dynamic_pointer_cast<BlackVolatilityWithATM>(*vts);
+    auto tmSurface = QuantLib::ext::dynamic_pointer_cast<BlackVolatilityWithATM>(*vts);
     BOOST_REQUIRE_MESSAGE(tmSurface, "Expected the commodity vol structure in TodaysMarket"
                                          << " to be of type BlackVolatilityWithATM");
-    auto surface = boost::dynamic_pointer_cast<BlackVarianceSurfaceSparse>(tmSurface->surface());
+    auto surface = QuantLib::ext::dynamic_pointer_cast<BlackVarianceSurfaceSparse>(tmSurface->surface());
     BOOST_REQUIRE_MESSAGE(tmSurface, "Expected the commodity vol structure in TodaysMarket to contain"
                                          << " a surface of type BlackVarianceSurfaceSparse");
 
@@ -391,10 +391,10 @@ BOOST_AUTO_TEST_CASE(testCommodityVolSurfaceWildcardExpiriesExplicitStrikes) {
 
     // Wildcards in configuration so we know that a BlackVarianceSurfaceSparse has been created and fed to a
     // BlackVolatilityWithATM surface in TodaysMarket
-    auto tmSurface = boost::dynamic_pointer_cast<BlackVolatilityWithATM>(*vts);
+    auto tmSurface = QuantLib::ext::dynamic_pointer_cast<BlackVolatilityWithATM>(*vts);
     BOOST_REQUIRE_MESSAGE(tmSurface, "Expected the commodity vol structure in TodaysMarket"
                                          << " to be of type BlackVolatilityWithATM");
-    auto surface = boost::dynamic_pointer_cast<BlackVarianceSurfaceSparse>(tmSurface->surface());
+    auto surface = QuantLib::ext::dynamic_pointer_cast<BlackVarianceSurfaceSparse>(tmSurface->surface());
     BOOST_REQUIRE_MESSAGE(tmSurface, "Expected the commodity vol structure in TodaysMarket to contain"
                                          << " a surface of type BlackVarianceSurfaceSparse");
 
@@ -449,10 +449,10 @@ BOOST_AUTO_TEST_CASE(testCommodityVolSurfaceExplicitExpiriesWildcardStrikes) {
 
     // Wildcards in configuration so we know that a BlackVarianceSurfaceSparse has been created and fed to a
     // BlackVolatilityWithATM surface in TodaysMarket
-    auto tmSurface = boost::dynamic_pointer_cast<BlackVolatilityWithATM>(*vts);
+    auto tmSurface = QuantLib::ext::dynamic_pointer_cast<BlackVolatilityWithATM>(*vts);
     BOOST_REQUIRE_MESSAGE(tmSurface, "Expected the commodity vol structure in TodaysMarket"
                                          << " to be of type BlackVolatilityWithATM");
-    auto surface = boost::dynamic_pointer_cast<BlackVarianceSurfaceSparse>(tmSurface->surface());
+    auto surface = QuantLib::ext::dynamic_pointer_cast<BlackVarianceSurfaceSparse>(tmSurface->surface());
     BOOST_REQUIRE_MESSAGE(tmSurface, "Expected the commodity vol structure in TodaysMarket to contain"
                                          << " a surface of type BlackVarianceSurfaceSparse");
 
@@ -538,7 +538,7 @@ BOOST_DATA_TEST_CASE(testCommodityVolDeltaSurface, bdata::make(asofDates) * bdat
     // For some reason, todaysmarket wraps the surface built in CommodityVolCurve in a BlackVolatilityWithATM.
     auto bvwa = dynamic_pointer_cast<BlackVolatilityWithATM>(*vts);
     BOOST_REQUIRE(bvwa);
-    auto bvsd = boost::dynamic_pointer_cast<BlackVolatilitySurfaceDelta>(bvwa->surface());
+    auto bvsd = QuantLib::ext::dynamic_pointer_cast<BlackVolatilitySurfaceDelta>(bvwa->surface());
     BOOST_REQUIRE(bvsd);
 
     // Tolerance for float comparison
@@ -562,7 +562,7 @@ BOOST_DATA_TEST_CASE(testCommodityVolDeltaSurface, bdata::make(asofDates) * bdat
 
         // Get the smile section, cast to expected type and check cast succeeds.
         auto fxss = bvsd->blackVolSmile(expiryDate);
-        auto iss = boost::dynamic_pointer_cast<InterpolatedSmileSection>(fxss);
+        auto iss = QuantLib::ext::dynamic_pointer_cast<InterpolatedSmileSection>(fxss);
         BOOST_REQUIRE(iss);
 
         // Check that the expected grid strike is one of the smile section strikes.
@@ -577,12 +577,12 @@ BOOST_DATA_TEST_CASE(testCommodityVolDeltaSurface, bdata::make(asofDates) * bdat
 
     // Check flat time extrapolation
     auto fxss = bvsd->blackVolSmile(bvsd->dates().back());
-    auto iss = boost::dynamic_pointer_cast<InterpolatedSmileSection>(fxss);
+    auto iss = QuantLib::ext::dynamic_pointer_cast<InterpolatedSmileSection>(fxss);
     BOOST_REQUIRE(iss);
     vector<Real> lastVolatilities = iss->volatilities();
 
     fxss = bvsd->blackVolSmile(bvsd->dates().back() + 1 * Years);
-    iss = boost::dynamic_pointer_cast<InterpolatedSmileSection>(fxss);
+    iss = QuantLib::ext::dynamic_pointer_cast<InterpolatedSmileSection>(fxss);
     BOOST_REQUIRE(iss);
     vector<Real> extrapVolatilities = iss->volatilities();
 
@@ -595,7 +595,7 @@ BOOST_DATA_TEST_CASE(testCommodityVolDeltaSurface, bdata::make(asofDates) * bdat
     Date testDate = asof + 1 * Years;
 
     fxss = bvsd->blackVolSmile(testDate);
-    iss = boost::dynamic_pointer_cast<InterpolatedSmileSection>(fxss);
+    iss = QuantLib::ext::dynamic_pointer_cast<InterpolatedSmileSection>(fxss);
     BOOST_REQUIRE(iss);
 
     Volatility volAtMinStrike = iss->volatilities().front();
@@ -730,7 +730,7 @@ BOOST_AUTO_TEST_CASE(testCommodityVolSurfaceMyrCrudePalmOil) {
     // For some reason, todaysmarket wraps the surface built in CommodityVolCurve in a BlackVolatilityWithATM.
     auto bvwa = dynamic_pointer_cast<BlackVolatilityWithATM>(*vts);
     BOOST_REQUIRE(bvwa);
-    auto bvsd = boost::dynamic_pointer_cast<BlackVolatilitySurfaceDelta>(bvwa->surface());
+    auto bvsd = QuantLib::ext::dynamic_pointer_cast<BlackVolatilitySurfaceDelta>(bvwa->surface());
     BOOST_REQUIRE(bvsd);
 
     // Now check that the surface dates are as expected.

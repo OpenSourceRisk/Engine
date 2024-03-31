@@ -59,11 +59,11 @@ public:
         PriceQuotePreference type, const QuantLib::Period& observationLag,
         const QuantLib::Calendar& cal, // calendar in index may not be useful
         const QuantLib::BusinessDayConvention& bdc, const QuantLib::DayCounter& dc,
-        const boost::shared_ptr<QuantLib::ZeroInflationIndex> index, 
+        const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex> index, 
         QuantLib::Handle<QuantLib::YieldTermStructure> yts,
         const std::vector<QuantLib::Rate>& cStrikes, const std::vector<QuantLib::Rate>& fStrikes,
         const std::vector<QuantLib::Period>& cfMaturities, const QuantLib::Matrix& cPrice,
-        const QuantLib::Matrix& fPrice, const boost::shared_ptr<QuantExt::CPICapFloorEngine>& engine,
+        const QuantLib::Matrix& fPrice, const QuantLib::ext::shared_ptr<QuantExt::CPICapFloorEngine>& engine,
         const bool quotedInstrumentsAreInterpolated = false,
         const QuantLib::Date& capFloorStartDate = QuantLib::Date(), 
         bool ignoreMissingPrices = false, // if true, it allows prices to be Null and work as long there is one
@@ -80,12 +80,12 @@ public:
         const QuantLib::Calendar& cal, // calendar in index may not be useful
         const QuantLib::BusinessDayConvention& bdc, 
         const QuantLib::DayCounter& dc,
-        const boost::shared_ptr<QuantLib::ZeroInflationIndex> index, 
+        const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex> index, 
         QuantLib::Handle<QuantLib::YieldTermStructure> yts,
         const std::vector<QuantLib::Rate>& cStrikes, const std::vector<QuantLib::Rate>& fStrikes,
         const std::vector<QuantLib::Period>& cfMaturities, const QuantLib::Matrix& cPrice,
         const QuantLib::Matrix& fPrice,
-        const boost::shared_ptr<QuantExt::CPICapFloorEngine>& engine,
+        const QuantLib::ext::shared_ptr<QuantExt::CPICapFloorEngine>& engine,
         const QuantLib::Date& capFloorStartDate = QuantLib::Date(),
         bool ignoreMissingPrices = false, // if true, it allows prices to be Null and work as long there is one
         bool lowerStrikeConstExtrap = true, bool upperStrikeConstExtrap = true,
@@ -174,12 +174,12 @@ private:
     double implyVol(double strike, const QuantLib::Date& maturity, double price, bool isFloor) const;
 
     PriceQuotePreference preference_;
-    boost::shared_ptr<QuantLib::ZeroInflationIndex> index_;
+    QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex> index_;
     QuantLib::Handle<QuantLib::YieldTermStructure> yts_;
     std::vector<double> capStrikes_;
     std::vector<double> floorStrikes_;
 
-    boost::shared_ptr<QuantExt::CPICapFloorEngine> engine_;
+    QuantLib::ext::shared_ptr<QuantExt::CPICapFloorEngine> engine_;
     bool ignoreMissingPrices_;
     bool lowerStrikeConstExtrap_;
     bool upperStrikeConstExtrap_;
@@ -197,7 +197,7 @@ private:
     mutable std::vector<std::vector<bool>> missingPrices_;
     mutable std::vector<std::vector<bool>> failedPrices_;
 
-    mutable boost::shared_ptr<QuantExt::OptionInterpolator2d<InterpolatorStrike, InterpolatorTime>> volSurface_;
+    mutable QuantLib::ext::shared_ptr<QuantExt::OptionInterpolator2d<InterpolatorStrike, InterpolatorTime>> volSurface_;
 };
 
 
@@ -207,10 +207,10 @@ CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::CPIPriceVolatil
     PriceQuotePreference type, const QuantLib::Period& observationLag,
     const QuantLib::Calendar& cal, // calendar in index may not be useful
     const QuantLib::BusinessDayConvention& bdc, const QuantLib::DayCounter& dc,
-    const boost::shared_ptr<QuantLib::ZeroInflationIndex> index, QuantLib::Handle<QuantLib::YieldTermStructure> yts,
+    const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex> index, QuantLib::Handle<QuantLib::YieldTermStructure> yts,
     const std::vector<QuantLib::Rate>& cStrikes, const std::vector<QuantLib::Rate>& fStrikes,
     const std::vector<QuantLib::Period>& cfMaturities, const QuantLib::Matrix& cPrice, const QuantLib::Matrix& fPrice,
-    const boost::shared_ptr<QuantExt::CPICapFloorEngine>& engine, const bool quotedInstrumentsAreInterpolated,
+    const QuantLib::ext::shared_ptr<QuantExt::CPICapFloorEngine>& engine, const bool quotedInstrumentsAreInterpolated,
     const QuantLib::Date& capFloorStartDate,
     bool ignoreMissingPrices, // if true, it allows prices to be Null and work as long there is one
     bool lowerStrikeConstExtrap, bool upperStrikeConstExtrap, const QuantLib::VolatilityType& volType,
@@ -239,11 +239,11 @@ CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::CPIPriceVolatil
     const QuantLib::Calendar& cal, // calendar in index may not be useful
     const QuantLib::BusinessDayConvention& bdc, 
     const QuantLib::DayCounter& dc,
-    const boost::shared_ptr<QuantLib::ZeroInflationIndex> index, 
+    const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex> index, 
     QuantLib::Handle<QuantLib::YieldTermStructure> yts,
     const std::vector<QuantLib::Rate>& cStrikes, const std::vector<QuantLib::Rate>& fStrikes,
     const std::vector<QuantLib::Period>& cfMaturities, const QuantLib::Matrix& cPrice, const QuantLib::Matrix& fPrice,
-    const boost::shared_ptr<QuantExt::CPICapFloorEngine>& engine,
+    const QuantLib::ext::shared_ptr<QuantExt::CPICapFloorEngine>& engine,
     const QuantLib::Date& capFloorStartDate,
     bool ignoreMissingPrices, // if true, it allows prices to be Null and work as long there is one
     bool lowerStrikeConstExtrap, bool upperStrikeConstExtrap, 
@@ -314,7 +314,7 @@ void CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::performCal
         }
     }
 
-    volSurface_ = boost::make_shared<QuantExt::OptionInterpolator2d<InterpolatorStrike, InterpolatorTime>>(
+    volSurface_ = QuantLib::ext::make_shared<QuantExt::OptionInterpolator2d<InterpolatorStrike, InterpolatorTime>>(
         referenceDate(), dayCounter(), dates, strikes, vols, lowerStrikeConstExtrap_, upperStrikeConstExtrap_,
         InterpolatorStrike(), InterpolatorTime(), baseDate());
 
@@ -539,14 +539,14 @@ double CPIPriceVolatilitySurface<InterpolatorStrike, InterpolatorTime>::implyVol
                                    index_, observationLag(),
                                    indexIsInterpolated() ? QuantLib::CPI::Linear : QuantLib::CPI::Flat);
 
-    boost::shared_ptr<QuantExt::CPICapFloorEngine> engine = engine_;
+    QuantLib::ext::shared_ptr<QuantExt::CPICapFloorEngine> engine = engine_;
 
     bool interpolated = indexIsInterpolated();
     capFloor.setPricingEngine(engine);
 
     auto targetFunction = [&engine, &cal, &dc, &bdc, &startDate, &obsLag, &freq, &price,
                            &capFloor, &interpolated](const double& guess) {
-        boost::shared_ptr<QuantExt::ConstantCPIVolatility> vol = boost::make_shared<QuantExt::ConstantCPIVolatility>(
+        QuantLib::ext::shared_ptr<QuantExt::ConstantCPIVolatility> vol = QuantLib::ext::make_shared<QuantExt::ConstantCPIVolatility>(
             guess, 0, cal, bdc, dc, obsLag, freq, interpolated, startDate);
 
         engine->setVolatility(QuantLib::Handle<QuantLib::CPIVolatilitySurface>(vol));

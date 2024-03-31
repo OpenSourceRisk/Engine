@@ -30,10 +30,10 @@ namespace QuantExt {
 SpreadedSwaptionVolatility::SpreadedSwaptionVolatility(
     const Handle<SwaptionVolatilityStructure>& base, const std::vector<Period>& optionTenors,
     const std::vector<Period>& swapTenors, const std::vector<Real>& strikeSpreads,
-    const std::vector<std::vector<Handle<Quote>>>& volSpreads, const boost::shared_ptr<SwapIndex>& baseSwapIndexBase,
-    const boost::shared_ptr<SwapIndex>& baseShortSwapIndexBase,
-    const boost::shared_ptr<SwapIndex>& simulatedSwapIndexBase,
-    const boost::shared_ptr<SwapIndex>& simulatedShortSwapIndexBase, const bool stickyAbsMoney)
+    const std::vector<std::vector<Handle<Quote>>>& volSpreads, const QuantLib::ext::shared_ptr<SwapIndex>& baseSwapIndexBase,
+    const QuantLib::ext::shared_ptr<SwapIndex>& baseShortSwapIndexBase,
+    const QuantLib::ext::shared_ptr<SwapIndex>& simulatedSwapIndexBase,
+    const QuantLib::ext::shared_ptr<SwapIndex>& simulatedShortSwapIndexBase, const bool stickyAbsMoney)
     : SwaptionVolatilityDiscrete(optionTenors, swapTenors, 0, base->calendar(), base->businessDayConvention(),
                                  base->dayCounter()),
       base_(base), strikeSpreads_(strikeSpreads), volSpreads_(volSpreads), baseSwapIndexBase_(baseSwapIndexBase),
@@ -92,8 +92,8 @@ void SpreadedSwaptionVolatility::deepUpdate() {
 const Handle<SwaptionVolatilityStructure>& SpreadedSwaptionVolatility::baseVol() { return base_; }
 
 Real SpreadedSwaptionVolatility::getAtmLevel(const Real optionTime, const Real swapLength,
-                                             const boost::shared_ptr<SwapIndex> swapIndexBase,
-                                             const boost::shared_ptr<SwapIndex> shortSwapIndexBase) const {
+                                             const QuantLib::ext::shared_ptr<SwapIndex> swapIndexBase,
+                                             const QuantLib::ext::shared_ptr<SwapIndex> shortSwapIndexBase) const {
     Date optionDate = optionDateFromTime(optionTime);
     Rounding rounder(0);
     Period swapTenor(static_cast<Integer>(rounder(swapLength * 12.0)), Months);
@@ -107,7 +107,7 @@ Real SpreadedSwaptionVolatility::getAtmLevel(const Real optionTime, const Real s
     }
 }
 
-boost::shared_ptr<SmileSection> SpreadedSwaptionVolatility::smileSectionImpl(Time optionTime, Time swapLength) const {
+QuantLib::ext::shared_ptr<SmileSection> SpreadedSwaptionVolatility::smileSectionImpl(Time optionTime, Time swapLength) const {
     calculate();
     auto baseSection = base_->smileSection(optionTime, swapLength);
     Real baseAtmLevel = Null<Real>();
@@ -129,7 +129,7 @@ boost::shared_ptr<SmileSection> SpreadedSwaptionVolatility::smileSectionImpl(Tim
         volSpreads[k] = volSpreadInterpolation_[k](swapLength, optionTime);
     }
     // create smile section
-    return boost::make_shared<SpreadedSmileSection2>(base_->smileSection(optionTime, swapLength), volSpreads,
+    return QuantLib::ext::make_shared<SpreadedSmileSection2>(base_->smileSection(optionTime, swapLength), volSpreads,
                                                      strikeSpreads_, true, baseAtmLevel, simulatedAtmLevel,
                                                      stickyAbsMoney_);
 }
@@ -176,7 +176,7 @@ void SpreadedSwaptionVolatility::performCalculations() const {
                 volSpreadValues_[k](i, j) = volSpreads_[index][k]->value();
             }
         }
-        volSpreadInterpolation_[k] = FlatExtrapolator2D(boost::make_shared<BilinearInterpolation>(
+        volSpreadInterpolation_[k] = FlatExtrapolator2D(QuantLib::ext::make_shared<BilinearInterpolation>(
             swapLengths_.begin(), swapLengths_.end(), optionTimes_.begin(), optionTimes_.end(), volSpreadValues_[k]));
         volSpreadInterpolation_[k].enableExtrapolation();
     }

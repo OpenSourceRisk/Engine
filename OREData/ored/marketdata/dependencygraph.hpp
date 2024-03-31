@@ -31,7 +31,7 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/directed_graph.hpp>
 #include <boost/graph/graph_traits.hpp>
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 #include <boost/graph/depth_first_search.hpp>
 #include <boost/graph/tiernan_all_cycles.hpp>
@@ -82,9 +82,9 @@ public:
         //! The asof date of the T0 market instance
         const Date& asof,
         //! Description of the market composition
-        const boost::shared_ptr<TodaysMarketParameters>& params,
+        const QuantLib::ext::shared_ptr<TodaysMarketParameters>& params,
         //! Description of curve compositions
-        const boost::shared_ptr<const CurveConfigurations>& curveConfigs,
+        const QuantLib::ext::shared_ptr<const CurveConfigurations>& curveConfigs,
         //! Ibor fallback config
         const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig())
         : asof_(asof), params_(params), curveConfigs_(curveConfigs),
@@ -95,7 +95,7 @@ public:
         MarketObject obj;                       // the market object to build
         std::string name;                       // the LHS of the todays market mapping
         std::string mapping;                    // the RHS of the todays market mapping
-        boost::shared_ptr<CurveSpec> curveSpec; // the parsed curve spec, if applicable, null otherwise
+        QuantLib::ext::shared_ptr<CurveSpec> curveSpec; // the parsed curve spec, if applicable, null otherwise
         bool built;                             // true if we have built this node
     };
 
@@ -118,8 +118,8 @@ private:
     std::map<std::string, Graph> dependencies_;
 
     const Date asof_;
-    const boost::shared_ptr<TodaysMarketParameters> params_;
-    const boost::shared_ptr<const CurveConfigurations> curveConfigs_;
+    const QuantLib::ext::shared_ptr<TodaysMarketParameters> params_;
+    const QuantLib::ext::shared_ptr<const CurveConfigurations> curveConfigs_;
     const IborFallbackConfig iborFallbackConfig_;
 };
 

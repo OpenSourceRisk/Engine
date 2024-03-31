@@ -37,7 +37,7 @@ ScriptedInstrumentAmcCalculator::simulatePath(const std::vector<QuantLib::Real>&
 
     // inject the global paths into our local model, notice that this will change the size of the model
 
-    auto amcModel = boost::dynamic_pointer_cast<AmcModel>(model_);
+    auto amcModel = QuantLib::ext::dynamic_pointer_cast<AmcModel>(model_);
     QL_REQUIRE(amcModel, "expected an AmcModel");
     amcModel->injectPaths(&pathTimes, &paths, &isRelevantTime, stickyCloseOutRun);
 
@@ -45,7 +45,7 @@ ScriptedInstrumentAmcCalculator::simulatePath(const std::vector<QuantLib::Real>&
 
     // set up copy of initial context to run the script engine on
 
-    auto workingContext = boost::make_shared<Context>(*context_);
+    auto workingContext = QuantLib::ext::make_shared<Context>(*context_);
 
     // amend context to new model size
     amendContextVariablesSizes(workingContext, model_->size());
@@ -53,9 +53,9 @@ ScriptedInstrumentAmcCalculator::simulatePath(const std::vector<QuantLib::Real>&
     // make sure we reset the injected path data after the calculation
     struct InjectedPathReleaser {
         ~InjectedPathReleaser() {
-            boost::dynamic_pointer_cast<AmcModel>(model)->injectPaths(nullptr, nullptr, nullptr, false);
+            QuantLib::ext::dynamic_pointer_cast<AmcModel>(model)->injectPaths(nullptr, nullptr, nullptr, false);
         }
-        boost::shared_ptr<Model> model;
+        QuantLib::ext::shared_ptr<Model> model;
     };
     InjectedPathReleaser injectedPathReleaser{model_};
 

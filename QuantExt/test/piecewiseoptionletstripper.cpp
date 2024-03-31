@@ -69,7 +69,7 @@ struct CommonVars : public qle::test::TopLevelFixture {
         Settings::instance().evaluationDate() = referenceDate;
 
         // Set cap floor ibor index to EUR-EURIBOR-6M and attach a forwarding curve
-        iborIndex = boost::make_shared<Euribor6M>(testYieldCurves.forward6M);
+        iborIndex = QuantLib::ext::make_shared<Euribor6M>(testYieldCurves.forward6M);
     }
 
     // Valuation date for the test
@@ -91,7 +91,7 @@ struct CommonVars : public qle::test::TopLevelFixture {
     Real tolerance;
 
     // Cap floor ibor index
-    boost::shared_ptr<IborIndex> iborIndex;
+    QuantLib::ext::shared_ptr<IborIndex> iborIndex;
 
     // EUR discount curve test data from file test/yieldcurvemarketdata.hpp
     YieldCurveEUR testYieldCurves;
@@ -175,18 +175,18 @@ Handle<OptionletVolatilityStructure> createOvs(VolatilityType volatilityType, bo
     }
 
     // Create the cap floor term vol surface
-    boost::shared_ptr<TermVolSurface> cfts;
+    QuantLib::ext::shared_ptr<TermVolSurface> cfts;
     if (isMoving) {
-        cfts = boost::make_shared<TermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc, vars.testVols.tenors,
+        cfts = QuantLib::ext::make_shared<TermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc, vars.testVols.tenors,
                                                   vars.testVols.strikes, vols, vars.dayCounter, vsInterpMethod);
     } else {
-        cfts = boost::make_shared<TermVolSurface>(vars.referenceDate, vars.calendar, vars.bdc, vars.testVols.tenors,
+        cfts = QuantLib::ext::make_shared<TermVolSurface>(vars.referenceDate, vars.calendar, vars.bdc, vars.testVols.tenors,
                                                   vars.testVols.strikes, vols, vars.dayCounter, vsInterpMethod);
     }
 
     // Create the piecewise optionlet stripper
     VolatilityType ovType = Normal;
-    boost::shared_ptr<QuantExt::OptionletStripper> pwos = boost::make_shared<PiecewiseOptionletStripper<TI> >(
+    QuantLib::ext::shared_ptr<QuantExt::OptionletStripper> pwos = QuantLib::ext::make_shared<PiecewiseOptionletStripper<TI> >(
         cfts, vars.iborIndex, vars.testYieldCurves.discountEonia, flatFirstPeriod, volatilityType, displacement, ovType,
         0.0, interpOnOptionlet, TI(),
         QuantExt::IterativeBootstrap<
@@ -197,31 +197,31 @@ Handle<OptionletVolatilityStructure> createOvs(VolatilityType volatilityType, bo
     vector<Handle<Quote> > atmVolquotes(vars.testVols.atmTenors.size());
     if (withAtm) {
 
-        boost::shared_ptr<CapFloorTermVolCurve> atmVolCurve;
+        QuantLib::ext::shared_ptr<CapFloorTermVolCurve> atmVolCurve;
 
         if (volatilityType == Normal) {
 
             for (Size i = 0; i < atmVolquotes.size(); ++i) {
-                atmVolquotes[i] = Handle<Quote>(boost::make_shared<SimpleQuote>(vars.testVols.nAtmVols[i]));
+                atmVolquotes[i] = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(vars.testVols.nAtmVols[i]));
             }
 
             if (isMoving) {
                 if (vsInterpMethod == TermVolSurface::Bilinear) {
-                    atmVolCurve = boost::make_shared<InterpolatedCapFloorTermVolCurve<Linear> >(
+                    atmVolCurve = QuantLib::ext::make_shared<InterpolatedCapFloorTermVolCurve<Linear> >(
                         vars.settlementDays, vars.calendar, vars.bdc, vars.testVols.atmTenors, atmVolquotes,
                         vars.dayCounter, flatFirstPeriod);
                 } else {
-                    atmVolCurve = boost::make_shared<InterpolatedCapFloorTermVolCurve<Cubic> >(
+                    atmVolCurve = QuantLib::ext::make_shared<InterpolatedCapFloorTermVolCurve<Cubic> >(
                         vars.settlementDays, vars.calendar, vars.bdc, vars.testVols.atmTenors, atmVolquotes,
                         vars.dayCounter, flatFirstPeriod);
                 }
             } else {
                 if (vsInterpMethod == TermVolSurface::Bilinear) {
-                    atmVolCurve = boost::make_shared<InterpolatedCapFloorTermVolCurve<Linear> >(
+                    atmVolCurve = QuantLib::ext::make_shared<InterpolatedCapFloorTermVolCurve<Linear> >(
                         vars.referenceDate, vars.calendar, vars.bdc, vars.testVols.atmTenors, atmVolquotes,
                         vars.dayCounter, flatFirstPeriod);
                 } else {
-                    atmVolCurve = boost::make_shared<InterpolatedCapFloorTermVolCurve<Cubic> >(
+                    atmVolCurve = QuantLib::ext::make_shared<InterpolatedCapFloorTermVolCurve<Cubic> >(
                         vars.referenceDate, vars.calendar, vars.bdc, vars.testVols.atmTenors, atmVolquotes,
                         vars.dayCounter, flatFirstPeriod);
                 }
@@ -229,26 +229,26 @@ Handle<OptionletVolatilityStructure> createOvs(VolatilityType volatilityType, bo
         } else {
 
             for (Size i = 0; i < atmVolquotes.size(); ++i) {
-                atmVolquotes[i] = Handle<Quote>(boost::make_shared<SimpleQuote>(vars.testVols.slnAtmVols_1[i]));
+                atmVolquotes[i] = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(vars.testVols.slnAtmVols_1[i]));
             }
 
             if (isMoving) {
                 if (vsInterpMethod == TermVolSurface::Bilinear) {
-                    atmVolCurve = boost::make_shared<InterpolatedCapFloorTermVolCurve<Linear> >(
+                    atmVolCurve = QuantLib::ext::make_shared<InterpolatedCapFloorTermVolCurve<Linear> >(
                         vars.settlementDays, vars.calendar, vars.bdc, vars.testVols.atmTenors, atmVolquotes,
                         vars.dayCounter, flatFirstPeriod);
                 } else {
-                    atmVolCurve = boost::make_shared<InterpolatedCapFloorTermVolCurve<Cubic> >(
+                    atmVolCurve = QuantLib::ext::make_shared<InterpolatedCapFloorTermVolCurve<Cubic> >(
                         vars.settlementDays, vars.calendar, vars.bdc, vars.testVols.atmTenors, atmVolquotes,
                         vars.dayCounter, flatFirstPeriod);
                 }
             } else {
                 if (vsInterpMethod == TermVolSurface::Bilinear) {
-                    atmVolCurve = boost::make_shared<InterpolatedCapFloorTermVolCurve<Linear> >(
+                    atmVolCurve = QuantLib::ext::make_shared<InterpolatedCapFloorTermVolCurve<Linear> >(
                         vars.referenceDate, vars.calendar, vars.bdc, vars.testVols.atmTenors, atmVolquotes,
                         vars.dayCounter, flatFirstPeriod);
                 } else {
-                    atmVolCurve = boost::make_shared<InterpolatedCapFloorTermVolCurve<Cubic> >(
+                    atmVolCurve = QuantLib::ext::make_shared<InterpolatedCapFloorTermVolCurve<Cubic> >(
                         vars.referenceDate, vars.calendar, vars.bdc, vars.testVols.atmTenors, atmVolquotes,
                         vars.dayCounter, flatFirstPeriod);
                 }
@@ -256,16 +256,16 @@ Handle<OptionletVolatilityStructure> createOvs(VolatilityType volatilityType, bo
         }
 
         Handle<CapFloorTermVolCurve> atmVolCurveH(atmVolCurve);
-        pwos = boost::make_shared<OptionletStripperWithAtm<TI, SI> >(
+        pwos = QuantLib::ext::make_shared<OptionletStripperWithAtm<TI, SI> >(
             pwos, atmVolCurveH, vars.testYieldCurves.discountEonia, volatilityType, displacement);
     }
 
     // Create the OptionletVolatilityStructure
-    boost::shared_ptr<OptionletVolatilityStructure> ovs;
+    QuantLib::ext::shared_ptr<OptionletVolatilityStructure> ovs;
     if (isMoving) {
-        ovs = boost::make_shared<QuantExt::StrippedOptionletAdapter<TI, SI> >(pwos);
+        ovs = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<TI, SI> >(pwos);
     } else {
-        ovs = boost::make_shared<QuantExt::StrippedOptionletAdapter<TI, SI> >(vars.referenceDate, pwos);
+        ovs = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<TI, SI> >(vars.referenceDate, pwos);
     }
 
     return Handle<OptionletVolatilityStructure>(ovs);
@@ -458,7 +458,7 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletSurfaceStripping,
     // Price all of the input surface instruments using the cap floor term volatilities and again with the optionlet
     // volatilities and check that the NPVs match
     Handle<YieldTermStructure> discount = testYieldCurves.discountEonia;
-    boost::shared_ptr<CapFloor> capFloor;
+    QuantLib::ext::shared_ptr<CapFloor> capFloor;
 
     for (Size i = 0; i < testVols.tenors.size(); i++) {
 
@@ -476,15 +476,15 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletSurfaceStripping,
             if (volatilityType == ShiftedLognormal) {
                 flatVol = testVols.slnVols_1[i][j];
                 capFloor->setPricingEngine(
-                    boost::make_shared<BlackCapFloorEngine>(discount, flatVol, dayCounter, testVols.shift_1));
+                    QuantLib::ext::make_shared<BlackCapFloorEngine>(discount, flatVol, dayCounter, testVols.shift_1));
             } else {
                 flatVol = testVols.nVols[i][j];
-                capFloor->setPricingEngine(boost::make_shared<BachelierCapFloorEngine>(discount, flatVol, dayCounter));
+                capFloor->setPricingEngine(QuantLib::ext::make_shared<BachelierCapFloorEngine>(discount, flatVol, dayCounter));
             }
             Real flatNpv = capFloor->NPV();
 
             // Price the instrument using the stripped (Normal) optionlet surface
-            capFloor->setPricingEngine(boost::make_shared<BachelierCapFloorEngine>(discount, ovs));
+            capFloor->setPricingEngine(QuantLib::ext::make_shared<BachelierCapFloorEngine>(discount, ovs));
             Real strippedNpv = capFloor->NPV();
 
             // Check that the difference is within the tolerance
@@ -512,15 +512,15 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletSurfaceStripping,
             if (volatilityType == ShiftedLognormal) {
                 flatVol = testVols.slnAtmVols_1[i];
                 capFloor->setPricingEngine(
-                    boost::make_shared<BlackCapFloorEngine>(discount, flatVol, dayCounter, testVols.shift_1));
+                    QuantLib::ext::make_shared<BlackCapFloorEngine>(discount, flatVol, dayCounter, testVols.shift_1));
             } else {
                 flatVol = testVols.nAtmVols[i];
-                capFloor->setPricingEngine(boost::make_shared<BachelierCapFloorEngine>(discount, flatVol, dayCounter));
+                capFloor->setPricingEngine(QuantLib::ext::make_shared<BachelierCapFloorEngine>(discount, flatVol, dayCounter));
             }
             Real flatNpv = capFloor->NPV();
 
             // Price the instrument using the stripped (Normal) optionlet surface
-            capFloor->setPricingEngine(boost::make_shared<BachelierCapFloorEngine>(discount, ovs));
+            capFloor->setPricingEngine(QuantLib::ext::make_shared<BachelierCapFloorEngine>(discount, ovs));
             Real strippedNpv = capFloor->NPV();
 
             // Check that the difference is within the tolerance
@@ -610,17 +610,17 @@ BOOST_FIXTURE_TEST_CASE(testCachedLinearFlat, CommonVars) {
     BOOST_TEST_MESSAGE("Testing against cached optionlet volatilities with LinearFlat time and smile interpolation");
 
     // Create the cap floor term vol surface
-    boost::shared_ptr<TermVolSurface> cfts =
-        boost::make_shared<TermVolSurface>(referenceDate, calendar, bdc, testVols.tenors, testVols.strikes,
+    QuantLib::ext::shared_ptr<TermVolSurface> cfts =
+        QuantLib::ext::make_shared<TermVolSurface>(referenceDate, calendar, bdc, testVols.tenors, testVols.strikes,
                                            testVols.nVols, dayCounter, TermVolSurface::Bilinear);
 
     // Create the piecewise optionlet stripper
-    boost::shared_ptr<QuantExt::OptionletStripper> pwos = boost::make_shared<PiecewiseOptionletStripper<LinearFlat> >(
+    QuantLib::ext::shared_ptr<QuantExt::OptionletStripper> pwos = QuantLib::ext::make_shared<PiecewiseOptionletStripper<LinearFlat> >(
         cfts, iborIndex, testYieldCurves.discountEonia, true, Normal, 0.0, Normal);
 
     // Create the OptionletVolatilityStructure
     Handle<OptionletVolatilityStructure> ovs = Handle<OptionletVolatilityStructure>(
-        boost::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, LinearFlat> >(referenceDate, pwos));
+        QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, LinearFlat> >(referenceDate, pwos));
     ovs->enableExtrapolation();
 
     // Check optionlet fixing dates against cached fixing dates
@@ -671,11 +671,11 @@ BOOST_FIXTURE_TEST_CASE(testChangingCapFloorSurface, CommonVars) {
     vector<Period> tenors = list_of(testVols.tenors[0])(testVols.tenors[lastTenorIdx]);
     vector<Rate> strikes = list_of(testVols.strikes[0])(testVols.strikes[lastStrikeIdx]);
 
-    vector<vector<boost::shared_ptr<SimpleQuote> > > quotes(2);
-    quotes[0].push_back(boost::make_shared<SimpleQuote>(testVols.nVols[0][0]));
-    quotes[0].push_back(boost::make_shared<SimpleQuote>(testVols.nVols[0][lastStrikeIdx]));
-    quotes[1].push_back(boost::make_shared<SimpleQuote>(testVols.nVols[lastTenorIdx][0]));
-    quotes[1].push_back(boost::make_shared<SimpleQuote>(testVols.nVols[lastTenorIdx][lastStrikeIdx]));
+    vector<vector<QuantLib::ext::shared_ptr<SimpleQuote> > > quotes(2);
+    quotes[0].push_back(QuantLib::ext::make_shared<SimpleQuote>(testVols.nVols[0][0]));
+    quotes[0].push_back(QuantLib::ext::make_shared<SimpleQuote>(testVols.nVols[0][lastStrikeIdx]));
+    quotes[1].push_back(QuantLib::ext::make_shared<SimpleQuote>(testVols.nVols[lastTenorIdx][0]));
+    quotes[1].push_back(QuantLib::ext::make_shared<SimpleQuote>(testVols.nVols[lastTenorIdx][lastStrikeIdx]));
 
     vector<vector<Handle<Quote> > > quoteHs(2);
     quoteHs[0].push_back(Handle<Quote>(quotes[0][0]));
@@ -684,16 +684,16 @@ BOOST_FIXTURE_TEST_CASE(testChangingCapFloorSurface, CommonVars) {
     quoteHs[1].push_back(Handle<Quote>(quotes[1][1]));
 
     // Create the cap floor term vol surface using the quotes
-    boost::shared_ptr<TermVolSurface> cfts = boost::make_shared<TermVolSurface>(
+    QuantLib::ext::shared_ptr<TermVolSurface> cfts = QuantLib::ext::make_shared<TermVolSurface>(
         settlementDays, calendar, bdc, tenors, strikes, quoteHs, dayCounter, TermVolSurface::Bilinear);
 
     // Create the piecewise optionlet stripper
-    boost::shared_ptr<QuantExt::OptionletStripper> pwos = boost::make_shared<PiecewiseOptionletStripper<LinearFlat> >(
+    QuantLib::ext::shared_ptr<QuantExt::OptionletStripper> pwos = QuantLib::ext::make_shared<PiecewiseOptionletStripper<LinearFlat> >(
         cfts, iborIndex, testYieldCurves.discountEonia, true, Normal, 0.0, Normal);
 
     // Create the OptionletVolatilityStructure
-    boost::shared_ptr<OptionletVolatilityStructure> ovs =
-        boost::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, LinearFlat> >(pwos);
+    QuantLib::ext::shared_ptr<OptionletVolatilityStructure> ovs =
+        QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, LinearFlat> >(pwos);
     ovs->enableExtrapolation();
 
     // Request optionlet volatility at test date

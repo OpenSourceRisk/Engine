@@ -51,14 +51,14 @@ public:
         : Trade(swapType, env), legData_({leg0, leg1}), settlement_(settlement) {}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
-    virtual void build(const boost::shared_ptr<EngineFactory>&) override;
+    virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
     virtual void setIsdaTaxonomyFields();
     QuantLib::Real notional() const override;
     std::string notionalCurrency() const override;
 
     //! Add underlying index names
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     //! Settlement Type can be set to "Cash" for NDF. Default value is "Physical"
     const string& settlement() const { return settlement_; }
@@ -77,7 +77,7 @@ public:
     const std::map<std::string,boost::any>& additionalData() const override;
 
 protected:
-    virtual boost::shared_ptr<LegData> createLegData() const;
+    virtual QuantLib::ext::shared_ptr<LegData> createLegData() const;
 
     vector<LegData> legData_;
     string settlement_;

@@ -41,7 +41,7 @@ public:
 protected:
     virtual string keyImpl(const string& indexName) override { return indexName; }
 
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& indexName) override;
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& indexName) override;
 };
 } // namespace data
 } // namespace ore

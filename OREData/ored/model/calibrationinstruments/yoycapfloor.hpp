@@ -42,13 +42,13 @@ public:
     //! Detailed constructor
     YoYCapFloor(QuantLib::YoYInflationCapFloor::Type type,
         const QuantLib::Period& tenor,
-        const boost::shared_ptr<BaseStrike>& strike);
+        const QuantLib::ext::shared_ptr<BaseStrike>& strike);
 
     //! \name Inspectors
     //@{
     QuantLib::YoYInflationCapFloor::Type type() const;
     const QuantLib::Period& tenor() const;
-    const boost::shared_ptr<BaseStrike>& strike() const;
+    const QuantLib::ext::shared_ptr<BaseStrike>& strike() const;
     //@}
 
     //! \name Serialisation
@@ -60,7 +60,7 @@ public:
 private:
     QuantLib::YoYInflationCapFloor::Type type_;
     QuantLib::Period tenor_;
-    boost::shared_ptr<BaseStrike> strike_;
+    QuantLib::ext::shared_ptr<BaseStrike> strike_;
 };
 
 }

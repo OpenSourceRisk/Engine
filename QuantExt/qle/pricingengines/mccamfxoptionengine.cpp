@@ -43,7 +43,7 @@ McCamFxOptionEngine::McCamFxOptionEngine(
 
 void McCamFxOptionEngine::calculate() const {
 
-    auto payoff = boost::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
+    auto payoff = QuantLib::ext::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
     QL_REQUIRE(payoff, "McCamFxOptionEngine: non-striked payoff given");
     QL_REQUIRE(arguments_.exercise->type() == Exercise::European, "McCamFxOptionEngine: not an European option");
     QL_REQUIRE(!arguments_.exercise->dates().empty(), "McCamFxOptionEngine: exercise dates are empty");
@@ -51,8 +51,8 @@ void McCamFxOptionEngine::calculate() const {
     Date payDate = arguments_.exercise->dates().front() + 1;
 
     Real w = payoff->optionType() == Option::Call ? 1.0 : -1.0;
-    Leg domesticLeg{boost::make_shared<SimpleCashFlow>(-w * payoff->strike(), payDate)};
-    Leg foreignLeg{boost::make_shared<SimpleCashFlow>(w, payDate)};
+    Leg domesticLeg{QuantLib::ext::make_shared<SimpleCashFlow>(-w * payoff->strike(), payDate)};
+    Leg foreignLeg{QuantLib::ext::make_shared<SimpleCashFlow>(w, payDate)};
 
     leg_ = {domesticLeg, foreignLeg};
     currency_ = {domesticCcy_, foreignCcy_};

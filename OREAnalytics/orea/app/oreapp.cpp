@@ -50,6 +50,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/timer/timer.hpp>
 
+#include <mutex>
+
 using namespace std;
 using namespace ore::data;
 using namespace ore::analytics;
@@ -69,7 +71,7 @@ std::set<std::string> OREApp::getSupportedAnalyticTypes() {
     return analyticsManager_->validAnalytics();
 }
 
-const boost::shared_ptr<Analytic>& OREApp::getAnalytic(std::string type) {
+const QuantLib::ext::shared_ptr<Analytic>& OREApp::getAnalytic(std::string type) {
     QL_REQUIRE(analyticsManager_, "analyticsManager_ not set yet, call analytics first");
     return analyticsManager_->getAnalytic(type);
 }
@@ -91,12 +93,12 @@ std::set<std::string> OREApp::getReportNames() {
     return names;
 }
 
-boost::shared_ptr<PlainInMemoryReport> OREApp::getReport(std::string reportName) {
+QuantLib::ext::shared_ptr<PlainInMemoryReport> OREApp::getReport(std::string reportName) {
     QL_REQUIRE(analyticsManager_, "analyticsManager_ not set yet, call analytics first");
     for (const auto& rep : analyticsManager_->reports()) {
         for (auto b : rep.second) {
             if (reportName == b.first)
-                return boost::make_shared<PlainInMemoryReport>(b.second);
+                return QuantLib::ext::make_shared<PlainInMemoryReport>(b.second);
         }
     }
     QL_FAIL("report " << reportName << " not found in results");
@@ -119,7 +121,7 @@ std::set<std::string> OREApp::getCubeNames() {
     return names;
 }
     
-boost::shared_ptr<NPVCube> OREApp::getCube(std::string cubeName) {
+QuantLib::ext::shared_ptr<NPVCube> OREApp::getCube(std::string cubeName) {
     QL_REQUIRE(analyticsManager_, "analyticsManager_ not set yet, call analytics first");
     for (const auto& c : analyticsManager_->npvCubes()) {
         for (auto b : c.second) {
@@ -147,7 +149,7 @@ std::set<std::string> OREApp::getMarketCubeNames() {
     return names;
 }
     
-boost::shared_ptr<AggregationScenarioData> OREApp::getMarketCube(std::string cubeName) {
+QuantLib::ext::shared_ptr<AggregationScenarioData> OREApp::getMarketCube(std::string cubeName) {
     QL_REQUIRE(analyticsManager_, "analyticsManager_ not set yet, call analytics first");
     for (const auto& c : analyticsManager_->mktCubes()) {
         for (auto b : c.second) {
@@ -167,7 +169,7 @@ Real OREApp::getRunTime() {
     return seconds.count();
 }
     
-boost::shared_ptr<CSVLoader> OREApp::buildCsvLoader(const boost::shared_ptr<Parameters>& params) {
+QuantLib::ext::shared_ptr<CSVLoader> OREApp::buildCsvLoader(const QuantLib::ext::shared_ptr<Parameters>& params) {
     bool implyTodaysFixings = false;
     vector<string> marketFiles = {};
     vector<string> fixingFiles = {};
@@ -200,7 +202,7 @@ boost::shared_ptr<CSVLoader> OREApp::buildCsvLoader(const boost::shared_ptr<Para
         WLOG("dividend data file not found");
     }
 
-    auto loader = boost::make_shared<CSVLoader>(marketFiles, fixingFiles, dividendFiles, implyTodaysFixings);
+    auto loader = QuantLib::ext::make_shared<CSVLoader>(marketFiles, fixingFiles, dividendFiles, implyTodaysFixings);
 
     return loader;
 }
@@ -222,19 +224,19 @@ void OREApp::analytics() {
 
         // Create a market data loader that reads market data, fixings, dividends from csv files
         auto csvLoader = buildCsvLoader(params_);
-        auto loader = boost::make_shared<MarketDataCsvLoader>(inputs_, csvLoader);
+        auto loader = QuantLib::ext::make_shared<MarketDataCsvLoader>(inputs_, csvLoader);
 
         // Create the analytics manager
-        analyticsManager_ = boost::make_shared<AnalyticsManager>(inputs_, loader);
+        analyticsManager_ = QuantLib::ext::make_shared<AnalyticsManager>(inputs_, loader);
         LOG("Available analytics: " << to_string(analyticsManager_->validAnalytics()));
         CONSOLEW("Requested analytics");
         CONSOLE(to_string(inputs_->analytics()));
         LOG("Requested analytics: " << to_string(inputs_->analytics()));
 
-        boost::shared_ptr<MarketCalibrationReportBase> mcr;
+        QuantLib::ext::shared_ptr<MarketCalibrationReportBase> mcr;
         if (inputs_->outputTodaysMarketCalibration()) {
-            auto marketCalibrationReport = boost::make_shared<ore::data::InMemoryReport>();
-            mcr = boost::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport);
+            auto marketCalibrationReport = QuantLib::ext::make_shared<ore::data::InMemoryReport>();
+            mcr = QuantLib::ext::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport);
         }
 
         // Run the requested analytics
@@ -346,9 +348,9 @@ void OREApp::initFromParams() {
 
     // Read all inputs from params and files referenced in params
     CONSOLEW("Loading inputs");
-    inputs_ = boost::make_shared<OREAppInputParameters>(params_);
+    inputs_ = QuantLib::ext::make_shared<OREAppInputParameters>(params_);
     inputs_->loadParameters();
-    outputs_ = boost::make_shared<OutputParameters>(params_);
+    outputs_ = QuantLib::ext::make_shared<OutputParameters>(params_);
     CONSOLE("OK");
         
     Settings::instance().evaluationDate() = inputs_->asof();
@@ -454,19 +456,19 @@ void OREApp::run(const std::vector<std::string>& marketData,
         InstrumentConventions::instance().setConventions(inputs_->conventions());
 
         // Create a market data loader that takes input from the provided vectors
-        auto loader = boost::make_shared<MarketDataInMemoryLoader>(inputs_, marketData, fixingData);
+        auto loader = QuantLib::ext::make_shared<MarketDataInMemoryLoader>(inputs_, marketData, fixingData);
 
         // Create the analytics manager
-        analyticsManager_ = boost::make_shared<AnalyticsManager>(inputs_, loader);
+        analyticsManager_ = QuantLib::ext::make_shared<AnalyticsManager>(inputs_, loader);
         LOG("Available analytics: " << to_string(analyticsManager_->validAnalytics()));
         CONSOLEW("Requested analytics:");
         CONSOLE(to_string(inputs_->analytics()));
         LOG("Requested analytics: " << to_string(inputs_->analytics()));
 
-        boost::shared_ptr<MarketCalibrationReportBase> mcr;
+        QuantLib::ext::shared_ptr<MarketCalibrationReportBase> mcr;
         if (inputs_->outputTodaysMarketCalibration()) {
-            auto marketCalibrationReport = boost::make_shared<ore::data::InMemoryReport>();
-            mcr = boost::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport);
+            auto marketCalibrationReport = QuantLib::ext::make_shared<ore::data::InMemoryReport>();
+            mcr = QuantLib::ext::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport);
         }
 
         // Run the requested analytics
@@ -502,7 +504,7 @@ void OREApp::setupLog(const std::string& path, const std::string& file, Size mas
     }
     QL_REQUIRE(boost::filesystem::is_directory(p), "output path '" << path << "' is not a directory.");
 
-    Log::instance().registerLogger(boost::make_shared<FileLogger>(file));
+    Log::instance().registerLogger(QuantLib::ext::make_shared<FileLogger>(file));
     boost::filesystem::path oreRootPath =
         logRootPath.empty() ? boost::filesystem::path(__FILE__).parent_path().parent_path().parent_path().parent_path()
                             : logRootPath;
@@ -511,20 +513,20 @@ void OREApp::setupLog(const std::string& path, const std::string& file, Size mas
     Log::instance().switchOn();
 
     // Progress logger
-    auto progressLogger = boost::make_shared<ProgressLogger>();
+    auto progressLogger = QuantLib::ext::make_shared<ProgressLogger>();
     string progressLogFilePath = progressLogFile.empty() ? path + "/log_progress.json" : progressLogFile;
     progressLogger->setFileLog(progressLogFilePath, path, progressLogRotationSize);
     progressLogger->setCoutLog(progressLogToConsole);
     Log::instance().registerIndependentLogger(progressLogger);
 
     // Structured message logger
-    structuredLogger_ = boost::make_shared<StructuredLogger>();
+    structuredLogger_ = QuantLib::ext::make_shared<StructuredLogger>();
     string structuredLogFilePath = structuredLogFile.empty() ? path + "/log_structured.json" : structuredLogFile;
     structuredLogger_->setFileLog(structuredLogFilePath, path, structuredLogRotationSize);
     Log::instance().registerIndependentLogger(structuredLogger_);
 
     // Event message logger
-    auto eventLogger = boost::make_shared<EventLogger>();
+    auto eventLogger = QuantLib::ext::make_shared<EventLogger>();
     eventLogger->setFileLog(path + "/log_event_");
     ore::data::Log::instance().registerIndependentLogger(eventLogger);
 }

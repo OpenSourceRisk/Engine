@@ -86,13 +86,13 @@ protected:
     void calculate() const;
 
     // return AmcCalculator instance (called from derived engines, calculate must be called before)
-    boost::shared_ptr<AmcCalculator> amcCalculator() const;
+    QuantLib::ext::shared_ptr<AmcCalculator> amcCalculator() const;
 
     // input data from the derived pricing engines, to be set in these engines
     mutable std::vector<Leg> leg_;
     mutable std::vector<Currency> currency_;
     mutable std::vector<bool> payer_;
-    mutable boost::shared_ptr<Exercise> exercise_; // may be empty, if underlying is the actual trade
+    mutable QuantLib::ext::shared_ptr<Exercise> exercise_; // may be empty, if underlying is the actual trade
     mutable Settlement::Type optionSettlement_ = Settlement::Physical;
     mutable bool includeSettlementDateFlows_ = false;
 
@@ -111,7 +111,7 @@ protected:
     RegressorModel regressorModel_;
 
     // the generated amc calculator
-    mutable boost::shared_ptr<AmcCalculator> amcCalculator_;
+    mutable QuantLib::ext::shared_ptr<AmcCalculator> amcCalculator_;
 
     // results, these are read from derived engines
     mutable Real resultUnderlyingNpv_, resultValue_;
@@ -194,7 +194,7 @@ private:
     Real time(const Date& d) const;
 
     // create the info for a given flow
-    CashflowInfo createCashflowInfo(boost::shared_ptr<CashFlow> flow, const Currency& payCcy, bool payer, Size legNo,
+    CashflowInfo createCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const Currency& payCcy, bool payer, Size legNo,
                                     Size cfNo) const;
 
     // get the index of a time in the given simulation times set

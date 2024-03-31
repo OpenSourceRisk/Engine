@@ -76,7 +76,7 @@ public:
 
     std::string getVariableName(const ASTNodePtr p) {
         checkpoint(*p);
-        auto var = boost::dynamic_pointer_cast<VariableNode>(p);
+        auto var = QuantLib::ext::dynamic_pointer_cast<VariableNode>(p);
         if (var) {
             TRACE("getVariableName(" << var->name << ")", *p);
             return var->name;
@@ -87,7 +87,7 @@ public:
     // returns Null<Real>() if not a constant number node
     Real getConstantNumber(const ASTNodePtr p) {
         checkpoint(*p);
-        auto cn = boost::dynamic_pointer_cast<ConstantNumberNode>(p);
+        auto cn = QuantLib::ext::dynamic_pointer_cast<ConstantNumberNode>(p);
         if (cn) {
             TRACE("getConstantNumber(" << cn->value << ")", *p);
             return cn->value;
@@ -249,7 +249,7 @@ public:
             QL_REQUIRE(i.which() == ValueTypeWhich::Index, "index expected as arg #1");
             std::string indexName = boost::get<IndexVec>(i).value;
             IndexInfo ind(indexName);
-            auto on = boost::dynamic_pointer_cast<OvernightIndex>(ind.irIbor());
+            auto on = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(ind.irIbor());
             // ignore indices that are not on, those are not allowed in the end, but might still occur
             // here, wenn an array contains both libor and on indices
             if (!on) {

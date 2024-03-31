@@ -47,8 +47,8 @@ public:
      */
     GaussianCam(const Handle<CrossAssetModel>& cam, const Size paths, const std::vector<std::string>& currencies,
                 const std::vector<Handle<YieldTermStructure>>& curves, const std::vector<Handle<Quote>>& fxSpots,
-                const std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>>& irIndices,
-                const std::vector<std::pair<std::string, boost::shared_ptr<ZeroInflationIndex>>>& infIndices,
+                const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
+                const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
                 const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
                 const std::set<Date>& simulationDates, const McParams& mcParams, const Size timeStepsPerYear = 1,
                 const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),

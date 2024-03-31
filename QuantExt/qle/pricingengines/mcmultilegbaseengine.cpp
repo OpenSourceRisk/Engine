@@ -67,7 +67,7 @@ Real McMultiLegBaseEngine::time(const Date& d) const {
     return model_->irlgm1f(0)->termStructure()->timeFromReference(d);
 }
 
-McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boost::shared_ptr<CashFlow> flow,
+McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow,
                                                                             const Currency& payCcy, bool payer,
                                                                             Size legNo, Size cfNo) const {
     CashflowInfo info;
@@ -80,7 +80,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
     info.payCcyIndex = model_->ccyIndex(payCcy);
     info.payer = payer;
 
-    if (auto cpn = boost::dynamic_pointer_cast<Coupon>(flow)) {
+    if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow)) {
         QL_REQUIRE(cpn->accrualStartDate() < flow->date(),
                    "McMultiLegBaseEngine::createCashflowInfo(): coupon leg "
                        << legNo << " cashflow " << cfNo << " has accrual start date (" << cpn->accrualStartDate()
@@ -92,7 +92,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
     }
 
     // Handle SimpleCashflow
-    if (boost::dynamic_pointer_cast<SimpleCashFlow>(flow) != nullptr) {
+    if (QuantLib::ext::dynamic_pointer_cast<SimpleCashFlow>(flow) != nullptr) {
         info.amountCalculator = [flow](const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
             return RandomVariable(n, flow->amount());
         };
@@ -100,7 +100,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
     }
 
     // handle fx linked fixed cashflow
-    if (auto fxl = boost::dynamic_pointer_cast<FXLinkedCashFlow>(flow)) {
+    if (auto fxl = QuantLib::ext::dynamic_pointer_cast<FXLinkedCashFlow>(flow)) {
         Date fxLinkedFixingDate = fxl->fxFixingDate();
         Size fxLinkedSourceCcyIdx = model_->ccyIndex(fxl->fxIndex()->sourceCurrency());
         Size fxLinkedTargetCcyIdx = model_->ccyIndex(fxl->fxIndex()->targetCurrency());
@@ -144,8 +144,8 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
     std::vector<Size> fxLinkedModelIndices;
 
     // A Coupon could be wrapped in a FxLinkedCoupon or IndexedCoupon but not both at the same time
-    if (auto indexCpn = boost::dynamic_pointer_cast<IndexedCoupon>(flow)) {
-        if (auto fxIndex = boost::dynamic_pointer_cast<FxIndex>(indexCpn->index())) {
+    if (auto indexCpn = QuantLib::ext::dynamic_pointer_cast<IndexedCoupon>(flow)) {
+        if (auto fxIndex = QuantLib::ext::dynamic_pointer_cast<FxIndex>(indexCpn->index())) {
             isFxIndexed = true;
             auto fixingDate = indexCpn->fixingDate();
             fxLinkedSourceCcyIdx = model_->ccyIndex(fxIndex->sourceCurrency());
@@ -165,7 +165,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
             }
             flow = indexCpn->underlying();
         }
-    } else if (auto fxl = boost::dynamic_pointer_cast<FloatingRateFXLinkedNotionalCoupon>(flow)) {
+    } else if (auto fxl = QuantLib::ext::dynamic_pointer_cast<FloatingRateFXLinkedNotionalCoupon>(flow)) {
         isFxLinked = true;
         auto fixingDate = fxl->fxFixingDate();
         fxLinkedSourceCcyIdx = model_->ccyIndex(fxl->fxIndex()->sourceCurrency());
@@ -188,12 +188,12 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
     bool isCapFloored = false;
     bool isNakedOption = false;
     Real effCap = Null<Real>(), effFloor = Null<Real>();
-    if (auto stripped = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(flow)) {
+    if (auto stripped = QuantLib::ext::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(flow)) {
         isNakedOption = true;
         flow = stripped->underlying(); // this is a CappedFlooredCoupon, handled below
     }
 
-    if (auto cf = boost::dynamic_pointer_cast<CappedFlooredCoupon>(flow)) {
+    if (auto cf = QuantLib::ext::dynamic_pointer_cast<CappedFlooredCoupon>(flow)) {
         isCapFloored = true;
         effCap = cf->effectiveCap();
         effFloor = cf->effectiveFloor();
@@ -202,7 +202,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
 
     // handle the coupon types
     
-    if (boost::dynamic_pointer_cast<FixedRateCoupon>(flow) != nullptr) {
+    if (QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(flow) != nullptr) {
         
         if (fxLinkedSimTime != Null<Real>()) {
             info.simulationTimes.push_back(fxLinkedSimTime);
@@ -230,7 +230,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
         return info;
     }
 
-    if (auto ibor = boost::dynamic_pointer_cast<IborCoupon>(flow)) {
+    if (auto ibor = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(flow)) {
         Real fixedRate =
             ibor->fixingDate() <= today_ ? (ibor->rate() - ibor->spread()) / ibor->gearing() : Null<Real>();
         Size indexCcyIdx = model_->ccyIndex(ibor->index()->currency());
@@ -292,7 +292,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
         return info;
     }
 
-    if (auto cms = boost::dynamic_pointer_cast<CmsCoupon>(flow)) {
+    if (auto cms = QuantLib::ext::dynamic_pointer_cast<CmsCoupon>(flow)) {
         Real fixedRate = cms->fixingDate() <= today_ ? (cms->rate() - cms->spread()) / cms->gearing() : Null<Real>();
         Size indexCcyIdx = model_->ccyIndex(cms->index()->currency());
         Real simTime = time(cms->fixingDate());
@@ -355,7 +355,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
         return info;
     }
 
-    if (auto on = boost::dynamic_pointer_cast<OvernightIndexedCoupon>(flow)) {
+    if (auto on = QuantLib::ext::dynamic_pointer_cast<OvernightIndexedCoupon>(flow)) {
         Real simTime = std::max(0.0, time(on->valueDates().front()));
         Size indexCcyIdx = model_->ccyIndex(on->index()->currency());
         info.simulationTimes.push_back(simTime);
@@ -395,7 +395,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
         return info;
     }
 
-    if (auto cfon = boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(flow)) {
+    if (auto cfon = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(flow)) {
         Real simTime = std::max(0.0, time(cfon->underlying()->valueDates().front()));
         Size indexCcyIdx = model_->ccyIndex(cfon->underlying()->index()->currency());
         info.simulationTimes.push_back(simTime);
@@ -436,7 +436,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
         return info;
     }
 
-    if (auto av = boost::dynamic_pointer_cast<AverageONIndexedCoupon>(flow)) {
+    if (auto av = QuantLib::ext::dynamic_pointer_cast<AverageONIndexedCoupon>(flow)) {
         Real simTime = std::max(0.0, time(av->valueDates().front()));
         Size indexCcyIdx = model_->ccyIndex(av->index()->currency());
         info.simulationTimes.push_back(simTime);
@@ -475,7 +475,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
         return info;
     }
 
-    if (auto cfav = boost::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(flow)) {
+    if (auto cfav = QuantLib::ext::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(flow)) {
         Real simTime = std::max(0.0, time(cfav->underlying()->valueDates().front()));
         Size indexCcyIdx = model_->ccyIndex(cfav->underlying()->index()->currency());
         info.simulationTimes.push_back(simTime);
@@ -516,7 +516,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
         return info;
     }
 
-    if (auto bma = boost::dynamic_pointer_cast<AverageBMACoupon>(flow)) {
+    if (auto bma = QuantLib::ext::dynamic_pointer_cast<AverageBMACoupon>(flow)) {
         Real simTime = std::max(0.0, time(bma->fixingDates().front()));
         Size indexCcyIdx = model_->ccyIndex(bma->index()->currency());
         info.simulationTimes.push_back(simTime);
@@ -530,7 +530,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
                                  fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isFxIndexed](
                                     const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
             RandomVariable effectiveRate = lgmVectorised_[indexCcyIdx].averagedBmaRate(
-                boost::dynamic_pointer_cast<BMAIndex>(bma->index()), bma->fixingDates(), bma->accrualStartDate(),
+                QuantLib::ext::dynamic_pointer_cast<BMAIndex>(bma->index()), bma->fixingDates(), bma->accrualStartDate(),
                 bma->accrualEndDate(), false, bma->spread(), bma->gearing(), Null<Real>(), Null<Real>(), false, simTime,
                 *states.at(0).at(0));
             RandomVariable fxFixing(n, 1.0);
@@ -554,7 +554,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
         return info;
     }
 
-    if (auto cfbma = boost::dynamic_pointer_cast<CappedFlooredAverageBMACoupon>(flow)) {
+    if (auto cfbma = QuantLib::ext::dynamic_pointer_cast<CappedFlooredAverageBMACoupon>(flow)) {
         Real simTime = std::max(0.0, time(cfbma->underlying()->fixingDates().front()));
         Size indexCcyIdx = model_->ccyIndex(cfbma->underlying()->index()->currency());
         info.simulationTimes.push_back(simTime);
@@ -568,7 +568,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
                                  fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isFxIndexed](
                                     const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
             RandomVariable effectiveRate = lgmVectorised_[indexCcyIdx].averagedBmaRate(
-                boost::dynamic_pointer_cast<BMAIndex>(cfbma->underlying()->index()), cfbma->underlying()->fixingDates(),
+                QuantLib::ext::dynamic_pointer_cast<BMAIndex>(cfbma->underlying()->index()), cfbma->underlying()->fixingDates(),
                 cfbma->underlying()->accrualStartDate(), cfbma->underlying()->accrualEndDate(), cfbma->includeSpread(),
                 cfbma->underlying()->spread(), cfbma->underlying()->gearing(), cfbma->cap(), cfbma->floor(),
                 cfbma->nakedOption(), simTime, *states.at(0).at(0));
@@ -594,7 +594,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(boos
         return info;
     }
 
-    if (auto sub = boost::dynamic_pointer_cast<SubPeriodsCoupon1>(flow)) {
+    if (auto sub = QuantLib::ext::dynamic_pointer_cast<SubPeriodsCoupon1>(flow)) {
         Real simTime = std::max(0.0, time(sub->fixingDates().front()));
         Size indexCcyIdx = model_->ccyIndex(sub->index()->currency());
         info.simulationTimes.push_back(simTime);
@@ -795,13 +795,13 @@ void McMultiLegBaseEngine::calculate() const {
 
     TimeGrid timeGrid(simulationTimes.begin(), simulationTimes.end());
 
-    boost::shared_ptr<StochasticProcess> process = model_->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> process = model_->stateProcess();
     if (model_->dimension() == 1) {
         // use lgm process if possible for better performance
-        auto tmp = boost::make_shared<IrLgm1fStateProcess>(model_->irlgm1f(0));
+        auto tmp = QuantLib::ext::make_shared<IrLgm1fStateProcess>(model_->irlgm1f(0));
         tmp->resetCache(timeGrid.size() - 1);
         process = tmp;
-    } else if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
+    } else if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
         // enable cache
         tmp->resetCache(timeGrid.size() - 1);
     }
@@ -935,13 +935,13 @@ void McMultiLegBaseEngine::calculate() const {
 
     // construct the amc calculator
 
-    amcCalculator_ = boost::make_shared<MultiLegBaseAmcCalculator>(
+    amcCalculator_ = QuantLib::ext::make_shared<MultiLegBaseAmcCalculator>(
         externalModelIndices_, optionSettlement_, exerciseXvaTimes, exerciseTimes, xvaTimes, regModelUndDirty,
         regModelUndExInto, regModelContinuationValue, regModelOption, resultValue_,
         model_->stateProcess()->initialValues(), model_->irlgm1f(0)->currency());
 }
 
-boost::shared_ptr<AmcCalculator> McMultiLegBaseEngine::amcCalculator() const { return amcCalculator_; }
+QuantLib::ext::shared_ptr<AmcCalculator> McMultiLegBaseEngine::amcCalculator() const { return amcCalculator_; }
 
 McMultiLegBaseEngine::MultiLegBaseAmcCalculator::MultiLegBaseAmcCalculator(
     const std::vector<Size>& externalModelIndices, const Settlement::Type settlement,

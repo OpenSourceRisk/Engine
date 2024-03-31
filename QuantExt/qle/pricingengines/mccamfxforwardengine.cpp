@@ -43,8 +43,8 @@ McCamFxForwardEngine::McCamFxForwardEngine(
 
 void McCamFxForwardEngine::calculate() const {
 
-    Leg foreignLeg{boost::make_shared<SimpleCashFlow>(arguments_.nominal1, arguments_.payDate)};
-    Leg domesticLeg{boost::make_shared<SimpleCashFlow>(arguments_.nominal2, arguments_.payDate)};
+    Leg foreignLeg{QuantLib::ext::make_shared<SimpleCashFlow>(arguments_.nominal1, arguments_.payDate)};
+    Leg domesticLeg{QuantLib::ext::make_shared<SimpleCashFlow>(arguments_.nominal2, arguments_.payDate)};
 
     leg_ = {foreignLeg, domesticLeg};
     currency_ = {foreignCcy_, domesticCcy_};
