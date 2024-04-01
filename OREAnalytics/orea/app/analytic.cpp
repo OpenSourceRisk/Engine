@@ -162,16 +162,21 @@ void Analytic::buildMarket(const boost::shared_ptr<ore::data::InMemoryLoader>& l
     // first build the market if we have a todaysMarketParams
     if (configurations().todaysMarketParams) {
         try {
-            // Note: we usually update the loader with implied data, but we simply use the provided loader here
-             loader_ = loader;
+            // imply bond spreads (no exclusion of securities in ore, just in ore+) and add results to loader
+            auto bondSpreads = implyBondSpreads(configurations().asofDate, inputs_, configurations_.todaysMarketParams,
+                                                loader, configurations_.curveConfig, std::string());
+
+            // Join the loaders
+            loader_ = boost::make_shared<CompositeLoader>(loader, bondSpreads);
+
             // Check that the loader has quotes
-            QL_REQUIRE( loader_->hasQuotes(inputs()->asof()),
-                       "There are no quotes available for date " << inputs()->asof());
+            QL_REQUIRE(loader_->hasQuotes(configurations().asofDate),
+                       "There are no quotes available for date " << configurations().asofDate);
             // Build the market
-            market_ = boost::make_shared<TodaysMarket>(inputs()->asof(), configurations().todaysMarketParams, loader_,
-                                                       configurations().curveConfig, inputs()->continueOnError(),
-                                                       true, inputs()->lazyMarketBuilding(), inputs()->refDataManager(),
-                                                       false, *inputs()->iborFallbackConfig());
+            market_ = boost::make_shared<TodaysMarket>(
+                configurations().asofDate(), configurations().todaysMarketParams, loader_, configurations().curveConfig,
+                inputs()->continueOnError(), true, inputs()->lazyMarketBuilding(), inputs()->refDataManager(), false,
+                *inputs()->iborFallbackConfig());
             // Note: we usually wrap the market into a PC market, but skip this step here
         } catch (const std::exception& e) {
             if (marketRequired)
