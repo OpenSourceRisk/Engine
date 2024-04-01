@@ -87,7 +87,7 @@ XMLNode* TradeStrike::toXML(XMLDocument& doc) const {
     XMLNode* node;
     if (onlyStrike_) {
         // can only happen for a StrikePrice
-        auto sp = boost::get<StrikePrice>(strike_);
+        auto sp = QuantLib::ext::get<StrikePrice>(strike_);
         node = doc.allocNode("Strike", boost::lexical_cast<std::string>(sp.valueString()));
     } else {
         node = doc.allocNode("StrikeData");

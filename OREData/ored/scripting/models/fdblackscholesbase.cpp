@@ -222,13 +222,13 @@ void FdBlackScholesBase::performCalculations() const {
 
     // 1b set up the critical points for the mesher
 
-    std::vector<std::vector<boost::tuple<Real, Real, bool>>> cPoints;
+    std::vector<std::vector<QuantLib::ext::tuple<Real, Real, bool>>> cPoints;
     for (Size i = 0; i < indices_.size(); ++i) {
-        cPoints.push_back(std::vector<boost::tuple<Real, Real, bool>>());
+        cPoints.push_back(std::vector<QuantLib::ext::tuple<Real, Real, bool>>());
         auto f = calibrationStrikes_.find(indices_[i].name());
         if (f != calibrationStrikes_.end()) {
             for (Size j = 0; j < std::min(f->second.size(), mesherMaxConcentratingPoints_); ++j) {
-                cPoints.back().push_back(boost::make_tuple(std::log(f->second[j]), mesherConcentration_, false));
+                cPoints.back().push_back(QuantLib::ext::make_tuple(std::log(f->second[j]), mesherConcentration_, false));
                 TLOG("added critical point at strike " << f->second[j] << " with concentration "
                                                        << mesherConcentration_);
             }

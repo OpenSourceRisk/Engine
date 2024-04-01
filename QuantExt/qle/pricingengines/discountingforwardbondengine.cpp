@@ -274,7 +274,7 @@ Real DiscountingForwardBondEngine::calculateBondNpv(Date npvDate, Date computeDa
     return npvValue * arguments_.bondNotional;
 }
 
-boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractPresentValue(
+QuantLib::ext::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractPresentValue(
     Real spotValue, Real cmpPayment, Date npvDate, Date computeDate, Date settlementDate, bool cashSettlement,
     Date cmpPaymentDate, bool dirty) const {
 
@@ -546,7 +546,7 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
 
     forwardContractPresentValue += fwdBondRecovery;
 
-    return boost::make_tuple(forwardContractForwardValue, forwardContractPresentValue);
+    return QuantLib::ext::make_tuple(forwardContractForwardValue, forwardContractPresentValue);
 }
 
 } // namespace QuantExt

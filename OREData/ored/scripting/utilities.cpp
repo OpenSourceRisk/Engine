@@ -229,7 +229,7 @@ QuantLib::ext::shared_ptr<Context> makeContext(Size nPaths, const std::string& g
                     for (auto const& d : base->second) {
                         QL_REQUIRE(d.which() == ValueTypeWhich::Event,
                                    "expected event in base schedule, got " << valueTypeLabels.at(d.which()));
-                        EventVec e = boost::get<EventVec>(d);
+                        EventVec e = QuantLib::ext::get<EventVec>(d);
                         tmp.push_back(EventVec{nPaths, cal.advance(e.value, shift, conv)});
                     }
                     context->arrays[ds.second.name()] = tmp;
@@ -336,8 +336,8 @@ void addNewSchedulesToContext(QuantLib::ext::shared_ptr<Context> context,
             Size n = 0;
             for (auto const& s : sources) {
                 for (auto const& d : s) {
-                    tmp.insert(boost::get<EventVec>(d).value);
-                    n = boost::get<EventVec>(d).size;
+                    tmp.insert(QuantLib::ext::get<EventVec>(d).value);
+                    n = QuantLib::ext::get<EventVec>(d).size;
                 }
             }
             for (auto const& d : tmp) {
@@ -679,7 +679,7 @@ getCalibrationStrikes(const std::vector<ScriptedTradeScriptData::CalibrationData
         if (index != context->scalars.end()) {
             QL_REQUIRE(index->second.which() == ValueTypeWhich::Index,
                 "calibration index variable '" << c.index() << "' must evaluate to an index");
-            std::string indexName = boost::get<IndexVec>(index->second).value;
+            std::string indexName = QuantLib::ext::get<IndexVec>(index->second).value;
             // replace fixing source tag in FX indices by GENERIC, since this is what is passed to the model
             // TODO FX indices might be reorganised vs. a base ccy != their original target ccy, is there anything
             // we can do to get an effective calibration at the specified deal strike?
@@ -695,7 +695,7 @@ getCalibrationStrikes(const std::vector<ScriptedTradeScriptData::CalibrationData
                     QL_REQUIRE(indexes->second[i].which() == ValueTypeWhich::Index,
                                "calibration strike variable '" << c.index() << "[" << i
                                                                << "]' must evaluate to an index");
-                    auto indexName = boost::get<IndexVec>(indexes->second[i]).value;
+                    auto indexName = QuantLib::ext::get<IndexVec>(indexes->second[i]).value;
                     IndexInfo info(indexName);
                     if (info.isFx())
                         indexName = "FX-GENERIC-" + info.fx()->sourceCurrency().code() + "-" +
@@ -714,7 +714,7 @@ getCalibrationStrikes(const std::vector<ScriptedTradeScriptData::CalibrationData
             if (strike != context->scalars.end()) {
                 QL_REQUIRE(strike->second.which() == ValueTypeWhich::Number,
                             "calibration strike variable '" << strikeStr << "' must evaluate to a number");
-                auto strikeNum = boost::get<RandomVariable>(strike->second);
+                auto strikeNum = QuantLib::ext::get<RandomVariable>(strike->second);
                 QL_REQUIRE(strikeNum.deterministic(), "calibration strike variable '"
                                                             << strikeStr << "' must be deterministic, got "
                                                             << strikeNum);
@@ -733,7 +733,7 @@ getCalibrationStrikes(const std::vector<ScriptedTradeScriptData::CalibrationData
                             QL_REQUIRE(strikeVec->second[ind].which() == ValueTypeWhich::Number,
                                         "calibration strike variable '" << strikeStr << "[" << i
                                                                         << "]' must evaluate to a number");
-                            auto strikeNum = boost::get<RandomVariable>(strikeVec->second[ind]);
+                            auto strikeNum = QuantLib::ext::get<RandomVariable>(strikeVec->second[ind]);
                             QL_REQUIRE(strikeNum.deterministic(), "calibration strike variable '"
                                                                     "calibration strike variable '"
                                                                         << strikeStr << "[" << i

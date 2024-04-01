@@ -29,6 +29,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ql/tuple.hpp>
 
 namespace ore {
 namespace data {
@@ -39,7 +40,7 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
     LOG("Build dependency graph for TodaysMarket configuration " << configuration);
 
     Graph& g = dependencies_[configuration];
-    IndexMap index = boost::get(boost::vertex_index, g);
+    IndexMap index = QuantLib::ext::get(boost::vertex_index, g);
     QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
 
     // add the vertices

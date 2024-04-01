@@ -53,6 +53,8 @@
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
 
+#include <ql/tuple.hpp>
+
 #include <boost/graph/topological_sort.hpp>
 #include <boost/range/adaptor/map.hpp>
 #include <boost/range/adaptor/reversed.hpp>
@@ -179,7 +181,7 @@ void TodaysMarket::initialise(const Date& asof) {
 
             timer.start();
             Graph& g = dependencies_[configuration.first];
-            IndexMap index = boost::get(boost::vertex_index, g);
+            IndexMap index = QuantLib::ext::get(boost::vertex_index, g);
             std::vector<Vertex> order;
             try {
                 boost::topological_sort(g, std::back_inserter(order));
@@ -843,7 +845,7 @@ void TodaysMarket::require(const MarketObject o, const string& name, const strin
     Vertex node = nullptr;
 
     Graph& g = tmp->second;
-    IndexMap index = boost::get(boost::vertex_index, g);
+    IndexMap index = QuantLib::ext::get(boost::vertex_index, g);
 
     VertexIterator v, vend;
     bool found = false;

@@ -646,11 +646,11 @@ void ReportWriter::writeCashflowNpv(ore::data::Report& report, const ore::data::
     map<string, Real> npvMap;
     Date asof = Settings::instance().evaluationDate();
     for (Size i = 0; i < cashflowReport.rows(); ++i) {
-        string tradeId = boost::get<string>(cashflowReport.data(tradeIdColumn).at(i));
-        string tradeType = boost::get<string>(cashflowReport.data(tradeTypeColumn).at(i));
-        Date payDate = boost::get<Date>(cashflowReport.data(payDateColumn).at(i));
-        string ccy = boost::get<string>(cashflowReport.data(ccyColumn).at(i));
-        Real pv = boost::get<Real>(cashflowReport.data(pvColumn).at(i));
+        string tradeId = QuantLib::ext::get<string>(cashflowReport.data(tradeIdColumn).at(i));
+        string tradeType = QuantLib::ext::get<string>(cashflowReport.data(tradeTypeColumn).at(i));
+        Date payDate = QuantLib::ext::get<Date>(cashflowReport.data(payDateColumn).at(i));
+        string ccy = QuantLib::ext::get<string>(cashflowReport.data(ccyColumn).at(i));
+        Real pv = QuantLib::ext::get<Real>(cashflowReport.data(pvColumn).at(i));
         Real fx = 1.0;
 	// There shouldn't be entries in the cf report without ccy. We assume ccy = baseCcy in this case and log an error.
         if (ccy.empty()) {

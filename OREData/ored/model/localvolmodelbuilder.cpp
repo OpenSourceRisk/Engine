@@ -132,8 +132,8 @@ std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>> LocalVolM
                  << l
                  << ": "
                     "calibration error min="
-                 << std::scientific << std::setprecision(6) << boost::get<0>(ah->calibrationError()) << " max="
-                 << boost::get<1>(ah->calibrationError()) << " avg=" << boost::get<2>(ah->calibrationError()));
+                 << std::scientific << std::setprecision(6) << QuantLib::ext::get<0>(ah->calibrationError()) << " max="
+                 << QuantLib::ext::get<1>(ah->calibrationError()) << " avg=" << QuantLib::ext::get<2>(ah->calibrationError()));
         } else if (lvType_ == Type::Dupire) {
             localVol = Handle<LocalVolTermStructure>(
                 QuantLib::ext::make_shared<LocalVolSurface>(processes_[l]->blackVolatility(), processes_[l]->riskFreeRate(),

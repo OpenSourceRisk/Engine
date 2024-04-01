@@ -57,7 +57,7 @@ Real ScriptedInstrumentPricingEngine::addMcErrorEstimate(const std::string& labe
         return Null<Real>();
     if (v.which() != ValueTypeWhich::Number)
         return Null<Real>();
-    Real var = variance(boost::get<RandomVariable>(v)).at(0);
+    Real var = variance(QuantLib::ext::get<RandomVariable>(v)).at(0);
     Real errEst = std::sqrt(var / static_cast<double>(model_->size()));
     if(!label.empty())
         results_.additionalResults[label] = errEst;
@@ -117,7 +117,7 @@ void ScriptedInstrumentPricingEngine::calculate() const {
                "did not find npv result variable '" << npv_ << "' as scalar in context");
     QL_REQUIRE(npv->second.which() == ValueTypeWhich::Number,
                "result variable '" << npv_ << "' must be of type NUMBER, got " << npv->second.which());
-    results_.value = model_->extractT0Result(boost::get<RandomVariable>(npv->second));
+    results_.value = model_->extractT0Result(QuantLib::ext::get<RandomVariable>(npv->second));
     DLOG("got NPV = " << results_.value << " " << model_->baseCcy());
 
     // set additional results, if this feature is enabled

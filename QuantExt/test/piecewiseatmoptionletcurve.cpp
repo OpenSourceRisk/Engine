@@ -149,24 +149,24 @@ public:
     enum { arity = 1 };
 
     InterpDataset() {
-        samples_.push_back(boost::make_tuple(InterpolationType(Linear()), true));
-        samples_.push_back(boost::make_tuple(InterpolationType(QuantExt::LinearFlat()), true));
-        samples_.push_back(boost::make_tuple(InterpolationType(Cubic()), true));
-        samples_.push_back(boost::make_tuple(InterpolationType(QuantExt::CubicFlat()), true));
-        samples_.push_back(boost::make_tuple(InterpolationType(BackwardFlat()), true));
-        samples_.push_back(boost::make_tuple(InterpolationType(Linear()), false));
-        samples_.push_back(boost::make_tuple(InterpolationType(QuantExt::LinearFlat()), false));
-        samples_.push_back(boost::make_tuple(InterpolationType(Cubic()), false));
-        samples_.push_back(boost::make_tuple(InterpolationType(QuantExt::CubicFlat()), false));
+        samples_.push_back(QuantLib::ext::make_tuple(InterpolationType(Linear()), true));
+        samples_.push_back(QuantLib::ext::make_tuple(InterpolationType(QuantExt::LinearFlat()), true));
+        samples_.push_back(QuantLib::ext::make_tuple(InterpolationType(Cubic()), true));
+        samples_.push_back(QuantLib::ext::make_tuple(InterpolationType(QuantExt::CubicFlat()), true));
+        samples_.push_back(QuantLib::ext::make_tuple(InterpolationType(BackwardFlat()), true));
+        samples_.push_back(QuantLib::ext::make_tuple(InterpolationType(Linear()), false));
+        samples_.push_back(QuantLib::ext::make_tuple(InterpolationType(QuantExt::LinearFlat()), false));
+        samples_.push_back(QuantLib::ext::make_tuple(InterpolationType(Cubic()), false));
+        samples_.push_back(QuantLib::ext::make_tuple(InterpolationType(QuantExt::CubicFlat()), false));
     }
 
     bdata::size_t size() const { return samples_.size(); }
 
-    typedef vector<boost::tuple<InterpolationType, bool> >::const_iterator iterator;
+    typedef vector<QuantLib::ext::tuple<InterpolationType, bool> >::const_iterator iterator;
     iterator begin() const { return samples_.begin(); }
 
 private:
-    vector<boost::tuple<InterpolationType, bool> > samples_;
+    vector<QuantLib::ext::tuple<InterpolationType, bool> > samples_;
 };
 
 // If the built optionlet structure in the test has a floating or fixed reference date
@@ -208,9 +208,9 @@ namespace boost {
 
 namespace test_tools {
 namespace tt_detail {
-template <> struct print_log_value<boost::tuple<InterpolationType, bool> > {
-    void operator()(ostream& os, const boost::tuple<InterpolationType, bool>& tp) {
-        os << to_string(boost::get<0>(tp)) << ", " << boolalpha << boost::get<1>(tp);
+template <> struct print_log_value<QuantLib::ext::tuple<InterpolationType, bool> > {
+    void operator()(ostream& os, const QuantLib::ext::tuple<InterpolationType, bool>& tp) {
+        os << to_string(QuantLib::ext::get<0>(tp)) << ", " << boolalpha << QuantLib::ext::get<1>(tp);
     }
 };
 } // namespace tt_detail
@@ -238,8 +238,8 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseAtmOptionletStripping,
 
     BOOST_TEST_MESSAGE("Testing piecewise optionlet stripping of ATM cap floor curve");
 
-    InterpolationType interpolationType = boost::get<0>(interpSample);
-    bool interpOnOptionlets = boost::get<1>(interpSample);
+    InterpolationType interpolationType = QuantLib::ext::get<0>(interpSample);
+    bool interpOnOptionlets = QuantLib::ext::get<1>(interpSample);
 
     BOOST_TEST_MESSAGE("Test inputs are:");
     BOOST_TEST_MESSAGE("  Quote volatility type: " << atmVolData.type);
