@@ -29,6 +29,7 @@
 #include <orea/engine/valuationengine.hpp>
 #include <orea/aggregation/dimregressioncalculator.hpp>
 
+#include <ored/marketdata/compositeloader.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/portfolio/builders/currencyswap.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
@@ -174,10 +175,9 @@ void Analytic::buildMarket(const boost::shared_ptr<ore::data::InMemoryLoader>& l
                        "There are no quotes available for date " << configurations().asofDate);
             // Build the market
             market_ = boost::make_shared<TodaysMarket>(
-                configurations().asofDate(), configurations().todaysMarketParams, loader_, configurations().curveConfig,
+                configurations().asofDate, configurations().todaysMarketParams, loader_, configurations().curveConfig,
                 inputs()->continueOnError(), true, inputs()->lazyMarketBuilding(), inputs()->refDataManager(), false,
                 *inputs()->iborFallbackConfig());
-            // Note: we usually wrap the market into a PC market, but skip this step here
         } catch (const std::exception& e) {
             if (marketRequired)
                 QL_FAIL("Failed to build market: " << e.what());
