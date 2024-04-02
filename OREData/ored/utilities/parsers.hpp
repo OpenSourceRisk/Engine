@@ -418,7 +418,7 @@ QuantLib::DoubleBarrier::Type parseDoubleBarrierType(const string& s);
 
     \ingroup utilities
 */
-template <class T> bool tryParse(const std::string& str, T& obj, std::function<T(std::string)> parser) {
+template <class T> bool tryParse(const std::string& str, T& obj, std::function<T(const std::string&)> parser) {
     DLOG("tryParse: attempting to parse " << str);
     try {
         obj = parser(str);
