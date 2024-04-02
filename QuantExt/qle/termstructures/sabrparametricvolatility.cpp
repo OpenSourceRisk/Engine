@@ -285,7 +285,7 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
             params = direct_(params);
             auto sabr = evalSabr_(params, forward_, timeToExpiry_, lognormalShift_, strikes_);
             for (Size i = 0; i < strikes_.size(); ++i) {
-                result[i] = (marketQuotes_[i] - sabr[i]) / marketQuotes_[i];
+                result[i] = (marketQuotes_[i] - sabr[i]);
             }
             return result;
         }
