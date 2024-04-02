@@ -397,7 +397,11 @@ void CapFloorVolatilityCurveConfig::validate() const {
                "InterpolateOn (" << interpolateOn_ << ") must be TermVolatilities or OptionletVolatilities");
     QL_REQUIRE(validInterps.count(timeInterpolation_) == 1,
                "TimeInterpolation, " << timeInterpolation_ << ", not recognised");
-    QL_REQUIRE(validInterps.count(strikeInterpolation_) == 1,
+    QuantExt::SabrParametricVolatility::ModelVariant dummySabrVariant;
+    QL_REQUIRE(validInterps.count(strikeInterpolation_) == 1 ||
+                   tryParse(strikeInterpolation_, dummySabrVariant,
+                            std::function<QuantExt::SabrParametricVolatility::ModelVariant(const std::string&)>(
+                                [](const std::string& s) { return parseSabrParametricVolatilityModelVariant(s); })),
                "StrikeInterpolation, " << strikeInterpolation_ << ", not recognised");
     QL_REQUIRE(strikeInterpolation_ != "BackwardFlat", "BackwardFlat StrikeInterpolation is not allowed");
     if (!strikes_.empty()) {
