@@ -69,31 +69,32 @@ std::vector<Real> SabrParametricVolatility::getGuess(const std::vector<std::pair
                                                      const std::vector<Real>& randomSeq, const Real forward,
                                                      const Real lognormalShift) const {
     std::vector<Real> result(4);
-    for (Size i = 0; i < 4; ++i) {
+    for (Size i = 0, j = 0; i < 4; ++i) {
         if (params[i].second) {
             result[i] = params[i].first;
         } else {
             switch (i) {
             case 0: {
                 Real fbeta = std::pow(forward + lognormalShift, params[1].first);
-                result[0] = (eps1 + randomSeq[0] * 0.01) / fbeta;
+                result[0] = (eps1 + randomSeq[j] * 0.01) / fbeta;
                 break;
             }
             case 1: {
-                result[1] = eps1 + randomSeq[1] * eps2;
+                result[1] = eps1 + randomSeq[j] * eps2;
                 break;
             }
             case 2: {
-                result[2] = eps1 + randomSeq[2] * 5.0;
+                result[2] = eps1 + randomSeq[j] * 5.0;
                 break;
             }
             case 3: {
-                result[3] = (randomSeq[3] * 2.0 - 1.0) * eps2;
+                result[3] = (randomSeq[j] * 2.0 - 1.0) * eps2;
                 break;
             }
             default:
                 break;
             }
+            ++j;
         }
     }
     return result;
@@ -108,7 +109,7 @@ std::vector<std::pair<Real, bool>> SabrParametricVolatility::defaultModelParamet
     case ModelVariant::Hagan2002NormalZeroBeta:
         return {{0.0050, false}, {0.0, true}, {0.30, false}, {0.0, false}};
     case ModelVariant::Antonov2015FreeBoundaryNormal:
-        return {{0.0050, false}, {0.0, false}, {0.30, false}, {0.0, false}};
+        return {{0.0050, false}, {0.0, true}, {0.30, false}, {0.0, false}};
     case ModelVariant::KienitzLawsonSwaynePde:
         return {{0.0050, false}, {0.8, false}, {0.30, false}, {0.0, false}};
     case ModelVariant::FlochKennedy:
@@ -153,64 +154,89 @@ std::vector<Real> SabrParametricVolatility::evaluateSabr(const std::vector<Real>
     case ModelVariant::Hagan2002Lognormal: {
         std::vector<Real> result(strikes.size());
         for (Size i = 0; i < strikes.size(); ++i) {
-            if (strikes[i] < -lognormalShift || QuantLib::close_enough(strikes[i], 0.0))
+            try {
+                if (strikes[i] < -lognormalShift || QuantLib::close_enough(strikes[i], 0.0))
+                    result[i] = 0.0;
+                else
+                    result[i] = unsafeSabrLogNormalVolatility(strikes[i] + lognormalShift, forward + lognormalShift,
+                                                              timeToExpiry, params[0], params[1], params[2], params[3]);
+            } catch (...) {
                 result[i] = 0.0;
-            else
-                result[i] = unsafeSabrLogNormalVolatility(strikes[i] + lognormalShift, forward + lognormalShift,
-                                                          timeToExpiry, params[0], params[1], params[2], params[3]);
+            }
         }
         return result;
     }
     case ModelVariant::Hagan2002Normal: {
         std::vector<Real> result(strikes.size());
         for (Size i = 0; i < strikes.size(); ++i) {
-            if (strikes[i] < -lognormalShift || QuantLib::close_enough(strikes[i], 0.0))
+            try {
+                if (strikes[i] < -lognormalShift || QuantLib::close_enough(strikes[i], 0.0))
+                    result[i] = 0.0;
+                else
+                    result[i] = unsafeSabrNormalVolatility(strikes[i] + lognormalShift, forward + lognormalShift,
+                                                           timeToExpiry, params[0], params[1], params[2], params[3]);
+            } catch (...) {
                 result[i] = 0.0;
-            else
-                result[i] = unsafeSabrNormalVolatility(strikes[i] + lognormalShift, forward + lognormalShift,
-                                                       timeToExpiry, params[0], params[1], params[2], params[3]);
+            }
+            return result;
         }
-        return result;
     }
     case ModelVariant::Hagan2002NormalZeroBeta: {
         std::vector<Real> result(strikes.size());
         for (Size i = 0; i < strikes.size(); ++i) {
-            result[i] =
-                QuantExt::normalSabrVolatility(strikes[i], forward, timeToExpiry, params[0], params[2], params[3]);
+            try {
+                result[i] =
+                    QuantExt::normalSabrVolatility(strikes[i], forward, timeToExpiry, params[0], params[2], params[3]);
+            } catch (...) {
+                result[i] = 0.0;
+            }
         }
         return result;
     }
     case ModelVariant::Antonov2015FreeBoundaryNormal: {
         std::vector<Real> result(strikes.size());
         for (Size i = 0; i < strikes.size(); ++i) {
-            result[i] = QuantExt::normalFreeBoundarySabrPrice(strikes[i], forward, timeToExpiry, params[0], params[2],
-                                                              params[3]) *
-                        (discountCurve_.empty() ? 1.0 : discountCurve_->discount(timeToExpiry));
-            if (strikes[i] < forward)
-                result[i] = result[i] - forward + strikes[i];
+            try {
+                result[i] = QuantExt::normalFreeBoundarySabrPrice(strikes[i], forward, timeToExpiry, params[0],
+                                                                  params[2], params[3]) *
+                            (discountCurve_.empty() ? 1.0 : discountCurve_->discount(timeToExpiry));
+                if (strikes[i] < forward)
+                    result[i] = result[i] - forward + strikes[i];
+            } catch (...) {
+                result[i] = 0.0;
+            }
         }
         return result;
     }
     case ModelVariant::KienitzLawsonSwaynePde: {
-        KienitzLawsonSwayneSabrPdeDensity pde(params[0], params[1], params[2], params[3], forward, timeToExpiry,
-                                              lognormalShift, 50,
-                                              std::max<Size>(5, std::lround(24.0 * timeToExpiry + 0.5)), 5.0);
-        auto result = pde.callPrices(strikes);
-        for (Size i = 0; i < strikes.size(); ++i) {
-            if (strikes[i] < forward)
-                result[i] = result[i] - forward + strikes[i];
-            result[i] *= discountCurve_.empty() ? 1.0 : discountCurve_->discount(timeToExpiry);
+        try {
+            KienitzLawsonSwayneSabrPdeDensity pde(params[0], params[1], params[2], params[3], forward, timeToExpiry,
+                                                  lognormalShift, 50,
+                                                  std::max<Size>(5, std::lround(24.0 * timeToExpiry + 0.5)), 5.0);
+            auto result = pde.callPrices(strikes);
+            for (Size i = 0; i < strikes.size(); ++i) {
+                if (strikes[i] < forward)
+                    result[i] = result[i] - forward + strikes[i];
+                result[i] *= discountCurve_.empty() ? 1.0 : discountCurve_->discount(timeToExpiry);
+            }
+            return result;
+        } catch (...) {
+            std::vector<Real> result(strikes.size(), 0.0);
+            return result;
         }
-        return result;
     }
     case ModelVariant::FlochKennedy: {
         std::vector<Real> result(strikes.size());
         for (Size i = 0; i < strikes.size(); ++i) {
-            if (strikes[i] < -lognormalShift || QuantLib::close_enough(strikes[i], 0.0))
+            try {
+                if (strikes[i] < -lognormalShift || QuantLib::close_enough(strikes[i], 0.0))
+                    result[i] = 0.0;
+                else
+                    result[i] = sabrFlochKennedyVolatility(strikes[i] + lognormalShift, forward + lognormalShift,
+                                                           timeToExpiry, params[0], params[1], params[2], params[3]);
+            } catch (...) {
                 result[i] = 0.0;
-            else
-                result[i] = sabrFlochKennedyVolatility(strikes[i] + lognormalShift, forward + lognormalShift,
-                                                       timeToExpiry, params[0], params[1], params[2], params[3]);
+            }
         }
         return result;
     }
@@ -388,14 +414,10 @@ void SabrParametricVolatility::calculate() {
                        << s.timeToExpiry << ", " << s.underlyingLength
                        << "). All (timeToExpiry, underlyingLength) pairs that are given as market points must be "
                           "covered by the given model parameters.");
-        try {
-            auto [params, error] = calibrateModelParameters(s, param->second);
-            if (error < maxAcceptableError_)
-                calibratedSabrParams_[key] = params;
-            calibrationErrors_[key] = error;
-        } catch (...) {
-        }
-        // handle calibration error TODO !!! we want to remove those exceeding an error threshold
+        auto [params, error] = calibrateModelParameters(s, param->second);
+        if (error < maxAcceptableError_)
+            calibratedSabrParams_[key] = params;
+        calibrationErrors_[key] = error;
         lognormalShifts_[key] = s.lognormalShift;
     }
 

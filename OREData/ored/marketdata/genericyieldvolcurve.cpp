@@ -361,6 +361,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                     cube->enableExtrapolation();
                 } else {
                     // TODO provide initial model parameters from config?
+                    // TODO provide error thresholds from config?
                     cube = boost::make_shared<QuantExt::SwaptionSabrCube>(
                         hATM, smileOptionTenors, smileUnderlyingTenors, spreads, volSpreadHandles, swapIndexBase,
                         shortSwapIndexBase, QuantExt::SabrParametricVolatility::ModelVariant(config->interpolation()),
