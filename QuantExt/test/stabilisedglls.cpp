@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(testBigInputNumbers) {
 
     std::vector<Real> x, y;
 
-    std::vector<QuantLib::ext::function1<Real, Real> > v;
+    std::vector<boost::function1<Real, Real> > v;
     v.push_back([](Real x) { return 1.0; });
     v.push_back([](Real x) { return x; });
     v.push_back([](Real x) { return x * x; });
@@ -1130,7 +1130,7 @@ BOOST_AUTO_TEST_CASE(test2DRegression) {
     std::vector<ext::function<Real(Array)> > basis =
         LsmBasisSystem::multiPathBasisSystem(2, 2, LsmBasisSystem::Monomial);
 #else // QL 1.14 and below
-    std::vector<QuantLib::ext::function1<Real, Array> > basis =
+    std::vector<boost::function1<Real, Array> > basis =
         LsmBasisSystem::multiPathBasisSystem(2, 2, LsmBasisSystem::Monomial);
 #endif
 

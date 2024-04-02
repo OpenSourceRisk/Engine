@@ -26,6 +26,7 @@
 #include <oret/toplevelfixture.hpp>
 
 #include <ql/time/date.hpp>
+#include <ql/tuple.hpp>
 
 #include <iostream>
 #include <iomanip>
