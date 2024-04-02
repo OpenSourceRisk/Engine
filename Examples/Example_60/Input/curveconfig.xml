@@ -1,5 +1,41 @@
 <?xml version="1.0"?>
 <CurveConfiguration>
+  <CapFloorVolatilities>
+    <CapFloorVolatility>
+      <CurveId>USD-SOFR</CurveId>
+      <CurveDescription>USD-SOFR Normal Cap Floor Volatilities</CurveDescription>
+      <VolatilityType>Normal</VolatilityType>
+      <Extrapolation>Flat</Extrapolation>
+      <InterpolationMethod>Bilinear</InterpolationMethod>
+      <IncludeAtm>false</IncludeAtm>
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <Calendar>US settlement</Calendar>
+      <BusinessDayConvention>Following</BusinessDayConvention>
+      <Tenors>1Y, 2Y, 3Y, 4Y, 5Y, 6Y, 7Y, 8Y, 9Y, 10Y, 12Y, 15Y, 20Y</Tenors>
+      <Strikes>-0.0075, -0.005, -0.0025, -0.0015, 0, 0.0025, 0.005, 0.0075, 0.01, 0.015, 0.02, 0.025, 0.03, 0.035, 0.04, 0.045, 0.05, 0.06, 0.07, 0.1</Strikes>
+      <OptionalQuotes>false</OptionalQuotes>
+      <Index>USD-SOFR</Index>
+      <RateComputationPeriod>3M</RateComputationPeriod>
+      <DiscountCurve>Yield/USD/USD-SOFR</DiscountCurve>
+      <AtmTenors>1Y, 2Y, 3Y, 4Y, 5Y, 6Y, 7Y, 8Y, 9Y, 10Y, 12Y, 15Y, 20Y</AtmTenors>
+      <SettlementDays>0</SettlementDays>
+      <InterpolateOn>OptionletVolatilities</InterpolateOn>
+      <TimeInterpolation>BackwardFlat</TimeInterpolation>
+      <StrikeInterpolation>LinearFlat</StrikeInterpolation>
+      <QuoteIncludesIndexName>false</QuoteIncludesIndexName>
+      <BootstrapConfig>
+        <Accuracy>0.0000000000010000</Accuracy>
+        <GlobalAccuracy>0.0000000000010000</GlobalAccuracy>
+        <DontThrow>true</DontThrow>
+        <MaxAttempts>5</MaxAttempts>
+        <MaxFactor>2</MaxFactor>
+        <MinFactor>2</MinFactor>
+        <DontThrowSteps>10</DontThrowSteps>
+      </BootstrapConfig>
+      <InputType>TermVolatilities</InputType>
+      <Report/>
+    </CapFloorVolatility>
+  </CapFloorVolatilities>
   <SwaptionVolatilities>
     <SwaptionVolatility>
       <CurveId>USD-SOFR</CurveId>
@@ -15,6 +51,8 @@
            KienitzLawsonSwaynePde,
            FlochKennedy -->
       <Interpolation>Hagan2002NormalZeroBeta</Interpolation>
+      <!-- <Interpolation>Antonov2015FreeBoundaryNormal</Interpolation> -->
+      <!-- <Interpolation>KienitzLawsonSwaynePde</Interpolation> -->
       <!-- Optional, defaults to Flat, applies to Interpolation = Linear only, it is ignored for the SABR interpolations
            None,
            Flat,
@@ -203,5 +241,13 @@
         <StrikeSpreads>-0.02,-0.015,-0.01,-0.005,0.0,0.005,0.01,0.015,0.02,0.03</StrikeSpreads>
       </Report>
     </IRSwaptionVolatilities>
+    <IRCapFloorVolatilities>
+      <Report>
+        <ReportOnStrikeGrid>true</ReportOnStrikeGrid>
+        <ReportOnStrikeSpreadGrid>false</ReportOnStrikeSpreadGrid>
+        <Expiries>1M,3M,6M,9M,12M,15M,18M,21M,24M,27M,30M,33M,36M,39M,42M,45M,48M,51M,54M,57M,60M,63M,66M,69M,72M,75M,78M,81M,84M,87M,90M,93M,96M,99M,102M,105M,108M,111M,114M,117M,120M,123M,126M,129M,132M,135M,138M,141M,144M,147M,150M,153M,156M,159M,162M,165M,168M,171M,174M,177M,180M,183M,186M,189M,192M,195M,198M,201M,204M,207M,210M,213M,216M,219M,222M,225M,228M,231M,234M,237M,240M,243M,246M,249M,252M,255M,258M,261M,264M,267M,270M,273M,276M,279M,282M,285M,288M,291M,294M,297M,300M,303M,306M,309M,312M,315M,318M,321M,324M,327M,330M,333M,336M,339M,342M,345M,348M,351M,354M,357M,360M</Expiries>
+        <Strikes>-0.02,-0.01,0.0,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.10</Strikes>
+      </Report>
+    </IRCapFloorVolatilities>
   </ReportConfiguration>
 </CurveConfiguration>

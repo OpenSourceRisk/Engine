@@ -71,4 +71,7 @@
   <SwaptionVolatilities id="default">
     <SwaptionVolatility key="USD-SOFR">SwaptionVolatility/USD-SOFR/USD-SOFR</SwaptionVolatility>
   </SwaptionVolatilities>
+  <CapFloorVolatilities id="default">
+    <CapFloorVolatility key="USD-SOFR">CapFloorVolatility/USD-SOFR/USD-SOFR</CapFloorVolatility>
+  </CapFloorVolatilities>
 </TodaysMarket>
