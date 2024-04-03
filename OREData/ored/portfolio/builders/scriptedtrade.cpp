@@ -327,7 +327,7 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
         bool useExternalDev = useExternalComputeDevice_ && !generateAdditionalResults && !useCachedSensis;
         engine = boost::make_shared<ScriptedInstrumentPricingEngineCG>(
             script.npv(), script.results(), modelCG_, ast_, context, mcParams_, script.code(), interactive_,
-            generateAdditionalResults, useCachedSensis, useExternalDev);
+            generateAdditionalResults, includePastCashflows_, useCachedSensis, useExternalDev);
         if (useExternalDev) {
             ComputeEnvironment::instance().selectContext(externalComputeDevice_);
         }
