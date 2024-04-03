@@ -320,7 +320,7 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
         engine = boost::make_shared<ScriptedInstrumentPricingEngine>(
             script.npv(), script.results(), model_, ast_, context, script.code(), interactive_, amcCam_ != nullptr,
             std::set<std::string>(script.stickyCloseOutStates().begin(), script.stickyCloseOutStates().end()),
-            generateAdditionalResults);
+            generateAdditionalResults, includePastCashflows_);
     } else if (modelCG_) {
         auto rt = globalParameters_.find("RunType");
         bool useCachedSensis = useAd_ && (rt != globalParameters_.end() && rt->second == "SensitivityDelta");
@@ -485,6 +485,7 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
     useExternalComputeDevice_ =
         parseBool(engineParameter("UseExternalComputeDevice", {resolvedProductTag_}, false, "false"));
     externalComputeDevice_ = engineParameter("ExternalComputeDevice", {}, false, "");
+    includePastCashflows_ = parseBool(engineParameter("IncludePastCashflows", {resolvedProductTag_}, false, "false"));
 
     // usage of ad or an external device implies usage of cg
     if (useAd_ || useExternalComputeDevice_)
