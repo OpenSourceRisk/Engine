@@ -80,6 +80,7 @@ class OreExample(object):
             else:
                 print_on_console("ORE executable not found.")
                 quit()
+        print_on_console("Using ORE executable " + (os.path.abspath(self.ore_exe)))
 
     def print_headline(self, headline):
         self.headlinecounter += 1
