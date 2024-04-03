@@ -466,7 +466,8 @@ where
 \item here $P_{ccy}$ is the discount factor in currency ccy, $FX$ is the FX spot from ccy to base and $N$ is the model
   numeraire
 \item $d\leq p$ must hold
-\item if $p$ lies on or before the evaluation date, the result is zero; $X$ is not evaluated in this case
+\item if $p$ lies on or before the evaluation date, the result is zero; $X$ is not evaluated in this case. 
+Note that $X$ is evaluated in the LOGPAY function though, see \ref{function_logpay}.
 \item avoids reading non-relevant past fixings from the index history
 \item if $d$ lies before (but $p$ after) the evaluation date, it is set to the evaluation date, i.e. the result is
   computed as of the evaluation date
@@ -513,6 +514,10 @@ Examples for the three forms are given below:
 Here, Payoff1 will appear under leg number $0$ and flow type ``Unspecified'' in the cashflow report. Payoff2 will appear
 under leg number $2$ and flow Type ``Interest''. The same holds for Payoff3, but if any amounts were booked using the
 slot parameter $3$ previously they will be overwritten with the current amount.
+
+Note: Even if $p$ lies on or before the evaluation date, a cashflow entry will be generated. If one wants to explicitly
+avoid that, e.g. because past fixings are not available to evaluate the past paid amounts, it can be done with an IF
+construct comparing the pay date with TODAY.
 
 % ====================================================
 \stsubsection{Function {\tt NPV, NPVMEM}}\label{function_npv}

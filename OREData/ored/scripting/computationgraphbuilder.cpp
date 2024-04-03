@@ -1029,7 +1029,7 @@ public:
         QL_REQUIRE(model_, "model is null");
         // handle case of past payments: do not evaluate the other parameters, since not needed (e.g. past fixings)
         Date pay = boost::get<EventVec>(paydate).value;
-        if (pay <= model_->referenceDate()) {
+        if (pay <= model_->referenceDate() && !log) {
             value.push(RandomVariable(size_, 0.0));
             std::size_t node = cg_const(g_, 0.0);
             value_node.push(node);
@@ -1053,7 +1053,9 @@ public:
             QL_REQUIRE(obs <= pay, "observation date (" << obs << ") <= payment date (" << pay << ") required");
             RandomVariable result; // uninitialised, since model dependent
             value.push(result);
-            std::size_t node = model_->pay(amount_node, obs, pay, pccy);
+            std::size_t node =
+                pay <= model_->referenceDate() ? cg_const(g_, 0.0) : model_->pay(amount_node, obs, pay, pccy);
+            std::size_t cfnode = pay <= model_->referenceDate() ? amount_node : node;
             value_node.push(node);
             TRACE("pay( " << amount << " , " << obsdate << " , " << paydate << " , " << paycurr << " ) (#" << node
                           << ")",
@@ -1092,10 +1094,10 @@ public:
                 }
                 // add nodes necessary to write paylog to keepNodes set
                 std::size_t filterNode =  filter_node.top() == ComputationGraph::nan ? cg_const(g_, 1.0) : filter_node.top();
-                keepNodes_.insert(node);
+                keepNodes_.insert(cfnode);
                 keepNodes_.insert(filterNode);
                 // add paylog entry data
-                payLogEntries_.push_back({node, filterNode, obs, pay, pccy, (Size)legno, cftype, (Size)slot});
+                payLogEntries_.push_back({cfnode, filterNode, obs, pay, pccy, (Size)legno, cftype, (Size)slot});
             }
         }
     }
