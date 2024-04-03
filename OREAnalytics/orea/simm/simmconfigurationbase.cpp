@@ -280,57 +280,30 @@ QuantLib::Real SimmConfigurationBase::correlation(const RiskType& firstRt, const
         return 1.0;
     }
 
-    // Deal with case of different risk types
-    if ((firstRt != secondRt) && (firstQualifier == secondQualifier)) {
-        if (((firstRt == RiskType::IRCurve || firstRt == RiskType::Inflation) && secondRt == RiskType::XCcyBasis) ||
-            (firstRt == RiskType::XCcyBasis && (secondRt == RiskType::IRCurve || secondRt == RiskType::Inflation))) {
-            // Between xccy basis and any yield or inflation in same currency
-            return xccyCorr_;
-        }
-        if ((firstRt == RiskType::IRCurve && secondRt == RiskType::Inflation) ||
-            (firstRt == RiskType::Inflation && secondRt == RiskType::IRCurve)) {
-            // Between any yield and inflation in same currency
-            return infCorr_;
-        }
-        if ((firstRt == RiskType::IRVol && secondRt == RiskType::InflationVol) ||
-            (firstRt == RiskType::InflationVol && secondRt == RiskType::IRVol)) {
-            // Between any yield volatility and inflation volatility in same currency
-            return infVolCorr_;
-        }
-    }
+    // Deal with Equity correlations
+    if ((firstRt == RiskType::Equity && secondRt == RiskType::Equity) ||
+        (firstRt == RiskType::EquityVol && secondRt == RiskType::EquityVol)) {
 
-    // Deal with IRCurve and IRVol correlations
-    if ((firstRt == RiskType::IRCurve && secondRt == RiskType::IRCurve) ||
-        (firstRt == RiskType::IRVol && secondRt == RiskType::IRVol)) {
+        // Get the bucket of each qualifier
+        string bucket_1 = simmBucketMapper_->bucket(firstRt, firstQualifier);
+        string bucket_2 = simmBucketMapper_->bucket(secondRt, secondQualifier);
 
-        // If the qualifiers, i.e. currencies, are the same
-        if (firstQualifier == secondQualifier) {
-            // Label2 level, i.e. sub-curve, correlations
-            if (firstLabel_2 != secondLabel_2) {
-                QL_REQUIRE(
-                    firstLabel_1 == "" && secondLabel_1 == "",
-                    "When asking for Label2 level correlations, "
-                        << "the Label1 level values should both contain the default parameter i.e. empty string");
-                QL_REQUIRE(firstRt != RiskType::IRVol, "There is no correlation at the Label2 level for Risk_IRVol");
-                return irSubCurveCorr_;
-            }
+        // Residual is special, 0 correlation inter and intra except if same qualifier
+        if (bucket_1 == "Residual" || bucket_2 == "Residual") {
+            return firstQualifier == secondQualifier ? 1.0 : 0.0;
+        }
 
-            // Label1 level, i.e. tenor, correlations
-            RiskType rt = RiskType::IRCurve;
-            auto label12Key = makeKey("", firstLabel_1, secondLabel_1);
-            if (intraBucketCorrelation_.at(rt).find(label12Key) != intraBucketCorrelation_.at(rt).end())
-                return intraBucketCorrelation_.at(rt).at(label12Key);
-            else
-                QL_FAIL("Could not find correlation for risk type " << rt << " and key " << label12Key);
+        // Non-residual
+        // Get the bucket index of each qualifier
+        if (bucket_1 == bucket_2) {
+            auto bucketKey = makeKey(bucket_1, "", "");
+            // If same bucket, return the intra-bucket correlation
+            return firstQualifier == secondQualifier ? 1.0 : intraBucketCorrelation_.at(RiskType::Equity).at(bucketKey);
         } else {
-            // If the qualifiers, i.e. currencies, are not the same
-            return irInterCurrencyCorr_;
+            // If different buckets, return the inter-bucket correlation
+            auto label12Key = makeKey("", bucket_1, bucket_2);
+            return interBucketCorrelation_.at(RiskType::Equity).at(label12Key);
         }
-    }
-
-    // Deal with inflation volatility correlations
-    if (firstRt == RiskType::InflationVol && secondRt == RiskType::InflationVol) {
-        return 1.0;
     }
 
     // Deal with CreditQ correlations
@@ -413,32 +386,6 @@ QuantLib::Real SimmConfigurationBase::correlation(const RiskType& firstRt, const
         }
     }
 
-    // Deal with Equity correlations
-    if ((firstRt == RiskType::Equity && secondRt == RiskType::Equity) ||
-        (firstRt == RiskType::EquityVol && secondRt == RiskType::EquityVol)) {
-
-        // Get the bucket of each qualifier
-        string bucket_1 = simmBucketMapper_->bucket(firstRt, firstQualifier);
-        string bucket_2 = simmBucketMapper_->bucket(secondRt, secondQualifier);
-
-        // Residual is special, 0 correlation inter and intra except if same qualifier
-        if (bucket_1 == "Residual" || bucket_2 == "Residual") {
-            return firstQualifier == secondQualifier ? 1.0 : 0.0;
-        }
-
-        // Non-residual
-        // Get the bucket index of each qualifier
-        if (bucket_1 == bucket_2) {
-            auto bucketKey = makeKey(bucket_1, "", "");
-            // If same bucket, return the intra-bucket correlation
-            return firstQualifier == secondQualifier ? 1.0 : intraBucketCorrelation_.at(RiskType::Equity).at(bucketKey);
-        } else {
-            // If different buckets, return the inter-bucket correlation
-            auto label12Key = makeKey("", bucket_1, bucket_2);
-            return interBucketCorrelation_.at(RiskType::Equity).at(label12Key);
-        }
-    }
-
     // Deal with Commodity correlations
     if ((firstRt == RiskType::Commodity && secondRt == RiskType::Commodity) ||
         (firstRt == RiskType::CommodityVol && secondRt == RiskType::CommodityVol)) {
@@ -456,6 +403,59 @@ QuantLib::Real SimmConfigurationBase::correlation(const RiskType& firstRt, const
             auto label12Key = makeKey("", bucket_1, bucket_2);
             return interBucketCorrelation_.at(RiskType::Commodity).at(label12Key);
         }
+    }
+
+    // Deal with case of different risk types
+    if ((firstRt != secondRt) && (firstQualifier == secondQualifier)) {
+        if (((firstRt == RiskType::IRCurve || firstRt == RiskType::Inflation) && secondRt == RiskType::XCcyBasis) ||
+            (firstRt == RiskType::XCcyBasis && (secondRt == RiskType::IRCurve || secondRt == RiskType::Inflation))) {
+            // Between xccy basis and any yield or inflation in same currency
+            return xccyCorr_;
+        }
+        if ((firstRt == RiskType::IRCurve && secondRt == RiskType::Inflation) ||
+            (firstRt == RiskType::Inflation && secondRt == RiskType::IRCurve)) {
+            // Between any yield and inflation in same currency
+            return infCorr_;
+        }
+        if ((firstRt == RiskType::IRVol && secondRt == RiskType::InflationVol) ||
+            (firstRt == RiskType::InflationVol && secondRt == RiskType::IRVol)) {
+            // Between any yield volatility and inflation volatility in same currency
+            return infVolCorr_;
+        }
+    }
+
+    // Deal with IRCurve and IRVol correlations
+    if ((firstRt == RiskType::IRCurve && secondRt == RiskType::IRCurve) ||
+        (firstRt == RiskType::IRVol && secondRt == RiskType::IRVol)) {
+
+        // If the qualifiers, i.e. currencies, are the same
+        if (firstQualifier == secondQualifier) {
+            // Label2 level, i.e. sub-curve, correlations
+            if (firstLabel_2 != secondLabel_2) {
+                QL_REQUIRE(
+                    firstLabel_1 == "" && secondLabel_1 == "",
+                    "When asking for Label2 level correlations, "
+                        << "the Label1 level values should both contain the default parameter i.e. empty string");
+                QL_REQUIRE(firstRt != RiskType::IRVol, "There is no correlation at the Label2 level for Risk_IRVol");
+                return irSubCurveCorr_;
+            }
+
+            // Label1 level, i.e. tenor, correlations
+            RiskType rt = RiskType::IRCurve;
+            auto label12Key = makeKey("", firstLabel_1, secondLabel_1);
+            if (intraBucketCorrelation_.at(rt).find(label12Key) != intraBucketCorrelation_.at(rt).end())
+                return intraBucketCorrelation_.at(rt).at(label12Key);
+            else
+                QL_FAIL("Could not find correlation for risk type " << rt << " and key " << label12Key);
+        } else {
+            // If the qualifiers, i.e. currencies, are not the same
+            return irInterCurrencyCorr_;
+        }
+    }
+
+    // Deal with inflation volatility correlations
+    if (firstRt == RiskType::InflationVol && secondRt == RiskType::InflationVol) {
+        return 1.0;
     }
 
     // Deal with FX correlations
