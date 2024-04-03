@@ -580,6 +580,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                     if (cf.effectiveCapVolatility != Null<Real>())
                         capVolatility = cf.effectiveCapVolatility;
 
+                    if (!includePastCashflows && cf.payDate <= asof)
+                        continue;
+
                     report.next()
                         .add(trade->id())
                         .add(trade->tradeType())

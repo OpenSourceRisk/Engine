@@ -769,7 +769,7 @@ public:
         QL_REQUIRE(model_, "model is null");
         // handle case of past payments: do not evaluate the other parameters, since not needed (e.g. past fixings)
         Date pay = boost::get<EventVec>(paydate).value;
-        if (pay <= model_->referenceDate()) {
+        if (pay <= model_->referenceDate() && !log) {
             value.push(RandomVariable(size_, 0.0));
             TRACE("pay() = 0, since paydate " << paydate << " <= " << model_->referenceDate(), n);
         } else {
@@ -786,7 +786,11 @@ public:
             Date obs = boost::get<EventVec>(obsdate).value;
             std::string pccy = boost::get<CurrencyVec>(paycurr).value;
             QL_REQUIRE(obs <= pay, "observation date (" << obs << ") <= payment date (" << pay << ") required");
-            RandomVariable result = model_->pay(boost::get<RandomVariable>(amount), obs, pay, pccy);
+            RandomVariable result = pay <= model_->referenceDate()
+                                        ? RandomVariable(model_->size(), 0.0)
+                                        : model_->pay(boost::get<RandomVariable>(amount), obs, pay, pccy);
+            RandomVariable cashflowResult =
+                pay <= model_->referenceDate() ? boost::get<RandomVariable>(amount) : result;
             if (!log || paylog_ == nullptr) {
                 TRACE("pay( " << amount << " , " << obsdate << " , " << paydate << " , " << paycurr << " )", n);
             } else {
@@ -819,7 +823,7 @@ public:
                         QL_REQUIRE(slot >= 1, " slot must be >= 1");
                     }
                 }
-                paylog_->write(result, filter.top(), obs, pay, pccy, static_cast<Size>(legno), cftype,
+                paylog_->write(cashflowResult, filter.top(), obs, pay, pccy, static_cast<Size>(legno), cftype,
                                static_cast<Size>(slot));
                 TRACE("logpay( " << amount << " , " << obsdate << " , " << paydate << " , " << paycurr << " , " << legno
                                  << " , " << cftype << " , " << slot << ")",
