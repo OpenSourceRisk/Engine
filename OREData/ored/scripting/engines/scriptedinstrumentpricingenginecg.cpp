@@ -68,11 +68,12 @@ ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
     const std::string& npv, const std::vector<std::pair<std::string, std::string>>& additionalResults,
     const boost::shared_ptr<ModelCG>& model, const ASTNodePtr ast, const boost::shared_ptr<Context>& context,
     const Model::McParams& mcParams, const std::string& script, const bool interactive,
-    const bool generateAdditionalResults, const bool useCachedSensis, const bool useExternalComputeFramework)
+    const bool generateAdditionalResults, const bool includePastCashflows, const bool useCachedSensis,
+    const bool useExternalComputeFramework)
     : npv_(npv), additionalResults_(additionalResults), model_(model), ast_(ast), context_(context),
       mcParams_(mcParams), script_(script), interactive_(interactive),
-      generateAdditionalResults_(generateAdditionalResults), useCachedSensis_(useCachedSensis),
-      useExternalComputeFramework_(useExternalComputeFramework) {
+      generateAdditionalResults_(generateAdditionalResults), includePastCashflows_(includePastCashflows),
+      useCachedSensis_(useCachedSensis), useExternalComputeFramework_(useExternalComputeFramework) {
 
     // register with model
 
@@ -138,7 +139,7 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph() const {
         // build graph
 
         ComputationGraphBuilder cgBuilder(*g, getRandomVariableOpLabels(), ast_, workingContext_, model_);
-        cgBuilder.run(generateAdditionalResults_, script_, interactive_);
+        cgBuilder.run(generateAdditionalResults_, includePastCashflows_, script_, interactive_);
         cgVersion_ = model_->cgVersion();
         DLOG("Built computation graph version " << cgVersion_ << " size is " << g->size());
         TLOGGERSTREAM(ssaForm(*g, getRandomVariableOpLabels()));
