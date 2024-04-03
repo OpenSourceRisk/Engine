@@ -119,12 +119,12 @@ class ASTRunner : public AcyclicVisitor,
                   public Visitor<LoopNode> {
 public:
     ASTRunner(ComputationGraph& g, const std::vector<std::string>& opLabels, const boost::shared_ptr<ModelCG> model,
-              const bool generatePayLog, const std::string& script, bool& interactive, Context& context,
-              ASTNode*& lastVisitedNode, std::set<std::size_t>& keepNodes,
+              const bool generatePayLog, const bool includePastCashflows, const std::string& script, bool& interactive,
+              Context& context, ASTNode*& lastVisitedNode, std::set<std::size_t>& keepNodes,
               std::vector<ComputationGraphBuilder::PayLogEntry>& payLogEntries)
         : g_(g), opLabels_(opLabels), model_(model), size_(model ? model->size() : 1), generatePayLog_(generatePayLog),
-          script_(script), interactive_(interactive), keepNodes_(keepNodes), payLogEntries_(payLogEntries),
-          context_(context), lastVisitedNode_(lastVisitedNode) {
+          includePastCashflows_(includePastCashflows), script_(script), interactive_(interactive),
+          keepNodes_(keepNodes), payLogEntries_(payLogEntries), context_(context), lastVisitedNode_(lastVisitedNode) {
         filter.emplace(size_, true);
         value.push(RandomVariable());
         filter_node.push(ComputationGraph::nan);
@@ -1029,7 +1029,7 @@ public:
         QL_REQUIRE(model_, "model is null");
         // handle case of past payments: do not evaluate the other parameters, since not needed (e.g. past fixings)
         Date pay = boost::get<EventVec>(paydate).value;
-        if (pay <= model_->referenceDate() && !log) {
+        if (pay <= model_->referenceDate() && (!log || !includePastCashflows_)) {
             value.push(RandomVariable(size_, 0.0));
             std::size_t node = cg_const(g_, 0.0);
             value_node.push(node);
@@ -1465,6 +1465,7 @@ public:
     const boost::shared_ptr<ModelCG> model_;
     const Size size_;
     const bool generatePayLog_;
+    const bool includePastCashflows_;
     const std::string script_;
     bool& interactive_;
     std::set<std::size_t>& keepNodes_;
@@ -1481,14 +1482,15 @@ public:
 
 } // namespace
 
-void ComputationGraphBuilder::run(const bool generatePayLog, const std::string& script, bool interactive) {
+void ComputationGraphBuilder::run(const bool generatePayLog, const bool includePastCashflows, const std::string& script,
+                                  bool interactive) {
 
     keepNodes_.clear();
     payLogEntries_.clear();
 
     ASTNode* loc;
-    ASTRunner runner(g_, opLabels_, model_, generatePayLog, script, interactive, *context_, loc, keepNodes_,
-                     payLogEntries_);
+    ASTRunner runner(g_, opLabels_, model_, generatePayLog, generatePayLog && includePastCashflows, script, interactive,
+                     *context_, loc, keepNodes_, payLogEntries_);
 
     randomvariable_output_pattern pattern;
     if (model_ == nullptr || model_->type() == ModelCG::Type::MC) {

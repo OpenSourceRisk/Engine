@@ -112,7 +112,7 @@ void ScriptedInstrumentPricingEngine::calculate() const {
     if (generateAdditionalResults_)
         paylog = boost::make_shared<PayLog>();
 
-    engine.run(script_, interactive_, paylog);
+    engine.run(script_, interactive_, paylog, includePastCashflows_);
 
     // extract npv result and set it
 

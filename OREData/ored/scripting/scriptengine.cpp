@@ -106,9 +106,9 @@ class ASTRunner : public AcyclicVisitor,
                   public Visitor<LoopNode> {
 public:
     ASTRunner(const boost::shared_ptr<Model> model, const std::string& script, bool& interactive, Context& context,
-              ASTNode*& lastVisitedNode, boost::shared_ptr<PayLog> paylog)
+              ASTNode*& lastVisitedNode, boost::shared_ptr<PayLog> paylog, bool includePastCashflows)
         : model_(model), size_(model ? model->size() : 1), script_(script), interactive_(interactive), paylog_(paylog),
-          context_(context), lastVisitedNode_(lastVisitedNode) {
+          includePastCashflows_(includePastCashflows), context_(context), lastVisitedNode_(lastVisitedNode) {
         filter.emplace(size_, true);
         value.push(RandomVariable());
     }
@@ -769,7 +769,7 @@ public:
         QL_REQUIRE(model_, "model is null");
         // handle case of past payments: do not evaluate the other parameters, since not needed (e.g. past fixings)
         Date pay = boost::get<EventVec>(paydate).value;
-        if (pay <= model_->referenceDate() && !log) {
+        if (pay <= model_->referenceDate() && (!log || !includePastCashflows_)) {
             value.push(RandomVariable(size_, 0.0));
             TRACE("pay() = 0, since paydate " << paydate << " <= " << model_->referenceDate(), n);
         } else {
@@ -1149,6 +1149,7 @@ public:
     const std::string script_;
     bool& interactive_;
     boost::shared_ptr<PayLog> paylog_; // cashflow log
+    bool includePastCashflows_;
     // working variables
     Context& context_;
     ASTNode*& lastVisitedNode_;
@@ -1159,10 +1160,11 @@ public:
 
 } // namespace
 
-void ScriptEngine::run(const std::string& script, bool interactive, boost::shared_ptr<PayLog> paylog) {
+void ScriptEngine::run(const std::string& script, bool interactive, boost::shared_ptr<PayLog> paylog,
+                       bool includePastCashflows) {
 
     ASTNode* loc;
-    ASTRunner runner(model_, script, interactive, *context_, loc, paylog);
+    ASTRunner runner(model_, script, interactive, *context_, loc, paylog, paylog != nullptr && includePastCashflows);
 
     randomvariable_output_pattern pattern;
     if (model_ == nullptr || model_->type() == Model::Type::MC) {

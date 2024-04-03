@@ -38,7 +38,8 @@ public:
     ScriptEngine(const ASTNodePtr root, const boost::shared_ptr<Context> context,
                  const boost::shared_ptr<Model> model = nullptr)
         : root_(root), context_(context), model_(model) {}
-    void run(const std::string& script = "", bool interactive = false, boost::shared_ptr<PayLog> paylog = nullptr);
+    void run(const std::string& script = "", bool interactive = false, boost::shared_ptr<PayLog> paylog = nullptr,
+             bool includePastCashflows = false);
 
 private:
     const ASTNodePtr root_;
