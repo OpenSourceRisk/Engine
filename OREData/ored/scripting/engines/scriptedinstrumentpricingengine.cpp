@@ -107,7 +107,11 @@ void ScriptedInstrumentPricingEngine::calculate() const {
     // set up script engine and run it
 
     ScriptEngine engine(ast_, workingContext, model_);
-    auto paylog = boost::make_shared<PayLog>();
+
+    boost::shared_ptr<PayLog> paylog;
+    if (generateAdditionalResults_)
+        paylog = boost::make_shared<PayLog>();
+
     engine.run(script_, interactive_, paylog);
 
     // extract npv result and set it
@@ -191,8 +195,12 @@ void ScriptedInstrumentPricingEngine::calculate() const {
         for (Size i = 0; i < paylog->size(); ++i) {
             // cashflow is written as expectation of deflated base ccy amount at T0, converted to flow ccy
             // with the T0 FX Spot and compounded back to the pay date on T0 curves
-            Real fx = model_->fxSpotT0(paylog->currencies().at(i), model_->baseCcy());
-            Real discount = model_->discount(referenceDate, paylog->dates().at(i), paylog->currencies().at(i)).at(0);
+            Real fx = 1.0;
+            Real discount = 1.0;
+            if (paylog->dates().at(i) > model_->referenceDate()) {
+                fx = model_->fxSpotT0(paylog->currencies().at(i), model_->baseCcy());
+                discount = model_->discount(referenceDate, paylog->dates().at(i), paylog->currencies().at(i)).at(0);
+            }
             cashFlowResults[i].amount = model_->extractT0Result(paylog->amounts().at(i)) / fx / discount;
             cashFlowResults[i].payDate = paylog->dates().at(i);
             cashFlowResults[i].currency = paylog->currencies().at(i);
@@ -202,10 +210,12 @@ void ScriptedInstrumentPricingEngine::calculate() const {
                                  << cashFlowResults[i].currency << cashFlowResults[i].amount << " "
                                  << cashFlowResults[i].currency << "-" << model_->baseCcy() << " " << fx << " discount("
                                  << cashFlowResults[i].currency << ") " << discount);
-            addMcErrorEstimate("cashflow_" + std::to_string(paylog->legNos().at(i)) + "_" +
-                                   std::to_string(++cashflowNumber[paylog->legNos().at(i)]) + "_MCErrEst",
-                               paylog->amounts().at(i) /
-                                   RandomVariable(paylog->amounts().at(i).size(), (fx * discount)));
+            if (paylog->dates().at(i) > model_->referenceDate()) {
+                addMcErrorEstimate("cashflow_" + std::to_string(paylog->legNos().at(i)) + "_" +
+                                       std::to_string(++cashflowNumber[paylog->legNos().at(i)]) + "_MCErrEst",
+                                   paylog->amounts().at(i) /
+                                       RandomVariable(paylog->amounts().at(i).size(), (fx * discount)));
+            }
         }
         results_.additionalResults["cashFlowResults"] = cashFlowResults;
 
