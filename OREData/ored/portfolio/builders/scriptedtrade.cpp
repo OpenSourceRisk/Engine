@@ -320,14 +320,14 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
         engine = boost::make_shared<ScriptedInstrumentPricingEngine>(
             script.npv(), script.results(), model_, ast_, context, script.code(), interactive_, amcCam_ != nullptr,
             std::set<std::string>(script.stickyCloseOutStates().begin(), script.stickyCloseOutStates().end()),
-            generateAdditionalResults);
+            generateAdditionalResults, includePastCashflows_);
     } else if (modelCG_) {
         auto rt = globalParameters_.find("RunType");
         bool useCachedSensis = useAd_ && (rt != globalParameters_.end() && rt->second == "SensitivityDelta");
         bool useExternalDev = useExternalComputeDevice_ && !generateAdditionalResults && !useCachedSensis;
         engine = boost::make_shared<ScriptedInstrumentPricingEngineCG>(
             script.npv(), script.results(), modelCG_, ast_, context, mcParams_, script.code(), interactive_,
-            generateAdditionalResults, useCachedSensis, useExternalDev);
+            generateAdditionalResults, includePastCashflows_, useCachedSensis, useExternalDev);
         if (useExternalDev) {
             ComputeEnvironment::instance().selectContext(externalComputeDevice_);
         }
@@ -485,6 +485,7 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
     useExternalComputeDevice_ =
         parseBool(engineParameter("UseExternalComputeDevice", {resolvedProductTag_}, false, "false"));
     externalComputeDevice_ = engineParameter("ExternalComputeDevice", {}, false, "");
+    includePastCashflows_ = parseBool(engineParameter("IncludePastCashflows", {resolvedProductTag_}, false, "false"));
 
     // usage of ad or an external device implies usage of cg
     if (useAd_ || useExternalComputeDevice_)
@@ -1444,7 +1445,7 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
             // build calibration basket (CPI Floors at calibration strike or if that is not given, ATM strike)
             boost::shared_ptr<BaseStrike> calibrationStrike;
             if (auto k = calibrationStrikes_.find(modelInfIndices_[i].first);
-                k != calibrationStrikes_.end() && k->second.empty()) {
+                k != calibrationStrikes_.end() && !k->second.empty()) {
                 calibrationStrike = boost::make_shared<AbsoluteStrike>(k->second.front());
             } else {
                 calibrationStrike = boost::make_shared<AtmStrike>(QuantLib::DeltaVolQuote::AtmType::AtmFwd);

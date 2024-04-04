@@ -26,6 +26,7 @@ app/analytics/simmanalytic.cpp
 app/analytics/varanalytic.cpp
 app/analytics/xvaanalytic.cpp
 app/analyticsmanager.cpp
+app/cleanupsingletons.cpp
 app/inputparameters.cpp
 app/marketcalibrationreport.cpp
 app/marketdatacsvloader.cpp
@@ -102,6 +103,7 @@ scenario/simplescenario.cpp
 scenario/stressscenariodata.cpp
 scenario/stressscenariogenerator.cpp
 simm/crif.cpp
+simm/crifconfiguration.cpp
 simm/crifloader.cpp
 simm/crifrecord.cpp
 simm/imschedulecalculator.cpp
@@ -169,6 +171,7 @@ app/analytics/simmanalytic.hpp
 app/analytics/varanalytic.hpp
 app/analytics/xvaanalytic.hpp
 app/analyticsmanager.hpp
+app/cleanupsingletons.hpp
 app/inputparameters.hpp
 app/marketcalibrationreport.hpp
 app/marketdatacsvloader.hpp
@@ -261,6 +264,7 @@ scenario/simplescenariofactory.hpp
 scenario/stressscenariodata.hpp
 scenario/stressscenariogenerator.hpp
 simm/crif.hpp
+simm/crifconfiguration.hpp
 simm/crifloader.hpp
 simm/crifrecord.hpp
 simm/imschedulecalculator.hpp

@@ -45,6 +45,15 @@ struct RandomVariableStats : public QuantLib::Singleton<RandomVariableStats> {
         calc_timer.start();
         calc_timer.stop();
     }
+
+    void reset() {
+      enabled = false;
+      data_ops = 0;
+      calc_ops = 0;
+      data_timer.stop();
+      calc_timer.stop();
+    }
+
     bool enabled = false;
     std::size_t data_ops = 0;
     std::size_t calc_ops = 0;
