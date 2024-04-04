@@ -558,15 +558,13 @@ void XvaAnalyticImpl::runPostProcessor() {
             std::map<std::string, Real> currentIM;
             if (inputs_->collateralBalances()) {
                 for (auto const& [n, b] : inputs_->collateralBalances()->collateralBalances()) {
-                    if (b->currency() != baseCurrency) {
-                        currentIM[n.nettingSetId()] =
-                            b->initialMargin() * (b->currency() == baseCurrency
-                                                      ? 1.0
-                                                      : analytic()
-                                                            ->market()
-                                                            ->fxRate(b->currency() + baseCurrency, marketConfiguration)
-                                                            ->value());
-                    }
+                    currentIM[n.nettingSetId()] =
+                        b->initialMargin() * (b->currency() == baseCurrency
+                                                  ? 1.0
+                                                  : analytic()
+                                                        ->market()
+                                                        ->fxRate(b->currency() + baseCurrency, marketConfiguration)
+                                                        ->value());
                 }
             }
             dimCalculator_ = boost::make_shared<RegressionDynamicInitialMarginCalculator>(
