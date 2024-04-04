@@ -311,6 +311,9 @@ RandomVariable expectation(const RandomVariable& r);
 // time zero variance
 RandomVariable variance(const RandomVariable& r);
 
+// time zero covariance
+RandomVariable covariance(const RandomVariable& r, const RandomVariable& s);
+
 // black formula
 RandomVariable black(const RandomVariable& omega, const RandomVariable& t, const RandomVariable& strike,
                      const RandomVariable& forward, const RandomVariable& impliedVol);

@@ -26,9 +26,11 @@
 #include <boost/math/distributions/normal.hpp>
 
 #include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/covariance.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
+#include <boost/accumulators/statistics/variates/covariate.hpp>
 
 #include <iostream>
 #include <map>
@@ -1226,6 +1228,23 @@ RandomVariable variance(const RandomVariable& r) {
     }
     stopCalcStats(r.size());
     return RandomVariable(r.size(), boost::accumulators::variance(acc));
+}
+
+RandomVariable covariance(const RandomVariable& r, const RandomVariable& s) {
+    QL_REQUIRE(r.size() == s.size(), "covariance(RandomVariable r, RandomVariable s): inconsistent sizes r ("
+                                         << r.size() << "), s(" << s.size() << ")");
+    if (r.deterministic() || s.deterministic())
+        return RandomVariable(r.size(), 0.0);
+    resumeCalcStats();
+    boost::accumulators::accumulator_set<
+        double,
+        boost::accumulators::stats<boost::accumulators::tag::covariance<double, boost::accumulators::tag::covariate1>>>
+        acc;
+    for (Size i = 0; i < r.size(); ++i) {
+        acc(r[i], boost::accumulators::covariate1 = s[i]);
+    }
+    stopCalcStats(r.size());
+    return RandomVariable(r.size(), boost::accumulators::covariance(acc));
 }
 
 RandomVariable black(const RandomVariable& omega, const RandomVariable& t, const RandomVariable& strike,
