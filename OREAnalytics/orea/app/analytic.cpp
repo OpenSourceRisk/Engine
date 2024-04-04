@@ -29,6 +29,7 @@
 #include <orea/engine/valuationengine.hpp>
 #include <orea/aggregation/dimregressioncalculator.hpp>
 
+#include <ored/marketdata/bondspreadimply.hpp>
 #include <ored/marketdata/compositeloader.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/portfolio/builders/currencyswap.hpp>
@@ -245,6 +246,29 @@ void MarketDataAnalyticImpl::runAnalytic(
     CONSOLEW("Build Market");
     analytic()->buildMarket(loader);
     CONSOLE("OK");
+}
+
+boost::shared_ptr<Loader> implyBondSpreads(const Date& asof,
+                                           const boost::shared_ptr<ore::analytics::InputParameters>& params,
+                                           const boost::shared_ptr<TodaysMarketParameters>& todaysMarketParams,
+                                           const boost::shared_ptr<Loader>& loader,
+                                           const boost::shared_ptr<CurveConfigurations>& curveConfigs,
+                                           const std::string& excludeRegex) {
+
+    auto securities = BondSpreadImply::requiredSecurities(asof, todaysMarketParams, curveConfigs, *loader,
+                                                          true, excludeRegex);
+
+    if (!securities.empty()) {
+        // always continue on error and always use lazy market building
+        boost::shared_ptr<Market> market =
+            boost::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, true, true, true,
+                                             params->refDataManager(), false, *params->iborFallbackConfig());
+        return BondSpreadImply::implyBondSpreads(securities, params->refDataManager(), market, params->pricingEngine(),
+                                                 Market::defaultConfiguration, *params->iborFallbackConfig());
+    } else {
+        // no bonds that require a spread imply => return null ptr
+        return boost::shared_ptr<Loader>();
+    }
 }
 
 } // namespace analytics
