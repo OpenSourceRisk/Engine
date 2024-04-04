@@ -580,6 +580,11 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                     if (cf.effectiveCapVolatility != Null<Real>())
                         capVolatility = cf.effectiveCapVolatility;
 
+                    // to be consistent with the leg-based cf report we should do this:
+                    // if (!includePastCashflows && cf.payDate <= asof)
+                    //     continue;
+                    // however, this changes a lot of results, so we output all cfs for the time being
+
                     report.next()
                         .add(trade->id())
                         .add(trade->tradeType())
