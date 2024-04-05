@@ -47,12 +47,13 @@ McMultiLegBaseEngine::McMultiLegBaseEngine(
     const LsmBasisSystem::PolynomialType polynomType, const SobolBrownianGenerator::Ordering ordering,
     SobolRsg::DirectionIntegers directionIntegers, const std::vector<Handle<YieldTermStructure>>& discountCurves,
     const std::vector<Date>& simulationDates, const std::vector<Size>& externalModelIndices, const bool minimalObsDate,
-    const RegressorModel regressorModel)
+    const RegressorModel regressorModel, const Real regressionVarianceCutoff)
     : model_(model), calibrationPathGenerator_(calibrationPathGenerator), pricingPathGenerator_(pricingPathGenerator),
       calibrationSamples_(calibrationSamples), pricingSamples_(pricingSamples), calibrationSeed_(calibrationSeed),
       pricingSeed_(pricingSeed), polynomOrder_(polynomOrder), polynomType_(polynomType), ordering_(ordering),
       directionIntegers_(directionIntegers), discountCurves_(discountCurves), simulationDates_(simulationDates),
-      externalModelIndices_(externalModelIndices), minimalObsDate_(minimalObsDate), regressorModel_(regressorModel) {
+      externalModelIndices_(externalModelIndices), minimalObsDate_(minimalObsDate), regressorModel_(regressorModel),
+      regressionVarianceCutoff_(regressionVarianceCutoff) {
 
     if (discountCurves_.empty())
         discountCurves_.resize(model_->components(CrossAssetModel::AssetType::IR));
@@ -874,7 +875,7 @@ void McMultiLegBaseEngine::calculate() const {
         if (exercise_ != nullptr) {
             regModelUndExInto[counter] = RegressionModel(
                 *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
-                regressorModel_);
+                regressorModel_, regressionVarianceCutoff_);
             regModelUndExInto[counter].train(polynomOrder_, polynomType_, pathValueUndExInto, pathValuesRef,
                                              simulationTimes);
         }
@@ -884,7 +885,7 @@ void McMultiLegBaseEngine::calculate() const {
                                                                   pathValuesRef, simulationTimes);
             regModelContinuationValue[counter] = RegressionModel(
                 *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
-                regressorModel_);
+                regressorModel_, regressionVarianceCutoff_);
             regModelContinuationValue[counter].train(polynomOrder_, polynomType_, pathValueOption, pathValuesRef,
                                                      simulationTimes,
                                                      exerciseValue > RandomVariable(calibrationSamples_, 0));
@@ -895,14 +896,14 @@ void McMultiLegBaseEngine::calculate() const {
                                                 pathValueUndExInto, pathValueOption);
             regModelOption[counter] = RegressionModel(
                 *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
-                regressorModel_);
+                regressorModel_, regressionVarianceCutoff_);
             regModelOption[counter].train(polynomOrder_, polynomType_, pathValueOption, pathValuesRef, simulationTimes);
         }
 
         if (isXvaTime) {
             regModelUndDirty[counter] = RegressionModel(
                 *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] != CfStatus::open; }, **model_,
-                regressorModel_);
+                regressorModel_, regressionVarianceCutoff_);
             regModelUndDirty[counter].train(polynomOrder_, polynomType_, pathValueUndDirty, pathValuesRef,
                                             simulationTimes);
         }
@@ -910,7 +911,7 @@ void McMultiLegBaseEngine::calculate() const {
         if (exercise_ != nullptr) {
             regModelOption[counter] = RegressionModel(
                 *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
-                regressorModel_);
+                regressorModel_, regressionVarianceCutoff_);
             regModelOption[counter].train(polynomOrder_, polynomType_, pathValueOption, pathValuesRef, simulationTimes);
         }
 
@@ -1093,8 +1094,9 @@ McMultiLegBaseEngine::RegressionModel::RegressionModel(const Real observationTim
                                                        const std::vector<CashflowInfo>& cashflowInfo,
                                                        const std::function<bool(std::size_t)>& cashflowRelevant,
                                                        const CrossAssetModel& model,
-                                                       const McMultiLegBaseEngine::RegressorModel regressorModel)
-    : observationTime_(observationTime) {
+                                                       const McMultiLegBaseEngine::RegressorModel regressorModel,
+                                                       const Real regressionVarianceCutoff)
+    : observationTime_(observationTime), regressionVarianceCutoff_(regressionVarianceCutoff) {
 
     // we always include the full model state as of the observation time
 
@@ -1151,7 +1153,18 @@ void McMultiLegBaseEngine::RegressionModel::train(const Size polynomOrder,
                    "McMultiLegBaseEngine::RegressionModel::train(): internal error: did not find regressor time "
                        << t << " in pathTimes.");
         regressor.push_back(paths[std::distance(pathTimes.begin(), pt)][modelIdx]);
+     }
+
+    // factor reduction to reduce dimensionalitty and handle collinearity
+
+    std::vector<RandomVariable> transformedRegressor;
+    if (regressionVarianceCutoff_ != Null<Real>()) {
+        coordinateTransform_ = pcaCoordinateTransform(regressor, regressionVarianceCutoff_);
+        transformedRegressor = applyCoordinateTransform(regressor, coordinateTransform_);
+        regressor = vec2vecptr(transformedRegressor);
     }
+
+    // compute regression coefficients
 
     if (!regressor.empty()) {
 
@@ -1162,7 +1175,7 @@ void McMultiLegBaseEngine::RegressionModel::train(const Size polynomOrder,
         // compute the regression coefficients
 
         regressionCoeffs_ =
-            regressionCoefficients(regressand, regressor, basisFns_, filter, RandomVariableRegressionMethod::QR);
+            regressionCoefficients(regressand, regressor, basisFns_, filter, RandomVariableRegressionMethod::SVD);
 
     } else {
 
@@ -1258,6 +1271,14 @@ McMultiLegBaseEngine::RegressionModel::apply(const Array& initialState,
             regressor[i] = &tmp[i];
         }
         ++i;
+    }
+
+    // transform regressor if necessary
+
+    std::vector<RandomVariable> transformedRegressor;
+    if(!coordinateTransform_.empty()) {
+        transformedRegressor = applyCoordinateTransform(regressor, coordinateTransform_);
+        regressor = vec2vecptr(transformedRegressor);
     }
 
     // compute result and return it
