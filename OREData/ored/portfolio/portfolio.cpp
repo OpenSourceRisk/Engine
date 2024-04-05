@@ -125,8 +125,8 @@ void Portfolio::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     Size initialSize = trades_.size();
     Size failedTrades = 0;
     while (trade != trades_.end()) {
-        auto [ft, success] =
-            buildTrade((*trade).second, engineFactory, context, buildFailedTrades(), emitStructuredError);
+        auto [ft, success] = buildTrade((*trade).second, engineFactory, context, ignoreTradeBuildFail(),
+                                        buildFailedTrades(), emitStructuredError);
         if (success) {
             ++trade;
         } else if (ft) {
@@ -267,8 +267,8 @@ Portfolio::underlyingIndices(AssetClass assetClass,
 
 std::pair<QuantLib::ext::shared_ptr<Trade>, bool> buildTrade(QuantLib::ext::shared_ptr<Trade>& trade,
                                                      const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                                                     const std::string& context, const bool buildFailedTrades,
-                                                     const bool emitStructuredError) {
+                                                     const std::string& context, const bool ignoreTradeBuildFail,
+                                                     const bool buildFailedTrades, const bool emitStructuredError) {
     try {
         trade->reset();
         trade->build(engineFactory);
@@ -281,18 +281,15 @@ std::pair<QuantLib::ext::shared_ptr<Trade>, bool> buildTrade(QuantLib::ext::shar
         } else {
             ALOG("Error building trade '" << trade->id() << "' for context '" + context + "': " + e.what());
         }
-        if (buildFailedTrades) {
+        if (ignoreTradeBuildFail) {
+            return std::make_pair(trade, false);
+        } else if (buildFailedTrades) {
             QuantLib::ext::shared_ptr<FailedTrade> failed = QuantLib::ext::make_shared<FailedTrade>();
             failed->id() = trade->id();
             failed->setUnderlyingTradeType(trade->tradeType());
             failed->setEnvelope(trade->envelope());
             failed->build(engineFactory);
             failed->resetPricingStats(trade->getNumberOfPricings(), trade->getCumulativePricingTime());
-            try {
-                failed->setAdditionalData(trade->additionalData());
-            } catch (...) {
-                // We try to get the additional fields, but only if it is possible
-            }
             LOG("Built failed trade with id " << failed->id());
             return std::make_pair(failed, false);
         } else {

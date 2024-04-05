@@ -78,6 +78,14 @@ void CommodityAveragePriceOption::build(const QuantLib::ext::shared_ptr<EngineFa
     QL_REQUIRE(spread_ < strike_ || QuantLib::close_enough(spread_, strike_),
                "Spread (" << spread_ << ") should be less than strike (" << strike_ << ").");
 
+    additionalData_["quantity"] = quantity_;
+    additionalData_["strike"] = strike_;
+    additionalData_["strikeCurrency"] = currency_;
+
+    // Notional = effective_quantity * effective_strike = (G x Q) x ((K - s) / G) = Q x (K - s)
+    notional_ = quantity_ * (strike_ - spread_);
+    notionalCurrency_ = npvCurrency_ = currency_;
+
     // Allow exercise dates not to be specified for an APO. In this case, the exercise date is deduced below when
     // building the APO or a standard option.
     Date exDate;
@@ -95,12 +103,7 @@ void CommodityAveragePriceOption::build(const QuantLib::ext::shared_ptr<EngineFa
     // can then use a standard commodity option pricer below.
     Leg leg = buildLeg(engineFactory, configuration);
 
-    // Notional = effective_quantity * effective_strike = (G x Q) x ((K - s) / G) = Q x (K - s)
-    notional_ = quantity_ * (strike_ - spread_);
-    notionalCurrency_ = currency_;
-
     // Based on allAveraging_ flag, set up a standard or averaging commodity option
-    npvCurrency_ = currency_;
     if (allAveraging_) {
         buildStandardOption(engineFactory, leg, exDate);
     } else {
@@ -111,10 +114,6 @@ void CommodityAveragePriceOption::build(const QuantLib::ext::shared_ptr<EngineFa
     legs_.push_back(leg);
     legPayers_.push_back(false);
     legCurrencies_.push_back(currency_);
-
-    additionalData_["quantity"] = quantity_;
-    additionalData_["strike"] = strike_;
-    additionalData_["strikeCurrency"] = currency_;
 }
 
 std::map<AssetClass, std::set<std::string>> CommodityAveragePriceOption::underlyingIndices(
@@ -312,6 +311,10 @@ void CommodityAveragePriceOption::buildApo(const QuantLib::ext::shared_ptr<Engin
     QL_REQUIRE(leg.size() == 1, "Single flow expected but found " << leg.size());
     auto apoFlow = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(leg[0]);
     QL_REQUIRE(apoFlow, "Expected a cashflow of type CommodityIndexedAverageCashFlow");
+
+    // Populate relevant Trade members
+    maturity_ = std::max(optionData_.premiumData().latestPremiumDate(), apoFlow->date());
+    
     Date lastApoFixingDate = apoFlow->indices().rbegin()->first;
 
     // If exercise date is given use it. If not given, take the cashflow's last pricing date.
@@ -399,15 +402,12 @@ void CommodityAveragePriceOption::buildApo(const QuantLib::ext::shared_ptr<Engin
     // Take care of fees
     vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     vector<Real> additionalMultipliers;
-    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, multiplier,
-                                       optionData_.premiumData(), positionType == Position::Long ? -1.0 : 1.0, ccy,
-                                       engineFactory, engineBuilder->configuration(MarketContext::pricing));
+    addPremiums(additionalInstruments, additionalMultipliers, multiplier, optionData_.premiumData(),
+                positionType == Position::Long ? -1.0 : 1.0, ccy, engineFactory,
+                engineBuilder->configuration(MarketContext::pricing));
 
     // Populate instrument wrapper
     instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(apo, multiplier, additionalInstruments, additionalMultipliers);
-
-    // Populate relevant Trade members
-    maturity_ = std::max(lastPremiumDate, apoFlow->date());
 }
 
 } // namespace data

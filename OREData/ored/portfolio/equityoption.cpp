@@ -43,14 +43,29 @@ void EquityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     // skip the transaction level mapping for now
     additionalData_["isdaTransaction"] = string("");
 
+    additionalData_["quantity"] = quantity_;
+    additionalData_["strike"] = strike_.value();
+    additionalData_["strikeCurrency"] = strike_.currency();
+
     // Set the assetName_ as it may have changed after lookup
     assetName_ = equityName();
+
+    Currency ccy = parseCurrencyWithMinors(currency_);
+    npvCurrency_ = notionalCurrency_ = ccy.code();
+
+    // Notional - we really need todays spot to get the correct notional.
+    // But rather than having it move around we use strike * quantity
+    notional_ = strike_.value() * quantity_;
+
+    QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of exercise dates");
+    expiryDate_ = parseDate(option_.exerciseDates().front());
+    // Set the maturity date equal to the expiry date. It may get updated below if option is cash settled with
+    // payment after expiry.
+    maturity_ = expiryDate_;
 
     // Populate the index_ in case the option is automatic exercise.
     const QuantLib::ext::shared_ptr<Market>& market = engineFactory->market();
     index_ = *market->equityCurve(assetName_, engineFactory->configuration(MarketContext::pricing));
-
-    Currency ccy = parseCurrencyWithMinors(currency_);
 
     // check the equity currency
     underlyingCurrency_ =
@@ -71,7 +86,6 @@ void EquityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
             QL_FAIL("Strike currency must be specified for a quanto payoff for trade " << id() << ".");
         }
     }
-
     // Quanto payoff condition, i.e. currency_ != underlyingCurrency_, will be checked in VanillaOptionTrade::build()
     // Build the trade using the shared functionality in the base class.
     if (strike_.currency() != underlyingCurrency_.code()) {
@@ -84,15 +98,8 @@ void EquityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
                                          << "), quanto composite options are not supported (underlying currency is "
                                          << underlyingCurrency_.code() << ")");
 
-        Option::Type type = parseOptionType(option_.callPut());
-        QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike_.value()));
-        QuantLib::Exercise::Type exerciseType = parseExerciseType(option_.style());
-        QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of exercise dates");
-        expiryDate_ = parseDate(option_.exerciseDates().front());
-        // Set the maturity date equal to the expiry date. It may get updated below if option is cash settled with
-        // payment after expiry.
-        maturity_ = expiryDate_;
         // Exercise
+        QuantLib::Exercise::Type exerciseType = parseExerciseType(option_.style());
         QuantLib::ext::shared_ptr<Exercise> exercise;
         switch (exerciseType) {
         case QuantLib::Exercise::Type::European: {
@@ -130,6 +137,8 @@ void EquityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         QL_REQUIRE(forwardDate_ ==
                     QuantLib::Date(), "Composite payoff is not currently supported for Forward Options: Trade "
                         << id());
+        Option::Type type = parseOptionType(option_.callPut());
+        QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike_.value()));
         vanilla = QuantLib::ext::make_shared<QuantLib::VanillaOption>(payoff, exercise);
 
         string tradeTypeBuilder = "EquityEuropeanCompositeOption";
@@ -157,19 +166,10 @@ void EquityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
 
         instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
             new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));
-        npvCurrency_ = ccy.code();
 
-        // Notional - we really need todays spot to get the correct notional.
-        // But rather than having it move around we use strike * quantity
-        notional_ = strike_.value() * quantity_;
-        notionalCurrency_ = ccy.code();
     } else {
         VanillaOptionTrade::build(engineFactory);
     }
-
-    additionalData_["quantity"] = quantity_;
-    additionalData_["strike"] = strike_.value();
-    additionalData_["strikeCurrency"] = strike_.currency();
 }
 
 void EquityOption::fromXML(XMLNode* node) {
