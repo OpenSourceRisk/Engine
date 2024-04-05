@@ -88,7 +88,7 @@ ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
     } else {
         ops_ = getRandomVariableOps(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType, 0.0,
                                     mcParams_.regressionVarianceCutoff);
-        grads_ = getRandomVariableGradients(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType, 0.0,
+        grads_ = getRandomVariableGradients(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType, 0.2,
                                             mcParams_.regressionVarianceCutoff);
     }
 }

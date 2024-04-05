@@ -26,8 +26,7 @@ namespace QuantExt {
 
 std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size regressionOrder,
                                                    QuantLib::LsmBasisSystem::PolynomialType polynomType,
-                                                   QuantLib::Real regressionVarianceCutoff,
-                                                   const double eps) {
+                                                   const double eps, QuantLib::Real regressionVarianceCutoff) {
     std::vector<RandomVariableOp> ops;
 
     // None = 0
