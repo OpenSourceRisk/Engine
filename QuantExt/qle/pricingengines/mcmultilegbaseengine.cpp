@@ -1175,7 +1175,7 @@ void McMultiLegBaseEngine::RegressionModel::train(const Size polynomOrder,
         // compute the regression coefficients
 
         regressionCoeffs_ =
-            regressionCoefficients(regressand, regressor, basisFns_, filter, RandomVariableRegressionMethod::SVD);
+            regressionCoefficients(regressand, regressor, basisFns_, filter, RandomVariableRegressionMethod::QR);
 
     } else {
 
