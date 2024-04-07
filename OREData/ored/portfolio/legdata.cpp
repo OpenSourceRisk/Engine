@@ -1649,7 +1649,7 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
     CPI::InterpolationType interpolationMethod;
     if (cpiLegData->interpolation().empty()) {
         QL_REQUIRE(cpiSwapConvention,
-                   "observationLag is not specified in legData and couldn't find convention for "
+                   "Interpolation is not specified in legData and couldn't find convention for "
                        << cpiLegData->index() << ". Please add field to trade xml or add convention");
         DLOG("Build CPI Leg and use observation lag from standard inflationswap convention");
         interpolationMethod = cpiSwapConvention->interpolated() ? CPI::Linear : CPI::Flat;
