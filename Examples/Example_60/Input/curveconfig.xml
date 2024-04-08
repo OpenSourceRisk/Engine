@@ -21,7 +21,16 @@
       <SettlementDays>0</SettlementDays>
       <InterpolateOn>OptionletVolatilities</InterpolateOn>
       <TimeInterpolation>BackwardFlat</TimeInterpolation>
+      <!-- Can be Linear, LinearFlat, Cubic, CubicFlat
+           or one of the SABR variants (only for surfaces though, i.e. when strikes are given, and if InterpolateOn = OptionletVolatilities)
+           Hagan2002Lognormal,
+           Hagan2002Normal,
+           Hagan2002NormalZeroBeta,
+           Antonov2015FreeBoundaryNormal,
+           KienitzLawsonSwaynePde,
+           FlochKennedy -->
       <StrikeInterpolation>LinearFlat</StrikeInterpolation>
+      <!-- <StrikeInterpolation>Hagan2002NormalZeroBeta</StrikeInterpolation> -->
       <QuoteIncludesIndexName>false</QuoteIncludesIndexName>
       <BootstrapConfig>
         <Accuracy>0.0000000000010000</Accuracy>
@@ -58,7 +67,7 @@
            Flat,
            Linear -->
       <Extrapolation>Flat</Extrapolation>
-      <!-- Optional, defaults to a 'naturual' default value per model choice, applies to SABR variants only, for Linear it
+      <!-- Optional, defaults to input volatility type, applies to SABR variants only, for Linear it
            must be set to the input VolatilityType or (better) omitted.
            - Normal
            - Lognormal (alias for ShiftedLognormal, shift is always implied from input data)
