@@ -24,29 +24,13 @@
 #ifndef quantext_swaption_sabrcube_h
 #define quantext_swaption_sabrcube_h
 
+#include <qle/termstructures/parametricvolatilitysmilesection.hpp>
 #include <qle/termstructures/sabrparametricvolatility.hpp>
 
-#include <ql/math/interpolations/interpolation2d.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolcube.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
-
-class ParametricVolatilitySmileSection : public QuantLib::SmileSection {
-public:
-    ParametricVolatilitySmileSection(const Real optionTime, const Real swapLength, const Real atmLevel,
-                                     const boost::shared_ptr<ParametricVolatility> parametricVolatility,
-                                     const ParametricVolatility::MarketQuoteType outputMarketQuoteType);
-    Real minStrike() const override { return -QL_MAX_REAL; }
-    Real maxStrike() const override { return QL_MAX_REAL; }
-    Real atmLevel() const override;
-
-private:
-    Volatility volatilityImpl(Rate strike) const override;
-    Real optionTime_, swapLength_, atmLevel_;
-    boost::shared_ptr<ParametricVolatility> parametricVolatility_;
-    ParametricVolatility::MarketQuoteType outputMarketQuoteType_;
-};
 
 class SwaptionSabrCube : public SwaptionVolatilityCube {
 public:

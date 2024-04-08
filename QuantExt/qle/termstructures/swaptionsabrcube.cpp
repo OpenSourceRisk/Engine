@@ -16,27 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file swaptionsabrcube.hpp
-    \brief SABR Swaption volatility cube
-    \ingroup termstructures
-*/
-
 #include <qle/termstructures/swaptionsabrcube.hpp>
 
 namespace QuantExt {
-
-ParametricVolatilitySmileSection::ParametricVolatilitySmileSection(
-    const Real optionTime, const Real swapLength, const Real atmLevel,
-    const boost::shared_ptr<ParametricVolatility> parametricVolatility,
-    const ParametricVolatility::MarketQuoteType outputMarketQuoteType)
-    : optionTime_(optionTime), swapLength_(swapLength), atmLevel_(atmLevel),
-      parametricVolatility_(parametricVolatility), outputMarketQuoteType_(outputMarketQuoteType) {}
-
-Real ParametricVolatilitySmileSection::atmLevel() const { return atmLevel_; }
-
-Real ParametricVolatilitySmileSection::volatilityImpl(Rate strike) const {
-    return parametricVolatility_->evaluate(optionTime_, swapLength_, strike, atmLevel_, outputMarketQuoteType_);
-}
 
 SwaptionSabrCube::SwaptionSabrCube(
     const Handle<SwaptionVolatilityStructure>& atmVolStructure, const std::vector<Period>& optionTenors,
