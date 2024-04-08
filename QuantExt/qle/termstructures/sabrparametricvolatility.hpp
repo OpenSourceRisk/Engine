@@ -101,6 +101,7 @@ private:
     mutable std::map<std::pair<Real, Real>, QuantLib::Size> noOfAttempts_;
 
     mutable std::vector<Real> underlyingLengths_, timeToExpiries_;
+    mutable std::vector<Real> underlyingLengthsForInterpolation_, timeToExpiriesForInterpolation_;
     mutable QuantLib::Matrix alpha_, beta_, nu_, rho_, lognormalShift_, calibrationError_, isInterpolated_,
         numberOfCalibrationAttempts_;
     mutable QuantLib::Interpolation2D alphaInterpolation_, betaInterpolation_, nuInterpolation_, rhoInterpolation_,

@@ -518,6 +518,49 @@ void SabrParametricVolatility::calculate() {
         }
     }
 
+    // workaround because BilinearInterpolation below requires at least two points in each dimension
+
+    timeToExpiriesForInterpolation_ = timeToExpiries_;
+    underlyingLengthsForInterpolation_ = underlyingLengths_;
+
+    if (m == 1 || n == 1) {
+
+        auto mNew = m == 1 ? m + 1 : m;
+        auto nNew = n == 1 ? n + 1 : n;
+
+        auto alphaTmp = alpha_;
+        auto betaTmp = alpha_;
+        auto nuTmp = alpha_;
+        auto rhoTmp = alpha_;
+        auto lognormalShiftTmp = lognormalShift_;
+
+        alpha_ = Matrix(m, n, Null<Real>());
+        beta_ = Matrix(m, n, Null<Real>());
+        nu_ = Matrix(m, n, Null<Real>());
+        rho_ = Matrix(m, n, Null<Real>());
+        lognormalShift_ = Matrix(m, n, Null<Real>());
+
+        for (Size i = 0; i < mNew; ++i) {
+            for (Size j = 0; j < nNew; ++j) {
+                Size iOld = std::min(i, m);
+                Size jOld = std::min(j, n);
+                alpha_(i, j) = alphaTmp(iOld, jOld);
+                beta_(i, j) = betaTmp(iOld, jOld);
+                nu_(i, j) = nuTmp(iOld, jOld);
+                rho_(i, j) = rhoTmp(iOld, jOld);
+                lognormalShift_(i, j) = lognormalShiftTmp(iOld, jOld);
+            }
+        }
+
+        if (m == 1)
+            underlyingLengthsForInterpolation_.push_back(underlyingLengthsForInterpolation_.back() + 1.0);
+        if (n == 1)
+            timeToExpiriesForInterpolation_.push_back(timeToExpiriesForInterpolation_.back() + 1.0);
+
+        m = mNew;
+        n = nNew;
+    }
+
     // set up the parameter interpolations
 
     alphaInterpolation_ = FlatExtrapolator2D(boost::make_shared<BilinearInterpolation>(
