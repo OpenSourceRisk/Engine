@@ -373,6 +373,7 @@ termstructures/optionletstripper1.cpp
 termstructures/optionletstripper2.cpp
 termstructures/overnightfallbackcurve.cpp
 termstructures/parametricvolatility.cpp
+termstructures/parametricvolatilitysmilesection.cpp
 termstructures/pricetermstructure.cpp
 termstructures/pricetermstructureadapter.cpp
 termstructures/proxyoptionletvolatility.cpp
@@ -936,6 +937,7 @@ termstructures/optionletstripperwithatm.hpp
 termstructures/optionpricesurface.hpp
 termstructures/overnightfallbackcurve.hpp
 termstructures/parametricvolatility.hpp
+termstructures/parametricvolatilitysmilesection.hpp
 termstructures/piecewiseatmoptionletcurve.hpp
 termstructures/piecewiseoptionletcurve.hpp
 termstructures/piecewiseoptionletstripper.hpp
