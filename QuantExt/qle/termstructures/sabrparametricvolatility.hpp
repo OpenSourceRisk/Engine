@@ -59,12 +59,13 @@ public:
     // the calculated grid of option expiries and the underlying lenghts
     const std::vector<Real>& timeToEpiries() const;
     const std::vector<Real>& underlyingLenghts() const;
-    // calibrated or interpolated model parameters (rows = underlying lenghts, cols = option expiries) 
-    const QuantLib::Matrix& alpha() const;
-    const QuantLib::Matrix& beta() const;
-    const QuantLib::Matrix& nu() const;
-    const QuantLib::Matrix& rho() const;
-    const QuantLib::Matrix& lognormalShift() const;
+    // calibrated or interpolated model parameters (rows = underlying lenghts, cols = option expiries)
+    const QuantLib::Matrix& alpha() const { return alpha_; }
+    const QuantLib::Matrix& beta() const  { return beta_; }
+    const QuantLib::Matrix& nu() const { return nu_; }
+    const QuantLib::Matrix& rho() const { return rho_; }
+    const QuantLib::Matrix& lognormalShift() const { return lognormalShift_; }
+    const QuantLib::Matrix& numberOfCalibrationAttempts() const { return numberOfCalibrationAttempts_; }
     // calibration error
     const QuantLib::Matrix& calibrationError() const;
     // indicator whether smile params were interpolated (1) or calibrated (0)
@@ -85,8 +86,8 @@ private:
     std::vector<Real> inverse(const std::vector<Real>& y, const Real forward, const Real lognormalShift) const;
     std::vector<Real> evaluateSabr(const std::vector<Real>& params, const Real forward, const Real timeToExpiry,
                                    const Real lognormalShift, const std::vector<Real>& strikes) const;
-    std::pair<std::vector<Real>, Real> calibrateModelParameters(const MarketSmile& marketSmile,
-                                                                const std::vector<std::pair<Real, bool>>& params) const;
+    std::tuple<std::vector<Real>, Real, QuantLib::Size>
+    calibrateModelParameters(const MarketSmile& marketSmile, const std::vector<std::pair<Real, bool>>& params) const;
 
     ModelVariant modelVariant_;
     std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, bool>>> modelParameters_;
@@ -97,9 +98,11 @@ private:
     mutable std::map<std::pair<Real, Real>, std::vector<Real>> calibratedSabrParams_;
     mutable std::map<std::pair<Real, Real>, Real> lognormalShifts_;
     mutable std::map<std::pair<Real, Real>, Real> calibrationErrors_;
+    mutable std::map<std::pair<Real, Real>, QuantLib::Size> noOfAttempts_;
 
     mutable std::vector<Real> underlyingLengths_, timeToExpiries_;
-    mutable QuantLib::Matrix alpha_, beta_, nu_, rho_, lognormalShift_, calibrationError_, isInterpolated_;
+    mutable QuantLib::Matrix alpha_, beta_, nu_, rho_, lognormalShift_, calibrationError_, isInterpolated_,
+        numberOfCalibrationAttempts_;
     mutable QuantLib::Interpolation2D alphaInterpolation_, betaInterpolation_, nuInterpolation_, rhoInterpolation_,
         lognormalShiftInterpolation_;
 };

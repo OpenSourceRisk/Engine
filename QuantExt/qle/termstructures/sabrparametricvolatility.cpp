@@ -254,7 +254,7 @@ std::vector<Real> SabrParametricVolatility::evaluateSabr(const std::vector<Real>
     return result;
 }
 
-std::pair<std::vector<Real>, Real>
+std::tuple<std::vector<Real>, Real, Size>
 SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmile,
                                                    const std::vector<std::pair<Real, bool>>& params) const {
 
@@ -281,8 +281,7 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
         std::function<std::vector<Real>(const std::vector<Real>&)> direct_;
         std::function<std::vector<Real>(const std::vector<Real>&)> inverse_;
 
-        Array values(const Array& x) const override {
-            Array result(strikes_.size());
+        std::vector<Real> evalSabr(const Array& x) const {
             std::vector<Real> params(4);
             for (Size i = 0, j = 0; i < params_.size(); ++i) {
                 if (params_[i].second)
@@ -291,10 +290,28 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
                     params[i] = x[j++];
             }
             params = direct_(params);
-            auto sabr = evalSabr_(params, forward_, timeToExpiry_, lognormalShift_, strikes_);
+            return evalSabr_(params, forward_, timeToExpiry_, lognormalShift_, strikes_);
+        }
+
+        Array values(const Array& x) const override {
+            Array result(strikes_.size());
+            auto sabr = evalSabr(x);
             for (Size i = 0; i < strikes_.size(); ++i) {
                 result[i] = (marketQuotes_[i] - sabr[i]);
             }
+            return result;
+        }
+
+        Real normalizedError(const Array& x) const {
+            auto sabr = evalSabr(x);
+            Real maxQuote = *std::max_element(marketQuotes_.begin(), marketQuotes_.end());
+            Real result = 0.0;
+            for (Size i = 0; i < strikes_.size(); ++i) {
+                /* we want a relative error measure, but can't do this point by point, because for far-ootm strikes
+                 * premiums are close to zero */
+                result += std::pow((marketQuotes_[i] - sabr[i]) / maxQuote, 2.0);
+            }
+            result = std::sqrt(result / static_cast<Real>(strikes_.size()));
             return result;
         }
     };
@@ -348,7 +365,8 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
 
     Array guess(noFreeParams);
 
-    for (Size attempt = 0; attempt < maxCalibrationAttempts_; ++attempt) {
+    Size attempt;
+    for (attempt = 0; attempt < maxCalibrationAttempts_; ++attempt) {
 
         if (attempt == 0) {
             // first attempt uses given initial model parameters
@@ -375,7 +393,7 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
             continue;
         }
 
-        Real thisError = problem.functionValue();
+        Real thisError = t.normalizedError(problem.currentValue());
         if (thisError < bestError) {
             bestError = thisError;
             for (Size i = 0, j = 0; i < bestResult.size(); ++i) {
@@ -393,7 +411,7 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
 
     QL_REQUIRE(bestError < QL_MAX_REAL, "internal: all calibrations failed");
 
-    return std::make_pair(bestResult, bestError);
+    return std::make_tuple(bestResult, bestError, ++attempt);
 }
 
 void SabrParametricVolatility::calculate() {
@@ -423,10 +441,11 @@ void SabrParametricVolatility::calculate() {
                        << "). All (timeToExpiry, underlyingLength) pairs that are given as market points must be "
                           "covered by the given model parameters.");
         try {
-            auto [params, error] = calibrateModelParameters(s, param->second);
+            auto [params, error, noOfAttempts] = calibrateModelParameters(s, param->second);
             if (error < maxAcceptableError_)
                 calibratedSabrParams_[key] = params;
             calibrationErrors_[key] = error;
+            noOfAttempts_[key] = noOfAttempts;
         } catch (const std::exception& e) {
             // all calibration failed -> do not populate params, but interpolate them below
         }
@@ -457,6 +476,7 @@ void SabrParametricVolatility::calculate() {
     lognormalShift_ = Matrix(m, n, Null<Real>());
     calibrationError_ = Matrix(m, n, Null<Real>());
     isInterpolated_ = Matrix(m, n, 1.0);
+    numberOfCalibrationAttempts_ = Matrix(m, n, 0.0);
 
     for (Size i = 0; i < m; ++i) {
         for (Size j = 0; j < n; ++j) {
@@ -473,6 +493,9 @@ void SabrParametricVolatility::calculate() {
             }
             if (auto e = calibrationErrors_.find(key); e != calibrationErrors_.end()) {
                 calibrationError_(i, j) = e->second;
+            }
+            if (auto e = noOfAttempts_.find(key); e != noOfAttempts_.end()) {
+                numberOfCalibrationAttempts_(i, j) = static_cast<Real>(e->second);
             }
         }
     }
