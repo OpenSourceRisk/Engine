@@ -534,16 +534,16 @@ void SabrParametricVolatility::calculate() {
         auto rhoTmp = alpha_;
         auto lognormalShiftTmp = lognormalShift_;
 
-        alpha_ = Matrix(m, n, Null<Real>());
-        beta_ = Matrix(m, n, Null<Real>());
-        nu_ = Matrix(m, n, Null<Real>());
-        rho_ = Matrix(m, n, Null<Real>());
-        lognormalShift_ = Matrix(m, n, Null<Real>());
+        alpha_ = Matrix(mNew, nNew, Null<Real>());
+        beta_ = Matrix(mNew, nNew, Null<Real>());
+        nu_ = Matrix(mNew, nNew, Null<Real>());
+        rho_ = Matrix(mNew, nNew, Null<Real>());
+        lognormalShift_ = Matrix(mNew, nNew, Null<Real>());
 
         for (Size i = 0; i < mNew; ++i) {
             for (Size j = 0; j < nNew; ++j) {
-                Size iOld = std::min(i, m);
-                Size jOld = std::min(j, n);
+                Size iOld = std::min(i, m - 1);
+                Size jOld = std::min(j, n - 1);
                 alpha_(i, j) = alphaTmp(iOld, jOld);
                 beta_(i, j) = betaTmp(iOld, jOld);
                 nu_(i, j) = nuTmp(iOld, jOld);
@@ -552,8 +552,12 @@ void SabrParametricVolatility::calculate() {
             }
         }
 
-        if (m == 1)
+        if (m == 1) {
+            // do not use null value for interpolation grid
+            if (underlyingLengthsForInterpolation_[0] == Null<Real>())
+                underlyingLengthsForInterpolation_[0] = 1.0;
             underlyingLengthsForInterpolation_.push_back(underlyingLengthsForInterpolation_.back() + 1.0);
+        }
         if (n == 1)
             timeToExpiriesForInterpolation_.push_back(timeToExpiriesForInterpolation_.back() + 1.0);
 
@@ -564,16 +568,26 @@ void SabrParametricVolatility::calculate() {
     // set up the parameter interpolations
 
     alphaInterpolation_ = FlatExtrapolator2D(boost::make_shared<BilinearInterpolation>(
-        timeToExpiries_.begin(), timeToExpiries_.end(), underlyingLengths_.begin(), underlyingLengths_.end(), alpha_));
+        timeToExpiriesForInterpolation_.begin(), timeToExpiriesForInterpolation_.end(),
+        underlyingLengthsForInterpolation_.begin(), underlyingLengthsForInterpolation_.end(), alpha_));
     betaInterpolation_ = FlatExtrapolator2D(boost::make_shared<BilinearInterpolation>(
-        timeToExpiries_.begin(), timeToExpiries_.end(), underlyingLengths_.begin(), underlyingLengths_.end(), beta_));
+        timeToExpiriesForInterpolation_.begin(), timeToExpiriesForInterpolation_.end(),
+        underlyingLengthsForInterpolation_.begin(), underlyingLengthsForInterpolation_.end(), beta_));
     nuInterpolation_ = FlatExtrapolator2D(boost::make_shared<BilinearInterpolation>(
-        timeToExpiries_.begin(), timeToExpiries_.end(), underlyingLengths_.begin(), underlyingLengths_.end(), nu_));
+        timeToExpiriesForInterpolation_.begin(), timeToExpiriesForInterpolation_.end(),
+        underlyingLengthsForInterpolation_.begin(), underlyingLengthsForInterpolation_.end(), nu_));
     rhoInterpolation_ = FlatExtrapolator2D(boost::make_shared<BilinearInterpolation>(
-        timeToExpiries_.begin(), timeToExpiries_.end(), underlyingLengths_.begin(), underlyingLengths_.end(), rho_));
+        timeToExpiriesForInterpolation_.begin(), timeToExpiriesForInterpolation_.end(),
+        underlyingLengthsForInterpolation_.begin(), underlyingLengthsForInterpolation_.end(), rho_));
     lognormalShiftInterpolation_ = FlatExtrapolator2D(boost::make_shared<BilinearInterpolation>(
-        timeToExpiries_.begin(), timeToExpiries_.end(), underlyingLengths_.begin(), underlyingLengths_.end(),
-        lognormalShift_));
+        timeToExpiriesForInterpolation_.begin(), timeToExpiriesForInterpolation_.end(),
+        underlyingLengthsForInterpolation_.begin(), underlyingLengthsForInterpolation_.end(), lognormalShift_));
+
+    alphaInterpolation_.enableExtrapolation();
+    betaInterpolation_.enableExtrapolation();
+    nuInterpolation_.enableExtrapolation();
+    rhoInterpolation_.enableExtrapolation();
+    lognormalShiftInterpolation_.enableExtrapolation();
 }
 
 Real SabrParametricVolatility::evaluate(const Real timeToExpiry, const Real underlyingLength, const Real strike,

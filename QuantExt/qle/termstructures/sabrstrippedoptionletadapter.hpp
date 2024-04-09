@@ -195,6 +195,7 @@ inline void SabrStrippedOptionletAdapter<TimeInterpolator>::performCalculations(
     atmInterpolation_ = std::make_unique<FlatExtrapolation>(boost::make_shared<LinearInterpolation>(
         this->optionletBase()->optionletFixingTimes().begin(), this->optionletBase()->optionletFixingTimes().end(),
         this->optionletBase()->atmOptionletRates().begin()));
+    atmInterpolation_->enableExtrapolation();
     atmInterpolation_->update();
 
     std::vector<ParametricVolatility::MarketSmile> marketSmiles;
