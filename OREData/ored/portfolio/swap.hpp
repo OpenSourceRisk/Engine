@@ -81,7 +81,7 @@ protected:
 
     vector<LegData> legData_;
     string settlement_;
-    bool isXCCY_;
+    bool isXCCY_ = false;
 
 private:
     bool isResetting_;
