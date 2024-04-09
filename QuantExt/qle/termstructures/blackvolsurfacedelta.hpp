@@ -97,7 +97,8 @@ public:
                                 boost::optional<QuantLib::DeltaVolQuote::DeltaType> longTermAtmDeltaType = boost::none,
                                 InterpolatedSmileSection::InterpolationMethod interpolationMethod =
                                     InterpolatedSmileSection::InterpolationMethod::Linear,
-                                bool flatExtrapolation = true);
+                                bool flatExtrapolation = true,
+                                const Period& deltaSwitchTenor = 0 * Days);
 
     //! \name TermStructure interface
     //@{
@@ -154,8 +155,10 @@ private:
 
     InterpolatedSmileSection::InterpolationMethod interpolationMethod_;
     bool flatExtrapolation_;
+    Period deltaSwitchTenor_;
 
     Real switchTime_;
+    Real deltaSwitchTime_;
 
     // calculate forward for time $t$
     Real forward(Time t) const;

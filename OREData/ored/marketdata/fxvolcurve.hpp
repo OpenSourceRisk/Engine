@@ -82,6 +82,7 @@ private:
     QuantLib::DeltaVolQuote::DeltaType longTermDeltaType_;
     QuantLib::Option::Type riskReversalInFavorOf_;
     bool butterflyIsBrokerStyle_;
+    QuantLib::Period deltaSwitchTenor_;
 
     boost::shared_ptr<FxEqCommVolCalibrationInfo> calibrationInfo_;
 

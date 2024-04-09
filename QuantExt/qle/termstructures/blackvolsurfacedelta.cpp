@@ -68,12 +68,12 @@ BlackVolatilitySurfaceDelta::BlackVolatilitySurfaceDelta(
     const Handle<YieldTermStructure>& foreignTS, DeltaVolQuote::DeltaType dt, DeltaVolQuote::AtmType at,
     boost::optional<DeltaVolQuote::DeltaType> atmDeltaType, const Period& switchTenor, DeltaVolQuote::DeltaType ltdt,
     DeltaVolQuote::AtmType ltat, boost::optional<QuantLib::DeltaVolQuote::DeltaType> longTermAtmDeltaType,
-    InterpolatedSmileSection::InterpolationMethod im, bool flatExtrapolation)
+    InterpolatedSmileSection::InterpolationMethod im, bool flatExtrapolation, const Period& deltaSwitchTenor)
     : BlackVolatilityTermStructure(referenceDate, cal, Following, dayCounter), dates_(dates), times_(dates.size(), 0),
       putDeltas_(putDeltas), callDeltas_(callDeltas), hasAtm_(hasAtm), spot_(spot), domesticTS_(domesticTS),
       foreignTS_(foreignTS), dt_(dt), at_(at), atmDeltaType_(atmDeltaType), switchTenor_(switchTenor), ltdt_(ltdt),
       ltat_(ltat), longTermAtmDeltaType_(longTermAtmDeltaType), interpolationMethod_(im),
-      flatExtrapolation_(flatExtrapolation) {
+      flatExtrapolation_(flatExtrapolation), deltaSwitchTenor_(deltaSwitchTenor) {
 
     // If ATM delta type is not given, set it to dt
     if (!atmDeltaType_)
@@ -83,6 +83,9 @@ BlackVolatilitySurfaceDelta::BlackVolatilitySurfaceDelta(
 
     // set switch time
     switchTime_ = switchTenor_ == 0 * Days ? QL_MAX_REAL : timeFromReference(optionDateFromTenor(switchTenor));
+
+    // set delta switch time
+    deltaSwitchTime_ = deltaSwitchTenor_ == 0 * Days ? switchTime_ : timeFromReference(optionDateFromTenor(deltaSwitchTenor));
 
     QL_REQUIRE(dates.size() > 1, "at least 1 date required");
     // this has already been done for dates
@@ -134,10 +137,14 @@ boost::shared_ptr<FxSmileSection> BlackVolatilitySurfaceDelta::blackVolSmile(Tim
     DeltaVolQuote::DeltaType atmDt;
     if (t < switchTime_ && !close_enough(t, switchTime_)) {
         at = at_;
+    } else {
+        at = ltat_;
+    }
+
+    if (t < deltaSwitchTime_ && !close_enough(t, deltaSwitchTime_)) {
         dt = dt_;
         atmDt = *atmDeltaType_;
     } else {
-        at = ltat_;
         dt = ltdt_;
         atmDt = *longTermAtmDeltaType_;
     }

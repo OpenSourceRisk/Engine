@@ -466,6 +466,7 @@
       <xs:element type="xs:string" name="LongTermDeltaType" minOccurs="0"/>
       <xs:element type="xs:string" name="RiskReversalInFavorOf" minOccurs="0"/>
       <xs:element type="xs:string" name="ButterflyStyle" minOccurs="0"/>
+      <xs:element type="xs:string" name="DeltaSwitchTenor" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 

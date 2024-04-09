@@ -227,7 +227,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
                    [](const std::pair<Real, string>& x) { return x.first; });
     vol_ = boost::make_shared<QuantExt::BlackVolatilitySurfaceDelta>(
         asof, dates, putDeltasNum, callDeltasNum, hasATM, blackVolMatrix, dc, cal, fxSpot_, domYts_, forYts_,
-        deltaType_, atmType_, boost::none, switchTenor_, longTermDeltaType_, longTermAtmType_, boost::none, interp);
+        deltaType_, atmType_, boost::none, switchTenor_, longTermDeltaType_, longTermAtmType_, boost::none, interp, true, deltaSwitchTenor_);
 
     vol_->enableExtrapolation();
 }
@@ -865,6 +865,7 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         longTermDeltaType_ = DeltaVolQuote::DeltaType::Fwd;
         riskReversalInFavorOf_ = Option::Call;
         butterflyIsBrokerStyle_ = true;
+        deltaSwitchTenor_ = 0 * Days;
         spotDays_ = 2;
         string calTmp = sourceCcy_ + "," + targetCcy_;
         spotCalendar_ = parseCalendar(calTmp);
@@ -890,6 +891,7 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             switchTenor_ = fxOptConv->switchTenor();
             riskReversalInFavorOf_ = fxOptConv->riskReversalInFavorOf();
             butterflyIsBrokerStyle_ = fxOptConv->butterflyIsBrokerStyle();
+            deltaSwitchTenor_ = fxOptConv->deltaSwitchTenor();
             if (fxConv) {
                 spotDays_ = fxConv->spotDays();
                 spotCalendar_ = fxConv->advanceCalendar();

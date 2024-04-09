@@ -1703,7 +1703,7 @@ public:
     FxOptionConvention(const string& id, const string& fxConventionId, const string& atmType, const string& deltaType,
                        const string& switchTenor = "", const string& longTermAtmType = "",
                        const string& longTermDeltaType = "", const string& riskReversalInFavorOf = "Call",
-                       const string& butterflyStyle = "Broker");
+                       const string& butterflyStyle = "Broker", const string& deltaSwitchTenor = "");
     //@}
 
     //! \name Inspectors
@@ -1716,6 +1716,7 @@ public:
     const DeltaVolQuote::DeltaType& longTermDeltaType() const { return longTermDeltaType_; }
     const QuantLib::Option::Type& riskReversalInFavorOf() const { return riskReversalInFavorOf_; }
     const bool butterflyIsBrokerStyle() const { return butterflyIsBrokerStyle_; }
+    const Period& deltaSwitchTenor() const { return deltaSwitchTenor_; }
     //@}
 
     //! \name Serialisation
@@ -1731,6 +1732,7 @@ private:
     Period switchTenor_;
     QuantLib::Option::Type riskReversalInFavorOf_;
     bool butterflyIsBrokerStyle_;
+    Period deltaSwitchTenor_;
 
     // Strings to store the inputs
     string strAtmType_;
@@ -1740,6 +1742,7 @@ private:
     string strLongTermDeltaType_;
     string strRiskReversalInFavorOf_;
     string strButterflyStyle_;
+    string strDeltaSwitchTenor_;
 };
 
 /*! Container for storing zero inflation index conventions

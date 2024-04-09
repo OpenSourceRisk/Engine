@@ -351,6 +351,31 @@ BOOST_AUTO_TEST_CASE(testIborConventionConstruction7D) {
     testIborIndexConvention("CNY-REPO-7D", "CNY", "A365F", 2, "MF", true, "CNY-REPO-1W");
 }
 
+BOOST_AUTO_TEST_CASE(testFxOptionConventionFromXml) {
+    BOOST_TEST_MESSAGE("Testing parsing of FXOption convetion from XML");
+
+    // XML string convention
+    string xml;
+    xml.append("<FxOption>");
+    xml.append("  <Id>EUR-USD-FXOPTION</Id>");
+    xml.append("  <FXConventionID>EUR-USD-FX</FXConventionID>");
+    xml.append("  <AtmType>AtmDeltaNeutral</AtmType>");
+    xml.append("  <DeltaType>Spot</DeltaType>");
+    xml.append("  <SwitchTenor>2Y</SwitchTenor>");
+    xml.append("  <LongTermAtmType>AtmDeltaNeutral</LongTermAtmType>");
+    xml.append("  <LongTermDeltaType>Fwd</LongTermDeltaType>");
+    xml.append("  <RiskReversalInFavorOf>Call</RiskReversalInFavorOf>");
+    xml.append("  <ButterflyStyle>Broker</ButterflyStyle>");
+    xml.append("  <DeltaSwitchTenor>2Y</DeltaSwitchTenor>");
+    xml.append("</FxOption>");
+
+    // Parse convention from XML
+    boost::shared_ptr<FxOptionConvention> convention = boost::make_shared<FxOptionConvention>();
+    BOOST_CHECK_NO_THROW(convention->fromXMLString(xml));
+
+    BOOST_CHECK_EQUAL(convention->deltaSwitchTenor(), Period(2, Years));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
