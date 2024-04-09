@@ -29,8 +29,8 @@
            Antonov2015FreeBoundaryNormal,
            KienitzLawsonSwaynePde,
            FlochKennedy -->
-      <StrikeInterpolation>LinearFlat</StrikeInterpolation>
-      <!-- <StrikeInterpolation>Hagan2002NormalZeroBeta</StrikeInterpolation> -->
+      <!-- <StrikeInterpolation>LinearFlat</StrikeInterpolation> -->
+      <StrikeInterpolation>Hagan2002NormalZeroBeta</StrikeInterpolation>
       <QuoteIncludesIndexName>false</QuoteIncludesIndexName>
       <BootstrapConfig>
         <Accuracy>0.0000000000010000</Accuracy>
