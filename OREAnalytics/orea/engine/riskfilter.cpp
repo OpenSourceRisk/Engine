@@ -139,7 +139,8 @@ RiskFilter::RiskFilter(const MarketRiskConfiguration::RiskClass& riskClass, cons
                             RiskFactorKey::KeyType::FXSpot,
                             RiskFactorKey::KeyType::EquitySpot,
                             RiskFactorKey::KeyType::DividendYield,
-                            RiskFactorKey::KeyType::SurvivalProbability,
+                            RiskFactorKey::KeyType::SurvivalProbability, 
+                            RiskFactorKey::KeyType::CommodityCurve,
                             RiskFactorKey::KeyType::RecoveryRate,
                             RiskFactorKey::KeyType::CPIIndex,
                             RiskFactorKey::KeyType::ZeroInflationCurve,
@@ -152,7 +153,9 @@ RiskFilter::RiskFilter(const MarketRiskConfiguration::RiskClass& riskClass, cons
                             RiskFactorKey::KeyType::FXVolatility,
                             RiskFactorKey::KeyType::EquityVolatility,
                             RiskFactorKey::KeyType::CDSVolatility,
+                            RiskFactorKey::KeyType::CommodityVolatility,
                             RiskFactorKey::KeyType::YieldVolatility,
+                            RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility,
                             RiskFactorKey::KeyType::YoYInflationCapFloorVolatility};
             break;
         case MarketRiskConfiguration::RiskType::BaseCorrelation:

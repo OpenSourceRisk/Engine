@@ -25,10 +25,27 @@ class PNLExplainReport : public MarketRiskReport {
 public:
 
     struct PNLExplainResults {
-        QuantLib::Real asofMtm;
-        QuantLib::Real pnlMtm;
-        QuantLib::Real pnl;
-        QuantLib::Real irDelta;
+        QuantLib::Real asofMtm = 0.0;
+        QuantLib::Real pnlMtm = 0.0;
+        QuantLib::Real pnl = 0.0;
+        QuantLib::Real irDelta = 0.0;
+        QuantLib::Real irGamma = 0.0;
+        QuantLib::Real irVega = 0.0;
+        QuantLib::Real eqDelta = 0.0;
+        QuantLib::Real eqGamma = 0.0;
+        QuantLib::Real eqVega = 0.0;
+        QuantLib::Real fxDelta = 0.0;
+        QuantLib::Real fxGamma = 0.0;
+        QuantLib::Real fxVega = 0.0;
+        QuantLib::Real infDelta = 0.0;
+        QuantLib::Real infGamma = 0.0;
+        QuantLib::Real infVega = 0.0;
+        QuantLib::Real creditDelta = 0.0;
+        QuantLib::Real creditGamma = 0.0;
+        QuantLib::Real creditVega = 0.0;
+        QuantLib::Real comDelta = 0.0;
+        QuantLib::Real comGamma = 0.0;
+        QuantLib::Real comVega = 0.0;
     };
 
     PNLExplainReport(const std::string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
@@ -60,8 +77,6 @@ protected:
 
 private:
     std::map<std::string, PNLExplainResults> results_;
-
-    std::vector<QuantLib::Real> sensiPnls_, foSensiPnls_;
 };
 
 } // namespace analytics

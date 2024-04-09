@@ -45,7 +45,7 @@ public:
 
         \warning Internal methods rely on the first element being 'All'
     */
-    enum class RiskClass { All, InterestRate, Inflation, Credit, Equity, FX};
+    enum class RiskClass { All, InterestRate, Inflation, Credit, Equity, FX, Commodity};
 
     /*! Risk Type types in VaR plus an All type for convenience
         \warning Internal methods rely on the first element being 'All'

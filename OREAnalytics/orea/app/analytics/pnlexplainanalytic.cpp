@@ -89,6 +89,7 @@ void PNLExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     reports->add(pnlReport);
 
     pnlExplainReport->calculate(reports);
+    analytic()->reports()[label_]["pnl"] = pnlReport;
 }
 
 } // namespace analytics
