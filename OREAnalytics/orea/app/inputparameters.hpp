@@ -226,9 +226,11 @@ public:
        cube. Therefore this method should be called after setScenarioGeneratorData(), setStoreFlows(),
        setStoreCreditStateNPVs() to ensure that the overwrite takes place. */
     void setCubeFromFile(const std::string& file);
+    void setCube(const QuantLib::ext::shared_ptr<NPVCube>& cube);
     void setNettingSetCubeFromFile(const std::string& file);
     void setCptyCubeFromFile(const std::string& file);
     void setMarketCubeFromFile(const std::string& file);
+    void setMarketCube(const QuantLib::ext::shared_ptr<AggregationScenarioData>& cube);
     // boost::shared_ptr<AggregationScenarioData> mktCube();
     void setFlipViewXVA(bool b) { flipViewXVA_ = b; }
     void setMporCashFlowMode(const MporCashFlowMode m) { mporCashFlowMode_ = m; }
