@@ -412,7 +412,6 @@ void GenericBarrierOption::build(const boost::shared_ptr<EngineFactory>& factory
     if (!transatlanticBarrier_[0].type().empty()) {
         transatlanticBarrierType.clear();
         for (auto const& n : transatlanticBarrier_) {
-            std::cout << "TransatlanticBarrier " << n.type() << " ";
             if (n.type() == "DownAndIn")
                 transatlanticBarrierType.push_back("1");
             else if (n.type() == "UpAndIn")
@@ -463,7 +462,6 @@ void GenericBarrierOption::build(const boost::shared_ptr<EngineFactory>& factory
         if (!transatlanticBarrier_[0].rebateCurrency().empty())
             transatlanticBarrierRebateCurrency = transatlanticBarrier_[0].rebateCurrency();
         if (transatlanticBarrier_[0].strictComparison()) {
-            std::cout << transatlanticBarrier_[0].strictComparison() << " ";
             transatlanticBarrierStrictComparison = transatlanticBarrier_[0].strictComparison().get();
         } else {
             transatlanticBarrierStrictComparison = "0";
@@ -530,7 +528,6 @@ void GenericBarrierOption::build(const boost::shared_ptr<EngineFactory>& factory
     bool hasKi = false, hasKo = false;
     for (auto const& b : barriers_) {
         std::string barrierType;
-        std::cout << "Barrier " << b.type() << " ";
         if (b.type() == "DownAndIn") {
             barrierType = "1";
             hasKi = true;
@@ -563,13 +560,11 @@ void GenericBarrierOption::build(const boost::shared_ptr<EngineFactory>& factory
         }
         barrierRebatePayTimes.push_back(rebatePayTime);
         if (b.strictComparison()) {
-            std::cout << b.strictComparison();
             barrierStrictComparison.push_back(b.strictComparison().get());
         } 
         else {
             barrierStrictComparison.push_back("0");
         }
-        std::cout<<std::endl;
     }
 
     // if there is at least one ki barrier, all rebates must be identical + atExpiry
