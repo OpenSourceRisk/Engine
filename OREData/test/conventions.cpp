@@ -373,6 +373,14 @@ BOOST_AUTO_TEST_CASE(testFxOptionConventionFromXml) {
     boost::shared_ptr<FxOptionConvention> convention = boost::make_shared<FxOptionConvention>();
     BOOST_CHECK_NO_THROW(convention->fromXMLString(xml));
 
+    BOOST_CHECK_EQUAL(convention->fxConventionID(), "EUR-USD-FX");
+    BOOST_CHECK_EQUAL(convention->atmType(), DeltaVolQuote::AtmType::AtmDeltaNeutral);
+    BOOST_CHECK_EQUAL(convention->deltaType(), DeltaVolQuote::DeltaType::Spot);
+    BOOST_CHECK_EQUAL(convention->switchTenor(), Period(2, Years));
+    BOOST_CHECK_EQUAL(convention->longTermAtmType(), DeltaVolQuote::AtmType::AtmDeltaNeutral);
+    BOOST_CHECK_EQUAL(convention->longTermDeltaType(), DeltaVolQuote::DeltaType::Fwd);
+    BOOST_CHECK_EQUAL(convention->riskReversalInFavorOf(), QuantLib::Option::Type::Call);
+    BOOST_CHECK_EQUAL(convention->butterflyIsBrokerStyle(), true);
     BOOST_CHECK_EQUAL(convention->deltaSwitchTenor(), Period(2, Years));
 }
 
