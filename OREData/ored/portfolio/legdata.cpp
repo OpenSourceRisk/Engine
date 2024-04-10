@@ -78,7 +78,6 @@
 #include <ql/experimental/coupons/digitalcmsspreadcoupon.hpp>
 #include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
 #include <ql/utilities/vectors.hpp>
-#include <ql/version.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/make_shared.hpp>

@@ -39,7 +39,6 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
-#include <ql/version.hpp>
 
 namespace ore {
 namespace data {

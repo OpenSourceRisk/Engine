@@ -24,7 +24,6 @@
 #include <ored/utilities/vectorutils.hpp>
 
 #include <ql/errors.hpp>
-#include <ql/version.hpp>
 
 using namespace std;
 using namespace QuantLib;
