@@ -112,8 +112,10 @@ public:
                                               const std::map<RiskFactorKey, QuantLib::Real>& baseValues,
                                               const std::map<RiskFactorKey, std::string>& keyToFactor);
 
-    virtual void writeAdditionalResultsReport(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio,
-                                        boost::shared_ptr<Market> market, const std::string& baseCurrency);
+    virtual void writeAdditionalResultsReport(ore::data::Report& report,
+                                              boost::shared_ptr<ore::data::Portfolio> portfolio,
+                                              boost::shared_ptr<Market> market, const std::string& baseCurrency,
+                                              const std::size_t precision = 6);
 
     virtual void writeMarketData(ore::data::Report& report, const boost::shared_ptr<ore::data::Loader>& loader, const QuantLib::Date& asof,
         const set<string>& quoteNames, bool returnAll);

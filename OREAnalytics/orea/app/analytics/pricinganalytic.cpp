@@ -98,7 +98,7 @@ void PricingAnalyticImpl::runAnalytic(
                 boost::shared_ptr<InMemoryReport> addReport = boost::make_shared<InMemoryReport>();;
                 ReportWriter(inputs_->reportNaString())
                     .writeAdditionalResultsReport(*addReport, analytic()->portfolio(), analytic()->market(),
-                                                  effectiveResultCurrency);
+                                                  effectiveResultCurrency, inputs_->additionalResultsReportPrecision());
                 analytic()->reports()[type]["additional_results"] = addReport;
                 CONSOLE("OK");
             }

@@ -177,7 +177,7 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
     // 12 get the t0 curves for each model ccy
 
     std::string externalDiscountCurve = scriptedTrade.envelope().additionalField("discount_curve", false);
-    std::string externalSecuritySpread = scriptedTrade.envelope().additionalField("security_spreads", false);
+    std::string externalSecuritySpread = scriptedTrade.envelope().additionalField("security_spread", false);
     for (auto const& c : modelCcys_) {
         // for base ccy we account for an external discount curve and security spread if given
         Handle<YieldTermStructure> yts =
