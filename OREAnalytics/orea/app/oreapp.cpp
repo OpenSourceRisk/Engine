@@ -164,6 +164,11 @@ Real OREApp::getRunTime() {
     boost::chrono::duration<double> seconds = boost::chrono::nanoseconds(runTimer_.elapsed().wall);
     return seconds.count();
 }
+
+QuantLib::ext::shared_ptr<BufferLogger> OREApp::log() {
+    if (Log::instance().hasLogger("BufferLogger"))
+        return QuantLib::ext::dynamic_pointer_cast<BufferLogger>(Log::instance().logger("BufferLogger"));
+}   
     
 boost::shared_ptr<CSVLoader> OREApp::buildCsvLoader(const boost::shared_ptr<Parameters>& params) {
     bool implyTodaysFixings = false;
@@ -465,7 +470,10 @@ void OREApp::setupLog(const std::string& path, const std::string& file, Size mas
     }
     QL_REQUIRE(boost::filesystem::is_directory(p), "output path '" << path << "' is not a directory.");
 
-    Log::instance().registerLogger(boost::make_shared<FileLogger>(file));
+	if (file == "")
+        Log::instance().registerLogger(QuantLib::ext::make_shared<BufferLogger>());
+    else
+        Log::instance().registerLogger(QuantLib::ext::make_shared<FileLogger>(file));
     boost::filesystem::path oreRootPath =
         logRootPath.empty() ? boost::filesystem::path(__FILE__).parent_path().parent_path().parent_path().parent_path()
                             : logRootPath;

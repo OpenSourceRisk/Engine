@@ -77,6 +77,8 @@ public:
     Real getRunTime();
 
     std::string version();
+
+	QuantLib::ext::shared_ptr<BufferLogger> log();
     
 protected:
     virtual void analytics();
