@@ -42,7 +42,9 @@ Listing \ref{lst:swaptionvol_configuration} shows an example of a Swaption volat
     <CurveDescription>EUR normal swaption volatilities</CurveDescription>
     <Dimension>ATM</Dimension>
     <VolatilityType>Normal</VolatilityType>
+    <Interpolation>Hagan2002NormalZeroBeta</Interpolation>
     <Extrapolation>Flat</Extrapolation>
+    <OutputVolatilityType>Normal</OutputVolatilityType>
     <DayCounter>Actual/365 (Fixed)</DayCounter>
     <Calendar>TARGET</Calendar>
     <BusinessDayConvention>Following</BusinessDayConvention>
@@ -74,7 +76,13 @@ The meaning of each of the elements in Listing \ref{lst:swaptionvol_configuratio
 \item VolatilityType: Specifies the type of market volatility inputs. \\ 
 Allowable values: {\tt Normal, Lognormal, ShiftedLognormal} \\
 In the case of {\tt ShiftedLognormal}, a matrix of shifts (by option and swap tenor) has to be provided in the market data input. 
-\item Extrapolation: Specifies the extrapolation behaviour in all dimensions. \\ Allowable values: {\tt Linear, Flat, None}
+\item Interpolation: Optional. Possible values: Linear, Hagan2002Lognormal, Hagan2002Normal, Hagan2002NormalZeroBeta,
+  Antonov2015FreeBoundaryNormal, KienitzLawsonSwaynePde, FlochKennedy. If not given, defaults to Linear.
+\item Extrapolation: Specifies the extrapolation behaviour in all dimensions. \\ Allowable values: {\tt Linear, Flat,
+  None}
+\item OutputVolatilityType: Optional, defaults to input volatility type and applies to SABR variants only. For
+  Interpolation = Linear it must be set to the input VolatilityType or (better) omitted. Possible values: Normal,
+  Lognormal (alias for ShiftedLognormal, shift is always implied from input data), ShiftedLognormal.
 \item DayCounter: The term structure's day counter used in date to time conversions
 \item Calendar: The term structure's calendar used in option tenor to date conversions
 \item BusinessDayConvention: The term structure's business day convention used in option tenor to date conversion
