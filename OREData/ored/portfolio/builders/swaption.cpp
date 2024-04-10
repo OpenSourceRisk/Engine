@@ -56,7 +56,8 @@ boost::shared_ptr<PricingEngine> buildMcEngine(
         parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering", {}, false, "Steps")),
         parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers", {}, false, "JoeKuoD7")), discountCurve,
         simulationDates, externalModelIndices, parseBool(engineParameter("MinObsDate", {}, false, "true")),
-        parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")));
+        parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
+        parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())));
 }
 } // namespace
 
