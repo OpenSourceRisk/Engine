@@ -285,10 +285,23 @@ RandomVariable applyFilter(RandomVariable, const Filter&);
 // set all entries to 0 where filter = true, leave the others unchanged
 RandomVariable applyInverseFilter(RandomVariable, const Filter&);
 
+/* Perform a factor reduction: We keep m factors so that "1 - varianceCutoff" of the total variance of the n regressor
+   variables is explained by the m factors. The return value is m x n transforming from original coordinates to new
+   coordinates. This can be a useful preprocessing step for linear regression to reduce the dimensionality or also to
+   handle collinear regressors. */
+Matrix pcaCoordinateTransform(const std::vector<const RandomVariable*>& regressor, const Real varianceCutoff = 1E-5);
+
+/* Apply a coordinate transform */
+std::vector<RandomVariable> applyCoordinateTransform(const std::vector<const RandomVariable*>& regressor,
+                                                     const Matrix& transform);
+
+/* Create vector of pointers to rvs from vector of rvs */
+std::vector<const RandomVariable*> vec2vecptr(const std::vector<RandomVariable>& values);
+
 // compute regression coefficients
-enum class RandomVariableRegressionMethod { QR, SVI };
+enum class RandomVariableRegressionMethod { QR, SVD };
 Array regressionCoefficients(
-    RandomVariable r, const std::vector<const RandomVariable*>& regressor,
+    RandomVariable r, std::vector<const RandomVariable*> regressor,
     const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>& basisFn,
     const Filter& filter = Filter(), const RandomVariableRegressionMethod = RandomVariableRegressionMethod::QR,
     const std::string& debugLabel = std::string());
@@ -310,6 +323,9 @@ RandomVariable expectation(const RandomVariable& r);
 
 // time zero variance
 RandomVariable variance(const RandomVariable& r);
+
+// time zero covariance
+RandomVariable covariance(const RandomVariable& r, const RandomVariable& s);
 
 // black formula
 RandomVariable black(const RandomVariable& omega, const RandomVariable& t, const RandomVariable& strike,
