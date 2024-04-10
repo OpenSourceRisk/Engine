@@ -24,6 +24,7 @@
 #include <ored/marketdata/fittedbondcurvehelpermarket.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/portfolio.hpp>
+#include <ored/portfolio/trade.hpp>
 
 #include <ql/pricingengines/bond/discountingbondengine.hpp>
 #include <ql/termstructures/yield/bondhelpers.hpp>
@@ -38,8 +39,6 @@ BOOST_AUTO_TEST_SUITE(FittedBondCurveTests)
 
 BOOST_AUTO_TEST_CASE(testCurveFromFixedRateBonds) {
 
-#if QL_HEX_VERSION >= 0x01190000 || defined(QL_ORE_PATCH)
-    // will work in QL 1.19
     Date asof(6, April, 2020);
     Settings::instance().evaluationDate() = asof;
 
@@ -49,7 +48,7 @@ BOOST_AUTO_TEST_CASE(testCurveFromFixedRateBonds) {
 
     BOOST_TEST_MESSAGE("read portfolio of bonds");
     auto portfolio = boost::make_shared<Portfolio>();
-    portfolio->load(TEST_INPUT_FILE("portfolio1.xml"));
+    portfolio->fromFile(TEST_INPUT_FILE("portfolio1.xml"));
 
     BOOST_TEST_MESSAGE("build portfolio against FittedBondCurveHelperMarket");
     auto engineFactory =
@@ -60,15 +59,14 @@ BOOST_AUTO_TEST_CASE(testCurveFromFixedRateBonds) {
     std::vector<boost::shared_ptr<Bond>> bonds;
     std::vector<boost::shared_ptr<BondHelper>> helpers;
     for (auto const& t : portfolio->trades()) {
-        auto bond = boost::dynamic_pointer_cast<Bond>(t->instrument()->qlInstrument());
+        auto bond = boost::dynamic_pointer_cast<Bond>(t.second->instrument()->qlInstrument());
         BOOST_REQUIRE(bond);
         bonds.push_back(bond);
         helpers.push_back(boost::make_shared<BondHelper>(Handle<Quote>(boost::make_shared<SimpleQuote>(100.0)), bond));
     }
 
     BOOST_TEST_MESSAGE("build fitted bond curve");
-    Array guess(4);
-    guess << 0.03, 0.03, 0.03, 0.5;
+    Array guess({0.03, 0.03, 0.03, 0.5});
     NelsonSiegelFitting method((Array(), boost::shared_ptr<OptimizationMethod>(), Array()));
     auto curve =
         boost::make_shared<FittedBondDiscountCurve>(asof, helpers, Actual365Fixed(), method, 1E-10, 10000, guess);
@@ -82,7 +80,6 @@ BOOST_AUTO_TEST_CASE(testCurveFromFixedRateBonds) {
                                                    << " discount factor is " << curve->discount(b->maturityDate()));
         BOOST_CHECK_CLOSE(b->cleanPrice(), 100.0, 0.01); // 1bp tolerance in absolute price
     }
-#endif
 }
 
 BOOST_AUTO_TEST_SUITE_END()
