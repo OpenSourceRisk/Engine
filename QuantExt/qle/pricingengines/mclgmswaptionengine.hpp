@@ -43,7 +43,8 @@ public:
                         const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
                         const std::vector<Date> simulationDates = std::vector<Date>(),
                         const std::vector<Size> externalModelIndices = std::vector<Size>(),
-                        const bool minimalObsDate = true, const RegressorModel regressorModel = RegressorModel::Simple)
+                        const bool minimalObsDate = true, const RegressorModel regressorModel = RegressorModel::Simple,
+                        const Real regressionVarianceCutoff = Null<Real>())
         : GenericEngine<QuantLib::Swaption::arguments, QuantLib::Swaption::results>(),
           McMultiLegBaseEngine(Handle<CrossAssetModel>(QuantLib::ext::make_shared<CrossAssetModel>(
                                    std::vector<QuantLib::ext::shared_ptr<IrModel>>(1, model),

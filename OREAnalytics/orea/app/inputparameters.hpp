@@ -115,7 +115,7 @@ public:
 
     // Setters for npv analytics
     void setOutputAdditionalResults(bool b) { outputAdditionalResults_ = b; }
-
+    void setAdditionalResultsReportPrecision(std::size_t p) { additionalResultsReportPrecision_ = p; }
     // Setters for cashflows
     void setIncludePastCashflows(bool b) { includePastCashflows_ = b; }
 
@@ -226,9 +226,11 @@ public:
        cube. Therefore this method should be called after setScenarioGeneratorData(), setStoreFlows(),
        setStoreCreditStateNPVs() to ensure that the overwrite takes place. */
     void setCubeFromFile(const std::string& file);
+    void setCube(const QuantLib::ext::shared_ptr<NPVCube>& cube);
     void setNettingSetCubeFromFile(const std::string& file);
     void setCptyCubeFromFile(const std::string& file);
     void setMarketCubeFromFile(const std::string& file);
+    void setMarketCube(const QuantLib::ext::shared_ptr<AggregationScenarioData>& cube);
     // QuantLib::ext::shared_ptr<AggregationScenarioData> mktCube();
     void setFlipViewXVA(bool b) { flipViewXVA_ = b; }
     void setMporCashFlowMode(const MporCashFlowMode m) { mporCashFlowMode_ = m; }
@@ -409,6 +411,7 @@ public:
      * Getters for npv analytics
      ***************************/
     bool outputAdditionalResults() const { return outputAdditionalResults_; };
+    std::size_t additionalResultsReportPrecision() const { return additionalResultsReportPrecision_; }
 
     /***********************
      * Getters for cashflows
@@ -687,6 +690,7 @@ protected:
      * NPV analytic
      *************/
     bool outputAdditionalResults_ = false;
+    std::size_t additionalResultsReportPrecision_ = 6;
     bool outputCurves_ = false;
     std::string curvesMarketConfig_ = Market::defaultConfiguration;
     std::string curvesGrid_ = "240,1M";

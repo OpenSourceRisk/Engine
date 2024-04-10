@@ -323,6 +323,10 @@ void InputParameters::setCubeFromFile(const std::string& file) {
         storeCreditStateNPVs_ = *r.storeCreditStateNPVs;
 }
 
+void InputParameters::setCube(const ext::shared_ptr<NPVCube>& cube) {
+    cube_ = cube;
+}
+
 void InputParameters::setNettingSetCubeFromFile(const std::string& file) {
     nettingSetCube_ = ore::analytics::loadCube(file).cube;
 }
@@ -332,6 +336,8 @@ void InputParameters::setCptyCubeFromFile(const std::string& file) {
 }
 
 void InputParameters::setMarketCubeFromFile(const std::string& file) { mktCube_ = loadAggregationScenarioData(file); }
+
+void InputParameters::setMarketCube(const QuantLib::ext::shared_ptr<AggregationScenarioData>& cube) { mktCube_ = cube; }
 
 void InputParameters::setVarQuantiles(const std::string& s) {
     // parse to vector<Real>

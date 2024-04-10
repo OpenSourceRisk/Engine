@@ -1301,21 +1301,21 @@ BOOST_AUTO_TEST_CASE(testLgm5fMoments) {
                     tol = tolLn;
                 }
             }
-            if (std::fabs(covariance(v_eu[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
-                                                         << ") is inconsistent with numerical "
-                                                            "value (Euler discretization, "
-                                                         << covariance(v_eu[i][j]) << "), error is "
-                                                         << v_an[i][j] - covariance(v_eu[i][j]) << " tolerance is "
-                                                         << tol);
+            if (std::fabs(boost::accumulators::covariance(v_eu[i][j]) - v_an[i][j]) > tol) {
+                BOOST_ERROR("analytical covariance at ("
+                            << i << "," << j << ") (" << v_an[i][j]
+                            << ") is inconsistent with numerical "
+                               "value (Euler discretization, "
+                            << boost::accumulators::covariance(v_eu[i][j]) << "), error is "
+                            << v_an[i][j] - boost::accumulators::covariance(v_eu[i][j]) << " tolerance is " << tol);
             }
-            if (std::fabs(covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
-                                                         << ") is inconsistent with numerical "
-                                                            "value (Exact discretization, "
-                                                         << covariance(v_eu2[i][j]) << "), error is "
-                                                         << v_an[i][j] - covariance(v_eu2[i][j]) << " tolerance is "
-                                                         << tol);
+            if (std::fabs(boost::accumulators::covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
+                BOOST_ERROR("analytical covariance at ("
+                            << i << "," << j << ") (" << v_an[i][j]
+                            << ") is inconsistent with numerical "
+                               "value (Exact discretization, "
+                            << boost::accumulators::covariance(v_eu2[i][j]) << "), error is "
+                            << v_an[i][j] - boost::accumulators::covariance(v_eu2[i][j]) << " tolerance is " << tol);
             }
         }
     }
@@ -1773,7 +1773,7 @@ BOOST_AUTO_TEST_CASE(testIrFxCrMoments) {
     for (Size i = 0; i < 11; ++i) {
         std::ostringstream tmp;
         for (Size j = 0; j <= i; ++j) {
-            tmp << covariance(v_eu[i][j]) << " ";
+            tmp << boost::accumulators::covariance(v_eu[i][j]) << " ";
         }
         BOOST_TEST_MESSAGE(tmp.str());
     }
@@ -1783,7 +1783,7 @@ BOOST_AUTO_TEST_CASE(testIrFxCrMoments) {
     for (Size i = 0; i < 11; ++i) {
         std::ostringstream tmp;
         for (Size j = 0; j <= i; ++j) {
-            tmp << covariance(v_eu2[i][j]) << " ";
+            tmp << boost::accumulators::covariance(v_eu2[i][j]) << " ";
         }
         BOOST_TEST_MESSAGE(tmp.str());
     }
@@ -1818,21 +1818,21 @@ BOOST_AUTO_TEST_CASE(testIrFxCrMoments) {
 
     for (Size i = 0; i < 11; ++i) {
         for (Size j = 0; j <= i; ++j) {
-            if (std::fabs(covariance(v_eu[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
-                                                         << ") is inconsistent with numerical "
-                                                            "value (Euler discretization, "
-                                                         << covariance(v_eu[i][j]) << "), error is "
-                                                         << v_an[i][j] - covariance(v_eu[i][j]) << " tolerance is "
-                                                         << tol);
+            if (std::fabs(boost::accumulators::covariance(v_eu[i][j]) - v_an[i][j]) > tol) {
+                BOOST_ERROR("analytical covariance at ("
+                            << i << "," << j << ") (" << v_an[i][j]
+                            << ") is inconsistent with numerical "
+                               "value (Euler discretization, "
+                            << boost::accumulators::covariance(v_eu[i][j]) << "), error is "
+                            << v_an[i][j] - boost::accumulators::covariance(v_eu[i][j]) << " tolerance is " << tol);
             }
-            if (std::fabs(covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
-                                                         << ") is inconsistent with numerical "
-                                                            "value (exact discretization, "
-                                                         << covariance(v_eu2[i][j]) << "), error is "
-                                                         << v_an[i][j] - covariance(v_eu2[i][j]) << " tolerance is "
-                                                         << tol);
+            if (std::fabs(boost::accumulators::covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
+                BOOST_ERROR("analytical covariance at ("
+                            << i << "," << j << ") (" << v_an[i][j]
+                            << ") is inconsistent with numerical "
+                               "value (exact discretization, "
+                            << boost::accumulators::covariance(v_eu2[i][j]) << "), error is "
+                            << v_an[i][j] - boost::accumulators::covariance(v_eu2[i][j]) << " tolerance is " << tol);
             }
         }
     }
@@ -2630,7 +2630,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMoments,
     for (Size i = 0; i < n; ++i) {
         std::ostringstream tmp;
         for (Size j = 0; j <= i; ++j) {
-            tmp << covariance(v_eu[i][j]) << " ";
+            tmp << boost::accumulators::covariance(v_eu[i][j]) << " ";
         }
         BOOST_TEST_MESSAGE(tmp.str());
     }
@@ -2640,7 +2640,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMoments,
     for (Size i = 0; i < n; ++i) {
         std::ostringstream tmp;
         for (Size j = 0; j <= i; ++j) {
-            tmp << covariance(v_eu2[i][j]) << " ";
+            tmp << boost::accumulators::covariance(v_eu2[i][j]) << " ";
         }
         BOOST_TEST_MESSAGE(tmp.str());
     }
@@ -2675,21 +2675,21 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMoments,
 
     for (Size i = 0; i < n; ++i) {
         for (Size j = 0; j <= i; ++j) {
-            if (std::fabs(covariance(v_eu[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
-                                                         << ") is inconsistent with numerical "
-                                                            "value (Euler discretization, "
-                                                         << covariance(v_eu[i][j]) << "), error is "
-                                                         << v_an[i][j] - covariance(v_eu[i][j]) << " tolerance is "
-                                                         << tol);
+            if (std::fabs(boost::accumulators::covariance(v_eu[i][j]) - v_an[i][j]) > tol) {
+                BOOST_ERROR("analytical covariance at ("
+                            << i << "," << j << ") (" << v_an[i][j]
+                            << ") is inconsistent with numerical "
+                               "value (Euler discretization, "
+                            << boost::accumulators::covariance(v_eu[i][j]) << "), error is "
+                            << v_an[i][j] - boost::accumulators::covariance(v_eu[i][j]) << " tolerance is " << tol);
             }
-            if (std::fabs(covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
-                                                         << ") is inconsistent with numerical "
-                                                            "value (exact discretization, "
-                                                         << covariance(v_eu2[i][j]) << "), error is "
-                                                         << v_an[i][j] - covariance(v_eu2[i][j]) << " tolerance is "
-                                                         << tol);
+            if (std::fabs(boost::accumulators::covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
+                BOOST_ERROR("analytical covariance at ("
+                            << i << "," << j << ") (" << v_an[i][j]
+                            << ") is inconsistent with numerical "
+                               "value (exact discretization, "
+                            << boost::accumulators::covariance(v_eu2[i][j]) << "), error is "
+                            << v_an[i][j] - boost::accumulators::covariance(v_eu2[i][j]) << " tolerance is " << tol);
             }
         }
     }
@@ -3222,7 +3222,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMoments) {
     for (Size i = 0; i < n; ++i) {
         std::ostringstream tmp;
         for (Size j = 0; j <= i; ++j) {
-            tmp << covariance(v_eu[i][j]) << " ";
+            tmp << boost::accumulators::covariance(v_eu[i][j]) << " ";
         }
         BOOST_TEST_MESSAGE(tmp.str());
     }
@@ -3232,7 +3232,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMoments) {
     for (Size i = 0; i < n; ++i) {
         std::ostringstream tmp;
         for (Size j = 0; j <= i; ++j) {
-            tmp << covariance(v_eu2[i][j]) << " ";
+            tmp << boost::accumulators::covariance(v_eu2[i][j]) << " ";
         }
         BOOST_TEST_MESSAGE(tmp.str());
     }
@@ -3270,21 +3270,22 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMoments) {
 
     for (Size i = 0; i < n; ++i) {
         for (Size j = 0; j <= i; ++j) {
-            if (std::fabs(covariance(v_eu[i][j]) - v_an[i][j]) > tolEuler) {
-                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
-                                                         << ") is inconsistent with numerical "
-                                                            "value (Euler discretization, "
-                                                         << covariance(v_eu[i][j]) << "), error is "
-                                                         << v_an[i][j] - covariance(v_eu[i][j]) << " tolerance is "
-                                                         << tolEuler);
+            if (std::fabs(boost::accumulators::covariance(v_eu[i][j]) - v_an[i][j]) > tolEuler) {
+                BOOST_ERROR("analytical covariance at ("
+                            << i << "," << j << ") (" << v_an[i][j]
+                            << ") is inconsistent with numerical "
+                               "value (Euler discretization, "
+                            << boost::accumulators::covariance(v_eu[i][j]) << "), error is "
+                            << v_an[i][j] - boost::accumulators::covariance(v_eu[i][j]) << " tolerance is "
+                            << tolEuler);
             }
-            if (std::fabs(covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
-                                                         << ") is inconsistent with numerical "
-                                                            "value (exact discretization, "
-                                                         << covariance(v_eu2[i][j]) << "), error is "
-                                                         << v_an[i][j] - covariance(v_eu2[i][j]) << " tolerance is "
-                                                         << tol);
+            if (std::fabs(boost::accumulators::covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
+                BOOST_ERROR("analytical covariance at ("
+                            << i << "," << j << ") (" << v_an[i][j]
+                            << ") is inconsistent with numerical "
+                               "value (exact discretization, "
+                            << boost::accumulators::covariance(v_eu2[i][j]) << "), error is "
+                            << v_an[i][j] - boost::accumulators::covariance(v_eu2[i][j]) << " tolerance is " << tol);
             }
         }
     }
@@ -3769,21 +3770,21 @@ BOOST_AUTO_TEST_CASE(testEqLgm5fMoments) {
                     tol = tolLn;
                 }
             }
-            if (std::fabs(covariance(v_eu[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
-                                                         << ") is inconsistent with numerical "
-                                                            "value (Euler discretization, "
-                                                         << covariance(v_eu[i][j]) << "), error is "
-                                                         << v_an[i][j] - covariance(v_eu[i][j]) << " tolerance is "
-                                                         << tol);
+            if (std::fabs(boost::accumulators::covariance(v_eu[i][j]) - v_an[i][j]) > tol) {
+                BOOST_ERROR("analytical covariance at ("
+                            << i << "," << j << ") (" << v_an[i][j]
+                            << ") is inconsistent with numerical "
+                               "value (Euler discretization, "
+                            << boost::accumulators::covariance(v_eu[i][j]) << "), error is "
+                            << v_an[i][j] - boost::accumulators::covariance(v_eu[i][j]) << " tolerance is " << tol);
             }
-            if (std::fabs(covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
-                                                         << ") is inconsistent with numerical "
-                                                            "value (Exact discretization, "
-                                                         << covariance(v_eu2[i][j]) << "), error is "
-                                                         << v_an[i][j] - covariance(v_eu2[i][j]) << " tolerance is "
-                                                         << tol);
+            if (std::fabs(boost::accumulators::covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
+                BOOST_ERROR("analytical covariance at ("
+                            << i << "," << j << ") (" << v_an[i][j]
+                            << ") is inconsistent with numerical "
+                               "value (Exact discretization, "
+                            << boost::accumulators::covariance(v_eu2[i][j]) << "), error is "
+                            << v_an[i][j] - boost::accumulators::covariance(v_eu2[i][j]) << " tolerance is " << tol);
             }
         }
     }
@@ -3842,10 +3843,10 @@ BOOST_AUTO_TEST_CASE(testEqLgm5fMoments) {
     }
     for (Size i = 0; i < 5; ++i) {
         for (Size j = 0; j <= i; ++j) {
-            Real cov = covariance(v_eu[i][j]);
+            Real cov = boost::accumulators::covariance(v_eu[i][j]);
             BOOST_TEST_MESSAGE(i << ";" << j << ";"
                                  << "EULER;" << v_an[i][j] << ";" << cov);
-            Real cov2 = covariance(v_eu2[i][j]);
+            Real cov2 = boost::accumulators::covariance(v_eu2[i][j]);
             BOOST_TEST_MESSAGE(i << ";" << j << ";"
                                  << "EXACT;" << v_an[i][j] << ";" << cov2);
         }

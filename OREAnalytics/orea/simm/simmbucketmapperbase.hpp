@@ -115,6 +115,8 @@ protected:
     std::set<CrifRecord::RiskType> rtWithBuckets_;
 
 private:
+    mutable std::map<std::pair<CrifRecord::RiskType, std::string>, std::string> cache_;
+
     //! Reset the SIMM bucket mapper i.e. clears all mappings and adds the initial hard-coded commodity mappings
     void reset();
 

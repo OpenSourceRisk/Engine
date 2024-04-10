@@ -223,13 +223,19 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
         };
 
         Real fepAdjustedForwardSpread;
-        Brent brent;
-        brent.setLowerBound(1.0E-8);
-        try {
-            fepAdjustedForwardSpread = brent.solve(target, 1.0E-7, arguments_.swap->fairSpreadClean(), 0.0001);
-        } catch (const std::exception& e) {
-            QL_FAIL(
-                "NumericalIntegrationIndexCdsOptionEngine::doCalc(): failed to calibrate forward spread: " << e.what());
+        if (target(0.0) > 0.0) {
+            // the target function might not have a zero, because of the continuous annuity approximation
+            // in some extreme situations (e.g. survival prob = 1 everywhere)
+            fepAdjustedForwardSpread = 0.0;
+        } else {
+            Brent brent;
+            brent.setLowerBound(0.0);
+            try {
+                fepAdjustedForwardSpread = brent.solve(target, 1.0E-7, arguments_.swap->fairSpreadClean(), 0.0001);
+            } catch (const std::exception& e) {
+                QL_FAIL("NumericalIntegrationIndexCdsOptionEngine::doCalc(): failed to calibrate forward spread: "
+                        << e.what());
+            }
         }
         results_.additionalResults["fepAdjustedForwardSpread"] = fepAdjustedForwardSpread;
         results_.additionalResults["forwardSpread"] = arguments_.swap->fairSpreadClean();

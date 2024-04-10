@@ -44,7 +44,8 @@ public:
                                       const QuantLib::ext::shared_ptr<ModelCG>& model, const ASTNodePtr ast,
                                       const QuantLib::ext::shared_ptr<Context>& context, const Model::McParams& mcParams,
                                       const std::string& script = "", const bool interactive = false,
-                                      const bool generateAdditionalResults = false, const bool useCachedSensis = false,
+                                      const bool generateAdditionalResults = false,
+                                      const bool includePastCashflows = false, const bool useCachedSensis = false,
                                       const bool useExternalComputeFramework = false);
 
     bool lastCalculationWasValid() const { return lastCalculationWasValid_; }
@@ -106,6 +107,7 @@ private:
     const std::string script_;
     const bool interactive_;
     const bool generateAdditionalResults_;
+    const bool includePastCashflows_;
     const bool useCachedSensis_;
     const bool useExternalComputeFramework_;
 };

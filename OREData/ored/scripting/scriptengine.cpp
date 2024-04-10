@@ -106,9 +106,9 @@ class ASTRunner : public AcyclicVisitor,
                   public Visitor<LoopNode> {
 public:
     ASTRunner(const QuantLib::ext::shared_ptr<Model> model, const std::string& script, bool& interactive, Context& context,
-              ASTNode*& lastVisitedNode, QuantLib::ext::shared_ptr<PayLog> paylog)
+              ASTNode*& lastVisitedNode, QuantLib::ext::shared_ptr<PayLog> paylog, bool includePastCashflows)
         : model_(model), size_(model ? model->size() : 1), script_(script), interactive_(interactive), paylog_(paylog),
-          context_(context), lastVisitedNode_(lastVisitedNode) {
+          includePastCashflows_(includePastCashflows), context_(context), lastVisitedNode_(lastVisitedNode) {
         filter.emplace(size_, true);
         value.push(RandomVariable());
     }
@@ -768,8 +768,8 @@ public:
         QL_REQUIRE(paydate.which() == ValueTypeWhich::Event, "paydate must be EVENT");
         QL_REQUIRE(model_, "model is null");
         // handle case of past payments: do not evaluate the other parameters, since not needed (e.g. past fixings)
-        Date pay = QuantLib::ext::get<EventVec>(paydate).value;
-        if (pay <= model_->referenceDate()) {
+        Date pay = boost::get<EventVec>(paydate).value;
+        if (pay <= model_->referenceDate() && (!log || !includePastCashflows_)) {
             value.push(RandomVariable(size_, 0.0));
             TRACE("pay() = 0, since paydate " << paydate << " <= " << model_->referenceDate(), n);
         } else {
@@ -786,7 +786,11 @@ public:
             Date obs = QuantLib::ext::get<EventVec>(obsdate).value;
             std::string pccy = QuantLib::ext::get<CurrencyVec>(paycurr).value;
             QL_REQUIRE(obs <= pay, "observation date (" << obs << ") <= payment date (" << pay << ") required");
-            RandomVariable result = model_->pay(QuantLib::ext::get<RandomVariable>(amount), obs, pay, pccy);
+            RandomVariable result = pay <= model_->referenceDate()
+                                        ? RandomVariable(model_->size(), 0.0)
+                                        : model_->pay(boost::get<RandomVariable>(amount), obs, pay, pccy);
+            RandomVariable cashflowResult =
+                pay <= model_->referenceDate() ? boost::get<RandomVariable>(amount) : result;
             if (!log || paylog_ == nullptr) {
                 TRACE("pay( " << amount << " , " << obsdate << " , " << paydate << " , " << paycurr << " )", n);
             } else {
@@ -819,7 +823,7 @@ public:
                         QL_REQUIRE(slot >= 1, " slot must be >= 1");
                     }
                 }
-                paylog_->write(result, filter.top(), obs, pay, pccy, static_cast<Size>(legno), cftype,
+                paylog_->write(cashflowResult, filter.top(), obs, pay, pccy, static_cast<Size>(legno), cftype,
                                static_cast<Size>(slot));
                 TRACE("logpay( " << amount << " , " << obsdate << " , " << paydate << " , " << paycurr << " , " << legno
                                  << " , " << cftype << " , " << slot << ")",
@@ -1145,6 +1149,7 @@ public:
     const std::string script_;
     bool& interactive_;
     QuantLib::ext::shared_ptr<PayLog> paylog_; // cashflow log
+    bool includePastCashflows_;
     // working variables
     Context& context_;
     ASTNode*& lastVisitedNode_;
@@ -1155,10 +1160,11 @@ public:
 
 } // namespace
 
-void ScriptEngine::run(const std::string& script, bool interactive, QuantLib::ext::shared_ptr<PayLog> paylog) {
+void ScriptEngine::run(const std::string& script, bool interactive, QuantLib::ext::shared_ptr<PayLog> paylog,
+                       bool includePastCashflows) {
 
     ASTNode* loc;
-    ASTRunner runner(model_, script, interactive, *context_, loc, paylog);
+    ASTRunner runner(model_, script, interactive, *context_, loc, paylog, paylog != nullptr && includePastCashflows);
 
     randomvariable_output_pattern pattern;
     if (model_ == nullptr || model_->type() == Model::Type::MC) {

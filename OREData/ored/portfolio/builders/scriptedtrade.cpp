@@ -177,7 +177,7 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
     // 12 get the t0 curves for each model ccy
 
     std::string externalDiscountCurve = scriptedTrade.envelope().additionalField("discount_curve", false);
-    std::string externalSecuritySpread = scriptedTrade.envelope().additionalField("security_spreads", false);
+    std::string externalSecuritySpread = scriptedTrade.envelope().additionalField("security_spread", false);
     for (auto const& c : modelCcys_) {
         // for base ccy we account for an external discount curve and security spread if given
         Handle<YieldTermStructure> yts =
@@ -320,14 +320,14 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
         engine = QuantLib::ext::make_shared<ScriptedInstrumentPricingEngine>(
             script.npv(), script.results(), model_, ast_, context, script.code(), interactive_, amcCam_ != nullptr,
             std::set<std::string>(script.stickyCloseOutStates().begin(), script.stickyCloseOutStates().end()),
-            generateAdditionalResults);
+            generateAdditionalResults, includePastCashflows_);
     } else if (modelCG_) {
         auto rt = globalParameters_.find("RunType");
         bool useCachedSensis = useAd_ && (rt != globalParameters_.end() && rt->second == "SensitivityDelta");
         bool useExternalDev = useExternalComputeDevice_ && !generateAdditionalResults && !useCachedSensis;
         engine = QuantLib::ext::make_shared<ScriptedInstrumentPricingEngineCG>(
             script.npv(), script.results(), modelCG_, ast_, context, mcParams_, script.code(), interactive_,
-            generateAdditionalResults, useCachedSensis, useExternalDev);
+            generateAdditionalResults, includePastCashflows_, useCachedSensis, useExternalDev);
         if (useExternalDev) {
             ComputeEnvironment::instance().selectContext(externalComputeDevice_);
         }
@@ -485,6 +485,7 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
     useExternalComputeDevice_ =
         parseBool(engineParameter("UseExternalComputeDevice", {resolvedProductTag_}, false, "false"));
     externalComputeDevice_ = engineParameter("ExternalComputeDevice", {}, false, "");
+    includePastCashflows_ = parseBool(engineParameter("IncludePastCashflows", {resolvedProductTag_}, false, "false"));
 
     // usage of ad or an external device implies usage of cg
     if (useAd_ || useExternalComputeDevice_)
@@ -536,6 +537,8 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
         } else {
             mcParams_.trainingSamples = Null<Size>();
         }
+        mcParams_.regressionVarianceCutoff =
+            parseRealOrNull(engineParameter("RegressionVarianceCutoff", {resolvedProductTag_}, false, std::string()));
     } else if (engineParam_ == "FD") {
         modelSize_ = parseInteger(engineParameter("StateGridPoints", {resolvedProductTag_}));
         mesherEpsilon_ = parseReal(engineParameter("MesherEpsilon", {resolvedProductTag_}, false, "1.0E-4"));

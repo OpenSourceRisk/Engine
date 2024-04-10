@@ -264,40 +264,74 @@ RandomVariable BlackScholesBase::npv(const RandomVariable& amount, const Date& o
         return expectation(amount);
     }
 
-    // get basis fns
-
-    auto basisFns = multiPathBasisSystem(state.size(), mcParams_.regressionOrder, mcParams_.polynomType,
-                                         std::min(trainingSamples(), Model::size()));
-
-    // if a memSlot is given and coefficients are stored, we use them
+    // the regression model is given by coefficients and an optional coordinate transform
 
     Array coeff;
+    Matrix coordinateTransform;
+
+    // if a memSlot is given and coefficients / coordinate transform are stored, we use them
+
+    bool haveStoredModel = false;
 
     if (memSlot) {
-        auto it = storedRegressionCoeff_.find(*memSlot);
-        if (it != storedRegressionCoeff_.end()) {
-            coeff = it->second.first;
-            QL_REQUIRE(it->second.second == state.size(),
-                       "GaussianCam::npv(): stored regression coefficients at mem slot "
-                           << *memSlot << " are for state size " << it->second.second << ", actual state size is "
-                           << state.size());
+        if (auto it = storedRegressionModel_.find(*memSlot); it != storedRegressionModel_.end()) {
+            coeff = std::get<0>(it->second);
+            coordinateTransform = std::get<2>(it->second);
+            QL_REQUIRE(std::get<1>(it->second) == state.size(),
+                       "BlackScholesBase::npv(): stored regression coefficients at mem slot "
+                           << *memSlot << " are for state size " << std::get<1>(it->second) << ", actual state size is "
+                           << state.size() << " (before possible coordinate transform).");
+            haveStoredModel = true;
         }
     }
 
-    // otherwise compute coefficients and store them if a memSlot is given
+    // if we do not have retrieved a model in the previous step, we create it now
 
-    if (coeff.size() == 0) {
-        coeff = regressionCoefficients(amount, state, basisFns, filter, RandomVariableRegressionMethod::QR);
+    std::vector<RandomVariable> transformedState;
+
+    if(!haveStoredModel) {
+
+        // factor reduction to reduce dimensionalitty and handle collinearity
+
+        if (mcParams_.regressionVarianceCutoff != Null<Real>()) {
+            coordinateTransform = pcaCoordinateTransform(state, mcParams_.regressionVarianceCutoff);
+            transformedState = applyCoordinateTransform(state, coordinateTransform);
+            state = vec2vecptr(transformedState);
+        }
+
+        // train coefficients
+
+        coeff = regressionCoefficients(amount, state,
+                                       multiPathBasisSystem(state.size(), mcParams_.regressionOrder,
+                                                            mcParams_.polynomType, std::min(size(), trainingSamples())),
+                                       filter, RandomVariableRegressionMethod::QR);
         DLOG("BlackScholesBase::npv(" << ore::data::to_string(obsdate) << "): regression coefficients are " << coeff
                                       << " (got model state size " << nModelStates << " and " << nAddReg
-                                      << " additional regressors)");
-        if (memSlot)
-            storedRegressionCoeff_[*memSlot] = std::make_pair(coeff, state.size());
+                                      << " additional regressors, coordinate transform "
+                                      << coordinateTransform.columns() << " -> " << coordinateTransform.rows() << ")");
+
+        // store model if requried
+
+        if (memSlot) {
+            storedRegressionModel_[*memSlot] = std::make_tuple(coeff, nModelStates, coordinateTransform);
+        }
+
+    } else {
+
+        // apply the stored coordinate transform to the state
+
+        if(!coordinateTransform.empty()) {
+            transformedState = applyCoordinateTransform(state, coordinateTransform);
+            state = vec2vecptr(transformedState);
+        }
     }
 
     // compute conditional expectation and return the result
 
-    return conditionalExpectation(state, basisFns, coeff);
+    return conditionalExpectation(state,
+                                  multiPathBasisSystem(state.size(), mcParams_.regressionOrder, mcParams_.polynomType,
+                                                       std::min(size(), trainingSamples())),
+                                  coeff);
 }
 
 void BlackScholesBase::releaseMemory() {
@@ -305,7 +339,7 @@ void BlackScholesBase::releaseMemory() {
     underlyingPathsTraining_.clear();
 }
 
-void BlackScholesBase::resetNPVMem() { storedRegressionCoeff_.clear(); }
+void BlackScholesBase::resetNPVMem() { storedRegressionModel_.clear(); }
 
 void BlackScholesBase::toggleTrainingPaths() const {
     std::swap(underlyingPaths_, underlyingPathsTraining_);

@@ -512,7 +512,7 @@ const std::map<std::string, boost::any>& CapFloor::additionalData() const {
     additionalData_["legType"] = legData_.legType();
     additionalData_["isPayer"] = legData_.isPayer();
     additionalData_["notionalCurrency"] = legData_.currency();
-    for (Size j = 0; j < legs_[0].size(); ++j) {
+    for (Size j = 0; !legs_.empty() && j < legs_[0].size(); ++j) {
         QuantLib::ext::shared_ptr<CashFlow> flow = legs_[0][j];
         // pick flow with earliest future payment date on this leg
         if (flow->date() > asof) {
@@ -535,7 +535,7 @@ const std::map<std::string, boost::any>& CapFloor::additionalData() const {
             break;
         }
     }
-    if (legs_[0].size() > 0) {
+    if (!legs_.empty() && legs_[0].size() > 0) {
         QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(legs_[0][0]);
         if (coupon) {
             Real originalNotional = 0.0;
@@ -567,165 +567,177 @@ const std::map<std::string, boost::any>& CapFloor::additionalData() const {
     vector<Real> floorletAmounts;
 
     try {
-        for (const auto& flow : legs_[0]) {
-            // pick flow with earliest future payment date on this leg
-            if (flow->date() > asof) {
-                amounts.push_back(flow->amount());
-                paymentDates.push_back(flow->date());
-                QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
-                if (coupon) {
-                    currentNotionals.push_back(coupon->nominal());
-                    rates.push_back(coupon->rate());
-                    QuantLib::ext::shared_ptr<FloatingRateCoupon> frc = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(flow);
-                    if (frc) {
-                        fixingDates.push_back(frc->fixingDate());
+        if (!legs_.empty()) {
+            for (const auto& flow : legs_[0]) {
+                // pick flow with earliest future payment date on this leg
+                if (flow->date() > asof) {
+                    amounts.push_back(flow->amount());
+                    paymentDates.push_back(flow->date());
+                    QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
+                    if (coupon) {
+                        currentNotionals.push_back(coupon->nominal());
+                        rates.push_back(coupon->rate());
+                        QuantLib::ext::shared_ptr<FloatingRateCoupon> frc =
+                            QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(flow);
+                        if (frc) {
+                            fixingDates.push_back(frc->fixingDate());
 
-                        // indexFixing for overnight indices
-                        if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(frc)) {
-                            indexFixings.push_back((on->rate() - on->spread()) / on->gearing());
-                        } else if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(frc)) {
-                            indexFixings.push_back((on->rate() - on->effectiveSpread()) / on->gearing());
-                        } else if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCoupon>(
-                                       frc)) {
-                            indexFixings.push_back((c->underlying()->rate() - c->underlying()->effectiveSpread()) /
-                                                   c->underlying()->gearing());
-                        } else if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredAverageONIndexedCoupon>(frc)) {
-                            indexFixings.push_back((c->underlying()->rate() - c->underlying()->spread()) /
-                                                   c->underlying()->gearing());
-                        } 
-                        // indexFixing for BMA and subPeriod Coupons
-                        else if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(frc)) {
-                            indexFixings.push_back((c->rate() - c->spread()) / c->gearing());
-                        } else if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredAverageBMACoupon>(frc)) {
-                            indexFixings.push_back((c->underlying()->rate() - c->underlying()->spread()) / c->underlying()->gearing());
-                        } else if (auto sp = QuantLib::ext::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(frc))
-                            indexFixings.push_back((sp->rate() - sp->spread()) / sp->gearing());
-                        else {
-                            // this sets indexFixing to the last single overnight fixing
-                            indexFixings.push_back(frc->indexFixing());
-                        }
-
-                        spreads.push_back(frc->spread());
-
-                        // The below code adds cap/floor levels, vols, and amounts
-                        // for capped/floored Ibor coupons and overnight coupons
-                        QuantLib::ext::shared_ptr<CashFlow> c = flow;
-                        if (auto strippedCfc = QuantLib::ext::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(flow)) {
-                            c = strippedCfc->underlying();
-                        }
-
-                        if (auto cfc = QuantLib::ext::dynamic_pointer_cast<CappedFlooredCoupon>(c)) {
-                            // enfore coupon pricer to hold the results of the current coupon
-                            cfc->deepUpdate();
-                            cfc->amount();
-                            QuantLib::ext::shared_ptr<IborCouponPricer> pricer =
-                                QuantLib::ext::dynamic_pointer_cast<IborCouponPricer>(cfc->pricer());
-                            if (pricer && (cfc->fixingDate() > asof)) {
-                                // We write the vols if an Ibor coupon pricer is found and the fixing date is in the
-                                // future
-                                if (cfc->isCapped()) {
-                                    caps.push_back(cfc->cap());
-                                    const Rate effectiveCap = cfc->effectiveCap();
-                                    effectiveCaps.push_back(effectiveCap);
-                                    capletVols.push_back(
-                                        pricer->capletVolatility()->volatility(cfc->fixingDate(), effectiveCap));
-                                    capletAmounts.push_back(pricer->capletRate(effectiveCap) * coupon->accrualPeriod() *
-                                                            coupon->nominal());
-                                }
-                                if (cfc->isFloored()) {
-                                    floors.push_back(cfc->floor());
-                                    const Rate effectiveFloor = cfc->effectiveFloor();
-                                    effectiveFloors.push_back(effectiveFloor);
-                                    floorletVols.push_back(
-                                        pricer->capletVolatility()->volatility(cfc->fixingDate(), effectiveFloor));
-                                    floorletAmounts.push_back(pricer->floorletRate(effectiveFloor) *
-                                                              coupon->accrualPeriod() * coupon->nominal());
-                                }
+                            // indexFixing for overnight indices
+                            if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(frc)) {
+                                indexFixings.push_back((on->rate() - on->spread()) / on->gearing());
+                            } else if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(frc)) {
+                                indexFixings.push_back((on->rate() - on->effectiveSpread()) / on->gearing());
+                            } else if (auto c =
+                                           QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCoupon>(
+                                               frc)) {
+                                indexFixings.push_back((c->underlying()->rate() - c->underlying()->effectiveSpread()) /
+                                                       c->underlying()->gearing());
+                            } else if (auto c =
+                                           QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredAverageONIndexedCoupon>(
+                                               frc)) {
+                                indexFixings.push_back((c->underlying()->rate() - c->underlying()->spread()) /
+                                                       c->underlying()->gearing());
                             }
-                        } else if (auto tmp = QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCoupon>(c)) {
-                            tmp->deepUpdate();
-                            tmp->amount();
-                            QuantLib::ext::shared_ptr<QuantExt::CappedFlooredOvernightIndexedCouponPricer> pricer =
-                                QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCouponPricer>(
-                                    tmp->pricer());
-                            if (pricer && (tmp->fixingDate() > asof)) {
-                                if (tmp->isCapped()) {
-                                    caps.push_back(tmp->cap());
-                                    const Rate effectiveCap = tmp->effectiveCap();
-                                    effectiveCaps.push_back(effectiveCap);
-                                    capletVols.push_back(
-                                        pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveCap));
-                                    capletAmounts.push_back(pricer->capletRate(effectiveCap) * coupon->accrualPeriod() *
-                                                            coupon->nominal());
-                                    effectiveCapletVols.push_back(tmp->effectiveCapletVolatility());
-                                }
-                                if (tmp->isFloored()) {
-                                    floors.push_back(tmp->floor());
-                                    const Rate effectiveFloor = tmp->effectiveFloor();
-                                    effectiveFloors.push_back(effectiveFloor);
-                                    floorletVols.push_back(
-                                        pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveFloor));
-                                    floorletAmounts.push_back(pricer->floorletRate(effectiveFloor) *
-                                                              coupon->accrualPeriod() * coupon->nominal());
-                                    effectiveFloorletVols.push_back(tmp->effectiveFloorletVolatility());
-                                }
-                            }
-                        } else if (auto tmp =
-                                       QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredAverageONIndexedCoupon>(c)) {
-                            tmp->deepUpdate();
-                            tmp->amount();
-                            QuantLib::ext::shared_ptr<QuantExt::CapFlooredAverageONIndexedCouponPricer> pricer =
-                                QuantLib::ext::dynamic_pointer_cast<QuantExt::CapFlooredAverageONIndexedCouponPricer>(
-                                    tmp->pricer());
-                            if (pricer && (tmp->fixingDate() > asof)) {
-                                if (tmp->isCapped()) {
-                                    caps.push_back(tmp->cap());
-                                    const Rate effectiveCap = tmp->effectiveCap();
-                                    effectiveCaps.push_back(effectiveCap);
-                                    capletVols.push_back(
-                                        pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveCap));
-                                    capletAmounts.push_back(pricer->capletRate(effectiveCap) * coupon->accrualPeriod() *
-                                                            coupon->nominal());
-                                    effectiveCapletVols.push_back(tmp->effectiveCapletVolatility());
-                                }
-                                if (tmp->isFloored()) {
-                                    floors.push_back(tmp->floor());
-                                    const Rate effectiveFloor = tmp->effectiveFloor();
-                                    effectiveFloors.push_back(effectiveFloor);
-                                    floorletVols.push_back(
-                                        pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveFloor));
-                                    floorletAmounts.push_back(pricer->floorletRate(effectiveFloor) *
-                                                              coupon->accrualPeriod() * coupon->nominal());
-                                    effectiveFloorletVols.push_back(tmp->effectiveFloorletVolatility());
-                                }
+                            // indexFixing for BMA and subPeriod Coupons
+                            else if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(frc)) {
+                                indexFixings.push_back((c->rate() - c->spread()) / c->gearing());
+                            } else if (auto c =
+                                           QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredAverageBMACoupon>(frc)) {
+                                indexFixings.push_back((c->underlying()->rate() - c->underlying()->spread()) /
+                                                       c->underlying()->gearing());
+                            } else if (auto sp = QuantLib::ext::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(frc))
+                                indexFixings.push_back((sp->rate() - sp->spread()) / sp->gearing());
+                            else {
+                                // this sets indexFixing to the last single overnight fixing
+                                indexFixings.push_back(frc->indexFixing());
                             }
 
-                        } else if (auto tmp = QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredAverageBMACoupon>(c)) {
-                            tmp->deepUpdate();
-                            tmp->amount();
-                            QuantLib::ext::shared_ptr<QuantExt::CapFlooredAverageBMACouponPricer> pricer =
-                                QuantLib::ext::dynamic_pointer_cast<QuantExt::CapFlooredAverageBMACouponPricer>(
-                                    tmp->pricer());
-                            if (pricer && (tmp->fixingDate() > asof)) {
-                                if (tmp->isCapped()) {
-                                    caps.push_back(tmp->cap());
-                                    const Rate effectiveCap = tmp->effectiveCap();
-                                    effectiveCaps.push_back(effectiveCap);
-                                    capletVols.push_back(
-                                        pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveCap));
-                                    capletAmounts.push_back(pricer->capletRate(effectiveCap) * coupon->accrualPeriod() *
-                                                            coupon->nominal());
-                                    effectiveCapletVols.push_back(tmp->effectiveCapletVolatility());
+                            spreads.push_back(frc->spread());
+
+                            // The below code adds cap/floor levels, vols, and amounts
+                            // for capped/floored Ibor coupons and overnight coupons
+                            QuantLib::ext::shared_ptr<CashFlow> c = flow;
+                            if (auto strippedCfc = QuantLib::ext::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(flow)) {
+                                c = strippedCfc->underlying();
+                            }
+
+                            if (auto cfc = QuantLib::ext::dynamic_pointer_cast<CappedFlooredCoupon>(c)) {
+                                // enfore coupon pricer to hold the results of the current coupon
+                                cfc->deepUpdate();
+                                cfc->amount();
+                                QuantLib::ext::shared_ptr<IborCouponPricer> pricer =
+                                    QuantLib::ext::dynamic_pointer_cast<IborCouponPricer>(cfc->pricer());
+                                if (pricer && (cfc->fixingDate() > asof)) {
+                                    // We write the vols if an Ibor coupon pricer is found and the fixing date is in the
+                                    // future
+                                    if (cfc->isCapped()) {
+                                        caps.push_back(cfc->cap());
+                                        const Rate effectiveCap = cfc->effectiveCap();
+                                        effectiveCaps.push_back(effectiveCap);
+                                        capletVols.push_back(
+                                            pricer->capletVolatility()->volatility(cfc->fixingDate(), effectiveCap));
+                                        capletAmounts.push_back(pricer->capletRate(effectiveCap) *
+                                                                coupon->accrualPeriod() * coupon->nominal());
+                                    }
+                                    if (cfc->isFloored()) {
+                                        floors.push_back(cfc->floor());
+                                        const Rate effectiveFloor = cfc->effectiveFloor();
+                                        effectiveFloors.push_back(effectiveFloor);
+                                        floorletVols.push_back(
+                                            pricer->capletVolatility()->volatility(cfc->fixingDate(), effectiveFloor));
+                                        floorletAmounts.push_back(pricer->floorletRate(effectiveFloor) *
+                                                                  coupon->accrualPeriod() * coupon->nominal());
+                                    }
                                 }
-                                if (tmp->isFloored()) {
-                                    floors.push_back(tmp->floor());
-                                    const Rate effectiveFloor = tmp->effectiveFloor();
-                                    effectiveFloors.push_back(effectiveFloor);
-                                    floorletVols.push_back(
-                                        pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveFloor));
-                                    floorletAmounts.push_back(pricer->floorletRate(effectiveFloor) *
-                                                              coupon->accrualPeriod() * coupon->nominal());
-                                    effectiveFloorletVols.push_back(tmp->effectiveFloorletVolatility());
+                            } else if (auto tmp =
+                                           QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCoupon>(
+                                               c)) {
+                                tmp->deepUpdate();
+                                tmp->amount();
+                                QuantLib::ext::shared_ptr<QuantExt::CappedFlooredOvernightIndexedCouponPricer> pricer =
+                                    QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCouponPricer>(
+                                        tmp->pricer());
+                                if (pricer && (tmp->fixingDate() > asof)) {
+                                    if (tmp->isCapped()) {
+                                        caps.push_back(tmp->cap());
+                                        const Rate effectiveCap = tmp->effectiveCap();
+                                        effectiveCaps.push_back(effectiveCap);
+                                        capletVols.push_back(
+                                            pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveCap));
+                                        capletAmounts.push_back(pricer->capletRate(effectiveCap) *
+                                                                coupon->accrualPeriod() * coupon->nominal());
+                                        effectiveCapletVols.push_back(tmp->effectiveCapletVolatility());
+                                    }
+                                    if (tmp->isFloored()) {
+                                        floors.push_back(tmp->floor());
+                                        const Rate effectiveFloor = tmp->effectiveFloor();
+                                        effectiveFloors.push_back(effectiveFloor);
+                                        floorletVols.push_back(
+                                            pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveFloor));
+                                        floorletAmounts.push_back(pricer->floorletRate(effectiveFloor) *
+                                                                  coupon->accrualPeriod() * coupon->nominal());
+                                        effectiveFloorletVols.push_back(tmp->effectiveFloorletVolatility());
+                                    }
+                                }
+                            } else if (auto tmp =
+                                           QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredAverageONIndexedCoupon>(
+                                               c)) {
+                                tmp->deepUpdate();
+                                tmp->amount();
+                                QuantLib::ext::shared_ptr<QuantExt::CapFlooredAverageONIndexedCouponPricer> pricer =
+                                    QuantLib::ext::dynamic_pointer_cast<QuantExt::CapFlooredAverageONIndexedCouponPricer>(
+                                        tmp->pricer());
+                                if (pricer && (tmp->fixingDate() > asof)) {
+                                    if (tmp->isCapped()) {
+                                        caps.push_back(tmp->cap());
+                                        const Rate effectiveCap = tmp->effectiveCap();
+                                        effectiveCaps.push_back(effectiveCap);
+                                        capletVols.push_back(
+                                            pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveCap));
+                                        capletAmounts.push_back(pricer->capletRate(effectiveCap) *
+                                                                coupon->accrualPeriod() * coupon->nominal());
+                                        effectiveCapletVols.push_back(tmp->effectiveCapletVolatility());
+                                    }
+                                    if (tmp->isFloored()) {
+                                        floors.push_back(tmp->floor());
+                                        const Rate effectiveFloor = tmp->effectiveFloor();
+                                        effectiveFloors.push_back(effectiveFloor);
+                                        floorletVols.push_back(
+                                            pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveFloor));
+                                        floorletAmounts.push_back(pricer->floorletRate(effectiveFloor) *
+                                                                  coupon->accrualPeriod() * coupon->nominal());
+                                        effectiveFloorletVols.push_back(tmp->effectiveFloorletVolatility());
+                                    }
+                                }
+
+                            } else if (auto tmp =
+                                           QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredAverageBMACoupon>(c)) {
+                                tmp->deepUpdate();
+                                tmp->amount();
+                                QuantLib::ext::shared_ptr<QuantExt::CapFlooredAverageBMACouponPricer> pricer =
+                                    QuantLib::ext::dynamic_pointer_cast<QuantExt::CapFlooredAverageBMACouponPricer>(
+                                        tmp->pricer());
+                                if (pricer && (tmp->fixingDate() > asof)) {
+                                    if (tmp->isCapped()) {
+                                        caps.push_back(tmp->cap());
+                                        const Rate effectiveCap = tmp->effectiveCap();
+                                        effectiveCaps.push_back(effectiveCap);
+                                        capletVols.push_back(
+                                            pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveCap));
+                                        capletAmounts.push_back(pricer->capletRate(effectiveCap) *
+                                                                coupon->accrualPeriod() * coupon->nominal());
+                                        effectiveCapletVols.push_back(tmp->effectiveCapletVolatility());
+                                    }
+                                    if (tmp->isFloored()) {
+                                        floors.push_back(tmp->floor());
+                                        const Rate effectiveFloor = tmp->effectiveFloor();
+                                        effectiveFloors.push_back(effectiveFloor);
+                                        floorletVols.push_back(
+                                            pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveFloor));
+                                        floorletAmounts.push_back(pricer->floorletRate(effectiveFloor) *
+                                                                  coupon->accrualPeriod() * coupon->nominal());
+                                        effectiveFloorletVols.push_back(tmp->effectiveFloorletVolatility());
+                                    }
                                 }
                             }
                         }

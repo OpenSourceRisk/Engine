@@ -156,12 +156,15 @@ Leg makeNonStandardIborLeg(const QuantLib::ext::shared_ptr<IborIndex>& index, co
     for (auto const& d : calcDates)
         effCalcDates.insert(d);
 
-    for (auto const& d : resetDates)
-        effCalcDates.insert(d);
+    for (auto const& d : resetDates) {
+        if (d >= calcDates.front() && d < calcDates.back())
+            effCalcDates.insert(d);
+    }
 
     if (strictNotionalDates) {
         for (auto const& d : notionalDates) {
-            effCalcDates.insert(d);
+            if (d >= calcDates.front() && d < calcDates.back())
+                effCalcDates.insert(d);
         }
     }
 
@@ -279,7 +282,8 @@ Leg makeNonStandardFixedLeg(const std::vector<Date>& calcDates, const std::vecto
 
     if (strictNotionalDates)
         for (auto const& d : notionalDates) {
-            effCalcDates.insert(d);
+            if (d >= calcDates.front() && d < calcDates.back())
+                effCalcDates.insert(d);
         }
 
     // build coupons
