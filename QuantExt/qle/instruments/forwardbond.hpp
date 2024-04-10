@@ -44,12 +44,12 @@ public:
     class engine;
     class results;
     //! Constructor vanilla forward bond
-    ForwardBond(const boost::shared_ptr<QuantLib::Bond>& underlying, const boost::shared_ptr<Payoff>& payoff,
+    ForwardBond(const QuantLib::ext::shared_ptr<QuantLib::Bond>& underlying, const QuantLib::ext::shared_ptr<Payoff>& payoff,
                 const Date& fwdMaturityDate, const Date& fwdSettlementDate, const bool isPhysicallySettled,
                 const bool settlementDirty, const Real compensationPayment, const Date compensationPaymentDate,
                 const Real bondNotional = 1.0);
     //! Constructor for tlocks with lock rate
-    ForwardBond(const boost::shared_ptr<QuantLib::Bond>& underlying, const Real lockRate,
+    ForwardBond(const QuantLib::ext::shared_ptr<QuantLib::Bond>& underlying, const Real lockRate,
                 const DayCounter& lockRateDayCounter, const bool longInForward, const Date& fwdMaturityDate,
                 const Date& fwdSettlementDate, const bool isPhysicallySettled, const bool settlementDirty,
                 const Real compensationPayment, const Date compensationPaymentDate, const Real bondNotional = 1.0,
@@ -64,12 +64,12 @@ public:
 
     //! \name Inspectors
     //@{
-    const boost::shared_ptr<QuantLib::Bond>& underlying() { return underlying_; }
+    const QuantLib::ext::shared_ptr<QuantLib::Bond>& underlying() { return underlying_; }
     //@}
 
 private:
-    boost::shared_ptr<QuantLib::Bond> underlying_;
-    boost::shared_ptr<Payoff> payoff_;    // nullptr for tlocks
+    QuantLib::ext::shared_ptr<QuantLib::Bond> underlying_;
+    QuantLib::ext::shared_ptr<Payoff> payoff_;    // nullptr for tlocks
     Real lockRate_;                       // Null<Real>() for vanilla forwards
     DayCounter lockRateDayCounter_;       // empty dc for vanilla forwards
     boost::optional<bool> longInForward_; // only filled for tlocks
@@ -89,8 +89,8 @@ private:
 //! \ingroup instruments
 class ForwardBond::arguments : public virtual PricingEngine::arguments {
 public:
-    boost::shared_ptr<QuantLib::Bond> underlying;
-    boost::shared_ptr<Payoff> payoff;    // nullptr for tlocks
+    QuantLib::ext::shared_ptr<QuantLib::Bond> underlying;
+    QuantLib::ext::shared_ptr<Payoff> payoff;    // nullptr for tlocks
     Real lockRate;                       // Null<Real>() for vanilla forwards
     boost::optional<bool> longInForward; // only filled for tlocks
     DayCounter lockRateDayCounter;       // empty dc for vanilla forwards

@@ -37,9 +37,9 @@ class CommodityBasisFutureIndex : public CommodityFuturesIndex {
 public:
     CommodityBasisFutureIndex(const std::string& underlyingName, const QuantLib::Date& expiryDate,
                               const QuantLib::Calendar& fixingCalendar,
-                              const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
-                              const boost::shared_ptr<QuantExt::CommodityIndex>& baseIndex,
-                              const boost::shared_ptr<FutureExpiryCalculator>& baseFec,
+                              const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& basisFec,
+                              const QuantLib::ext::shared_ptr<QuantExt::CommodityIndex>& baseIndex,
+                              const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& baseFec,
                               const QuantLib::Handle<QuantExt::PriceTermStructure>& priceCurve =
                                   QuantLib::Handle<QuantExt::PriceTermStructure>(),
                               const bool addBasis = true, const QuantLib::Size monthOffset = 0,
@@ -47,27 +47,27 @@ public:
 
     CommodityBasisFutureIndex(const std::string& underlyingName, const QuantLib::Date& expiryDate,
                               const QuantLib::Calendar& fixingCalendar,
-                              const boost::shared_ptr<CommodityBasisPriceTermStructure>& priceCurve);
+                              const QuantLib::ext::shared_ptr<CommodityBasisPriceTermStructure>& priceCurve);
 
     //! Implement the base clone. Ajust the base future to match the same contract month
-    boost::shared_ptr<CommodityIndex>
+    QuantLib::ext::shared_ptr<CommodityIndex>
     clone(const QuantLib::Date& expiryDate = QuantLib::Date(),
           const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::none) const override;
 
     QuantLib::Real pastFixing(const QuantLib::Date& fixingDate) const override;
 
-    const boost::shared_ptr<QuantExt::CommodityIndex>& baseIndex() { return baseIndex_; }
-    boost::shared_ptr<QuantLib::CashFlow> baseCashflow(const QuantLib::Date& paymentDate = QuantLib::Date()) const;
+    const QuantLib::ext::shared_ptr<QuantExt::CommodityIndex>& baseIndex() { return baseIndex_; }
+    QuantLib::ext::shared_ptr<QuantLib::CashFlow> baseCashflow(const QuantLib::Date& paymentDate = QuantLib::Date()) const;
 
 private:
-    boost::shared_ptr<FutureExpiryCalculator> basisFec_;
-    boost::shared_ptr<QuantExt::CommodityIndex> baseIndex_;
-    boost::shared_ptr<FutureExpiryCalculator> baseFec_;
+    QuantLib::ext::shared_ptr<FutureExpiryCalculator> basisFec_;
+    QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> baseIndex_;
+    QuantLib::ext::shared_ptr<FutureExpiryCalculator> baseFec_;
     bool addBasis_;
     QuantLib::Size monthOffset_;
     bool baseIsAveraging_;
     bool priceAsHistoricalFixing_;
-    boost::shared_ptr<QuantLib::CashFlow> cashflow_;
+    QuantLib::ext::shared_ptr<QuantLib::CashFlow> cashflow_;
 };
 
 } // namespace QuantExt

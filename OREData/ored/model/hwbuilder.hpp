@@ -46,7 +46,7 @@ public:
     /*! The configuration should refer to the calibration configuration here,
       alternative discounting curves are then usually set in the pricing
       engines for swaptions etc. */
-    HwBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<HwModelData>& data,
+    HwBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<HwModelData>& data,
               const IrModel::Measure measure = IrModel::Measure::BA,
               const HwModel::Discretization discretization = HwModel::Discretization::Euler,
               const bool evaluateBankAccount = true, const std::string& configuration = Market::defaultConfiguration,
@@ -59,10 +59,10 @@ public:
     //@{
     std::string qualifier() { return data_->qualifier(); }
     std::string ccy() { return currency_; }
-    boost::shared_ptr<QuantExt::HwModel> model() const;
-    boost::shared_ptr<QuantExt::IrHwParametrization> parametrization() const;
+    QuantLib::ext::shared_ptr<QuantExt::HwModel> model() const;
+    QuantLib::ext::shared_ptr<QuantExt::IrHwParametrization> parametrization() const;
     RelinkableHandle<YieldTermStructure> discountCurve() { return modelDiscountCurve_; }
-    std::vector<boost::shared_ptr<BlackCalibrationHelper>> swaptionBasket() const;
+    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> swaptionBasket() const;
     //@}
 
     //! \name ModelBuilder interface
@@ -74,9 +74,9 @@ public:
 private:
     void performCalculations() const override;
 
-    boost::shared_ptr<ore::data::Market> market_;
+    QuantLib::ext::shared_ptr<ore::data::Market> market_;
     const std::string configuration_;
-    boost::shared_ptr<HwModelData> data_;
+    QuantLib::ext::shared_ptr<HwModelData> data_;
     IrModel::Measure measure_;
     HwModel::Discretization discretization_;
     bool evaluateBankAccount_;
@@ -88,15 +88,15 @@ private:
     std::string currency_; // derived from data->qualifier()
 
     mutable Real error_;
-    mutable boost::shared_ptr<QuantExt::HwModel> model_;
+    mutable QuantLib::ext::shared_ptr<QuantExt::HwModel> model_;
     mutable Array params_;
-    mutable boost::shared_ptr<QuantExt::IrHwParametrization> parametrization_;
+    mutable QuantLib::ext::shared_ptr<QuantExt::IrHwParametrization> parametrization_;
 
     // which swaptions in data->optionExpries() are actually in the basket?
     mutable std::vector<bool> swaptionActive_;
-    mutable std::vector<boost::shared_ptr<BlackCalibrationHelper>> swaptionBasket_;
+    mutable std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> swaptionBasket_;
     mutable std::vector<Real> swaptionStrike_;
-    mutable std::vector<boost::shared_ptr<SimpleQuote>> swaptionBasketVols_;
+    mutable std::vector<QuantLib::ext::shared_ptr<SimpleQuote>> swaptionBasketVols_;
     mutable Array swaptionExpiries_;
     mutable Array swaptionMaturities_;
     mutable Date swaptionBasketRefDate_;
@@ -107,7 +107,7 @@ private:
     Handle<SwapIndex> swapIndex_, shortSwapIndex_;
 
     // TODO: Move CalibrationErrorType, optimizer and end criteria parameters to data
-    boost::shared_ptr<OptimizationMethod> optimizationMethod_;
+    QuantLib::ext::shared_ptr<OptimizationMethod> optimizationMethod_;
     EndCriteria endCriteria_;
     // BlackCalibrationHelper::CalibrationErrorType calibrationErrorType_;
 
@@ -117,7 +117,7 @@ private:
     bool forceCalibration_ = false;
 
     // LGM Observer
-    boost::shared_ptr<QuantExt::MarketObserver> marketObserver_;
+    QuantLib::ext::shared_ptr<QuantExt::MarketObserver> marketObserver_;
 };
 } // namespace data
 } // namespace ore

@@ -49,24 +49,24 @@ public:
     }
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
-    void build(const boost::shared_ptr<ore::data::EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
     
     //! check validity of barriers
     virtual void checkBarriers() = 0;
 
     // index of the underlying
-    virtual boost::shared_ptr<QuantLib::Index> getIndex() = 0;
+    virtual QuantLib::ext::shared_ptr<QuantLib::Index> getIndex() = 0;
 
     // strike of underlying option
     virtual const QuantLib::Real strike() = 0;
 
     virtual QuantLib::Real tradeMultiplier() = 0;
     virtual Currency tradeCurrency() = 0;
-    virtual boost::shared_ptr<QuantLib::PricingEngine>
-    vanillaPricingEngine(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
+    vanillaPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
                            const QuantLib::Date& paymentDate) = 0;
-    virtual boost::shared_ptr<QuantLib::PricingEngine>
-    barrierPricingEngine(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
+    barrierPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
                            const QuantLib::Date& paymentDate) = 0;
     virtual const QuantLib::Handle<QuantLib::Quote>& spotQuote() = 0;
 
@@ -120,14 +120,14 @@ public:
     QuantLib::Real soldAmount() const { return soldAmount_; }
     //@}
 
-    void build(const boost::shared_ptr<ore::data::EngineFactory>& ef) override;
+    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& ef) override;
     //! \name Serialisation
     //@{
     void additionalFromXml(ore::data::XMLNode* node) override;
     void additionalToXml(ore::data::XMLDocument& doc, ore::data::XMLNode* node) const override;
     //@}
 
-    boost::shared_ptr<QuantLib::Index> getIndex() override { return boost::dynamic_pointer_cast<Index>(fxIndex_); }
+    QuantLib::ext::shared_ptr<QuantLib::Index> getIndex() override { return QuantLib::ext::dynamic_pointer_cast<Index>(fxIndex_); }
     const QuantLib::Real strike() override { return soldAmount_ / boughtAmount_; }
     QuantLib::Real tradeMultiplier() override { return boughtAmount_; }
     Currency tradeCurrency() override { return parseCurrency(soldCurrency_); }
@@ -139,7 +139,7 @@ public:
 
 private:
     std::string fxIndexStr_;
-    boost::shared_ptr<QuantExt::FxIndex> fxIndex_;
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex_;
     QuantLib::Handle<QuantLib::Quote> spotQuote_;
     QuantLib::Real boughtAmount_;
     QuantLib::Real soldAmount_;
@@ -165,14 +165,14 @@ public:
     QuantLib::Real quantity() const { return quantity_; }
     //@}
 
-    void build(const boost::shared_ptr<ore::data::EngineFactory>& ef) override;
+    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& ef) override;
     //! \name Serialisation
     //@{
     void additionalFromXml(ore::data::XMLNode* node) override;
     void additionalToXml(ore::data::XMLDocument& doc, ore::data::XMLNode* node) const override;
     //@}
 
-    boost::shared_ptr<QuantLib::Index> getIndex() override { return boost::dynamic_pointer_cast<Index>(eqIndex_); }
+    QuantLib::ext::shared_ptr<QuantLib::Index> getIndex() override { return QuantLib::ext::dynamic_pointer_cast<Index>(eqIndex_); }
     const QuantLib::Real strike() override { return tradeStrike_.value(); }
     QuantLib::Real tradeMultiplier() override { return quantity_; }
     Currency tradeCurrency() override { return currency_; }
@@ -183,7 +183,7 @@ public:
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override { return BarrierOption::toXML(doc); }
 
 private:
-    boost::shared_ptr<QuantExt::EquityIndex2> eqIndex_;
+    QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> eqIndex_;
     QuantLib::Currency currency_;
     std::string currencyStr_;
     QuantLib::Real quantity_;

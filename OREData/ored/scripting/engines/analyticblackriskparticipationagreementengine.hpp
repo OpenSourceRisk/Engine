@@ -39,7 +39,7 @@ public:
         const std::string& baseCcy, const std::map<std::string, Handle<YieldTermStructure>>& discountCurves,
         const std::map<std::string, Handle<Quote>>& fxSpots,
         const Handle<DefaultProbabilityTermStructure>& defaultCurve, const Handle<Quote>& recoveryRate,
-        const Handle<SwaptionVolatilityStructure>& volatility, const boost::shared_ptr<SwapIndex>& swapIndexBase,
+        const Handle<SwaptionVolatilityStructure>& volatility, const QuantLib::ext::shared_ptr<SwapIndex>& swapIndexBase,
         const bool matchUnderlyingTenor, const Real reversion, const bool alwaysRecomputeOptionRepresentation,
         const Size maxGapDays = Null<Size>(), const Size maxDiscretisationPoints = Null<Size>());
 
@@ -47,7 +47,7 @@ private:
     Real protectionLegNpv() const override;
 
     const Handle<SwaptionVolatilityStructure> volatility_;
-    const boost::shared_ptr<SwapIndex> swapIndexBase_;
+    const QuantLib::ext::shared_ptr<SwapIndex> swapIndexBase_;
     const bool matchUnderlyingTenor_;
     const Real reversion_;
     const bool alwaysRecomputeOptionRepresentation_;

@@ -32,31 +32,31 @@ class MarketDataCsvLoaderImpl : public MarketDataLoaderImpl {
 public:
     MarketDataCsvLoaderImpl() {}
 
-    MarketDataCsvLoaderImpl(const boost::shared_ptr<InputParameters>& inputs, 
-        const boost::shared_ptr<ore::data::CSVLoader>& csvLoader)
+    MarketDataCsvLoaderImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs, 
+        const QuantLib::ext::shared_ptr<ore::data::CSVLoader>& csvLoader)
         : inputs_(inputs), csvLoader_(csvLoader) {}
     
-    void loadCorporateActionData(boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+    void loadCorporateActionData(QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                  const std::map<std::string, std::string>& equities) override;
     
-    void retrieveMarketData(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+    void retrieveMarketData(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                             const ore::analytics::QuoteMap& quotes,
                             const QuantLib::Date& requestDate = QuantLib::Date()) override;        
     
-    void retrieveFixings(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+    void retrieveFixings(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
         ore::analytics::FixingMap fixings = {},
         std::map<std::pair<std::string, QuantLib::Date>, std::set<QuantLib::Date>> lastAvailableFixingLookupMap = {}) override;
 
 private:
-    boost::shared_ptr<InputParameters> inputs_;
-    boost::shared_ptr<ore::data::CSVLoader> csvLoader_;
+    QuantLib::ext::shared_ptr<InputParameters> inputs_;
+    QuantLib::ext::shared_ptr<ore::data::CSVLoader> csvLoader_;
 };
 
 class MarketDataCsvLoader : public MarketDataLoader {
 public: 
-    MarketDataCsvLoader(const boost::shared_ptr<InputParameters>& inputs,
-                        const boost::shared_ptr<ore::data::CSVLoader>& csvLoader)
-        : MarketDataLoader(inputs, boost::make_shared<MarketDataCsvLoaderImpl>(inputs, csvLoader)) {}
+    MarketDataCsvLoader(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                        const QuantLib::ext::shared_ptr<ore::data::CSVLoader>& csvLoader)
+        : MarketDataLoader(inputs, QuantLib::ext::make_shared<MarketDataCsvLoaderImpl>(inputs, csvLoader)) {}
 };
     
 } // namespace analytics

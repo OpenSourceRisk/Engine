@@ -33,7 +33,7 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-void PairwiseVarSwap::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
+void PairwiseVarSwap::build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory) {
 
     // Build schedules
     ScheduleBuilder scheduleBuilder;
@@ -69,23 +69,23 @@ void PairwiseVarSwap::build(const boost::shared_ptr<ore::data::EngineFactory>& e
                "Trade " << id() << ": PairwiseVarSwap::build() basket notional must be non-negative (" << notional_
                         << ")");
 
-    boost::shared_ptr<QuantExt::PairwiseVarianceSwap> pairwiseVarSwap(new QuantExt::PairwiseVarianceSwap(
+    QuantLib::ext::shared_ptr<QuantExt::PairwiseVarianceSwap> pairwiseVarSwap(new QuantExt::PairwiseVarianceSwap(
         longShort, underlyingStrikes_[0], underlyingStrikes_[1], basketStrike_, underlyingNotionals_[0],
         underlyingNotionals_[1], basketNotional_, cap_, floor_, payoffLimit_, accrualLag_, valuationSchedule,
         laggedValuationSchedule, settlementDate));
 
     // Pricing Engine
-    boost::shared_ptr<ore::data::EngineBuilder> builder = engineFactory->builder(tradeType_);
+    QuantLib::ext::shared_ptr<ore::data::EngineBuilder> builder = engineFactory->builder(tradeType_);
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    boost::shared_ptr<PairwiseVarSwapEngineBuilder> pairwiseVarSwapBuilder =
-        boost::dynamic_pointer_cast<PairwiseVarSwapEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<PairwiseVarSwapEngineBuilder> pairwiseVarSwapBuilder =
+        QuantLib::ext::dynamic_pointer_cast<PairwiseVarSwapEngineBuilder>(builder);
 
     pairwiseVarSwap->setPricingEngine(pairwiseVarSwapBuilder->engine(
         name(0), name(1), ccy, laggedValuationSchedule.dates().back(), assetClassUnderlyings()));
     setSensitivityTemplate(*pairwiseVarSwapBuilder);
 
     // set up other Trade details
-    instrument_ = boost::shared_ptr<ore::data::InstrumentWrapper>(new ore::data::VanillaInstrument(pairwiseVarSwap));
+    instrument_ = QuantLib::ext::shared_ptr<ore::data::InstrumentWrapper>(new ore::data::VanillaInstrument(pairwiseVarSwap));
 
     npvCurrency_ = currency_;
     notionalCurrency_ = currency_;
@@ -135,7 +135,7 @@ void PairwiseVarSwap::fromXML(XMLNode* node) {
         }
 
         indexNames_.push_back(uVal);
-        boost::shared_ptr<ore::data::Underlying> underlying(new ore::data::Underlying(acString, uName, 1.0));
+        QuantLib::ext::shared_ptr<ore::data::Underlying> underlying(new ore::data::Underlying(acString, uName, 1.0));
         assetClasses.push_back(ac);
         underlyings_.push_back(underlying);
     }
@@ -222,7 +222,7 @@ XMLNode* PairwiseVarSwap::toXML(ore::data::XMLDocument& doc) const {
 }
 
 std::map<AssetClass, std::set<std::string>>
-EqPairwiseVarSwap::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+EqPairwiseVarSwap::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     return {{AssetClass::EQ, std::set<std::string>({name(0), name(1)})}};
 }
 

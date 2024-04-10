@@ -52,24 +52,24 @@ public:
 
     //! Detailed constructor
     DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
-                 map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-                 map<string, boost::shared_ptr<DefaultCurve>>& defaultCurves);
+                 map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
+                 map<string, QuantLib::ext::shared_ptr<DefaultCurve>>& defaultCurves);
     //@}
     //! \name Inspectors
     //@{
     const DefaultCurveSpec& spec() const { return spec_; }
-    const boost::shared_ptr<QuantExt::CreditCurve>& creditCurve() const { return curve_; }
+    const QuantLib::ext::shared_ptr<QuantExt::CreditCurve>& creditCurve() const { return curve_; }
     Real recoveryRate() { return recoveryRate_; }
     //@}
 private:
     DefaultCurveSpec spec_;
-    boost::shared_ptr<QuantExt::CreditCurve> curve_;
+    QuantLib::ext::shared_ptr<QuantExt::CreditCurve> curve_;
     Real recoveryRate_;
 
     //! Build a default curve from CDS spread quotes
     void buildCdsCurve(const std::string& curveID, const DefaultCurveConfig::Config& config, const QuantLib::Date& asof,
                        const DefaultCurveSpec& spec, const Loader& loader,
-                       std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves);
+                       std::map<std::string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves);
 
     //! Build a default curve from hazard rate quotes
     void buildHazardRateCurve(const std::string& curveID, const DefaultCurveConfig::Config& config,
@@ -78,16 +78,16 @@ private:
     //! Build a default curve implied from a spread over a benchmark curve
     void buildBenchmarkCurve(const std::string& curveID, const DefaultCurveConfig::Config& config,
                              const QuantLib::Date& asof, const DefaultCurveSpec& spec, const Loader& loader,
-                             std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves);
+                             std::map<std::string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves);
 
     //! Build a multi section curve
     void buildMultiSectionCurve(const std::string& curveID, const DefaultCurveConfig::Config& config, const Date& asof,
                                 const DefaultCurveSpec& spec, const Loader& loader,
-                                map<string, boost::shared_ptr<DefaultCurve>>& defaultCurves);
+                                map<string, QuantLib::ext::shared_ptr<DefaultCurve>>& defaultCurves);
 
     void buildTransitionMatrixCurve(const std::string& curveID, const DefaultCurveConfig::Config& config,
                                     const Date& asof, const DefaultCurveSpec& spec, const Loader& loader,
-                                    map<string, boost::shared_ptr<DefaultCurve>>& defaultCurves);
+                                    map<string, QuantLib::ext::shared_ptr<DefaultCurve>>& defaultCurves);
 
     //! Build a null curve (null rate, null recovery)
     void buildNullCurve(const std::string& curveID, const DefaultCurveConfig::Config& config, const Date& asof,

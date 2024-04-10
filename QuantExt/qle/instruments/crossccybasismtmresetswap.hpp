@@ -50,9 +50,9 @@ public:
     */
     CrossCcyBasisMtMResetSwap(
         Real foreignNominal, const Currency& foreignCurrency, const Schedule& foreignSchedule,
-        const boost::shared_ptr<IborIndex>& foreignIndex, Spread foreignSpread, const Currency& domesticCurrency,
-        const Schedule& domesticSchedule, const boost::shared_ptr<IborIndex>& domesticIndex, Spread domesticSpread,
-        const boost::shared_ptr<FxIndex>& fxIdx, bool receiveDomestic = true, Size foreignPaymentLag = 0,
+        const QuantLib::ext::shared_ptr<IborIndex>& foreignIndex, Spread foreignSpread, const Currency& domesticCurrency,
+        const Schedule& domesticSchedule, const QuantLib::ext::shared_ptr<IborIndex>& domesticIndex, Spread domesticSpread,
+        const QuantLib::ext::shared_ptr<FxIndex>& fxIdx, bool receiveDomestic = true, Size foreignPaymentLag = 0,
         Size recPaymentLag = 0, boost::optional<bool> foreignIncludeSpread = boost::none,
         boost::optional<Period> foreignLookback = boost::none, boost::optional<Size> foreignFixingDays = boost::none,
         boost::optional<Size> foreignRateCutoff = boost::none, boost::optional<bool> foreignIsAveraged = boost::none,
@@ -72,12 +72,12 @@ public:
     Real foreignNominal() const { return foreignNominal_; }
     const Currency& foreignCurrency() const { return foreignCurrency_; }
     const Schedule& foreignSchedule() const { return foreignSchedule_; }
-    const boost::shared_ptr<IborIndex>& foreignIndex() const { return foreignIndex_; }
+    const QuantLib::ext::shared_ptr<IborIndex>& foreignIndex() const { return foreignIndex_; }
     Spread foreignSpread() const { return foreignSpread_; }
 
     const Currency& domesticCurrency() const { return domesticCurrency_; }
     const Schedule& domesticSchedule() const { return domesticSchedule_; }
-    const boost::shared_ptr<IborIndex>& domesticIndex() const { return domesticIndex_; }
+    const QuantLib::ext::shared_ptr<IborIndex>& domesticIndex() const { return domesticIndex_; }
     Spread domesticSpread() const { return domesticSpread_; }
     //@}
 
@@ -113,15 +113,15 @@ private:
     Real foreignNominal_;
     Currency foreignCurrency_;
     Schedule foreignSchedule_;
-    boost::shared_ptr<IborIndex> foreignIndex_;
+    QuantLib::ext::shared_ptr<IborIndex> foreignIndex_;
     Spread foreignSpread_;
 
     Currency domesticCurrency_;
     Schedule domesticSchedule_;
-    boost::shared_ptr<IborIndex> domesticIndex_;
+    QuantLib::ext::shared_ptr<IborIndex> domesticIndex_;
     Spread domesticSpread_;
 
-    boost::shared_ptr<FxIndex> fxIndex_;
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
     bool receiveDomestic_;
 
     Size foreignPaymentLag_;

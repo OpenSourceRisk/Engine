@@ -44,11 +44,11 @@ BOOST_AUTO_TEST_CASE(testAbsoluteStrike) {
     string strStrike = strike.toString();
 
     // Parse AbsoluteStrike from string
-    boost::shared_ptr<BaseStrike> parsedStrike;
+    QuantLib::ext::shared_ptr<BaseStrike> parsedStrike;
     BOOST_REQUIRE_NO_THROW(parsedStrike = parseBaseStrike(strStrike));
 
     // Check that we get back an AbsoluteStrike
-    boost::shared_ptr<AbsoluteStrike> castStrike = boost::dynamic_pointer_cast<AbsoluteStrike>(parsedStrike);
+    QuantLib::ext::shared_ptr<AbsoluteStrike> castStrike = QuantLib::ext::dynamic_pointer_cast<AbsoluteStrike>(parsedStrike);
     BOOST_CHECK(castStrike);
 
     // Check its members
@@ -74,11 +74,11 @@ BOOST_AUTO_TEST_CASE(testDeltaStrike) {
     string strStrike = strike.toString();
 
     // Parse DeltaStrike from string
-    boost::shared_ptr<BaseStrike> parsedStrike;
+    QuantLib::ext::shared_ptr<BaseStrike> parsedStrike;
     BOOST_REQUIRE_NO_THROW(parsedStrike = parseBaseStrike(strStrike));
 
     // Check that we get back a DeltaStrike
-    boost::shared_ptr<DeltaStrike> castStrike = boost::dynamic_pointer_cast<DeltaStrike>(parsedStrike);
+    QuantLib::ext::shared_ptr<DeltaStrike> castStrike = QuantLib::ext::dynamic_pointer_cast<DeltaStrike>(parsedStrike);
     BOOST_CHECK(castStrike);
 
     // Check its members
@@ -102,11 +102,11 @@ BOOST_AUTO_TEST_CASE(testAtmStrikeNoDelta) {
     string strStrike = strike.toString();
 
     // Parse AtmStrike from string
-    boost::shared_ptr<BaseStrike> parsedStrike;
+    QuantLib::ext::shared_ptr<BaseStrike> parsedStrike;
     BOOST_REQUIRE_NO_THROW(parsedStrike = parseBaseStrike(strStrike));
 
     // Check that we get back an AtmStrike
-    boost::shared_ptr<AtmStrike> castStrike = boost::dynamic_pointer_cast<AtmStrike>(parsedStrike);
+    QuantLib::ext::shared_ptr<AtmStrike> castStrike = QuantLib::ext::dynamic_pointer_cast<AtmStrike>(parsedStrike);
     BOOST_CHECK(castStrike);
 
     // Check its members
@@ -122,9 +122,9 @@ BOOST_AUTO_TEST_CASE(testAtmStrikeNoDeltaEquality) {
      DeltaVolQuote::AtmType atmType = DeltaVolQuote::AtmFwd;
      boost::optional<DeltaVolQuote::DeltaType> atmDeltaType;
 
-     vector<boost::shared_ptr<BaseStrike>> strikes;
-     strikes.push_back(boost::make_shared<AtmStrike>(atmType, atmDeltaType));
-     strikes.push_back(boost::make_shared<AtmStrike>(DeltaVolQuote::AtmFwd));
+     vector<QuantLib::ext::shared_ptr<BaseStrike>> strikes;
+     strikes.push_back(QuantLib::ext::make_shared<AtmStrike>(atmType, atmDeltaType));
+     strikes.push_back(QuantLib::ext::make_shared<AtmStrike>(DeltaVolQuote::AtmFwd));
      BOOST_CHECK(*strikes[0] == *strikes[1]);
 }
 
@@ -145,11 +145,11 @@ BOOST_AUTO_TEST_CASE(testAtmStrikeWithDelta) {
     string strStrike = strike.toString();
 
     // Parse AtmStrike from string
-    boost::shared_ptr<BaseStrike> parsedStrike;
+    QuantLib::ext::shared_ptr<BaseStrike> parsedStrike;
     BOOST_REQUIRE_NO_THROW(parsedStrike = parseBaseStrike(strStrike));
 
     // Check that we get back an AtmStrike
-    boost::shared_ptr<AtmStrike> castStrike = boost::dynamic_pointer_cast<AtmStrike>(parsedStrike);
+    QuantLib::ext::shared_ptr<AtmStrike> castStrike = QuantLib::ext::dynamic_pointer_cast<AtmStrike>(parsedStrike);
     BOOST_CHECK(castStrike);
 
     // Check its members
@@ -175,11 +175,11 @@ BOOST_AUTO_TEST_CASE(testMoneynessStrike) {
     string strStrike = strike.toString();
 
     // Parse MoneynessStrike from string
-    boost::shared_ptr<BaseStrike> parsedStrike;
+    QuantLib::ext::shared_ptr<BaseStrike> parsedStrike;
     BOOST_REQUIRE_NO_THROW(parsedStrike = parseBaseStrike(strStrike));
 
     // Check that we get back an MoneynessStrike
-    boost::shared_ptr<MoneynessStrike> castStrike = boost::dynamic_pointer_cast<MoneynessStrike>(parsedStrike);
+    QuantLib::ext::shared_ptr<MoneynessStrike> castStrike = QuantLib::ext::dynamic_pointer_cast<MoneynessStrike>(parsedStrike);
     BOOST_CHECK(castStrike);
 
     // Check its members

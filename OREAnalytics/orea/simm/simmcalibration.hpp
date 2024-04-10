@@ -69,9 +69,9 @@ public:
             RiskWeights(const SimmConfiguration::RiskClass& rc) : riskClass_(rc) {}
             RiskWeights(const SimmConfiguration::RiskClass& rc, ore::data::XMLNode* node);
 
-            virtual const std::map<CrifRecord::RiskType, std::map<QuantLib::Size, boost::shared_ptr<Amount>>>
+            virtual const std::map<CrifRecord::RiskType, std::map<QuantLib::Size, QuantLib::ext::shared_ptr<Amount>>>
             uniqueRiskWeights() const {
-                return std::map<CrifRecord::RiskType, std::map<QuantLib::Size, boost::shared_ptr<Amount>>>();
+                return std::map<CrifRecord::RiskType, std::map<QuantLib::Size, QuantLib::ext::shared_ptr<Amount>>>();
             }
 
             //! \name Serialisation
@@ -82,7 +82,7 @@ public:
 
             const std::map<QuantLib::Size, Amounts>& delta() const { return delta_; }
             const std::map<QuantLib::Size, Amounts>& vega() const { return vega_; }
-            const std::map<QuantLib::Size, boost::shared_ptr<Amount>>& historicalVolatilityRatio() const {
+            const std::map<QuantLib::Size, QuantLib::ext::shared_ptr<Amount>>& historicalVolatilityRatio() const {
                 return historicalVolatilityRatio_;
             }
 
@@ -91,7 +91,7 @@ public:
             //       MPOR days
             std::map<QuantLib::Size, Amounts> delta_;
             std::map<QuantLib::Size, Amounts> vega_;
-            std::map<QuantLib::Size, boost::shared_ptr<Amount>> historicalVolatilityRatio_;
+            std::map<QuantLib::Size, QuantLib::ext::shared_ptr<Amount>> historicalVolatilityRatio_;
         };
         class IRRiskWeights : public RiskWeights {
         public:
@@ -101,16 +101,16 @@ public:
             ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
             void fromXML(ore::data::XMLNode* node) override;
             //@}
-            virtual const std::map<CrifRecord::RiskType, std::map<QuantLib::Size, boost::shared_ptr<Amount>>>
+            virtual const std::map<CrifRecord::RiskType, std::map<QuantLib::Size, QuantLib::ext::shared_ptr<Amount>>>
             uniqueRiskWeights() const override;
 
-            const std::map<QuantLib::Size, boost::shared_ptr<Amount>>& inflation() const { return inflation_; }
-            const std::map<QuantLib::Size, boost::shared_ptr<Amount>>& xCcyBasis() const { return xCcyBasis_; }
+            const std::map<QuantLib::Size, QuantLib::ext::shared_ptr<Amount>>& inflation() const { return inflation_; }
+            const std::map<QuantLib::Size, QuantLib::ext::shared_ptr<Amount>>& xCcyBasis() const { return xCcyBasis_; }
             const CurrencyLists& currencyLists() const { return currencyLists_; }
 
         private:
-            std::map<QuantLib::Size, boost::shared_ptr<Amount>> inflation_;
-            std::map<QuantLib::Size, boost::shared_ptr<Amount>> xCcyBasis_;
+            std::map<QuantLib::Size, QuantLib::ext::shared_ptr<Amount>> inflation_;
+            std::map<QuantLib::Size, QuantLib::ext::shared_ptr<Amount>> xCcyBasis_;
             CurrencyLists currencyLists_;
         };
         class CreditQRiskWeights : public RiskWeights {
@@ -121,11 +121,11 @@ public:
             ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
             void fromXML(ore::data::XMLNode* node) override;
             //@}
-            virtual const std::map<CrifRecord::RiskType, std::map<QuantLib::Size, boost::shared_ptr<Amount>>>
+            virtual const std::map<CrifRecord::RiskType, std::map<QuantLib::Size, QuantLib::ext::shared_ptr<Amount>>>
             uniqueRiskWeights() const override;
 
         private:
-            std::map<QuantLib::Size, boost::shared_ptr<Amount>> baseCorrelation_;
+            std::map<QuantLib::Size, QuantLib::ext::shared_ptr<Amount>> baseCorrelation_;
         };
         class FXRiskWeights : public RiskWeights {
         public:
@@ -165,16 +165,16 @@ public:
             ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
             void fromXML(ore::data::XMLNode* node) override;
             //@}
-            const boost::shared_ptr<Amount>& subCurves() const { return subCurves_; }
-            const boost::shared_ptr<Amount>& inflation() const { return inflation_; }
-            const boost::shared_ptr<Amount>& xCcyBasis() const { return xCcyBasis_; }
-            const boost::shared_ptr<Amount>& outer() const { return outer_; }
+            const QuantLib::ext::shared_ptr<Amount>& subCurves() const { return subCurves_; }
+            const QuantLib::ext::shared_ptr<Amount>& inflation() const { return inflation_; }
+            const QuantLib::ext::shared_ptr<Amount>& xCcyBasis() const { return xCcyBasis_; }
+            const QuantLib::ext::shared_ptr<Amount>& outer() const { return outer_; }
 
         private:
-            boost::shared_ptr<Amount> subCurves_;
-            boost::shared_ptr<Amount> inflation_;
-            boost::shared_ptr<Amount> xCcyBasis_;
-            boost::shared_ptr<Amount> outer_;
+            QuantLib::ext::shared_ptr<Amount> subCurves_;
+            QuantLib::ext::shared_ptr<Amount> inflation_;
+            QuantLib::ext::shared_ptr<Amount> xCcyBasis_;
+            QuantLib::ext::shared_ptr<Amount> outer_;
         };
         class CreditQCorrelations : public Correlations {
         public:
@@ -184,10 +184,10 @@ public:
             ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
             void fromXML(ore::data::XMLNode* node) override;
             //@}
-            const boost::shared_ptr<Amount>& baseCorrelation() const { return baseCorrelation_; }
+            const QuantLib::ext::shared_ptr<Amount>& baseCorrelation() const { return baseCorrelation_; }
 
         private:
-            boost::shared_ptr<Amount> baseCorrelation_;
+            QuantLib::ext::shared_ptr<Amount> baseCorrelation_;
         };
         class FXCorrelations : public Correlations {
         public:
@@ -197,10 +197,10 @@ public:
             ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
             void fromXML(ore::data::XMLNode* node) override;
             //@}
-            const boost::shared_ptr<Amount>& volatility() const { return volatility_; }
+            const QuantLib::ext::shared_ptr<Amount>& volatility() const { return volatility_; }
 
         private:
-            boost::shared_ptr<Amount> volatility_;
+            QuantLib::ext::shared_ptr<Amount> volatility_;
         };
 
         class ConcentrationThresholds : public ore::data::XMLSerializable {
@@ -245,9 +245,9 @@ public:
         void fromXML(ore::data::XMLNode* node) override;
         //@}
 
-        const boost::shared_ptr<RiskWeights>& riskWeights() const { return riskWeights_; }
-        const boost::shared_ptr<Correlations>& correlations() const { return correlations_; }
-        const boost::shared_ptr<ConcentrationThresholds>& concentrationThresholds() const {
+        const QuantLib::ext::shared_ptr<RiskWeights>& riskWeights() const { return riskWeights_; }
+        const QuantLib::ext::shared_ptr<Correlations>& correlations() const { return correlations_; }
+        const QuantLib::ext::shared_ptr<ConcentrationThresholds>& concentrationThresholds() const {
             return concentrationThresholds_;
         }
         const std::map<CrifRecord::RiskType, std::vector<std::string>>& buckets() const { return buckets_; }
@@ -256,9 +256,9 @@ public:
 
     private:
         SimmConfiguration::RiskClass riskClass_;
-        boost::shared_ptr<RiskWeights> riskWeights_;
-        boost::shared_ptr<Correlations> correlations_;
-        boost::shared_ptr<ConcentrationThresholds> concentrationThresholds_;
+        QuantLib::ext::shared_ptr<RiskWeights> riskWeights_;
+        QuantLib::ext::shared_ptr<Correlations> correlations_;
+        QuantLib::ext::shared_ptr<ConcentrationThresholds> concentrationThresholds_;
         std::map<CrifRecord::RiskType, std::vector<std::string>> buckets_;
         std::map<CrifRecord::RiskType, std::vector<std::string>> labels1_;
         std::map<CrifRecord::RiskType, std::vector<std::string>> labels2_;
@@ -276,7 +276,7 @@ public:
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     void fromXML(ore::data::XMLNode* node) override;
     //@}
-    const std::map<SimmConfiguration::RiskClass, boost::shared_ptr<RiskClassData>>& riskClassData() const {
+    const std::map<SimmConfiguration::RiskClass, QuantLib::ext::shared_ptr<RiskClassData>>& riskClassData() const {
         return riskClassData_;
     }
     const Amounts& riskClassCorrelations() const { return riskClassCorrelations_; }
@@ -290,7 +290,7 @@ private:
     std::string id_;
     std::vector<std::string> versionNames_;
     std::vector<std::pair<std::string, std::string>> additionalFields_;
-    std::map<SimmConfiguration::RiskClass, boost::shared_ptr<RiskClassData>> riskClassData_;
+    std::map<SimmConfiguration::RiskClass, QuantLib::ext::shared_ptr<RiskClassData>> riskClassData_;
     Amounts riskClassCorrelations_;
 };
 
@@ -305,13 +305,13 @@ public:
     void fromXML(ore::data::XMLNode* node) override;
     //@}
 
-    void add(const boost::shared_ptr<SimmCalibration>&);
+    void add(const QuantLib::ext::shared_ptr<SimmCalibration>&);
     bool hasId(const std::string& id) const { return data_.find(id) != data_.end(); }
-    const boost::shared_ptr<SimmCalibration>& getById(const std::string& id) const;
-    const boost::shared_ptr<SimmCalibration> getBySimmVersion(const std::string& id) const;
+    const QuantLib::ext::shared_ptr<SimmCalibration>& getById(const std::string& id) const;
+    const QuantLib::ext::shared_ptr<SimmCalibration> getBySimmVersion(const std::string& id) const;
 
 private:
-    std::map<std::string, boost::shared_ptr<SimmCalibration>> data_;
+    std::map<std::string, QuantLib::ext::shared_ptr<SimmCalibration>> data_;
 };
 
 } // namespace analytics

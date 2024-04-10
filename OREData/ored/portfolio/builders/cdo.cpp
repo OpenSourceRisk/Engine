@@ -68,10 +68,10 @@ std::vector<Handle<DefaultProbabilityTermStructure>> buildPerformanceOptimizedDe
                 if (close_enough(spread, 0.0)) {
                     spread = 1e-18;
                 }
-                return Handle<Quote>(boost::make_shared<SimpleQuote>(spread));
+                return Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(spread));
             });
             clientCurve = Handle<DefaultProbabilityTermStructure>(
-                boost::make_shared<SpreadedSurvivalProbabilityTermStructure>(baseCurve, times, spreads));
+                QuantLib::ext::make_shared<SpreadedSurvivalProbabilityTermStructure>(baseCurve, times, spreads));
             if (baseCurve->allowsExtrapolation())
                 clientCurve->enableExtrapolation();
         }
@@ -80,9 +80,9 @@ std::vector<Handle<DefaultProbabilityTermStructure>> buildPerformanceOptimizedDe
     return dpts;
 }
 
-boost::shared_ptr<PricingEngine> GaussCopulaBucketingCdoEngineBuilder::engineImpl(
+QuantLib::ext::shared_ptr<PricingEngine> GaussCopulaBucketingCdoEngineBuilder::engineImpl(
     const Currency& ccy, bool isIndexCDS, const vector<string>& creditCurves,
-    const boost::shared_ptr<SimpleQuote>& calibrationFactor,
+    const QuantLib::ext::shared_ptr<SimpleQuote>& calibrationFactor,
     const QuantLib::Real fixedRecovery) {
     if (isIndexCDS) {
         Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
@@ -106,10 +106,10 @@ boost::shared_ptr<PricingEngine> GaussCopulaBucketingCdoEngineBuilder::engineImp
         if (optimizedSensitivityCalculation()) {
             dpts = buildPerformanceOptimizedDefaultCurves(dpts);
         }
-        return boost::make_shared<QuantExt::MidPointIndexCdsEngine>(dpts, recovery, yts);
+        return QuantLib::ext::make_shared<QuantExt::MidPointIndexCdsEngine>(dpts, recovery, yts);
     } else {
         Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
-        return boost::make_shared<QuantExt::IndexCdsTrancheEngine>(yts);
+        return QuantLib::ext::make_shared<QuantExt::IndexCdsTrancheEngine>(yts);
     }
 }
 } // namespace data

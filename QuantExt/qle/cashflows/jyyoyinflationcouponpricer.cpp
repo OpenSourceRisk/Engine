@@ -27,7 +27,7 @@ using QuantLib::Size;
 
 namespace QuantExt {
 
-JyYoYInflationCouponPricer::JyYoYInflationCouponPricer(const boost::shared_ptr<CrossAssetModel>& model, Size index)
+JyYoYInflationCouponPricer::JyYoYInflationCouponPricer(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index)
     : YoYInflationCouponPricer(model->irlgm1f(model->ccyIndex(model->infjy(index)->currency()))->termStructure()),
       model_(model), index_(index) {
 
@@ -74,7 +74,7 @@ Rate JyYoYInflationCouponPricer::adjustedFixing(Rate) const {
     return jyExpectedIndexRatio(model_, index_, S, T, index->interpolated()) - 1;
 }
 
-Real jyExpectedIndexRatio(const boost::shared_ptr<CrossAssetModel>& model, Size index, Time S, Time T,
+Real jyExpectedIndexRatio(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index, Time S, Time T,
                           bool indexIsInterpolated) {
 
     using namespace CrossAssetAnalytics;

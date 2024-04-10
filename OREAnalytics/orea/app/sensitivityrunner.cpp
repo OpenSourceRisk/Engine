@@ -42,17 +42,17 @@ vector<string> getFilenames(const string& fileString, const string& path) {
 namespace ore {
 namespace analytics {
 
-void SensitivityRunner::runSensitivityAnalysis(boost::shared_ptr<Market> market,
-                                               const boost::shared_ptr<CurveConfigurations>& curveConfigs,
-                                               const boost::shared_ptr<TodaysMarketParameters>& todaysMarketParams) {
+void SensitivityRunner::runSensitivityAnalysis(QuantLib::ext::shared_ptr<Market> market,
+                                               const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs,
+                                               const QuantLib::ext::shared_ptr<TodaysMarketParameters>& todaysMarketParams) {
 
     MEM_LOG;
     LOG("Running sensitivity analysis");
 
-    boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
-    sensiData_ = boost::make_shared<SensitivityScenarioData>();
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
-    boost::shared_ptr<Portfolio> sensiPortfolio = boost::make_shared<Portfolio>();
+    QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
+    sensiData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<Portfolio> sensiPortfolio = QuantLib::ext::make_shared<Portfolio>();
     string marketConfiguration = params_->get("markets", "sensitivity");
 
     sensiInputInitialize(simMarketData, sensiData_, engineData, sensiPortfolio);
@@ -65,7 +65,7 @@ void SensitivityRunner::runSensitivityAnalysis(boost::shared_ptr<Market> market,
         analyticFxSensis = parseBool(params_->get("sensitivity", "analyticFxSensis"));
     }
 
-    boost::shared_ptr<SensitivityAnalysis> sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
+    QuantLib::ext::shared_ptr<SensitivityAnalysis> sensiAnalysis = QuantLib::ext::make_shared<SensitivityAnalysis>(
         sensiPortfolio, market, marketConfiguration, engineData, simMarketData, sensiData_, recalibrateModels,
         curveConfigs, todaysMarketParams, false, referenceData_, iborFallbackConfig_, continueOnError_,
         analyticFxSensis);
@@ -79,10 +79,10 @@ void SensitivityRunner::runSensitivityAnalysis(boost::shared_ptr<Market> market,
     MEM_LOG;
 }
 
-void SensitivityRunner::sensiInputInitialize(boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-                                             boost::shared_ptr<SensitivityScenarioData>& sensiData,
-                                             boost::shared_ptr<EngineData>& engineData,
-                                             boost::shared_ptr<Portfolio>& sensiPortfolio) {
+void SensitivityRunner::sensiInputInitialize(QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+                                             QuantLib::ext::shared_ptr<SensitivityScenarioData>& sensiData,
+                                             QuantLib::ext::shared_ptr<EngineData>& engineData,
+                                             QuantLib::ext::shared_ptr<Portfolio>& sensiPortfolio) {
 
     DLOG("sensiInputInitialize called");
 
@@ -110,7 +110,7 @@ void SensitivityRunner::sensiInputInitialize(boost::shared_ptr<ScenarioSimMarket
     DLOG("sensiInputInitialize done");
 }
 
-void SensitivityRunner::sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis) {
+void SensitivityRunner::sensiOutputReports(const QuantLib::ext::shared_ptr<SensitivityAnalysis>& sensiAnalysis) {
 
     string outputPath = params_->get("setup", "outputPath");
     Real sensiThreshold = parseReal(params_->get("sensitivity", "outputSensitivityThreshold"));
@@ -121,7 +121,7 @@ void SensitivityRunner::sensiOutputReports(const boost::shared_ptr<SensitivityAn
 
     // Create a stream from the sensitivity cube
     auto baseCurrency = sensiAnalysis->simMarketData()->baseCcy();
-    auto ss = boost::make_shared<SensitivityCubeStream>(sensiAnalysis->sensiCube(), baseCurrency);
+    auto ss = QuantLib::ext::make_shared<SensitivityCubeStream>(sensiAnalysis->sensiCube(), baseCurrency);
 
     Size outputPrecision = 2;
     if (params_->has("sensitivity", "outputPrecision")) {

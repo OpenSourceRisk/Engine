@@ -47,7 +47,7 @@ public:
                                     Size steps = Null<Size>()) const = 0;
 
     /* the underlying model */
-    virtual const boost::shared_ptr<LinearGaussMarkovModel>& model() const = 0;
+    virtual const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model() const = 0;
 };
 
 } // namespace QuantExt

@@ -30,11 +30,11 @@ using namespace QuantLib;
 
 class IborFallbackCurve : public QuantLib::YieldTermStructure {
 public:
-    IborFallbackCurve(const boost::shared_ptr<IborIndex>& originalIndex,
-                      const boost::shared_ptr<OvernightIndex>& rfrIndex, const Real spread, const Date& switchDate);
+    IborFallbackCurve(const QuantLib::ext::shared_ptr<IborIndex>& originalIndex,
+                      const QuantLib::ext::shared_ptr<OvernightIndex>& rfrIndex, const Real spread, const Date& switchDate);
 
-    boost::shared_ptr<IborIndex> originalIndex() const;
-    boost::shared_ptr<OvernightIndex> rfrIndex() const;
+    QuantLib::ext::shared_ptr<IborIndex> originalIndex() const;
+    QuantLib::ext::shared_ptr<OvernightIndex> rfrIndex() const;
     Real spread() const;
     const Date& switchDate() const;
 
@@ -46,8 +46,8 @@ public:
 private:
     Real discountImpl(QuantLib::Time t) const override;
 
-    boost::shared_ptr<IborIndex> originalIndex_;
-    boost::shared_ptr<OvernightIndex> rfrIndex_;
+    QuantLib::ext::shared_ptr<IborIndex> originalIndex_;
+    QuantLib::ext::shared_ptr<OvernightIndex> rfrIndex_;
     Real spread_;
     Date switchDate_;
 };

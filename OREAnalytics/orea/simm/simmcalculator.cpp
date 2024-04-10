@@ -63,9 +63,9 @@ typedef SimmConfiguration::Regulation Regulation;
 typedef SimmConfiguration::SimmSide SimmSide;
 
 SimmCalculator::SimmCalculator(const ore::analytics::Crif& crif,
-                               const boost::shared_ptr<SimmConfiguration>& simmConfiguration,
+                               const QuantLib::ext::shared_ptr<SimmConfiguration>& simmConfiguration,
                                const string& calculationCcyCall, const string& calculationCcyPost,
-                               const string& resultCcy, const boost::shared_ptr<Market> market,
+                               const string& resultCcy, const QuantLib::ext::shared_ptr<Market> market,
                                const bool determineWinningRegulations, const bool enforceIMRegulations,
                                const bool quiet, const map<SimmSide, set<NettingSetDetails>>& hasSEC,
                                const map<SimmSide, set<NettingSetDetails>>& hasCFTC)

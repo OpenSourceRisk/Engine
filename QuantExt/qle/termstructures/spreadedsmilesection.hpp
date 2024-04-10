@@ -35,8 +35,8 @@ using QuantLib::Volatility;
 
 class SpreadedSmileSection : public QuantLib::SpreadedSmileSection {
 public:
-    SpreadedSmileSection(const boost::shared_ptr<SmileSection>& underlyingSection, const Handle<Quote>& spread);
-    SpreadedSmileSection(const boost::shared_ptr<QuantLib::SpreadedSmileSection>& underlyingSection);
+    SpreadedSmileSection(const QuantLib::ext::shared_ptr<SmileSection>& underlyingSection, const Handle<Quote>& spread);
+    SpreadedSmileSection(const QuantLib::ext::shared_ptr<QuantLib::SpreadedSmileSection>& underlyingSection);
 
 protected:
     Volatility volatilityImpl(Rate strike) const override;

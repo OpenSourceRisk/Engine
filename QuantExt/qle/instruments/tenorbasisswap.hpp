@@ -43,20 +43,20 @@ public:
     //@{
     //! Constructor with conventions deduced from the indices
     TenorBasisSwap(const Date& effectiveDate, Real nominal, const Period& swapTenor,
-                   const boost::shared_ptr<IborIndex>& payIndex, Spread paySpread, const Period& payFrequency,
-                   const boost::shared_ptr<IborIndex>& recIndex, Spread recSpread, const Period& recFrequency,
+                   const QuantLib::ext::shared_ptr<IborIndex>& payIndex, Spread paySpread, const Period& payFrequency,
+                   const QuantLib::ext::shared_ptr<IborIndex>& recIndex, Spread recSpread, const Period& recFrequency,
                    DateGeneration::Rule rule = DateGeneration::Backward, bool includeSpread = false,
                    bool spreadOnRec = true,
                    QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding,
                    const bool telescopicValueDates = false);
     //! Constructor using Schedules with a full interface
-    TenorBasisSwap(Real nominal, const Schedule& paySchedule, const boost::shared_ptr<IborIndex>& payIndex,
-                   Spread paySpread, const Schedule& recSchedule, const boost::shared_ptr<IborIndex>& recIndex,
+    TenorBasisSwap(Real nominal, const Schedule& paySchedule, const QuantLib::ext::shared_ptr<IborIndex>& payIndex,
+                   Spread paySpread, const Schedule& recSchedule, const QuantLib::ext::shared_ptr<IborIndex>& recIndex,
                    Spread recSpread, bool includeSpread = false, bool spreadOnRec = true,
                    QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding,
                    const bool telescopicValueDates = false);
-    TenorBasisSwap(const std::vector<Real>& nominals, const Schedule& paySchedule, const boost::shared_ptr<IborIndex>& payIndex,
-                   Spread paySpread, const Schedule& recSchedule, const boost::shared_ptr<IborIndex>& recIndex,
+    TenorBasisSwap(const std::vector<Real>& nominals, const Schedule& paySchedule, const QuantLib::ext::shared_ptr<IborIndex>& payIndex,
+                   Spread paySpread, const Schedule& recSchedule, const QuantLib::ext::shared_ptr<IborIndex>& recIndex,
                    Spread recSpread, bool includeSpread = false, bool spreadOnRec = true,
                    QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding,
                    const bool telescopicValueDates = false);
@@ -68,12 +68,12 @@ public:
     const std::vector<Real>& nominals() const { return nominals_; }
 
     const Schedule& paySchedule() const;
-    const boost::shared_ptr<IborIndex>& payIndex() const;
+    const QuantLib::ext::shared_ptr<IborIndex>& payIndex() const;
     Spread paySpread() const;
     const Leg& payLeg() const;
 
     const Schedule& recSchedule() const;
-    const boost::shared_ptr<IborIndex>& recIndex() const;
+    const QuantLib::ext::shared_ptr<IborIndex>& recIndex() const;
     Spread recSpread() const;
     const Leg& recLeg() const;
     const Period& recFrequency() const;
@@ -102,12 +102,12 @@ private:
     std::vector<Real> nominals_;
 
     Schedule paySchedule_;
-    boost::shared_ptr<IborIndex> payIndex_;
+    QuantLib::ext::shared_ptr<IborIndex> payIndex_;
     Spread paySpread_;
     Period payFrequency_;
 
     Schedule recSchedule_;
-    boost::shared_ptr<IborIndex> recIndex_;
+    QuantLib::ext::shared_ptr<IborIndex> recIndex_;
     Spread recSpread_;
     Period recFrequency_;
 
@@ -142,7 +142,7 @@ inline Real TenorBasisSwap::nominal() const {
 }
 inline const Schedule& TenorBasisSwap::paySchedule() const { return paySchedule_; }
 
-inline const boost::shared_ptr<IborIndex>& TenorBasisSwap::payIndex() const { return payIndex_; }
+inline const QuantLib::ext::shared_ptr<IborIndex>& TenorBasisSwap::payIndex() const { return payIndex_; }
 
 inline Spread TenorBasisSwap::paySpread() const { return paySpread_; }
 
@@ -150,7 +150,7 @@ inline const Leg& TenorBasisSwap::payLeg() const { return legs_[idxPay_]; }
 
 inline const Schedule& TenorBasisSwap::recSchedule() const { return recSchedule_; }
 
-inline const boost::shared_ptr<IborIndex>& TenorBasisSwap::recIndex() const { return recIndex_; }
+inline const QuantLib::ext::shared_ptr<IborIndex>& TenorBasisSwap::recIndex() const { return recIndex_; }
 
 inline Spread TenorBasisSwap::recSpread() const { return recSpread_; }
 

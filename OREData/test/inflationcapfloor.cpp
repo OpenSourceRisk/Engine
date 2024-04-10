@@ -52,38 +52,38 @@ public:
         cal = TARGET();
 
         // Add EUR notional curve
-        Handle<YieldTermStructure> nominalTs(boost::make_shared<FlatForward>(0, cal, 0.005, dc));
+        Handle<YieldTermStructure> nominalTs(QuantLib::ext::make_shared<FlatForward>(0, cal, 0.005, dc));
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")] = nominalTs;
 
         // Add EUHICPXT YoY Inflation Curve
-        boost::shared_ptr<ZeroInflationIndex> zcindex = boost::shared_ptr<EUHICPXT>(new EUHICPXT());
+        QuantLib::ext::shared_ptr<ZeroInflationIndex> zcindex = QuantLib::ext::shared_ptr<EUHICPXT>(new EUHICPXT());
         ;
-        boost::shared_ptr<YoYInflationIndex> index =
-            boost::make_shared<QuantExt::YoYInflationIndexWrapper>(zcindex, false);
+        QuantLib::ext::shared_ptr<YoYInflationIndex> index =
+            QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zcindex, false);
 
         std::vector<Date> datesZCII = {asof + 1 * Years, asof + 2 * Years, asof + 5 * Years, asof + 10 * Years,
                                        asof + 20 * Years};
         std::vector<Rate> ratesZCII = {1.1625, 1.23211, 1.36019, 1.51199, 1.74773};
 
-        std::vector<boost::shared_ptr<YoYInflationTraits::helper>> instruments;
+        std::vector<QuantLib::ext::shared_ptr<YoYInflationTraits::helper>> instruments;
         for (Size i = 0; i < datesZCII.size(); i++) {
-            Handle<Quote> quote(boost::shared_ptr<Quote>(new SimpleQuote(ratesZCII[i] / 100)));
-            boost::shared_ptr<YoYInflationTraits::helper> anInstrument =
-                boost::make_shared<YearOnYearInflationSwapHelper>(quote, Period(3, Months), datesZCII[i], cal, bdc, dc,
+            Handle<Quote> quote(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(ratesZCII[i] / 100)));
+            QuantLib::ext::shared_ptr<YoYInflationTraits::helper> anInstrument =
+                QuantLib::ext::make_shared<YearOnYearInflationSwapHelper>(quote, Period(3, Months), datesZCII[i], cal, bdc, dc,
                                                                   index, nominalTs);
             instruments.push_back(anInstrument);
         };
-        boost::shared_ptr<YoYInflationTermStructure> yoyTs = boost::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(
+        QuantLib::ext::shared_ptr<YoYInflationTermStructure> yoyTs = QuantLib::ext::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(
             new PiecewiseYoYInflationCurve<Linear>(asof, TARGET(), Actual365Fixed(), Period(3, Months), Monthly,
                                                    index->interpolated(), ratesZCII[0] / 100, instruments));
 
         yoyInflationIndices_[make_pair(Market::defaultConfiguration, "EUHICPXT")] =
-            Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
+            Handle<YoYInflationIndex>(QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(
                 parseZeroInflationIndex("EUHICPXT"), false, Handle<YoYInflationTermStructure>(yoyTs)));
 
         // Add EUHICPXT yoy volatility term structure
-        boost::shared_ptr<QuantLib::ConstantYoYOptionletVolatility> volSurface =
-            boost::make_shared<QuantLib::ConstantYoYOptionletVolatility>(0.01, 0, cal, bdc, dc, Period(3, Months),
+        QuantLib::ext::shared_ptr<QuantLib::ConstantYoYOptionletVolatility> volSurface =
+            QuantLib::ext::make_shared<QuantLib::ConstantYoYOptionletVolatility>(0.01, 0, cal, bdc, dc, Period(3, Months),
                                                                          Monthly, index->interpolated(), -1.0, 100.0,
                                                                          VolatilityType::Normal);
 
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(testYoYCapFloor) {
     Date today(18, July, 2016);
     Settings::instance().evaluationDate() = today;
 
-    boost::shared_ptr<TestMarket> market = boost::make_shared<TestMarket>(today);
+    QuantLib::ext::shared_ptr<TestMarket> market = QuantLib::ext::make_shared<TestMarket>(today);
     // Test if EUR yoy inflation curve is empty
     Handle<YoYInflationIndex> infidx = market->yoyInflationIndex("EUHICPXT");
     QL_REQUIRE(!infidx.empty(), "EUHICPXT inflation index not found");
@@ -143,21 +143,21 @@ BOOST_AUTO_TEST_CASE(testYoYCapFloor) {
     bool isPayerYY = false;
     string indexYY = "EUHICPXT";
     string lag = "3M";
-    LegData legYY(boost::make_shared<YoYLegData>(indexYY, lag, 0), isPayerYY, "EUR", scheduleYY, dc, notional,
+    LegData legYY(QuantLib::ext::make_shared<YoYLegData>(indexYY, lag, 0), isPayerYY, "EUR", scheduleYY, dc, notional,
                   vector<string>(), paymentConvention, false, true);
 
     std::vector<double> caps(1, 0.009);
     // Build capfloor trades
-    boost::shared_ptr<Trade> yyCap(new ore::data::CapFloor(env, "Long", legYY, caps, std::vector<double>()));
+    QuantLib::ext::shared_ptr<Trade> yyCap(new ore::data::CapFloor(env, "Long", legYY, caps, std::vector<double>()));
 
     // engine data and factory
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("YYCapFloor") = "YYCapModel";
     engineData->engine("YYCapFloor") = "YYCapEngine";
-    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
     // build capfloor and portfolio
-    boost::shared_ptr<Portfolio> portfolio(new Portfolio());
+    QuantLib::ext::shared_ptr<Portfolio> portfolio(new Portfolio());
     yyCap->id() = "YoY_Cap";
 
     portfolio->add(yyCap);
@@ -173,10 +173,10 @@ BOOST_AUTO_TEST_CASE(testYoYCapFloor) {
             .withPaymentAdjustment(Following)
             .withRateCurve(nominalTs);
 
-    boost::shared_ptr<YoYInflationCapFloor> qlCap(new YoYInflationCap(yyLeg, caps));
+    QuantLib::ext::shared_ptr<YoYInflationCapFloor> qlCap(new YoYInflationCap(yyLeg, caps));
 
     Handle<QuantLib::YoYOptionletVolatilitySurface> hovs = market->yoyCapFloorVol("EUHICPXT");
-    auto dscEngine = boost::make_shared<YoYInflationBachelierCapFloorEngine>(
+    auto dscEngine = QuantLib::ext::make_shared<YoYInflationBachelierCapFloorEngine>(
         market->yoyInflationIndex("EUHICPXT").currentLink(), hovs, nominalTs);
     qlCap->setPricingEngine(dscEngine);
     BOOST_CHECK_CLOSE(yyCap->instrument()->NPV(), qlCap->NPV(), 1E-8); // this is 1E-10 rel diff
