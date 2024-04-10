@@ -103,6 +103,10 @@ QuantLib::Date BucketMapping::validFromDate() const {
 
 string SimmBucketMapperBase::bucket(const RiskType& riskType, const string& qualifier) const {
 
+    auto key = std::make_pair(riskType, qualifier);
+    if (auto b = cache_.find(key); b != cache_.end())
+        return b->second;
+
     QL_REQUIRE(hasBuckets(riskType), "The risk type " << riskType << " does not have buckets");
 
     // Vol risk type bucket mappings are stored in their non-vol counterparts
@@ -114,7 +118,9 @@ string SimmBucketMapperBase::bucket(const RiskType& riskType, const string& qual
 
     // Deal with RiskType::IRCurve
     if (lookupRiskType == RiskType::IRCurve || lookupRiskType == RiskType::GIRR_DELTA) {
-        return irBucket(qualifier);
+        auto tmp = irBucket(qualifier);
+        cache_[key] = tmp;
+        return tmp;
     }
 
     string bucket;
@@ -186,6 +192,7 @@ string SimmBucketMapperBase::bucket(const RiskType& riskType, const string& qual
         for (auto m : bucketMapping_.at(lookupRiskType).at(lookupName)) {
             if (m.validToDate() >= today && m.validFromDate() <= today && m.fallback() == !haveMapping) {
                 bucket = m.bucket();
+                cache_[key] = bucket;
                 return bucket;
             }
         }
@@ -193,6 +200,7 @@ string SimmBucketMapperBase::bucket(const RiskType& riskType, const string& qual
         bucket = "Residual";
     }
 
+    cache_[key] = bucket;
     return bucket;
 }
 
@@ -332,6 +340,8 @@ XMLNode* SimmBucketMapperBase::toXML(ore::data::XMLDocument& doc) const {
 void SimmBucketMapperBase::addMapping(const RiskType& riskType, const string& qualifier, const string& bucket,
                                       const string& validFrom, const string& validTo, bool fallback) {
 
+    cache_.clear();
+
     // Possibly map to non-vol counterpart for lookup
     RiskType rt = riskType;
     if (nonVolRiskTypeMap.count(riskType) > 0) {
@@ -393,6 +403,7 @@ void SimmBucketMapperBase::checkRiskType(const RiskType& riskType) const {
 }
 
 void SimmBucketMapperBase::reset() {
+    cache_.clear();
     // Clear the bucket mapper and add back the commodity mappings
     bucketMapping_.clear();
     failedMappings_.clear();
