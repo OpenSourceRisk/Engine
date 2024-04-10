@@ -59,7 +59,10 @@ public:
     //! Runs analytics and generates reports after using the second OREApp c'tor
     void run(const std::vector<std::string>& marketData,
              const std::vector<std::string>& fixingData);
-    
+
+    void initFromParams();
+    void initFromInputs();
+
     boost::shared_ptr<InputParameters> getInputs() { return inputs_; }
 
     std::set<std::string> getAnalyticTypes();
@@ -96,10 +99,7 @@ protected:
                   const std::string& structuredLogFile = "", QuantLib::Size structuredLogRotationSize = 100 * 1024 * 1024);
     //! remove logs
     void closeLog();
-
-    void initFromParams();
-    void initFromInputs();
-  
+      
     //! ORE Input parameters
     boost::shared_ptr<Parameters> params_;
     boost::shared_ptr<InputParameters> inputs_;
