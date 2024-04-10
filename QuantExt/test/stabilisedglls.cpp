@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(testBigInputNumbers) {
 
     std::vector<Real> x, y;
 
-    std::vector<boost::function1<Real, Real> > v;
+    std::vector<ext::function<Real(Real)> > v;
     v.push_back([](Real x) { return 1.0; });
     v.push_back([](Real x) { return x; });
     v.push_back([](Real x) { return x * x; });
