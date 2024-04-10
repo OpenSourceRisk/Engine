@@ -46,7 +46,7 @@ const QuantLib::ext::shared_ptr<ore::data::Report>& MarketRiskBacktest::Backtest
 }
 
 MarketRiskBacktest::MarketRiskBacktest(
-    const std::string& baseCurrency,
+    const std::string& calculationCurrency,
     std::unique_ptr<BacktestArgs> btArgs, 
     std::unique_ptr<SensiRunArgs> sensiArgs,
     std::unique_ptr<FullRevalArgs> revalArgs,
@@ -54,7 +54,7 @@ MarketRiskBacktest::MarketRiskBacktest(
     const ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
     const bool breakdown,
     const bool requireTradePnl)
-    : MarketRiskReport(baseCurrency, btArgs->backtestPeriod_, hisScenGen, std::move(sensiArgs), std::move(revalArgs),
+    : MarketRiskReport(calculationCurrency, btArgs->backtestPeriod_, hisScenGen, std::move(sensiArgs), std::move(revalArgs),
                        std::move(mtArgs), breakdown, requireTradePnl),
       btArgs_(std::move(btArgs)) {
     init();
@@ -403,7 +403,7 @@ void MarketRiskBacktest::addPnlRow(const QuantLib::ext::shared_ptr<BacktestRepor
         .add(shift_2)
         .add(deltaPnl)
         .add(gammaPnl)
-        .add(baseCurrency_);
+        .add(calculationCurrency_);
 }
 
 void BacktestPNLCalculator::writePNL(Size scenarioIdx, bool isCall, const RiskFactorKey& key_1, Real shift_1,
