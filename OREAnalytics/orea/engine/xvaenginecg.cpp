@@ -281,7 +281,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     LOG("XvaEngineCG: do forward evaluation");
 
     Real eps = 0.0; // smoothing parameter for indicator functions
-    ops_ = getRandomVariableOps(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial, bumpCvaSensis ? eps : 0.0);
+    ops_ = getRandomVariableOps(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial, bumpCvaSensis ? eps : 0.0,
+                                Null<Real>()); // todo set regression variance cutoff
     grads_ = getRandomVariableGradients(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial, eps);
     opNodeRequirements_ = getRandomVariableOpNodeRequirements();
 
