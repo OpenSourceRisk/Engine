@@ -118,6 +118,12 @@ Real parseReal(const string& s) {
     }
 }
 
+Real parseRealOrNull(const string& s) {
+    if(s.empty())
+        return Null<Real>();
+    return parseReal(s);
+}
+
 bool tryParseReal(const string& s, QuantLib::Real& result) {
     try {
         result = std::stod(s);
