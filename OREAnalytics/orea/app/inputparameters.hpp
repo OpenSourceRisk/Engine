@@ -115,7 +115,7 @@ public:
 
     // Setters for npv analytics
     void setOutputAdditionalResults(bool b) { outputAdditionalResults_ = b; }
-
+    void setAdditionalResultsReportPrecision(std::size_t p) { additionalResultsReportPrecision_ = p; }
     // Setters for cashflows
     void setIncludePastCashflows(bool b) { includePastCashflows_ = b; }
 
@@ -406,6 +406,7 @@ public:
      * Getters for npv analytics
      ***************************/
     bool outputAdditionalResults() const { return outputAdditionalResults_; };
+    std::size_t additionalResultsReportPrecision() const { return additionalResultsReportPrecision_; }
 
     /***********************
      * Getters for cashflows
@@ -681,6 +682,7 @@ protected:
      * NPV analytic
      *************/
     bool outputAdditionalResults_ = false;
+    std::size_t additionalResultsReportPrecision_ = 6;
     bool outputCurves_ = false;
     std::string curvesMarketConfig_ = Market::defaultConfiguration;
     std::string curvesGrid_ = "240,1M";

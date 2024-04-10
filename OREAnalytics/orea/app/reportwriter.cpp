@@ -1233,7 +1233,8 @@ void addMapResults(boost::any resultMap, const std::string& tradeId, const std::
 }
 
 void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_ptr<Portfolio> portfolio,
-                                                boost::shared_ptr<Market> market, const std::string& baseCurrency) {
+                                                boost::shared_ptr<Market> market, const std::string& baseCurrency,
+                                                const std::size_t precision) {
 
     LOG("Writing AdditionalResults report");
 
@@ -1252,7 +1253,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
             // Get the additional data for the current instrument.
             auto additionalData = trade->additionalData();
             for (const auto& kv : additionalData) {
-                auto p = parseBoostAny(kv.second, 6);
+                auto p = parseBoostAny(kv.second, precision);
                 if (boost::starts_with(p.first, "vector")) {
                     vector<std::string> tokens;
                     string vect = p.second;
@@ -1329,7 +1330,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
                     } else if (kv.second.type() == typeid(result_type_scalar)) {
                         addMapResults<result_type_scalar>(kv.second, tradeId, kv.first, report);
                     } else {
-                        auto p = parseBoostAny(kv.second, 6);
+                        auto p = parseBoostAny(kv.second, precision);
                         if (boost::starts_with(p.first, "vector")) {
                             vector<std::string> tokens;
                             string vect = p.second;
