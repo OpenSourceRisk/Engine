@@ -107,9 +107,9 @@ private:
     const McParams mcParams_;
     const Size timeStepsPerYear_;
     const std::vector<Size> projectedStateProcessIndices_; // if data is injected via the AMCModel interface
+    const Real regressionVarianceCutoff_ = Null<Real>();
 
     // computed values
-    mutable map<Size, std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>> basisFns_;
     mutable Date referenceDate_;                      // the model reference date
     mutable std::set<Date> effectiveSimulationDates_; // the dates effectively simulated (including today)
     mutable TimeGrid timeGrid_;                       // the (possibly refined) time grid for the simulation
@@ -144,8 +144,8 @@ private:
     bool injectedPathStickyCloseOutRun_;
     Size overwriteModelSize_ = Null<Size>();
 
-    // stored regression coefficients and state size
-    mutable std::map<long, std::pair<Array, Size>> storedRegressionCoeff_;
+    // stored regression coefficients, state size (before possible transform) and (optional) coordinate transform
+    mutable std::map<long, std::tuple<Array, Size, Matrix>> storedRegressionModel_;
 };
 
 } // namespace data

@@ -112,7 +112,7 @@ protected:
     mutable bool inTrainingPhase_ = false; // are we currently using training paths?
 
     // stored regression coefficients
-    mutable std::map<long, std::pair<Array, Size>> storedRegressionCoeff_;
+    mutable std::map<long, std::tuple<Array, Size, Matrix>> storedRegressionModel_;
 };
 
 } // namespace data
