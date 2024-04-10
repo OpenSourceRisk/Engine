@@ -113,6 +113,7 @@ ORE+ Release & Date & Author & Comment \\
 \hline
 na & 25 February 2019  & Peter Caspers & initial version\\
 na & 23 October 2023 & Peter Caspers & add parameter RegressorModel\\
+na & 4 April 2024 & Peter Caspers & add parameter RegressionVarianceCutoff\\
 \hline
 \end{supertabular}
 \end{center}
@@ -247,6 +248,7 @@ The pricing engine configuration is similar for all AMC enabled products, e.g. f
     <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
     <Parameter name="MinObsDate">true</Parameter>
     <Parameter name="RegressorModel">Simple</Parameter>
+    <Parameter name="RegressionVarianceCutoff">1E-5</Parameter>
   </EngineParameters>
 </Product>
 \end{minted}
@@ -286,6 +288,9 @@ engine types. The engine parameters are the same for all products:
       addition, past FX states that are relevant for future cashflows are included. For example, for a FX resettable
       cashflow the FX state observed on the FX reset date is included.
   \end{itemize}
+\item \verb+RegressionVarianceCutoff+: Optional. If given, a coordinate transform and (possibly) a factor reduction is
+  applied to the regressors, such that $1-\epsilon$ of the total variance of regressors is kept, where $\epsilon$ the
+  given parameter. This helps dealing with collinearity and also reducing the dimnensionality of the regression model.
 \end{enumerate}
 
 \begin{table}[hbt]
