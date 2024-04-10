@@ -36,6 +36,7 @@ class SwaptionSabrCube : public SwaptionVolatilityCube {
 public:
     SwaptionSabrCube(const Handle<SwaptionVolatilityStructure>& atmVolStructure,
                      const std::vector<Period>& optionTenors, const std::vector<Period>& swapTenors,
+                     const std::vector<Period>& atmOptionTenors, const std::vector<Period>& atmSwapLengths,
                      const std::vector<Spread>& strikeSpreads,
                      const std::vector<std::vector<Handle<Quote>>>& volSpreads,
                      const boost::shared_ptr<SwapIndex>& swapIndexBase,
@@ -52,6 +53,7 @@ public:
 private:
     mutable std::map<std::pair<Real, Real>, boost::shared_ptr<ParametricVolatilitySmileSection>> cache_;
     mutable boost::shared_ptr<ParametricVolatility> parametricVolatility_;
+    std::vector<Period> atmOptionTenors_, atmSwapTenors_;
     QuantExt::SabrParametricVolatility::ModelVariant modelVariant_;
     boost::optional<QuantLib::VolatilityType> outputVolatilityType_;
     std::vector<std::pair<Real, bool>> initialModelParameters_;
