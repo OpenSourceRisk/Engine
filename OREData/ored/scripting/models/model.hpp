@@ -57,6 +57,7 @@ public:
         QuantLib::LsmBasisSystem::PolynomialType polynomType = QuantLib::LsmBasisSystem::PolynomialType::Monomial;
         QuantLib::SobolBrownianGenerator::Ordering sobolOrdering = QuantLib::SobolBrownianGenerator::Steps;
         QuantLib::SobolRsg::DirectionIntegers sobolDirectionIntegers = QuantLib::SobolRsg::DirectionIntegers::JoeKuoD7;
+        QuantLib::Real regressionVarianceCutoff = Null<QuantLib::Real>();
     };
 
     explicit Model(const Size n) : n_(n) {}

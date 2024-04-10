@@ -537,6 +537,8 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
         } else {
             mcParams_.trainingSamples = Null<Size>();
         }
+        mcParams_.regressionVarianceCutoff =
+            parseRealOrNull(engineParameter("RegressionVarianceCutoff", {resolvedProductTag_}, false, std::string()));
     } else if (engineParam_ == "FD") {
         modelSize_ = parseInteger(engineParameter("StateGridPoints", {resolvedProductTag_}));
         mesherEpsilon_ = parseReal(engineParameter("MesherEpsilon", {resolvedProductTag_}, false, "1.0E-4"));
