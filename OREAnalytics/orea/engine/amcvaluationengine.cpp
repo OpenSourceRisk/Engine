@@ -407,11 +407,29 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
 
     LOG("Run simulation...");
 
+    for (size_t i = 0; i < sgd->getGrid()->dates().size(); i++){
+        std::cout << i << " Date " << sgd->getGrid()->dates()[i] << std::endl;
+    }
+
+    for (size_t i = 0; i < sgd->getGrid()->times().size(); i++) {
+        std::cout << i << " time " << sgd->getGrid()->times()[i] << std::endl;
+    }
+
+    for (size_t i = 0; i < sgd->getGrid()->isCloseOutDate().size(); i++) {
+        std::cout << i << " isCloseOutDate " << sgd->getGrid()->isCloseOutDate()[i] << std::endl;
+    }
+
+    for (size_t i = 0; i < sgd->getGrid()->isValuationDate().size(); i++) {
+        std::cout << i << " isValuationDate " << sgd->getGrid()->isValuationDate()[i] << std::endl;
+    }
+
     // set up vectors indicating valuation times, close-out times and all times
 
     std::vector<bool> allTimes(pathTimes.size(), true);
     std::vector<bool> valuationTimes(pathTimes.size()), closeOutTimes(pathTimes.size());
     for (Size i = 0; i < pathTimes.size(); ++i) {
+        std::cout << pathTimes[i] << " " << sgd->getGrid()->isValuationDate()[i] << " "
+                  << sgd->getGrid()->isCloseOutDate()[i] << std::endl;
         valuationTimes[i] = sgd->getGrid()->isValuationDate()[i];
         closeOutTimes[i] = sgd->getGrid()->isCloseOutDate()[i];
     }
@@ -449,12 +467,16 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
         } else {
             // with close-out lag, fill depth 0 with valuation date npvs, depth 1 with (inflated) close-out npvs
             if (sgd->withMporStickyDate()) {
+                std::cout << "Simulate with sticky date the valuationTimes" << std::endl;
                 // sticky date mpor mode. simulate the valuation times...
                 auto res = simulatePathInterface2(amcCalculators[j], pathTimes, paths, valuationTimes, false,
                                                   tradeLabel[j], tradeType[j]);
                 // ... and then the close-out times, but times moved to the valuation times
+                std::cout << "Simulate with sticky date the closeOutTimes" << std::endl;
+                
                 auto resLag = simulatePathInterface2(amcCalculators[j], pathTimes, paths, closeOutTimes, true,
                                                      tradeLabel[j], tradeType[j]);
+                std::cout << "Finished closeOutTime simulation" << std::endl;
                 Real v = outputCube->getT0(tradeId[j], 0);
                 outputCube->setT0(v +
                                       res[0].at(0) * fx(fxBuffer, currencyIndex[j], 0, 0) *
@@ -463,33 +485,39 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                                       resFee[0][0],
                                   tradeId[j], 0);
                 int dateIndex = -1;
-                std::map<QuantLib::Date, std::pair<double, size_t>> dateIndexCache;
+                std::map<QuantLib::Date, std::queue<std::tuple<QuantLib::Date, double, size_t>>> closeOutDateToValuationDate;
                 for (Size k = 0; k < sgd->getGrid()->dates().size(); ++k) {
+                     
                     Real t = sgd->getGrid()->timeGrid()[k + 1];
-
+                    std::cout << k << " " << t << std::endl;
                     if (sgd->getGrid()->isCloseOutDate()[k]) {
                         Date closeOutDate = sgd->getGrid()->dates()[k];
-                        Date valuationDate = sgd->getGrid()->valuationDateFromCloseOutDate(closeOutDate);
-                        auto dateIndexIt = dateIndexCache.find(valuationDate);
-                        QL_REQUIRE(dateIndexIt != dateIndexCache.end(),
-                                   "The valuation date (" << ore::data::to_string(valuationDate)
-                                                          << ") needs to before the corresponding close out date ("
-                                                          << ore::data::to_string(closeOutDate) << ")");
-                        auto [timeValueDate, timeIndexValueDate] = dateIndexIt->second;
+                        auto dateIndexIt = closeOutDateToValuationDate.find(closeOutDate);
+                        QL_REQUIRE(dateIndexIt != closeOutDateToValuationDate.end() && !dateIndexIt->second.empty(), 
+                                    "The valuation date needs to before the corresponding close out date");
+                        Date valuationDate;
+                        double valuationTime;
+                        size_t valuationIndex;
+                        std::tie(valuationDate, valuationTime, valuationIndex) = dateIndexIt->second.front();
+                        dateIndexIt->second.pop();
+                        std::cout << "Is closeOut date: " << to_string(closeOutDate) << " for valuation Date " << to_string(valuationDate) << std::endl;
                         for (Size i = 0; i < outputCube->samples(); ++i) {
-                            Real v = outputCube->get(tradeId[j], dateIndex, i, 1);
+                            Real v = outputCube->get(tradeId[j], valuationIndex, i, 1);
                             outputCube->set(
                                 v +
                                     resLag[dateIndex + 1][i] * fx(fxBuffer, currencyIndex[j], k + 1, i) *
-                                        num(model, irStateBuffer, currencyIndex[j], k + 1, timeValueDate, i) *
+                                        num(model, irStateBuffer, currencyIndex[j], k + 1, valuationTime, i) *
                                         effectiveMultiplier[j] +
                                     resFee[dateIndex + 1][i],
-                                tradeId[j], timeIndexValueDate, i, 1);
+                                tradeId[j], valuationIndex, i, 1);
                         }
                     }
                     if (sgd->getGrid()->isValuationDate()[k]) {
                         Date valuationDate = sgd->getGrid()->dates()[k];
-                        dateIndexCache[valuationDate] = std::make_pair(t, ++dateIndex);
+                        Date closeOutDate = sgd->getGrid()->closeOutDateFromValuationDate(valuationDate);
+                        std::cout << "Is valuationDate date: " << to_string(valuationDate) << " with Index " << to_string(dateIndex + 1)
+                                  << " and closeOutDate " << to_string(closeOutDate) << std::endl; 
+                        closeOutDateToValuationDate[closeOutDate].push(std::make_tuple(valuationDate, t, ++dateIndex));
                         for (Size i = 0; i < outputCube->samples(); ++i) {
                             Real v = outputCube->get(tradeId[j], dateIndex, i, 0);
                             outputCube->set(v +
@@ -510,32 +538,34 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                                           numRatio(model, irStateBuffer, currencyIndex[j], 0, 0.0, 0) *
                                           effectiveMultiplier[j],
                                   tradeId[j], 0);
-                std::map<QuantLib::Date, std::pair<double, size_t>> dateIndexCache;
+                std::map<QuantLib::Date, std::queue<std::tuple<QuantLib::Date, double, size_t>>>
+                    closeOutDateToValuationDate;
                 int dateIndex = -1;
                 for (Size k = 1; k < res.size(); ++k) {
                     Real t = sgd->getGrid()->timeGrid()[k];
                     if (sgd->getGrid()->isCloseOutDate()[k - 1]) {
                         Date closeOutDate = sgd->getGrid()->dates()[k - 1];
-                        Date valuationDate = sgd->getGrid()->valuationDateFromCloseOutDate(closeOutDate);
-                        auto dateIndexIt = dateIndexCache.find(valuationDate);
-                        QL_REQUIRE(dateIndexIt != dateIndexCache.end(),
-                                   "The valuation date (" << ore::data::to_string(valuationDate)
-                                                          << ") needs to before the corresponding close out date ("
-                                                          << ore::data::to_string(closeOutDate) << ")");
-                        auto [_, timeIndexValueDate] = dateIndexIt->second;
+                        auto dateIndexIt = closeOutDateToValuationDate.find(closeOutDate);
+                        QL_REQUIRE(dateIndexIt != closeOutDateToValuationDate.end() && !dateIndexIt->second.empty(),
+                                   "The valuation date needs to before the corresponding close out date");
+                        Date valuationDate;
+                        double valuationTime;
+                        size_t valuationIndex;
+                        std::tie(valuationDate, valuationTime, valuationIndex) = dateIndexIt->second.front();
                         for (Size i = 0; i < outputCube->samples(); ++i) {
-                            Real v = outputCube->get(tradeId[j], dateIndex, i, 1);
+                            Real v = outputCube->get(tradeId[j], valuationIndex, i, 1);
                             outputCube->set(v +
                                                 res[k][i] * fx(fxBuffer, currencyIndex[j], k, i) *
                                                     num(model, irStateBuffer, currencyIndex[j], k, t, i) *
                                                     effectiveMultiplier[j] +
                                                 resFee[k][i],
-                                            tradeId[j], timeIndexValueDate, i, 1);
+                                            tradeId[j], valuationIndex, i, 1);
                         }
                     }
                     if (sgd->getGrid()->isValuationDate()[k - 1]) {
                         Date valuationDate = sgd->getGrid()->dates()[k - 1];
-                        dateIndexCache[valuationDate] = std::make_pair(t, ++dateIndex);
+                        Date closeOutDate = sgd->getGrid()->closeOutDateFromValuationDate(valuationDate);
+                        closeOutDateToValuationDate[closeOutDate].push(std::make_tuple(valuationDate, t, ++dateIndex));
                         for (Size i = 0; i < outputCube->samples(); ++i) {
                             Real v = outputCube->get(tradeId[j], dateIndex, i, 0);
                             outputCube->set(v +

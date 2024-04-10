@@ -205,7 +205,7 @@ void DateGrid::truncate(Size len) {
 }
 
 void DateGrid::addCloseOutDates(const QuantLib::Period& p) {
-    closeOutToValuation_.clear();
+    valuationCloseOutMap_.clear();
     if (p == QuantLib::Period(0, QuantLib::Days)) {
         for (Size i = 0; i < dates_.size(); ++i) {
             if (i == 0) {
@@ -219,9 +219,10 @@ void DateGrid::addCloseOutDates(const QuantLib::Period& p) {
                 isValuationDate_[i] = true;
             }
             if (isCloseOutDate_[i] && i > 0)
-                closeOutToValuation_[dates_[i]] = dates_[i - 1];
+                valuationCloseOutMap_[dates_[i-1]] = dates_[i];
         }
     } else {
+        std::set<QuantLib::Date> tmpCloseOutDates;
         std::set<QuantLib::Date> tmpDates;
         std::set<QuantLib::Date> tmpValueDates;
         for (Size i = 0; i < dates_.size(); ++i) {
@@ -230,7 +231,9 @@ void DateGrid::addCloseOutDates(const QuantLib::Period& p) {
                 c = calendar_.adjust(dates_[i] + p);
             else
                 c = calendar_.advance(dates_[i], p, Following, false);
-            closeOutToValuation_[c] = dates_[i];
+            tmpCloseOutDates.insert(c);
+            std::cout << dates_[i] << " " << c << std::endl;
+            valuationCloseOutMap_[dates_[i]] = c;
             tmpDates.insert(dates_[i]);
             tmpDates.insert(c);
             tmpValueDates.insert(dates_[i]);
@@ -241,7 +244,7 @@ void DateGrid::addCloseOutDates(const QuantLib::Period& p) {
         isValuationDate_ = std::vector<bool>(dates_.size(), true);
         for(size_t i = 0; i < dates_.size(); ++i){
             Date d = dates_[i];
-            if(closeOutToValuation_.count(d) == 1){
+            if (tmpCloseOutDates.count(d) == 1) {
                 isCloseOutDate_[i] = true;
             }
             if(tmpValueDates.count(d) == 0){
@@ -299,9 +302,9 @@ QuantLib::TimeGrid DateGrid::closeOutTimeGrid() const {
     return TimeGrid(times.begin(), times.end());
 }
 
-QuantLib::Date DateGrid::valuationDateFromCloseOutDate(const QuantLib::Date& closeOutDate) const {
-    auto it = closeOutToValuation_.find(closeOutDate);
-    QL_REQUIRE(it != closeOutToValuation_.end(), "close out date " << closeOutDate << " not found in dategrid");
+QuantLib::Date DateGrid::closeOutDateFromValuationDate(const QuantLib::Date& d) const {
+    auto it = valuationCloseOutMap_.find(d);
+    QL_REQUIRE(it != valuationCloseOutMap_.end(), "Not a valid valuationDate");
     return it->second;
 }
 
