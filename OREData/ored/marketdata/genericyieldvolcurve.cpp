@@ -28,7 +28,6 @@
 #include <qle/termstructures/swaptionsabrcube.hpp>
 #include <qle/termstructures/swaptionvolcube2.hpp>
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
-#include <qle/termstructures/swaptionsabrcube.hpp>
 
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
@@ -363,8 +362,9 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                     // TODO provide initial model parameters from config?
                     // TODO provide error thresholds from config?
                     cube = boost::make_shared<QuantExt::SwaptionSabrCube>(
-                        hATM, smileOptionTenors, smileUnderlyingTenors, spreads, volSpreadHandles, swapIndexBase,
-                        shortSwapIndexBase, QuantExt::SabrParametricVolatility::ModelVariant(config->interpolation()),
+                        hATM, smileOptionTenors, smileUnderlyingTenors, optionTenors, underlyingTenors, spreads,
+                        volSpreadHandles, swapIndexBase, shortSwapIndexBase,
+                        QuantExt::SabrParametricVolatility::ModelVariant(config->interpolation()),
                         config->outputVolatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
                             ? QuantLib::Normal
                             : QuantLib::ShiftedLognormal);

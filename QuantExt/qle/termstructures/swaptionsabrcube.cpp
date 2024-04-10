@@ -18,11 +18,14 @@
 
 #include <qle/termstructures/swaptionsabrcube.hpp>
 
+#include <ql/experimental/math/laplaceinterpolation.hpp>
+
 namespace QuantExt {
 
 SwaptionSabrCube::SwaptionSabrCube(
     const Handle<SwaptionVolatilityStructure>& atmVolStructure, const std::vector<Period>& optionTenors,
-    const std::vector<Period>& swapTenors, const std::vector<Spread>& strikeSpreads,
+    const std::vector<Period>& swapTenors, const std::vector<Period>& atmOptionTenors,
+    const std::vector<Period>& atmSwapTenors, const std::vector<Spread>& strikeSpreads,
     const std::vector<std::vector<Handle<Quote>>>& volSpreads, const boost::shared_ptr<SwapIndex>& swapIndexBase,
     const boost::shared_ptr<SwapIndex>& shortSwapIndexBase,
     const QuantExt::SabrParametricVolatility::ModelVariant modelVariant,
@@ -31,9 +34,10 @@ SwaptionSabrCube::SwaptionSabrCube(
     const QuantLib::Real exitEarlyErrorThreshold, const QuantLib::Real maxAcceptableError)
     : SwaptionVolatilityCube(atmVolStructure, optionTenors, swapTenors, strikeSpreads, volSpreads, swapIndexBase,
                              shortSwapIndexBase, false),
-      modelVariant_(modelVariant), outputVolatilityType_(outputVolatilityType),
-      initialModelParameters_(initialModelParameters), maxCalibrationAttempts_(maxCalibrationAttempts),
-      exitEarlyErrorThreshold_(exitEarlyErrorThreshold), maxAcceptableError_(maxAcceptableError) {
+      atmOptionTenors_(atmOptionTenors), atmSwapTenors_(atmSwapTenors), modelVariant_(modelVariant),
+      outputVolatilityType_(outputVolatilityType), initialModelParameters_(initialModelParameters),
+      maxCalibrationAttempts_(maxCalibrationAttempts), exitEarlyErrorThreshold_(exitEarlyErrorThreshold),
+      maxAcceptableError_(maxAcceptableError) {
 
     registerWith(atmVolStructure);
 
@@ -48,26 +52,63 @@ void SwaptionSabrCube::performCalculations() const {
 
     cache_.clear();
 
+    // build matrices of vol spreads on either given atm options / swap tenors or the smile option / swap tenors
+
+    std::vector<Period> allOptionTenors = atmOptionTenors_.empty() ? optionTenors_ : atmOptionTenors_;
+    std::vector<Period> allSwapTenors = atmSwapTenors_.empty() ? swapTenors_ : atmSwapTenors_;
+
+    std::vector<Real> allOptionTimes, allSwapLengths;
+    for (auto const& p : allOptionTenors)
+        allOptionTimes.push_back(timeFromReference(optionDateFromTenor(p)));
+    for (auto const& p : allSwapTenors)
+        allSwapLengths.push_back(swapLength(p));
+
+    std::vector<Matrix> interpolatedVolSpreads(strikeSpreads_.size(),
+                                               Matrix(allSwapLengths.size(), allOptionTimes.size(), Null<Real>()));
+
+    for (Size k = 0; k < strikeSpreads_.size(); ++k) {
+        for (Size i = 0; i < allOptionTenors.size(); ++i) {
+            for (Size j = 0; j < allSwapTenors.size(); ++j) {
+                Size i0 = std::distance(optionTenors_.begin(),
+                                        std::find(optionTenors_.begin(), optionTenors_.end(), allOptionTenors[i]));
+                Size j0 = std::distance(swapTenors_.begin(),
+                                        std::find(swapTenors_.begin(), swapTenors_.end(), allSwapTenors[j]));
+                if (i0 < optionTenors_.size() && j0 < swapTenors_.size()) {
+                    interpolatedVolSpreads[k](j, i) = volSpreads_[i0 * swapTenors_.size() + j0][k]->value();
+                }
+            }
+        }
+    }
+
+    for (auto& v : interpolatedVolSpreads) {
+        laplaceInterpolation(v, allOptionTimes, allSwapLengths);
+    }
+
+    // build market smiles on the grid
+
     std::vector<ParametricVolatility::MarketSmile> marketSmiles;
     std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, bool>>> modelParameters;
-    for (Size i = 0; i < optionTenors_.size(); ++i) {
-        for (Size j = 0; j < swapTenors_.size(); ++j) {
-            Real forward = atmStrike(optionTenors_[i], swapTenors_[j]);
-            Real sigma = atmVol()->volatility(optionTenors_[i], swapTenors_[j], forward);
+    for (Size i = 0; i < allOptionTenors.size(); ++i) {
+        for (Size j = 0; j < allSwapTenors.size(); ++j) {
+            Real forward = atmStrike(allOptionTenors[i], allSwapTenors[j]);
+            Real sigma = atmVol()->volatility(allOptionTenors[i], allSwapTenors[j], forward);
             std::vector<Real> strikes;
             std::vector<Real> vols;
             for (Size k = 0; k < strikeSpreads_.size(); ++k) {
                 strikes.push_back(forward + strikeSpreads_[k]);
-                vols.push_back(sigma + volSpreads_[i * swapTenors_.size() + j][k]->value());
+                vols.push_back(sigma + interpolatedVolSpreads[k](j, i));
             }
-            marketSmiles.push_back(ParametricVolatility::MarketSmile{
-                optionTimes_[i], swapLengths_[j], forward, shift(optionTenors_[i], swapTenors_[j]), {}, strikes, vols});
+            marketSmiles.push_back(ParametricVolatility::MarketSmile{allOptionTimes[i],
+                                                                     allSwapLengths[j],
+                                                                     forward,
+                                                                     shift(allOptionTenors[i], allSwapTenors[j]),
+                                                                     {},
+                                                                     strikes,
+                                                                     vols});
             if (!initialModelParameters_.empty())
-                modelParameters[std::make_pair(optionTimes_[i], swapLengths_[j])] = initialModelParameters_;
+                modelParameters[std::make_pair(allOptionTimes[i], allSwapLengths[j])] = initialModelParameters_;
         }
     }
-
-    // TODO we want to interpolate the market smiles on the finer atm grid, at least as an option
 
     parametricVolatility_ = boost::make_shared<SabrParametricVolatility>(
         modelVariant_, marketSmiles, ParametricVolatility::MarketModelType::Black76,
