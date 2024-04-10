@@ -736,6 +736,10 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setOutputAdditionalResults(parseBool(tmp));
 
+    tmp = params_->get("npv", "additionalResultsReportPrecision", false);
+    if (tmp != "")
+        setAdditionalResultsReportPrecision(parseInteger(tmp));
+
     /*************
      * CASHFLOW
      *************/
