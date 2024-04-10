@@ -122,7 +122,7 @@ public:
         void reset() { var = 0.0; }
     };
 
-    MarketRiskBacktest(const std::string& baseCurrency,
+    MarketRiskBacktest(const std::string& calculationCurrency,
                        std::unique_ptr<BacktestArgs> btArgs,
                        std::unique_ptr<SensiRunArgs> sensiArgs = nullptr,
                        std::unique_ptr<FullRevalArgs> revalArgs = nullptr,

@@ -154,13 +154,15 @@ public:
         std::vector<QuantLib::ext::shared_ptr<ore::data::Report>> reports_;
     };
 
-    MarketRiskReport(const std::string& baseCurrency, boost::optional<ore::data::TimePeriod> period, const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr, 
-        std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr,
-        std::unique_ptr<MultiThreadArgs> multiThreadArgs = nullptr, const bool breakdown = false, 
-        const bool requireTradePnl = false)
-        : baseCurrency_(baseCurrency), period_(period), hisScenGen_(hisScenGen), sensiArgs_(std::move(sensiArgs)),
-          fullRevalArgs_(std::move(fullRevalArgs)),  multiThreadArgs_(std::move(multiThreadArgs)), breakdown_(breakdown), 
-          requireTradePnl_(requireTradePnl) {}
+    MarketRiskReport(const std::string& calculationCurrency, boost::optional<ore::data::TimePeriod> period,
+                     const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr,
+                     std::unique_ptr<SensiRunArgs> sensiArgs = nullptr,
+                     std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr,
+                     std::unique_ptr<MultiThreadArgs> multiThreadArgs = nullptr, const bool breakdown = false,
+                     const bool requireTradePnl = false)
+        : calculationCurrency_(calculationCurrency), period_(period), hisScenGen_(hisScenGen),
+          sensiArgs_(std::move(sensiArgs)), fullRevalArgs_(std::move(fullRevalArgs)),
+          multiThreadArgs_(std::move(multiThreadArgs)), breakdown_(breakdown), requireTradePnl_(requireTradePnl) {}
     virtual ~MarketRiskReport() {}
 
     virtual void init();
@@ -183,7 +185,7 @@ protected:
     bool sensiBased_ = false;
     bool fullReval_ = false;
 
-    std::string baseCurrency_;
+    std::string calculationCurrency_;
     boost::optional<ore::data::TimePeriod> period_;
     QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> hisScenGen_;
     std::unique_ptr<SensiRunArgs> sensiArgs_;
