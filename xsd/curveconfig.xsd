@@ -408,7 +408,12 @@
             <xs:enumeration value="Linear"/>
             <xs:enumeration value="LinearFlat"/>
             <xs:enumeration value="Cubic"/>
-            <xs:enumeration value="CubicFlat"/>
+            <xs:enumeration value="Hagan2002Lognormal"/>
+            <xs:enumeration value="Hagan2002Normal"/>
+            <xs:enumeration value="Hagan2002NormalZeroBeta"/>
+            <xs:enumeration value="Antonov2015FreeBoundaryNormal"/>
+            <xs:enumeration value="KienitzLawsonSwaynePde"/>
+            <xs:enumeration value="FlochKennedy"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
