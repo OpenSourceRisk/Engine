@@ -33,14 +33,14 @@ namespace analytics {
 
 DynamicCreditXvaCalculator::DynamicCreditXvaCalculator(
     //! Driving portfolio consistent with the cube below
-    const boost::shared_ptr<Portfolio> portfolio, const boost::shared_ptr<Market> market,
+    const QuantLib::ext::shared_ptr<Portfolio> portfolio, const QuantLib::ext::shared_ptr<Market> market,
     const string& configuration, const string& baseCurrency, const string& dvaName,
     const string& fvaBorrowingCurve, const string& fvaLendingCurve,
     const bool applyDynamicInitialMargin,
-    const boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator,
-    const boost::shared_ptr<NPVCube> tradeExposureCube,
-    const boost::shared_ptr<NPVCube> nettingSetExposureCube,
-    const boost::shared_ptr<NPVCube>& cptyCube,
+    const QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> dimCalculator,
+    const QuantLib::ext::shared_ptr<NPVCube> tradeExposureCube,
+    const QuantLib::ext::shared_ptr<NPVCube> nettingSetExposureCube,
+    const QuantLib::ext::shared_ptr<NPVCube>& cptyCube,
     const Size tradeEpeIndex, const Size tradeEneIndex,
     const Size nettingSetEpeIndex, const Size nettingSetEneIndex, const Size cptySpIndex,
     const bool flipViewXVA, const string& flipViewBorrowingCurvePostfix, const string& flipViewLendingCurvePostfix)

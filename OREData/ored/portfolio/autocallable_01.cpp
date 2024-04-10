@@ -22,7 +22,7 @@
 namespace ore {
 namespace data {
 
-void Autocallable_01::build(const boost::shared_ptr<EngineFactory>& factory) {
+void Autocallable_01::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
     // set script parameters
 

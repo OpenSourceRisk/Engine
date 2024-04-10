@@ -42,7 +42,7 @@ RiskParticipationAgreementBaseEngine::RiskParticipationAgreementBaseEngine(
         registerWith(s.second);
     registerWith(defaultCurve_);
     registerWith(recoveryRate_);
-    fxSpots_[baseCcy_] = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
+    fxSpots_[baseCcy_] = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
 }
 
 // just for debugging
@@ -71,7 +71,7 @@ std::vector<Date> RiskParticipationAgreementBaseEngine::buildDiscretisationGrid(
     std::vector<Date> accrualDates;
     for (auto const& l : underlying) {
         for (auto const& c : l) {
-            if (auto f = boost::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
+            if (auto f = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
                 accrualDates.push_back(f->accrualEndDate());
             }
         }
@@ -226,7 +226,7 @@ void RiskParticipationAgreementBaseEngine::calculate() const {
             // the fee is only paid if the reference entity is still alive at the payment date
             fee += thisFeeAmounts.back() * thisFeeDiscounts.back() * feeFXSpot.back() * thisFeeSurvivalProbs.back();
             // accrual settlement using the mid of the coupon periods
-            auto cpn = boost::dynamic_pointer_cast<Coupon>(c);
+            auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(c);
             if (cpn && arguments_.settlesAccrual) {
                 Date start = std::max(cpn->accrualStartDate(), referenceDate_);
                 Date end = cpn->accrualEndDate();

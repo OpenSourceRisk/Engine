@@ -502,15 +502,15 @@ void BasicReferenceDataManager::fromXML(XMLNode* node) {
     }
 }
 
-void BasicReferenceDataManager::add(const boost::shared_ptr<ReferenceDatum>& rd) {
+void BasicReferenceDataManager::add(const QuantLib::ext::shared_ptr<ReferenceDatum>& rd) {
     // Add reference datum, it is overwritten if it is already present.
     data_[make_pair(rd->type(), rd->id())][rd->validFrom()] = rd;
 }
 
-boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::addFromXMLNode(XMLNode* node, const std::string& inputId,
+QuantLib::ext::shared_ptr<ReferenceDatum> BasicReferenceDataManager::addFromXMLNode(XMLNode* node, const std::string& inputId,
                                                                             const QuantLib::Date& inputValidFrom) {
     string refDataType = XMLUtils::getChildValue(node, "Type", false);
-    boost::shared_ptr<ReferenceDatum> refData;
+    QuantLib::ext::shared_ptr<ReferenceDatum> refData;
 
     if (refDataType.empty()) {
         ALOG("Found referenceDatum without Type - skipping");
@@ -562,7 +562,7 @@ boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::addFromXMLNode(XMLN
     return refData;
 }
 
-boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::buildReferenceDatum(const string& refDataType) {
+QuantLib::ext::shared_ptr<ReferenceDatum> BasicReferenceDataManager::buildReferenceDatum(const string& refDataType) {
     auto refData = ReferenceDatumFactory::instance().build(refDataType);
     QL_REQUIRE(refData,
                "Reference data type " << refDataType << " has not been registered with the reference data factory.");
@@ -579,7 +579,7 @@ XMLNode* BasicReferenceDataManager::toXML(XMLDocument& doc) const {
     return node;
 }
 
-std::tuple<QuantLib::Date, boost::shared_ptr<ReferenceDatum>> BasicReferenceDataManager::latestValidFrom(const string& type, const string& id,
+std::tuple<QuantLib::Date, QuantLib::ext::shared_ptr<ReferenceDatum>> BasicReferenceDataManager::latestValidFrom(const string& type, const string& id,
                                                           const QuantLib::Date& asof) const {   
     auto it = data_.find(make_pair(type, id));
     if (it != data_.end() && !it->second.empty()){
@@ -616,7 +616,7 @@ bool BasicReferenceDataManager::hasData(const string& type, const string& id, co
     return refData != nullptr;
 }
 
-boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::getData(const string& type, const string& id,
+QuantLib::ext::shared_ptr<ReferenceDatum> BasicReferenceDataManager::getData(const string& type, const string& id,
                                                                      const QuantLib::Date& asof) {
     Date asofDate = asof;
     if (asofDate == QuantLib::Null<QuantLib::Date>()) {

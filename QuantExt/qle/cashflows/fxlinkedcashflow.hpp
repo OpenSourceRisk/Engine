@@ -38,39 +38,39 @@ using namespace QuantLib;
 //! Base class for FX Linked cashflows
 class FXLinked {
 public:
-    FXLinked(const Date& fixingDate, Real foreignAmount, boost::shared_ptr<FxIndex> fxIndex);
+    FXLinked(const Date& fixingDate, Real foreignAmount, QuantLib::ext::shared_ptr<FxIndex> fxIndex);
     virtual ~FXLinked() {}
     Date fxFixingDate() const { return fxFixingDate_; }
     Real foreignAmount() const { return foreignAmount_; }
-    const boost::shared_ptr<FxIndex>& fxIndex() const { return fxIndex_; }
+    const QuantLib::ext::shared_ptr<FxIndex>& fxIndex() const { return fxIndex_; }
     Real fxRate() const;
 
-    virtual boost::shared_ptr<FXLinked> clone(boost::shared_ptr<FxIndex> fxIndex) = 0;
+    virtual QuantLib::ext::shared_ptr<FXLinked> clone(QuantLib::ext::shared_ptr<FxIndex> fxIndex) = 0;
 
 protected:
     Date fxFixingDate_;
     Real foreignAmount_;
-    boost::shared_ptr<FxIndex> fxIndex_;
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
 };
 
 class AverageFXLinked {
 public:
     // if inverted = true, the arithmetic averaging is done over the inverted fixings and the reciprocal of the result
     // is taken to compute the rate
-    AverageFXLinked(const std::vector<Date>& fixingDates, Real foreignAmount, boost::shared_ptr<FxIndex> fxIndex,
+    AverageFXLinked(const std::vector<Date>& fixingDates, Real foreignAmount, QuantLib::ext::shared_ptr<FxIndex> fxIndex,
                     const bool inverted = false);
     virtual ~AverageFXLinked() {}
     const std::vector<Date>& fxFixingDates() const { return fxFixingDates_; }
     Real foreignAmount() const { return foreignAmount_; }
-    const boost::shared_ptr<FxIndex>& fxIndex() const { return fxIndex_; }
+    const QuantLib::ext::shared_ptr<FxIndex>& fxIndex() const { return fxIndex_; }
     Real fxRate() const;
 
-    virtual boost::shared_ptr<AverageFXLinked> clone(boost::shared_ptr<FxIndex> fxIndex) = 0;
+    virtual QuantLib::ext::shared_ptr<AverageFXLinked> clone(QuantLib::ext::shared_ptr<FxIndex> fxIndex) = 0;
 
 protected:
     std::vector<Date> fxFixingDates_;
     Real foreignAmount_;
-    boost::shared_ptr<FxIndex> fxIndex_;
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
     bool inverted_ = false;
 };
 
@@ -101,7 +101,7 @@ protected:
 class FXLinkedCashFlow : public CashFlow, public FXLinked, public Observer {
 public:
     FXLinkedCashFlow(const Date& cashFlowDate, const Date& fixingDate, Real foreignAmount,
-                     boost::shared_ptr<FxIndex> fxIndex);
+                     QuantLib::ext::shared_ptr<FxIndex> fxIndex);
 
     //! \name CashFlow interface
     //@{
@@ -121,7 +121,7 @@ public:
 
     //! \name FXLinked interface
     //@{
-    boost::shared_ptr<FXLinked> clone(boost::shared_ptr<FxIndex> fxIndex) override;
+    QuantLib::ext::shared_ptr<FXLinked> clone(QuantLib::ext::shared_ptr<FxIndex> fxIndex) override;
     //@}
 
 private:
@@ -153,7 +153,7 @@ inline void FXLinkedCashFlow::accept(AcyclicVisitor& v) {
 class AverageFXLinkedCashFlow : public CashFlow, public AverageFXLinked, public Observer {
 public:
     AverageFXLinkedCashFlow(const Date& cashFlowDate, const std::vector<Date>& fixingDates, Real foreignAmount,
-                            boost::shared_ptr<FxIndex> fxIndex, const bool inverted = false);
+                            QuantLib::ext::shared_ptr<FxIndex> fxIndex, const bool inverted = false);
 
     //! \name CashFlow interface
     //@{
@@ -173,7 +173,7 @@ public:
 
     //! \name FXLinked interface
     //@{
-    boost::shared_ptr<AverageFXLinked> clone(boost::shared_ptr<FxIndex> fxIndex) override;
+    QuantLib::ext::shared_ptr<AverageFXLinked> clone(QuantLib::ext::shared_ptr<FxIndex> fxIndex) override;
     //@}
 
     // get single fixing dates and values

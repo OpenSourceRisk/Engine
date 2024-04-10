@@ -21,11 +21,11 @@
 
 namespace QuantExt {
 
-FXLinked::FXLinked(const Date& fxFixingDate, Real foreignAmount, boost::shared_ptr<FxIndex> fxIndex)
+FXLinked::FXLinked(const Date& fxFixingDate, Real foreignAmount, QuantLib::ext::shared_ptr<FxIndex> fxIndex)
     : fxFixingDate_(fxFixingDate), foreignAmount_(foreignAmount), fxIndex_(fxIndex) {}
 
 AverageFXLinked::AverageFXLinked(const std::vector<Date>& fxFixingDates, Real foreignAmount,
-                                 boost::shared_ptr<FxIndex> fxIndex, const bool inverted)
+                                 QuantLib::ext::shared_ptr<FxIndex> fxIndex, const bool inverted)
     : fxFixingDates_(fxFixingDates), foreignAmount_(foreignAmount), fxIndex_(fxIndex), inverted_(inverted) {}
 
 Real FXLinked::fxRate() const {
@@ -41,24 +41,24 @@ Real AverageFXLinked::fxRate() const {
 }
 
 FXLinkedCashFlow::FXLinkedCashFlow(const Date& cashFlowDate, const Date& fxFixingDate, Real foreignAmount,
-                                   boost::shared_ptr<FxIndex> fxIndex)
+                                   QuantLib::ext::shared_ptr<FxIndex> fxIndex)
     : FXLinked(fxFixingDate, foreignAmount, fxIndex), cashFlowDate_(cashFlowDate) {
     registerWith(FXLinked::fxIndex());
 }
 
 AverageFXLinkedCashFlow::AverageFXLinkedCashFlow(const Date& cashFlowDate, const std::vector<Date>& fxFixingDates,
-                                                 Real foreignAmount, boost::shared_ptr<FxIndex> fxIndex,
+                                                 Real foreignAmount, QuantLib::ext::shared_ptr<FxIndex> fxIndex,
                                                  const bool inverted)
     : AverageFXLinked(fxFixingDates, foreignAmount, fxIndex, inverted), cashFlowDate_(cashFlowDate) {
     registerWith(AverageFXLinked::fxIndex());
 }
 
-boost::shared_ptr<FXLinked> FXLinkedCashFlow::clone(boost::shared_ptr<FxIndex> fxIndex) {
-    return boost::make_shared<FXLinkedCashFlow>(date(), fxFixingDate(), foreignAmount(), fxIndex);
+QuantLib::ext::shared_ptr<FXLinked> FXLinkedCashFlow::clone(QuantLib::ext::shared_ptr<FxIndex> fxIndex) {
+    return QuantLib::ext::make_shared<FXLinkedCashFlow>(date(), fxFixingDate(), foreignAmount(), fxIndex);
 }
 
-boost::shared_ptr<AverageFXLinked> AverageFXLinkedCashFlow::clone(boost::shared_ptr<FxIndex> fxIndex) {
-    return boost::make_shared<AverageFXLinkedCashFlow>(date(), fxFixingDates(), foreignAmount(), fxIndex);
+QuantLib::ext::shared_ptr<AverageFXLinked> AverageFXLinkedCashFlow::clone(QuantLib::ext::shared_ptr<FxIndex> fxIndex) {
+    return QuantLib::ext::make_shared<AverageFXLinkedCashFlow>(date(), fxFixingDates(), foreignAmount(), fxIndex);
 }
 
 std::map<Date, Real> AverageFXLinkedCashFlow::fixings() const {

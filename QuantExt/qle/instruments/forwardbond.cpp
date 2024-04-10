@@ -23,7 +23,7 @@
 
 namespace QuantExt {
 
-ForwardBond::ForwardBond(const boost::shared_ptr<Bond>& underlying, const boost::shared_ptr<Payoff>& payoff,
+ForwardBond::ForwardBond(const QuantLib::ext::shared_ptr<Bond>& underlying, const QuantLib::ext::shared_ptr<Payoff>& payoff,
                          const Date& fwdMaturityDate, const Date& fwdSettlementDate, const bool isPhysicallySettled,
                          const bool settlementDirty, const Real compensationPayment, const Date compensationPaymentDate,
                          const Real bondNotional)
@@ -32,7 +32,7 @@ ForwardBond::ForwardBond(const boost::shared_ptr<Bond>& underlying, const boost:
       settlementDirty_(settlementDirty), compensationPayment_(compensationPayment),
       compensationPaymentDate_(compensationPaymentDate), bondNotional_(bondNotional), dv01_(Null<Real>()) {}
 
-ForwardBond::ForwardBond(const boost::shared_ptr<Bond>& underlying, const Real lockRate, 
+ForwardBond::ForwardBond(const QuantLib::ext::shared_ptr<Bond>& underlying, const Real lockRate, 
                          const DayCounter& lockRateDayCounter, const bool longInForward, const Date& fwdMaturityDate,
                          const Date& fwdSettlementDate, const bool isPhysicallySettled, const bool settlementDirty,
                          const Real compensationPayment, const Date compensationPaymentDate, 

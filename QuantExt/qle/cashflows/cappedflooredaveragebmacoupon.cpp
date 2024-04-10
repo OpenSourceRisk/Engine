@@ -51,7 +51,7 @@ void CappedFlooredAverageBMACoupon::performCalculations() const {
     if (cap_ != Null<Real>())
         capletRate = (nakedOption_ && floor_ == Null<Real>() ? -1.0 : 1.0) * pricer()->capletRate(effectiveCap());
     rate_ = swapletRate + floorletRate - capletRate;
-    auto p = boost::dynamic_pointer_cast<CapFlooredAverageBMACouponPricer>(pricer());
+    auto p = QuantLib::ext::dynamic_pointer_cast<CapFlooredAverageBMACouponPricer>(pricer());
     QL_REQUIRE(p, "CapFlooredAverageBMACoupon::performCalculations(): internal error, could not cast to "
                   "CapFlooredAverageBMACouponPricer");
     effectiveCapletVolatility_ = p->effectiveCapletVolatility();

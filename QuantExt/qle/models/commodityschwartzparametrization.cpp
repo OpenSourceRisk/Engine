@@ -27,7 +27,7 @@ CommoditySchwartzParametrization::CommoditySchwartzParametrization(const Currenc
                                                                    const Real sigma, const Real kappa,
                                                                    bool driftFreeState)
     : Parametrization(currency, name), priceCurve_(priceCurve), fxSpotToday_(fxSpotToday),
-      sigma_(boost::make_shared<PseudoParameter>(1)), kappa_(boost::make_shared<PseudoParameter>(1)),
+      sigma_(QuantLib::ext::make_shared<PseudoParameter>(1)), kappa_(QuantLib::ext::make_shared<PseudoParameter>(1)),
       driftFreeState_(driftFreeState) {
     sigma_->setParam(0, inverse(0, sigma));
     kappa_->setParam(0, inverse(0, kappa));

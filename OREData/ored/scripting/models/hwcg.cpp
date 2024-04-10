@@ -103,7 +103,7 @@ std::size_t HwCG::reducedDiscountBond(const Date& d, const Date& e, const std::s
 }
 
 /* Handles IborIndex and SwapIndex. Requires observation time t <= fixingDate */
-std::size_t HwCG::fixing(const boost::shared_ptr<InterestRateIndex>& index, const Date& fixingDate, const Date& t,
+std::size_t HwCG::fixing(const QuantLib::ext::shared_ptr<InterestRateIndex>& index, const Date& fixingDate, const Date& t,
                          const std::size_t x) const {
 
     std::string id =
@@ -121,7 +121,7 @@ std::size_t HwCG::fixing(const boost::shared_ptr<InterestRateIndex>& index, cons
             n = addModelParameter(g_, modelParameters_, id,
                                   [index, fixingDate]() { return index->fixing(fixingDate); });
 
-        } else if (auto ibor = boost::dynamic_pointer_cast<IborIndex>(index)) {
+        } else if (auto ibor = QuantLib::ext::dynamic_pointer_cast<IborIndex>(index)) {
 
             // Ibor Index
 
