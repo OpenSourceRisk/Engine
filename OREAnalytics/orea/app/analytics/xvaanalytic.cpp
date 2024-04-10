@@ -555,11 +555,23 @@ void XvaAnalyticImpl::runPostProcessor() {
     if (!dimCalculator_ && (analytics["mva"] || analytics["dim"])) {
         if (inputs_->dimModel() == "Regression") {
             LOG("dim calculator not set, create RegressionDynamicInitialMarginCalculator");
+            std::map<std::string, Real> currentIM;
+            if (inputs_->collateralBalances()) {
+                for (auto const& [n, b] : inputs_->collateralBalances()->collateralBalances()) {
+                    currentIM[n.nettingSetId()] =
+                        b->initialMargin() * (b->currency() == baseCurrency
+                                                  ? 1.0
+                                                  : analytic()
+                                                        ->market()
+                                                        ->fxRate(b->currency() + baseCurrency, marketConfiguration)
+                                                        ->value());
+                }
+            }
             dimCalculator_ = boost::make_shared<RegressionDynamicInitialMarginCalculator>(
-                inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, *scenarioData_, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder,
-                dimRegressors, dimLocalRegressionEvaluations, dimLocalRegressionBandwidth);
-        }
-        else {
+                inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, *scenarioData_, dimQuantile,
+                dimHorizonCalendarDays, dimRegressionOrder, dimRegressors, dimLocalRegressionEvaluations,
+                dimLocalRegressionBandwidth, currentIM);
+        } else {
             LOG("dim calculator not set, create FlatDynamicInitialMarginCalculator");
             dimCalculator_ = boost::make_shared<FlatDynamicInitialMarginCalculator>(
                 inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, *scenarioData_);
