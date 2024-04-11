@@ -38,6 +38,7 @@ void CompositeTrade::build(const boost::shared_ptr<EngineFactory>& engineFactory
     fxRates_.clear();
     fxRatesNotional_.clear();
     legs_.clear();
+    QL_REQUIRE(trades_.size() > 0, "Failed to build composite trade.");
     for (const boost::shared_ptr<Trade>& trade : trades_) {
 
 	trade->reset();
