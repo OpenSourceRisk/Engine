@@ -58,9 +58,9 @@ public:
     class option;
     //! similar to bond ctor, coupons should not contain redemption flows
     ConvertibleBond(Natural settlementDays, const Calendar& calendar, const Date& issueDate, const Leg& coupons,
-                    const boost::shared_ptr<Exercise>& exercise, const Real conversionRatio,
+                    const QuantLib::ext::shared_ptr<Exercise>& exercise, const Real conversionRatio,
                     const DividendSchedule& dividends, const CallabilitySchedule& callability);
-    boost::shared_ptr<Exercise> exercise() const { return exercise_; }
+    QuantLib::ext::shared_ptr<Exercise> exercise() const { return exercise_; }
     Real conversionRatio() const { return conversionRatio_; }
     const DividendSchedule& dividends() const { return dividends_; }
     const CallabilitySchedule& callability() const { return callability_; }
@@ -68,12 +68,12 @@ public:
 protected:
     void performCalculations() const override;
 
-    boost::shared_ptr<Exercise> exercise_;
+    QuantLib::ext::shared_ptr<Exercise> exercise_;
     Real conversionRatio_;
     DividendSchedule dividends_;
     CallabilitySchedule callability_;
 
-    boost::shared_ptr<option> option_;
+    QuantLib::ext::shared_ptr<option> option_;
 };
 
 class ConvertibleBond::option : public OneAssetOption {

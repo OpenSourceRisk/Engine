@@ -28,7 +28,7 @@
 namespace ore {
 namespace analytics {
 
-void NPVCalculator::init(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<SimMarket>& simMarket) {
+void NPVCalculator::init(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<SimMarket>& simMarket) {
     DLOG("init NPVCalculator");
     tradeCcyIndex_.resize(portfolio->size());
     std::set<std::string> ccys;
@@ -52,22 +52,22 @@ void NPVCalculator::initScenario() {
         fxRates_[i] = ccyQuotes_[i]->value();
 }
 
-void NPVCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
-                              const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
-                              boost::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
+void NPVCalculator::calculate(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
+                              const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
+                              QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
                               Size sample, bool isCloseOut) {
     if (!isCloseOut)
         outputCube->set(npv(tradeIndex, trade, simMarket), tradeIndex, dateIndex, sample, index_);
 }
 
-void NPVCalculator::calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
-                                const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
-                                boost::shared_ptr<NPVCube>& outputCubeNettingSet) {
+void NPVCalculator::calculateT0(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
+                                const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
+                                QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet) {
     outputCube->setT0(npv(tradeIndex, trade, simMarket), tradeIndex, index_);
 }
 
-Real NPVCalculator::npv(Size tradeIndex, const boost::shared_ptr<Trade>& trade,
-                        const boost::shared_ptr<SimMarket>& simMarket) {
+Real NPVCalculator::npv(Size tradeIndex, const QuantLib::ext::shared_ptr<Trade>& trade,
+                        const QuantLib::ext::shared_ptr<SimMarket>& simMarket) {
     Real npv = trade->instrument()->NPV();
     if (close_enough(npv, 0.0))
         return npv;
@@ -76,8 +76,8 @@ Real NPVCalculator::npv(Size tradeIndex, const boost::shared_ptr<Trade>& trade,
     return npv * fx / numeraire;
 }
 
-void CashflowCalculator::init(const boost::shared_ptr<Portfolio>& portfolio,
-                              const boost::shared_ptr<SimMarket>& simMarket) {
+void CashflowCalculator::init(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+                              const QuantLib::ext::shared_ptr<SimMarket>& simMarket) {
     DLOG("init CashflowCalculator");
     tradeAndLegCcyIndex_.clear();
     std::set<std::string> ccys;
@@ -106,10 +106,10 @@ void CashflowCalculator::initScenario() {
         fxRates_[i] = ccyQuotes_[i]->value();
 }
 
-void CashflowCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
-                                   const boost::shared_ptr<SimMarket>& simMarket,
-                                   boost::shared_ptr<NPVCube>& outputCube,
-                                   boost::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
+void CashflowCalculator::calculate(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
+                                   const QuantLib::ext::shared_ptr<SimMarket>& simMarket,
+                                   QuantLib::ext::shared_ptr<NPVCube>& outputCube,
+                                   QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
                                    Size sample, bool isCloseOut) {
     if (isCloseOut)
         return;
@@ -129,8 +129,8 @@ void CashflowCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size t
     bool isPhysical = false;
     Real longShort = 1.0;
     if (isOption) {
-        boost::shared_ptr<data::OptionWrapper> wrapper =
-            boost::dynamic_pointer_cast<data::OptionWrapper>(trade->instrument());
+        QuantLib::ext::shared_ptr<data::OptionWrapper> wrapper =
+            QuantLib::ext::dynamic_pointer_cast<data::OptionWrapper>(trade->instrument());
         isExercised = wrapper->isExercised();
         longShort = wrapper->isLong() ? 1.0 : -1.0;
         isPhysical = wrapper->isPhysicalDelivery();
@@ -174,8 +174,8 @@ void CashflowCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size t
     outputCube->set(netNegativeFlow / numeraire, tradeIndex, dateIndex, sample, index_+1);
 }
 
-void NPVCalculatorFXT0::init(const boost::shared_ptr<Portfolio>& portfolio,
-                             const boost::shared_ptr<SimMarket>& simMarket) {
+void NPVCalculatorFXT0::init(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+                             const QuantLib::ext::shared_ptr<SimMarket>& simMarket) {
     DLOG("init NPVCalculatorFXT0");
     tradeCcyIndex_.resize(portfolio->size());
     std::set<std::string> ccys;
@@ -191,23 +191,23 @@ void NPVCalculatorFXT0::init(const boost::shared_ptr<Portfolio>& portfolio,
         fxRates_[i] = t0Market_->fxRate(*std::next(ccys.begin(), i) + baseCcyCode_)->value();
 }
 
-void NPVCalculatorFXT0::calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
-                                  const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
-                                  boost::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
+void NPVCalculatorFXT0::calculate(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
+                                  const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
+                                  QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
                                   Size sample, bool isCloseOut) {
     if (!isCloseOut)
         outputCube->set(npv(tradeIndex, trade, simMarket), tradeIndex, dateIndex, sample, index_);
 }
 
-void NPVCalculatorFXT0::calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
-                                    const boost::shared_ptr<SimMarket>& simMarket,
-                                    boost::shared_ptr<NPVCube>& outputCube,
-                                    boost::shared_ptr<NPVCube>& outputCubeNettingSet) {
+void NPVCalculatorFXT0::calculateT0(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
+                                    const QuantLib::ext::shared_ptr<SimMarket>& simMarket,
+                                    QuantLib::ext::shared_ptr<NPVCube>& outputCube,
+                                    QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet) {
     outputCube->setT0(npv(tradeIndex, trade, simMarket), tradeIndex, index_);
 }
 
-Real NPVCalculatorFXT0::npv(Size tradeIndex, const boost::shared_ptr<Trade>& trade,
-                            const boost::shared_ptr<SimMarket>& simMarket) {
+Real NPVCalculatorFXT0::npv(Size tradeIndex, const QuantLib::ext::shared_ptr<Trade>& trade,
+                            const QuantLib::ext::shared_ptr<SimMarket>& simMarket) {
     Real npv = trade->instrument()->NPV();
     if (close_enough(npv, 0.0))
         return npv;

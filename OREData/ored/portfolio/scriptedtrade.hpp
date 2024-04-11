@@ -228,19 +228,19 @@ public:
     void clear();
 
     // Trade interface
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
     QuantLib::Real notional() const override;
     std::string notionalCurrency() const override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     // build and incorporate provided premium data
-    void build(const boost::shared_ptr<EngineFactory>& engineFactory, const PremiumData& premiumData,
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, const PremiumData& premiumData,
                const Real premiumMultiplier);
 
     // underlying asset names
     std::map<ore::data::AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     // Add ISDA taxonomy classification to additional data
     virtual void setIsdaTaxonomyFields();

@@ -26,6 +26,7 @@
 #include <oret/toplevelfixture.hpp>
 
 #include <ql/time/date.hpp>
+#include <ql/tuple.hpp>
 
 #include <iostream>
 #include <iomanip>
@@ -46,25 +47,25 @@ BOOST_AUTO_TEST_CASE(testValueRandomVariableBinaryOps) {
     BOOST_REQUIRE_EQUAL(y.which(), 0);
     ValueType z = x + y;
     BOOST_REQUIRE_EQUAL(z.which(), 0);
-    BOOST_CHECK_EQUAL(boost::get<RandomVariable>(z), a + b);
+    BOOST_CHECK_EQUAL(QuantLib::ext::get<RandomVariable>(z), a + b);
     z = x - y;
     BOOST_REQUIRE_EQUAL(z.which(), 0);
-    BOOST_CHECK_EQUAL(boost::get<RandomVariable>(z), a - b);
+    BOOST_CHECK_EQUAL(QuantLib::ext::get<RandomVariable>(z), a - b);
     z = x * y;
     BOOST_REQUIRE_EQUAL(z.which(), 0);
-    BOOST_CHECK_EQUAL(boost::get<RandomVariable>(z), a * b);
+    BOOST_CHECK_EQUAL(QuantLib::ext::get<RandomVariable>(z), a * b);
     z = x / y;
     BOOST_REQUIRE_EQUAL(z.which(), 0);
-    BOOST_CHECK_EQUAL(boost::get<RandomVariable>(z), a / b);
+    BOOST_CHECK_EQUAL(QuantLib::ext::get<RandomVariable>(z), a / b);
     z = min(x, y);
     BOOST_REQUIRE_EQUAL(z.which(), 0);
-    BOOST_CHECK_EQUAL(boost::get<RandomVariable>(z), min(a, b));
+    BOOST_CHECK_EQUAL(QuantLib::ext::get<RandomVariable>(z), min(a, b));
     z = max(x, y);
     BOOST_REQUIRE_EQUAL(z.which(), 0);
-    BOOST_CHECK_EQUAL(boost::get<RandomVariable>(z), max(a, b));
+    BOOST_CHECK_EQUAL(QuantLib::ext::get<RandomVariable>(z), max(a, b));
     z = pow(x, y);
     BOOST_REQUIRE_EQUAL(z.which(), 0);
-    BOOST_CHECK_EQUAL(boost::get<RandomVariable>(z), pow(a, b));
+    BOOST_CHECK_EQUAL(QuantLib::ext::get<RandomVariable>(z), pow(a, b));
 }
 
 BOOST_AUTO_TEST_CASE(testValueRandomVariableUnaryOps) {
@@ -75,25 +76,25 @@ BOOST_AUTO_TEST_CASE(testValueRandomVariableUnaryOps) {
     BOOST_REQUIRE_EQUAL(x.which(), 0);
     ValueType z = -x;
     BOOST_REQUIRE_EQUAL(z.which(), 0);
-    BOOST_CHECK_EQUAL(boost::get<RandomVariable>(z), -a);
+    BOOST_CHECK_EQUAL(QuantLib::ext::get<RandomVariable>(z), -a);
     z = abs(x);
     BOOST_REQUIRE_EQUAL(z.which(), 0);
-    BOOST_CHECK_EQUAL(boost::get<RandomVariable>(z), abs(a));
+    BOOST_CHECK_EQUAL(QuantLib::ext::get<RandomVariable>(z), abs(a));
     z = exp(x);
     BOOST_REQUIRE_EQUAL(z.which(), 0);
-    BOOST_CHECK_EQUAL(boost::get<RandomVariable>(z), exp(a));
+    BOOST_CHECK_EQUAL(QuantLib::ext::get<RandomVariable>(z), exp(a));
     z = log(x);
     BOOST_REQUIRE_EQUAL(z.which(), 0);
-    BOOST_CHECK_EQUAL(boost::get<RandomVariable>(z), log(a));
+    BOOST_CHECK_EQUAL(QuantLib::ext::get<RandomVariable>(z), log(a));
     z = sqrt(x);
     BOOST_REQUIRE_EQUAL(z.which(), 0);
-    BOOST_CHECK_EQUAL(boost::get<RandomVariable>(z), sqrt(a));
+    BOOST_CHECK_EQUAL(QuantLib::ext::get<RandomVariable>(z), sqrt(a));
     z = normalCdf(x);
     BOOST_REQUIRE_EQUAL(z.which(), 0);
-    BOOST_CHECK_EQUAL(boost::get<RandomVariable>(z), normalCdf(a));
+    BOOST_CHECK_EQUAL(QuantLib::ext::get<RandomVariable>(z), normalCdf(a));
     z = normalPdf(x);
     BOOST_REQUIRE_EQUAL(z.which(), 0);
-    BOOST_CHECK_EQUAL(boost::get<RandomVariable>(z), normalPdf(a));
+    BOOST_CHECK_EQUAL(QuantLib::ext::get<RandomVariable>(z), normalPdf(a));
 }
 
 BOOST_AUTO_TEST_CASE(testValueIllegalOps) {

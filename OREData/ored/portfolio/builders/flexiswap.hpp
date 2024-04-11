@@ -59,7 +59,7 @@ public:
         : FlexiSwapBGSEngineBuilderBase(tradeType, "DiscountedCashflows", "DiscountingSwapEngine") {}
 
 protected:
-    virtual boost::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id, const std::string& id2,
+    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id, const std::string& id2,
                                                                   const std::string& key,
                                                                   const std::vector<QuantLib::Date>& dates,
                                                                   const QuantLib::Date& maturity,
@@ -73,7 +73,7 @@ public:
         : FlexiSwapBGSEngineBuilderBase(tradeType, model, "Grid") {}
 
 protected:
-    boost::shared_ptr<QuantExt::LGM> model(const std::string& id, const std::string& key,
+    QuantLib::ext::shared_ptr<QuantExt::LGM> model(const std::string& id, const std::string& key,
                                            const std::vector<QuantLib::Date>& dates, const QuantLib::Date& maturity,
                                            const std::vector<QuantLib::Real>& strikes);
 };
@@ -90,7 +90,7 @@ public:
     FlexiSwapLGMGridEngineBuilder() : FlexiSwapBGSLGMGridEngineBuilderBase("FlexiSwap", "LGM") {}
 
 protected:
-    virtual boost::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id, const std::string& id2,
+    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id, const std::string& id2,
                                                                   const std::string& key,
                                                                   const std::vector<QuantLib::Date>& dates,
                                                                   const QuantLib::Date& maturity,

@@ -45,26 +45,26 @@ using namespace std;
 class NettedExposureCalculator {
 public:
     NettedExposureCalculator(
-        const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<Market>& market,
-        const boost::shared_ptr<NPVCube>& cube, const string& baseCurrency, const string& configuration,
+        const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<Market>& market,
+        const QuantLib::ext::shared_ptr<NPVCube>& cube, const string& baseCurrency, const string& configuration,
         const Real quantile, const CollateralExposureHelper::CalculationType calcType, const bool multiPath,
-        const boost::shared_ptr<NettingSetManager>& nettingSetManager,
-        const boost::shared_ptr<CollateralBalances>& collateralBalances,
+        const QuantLib::ext::shared_ptr<NettingSetManager>& nettingSetManager,
+        const QuantLib::ext::shared_ptr<CollateralBalances>& collateralBalances,
         const map<string, vector<vector<Real>>>& nettingSetDefaultValue,
         const map<string, vector<vector<Real>>>& nettingSetCloseOutValue,
         const map<string, vector<vector<Real>>>& nettingSetMporPositiveFlow,
         const map<string, vector<vector<Real>>>& nettingSetMporNegativeFlow,
-        const boost::shared_ptr<AggregationScenarioData>& scenarioData,
-        const boost::shared_ptr<CubeInterpretation> cubeInterpretation, const bool applyInitialMargin,
-        const boost::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator, const bool fullInitialCollateralisation,
+        const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData,
+        const QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpretation, const bool applyInitialMargin,
+        const QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator, const bool fullInitialCollateralisation,
         // Marginal Allocation
         const bool marginalAllocation, const Real marginalAllocationLimit,
-        const boost::shared_ptr<NPVCube>& tradeExposureCube, const Size allocatedEpeIndex, const Size allocatedEneIndex,
+        const QuantLib::ext::shared_ptr<NPVCube>& tradeExposureCube, const Size allocatedEpeIndex, const Size allocatedEneIndex,
         const bool flipViewXVA, const bool withMporStickyDate, const MporCashFlowMode mporCashFlowMode);
 
     virtual ~NettedExposureCalculator() {}
-    const boost::shared_ptr<NPVCube>& exposureCube() { return exposureCube_; }
-    const boost::shared_ptr<NPVCube>& nettedCube() { return nettedCube_; }
+    const QuantLib::ext::shared_ptr<NPVCube>& exposureCube() { return exposureCube_; }
+    const QuantLib::ext::shared_ptr<NPVCube>& nettedCube() { return nettedCube_; }
     //! Compute exposures along all paths and fill result structures
     virtual void build();
 
@@ -94,36 +94,36 @@ public:
     map<string, vector<vector<Real>>> nettingSetMporPositiveFlow() { return nettingSetMporPositiveFlow_; }
     map<string, vector<vector<Real>>> nettingSetMporNegativeFlow() { return nettingSetMporNegativeFlow_; }
 protected:
-    boost::shared_ptr<Portfolio> portfolio_;
-    boost::shared_ptr<Market> market_;
-    boost::shared_ptr<NPVCube> cube_;
+    QuantLib::ext::shared_ptr<Portfolio> portfolio_;
+    QuantLib::ext::shared_ptr<Market> market_;
+    QuantLib::ext::shared_ptr<NPVCube> cube_;
     string baseCurrency_;
     string configuration_;
     Real quantile_;
     CollateralExposureHelper::CalculationType calcType_;
     bool multiPath_;
-    const boost::shared_ptr<NettingSetManager> nettingSetManager_;
-    const boost::shared_ptr<CollateralBalances> collateralBalances_;
+    const QuantLib::ext::shared_ptr<NettingSetManager> nettingSetManager_;
+    const QuantLib::ext::shared_ptr<CollateralBalances> collateralBalances_;
     map<string, vector<vector<Real>>> nettingSetDefaultValue_;
     map<string, vector<vector<Real>>> nettingSetCloseOutValue_;
     map<string, vector<vector<Real>>> nettingSetMporPositiveFlow_;
     map<string, vector<vector<Real>>> nettingSetMporNegativeFlow_;
-    const boost::shared_ptr<AggregationScenarioData> scenarioData_;
-    boost::shared_ptr<CubeInterpretation> cubeInterpretation_;
+    const QuantLib::ext::shared_ptr<AggregationScenarioData> scenarioData_;
+    QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpretation_;
     const bool applyInitialMargin_;
-    const boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
+    const QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
     const bool fullInitialCollateralisation_;
     // Marginal Allocation
     const bool marginalAllocation_;
     const Real marginalAllocationLimit_;
-    boost::shared_ptr<NPVCube> tradeExposureCube_;
+    QuantLib::ext::shared_ptr<NPVCube> tradeExposureCube_;
     const Size allocatedEpeIndex_;
     const Size allocatedEneIndex_;
     const bool flipViewXVA_;
 
     // Output
-    boost::shared_ptr<NPVCube> nettedCube_;
-    boost::shared_ptr<NPVCube> exposureCube_;
+    QuantLib::ext::shared_ptr<NPVCube> nettedCube_;
+    QuantLib::ext::shared_ptr<NPVCube> exposureCube_;
     map<string, string> counterpartyMap_; // map netting set id to counterparty name
     map<string, std::vector<Real>> ee_b_;
     map<string, std::vector<Real>> eee_b_;
@@ -137,7 +137,7 @@ protected:
     map<string, Real> collateralFloor_;
     vector<Real> getMeanExposure(const string& tid, ExposureIndex index);
 
-    boost::shared_ptr<vector<boost::shared_ptr<CollateralAccount>>>
+    QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<CollateralAccount>>>
     collateralPaths(const string& nettingSetId,
         const Real& nettingSetValueToday,
         const vector<vector<Real>>& nettingSetValue,

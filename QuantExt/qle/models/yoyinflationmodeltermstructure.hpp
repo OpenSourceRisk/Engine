@@ -43,7 +43,7 @@ public:
     /*! Constructor taking the cross asset model, \p model, and the index of the relevant inflation component within 
         the model, \p index.
     */
-    YoYInflationModelTermStructure(const boost::shared_ptr<CrossAssetModel>& model, QuantLib::Size index, bool indexIsInterpolated);
+    YoYInflationModelTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, QuantLib::Size index, bool indexIsInterpolated);
 
     //! \name Observer interface
     //@{
@@ -85,7 +85,7 @@ public:
         const QuantLib::Period& obsLag = -1 * QuantLib::Days) const = 0;
 
 protected:
-    boost::shared_ptr<CrossAssetModel> model_;
+    QuantLib::ext::shared_ptr<CrossAssetModel> model_;
     QuantLib::Size index_;
     bool indexIsInterpolated_;
     // Hides referenceDate_ in TermStructure.

@@ -56,7 +56,7 @@ public:
     //! \name Constructors
     //@{
     CBO( //! Underlying bond basket
-        const boost::shared_ptr<BondBasket>& basket,
+        const QuantLib::ext::shared_ptr<BondBasket>& basket,
         //! CBO schedule
         const QuantLib::Schedule& schedule,
         //! Senior fee rate to be paid before any cash flow goes to the tranches
@@ -76,7 +76,7 @@ public:
     //@}
     //! \name Inspectors
     //@{
-    boost::shared_ptr<BondBasket> basket() const { return basket_; }
+    QuantLib::ext::shared_ptr<BondBasket> basket() const { return basket_; }
     //@}
 
     //! \name Instrument interface
@@ -102,7 +102,7 @@ public:
 private:
     void setupExpired() const override;
 
-    boost::shared_ptr<BondBasket> basket_;
+    QuantLib::ext::shared_ptr<BondBasket> basket_;
     Schedule schedule_;
     Rate seniorFee_;
     DayCounter feeDayCounter_;
@@ -127,7 +127,7 @@ class CBO::arguments : public virtual PricingEngine::arguments {
 public:
     void validate() const override;
 
-    boost::shared_ptr<BondBasket> basket;
+    QuantLib::ext::shared_ptr<BondBasket> basket;
     Schedule schedule;
     Rate seniorFee;
     Rate subordinatedFee;

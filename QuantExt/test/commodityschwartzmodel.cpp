@@ -72,21 +72,21 @@ std::vector<Real> prices { 100, 101, 102, 103, 105, 110, 115, 120, 130 };
 
 struct CommoditySchwartzModelTestData : public qle::test::TopLevelFixture {
     CommoditySchwartzModelTestData(bool driftFreeState) :
-        ts(boost::make_shared<InterpolatedPriceCurve<Linear>>(periods, prices, ActualActual(ActualActual::ISDA), USDCurrency())) {
+        ts(QuantLib::ext::make_shared<InterpolatedPriceCurve<Linear>>(periods, prices, ActualActual(ActualActual::ISDA), USDCurrency())) {
 
         referenceDate = Date(10, November, 2022);
         Settings::instance().evaluationDate() = referenceDate;
 
-        Handle<Quote> fx(boost::make_shared<SimpleQuote>(1.0));
+        Handle<Quote> fx(QuantLib::ext::make_shared<SimpleQuote>(1.0));
         sigma = 0.1;
         kappa = 0.05;
 
-        parametrization = boost::make_shared<CommoditySchwartzParametrization>(USDCurrency(), "WTI", ts, fx, sigma, kappa, driftFreeState);
+        parametrization = QuantLib::ext::make_shared<CommoditySchwartzParametrization>(USDCurrency(), "WTI", ts, fx, sigma, kappa, driftFreeState);
         QL_REQUIRE(parametrization != NULL, "CommoditySchwartzParametrization has null pointer");
 
         // TODO test Euler discretization
         model =
-            boost::make_shared<CommoditySchwartzModel>(parametrization, CommoditySchwartzModel::Discretization::Exact);
+            QuantLib::ext::make_shared<CommoditySchwartzModel>(parametrization, CommoditySchwartzModel::Discretization::Exact);
     }
 
     SavedSettings backup;
@@ -94,8 +94,8 @@ struct CommoditySchwartzModelTestData : public qle::test::TopLevelFixture {
     Date referenceDate;
     Handle<QuantExt::PriceTermStructure> ts;
     Real kappa, sigma;
-    boost::shared_ptr<CommoditySchwartzParametrization> parametrization;
-    boost::shared_ptr<CommoditySchwartzModel> model;
+    QuantLib::ext::shared_ptr<CommoditySchwartzParametrization> parametrization;
+    QuantLib::ext::shared_ptr<CommoditySchwartzModel> model;
 }; // CommoditySchwarzModelTestData
 
 } // namespace
@@ -117,7 +117,7 @@ BOOST_DATA_TEST_CASE(testMartingaleProperty,
     BOOST_TEST_MESSAGE("Testing martingale property in the COM Schwartz model ...");
 
     CommoditySchwartzModelTestData data(driftFreeState);
-    boost::shared_ptr<StochasticProcess> process = data.model->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> process = data.model->stateProcess();
     QL_REQUIRE(process != NULL, "process has null pointer!");
 
     Size n = 100000; // number of paths
@@ -183,7 +183,7 @@ BOOST_DATA_TEST_CASE(testMartingaleProperty,
         // FIXME: What's the MC error here? I assume that the mean error is smaller than the error of variance estimate, so re-using it.
         Real error = error_of<tag::mean>(acc_state); 
 
-        boost::shared_ptr<CommoditySchwartzStateProcess> stateProcess = boost::dynamic_pointer_cast<CommoditySchwartzStateProcess>(process);
+        QuantLib::ext::shared_ptr<CommoditySchwartzStateProcess> stateProcess = QuantLib::ext::dynamic_pointer_cast<CommoditySchwartzStateProcess>(process);
         QL_REQUIRE(stateProcess, "state process is null");
         Real expected2 = stateProcess->variance(0.0, 0.0, t);
 

@@ -28,7 +28,7 @@ RiskParticipationAgreement::RiskParticipationAgreement(
     const std::vector<std::string>& underlyingCcys, const std::vector<Leg>& protectionFee,
     const bool protectionFeePayer, const std::vector<std::string>& protectionFeeCcys, const Real participationRate,
     const Date& protectionStart, const Date& protectionEnd, const bool settlesAccrual, const Real fixedRecoveryRate,
-    const boost::shared_ptr<Exercise>& exercise, const bool exerciseIsLong, const std::vector<boost::shared_ptr<CashFlow>>& premium, const bool nakedOption)
+    const QuantLib::ext::shared_ptr<Exercise>& exercise, const bool exerciseIsLong, const std::vector<QuantLib::ext::shared_ptr<CashFlow>>& premium, const bool nakedOption)
     : underlying_(underlying), underlyingPayer_(underlyingPayer), underlyingCcys_(underlyingCcys),
       protectionFee_(protectionFee), protectionFeePayer_(protectionFeePayer), protectionFeeCcys_(protectionFeeCcys),
       participationRate_(participationRate), protectionStart_(protectionStart), protectionEnd_(protectionEnd),
@@ -65,7 +65,7 @@ RiskParticipationAgreement::RiskParticipationAgreement(
     for (auto const& l : underlying) {
         for (auto const& c : l) {
             registerWith(c);
-            if (auto lazy = boost::dynamic_pointer_cast<LazyObject>(c))
+            if (auto lazy = QuantLib::ext::dynamic_pointer_cast<LazyObject>(c))
                 lazy->alwaysForwardNotifications();
         }
     }
@@ -73,7 +73,7 @@ RiskParticipationAgreement::RiskParticipationAgreement(
     for (auto const& l : protectionFee) {
         for (auto const& c : l) {
             registerWith(c);
-            if (auto lazy = boost::dynamic_pointer_cast<LazyObject>(c))
+            if (auto lazy = QuantLib::ext::dynamic_pointer_cast<LazyObject>(c))
                 lazy->alwaysForwardNotifications();
         }
     }

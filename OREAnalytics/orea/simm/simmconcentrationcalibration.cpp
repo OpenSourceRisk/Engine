@@ -22,8 +22,8 @@ using RiskType = CrifRecord::RiskType;
 using RiskClass = SimmConfiguration::RiskClass;
 using IRFXConcentrationThresholds = SimmCalibration::RiskClassData::IRFXConcentrationThresholds;
 
-SimmConcentrationCalibration::SimmConcentrationCalibration(const boost::shared_ptr<SimmCalibration>& simmCalibration,
-                                                           const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper)
+SimmConcentrationCalibration::SimmConcentrationCalibration(const QuantLib::ext::shared_ptr<SimmCalibration>& simmCalibration,
+                                                           const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper)
     : simmBucketMapper_(simmBucketMapper) {
 
     for (const auto& [riskClass, rcData] : simmCalibration->riskClassData()) {
@@ -32,7 +32,7 @@ SimmConcentrationCalibration::SimmConcentrationCalibration(const boost::shared_p
 
         // IR and FX currency lists
         if (riskClass == RiskClass::InterestRate || riskClass == RiskClass::FX) {
-            const auto& irFxThresholds = boost::dynamic_pointer_cast<IRFXConcentrationThresholds>(concThresholds);
+            const auto& irFxThresholds = QuantLib::ext::dynamic_pointer_cast<IRFXConcentrationThresholds>(concThresholds);
             QL_REQUIRE(irFxThresholds, "Cannot cast ConcentrationThresholds to IRFXConcentrationThresholds");
             const auto& ccyLists = irFxThresholds->currencyLists();
 

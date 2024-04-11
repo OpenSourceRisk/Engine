@@ -48,8 +48,8 @@ public:
     //! Constructor
     DeltaScenario() {}
     //! Constructor
-    DeltaScenario(const boost::shared_ptr<ore::analytics::Scenario>& baseScenario,
-                  const boost::shared_ptr<ore::analytics::Scenario>& incrementalScenario)
+    DeltaScenario(const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& baseScenario,
+                  const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& incrementalScenario)
         : baseScenario_(baseScenario), delta_(incrementalScenario) {}
 
     //! Return the scenario asof date
@@ -72,15 +72,15 @@ public:
     Real get(const ore::analytics::RiskFactorKey& key) const override;
 
     //! Get delta
-    boost::shared_ptr<Scenario> delta() const { return delta_; }
+    QuantLib::ext::shared_ptr<Scenario> delta() const { return delta_; }
 
-    boost::shared_ptr<Scenario> clone() const override;
+    QuantLib::ext::shared_ptr<Scenario> clone() const override;
 
-    bool isCloseEnough(const boost::shared_ptr<Scenario>& s) const override;
+    bool isCloseEnough(const QuantLib::ext::shared_ptr<Scenario>& s) const override;
 
 protected:
-    boost::shared_ptr<Scenario> baseScenario_;
-    boost::shared_ptr<Scenario> delta_;
+    QuantLib::ext::shared_ptr<Scenario> baseScenario_;
+    QuantLib::ext::shared_ptr<Scenario> delta_;
 
 private:
     friend class boost::serialization::access;

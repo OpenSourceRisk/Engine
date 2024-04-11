@@ -40,7 +40,7 @@ using namespace std;
 namespace ore {
 namespace data {
 
-HwBuilder::HwBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<HwModelData>& data,
+HwBuilder::HwBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<HwModelData>& data,
                      const IrModel::Measure measure, const HwModel::Discretization discretization,
                      const bool evaluateBankAccount, const std::string& configuration, const Real bootstrapTolerance,
                      const bool continueOnError, const std::string& referenceCalibrationGrid,
@@ -48,14 +48,14 @@ HwBuilder::HwBuilder(const boost::shared_ptr<ore::data::Market>& market, const b
     : market_(market), configuration_(configuration), data_(data), measure_(measure), discretization_(discretization),
       /*bootstrapTolerance_(bootstrapTolerance), continueOnError_(continueOnError),*/
       referenceCalibrationGrid_(referenceCalibrationGrid), /*setCalibrationInfo_(setCalibrationInfo),*/
-      optimizationMethod_(boost::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
+      optimizationMethod_(QuantLib::ext::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
       endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8))
       /*,calibrationErrorType_(BlackCalibrationHelper::RelativePriceError)*/ {
 
-    marketObserver_ = boost::make_shared<MarketObserver>();
+    marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
     string qualifier = data_->qualifier();
     currency_ = qualifier;
-    boost::shared_ptr<IborIndex> index;
+    QuantLib::ext::shared_ptr<IborIndex> index;
     if (tryParseIborIndex(qualifier, index)) {
         currency_ = index->currency().code();
     }
@@ -149,12 +149,12 @@ HwBuilder::HwBuilder(const boost::shared_ptr<ore::data::Market>& market, const b
     DLOGGERSTREAM("before calibration: kappa times = " << kappaTimes);
 
     parametrization_ =
-        boost::make_shared<QuantExt::IrHwConstantParametrization>(ccy, modelDiscountCurve_, sigma[0], kappa[0]);
+        QuantLib::ext::make_shared<QuantExt::IrHwConstantParametrization>(ccy, modelDiscountCurve_, sigma[0], kappa[0]);
 
     DLOG("alpha times size: " << sigmaTimes.size());
     DLOG("lambda times size: " << kappaTimes.size());
 
-    model_ = boost::make_shared<QuantExt::HwModel>(parametrization_, measure_, discretization_, evaluateBankAccount_);
+    model_ = QuantLib::ext::make_shared<QuantExt::HwModel>(parametrization_, measure_, discretization_, evaluateBankAccount_);
     params_ = model_->params();
 }
 
@@ -163,17 +163,17 @@ Real HwBuilder::error() const {
     return error_;
 }
 
-boost::shared_ptr<QuantExt::HwModel> HwBuilder::model() const {
+QuantLib::ext::shared_ptr<QuantExt::HwModel> HwBuilder::model() const {
     calculate();
     return model_;
 }
 
-boost::shared_ptr<QuantExt::IrHwParametrization> HwBuilder::parametrization() const {
+QuantLib::ext::shared_ptr<QuantExt::IrHwParametrization> HwBuilder::parametrization() const {
     calculate();
     return parametrization_;
 }
 
-std::vector<boost::shared_ptr<BlackCalibrationHelper>> HwBuilder::swaptionBasket() const {
+std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> HwBuilder::swaptionBasket() const {
     calculate();
     return swaptionBasket_;
 }

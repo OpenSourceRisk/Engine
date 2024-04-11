@@ -43,11 +43,11 @@ public:
     /*! Constructor taking the cross asset model, \p model, and the index of the relevant inflation component within 
         the model, \p index.
     */
-    ZeroInflationModelTermStructure(const boost::shared_ptr<CrossAssetModel>& model, QuantLib::Size index);
+    ZeroInflationModelTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, QuantLib::Size index);
 
     // Deprecated constructor with interpolated index, index is always flat and the coupon is responsible for interpolation
     QL_DEPRECATED
-    ZeroInflationModelTermStructure(const boost::shared_ptr<CrossAssetModel>& model, QuantLib::Size index, bool indexIsInterpolated);
+    ZeroInflationModelTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, QuantLib::Size index, bool indexIsInterpolated);
 
     //! \name Observer interface
     //@{
@@ -76,7 +76,7 @@ public:
     void move(const QuantLib::Date& d, const QuantLib::Array& s);
 
 protected:
-    boost::shared_ptr<CrossAssetModel> model_;
+    QuantLib::ext::shared_ptr<CrossAssetModel> model_;
     QuantLib::Size index_;
     QL_DEPRECATED bool indexIsInterpolated_;
     // Hides referenceDate_ in TermStructure.
