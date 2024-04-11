@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 #include <map>
 #include <orea/cube/npvcube.hpp>
 #include <string>
@@ -43,7 +43,7 @@ public:
     const std::string& filename() const { return filename_; }
 
     //! Read a cube from a csv file
-    void read(boost::shared_ptr<ore::analytics::NPVCube>& cube, std::map<std::string, std::string>& nettingSetMap);
+    void read(QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& cube, std::map<std::string, std::string>& nettingSetMap);
 
 private:
     std::string filename_;

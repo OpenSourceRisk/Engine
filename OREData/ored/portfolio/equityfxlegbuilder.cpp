@@ -36,13 +36,13 @@ using std::string;
 namespace ore {
 namespace data {
 
-Leg EquityMarginLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+Leg EquityMarginLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                      RequiredFixings& requiredFixings, const string& configuration,
                                      const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
-    auto eqMarginData = boost::dynamic_pointer_cast<EquityMarginLegData>(data.concreteLegData());
+    auto eqMarginData = QuantLib::ext::dynamic_pointer_cast<EquityMarginLegData>(data.concreteLegData());
     QL_REQUIRE(eqMarginData, "Wrong LegType, expected EquityMargin");
      
-    boost::shared_ptr<EquityLegData> eqData = eqMarginData->equityLegData();
+    QuantLib::ext::shared_ptr<EquityLegData> eqData = eqMarginData->equityLegData();
     
     string eqName = eqData->eqName();
     auto eqCurve = *engineFactory->market()->equityCurve(eqName, configuration);
@@ -50,7 +50,7 @@ Leg EquityMarginLegBuilder::buildLeg(const LegData& data, const boost::shared_pt
     Currency dataCurrency = parseCurrencyWithMinors(data.currency());
     Currency eqCurrency = eqCurve->currency();
 
-    boost::shared_ptr<QuantExt::FxIndex> fxIndex = nullptr;
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex = nullptr;
     // if equity currency differs from the leg currency we need an FxIndex
     if (dataCurrency != eqCurrency) {
         QL_REQUIRE(eqData->fxIndex() != "",
@@ -60,7 +60,7 @@ Leg EquityMarginLegBuilder::buildLeg(const LegData& data, const boost::shared_pt
     }
 
     Leg result = makeEquityMarginLeg(data, eqCurve, fxIndex, openEndDateReplacement);
-    addToRequiredFixings(result, boost::make_shared<ore::data::FixingDateGetter>(requiredFixings));
+    addToRequiredFixings(result, QuantLib::ext::make_shared<ore::data::FixingDateGetter>(requiredFixings));
     return result;
 }
 

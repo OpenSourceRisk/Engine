@@ -40,16 +40,16 @@ namespace data {
 
 InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader& loader,
                                const CurveConfigurations& curveConfigs,
-                               map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+                               map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
                                const bool buildCalibrationInfo) {
 
     try {
 
-        const boost::shared_ptr<InflationCurveConfig>& config = curveConfigs.inflationCurveConfig(spec.curveConfigID());
+        const QuantLib::ext::shared_ptr<InflationCurveConfig>& config = curveConfigs.inflationCurveConfig(spec.curveConfigID());
 
-        const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
-        boost::shared_ptr<InflationSwapConvention> conv =
-            boost::dynamic_pointer_cast<InflationSwapConvention>(conventions->get(config->conventions()));
+        const QuantLib::ext::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
+        QuantLib::ext::shared_ptr<InflationSwapConvention> conv =
+            QuantLib::ext::dynamic_pointer_cast<InflationSwapConvention>(conventions->get(config->conventions()));
 
         QL_REQUIRE(conv != nullptr, "convention " << config->conventions() << " could not be found.");
 
@@ -91,7 +91,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                 (md->instrumentType() == MarketDatum::InstrumentType::YY_INFLATIONSWAP &&
                  config->type() == InflationCurveConfig::Type::YY))) {
 
-                boost::shared_ptr<ZcInflationSwapQuote> q = boost::dynamic_pointer_cast<ZcInflationSwapQuote>(md);
+                QuantLib::ext::shared_ptr<ZcInflationSwapQuote> q = QuantLib::ext::dynamic_pointer_cast<ZcInflationSwapQuote>(md);
                 if (q) {
                     auto it = std::find(strQuotes.begin(), strQuotes.end(), q->name());
                     if (it != strQuotes.end()) {
@@ -102,7 +102,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                     }
                 }
 
-                boost::shared_ptr<YoYInflationSwapQuote> q2 = boost::dynamic_pointer_cast<YoYInflationSwapQuote>(md);
+                QuantLib::ext::shared_ptr<YoYInflationSwapQuote> q2 = QuantLib::ext::dynamic_pointer_cast<YoYInflationSwapQuote>(md);
                 if (q2) {
                     auto it = std::find(strQuotes.begin(), strQuotes.end(), q2->name());
                     if (it != strQuotes.end()) {
@@ -123,13 +123,13 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
         bool derive_yoy_from_zc = (config->type() == InflationCurveConfig::Type::YY && isZc[0]);
 
         // construct seasonality
-        boost::shared_ptr<Seasonality> seasonality;
+        QuantLib::ext::shared_ptr<Seasonality> seasonality;
         if (config->seasonalityBaseDate() != Null<Date>()) {
             if (config->overrideSeasonalityFactors().empty()) {
                 std::vector<string> strFactorIDs = config->seasonalityFactors();
                 std::vector<double> factors(strFactorIDs.size());
                 for (Size i = 0; i < strFactorIDs.size(); i++) {
-                    boost::shared_ptr<MarketDatum> marketQuote = loader.get(strFactorIDs[i], asof);
+                    QuantLib::ext::shared_ptr<MarketDatum> marketQuote = loader.get(strFactorIDs[i], asof);
                     // Check that we have a valid seasonality factor
                     if (marketQuote) {
                         QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::SEASONALITY,
@@ -139,8 +139,8 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                                    "Only monthly seasonality with 12 factors is allowed. Provided "
                                        << config->seasonalityFrequency() << " with " << strFactorIDs.size()
                                        << " factors.");
-                        boost::shared_ptr<SeasonalityQuote> sq =
-                            boost::dynamic_pointer_cast<SeasonalityQuote>(marketQuote);
+                        QuantLib::ext::shared_ptr<SeasonalityQuote> sq =
+                            QuantLib::ext::dynamic_pointer_cast<SeasonalityQuote>(marketQuote);
                             QL_REQUIRE(sq, "Could not cast to SeasonalityQuote, internal error.");
                             QL_REQUIRE(sq->type() == "MULT",
                                    "Market quote (" << sq->name() << ") not of multiplicative type.");
@@ -156,11 +156,11 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                     }
                 }
                 QL_REQUIRE(!factors.empty(), "no seasonality factors found");
-                seasonality = boost::make_shared<MultiplicativePriceSeasonality>(
+                seasonality = QuantLib::ext::make_shared<MultiplicativePriceSeasonality>(
                     config->seasonalityBaseDate(), config->seasonalityFrequency(), factors);
             } else {
                 // override market data by explicit list
-                seasonality = boost::make_shared<MultiplicativePriceSeasonality>(config->seasonalityBaseDate(),
+                seasonality = QuantLib::ext::make_shared<MultiplicativePriceSeasonality>(config->seasonalityBaseDate(),
                                                                                  config->seasonalityFrequency(),
                                                                                  config->overrideSeasonalityFactors());
             }
@@ -176,16 +176,16 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
 
         interpolatedIndex_ = conv->interpolated();
         CPI::InterpolationType observationInterpolation = interpolatedIndex_ ? CPI::Linear : CPI::Flat;
-        boost::shared_ptr<YoYInflationIndex> zc_to_yoy_conversion_index;
+        QuantLib::ext::shared_ptr<YoYInflationIndex> zc_to_yoy_conversion_index;
         if (config->type() == InflationCurveConfig::Type::ZC || derive_yoy_from_zc) {
             // ZC Curve
-            std::vector<boost::shared_ptr<QuantExt::ZeroInflationTraits::helper>> instruments;
-            boost::shared_ptr<ZeroInflationIndex> index = conv->index();
+            std::vector<QuantLib::ext::shared_ptr<QuantExt::ZeroInflationTraits::helper>> instruments;
+            QuantLib::ext::shared_ptr<ZeroInflationIndex> index = conv->index();
             for (Size i = 0; i < strQuotes.size(); ++i) {
                 // QL conventions do not incorporate settlement delay => patch here once QL is patched
                 Date maturity = swapStart + terms[i];
-                boost::shared_ptr<QuantExt::ZeroInflationTraits::helper> instrument =
-                    boost::make_shared<ZeroCouponInflationSwapHelper>(
+                QuantLib::ext::shared_ptr<QuantExt::ZeroInflationTraits::helper> instrument =
+                    QuantLib::ext::make_shared<ZeroCouponInflationSwapHelper>(
                         quotes[i], conv->observationLag(), maturity, conv->fixCalendar(), conv->fixConvention(),
                         conv->dayCounter(), index, observationInterpolation, nominalTs, swapStart);
                 // The instrument gets registered to update on change of evaluation date. This triggers a
@@ -209,30 +209,30 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                     baseRate = quotes[0]->value();
                 }
             }
-            curve_ = boost::shared_ptr<QuantExt::PiecewiseZeroInflationCurve<Linear>>(
+            curve_ = QuantLib::ext::shared_ptr<QuantExt::PiecewiseZeroInflationCurve<Linear>>(
                 new QuantExt::PiecewiseZeroInflationCurve<Linear>(
                     asof, config->calendar(), config->dayCounter(), curveObsLag, config->frequency(), baseRate,
                     instruments, config->tolerance(), index, config->useLastAvailableFixingAsBaseDate()));
             
             // force bootstrap so that errors are thrown during the build, not later
-            boost::static_pointer_cast<QuantExt::PiecewiseZeroInflationCurve<Linear>>(curve_)->zeroRate(QL_EPSILON);
+            QuantLib::ext::static_pointer_cast<QuantExt::PiecewiseZeroInflationCurve<Linear>>(curve_)->zeroRate(QL_EPSILON);
             if (derive_yoy_from_zc) {
                 // set up yoy wrapper with empty ts, so that zero index is used to forecast fixings
                 // for this link the appropriate curve to the zero index
-                zc_to_yoy_conversion_index = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
+                zc_to_yoy_conversion_index = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(
                     index->clone(Handle<ZeroInflationTermStructure>(
-                        boost::dynamic_pointer_cast<ZeroInflationTermStructure>(curve_))),
+                        QuantLib::ext::dynamic_pointer_cast<ZeroInflationTermStructure>(curve_))),
                     interpolatedIndex_);
             }
         }
         if (config->type() == InflationCurveConfig::Type::YY) {
             // YOY Curve
-            std::vector<boost::shared_ptr<YoYInflationTraits::helper>> instruments;
-            boost::shared_ptr<ZeroInflationIndex> zcindex = conv->index();
-            boost::shared_ptr<YoYInflationIndex> index =
-                boost::make_shared<QuantExt::YoYInflationIndexWrapper>(zcindex, interpolatedIndex_);
-            boost::shared_ptr<InflationCouponPricer> yoyCpnPricer =
-                boost::make_shared<YoYInflationCouponPricer>(nominalTs);
+            std::vector<QuantLib::ext::shared_ptr<YoYInflationTraits::helper>> instruments;
+            QuantLib::ext::shared_ptr<ZeroInflationIndex> zcindex = conv->index();
+            QuantLib::ext::shared_ptr<YoYInflationIndex> index =
+                QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zcindex, interpolatedIndex_);
+            QuantLib::ext::shared_ptr<InflationCouponPricer> yoyCpnPricer =
+                QuantLib::ext::make_shared<YoYInflationCouponPricer>(nominalTs);
             for (Size i = 0; i < strQuotes.size(); ++i) {
                 Date maturity = swapStart + terms[i];
                 Real effectiveQuote = quotes[i]->value();
@@ -250,21 +250,21 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                                                 conv->observationLag(), 0.0, conv->dayCounter(), conv->fixCalendar(),
                                                 conv->fixConvention());
                     for (auto& c : tmp.yoyLeg()) {
-                        auto cpn = boost::dynamic_pointer_cast<YoYInflationCoupon>(c);
+                        auto cpn = QuantLib::ext::dynamic_pointer_cast<YoYInflationCoupon>(c);
                         QL_REQUIRE(cpn, "yoy inflation coupon expected, could not cast");
                         cpn->setPricer(yoyCpnPricer);
                     }
-                    boost::shared_ptr<PricingEngine> engine =
-                        boost::make_shared<QuantLib::DiscountingSwapEngine>(nominalTs);
+                    QuantLib::ext::shared_ptr<PricingEngine> engine =
+                        QuantLib::ext::make_shared<QuantLib::DiscountingSwapEngine>(nominalTs);
                     tmp.setPricingEngine(engine);
                     effectiveQuote = tmp.fairRate();
                     DLOG("Derive " << terms[i] << " yoy quote " << effectiveQuote << " from zc quote "
                                    << quotes[i]->value());
                 }
                 // QL conventions do not incorporate settlement delay => patch here once QL is patched
-                boost::shared_ptr<YoYInflationTraits::helper> instrument =
-                    boost::make_shared<YearOnYearInflationSwapHelper>(
-                        Handle<Quote>(boost::make_shared<SimpleQuote>(effectiveQuote)), conv->observationLag(),
+                QuantLib::ext::shared_ptr<YoYInflationTraits::helper> instrument =
+                    QuantLib::ext::make_shared<YearOnYearInflationSwapHelper>(
+                        Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(effectiveQuote)), conv->observationLag(),
                         maturity, conv->fixCalendar(), conv->fixConvention(), conv->dayCounter(), index, nominalTs,
                         swapStart);
                 instrument->unregisterWith(Settings::instance().evaluationDate());
@@ -274,11 +274,11 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             // base zero rate: if given, take it, otherwise set it to first quote
             Real baseRate =
                 config->baseRate() != Null<Real>() ? config->baseRate() : instruments.front()->quote()->value();
-            curve_ = boost::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
+            curve_ = QuantLib::ext::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
                 asof, config->calendar(), config->dayCounter(), curveObsLag, config->frequency(), interpolatedIndex_,
                 baseRate, instruments, config->tolerance()));
             // force bootstrap so that errors are thrown during the build, not later
-            boost::static_pointer_cast<PiecewiseYoYInflationCurve<Linear>>(curve_)->yoyRate(QL_EPSILON);
+            QuantLib::ext::static_pointer_cast<PiecewiseYoYInflationCurve<Linear>>(curve_)->yoyRate(QL_EPSILON);
         }
         if (seasonality != nullptr) {
             curve_->setSeasonality(seasonality);
@@ -304,9 +304,9 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             }
 
             if (config->type() == InflationCurveConfig::Type::YY) {
-                auto yoyCurve = boost::dynamic_pointer_cast<YoYInflationCurve>(curve_);
+                auto yoyCurve = QuantLib::ext::dynamic_pointer_cast<YoYInflationCurve>(curve_);
                 QL_REQUIRE(yoyCurve, "internal error: expected YoYInflationCurve (inflation curve builder)");
-                auto calInfo = boost::make_shared<YoYInflationCurveCalibrationInfo>();
+                auto calInfo = QuantLib::ext::make_shared<YoYInflationCurveCalibrationInfo>();
                 calInfo->dayCounter = config->dayCounter().name();
                 calInfo->calendar = config->calendar().empty() ? "null" : config->calendar().name();
                 calInfo->baseDate = curve_->baseDate();
@@ -319,10 +319,10 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             }
 
             if (config->type() == InflationCurveConfig::Type::ZC) {
-                auto zcCurve = boost::dynamic_pointer_cast<ZeroInflationTermStructure>(curve_);
+                auto zcCurve = QuantLib::ext::dynamic_pointer_cast<ZeroInflationTermStructure>(curve_);
                 QL_REQUIRE(zcCurve, "internal error: expected ZeroInflationCurve (inflation curve builder)");
                 auto zcIndex = conv->index()->clone(Handle<ZeroInflationTermStructure>(zcCurve));
-                auto calInfo = boost::make_shared<ZeroInflationCurveCalibrationInfo>();
+                auto calInfo = QuantLib::ext::make_shared<ZeroInflationCurveCalibrationInfo>();
                 calInfo->dayCounter = config->dayCounter().name();
                 calInfo->calendar = config->calendar().empty() ? "null" : config->calendar().name();
                 calInfo->baseDate = curve_->baseDate();

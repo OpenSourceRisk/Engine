@@ -49,7 +49,7 @@ private:
 
 public:
     PseudoParameter(const Size size = 0, const Constraint& constraint = NoConstraint())
-        : Parameter(size, boost::make_shared<PseudoParameter::Impl>(), constraint) {}
+        : Parameter(size, QuantLib::ext::make_shared<PseudoParameter::Impl>(), constraint) {}
 };
 
 } // namespace QuantExt

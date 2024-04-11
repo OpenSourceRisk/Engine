@@ -53,16 +53,16 @@ protected:
         return forCcy.code() + domCcy.code() + ore::data::to_string(paymentDate);
     }
 
-    boost::shared_ptr<GeneralizedBlackScholesProcess>
+    QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>
     getBlackScholesProcess(const Currency& forCcy, const Currency& domCcy, const std::vector<Time>& timePoints = {}) {
         const string pair = forCcy.code() + domCcy.code();
         Handle<BlackVolTermStructure> vol = market_->fxVol(pair, configuration(ore::data::MarketContext::pricing));
         if (!timePoints.empty()) {
             vol = Handle<BlackVolTermStructure>(
-                boost::make_shared<QuantExt::BlackMonotoneVarVolTermStructure>(vol, timePoints));
+                QuantLib::ext::make_shared<QuantExt::BlackMonotoneVarVolTermStructure>(vol, timePoints));
             vol->enableExtrapolation();
         }
-        return boost::make_shared<GeneralizedBlackScholesProcess>(
+        return QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
             market_->fxSpot(pair, configuration(ore::data::MarketContext::pricing)),
             market_->discountCurve(forCcy.code(),
                                    configuration(ore::data::MarketContext::pricing)), // dividend yield ~ foreign yield
@@ -81,9 +81,9 @@ public:
         : FxDoubleBarrierOptionEngineBuilder("GarmanKohlhagen", "AnalyticDoubleBarrierEngine") {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy, const Date& paymentDate) override {
-        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(forCcy, domCcy);
-        return boost::make_shared<QuantExt::AnalyticDoubleBarrierEngine>(gbsp, paymentDate);
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy, const Date& paymentDate) override {
+        QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(forCcy, domCcy);
+        return QuantLib::ext::make_shared<QuantExt::AnalyticDoubleBarrierEngine>(gbsp, paymentDate);
     }
 };
 

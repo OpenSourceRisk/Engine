@@ -68,13 +68,13 @@ Rate SpreadedOptionletVolatility2::maxStrike() const { return baseVol_->maxStrik
 VolatilityType SpreadedOptionletVolatility2::volatilityType() const { return baseVol_->volatilityType(); }
 Real SpreadedOptionletVolatility2::displacement() const { return baseVol_->displacement(); }
 
-boost::shared_ptr<SmileSection> SpreadedOptionletVolatility2::smileSectionImpl(Time optionTime) const {
+QuantLib::ext::shared_ptr<SmileSection> SpreadedOptionletVolatility2::smileSectionImpl(Time optionTime) const {
     calculate();
     std::vector<Real> volSpreads(strikes_.size());
     for (Size k = 0; k < strikes_.size(); ++k) {
         volSpreads[k] = volSpreadInterpolation_(optionTime, strikes_[k]);
     }
-    return boost::make_shared<SpreadedSmileSection2>(baseVol_->smileSection(optionTime), volSpreads, strikes_);
+    return QuantLib::ext::make_shared<SpreadedSmileSection2>(baseVol_->smileSection(optionTime), volSpreads, strikes_);
 }
 
 Volatility SpreadedOptionletVolatility2::volatilityImpl(Time optionTime, Rate strike) const {
@@ -91,7 +91,7 @@ void SpreadedOptionletVolatility2::performCalculations() const {
             volSpreadValues_(k, i) = volSpreads_[i][k]->value();
         }
     }
-    volSpreadInterpolation_ = FlatExtrapolator2D(boost::make_shared<BilinearInterpolation>(
+    volSpreadInterpolation_ = FlatExtrapolator2D(QuantLib::ext::make_shared<BilinearInterpolation>(
         optionTimes_.begin(), optionTimes_.end(), strikes_.begin(), strikes_.end(), volSpreadValues_));
     volSpreadInterpolation_.enableExtrapolation();
 }

@@ -37,7 +37,7 @@ class BilinearFlat {
     public:
     template <class I1, class I2, class M>
     Interpolation2D interpolate(const I1& xBegin, const I1& xEnd, const I2& yBegin, const I2& yEnd, const M& z) const {
-            return FlatExtrapolator2D(boost::make_shared<BilinearInterpolation>(xBegin, xEnd, yBegin, yEnd, z));
+            return FlatExtrapolator2D(QuantLib::ext::make_shared<BilinearInterpolation>(xBegin, xEnd, yBegin, yEnd, z));
     }
 };
 
@@ -47,7 +47,7 @@ class BicubicFlat {
 public:
     template <class I1, class I2, class M>
     Interpolation2D interpolate(const I1& xBegin, const I1& xEnd, const I2& yBegin, const I2& yEnd, const M& z) const {
-        return FlatExtrapolator2D(boost::make_shared<BicubicSpline>(xBegin, xEnd, yBegin, yEnd, z));
+        return FlatExtrapolator2D(QuantLib::ext::make_shared<BicubicSpline>(xBegin, xEnd, yBegin, yEnd, z));
     }
 };
 

@@ -52,8 +52,8 @@ public:
         \param dontCalibrate            Flag to use a dummy basecpi for the dependency market run
     */
     InfDkBuilder(
-        const boost::shared_ptr<ore::data::Market>& market,
-        const boost::shared_ptr<InfDkData>& data,
+        const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+        const QuantLib::ext::shared_ptr<InfDkData>& data,
         const std::string& configuration = Market::defaultConfiguration,
         const std::string& referenceCalibrationGrid = "", 
         const bool dontCalibrate = false);
@@ -61,8 +61,8 @@ public:
     //! \name Inspectors
     //@{
     std::string infIndex() { return data_->index(); }
-    boost::shared_ptr<QuantExt::InfDkParametrization> parametrization() const;
-    std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket() const;
+    QuantLib::ext::shared_ptr<QuantExt::InfDkParametrization> parametrization() const;
+    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> optionBasket() const;
     //@}
 
     //! \name ModelBuilder interface
@@ -83,21 +83,21 @@ private:
     bool volSurfaceChanged(const bool updateCache) const;
 
     // input data
-    const boost::shared_ptr<ore::data::Market> market_;
+    const QuantLib::ext::shared_ptr<ore::data::Market> market_;
     const std::string configuration_;
-    const boost::shared_ptr<InfDkData> data_;
+    const QuantLib::ext::shared_ptr<InfDkData> data_;
     const std::string referenceCalibrationGrid_;
 
     // computed
-    boost::shared_ptr<QuantExt::InfDkParametrization> parametrization_;
+    QuantLib::ext::shared_ptr<QuantExt::InfDkParametrization> parametrization_;
 
     // which option in data->optionExpries() are actually in the basket?
     mutable std::vector<bool> optionActive_;
-    mutable std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket_;
+    mutable std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> optionBasket_;
     mutable QuantLib::Array optionExpiries_;
 
     // market data
-    boost::shared_ptr<QuantLib::ZeroInflationIndex> inflationIndex_;
+    QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex> inflationIndex_;
     Handle<YieldTermStructure> rateCurve_;
     QuantLib::Handle<QuantLib::CPIVolatilitySurface> infVol_;
 
@@ -111,7 +111,7 @@ private:
     bool dontCalibrate_ = false;
 
     // market observer
-    boost::shared_ptr<QuantExt::MarketObserver> marketObserver_;
+    QuantLib::ext::shared_ptr<QuantExt::MarketObserver> marketObserver_;
 };
 
 } // namespace data

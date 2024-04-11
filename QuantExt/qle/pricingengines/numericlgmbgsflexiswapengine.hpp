@@ -43,7 +43,7 @@ class NumericLgmBgsFlexiSwapEngine
     : public GenericEngine<BalanceGuaranteedSwap::arguments, BalanceGuaranteedSwap::results>,
       public NumericLgmFlexiSwapEngineBase {
 public:
-    NumericLgmBgsFlexiSwapEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny,
+    NumericLgmBgsFlexiSwapEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny,
                                  const Real sx, const Size nx, const Handle<Quote>& minCpr, const Handle<Quote>& maxCpr,
                                  const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
                                  const Method method = Method::Automatic, const Real singleSwaptionThreshold = 20.0);

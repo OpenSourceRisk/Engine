@@ -46,8 +46,8 @@ public:
 
 class SimmConcentrationBase : public SimmConcentration {
 public:
-    //SimmConcentrationBase(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
-    //                      const boost::shared_ptr<SimmCalibration>& simmCalibration = nullptr);
+    //SimmConcentrationBase(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+    //                      const QuantLib::ext::shared_ptr<SimmCalibration>& simmCalibration = nullptr);
 
     /*! Default ctor. May need to generalise if units of threshold quotation
         change significantly
@@ -87,11 +87,11 @@ protected:
     std::map<std::string, std::set<std::string>> fxCategories_;
 
     //! Maps SIMM qualifiers to SIMM buckets
-    boost::shared_ptr<SimmBucketMapper> simmBucketMapper_;
+    QuantLib::ext::shared_ptr<SimmBucketMapper> simmBucketMapper_;
 
     /*! Shared threshold implementation for derived classes to call
      */
-    QuantLib::Real thresholdImpl(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+    QuantLib::Real thresholdImpl(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
                                  const CrifRecord::RiskType& riskType, const std::string& qualifier) const;
 
     //! Return concentration threshold for <em>Risk_FXVol</em> given the \p fxPair

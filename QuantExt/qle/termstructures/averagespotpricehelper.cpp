@@ -30,7 +30,7 @@ using QuantLib::Visitor;
 namespace QuantExt {
 
 AverageSpotPriceHelper::AverageSpotPriceHelper(const Handle<Quote>& price,
-    const boost::shared_ptr<CommoditySpotIndex>& index,
+    const QuantLib::ext::shared_ptr<CommoditySpotIndex>& index,
     const Date& start,
     const Date& end,
     const Calendar& calendar,
@@ -40,7 +40,7 @@ AverageSpotPriceHelper::AverageSpotPriceHelper(const Handle<Quote>& price,
 }
 
 AverageSpotPriceHelper::AverageSpotPriceHelper(Real price,
-    const boost::shared_ptr<CommoditySpotIndex>& index,
+    const QuantLib::ext::shared_ptr<CommoditySpotIndex>& index,
     const Date& start,
     const Date& end,
     const Calendar& calendar,
@@ -49,12 +49,12 @@ AverageSpotPriceHelper::AverageSpotPriceHelper(Real price,
     init(index, start, end, calendar, useBusinessDays);
 }
 
-void AverageSpotPriceHelper::init(const boost::shared_ptr<CommoditySpotIndex>& index,
+void AverageSpotPriceHelper::init(const QuantLib::ext::shared_ptr<CommoditySpotIndex>& index,
     const Date& start, const Date& end, const Calendar& calendar, bool useBusinessDays) {
 
     // Make a copy of the commodity spot index linked to this price helper's price term structure handle, 
     // termStructureHandle_.
-    auto indexClone = boost::make_shared<CommoditySpotIndex>(index->underlyingName(),
+    auto indexClone = QuantLib::ext::make_shared<CommoditySpotIndex>(index->underlyingName(),
         index->fixingCalendar(), termStructureHandle_);
 
     // While bootstrapping is happening, this price helper's price term structure handle, termStructureHandle_, will 
@@ -64,7 +64,7 @@ void AverageSpotPriceHelper::init(const boost::shared_ptr<CommoditySpotIndex>& i
 
     // Create the averaging cashflow referencing the commodity spot index. Need to specify all the defaults 
     // here just to amend the final default parameter i.e. set excludeStartDate to false.
-    averageCashflow_ = boost::make_shared<CommodityIndexedAverageCashFlow>(1.0, start, end, end, indexClone,
+    averageCashflow_ = QuantLib::ext::make_shared<CommodityIndexedAverageCashFlow>(1.0, start, end, end, indexClone,
         calendar, 0.0, 1.0, false, 0, 0, nullptr, true, false, useBusinessDays);
 
     // Get the date index pairs involved in the averaging. The earliest date is the date of the first element 
@@ -80,7 +80,7 @@ Real AverageSpotPriceHelper::impliedQuote() const {
 }
 
 void AverageSpotPriceHelper::setTermStructure(PriceTermStructure* ts) {
-    boost::shared_ptr<PriceTermStructure> temp(ts, null_deleter());
+    QuantLib::ext::shared_ptr<PriceTermStructure> temp(ts, null_deleter());
     // Do not set the relinkable handle as an observer i.e. registerAsObserver is false here.
     termStructureHandle_.linkTo(temp, false);
     PriceHelper::setTermStructure(ts);
@@ -93,7 +93,7 @@ void AverageSpotPriceHelper::accept(AcyclicVisitor& v) {
         PriceHelper::accept(v);
 }
 
-boost::shared_ptr<CommodityIndexedAverageCashFlow> AverageSpotPriceHelper::averageCashflow() const {
+QuantLib::ext::shared_ptr<CommodityIndexedAverageCashFlow> AverageSpotPriceHelper::averageCashflow() const {
     return averageCashflow_;
 }
 

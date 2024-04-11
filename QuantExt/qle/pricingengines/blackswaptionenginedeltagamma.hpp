@@ -248,7 +248,7 @@ BlackStyleSwaptionEngineDeltaGamma<Spec>::BlackStyleSwaptionEngineDeltaGamma(
     const std::vector<Time>& bucketTimesDeltaGamma, const std::vector<Time>& bucketTimesVegaOpt,
     const std::vector<Time>& bucketTimesVegaUnd, const bool computeDeltaVega, const bool computeGamma,
     const bool linearInZero)
-    : discountCurve_(discountCurve), vol_(boost::shared_ptr<SwaptionVolatilityStructure>(new ConstantSwaptionVolatility(
+    : discountCurve_(discountCurve), vol_(QuantLib::ext::shared_ptr<SwaptionVolatilityStructure>(new ConstantSwaptionVolatility(
                                          0, NullCalendar(), Following, vol, dc, Spec().type, displacement))),
       displacement_(displacement), bucketTimesDeltaGamma_(bucketTimesDeltaGamma),
       bucketTimesVegaOpt_(bucketTimesVegaOpt), bucketTimesVegaUnd_(bucketTimesVegaUnd),
@@ -265,7 +265,7 @@ BlackStyleSwaptionEngineDeltaGamma<Spec>::BlackStyleSwaptionEngineDeltaGamma(
     const std::vector<Time>& bucketTimesDeltaGamma, const std::vector<Time>& bucketTimesVegaOpt,
     const std::vector<Time>& bucketTimesVegaUnd, const bool computeDeltaVega, const bool computeGamma,
     const bool linearInZero)
-    : discountCurve_(discountCurve), vol_(boost::shared_ptr<SwaptionVolatilityStructure>(new ConstantSwaptionVolatility(
+    : discountCurve_(discountCurve), vol_(QuantLib::ext::shared_ptr<SwaptionVolatilityStructure>(new ConstantSwaptionVolatility(
                                          0, NullCalendar(), Following, vol, dc, Spec().type, displacement))),
       displacement_(displacement), bucketTimesDeltaGamma_(bucketTimesDeltaGamma),
       bucketTimesVegaOpt_(bucketTimesVegaOpt), bucketTimesVegaUnd_(bucketTimesVegaUnd),
@@ -303,10 +303,10 @@ template <class Spec> void BlackStyleSwaptionEngineDeltaGamma<Spec>::calculate()
     std::vector<bool> payerFloat(1, false), payerFixed(1, false);
     QuantLib::Swap swapFloatLeg(floatLeg, payerFloat), swapFixedLeg(fixedLeg, payerFixed);
 
-    boost::shared_ptr<PricingEngine> engine = boost::make_shared<DiscountingSwapEngine>(discountCurve_);
-    boost::shared_ptr<PricingEngine> engine1 = boost::make_shared<DiscountingSwapEngineDeltaGamma>(
+    QuantLib::ext::shared_ptr<PricingEngine> engine = QuantLib::ext::make_shared<DiscountingSwapEngine>(discountCurve_);
+    QuantLib::ext::shared_ptr<PricingEngine> engine1 = QuantLib::ext::make_shared<DiscountingSwapEngineDeltaGamma>(
         discountCurve_, bucketTimesDeltaGamma_, computeDeltaVega_, computeGamma_, false, linearInZero_);
-    boost::shared_ptr<PricingEngine> engine2 = boost::make_shared<DiscountingSwapEngineDeltaGamma>(
+    QuantLib::ext::shared_ptr<PricingEngine> engine2 = QuantLib::ext::make_shared<DiscountingSwapEngineDeltaGamma>(
         discountCurve_, bucketTimesDeltaGamma_, computeDeltaVega_, computeGamma_, true, linearInZero_);
 
     swap.setPricingEngine(engine);
@@ -333,7 +333,7 @@ template <class Spec> void BlackStyleSwaptionEngineDeltaGamma<Spec>::calculate()
     results_.additionalResults["strike"] = strike;
     results_.additionalResults["atmForward"] = atmForward;
 
-    swap.setPricingEngine(boost::shared_ptr<PricingEngine>(new DiscountingSwapEngine(discountCurve_, false)));
+    swap.setPricingEngine(QuantLib::ext::shared_ptr<PricingEngine>(new DiscountingSwapEngine(discountCurve_, false)));
 
     // TODO this is for physical settlement only, add pricing + sensitivities for cash settlement
     Real annuity = std::fabs(swap.fixedLegBPS()) / 1.0E-4;

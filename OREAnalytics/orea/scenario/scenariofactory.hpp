@@ -36,7 +36,7 @@ public:
     //! Default destructor
     virtual ~ScenarioFactory(){};
     //! Build a scenario instance without filling it
-    virtual const boost::shared_ptr<Scenario> buildScenario(Date asof, const std::string& label = "",
+    virtual const QuantLib::ext::shared_ptr<Scenario> buildScenario(Date asof, const std::string& label = "",
                                                             Real numeraire = 0.0) const = 0;
 };
 
