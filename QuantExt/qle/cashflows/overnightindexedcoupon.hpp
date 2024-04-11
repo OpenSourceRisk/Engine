@@ -118,7 +118,7 @@ public:
     void accept(AcyclicVisitor&) override;
     //@}
 private:
-    boost::shared_ptr<OvernightIndex> overnightIndex_;
+    QuantLib::ext::shared_ptr<OvernightIndex> overnightIndex_;
     std::vector<Date> valueDates_, fixingDates_;
     mutable std::vector<Rate> fixings_;
     Size n_;
@@ -253,10 +253,10 @@ public:
     OvernightLeg& withInArrears(const bool inArrears);
     OvernightLeg& withLastRecentPeriod(const boost::optional<Period>& lastRecentPeriod);
     OvernightLeg& withLastRecentPeriodCalendar(const Calendar& lastRecentPeriodCalendar);
-    OvernightLeg& withOvernightIndexedCouponPricer(const boost::shared_ptr<OvernightIndexedCouponPricer>& couponPricer);
+    OvernightLeg& withOvernightIndexedCouponPricer(const QuantLib::ext::shared_ptr<OvernightIndexedCouponPricer>& couponPricer);
     OvernightLeg& withPaymentDates(const std::vector<Date>& paymentDates);
     OvernightLeg& withCapFlooredOvernightIndexedCouponPricer(
-        const boost::shared_ptr<CappedFlooredOvernightIndexedCouponPricer>& couponPricer);
+        const QuantLib::ext::shared_ptr<CappedFlooredOvernightIndexedCouponPricer>& couponPricer);
     operator Leg() const;
 
 private:
@@ -281,8 +281,8 @@ private:
     boost::optional<Period> lastRecentPeriod_;
     Calendar lastRecentPeriodCalendar_;
     std::vector<QuantLib::Date> paymentDates_;
-    boost::shared_ptr<OvernightIndexedCouponPricer> couponPricer_;
-    boost::shared_ptr<CappedFlooredOvernightIndexedCouponPricer> capFlooredCouponPricer_;
+    QuantLib::ext::shared_ptr<OvernightIndexedCouponPricer> couponPricer_;
+    QuantLib::ext::shared_ptr<CappedFlooredOvernightIndexedCouponPricer> capFlooredCouponPricer_;
 };
 
 } // namespace QuantExt

@@ -40,9 +40,9 @@ class DurationAdjustedCmsCouponTsrPricer : public CmsCouponPricer {
 public:
     DurationAdjustedCmsCouponTsrPricer(
         const Handle<SwaptionVolatilityStructure>& swaptionVol,
-        const boost::shared_ptr<AnnuityMappingBuilder>& annuityMappingBuilder, const Real lowerIntegrationBound = -0.3,
+        const QuantLib::ext::shared_ptr<AnnuityMappingBuilder>& annuityMappingBuilder, const Real lowerIntegrationBound = -0.3,
         const Real upperIntegrationBound = 0.3,
-        const boost::shared_ptr<Integrator>& integrator = boost::shared_ptr<Integrator>());
+        const QuantLib::ext::shared_ptr<Integrator>& integrator = QuantLib::ext::shared_ptr<Integrator>());
 
     Real swapletPrice() const override;
     Rate swapletRate() const override;
@@ -55,15 +55,15 @@ private:
     void initialize(const FloatingRateCoupon& coupon) override;
     Real optionletRate(Option::Type type, Real effectiveStrike) const;
 
-    boost::shared_ptr<AnnuityMappingBuilder> annuityMappingBuilder_;
+    QuantLib::ext::shared_ptr<AnnuityMappingBuilder> annuityMappingBuilder_;
     Real lowerIntegrationBound_, upperIntegrationBound_;
-    boost::shared_ptr<Integrator> integrator_;
+    QuantLib::ext::shared_ptr<Integrator> integrator_;
 
     const DurationAdjustedCmsCoupon* coupon_;
     Date today_;
     Real swapRate_, durationAdjustment_, forwardAnnuity_;
-    boost::shared_ptr<SmileSection> smileSection_;
-    boost::shared_ptr<AnnuityMapping> annuityMapping_;
+    QuantLib::ext::shared_ptr<SmileSection> smileSection_;
+    QuantLib::ext::shared_ptr<AnnuityMapping> annuityMapping_;
 };
 
 } // namespace QuantExt

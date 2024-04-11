@@ -84,7 +84,7 @@ public:
 
     //! \name Trade interface
     //@{
-    void build(const boost::shared_ptr<EngineFactory>& ef) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>& ef) override;
     //@}
 
     //! \name Inspectors
@@ -114,15 +114,15 @@ private:
     boost::optional<AuctionSettlementInformation> asi_;
 
     //! Build CDS option given that no default
-    void buildNoDefault(const boost::shared_ptr<EngineFactory>& ef);
+    void buildNoDefault(const QuantLib::ext::shared_ptr<EngineFactory>& ef);
 
     //! Build instrument given that default has occurred
-    void buildDefaulted(const boost::shared_ptr<EngineFactory>& ef);
+    void buildDefaulted(const QuantLib::ext::shared_ptr<EngineFactory>& ef);
 
     //! Add the premium payment
-    Date addPremium(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Currency& tradeCurrency,
+    Date addPremium(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Currency& tradeCurrency,
                     const std::string& marketConfig,
-                    std::vector<boost::shared_ptr<QuantLib::Instrument>>& additionalInstruments,
+                    std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>& additionalInstruments,
                     std::vector<QuantLib::Real>& additionalMultipliers);
 };
 

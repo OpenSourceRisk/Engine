@@ -28,9 +28,9 @@ ScriptedInstrument::ScriptedInstrument(const QuantLib::Date& lastRelevantDate) :
 bool ScriptedInstrument::isExpired() const { return QuantLib::detail::simple_event(lastRelevantDate_).hasOccurred(); }
 
 bool ScriptedInstrument::lastCalculationWasValid() const {
-    if (auto res = boost::dynamic_pointer_cast<ore::data::ScriptedInstrumentPricingEngine>(engine_)) {
+    if (auto res = QuantLib::ext::dynamic_pointer_cast<ore::data::ScriptedInstrumentPricingEngine>(engine_)) {
         return res->lastCalculationWasValid();
-    } else if (auto res = boost::dynamic_pointer_cast<ore::data::ScriptedInstrumentPricingEngineCG>(engine_)) {
+    } else if (auto res = QuantLib::ext::dynamic_pointer_cast<ore::data::ScriptedInstrumentPricingEngineCG>(engine_)) {
         return res->lastCalculationWasValid();
     } else {
         QL_FAIL(

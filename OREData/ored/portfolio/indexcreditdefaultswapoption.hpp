@@ -40,7 +40,7 @@ public:
 
     //! \name Trade
     //@{
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
     QuantLib::Real notional() const override;
     //@}
 
@@ -107,7 +107,7 @@ private:
 
     //! Populate constituent notionals and curve IDs from reference data
     void fromReferenceData(const QuantLib::Date& asof, std::map<std::string, QuantLib::Real>& constituents,
-                           const boost::shared_ptr<ReferenceDataManager>& refData);
+                           const QuantLib::ext::shared_ptr<ReferenceDataManager>& refData);
 };
 
 } // namespace data

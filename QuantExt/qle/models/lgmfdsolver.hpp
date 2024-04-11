@@ -35,7 +35,7 @@ namespace QuantExt {
 //! Numerical FD solver for the LGM model
 class LgmFdSolver : public LgmBackwardSolver {
 public:
-    LgmFdSolver(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime = 50.0,
+    LgmFdSolver(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime = 50.0,
                 const QuantLib::FdmSchemeDesc scheme = QuantLib::FdmSchemeDesc::Douglas(),
                 const Size stateGridPoints = 64, const Size timeStepsPerYear = 24, const Real mesherEpsilon = 1E-4);
     Size gridSize() const override;
@@ -43,19 +43,19 @@ public:
     // if steps are not given, the time steps per year specified in the constructor
     RandomVariable rollback(const RandomVariable& v, const Real t1, const Real t0,
                             Size steps = Null<Size>()) const override;
-    const boost::shared_ptr<LinearGaussMarkovModel>& model() const override;
+    const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model() const override;
 
 private:
-    boost::shared_ptr<LinearGaussMarkovModel> model_;
+    QuantLib::ext::shared_ptr<LinearGaussMarkovModel> model_;
     Real maxTime_;
     QuantLib::FdmSchemeDesc scheme_;
     Size stateGridPoints_;
     Size timeStepsPerYear_;
     Real mesherEpsilon_;
 
-    mutable boost::shared_ptr<FdmMesher> mesher_;              // the mesher for the FD solver
-    mutable boost::shared_ptr<FdmLinearOpComposite> operator_; // the operator
-    mutable boost::shared_ptr<FdmBackwardSolver> solver_;      // the sovler
+    mutable QuantLib::ext::shared_ptr<FdmMesher> mesher_;              // the mesher for the FD solver
+    mutable QuantLib::ext::shared_ptr<FdmLinearOpComposite> operator_; // the operator
+    mutable QuantLib::ext::shared_ptr<FdmBackwardSolver> solver_;      // the sovler
 
     RandomVariable mesherLocations_;
 };

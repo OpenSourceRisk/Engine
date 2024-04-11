@@ -47,21 +47,21 @@ public:
     class results;
     class engine;
     OvernightIndexedCrossCcyBasisSwap(Real payNominal, Currency payCurrency, const Schedule& paySchedule,
-                                      const boost::shared_ptr<OvernightIndex>& payIndex, Real paySpread,
+                                      const QuantLib::ext::shared_ptr<OvernightIndex>& payIndex, Real paySpread,
                                       Real recNominal, Currency recCurrency, const Schedule& recSchedule,
-                                      const boost::shared_ptr<OvernightIndex>& recIndex, Real recSpread);
+                                      const QuantLib::ext::shared_ptr<OvernightIndex>& recIndex, Real recSpread);
     //! \name Inspectors
     //@{
     Real payNominal() const;
     Currency payCurrency() const;
     const Schedule& paySchedule() { return paySchedule_; }
-    const boost::shared_ptr<OvernightIndex>& payIndex() { return payIndex_; }
+    const QuantLib::ext::shared_ptr<OvernightIndex>& payIndex() { return payIndex_; }
     Real paySpread() const;
 
     Real recNominal() const;
     Currency recCurrency() const;
     const Schedule& recSchedule() { return recSchedule_; }
-    const boost::shared_ptr<OvernightIndex>& recIndex() { return recIndex_; }
+    const QuantLib::ext::shared_ptr<OvernightIndex>& recIndex() { return recIndex_; }
     Real recSpread() const;
 
     const Leg& payLeg() const { return legs_[0]; }
@@ -87,7 +87,7 @@ private:
     Real payNominal_, recNominal_;
     Currency payCurrency_, recCurrency_;
     Schedule paySchedule_, recSchedule_;
-    boost::shared_ptr<OvernightIndex> payIndex_, recIndex_;
+    QuantLib::ext::shared_ptr<OvernightIndex> payIndex_, recIndex_;
     Spread paySpread_, recSpread_;
     std::vector<Currency> currency_;
 

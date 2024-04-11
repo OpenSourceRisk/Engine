@@ -37,9 +37,9 @@ namespace analytics {
 class SensitivityCubeStream : public SensitivityStream {
 public:
     /*! Constructor providing the sensitivity \p cube and currency of the sensitivities */
-    SensitivityCubeStream(const boost::shared_ptr<SensitivityCube>& cube, const std::string& currency);
+    SensitivityCubeStream(const QuantLib::ext::shared_ptr<SensitivityCube>& cube, const std::string& currency);
     /*! Constructor providing the sensitivity \p cubes and currency of the sensitivities */
-    SensitivityCubeStream(const std::vector<boost::shared_ptr<SensitivityCube>>& cubes, const std::string& currency);
+    SensitivityCubeStream(const std::vector<QuantLib::ext::shared_ptr<SensitivityCube>>& cubes, const std::string& currency);
 
     /*! Returns the next SensitivityRecord in the stream
 
@@ -54,7 +54,7 @@ private:
     void updateForNewTrade();
 
     //! Handle on the SensitivityCubes
-    std::vector<boost::shared_ptr<SensitivityCube>> cubes_;
+    std::vector<QuantLib::ext::shared_ptr<SensitivityCube>> cubes_;
     //! Currency of the sensitivities in the SensitivityCubes
     std::string currency_;
 

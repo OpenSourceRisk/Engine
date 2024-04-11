@@ -116,7 +116,7 @@ protected:
     /*! Gives a flat SmileSection at the requested \p optionTime. The flat value is obtained by interpolating the
         input volatilities at the given \p optionTime.
     */
-    boost::shared_ptr<QuantLib::SmileSection> smileSectionImpl(QuantLib::Time optionTime) const override;
+    QuantLib::ext::shared_ptr<QuantLib::SmileSection> smileSectionImpl(QuantLib::Time optionTime) const override;
 
     /*! Gives the interpolated optionlet volatility at the requested \p optionTime. The \p strike is ignored.
      */
@@ -237,10 +237,10 @@ inline std::vector<std::pair<QuantLib::Date, QuantLib::Real> > InterpolatedOptio
 }
 
 template <class T>
-boost::shared_ptr<QuantLib::SmileSection>
+QuantLib::ext::shared_ptr<QuantLib::SmileSection>
 InterpolatedOptionletCurve<T>::smileSectionImpl(QuantLib::Time optionTime) const {
     QuantLib::Volatility vol = volatility(optionTime, 0.0, true);
-    return boost::make_shared<QuantLib::FlatSmileSection>(
+    return QuantLib::ext::make_shared<QuantLib::FlatSmileSection>(
         optionTime, vol, dayCounter(), QuantLib::Null<QuantLib::Rate>(), volatilityType_, displacement_);
 }
 

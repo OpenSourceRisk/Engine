@@ -29,8 +29,8 @@ using namespace std;
 namespace QuantExt {
 
 Basket::Basket(const Date& refDate, const vector<string>& names, const vector<Real>& notionals,
-               const boost::shared_ptr<Pool> pool, Real attachment, Real detachment,
-               const boost::shared_ptr<Claim>& claim)
+               const QuantLib::ext::shared_ptr<Pool> pool, Real attachment, Real detachment,
+               const QuantLib::ext::shared_ptr<Claim>& claim)
     : notionals_(notionals), pool_(pool), claim_(claim), attachmentRatio_(attachment), detachmentRatio_(detachment),
       basketNotional_(0.0), attachmentAmount_(0.0), detachmentAmount_(0.0), trancheNotional_(0.0), refDate_(refDate) {
     QL_REQUIRE(!notionals_.empty(), "notionals empty");
@@ -50,7 +50,7 @@ Basket::Basket(const Date& refDate, const vector<string>& names, const vector<Re
 /*\todo Alternatively send a relinkable handle so it can be changed from
 the outside. In that case reconsider the observability chain.
 */
-void Basket::setLossModel(const boost::shared_ptr<DefaultLossModel>& lossModel) {
+void Basket::setLossModel(const QuantLib::ext::shared_ptr<DefaultLossModel>& lossModel) {
 
     if (lossModel_)
         unregisterWith(lossModel_);
@@ -102,7 +102,7 @@ Real Basket::cumulatedLoss(const Date& endDate) const {
     QL_REQUIRE(endDate >= refDate_, "Target date lies before basket inception");
     Real loss = 0.0;
     for (Size i = 0; i < size(); i++) {
-        boost::shared_ptr<DefaultEvent> credEvent =
+        QuantLib::ext::shared_ptr<DefaultEvent> credEvent =
             pool_->get(pool_->names()[i]).defaultedBetween(refDate_, endDate, pool_->defaultKeys()[i]);
         if (credEvent) {
             /* \todo If the event has not settled one would need to
@@ -125,7 +125,7 @@ Real Basket::settledLoss(const Date& endDate) const {
 
     Real loss = 0.0;
     for (Size i = 0; i < size(); i++) {
-        boost::shared_ptr<DefaultEvent> credEvent =
+        QuantLib::ext::shared_ptr<DefaultEvent> credEvent =
             pool_->get(pool_->names()[i]).defaultedBetween(refDate_, endDate, pool_->defaultKeys()[i]);
         if (credEvent) {
             if (credEvent->hasSettled()) {

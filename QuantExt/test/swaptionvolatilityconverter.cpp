@@ -43,28 +43,28 @@ struct CommonVars {
         Settings::instance().evaluationDate() = referenceDate;
 
         // Link ibor index to correct forward curve
-        boost::shared_ptr<IborIndex> iborIndex = conventions.floatIndex->clone(yieldCurves.forward6M);
+        QuantLib::ext::shared_ptr<IborIndex> iborIndex = conventions.floatIndex->clone(yieldCurves.forward6M);
 
         // Create underlying swap conventions
-        swapConventions = boost::make_shared<SwapConventions>(conventions.settlementDays, conventions.fixedTenor,
+        swapConventions = QuantLib::ext::make_shared<SwapConventions>(conventions.settlementDays, conventions.fixedTenor,
                                                               conventions.fixedCalendar, conventions.fixedConvention,
                                                               conventions.fixedDayCounter, iborIndex);
 
         // Set up the various swaption matrices
-        atmNormalVolMatrix = boost::make_shared<SwaptionVolatilityMatrix>(
+        atmNormalVolMatrix = QuantLib::ext::make_shared<SwaptionVolatilityMatrix>(
             referenceDate, conventions.fixedCalendar, conventions.fixedConvention, atmVols.optionTenors,
             atmVols.swapTenors, atmVols.nVols, Actual365Fixed(), true, Normal);
 
-        atmLogNormalVolMatrix = boost::make_shared<SwaptionVolatilityMatrix>(
+        atmLogNormalVolMatrix = QuantLib::ext::make_shared<SwaptionVolatilityMatrix>(
             referenceDate, conventions.fixedCalendar, conventions.fixedConvention, atmVols.optionTenors,
             atmVols.swapTenors, atmVols.lnVols, Actual365Fixed(), true, ShiftedLognormal);
 
-        // boost::make_shared can only handle 9 parameters
-        atmShiftedLogNormalVolMatrix_1 = boost::shared_ptr<SwaptionVolatilityMatrix>(new SwaptionVolatilityMatrix(
+        // QuantLib::ext::make_shared can only handle 9 parameters
+        atmShiftedLogNormalVolMatrix_1 = QuantLib::ext::shared_ptr<SwaptionVolatilityMatrix>(new SwaptionVolatilityMatrix(
             referenceDate, conventions.fixedCalendar, conventions.fixedConvention, atmVols.optionTenors,
             atmVols.swapTenors, atmVols.slnVols_1, Actual365Fixed(), true, ShiftedLognormal, atmVols.shifts_1));
 
-        atmShiftedLogNormalVolMatrix_2 = boost::shared_ptr<SwaptionVolatilityMatrix>(new SwaptionVolatilityMatrix(
+        atmShiftedLogNormalVolMatrix_2 = QuantLib::ext::shared_ptr<SwaptionVolatilityMatrix>(new SwaptionVolatilityMatrix(
             referenceDate, conventions.fixedCalendar, conventions.fixedConvention, atmVols.optionTenors,
             atmVols.swapTenors, atmVols.slnVols_2, Actual365Fixed(), true, ShiftedLognormal, atmVols.shifts_2));
     }
@@ -74,11 +74,11 @@ struct CommonVars {
     SwaptionConventionsEUR conventions;
     SwaptionVolatilityEUR atmVols;
     YieldCurveEUR yieldCurves;
-    boost::shared_ptr<SwapConventions> swapConventions;
-    boost::shared_ptr<SwaptionVolatilityStructure> atmNormalVolMatrix;
-    boost::shared_ptr<SwaptionVolatilityStructure> atmLogNormalVolMatrix;
-    boost::shared_ptr<SwaptionVolatilityStructure> atmShiftedLogNormalVolMatrix_1;
-    boost::shared_ptr<SwaptionVolatilityStructure> atmShiftedLogNormalVolMatrix_2;
+    QuantLib::ext::shared_ptr<SwapConventions> swapConventions;
+    QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> atmNormalVolMatrix;
+    QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> atmLogNormalVolMatrix;
+    QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> atmShiftedLogNormalVolMatrix_1;
+    QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> atmShiftedLogNormalVolMatrix_2;
     SavedSettings backup;
 };
 } // namespace
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(testNormalToLognormal) {
                                           1 * Years, 30 * Years, ShiftedLognormal);
 
     // Get back converted volatility structure and test result on pillar points
-    boost::shared_ptr<SwaptionVolatilityStructure> convertedsvs = converter.convert();
+    QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> convertedsvs = converter.convert();
     Volatility targetVol = 0.0;
     Volatility outVol = 0.0;
     Real dummyStrike = 0.0;
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(testLognormalToNormal) {
                                           vars.swapConventions, vars.swapConventions, 1 * Years, 30 * Years, Normal);
 
     // Get back converted volatility structure and test result on pillar points
-    boost::shared_ptr<SwaptionVolatilityStructure> convertedsvs = converter.convert();
+    QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> convertedsvs = converter.convert();
     Volatility targetVol = 0.0;
     Volatility outVol = 0.0;
     Real dummyStrike = 0.0;
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(testNormalToShiftedLognormal) {
                                           1 * Years, 30 * Years, ShiftedLognormal, vars.atmVols.shifts_1);
 
     // Get back converted volatility structure and test result on pillar points
-    boost::shared_ptr<SwaptionVolatilityStructure> convertedsvs = converter.convert();
+    QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> convertedsvs = converter.convert();
     Volatility targetVol = 0.0;
     Volatility outVol = 0.0;
     Real dummyStrike = 0.0;
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(testShiftedLognormalToShiftedLognormal) {
                                           ShiftedLognormal, vars.atmVols.shifts_2);
 
     // Get back converted volatility structure and test result on pillar points
-    boost::shared_ptr<SwaptionVolatilityStructure> convertedsvs = converter.convert();
+    QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> convertedsvs = converter.convert();
     Volatility targetVol = 0.0;
     Volatility outVol = 0.0;
     Real dummyStrike = 0.0;
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(testShiftedLognormalToNormal) {
                                           vars.swapConventions, vars.swapConventions, 1 * Years, 30 * Years, Normal);
 
     // Get back converted volatility structure and test result on pillar points
-    boost::shared_ptr<SwaptionVolatilityStructure> convertedsvs = converter.convert();
+    QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> convertedsvs = converter.convert();
     Volatility targetVol = 0.0;
     Volatility outVol = 0.0;
     Real dummyStrike = 0.0;
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(testFailureImplyingVol) {
     normalVols[1][0] = 0.003543;
     normalVols[1][1] = 0.005270;
 
-    boost::shared_ptr<SwaptionVolatilityStructure> volMatrix = boost::make_shared<SwaptionVolatilityMatrix>(
+    QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> volMatrix = QuantLib::ext::make_shared<SwaptionVolatilityMatrix>(
         vars.referenceDate, vars.conventions.fixedCalendar, vars.conventions.fixedConvention, optionTenors, swapTenors,
         normalVols, Actual365Fixed(), true, Normal);
 
@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(testNormalShiftsIgnored) {
         vars.swapConventions, vars.swapConventions, 1 * Years, 30 * Years, Normal, vars.atmVols.shifts_1);
 
     // Get back converted volatility structure and test result on pillar points
-    boost::shared_ptr<SwaptionVolatilityStructure> convertedsvs = converter.convert();
+    QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> convertedsvs = converter.convert();
     Volatility targetVol = 0.0;
     Volatility outVol = 0.0;
     Real dummyStrike = 0.0;
@@ -299,15 +299,15 @@ BOOST_AUTO_TEST_CASE(testConstructionFromSwapIndex) {
     Real tolerance = 0.00001;
 
     // Set up a SwapIndex
-    boost::shared_ptr<SwapIndex> swapIndex =
-        boost::make_shared<EuriborSwapIsdaFixA>(2 * Years, vars.yieldCurves.forward6M, vars.yieldCurves.discountEonia);
+    QuantLib::ext::shared_ptr<SwapIndex> swapIndex =
+        QuantLib::ext::make_shared<EuriborSwapIsdaFixA>(2 * Years, vars.yieldCurves.forward6M, vars.yieldCurves.discountEonia);
 
     // Set up the converter using swap index (Shifted Lognormal with shift set 2 -> Normal)
     SwaptionVolatilityConverter converter(vars.referenceDate, vars.atmShiftedLogNormalVolMatrix_2, swapIndex, swapIndex,
                                           Normal);
 
     // Test that the results are still ok
-    boost::shared_ptr<SwaptionVolatilityStructure> convertedsvs = converter.convert();
+    QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> convertedsvs = converter.convert();
     Volatility targetVol = 0.0;
     Volatility outVol = 0.0;
     Real dummyStrike = 0.0;
@@ -328,8 +328,8 @@ BOOST_AUTO_TEST_CASE(testConstructionFromSwapIndexNoDiscount) {
     CommonVars vars;
 
     // Set up a SwapIndex
-    boost::shared_ptr<SwapIndex> swapIndex =
-        boost::make_shared<EuriborSwapIsdaFixA>(2 * Years, vars.yieldCurves.forward6M);
+    QuantLib::ext::shared_ptr<SwapIndex> swapIndex =
+        QuantLib::ext::make_shared<EuriborSwapIsdaFixA>(2 * Years, vars.yieldCurves.forward6M);
 
     // Set up the converter using swap index (Shifted Lognormal with shift set 2 -> Normal)
     SwaptionVolatilityConverter converter(vars.referenceDate, vars.atmShiftedLogNormalVolMatrix_2, swapIndex, swapIndex,
@@ -345,20 +345,20 @@ BOOST_AUTO_TEST_CASE(testCube) {
     CommonVars vars;
 
     // Set up Swap Indices
-    boost::shared_ptr<SwapIndex> shortSwapIndex =
-        boost::make_shared<EuriborSwapIsdaFixA>(1 * Years, vars.yieldCurves.forward3M, vars.yieldCurves.discountEonia);
-    boost::shared_ptr<SwapIndex> swapIndex =
-        boost::make_shared<EuriborSwapIsdaFixA>(30 * Years, vars.yieldCurves.forward6M, vars.yieldCurves.discountEonia);
+    QuantLib::ext::shared_ptr<SwapIndex> shortSwapIndex =
+        QuantLib::ext::make_shared<EuriborSwapIsdaFixA>(1 * Years, vars.yieldCurves.forward3M, vars.yieldCurves.discountEonia);
+    QuantLib::ext::shared_ptr<SwapIndex> swapIndex =
+        QuantLib::ext::make_shared<EuriborSwapIsdaFixA>(30 * Years, vars.yieldCurves.forward6M, vars.yieldCurves.discountEonia);
 
     // Set up a lognormal cube
-    boost::shared_ptr<SwaptionVolatilityCube> cube = boost::make_shared<QuantExt::SwaptionVolCube2>(
+    QuantLib::ext::shared_ptr<SwaptionVolatilityCube> cube = QuantLib::ext::make_shared<QuantExt::SwaptionVolCube2>(
         Handle<SwaptionVolatilityStructure>(vars.atmLogNormalVolMatrix), vars.atmVols.optionTenors,
         vars.atmVols.swapTenors, vars.atmVols.strikeSpreads, vars.atmVols.lnVolSpreads, swapIndex, shortSwapIndex,
         false, true);
 
     // Convert the cube to normal
     SwaptionVolatilityConverter converter(vars.referenceDate, cube, swapIndex, shortSwapIndex, Normal);
-    boost::shared_ptr<SwaptionVolatilityStructure> convertedsvs = converter.convert();
+    QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> convertedsvs = converter.convert();
 
     // Price swaptions in the lognormal and normal cube and compare their premiums
     for (Size i = 0; i < vars.atmVols.optionTenors.size(); ++i) {

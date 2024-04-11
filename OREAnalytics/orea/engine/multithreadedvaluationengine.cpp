@@ -40,24 +40,24 @@ namespace analytics {
 using QuantLib::Size;
 
 MultiThreadedValuationEngine::MultiThreadedValuationEngine(
-    const Size nThreads, const QuantLib::Date& today, const boost::shared_ptr<ore::data::DateGrid>& dateGrid,
-    const Size nSamples, const boost::shared_ptr<ore::data::Loader>& loader,
-    const boost::shared_ptr<ore::analytics::ScenarioGenerator>& scenarioGenerator,
-    const boost::shared_ptr<ore::data::EngineData>& engineData,
-    const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
-    const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams, const std::string& configuration,
-    const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
+    const Size nThreads, const QuantLib::Date& today, const QuantLib::ext::shared_ptr<ore::data::DateGrid>& dateGrid,
+    const Size nSamples, const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
+    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioGenerator>& scenarioGenerator,
+    const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
+    const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
+    const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams, const std::string& configuration,
+    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
     const bool useSpreadedTermStructures, const bool cacheSimData,
-    const boost::shared_ptr<ore::analytics::ScenarioFilter>& scenarioFilter,
-    const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData,
+    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioFilter>& scenarioFilter,
+    const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData,
     const ore::data::IborFallbackConfig& iborFallbackConfig, const bool handlePseudoCurrenciesTodaysMarket,
     const bool handlePseudoCurrenciesSimMarket, const bool recalibrateModels,
-    const std::function<boost::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
+    const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
                                                                    const std::vector<QuantLib::Date>&,
                                                                    const QuantLib::Size)>& cubeFactory,
-    const std::function<boost::shared_ptr<ore::analytics::NPVCube>(
+    const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(
         const QuantLib::Date&, const std::vector<QuantLib::Date>&, const QuantLib::Size)>& nettingSetCubeFactory,
-    const std::function<boost::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
+    const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
                                                                    const std::vector<QuantLib::Date>&,
                                                                    const QuantLib::Size)>& cptyCubeFactory,
     const std::string& context)
@@ -84,7 +84,7 @@ MultiThreadedValuationEngine::MultiThreadedValuationEngine(
     if (!cubeFactory_)
         cubeFactory_ = [](const QuantLib::Date& asof, const std::set<std::string>& ids,
                           const std::vector<QuantLib::Date>& dates, const Size samples) {
-            return boost::make_shared<ore::analytics::DoublePrecisionInMemoryCube>(asof, ids, dates, samples);
+            return QuantLib::ext::make_shared<ore::analytics::DoublePrecisionInMemoryCube>(asof, ids, dates, samples);
         };
 
     if (!nettingSetCubeFactory_)
@@ -97,14 +97,14 @@ MultiThreadedValuationEngine::MultiThreadedValuationEngine(
 }
 
 void MultiThreadedValuationEngine::setAggregationScenarioData(
-    const boost::shared_ptr<AggregationScenarioData>& aggregationScenarioData) {
+    const QuantLib::ext::shared_ptr<AggregationScenarioData>& aggregationScenarioData) {
     aggregationScenarioData_ = aggregationScenarioData;
 }
 
 void MultiThreadedValuationEngine::buildCube(
-    const boost::shared_ptr<ore::data::Portfolio>& portfolio,
-    const std::function<std::vector<boost::shared_ptr<ore::analytics::ValuationCalculator>>()>& calculators,
-    const std::function<std::vector<boost::shared_ptr<ore::analytics::CounterpartyCalculator>>()>& cptyCalculators,
+    const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
+    const std::function<std::vector<QuantLib::ext::shared_ptr<ore::analytics::ValuationCalculator>>()>& calculators,
+    const std::function<std::vector<QuantLib::ext::shared_ptr<ore::analytics::CounterpartyCalculator>>()>& cptyCalculators,
     bool mporStickyDate, bool dryRun) {
 
     boost::timer::cpu_timer timer;
@@ -125,11 +125,11 @@ void MultiThreadedValuationEngine::buildCube(
         "configuration '"
         << configuration_ << "'.");
 
-    boost::shared_ptr<ore::data::Market> initMarket = boost::make_shared<ore::data::TodaysMarket>(
+    QuantLib::ext::shared_ptr<ore::data::Market> initMarket = QuantLib::ext::make_shared<ore::data::TodaysMarket>(
         today_, todaysMarketParams_, loader_, curveConfigs_, true, true, true, referenceData_, false,
         iborFallbackConfig_, false, handlePseudoCurrenciesTodaysMarket_);
 
-    auto engineFactory = boost::make_shared<ore::data::EngineFactory>(
+    auto engineFactory = QuantLib::ext::make_shared<ore::data::EngineFactory>(
         engineData_, initMarket,
         std::map<ore::data::MarketContext, string>{{ore::data::MarketContext::pricing, configuration_}}, referenceData_,
         iborFallbackConfig_);
@@ -153,9 +153,9 @@ void MultiThreadedValuationEngine::buildCube(
 
     QL_REQUIRE(eff_nThreads > 0, "effective threads are zero, this is not allowed.");
 
-    std::vector<boost::shared_ptr<ore::data::Portfolio>> portfolios;
+    std::vector<QuantLib::ext::shared_ptr<ore::data::Portfolio>> portfolios;
     for (Size i = 0; i < eff_nThreads; ++i)
-        portfolios.push_back(boost::make_shared<ore::data::Portfolio>());
+        portfolios.push_back(QuantLib::ext::make_shared<ore::data::Portfolio>());
 
     double totalAvgPricingTime = 0.0;
     std::vector<std::pair<std::string, double>> timings;
@@ -205,22 +205,22 @@ void MultiThreadedValuationEngine::buildCube(
     // build scenario generators for each thread as clones of the original one
 
     LOG("Cloning scenario generators for " << eff_nThreads << " threads...");
-    std::vector<boost::shared_ptr<ore::analytics::ScenarioGenerator>> scenarioGenerators;
+    std::vector<QuantLib::ext::shared_ptr<ore::analytics::ScenarioGenerator>> scenarioGenerators;
     auto tmp =
-        boost::make_shared<ore::analytics::ClonedScenarioGenerator>(scenarioGenerator_, dateGrid_->dates(), nSamples_);
+        QuantLib::ext::make_shared<ore::analytics::ClonedScenarioGenerator>(scenarioGenerator_, dateGrid_->dates(), nSamples_);
     scenarioGenerators.push_back(tmp);
     DLOG("generator for thread 1 cloned.");
     for (Size i = 1; i < eff_nThreads; ++i) {
-        scenarioGenerators.push_back(boost::make_shared<ore::analytics::ClonedScenarioGenerator>(*tmp));
+        scenarioGenerators.push_back(QuantLib::ext::make_shared<ore::analytics::ClonedScenarioGenerator>(*tmp));
         DLOG("generator for thread " << (i + 1) << " cloned.");
     }
 
     // build loaders for each thread as clones of the original one
 
     LOG("Cloning loaders for " << eff_nThreads << " threads...");
-    std::vector<boost::shared_ptr<ore::data::ClonedLoader>> loaders;
+    std::vector<QuantLib::ext::shared_ptr<ore::data::ClonedLoader>> loaders;
     for (Size i = 0; i < eff_nThreads; ++i)
-        loaders.push_back(boost::make_shared<ore::data::ClonedLoader>(today_, loader_));
+        loaders.push_back(QuantLib::ext::make_shared<ore::data::ClonedLoader>(today_, loader_));
 
     // build nThreads mini-cubes to which each thread writes its results
 
@@ -238,7 +238,7 @@ void MultiThreadedValuationEngine::buildCube(
     // build progress indicator consolidating the results from the threads
 
     auto progressIndicator =
-        boost::make_shared<ore::analytics::MultiThreadedProgressIndicator>(this->progressIndicators());
+        QuantLib::ext::make_shared<ore::analytics::MultiThreadedProgressIndicator>(this->progressIndicators());
 
     // create the thread pool with eff_nThreads and queue size = eff_nThreads as well
 
@@ -276,14 +276,14 @@ void MultiThreadedValuationEngine::buildCube(
 
                 // build todays market using cloned market data
 
-                boost::shared_ptr<ore::data::Market> initMarket = boost::make_shared<ore::data::TodaysMarket>(
+                QuantLib::ext::shared_ptr<ore::data::Market> initMarket = QuantLib::ext::make_shared<ore::data::TodaysMarket>(
                     today_, todaysMarketParams_, loaders[id], curveConfigs_, true, true, true, referenceData_, false,
                     iborFallbackConfig_, false, handlePseudoCurrenciesTodaysMarket_);
 
                 // build sim market
 
-                boost::shared_ptr<ore::analytics::ScenarioSimMarket> simMarket =
-                    boost::make_shared<ore::analytics::ScenarioSimMarket>(
+                QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket> simMarket =
+                    QuantLib::ext::make_shared<ore::analytics::ScenarioSimMarket>(
                         initMarket, simMarketData_, configuration_, *curveConfigs_, *todaysMarketParams_, true,
                         useSpreadedTermStructures_, cacheSimData_, false, iborFallbackConfig_,
                         handlePseudoCurrenciesSimMarket_);
@@ -304,9 +304,9 @@ void MultiThreadedValuationEngine::buildCube(
 
                 // build portfolio against sim market
 
-                auto portfolio = boost::make_shared<ore::data::Portfolio>();
+                auto portfolio = QuantLib::ext::make_shared<ore::data::Portfolio>();
                 portfolio->fromXMLString(portfoliosAsString[id]);
-                auto engineFactory = boost::make_shared<ore::data::EngineFactory>(
+                auto engineFactory = QuantLib::ext::make_shared<ore::data::EngineFactory>(
                     engineData_, simMarket, std::map<ore::data::MarketContext, string>(), referenceData_,
                     iborFallbackConfig_);
 
@@ -314,10 +314,10 @@ void MultiThreadedValuationEngine::buildCube(
 
                 // build valuation engine
 
-                auto valEngine = boost::make_shared<ore::analytics::ValuationEngine>(
+                auto valEngine = QuantLib::ext::make_shared<ore::analytics::ValuationEngine>(
                     today_, dateGrid_, simMarket,
                     recalibrateModels_ ? engineFactory->modelBuilders()
-                                       : std::set<std::pair<std::string, boost::shared_ptr<QuantExt::ModelBuilder>>>());
+                                       : std::set<std::pair<std::string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>>());
                 valEngine->registerProgressIndicator(progressIndicator);
 
                 // build mini-cube
@@ -325,7 +325,7 @@ void MultiThreadedValuationEngine::buildCube(
                 valEngine->buildCube(portfolio, miniCubes_[id], calculators(), mporStickyDate, miniNettingSetCubes_[id],
                                      miniCptyCubes_[id],
                                      cptyCalculators ? cptyCalculators()
-                                                     : std::vector<boost::shared_ptr<CounterpartyCalculator>>(),
+                                                     : std::vector<QuantLib::ext::shared_ptr<CounterpartyCalculator>>(),
                                      dryRun);
 
                 // set pricing stats for val engine run

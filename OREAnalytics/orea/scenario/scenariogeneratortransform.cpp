@@ -23,8 +23,8 @@ using namespace QuantLib;
 namespace ore {
 namespace analytics {
 
-boost::shared_ptr<Scenario> ScenarioGeneratorTransform::next(const Date& d) {
-    boost::shared_ptr<Scenario> scenario = scenarioGenerator_->next(d)->clone();
+QuantLib::ext::shared_ptr<Scenario> ScenarioGeneratorTransform::next(const Date& d) {
+    QuantLib::ext::shared_ptr<Scenario> scenario = scenarioGenerator_->next(d)->clone();
     const vector<RiskFactorKey>& keys = simMarket_->baseScenario()->keys();
     Date asof = simMarket_->baseScenario()->asof();
     vector<Period> tenors;

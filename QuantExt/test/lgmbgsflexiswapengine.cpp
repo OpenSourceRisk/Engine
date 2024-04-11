@@ -63,12 +63,12 @@ struct TestData : qle::test::TopLevelFixture {
         rateLevel = 0.02;
         strike = 0.025;
         nominal = 1000.0;
-        yts = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(evalDate, rateLevel, Actual365Fixed()));
-        euribor6m = boost::make_shared<Euribor>(6 * Months, yts);
-        vanillaSwap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, nominal, fixedSchedule, strike,
+        yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(evalDate, rateLevel, Actual365Fixed()));
+        euribor6m = QuantLib::ext::make_shared<Euribor>(6 * Months, yts);
+        vanillaSwap = QuantLib::ext::make_shared<VanillaSwap>(VanillaSwap::Receiver, nominal, fixedSchedule, strike,
                                                       Thirty360(Thirty360::BondBasis), floatingSchedule, euribor6m, 0.0, Actual360());
         for (Size i = 0; i < vanillaSwap->floatingLeg().size(); ++i) {
-            auto cpn = boost::dynamic_pointer_cast<FloatingRateCoupon>(vanillaSwap->floatingLeg()[i]);
+            auto cpn = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(vanillaSwap->floatingLeg()[i]);
             BOOST_REQUIRE(cpn != nullptr);
             if (cpn->fixingDate() > evalDate && i % 2 == 0)
                 exerciseDates.push_back(cpn->fixingDate());
@@ -83,11 +83,11 @@ struct TestData : qle::test::TopLevelFixture {
             sigmas[i] = 0.0050 + (0.0080 - 0.0050) * std::exp(-0.2 * static_cast<double>(i));
         }
         reversion = 0.03;
-        lgmParam = boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+        lgmParam = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
             EURCurrency(), yts, stepTimes, Array(sigmas.begin(), sigmas.end()), stepTimes,
             Array(sigmas.size(), reversion));
-        lgm = boost::make_shared<LinearGaussMarkovModel>(lgmParam);
-        dscSwapEngine = boost::make_shared<DiscountingSwapEngine>(yts);
+        lgm = QuantLib::ext::make_shared<LinearGaussMarkovModel>(lgmParam);
+        dscSwapEngine = QuantLib::ext::make_shared<DiscountingSwapEngine>(yts);
         vanillaSwap->setPricingEngine(dscSwapEngine);
     }
 
@@ -97,14 +97,14 @@ struct TestData : qle::test::TopLevelFixture {
     Schedule fixedScheduleSeasoned, floatingScheduleSeasoned;
     Real rateLevel, strike, nominal;
     Handle<YieldTermStructure> yts;
-    boost::shared_ptr<IborIndex> euribor6m;
-    boost::shared_ptr<VanillaSwap> vanillaSwap;
+    QuantLib::ext::shared_ptr<IborIndex> euribor6m;
+    QuantLib::ext::shared_ptr<VanillaSwap> vanillaSwap;
     std::vector<Date> exerciseDates, stepDates;
     Array stepTimes, sigmas;
     Real reversion;
-    boost::shared_ptr<IrLgm1fParametrization> lgmParam;
-    boost::shared_ptr<LinearGaussMarkovModel> lgm;
-    boost::shared_ptr<DiscountingSwapEngine> dscSwapEngine;
+    QuantLib::ext::shared_ptr<IrLgm1fParametrization> lgmParam;
+    QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm;
+    QuantLib::ext::shared_ptr<DiscountingSwapEngine> dscSwapEngine;
 };
 
 } // namespace
@@ -126,21 +126,21 @@ BOOST_AUTO_TEST_CASE(testConsistencyWithFlexiSwapPricing) {
         {300.0, 300.0, 300.0, 300.0, 300.0, 300.0, 300.0, 300.0, 300.0, 300.0}};
 
     // tranche 0
-    boost::shared_ptr<BalanceGuaranteedSwap> bgs0 = boost::make_shared<BalanceGuaranteedSwap>(
+    QuantLib::ext::shared_ptr<BalanceGuaranteedSwap> bgs0 = QuantLib::ext::make_shared<BalanceGuaranteedSwap>(
         VanillaSwap::Payer, trancheNominals, fixedSchedule, 0, fixedSchedule, std::vector<Real>(nFixed, strike),
         Thirty360(Thirty360::BondBasis), floatingSchedule, euribor6m, std::vector<Real>(nFloat, 1.0), std::vector<Real>(nFloat, 0.0),
         std::vector<Real>(nFloat, Null<Real>()), std::vector<Real>(nFloat, Null<Real>()), Actual360());
 
     // tranche 1
-    boost::shared_ptr<BalanceGuaranteedSwap> bgs1 = boost::make_shared<BalanceGuaranteedSwap>(
+    QuantLib::ext::shared_ptr<BalanceGuaranteedSwap> bgs1 = QuantLib::ext::make_shared<BalanceGuaranteedSwap>(
         VanillaSwap::Payer, trancheNominals, fixedSchedule, 1, fixedSchedule, std::vector<Real>(nFixed, strike),
         Thirty360(Thirty360::BondBasis), floatingSchedule, euribor6m, std::vector<Real>(nFloat, 1.0), std::vector<Real>(nFloat, 0.0),
         std::vector<Real>(nFloat, Null<Real>()), std::vector<Real>(nFloat, Null<Real>()), Actual360());
 
-    Handle<Quote> minCpr(boost::make_shared<SimpleQuote>(0.05));
-    Handle<Quote> maxCpr(boost::make_shared<SimpleQuote>(0.25));
+    Handle<Quote> minCpr(QuantLib::ext::make_shared<SimpleQuote>(0.05));
+    Handle<Quote> maxCpr(QuantLib::ext::make_shared<SimpleQuote>(0.25));
 
-    auto bgsEngine = boost::make_shared<NumericLgmBgsFlexiSwapEngine>(
+    auto bgsEngine = QuantLib::ext::make_shared<NumericLgmBgsFlexiSwapEngine>(
         lgm, 7.0, 16, 7.0, 32, minCpr, maxCpr, yts, QuantExt::NumericLgmBgsFlexiSwapEngine::Method::SingleSwaptions);
 
     bgs0->setPricingEngine(bgsEngine);
@@ -189,12 +189,12 @@ BOOST_AUTO_TEST_CASE(testConsistencyWithFlexiSwapPricing) {
     i = 0; // see above
     std::generate(floatNotionals0ZeroCpr.begin(), floatNotionals0ZeroCpr.end(),
                   [i, &fixedNotionals0ZeroCpr]() mutable { return fixedNotionals0ZeroCpr[i++ / 2]; });
-    boost::shared_ptr<FlexiSwap> flexiSwap0 = boost::make_shared<FlexiSwap>(
+    QuantLib::ext::shared_ptr<FlexiSwap> flexiSwap0 = QuantLib::ext::make_shared<FlexiSwap>(
         VanillaSwap::Payer, fixedNotionals0, floatNotionals0, fixedSchedule, std::vector<Real>(nFixed, strike),
         Thirty360(Thirty360::BondBasis), floatingSchedule, euribor6m, std::vector<Real>(nFloat, 1.0), std::vector<Real>(nFloat, 0.0),
         std::vector<Real>(nFloat, Null<Real>()), std::vector<Real>(nFloat, Null<Real>()), Actual360(), lowerNotionals0,
         Position::Long);
-    boost::shared_ptr<FlexiSwap> flexiSwap0MinCpr0 = boost::make_shared<FlexiSwap>(
+    QuantLib::ext::shared_ptr<FlexiSwap> flexiSwap0MinCpr0 = QuantLib::ext::make_shared<FlexiSwap>(
         VanillaSwap::Payer, fixedNotionals0ZeroCpr, floatNotionals0ZeroCpr, fixedSchedule,
         std::vector<Real>(nFixed, strike), Thirty360(Thirty360::BondBasis), floatingSchedule, euribor6m, std::vector<Real>(nFloat, 1.0),
         std::vector<Real>(nFloat, 0.0), std::vector<Real>(nFloat, Null<Real>()),
@@ -203,18 +203,18 @@ BOOST_AUTO_TEST_CASE(testConsistencyWithFlexiSwapPricing) {
     // tranche 1
     std::vector<Real> fixedNotionals1ZeroCpr(10, 300.0);
     std::vector<Real> floatNotionals1ZeroCpr(20, 300.0);
-    boost::shared_ptr<FlexiSwap> flexiSwap1 = boost::make_shared<FlexiSwap>(
+    QuantLib::ext::shared_ptr<FlexiSwap> flexiSwap1 = QuantLib::ext::make_shared<FlexiSwap>(
         VanillaSwap::Payer, fixedNotionals1, floatNotionals1, fixedSchedule, std::vector<Real>(nFixed, strike),
         Thirty360(Thirty360::BondBasis), floatingSchedule, euribor6m, std::vector<Real>(nFloat, 1.0), std::vector<Real>(nFloat, 0.0),
         std::vector<Real>(nFloat, Null<Real>()), std::vector<Real>(nFloat, Null<Real>()), Actual360(), lowerNotionals1,
         Position::Long);
-    boost::shared_ptr<FlexiSwap> flexiSwap1MinCpr0 = boost::make_shared<FlexiSwap>(
+    QuantLib::ext::shared_ptr<FlexiSwap> flexiSwap1MinCpr0 = QuantLib::ext::make_shared<FlexiSwap>(
         VanillaSwap::Payer, fixedNotionals1ZeroCpr, floatNotionals1ZeroCpr, fixedSchedule,
         std::vector<Real>(nFixed, strike), Thirty360(Thirty360::BondBasis), floatingSchedule, euribor6m, std::vector<Real>(nFloat, 1.0),
         std::vector<Real>(nFloat, 0.0), std::vector<Real>(nFloat, Null<Real>()),
         std::vector<Real>(nFloat, Null<Real>()), Actual360(), lowerNotionals1, Position::Long);
 
-    auto flexiEngine = boost::make_shared<NumericLgmFlexiSwapEngine>(
+    auto flexiEngine = QuantLib::ext::make_shared<NumericLgmFlexiSwapEngine>(
         lgm, 7.0, 16, 7.0, 32, yts, QuantExt::NumericLgmFlexiSwapEngine::Method::SingleSwaptions);
 
     flexiSwap0->setPricingEngine(flexiEngine);
@@ -255,16 +255,16 @@ BOOST_AUTO_TEST_CASE(testConsistencyWithFlexiSwapPricingSeasonedDeal) {
         {300.0, 300.0, 300.0, 300.0, 300.0, 300.0, 300.0, 300.0, 300.0, 300.0}};
 
     // tranche 0
-    boost::shared_ptr<BalanceGuaranteedSwap> bgs0 = boost::make_shared<BalanceGuaranteedSwap>(
+    QuantLib::ext::shared_ptr<BalanceGuaranteedSwap> bgs0 = QuantLib::ext::make_shared<BalanceGuaranteedSwap>(
         VanillaSwap::Payer, trancheNominals, fixedScheduleSeasoned, 0, fixedScheduleSeasoned,
         std::vector<Real>(nFixed, strike), Thirty360(Thirty360::BondBasis), floatingScheduleSeasoned, euribor6m,
         std::vector<Real>(nFloat, 1.0), std::vector<Real>(nFloat, 0.0), std::vector<Real>(nFloat, Null<Real>()),
         std::vector<Real>(nFloat, Null<Real>()), Actual360());
 
-    Handle<Quote> minCpr(boost::make_shared<SimpleQuote>(0.05));
-    Handle<Quote> maxCpr(boost::make_shared<SimpleQuote>(0.25));
+    Handle<Quote> minCpr(QuantLib::ext::make_shared<SimpleQuote>(0.05));
+    Handle<Quote> maxCpr(QuantLib::ext::make_shared<SimpleQuote>(0.25));
 
-    auto bgsEngine = boost::make_shared<NumericLgmBgsFlexiSwapEngine>(
+    auto bgsEngine = QuantLib::ext::make_shared<NumericLgmBgsFlexiSwapEngine>(
         lgm, 7.0, 16, 7.0, 32, minCpr, maxCpr, yts, QuantExt::NumericLgmBgsFlexiSwapEngine::Method::SingleSwaptions);
 
     bgs0->setPricingEngine(bgsEngine);
@@ -297,18 +297,18 @@ BOOST_AUTO_TEST_CASE(testConsistencyWithFlexiSwapPricingSeasonedDeal) {
     i = 0; // see above
     std::generate(floatNotionals0ZeroCpr.begin(), floatNotionals0ZeroCpr.end(),
                   [i, &fixedNotionals0ZeroCpr]() mutable { return fixedNotionals0ZeroCpr[i++ / 2]; });
-    boost::shared_ptr<FlexiSwap> flexiSwap0 = boost::make_shared<FlexiSwap>(
+    QuantLib::ext::shared_ptr<FlexiSwap> flexiSwap0 = QuantLib::ext::make_shared<FlexiSwap>(
         VanillaSwap::Payer, fixedNotionals0, floatNotionals0, fixedScheduleSeasoned, std::vector<Real>(nFixed, strike),
         Thirty360(Thirty360::BondBasis), floatingScheduleSeasoned, euribor6m, std::vector<Real>(nFloat, 1.0),
         std::vector<Real>(nFloat, 0.0), std::vector<Real>(nFloat, Null<Real>()),
         std::vector<Real>(nFloat, Null<Real>()), Actual360(), lowerNotionals0, Position::Long);
-    boost::shared_ptr<FlexiSwap> flexiSwap0MinCpr0 = boost::make_shared<FlexiSwap>(
+    QuantLib::ext::shared_ptr<FlexiSwap> flexiSwap0MinCpr0 = QuantLib::ext::make_shared<FlexiSwap>(
         VanillaSwap::Payer, fixedNotionals0ZeroCpr, floatNotionals0ZeroCpr, fixedScheduleSeasoned,
         std::vector<Real>(nFixed, strike), Thirty360(Thirty360::BondBasis), floatingScheduleSeasoned, euribor6m,
         std::vector<Real>(nFloat, 1.0), std::vector<Real>(nFloat, 0.0), std::vector<Real>(nFloat, Null<Real>()),
         std::vector<Real>(nFloat, Null<Real>()), Actual360(), lowerNotionals0, Position::Long);
 
-    auto flexiEngine = boost::make_shared<NumericLgmFlexiSwapEngine>(
+    auto flexiEngine = QuantLib::ext::make_shared<NumericLgmFlexiSwapEngine>(
         lgm, 7.0, 16, 7.0, 32, yts, QuantExt::NumericLgmFlexiSwapEngine::Method::SingleSwaptions);
 
     flexiSwap0->setPricingEngine(flexiEngine);

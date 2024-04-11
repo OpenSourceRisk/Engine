@@ -43,10 +43,10 @@ public:
     class arguments;
     class results;
     class engine;
-    OutperformanceOption(const boost::shared_ptr<Exercise>& exercise, const Option::Type optionType, 
+    OutperformanceOption(const QuantLib::ext::shared_ptr<Exercise>& exercise, const Option::Type optionType, 
         const Real strikeReturn, const Real initialValue1, const Real initialValue2, const Real notional, 
-        const Real knockInPrice = Null<Real>(), const Real knockOutPrice = Null<Real>(), boost::shared_ptr<QuantExt::FxIndex> fxIndex1 = nullptr,
-        boost::shared_ptr<QuantExt::FxIndex> fxIndex2 = nullptr);
+        const Real knockInPrice = Null<Real>(), const Real knockOutPrice = Null<Real>(), QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex1 = nullptr,
+        QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex2 = nullptr);
 
     //! \name Instrument interface
     //@{
@@ -54,7 +54,7 @@ public:
     void setupArguments(PricingEngine::arguments*) const override;
     //@}
 
-    boost::shared_ptr<Exercise> exercise() const { return exercise_; }
+    QuantLib::ext::shared_ptr<Exercise> exercise() const { return exercise_; }
     Option::Type optionType() const { return optionType_; }
     Real strikeReturn() const { return strikeReturn_; }
     Real initialValue1() const { return initialValue1_; }
@@ -62,13 +62,13 @@ public:
     Real notional() const { return notional_; }
     Real knockInPrice() const { return knockInPrice_; }
     Real knockOutPrice() const { return knockOutPrice_; }
-    boost::shared_ptr<QuantExt::FxIndex> fxIndex1() const { return fxIndex1_; }
-    boost::shared_ptr<QuantExt::FxIndex> fxIndex2() const { return fxIndex2_; }
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex1() const { return fxIndex1_; }
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex2() const { return fxIndex2_; }
 private:
     void setupExpired() const override;
     void fetchResults(const PricingEngine::results*) const override;
     
-    boost::shared_ptr<Exercise> exercise_;
+    QuantLib::ext::shared_ptr<Exercise> exercise_;
     Option::Type optionType_;
     Real strikeReturn_;
     Real initialValue1_;
@@ -76,14 +76,14 @@ private:
     Real notional_;
     Real knockInPrice_;
     Real knockOutPrice_;
-    boost::shared_ptr<QuantExt::FxIndex> fxIndex1_;
-    boost::shared_ptr<QuantExt::FxIndex> fxIndex2_;
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex1_;
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex2_;
 };
 
 //! %Arguments for Outperformance option calculation
 class OutperformanceOption::arguments : public PricingEngine::arguments {
 public:
-    boost::shared_ptr<Exercise> exercise;
+    QuantLib::ext::shared_ptr<Exercise> exercise;
     Option::Type optionType;
     Real strikeReturn;
     Real initialValue1;
@@ -91,8 +91,8 @@ public:
     Real notional;
     Real knockInPrice;
     Real knockOutPrice;
-    boost::shared_ptr<QuantExt::FxIndex> fxIndex1;
-    boost::shared_ptr<QuantExt::FxIndex> fxIndex2;
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex1;
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex2;
     void validate() const override;
 };
 
