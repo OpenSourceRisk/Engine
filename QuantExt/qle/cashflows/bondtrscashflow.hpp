@@ -39,8 +39,8 @@ using namespace QuantLib;
 class BondTRSCashFlow : public TRSCashFlow {
 public:
     BondTRSCashFlow(const Date& paymentDate, const Date& fixingStartDate, const Date& fixingEndDate,
-                    const Real bondNotional, const boost::shared_ptr<BondIndex>& bondIndex,
-                    const Real initialPrice = Null<Real>(), const boost::shared_ptr<FxIndex>& fxIndex = nullptr);
+                    const Real bondNotional, const QuantLib::ext::shared_ptr<BondIndex>& bondIndex,
+                    const Real initialPrice = Null<Real>(), const QuantLib::ext::shared_ptr<FxIndex>& fxIndex = nullptr);
 
     const Real notional(Date date) const override;
     const Real notional() const override { return TRSCashFlow::notional(); };
@@ -54,7 +54,7 @@ public:
 class BondTRSLeg {
 public:
     BondTRSLeg(const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates, const Real bondNotional,
-               const boost::shared_ptr<BondIndex>& bondIndex, const boost::shared_ptr<FxIndex>& fxIndex = nullptr);
+               const QuantLib::ext::shared_ptr<BondIndex>& bondIndex, const QuantLib::ext::shared_ptr<FxIndex>& fxIndex = nullptr);
     BondTRSLeg& withInitialPrice(Real);
     operator Leg() const;
 
@@ -62,8 +62,8 @@ private:
     std::vector<Date> valuationDates_;
     std::vector<Date> paymentDates_;
     Real bondNotional_;
-    boost::shared_ptr<BondIndex> bondIndex_;
-    boost::shared_ptr<FxIndex> fxIndex_;
+    QuantLib::ext::shared_ptr<BondIndex> bondIndex_;
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
     Real initialPrice_ = QuantLib::Null<QuantLib::Real>();
 };
 

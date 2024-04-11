@@ -102,7 +102,7 @@ std::size_t LgmCG::reducedDiscountBond(const Date& d, Date e, const std::size_t 
 }
 
 /* Handles IborIndex and SwapIndex. Requires observation time t <= fixingDate */
-std::size_t LgmCG::fixing(const boost::shared_ptr<InterestRateIndex>& index, const Date& fixingDate, const Date& t,
+std::size_t LgmCG::fixing(const QuantLib::ext::shared_ptr<InterestRateIndex>& index, const Date& fixingDate, const Date& t,
                           const std::size_t x) const {
 
     std::string id =
@@ -120,7 +120,7 @@ std::size_t LgmCG::fixing(const boost::shared_ptr<InterestRateIndex>& index, con
             n = addModelParameter(g_, modelParameters_, id,
                                   [index, fixingDate]() { return index->fixing(fixingDate); });
 
-        } else if (auto ibor = boost::dynamic_pointer_cast<IborIndex>(index)) {
+        } else if (auto ibor = QuantLib::ext::dynamic_pointer_cast<IborIndex>(index)) {
 
             // Ibor Index
 

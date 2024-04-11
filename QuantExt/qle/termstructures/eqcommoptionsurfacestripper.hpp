@@ -64,8 +64,8 @@ struct Solver1DOptions {
 class OptionSurfaceStripper : public QuantLib::LazyObject {
 
 public:
-    OptionSurfaceStripper(const boost::shared_ptr<OptionInterpolatorBase>& callSurface,
-                          const boost::shared_ptr<OptionInterpolatorBase>& putSurface,
+    OptionSurfaceStripper(const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& callSurface,
+                          const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& putSurface,
                           const QuantLib::Calendar& calendar,
                           const QuantLib::DayCounter& dayCounter,
                           QuantLib::Exercise::Type type = QuantLib::Exercise::European,
@@ -81,18 +81,18 @@ public:
     //@}
 
     //! Return the stripped volatility structure.
-    boost::shared_ptr<QuantLib::BlackVolTermStructure> volSurface();
+    QuantLib::ext::shared_ptr<QuantLib::BlackVolTermStructure> volSurface();
 
 protected:
     //! Generate the relevant Black Scholes process for the underlying.
-    virtual boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> process(
-        const boost::shared_ptr<QuantLib::SimpleQuote>& volatilityQuote) const = 0;
+    virtual QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> process(
+        const QuantLib::ext::shared_ptr<QuantLib::SimpleQuote>& volatilityQuote) const = 0;
 
     //! Return the forward price at a given date.
     virtual QuantLib::Real forward(const QuantLib::Date& date) const = 0;
 
-    boost::shared_ptr<OptionInterpolatorBase> callSurface_;
-    boost::shared_ptr<OptionInterpolatorBase> putSurface_;
+    QuantLib::ext::shared_ptr<OptionInterpolatorBase> callSurface_;
+    QuantLib::ext::shared_ptr<OptionInterpolatorBase> putSurface_;
     const QuantLib::Calendar& calendar_;
     const QuantLib::DayCounter& dayCounter_;
     QuantLib::Exercise::Type type_;
@@ -128,13 +128,13 @@ private:
     QuantLib::Real implyVol(QuantLib::Date expiry,
         QuantLib::Real strike,
         QuantLib::Option::Type type,
-        boost::shared_ptr<QuantLib::PricingEngine> engine,
+        QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engine,
         QuantLib::SimpleQuote& volQuote) const;
 
     // Apply the solver options.
     void setUpSolver();
 
-    mutable boost::shared_ptr<QuantLib::BlackVolTermStructure> volSurface_;
+    mutable QuantLib::ext::shared_ptr<QuantLib::BlackVolTermStructure> volSurface_;
 
     //! Solver used when implying volatility from price.
     Brent brent_;
@@ -151,8 +151,8 @@ class EquityOptionSurfaceStripper : public OptionSurfaceStripper {
 
 public:
     EquityOptionSurfaceStripper(const QuantLib::Handle<QuantExt::EquityIndex2>& equityIndex,
-        const boost::shared_ptr<OptionInterpolatorBase>& callSurface,
-        const boost::shared_ptr<OptionInterpolatorBase>& putSurface,
+        const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& callSurface,
+        const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& putSurface,
         const QuantLib::Calendar& calendar,
         const QuantLib::DayCounter& dayCounter,
         QuantLib::Exercise::Type type = QuantLib::Exercise::European,
@@ -165,8 +165,8 @@ public:
 protected:
     //! \name OptionSurfaceStripper interface
     //@{
-    boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> process(
-        const boost::shared_ptr<QuantLib::SimpleQuote>& volatilityQuote) const override;
+    QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> process(
+        const QuantLib::ext::shared_ptr<QuantLib::SimpleQuote>& volatilityQuote) const override;
 
     QuantLib::Real forward(const QuantLib::Date& date) const override;
     //@}
@@ -181,8 +181,8 @@ public:
     CommodityOptionSurfaceStripper(
         const QuantLib::Handle<QuantExt::PriceTermStructure>& priceCurve,
         const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-        const boost::shared_ptr<OptionInterpolatorBase>& callSurface,
-        const boost::shared_ptr<OptionInterpolatorBase>& putSurface,
+        const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& callSurface,
+        const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& putSurface,
         const QuantLib::Calendar& calendar,
         const QuantLib::DayCounter& dayCounter,
         QuantLib::Exercise::Type type = QuantLib::Exercise::European,
@@ -195,8 +195,8 @@ public:
 protected:
     //! \name OptionSurfaceStripper interface
     //@{
-    boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> process(
-        const boost::shared_ptr<QuantLib::SimpleQuote>& volatilityQuote) const override;
+    QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> process(
+        const QuantLib::ext::shared_ptr<QuantLib::SimpleQuote>& volatilityQuote) const override;
 
     QuantLib::Real forward(const QuantLib::Date& date) const override;
     //@}

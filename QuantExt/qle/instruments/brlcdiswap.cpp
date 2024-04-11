@@ -32,7 +32,7 @@ using std::vector;
 namespace QuantExt {
 
 BRLCdiSwap::BRLCdiSwap(Type type, Real nominal, const Date& startDate, const Date& endDate, Rate fixedRate,
-                       const boost::shared_ptr<BRLCdi>& overnightIndex, Spread spread, bool telescopicValueDates)
+                       const QuantLib::ext::shared_ptr<BRLCdi>& overnightIndex, Spread spread, bool telescopicValueDates)
     : OvernightIndexedSwap(type, nominal,
                            Schedule({startDate, endDate}, NullCalendar(),
                                     QuantLib::Unadjusted, QuantLib::Unadjusted, 100 * Years),
@@ -47,17 +47,17 @@ BRLCdiSwap::BRLCdiSwap(Type type, Real nominal, const Date& startDate, const Dat
     Time dcf = index_->dayCounter().yearFraction(startDate_, endDate_);
     Real fixedLegPayment = nominal * (pow(1.0 + fixedRate, dcf) - 1.0);
     Date paymentDate = legs_[0].back()->date();
-    boost::shared_ptr<CashFlow> fixedCashflow = boost::make_shared<SimpleCashFlow>(fixedLegPayment, paymentDate);
+    QuantLib::ext::shared_ptr<CashFlow> fixedCashflow = QuantLib::ext::make_shared<SimpleCashFlow>(fixedLegPayment, paymentDate);
     legs_[0].clear();
     legs_[0].push_back(fixedCashflow);
     registerWith(fixedCashflow);
 
     // Set the pricer on the BRL CDI coupon
     QL_REQUIRE(legs_[1].size() == 1, "BRLCdiSwap expected exactly one overnight coupon");
-    boost::shared_ptr<QuantLib::OvernightIndexedCoupon> coupon =
-        boost::dynamic_pointer_cast<QuantLib::OvernightIndexedCoupon>(legs_[1][0]);
+    QuantLib::ext::shared_ptr<QuantLib::OvernightIndexedCoupon> coupon =
+        QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndexedCoupon>(legs_[1][0]);
     QL_REQUIRE(coupon, "BRLCdiSwap: expected QuantLib::OvernightIndexedCoupon");
-    coupon->setPricer(boost::make_shared<BRLCdiCouponPricer>());
+    coupon->setPricer(QuantLib::ext::make_shared<BRLCdiCouponPricer>());
 }
 
 Real BRLCdiSwap::fixedLegBPS() const {

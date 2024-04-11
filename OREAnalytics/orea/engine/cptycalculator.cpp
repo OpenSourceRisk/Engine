@@ -29,20 +29,20 @@ namespace ore {
 namespace analytics {
 
 void SurvivalProbabilityCalculator::calculate(const std::string& name, Size nameIndex,
-                                              const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
+                                              const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
                                               const Date& date, Size dateIndex, Size sample, bool isCloseOut) {
     if (!isCloseOut)
         outputCube->set(survProb(name, simMarket, date), nameIndex, dateIndex, sample, index_);
 }
 
 void SurvivalProbabilityCalculator::calculateT0(const std::string& name, Size nameIndex,
-                                                const boost::shared_ptr<SimMarket>& simMarket,
-                                                boost::shared_ptr<NPVCube>& outputCube) {
+                                                const QuantLib::ext::shared_ptr<SimMarket>& simMarket,
+                                                QuantLib::ext::shared_ptr<NPVCube>& outputCube) {
     outputCube->setT0(survProb(name, simMarket), nameIndex, index_);
 }
 
 Real SurvivalProbabilityCalculator::survProb(const std::string& name,
-                                             const boost::shared_ptr<SimMarket>& simMarket,
+                                             const QuantLib::ext::shared_ptr<SimMarket>& simMarket,
                                              const Date& date) {
     Real survivalProb = 1.0;
 

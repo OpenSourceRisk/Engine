@@ -122,7 +122,7 @@ XMLNode* IrModelData::toXML(XMLDocument& doc) const {
 }
 
 std::string IrModelData::ccy() const{
-    boost::shared_ptr<QuantLib::IborIndex> index;
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> index;
     return tryParseIborIndex(qualifier_, index) ? index->currency().code() : qualifier_;
 }
 

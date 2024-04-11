@@ -26,7 +26,7 @@
 
 #include <boost/make_shared.hpp>
 
-using boost::shared_ptr;
+using QuantLib::ext::shared_ptr;
 
 namespace QuantExt {
 
@@ -52,7 +52,7 @@ OptionletStripper1::OptionletStripper1(const shared_ptr<QuantExt::CapFloorTermVo
     optionletStDevs_ = Matrix(nOptionletTenors_, nStrikes_, firstGuess);
 
     capFloors_ = CapFloorMatrix(nOptionletTenors_);
-    capFloorEngines_ = std::vector<std::vector<boost::shared_ptr<PricingEngine> > >(nOptionletTenors_);
+    capFloorEngines_ = std::vector<std::vector<QuantLib::ext::shared_ptr<PricingEngine> > >(nOptionletTenors_);
 }
 
 void OptionletStripper1::performCalculations() const {
@@ -84,11 +84,11 @@ void OptionletStripper1::performCalculations() const {
             for (Size i = 0; i < nOptionletTenors_; ++i) {
                 volQuotes_[i][j] = shared_ptr<SimpleQuote>(new SimpleQuote());
                 if (inputVolatilityType_ == ShiftedLognormal) {
-                    capFloorEngines_[i][j] = boost::make_shared<BlackCapFloorEngine>(
+                    capFloorEngines_[i][j] = QuantLib::ext::make_shared<BlackCapFloorEngine>(
                         discountCurve, Handle<Quote>(volQuotes_[i][j]), dc, inputDisplacement_);
                 } else if (inputVolatilityType_ == Normal) {
                     capFloorEngines_[i][j] =
-                        boost::make_shared<BachelierCapFloorEngine>(discountCurve, Handle<Quote>(volQuotes_[i][j]), dc);
+                        QuantLib::ext::make_shared<BachelierCapFloorEngine>(discountCurve, Handle<Quote>(volQuotes_[i][j]), dc);
                 } else {
                     QL_FAIL("unknown volatility type: " << volatilityType_);
                 }

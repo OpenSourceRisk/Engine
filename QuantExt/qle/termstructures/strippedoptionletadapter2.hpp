@@ -38,7 +38,7 @@ namespace QuantExt {
 */
 class StrippedOptionletAdapter2 : public QuantLib::OptionletVolatilityStructure, public QuantLib::LazyObject {
 public:
-    StrippedOptionletAdapter2(const boost::shared_ptr<QuantLib::StrippedOptionletBase>&,
+    StrippedOptionletAdapter2(const QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase>&,
                               const bool flatExtrapolation = false);
 
     //! \name TermStructure interface
@@ -54,7 +54,7 @@ public:
     //@{
     void update() override;
     void performCalculations() const override;
-    boost::shared_ptr<QuantLib::OptionletStripper> optionletStripper() const;
+    QuantLib::ext::shared_ptr<QuantLib::OptionletStripper> optionletStripper() const;
     //@}
     QuantLib::VolatilityType volatilityType() const override;
     QuantLib::Real displacement() const override;
@@ -62,14 +62,14 @@ public:
 protected:
     //! \name OptionletVolatilityStructure interface
     //@{
-    boost::shared_ptr<QuantLib::SmileSection> smileSectionImpl(QuantLib::Time optionTime) const override;
+    QuantLib::ext::shared_ptr<QuantLib::SmileSection> smileSectionImpl(QuantLib::Time optionTime) const override;
 
     QuantLib::Volatility volatilityImpl(QuantLib::Time length, QuantLib::Rate strike) const override;
     //@}
 private:
-    const boost::shared_ptr<QuantLib::StrippedOptionletBase> optionletStripper_;
+    const QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase> optionletStripper_;
     QuantLib::Size nInterpolations_;
-    mutable std::vector<boost::shared_ptr<QuantLib::Interpolation> > strikeInterpolations_;
+    mutable std::vector<QuantLib::ext::shared_ptr<QuantLib::Interpolation> > strikeInterpolations_;
     const bool flatExtrapolation_;
 };
 
@@ -79,8 +79,8 @@ inline void StrippedOptionletAdapter2::update() {
     LazyObject::update();
 }
 
-inline boost::shared_ptr<QuantLib::OptionletStripper> StrippedOptionletAdapter2::optionletStripper() const {
-    return boost::dynamic_pointer_cast<QuantLib::OptionletStripper>(optionletStripper_);
+inline QuantLib::ext::shared_ptr<QuantLib::OptionletStripper> StrippedOptionletAdapter2::optionletStripper() const {
+    return QuantLib::ext::dynamic_pointer_cast<QuantLib::OptionletStripper>(optionletStripper_);
 }
 } // namespace QuantExt
 

@@ -79,10 +79,10 @@ private:
                                                     std::vector<Period> cfMaturities, Matrix cPrice, Matrix fPrice);
     Handle<QuantLib::CPIVolatilitySurface> flatCpiVolSurface(Volatility v);
     Handle<ZeroInflationIndex> makeZeroInflationIndex(string index, vector<Date> dates, vector<Rate> rates,
-                                                      boost::shared_ptr<ZeroInflationIndex> ii,
+                                                      QuantLib::ext::shared_ptr<ZeroInflationIndex> ii,
                                                       Handle<YieldTermStructure> yts);
     Handle<YoYInflationIndex> makeYoYInflationIndex(string index, vector<Date> dates, vector<Rate> rates,
-                                                    boost::shared_ptr<YoYInflationIndex> ii,
+                                                    QuantLib::ext::shared_ptr<YoYInflationIndex> ii,
                                                     Handle<YieldTermStructure> yts);
     Handle<ZeroInflationTermStructure> flatZeroInflationCurve(Real inflationRate, Rate nominalRate);
     Handle<YoYInflationTermStructure> flatYoYInflationCurve(Real inflationRate, Rate nominalRate);
@@ -125,16 +125,16 @@ public:
     const map<string, vector<Period>>& yoyInflationRateHelperTenorsMap() const {
         return yoyInflationRateHelperTenorsMap_;
     }
-    const map<string, vector<boost::shared_ptr<RateHelper>>>& equityForecastRateHelpersMap() const {
+    const map<string, vector<QuantLib::ext::shared_ptr<RateHelper>>>& equityForecastRateHelpersMap() const {
         return equityForecastRateHelpersMap_;
     }
-    const map<string, vector<boost::shared_ptr<RateHelper>>>& discountRateHelpersMap() const {
+    const map<string, vector<QuantLib::ext::shared_ptr<RateHelper>>>& discountRateHelpersMap() const {
         return discountRateHelpersMap_;
     }
-    const map<string, vector<boost::shared_ptr<RateHelper>>>& indexCurveRateHelpersMap() const {
+    const map<string, vector<QuantLib::ext::shared_ptr<RateHelper>>>& indexCurveRateHelpersMap() const {
         return indexCurveRateHelpersMap_;
     }
-    const map<string, vector<boost::shared_ptr<QuantExt::DefaultProbabilityHelper>>>& defaultRateHelpersMap() const {
+    const map<string, vector<QuantLib::ext::shared_ptr<QuantExt::DefaultProbabilityHelper>>>& defaultRateHelpersMap() const {
         return defaultRateHelpersMap_;
     }
     const map<string, vector<Handle<Quote>>>& discountRateHelperValuesMap() const {
@@ -208,9 +208,9 @@ private:
         swaptionVolRateHelperTenorsMap_, swaptionVolRateHelperSwapTenorsMap_, equityVolRateHelperTenorsMap_,
         baseCorrRateHelperTenorsMap_, zeroInflationRateHelperTenorsMap_, yoyInflationRateHelperTenorsMap_;
     map<string, vector<string>> baseCorrLossLevelsMap_;
-    map<string, vector<boost::shared_ptr<RateHelper>>> discountRateHelpersMap_, equityForecastRateHelpersMap_,
+    map<string, vector<QuantLib::ext::shared_ptr<RateHelper>>> discountRateHelpersMap_, equityForecastRateHelpersMap_,
         indexCurveRateHelpersMap_;
-    map<string, vector<boost::shared_ptr<QuantExt::DefaultProbabilityHelper>>> defaultRateHelpersMap_;
+    map<string, vector<QuantLib::ext::shared_ptr<QuantExt::DefaultProbabilityHelper>>> defaultRateHelpersMap_;
     map<string, vector<Handle<Quote>>> discountRateHelperValuesMap_, equityForecastRateHelperValuesMap_,
         indexCurveRateHelperValuesMap_, defaultRateHelperValuesMap_, cdsVolRateHelperValuesMap_,
         swaptionVolRateHelperValuesMap_, equityVolRateHelperValuesMap_, baseCorrRateHelperValuesMap_,
@@ -222,21 +222,21 @@ private:
 class TestConfigurationObjects {
 public:
     //! ScenarioSimMarketParameters instance
-    static boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>
+    static QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>
     setupSimMarketData(bool hasSwapVolCube = false, bool hasYYCapVols = false);
     //! SensitivityScenarioData instance
-    static boost::shared_ptr<ore::analytics::SensitivityScenarioData>
+    static QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>
     setupSensitivityScenarioData(bool hasSwapVolCube = false, bool hasYYCapVols = false, bool parConversion = false);
     //! ScenarioSimMarketParameters instance, 2 currencies
-    static boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> setupSimMarketData2();
+    static QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> setupSimMarketData2();
     //! ScenarioSimMarketParameters instance, 5 currencies
-    static boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> setupSimMarketData5();
+    static QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> setupSimMarketData5();
     //! SensitivityScenarioData instance, 2 currencies
-    static boost::shared_ptr<ore::analytics::SensitivityScenarioData> setupSensitivityScenarioData2();
+    static QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> setupSensitivityScenarioData2();
     //! SensitivityScenarioData instance, 5 currencies
-    static boost::shared_ptr<ore::analytics::SensitivityScenarioData> setupSensitivityScenarioData5();
+    static QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> setupSensitivityScenarioData5();
     //! SensitivityScenarioData instance, 2 currencies, shifts more granular than base curve
-    static boost::shared_ptr<ore::analytics::SensitivityScenarioData> setupSensitivityScenarioData2b();
+    static QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> setupSensitivityScenarioData2b();
     //! Set Conventions
     static void setConventions();
     static void setConventions2();

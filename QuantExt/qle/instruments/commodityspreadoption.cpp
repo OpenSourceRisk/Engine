@@ -24,13 +24,13 @@
 
 namespace QuantExt {
 
-CommoditySpreadOption::CommoditySpreadOption(const boost::shared_ptr<CommodityCashFlow>& longAssetFlow,
-                                             const boost::shared_ptr<CommodityCashFlow>& shortAssetFlow,
+CommoditySpreadOption::CommoditySpreadOption(const QuantLib::ext::shared_ptr<CommodityCashFlow>& longAssetFlow,
+                                             const QuantLib::ext::shared_ptr<CommodityCashFlow>& shortAssetFlow,
                                              const ext::shared_ptr<Exercise>& exercise, const Real quantity,
                                              const Real strikePrice, QuantLib::Option::Type type,
                                              const QuantLib::Date& paymentDate,
-                                             const boost::shared_ptr<FxIndex>& longAssetFxIndex,
-                                             const boost::shared_ptr<FxIndex>& shortAssetFxIndex,
+                                             const QuantLib::ext::shared_ptr<FxIndex>& longAssetFxIndex,
+                                             const QuantLib::ext::shared_ptr<FxIndex>& shortAssetFxIndex,
                                              Settlement::Type delivery, Settlement::Method settlementMethod)
     : Option(ext::shared_ptr<Payoff>(), exercise), longAssetFlow_(longAssetFlow), shortAssetFlow_(shortAssetFlow),
       quantity_(quantity), strikePrice_(strikePrice), type_(type), paymentDate_(paymentDate),
@@ -39,16 +39,16 @@ CommoditySpreadOption::CommoditySpreadOption(const boost::shared_ptr<CommodityCa
     registerWith(longAssetFlow_);
     registerWith(shortAssetFlow_);
     QL_REQUIRE(ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(longAssetFlow_) ||
-                   boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(longAssetFlow_),
+                   QuantLib::ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(longAssetFlow_),
                "Expect commodity floating cashflows");
     QL_REQUIRE(ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(shortAssetFlow_) ||
-                   boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(shortAssetFlow_),
+                   QuantLib::ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(shortAssetFlow_),
                "Expect commodity floating cashflows");
-    if (auto avgFlow = boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(longAssetFlow_)) {
+    if (auto avgFlow = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(longAssetFlow_)) {
         QL_REQUIRE(exercise_->lastDate() >= avgFlow->indices().rbegin()->first,
                    "exercise Date hast to be after last observation date");
     }
-    if (auto avgFlow = boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(shortAssetFlow_)) {
+    if (auto avgFlow = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(shortAssetFlow_)) {
         QL_REQUIRE(exercise_->lastDate() >= avgFlow->indices().rbegin()->first,
                    "exercise Date hast to be after last observation date");
     }

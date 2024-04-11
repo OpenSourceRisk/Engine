@@ -26,8 +26,8 @@
 
 namespace QuantExt {
 
-IborFallbackCurve::IborFallbackCurve(const boost::shared_ptr<IborIndex>& originalIndex,
-                                     const boost::shared_ptr<OvernightIndex>& rfrIndex, const Real spread,
+IborFallbackCurve::IborFallbackCurve(const QuantLib::ext::shared_ptr<IborIndex>& originalIndex,
+                                     const QuantLib::ext::shared_ptr<OvernightIndex>& rfrIndex, const Real spread,
                                      const Date& switchDate)
     : YieldTermStructure(originalIndex->forwardingTermStructure()->dayCounter()), originalIndex_(originalIndex),
       rfrIndex_(rfrIndex), spread_(spread), switchDate_(switchDate) {
@@ -38,9 +38,9 @@ IborFallbackCurve::IborFallbackCurve(const boost::shared_ptr<IborIndex>& origina
     enableExtrapolation();
 }
 
-boost::shared_ptr<IborIndex> IborFallbackCurve::originalIndex() const { return originalIndex_; }
+QuantLib::ext::shared_ptr<IborIndex> IborFallbackCurve::originalIndex() const { return originalIndex_; }
 
-boost::shared_ptr<OvernightIndex> IborFallbackCurve::rfrIndex() const { return rfrIndex_; }
+QuantLib::ext::shared_ptr<OvernightIndex> IborFallbackCurve::rfrIndex() const { return rfrIndex_; }
 
 Real IborFallbackCurve::spread() const { return spread_; }
 

@@ -46,8 +46,8 @@ protected:
         return equityName + "/" + ccy.code();
     }
 
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& equityName, const Currency& ccy) override {
-        return boost::make_shared<QuantExt::DiscountingEquityForwardEngine>(
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& equityName, const Currency& ccy) override {
+        return QuantLib::ext::make_shared<QuantExt::DiscountingEquityForwardEngine>(
             market_->equityForecastCurve(equityName, configuration(MarketContext::pricing)),
             market_->equityDividendCurve(equityName, configuration(MarketContext::pricing)),
             market_->equitySpot(equityName, configuration(MarketContext::pricing)),

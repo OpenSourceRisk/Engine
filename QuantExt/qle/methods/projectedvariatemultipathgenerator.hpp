@@ -34,17 +34,17 @@ public:
     /*! If projection(j) = i for state process indices i from the projected process and j from the original process,
       then stateProcessProjection[i] = j, i.e. a state process component index from the projected model is mapped to
       the state process component index of the original model. */
-    ProjectedVariateMultiPathGenerator(const boost::shared_ptr<StochasticProcess>& process, const TimeGrid& timeGrid,
+    ProjectedVariateMultiPathGenerator(const QuantLib::ext::shared_ptr<StochasticProcess>& process, const TimeGrid& timeGrid,
                                        const std::vector<Size>& stateProcessProjection,
-                                       const boost::shared_ptr<MultiPathVariateGeneratorBase>& variateGenerator);
+                                       const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& variateGenerator);
     const Sample<MultiPath>& next() const override;
     void reset() override;
 
 private:
-    const boost::shared_ptr<StochasticProcess> process_;
+    const QuantLib::ext::shared_ptr<StochasticProcess> process_;
     const TimeGrid timeGrid_;
     const std::vector<Size> stateProcessProjection_;
-    const boost::shared_ptr<MultiPathVariateGeneratorBase> variateGenerator_;
+    const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase> variateGenerator_;
 
     Size maxTargetIndex_;
 

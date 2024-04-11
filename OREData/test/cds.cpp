@@ -62,7 +62,7 @@ public:
             flatRateYts(liborRate);
         defaultCurves_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] = flatRateDcs(hazardRate);
         recoveryRates_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] =
-            Handle<Quote>(boost::make_shared<SimpleQuote>(recoveryRate));
+            Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(recoveryRate));
         // build ibor index
         Handle<IborIndex> hEUR(ore::data::parseIborIndex(
             "EUR-EURIBOR-6M", yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")]));
@@ -71,15 +71,15 @@ public:
 
 private:
     Handle<YieldTermStructure> flatRateYts(Real forward) {
-        boost::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, ActualActual(ActualActual::ISDA)));
+        QuantLib::ext::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, ActualActual(ActualActual::ISDA)));
         yts->enableExtrapolation();
         return Handle<YieldTermStructure>(yts);
     }
     Handle<QuantExt::CreditCurve> flatRateDcs(Volatility forward) {
-        boost::shared_ptr<DefaultProbabilityTermStructure> dcs(
+        QuantLib::ext::shared_ptr<DefaultProbabilityTermStructure> dcs(
             new FlatHazardRate(asof_, forward, ActualActual(ActualActual::ISDA)));
         return Handle<QuantExt::CreditCurve>(
-            boost::make_shared<QuantExt::CreditCurve>(Handle<DefaultProbabilityTermStructure>(dcs)));
+            QuantLib::ext::make_shared<QuantExt::CreditCurve>(Handle<DefaultProbabilityTermStructure>(dcs)));
     }
 };
 
@@ -105,18 +105,18 @@ struct CommonVars {
     vector<Real> spread;
 
     // utilities
-    boost::shared_ptr<ore::data::CreditDefaultSwap> makeCDS(string end, Real rate) {
+    QuantLib::ext::shared_ptr<ore::data::CreditDefaultSwap> makeCDS(string end, Real rate) {
         ScheduleData fixedSchedule(ScheduleRules(start, end, fixtenor, calStr, conv, conv, rule));
 
         // build CDS
-        boost::shared_ptr<FixedLegData> fixedLegRateData = boost::make_shared<FixedLegData>(vector<double>(1, rate));
+        QuantLib::ext::shared_ptr<FixedLegData> fixedLegRateData = QuantLib::ext::make_shared<FixedLegData>(vector<double>(1, rate));
         LegData fixedLegData(fixedLegRateData, isPayer, ccy, fixedSchedule, fixDC, notionals);
 
         CreditDefaultSwapData cd(issuerId, creditCurveId, fixedLegData, false,
                                  QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault);
         Envelope env("CP1");
 
-        boost::shared_ptr<ore::data::CreditDefaultSwap> cds(new ore::data::CreditDefaultSwap(env, cd));
+        QuantLib::ext::shared_ptr<ore::data::CreditDefaultSwap> cds(new ore::data::CreditDefaultSwap(env, cd));
         return cds;
     }
 
@@ -158,18 +158,18 @@ ostream& operator<<(ostream& os, const TradeInputs& t) { return os << "[" << t.e
 Real cdsNpv(const MarketInputs& m, const TradeInputs& t) {
 
     // build market
-    boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(m.hazardRate, m.recoveryRate, m.liborRate);
+    QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(m.hazardRate, m.recoveryRate, m.liborRate);
     Settings::instance().evaluationDate() = market->asofDate();
 
     CommonVars vars;
-    boost::shared_ptr<ore::data::CreditDefaultSwap> cds = vars.makeCDS(t.endDate, t.fixedRate);
+    QuantLib::ext::shared_ptr<ore::data::CreditDefaultSwap> cds = vars.makeCDS(t.endDate, t.fixedRate);
 
     // Build and price
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("CreditDefaultSwap") = "DiscountedCashflows";
     engineData->engine("CreditDefaultSwap") = "MidPointCdsEngine";
 
-    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
     cds->build(engineFactory);
 
@@ -203,23 +203,23 @@ struct TodaysMarketFiles {
 };
 
 // Create todaysmarket from input files.
-boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const string& inputDir,
+QuantLib::ext::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const string& inputDir,
                                                    const TodaysMarketFiles& tmf) {
 
-    auto conventions = boost::make_shared<Conventions>();
+    auto conventions = QuantLib::ext::make_shared<Conventions>();
     conventions->fromFile(TEST_INPUT_FILE(string(inputDir + "/" + tmf.conventions)));
     InstrumentConventions::instance().setConventions(conventions);
 
-    auto curveConfigs = boost::make_shared<CurveConfigurations>();
+    auto curveConfigs = QuantLib::ext::make_shared<CurveConfigurations>();
     curveConfigs->fromFile(TEST_INPUT_FILE(string(inputDir + "/" + tmf.curveConfig)));
 
-    auto todaysMarketParameters = boost::make_shared<TodaysMarketParameters>();
+    auto todaysMarketParameters = QuantLib::ext::make_shared<TodaysMarketParameters>();
     todaysMarketParameters->fromFile(TEST_INPUT_FILE(string(inputDir + "/" + tmf.todaysMarket)));
 
-    auto loader = boost::make_shared<CSVLoader>(TEST_INPUT_FILE(string(inputDir + "/" + tmf.market)),
+    auto loader = QuantLib::ext::make_shared<CSVLoader>(TEST_INPUT_FILE(string(inputDir + "/" + tmf.market)),
                                                 TEST_INPUT_FILE(string(inputDir + "/" + tmf.fixings)), false);
 
-    return boost::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs);
+    return QuantLib::ext::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs);
 }
 
 } // namespace
@@ -247,15 +247,15 @@ BOOST_DATA_TEST_CASE_F(TopLevelFixture, testCreditDefaultSwapBuilding, bdata::ma
     BOOST_REQUIRE_MESSAGE(p.size() == 1, "Expected portfolio to contain a single trade");
 
     // Use the test market
-    boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(0.02, 0.4, 0.05);
+    QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(0.02, 0.4, 0.05);
 
     // Engine data
-    boost::shared_ptr<EngineData> ed = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> ed = QuantLib::ext::make_shared<EngineData>();
     ed->model("CreditDefaultSwap") = "DiscountedCashflows";
     ed->engine("CreditDefaultSwap") = "MidPointCdsEngine";
 
     // Test that the trade builds and prices without error
-    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(ed, market);
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(ed, market);
     BOOST_CHECK_NO_THROW(p.build(engineFactory));
     Real npv;
     BOOST_CHECK_NO_THROW(npv = p.trades().begin()->second->instrument()->NPV());
@@ -290,12 +290,12 @@ BOOST_DATA_TEST_CASE(testUpfrontDefaultCurveConsistency, bdata::make(upfrontFile
     tmf.market = files.market;
     tmf.curveConfig = files.curveConfig;
 
-    boost::shared_ptr<TodaysMarket> tm;
+    QuantLib::ext::shared_ptr<TodaysMarket> tm;
     BOOST_REQUIRE_NO_THROW(tm = createTodaysMarket(asof, dir, tmf));
 
-    boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> data = QuantLib::ext::make_shared<EngineData>();
     data->fromFile(TEST_INPUT_FILE(string(dir + "/pricingengine.xml")));
-    boost::shared_ptr<EngineFactory> ef = boost::make_shared<EngineFactory>(data, tm);
+    QuantLib::ext::shared_ptr<EngineFactory> ef = QuantLib::ext::make_shared<EngineFactory>(data, tm);
 
     Portfolio portfolio;
     portfolio.fromFile(TEST_INPUT_FILE(string(dir + "/portfolio.xml")));
@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(testSimultaneousUsageCdsQuoteTypes) {
     Settings::instance().evaluationDate() = Date(6, Nov, 2020);
 
     // Check that todaysmarket instance is created without error.
-    boost::shared_ptr<TodaysMarket> tm;
+    QuantLib::ext::shared_ptr<TodaysMarket> tm;
     BOOST_CHECK_NO_THROW(tm = createTodaysMarket(asof, "upfront", tmf));
 
     // Check that each of the three expected curves exist and give survival probability.

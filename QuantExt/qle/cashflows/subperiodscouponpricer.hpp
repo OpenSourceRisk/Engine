@@ -52,7 +52,7 @@ protected:
     Real gearing_;
     Spread spread_;
     Time accrualPeriod_;
-    boost::shared_ptr<InterestRateIndex> index_;
+    QuantLib::ext::shared_ptr<InterestRateIndex> index_;
     SubPeriodsCoupon1::Type type_;
     bool includeSpread_;
 

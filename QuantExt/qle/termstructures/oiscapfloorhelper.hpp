@@ -37,7 +37,7 @@ public:
     OISCapFloorHelper(CapFloorHelper::Type type, const QuantLib::Period& tenor,
                       const QuantLib::Period& rateComputationPeriod, QuantLib::Rate strike,
                       const QuantLib::Handle<QuantLib::Quote>& quote,
-                      const boost::shared_ptr<QuantLib::OvernightIndex>& index,
+                      const QuantLib::ext::shared_ptr<QuantLib::OvernightIndex>& index,
                       const QuantLib::Handle<QuantLib::YieldTermStructure>& discountingCurve, bool moving = true,
                       const QuantLib::Date& effectiveDate = QuantLib::Date(),
                       CapFloorHelper::QuoteType quoteType = CapFloorHelper::Premium,
@@ -57,7 +57,7 @@ private:
     QuantLib::Period tenor_;
     QuantLib::Period rateComputationPeriod_;
     QuantLib::Rate strike_;
-    boost::shared_ptr<QuantLib::OvernightIndex> index_;
+    QuantLib::ext::shared_ptr<QuantLib::OvernightIndex> index_;
     QuantLib::Handle<QuantLib::YieldTermStructure> discountHandle_;
     bool moving_;
     QuantLib::Date effectiveDate_;

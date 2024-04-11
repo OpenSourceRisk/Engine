@@ -46,7 +46,7 @@ private:
     void resetModel();
 
 public:
-    HomogeneousPoolLossModel(const boost::shared_ptr<ConstantLossLatentmodel<copulaPolicy>>& copula, Size nBuckets,
+    HomogeneousPoolLossModel(const QuantLib::ext::shared_ptr<ConstantLossLatentmodel<copulaPolicy>>& copula, Size nBuckets,
                              Real max = 5., Real min = -5., Real nSteps = 50)
         : copula_(copula), nBuckets_(nBuckets), max_(max), min_(min), nSteps_(nSteps), delta_((max - min) / nSteps) {
         QL_REQUIRE(copula->numFactors() == 1, "Inhomogeneous model not implemented for multifactor");
@@ -95,7 +95,7 @@ public:
     }
 
 protected:
-    const boost::shared_ptr<ConstantLossLatentmodel<copulaPolicy>> copula_;
+    const QuantLib::ext::shared_ptr<ConstantLossLatentmodel<copulaPolicy>> copula_;
     Size nBuckets_;
     mutable Real attach_, detach_, notional_, attachAmount_, detachAmount_;
     mutable std::vector<Real> notionals_;

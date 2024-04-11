@@ -30,8 +30,8 @@ namespace QuantExt {
 class ProxyOptionletVolatility : public QuantLib::OptionletVolatilityStructure {
 public:
     ProxyOptionletVolatility(const QuantLib::Handle<OptionletVolatilityStructure>& baseVol,
-                             const boost::shared_ptr<QuantLib::IborIndex>& baseIndex,
-                             const boost::shared_ptr<QuantLib::IborIndex>& targetIndex,
+                             const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& baseIndex,
+                             const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& targetIndex,
                              const QuantLib::Period& baseRateComputationPeriod = 0 * QuantLib::Days,
                              const QuantLib::Period& targetRateComputationPeriod = 0 * QuantLib::Days);
 
@@ -44,13 +44,13 @@ public:
     Calendar calendar() const override { return baseVol_->calendar(); }
 
 private:
-    boost::shared_ptr<QuantLib::SmileSection> smileSectionImpl(const QuantLib::Date& optionDate) const override;
-    boost::shared_ptr<QuantLib::SmileSection> smileSectionImpl(QuantLib::Time optionTime) const override;
+    QuantLib::ext::shared_ptr<QuantLib::SmileSection> smileSectionImpl(const QuantLib::Date& optionDate) const override;
+    QuantLib::ext::shared_ptr<QuantLib::SmileSection> smileSectionImpl(QuantLib::Time optionTime) const override;
     QuantLib::Volatility volatilityImpl(QuantLib::Time optionTime, QuantLib::Rate strike) const override;
 
     QuantLib::Handle<QuantLib::OptionletVolatilityStructure> baseVol_;
-    boost::shared_ptr<QuantLib::IborIndex> baseIndex_;
-    boost::shared_ptr<QuantLib::IborIndex> targetIndex_;
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> baseIndex_;
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> targetIndex_;
     QuantLib::Period baseRateComputationPeriod_;
     QuantLib::Period targetRateComputationPeriod_;
 };
