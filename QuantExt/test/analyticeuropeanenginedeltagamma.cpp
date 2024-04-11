@@ -41,10 +41,10 @@ namespace {
 struct TestData {
     TestData() : refDate(Date(22, Aug, 2016)) {
         Settings::instance().evaluationDate() = refDate;
-        rateDiscount = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(
-            0, NullCalendar(), Handle<Quote>(boost::make_shared<SimpleQuote>(0.02)), Actual365Fixed()));
-        divDiscount = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(
-            0, NullCalendar(), Handle<Quote>(boost::make_shared<SimpleQuote>(0.03)), Actual365Fixed()));
+        rateDiscount = Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(
+            0, NullCalendar(), Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.02)), Actual365Fixed()));
+        divDiscount = Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(
+            0, NullCalendar(), Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.03)), Actual365Fixed()));
         pillarDates.push_back(refDate + 1 * Years);
         pillarDates.push_back(refDate + 2 * Years);
         pillarDates.push_back(refDate + 3 * Years);
@@ -56,8 +56,8 @@ struct TestData {
         pillarDates.push_back(refDate + 20 * Years);
         std::vector<Handle<Quote>> tmpRateSpr, tmpDivSpr;
         for (Size i = 0; i < pillarDates.size(); ++i) {
-            boost::shared_ptr<SimpleQuote> qr = boost::make_shared<SimpleQuote>(0.0);
-            boost::shared_ptr<SimpleQuote> qd = boost::make_shared<SimpleQuote>(0.0);
+            QuantLib::ext::shared_ptr<SimpleQuote> qr = QuantLib::ext::make_shared<SimpleQuote>(0.0);
+            QuantLib::ext::shared_ptr<SimpleQuote> qd = QuantLib::ext::make_shared<SimpleQuote>(0.0);
             rateSpreads.push_back(qr);
             divSpreads.push_back(qd);
             tmpRateSpr.push_back(Handle<Quote>(qr));
@@ -65,27 +65,27 @@ struct TestData {
             pillarTimes.push_back(rateDiscount->timeFromReference(pillarDates[i]));
         }
         rateCurve =
-            Handle<YieldTermStructure>(boost::make_shared<InterpolatedPiecewiseZeroSpreadedTermStructure<Linear>>(
+            Handle<YieldTermStructure>(QuantLib::ext::make_shared<InterpolatedPiecewiseZeroSpreadedTermStructure<Linear>>(
                 rateDiscount, tmpRateSpr, pillarDates));
         divCurve =
-            Handle<YieldTermStructure>(boost::make_shared<InterpolatedPiecewiseZeroSpreadedTermStructure<Linear>>(
+            Handle<YieldTermStructure>(QuantLib::ext::make_shared<InterpolatedPiecewiseZeroSpreadedTermStructure<Linear>>(
                 divDiscount, tmpDivSpr, pillarDates));
         rateCurve->enableExtrapolation();
         divCurve->enableExtrapolation();
-        vol = boost::make_shared<SimpleQuote>(0.20);
+        vol = QuantLib::ext::make_shared<SimpleQuote>(0.20);
         volTs = Handle<BlackVolTermStructure>(
-            boost::make_shared<BlackConstantVol>(0, NullCalendar(), Handle<Quote>(vol), Actual365Fixed()));
-        spot = boost::make_shared<SimpleQuote>(100.0);
-        process = boost::make_shared<GeneralizedBlackScholesProcess>(Handle<Quote>(spot), divCurve, rateCurve, volTs);
+            QuantLib::ext::make_shared<BlackConstantVol>(0, NullCalendar(), Handle<Quote>(vol), Actual365Fixed()));
+        spot = QuantLib::ext::make_shared<SimpleQuote>(100.0);
+        process = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(Handle<Quote>(spot), divCurve, rateCurve, volTs);
     }
     Date refDate;
     Handle<YieldTermStructure> rateDiscount, divDiscount, rateCurve, divCurve;
     std::vector<Date> pillarDates;
-    std::vector<boost::shared_ptr<SimpleQuote>> rateSpreads, divSpreads;
+    std::vector<QuantLib::ext::shared_ptr<SimpleQuote>> rateSpreads, divSpreads;
     std::vector<Real> pillarTimes;
-    boost::shared_ptr<SimpleQuote> vol, spot;
+    QuantLib::ext::shared_ptr<SimpleQuote> vol, spot;
     Handle<BlackVolTermStructure> volTs;
-    boost::shared_ptr<GeneralizedBlackScholesProcess> process;
+    QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> process;
 }; // TestData
 
 bool check(const Real reference, const Real value) {
@@ -112,13 +112,13 @@ BOOST_AUTO_TEST_CASE(testNpvDeltasGammaVegas) {
 
     Real strike = d.spot->value();
     Date expiryDate = d.refDate + 6 * Years;
-    boost::shared_ptr<StrikedTypePayoff> payoff = boost::make_shared<PlainVanillaPayoff>(Option::Put, strike);
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(expiryDate);
-    boost::shared_ptr<VanillaOption> option = boost::make_shared<VanillaOption>(payoff, exercise);
+    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff = QuantLib::ext::make_shared<PlainVanillaPayoff>(Option::Put, strike);
+    QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(expiryDate);
+    QuantLib::ext::shared_ptr<VanillaOption> option = QuantLib::ext::make_shared<VanillaOption>(payoff, exercise);
 
-    boost::shared_ptr<PricingEngine> engine0 = boost::make_shared<AnalyticEuropeanEngine>(d.process);
-    boost::shared_ptr<PricingEngine> engine1 =
-        boost::make_shared<AnalyticEuropeanEngineDeltaGamma>(d.process, d.pillarTimes, d.pillarTimes, true, true);
+    QuantLib::ext::shared_ptr<PricingEngine> engine0 = QuantLib::ext::make_shared<AnalyticEuropeanEngine>(d.process);
+    QuantLib::ext::shared_ptr<PricingEngine> engine1 =
+        QuantLib::ext::make_shared<AnalyticEuropeanEngineDeltaGamma>(d.process, d.pillarTimes, d.pillarTimes, true, true);
 
     option->setPricingEngine(engine0);
     Real npv0 = option->NPV();

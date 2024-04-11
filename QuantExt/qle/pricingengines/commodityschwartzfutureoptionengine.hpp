@@ -35,11 +35,11 @@ namespace QuantExt {
  */
 class CommoditySchwartzFutureOptionEngine : public VanillaOption::engine {
 public:
-    CommoditySchwartzFutureOptionEngine(const boost::shared_ptr<CommoditySchwartzModel>& model);
+    CommoditySchwartzFutureOptionEngine(const QuantLib::ext::shared_ptr<CommoditySchwartzModel>& model);
     void calculate() const override;
 
 private:
-    boost::shared_ptr<CommoditySchwartzModel> model_;
+    QuantLib::ext::shared_ptr<CommoditySchwartzModel> model_;
 };
 
 } // namespace QuantExt

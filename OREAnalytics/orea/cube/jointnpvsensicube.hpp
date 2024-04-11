@@ -38,14 +38,14 @@ using QuantLib::Size;
 class JointNPVSensiCube : public NPVSensiCube {
 public:
     /*! ctor for two input cubes */
-    JointNPVSensiCube(const boost::shared_ptr<NPVSensiCube>& cube1, const boost::shared_ptr<NPVSensiCube>& cube2,
+    JointNPVSensiCube(const QuantLib::ext::shared_ptr<NPVSensiCube>& cube1, const QuantLib::ext::shared_ptr<NPVSensiCube>& cube2,
                       const std::set<std::string>& ids = {});
 
     /*! ctor for n input cubes
         If no ids are given, the ids in the input cubes define theids in the resulting cube, the ids must be unique
         in this case. If ids are given they define the ids in the output cube.
      */
-    JointNPVSensiCube(const std::vector<boost::shared_ptr<NPVSensiCube>>& cubes,
+    JointNPVSensiCube(const std::vector<QuantLib::ext::shared_ptr<NPVSensiCube>>& cubes,
                       const std::set<std::string>& ids = {});
 
     //! Return the length of each dimension
@@ -71,10 +71,10 @@ public:
     void remove(Size id, Size sample) override;
 
 private:
-    const std::pair<boost::shared_ptr<NPVSensiCube>, Size>& cubeAndId(Size id) const;
+    const std::pair<QuantLib::ext::shared_ptr<NPVSensiCube>, Size>& cubeAndId(Size id) const;
     std::map<std::string, Size> idIdx_;
-    std::vector<std::pair<boost::shared_ptr<NPVSensiCube>, Size>> cubeAndId_;
-    const std::vector<boost::shared_ptr<NPVSensiCube>> cubes_;
+    std::vector<std::pair<QuantLib::ext::shared_ptr<NPVSensiCube>, Size>> cubeAndId_;
+    const std::vector<QuantLib::ext::shared_ptr<NPVSensiCube>> cubes_;
 };
 
 } // namespace analytics

@@ -48,7 +48,7 @@ namespace ore {
 namespace analytics {
 
 // Search for a valid fixing date maximum gap days larger than d, the only relevant case for this so far is BMA/SIFMA
-Date nextValidFixingDate(Date d, const boost::shared_ptr<Index>& index, Size gap = 7) {
+Date nextValidFixingDate(Date d, const QuantLib::ext::shared_ptr<Index>& index, Size gap = 7) {
     Date adjusted = d;
     for (Size i = 0; i <= gap; ++i) {
         adjusted = d + i;
@@ -62,7 +62,7 @@ FixingManager::FixingManager(Date today) : today_(today), fixingsEnd_(today), mo
 
 //! Initialise the manager-
 
-void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<Market>& market,
+void FixingManager::initialise(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<Market>& market,
                                const std::string& configuration) {
 
     // populate the map "Index -> set of required fixing dates", where the index on the LHS is linked to curves
@@ -76,13 +76,13 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio, co
             }
             try {
                 auto rawIndex = parseIndex(name);
-                if (auto index = boost::dynamic_pointer_cast<EquityIndex2>(rawIndex)) {
+                if (auto index = QuantLib::ext::dynamic_pointer_cast<EquityIndex2>(rawIndex)) {
                     
                     fixingMap_[*market->equityCurve(index->familyName(), configuration)].insert(dates.begin(),
                                                                                                 dates.end());
-                } else if (auto index = boost::dynamic_pointer_cast<BondIndex>(rawIndex)) {
+                } else if (auto index = QuantLib::ext::dynamic_pointer_cast<BondIndex>(rawIndex)) {
                     QL_FAIL("BondIndex not handled");
-                } else if (auto index = boost::dynamic_pointer_cast<CommodityIndex>(rawIndex)) {
+                } else if (auto index = QuantLib::ext::dynamic_pointer_cast<CommodityIndex>(rawIndex)) {
                     // for comm indices with non-daily expiries the expiry date's day of month is 1 always
                     Date safeExpiryDate = index->expiryDate();
                     if (safeExpiryDate != Date() && !index->keepDays()) {
@@ -91,17 +91,17 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio, co
                     fixingMap_[index->clone(safeExpiryDate,
                                             market->commodityPriceCurve(index->underlyingName(), configuration))]
                         .insert(dates.begin(), dates.end());
-                } else if (auto index = boost::dynamic_pointer_cast<FxIndex>(rawIndex)) {
+                } else if (auto index = QuantLib::ext::dynamic_pointer_cast<FxIndex>(rawIndex)) {
                     fixingMap_[*market->fxIndex(index->oreName(), configuration)].insert(dates.begin(), dates.end());
-                } else if (auto index = boost::dynamic_pointer_cast<GenericIndex>(rawIndex)) {
+                } else if (auto index = QuantLib::ext::dynamic_pointer_cast<GenericIndex>(rawIndex)) {
                     QL_FAIL("GenericIndex not handled");
-                } else if (auto index = boost::dynamic_pointer_cast<ConstantMaturityBondIndex>(rawIndex)) {
+                } else if (auto index = QuantLib::ext::dynamic_pointer_cast<ConstantMaturityBondIndex>(rawIndex)) {
                     QL_FAIL("ConstantMaturityBondIndex not handled");
-                } else if (auto index = boost::dynamic_pointer_cast<IborIndex>(rawIndex)) {
+                } else if (auto index = QuantLib::ext::dynamic_pointer_cast<IborIndex>(rawIndex)) {
                     fixingMap_[*market->iborIndex(name, configuration)].insert(dates.begin(), dates.end());
-                } else if (auto index = boost::dynamic_pointer_cast<SwapIndex>(rawIndex)) {
+                } else if (auto index = QuantLib::ext::dynamic_pointer_cast<SwapIndex>(rawIndex)) {
                     fixingMap_[*market->swapIndex(name, configuration)].insert(dates.begin(), dates.end());
-                } else if (auto index = boost::dynamic_pointer_cast<ZeroInflationIndex>(rawIndex)) {
+                } else if (auto index = QuantLib::ext::dynamic_pointer_cast<ZeroInflationIndex>(rawIndex)) {
                     fixingMap_[*market->zeroInflationIndex(name, configuration)].insert(dates.begin(), dates.end());
                 }
             } catch (const std::exception& e) {
@@ -145,14 +145,14 @@ void FixingManager::applyFixings(Date start, Date end) {
         Date fixStart = start;
         Date fixEnd = end;
         Date currentFixingDate;
-        if (auto zii = boost::dynamic_pointer_cast<ZeroInflationIndex>(m.first)) {
+        if (auto zii = QuantLib::ext::dynamic_pointer_cast<ZeroInflationIndex>(m.first)) {
             fixStart =
                 inflationPeriod(fixStart - zii->zeroInflationTermStructure()->observationLag(), zii->frequency()).first;
             fixEnd =
                 inflationPeriod(fixEnd - zii->zeroInflationTermStructure()->observationLag(), zii->frequency()).first +
                 1;
             currentFixingDate = fixEnd;
-        } else if (auto yii = boost::dynamic_pointer_cast<YoYInflationIndex>(m.first)) {
+        } else if (auto yii = QuantLib::ext::dynamic_pointer_cast<YoYInflationIndex>(m.first)) {
             fixStart =
                 inflationPeriod(fixStart - yii->yoyInflationTermStructure()->observationLag(), yii->frequency()).first;
             fixEnd =
@@ -177,7 +177,7 @@ void FixingManager::applyFixings(Date start, Date end) {
 
         if (needFixings) {
             Rate currentFixing;
-            if (auto comm = boost::dynamic_pointer_cast<QuantExt::CommodityIndex>(m.first);
+            if (auto comm = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityIndex>(m.first);
                 comm != nullptr && comm->expiryDate() < currentFixingDate) {
                 currentFixing = comm->priceCurve()->price(currentFixingDate);
             } else {

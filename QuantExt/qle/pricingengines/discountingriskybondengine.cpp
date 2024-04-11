@@ -42,7 +42,7 @@ DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStr
     discountCurve_ =
         securitySpread_.empty()
             ? discountCurve
-            : Handle<YieldTermStructure>(boost::make_shared<ZeroSpreadedTermStructure>(discountCurve, securitySpread));
+            : Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(discountCurve, securitySpread));
     registerWith(discountCurve_);
     registerWith(defaultCurve_);
     registerWith(recoveryRate_);
@@ -57,7 +57,7 @@ DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStr
     discountCurve_ =
         securitySpread_.empty()
             ? discountCurve
-            : Handle<YieldTermStructure>(boost::make_shared<ZeroSpreadedTermStructure>(discountCurve, securitySpread));
+            : Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(discountCurve, securitySpread));
     registerWith(discountCurve_);
     registerWith(securitySpread_);
 }
@@ -110,8 +110,8 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
     // i.e. credit curve term structure (and recovery) have not been specified
     // we set the default probability and recovery rate to zero in this instance (issuer credit worthiness already
     // captured within security spread)
-    boost::shared_ptr<DefaultProbabilityTermStructure> creditCurvePtr =
-        defaultCurve_.empty() ? boost::make_shared<QuantLib::FlatHazardRate>(npvDate, 0.0, discountCurve_->dayCounter())
+    QuantLib::ext::shared_ptr<DefaultProbabilityTermStructure> creditCurvePtr =
+        defaultCurve_.empty() ? QuantLib::ext::make_shared<QuantLib::FlatHazardRate>(npvDate, 0.0, discountCurve_->dayCounter())
                               : defaultCurve_.currentLink();
     Rate recoveryVal = recoveryRate_.empty() ? 0.0 : recoveryRate_->value();
 
@@ -132,7 +132,7 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
     Size numCoupons = 0;
     bool hasLiveCashFlow = false;
     for (Size i = 0; i < cashflows.size(); i++) {
-        boost::shared_ptr<CashFlow> cf = cashflows[i];
+        QuantLib::ext::shared_ptr<CashFlow> cf = cashflows[i];
         if (cf->hasOccurred(npvDate, includeRefDateFlows))
             continue;
         hasLiveCashFlow = true;
@@ -157,7 +157,7 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
             calculationResults.cashflowResults.push_back(cfRes);
         }
 
-        boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(cf);
+        QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(cf);
         if (coupon) {
             numCoupons++;
             Date startDate = coupon->accrualStartDate();
@@ -198,7 +198,7 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
        to bonds with 1 cashflow, identified as a final redemption payment.
     */
     if (cashflows.size() == 1) {
-        boost::shared_ptr<Redemption> redemption = boost::dynamic_pointer_cast<Redemption>(cashflows[0]);
+        QuantLib::ext::shared_ptr<Redemption> redemption = QuantLib::ext::dynamic_pointer_cast<Redemption>(cashflows[0]);
         if (redemption) {
             Date startDate = npvDate;
             while (startDate < redemption->date()) {

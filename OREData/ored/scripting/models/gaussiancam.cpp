@@ -48,8 +48,8 @@ GaussianCam::GaussianCam(const Handle<CrossAssetModel>& cam, const Size paths,
                          const std::vector<std::string>& currencies,
                          const std::vector<Handle<YieldTermStructure>>& curves,
                          const std::vector<Handle<Quote>>& fxSpots,
-                         const std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>>& irIndices,
-                         const std::vector<std::pair<std::string, boost::shared_ptr<ZeroInflationIndex>>>& infIndices,
+                         const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
+                         const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
                          const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
                          const std::set<Date>& simulationDates, const McParams& mcParams, const Size timeStepsPerYear,
                          const IborFallbackConfig& iborFallbackConfig,
@@ -260,7 +260,7 @@ void GaussianCam::populatePathValues(const Size nSamples, std::map<Date, std::ve
         // we treat the case of a one dimensional process separately for optimisation reasons; we know that in
         // this case we have a single, driftless LGM process for currency 0
 
-        auto lgmProcess = boost::dynamic_pointer_cast<StochasticProcess1D>(cam_->lgm(0)->stateProcess());
+        auto lgmProcess = QuantLib::ext::dynamic_pointer_cast<StochasticProcess1D>(cam_->lgm(0)->stateProcess());
 
         std::vector<Real> stdDevs(times.size() - 1);
         for (Size i = 0; i < times.size() - 1; ++i) {
@@ -292,7 +292,7 @@ void GaussianCam::populatePathValues(const Size nSamples, std::map<Date, std::ve
 
         // case process size > 1 or we have injected paths, we use the normal process interface to evolve the process
 
-        boost::shared_ptr<MultiPathGeneratorBase> pathGen;
+        QuantLib::ext::shared_ptr<MultiPathGeneratorBase> pathGen;
 
         // build a temporary repository of the state prcess values, since we want to access them not path by path
         // below - for efficiency reasons the loop over the paths should be the innermost loop there!
@@ -305,7 +305,7 @@ void GaussianCam::populatePathValues(const Size nSamples, std::map<Date, std::ve
 
             // the usual path generator
 
-            if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
+            if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
                 tmp->resetCache(timeGrid_.size() - 1);
             }
 
@@ -508,17 +508,17 @@ RandomVariable GaussianCam::fwdCompAvg(const bool isAvg, const std::string& inde
                                        const bool nakedOption, const bool localCapFloor) const {
     calculate();
     auto ir = std::find_if(irIndices_.begin(), irIndices_.end(),
-                           [&indexInput](const std::pair<IndexInfo, boost::shared_ptr<InterestRateIndex>>& p) {
+                           [&indexInput](const std::pair<IndexInfo, QuantLib::ext::shared_ptr<InterestRateIndex>>& p) {
                                return p.first.name() == indexInput;
                            });
     QL_REQUIRE(ir != irIndices_.end(),
                "GaussianCam::fwdComp() ir index " << indexInput << " not found, this is unexpected");
     Size irIndexPos = irIndexPositionInCam_[std::distance(irIndices_.begin(), ir)];
     LgmVectorised lgmv(cam_->lgm(irIndexPos)->parametrization());
-    auto on = boost::dynamic_pointer_cast<OvernightIndex>(ir->second);
+    auto on = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(ir->second);
     QL_REQUIRE(on, "GaussianCam::fwdCompAvg(): expected on index for " << indexInput);
     // only used to extract fixing and value dates
-    auto coupon = boost::make_shared<QuantExt::OvernightIndexedCoupon>(
+    auto coupon = QuantLib::ext::make_shared<QuantExt::OvernightIndexedCoupon>(
         end, 1.0, start, end, on, gearing, spread, Date(), Date(), DayCounter(), false, includeSpread, lookback * Days,
         rateCutoff, fixingDays);
     // get model time and state

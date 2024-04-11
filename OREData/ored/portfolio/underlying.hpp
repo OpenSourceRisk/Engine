@@ -263,11 +263,11 @@ public:
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
-    const boost::shared_ptr<Underlying>& underlying() { return underlying_; };
+    const QuantLib::ext::shared_ptr<Underlying>& underlying() { return underlying_; };
 
 private:
     const std::string nodeName_, basicUnderlyingNodeName_;
-    boost::shared_ptr<Underlying> underlying_;
+    QuantLib::ext::shared_ptr<Underlying> underlying_;
 };
 
 } // namespace data

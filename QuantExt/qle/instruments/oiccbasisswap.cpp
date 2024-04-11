@@ -24,8 +24,8 @@ namespace QuantExt {
 
 OvernightIndexedCrossCcyBasisSwap::OvernightIndexedCrossCcyBasisSwap(
     Real payNominal, Currency payCurrency, const Schedule& paySchedule,
-    const boost::shared_ptr<OvernightIndex>& payIndex, Real paySpread, Real recNominal, Currency recCurrency,
-    const Schedule& recSchedule, const boost::shared_ptr<OvernightIndex>& recIndex, Real recSpread)
+    const QuantLib::ext::shared_ptr<OvernightIndex>& payIndex, Real paySpread, Real recNominal, Currency recCurrency,
+    const Schedule& recSchedule, const QuantLib::ext::shared_ptr<OvernightIndex>& recIndex, Real recSpread)
     : Swap(2), payNominal_(payNominal), recNominal_(recNominal), payCurrency_(payCurrency), recCurrency_(recCurrency),
       paySchedule_(paySchedule), recSchedule_(recSchedule), payIndex_(payIndex), recIndex_(recIndex),
       paySpread_(paySpread), recSpread_(recSpread), currency_(2) {
@@ -38,13 +38,13 @@ OvernightIndexedCrossCcyBasisSwap::OvernightIndexedCrossCcyBasisSwap(
 void OvernightIndexedCrossCcyBasisSwap::initialize() {
     legs_[0] = OvernightLeg(paySchedule_, payIndex_).withNotionals(payNominal_).withSpreads(paySpread_);
     legs_[0].insert(legs_[0].begin(),
-                    boost::shared_ptr<CashFlow>(new SimpleCashFlow(-payNominal_, paySchedule_.dates().front())));
-    legs_[0].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(payNominal_, paySchedule_.dates().back())));
+                    QuantLib::ext::shared_ptr<CashFlow>(new SimpleCashFlow(-payNominal_, paySchedule_.dates().front())));
+    legs_[0].push_back(QuantLib::ext::shared_ptr<CashFlow>(new SimpleCashFlow(payNominal_, paySchedule_.dates().back())));
 
     legs_[1] = OvernightLeg(recSchedule_, recIndex_).withNotionals(recNominal_).withSpreads(recSpread_);
     legs_[1].insert(legs_[1].begin(),
-                    boost::shared_ptr<CashFlow>(new SimpleCashFlow(-recNominal_, recSchedule_.dates().front())));
-    legs_[1].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(recNominal_, recSchedule_.dates().back())));
+                    QuantLib::ext::shared_ptr<CashFlow>(new SimpleCashFlow(-recNominal_, recSchedule_.dates().front())));
+    legs_[1].push_back(QuantLib::ext::shared_ptr<CashFlow>(new SimpleCashFlow(recNominal_, recSchedule_.dates().back())));
 
     for (Size j = 0; j < 2; ++j) {
         for (Leg::iterator i = legs_[j].begin(); i != legs_[j].end(); ++i)

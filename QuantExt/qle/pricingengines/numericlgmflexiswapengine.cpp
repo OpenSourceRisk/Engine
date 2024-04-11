@@ -36,7 +36,7 @@ Array max(Array x, const Array& y) {
 }
 } // namespace
 
-NumericLgmFlexiSwapEngineBase::NumericLgmFlexiSwapEngineBase(const boost::shared_ptr<LinearGaussMarkovModel>& model,
+NumericLgmFlexiSwapEngineBase::NumericLgmFlexiSwapEngineBase(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
                                                              const Real sy, const Size ny, const Real sx, const Size nx,
                                                              const Handle<YieldTermStructure>& discountCurve,
                                                              const Method method, const Real singleSwaptionThreshold)
@@ -182,7 +182,7 @@ std::pair<Real, Real> NumericLgmFlexiSwapEngineBase::calculate() const {
 
     // model linked ibor index curve
 
-    iborModelCurve_ = boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(model(), iborIndex->forwardingTermStructure());
+    iborModelCurve_ = QuantLib::ext::make_shared<LgmImpliedYtsFwdFwdCorrected>(model(), iborIndex->forwardingTermStructure());
     iborModelIndex_ = iborIndex->clone(Handle<YieldTermStructure>(iborModelCurve_));
 
     // x grid for each expiry
@@ -359,7 +359,7 @@ std::pair<Real, Real> NumericLgmFlexiSwapEngineBase::calculate() const {
 
 } // NumericLgmFlexiSwapEngineBase::calculate()
 
-NumericLgmFlexiSwapEngine::NumericLgmFlexiSwapEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model,
+NumericLgmFlexiSwapEngine::NumericLgmFlexiSwapEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
                                                      const Real sy, const Size ny, const Real sx, const Size nx,
                                                      const Handle<YieldTermStructure>& discountCurve,
                                                      const Method method, const Real singleSwaptionThreshold)

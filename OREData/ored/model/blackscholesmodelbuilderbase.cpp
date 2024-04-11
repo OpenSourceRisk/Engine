@@ -23,22 +23,22 @@ namespace ore {
 namespace data {
 
 BlackScholesModelBuilderBase::BlackScholesModelBuilderBase(
-    const Handle<YieldTermStructure>& curve, const boost::shared_ptr<GeneralizedBlackScholesProcess>& process,
+    const Handle<YieldTermStructure>& curve, const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
     const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear)
     : BlackScholesModelBuilderBase(std::vector<Handle<YieldTermStructure>>{curve},
-                                   std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>>{process},
+                                   std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>{process},
                                    simulationDates, addDates, timeStepsPerYear) {}
 
 BlackScholesModelBuilderBase::BlackScholesModelBuilderBase(
     const std::vector<Handle<YieldTermStructure>>& curves,
-    const std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
+    const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
     const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear)
     : curves_(curves), processes_(processes), simulationDates_(simulationDates), addDates_(addDates),
       timeStepsPerYear_(timeStepsPerYear) {
 
     QL_REQUIRE(!curves_.empty(), "BlackScholesModelBuilderBase: no curves given");
 
-    marketObserver_ = boost::make_shared<MarketObserver>();
+    marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
 
     for (auto const& c : curves_)
         registerWith(c);
@@ -64,7 +64,7 @@ BlackScholesModelBuilderBase::BlackScholesModelBuilderBase(
 }
 
 BlackScholesModelBuilderBase::BlackScholesModelBuilderBase(
-    const Handle<YieldTermStructure>& curve, const boost::shared_ptr<GeneralizedBlackScholesProcess>& process)
+    const Handle<YieldTermStructure>& curve, const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process)
     : BlackScholesModelBuilderBase(curve, process, {}, {}, 1) {}
 
 Handle<BlackScholesModelWrapper> BlackScholesModelBuilderBase::model() const {
@@ -114,7 +114,7 @@ void BlackScholesModelBuilderBase::performCalculations() const {
 
         // setup model
 
-        model_.linkTo(boost::make_shared<BlackScholesModelWrapper>(getCalibratedProcesses(), effectiveSimulationDates_,
+        model_.linkTo(QuantLib::ext::make_shared<BlackScholesModelWrapper>(getCalibratedProcesses(), effectiveSimulationDates_,
                                                                    discretisationTimeGrid_));
 
         // notify model observers

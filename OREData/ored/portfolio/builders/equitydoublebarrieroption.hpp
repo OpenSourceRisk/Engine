@@ -52,16 +52,16 @@ protected:
         return assetName + "/" + ccy.code() + "/" + ore::data::to_string(expiryDate);
     }
 
-    boost::shared_ptr<GeneralizedBlackScholesProcess> getBlackScholesProcess(const string& assetName, const Currency& ccy,
+    QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> getBlackScholesProcess(const string& assetName, const Currency& ccy,
                                                                              const std::vector<Time>& timePoints = {}) {
 
         Handle<BlackVolTermStructure> vol = this->market_->equityVol(assetName, configuration(ore::data::MarketContext::pricing));
             if (!timePoints.empty()) {
                 vol = Handle<BlackVolTermStructure>(
-                    boost::make_shared<QuantExt::BlackMonotoneVarVolTermStructure>(vol, timePoints));
+                    QuantLib::ext::make_shared<QuantExt::BlackMonotoneVarVolTermStructure>(vol, timePoints));
                 vol->enableExtrapolation();
             }
-            return boost::make_shared<GeneralizedBlackScholesProcess>(
+            return QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
                 this->market_->equitySpot(assetName, configuration(ore::data::MarketContext::pricing)),
                 this->market_->equityDividendCurve(assetName, configuration(ore::data::MarketContext::pricing)),
                 this->market_->equityForecastCurve(assetName, configuration(ore::data::MarketContext::pricing)),
@@ -77,9 +77,9 @@ public:
 
 protected:
 
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy, const Date& expiryDate) override {
-        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(assetName, ccy);
-        return boost::make_shared<QuantLib::AnalyticDoubleBarrierEngine>(gbsp);
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy, const Date& expiryDate) override {
+        QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(assetName, ccy);
+        return QuantLib::ext::make_shared<QuantLib::AnalyticDoubleBarrierEngine>(gbsp);
     }
 
 };

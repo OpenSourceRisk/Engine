@@ -40,15 +40,15 @@ class FlatDynamicInitialMarginCalculator : public DynamicInitialMarginCalculator
 public:
     FlatDynamicInitialMarginCalculator(
         //! Global input parameters
-        const boost::shared_ptr<InputParameters>& inputs,
+        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
         //! Driving portfolio consistent with the cube below
-        const boost::shared_ptr<Portfolio>& portfolio,
+        const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
         //! NPV cube resulting from the Monte Carlo simulation loop
-        const boost::shared_ptr<NPVCube>& cube,
+        const QuantLib::ext::shared_ptr<NPVCube>& cube,
         //! Interpretation of the cube, regular NPV, MPoR grid etc
-        const boost::shared_ptr<CubeInterpretation>& cubeInterpretation,
+        const QuantLib::ext::shared_ptr<CubeInterpretation>& cubeInterpretation,
          //! Additional output of the MC simulation loop with numeraires, index fixings, FX spots etc
-        const boost::shared_ptr<AggregationScenarioData>& scenarioData);
+        const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData);
 
     map<string, Real> unscaledCurrentDIM() override { return currentIM_; }
     void build() override;

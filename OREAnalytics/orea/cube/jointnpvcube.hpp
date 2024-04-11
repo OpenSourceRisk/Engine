@@ -39,7 +39,7 @@ class JointNPVCube : public NPVCube {
 public:
     /*! ctor for two input cubes */
     JointNPVCube(
-        const boost::shared_ptr<NPVCube>& cube1, const boost::shared_ptr<NPVCube>& cube2,
+        const QuantLib::ext::shared_ptr<NPVCube>& cube1, const QuantLib::ext::shared_ptr<NPVCube>& cube2,
         const std::set<std::string>& ids = {}, const bool requireUniqueIds = true,
         const std::function<Real(Real a, Real x)>& accumulator = [](Real a, Real x) { return a + x; },
         const Real accumulatorInit = 0.0);
@@ -54,7 +54,7 @@ public:
           this will result in an exception.
      */
     JointNPVCube(
-        const std::vector<boost::shared_ptr<NPVCube>>& cubes, const std::set<std::string>& ids = {},
+        const std::vector<QuantLib::ext::shared_ptr<NPVCube>>& cubes, const std::set<std::string>& ids = {},
         const bool requireUniqueIds = true,
         const std::function<Real(Real a, Real x)>& accumulator = [](Real a, Real x) { return a + x; },
         const Real accumulatorInit = 0.0);
@@ -76,14 +76,14 @@ public:
     void set(Real value, Size id, Size date, Size sample, Size depth = 0) override;
 
 private:
-    std::set<std::pair<boost::shared_ptr<NPVCube>, Size>> cubeAndId(Size id) const;
+    std::set<std::pair<QuantLib::ext::shared_ptr<NPVCube>, Size>> cubeAndId(Size id) const;
 
-    const std::vector<boost::shared_ptr<NPVCube>> cubes_;
+    const std::vector<QuantLib::ext::shared_ptr<NPVCube>> cubes_;
     const std::function<Real(Real a, Real x)> accumulator_;
     const Real accumulatorInit_;
 
     std::map<std::string, Size> idIdx_;
-    std::vector<std::set<std::pair<boost::shared_ptr<NPVCube>, Size>>> cubeAndId_;
+    std::vector<std::set<std::pair<QuantLib::ext::shared_ptr<NPVCube>, Size>>> cubeAndId_;
 };
 
 } // namespace analytics

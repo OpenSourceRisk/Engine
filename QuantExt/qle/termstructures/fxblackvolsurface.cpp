@@ -69,7 +69,7 @@ FxBlackVolatilitySurface::FxBlackVolatilitySurface(
     registerWith(fxSpot_);
 }
 
-boost::shared_ptr<FxSmileSection> FxBlackVolatilitySurface::blackVolSmile(Time t) const {
+QuantLib::ext::shared_ptr<FxSmileSection> FxBlackVolatilitySurface::blackVolSmile(Time t) const {
     // we interpolate on the 3 curves independently
     Volatility atm = atmCurve_.blackVol(t, 0); // blackVol returns atm vol when strike is 0
 
@@ -106,7 +106,7 @@ Volatility FxBlackVolatilitySurface::blackVolImpl(Time t, Real strike) const {
         return blackVolSmile(t)->volatility(strike);
 }
 
-boost::shared_ptr<FxSmileSection> FxBlackVannaVolgaVolatilitySurface::blackVolSmileImpl(Real spot, Real rd, Real rf,
+QuantLib::ext::shared_ptr<FxSmileSection> FxBlackVannaVolgaVolatilitySurface::blackVolSmileImpl(Real spot, Real rd, Real rf,
                                                                                         Time t, Volatility atm,
                                                                                         Volatility rr,
                                                                                         Volatility bf) const {
@@ -121,7 +121,7 @@ boost::shared_ptr<FxSmileSection> FxBlackVannaVolgaVolatilitySurface::blackVolSm
         at = longTermAtmType_;
         dt = longTermDeltaType_;
     }
-    return boost::make_shared<VannaVolgaSmileSection>(spot, rd, rf, t, atm, rr, bf, firstApprox_, at, dt, delta_);
+    return QuantLib::ext::make_shared<VannaVolgaSmileSection>(spot, rd, rf, t, atm, rr, bf, firstApprox_, at, dt, delta_);
 }
 
 } // namespace QuantExt
