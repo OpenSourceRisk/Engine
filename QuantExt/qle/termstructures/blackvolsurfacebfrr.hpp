@@ -52,7 +52,8 @@ public:
         const Period& switchTenor = 2 * Years, const DeltaVolQuote::DeltaType ltdt = DeltaVolQuote::DeltaType::Fwd,
         const DeltaVolQuote::AtmType ltat = DeltaVolQuote::AtmType::AtmDeltaNeutral,
         const Option::Type riskReversalInFavorOf = Option::Call, const bool butterflyIsBrokerStyle = true,
-        const SmileInterpolation smileInterpolation = SmileInterpolation::Cubic);
+        const SmileInterpolation smileInterpolation = SmileInterpolation::Cubic,
+        const Period& deltaSwitchTenor = 0 * Years);
 
     Date maxDate() const override { return Date::maxDate(); }
     Real minStrike() const override { return 0; }
@@ -75,6 +76,7 @@ public:
     Option::Type riskReversalInFavorOf() const { return riskReversalInFavorOf_; }
     bool butterflyIsBrokerStyle() const { return butterflyIsBrokerStyle_; }
     SmileInterpolation smileInterpolation() const { return smileInterpolation_; }
+    const Period& deltaSwitchTenor() const { return deltaSwitchTenor_; }
 
     const std::vector<bool>& smileHasError() const;
     const std::vector<std::string>& smileErrorMessage() const;
@@ -103,8 +105,9 @@ private:
     Option::Type riskReversalInFavorOf_;
     bool butterflyIsBrokerStyle_;
     SmileInterpolation smileInterpolation_;
+    Period deltaSwitchTenor_;
 
-    mutable Real switchTime_, settlDomDisc_, settlForDisc_, settlLag_;
+    mutable Real switchTime_, settlDomDisc_, settlForDisc_, settlLag_, deltaSwitchTime_;
     mutable std::vector<Real> expiryTimes_;
     mutable std::vector<Date> settlementDates_;
     mutable std::vector<Real> currentDeltas_;

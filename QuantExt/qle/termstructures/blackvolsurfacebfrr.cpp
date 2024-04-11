@@ -395,12 +395,14 @@ BlackVolatilitySurfaceBFRR::BlackVolatilitySurfaceBFRR(
     const Handle<YieldTermStructure>& domesticTS, const Handle<YieldTermStructure>& foreignTS,
     const DeltaVolQuote::DeltaType dt, const DeltaVolQuote::AtmType at, const Period& switchTenor,
     const DeltaVolQuote::DeltaType ltdt, const DeltaVolQuote::AtmType ltat, const Option::Type riskReversalInFavorOf,
-    const bool butterflyIsBrokerStyle, const SmileInterpolation smileInterpolation)
+    const bool butterflyIsBrokerStyle, const SmileInterpolation smileInterpolation,
+    const Period& deltaSwitchTenor)
     : BlackVolatilityTermStructure(referenceDate, calendar, Following, dayCounter), dates_(dates), deltas_(deltas),
       bfQuotes_(bfQuotes), rrQuotes_(rrQuotes), atmQuotes_(atmQuotes), spot_(spot), spotDays_(spotDays),
       spotCalendar_(spotCalendar), domesticTS_(domesticTS), foreignTS_(foreignTS), dt_(dt), at_(at),
       switchTenor_(switchTenor), ltdt_(ltdt), ltat_(ltat), riskReversalInFavorOf_(riskReversalInFavorOf),
-      butterflyIsBrokerStyle_(butterflyIsBrokerStyle), smileInterpolation_(smileInterpolation) {
+      butterflyIsBrokerStyle_(butterflyIsBrokerStyle), smileInterpolation_(smileInterpolation),
+      deltaSwitchTenor_(deltaSwitchTenor) {
 
     // checks
 
@@ -453,6 +455,10 @@ void BlackVolatilitySurfaceBFRR::performCalculations() const {
     // calculate switch time
 
     switchTime_ = switchTenor_ == 0 * Days ? QL_MAX_REAL : timeFromReference(optionDateFromTenor(switchTenor_));
+
+    // delta switch time
+
+    deltaSwitchTime_ = switchTenor_ == 0 * Days ? switchTime_ : timeFromReference(optionDateFromTenor(deltaSwitchTenor_));
 
     // calculate times associated to expiry dates
 
@@ -557,11 +563,15 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
         DeltaVolQuote::DeltaType dt;
         if (expiryTimes_[index_m] < switchTime_ && !close_enough(switchTime_, expiryTimes_[index_m])) {
             at = at_;
-            dt = dt_;
         } else {
             at = ltat_;
+        }
+        if (expiryTimes_[index_m] < deltaSwitchTime_ && !close_enough(deltaSwitchTime_, expiryTimes_[index_m])) {
+            dt = dt_;
+        } else {
             dt = ltdt_;
         }
+
         try {
             smiles_[index_m] = detail::createSmile(
                 spot_->value(), domesticTS_->discount(settlementDates_[index_m]) / settlDomDisc_,
@@ -580,9 +590,12 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
         DeltaVolQuote::DeltaType dt;
         if (expiryTimes_[index_p] < switchTime_ && !close_enough(switchTime_, expiryTimes_[index_p])) {
             at = at_;
-            dt = dt_;
         } else {
             at = ltat_;
+        }
+        if (expiryTimes_[index_p] < deltaSwitchTime_ && !close_enough(deltaSwitchTime_, expiryTimes_[index_p])) {
+            dt = dt_;
+        } else {
             dt = ltdt_;
         }
         try {
