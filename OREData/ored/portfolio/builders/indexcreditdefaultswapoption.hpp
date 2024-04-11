@@ -70,7 +70,7 @@ public:
         : IndexCreditDefaultSwapOptionEngineBuilder("Black", "BlackIndexCdsOptionEngine") {}
 
 protected:
-    virtual boost::shared_ptr<QuantLib::PricingEngine>
+    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
     engineImpl(const QuantLib::Currency& ccy, const std::string& creditCurveId, const std::string& volCurveId,
                const std::vector<std::string>& creditCurveIds) override;
 };
@@ -82,7 +82,7 @@ public:
         : IndexCreditDefaultSwapOptionEngineBuilder("LognormalAdjustedIndexSpread", "NumericalIntegrationEngine") {}
 
 protected:
-    virtual boost::shared_ptr<QuantLib::PricingEngine>
+    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
     engineImpl(const QuantLib::Currency& ccy, const std::string& creditCurveId, const std::string& volCurveId,
                const std::vector<std::string>& creditCurveIds) override;
 };

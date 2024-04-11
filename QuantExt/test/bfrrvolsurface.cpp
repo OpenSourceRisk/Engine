@@ -46,12 +46,12 @@ public:
     std::vector<Real> atmQuotes = {0.09, 0.08};
     Actual365Fixed dc;
     NullCalendar cal;
-    Handle<Quote> spot = Handle<Quote>(boost::make_shared<SimpleQuote>(1.2));
+    Handle<Quote> spot = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.2));
     Size spotDays = 2;
     Handle<YieldTermStructure> domesticTS =
-        Handle<YieldTermStructure>(boost::make_shared<FlatForward>(refDate, 0.01, dc));
+        Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(refDate, 0.01, dc));
     Handle<YieldTermStructure> foreignTS =
-        Handle<YieldTermStructure>(boost::make_shared<FlatForward>(refDate, 0.015, dc));
+        Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(refDate, 0.015, dc));
     DeltaVolQuote::DeltaType dt = DeltaVolQuote::DeltaType::PaSpot;
     DeltaVolQuote::AtmType at = DeltaVolQuote::AtmType::AtmDeltaNeutral;
     Period switchTenor = 2 * Years;
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(testSmileBF) {
 
     Real tol1 = 1E-5;
 
-    auto vol1 = boost::make_shared<BlackVolatilitySurfaceBFRR>(
+    auto vol1 = QuantLib::ext::make_shared<BlackVolatilitySurfaceBFRR>(
         refDate, dates, deltas, bfQuotes, rrQuotes, atmQuotes, dc, cal, spot, spotDays, cal, domesticTS, foreignTS, dt,
         at, switchTenor, ltdt, ltat, rrInFavorOf, false, smileInterpolation);
 
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(testBrokerBF) {
     Real tol1 = 1E-5;
     Real tol2 = 1E-5;
 
-    auto vol2 = boost::make_shared<BlackVolatilitySurfaceBFRR>(
+    auto vol2 = QuantLib::ext::make_shared<BlackVolatilitySurfaceBFRR>(
         refDate, dates, deltas, bfQuotes, rrQuotes, atmQuotes, dc, cal, spot, spotDays, cal, domesticTS, foreignTS, dt,
         at, switchTenor, ltdt, ltat, rrInFavorOf, true, smileInterpolation);
 

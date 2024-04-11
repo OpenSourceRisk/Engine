@@ -83,7 +83,7 @@ private:
     DeltaVolQuote::DeltaType ltdt_;
     DeltaVolQuote::AtmType ltat_;
     SmileInterpolation smileInterpolation_;
-    std::vector<boost::shared_ptr<Interpolation>> interpolation_;
+    std::vector<QuantLib::ext::shared_ptr<Interpolation>> interpolation_;
     bool flatExtrapolation_;
 
     mutable std::vector<Real> expiryTimes_;

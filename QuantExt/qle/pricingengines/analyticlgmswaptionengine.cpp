@@ -28,7 +28,7 @@
 
 namespace QuantExt {
 
-AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model,
+AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
                                                      const Handle<YieldTermStructure>& discountCurve,
                                                      const FloatSpreadMapping floatSpreadMapping)
     : GenericEngine<Swaption::arguments, Swaption::results>(), p_(model->parametrization()),
@@ -38,7 +38,7 @@ AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const boost::shared_ptr<Lin
     registerWith(c_);
 }
 
-AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const boost::shared_ptr<CrossAssetModel>& model, const Size ccy,
+AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, const Size ccy,
                                                      const Handle<YieldTermStructure>& discountCurve,
                                                      const FloatSpreadMapping floatSpreadMapping)
     : GenericEngine<Swaption::arguments, Swaption::results>(), p_(model->irlgm1f(ccy)),
@@ -48,7 +48,7 @@ AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const boost::shared_ptr<Cro
     registerWith(c_);
 }
 
-AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const boost::shared_ptr<IrLgm1fParametrization> irlgm1f,
+AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const QuantLib::ext::shared_ptr<IrLgm1fParametrization> irlgm1f,
                                                      const Handle<YieldTermStructure>& discountCurve,
                                                      const FloatSpreadMapping floatSpreadMapping)
     : GenericEngine<Swaption::arguments, Swaption::results>(), p_(irlgm1f),
@@ -107,12 +107,12 @@ void AnalyticLgmSwaptionEngine::calculate() const {
         fixedLeg_.clear();
 	floatingLeg_.clear();
 	for(auto const& c: (arguments_.swap ? arguments_.swap->fixedLeg() : arguments_.swapOis->fixedLeg())) {
-	    fixedLeg_.push_back(boost::dynamic_pointer_cast<FixedRateCoupon>(c));
+	    fixedLeg_.push_back(QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c));
             QL_REQUIRE(fixedLeg_.back(),
                        "AnalyticalLgmSwaptionEngine::calculate(): internal error, could not cast to FixedRateCoupon");
         }
 	for(auto const& c: (arguments_.swap ? arguments_.swap->floatingLeg() : arguments_.swapOis->overnightLeg())) {
-	    floatingLeg_.push_back(boost::dynamic_pointer_cast<FloatingRateCoupon>(c));
+	    floatingLeg_.push_back(QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c));
             QL_REQUIRE(
                 floatingLeg_.back(),
                 "AnalyticalLgmSwaptionEngine::calculate(): internal error, could not cast to FloatingRateRateCoupon");
@@ -141,7 +141,7 @@ void AnalyticLgmSwaptionEngine::calculate() const {
         // The method reduces the problem to a one curve configuration w.r.t. the discount curve and
         // apply a correction for the discount curve / forwarding curve spread. Furthermore the method
         // assumes that no historical fixings are present in the floating rate coupons.
-        boost::shared_ptr<IborIndex> index =
+        QuantLib::ext::shared_ptr<IborIndex> index =
             arguments_.swap ? arguments_.swap->iborIndex() : arguments_.swapOis->overnightIndex();
         for (Size j = j1_; j < fixedLeg_.size(); ++j) {
             Real sum1 = 0.0, sum2 = 0.0;
@@ -162,7 +162,7 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                 if (amount != Null<Real>()) {
                     Real flatAmount;
 		    if(arguments_.swapOis) {
-                        auto on = boost::dynamic_pointer_cast<QuantLib::OvernightIndexedCoupon>(floatingLeg_[k]);
+                        auto on = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndexedCoupon>(floatingLeg_[k]);
                        QL_REQUIRE(on, "AnalyticalLgmSwaptionEngine::calculate(): internal error, could not cast to "
                                        "QuantLib::OvernightIndexedCoupon.");
                         QL_REQUIRE(
@@ -186,7 +186,7 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                             Date fixingValueDate = index->fixingCalendar().advance(floatingLeg_[k]->fixingDate(),
                                                                                    index->fixingDays(), Days);
                             fixingValueDate = std::max(fixingValueDate, reference);
-                            auto cpn = boost::dynamic_pointer_cast<Coupon>(floatingLeg_[k]);
+                            auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(floatingLeg_[k]);
                             QL_REQUIRE(cpn,
                                        "AnalyticalLgmSwaptionEngine::calculate(): coupon expected on underlying swap "
                                        "floating leg, could not cast");
@@ -203,7 +203,7 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                         } else {
                             // if indexed coupons are used, we use a proper fixing, but make sure that the fixing
                             // date is not in the past and we do not use a historical fixing for "today"
-                            auto flatIbor = boost::make_shared<IborIndex>(
+                            auto flatIbor = QuantLib::ext::make_shared<IborIndex>(
                                 index->familyName() + " (no fixings)", index->tenor(), index->fixingDays(),
                                 index->currency(), index->fixingCalendar(), index->businessDayConvention(),
                                 index->endOfMonth(), index->dayCounter(), c_);
@@ -263,7 +263,7 @@ void AnalyticLgmSwaptionEngine::calculate() const {
     Brent b;
     Real yStar;
     try {
-        yStar = b.solve(boost::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, boost::placeholders::_1), 1.0E-6,
+        yStar = b.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-6,
                         0.0, 0.01);
     } catch (const std::exception& e) {
         std::ostringstream os;

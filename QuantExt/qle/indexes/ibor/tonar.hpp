@@ -56,7 +56,7 @@ class TonarTerm : public TermRateIndex {
 public:
     TonarTerm(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : TermRateIndex("JPY-TONARTerm", tenor, 2, JPYCurrency(), Japan(), ModifiedFollowing, false, Actual365Fixed(), h,
-                        boost::make_shared<Tonar>(h)) {}
+                        QuantLib::ext::make_shared<Tonar>(h)) {}
 };
 
 } // namespace QuantExt

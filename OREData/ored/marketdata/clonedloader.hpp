@@ -31,7 +31,7 @@ namespace data {
 class ClonedLoader : public ore::data::InMemoryLoader {
 
 public:
-    ClonedLoader(const QuantLib::Date& loaderDate, const boost::shared_ptr<Loader>& inLoader);
+    ClonedLoader(const QuantLib::Date& loaderDate, const QuantLib::ext::shared_ptr<Loader>& inLoader);
 
     const QuantLib::Date& getLoaderDate() const { return loaderDate_; };
 

@@ -34,7 +34,7 @@ const string& CalibrationInstrument::instrumentType() const {
 
 CalibrationBasket::CalibrationBasket() {}
 
-CalibrationBasket::CalibrationBasket(const vector<boost::shared_ptr<CalibrationInstrument>>& instruments)
+CalibrationBasket::CalibrationBasket(const vector<QuantLib::ext::shared_ptr<CalibrationInstrument>>& instruments)
     : instruments_(instruments) {
     
     // Check that all instruments in the basket, if any, are the same type.
@@ -54,7 +54,7 @@ const string& CalibrationBasket::instrumentType() const {
     return instrumentType_;
 }
 
-const vector<boost::shared_ptr<CalibrationInstrument>>& CalibrationBasket::instruments() const {
+const vector<QuantLib::ext::shared_ptr<CalibrationInstrument>>& CalibrationBasket::instruments() const {
     return instruments_;
 }
 

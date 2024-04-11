@@ -43,7 +43,7 @@ public:
     SubPeriodsSwap(const Date& effectiveDate, Real nominal, const Period& swapTenor, bool isPayer,
                    const Period& fixedTenor, Rate fixedRate, const Calendar& fixedCalendar,
                    const DayCounter& fixedDayCount, BusinessDayConvention fixedConvention, const Period& floatPayTenor,
-                   const boost::shared_ptr<IborIndex>& iborIndex, const DayCounter& floatingDayCount,
+                   const QuantLib::ext::shared_ptr<IborIndex>& iborIndex, const DayCounter& floatingDayCount,
                    DateGeneration::Rule rule = DateGeneration::Backward,
                    QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding);
     //@}
@@ -57,7 +57,7 @@ public:
     const Leg& fixedLeg() const;
 
     const Schedule& floatSchedule() const;
-    const boost::shared_ptr<IborIndex>& floatIndex() const;
+    const QuantLib::ext::shared_ptr<IborIndex>& floatIndex() const;
     QuantExt::SubPeriodsCoupon1::Type type() const;
     const Period& floatPayTenor() const;
     const Leg& floatLeg() const;
@@ -81,7 +81,7 @@ private:
     DayCounter fixedDayCount_;
 
     Schedule floatSchedule_;
-    boost::shared_ptr<IborIndex> floatIndex_;
+    QuantLib::ext::shared_ptr<IborIndex> floatIndex_;
     DayCounter floatDayCount_;
     Period floatPayTenor_;
     QuantExt::SubPeriodsCoupon1::Type type_;
@@ -104,7 +104,7 @@ inline Rate SubPeriodsSwap::fixedLegNPV() const { return legNPV(0); }
 
 inline const Schedule& SubPeriodsSwap::floatSchedule() const { return floatSchedule_; }
 
-inline const boost::shared_ptr<IborIndex>& SubPeriodsSwap::floatIndex() const { return floatIndex_; }
+inline const QuantLib::ext::shared_ptr<IborIndex>& SubPeriodsSwap::floatIndex() const { return floatIndex_; }
 
 inline QuantExt::SubPeriodsCoupon1::Type SubPeriodsSwap::type() const { return type_; }
 
@@ -118,11 +118,11 @@ inline Rate SubPeriodsSwap::floatLegNPV() const { return legNPV(1); }
 
 class MakeSubPeriodsSwap {
 public:
-    MakeSubPeriodsSwap(const Period& swapTenor, const boost::shared_ptr<IborIndex>& index,
+    MakeSubPeriodsSwap(const Period& swapTenor, const QuantLib::ext::shared_ptr<IborIndex>& index,
         Rate fixedRate, const Period& floatPayTenor, const Period& forwardStart = 0 * Days);
 
     operator SubPeriodsSwap() const;
-    operator boost::shared_ptr<SubPeriodsSwap>() const;
+    operator QuantLib::ext::shared_ptr<SubPeriodsSwap>() const;
 
     MakeSubPeriodsSwap& withEffectiveDate(const Date&);
     MakeSubPeriodsSwap& withNominal(Real n);
@@ -138,11 +138,11 @@ public:
     MakeSubPeriodsSwap& withSubCouponsType(const QuantExt::SubPeriodsCoupon1::Type& st);
 
     MakeSubPeriodsSwap& withDiscountingTermStructure(const Handle<YieldTermStructure>& discountCurve);
-    MakeSubPeriodsSwap& withPricingEngine(const boost::shared_ptr<PricingEngine>& engine);
+    MakeSubPeriodsSwap& withPricingEngine(const QuantLib::ext::shared_ptr<PricingEngine>& engine);
 
 private:
     Period swapTenor_;
-    boost::shared_ptr<IborIndex> index_;
+    QuantLib::ext::shared_ptr<IborIndex> index_;
     Rate fixedRate_;
     Period floatPayTenor_;
     Period forwardStart_;
@@ -160,7 +160,7 @@ private:
 
     QuantExt::SubPeriodsCoupon1::Type subCouponsType_;
 
-    boost::shared_ptr<PricingEngine> engine_;
+    QuantLib::ext::shared_ptr<PricingEngine> engine_;
 };
 } // namespace QuantExt
 

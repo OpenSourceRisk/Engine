@@ -39,8 +39,8 @@ namespace ore {
 namespace data {
 
 namespace {
-Rate atmStrike(const Date& optionD, const Period& swapTenor, const boost::shared_ptr<SwapIndex> swapIndexBase,
-               const boost::shared_ptr<SwapIndex> shortSwapIndexBase) {
+Rate atmStrike(const Date& optionD, const Period& swapTenor, const QuantLib::ext::shared_ptr<SwapIndex> swapIndexBase,
+               const QuantLib::ext::shared_ptr<SwapIndex> shortSwapIndexBase) {
     if (swapTenor > shortSwapIndexBase->tenor()) {
         return swapIndexBase->clone(swapTenor)->fixing(optionD);
     } else {
@@ -51,18 +51,18 @@ Rate atmStrike(const Date& optionD, const Period& swapTenor, const boost::shared
 
 GenericYieldVolCurve::GenericYieldVolCurve(
     const Date& asof, const Loader& loader, const CurveConfigurations& curveConfigs,
-    const boost::shared_ptr<GenericYieldVolatilityCurveConfig>& config,
-    const map<string, boost::shared_ptr<SwapIndex>>& requiredSwapIndices,
-    const map<string, boost::shared_ptr<GenericYieldVolCurve>>& requiredVolCurves,
-    const std::function<bool(const boost::shared_ptr<MarketDatum>& md, Period& expiry, Period& term)>& matchAtmQuote,
-    const std::function<bool(const boost::shared_ptr<MarketDatum>& md, Period& expiry, Period& term, Real& strike)>&
+    const QuantLib::ext::shared_ptr<GenericYieldVolatilityCurveConfig>& config,
+    const map<string, QuantLib::ext::shared_ptr<SwapIndex>>& requiredSwapIndices,
+    const map<string, QuantLib::ext::shared_ptr<GenericYieldVolCurve>>& requiredVolCurves,
+    const std::function<bool(const QuantLib::ext::shared_ptr<MarketDatum>& md, Period& expiry, Period& term)>& matchAtmQuote,
+    const std::function<bool(const QuantLib::ext::shared_ptr<MarketDatum>& md, Period& expiry, Period& term, Real& strike)>&
         matchSmileQuote,
-    const std::function<bool(const boost::shared_ptr<MarketDatum>& md, Period& term)>& matchShiftQuote,
+    const std::function<bool(const QuantLib::ext::shared_ptr<MarketDatum>& md, Period& term)>& matchShiftQuote,
     const bool buildCalibrationInfo) {
 
     try {
-        boost::shared_ptr<SwapIndex> swapIndexBase;
-        boost::shared_ptr<SwapIndex> shortSwapIndexBase;
+        QuantLib::ext::shared_ptr<SwapIndex> swapIndexBase;
+        QuantLib::ext::shared_ptr<SwapIndex> shortSwapIndexBase;
 
         if (!config->proxySourceCurveId().empty()) {
 
@@ -77,8 +77,8 @@ GenericYieldVolCurve::GenericYieldVolCurve(
             QL_REQUIRE(!config->proxyTargetSwapIndexBase().empty(),
                        "GenericYieldVolCurve: proxy curve requires Target / SwapIndexBase in the curve config.");
 
-            boost::shared_ptr<SwapIndex> sourceSwapIndexBase;
-            boost::shared_ptr<SwapIndex> sourceShortSwapIndexBase;
+            QuantLib::ext::shared_ptr<SwapIndex> sourceSwapIndexBase;
+            QuantLib::ext::shared_ptr<SwapIndex> sourceShortSwapIndexBase;
 
             auto it = requiredSwapIndices.find(config->proxySourceShortSwapIndexBase());
             QL_REQUIRE(it != requiredSwapIndices.end(), "GenericYieldVolCurve: did not find swap index '"
@@ -109,7 +109,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                                                            << config->proxySourceCurveId()
                                                            << "' required for curve id '" << config->curveID() << "'");
 
-            vol_ = boost::make_shared<QuantExt::ProxySwaptionVolatility>(
+            vol_ = QuantLib::ext::make_shared<QuantExt::ProxySwaptionVolatility>(
                 Handle<SwaptionVolatilityStructure>(it2->second->volTermStructure()), sourceSwapIndexBase,
                 sourceShortSwapIndexBase, swapIndexBase, shortSwapIndexBase);
 
@@ -143,7 +143,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
 
             for (auto& p : config->quotes()) {
                 // optional, because we do not require all spread quotes; we check below that we have all atm quotes
-                boost::shared_ptr<MarketDatum> md = loader.get(std::make_pair(p, true), asof);
+                QuantLib::ext::shared_ptr<MarketDatum> md = loader.get(std::make_pair(p, true), asof);
                 if (md == nullptr)
                     continue;
                 Period expiry, term;
@@ -200,12 +200,12 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                     shortSwapIndexBase = it->second;
             }
 
-            boost::shared_ptr<SwaptionVolatilityStructure> atm;
+            QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> atm;
 
             QL_REQUIRE(quotesRead > 0,
                        "GenericYieldVolCurve: did not read any quotes, are option and swap tenors defined?");
             if (quotesRead > 1) {
-                atm = boost::shared_ptr<SwaptionVolatilityStructure>(new SwaptionVolatilityMatrix(
+                atm = QuantLib::ext::shared_ptr<SwaptionVolatilityStructure>(new SwaptionVolatilityMatrix(
                     asof, config->calendar(), config->businessDayConvention(), optionTenors, underlyingTenors, vols,
                     config->dayCounter(), config->flatExtrapolation(),
                     config->volatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
@@ -222,7 +222,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                 }
             } else {
                 // Constant volatility
-                atm = boost::shared_ptr<SwaptionVolatilityStructure>(new ConstantSwaptionVolatility(
+                atm = QuantLib::ext::shared_ptr<SwaptionVolatilityStructure>(new ConstantSwaptionVolatility(
                     asof, config->calendar(), config->businessDayConvention(), vols[0][0], config->dayCounter(),
                     config->volatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
                         ? QuantLib::Normal
@@ -261,7 +261,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                 vector<vector<Handle<Quote>>> volSpreadHandles(n, vector<Handle<Quote>>(spreads.size()));
                 for (auto& i : volSpreadHandles)
                     for (auto& j : i)
-                        j = Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));
+                        j = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0));
 
                 LOG("vol cube smile option tenors " << smileOptionTenors.size());
                 LOG("vol cube smile swap tenors " << smileUnderlyingTenors.size());
@@ -271,7 +271,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                 for (auto& p : config->quotes()) {
                     // optional because we do not require all spreads
                     // we default them to zero instead and post process them below
-                    boost::shared_ptr<MarketDatum> md = loader.get(std::make_pair(p, true), asof);
+                    QuantLib::ext::shared_ptr<MarketDatum> md = loader.get(std::make_pair(p, true), asof);
                     if (md == nullptr)
                         continue;
                     Period expiry, term;
@@ -295,7 +295,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                         // Assume quotes are absolute vols by strike so construct the vol spreads here
                         Volatility atmVol = atm->volatility(smileOptionTenors[i], smileUnderlyingTenors[j], 0.0);
                         volSpreadHandles[i * smileUnderlyingTenors.size() + j][k] =
-                            Handle<Quote>(boost::make_shared<SimpleQuote>(md->quote()->value() - atmVol));
+                            Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(md->quote()->value() - atmVol));
                         zero[i * smileUnderlyingTenors.size() + j][k] = close_enough(md->quote()->value(), 0.0);
                     }
                 }
@@ -307,7 +307,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                     for (Size j = 0; j < smileUnderlyingTenors.size(); ++j) {
                         Real lastNonZeroValue = 0.0;
                         for (Size k = 0; k < spreads.size(); ++k) {
-                            boost::shared_ptr<SimpleQuote> q = boost::dynamic_pointer_cast<SimpleQuote>(
+                            QuantLib::ext::shared_ptr<SimpleQuote> q = QuantLib::ext::dynamic_pointer_cast<SimpleQuote>(
                                 *volSpreadHandles[i * smileUnderlyingTenors.size() + j][spreads.size() - 1 - k]);
                             QL_REQUIRE(q, "internal error: expected simple quote");
                             // do not overwrite vol spread for zero strike spread (ATM point)
@@ -347,13 +347,13 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                 bool vegaWeighedSmileFit = false; // TODO
 
                 Handle<SwaptionVolatilityStructure> hATM(atm);
-                boost::shared_ptr<QuantExt::SwaptionVolCube2> cube = boost::make_shared<QuantExt::SwaptionVolCube2>(
+                QuantLib::ext::shared_ptr<QuantExt::SwaptionVolCube2> cube = QuantLib::ext::make_shared<QuantExt::SwaptionVolCube2>(
                     hATM, smileOptionTenors, smileUnderlyingTenors, spreads, volSpreadHandles, swapIndexBase,
                     shortSwapIndexBase, vegaWeighedSmileFit, config->flatExtrapolation());
                 cube->enableExtrapolation();
 
                 // Wrap it in a SwaptionVolCubeWithATM
-                vol_ = boost::make_shared<QuantExt::SwaptionVolCubeWithATM>(cube);
+                vol_ = QuantLib::ext::make_shared<QuantExt::SwaptionVolCubeWithATM>(cube);
             }
         }
 
@@ -377,7 +377,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
             std::vector<Period> expiries = *rc.expiries();
             std::vector<Period> underlyingTenorsReport = *rc.underlyingTenors();
 
-            calibrationInfo_ = boost::make_shared<IrVolCalibrationInfo>();
+            calibrationInfo_ = QuantLib::ext::make_shared<IrVolCalibrationInfo>();
 
             calibrationInfo_->dayCounter = config->dayCounter().empty() ? "na" : config->dayCounter().name();
             calibrationInfo_->calendar = config->calendar().empty() ? "na" : config->calendar().name();

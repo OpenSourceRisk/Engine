@@ -73,8 +73,8 @@ using namespace boost::accumulators;
 namespace {
 struct CreditModelTestData_flat: public qle::test::TopLevelFixture {
     CreditModelTestData_flat()
-        : referenceDate(29, July, 2017), dts(boost::make_shared<FlatHazardRate>(referenceDate, 0.04, ActualActual(ActualActual::ISDA))),
-          yts(boost::make_shared<FlatForward>(referenceDate, 0.02, ActualActual(ActualActual::ISDA))) {
+        : referenceDate(29, July, 2017), dts(QuantLib::ext::make_shared<FlatHazardRate>(referenceDate, 0.04, ActualActual(ActualActual::ISDA))),
+          yts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.02, ActualActual(ActualActual::ISDA))) {
 
         Settings::instance().evaluationDate() = referenceDate;
 
@@ -86,11 +86,11 @@ struct CreditModelTestData_flat: public qle::test::TopLevelFixture {
 
         recoveryRate = 0.4;
         // QL_REQUIRE(2 * eurKappa * eurTheta / eurSigma / eurSigma > 1 , "Feller Condition is not satisfied!");
-        cirParametrization = boost::make_shared<CrCirppConstantWithFellerParametrization>(
+        cirParametrization = QuantLib::ext::make_shared<CrCirppConstantWithFellerParametrization>(
             EURCurrency(), dts, kappa, theta, sigma, y0, shifted);
         QL_REQUIRE(cirParametrization != NULL, "CrCirppConstantWithFellerParametrization has null pointer!");
 
-        model = boost::make_shared<CrCirpp>(cirParametrization);
+        model = QuantLib::ext::make_shared<CrCirpp>(cirParametrization);
         BOOST_TEST_MESSAGE("CIR++ parameters: ");
         BOOST_TEST_MESSAGE("Kappa: \t" << model->parametrization()->kappa(0));
         BOOST_TEST_MESSAGE("Theta: \t" << model->parametrization()->theta(0));
@@ -108,8 +108,8 @@ struct CreditModelTestData_flat: public qle::test::TopLevelFixture {
     Real kappa, theta, sigma, y0;
     bool shifted;
     Real recoveryRate;
-    boost::shared_ptr<CrCirppConstantWithFellerParametrization> cirParametrization;
-    boost::shared_ptr<CrCirpp> model;
+    QuantLib::ext::shared_ptr<CrCirppConstantWithFellerParametrization> cirParametrization;
+    QuantLib::ext::shared_ptr<CrCirpp> model;
 }; // IrTSModelTestData
 } // namespace
 
@@ -121,13 +121,13 @@ BOOST_AUTO_TEST_CASE(testMartingaleProperty) {
 
     BOOST_TEST_MESSAGE("Testing martingale property in credit-CIR++ model for Brigo-Alfonsi discretizations...");
 
-    boost::shared_ptr<StochasticProcess> process = model->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> process = model->stateProcess();
     QL_REQUIRE(process != NULL, "process has null pointer!");
 
     // CIRplusplusStateProcess::Discretization discType = CIRplusplusStateProcess::Discretization::Reflection;
     // CIRplusplusStateProcess::Discretization discType = CIRplusplusStateProcess::Discretization::PartialTruncation;
     // CIRplusplusStateProcess::Discretization discType = CIRplusplusStateProcess::Discretization::FullTruncation;
-    // boost::shared_ptr<StochasticProcess> process = boost::make_shared<CIRplusplusStateProcess>(model.get(),
+    // QuantLib::ext::shared_ptr<StochasticProcess> process = QuantLib::ext::make_shared<CIRplusplusStateProcess>(model.get(),
     // discType);  BOOST_TEST_MESSAGE("Simulation type of negative variance process "<<discType);
     Size n = 10000; // number of paths
     Size seed = 42; // rng seed

@@ -26,7 +26,7 @@
 namespace ore {
 namespace data {
 
-void BestEntryOption::build(const boost::shared_ptr<EngineFactory>& factory) {
+void BestEntryOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
     // set script parameters
 

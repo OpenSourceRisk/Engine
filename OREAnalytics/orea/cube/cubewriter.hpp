@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 #include <map>
 #include <orea/cube/npvcube.hpp>
 #include <string>
@@ -43,7 +43,7 @@ public:
     const std::string& filename() { return filename_; }
 
     //! Write a cube out to file
-    void write(const boost::shared_ptr<NPVCube>& cube, const std::map<std::string, std::string>& nettingSetMap,
+    void write(const QuantLib::ext::shared_ptr<NPVCube>& cube, const std::map<std::string, std::string>& nettingSetMap,
                bool append = false);
 
 private:

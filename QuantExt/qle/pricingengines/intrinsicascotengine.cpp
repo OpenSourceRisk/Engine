@@ -42,7 +42,7 @@ void IntrinsicAscotEngine::calculate() const {
 
     Real currentNotional = Null<Real>();
     for (auto const& c : bond.cashflows()) {
-        if (auto coupon = boost::dynamic_pointer_cast<QuantLib::Coupon>(c)) {
+        if (auto coupon = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(c)) {
             currentNotional = coupon->nominal();
             if (c->date() > referenceDate)
                 break;
@@ -53,7 +53,7 @@ void IntrinsicAscotEngine::calculate() const {
                                                 "notional, underlying bond must have at least one coupon");
 
     Leg upfrontLeg;
-    upfrontLeg.push_back(boost::make_shared<SimpleCashFlow>(currentNotional, settlementDate));
+    upfrontLeg.push_back(QuantLib::ext::make_shared<SimpleCashFlow>(currentNotional, settlementDate));
     Real upfrontLegNpv = CashFlows::npv(upfrontLeg, **discountCurve_, false, referenceDate, referenceDate);
 
     // includes redemption flows

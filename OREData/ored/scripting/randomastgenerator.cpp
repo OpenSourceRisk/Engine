@@ -64,14 +64,14 @@ struct RandomASTGenerator {
             }
             args.push_back(current);
         }
-        current = boost::make_shared<SequenceNode>(args);
+        current = QuantLib::ext::make_shared<SequenceNode>(args);
         --depth;
     }
 
     void createRequire() {
         ++depth;
         createCondition();
-        current = boost::make_shared<RequireNode>(std::vector<ASTNodePtr>(1, current));
+        current = QuantLib::ext::make_shared<RequireNode>(std::vector<ASTNodePtr>(1, current));
         --depth;
     }
 
@@ -79,18 +79,18 @@ struct RandomASTGenerator {
         std::uniform_int_distribution<> seq(1, 3);
         std::vector<ASTNodePtr> vars;
         for (int i = 0; i < seq(gen_); ++i) {
-            vars.push_back(boost::make_shared<VariableNode>(createVariableName()));
+            vars.push_back(QuantLib::ext::make_shared<VariableNode>(createVariableName()));
         }
-        current = boost::make_shared<SortNode>(vars);
+        current = QuantLib::ext::make_shared<SortNode>(vars);
     }
 
     void createPermute() {
         std::uniform_int_distribution<> seq(2, 3);
         std::vector<ASTNodePtr> vars;
         for (int i = 0; i < seq(gen_); ++i) {
-            vars.push_back(boost::make_shared<VariableNode>(createVariableName()));
+            vars.push_back(QuantLib::ext::make_shared<VariableNode>(createVariableName()));
         }
-        current = boost::make_shared<PermuteNode>(vars);
+        current = QuantLib::ext::make_shared<PermuteNode>(vars);
     }
 
     void createDeclaration() {
@@ -101,7 +101,7 @@ struct RandomASTGenerator {
             createVarExpr();
             args.push_back(current);
         }
-        current = boost::make_shared<DeclarationNumberNode>(args);
+        current = QuantLib::ext::make_shared<DeclarationNumberNode>(args);
         --depth;
     }
 
@@ -117,7 +117,7 @@ struct RandomASTGenerator {
             createInstructionSequence();
             args.push_back(current);
         }
-        current = boost::make_shared<IfThenElseNode>(args);
+        current = QuantLib::ext::make_shared<IfThenElseNode>(args);
         --depth;
     }
 
@@ -132,7 +132,7 @@ struct RandomASTGenerator {
         args.push_back(current);
         createInstructionSequence();
         args.push_back(current);
-        current = boost::make_shared<LoopNode>(createVariableName(), args);
+        current = QuantLib::ext::make_shared<LoopNode>(createVariableName(), args);
         --depth;
     }
 
@@ -143,7 +143,7 @@ struct RandomASTGenerator {
         args.push_back(current);
         createTerm();
         args.push_back(current);
-        current = boost::make_shared<AssignmentNode>(args);
+        current = QuantLib::ext::make_shared<AssignmentNode>(args);
         --depth;
     }
 
@@ -160,22 +160,22 @@ struct RandomASTGenerator {
             args.push_back(current);
             switch (cond(gen_)) {
             case 0:
-                current = boost::make_shared<ConditionEqNode>(args);
+                current = QuantLib::ext::make_shared<ConditionEqNode>(args);
                 break;
             case 1:
-                current = boost::make_shared<ConditionNeqNode>(args);
+                current = QuantLib::ext::make_shared<ConditionNeqNode>(args);
                 break;
             case 2:
-                current = boost::make_shared<ConditionGeqNode>(args);
+                current = QuantLib::ext::make_shared<ConditionGeqNode>(args);
                 break;
             case 3:
-                current = boost::make_shared<ConditionGtNode>(args);
+                current = QuantLib::ext::make_shared<ConditionGtNode>(args);
                 break;
             case 4:
-                current = boost::make_shared<ConditionLeqNode>(args);
+                current = QuantLib::ext::make_shared<ConditionLeqNode>(args);
                 break;
             case 5:
-                current = boost::make_shared<ConditionLtNode>(args);
+                current = QuantLib::ext::make_shared<ConditionLtNode>(args);
                 break;
             default:
                 QL_FAIL("internal error");
@@ -188,10 +188,10 @@ struct RandomASTGenerator {
             args.push_back(current);
             switch (andor(gen_)) {
             case 0:
-                current = boost::make_shared<ConditionAndNode>(args);
+                current = QuantLib::ext::make_shared<ConditionAndNode>(args);
                 break;
             case 1:
-                current = boost::make_shared<ConditionOrNode>(args);
+                current = QuantLib::ext::make_shared<ConditionOrNode>(args);
                 break;
             default:
                 QL_FAIL("internal error");
@@ -214,16 +214,16 @@ struct RandomASTGenerator {
             args.push_back(current);
             switch (pm(gen_)) {
             case 0:
-                current = boost::make_shared<OperatorPlusNode>(args);
+                current = QuantLib::ext::make_shared<OperatorPlusNode>(args);
                 break;
             case 1:
-                current = boost::make_shared<OperatorMinusNode>(args);
+                current = QuantLib::ext::make_shared<OperatorMinusNode>(args);
                 break;
             case 2:
-                current = boost::make_shared<OperatorMultiplyNode>(args);
+                current = QuantLib::ext::make_shared<OperatorMultiplyNode>(args);
                 break;
             case 3:
-                current = boost::make_shared<OperatorDivideNode>(args);
+                current = QuantLib::ext::make_shared<OperatorDivideNode>(args);
                 break;
             default:
                 QL_FAIL("internal error");
@@ -244,13 +244,13 @@ struct RandomASTGenerator {
         if (depth + dep(gen_) >= maxDepth_) {
             switch (sing(gen_)) {
             case 0:
-                current = boost::make_shared<VariableNode>(createVariableName(), std::vector<ASTNodePtr>());
+                current = QuantLib::ext::make_shared<VariableNode>(createVariableName(), std::vector<ASTNodePtr>());
                 break;
             case 1:
-                current = boost::make_shared<ConstantNumberNode>(createConstantNumber());
+                current = QuantLib::ext::make_shared<ConstantNumberNode>(createConstantNumber());
                 break;
             case 2:
-                current = boost::make_shared<SizeOpNode>(createVariableName());
+                current = QuantLib::ext::make_shared<SizeOpNode>(createVariableName());
                 break;
             default:
                 QL_FAIL("internal error");
@@ -261,58 +261,58 @@ struct RandomASTGenerator {
             case 0:
                 createFactor();
                 args.push_back(current);
-                current = boost::make_shared<NegateNode>(args);
+                current = QuantLib::ext::make_shared<NegateNode>(args);
                 break;
             case 1:
                 createTerm();
                 args.push_back(current);
-                current = boost::make_shared<FunctionAbsNode>(args);
+                current = QuantLib::ext::make_shared<FunctionAbsNode>(args);
                 break;
             case 2:
                 createTerm();
                 args.push_back(current);
-                current = boost::make_shared<FunctionExpNode>(args);
+                current = QuantLib::ext::make_shared<FunctionExpNode>(args);
                 break;
             case 3:
                 createTerm();
                 args.push_back(current);
-                current = boost::make_shared<FunctionLogNode>(args);
+                current = QuantLib::ext::make_shared<FunctionLogNode>(args);
                 break;
             case 4:
                 createTerm();
                 args.push_back(current);
-                current = boost::make_shared<FunctionSqrtNode>(args);
+                current = QuantLib::ext::make_shared<FunctionSqrtNode>(args);
                 break;
             case 5:
                 createTerm();
                 args.push_back(current);
-                current = boost::make_shared<FunctionNormalCdfNode>(args);
+                current = QuantLib::ext::make_shared<FunctionNormalCdfNode>(args);
                 break;
             case 6:
                 createTerm();
                 args.push_back(current);
-                current = boost::make_shared<FunctionNormalPdfNode>(args);
+                current = QuantLib::ext::make_shared<FunctionNormalPdfNode>(args);
                 break;
             case 7:
                 createTerm();
                 args.push_back(current);
                 createTerm();
                 args.push_back(current);
-                current = boost::make_shared<FunctionMaxNode>(args);
+                current = QuantLib::ext::make_shared<FunctionMaxNode>(args);
                 break;
             case 8:
                 createTerm();
                 args.push_back(current);
                 createTerm();
                 args.push_back(current);
-                current = boost::make_shared<FunctionMinNode>(args);
+                current = QuantLib::ext::make_shared<FunctionMinNode>(args);
                 break;
             case 9:
                 createTerm();
                 args.push_back(current);
                 createTerm();
                 args.push_back(current);
-                current = boost::make_shared<FunctionPowNode>(args);
+                current = QuantLib::ext::make_shared<FunctionPowNode>(args);
                 break;
             case 10:
                 createTerm();
@@ -327,7 +327,7 @@ struct RandomASTGenerator {
                 args.push_back(current);
                 createTerm();
                 args.push_back(current);
-                current = boost::make_shared<FunctionBlackNode>(args);
+                current = QuantLib::ext::make_shared<FunctionBlackNode>(args);
                 break;
             case 11:
                 createVarExpr();
@@ -336,7 +336,7 @@ struct RandomASTGenerator {
                 args.push_back(current);
                 createVarExpr();
                 args.push_back(current);
-                current = boost::make_shared<FunctionDcfNode>(args);
+                current = QuantLib::ext::make_shared<FunctionDcfNode>(args);
                 break;
             case 12:
                 createVarExpr();
@@ -345,7 +345,7 @@ struct RandomASTGenerator {
                 args.push_back(current);
                 createVarExpr();
                 args.push_back(current);
-                current = boost::make_shared<FunctionDaysNode>(args);
+                current = QuantLib::ext::make_shared<FunctionDaysNode>(args);
                 break;
             case 13:
                 createTerm();
@@ -356,7 +356,7 @@ struct RandomASTGenerator {
                 args.push_back(current);
                 createTerm();
                 args.push_back(current);
-                current = boost::make_shared<FunctionPayNode>(args);
+                current = QuantLib::ext::make_shared<FunctionPayNode>(args);
                 break;
             case 14: {
                 createTerm();
@@ -371,14 +371,14 @@ struct RandomASTGenerator {
                 if (l) {
                     createTerm();
                     args.push_back(current);
-                    args.push_back(boost::make_shared<VariableNode>(createVariableName()));
+                    args.push_back(QuantLib::ext::make_shared<VariableNode>(createVariableName()));
                     int s = slot(gen_);
                     if (s) {
                         createTerm();
                         args.push_back(current);
                     }
                 }
-                current = boost::make_shared<FunctionLogPayNode>(args);
+                current = QuantLib::ext::make_shared<FunctionLogPayNode>(args);
                 break;
             }
             case 15:
@@ -398,7 +398,7 @@ struct RandomASTGenerator {
                         }
                     }
                 }
-                current = boost::make_shared<FunctionNpvNode>(args);
+                current = QuantLib::ext::make_shared<FunctionNpvNode>(args);
                 break;
             case 16:
                 createTerm();
@@ -419,14 +419,14 @@ struct RandomASTGenerator {
                         }
                     }
                 }
-                current = boost::make_shared<FunctionNpvMemNode>(args);
+                current = QuantLib::ext::make_shared<FunctionNpvMemNode>(args);
                 break;
             case 17:
                 createVarExpr();
                 args.push_back(current);
                 createVarExpr();
                 args.push_back(current);
-                current = boost::make_shared<HistFixingNode>(args);
+                current = QuantLib::ext::make_shared<HistFixingNode>(args);
                 break;
             case 18:
                 createTerm();
@@ -435,7 +435,7 @@ struct RandomASTGenerator {
                 args.push_back(current);
                 createTerm();
                 args.push_back(current);
-                current = boost::make_shared<FunctionDiscountNode>(args);
+                current = QuantLib::ext::make_shared<FunctionDiscountNode>(args);
                 break;
             case 19:
                 createVarExpr();
@@ -479,7 +479,7 @@ struct RandomASTGenerator {
                 default:
                     QL_FAIL("internal error");
                 }
-                current = boost::make_shared<FunctionFwdCompNode>(args);
+                current = QuantLib::ext::make_shared<FunctionFwdCompNode>(args);
                 break;
             case 20:
                 createVarExpr();
@@ -523,7 +523,7 @@ struct RandomASTGenerator {
                 default:
                     QL_FAIL("internal error");
                 }
-                current = boost::make_shared<FunctionFwdAvgNode>(args);
+                current = QuantLib::ext::make_shared<FunctionFwdAvgNode>(args);
                 break;
             case 21:
                 createVarExpr();
@@ -534,7 +534,7 @@ struct RandomASTGenerator {
                 args.push_back(current);
                 createTerm();
                 args.push_back(current);
-                current = boost::make_shared<FunctionAboveProbNode>(args);
+                current = QuantLib::ext::make_shared<FunctionAboveProbNode>(args);
                 break;
             case 22:
                 createVarExpr();
@@ -545,19 +545,19 @@ struct RandomASTGenerator {
                 args.push_back(current);
                 createTerm();
                 args.push_back(current);
-                current = boost::make_shared<FunctionBelowProbNode>(args);
+                current = QuantLib::ext::make_shared<FunctionBelowProbNode>(args);
                 break;
             case 23: {
                 createVarExpr();
                 args.push_back(current);
                 boost::fusion::vector<std::string, std::string> p(createVariableName(), createVariableName());
-                current = boost::make_shared<FunctionDateIndexNode>(p, args);
+                current = QuantLib::ext::make_shared<FunctionDateIndexNode>(p, args);
                 break;
             }
             case 24:
                 createVarExpr();
                 args.push_back(current);
-                current = boost::make_shared<VariableNode>(createVariableName(), args);
+                current = QuantLib::ext::make_shared<VariableNode>(createVariableName(), args);
                 break;
             case 25:
                 createVarExpr();
@@ -568,7 +568,7 @@ struct RandomASTGenerator {
                     createVarExpr();
                     args.push_back(current);
                 }
-                current = boost::make_shared<VarEvaluationNode>(args);
+                current = QuantLib::ext::make_shared<VarEvaluationNode>(args);
                 break;
             default:
                 QL_FAIL("internal error");
@@ -581,10 +581,10 @@ struct RandomASTGenerator {
         std::uniform_int_distribution<> dep(0, maxDepth_);
         ++depth;
         if (depth + dep(gen_) > maxDepth_) {
-            current = boost::make_shared<VariableNode>(createVariableName());
+            current = QuantLib::ext::make_shared<VariableNode>(createVariableName());
         } else {
             createTerm();
-            current = boost::make_shared<VariableNode>(createVariableName(), std::vector<ASTNodePtr>{current});
+            current = QuantLib::ext::make_shared<VariableNode>(createVariableName(), std::vector<ASTNodePtr>{current});
         }
         --depth;
     }

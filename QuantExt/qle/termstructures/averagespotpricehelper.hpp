@@ -50,7 +50,7 @@ public:
                                dates in the period.
     */
     AverageSpotPriceHelper(const QuantLib::Handle<QuantLib::Quote>& price,
-        const boost::shared_ptr<CommoditySpotIndex>& index,
+        const QuantLib::ext::shared_ptr<CommoditySpotIndex>& index,
         const QuantLib::Date& start,
         const QuantLib::Date& end,
         const QuantLib::Calendar& calendar = QuantLib::Calendar(),
@@ -68,7 +68,7 @@ public:
                                dates in the period.
     */
     AverageSpotPriceHelper(QuantLib::Real price,
-        const boost::shared_ptr<CommoditySpotIndex>& index,
+        const QuantLib::ext::shared_ptr<CommoditySpotIndex>& index,
         const QuantLib::Date& start,
         const QuantLib::Date& end,
         const QuantLib::Calendar& calendar = QuantLib::Calendar(),
@@ -88,18 +88,18 @@ public:
 
     //! \name Inspectors
     //@{
-    boost::shared_ptr<CommodityIndexedAverageCashFlow> averageCashflow() const;
+    QuantLib::ext::shared_ptr<CommodityIndexedAverageCashFlow> averageCashflow() const;
     //@}
 
 private:
     //! Shared initialisation method.
-    void init(const boost::shared_ptr<CommoditySpotIndex>& index,
+    void init(const QuantLib::ext::shared_ptr<CommoditySpotIndex>& index,
         const QuantLib::Date& start,
         const QuantLib::Date& end,
         const QuantLib::Calendar& calendar,
         bool useBusinessDays);
 
-    boost::shared_ptr<CommodityIndexedAverageCashFlow> averageCashflow_;
+    QuantLib::ext::shared_ptr<CommodityIndexedAverageCashFlow> averageCashflow_;
     QuantLib::RelinkableHandle<PriceTermStructure> termStructureHandle_;
 };
 

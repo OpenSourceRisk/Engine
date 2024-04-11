@@ -42,7 +42,7 @@ using namespace QuantExt;
 
 FdGaussianCam::FdGaussianCam(const Handle<CrossAssetModel>& cam, const std::string& currency,
                              const Handle<YieldTermStructure>& curve,
-                             const std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>>& irIndices,
+                             const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
                              const std::set<Date>& simulationDates, const Size stateGridPoints,
                              const Size timeStepsPerYear, const Real mesherEpsilon,
                              const IborFallbackConfig& iborFallbackConfig)
@@ -139,16 +139,16 @@ RandomVariable FdGaussianCam::fwdCompAvg(const bool isAvg, const std::string& in
                                          const bool nakedOption, const bool localCapFloor) const {
     calculate();
     auto ir = std::find_if(irIndices_.begin(), irIndices_.end(),
-                           [&indexInput](const std::pair<IndexInfo, boost::shared_ptr<InterestRateIndex>>& p) {
+                           [&indexInput](const std::pair<IndexInfo, QuantLib::ext::shared_ptr<InterestRateIndex>>& p) {
                                return p.first.name() == indexInput;
                            });
     QL_REQUIRE(ir != irIndices_.end(),
                "FdGaussianCam::fwdComp() ir index " << indexInput << " not found, this is unexpected");
     LgmVectorised lgmv(cam_->lgm(0)->parametrization());
-    auto on = boost::dynamic_pointer_cast<OvernightIndex>(ir->second);
+    auto on = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(ir->second);
     QL_REQUIRE(on, "FdGaussianCam::fwdCompAvg(): expected on index for " << indexInput);
     // only used to extract fixing and value dates
-    auto coupon = boost::make_shared<QuantExt::OvernightIndexedCoupon>(
+    auto coupon = QuantLib::ext::make_shared<QuantExt::OvernightIndexedCoupon>(
         end, 1.0, start, end, on, gearing, spread, Date(), Date(), DayCounter(), false, includeSpread, lookback * Days,
         rateCutoff, fixingDays);
     // get model time and state

@@ -385,7 +385,7 @@ public:
     void fromXML(ore::data::XMLNode* node) override;
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
-    void populateFromBondReferenceData(const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData);
+    void populateFromBondReferenceData(const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData);
 
 private:
     ore::data::BondData bondData_;

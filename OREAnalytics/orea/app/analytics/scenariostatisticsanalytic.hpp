@@ -31,29 +31,29 @@ class ScenarioStatisticsAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "SCENARIO_STATISTICS";
 
-    ScenarioStatisticsAnalyticImpl(const boost::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) { setLabel(LABEL); }
-    virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+    ScenarioStatisticsAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) { setLabel(LABEL); }
+    virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
 
-    boost::shared_ptr<ScenarioGenerator> scenarioGenerator() { return scenarioGenerator_; }
+    QuantLib::ext::shared_ptr<ScenarioGenerator> scenarioGenerator() { return scenarioGenerator_; }
     
 protected:
     void buildScenarioSimMarket();
     void buildCrossAssetModel(bool continueOnError);
     void buildScenarioGenerator(bool continueOnError);
 
-    boost::shared_ptr<ScenarioSimMarket> simMarket_;
-    boost::shared_ptr<CrossAssetModel> model_;
-    boost::shared_ptr<ScenarioGenerator> scenarioGenerator_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket_;
+    QuantLib::ext::shared_ptr<CrossAssetModel> model_;
+    QuantLib::ext::shared_ptr<ScenarioGenerator> scenarioGenerator_;
     
-    boost::shared_ptr<DateGrid> grid_;
+    QuantLib::ext::shared_ptr<DateGrid> grid_;
     Size samples_ = 0;
 };
 
 class ScenarioStatisticsAnalytic : public Analytic {
 public:
-    ScenarioStatisticsAnalytic(const boost::shared_ptr<InputParameters>& inputs)
+    ScenarioStatisticsAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
         : Analytic(std::make_unique<ScenarioStatisticsAnalyticImpl>(inputs), {"SCENARIO_STATISTICS"}, inputs, true, false, true, true) {}
 };
 

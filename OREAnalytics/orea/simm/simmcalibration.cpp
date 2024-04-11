@@ -141,7 +141,7 @@ void SimmCalibration::RiskClassData::RiskWeights::fromXML(XMLNode* node) {
     auto hvrNodes = XMLUtils::getChildrenNodes(node, "HistoricalVolatilityRatio");
     for (XMLNode* hvrNode : hvrNodes) {
         Size mpor = getMPOR(hvrNode);
-        auto hvr = boost::make_shared<Amount>(hvrNode);
+        auto hvr = QuantLib::ext::make_shared<Amount>(hvrNode);
         historicalVolatilityRatio_[mpor] = hvr;
     }
 }
@@ -188,7 +188,7 @@ void SimmCalibration::RiskClassData::IRRiskWeights::fromXML(XMLNode* node) {
         auto weightTypeNodes = XMLUtils::getChildrenNodes(node, weightType);
         for (XMLNode* weightTypeNode : weightTypeNodes) {
             Size mpor = getMPOR(weightTypeNode);
-            auto amount = boost::make_shared<Amount>(weightTypeNode);
+            auto amount = QuantLib::ext::make_shared<Amount>(weightTypeNode);
             weightMap[mpor] = amount;
         }
     }
@@ -202,9 +202,9 @@ void SimmCalibration::RiskClassData::IRRiskWeights::fromXML(XMLNode* node) {
     }
 }
 
-const std::map<RT, map<Size, boost::shared_ptr<SimmCalibration::Amount>>>
+const std::map<RT, map<Size, QuantLib::ext::shared_ptr<SimmCalibration::Amount>>>
 SimmCalibration::RiskClassData::IRRiskWeights::uniqueRiskWeights() const {
-    std::map<RT, map<Size, boost::shared_ptr<SimmCalibration::Amount>>> urwMap;
+    std::map<RT, map<Size, QuantLib::ext::shared_ptr<SimmCalibration::Amount>>> urwMap;
 
     for (const auto& [mpor, rw] : inflation_)
         urwMap[RT::Inflation][mpor] = rw;
@@ -274,14 +274,14 @@ void SimmCalibration::RiskClassData::CreditQRiskWeights::fromXML(XMLNode* node) 
     auto baseCorrNodes = XMLUtils::getChildrenNodes(node, "BaseCorrelation");
     for (XMLNode* baseCorrNode : baseCorrNodes) {
         Size mpor = getMPOR(baseCorrNode);
-        auto baseCorrelation = boost::make_shared<Amount>(baseCorrNode);
+        auto baseCorrelation = QuantLib::ext::make_shared<Amount>(baseCorrNode);
         baseCorrelation_[mpor] = baseCorrelation;
     }
 }
 
-const std::map<RT, map<Size, boost::shared_ptr<SimmCalibration::Amount>>>
+const std::map<RT, map<Size, QuantLib::ext::shared_ptr<SimmCalibration::Amount>>>
 SimmCalibration::RiskClassData::CreditQRiskWeights::uniqueRiskWeights() const {
-    std::map<RT, map<Size, boost::shared_ptr<SimmCalibration::Amount>>> urwMap;
+    std::map<RT, map<Size, QuantLib::ext::shared_ptr<SimmCalibration::Amount>>> urwMap;
 
     for (const auto& [mpor, rw] : baseCorrelation_)
         urwMap[RT::BaseCorr][mpor] = rw;
@@ -332,7 +332,7 @@ void SimmCalibration::RiskClassData::Correlations::fromXML(XMLNode* node) {
 XMLNode* SimmCalibration::RiskClassData::IRCorrelations::toXML(XMLDocument& doc) const {
     auto correlationsNode = Correlations::toXML(doc);
 
-    auto corrTypes = map<string, boost::shared_ptr<Amount>>(
+    auto corrTypes = map<string, QuantLib::ext::shared_ptr<Amount>>(
         {{"SubCurves", subCurves_}, {"Inflation", inflation_}, {"XCcyBasis", xCcyBasis_}, {"Outer", outer_}});
 
     for (const auto& [corrType, container] : corrTypes) {
@@ -347,12 +347,12 @@ XMLNode* SimmCalibration::RiskClassData::IRCorrelations::toXML(XMLDocument& doc)
 void SimmCalibration::RiskClassData::IRCorrelations::fromXML(XMLNode* node) {
     Correlations::fromXML(node);
 
-    auto corrTypes = map<string, boost::shared_ptr<Amount>&>(
+    auto corrTypes = map<string, QuantLib::ext::shared_ptr<Amount>&>(
         {{"SubCurves", subCurves_}, {"Inflation", inflation_}, {"XCcyBasis", xCcyBasis_}, {"Outer", outer_}});
 
     for (auto& [corrType, container] : corrTypes) {
         auto corrNode = XMLUtils::getChildNode(node, corrType);
-        container = boost::make_shared<Amount>(corrNode);
+        container = QuantLib::ext::make_shared<Amount>(corrNode);
     }
 }
 
@@ -370,7 +370,7 @@ void SimmCalibration::RiskClassData::CreditQCorrelations::fromXML(XMLNode* node)
     Correlations::fromXML(node);
 
     auto baseCorrelationNode = XMLUtils::getChildNode(node, "BaseCorrelation");
-    baseCorrelation_ = boost::make_shared<Amount>(baseCorrelationNode);
+    baseCorrelation_ = QuantLib::ext::make_shared<Amount>(baseCorrelationNode);
 }
 
 XMLNode* SimmCalibration::RiskClassData::FXCorrelations::toXML(XMLDocument& doc) const {
@@ -387,7 +387,7 @@ void SimmCalibration::RiskClassData::FXCorrelations::fromXML(XMLNode* node) {
     Correlations::fromXML(node);
 
     auto volatilityNode = XMLUtils::getChildNode(node, "Volatility");
-    volatility_ = boost::make_shared<Amount>(volatilityNode);
+    volatility_ = QuantLib::ext::make_shared<Amount>(volatilityNode);
 }
 
 XMLNode* SimmCalibration::RiskClassData::ConcentrationThresholds::toXML(XMLDocument& doc) const {
@@ -481,40 +481,40 @@ void SimmCalibration::RiskClassData::fromXML(XMLNode* node) {
     XMLNode* riskWeightsNode = XMLUtils::getChildNode(node, "RiskWeights");
     switch (riskClass_) {
     case (RC::InterestRate):
-        riskWeights_ = boost::make_shared<IRRiskWeights>(riskWeightsNode);
+        riskWeights_ = QuantLib::ext::make_shared<IRRiskWeights>(riskWeightsNode);
         break;
     case (RC::CreditQualifying):
-        riskWeights_ = boost::make_shared<CreditQRiskWeights>(riskWeightsNode);
+        riskWeights_ = QuantLib::ext::make_shared<CreditQRiskWeights>(riskWeightsNode);
         break;
     case (RC::FX):
-        riskWeights_ = boost::make_shared<FXRiskWeights>(riskWeightsNode);
+        riskWeights_ = QuantLib::ext::make_shared<FXRiskWeights>(riskWeightsNode);
         break;
     default:
-        riskWeights_ = boost::make_shared<RiskWeights>(riskClass_, riskWeightsNode);
+        riskWeights_ = QuantLib::ext::make_shared<RiskWeights>(riskClass_, riskWeightsNode);
     }
 
     // Correlations
     XMLNode* correlationsNode = XMLUtils::getChildNode(node, "Correlations");
     switch (riskClass_) {
     case (RC::InterestRate):
-        correlations_ = boost::make_shared<IRCorrelations>(correlationsNode);
+        correlations_ = QuantLib::ext::make_shared<IRCorrelations>(correlationsNode);
         break;
     case (RC::CreditQualifying):
-        correlations_ = boost::make_shared<CreditQCorrelations>(correlationsNode);
+        correlations_ = QuantLib::ext::make_shared<CreditQCorrelations>(correlationsNode);
         break;
     case (RC::FX):
-        correlations_ = boost::make_shared<FXCorrelations>(correlationsNode);
+        correlations_ = QuantLib::ext::make_shared<FXCorrelations>(correlationsNode);
         break;
     default:
-        correlations_ = boost::make_shared<Correlations>(correlationsNode);
+        correlations_ = QuantLib::ext::make_shared<Correlations>(correlationsNode);
     }
 
     // Concentration Thresholds
     XMLNode* concentrationThresholdsNode = XMLUtils::getChildNode(node, "ConcentrationThresholds");
     if (riskClass_ == RC::InterestRate || riskClass_ == RC::FX) {
-        concentrationThresholds_ = boost::make_shared<IRFXConcentrationThresholds>(concentrationThresholdsNode);
+        concentrationThresholds_ = QuantLib::ext::make_shared<IRFXConcentrationThresholds>(concentrationThresholdsNode);
     } else {
-        concentrationThresholds_ = boost::make_shared<ConcentrationThresholds>(concentrationThresholdsNode);
+        concentrationThresholds_ = QuantLib::ext::make_shared<ConcentrationThresholds>(concentrationThresholdsNode);
     }
 }
 
@@ -579,7 +579,7 @@ void SimmCalibration::fromXML(XMLNode* node) {
     for (const SimmConfiguration::RiskClass& rc :
         { RC::InterestRate, RC::CreditQualifying, RC::CreditNonQualifying, RC::Equity, RC::Commodity, RC::FX }) {
         riskClassNode = XMLUtils::getChildNode(node, ore::data::to_string(rc));
-        auto riskClassData = boost::make_shared<RiskClassData>(rc);
+        auto riskClassData = QuantLib::ext::make_shared<RiskClassData>(rc);
         riskClassData->fromXML(riskClassNode);
         riskClassData_[rc] = riskClassData;
     }
@@ -606,7 +606,7 @@ void SimmCalibrationData::fromXML(XMLNode* node) {
     vector<XMLNode*> simmCalibrationNodes = XMLUtils::getChildrenNodes(node, "SIMMCalibration");
     for (XMLNode* scNode : simmCalibrationNodes) {
         try {
-            add(boost::make_shared<SimmCalibration>(scNode));
+            add(QuantLib::ext::make_shared<SimmCalibration>(scNode));
         } catch (const std::exception& ex) {
             ore::data::StructuredConfigurationErrorMessage("SIMM calibration data", "",
                                                            "SIMM calibration node failed to parse", ex.what())
@@ -615,7 +615,7 @@ void SimmCalibrationData::fromXML(XMLNode* node) {
     }
 }
 
-void SimmCalibrationData::add(const boost::shared_ptr<SimmCalibration>& simmCalibration) {
+void SimmCalibrationData::add(const QuantLib::ext::shared_ptr<SimmCalibration>& simmCalibration) {
 
     const string configurationType = "SIMM calibration data";
     const string exceptionType = "Adding SIMM calibration";
@@ -650,14 +650,14 @@ void SimmCalibrationData::add(const boost::shared_ptr<SimmCalibration>& simmCali
     data_[simmCalibration->id()] = simmCalibration;
 }
 
-const boost::shared_ptr<SimmCalibration>& SimmCalibrationData::getById(const string& id) const {
+const QuantLib::ext::shared_ptr<SimmCalibration>& SimmCalibrationData::getById(const string& id) const {
     if (!hasId(id))
         QL_FAIL("Could not find SIMM calibration with ID '" << id << "'");
 
     return data_.at(id);
 }
 
-const boost::shared_ptr<SimmCalibration> SimmCalibrationData::getBySimmVersion(const string& version) const {
+const QuantLib::ext::shared_ptr<SimmCalibration> SimmCalibrationData::getBySimmVersion(const string& version) const {
     for (const auto& kv : data_) {
         const auto& simmCalibrationData = kv.second;
         for (const string& scVersion : simmCalibrationData->versionNames()) {
