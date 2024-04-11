@@ -43,7 +43,7 @@ bool BlackMultiLegOptionEngineBase::instrumentIsHandled(const MultiLegOption& m,
 
 bool BlackMultiLegOptionEngineBase::instrumentIsHandled(const std::vector<Leg>& legs, const std::vector<bool>& payer,
                                                         const std::vector<Currency>& currency,
-                                                        const boost::shared_ptr<Exercise>& exercise,
+                                                        const QuantLib::ext::shared_ptr<Exercise>& exercise,
                                                         const Settlement::Type& settlementType,
                                                         const Settlement::Method& settlementMethod,
                                                         std::vector<std::string>& messages) {
@@ -63,7 +63,7 @@ bool BlackMultiLegOptionEngineBase::instrumentIsHandled(const std::vector<Leg>& 
 
     for (Size i = 0; i < legs.size(); ++i) {
         for (Size j = 0; j < legs[i].size(); ++j) {
-            if (auto cpn = boost::dynamic_pointer_cast<FloatingRateCoupon>(legs[i][j])) {
+            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(legs[i][j])) {
                 if (cpn->index()->currency() != currency[0]) {
                     messages.push_back("NumericLgmMultilegOptionEngine: can only handle indices (" +
                                        cpn->index()->name() + ") with same currency as unqiue pay currency (" +
@@ -77,12 +77,12 @@ bool BlackMultiLegOptionEngineBase::instrumentIsHandled(const std::vector<Leg>& 
 
     for (Size i = 0; i < legs.size(); ++i) {
         for (Size j = 0; j < legs[i].size(); ++j) {
-            if (auto c = boost::dynamic_pointer_cast<Coupon>(legs[i][j])) {
-                if (!(boost::dynamic_pointer_cast<IborCoupon>(c) || boost::dynamic_pointer_cast<FixedRateCoupon>(c) ||
-                      boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c) ||
-                      boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c) ||
-                      boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(c) ||
-                      boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(c))) {
+            if (auto c = QuantLib::ext::dynamic_pointer_cast<Coupon>(legs[i][j])) {
+                if (!(QuantLib::ext::dynamic_pointer_cast<IborCoupon>(c) || QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c) ||
+                      QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c) ||
+                      QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c) ||
+                      QuantLib::ext::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(c) ||
+                      QuantLib::ext::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(c))) {
                     messages.push_back(
                         "BlackMultilegOptionEngine: coupon type not handled, supported coupon types: Fix, "
                         "Ibor, ON comp, ON avg, BMA/SIFMA, subperiod. leg = " +
@@ -152,8 +152,8 @@ void BlackMultiLegOptionEngineBase::calculate() const {
     for (Size i = 0; i < legs_.size(); ++i) {
         for (Size j = 0; j < legs_[i].size(); ++j) {
             Real payer = payer_[i] ? -1.0 : 1.0;
-            if (auto c = boost::dynamic_pointer_cast<Coupon>(legs_[i][j])) {
-                auto fixedCoupon = boost::dynamic_pointer_cast<FixedRateCoupon>(c);
+            if (auto c = QuantLib::ext::dynamic_pointer_cast<Coupon>(legs_[i][j])) {
+                auto fixedCoupon = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c);
                 if (fixedCoupon)
                     fixedDayCount = c->dayCounter();
                 if (c->accrualStartDate() >= exerciseDate) {
@@ -164,7 +164,7 @@ void BlackMultiLegOptionEngineBase::calculate() const {
                         cfInfo.back().fixedRate = fixedCoupon->rate();
                         cfInfo.back().nominal = c->nominal() * payer;
                         ++numFixed;
-                    } else if (auto f = boost::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
+                    } else if (auto f = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
                         cfInfo.back().floatingSpread = f->spread();
                         cfInfo.back().floatingGearing = f->gearing();
                         cfInfo.back().nominal = f->nominal() * payer;
@@ -208,7 +208,7 @@ void BlackMultiLegOptionEngineBase::calculate() const {
 
     // add the rebate (if any) as a fixed cashflow to the exercise-into underlying
 
-    if (auto rebatedExercise = boost::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_)) {
+    if (auto rebatedExercise = QuantLib::ext::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_)) {
         cfInfo.push_back(CfInfo());
         cfInfo.back().amount = rebatedExercise->rebate(0);
         cfInfo.back().discountFactor = discountCurve_->discount(rebatedExercise->rebatePaymentDate(0));

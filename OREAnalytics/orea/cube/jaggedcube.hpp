@@ -119,13 +119,13 @@ private:
 class DepthCalculator {
 public:
     virtual ~DepthCalculator() {}
-    virtual Size depth(const boost::shared_ptr<ore::data::Trade>& t) const = 0;
+    virtual Size depth(const QuantLib::ext::shared_ptr<ore::data::Trade>& t) const = 0;
 };
 
 class ConstantDepthCalculator : public DepthCalculator {
 public:
     ConstantDepthCalculator(Size d = 1) : d_(d) {}
-    Size depth(const boost::shared_ptr<ore::data::Trade>&) const override { return d_; }
+    Size depth(const QuantLib::ext::shared_ptr<ore::data::Trade>&) const override { return d_; }
 
 private:
     Size d_;
@@ -139,18 +139,18 @@ private:
  */
 template <typename T> class JaggedCube : public ore::analytics::NPVCube {
 public:
-    JaggedCube(Date asof, boost::shared_ptr<ore::data::Portfolio>& portfolio, const vector<Date>& dates, Size samples,
+    JaggedCube(Date asof, QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio, const vector<Date>& dates, Size samples,
                Size depth) {
         init(asof, portfolio, dates, samples, ConstantDepthCalculator(depth));
     }
 
-    JaggedCube(Date asof, boost::shared_ptr<ore::data::Portfolio>& portfolio, const vector<Date>& dates, Size samples,
+    JaggedCube(Date asof, QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio, const vector<Date>& dates, Size samples,
                const DepthCalculator& dc) {
         init(asof, portfolio, dates, samples, dc);
     }
 
     // go back to depth, dep??? they are different
-    void init(Date asof, boost::shared_ptr<ore::data::Portfolio>& portfolio, const vector<Date>& dates, Size samples,
+    void init(Date asof, QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio, const vector<Date>& dates, Size samples,
               const DepthCalculator& dc) {
         asof_ = asof;
         dates_ = dates;

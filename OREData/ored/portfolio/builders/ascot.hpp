@@ -48,7 +48,7 @@ public:
     AscotIntrinsicEngineBuilder() : AscotEngineBuilder("BlackScholes", "Intrinsic") {}
 
 protected:
-    boost::shared_ptr<QuantExt::PricingEngine>
+    QuantLib::ext::shared_ptr<QuantExt::PricingEngine>
     engineImpl(const std::string& id, const std::string& ccy) override;
 };
 

@@ -69,7 +69,7 @@ void BlackVarianceSurfaceMoneyness::init() {
 
     if (stickyStrike_) {
         // we don't want to know if the spot has changed - we take a copy here
-        spot_ = Handle<Quote>(boost::make_shared<SimpleQuote>(spot_->value()));
+        spot_ = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(spot_->value()));
     } else {
         registerWith(spot_);
     }

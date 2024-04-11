@@ -26,7 +26,7 @@ using QuantLib::Time;
 
 namespace QuantExt {
 
-Real getOisAtmLevel(const boost::shared_ptr<OvernightIndex>& on, const Date& fixingDate,
+Real getOisAtmLevel(const QuantLib::ext::shared_ptr<OvernightIndex>& on, const Date& fixingDate,
                     const Period& rateComputationPeriod) {
     Date today = Settings::instance().evaluationDate();
     Date start = on->valueDate(fixingDate);
@@ -34,11 +34,11 @@ Real getOisAtmLevel(const boost::shared_ptr<OvernightIndex>& on, const Date& fix
     Date adjStart = std::max(start, today);
     Date adjEnd = std::max(adjStart + 1, end);
     OvernightIndexedCoupon cpn(end, 1.0, adjStart, adjEnd, on);
-    cpn.setPricer(boost::make_shared<OvernightIndexedCouponPricer>());
+    cpn.setPricer(QuantLib::ext::make_shared<OvernightIndexedCouponPricer>());
     return cpn.rate();
 }
 
-Real getBMAAtmLevel(const boost::shared_ptr<BMAIndex>& bma, const Date& fixingDate,
+Real getBMAAtmLevel(const QuantLib::ext::shared_ptr<BMAIndex>& bma, const Date& fixingDate,
                     const Period& rateComputationPeriod) {
     Date today = Settings::instance().evaluationDate();
     Date start = bma->fixingCalendar().advance(fixingDate, 1 * Days);

@@ -56,7 +56,7 @@ namespace QuantExt {
 class NumericLgmFlexiSwapEngineBase : public LgmConvolutionSolver {
 public:
     enum class Method { SwaptionArray, SingleSwaptions, Automatic };
-    NumericLgmFlexiSwapEngineBase(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny,
+    NumericLgmFlexiSwapEngineBase(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny,
                                   const Real sx, const Size nx,
                                   const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
                                   const Method method = Method::Automatic, const Real singleSwaptionThreshold = 20.0);
@@ -71,8 +71,8 @@ protected:
     const Method method_;
     const Real singleSwaptionThreshold_;
     //
-    mutable boost::shared_ptr<IborIndex> iborModelIndex_;
-    mutable boost::shared_ptr<LgmImpliedYieldTermStructure> iborModelCurve_;
+    mutable QuantLib::ext::shared_ptr<IborIndex> iborModelIndex_;
+    mutable QuantLib::ext::shared_ptr<LgmImpliedYieldTermStructure> iborModelCurve_;
     // arguments to be set by derived pricing engines before calling calculate()
     mutable VanillaSwap::Type type;
     mutable std::vector<Real> fixedNominal, floatingNominal;
@@ -89,7 +89,7 @@ protected:
     mutable std::vector<Real> cappedRate;
     mutable std::vector<Real> flooredRate;
     mutable std::vector<Real> floatingCoupons;
-    mutable boost::shared_ptr<IborIndex> iborIndex;
+    mutable QuantLib::ext::shared_ptr<IborIndex> iborIndex;
     mutable std::vector<Real> lowerNotionalBound;
     mutable QuantLib::Position::Type optionPosition;
     mutable std::vector<bool> notionalCanBeDecreased;
@@ -98,7 +98,7 @@ protected:
 class NumericLgmFlexiSwapEngine : public GenericEngine<FlexiSwap::arguments, FlexiSwap::results>,
                                   public NumericLgmFlexiSwapEngineBase {
 public:
-    NumericLgmFlexiSwapEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny,
+    NumericLgmFlexiSwapEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny,
                               const Real sx, const Size nx,
                               const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
                               const Method method = Method::Automatic, const Real singleSwaptionThreshold = 20.0);

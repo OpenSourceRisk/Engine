@@ -34,7 +34,7 @@ using namespace QuantLib;
 //! \ingroup cashflows
 class FloatingAnnuityNominal : public CashFlow {
 public:
-    FloatingAnnuityNominal(const boost::shared_ptr<FloatingAnnuityCoupon>& floatingAnnuityCoupon)
+    FloatingAnnuityNominal(const QuantLib::ext::shared_ptr<FloatingAnnuityCoupon>& floatingAnnuityCoupon)
         : coupon_(floatingAnnuityCoupon) {}
 
     //! \name Cashflow interface
@@ -42,7 +42,7 @@ public:
     Date date() const override;
 
 private:
-    boost::shared_ptr<FloatingAnnuityCoupon> coupon_;
+    QuantLib::ext::shared_ptr<FloatingAnnuityCoupon> coupon_;
 };
 
 inline Date FloatingAnnuityNominal::date() const { return coupon_->accrualStartDate(); }

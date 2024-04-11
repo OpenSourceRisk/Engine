@@ -39,9 +39,9 @@ using namespace QuantLib;
 namespace QuantExt {
 
 PairwiseVarianceSwapEngine::PairwiseVarianceSwapEngine(
-    const boost::shared_ptr<Index>& index1, const boost::shared_ptr<Index>& index2,
-    const boost::shared_ptr<GeneralizedBlackScholesProcess>& process1,
-    const boost::shared_ptr<GeneralizedBlackScholesProcess>& process2, const Handle<YieldTermStructure>& discountingTS,
+    const QuantLib::ext::shared_ptr<Index>& index1, const QuantLib::ext::shared_ptr<Index>& index2,
+    const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process1,
+    const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process2, const Handle<YieldTermStructure>& discountingTS,
     Handle<Quote> correlation)
     : index1_(index1), index2_(index2), process1_(process1), process2_(process2), discountingTS_(discountingTS),
       correlation_(correlation) {

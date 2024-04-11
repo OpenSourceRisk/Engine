@@ -44,7 +44,7 @@ namespace QuantExt {
 YoYSwapHelper::YoYSwapHelper(const Handle<Quote>& rate,
     Natural settlementDays,
     const Period& tenor,
-    const boost::shared_ptr<YoYInflationIndex>& yoyIndex,
+    const QuantLib::ext::shared_ptr<YoYInflationIndex>& yoyIndex,
     const Handle<YieldTermStructure>& rateCurve,
     const Period& observationLag,
     const Calendar& yoyCalendar,
@@ -95,11 +95,11 @@ void YoYSwapHelper::update() {
     notifyObservers();
 }
 
-boost::shared_ptr<YearOnYearInflationSwap> YoYSwapHelper::yoySwap() const {
+QuantLib::ext::shared_ptr<YearOnYearInflationSwap> YoYSwapHelper::yoySwap() const {
     return yoySwap_;
 }
 
-void YoYSwapHelper::setPricingEngine(const boost::shared_ptr<PricingEngine>& engine) {
+void YoYSwapHelper::setPricingEngine(const QuantLib::ext::shared_ptr<PricingEngine>& engine) {
     engine_ = engine;
 }
 
@@ -128,14 +128,14 @@ void YoYSwapHelper::createSwap() {
         yoyConvention_, DateGeneration::Backward, false);
 
     // YoY swap
-    yoySwap_ = boost::make_shared<YearOnYearInflationSwap>(YearOnYearInflationSwap::Payer, 1.0,
+    yoySwap_ = QuantLib::ext::make_shared<YearOnYearInflationSwap>(YearOnYearInflationSwap::Payer, 1.0,
         fixedSchedule, 0.01, fixedDayCount_, yoySchedule, yoyIndex_, observationLag_, 0.0, yoyDayCount_,
         paymentCalendar_, paymentConvention_);
 
     // set coupon pricer
-    auto pricer = boost::make_shared<QuantLib::YoYInflationCouponPricer>(rateCurve_);
+    auto pricer = QuantLib::ext::make_shared<QuantLib::YoYInflationCouponPricer>(rateCurve_);
     for (auto& c : yoySwap_->yoyLeg()) {
-        if (auto cpn = boost::dynamic_pointer_cast<QuantLib::YoYInflationCoupon>(c))
+        if (auto cpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::YoYInflationCoupon>(c))
             cpn->setPricer(pricer);
     }
 }

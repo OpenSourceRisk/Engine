@@ -87,7 +87,7 @@ public:
 	by priceQuoteBaseValue before returning it.
     */
     BondIndex(const std::string& securityName, const bool dirty = false, const bool relative = true,
-              const Calendar& fixingCalendar = NullCalendar(), const boost::shared_ptr<QuantLib::Bond>& bond = nullptr,
+              const Calendar& fixingCalendar = NullCalendar(), const QuantLib::ext::shared_ptr<QuantLib::Bond>& bond = nullptr,
               const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
               const Handle<DefaultProbabilityTermStructure>& defaultCurve = Handle<DefaultProbabilityTermStructure>(),
               const Handle<Quote>& recoveryRate = Handle<Quote>(),
@@ -122,7 +122,7 @@ public:
     const std::string& securityName() const { return securityName_; }
     bool dirty() const { return dirty_; }
     bool relative() const { return relative_; }
-    boost::shared_ptr<QuantLib::Bond> bond() const { return bond_; }
+    QuantLib::ext::shared_ptr<QuantLib::Bond> bond() const { return bond_; }
     Handle<YieldTermStructure> discountCurve() const { return discountCurve_; }
     Handle<DefaultProbabilityTermStructure> defaultCurve() const { return defaultCurve_; }
     Handle<Quote> recoveryRate() const { return recoveryRate_; }
@@ -138,7 +138,7 @@ protected:
     std::string securityName_;
     bool dirty_, relative_;
     Calendar fixingCalendar_;
-    boost::shared_ptr<QuantLib::Bond> bond_;
+    QuantLib::ext::shared_ptr<QuantLib::Bond> bond_;
     Handle<YieldTermStructure> discountCurve_;
     Handle<DefaultProbabilityTermStructure> defaultCurve_;
     Handle<Quote> recoveryRate_;
@@ -150,7 +150,7 @@ protected:
     double priceQuoteBaseValue_;
     bool isInflationLinked_;
     double bidAskAdjustment_;
-    boost::shared_ptr<DiscountingRiskyBondEngine> vanillaBondEngine_;
+    QuantLib::ext::shared_ptr<DiscountingRiskyBondEngine> vanillaBondEngine_;
     bool bondIssueDateFallback_ = false;
 };
 
@@ -161,7 +161,7 @@ public:
     BondFuturesIndex(
         const QuantLib::Date& expiryDate, const std::string& securityName, const bool dirty = false,
         const bool relative = true, const Calendar& fixingCalendar = NullCalendar(),
-        const boost::shared_ptr<QuantLib::Bond>& bond = nullptr,
+        const QuantLib::ext::shared_ptr<QuantLib::Bond>& bond = nullptr,
         const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
         const Handle<DefaultProbabilityTermStructure>& defaultCurve = Handle<DefaultProbabilityTermStructure>(),
         const Handle<Quote>& recoveryRate = Handle<Quote>(), const Handle<Quote>& securitySpread = Handle<Quote>(),

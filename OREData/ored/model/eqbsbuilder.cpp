@@ -36,14 +36,14 @@ using namespace std;
 namespace ore {
 namespace data {
 
-EqBsBuilder::EqBsBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<EqBsData>& data,
+EqBsBuilder::EqBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<EqBsData>& data,
                          const QuantLib::Currency& baseCcy, const std::string& configuration,
                          const std::string& referenceCalibrationGrid)
     : market_(market), configuration_(configuration), data_(data), referenceCalibrationGrid_(referenceCalibrationGrid),
       baseCcy_(baseCcy) {
 
     optionActive_ = std::vector<bool>(data_->optionExpiries().size(), false);
-    marketObserver_ = boost::make_shared<MarketObserver>();
+    marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
     QuantLib::Currency ccy = ore::data::parseCurrency(data->currency());
     string eqName = data->eqName();
 
@@ -96,10 +96,10 @@ EqBsBuilder::EqBsBuilder(const boost::shared_ptr<ore::data::Market>& market, con
 
     // Quotation needs to be consistent with FX spot quotation in the FX calibration basket
     if (data->sigmaParamType() == ParamType::Piecewise)
-        parametrization_ = boost::make_shared<QuantExt::EqBsPiecewiseConstantParametrization>(
+        parametrization_ = QuantLib::ext::make_shared<QuantExt::EqBsPiecewiseConstantParametrization>(
             ccy, eqName, eqSpot_, fxSpot_, sigmaTimes, sigma, ytsRate_, ytsDiv_);
     else if (data->sigmaParamType() == ParamType::Constant)
-        parametrization_ = boost::make_shared<QuantExt::EqBsConstantParametrization>(ccy, eqName, eqSpot_, fxSpot_,
+        parametrization_ = QuantLib::ext::make_shared<QuantExt::EqBsConstantParametrization>(ccy, eqName, eqSpot_, fxSpot_,
                                                                                      sigma[0], ytsRate_, ytsDiv_);
     else
         QL_FAIL("interpolation type not supported for Equity");
@@ -110,11 +110,11 @@ Real EqBsBuilder::error() const {
     return error_;
 }
 
-boost::shared_ptr<QuantExt::EqBsParametrization> EqBsBuilder::parametrization() const {
+QuantLib::ext::shared_ptr<QuantExt::EqBsParametrization> EqBsBuilder::parametrization() const {
     calculate();
     return parametrization_;
 }
-std::vector<boost::shared_ptr<BlackCalibrationHelper>> EqBsBuilder::optionBasket() const {
+std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> EqBsBuilder::optionBasket() const {
     calculate();
     return optionBasket_;
 }
@@ -207,8 +207,8 @@ void EqBsBuilder::buildOptionBasket() const {
         if (refCalDate == referenceCalibrationDates.end() || *refCalDate > lastRefCalDate) {
             optionActive_[j] = true;
             Real strikeValue = optionStrike(j);
-            Handle<Quote> volQuote(boost::make_shared<SimpleQuote>(eqVol_->blackVol(expiryDate, strikeValue)));
-            boost::shared_ptr<QuantExt::FxEqOptionHelper> helper = boost::make_shared<QuantExt::FxEqOptionHelper>(
+            Handle<Quote> volQuote(QuantLib::ext::make_shared<SimpleQuote>(eqVol_->blackVol(expiryDate, strikeValue)));
+            QuantLib::ext::shared_ptr<QuantExt::FxEqOptionHelper> helper = QuantLib::ext::make_shared<QuantExt::FxEqOptionHelper>(
                 expiryDate, strikeValue, eqSpot_, volQuote, ytsRate_, ytsDiv_);
             optionBasket_.push_back(helper);
             helper->performCalculations();

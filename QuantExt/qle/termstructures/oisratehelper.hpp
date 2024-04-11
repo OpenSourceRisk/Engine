@@ -36,7 +36,7 @@ using namespace QuantLib;
 class OISRateHelper : public RelativeDateRateHelper {
 public:
     OISRateHelper(Natural settlementDays, const Period& swapTenor, const Handle<Quote>& fixedRate,
-                  const boost::shared_ptr<OvernightIndex>& overnightIndex, const DayCounter& fixedDayCounter,
+                  const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex, const DayCounter& fixedDayCounter,
                   const Calendar& fixedCalendar, Natural paymentLag = 0, bool endOfMonth = false,
                   Frequency paymentFrequency = Annual, BusinessDayConvention fixedConvention = Following,
                   BusinessDayConvention paymentAdjustment = Following,
@@ -51,7 +51,7 @@ public:
     //@}
     //! \name inspectors
     //@{
-    boost::shared_ptr<OvernightIndexedSwap> swap() const { return swap_; }
+    QuantLib::ext::shared_ptr<OvernightIndexedSwap> swap() const { return swap_; }
     //@}
     //! \name Visitability
     //@{
@@ -62,7 +62,7 @@ protected:
 
     Natural settlementDays_;
     Period swapTenor_;
-    boost::shared_ptr<OvernightIndex> overnightIndex_;
+    QuantLib::ext::shared_ptr<OvernightIndex> overnightIndex_;
     DayCounter fixedDayCounter_;
     Calendar fixedCalendar_;
     Natural paymentLag_;
@@ -72,7 +72,7 @@ protected:
     BusinessDayConvention paymentAdjustment_;
     DateGeneration::Rule rule_;
 
-    boost::shared_ptr<OvernightIndexedSwap> swap_;
+    QuantLib::ext::shared_ptr<OvernightIndexedSwap> swap_;
     RelinkableHandle<YieldTermStructure> termStructureHandle_;
     Handle<YieldTermStructure> discountHandle_;
     RelinkableHandle<YieldTermStructure> discountRelinkableHandle_;
@@ -86,7 +86,7 @@ protected:
 class DatedOISRateHelper : public RateHelper {
 public:
     DatedOISRateHelper(const Date& startDate, const Date& endDate, const Handle<Quote>& fixedRate,
-                       const boost::shared_ptr<OvernightIndex>& overnightIndex, const DayCounter& fixedDayCounter,
+                       const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex, const DayCounter& fixedDayCounter,
                        const Calendar& fixedCalendar, Natural paymentLag = 0, Frequency paymentFrequency = Annual,
                        BusinessDayConvention fixedConvention = Following,
                        BusinessDayConvention paymentAdjustment = Following,
@@ -105,7 +105,7 @@ public:
     void accept(AcyclicVisitor&) override;
     //@}
 protected:
-    boost::shared_ptr<OvernightIndex> overnightIndex_;
+    QuantLib::ext::shared_ptr<OvernightIndex> overnightIndex_;
     DayCounter fixedDayCounter_;
     Calendar fixedCalendar_;
     Natural paymentLag_;
@@ -114,7 +114,7 @@ protected:
     BusinessDayConvention paymentAdjustment_;
     DateGeneration::Rule rule_;
 
-    boost::shared_ptr<OvernightIndexedSwap> swap_;
+    QuantLib::ext::shared_ptr<OvernightIndexedSwap> swap_;
     RelinkableHandle<YieldTermStructure> termStructureHandle_;
     Handle<YieldTermStructure> discountHandle_;
     RelinkableHandle<YieldTermStructure> discountRelinkableHandle_;

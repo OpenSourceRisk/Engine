@@ -34,12 +34,12 @@ using std::vector;
 namespace ore {
 namespace analytics {
 
-SimmConfiguration_ISDA_V1_0::SimmConfiguration_ISDA_V1_0(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+SimmConfiguration_ISDA_V1_0::SimmConfiguration_ISDA_V1_0(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
                                                          const std::string& name, const std::string version)
     : SimmConfigurationBase(simmBucketMapper, name, version) {
 
     // Set up the correct concentration threshold getter
-    simmConcentration_ = boost::make_shared<SimmConcentrationBase>();
+    simmConcentration_ = QuantLib::ext::make_shared<SimmConcentrationBase>();
 
     // clang-format off
 

@@ -370,7 +370,7 @@ XMLNode* ConvertibleBondData::toXML(XMLDocument& doc) const {
 }
 
 void ConvertibleBondData::populateFromBondReferenceData(
-    const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData) {
+    const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData) {
 
     QL_REQUIRE(!bondData_.securityId().empty(),
                "ConvertibleBondData::populateFromBondReferenceData(): no security id given");
@@ -378,13 +378,13 @@ void ConvertibleBondData::populateFromBondReferenceData(
         DLOG("could not get ConvertibleBondReferenceDatum for name " << bondData_.securityId()
                                                                      << " leave data in trade unchanged");
     } else {
-        auto bondRefData = boost::dynamic_pointer_cast<ConvertibleBondReferenceDatum>(
+        auto bondRefData = QuantLib::ext::dynamic_pointer_cast<ConvertibleBondReferenceDatum>(
             referenceData->getData(ConvertibleBondReferenceDatum::TYPE, bondData_.securityId()));
         QL_REQUIRE(bondRefData, "could not cast to ConvertibleBondReferenceDatum, this is unexpected");
         DLOG("Got ConvertibleBondReferenceDatum for name " << bondData_.securityId()
                                                            << " overwrite empty elements in trade");
         bondData_.populateFromBondReferenceData(
-            boost::make_shared<BondReferenceDatum>(bondData_.securityId(), bondRefData->bondData()));
+            QuantLib::ext::make_shared<BondReferenceDatum>(bondData_.securityId(), bondRefData->bondData()));
         if (!callData_.initialised()) {
             DLOG("overwrite CallData from reference data")
             callData_ = bondRefData->callData();

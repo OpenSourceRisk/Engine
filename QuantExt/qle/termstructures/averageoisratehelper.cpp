@@ -29,7 +29,7 @@ AverageOISRateHelper::AverageOISRateHelper(const Handle<Quote>& fixedRate, const
                                            const Calendar& fixedCalendar, BusinessDayConvention fixedConvention,
                                            BusinessDayConvention fixedPaymentAdjustment,
                                            // ON leg
-                                           const boost::shared_ptr<OvernightIndex>& overnightIndex,
+                                           const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex,
                                            const Period& onTenor, const Handle<Quote>& onSpread, Natural rateCutoff,
                                            // Exogenous discount curve
                                            const Handle<YieldTermStructure>& discountCurve,
@@ -45,8 +45,8 @@ AverageOISRateHelper::AverageOISRateHelper(const Handle<Quote>& fixedRate, const
     QL_REQUIRE(!(onIndexHasCurve && haveDiscountCurve), "Have both curves nothing to solve for.");
 
     if (!onIndexHasCurve) {
-        boost::shared_ptr<IborIndex> clonedIborIndex(overnightIndex_->clone(termStructureHandle_));
-        overnightIndex_ = boost::dynamic_pointer_cast<OvernightIndex>(clonedIborIndex);
+        QuantLib::ext::shared_ptr<IborIndex> clonedIborIndex(overnightIndex_->clone(termStructureHandle_));
+        overnightIndex_ = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(clonedIborIndex);
         overnightIndex_->unregisterWith(termStructureHandle_);
     }
 
@@ -92,7 +92,7 @@ Real AverageOISRateHelper::impliedQuote() const {
 void AverageOISRateHelper::setTermStructure(YieldTermStructure* t) {
 
     bool observer = false;
-    boost::shared_ptr<YieldTermStructure> temp(t, null_deleter());
+    QuantLib::ext::shared_ptr<YieldTermStructure> temp(t, null_deleter());
     termStructureHandle_.linkTo(temp, observer);
 
     if (discountHandle_.empty())
@@ -105,7 +105,7 @@ void AverageOISRateHelper::setTermStructure(YieldTermStructure* t) {
 
 Spread AverageOISRateHelper::onSpread() const { return onSpread_.empty() ? 0.0 : onSpread_->value(); }
 
-boost::shared_ptr<AverageOIS> AverageOISRateHelper::averageOIS() const { return averageOIS_; }
+QuantLib::ext::shared_ptr<AverageOIS> AverageOISRateHelper::averageOIS() const { return averageOIS_; }
 
 void AverageOISRateHelper::accept(AcyclicVisitor& v) {
 

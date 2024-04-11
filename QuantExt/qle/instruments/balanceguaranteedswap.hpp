@@ -54,7 +54,7 @@ public:
     BalanceGuaranteedSwap(const VanillaSwap::Type type, const std::vector<std::vector<Real>>& trancheNominals,
                           const Schedule& nominalSchedule, const Size referencedTranche, const Schedule& fixedSchedule,
                           const std::vector<Real>& fixedRate, const DayCounter& fixedDayCount,
-                          const Schedule& floatingSchedule, const boost::shared_ptr<IborIndex>& iborIndex,
+                          const Schedule& floatingSchedule, const QuantLib::ext::shared_ptr<IborIndex>& iborIndex,
                           const std::vector<Real>& gearing, const std::vector<Real>& spread,
                           const std::vector<Real>& cappedRate, const std::vector<Real>& flooredRate,
                           const DayCounter& floatingDayCount,
@@ -72,7 +72,7 @@ public:
     const DayCounter& fixedDayCount() const { return fixedDayCount_; }
 
     const Schedule& floatingSchedule() const { return floatingSchedule_; }
-    const boost::shared_ptr<IborIndex>& iborIndex() const { return iborIndex_; }
+    const QuantLib::ext::shared_ptr<IborIndex>& iborIndex() const { return iborIndex_; }
     const std::vector<Real>& gearing() const { return gearing_; }
     const std::vector<Real>& spread() const { return spread_; }
     const std::vector<Real>& cappedRate() const { return cappedRate_; }
@@ -96,7 +96,7 @@ private:
     const std::vector<Real> fixedRate_;
     const DayCounter fixedDayCount_;
     const Schedule floatingSchedule_;
-    const boost::shared_ptr<IborIndex> iborIndex_;
+    const QuantLib::ext::shared_ptr<IborIndex> iborIndex_;
     const std::vector<Real> gearing_;
     const std::vector<Real> spread_;
     const std::vector<Real> cappedRate_;
@@ -134,7 +134,7 @@ public:
     std::vector<Real> flooredRate;
     std::vector<Real> floatingCoupons;
 
-    boost::shared_ptr<IborIndex> iborIndex;
+    QuantLib::ext::shared_ptr<IborIndex> iborIndex;
 
     Leg fixedLeg, floatingLeg;
 

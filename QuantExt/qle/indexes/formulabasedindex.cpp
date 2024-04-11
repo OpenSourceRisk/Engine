@@ -23,7 +23,7 @@
 namespace QuantExt {
 
 FormulaBasedIndex::FormulaBasedIndex(const std::string& familyName,
-                                     const std::vector<boost::shared_ptr<InterestRateIndex>>& indices,
+                                     const std::vector<QuantLib::ext::shared_ptr<InterestRateIndex>>& indices,
                                      const CompiledFormula& formula, const Calendar& fixingCalendar)
     : InterestRateIndex(familyName, 0 * Days, indices.front()->fixingDays(), Currency(), fixingCalendar,
                         SimpleDayCounter()),
