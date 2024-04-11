@@ -86,15 +86,15 @@ public:
     };
 
     //! Constructor
-    ShiftScenarioGenerator(const boost::shared_ptr<Scenario>& baseScenario,
-                           const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-			   const boost::weak_ptr<ScenarioSimMarket>& simMarket);
+    ShiftScenarioGenerator(const QuantLib::ext::shared_ptr<Scenario>& baseScenario,
+                           const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+			   const QuantLib::ext::weak_ptr<ScenarioSimMarket>& simMarket);
     //! Default destructor
     ~ShiftScenarioGenerator(){};
 
     //! Scenario Generator interface
     //@{
-    boost::shared_ptr<Scenario> next(const Date& d) override;
+    QuantLib::ext::shared_ptr<Scenario> next(const Date& d) override;
     void reset() override { counter_ = 0; }
     //@}
 
@@ -103,9 +103,9 @@ public:
     //! Number of shift scenarios
     Size samples() { return scenarios_.size(); }
     //! Return the base scenario, i.e. cached initial values of all relevant market points
-    const boost::shared_ptr<Scenario>& baseScenario() { return scenarios_.front(); }
+    const QuantLib::ext::shared_ptr<Scenario>& baseScenario() { return scenarios_.front(); }
     //! Return vector of sensitivity scenarios, scenario 0 is the base scenario
-    const std::vector<boost::shared_ptr<Scenario>>& scenarios() { return scenarios_; }
+    const std::vector<QuantLib::ext::shared_ptr<Scenario>>& scenarios() { return scenarios_; }
     //! Return vector of scenario descriptions
     std::vector<ScenarioDescription> scenarioDescriptions() { return scenarioDescriptions_; }
     // ! Return map of RiskFactorKeys to factors, i.e. human readable text representations
@@ -177,13 +177,13 @@ public:
         bool initialise);
 
     //! return the base scenario
-    boost::shared_ptr<Scenario> baseScenario() const { return scenarios_.front(); }
+    QuantLib::ext::shared_ptr<Scenario> baseScenario() const { return scenarios_.front(); }
 
 protected:
-    const boost::shared_ptr<Scenario> baseScenario_;
-    const boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
-    const boost::weak_ptr<ScenarioSimMarket> simMarket_;
-    std::vector<boost::shared_ptr<Scenario>> scenarios_;
+    const QuantLib::ext::shared_ptr<Scenario> baseScenario_;
+    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
+    const QuantLib::ext::weak_ptr<ScenarioSimMarket> simMarket_;
+    std::vector<QuantLib::ext::shared_ptr<Scenario>> scenarios_;
     Size counter_;
     std::vector<ScenarioDescription> scenarioDescriptions_;
     // map risk factor key to "factor", i.e. human readable text representation
@@ -202,7 +202,7 @@ std::pair<RiskFactorKey, std::string> deconstructFactor(const std::string& facto
 std::string reconstructFactor(const RiskFactorKey& key, const std::string& desc);
 
 //! risk factor key parser that takes into account additional tokens occurring in sensitivity risk factor keys
-boost::shared_ptr<RiskFactorKey> parseRiskFactorKey(const std::string& str, std::vector<std::string>& addTokens);
+QuantLib::ext::shared_ptr<RiskFactorKey> parseRiskFactorKey(const std::string& str, std::vector<std::string>& addTokens);
 
 inline bool operator<(const ShiftScenarioGenerator::ScenarioDescription& lhs,
                       const ShiftScenarioGenerator::ScenarioDescription& rhs) {

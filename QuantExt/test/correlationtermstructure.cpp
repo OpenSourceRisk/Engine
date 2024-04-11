@@ -36,9 +36,9 @@ BOOST_AUTO_TEST_SUITE(CorrelationTermstructureTest)
 
 BOOST_AUTO_TEST_CASE(testFlatCorrelation) {
 
-    boost::shared_ptr<SimpleQuote> q = boost::make_shared<SimpleQuote>(0.02);
+    QuantLib::ext::shared_ptr<SimpleQuote> q = QuantLib::ext::make_shared<SimpleQuote>(0.02);
     Handle<Quote> hq(q);
-    Handle<FlatCorrelation> flatCorr(boost::make_shared<FlatCorrelation>(0, NullCalendar(), hq, Actual365Fixed()));
+    Handle<FlatCorrelation> flatCorr(QuantLib::ext::make_shared<FlatCorrelation>(0, NullCalendar(), hq, Actual365Fixed()));
 
     // check we get the expected quote value
     BOOST_CHECK_MESSAGE(flatCorr->correlation(1) == 0.02, "unexpected correlation value: " << flatCorr->correlation(1));
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(testInterpolatedCorrelationCurve) {
 
     // build interpolated correlation curve
     std::vector<Time> times;
-    std::vector<boost::shared_ptr<SimpleQuote> > simpleQuotes;
+    std::vector<QuantLib::ext::shared_ptr<SimpleQuote> > simpleQuotes;
     std::vector<Handle<Quote> > quotes;
 
     Size numYears = 10;
@@ -69,14 +69,14 @@ BOOST_AUTO_TEST_CASE(testInterpolatedCorrelationCurve) {
 
         Real corr = 0.1;
 
-        simpleQuotes.push_back(boost::make_shared<SimpleQuote>(corr));
+        simpleQuotes.push_back(QuantLib::ext::make_shared<SimpleQuote>(corr));
         quotes.push_back(Handle<Quote>(simpleQuotes.back()));
 
         times.push_back(static_cast<Time>(i));
     }
 
     Handle<PiecewiseLinearCorrelationCurve> interpCorr(
-        boost::make_shared<PiecewiseLinearCorrelationCurve>(times, quotes, Actual365Fixed(), NullCalendar()));
+        QuantLib::ext::make_shared<PiecewiseLinearCorrelationCurve>(times, quotes, Actual365Fixed(), NullCalendar()));
 
     Time t = 1;
     while (t < numYears) {

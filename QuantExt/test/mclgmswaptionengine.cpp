@@ -71,19 +71,19 @@ BOOST_AUTO_TEST_CASE(testAgainstSwaptionEngines) {
                            DateGeneration::Forward, false);
 
     // Floating leg
-    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(evalDate, 0.02, Actual365Fixed()));
-    boost::shared_ptr<IborIndex> euribor6m(boost::make_shared<Euribor>(6 * Months, yts));
+    Handle<YieldTermStructure> yts(QuantLib::ext::make_shared<FlatForward>(evalDate, 0.02, Actual365Fixed()));
+    QuantLib::ext::shared_ptr<IborIndex> euribor6m(QuantLib::ext::make_shared<Euribor>(6 * Months, yts));
     Spread spread = 0.0;
     DayCounter floatingDayCount = Actual360();
     Schedule floatingSchedule(startDate, maturityDate, 6 * Months, cal, ModifiedFollowing, ModifiedFollowing,
                               DateGeneration::Forward, false);
 
     // Underlying swap
-    boost::shared_ptr<VanillaSwap> undlSwap = boost::make_shared<VanillaSwap>(
+    QuantLib::ext::shared_ptr<VanillaSwap> undlSwap = QuantLib::ext::make_shared<VanillaSwap>(
         VanillaSwap(VanillaSwap::Payer, nominal, fixedSchedule, fixedRate, fixedDayCount, floatingSchedule, euribor6m,
                     spread, floatingDayCount));
 
-    undlSwap->setPricingEngine(boost::make_shared<DiscountingSwapEngine>(yts));
+    undlSwap->setPricingEngine(QuantLib::ext::make_shared<DiscountingSwapEngine>(yts));
     BOOST_TEST_MESSAGE("Underlying value analytic = " << undlSwap->NPV());
 
     // Bermudan swaption
@@ -91,8 +91,8 @@ BOOST_AUTO_TEST_CASE(testAgainstSwaptionEngines) {
     for (Size i = 0; i < 9; ++i) {
         exerciseDates.push_back(cal.advance(fixedSchedule[i], -2 * Days));
     }
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<BermudanExercise>(exerciseDates, false);
-    boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(undlSwap, exercise);
+    QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<BermudanExercise>(exerciseDates, false);
+    QuantLib::ext::shared_ptr<Swaption> swaption = QuantLib::ext::make_shared<Swaption>(undlSwap, exercise);
 
     // Setup models and model adaptors
     std::vector<Date> stepDates = std::vector<Date>(exerciseDates.begin(), exerciseDates.end() - 1);
@@ -107,33 +107,33 @@ BOOST_AUTO_TEST_CASE(testAgainstSwaptionEngines) {
     }
 
     Real reversion = 0.03;
-    boost::shared_ptr<Gsr> gsr = boost::make_shared<Gsr>(yts, stepDates, sigmas, reversion, 50.0);
+    QuantLib::ext::shared_ptr<Gsr> gsr = QuantLib::ext::make_shared<Gsr>(yts, stepDates, sigmas, reversion, 50.0);
 
     // The Hull White adaptor for the LGM parametrization should lead to equal Bermudan swaption prices
-    boost::shared_ptr<IrLgm1fParametrization> lgmParam = boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+    QuantLib::ext::shared_ptr<IrLgm1fParametrization> lgmParam = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
         EURCurrency(), yts, stepTimes, Array(sigmas.begin(), sigmas.end()), stepTimes, Array(sigmas.size(), reversion));
 
     // fix any T forward measure
-    boost::shared_ptr<LinearGaussMarkovModel> lgm = boost::make_shared<LinearGaussMarkovModel>(lgmParam);
-    boost::shared_ptr<Gaussian1dModel> lgmGaussian1d = boost::make_shared<Gaussian1dCrossAssetAdaptor>(lgm);
+    QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm = QuantLib::ext::make_shared<LinearGaussMarkovModel>(lgmParam);
+    QuantLib::ext::shared_ptr<Gaussian1dModel> lgmGaussian1d = QuantLib::ext::make_shared<Gaussian1dCrossAssetAdaptor>(lgm);
 
     // Setup the different pricing engines
-    boost::shared_ptr<PricingEngine> swaptionEngineGsr =
-        boost::make_shared<Gaussian1dSwaptionEngine>(gsr, 64, 7.0, true, false);
+    QuantLib::ext::shared_ptr<PricingEngine> swaptionEngineGsr =
+        QuantLib::ext::make_shared<Gaussian1dSwaptionEngine>(gsr, 64, 7.0, true, false);
 
-    boost::shared_ptr<PricingEngine> swaptionEngineLgm =
-        boost::make_shared<Gaussian1dSwaptionEngine>(lgmGaussian1d, 64, 7.0, true, false);
+    QuantLib::ext::shared_ptr<PricingEngine> swaptionEngineLgm =
+        QuantLib::ext::make_shared<Gaussian1dSwaptionEngine>(lgmGaussian1d, 64, 7.0, true, false);
 
-    boost::shared_ptr<PricingEngine> swaptionEngineLgm2 =
-        boost::make_shared<NumericLgmSwaptionEngine>(lgm, 7.0, 16, 7.0, 32);
+    QuantLib::ext::shared_ptr<PricingEngine> swaptionEngineLgm2 =
+        QuantLib::ext::make_shared<NumericLgmSwaptionEngine>(lgm, 7.0, 16, 7.0, 32);
 
     Size polynomOrder = 4;
     LsmBasisSystem::PolynomialType polynomType = LsmBasisSystem::Monomial;
     Size tSamples = 10000;
     Size pSamples = 10000;
-    boost::shared_ptr<StochasticProcess> stateProcess = lgm->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> stateProcess = lgm->stateProcess();
 
-    boost::shared_ptr<PricingEngine> swaptionEngineLgmMC = boost::shared_ptr<McLgmSwaptionEngine>(
+    QuantLib::ext::shared_ptr<PricingEngine> swaptionEngineLgmMC = QuantLib::ext::shared_ptr<McLgmSwaptionEngine>(
         new McLgmSwaptionEngine(lgm, MersenneTwisterAntithetic, SobolBrownianBridge, tSamples, pSamples, 42, 43,
                                 polynomOrder, polynomType));
 

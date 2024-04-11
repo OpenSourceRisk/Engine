@@ -38,7 +38,7 @@ template <typename NodeType, typename... AddArgs> struct createASTNode {
             evalStack.pop();
             --n;
         }
-        auto node = boost::make_shared<NodeType>(addArgs..., arg);
+        auto node = QuantLib::ext::make_shared<NodeType>(addArgs..., arg);
         if (mergeLocation && !arg.empty()) {
             auto const& loc1 = arg.front()->locationInfo;
             auto const& loc2 = arg.back()->locationInfo;
@@ -66,7 +66,7 @@ template <typename NodeType, typename... AddArgs> struct collapseASTNode {
         ASTNodePtr previous = evalStack.top();
         evalStack.pop();
         arg.insert(arg.begin(), previous->args.begin(), previous->args.end());
-        auto node = boost::make_shared<NodeType>(addArgs..., arg);
+        auto node = QuantLib::ext::make_shared<NodeType>(addArgs..., arg);
         node->locationInfo = previous->locationInfo;
         evalStack.push(node);
     }

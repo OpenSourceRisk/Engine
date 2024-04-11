@@ -51,8 +51,8 @@ void DiscountingFxForwardEngineDeltaGamma::calculate() const {
     // we build this engine similar to the currency swap engine
 
     std::vector<Leg> legs;
-    legs.push_back(Leg(1, boost::make_shared<SimpleCashFlow>(arguments_.nominal1, arguments_.maturityDate)));
-    legs.push_back(Leg(1, boost::make_shared<SimpleCashFlow>(arguments_.nominal2, arguments_.maturityDate)));
+    legs.push_back(Leg(1, QuantLib::ext::make_shared<SimpleCashFlow>(arguments_.nominal1, arguments_.maturityDate)));
+    legs.push_back(Leg(1, QuantLib::ext::make_shared<SimpleCashFlow>(arguments_.nominal2, arguments_.maturityDate)));
 
     std::vector<Currency> currencies = {arguments_.currency1, arguments_.currency2};
 

@@ -58,21 +58,21 @@ public:
         DayCounter dayCounter = Actual360();
 
         // Add USD discount curve
-        Handle<YieldTermStructure> discount(boost::make_shared<FlatForward>(asof_, riskFreeRate, dayCounter));
+        Handle<YieldTermStructure> discount(QuantLib::ext::make_shared<FlatForward>(asof_, riskFreeRate, dayCounter));
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "USD")] = discount;
 
         // Add ALU_USD price curve
         vector<Date> dates = {asof_, expiry};
         vector<Real> prices = {
             spot, spot * std::exp((riskFreeRate - convenienceYield) * dayCounter.yearFraction(asof_, expiry))};
-        Handle<PriceTermStructure> priceCurve(boost::make_shared<InterpolatedPriceCurve<QuantExt::LinearFlat>>(
+        Handle<PriceTermStructure> priceCurve(QuantLib::ext::make_shared<InterpolatedPriceCurve<QuantExt::LinearFlat>>(
             asof_, dates, prices, dayCounter, USDCurrency()));
-        Handle<CommodityIndex> commIdx(boost::make_shared<CommoditySpotIndex>("ALU_USD", NullCalendar(), priceCurve));
+        Handle<CommodityIndex> commIdx(QuantLib::ext::make_shared<CommoditySpotIndex>("ALU_USD", NullCalendar(), priceCurve));
         commodityIndices_[make_pair(Market::defaultConfiguration, "ALU_USD")] = commIdx;
 
         // Add ALU_USD volatilities
         Handle<BlackVolTermStructure> volatility(
-            boost::make_shared<BlackConstantVol>(asof_, TARGET(), flatVolatility, dayCounter));
+            QuantLib::ext::make_shared<BlackConstantVol>(asof_, TARGET(), flatVolatility, dayCounter));
         commodityVols_[make_pair(Market::defaultConfiguration, "ALU_USD")] = volatility;
     }
  };
@@ -137,8 +137,8 @@ public:
 
      Date asof = Date(01, Feb, 2021);
      Envelope env("CP1");
-     boost::shared_ptr<EngineFactory> engineFactory;
-     boost::shared_ptr<Market> market;
+     QuantLib::ext::shared_ptr<EngineFactory> engineFactory;
+     QuantLib::ext::shared_ptr<Market> market;
 
      for (const auto& a : asians) {
          Time deltaT = a.length / (a.fixings - 1);
@@ -154,15 +154,15 @@ public:
          ScheduleDates scheduleDates("NullCalendar", "", "", strFixingDates);
          ScheduleData scheduleData(scheduleDates);
 
-         market = boost::make_shared<TestMarket>(a.spot, expiry, a.riskFreeRate, a.convenienceYield, a.volatility);
-         boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+         market = QuantLib::ext::make_shared<TestMarket>(a.spot, expiry, a.riskFreeRate, a.convenienceYield, a.volatility);
+         QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
          std::string productName = "CommodityAsianOptionArithmeticPrice";
          engineData->model(productName) = "BlackScholesMerton";
          engineData->engine(productName) = "MCDiscreteArithmeticAPEngine";
          engineData->engineParameters(productName) = {{"ProcessType", "Discrete"},    {"BrownianBridge", "True"},
                                                       {"AntitheticVariate", "False"}, {"ControlVariate", "True"},
                                                       {"RequiredSamples", "2047"},    {"Seed", "0"}};
-         engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+         engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
          // Set evaluation date
          Settings::instance().evaluationDate() = market->asofDate();
@@ -174,23 +174,23 @@ public:
                                vector<string>(), "", "", "", "Asian", "Arithmetic", boost::none, boost::none,
                                boost::none);
 
-         boost::shared_ptr<CommodityAsianOption> asianOption = boost::make_shared<CommodityAsianOption>(
+         QuantLib::ext::shared_ptr<CommodityAsianOption> asianOption = QuantLib::ext::make_shared<CommodityAsianOption>(
              env, "CommodityAsianOption", 1.0, TradeStrike(a.strike, "USD"), optionData, scheduleData,
-             boost::make_shared<CommodityUnderlying>("ALU_USD", 1.0, "Spot", 0, 0, ""), Date(), "USD");
+             QuantLib::ext::make_shared<CommodityUnderlying>("ALU_USD", 1.0, "Spot", 0, 0, ""), Date(), "USD");
          BOOST_CHECK_NO_THROW(asianOption->build(engineFactory));
 
          // Check the underlying instrument was built as expected
-         boost::shared_ptr<Instrument> qlInstrument = asianOption->instrument()->qlInstrument();
+         QuantLib::ext::shared_ptr<Instrument> qlInstrument = asianOption->instrument()->qlInstrument();
 
-         boost::shared_ptr<DiscreteAveragingAsianOption> discreteAsian =
-             boost::dynamic_pointer_cast<DiscreteAveragingAsianOption>(qlInstrument);
+         QuantLib::ext::shared_ptr<DiscreteAveragingAsianOption> discreteAsian =
+             QuantLib::ext::dynamic_pointer_cast<DiscreteAveragingAsianOption>(qlInstrument);
 
          BOOST_CHECK(discreteAsian);
          BOOST_CHECK_EQUAL(discreteAsian->exercise()->type(), Exercise::Type::European);
          BOOST_CHECK_EQUAL(discreteAsian->exercise()->dates().size(), 1);
          BOOST_CHECK_EQUAL(discreteAsian->exercise()->dates()[0], expiry);
 
-         boost::shared_ptr<TypePayoff> payoff = boost::dynamic_pointer_cast<TypePayoff>(discreteAsian->payoff());
+         QuantLib::ext::shared_ptr<TypePayoff> payoff = QuantLib::ext::dynamic_pointer_cast<TypePayoff>(discreteAsian->payoff());
          BOOST_CHECK(payoff);
          BOOST_CHECK_EQUAL(payoff->optionType(), a.type);
 
@@ -272,9 +272,9 @@ public:
      portfolio.fromXMLString(tradeXml);
 
      // Extract CommodityAsianOption trade from portfolio
-     boost::shared_ptr<Trade> trade = portfolio.trades().begin()->second;
-     boost::shared_ptr<CommodityAsianOption> option =
-         boost::dynamic_pointer_cast<ore::data::CommodityAsianOption>(trade);
+     QuantLib::ext::shared_ptr<Trade> trade = portfolio.trades().begin()->second;
+     QuantLib::ext::shared_ptr<CommodityAsianOption> option =
+         QuantLib::ext::dynamic_pointer_cast<ore::data::CommodityAsianOption>(trade);
      BOOST_CHECK(option != nullptr);
 
      // Check fields after checking that the cast was successful

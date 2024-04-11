@@ -97,12 +97,12 @@ struct CommonVars {
         rrs = vector<Volatility>(atmVols.size(), 0.01);
         bfs = vector<Volatility>(atmVols.size(), 0.001);
 
-        baseSpot = Handle<Quote>(boost::shared_ptr<Quote>(new SimpleQuote(100)));
+        baseSpot = Handle<Quote>(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(100)));
 
         baseDomesticYield = Handle<YieldTermStructure>(
-            boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.03)), dc));
+            QuantLib::ext::make_shared<FlatForward>(today, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.03)), dc));
         baseForeignYield = Handle<YieldTermStructure>(
-            boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.01)), dc));
+            QuantLib::ext::make_shared<FlatForward>(today, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.01)), dc));
     }
 };
 
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(testVannaVolgaFxVolSurface) {
     Date asof(12, Feb, 2004);
     Settings::instance().evaluationDate() = asof;
 
-    Handle<Quote> fxSpot(boost::shared_ptr<Quote>(new SimpleQuote(1.2832)));
+    Handle<Quote> fxSpot(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(1.2832)));
 
     // vols are % here
     // tenor, atm, rr, bf, T, p_d, p_f
@@ -246,9 +246,9 @@ BOOST_AUTO_TEST_CASE(testVannaVolgaFxVolSurface) {
 
     // Now build discount curves
     Handle<YieldTermStructure> domYTS(
-        boost::shared_ptr<YieldTermStructure>(new DiscountCurve(discountDates, dfDom, dc)));
+        QuantLib::ext::shared_ptr<YieldTermStructure>(new DiscountCurve(discountDates, dfDom, dc)));
     Handle<YieldTermStructure> forYTS(
-        boost::shared_ptr<YieldTermStructure>(new DiscountCurve(discountDates, dfFor, dc)));
+        QuantLib::ext::shared_ptr<YieldTermStructure>(new DiscountCurve(discountDates, dfFor, dc)));
 
     // build surface
     FxBlackVannaVolgaVolatilitySurface volSurface(asof, dates, atm, rr, bf, dc, cal, fxSpot, domYTS, forYTS);
@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(testInvertedVolTermStructure) {
 
     CommonVars vars;
 
-    Handle<BlackVolTermStructure> surface(boost::shared_ptr<BlackVolTermStructure>(
+    Handle<BlackVolTermStructure> surface(QuantLib::ext::shared_ptr<BlackVolTermStructure>(
         new BlackVarianceSurface(vars.today, TARGET(), vars.dates, vars.strikes, vars.vols, vars.dc)));
 
     BlackInvertedVolTermStructure bivt(surface);

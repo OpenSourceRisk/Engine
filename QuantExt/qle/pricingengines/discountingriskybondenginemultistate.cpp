@@ -85,7 +85,7 @@ Real DiscountingRiskyBondEngineMultiState::calculateDefaultValue() const {
     for (auto& cf : arguments_.cashflows) {
         if (cf->hasOccurred(npvDate, includeSettlementDateFlows_))
             continue;
-        boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(cf);
+        QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(cf);
         if (coupon) {
             return coupon->nominal() * recoveryRates_.back()->value();
         }

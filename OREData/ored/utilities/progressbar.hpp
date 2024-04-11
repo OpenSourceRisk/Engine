@@ -25,7 +25,7 @@
 
 #include <ored/utilities/log.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 #include <boost/unordered_set.hpp>
 
 #include <string>
@@ -54,10 +54,10 @@ public:
     ProgressReporter() {}
 
     //! register a Progress Indicator
-    void registerProgressIndicator(const boost::shared_ptr<ProgressIndicator>& indicator);
+    void registerProgressIndicator(const QuantLib::ext::shared_ptr<ProgressIndicator>& indicator);
 
     //! unregister a Progress Indicator
-    void unregisterProgressIndicator(const boost::shared_ptr<ProgressIndicator>& indicator);
+    void unregisterProgressIndicator(const QuantLib::ext::shared_ptr<ProgressIndicator>& indicator);
 
     //! unregister all progress indicators
     void unregisterAllProgressIndicators();
@@ -69,10 +69,10 @@ public:
     void resetProgress();
 
     //! return progress indicators
-    const std::set<boost::shared_ptr<ProgressIndicator>>& progressIndicators() const { return indicators_; }
+    const std::set<QuantLib::ext::shared_ptr<ProgressIndicator>>& progressIndicators() const { return indicators_; }
 
 private:
-    std::set<boost::shared_ptr<ProgressIndicator>> indicators_;
+    std::set<QuantLib::ext::shared_ptr<ProgressIndicator>> indicators_;
 };
 
 //! Simple Progress Bar
@@ -129,13 +129,13 @@ public:
 /*! Progress Manager that consolidates updates from multiple threads */
 class MultiThreadedProgressIndicator : public ProgressIndicator {
 public:
-    explicit MultiThreadedProgressIndicator(const std::set<boost::shared_ptr<ProgressIndicator>>& indicators);
+    explicit MultiThreadedProgressIndicator(const std::set<QuantLib::ext::shared_ptr<ProgressIndicator>>& indicators);
     void updateProgress(const unsigned long progress, const unsigned long total, const std::string& detail) override;
     void reset() override;
 
 private:
     mutable boost::shared_mutex mutex_;
-    std::set<boost::shared_ptr<ProgressIndicator>> indicators_;
+    std::set<QuantLib::ext::shared_ptr<ProgressIndicator>> indicators_;
     std::map<std::thread::id, std::tuple<unsigned long, unsigned long, std::string>> threadData_;
 };
 

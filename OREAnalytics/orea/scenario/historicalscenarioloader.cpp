@@ -28,7 +28,7 @@ using namespace QuantLib;
 namespace ore {
 namespace analytics {
 
-boost::shared_ptr<Scenario> HistoricalScenarioLoader::getHistoricalScenario(const QuantLib::Date& date) const {
+QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioLoader::getHistoricalScenario(const QuantLib::Date& date) const {
     QL_REQUIRE(historicalScenarios_.size() > 0, "No Historical Scenarios Loaded");
 
     auto it = std::find(dates_.begin(), dates_.end(), date);
@@ -38,7 +38,7 @@ boost::shared_ptr<Scenario> HistoricalScenarioLoader::getHistoricalScenario(cons
     return historicalScenarios_[index];
 };
 
-HistoricalScenarioLoader::HistoricalScenarioLoader(const boost::shared_ptr<HistoricalScenarioReader>& scenarioReader,
+HistoricalScenarioLoader::HistoricalScenarioLoader(const QuantLib::ext::shared_ptr<HistoricalScenarioReader>& scenarioReader,
                                                    const Date& startDate, const Date& endDate,
                                                    const Calendar& calendar) {
 

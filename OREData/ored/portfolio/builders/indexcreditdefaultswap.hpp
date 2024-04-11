@@ -65,7 +65,7 @@ public:
         : IndexCreditDefaultSwapEngineBuilder("DiscountedCashflows", "MidPointIndexCdsEngine") {}
 
 protected:
-    boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId,
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId,
                                                 const vector<string>& creditCurveIds,
                                                 const boost::optional<string>& overrideCurve,
                                                 Real recoveryRate = Null<Real>(),

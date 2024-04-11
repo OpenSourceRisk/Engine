@@ -203,7 +203,7 @@ protected:
     
     Date asof_;
     // fx quotes / indices, this is shared between all configurations
-    boost::shared_ptr<FXTriangulation> fx_;
+    QuantLib::ext::shared_ptr<FXTriangulation> fx_;
     // maps (configuration, key) => term structure
     mutable map<tuple<string, YieldCurveType, string>, Handle<YieldTermStructure>> yieldCurves_;
     mutable map<pair<string, string>, Handle<IborIndex>> iborIndices_;
@@ -237,7 +237,7 @@ protected:
                       const string& configuration = Market::defaultConfiguration) const;
 
     // set of term structure pointers for refresh (per configuration)
-    map<string, std::set<boost::shared_ptr<TermStructure>>> refreshTs_;
+    map<string, std::set<QuantLib::ext::shared_ptr<TermStructure>>> refreshTs_;
 
 private:
     pair<string, string> swapIndexBases(const string& key,

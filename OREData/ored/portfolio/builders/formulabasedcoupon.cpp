@@ -36,11 +36,11 @@
 namespace ore {
 namespace data {
 
-boost::shared_ptr<FloatingRateCouponPricer> FormulaBasedCouponPricerBuilder::engineImpl(
+QuantLib::ext::shared_ptr<FloatingRateCouponPricer> FormulaBasedCouponPricerBuilder::engineImpl(
     const std::string& paymentCcy,
-    const std::map<std::string, boost::shared_ptr<QuantLib::IborCouponPricer>>& iborPricers,
-    const std::map<std::string, boost::shared_ptr<QuantLib::CmsCouponPricer>>& cmsPricers,
-    const std::map<std::string, boost::shared_ptr<InterestRateIndex>>& indexMaps) {
+    const std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::IborCouponPricer>>& iborPricers,
+    const std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::CmsCouponPricer>>& cmsPricers,
+    const std::map<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>& indexMaps) {
 
     // MC parameters
     auto samples = parseInteger(engineParameters_.at("Samples"));
@@ -72,7 +72,7 @@ boost::shared_ptr<FloatingRateCouponPricer> FormulaBasedCouponPricerBuilder::eng
             index2 = it2->first;
             indexQL2 = it2->second->name();
             QuantLib::Handle<QuantExt::CorrelationTermStructure> corrCurve(
-                boost::make_shared<FlatCorrelation>(0, NullCalendar(), 0.0, Actual365Fixed()));
+                QuantLib::ext::make_shared<FlatCorrelation>(0, NullCalendar(), 0.0, Actual365Fixed()));
             try {
                 corrCurve = market_->correlationCurve(index1, index2, configuration(MarketContext::pricing));
             } catch (...) {
@@ -93,7 +93,7 @@ boost::shared_ptr<FloatingRateCouponPricer> FormulaBasedCouponPricerBuilder::eng
         if (indexCcy != paymentCcy) {
             fxIndex = "FX-" + fxSource + "-" + indexCcy + "-" + paymentCcy;
             QuantLib::Handle<QuantExt::CorrelationTermStructure> corrCurve(
-                boost::make_shared<FlatCorrelation>(0, NullCalendar(), 0.0, Actual365Fixed()));
+                QuantLib::ext::make_shared<FlatCorrelation>(0, NullCalendar(), 0.0, Actual365Fixed()));
             try {
                 corrCurve = market_->correlationCurve(index, fxIndex, configuration(MarketContext::pricing));
             } catch (...) {
@@ -105,7 +105,7 @@ boost::shared_ptr<FloatingRateCouponPricer> FormulaBasedCouponPricerBuilder::eng
     }
 
     auto discount = market_->discountCurve(paymentCcy, configuration(MarketContext::pricing));
-    return boost::make_shared<QuantExt::MCGaussianFormulaBasedCouponPricer>(
+    return QuantLib::ext::make_shared<QuantExt::MCGaussianFormulaBasedCouponPricer>(
         paymentCcy, iborPricers, cmsPricers, fxVols, correlation, discount, samples, seed, useSobol, salvaging);
 }
 

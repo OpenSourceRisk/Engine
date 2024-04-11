@@ -48,7 +48,7 @@ public:
         // valuation date
         asof_ = Date(18, July, 2016);
 
-        spotSP5 = Handle<Quote>(boost::shared_ptr<SimpleQuote>(new SimpleQuote(2100)));
+        spotSP5 = Handle<Quote>(QuantLib::ext::shared_ptr<SimpleQuote>(new SimpleQuote(2100)));
         forecastSP5 = flatRateYts(0.03);
         dividendSP5 = flatRateYts(0.01);
 
@@ -62,7 +62,7 @@ public:
         iborIndices_[make_pair(Market::defaultConfiguration, "USD-LIBOR-3M")] = hUSD;
 
         // build SP5 Equity Curve
-        hSP5 = Handle<EquityIndex2>(boost::shared_ptr<EquityIndex2>(
+        hSP5 = Handle<EquityIndex2>(QuantLib::ext::shared_ptr<EquityIndex2>(
             new EquityIndex2("SP5", UnitedStates(UnitedStates::Settlement), parseCurrency("USD"), spotSP5, forecastSP5, dividendSP5)));
         equityCurves_[make_pair(Market::defaultConfiguration, "SP5")] = hSP5;
         IndexNameTranslator::instance().add(hSP5->name(), "EQ-" + hSP5->name());
@@ -81,7 +81,7 @@ public:
 
 private:
     Handle<YieldTermStructure> flatRateYts(Real forward) {
-        boost::shared_ptr<YieldTermStructure> yts(new FlatForward(0, UnitedStates(UnitedStates::Settlement), forward, ActualActual(ActualActual::ISDA)));
+        QuantLib::ext::shared_ptr<YieldTermStructure> yts(new FlatForward(0, UnitedStates(UnitedStates::Settlement), forward, ActualActual(ActualActual::ISDA)));
         return Handle<YieldTermStructure>(yts);
     }
 };
@@ -109,25 +109,25 @@ struct CommonVars {
     vector<double> spread;
 
     // utilities
-    boost::shared_ptr<ore::data::Swap> makeEquitySwap(EquityReturnType returnType, bool notionalReset = false) {
+    QuantLib::ext::shared_ptr<ore::data::Swap> makeEquitySwap(EquityReturnType returnType, bool notionalReset = false) {
         ScheduleData floatSchedule(ScheduleRules(start, end, floattenor, calStr, conv, conv, rule));
         ScheduleData eqSchedule(ScheduleRules(start, end, eqtenor, calStr, conv, conv, rule));
 
         // build EquitySwap
-        LegData floatLegData(boost::make_shared<FloatingLegData>(index, days, isinarrears, spread), !isPayer, ccy,
+        LegData floatLegData(QuantLib::ext::make_shared<FloatingLegData>(index, days, isinarrears, spread), !isPayer, ccy,
                              floatSchedule, fixDC, notionals);
-        LegData eqLegData(boost::make_shared<EquityLegData>(returnType, dividendFactor, EquityUnderlying(eqName),
+        LegData eqLegData(QuantLib::ext::make_shared<EquityLegData>(returnType, dividendFactor, EquityUnderlying(eqName),
                                                             initialPrice, notionalReset, settlementDays),
                           isPayer, ccy, eqSchedule, fixDC, notionals);
 
         Envelope env("CP1");
-        boost::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, eqLegData, floatLegData));
+        QuantLib::ext::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, eqLegData, floatLegData));
         return swap;
     }
 
-    boost::shared_ptr<QuantLib::Swap> qlEquitySwap(EquityReturnType returnType, bool notionalReset = false) {
+    QuantLib::ext::shared_ptr<QuantLib::Swap> qlEquitySwap(EquityReturnType returnType, bool notionalReset = false) {
 
-        boost::shared_ptr<TestMarket> market = boost::make_shared<TestMarket>();
+        QuantLib::ext::shared_ptr<TestMarket> market = QuantLib::ext::make_shared<TestMarket>();
         // check Equity swap NPV against pure QL pricing
         Schedule floatSchedule(parseDate(start), parseDate(end), parsePeriod(floattenor), parseCalendar(calStr),
                                parseBusinessDayConvention(conv), parseBusinessDayConvention(conv),
@@ -149,7 +149,7 @@ struct CommonVars {
                         .withInitialPrice(initialPrice)
                         .withNotionalReset(notionalReset);
 
-        boost::shared_ptr<QuantLib::Swap> swap(new QuantLib::Swap(floatLeg, eqLeg));
+        QuantLib::ext::shared_ptr<QuantLib::Swap> swap(new QuantLib::Swap(floatLeg, eqLeg));
         return swap;
     }
 
@@ -187,35 +187,35 @@ BOOST_AUTO_TEST_CASE(testEquitySwapPriceReturn) {
     BOOST_TEST_MESSAGE("Testing Equity Swap Price Return...");
 
     // build market
-    boost::shared_ptr<TestMarket> market = boost::make_shared<TestMarket>();
+    QuantLib::ext::shared_ptr<TestMarket> market = QuantLib::ext::make_shared<TestMarket>();
     Date today = market->asofDate();
     Settings::instance().evaluationDate() = today;
 
     CommonVars vars;
-    boost::shared_ptr<ore::data::Swap> eqSwap = vars.makeEquitySwap(EquityReturnType::Price);
+    QuantLib::ext::shared_ptr<ore::data::Swap> eqSwap = vars.makeEquitySwap(EquityReturnType::Price);
 
     // engine data and factory
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("Swap") = "DiscountedCashflows";
     engineData->engine("Swap") = "DiscountingSwapEngine";
-    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
     // build swaps and portfolio
-    boost::shared_ptr<Portfolio> portfolio(new Portfolio());
+    QuantLib::ext::shared_ptr<Portfolio> portfolio(new Portfolio());
     eqSwap->id() = "EQ_Swap";
 
     portfolio->add(eqSwap);
     portfolio->build(engineFactory);
 
-    boost::shared_ptr<QuantLib::Swap> qlSwap = vars.qlEquitySwap(EquityReturnType::Price);
+    QuantLib::ext::shared_ptr<QuantLib::Swap> qlSwap = vars.qlEquitySwap(EquityReturnType::Price);
 
-    auto dscEngine = boost::make_shared<DiscountingSwapEngine>(market->discountCurve("USD"));
+    auto dscEngine = QuantLib::ext::make_shared<DiscountingSwapEngine>(market->discountCurve("USD"));
     qlSwap->setPricingEngine(dscEngine);
     BOOST_TEST_MESSAGE("Leg 1 NPV: ORE = "
-                       << boost::static_pointer_cast<QuantLib::Swap>(eqSwap->instrument()->qlInstrument())->legNPV(0)
+                       << QuantLib::ext::static_pointer_cast<QuantLib::Swap>(eqSwap->instrument()->qlInstrument())->legNPV(0)
                        << " QL = " << qlSwap->legNPV(0));
     BOOST_TEST_MESSAGE("Leg 2 NPV: ORE = "
-                       << boost::static_pointer_cast<QuantLib::Swap>(eqSwap->instrument()->qlInstrument())->legNPV(1)
+                       << QuantLib::ext::static_pointer_cast<QuantLib::Swap>(eqSwap->instrument()->qlInstrument())->legNPV(1)
                        << " QL = " << qlSwap->legNPV(1));
     BOOST_CHECK_CLOSE(eqSwap->instrument()->NPV(), qlSwap->NPV(), 1E-8); // this is 1E-10 rel diff
 }
@@ -225,35 +225,35 @@ BOOST_AUTO_TEST_CASE(testEquitySwapTotalReturn) {
     BOOST_TEST_MESSAGE("Testing Equity Swap Total Return...");
 
     // build market
-    boost::shared_ptr<TestMarket> market = boost::make_shared<TestMarket>();
+    QuantLib::ext::shared_ptr<TestMarket> market = QuantLib::ext::make_shared<TestMarket>();
     Date today = market->asofDate();
     Settings::instance().evaluationDate() = today;
 
     CommonVars vars;
-    boost::shared_ptr<ore::data::Swap> eqSwap = vars.makeEquitySwap(EquityReturnType::Total);
+    QuantLib::ext::shared_ptr<ore::data::Swap> eqSwap = vars.makeEquitySwap(EquityReturnType::Total);
 
     // engine data and factory
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("Swap") = "DiscountedCashflows";
     engineData->engine("Swap") = "DiscountingSwapEngine";
-    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
     // build swaps and portfolio
-    boost::shared_ptr<Portfolio> portfolio(new Portfolio());
+    QuantLib::ext::shared_ptr<Portfolio> portfolio(new Portfolio());
     eqSwap->id() = "EQ_Swap";
 
     portfolio->add(eqSwap);
     portfolio->build(engineFactory);
 
-    boost::shared_ptr<QuantLib::Swap> qlSwap = vars.qlEquitySwap(EquityReturnType::Total);
+    QuantLib::ext::shared_ptr<QuantLib::Swap> qlSwap = vars.qlEquitySwap(EquityReturnType::Total);
 
-    auto dscEngine = boost::make_shared<DiscountingSwapEngine>(market->discountCurve("USD"));
+    auto dscEngine = QuantLib::ext::make_shared<DiscountingSwapEngine>(market->discountCurve("USD"));
     qlSwap->setPricingEngine(dscEngine);
     BOOST_TEST_MESSAGE("Leg 1 NPV: ORE = "
-                       << boost::static_pointer_cast<QuantLib::Swap>(eqSwap->instrument()->qlInstrument())->legNPV(0)
+                       << QuantLib::ext::static_pointer_cast<QuantLib::Swap>(eqSwap->instrument()->qlInstrument())->legNPV(0)
                        << " QL = " << qlSwap->legNPV(0));
     BOOST_TEST_MESSAGE("Leg 2 NPV: ORE = "
-                       << boost::static_pointer_cast<QuantLib::Swap>(eqSwap->instrument()->qlInstrument())->legNPV(1)
+                       << QuantLib::ext::static_pointer_cast<QuantLib::Swap>(eqSwap->instrument()->qlInstrument())->legNPV(1)
                        << " QL = " << qlSwap->legNPV(1));
     BOOST_CHECK_CLOSE(eqSwap->instrument()->NPV(), qlSwap->NPV(), 1E-8);
 }
@@ -263,41 +263,41 @@ BOOST_AUTO_TEST_CASE(testEquitySwapNotionalReset) {
     BOOST_TEST_MESSAGE("Testing Equity Swap Notional Reset...");
 
     // build market
-    boost::shared_ptr<TestMarket> market = boost::make_shared<TestMarket>();
+    QuantLib::ext::shared_ptr<TestMarket> market = QuantLib::ext::make_shared<TestMarket>();
     Date today = market->asofDate();
     // Move on 4 months so we during next period, check we can get a notional
     Settings::instance().evaluationDate() = today + Period(4, Months);
 
     CommonVars vars;
-    boost::shared_ptr<ore::data::Swap> eqSwap = vars.makeEquitySwap(EquityReturnType::Total, true);
+    QuantLib::ext::shared_ptr<ore::data::Swap> eqSwap = vars.makeEquitySwap(EquityReturnType::Total, true);
 
     // engine data and factory
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("Swap") = "DiscountedCashflows";
     engineData->engine("Swap") = "DiscountingSwapEngine";
-    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
     // build swaps and portfolio
-    boost::shared_ptr<Portfolio> portfolio(new Portfolio());
+    QuantLib::ext::shared_ptr<Portfolio> portfolio(new Portfolio());
     eqSwap->id() = "EQ_Swap";
 
     portfolio->add(eqSwap);
     portfolio->build(engineFactory);
 
-    boost::shared_ptr<QuantLib::Swap> qlSwap = vars.qlEquitySwap(EquityReturnType::Total, true);
+    QuantLib::ext::shared_ptr<QuantLib::Swap> qlSwap = vars.qlEquitySwap(EquityReturnType::Total, true);
 
     BOOST_TEST_MESSAGE("Initial notional = " << eqSwap->notional());
 
     // Add equity fixing after portfolio build, this allows us to test notional without fixing
     market->equityCurve("SP5")->addFixing(Date(18, October, 2016), 2100);
 
-    auto dscEngine = boost::make_shared<DiscountingSwapEngine>(market->discountCurve("USD"));
+    auto dscEngine = QuantLib::ext::make_shared<DiscountingSwapEngine>(market->discountCurve("USD"));
     qlSwap->setPricingEngine(dscEngine);
     BOOST_TEST_MESSAGE("Leg 1 NPV: ORE = "
-                       << boost::static_pointer_cast<QuantLib::Swap>(eqSwap->instrument()->qlInstrument())->legNPV(0)
+                       << QuantLib::ext::static_pointer_cast<QuantLib::Swap>(eqSwap->instrument()->qlInstrument())->legNPV(0)
                        << " QL = " << qlSwap->legNPV(0));
     BOOST_TEST_MESSAGE("Leg 2 NPV: ORE = "
-                       << boost::static_pointer_cast<QuantLib::Swap>(eqSwap->instrument()->qlInstrument())->legNPV(1)
+                       << QuantLib::ext::static_pointer_cast<QuantLib::Swap>(eqSwap->instrument()->qlInstrument())->legNPV(1)
                        << " QL = " << qlSwap->legNPV(1));
     BOOST_CHECK_CLOSE(eqSwap->instrument()->NPV(), qlSwap->NPV(), 1E-8);
 }

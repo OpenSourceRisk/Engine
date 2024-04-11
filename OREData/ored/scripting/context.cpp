@@ -20,6 +20,8 @@
 
 #include <ored/utilities/to_string.hpp>
 
+#include <ql/tuple.hpp>
+
 #include <iomanip>
 #include <sstream>
 
@@ -77,22 +79,22 @@ namespace {
 void resetSize(ValueType& v, const Size n) {
     switch (v.which()) {
     case ValueTypeWhich::Number:
-        boost::get<RandomVariable>(v).resetSize(n);
+        QuantLib::ext::get<RandomVariable>(v).resetSize(n);
         break;
     case ValueTypeWhich::Filter:
-        boost::get<Filter>(v).resetSize(n);
+        QuantLib::ext::get<Filter>(v).resetSize(n);
         break;
     case ValueTypeWhich::Event:
-        boost::get<EventVec>(v).size = n;
+        QuantLib::ext::get<EventVec>(v).size = n;
         break;
     case ValueTypeWhich::Currency:
-        boost::get<CurrencyVec>(v).size = n;
+        QuantLib::ext::get<CurrencyVec>(v).size = n;
         break;
     case ValueTypeWhich::Index:
-        boost::get<IndexVec>(v).size = n;
+        QuantLib::ext::get<IndexVec>(v).size = n;
         break;
     case ValueTypeWhich::Daycounter:
-        boost::get<DaycounterVec>(v).size = n;
+        QuantLib::ext::get<DaycounterVec>(v).size = n;
         break;
     default:
         QL_FAIL("resetSize(): value type not handled. internal error, contact dev.");

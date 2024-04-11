@@ -47,7 +47,7 @@ DiscountingForwardBondEngine::DiscountingForwardBondEngine(
     bondReferenceYieldCurve_ =
         bondSpread_.empty() ? bondReferenceYieldCurve
                             : Handle<YieldTermStructure>(
-                                  boost::make_shared<ZeroSpreadedTermStructure>(bondReferenceYieldCurve, bondSpread_));
+                                  QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(bondReferenceYieldCurve, bondSpread_));
     registerWith(discountCurve_);           // curve for discounting of the forward derivative contract. OIS, usually.
     registerWith(incomeCurve_);             // this is a curve for compounding of the bond
     registerWith(bondReferenceYieldCurve_); // this is the bond reference curve, for discounting, usually RePo
@@ -113,9 +113,9 @@ Real DiscountingForwardBondEngine::calculateBondNpv(Date npvDate, Date computeDa
     // i.e. credit curve term structure (and recovery) have not been specified
     // we set the default probability and recovery rate to zero in this instance (issuer credit worthiness already
     // captured within security spread)
-    boost::shared_ptr<DefaultProbabilityTermStructure> creditCurvePtr =
+    QuantLib::ext::shared_ptr<DefaultProbabilityTermStructure> creditCurvePtr =
         bondDefaultCurve_.empty()
-            ? boost::make_shared<QuantLib::FlatHazardRate>(npvDate, 0.0, bondReferenceYieldCurve_->dayCounter())
+            ? QuantLib::ext::make_shared<QuantLib::FlatHazardRate>(npvDate, 0.0, bondReferenceYieldCurve_->dayCounter())
             : bondDefaultCurve_.currentLink();
     Rate recoveryVal = bondRecoveryRate_.empty() ? 0.0 : bondRecoveryRate_->value(); // setup default bond recovery rate
 
@@ -123,7 +123,7 @@ Real DiscountingForwardBondEngine::calculateBondNpv(Date npvDate, Date computeDa
     std::vector<Real> bondCashflows, bondCashflowSurvivalProbabilities, bondCashflowDiscountFactors;
 
     // load the shared pointer into bd
-    boost::shared_ptr<Bond> bd = arguments_.underlying;
+    QuantLib::ext::shared_ptr<Bond> bd = arguments_.underlying;
 
     std::vector<CashFlowResults> cashFlowResults;
     for (Size i = 0; i < bd->cashflows().size(); i++) {
@@ -137,7 +137,7 @@ Real DiscountingForwardBondEngine::calculateBondNpv(Date npvDate, Date computeDa
            Default; this is added to the NPV value. For coupon bonds the coupon periods are taken
            as the timesteps for integrating over the probability of default.
         */
-        boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(bd->cashflows()[i]);
+        QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(bd->cashflows()[i]);
 
         if (coupon) {
             numCoupons++;
@@ -191,7 +191,7 @@ Real DiscountingForwardBondEngine::calculateBondNpv(Date npvDate, Date computeDa
     }
 
     Real bondRecovery = 0;
-    boost::shared_ptr<Coupon> firstCoupon = boost::dynamic_pointer_cast<Coupon>(bd->cashflows()[0]);
+    QuantLib::ext::shared_ptr<Coupon> firstCoupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(bd->cashflows()[0]);
     if (firstCoupon) {
         Date startDate = computeDate; // face value recovery starting with computeDate
         while (startDate < bd->cashflows()[0]->date()) {
@@ -222,7 +222,7 @@ Real DiscountingForwardBondEngine::calculateBondNpv(Date npvDate, Date computeDa
        to bonds with 1 cashflow, identified as a final redemption payment.
     */
     if (bd->cashflows().size() == 1) {
-        boost::shared_ptr<Redemption> redemption = boost::dynamic_pointer_cast<Redemption>(bd->cashflows()[0]);
+        QuantLib::ext::shared_ptr<Redemption> redemption = QuantLib::ext::dynamic_pointer_cast<Redemption>(bd->cashflows()[0]);
         Real redemptionRecovery = 0;
         if (redemption) {
             Date startDate = computeDate;
@@ -274,7 +274,7 @@ Real DiscountingForwardBondEngine::calculateBondNpv(Date npvDate, Date computeDa
     return npvValue * arguments_.bondNotional;
 }
 
-boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractPresentValue(
+QuantLib::ext::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractPresentValue(
     Real spotValue, Real cmpPayment, Date npvDate, Date computeDate, Date settlementDate, bool cashSettlement,
     Date cmpPaymentDate, bool dirty) const {
 
@@ -290,13 +290,13 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
     // i.e. credit curve term structure (and recovery) have not been specified
     // we set the default probability and recovery rate to zero in this instance (issuer credit worthiness already
     // captured within security spread)
-    boost::shared_ptr<DefaultProbabilityTermStructure> creditCurvePtr =
+    QuantLib::ext::shared_ptr<DefaultProbabilityTermStructure> creditCurvePtr =
         bondDefaultCurve_.empty()
-            ? boost::make_shared<QuantLib::FlatHazardRate>(npvDate, 0.0, bondReferenceYieldCurve_->dayCounter())
+            ? QuantLib::ext::make_shared<QuantLib::FlatHazardRate>(npvDate, 0.0, bondReferenceYieldCurve_->dayCounter())
             : bondDefaultCurve_.currentLink();
     Rate recoveryVal = bondRecoveryRate_.empty() ? 0.0 : bondRecoveryRate_->value(); // setup default bond recovery rate
     // load the shared pointer into bd
-    boost::shared_ptr<Bond> bd = arguments_.underlying;
+    QuantLib::ext::shared_ptr<Bond> bd = arguments_.underlying;
 
     // the case of dirty strike corresponds here to an accrual of 0.0. This will be convenient in the code.
     Date bondSettlementDate = bd->settlementDate(computeDate);
@@ -331,7 +331,7 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
     // Long: forwardBondValue - strike_dirt = (forwardBondValue - accrual) - strike_clean
     // Short: strike_dirt - forwardBondValue = strike_clean - (forwardBondValue - accrual)
     // In total:
-    boost::shared_ptr<Payoff> effectivePayoff;
+    QuantLib::ext::shared_ptr<Payoff> effectivePayoff;
     if (arguments_.payoff) {
         // vanilla forward bond calculation
         forwardContractForwardValue = (*arguments_.payoff)(forwardBondValue - accruedAmount);
@@ -357,7 +357,7 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
         forwardContractForwardValue = multiplier * (yield - arguments_.lockRate) * dv01 * arguments_.bondNotional *
                                       bd->notional(bondSettlementDate);
 
-        effectivePayoff = boost::make_shared<ForwardBondTypePayoff>(
+        effectivePayoff = QuantLib::ext::make_shared<ForwardBondTypePayoff>(
             (*arguments_.longInForward) ? Position::Long : Position::Short,
             arguments_.lockRate * dv01 * arguments_.bondNotional * bd->notional(bondSettlementDate));
         
@@ -432,7 +432,7 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
         if (bd->cashflows()[i]->date() >=
             computeDate) // Cashflows after computeDate do not fall into the forward period
             continue;
-        boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(bd->cashflows()[i]);
+        QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(bd->cashflows()[i]);
 
         if (coupon) {
             Date startDate = coupon->accrualStartDate();
@@ -463,7 +463,7 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
     }
 
     // B) Recovery for time period before coupons are present
-    boost::shared_ptr<Coupon> firstCoupon = boost::dynamic_pointer_cast<Coupon>(bd->cashflows()[0]);
+    QuantLib::ext::shared_ptr<Coupon> firstCoupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(bd->cashflows()[0]);
     if (firstCoupon) {
         Date startDate = npvDate; // face value recovery starting with npvDate
         Date stopDate = std::min(bd->cashflows()[0]->date(), computeDate);
@@ -500,7 +500,7 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
        to bonds with 1 cashflow, identified as a final redemption payment.
     */
     if (bd->cashflows().size() == 1) {
-        boost::shared_ptr<Redemption> redemption = boost::dynamic_pointer_cast<Redemption>(bd->cashflows()[0]);
+        QuantLib::ext::shared_ptr<Redemption> redemption = QuantLib::ext::dynamic_pointer_cast<Redemption>(bd->cashflows()[0]);
         if (redemption) {
             Real redemptionRecovery = 0;
             Date startDate = npvDate;
@@ -546,7 +546,7 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
 
     forwardContractPresentValue += fwdBondRecovery;
 
-    return boost::make_tuple(forwardContractForwardValue, forwardContractPresentValue);
+    return QuantLib::ext::make_tuple(forwardContractForwardValue, forwardContractPresentValue);
 }
 
 } // namespace QuantExt

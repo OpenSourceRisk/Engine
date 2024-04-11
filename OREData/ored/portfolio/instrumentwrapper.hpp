@@ -47,9 +47,9 @@ using QuantLib::Real;
 class InstrumentWrapper {
 public:
     InstrumentWrapper();
-    InstrumentWrapper(const boost::shared_ptr<QuantLib::Instrument>& inst, const Real multiplier = 1.0,
-                      const std::vector<boost::shared_ptr<QuantLib::Instrument>>& additionalInstruments =
-                          std::vector<boost::shared_ptr<QuantLib::Instrument>>(),
+    InstrumentWrapper(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& inst, const Real multiplier = 1.0,
+                      const std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>& additionalInstruments =
+                          std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>(),
                       const std::vector<Real>& additionalMultipliers = std::vector<Real>());
 
     virtual ~InstrumentWrapper() {}
@@ -81,7 +81,7 @@ public:
     /*! The "QuantLib" instrument
         Pass true if you trigger a calculation on the returned instrument and want to record
         the timing for that calculation. If in doubt whether a calculation is triggered, pass false. */
-    boost::shared_ptr<QuantLib::Instrument> qlInstrument(const bool calculate = false) const;
+    QuantLib::ext::shared_ptr<QuantLib::Instrument> qlInstrument(const bool calculate = false) const;
 
     /*! The multiplier */
     Real multiplier() const;
@@ -90,7 +90,7 @@ public:
     virtual Real multiplier2() const;
 
     /*! additional instruments */
-    const std::vector<boost::shared_ptr<QuantLib::Instrument>>& additionalInstruments() const;
+    const std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>& additionalInstruments() const;
 
     /*! multipliers for additional instruments */
     const std::vector<Real>& additionalMultipliers() const;
@@ -106,13 +106,13 @@ public:
     void resetPricingStats() const;
 
 protected:
-    boost::shared_ptr<QuantLib::Instrument> instrument_;
+    QuantLib::ext::shared_ptr<QuantLib::Instrument> instrument_;
     Real multiplier_;
-    std::vector<boost::shared_ptr<QuantLib::Instrument>> additionalInstruments_;
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>> additionalInstruments_;
     std::vector<Real> additionalMultipliers_;
 
     // all NPV calls to be logged in the timings should go through this method
-    Real getTimedNPV(const boost::shared_ptr<QuantLib::Instrument>& instr) const;
+    Real getTimedNPV(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& instr) const;
 
     mutable std::size_t numberOfPricings_ = 0;
     mutable boost::timer::nanosecond_type cumulativePricingTime_ = 0;
@@ -127,9 +127,9 @@ protected:
 */
 class VanillaInstrument : public InstrumentWrapper {
 public:
-    VanillaInstrument(const boost::shared_ptr<QuantLib::Instrument>& inst, const Real multiplier = 1.0,
-                      const std::vector<boost::shared_ptr<QuantLib::Instrument>>& additionalInstruments =
-                          std::vector<boost::shared_ptr<QuantLib::Instrument>>(),
+    VanillaInstrument(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& inst, const Real multiplier = 1.0,
+                      const std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>& additionalInstruments =
+                          std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>(),
                       const std::vector<Real>& additionalMultipliers = std::vector<Real>());
 
     void initialise(const std::vector<QuantLib::Date>&) override{};

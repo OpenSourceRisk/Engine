@@ -33,7 +33,7 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-void VarSwap::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
+void VarSwap::build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory) {
     Currency ccy = ore::data::parseCurrency(currency_);
     Position::Type longShort = ore::data::parsePositionType(longShort_);
     start_ = ore::data::parseDate(startDate_);
@@ -82,20 +82,20 @@ void VarSwap::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFac
     Real varianceStrike = strike_ * strike_;
     Real varianceNotional = notional_ / (2 * 100 * strike_);
 
-    boost::shared_ptr<QuantExt::VarianceSwap2> varSwap(new QuantExt::VarianceSwap2(
+    QuantLib::ext::shared_ptr<QuantExt::VarianceSwap2> varSwap(new QuantExt::VarianceSwap2(
         longShort, varianceStrike, momentType == MomentType::Variance ? varianceNotional : notional_, start_, endDate,
         cal_, addPastDividends_));
 
     // Pricing Engine
-    boost::shared_ptr<ore::data::EngineBuilder> builder = engineFactory->builder(tradeType_);
+    QuantLib::ext::shared_ptr<ore::data::EngineBuilder> builder = engineFactory->builder(tradeType_);
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    boost::shared_ptr<VarSwapEngineBuilder> varSwapBuilder = boost::dynamic_pointer_cast<VarSwapEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<VarSwapEngineBuilder> varSwapBuilder = QuantLib::ext::dynamic_pointer_cast<VarSwapEngineBuilder>(builder);
 
     varSwap->setPricingEngine(varSwapBuilder->engine(name(), ccy, assetClassUnderlying_, momentType));
     setSensitivityTemplate(*varSwapBuilder);
 
     // set up other Trade details
-    instrument_ = boost::shared_ptr<ore::data::InstrumentWrapper>(new ore::data::VanillaInstrument(varSwap));
+    instrument_ = QuantLib::ext::shared_ptr<ore::data::InstrumentWrapper>(new ore::data::VanillaInstrument(varSwap));
 
     npvCurrency_ = currency_;
     notionalCurrency_ = currency_;
@@ -186,12 +186,12 @@ void VarSwap::initIndexName() {
 }
 
 std::map<AssetClass, std::set<std::string>>
-EqVarSwap::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+EqVarSwap::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     return {{AssetClass::EQ, std::set<std::string>({name()})}};
 }
 
 std::map<AssetClass, std::set<std::string>>
-ComVarSwap::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+ComVarSwap::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     return {{AssetClass::COM, std::set<std::string>({name()})}};
 }
 

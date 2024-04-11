@@ -25,7 +25,7 @@ void BondRepo::arguments::validate() const {
     QL_REQUIRE(security, "BondRepo::validate(): security is null");
 }
 
-BondRepo::BondRepo(const Leg& cashLeg, const bool cashLegPays, const boost::shared_ptr<Bond>& security,
+BondRepo::BondRepo(const Leg& cashLeg, const bool cashLegPays, const QuantLib::ext::shared_ptr<Bond>& security,
                    const Real securityMultiplier)
     : cashLeg_(cashLeg), cashLegPays_(cashLegPays), security_(security), securityMultiplier_(securityMultiplier) {
     for (auto const& c : cashLeg_)

@@ -25,7 +25,7 @@ namespace ore {
 namespace analytics {
 	
 // ScenarioAnalytic
-ScenarioAnalytic::ScenarioAnalytic(const boost::shared_ptr<InputParameters>& inputs)
+ScenarioAnalytic::ScenarioAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
     : Analytic(std::make_unique<ScenarioAnalyticImpl>(inputs), {"SCENARIO"}, inputs, true, false, false, false) {}
 
 void ScenarioAnalyticImpl::setUpConfigurations() {
@@ -33,7 +33,7 @@ void ScenarioAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().simMarketParams = inputs_->scenarioSimMarketParams();
 }
 
-void ScenarioAnalyticImpl::runAnalytic(const boost::shared_ptr<InMemoryLoader>& loader,
+void ScenarioAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoader>& loader,
                                    const std::set<std::string>& runTypes) {
 
     if (!analytic()->match(runTypes))
@@ -48,7 +48,7 @@ void ScenarioAnalyticImpl::runAnalytic(const boost::shared_ptr<InMemoryLoader>& 
 
     LOG("Building scenario simulation market for date " << io::iso_date(inputs_->asof()));
     // FIXME: *configurations_.todaysMarketParams uninitialized?
-    auto ssm = boost::make_shared<ScenarioSimMarket>(
+    auto ssm = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), scenarioAnalytic->configurations().simMarketParams, Market::defaultConfiguration,
         *scenarioAnalytic->configurations().curveConfig, *scenarioAnalytic->configurations().todaysMarketParams, true,
         false, false, false, *inputs_->iborFallbackConfig());
@@ -57,7 +57,7 @@ void ScenarioAnalyticImpl::runAnalytic(const boost::shared_ptr<InMemoryLoader>& 
     auto scenario = ssm->baseScenario();
     setScenario(scenario);
 
-    boost::shared_ptr<InMemoryReport> report = boost::make_shared<InMemoryReport>();
+    QuantLib::ext::shared_ptr<InMemoryReport> report = QuantLib::ext::make_shared<InMemoryReport>();
     auto sw = ScenarioWriter(nullptr, report);
     sw.writeScenario(scenario, true);
     analytic()->reports()[label()]["scenario"] = report;

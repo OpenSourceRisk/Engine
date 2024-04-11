@@ -58,7 +58,7 @@ private:
     std::vector<Handle<Quote>> corrSpreads_;
     bool useAtmReferenceCorrsOnly_;
     mutable std::vector<Real> data_;
-    boost::shared_ptr<Interpolation> interpolation_;
+    QuantLib::ext::shared_ptr<Interpolation> interpolation_;
 };
 
 } // namespace QuantExt
