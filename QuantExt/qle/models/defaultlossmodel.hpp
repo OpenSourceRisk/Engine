@@ -157,7 +157,7 @@ private: // can only be called from Basket
         ..alternatively both old basket and model could be forced reset here
         */
         // RL: QuantExt version
-        basket_.linkTo(boost::shared_ptr<QuantExt::Basket>(bskt, null_deleter()), false);
+        basket_.linkTo(QuantLib::ext::shared_ptr<QuantExt::Basket>(bskt, null_deleter()), false);
         resetModel(); // or rename to setBasketImpl(...)
     }
     // the call order matters, which is the reason for the parent to be the

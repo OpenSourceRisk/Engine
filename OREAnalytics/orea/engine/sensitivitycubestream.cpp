@@ -30,10 +30,10 @@ namespace analytics {
 
 using crossPair = SensitivityCube::crossPair;
 
-SensitivityCubeStream::SensitivityCubeStream(const boost::shared_ptr<SensitivityCube>& cube, const string& currency)
-    : SensitivityCubeStream(std::vector<boost::shared_ptr<SensitivityCube>>{cube}, currency) {}
+SensitivityCubeStream::SensitivityCubeStream(const QuantLib::ext::shared_ptr<SensitivityCube>& cube, const string& currency)
+    : SensitivityCubeStream(std::vector<QuantLib::ext::shared_ptr<SensitivityCube>>{cube}, currency) {}
 
-SensitivityCubeStream::SensitivityCubeStream(const std::vector<boost::shared_ptr<SensitivityCube>>& cubes,
+SensitivityCubeStream::SensitivityCubeStream(const std::vector<QuantLib::ext::shared_ptr<SensitivityCube>>& cubes,
                                              const string& currency)
     : cubes_(cubes), currency_(currency), canComputeGamma_(false) {
 

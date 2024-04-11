@@ -28,7 +28,7 @@
 
 namespace QuantExt {
 
-Real AnalyticOutperformanceOptionEngine::getTodaysFxConversionRate(const boost::shared_ptr<QuantExt::FxIndex>& fxIndex) const {
+Real AnalyticOutperformanceOptionEngine::getTodaysFxConversionRate(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex) const {
     // The fx conversion rate as of today should always be taken from the market data, i.e. we should not use a
     // historical fixing, even if it exists, because we should generate sensitivities to market fx spot rate changes.
     // Furthermore, we can get the fx spot rate from the market data even if today is not a valid fixing date for the
@@ -200,7 +200,7 @@ void AnalyticOutperformanceOptionEngine::calculate() const {
             }
         }
 
-        boost::shared_ptr<Integrator> integratorBounded = boost::make_shared<GaussKronrodNonAdaptive>(precision, 1000000, 1.0);
+        QuantLib::ext::shared_ptr<Integrator> integratorBounded = QuantLib::ext::make_shared<GaussKronrodNonAdaptive>(precision, 1000000, 1.0);
         
         QL_REQUIRE(upperBound != Null<Real>(), "AnalyticOutperformanceOptionEngine: expected valid upper bound.");
         QL_REQUIRE(lowerBound != Null<Real>(), "AnalyticOutperformanceOptionEngine: expected valid lower bound.");
@@ -208,7 +208,7 @@ void AnalyticOutperformanceOptionEngine::calculate() const {
         integral +=  (*integratorBounded)(integrand_f(this, phi, k, m1, m2, v1, v2, s1, s2, i1, i2, fixingTime), lowerBound, upperBound);
 
     } else {
-        boost::shared_ptr<GaussianQuadrature> integrator = boost::make_shared<GaussHermiteIntegration>(integrationPoints_);
+        QuantLib::ext::shared_ptr<GaussianQuadrature> integrator = QuantLib::ext::make_shared<GaussHermiteIntegration>(integrationPoints_);
         integral +=
             (*integrator)(integrand_f(this, phi, k, m1, m2, v1, v2, s1, s2, i1, i2, fixingTime));
     }

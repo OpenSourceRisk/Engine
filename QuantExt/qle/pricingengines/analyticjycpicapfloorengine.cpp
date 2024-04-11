@@ -32,7 +32,7 @@ using std::sqrt;
 
 namespace QuantExt {
 
-AnalyticJyCpiCapFloorEngine::AnalyticJyCpiCapFloorEngine(const boost::shared_ptr<CrossAssetModel>& model, Size index)
+AnalyticJyCpiCapFloorEngine::AnalyticJyCpiCapFloorEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index)
     : model_(model), index_(index) {}
 
 void AnalyticJyCpiCapFloorEngine::calculate() const {

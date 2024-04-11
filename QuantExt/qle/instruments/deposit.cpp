@@ -32,7 +32,7 @@ Deposit::Deposit(const Real nominal, const Rate rate, const Period& tenor, const
                  const DayCounter& dayCounter, const Date& tradeDate, const bool isLong, const Period forwardStart) {
 
     leg_.resize(3);
-    index_ = boost::make_shared<IborIndex>("deposit-helper-index", tenor, fixingDays, Currency(), calendar, convention,
+    index_ = QuantLib::ext::make_shared<IborIndex>("deposit-helper-index", tenor, fixingDays, Currency(), calendar, convention,
                                            endOfMonth, dayCounter);
     // move to next good day
     Date referenceDate = calendar.adjust(tradeDate);
@@ -40,10 +40,10 @@ Deposit::Deposit(const Real nominal, const Rate rate, const Period& tenor, const
     fixingDate_ = index_->fixingDate(startDate_);
     maturityDate_ = index_->maturityDate(startDate_);
     Real w = isLong ? 1.0 : -1.0;
-    leg_[0] = boost::make_shared<Redemption>(-w * nominal, startDate_);
+    leg_[0] = QuantLib::ext::make_shared<Redemption>(-w * nominal, startDate_);
     leg_[1] =
-        boost::make_shared<FixedRateCoupon>(maturityDate_, w * nominal, rate, dayCounter, startDate_, maturityDate_);
-    leg_[2] = boost::make_shared<Redemption>(w * nominal, maturityDate_);
+        QuantLib::ext::make_shared<FixedRateCoupon>(maturityDate_, w * nominal, rate, dayCounter, startDate_, maturityDate_);
+    leg_[2] = QuantLib::ext::make_shared<Redemption>(w * nominal, maturityDate_);
 }
 
 bool Deposit::isExpired() const { return detail::simple_event(maturityDate_).hasOccurred(); }

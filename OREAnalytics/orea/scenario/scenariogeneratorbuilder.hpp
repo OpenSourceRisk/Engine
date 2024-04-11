@@ -57,18 +57,18 @@ public:
     ScenarioGeneratorBuilder() {}
 
     //! Constructor
-    ScenarioGeneratorBuilder(boost::shared_ptr<ScenarioGeneratorData> data) : data_(data) {}
+    ScenarioGeneratorBuilder(QuantLib::ext::shared_ptr<ScenarioGeneratorData> data) : data_(data) {}
 
     //! Build function
-    boost::shared_ptr<ScenarioGenerator>
-    build(boost::shared_ptr<QuantExt::CrossAssetModel> model, boost::shared_ptr<ScenarioFactory> sf,
-          boost::shared_ptr<ScenarioSimMarketParameters> marketConfig, Date asof,
-          boost::shared_ptr<ore::data::Market> initMarket,
+    QuantLib::ext::shared_ptr<ScenarioGenerator>
+    build(QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model, QuantLib::ext::shared_ptr<ScenarioFactory> sf,
+          QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> marketConfig, Date asof,
+          QuantLib::ext::shared_ptr<ore::data::Market> initMarket,
           const std::string& configuration = ore::data::Market::defaultConfiguration,
-          const boost::shared_ptr<PathGeneratorFactory>& pf = boost::make_shared<MultiPathGeneratorFactory>());
+          const QuantLib::ext::shared_ptr<PathGeneratorFactory>& pf = QuantLib::ext::make_shared<MultiPathGeneratorFactory>());
 
 private:
-    boost::shared_ptr<ScenarioGeneratorData> data_;
+    QuantLib::ext::shared_ptr<ScenarioGeneratorData> data_;
     boost::optional<std::set<std::string>> currencies_;
 };
 } // namespace analytics

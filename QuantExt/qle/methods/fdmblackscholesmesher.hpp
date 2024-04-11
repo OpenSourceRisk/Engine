@@ -29,7 +29,7 @@
 #include <ql/handle.hpp>
 #include <ql/quote.hpp>
 
-#include <boost/tuple/tuple.hpp>
+#include <ql/tuple.hpp>
 
 namespace QuantLib {
 class FdmQuantoHelper;
@@ -49,7 +49,7 @@ public:
     FdmBlackScholesMesher(Size size, const ext::shared_ptr<GeneralizedBlackScholesProcess>& process, Time maturity,
                           Real strike, Real xMinConstraint = Null<Real>(), Real xMaxConstraint = Null<Real>(),
                           Real eps = 0.0001, Real scaleFactor = 1.5,
-                          const std::vector<boost::tuple<Real, Real, bool>>& cPoints = {},
+                          const std::vector<QuantLib::ext::tuple<Real, Real, bool>>& cPoints = {},
                           const DividendSchedule& dividendSchedule = DividendSchedule(),
                           const ext::shared_ptr<FdmQuantoHelper>& fdmQuantoHelper = ext::shared_ptr<FdmQuantoHelper>(),
                           Real spotAdjustment = 0.0);

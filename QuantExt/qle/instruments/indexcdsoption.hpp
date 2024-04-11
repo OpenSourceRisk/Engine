@@ -38,8 +38,8 @@ public:
     class results;
     class engine;
 
-    IndexCdsOption(const boost::shared_ptr<IndexCreditDefaultSwap>& swap,
-                   const boost::shared_ptr<QuantLib::Exercise>& exercise, QuantLib::Real strike,
+    IndexCdsOption(const QuantLib::ext::shared_ptr<IndexCreditDefaultSwap>& swap,
+                   const QuantLib::ext::shared_ptr<QuantLib::Exercise>& exercise, QuantLib::Real strike,
                    CdsOption::StrikeType strikeType_ = CdsOption::Spread,
                    Settlement::Type settlementType = Settlement::Cash,
                    QuantLib::Real tradeDateNtl = QuantLib::Null<QuantLib::Real>(),
@@ -54,7 +54,7 @@ public:
 
     //! \name Inspectors
     //@{
-    const boost::shared_ptr<IndexCreditDefaultSwap>& underlyingSwap() const { return swap_; }
+    const QuantLib::ext::shared_ptr<IndexCreditDefaultSwap>& underlyingSwap() const { return swap_; }
     //@}
 
     //! \name Calculations
@@ -71,7 +71,7 @@ public:
     //@}
 
 private:
-    boost::shared_ptr<IndexCreditDefaultSwap> swap_;
+    QuantLib::ext::shared_ptr<IndexCreditDefaultSwap> swap_;
     QuantLib::Real strike_;
     CdsOption::StrikeType strikeType_;
     Settlement::Type settlementType_;
@@ -95,7 +95,7 @@ public:
         : strike(QuantLib::Null<QuantLib::Real>()), strikeType(CdsOption::Spread), settlementType(Settlement::Cash),
           tradeDateNtl(QuantLib::Null<QuantLib::Real>()), realisedFep(QuantLib::Null<QuantLib::Real>()) {}
 
-    boost::shared_ptr<IndexCreditDefaultSwap> swap;
+    QuantLib::ext::shared_ptr<IndexCreditDefaultSwap> swap;
     QuantLib::Real strike;
     CdsOption::StrikeType strikeType;
     Settlement::Type settlementType;

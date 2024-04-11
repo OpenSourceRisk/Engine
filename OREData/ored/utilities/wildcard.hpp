@@ -24,7 +24,7 @@
 #pragma once
 
 #include <boost/optional.hpp>
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 #include <regex>
 #include <set>
@@ -58,7 +58,7 @@ private:
     std::size_t wildCardPos_;
     boost::optional<std::string> regexString_;
     boost::optional<std::string> prefixString_;
-    mutable boost::shared_ptr<std::regex> regex_;
+    mutable QuantLib::ext::shared_ptr<std::regex> regex_;
 };
 
 //! checks if at most one element in C has a wild card and returns it in this case

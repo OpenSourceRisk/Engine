@@ -259,9 +259,9 @@ MoneynessStrike::Type parseMoneynessType(const string& type) {
     }
 }
 
-boost::shared_ptr<BaseStrike> parseBaseStrike(const string& strStrike) {
+QuantLib::ext::shared_ptr<BaseStrike> parseBaseStrike(const string& strStrike) {
 
-    boost::shared_ptr<BaseStrike> strike;
+    QuantLib::ext::shared_ptr<BaseStrike> strike;
 
     // Expect strStrike to either:
     // 1. have a single token which means that we have an absolute strike, or
@@ -270,13 +270,13 @@ boost::shared_ptr<BaseStrike> parseBaseStrike(const string& strStrike) {
     boost::split(tokens, strStrike, boost::is_any_of("/"));
 
     if (tokens.size() == 1) {
-        strike = boost::make_shared<AbsoluteStrike>();
+        strike = QuantLib::ext::make_shared<AbsoluteStrike>();
     } else if (tokens[0] == "DEL") {
-        strike = boost::make_shared<DeltaStrike>();
+        strike = QuantLib::ext::make_shared<DeltaStrike>();
     } else if (tokens[0] == "ATM") {
-        strike = boost::make_shared<AtmStrike>();
+        strike = QuantLib::ext::make_shared<AtmStrike>();
     } else if (tokens[0] == "MNY") {
-        strike = boost::make_shared<MoneynessStrike>();
+        strike = QuantLib::ext::make_shared<MoneynessStrike>();
     } else {
         QL_FAIL("Could not parse strike string '" << strStrike << "'.");
     }
