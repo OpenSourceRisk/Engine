@@ -62,7 +62,7 @@ void SimmResults::add(const CrifRecord::ProductClass& pc, const SimmConfiguratio
         data_[key] = im;
 }
 
-void SimmResults::convert(const boost::shared_ptr<ore::data::Market>& market, const string& currency) {
+void SimmResults::convert(const QuantLib::ext::shared_ptr<ore::data::Market>& market, const string& currency) {
     // Get corresponding FX spot rate
     Real fxSpot = market->fxRate(resultCcy_ + currency)->value();
 

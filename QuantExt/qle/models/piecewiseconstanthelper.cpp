@@ -45,55 +45,55 @@ Array datesToTimes(const std::vector<Date>& dates, const Handle<YieldTermStructu
 } // anonymous namespace
 
 PiecewiseConstantHelper1::PiecewiseConstantHelper1(const Array& t,
-    const boost::shared_ptr<Constraint>& constraint)
-    : t_(t), y_(boost::make_shared<PseudoParameter>(t.size() + 1, *constraint)) {
+    const QuantLib::ext::shared_ptr<Constraint>& constraint)
+    : t_(t), y_(QuantLib::ext::make_shared<PseudoParameter>(t.size() + 1, *constraint)) {
     checkTimes(t_);
 }
 
 PiecewiseConstantHelper1::PiecewiseConstantHelper1(const std::vector<Date>& dates,
     const Handle<YieldTermStructure>& yts,
-    const boost::shared_ptr<Constraint>& constraint)
+    const QuantLib::ext::shared_ptr<Constraint>& constraint)
     : t_(datesToTimes(dates, yts)),
-      y_(boost::make_shared<PseudoParameter>(dates.size() + 1, *constraint)) {
+      y_(QuantLib::ext::make_shared<PseudoParameter>(dates.size() + 1, *constraint)) {
     checkTimes(t_);
 }
 
 PiecewiseConstantHelper11::PiecewiseConstantHelper11(const Array& t1, const Array& t2,
-    const boost::shared_ptr<Constraint>& constraint1,
-    const boost::shared_ptr<Constraint>& constraint2)
+    const QuantLib::ext::shared_ptr<Constraint>& constraint1,
+    const QuantLib::ext::shared_ptr<Constraint>& constraint2)
     : h1_(t1, constraint1), h2_(t2, constraint2) {}
 
 PiecewiseConstantHelper11::PiecewiseConstantHelper11(const std::vector<Date>& dates1,
     const std::vector<Date>& dates2,
     const Handle<YieldTermStructure>& yts,
-    const boost::shared_ptr<Constraint>& constraint1,
-    const boost::shared_ptr<Constraint>& constraint2)
+    const QuantLib::ext::shared_ptr<Constraint>& constraint1,
+    const QuantLib::ext::shared_ptr<Constraint>& constraint2)
     : h1_(dates1, yts, constraint1), h2_(dates2, yts, constraint2) {}
 
 PiecewiseConstantHelper2::PiecewiseConstantHelper2(const Array& t,
-    const boost::shared_ptr<Constraint>& constraint)
+    const QuantLib::ext::shared_ptr<Constraint>& constraint)
     : zeroCutoff_(1.0E-6), t_(t),
-      y_(boost::make_shared<PseudoParameter>(t.size() + 1, *constraint)) {
+      y_(QuantLib::ext::make_shared<PseudoParameter>(t.size() + 1, *constraint)) {
     checkTimes(t_);
 }
 
 PiecewiseConstantHelper2::PiecewiseConstantHelper2(const std::vector<Date>& dates,
     const Handle<YieldTermStructure>& yts,
-    const boost::shared_ptr<Constraint>& constraint)
+    const QuantLib::ext::shared_ptr<Constraint>& constraint)
     : zeroCutoff_(1.0E-6), t_(datesToTimes(dates, yts)),
-      y_(boost::make_shared<PseudoParameter>(dates.size() + 1, *constraint)) {
+      y_(QuantLib::ext::make_shared<PseudoParameter>(dates.size() + 1, *constraint)) {
     checkTimes(t_);
 }
 
-PiecewiseConstantHelper2::PiecewiseConstantHelper2(const Array& t, const boost::shared_ptr<PseudoParameter>& p)
+PiecewiseConstantHelper2::PiecewiseConstantHelper2(const Array& t, const QuantLib::ext::shared_ptr<PseudoParameter>& p)
     : zeroCutoff_(1.0E-6), t_(t), y_(p) {}
 
 PiecewiseConstantHelper3::PiecewiseConstantHelper3(const Array& t1, const Array& t2,
-    const boost::shared_ptr<Constraint>& constraint1,
-    const boost::shared_ptr<Constraint>& constraint2)
+    const QuantLib::ext::shared_ptr<Constraint>& constraint1,
+    const QuantLib::ext::shared_ptr<Constraint>& constraint2)
     : zeroCutoff_(1.0E-6), t1_(t1), t2_(t2),
-      y1_(boost::make_shared<PseudoParameter>(t1.size() + 1, *constraint1)),
-      y2_(boost::make_shared<PseudoParameter>(t2.size() + 1, *constraint2)) {
+      y1_(QuantLib::ext::make_shared<PseudoParameter>(t1.size() + 1, *constraint1)),
+      y2_(QuantLib::ext::make_shared<PseudoParameter>(t2.size() + 1, *constraint2)) {
     checkTimes(t1_);
     checkTimes(t2_);
 }
@@ -101,13 +101,13 @@ PiecewiseConstantHelper3::PiecewiseConstantHelper3(const Array& t1, const Array&
 PiecewiseConstantHelper3::PiecewiseConstantHelper3(const std::vector<Date>& dates1,
     const std::vector<Date>& dates2,
     const Handle<YieldTermStructure>& yts,
-    const boost::shared_ptr<Constraint>& constraint1,
-    const boost::shared_ptr<Constraint>& constraint2)
+    const QuantLib::ext::shared_ptr<Constraint>& constraint1,
+    const QuantLib::ext::shared_ptr<Constraint>& constraint2)
     : zeroCutoff_(1.0E-6),
       t1_(datesToTimes(dates1, yts)),
       t2_(datesToTimes(dates2, yts)),
-      y1_(boost::make_shared<PseudoParameter>(dates1.size() + 1, *constraint1)),
-      y2_(boost::make_shared<PseudoParameter>(dates2.size() + 1, *constraint2)) {
+      y1_(QuantLib::ext::make_shared<PseudoParameter>(dates1.size() + 1, *constraint1)),
+      y2_(QuantLib::ext::make_shared<PseudoParameter>(dates2.size() + 1, *constraint2)) {
     checkTimes(t1_);
     checkTimes(t2_);
 }

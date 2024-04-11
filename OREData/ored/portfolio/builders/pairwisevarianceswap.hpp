@@ -63,19 +63,19 @@ protected:
         return underlyingName1 + "/" + underlyingName2 + "/" + ccy.code();
     }
 
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& underlyingName1, const string& underlyingName2,
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& underlyingName1, const string& underlyingName2,
                                                         const Currency& ccy, const Date& accrEndDate,
                                                         const AssetClass& assetClassUnderlyings) override {
-        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp1, gbsp2;
-        boost::shared_ptr<Index> index1, index2;
+        QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp1, gbsp2;
+        QuantLib::ext::shared_ptr<Index> index1, index2;
         if (assetClassUnderlyings == AssetClass::EQ) {
-            gbsp1 = boost::make_shared<GeneralizedBlackScholesProcess>(
+            gbsp1 = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
                 market_->equitySpot(underlyingName1, configuration(ore::data::MarketContext::pricing)),
                 market_->equityDividendCurve(underlyingName1, configuration(ore::data::MarketContext::pricing)),
                 market_->equityForecastCurve(underlyingName1, configuration(ore::data::MarketContext::pricing)),
                 market_->equityVol(underlyingName1, configuration(ore::data::MarketContext::pricing)));
             index1 = market_->equityCurve(underlyingName1).currentLink();
-            gbsp2 = boost::make_shared<GeneralizedBlackScholesProcess>(
+            gbsp2 = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
                 market_->equitySpot(underlyingName2, configuration(ore::data::MarketContext::pricing)),
                 market_->equityDividendCurve(underlyingName2, configuration(ore::data::MarketContext::pricing)),
                 market_->equityForecastCurve(underlyingName2, configuration(ore::data::MarketContext::pricing)),
@@ -86,11 +86,11 @@ protected:
             const auto fxIndex2 = market_->fxIndex("FX-" + underlyingName2);
             const string& ccyPairCode1 = fxIndex1->sourceCurrency().code() + fxIndex1->targetCurrency().code();
             const string& ccyPairCode2 = fxIndex2->sourceCurrency().code() + fxIndex2->targetCurrency().code();
-            gbsp1 = boost::make_shared<GeneralizedBlackScholesProcess>(
+            gbsp1 = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
                 market_->fxSpot(ccyPairCode1, configuration(ore::data::MarketContext::pricing)),
                 fxIndex1->targetCurve(), fxIndex1->sourceCurve(),
                 market_->fxVol(ccyPairCode1, configuration(ore::data::MarketContext::pricing)));
-            gbsp2 = boost::make_shared<GeneralizedBlackScholesProcess>(
+            gbsp2 = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
                 market_->fxSpot(ccyPairCode2, configuration(ore::data::MarketContext::pricing)),
                 fxIndex2->targetCurve(), fxIndex2->sourceCurve(),
                 market_->fxVol(ccyPairCode2, configuration(ore::data::MarketContext::pricing)));
@@ -102,9 +102,9 @@ protected:
         }
 
         QuantLib::Handle<QuantExt::CorrelationTermStructure> corrCurve(
-            boost::make_shared<QuantExt::FlatCorrelation>(0, NullCalendar(), 0.0, Actual365Fixed()));
+            QuantLib::ext::make_shared<QuantExt::FlatCorrelation>(0, NullCalendar(), 0.0, Actual365Fixed()));
         Handle<Quote> correlation(
-            boost::make_shared<QuantExt::CorrelationValue>(corrCurve, corrCurve->timeFromReference(accrEndDate)));
+            QuantLib::ext::make_shared<QuantExt::CorrelationValue>(corrCurve, corrCurve->timeFromReference(accrEndDate)));
 
         try {
             corrCurve =
@@ -114,7 +114,7 @@ protected:
                                              << " found, fall back to zero correlation");
         }
 
-        return boost::make_shared<QuantExt::PairwiseVarianceSwapEngine>(
+        return QuantLib::ext::make_shared<QuantExt::PairwiseVarianceSwapEngine>(
             index1, index2, gbsp1, gbsp2,
             market_->discountCurve(ccy.code(), configuration(ore::data::MarketContext::pricing)), correlation);
     }

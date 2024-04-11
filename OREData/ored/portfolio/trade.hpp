@@ -69,7 +69,7 @@ public:
 
     /*! Build QuantLib/QuantExt instrument, link pricing engine. If build() is called multiple times, reset() should
         be called between these calls. */
-    virtual void build(const boost::shared_ptr<EngineFactory>&) = 0;
+    virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) = 0;
 
     /*! Return the fixings that will be requested in order to price this Trade given the \p settlementDate.
 
@@ -90,7 +90,7 @@ public:
     const RequiredFixings& requiredFixings() const { return requiredFixings_; }
 
     virtual std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const {
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const {
         return {};
     }
 
@@ -138,7 +138,7 @@ public:
 
     const TradeActions& tradeActions() const { return tradeActions_; }
 
-    const boost::shared_ptr<InstrumentWrapper>& instrument() const { return instrument_; }
+    const QuantLib::ext::shared_ptr<InstrumentWrapper>& instrument() const { return instrument_; }
 
     const std::vector<QuantLib::Leg>& legs() const { return legs_; }
 
@@ -194,7 +194,7 @@ public:
 
 protected:
     string tradeType_; // class name of the derived class
-    boost::shared_ptr<InstrumentWrapper> instrument_;
+    QuantLib::ext::shared_ptr<InstrumentWrapper> instrument_;
     std::vector<QuantLib::Leg> legs_;
     std::vector<string> legCurrencies_;
     std::vector<bool> legPayers_;
@@ -215,9 +215,9 @@ protected:
     // into the InstrumentWrapper. This utility creates the additional instrument. The actual insertion into the
     // instrument wrapper is done in the individual trade builders when they instantiate the InstrumentWrapper.
     // The returned date is the latest premium payment date added.
-    Date addPremiums(std::vector<boost::shared_ptr<Instrument>>& instruments, std::vector<Real>& multipliers,
+    Date addPremiums(std::vector<QuantLib::ext::shared_ptr<Instrument>>& instruments, std::vector<Real>& multipliers,
                      const Real tradeMultiplier, const PremiumData& premiumData, const Real premiumMultiplier,
-                     const Currency& tradeCurrency, const boost::shared_ptr<EngineFactory>& factory,
+                     const Currency& tradeCurrency, const QuantLib::ext::shared_ptr<EngineFactory>& factory,
                      const string& configuration);
 
     RequiredFixings requiredFixings_;

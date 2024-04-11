@@ -76,7 +76,7 @@ protected:
 
 private:
     void initialiseStrikesTenors();
-    mutable boost::shared_ptr<OptionInterpolator2d<InterpolatorStrike, InterpolatorExpiry>> optionInterpolator_;
+    mutable QuantLib::ext::shared_ptr<OptionInterpolator2d<InterpolatorStrike, InterpolatorExpiry>> optionInterpolator_;
     std::vector<QuantLib::Period> allTenors_;
     std::vector<QuantLib::Real> allStrikes_;
     std::vector<QuantLib::Volatility> allVols_;
@@ -153,7 +153,7 @@ QuantLib::Volatility CapFloorTermVolSurfaceSparse<IS, IE>::volatilityImpl(Time t
 
 template <class IS, class IE>
 void CapFloorTermVolSurfaceSparse<IS, IE>::performCalculations() const {
-    optionInterpolator_ = boost::make_shared<OptionInterpolator2d<IS, IE>>(referenceDate(), calendar(), businessDayConvention(), dayCounter(), 
+    optionInterpolator_ = QuantLib::ext::make_shared<OptionInterpolator2d<IS, IE>>(referenceDate(), calendar(), businessDayConvention(), dayCounter(), 
         allTenors_, allStrikes_, allVols_, lowerStrikeConstExtrap_, upperStrikeConstExtrap_);
 }
 

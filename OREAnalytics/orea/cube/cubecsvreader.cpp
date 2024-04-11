@@ -35,7 +35,7 @@ namespace analytics {
 
 CubeCsvReader::CubeCsvReader(const std::string& filename) : filename_(filename) {}
 
-void CubeCsvReader::read(boost::shared_ptr<NPVCube>& cube, std::map<std::string, std::string>& nettingSetMap) {
+void CubeCsvReader::read(QuantLib::ext::shared_ptr<NPVCube>& cube, std::map<std::string, std::string>& nettingSetMap) {
 
     std::set<string> tradeIds;
     std::vector<Date> dateVec;
@@ -97,9 +97,9 @@ void CubeCsvReader::read(boost::shared_ptr<NPVCube>& cube, std::map<std::string,
         }
     }
     if (cubeDepth == 1)
-        cube = boost::make_shared<SinglePrecisionInMemoryCube>(asof, tradeIds, dateVec, numSamples);
+        cube = QuantLib::ext::make_shared<SinglePrecisionInMemoryCube>(asof, tradeIds, dateVec, numSamples);
     else if (cubeDepth > 1)
-        cube = boost::make_shared<SinglePrecisionInMemoryCubeN>(asof, tradeIds, dateVec, numSamples, cubeDepth);
+        cube = QuantLib::ext::make_shared<SinglePrecisionInMemoryCubeN>(asof, tradeIds, dateVec, numSamples, cubeDepth);
 
     // Now re-open the file and loop through its contents AGAIN
     std::ifstream file2;

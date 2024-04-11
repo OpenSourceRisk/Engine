@@ -52,7 +52,7 @@ IndexCreditDefaultSwapOption::IndexCreditDefaultSwapOption(const Envelope& env, 
     : Trade("IndexCreditDefaultSwapOption", env), swap_(swap), option_(option), strike_(strike),
       indexTerm_(indexTerm), strikeType_(strikeType), tradeDate_(tradeDate), fepStartDate_(fepStartDate) {}
 
-void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("IndexCreditDefaultSwapOption::build() called for trade " << id());
 
@@ -60,11 +60,11 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
     additionalData_["isdaAssetClass"] = string("Credit");
     additionalData_["isdaBaseProduct"] = string("Swaptions");
     string entity = swap_.creditCurveId();
-    boost::shared_ptr<ReferenceDataManager> refData = engineFactory->referenceData();
+    QuantLib::ext::shared_ptr<ReferenceDataManager> refData = engineFactory->referenceData();
     if (refData && refData->hasData("CreditIndex", entity)) {
         auto refDatum = refData->getData("CreditIndex", entity);
-        boost::shared_ptr<CreditIndexReferenceDatum> creditIndexRefDatum =
-            boost::dynamic_pointer_cast<CreditIndexReferenceDatum>(refDatum);
+        QuantLib::ext::shared_ptr<CreditIndexReferenceDatum> creditIndexRefDatum =
+            QuantLib::ext::dynamic_pointer_cast<CreditIndexReferenceDatum>(refDatum);
         additionalData_["isdaSubProduct"] = creditIndexRefDatum->indexFamily();
         if (creditIndexRefDatum->indexFamily() == "") {
             ALOG("IndexFamily is blank in credit index reference data for entity " << entity);
@@ -76,7 +76,7 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
     additionalData_["isdaTransaction"] = string("");  
 
     // Dates
-    const boost::shared_ptr<Market>& market = engineFactory->market();
+    const QuantLib::ext::shared_ptr<Market>& market = engineFactory->market();
     Date asof = market->asofDate();
     if (asof == Null<Date>() || asof == Date()) {
         asof = Settings::instance().evaluationDate();
@@ -128,7 +128,7 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
     // Need fixed leg data with one rate. This should be the standard running coupon on the index CDS e.g.
     // 100bp for CDX IG and 500bp for CDX HY.
     QL_REQUIRE(legData.legType() == "Fixed", "Index CDS option " << id() << " requires fixed leg.");
-    auto fixedLegData = boost::dynamic_pointer_cast<FixedLegData>(legData.concreteLegData());
+    auto fixedLegData = QuantLib::ext::dynamic_pointer_cast<FixedLegData>(legData.concreteLegData());
     QL_REQUIRE(fixedLegData->rates().size() == 1, "Index CDS option " << id() << " requires single fixed rate.");
     auto runningCoupon = fixedLegData->rates().front();
     Real upfrontFee = swap_.upfrontFee();
@@ -152,7 +152,7 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
     QL_REQUIRE(exerciseDates.size() == 1, "IndexCreditDefaultSwapOption expects one exercise date"
                                               << " but got " << exerciseDates.size() << " exercise dates.");
     Date exerciseDate = parseDate(exerciseDates.front());
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(exerciseDate);
+    QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(exerciseDate);
 
     QL_REQUIRE(parseDate(legData.schedule().rules().front().endDate()) > exerciseDate, 
         "IndexCreditDefaultSwapOption: ExerciseDate must be before EndDate");
@@ -253,11 +253,11 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
     }
 
     // get engine builders for option and underlying swap
-    auto iCdsOptionEngineBuilder = boost::dynamic_pointer_cast<IndexCreditDefaultSwapOptionEngineBuilder>(
+    auto iCdsOptionEngineBuilder = QuantLib::ext::dynamic_pointer_cast<IndexCreditDefaultSwapOptionEngineBuilder>(
         engineFactory->builder("IndexCreditDefaultSwapOption"));
     QL_REQUIRE(iCdsOptionEngineBuilder,
                "IndexCreditDefaultSwapOption: internal error, expected IndexCreditDefaultSwapOptionEngineBuilder");
-    auto iCdsEngineBuilder = boost::dynamic_pointer_cast<IndexCreditDefaultSwapEngineBuilder>(
+    auto iCdsEngineBuilder = QuantLib::ext::dynamic_pointer_cast<IndexCreditDefaultSwapEngineBuilder>(
         engineFactory->builder("IndexCreditDefaultSwap"));
     QL_REQUIRE(iCdsEngineBuilder,
                "IndexCreditDefaultSwap: internal error, expected IndexCreditDefaultSwapEngineBuilder");
@@ -265,9 +265,9 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
     // The underlying index CDS as it looks on the valuation date i.e. outstanding notional is the valuation
     // date notional and the basket of notionals contains only those reference entities not defaulted (i.e.
     // those with auction date in the future to be more precise).
-    auto cds = boost::make_shared<QuantExt::IndexCreditDefaultSwap>(
+    auto cds = QuantLib::ext::make_shared<QuantExt::IndexCreditDefaultSwap>(
         side, notionals_.valuationDate, constituentNtls, runningCoupon, schedule, payConvention, dc,
-        swap_.settlesAccrual(), swap_.protectionPaymentTime(), underlyingProtectionStart, boost::shared_ptr<Claim>(),
+        swap_.settlesAccrual(), swap_.protectionPaymentTime(), underlyingProtectionStart, QuantLib::ext::shared_ptr<Claim>(),
         lastPeriodDayCounter, true, underlyingTradeDate, swap_.cashSettlementDays());
 
     // Set engine on the underlying CDS.
@@ -307,7 +307,7 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
     }
 
     // Build the option
-    auto option = boost::make_shared<QuantExt::IndexCdsOption>(cds, exercise, effectiveStrike_, strikeType, settleType,
+    auto option = QuantLib::ext::make_shared<QuantExt::IndexCdsOption>(cds, exercise, effectiveStrike_, strikeType, settleType,
                                                                notionals_.tradeDate, notionals_.realisedFep,
                                                                effectiveIndexTerm_);
     // the vol curve id is the credit curve id stripped by a term, if the credit curve id should contain one
@@ -330,7 +330,7 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
     Real indicatorLongShort = positionType == Position::Long ? 1.0 : -1.0;
 
     // Include premium if enough information is provided
-    vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     vector<Real> additionalMultipliers;
     string configuration = iCdsOptionEngineBuilder->configuration(MarketContext::pricing);
     maturity_ =
@@ -343,12 +343,12 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
     // the expiry date with no assumptions on an (automatic) exercise. Therefore we build a vanilla
     // instrument if the exercise date is <= the eval date at build time.
     if (settleType == Settlement::Cash || exerciseDate <= Settings::instance().evaluationDate()) {
-        instrument_ = boost::make_shared<VanillaInstrument>(option, indicatorLongShort, additionalInstruments,
+        instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(option, indicatorLongShort, additionalInstruments,
                                                             additionalMultipliers);
     } else {
         bool isLong = positionType == Position::Long;
         bool isPhysical = settleType == Settlement::Physical;
-        instrument_ = boost::make_shared<EuropeanOptionWrapper>(option, isLong, exerciseDate, isPhysical, cds, 1.0, 1.0,
+        instrument_ = QuantLib::ext::make_shared<EuropeanOptionWrapper>(option, isLong, exerciseDate, isPhysical, cds, 1.0, 1.0,
                                                                 additionalInstruments, additionalMultipliers);
     }
 
@@ -552,7 +552,7 @@ void IndexCreditDefaultSwapOption::fromBasket(const Date& asof, map<string, Real
 }
 
 void IndexCreditDefaultSwapOption::fromReferenceData(const Date& asof, map<string, Real>& outConstituents,
-                                                     const boost::shared_ptr<ReferenceDataManager>& refData) {
+                                                     const QuantLib::ext::shared_ptr<ReferenceDataManager>& refData) {
 
     const string& iCdsId = swap_.creditCurveId();
     DLOG("Start building constituents using credit reference data for " << iCdsId << ".");
@@ -560,7 +560,7 @@ void IndexCreditDefaultSwapOption::fromReferenceData(const Date& asof, map<strin
     QL_REQUIRE(refData, "Building index CDS option " << id() << " ReferenceDataManager is null.");
     QL_REQUIRE(refData->hasData(CreditIndexReferenceDatum::TYPE, iCdsId),
                "No CreditIndex reference data for " << iCdsId);
-    auto referenceData = boost::dynamic_pointer_cast<CreditIndexReferenceDatum>(
+    auto referenceData = QuantLib::ext::dynamic_pointer_cast<CreditIndexReferenceDatum>(
         refData->getData(CreditIndexReferenceDatum::TYPE, iCdsId));
     DLOG("Got CreditIndexReferenceDatum for id " << iCdsId);
 

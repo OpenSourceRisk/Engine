@@ -48,7 +48,7 @@ class AnalyticCcLgmFxOptionEngine;
 
 class CrossAssetModelImpliedFxVolTermStructure : public BlackVolTermStructure {
 public:
-    CrossAssetModelImpliedFxVolTermStructure(const boost::shared_ptr<CrossAssetModel>& model,
+    CrossAssetModelImpliedFxVolTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
                                              const Size foreignCurrencyIndex, BusinessDayConvention bdc = Following,
                                              const DayCounter& dc = DayCounter(), const bool purelyTimeBased = false);
 
@@ -76,10 +76,10 @@ protected:
     Volatility blackVolImpl(Time t, Real strike) const override;
 
 private:
-    const boost::shared_ptr<CrossAssetModel> model_;
+    const QuantLib::ext::shared_ptr<CrossAssetModel> model_;
     const Size fxIndex_;
     const bool purelyTimeBased_;
-    const boost::shared_ptr<AnalyticCcLgmFxOptionEngine> engine_;
+    const QuantLib::ext::shared_ptr<AnalyticCcLgmFxOptionEngine> engine_;
     Date referenceDate_;
     Real relativeTime_, irDom_, irFor_, fx_;
 };

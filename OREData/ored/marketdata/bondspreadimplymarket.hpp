@@ -32,16 +32,16 @@ namespace data {
 
 class BondSpreadImplyMarket : public WrappedMarket {
 public:
-    explicit BondSpreadImplyMarket(const boost::shared_ptr<Market>& market, const bool handlePseudoCurrencies = true);
+    explicit BondSpreadImplyMarket(const QuantLib::ext::shared_ptr<Market>& market, const bool handlePseudoCurrencies = true);
 
     // an internally constructed spread quote returned by securitySpread()
-    boost::shared_ptr<SimpleQuote> spreadQuote(const string& securityID) const;
+    QuantLib::ext::shared_ptr<SimpleQuote> spreadQuote(const string& securityID) const;
 
     Handle<Quote> securitySpread(const string& securityID,
                                  const string& configuration = Market::defaultConfiguration) const override;
 
 protected:
-    mutable std::map<std::string, boost::shared_ptr<SimpleQuote>> spreadQuote_;
+    mutable std::map<std::string, QuantLib::ext::shared_ptr<SimpleQuote>> spreadQuote_;
 };
 
 } // namespace data

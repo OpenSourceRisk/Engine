@@ -173,21 +173,21 @@ struct IrVolCalibrationInfo {
 struct TodaysMarketCalibrationInfo {
     QuantLib::Date asof;
     // discount, index and yield curves
-    std::map<std::string, boost::shared_ptr<YieldCurveCalibrationInfo>> yieldCurveCalibrationInfo;
+    std::map<std::string, QuantLib::ext::shared_ptr<YieldCurveCalibrationInfo>> yieldCurveCalibrationInfo;
     // equity dividend yield curves
-    std::map<std::string, boost::shared_ptr<YieldCurveCalibrationInfo>> dividendCurveCalibrationInfo;
+    std::map<std::string, QuantLib::ext::shared_ptr<YieldCurveCalibrationInfo>> dividendCurveCalibrationInfo;
     // inflation curves
-    std::map<std::string, boost::shared_ptr<InflationCurveCalibrationInfo>> inflationCurveCalibrationInfo;
+    std::map<std::string, QuantLib::ext::shared_ptr<InflationCurveCalibrationInfo>> inflationCurveCalibrationInfo;
     // commodity curves
-    std::map<std::string, boost::shared_ptr<CommodityCurveCalibrationInfo>> commodityCurveCalibrationInfo;
+    std::map<std::string, QuantLib::ext::shared_ptr<CommodityCurveCalibrationInfo>> commodityCurveCalibrationInfo;
     // fx vols
-    std::map<std::string, boost::shared_ptr<FxEqCommVolCalibrationInfo>> fxVolCalibrationInfo;
+    std::map<std::string, QuantLib::ext::shared_ptr<FxEqCommVolCalibrationInfo>> fxVolCalibrationInfo;
     // eq vols
-    std::map<std::string, boost::shared_ptr<FxEqCommVolCalibrationInfo>> eqVolCalibrationInfo;
+    std::map<std::string, QuantLib::ext::shared_ptr<FxEqCommVolCalibrationInfo>> eqVolCalibrationInfo;
     // ir vols (swaption, capfloor)
-    std::map<std::string, boost::shared_ptr<IrVolCalibrationInfo>> irVolCalibrationInfo;
+    std::map<std::string, QuantLib::ext::shared_ptr<IrVolCalibrationInfo>> irVolCalibrationInfo;
     // comm vols
-    std::map<std::string, boost::shared_ptr<FxEqCommVolCalibrationInfo>> commVolCalibrationInfo;
+    std::map<std::string, QuantLib::ext::shared_ptr<FxEqCommVolCalibrationInfo>> commVolCalibrationInfo;
 };
 
 } // namespace data

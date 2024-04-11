@@ -33,19 +33,19 @@ using namespace QuantLib;
 
 namespace {
 
-bool isOis(const boost::shared_ptr<IborIndex>& index) {
-    return boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(index) != nullptr;
+bool isOis(const QuantLib::ext::shared_ptr<IborIndex>& index) {
+    return QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndex>(index) != nullptr;
 }
 
-bool isBMA(const boost::shared_ptr<IborIndex>& index) {
-    return boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(index) != nullptr;
+bool isBMA(const QuantLib::ext::shared_ptr<IborIndex>& index) {
+    return QuantLib::ext::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(index) != nullptr;
 }
 
 } // namespace
 
 ProxyOptionletVolatility::ProxyOptionletVolatility(const Handle<OptionletVolatilityStructure>& baseVol,
-                                                   const boost::shared_ptr<IborIndex>& baseIndex,
-                                                   const boost::shared_ptr<IborIndex>& targetIndex,
+                                                   const QuantLib::ext::shared_ptr<IborIndex>& baseIndex,
+                                                   const QuantLib::ext::shared_ptr<IborIndex>& targetIndex,
                                                    const Period& baseRateComputationPeriod,
                                                    const Period& targetRateComputationPeriod)
     : OptionletVolatilityStructure(baseVol->businessDayConvention(), baseVol->dayCounter()), baseVol_(baseVol),
@@ -66,22 +66,22 @@ ProxyOptionletVolatility::ProxyOptionletVolatility(const Handle<OptionletVolatil
     enableExtrapolation(baseVol->allowsExtrapolation());
 }
 
-boost::shared_ptr<QuantLib::SmileSection> ProxyOptionletVolatility::smileSectionImpl(QuantLib::Time optionTime) const {
+QuantLib::ext::shared_ptr<QuantLib::SmileSection> ProxyOptionletVolatility::smileSectionImpl(QuantLib::Time optionTime) const {
     // imply a fixing date from the optionTime
     Date fixingDate = lowerDate(optionTime, referenceDate(), dayCounter());
     return smileSectionImpl(fixingDate);
 }
 
-boost::shared_ptr<SmileSection> ProxyOptionletVolatility::smileSectionImpl(const Date& fixingDate) const {
+QuantLib::ext::shared_ptr<SmileSection> ProxyOptionletVolatility::smileSectionImpl(const Date& fixingDate) const {
 
     // compute the base and target forward rate levels
 
     Real baseAtmLevel;
     if (isOis(baseIndex_))
-        baseAtmLevel = getOisAtmLevel(boost::dynamic_pointer_cast<OvernightIndex>(baseIndex_),
+        baseAtmLevel = getOisAtmLevel(QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(baseIndex_),
                                       baseIndex_->fixingCalendar().adjust(fixingDate), baseRateComputationPeriod_);
     else if (isBMA(baseIndex_))
-        baseAtmLevel = getBMAAtmLevel(boost::dynamic_pointer_cast<BMAIndexWrapper>(baseIndex_)->bma(),
+        baseAtmLevel = getBMAAtmLevel(QuantLib::ext::dynamic_pointer_cast<BMAIndexWrapper>(baseIndex_)->bma(),
                                       baseIndex_->fixingCalendar().adjust(fixingDate), baseRateComputationPeriod_);
     else
         baseAtmLevel = baseIndex_->fixing(baseIndex_->fixingCalendar().adjust(fixingDate));
@@ -89,11 +89,11 @@ boost::shared_ptr<SmileSection> ProxyOptionletVolatility::smileSectionImpl(const
     Real targetAtmLevel;
     if (isOis(targetIndex_))
         targetAtmLevel =
-            getOisAtmLevel(boost::dynamic_pointer_cast<OvernightIndex>(targetIndex_),
+            getOisAtmLevel(QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(targetIndex_),
                            targetIndex_->fixingCalendar().adjust(fixingDate), targetRateComputationPeriod_);
     else if (isBMA(targetIndex_))
         targetAtmLevel =
-            getBMAAtmLevel(boost::dynamic_pointer_cast<BMAIndexWrapper>(targetIndex_)->bma(),
+            getBMAAtmLevel(QuantLib::ext::dynamic_pointer_cast<BMAIndexWrapper>(targetIndex_)->bma(),
                            targetIndex_->fixingCalendar().adjust(fixingDate), targetRateComputationPeriod_);
     else
         targetAtmLevel = targetIndex_->fixing(targetIndex_->fixingCalendar().adjust(fixingDate));
@@ -101,7 +101,7 @@ boost::shared_ptr<SmileSection> ProxyOptionletVolatility::smileSectionImpl(const
     // build the atm-adjusted smile section and return it
 
     QL_REQUIRE(!baseVol_.empty(), "ProxyOptionletVolatility: no base vol given.");
-    return boost::make_shared<AtmAdjustedSmileSection>(baseVol_->smileSection(fixingDate, true), baseAtmLevel,
+    return QuantLib::ext::make_shared<AtmAdjustedSmileSection>(baseVol_->smileSection(fixingDate, true), baseAtmLevel,
                                                        targetAtmLevel);
 }
 

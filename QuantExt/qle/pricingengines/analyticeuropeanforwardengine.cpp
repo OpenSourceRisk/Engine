@@ -58,13 +58,13 @@ using QuantLib::Error;
 namespace QuantExt {
 
     AnalyticEuropeanForwardEngine::AnalyticEuropeanForwardEngine(
-             const boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& process)
+             const QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& process)
     : process_(process) {
         registerWith(process_);
     }
 
     AnalyticEuropeanForwardEngine::AnalyticEuropeanForwardEngine(
-             const boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& process,
+             const QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& process,
              const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve)
     : process_(process), discountCurve_(discountCurve) {
         registerWith(process_);
@@ -75,7 +75,7 @@ namespace QuantExt {
 
         // if the discount curve is not specified, we default to the
         // risk free rate curve embedded within the GBM process
-        boost::shared_ptr<YieldTermStructure> discountPtr = 
+        QuantLib::ext::shared_ptr<YieldTermStructure> discountPtr = 
             discountCurve_.empty() ? 
             process_->riskFreeRate().currentLink() :
             discountCurve_.currentLink();
@@ -83,8 +83,8 @@ namespace QuantExt {
         QL_REQUIRE(arguments_.exercise->type() == Exercise::European,
                    "not an European option");
 
-        boost::shared_ptr<StrikedTypePayoff> payoff =
-            boost::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
+        QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff =
+            QuantLib::ext::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
         QL_REQUIRE(payoff, "non-striked payoff given");
 
         Real variance =

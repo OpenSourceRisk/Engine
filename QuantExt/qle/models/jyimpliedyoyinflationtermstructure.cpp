@@ -42,7 +42,7 @@ using std::vector;
 
 namespace QuantExt {
 
-JyImpliedYoYInflationTermStructure::JyImpliedYoYInflationTermStructure(const boost::shared_ptr<CrossAssetModel>& model,
+JyImpliedYoYInflationTermStructure::JyImpliedYoYInflationTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
                                                                        Size index, bool indexIsInterpolated)
     : YoYInflationModelTermStructure(model, index, indexIsInterpolated) {}
 
@@ -55,8 +55,8 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
     auto irIdx = model_->ccyIndex(model_->infjy(index_)->currency());
 
     // Will need a YoY index below in the helpers.
-    boost::shared_ptr<YoYInflationIndex> index =
-        boost::make_shared<YoYInflationIndexWrapper>(model_->infjy(index_)->inflationIndex(), indexIsInterpolated());
+    QuantLib::ext::shared_ptr<YoYInflationIndex> index =
+        QuantLib::ext::make_shared<YoYInflationIndexWrapper>(model_->infjy(index_)->inflationIndex(), indexIsInterpolated());
 
     for (const auto& maturity : dts) {
 
@@ -133,15 +133,15 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
 
     auto irTs = model_->irlgm1f(irIdx)->termStructure();
     Handle<YieldTermStructure> yts(
-        boost::make_shared<InterpolatedDiscountCurve<LogLinear>>(dfDates, dfValues, irTs->dayCounter(), LogLinear()));
+        QuantLib::ext::make_shared<InterpolatedDiscountCurve<LogLinear>>(dfDates, dfValues, irTs->dayCounter(), LogLinear()));
 
     // Create the YoY swap helpers from the YoY swap rates calculated above.
     // Using the curve's day counter as the helper's day counter for now.
     using YoYHelper = BootstrapHelper<YoYInflationTermStructure>;
-    vector<boost::shared_ptr<YoYHelper>> helpers;
+    vector<QuantLib::ext::shared_ptr<YoYHelper>> helpers;
     for (const auto& kv : yyiisRates) {
-        Handle<Quote> yyiisQuote(boost::make_shared<SimpleQuote>(kv.second));
-        helpers.push_back(boost::make_shared<YearOnYearInflationSwapHelper>(
+        Handle<Quote> yyiisQuote(QuantLib::ext::make_shared<SimpleQuote>(kv.second));
+        helpers.push_back(QuantLib::ext::make_shared<YearOnYearInflationSwapHelper>(
             yyiisQuote, observationLag(), kv.first, calendar(), Unadjusted, dayCounter(), index, yts));
     }
 
@@ -149,7 +149,7 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
     // Use Linear here in line with what is in scenariosimmarket and todaysmarket but should probably be more generic.
     auto lag = obsLag == -1 * Days ? observationLag() : obsLag;
     auto baseRate = helpers.front()->quote()->value();
-    auto yoyCurve = boost::make_shared<PiecewiseYoYInflationCurve<Linear>>(
+    auto yoyCurve = QuantLib::ext::make_shared<PiecewiseYoYInflationCurve<Linear>>(
         referenceDate_, calendar(), dayCounter(), lag, frequency(), indexIsInterpolated(), baseRate, helpers, 1e-12);
 
     // Read the necessary YoY rates from the bootstrapped YoY inflation curve

@@ -49,22 +49,22 @@ class InflationCurve {
 public:
     InflationCurve() : interpolatedIndex_(false) {}
     InflationCurve(Date asof, InflationCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
-                   map<string, boost::shared_ptr<YieldCurve>>& yieldCurves, const bool buildCalibrationInfo);
+                   map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves, const bool buildCalibrationInfo);
 
     //! getters
     const InflationCurveSpec& spec() const { return spec_; }
 
-    const boost::shared_ptr<InflationTermStructure> inflationTermStructure() const { return curve_; }
+    const QuantLib::ext::shared_ptr<InflationTermStructure> inflationTermStructure() const { return curve_; }
 
     const bool interpolatedIndex() const { return interpolatedIndex_; }
 
-    boost::shared_ptr<InflationCurveCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
+    QuantLib::ext::shared_ptr<InflationCurveCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
 
 private:
     InflationCurveSpec spec_;
-    boost::shared_ptr<InflationTermStructure> curve_;
+    QuantLib::ext::shared_ptr<InflationTermStructure> curve_;
     bool interpolatedIndex_;
-    boost::shared_ptr<InflationCurveCalibrationInfo> calibrationInfo_;
+    QuantLib::ext::shared_ptr<InflationCurveCalibrationInfo> calibrationInfo_;
 };
 
 /*! Given an \p asof and inflation swap \p convention, determine the start date of an inflation swap.

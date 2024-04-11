@@ -34,7 +34,7 @@ CrossCcyFixFloatSwapHelper::CrossCcyFixFloatSwapHelper(
     const Handle<Quote>& rate, const Handle<Quote>& spotFx, Natural settlementDays, const Calendar& paymentCalendar,
     BusinessDayConvention paymentConvention, const Period& tenor, const Currency& fixedCurrency,
     Frequency fixedFrequency, BusinessDayConvention fixedConvention, const DayCounter& fixedDayCount,
-    const boost::shared_ptr<IborIndex>& index, const Handle<YieldTermStructure>& floatDiscount,
+    const QuantLib::ext::shared_ptr<IborIndex>& index, const Handle<YieldTermStructure>& floatDiscount,
     const Handle<Quote>& spread, bool endOfMonth)
     : RelativeDateRateHelper(rate), spotFx_(spotFx), settlementDays_(settlementDays), paymentCalendar_(paymentCalendar),
       paymentConvention_(paymentConvention), tenor_(tenor), fixedCurrency_(fixedCurrency),
@@ -73,7 +73,7 @@ Real CrossCcyFixFloatSwapHelper::impliedQuote() const {
 }
 
 void CrossCcyFixFloatSwapHelper::setTermStructure(YieldTermStructure* yts) {
-    boost::shared_ptr<YieldTermStructure> temp(yts, null_deleter());
+    QuantLib::ext::shared_ptr<YieldTermStructure> temp(yts, null_deleter());
     termStructureHandle_.linkTo(temp, false);
     RelativeDateRateHelper::setTermStructure(yts);
 }
@@ -124,7 +124,7 @@ void CrossCcyFixFloatSwapHelper::initializeDates() {
     pillarDate_ = latestDate_ = latestRelevantDate_;
 
     // Attach engine
-    boost::shared_ptr<PricingEngine> engine = boost::make_shared<CrossCcySwapEngine>(
+    QuantLib::ext::shared_ptr<PricingEngine> engine = QuantLib::ext::make_shared<CrossCcySwapEngine>(
         fixedCurrency_, termStructureHandle_, index_->currency(), floatDiscount_, spotFx_);
     swap_->setPricingEngine(engine);
 }

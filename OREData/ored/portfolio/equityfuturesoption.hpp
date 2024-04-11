@@ -42,16 +42,16 @@ public:
     EquityFutureOption() : VanillaOptionTrade(AssetClass::EQ) { tradeType_ = "EquityFutureOption"; }
     //! Constructor
     EquityFutureOption(Envelope& env, OptionData option, const string& currency, Real quantity, 
-        const boost::shared_ptr<ore::data::Underlying>& underlying, TradeStrike strike, QuantLib::Date forwardDate,
-        const boost::shared_ptr<QuantLib::Index>& index = nullptr, const std::string& indexName = "");
+        const QuantLib::ext::shared_ptr<ore::data::Underlying>& underlying, TradeStrike strike, QuantLib::Date forwardDate,
+        const QuantLib::ext::shared_ptr<QuantLib::Index>& index = nullptr, const std::string& indexName = "");
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
     //! \name Inspectors
     //@{
     const std::string& name() const { return underlying_->name(); }
-    const boost::shared_ptr<ore::data::Underlying>& underlying() const { return underlying_; }
+    const QuantLib::ext::shared_ptr<ore::data::Underlying>& underlying() const { return underlying_; }
     //@}
 
     //! \name Serialisation
@@ -62,10 +62,10 @@ public:
 
     //! Add underlying Equity names
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
 private:
-    boost::shared_ptr<ore::data::Underlying> underlying_;    
+    QuantLib::ext::shared_ptr<ore::data::Underlying> underlying_;    
         
 };
 } // namespace data
