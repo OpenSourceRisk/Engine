@@ -327,13 +327,12 @@ void GaussianCam::populatePathValues(const Size nSamples, std::map<Date, std::ve
 
             std::vector<Real> relevantPathTimes;
             std::vector<Size> relevantPathIndices;
-            QL_REQUIRE(!injectedPathStickyCloseOutRun_ || !((*injectedPathIsRelevantTime_)[0]),
-                       "internal error: first injected time is relevant and stickyCloseOutRun is true");
-            for (Size j = 0; j < injectedPathTimes_->size(); ++j) {
-                if ((*injectedPathIsRelevantTime_)[j]) {
-                    relevantPathTimes.push_back((*injectedPathTimes_)[injectedPathStickyCloseOutRun_ ? j - 1 : j]);
-                    relevantPathIndices.push_back(j);
-                }
+
+            for (Size j = 0; j < injectedPathRelevantTimeIndexes_->size(); ++j) {
+                size_t pathIdx = (*injectedPathRelevantPathIndexes_)[j];
+                size_t timeIdx = (*injectedPathRelevantTimeIndexes_)[j];
+                relevantPathTimes.push_back((*injectedPathTimes_)[timeIdx]);
+                relevantPathIndices.push_back(pathIdx);
             }
             Array y(relevantPathTimes.size());
             auto pathInterpolator =
@@ -660,13 +659,15 @@ Size GaussianCam::trainingSamples() const { return mcParams_.trainingSamples; }
 
 void GaussianCam::injectPaths(const std::vector<QuantLib::Real>* pathTimes,
                               const std::vector<std::vector<QuantExt::RandomVariable>>* paths,
-                              const std::vector<bool>* isRelevantTime, const bool stickyCloseOutRun) {
+                              const std::vector<size_t>* pathIndexes, const std::vector<size_t>* timeIndexes,
+                              const bool stickyCloseOutRun) {
 
     if (pathTimes == nullptr) {
         // reset injected path data
         injectedPathTimes_ = nullptr;
         injectedPaths_ = nullptr;
-        injectedPathIsRelevantTime_ = nullptr;
+        injectedPathRelevantPathIndexes_ = nullptr;
+        injectedPathRelevantTimeIndexes_ = nullptr;
         injectedPathStickyCloseOutRun_ = false; // arbitrary
         return;
     }
@@ -677,9 +678,9 @@ void GaussianCam::injectPaths(const std::vector<QuantLib::Real>* pathTimes,
                                                        << pathTimes->size() << ") must match path size ("
                                                        << paths->size() << ")");
 
-    QL_REQUIRE(pathTimes->size() == isRelevantTime->size(),
-               "GaussianCam::injectPaths(): path times (" << pathTimes->size() << ") must match isRelevanTime size ("
-                                                          << isRelevantTime->size() << ")");
+    QL_REQUIRE(pathIndexes->size() == timeIndexes->size(),
+               "GaussianCam::injectPaths(): path indexes size (" << pathIndexes->size() << ") must match time indexes size ("
+                                                          << timeIndexes->size() << ")");
 
     QL_REQUIRE(projectedStateProcessIndices_.size() == cam_->dimension(),
                "GaussianCam::injectPaths(): number of projected state process indices ("
@@ -698,7 +699,8 @@ void GaussianCam::injectPaths(const std::vector<QuantLib::Real>* pathTimes,
 
     injectedPathTimes_ = pathTimes;
     injectedPaths_ = paths;
-    injectedPathIsRelevantTime_ = isRelevantTime;
+    injectedPathRelevantPathIndexes_ = pathIndexes;
+    injectedPathRelevantTimeIndexes_ = timeIndexes;
     injectedPathStickyCloseOutRun_ = stickyCloseOutRun;
     update();
 }

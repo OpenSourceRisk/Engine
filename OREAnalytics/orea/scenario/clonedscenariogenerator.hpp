@@ -36,6 +36,8 @@ public:
     virtual void reset() override;
 
 private:
+    std::vector<Date> dates_;
+    Size nDate_ = 0;
     std::vector<boost::shared_ptr<Scenario>> scenarios_;
     Size i_ = 0;
 };

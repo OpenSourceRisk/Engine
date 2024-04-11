@@ -229,10 +229,10 @@ void MultiThreadedValuationEngine::buildCube(
     miniNettingSetCubes_.clear();
     miniCptyCubes_.clear();
     for (Size i = 0; i < eff_nThreads; ++i) {
-        miniCubes_.push_back(cubeFactory_(today_, portfolios[i]->ids(), dateGrid_->dates(), nSamples_));
-        miniNettingSetCubes_.push_back(nettingSetCubeFactory_(today_, dateGrid_->dates(), nSamples_));
+        miniCubes_.push_back(cubeFactory_(today_, portfolios[i]->ids(), dateGrid_->valuationDates(), nSamples_));
+        miniNettingSetCubes_.push_back(nettingSetCubeFactory_(today_, dateGrid_->valuationDates(), nSamples_));
         miniCptyCubes_.push_back(
-            cptyCubeFactory_(today_, portfolios[i]->counterparties(), dateGrid_->dates(), nSamples_));
+            cptyCubeFactory_(today_, portfolios[i]->counterparties(), dateGrid_->valuationDates(), nSamples_));
     }
 
     // build progress indicator consolidating the results from the threads

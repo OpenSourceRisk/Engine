@@ -48,7 +48,8 @@ public:
 
     std::vector<QuantExt::RandomVariable> simulatePath(const std::vector<QuantLib::Real>& pathTimes,
                                                        std::vector<std::vector<QuantExt::RandomVariable>>& paths,
-                                                       const std::vector<bool>& isRelevantTime,
+                                                       const std::vector<size_t>& relevantPathIndex,
+                                                       const std::vector<size_t>& relevantTimeIndex,
                                                        const bool stickyCloseOutRun) override;
 
 private:
