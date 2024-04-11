@@ -56,14 +56,14 @@ protected:
         return assetName1 + assetName2 + ccy.code();
     }
 
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName1, const string& assetName2, const Currency& ccy) override {
-        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp1 = boost::make_shared<GeneralizedBlackScholesProcess>(
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName1, const string& assetName2, const Currency& ccy) override {
+        QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp1 = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
             market_->equitySpot(assetName1, configuration(ore::data::MarketContext::pricing)),
             market_->equityDividendCurve(assetName1, configuration(ore::data::MarketContext::pricing)),
             market_->equityForecastCurve(assetName1, configuration(ore::data::MarketContext::pricing)),
             market_->equityVol(assetName1, configuration(ore::data::MarketContext::pricing)));
 
-        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp2 = boost::make_shared<GeneralizedBlackScholesProcess>(
+        QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp2 = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
             market_->equitySpot(assetName2, configuration(ore::data::MarketContext::pricing)),
             market_->equityDividendCurve(assetName2, configuration(ore::data::MarketContext::pricing)),
             market_->equityForecastCurve(assetName2, configuration(ore::data::MarketContext::pricing)),
@@ -72,7 +72,7 @@ protected:
         int integrationPoints = ore::data::parseInteger(engineParameter("IntegrationPoints"));
 
         QuantLib::Handle<QuantExt::CorrelationTermStructure> corrCurve(
-            boost::make_shared<QuantExt::FlatCorrelation>(0, NullCalendar(), 0.0, Actual365Fixed()));
+            QuantLib::ext::make_shared<QuantExt::FlatCorrelation>(0, NullCalendar(), 0.0, Actual365Fixed()));
         try {
             corrCurve = market_->correlationCurve("EQ-" + assetName1, "EQ-" + assetName2,
                                                   configuration(MarketContext::pricing));
@@ -82,7 +82,7 @@ protected:
         }
 
         engine_ = "AnalyticOutperformanceOptionEngine";
-        return boost::make_shared<QuantExt::AnalyticOutperformanceOptionEngine>(gbsp1, gbsp2, corrCurve, integrationPoints);
+        return QuantLib::ext::make_shared<QuantExt::AnalyticOutperformanceOptionEngine>(gbsp1, gbsp2, corrCurve, integrationPoints);
     }
 };
 

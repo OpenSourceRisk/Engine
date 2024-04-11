@@ -24,7 +24,7 @@
 #pragma once
 
 #include <boost/make_shared.hpp>
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/tradefactory.hpp>
 #include <ql/time/date.hpp>
@@ -46,7 +46,7 @@ public:
     explicit Portfolio(bool buildFailedTrades = true) : buildFailedTrades_(buildFailedTrades) {}
 
     //! Add a trade to the portfolio
-    void add(const boost::shared_ptr<Trade>& trade);
+    void add(const QuantLib::ext::shared_ptr<Trade>& trade);
 
     //! Check if a trade id is already in the portfolio
     bool has(const string& id);
@@ -55,7 +55,7 @@ public:
 
         \remark returns a `nullptr` if no trade found with the given \p id
     */
-    boost::shared_ptr<Trade> get(const std::string& id) const;
+    QuantLib::ext::shared_ptr<Trade> get(const std::string& id) const;
 
     //! Clear the portfolio
     void clear();
@@ -79,14 +79,14 @@ public:
     void removeMatured(const QuantLib::Date& asof);
 
     //! Call build on all trades in the portfolio, the context is included in error messages
-    void build(const boost::shared_ptr<EngineFactory>&, const std::string& context = "unspecified",
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&, const std::string& context = "unspecified",
                const bool emitStructuredError = true);
 
     //! Calculates the maturity of the portfolio
     QuantLib::Date maturity() const;
 
     //! Return the map tradeId -> trade
-    const std::map<std::string, boost::shared_ptr<Trade>>& trades() const;
+    const std::map<std::string, QuantLib::ext::shared_ptr<Trade>>& trades() const;
 
     //! Build a set of tradeIds
     std::set<std::string> ids() const;
@@ -119,19 +119,19 @@ public:
 
     /*! Returns the names of the underlying instruments for each asset class */
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr);
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr);
     std::set<std::string>
     underlyingIndices(AssetClass assetClass,
-                      const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr);
+                      const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr);
 
 private:
     bool buildFailedTrades_;
-    std::map<std::string, boost::shared_ptr<Trade>> trades_;
+    std::map<std::string, QuantLib::ext::shared_ptr<Trade>> trades_;
     std::map<AssetClass, std::set<std::string>> underlyingIndicesCache_;
 };
 
-std::pair<boost::shared_ptr<Trade>, bool> buildTrade(boost::shared_ptr<Trade>& trade,
-                                                     const boost::shared_ptr<EngineFactory>& engineFactory,
+std::pair<QuantLib::ext::shared_ptr<Trade>, bool> buildTrade(QuantLib::ext::shared_ptr<Trade>& trade,
+                                                     const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                                      const std::string& context, const bool buildFailedTrades,
                                                      const bool emitStructuredError);
 

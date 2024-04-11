@@ -26,7 +26,7 @@ namespace QuantExt {
 
 FormulaBasedCoupon::FormulaBasedCoupon(const Currency& paymentCurrency, const Date& paymentDate, Real nominal,
                                        const Date& startDate, const Date& endDate, Natural fixingDays,
-                                       const boost::shared_ptr<FormulaBasedIndex>& index, const Date& refPeriodStart,
+                                       const QuantLib::ext::shared_ptr<FormulaBasedIndex>& index, const Date& refPeriodStart,
                                        const Date& refPeriodEnd, const DayCounter& dayCounter, bool isInArrears)
     : FloatingRateCoupon(paymentDate, nominal, startDate, endDate, fixingDays, index, 1.0, 0.0, refPeriodStart,
                          refPeriodEnd, dayCounter, isInArrears),
@@ -41,7 +41,7 @@ void FormulaBasedCoupon::accept(AcyclicVisitor& v) {
 }
 
 FormulaBasedLeg::FormulaBasedLeg(const Currency& paymentCurrency, const Schedule& schedule,
-                                 const boost::shared_ptr<FormulaBasedIndex>& index)
+                                 const QuantLib::ext::shared_ptr<FormulaBasedIndex>& index)
     : paymentCurrency_(paymentCurrency), schedule_(schedule), index_(index), paymentAdjustment_(Following),
       paymentLag_(0), inArrears_(false), zeroPayments_(false) {}
 
@@ -127,7 +127,7 @@ FormulaBasedLeg::operator Leg() const {
             BusinessDayConvention bdc = schedule_.businessDayConvention();
             refEnd = calendar.adjust(start + schedule_.tenor(), bdc);
         }
-        leg.push_back(boost::shared_ptr<CashFlow>(
+        leg.push_back(QuantLib::ext::shared_ptr<CashFlow>(
             new FormulaBasedCoupon(paymentCurrency_, paymentDate, detail::get(notionals_, i, 1.0), start, end,
                                    detail::get(fixingDays_, i, index_->fixingDays()), index_, refStart, refEnd,
                                    paymentDayCounter_, inArrears_)));

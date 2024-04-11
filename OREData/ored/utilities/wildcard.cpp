@@ -70,7 +70,7 @@ bool Wildcard::matches(const std::string& s) const {
         return s.substr(0, (*prefixString_).size()) == (*prefixString_);
     } else if (regexString_) {
         if (regex_ == nullptr)
-            regex_ = boost::make_shared<std::regex>(*regexString_);
+            regex_ = QuantLib::ext::make_shared<std::regex>(*regexString_);
         return std::regex_match(s, *regex_);
     } else {
         return s == pattern_;

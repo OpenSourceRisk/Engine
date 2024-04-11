@@ -34,17 +34,17 @@ using namespace QuantLib;
 class BlackScholesModelBuilder : public BlackScholesModelBuilderBase {
 public:
     BlackScholesModelBuilder(const std::vector<Handle<YieldTermStructure>>& curves,
-                             const std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
+                             const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
                              const std::set<Date>& simulationDates, const std::set<Date>& addDates,
                              const Size timeStepsPerYear = 0, const std::string& calibration = "ATM",
                              const std::vector<std::vector<Real>>& calibrationStrikes = {});
     BlackScholesModelBuilder(const Handle<YieldTermStructure>& curve,
-                             const boost::shared_ptr<GeneralizedBlackScholesProcess>& process,
+                             const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
                              const std::set<Date>& simulationDates, const std::set<Date>& addDates,
                              const Size timeStepsPerYear = 0, const std::string& calibration = "ATM",
                              const std::vector<Real>& calibrationStrikes = {});
 
-    std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>> getCalibratedProcesses() const override;
+    std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>> getCalibratedProcesses() const override;
 
 protected:
     std::vector<std::vector<Real>> getCurveTimes() const override;

@@ -56,7 +56,7 @@ void BlackBondOptionEngine::calculate() const {
 
     QL_REQUIRE(!underlyingReferenceCurve_.empty(), "BlackBondOptionEngine::calculate(): empty reference curve");
 
-    auto fwdBondEngine = boost::make_shared<DiscountingRiskyBondEngine>(
+    auto fwdBondEngine = QuantLib::ext::make_shared<DiscountingRiskyBondEngine>(
         underlyingReferenceCurve_, defaultCurve_, recoveryRate_, securitySpread_, timestepPeriod_);
     auto bondNpvResults = fwdBondEngine->calculateNpv(exerciseDate, arguments_.underlying->settlementDate(exerciseDate),
                                               arguments_.underlying->cashflows());

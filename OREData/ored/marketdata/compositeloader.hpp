@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 #include <ored/marketdata/loader.hpp>
 
 namespace ore {
@@ -31,16 +31,16 @@ namespace data {
 
 class CompositeLoader : public Loader {
 public:
-    CompositeLoader(const boost::shared_ptr<Loader>& a, const boost::shared_ptr<Loader>& b) : a_(a), b_(b) {
+    CompositeLoader(const QuantLib::ext::shared_ptr<Loader>& a, const QuantLib::ext::shared_ptr<Loader>& b) : a_(a), b_(b) {
         QL_REQUIRE(a_ || b_, "CompositeLoader(): at least one loader must be not null");
     }
 
-    std::vector<boost::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date& d) const override {
+    std::vector<QuantLib::ext::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date& d) const override {
         if (!b_)
             return a_->loadQuotes(d);
         if (!a_)
             return b_->loadQuotes(d);
-        std::vector<boost::shared_ptr<MarketDatum>> data;
+        std::vector<QuantLib::ext::shared_ptr<MarketDatum>> data;
         auto tmp1 = a_->loadQuotes(d);
         data.insert(data.end(), tmp1.begin(), tmp1.end());
         auto tmp2 = b_->loadQuotes(d);
@@ -48,7 +48,7 @@ public:
         return data;
     }
 
-    boost::shared_ptr<MarketDatum> get(const std::string& name, const QuantLib::Date& d) const override {
+    QuantLib::ext::shared_ptr<MarketDatum> get(const std::string& name, const QuantLib::Date& d) const override {
         if (a_ && a_->has(name, d))
             return a_->get(name, d);
         if (b_ && b_->has(name, d))
@@ -56,9 +56,9 @@ public:
         QL_FAIL("No MarketDatum for name " << name << " and date " << d);
     }
 
-    std::set<boost::shared_ptr<MarketDatum>> get(const std::set<std::string>& names,
+    std::set<QuantLib::ext::shared_ptr<MarketDatum>> get(const std::set<std::string>& names,
                                                  const QuantLib::Date& asof) const override {
-        std::set<boost::shared_ptr<MarketDatum>> result;
+        std::set<QuantLib::ext::shared_ptr<MarketDatum>> result;
         if (a_) {
             auto tmp = a_->get(names, asof);
             result.insert(tmp.begin(), tmp.end());
@@ -70,8 +70,8 @@ public:
         return result;
     }
 
-    std::set<boost::shared_ptr<MarketDatum>> get(const Wildcard& wildcard, const QuantLib::Date& asof) const override {
-        std::set<boost::shared_ptr<MarketDatum>> result;
+    std::set<QuantLib::ext::shared_ptr<MarketDatum>> get(const Wildcard& wildcard, const QuantLib::Date& asof) const override {
+        std::set<QuantLib::ext::shared_ptr<MarketDatum>> result;
         if (a_) {
             auto tmp = a_->get(wildcard, asof);
             result.insert(tmp.begin(), tmp.end());
@@ -114,7 +114,7 @@ public:
     }
 
 private:
-    const boost::shared_ptr<Loader> a_, b_;
+    const QuantLib::ext::shared_ptr<Loader> a_, b_;
 };
 
 } // namespace data

@@ -471,9 +471,9 @@ public:
     virtual ~ReferenceDataManager() {}
     virtual bool hasData(const string& type, const string& id,
                          const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) = 0;
-    virtual boost::shared_ptr<ReferenceDatum>
+    virtual QuantLib::ext::shared_ptr<ReferenceDatum>
     getData(const string& type, const string& id, const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) = 0;
-    virtual void add(const boost::shared_ptr<ReferenceDatum>& referenceDatum) = 0;
+    virtual void add(const QuantLib::ext::shared_ptr<ReferenceDatum>& referenceDatum) = 0;
 };
 
 //! Basic Concrete impl that loads an big XML and keeps data in memory
@@ -485,7 +485,7 @@ public:
     // Load extra data and append to this manger
     void appendData(const string& filename) { fromFile(filename); }
 
-    boost::shared_ptr<ReferenceDatum> buildReferenceDatum(const string& refDataType);
+    QuantLib::ext::shared_ptr<ReferenceDatum> buildReferenceDatum(const string& refDataType);
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(ore::data::XMLDocument& doc) const override;
@@ -495,18 +495,18 @@ public:
 
     bool hasData(const string& type, const string& id,
                  const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) override;
-    boost::shared_ptr<ReferenceDatum> getData(const string& type, const string& id,
+    QuantLib::ext::shared_ptr<ReferenceDatum> getData(const string& type, const string& id,
                                               const QuantLib::Date& asof = QuantLib::Null<QuantLib::Date>()) override;
-    void add(const boost::shared_ptr<ReferenceDatum>& referenceDatum) override;
+    void add(const QuantLib::ext::shared_ptr<ReferenceDatum>& referenceDatum) override;
     // adds a datum from an xml node and returns it (or nullptr if nothing was added due to an error)
-    boost::shared_ptr<ReferenceDatum> addFromXMLNode(XMLNode* node, const std::string& id = std::string(),
+    QuantLib::ext::shared_ptr<ReferenceDatum> addFromXMLNode(XMLNode* node, const std::string& id = std::string(),
                                                      const QuantLib::Date& validFrom = QuantLib::Null<QuantLib::Date>());
 
 protected:
-    std::tuple<QuantLib::Date, boost::shared_ptr<ReferenceDatum>> latestValidFrom(const string& type, const string& id,
+    std::tuple<QuantLib::Date, QuantLib::ext::shared_ptr<ReferenceDatum>> latestValidFrom(const string& type, const string& id,
                                                                                   const QuantLib::Date& asof) const;
     void check(const string& type, const string& id, const QuantLib::Date& asof) const;
-    map<std::pair<string, string>, std::map<QuantLib::Date, boost::shared_ptr<ReferenceDatum>>> data_;
+    map<std::pair<string, string>, std::map<QuantLib::Date, QuantLib::ext::shared_ptr<ReferenceDatum>>> data_;
     std::set<std::tuple<string, string, QuantLib::Date>> duplicates_;
     map<std::pair<string, string>, std::map<QuantLib::Date, string>> buildErrors_;
 };

@@ -46,7 +46,7 @@ public:
 
     //! \name IborIndex interface
     //@{
-    boost::shared_ptr<IborIndex> clone(const QuantLib::Handle<QuantLib::YieldTermStructure>& h) const override;
+    QuantLib::ext::shared_ptr<IborIndex> clone(const QuantLib::Handle<QuantLib::YieldTermStructure>& h) const override;
     //@}
 };
 

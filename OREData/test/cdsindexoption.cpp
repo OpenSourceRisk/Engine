@@ -47,40 +47,40 @@ using std::vector;
 namespace {
 
 // Create portfolio from input files.
-boost::shared_ptr<Portfolio> buildPortfolio(const Date& asof, const string& inputDir) {
+QuantLib::ext::shared_ptr<Portfolio> buildPortfolio(const Date& asof, const string& inputDir) {
 
     Settings::instance().evaluationDate() = asof;
 
-    auto conventions = boost::make_shared<Conventions>();
+    auto conventions = QuantLib::ext::make_shared<Conventions>();
     conventions->fromFile(TEST_INPUT_FILE(string(inputDir + "/conventions.xml")));
     InstrumentConventions::instance().setConventions(conventions);
 
-    auto curveConfigs = boost::make_shared<CurveConfigurations>();
+    auto curveConfigs = QuantLib::ext::make_shared<CurveConfigurations>();
     curveConfigs->fromFile(TEST_INPUT_FILE(string(inputDir + "/curveconfig.xml")));
 
-    auto todaysMarketParameters = boost::make_shared<TodaysMarketParameters>();
+    auto todaysMarketParameters = QuantLib::ext::make_shared<TodaysMarketParameters>();
     todaysMarketParameters->fromFile(TEST_INPUT_FILE(string(inputDir + "/todaysmarket.xml")));
 
-    auto loader = boost::make_shared<CSVLoader>(TEST_INPUT_FILE(string(inputDir + "/market.txt")),
+    auto loader = QuantLib::ext::make_shared<CSVLoader>(TEST_INPUT_FILE(string(inputDir + "/market.txt")),
         TEST_INPUT_FILE(string(inputDir + "/fixings.txt")), false);
 
-    auto tm = boost::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs);
+    auto tm = QuantLib::ext::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs);
 
-    boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> data = QuantLib::ext::make_shared<EngineData>();
     data->fromFile(TEST_INPUT_FILE(string(inputDir + "/pricingengine.xml")));
 
-    auto rdm = boost::make_shared<BasicReferenceDataManager>(
+    auto rdm = QuantLib::ext::make_shared<BasicReferenceDataManager>(
         TEST_INPUT_FILE(string(inputDir + "/reference_data.xml")));
 
     map<MarketContext, string> configurations;
-    vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders{
-        boost::make_shared<MidPointIndexCdsEngineBuilder>(),
-        boost::make_shared<BlackIndexCdsOptionEngineBuilder>()
+    vector<QuantLib::ext::shared_ptr<EngineBuilder>> extraEngineBuilders{
+        QuantLib::ext::make_shared<MidPointIndexCdsEngineBuilder>(),
+        QuantLib::ext::make_shared<BlackIndexCdsOptionEngineBuilder>()
     };
-    vector<boost::shared_ptr<LegBuilder>> extraLegBuilders;
-    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(data, tm, configurations, rdm);
+    vector<QuantLib::ext::shared_ptr<LegBuilder>> extraLegBuilders;
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(data, tm, configurations, rdm);
 
-    auto portfolio = boost::make_shared<Portfolio>();
+    auto portfolio = QuantLib::ext::make_shared<Portfolio>();
     portfolio->fromFile(TEST_INPUT_FILE(string(inputDir + "/portfolio.xml")));
     portfolio->build(engineFactory);
 
@@ -88,11 +88,11 @@ boost::shared_ptr<Portfolio> buildPortfolio(const Date& asof, const string& inpu
 }
 
 // Check portfolio prices are within tolerance
-void checkNpvs(const boost::shared_ptr<Portfolio>& portfolio, Real tol, Real relTol = Null<Real>()) {
+void checkNpvs(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, Real tol, Real relTol = Null<Real>()) {
     for (const auto& [tradeId, trade] : portfolio->trades()) {
         auto npv = trade->instrument()->NPV();
         if (relTol != Null<Real>()) {
-            auto opt = boost::dynamic_pointer_cast<ore::data::IndexCreditDefaultSwapOption>(trade);
+            auto opt = QuantLib::ext::dynamic_pointer_cast<ore::data::IndexCreditDefaultSwapOption>(trade);
             Real expNpv = opt->option().premiumData().premiumData().front().amount;
             Real relDiff = npv / expNpv;
             BOOST_TEST_CONTEXT("trade_id,npv,expNpv,relDiff:" << tradeId << fixed << setprecision(2) <<

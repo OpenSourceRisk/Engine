@@ -61,7 +61,7 @@ private:
     Date npvDate_;
 
     class AmountImpl;
-    boost::shared_ptr<AmountImpl> impl_;
+    QuantLib::ext::shared_ptr<AmountImpl> impl_;
 };
 } // namespace QuantExt
 

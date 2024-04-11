@@ -54,13 +54,13 @@ public:
     virtual bool hasBucketMapping(const ore::analytics::CrifRecord::RiskType& rt, const std::string& qualifier) const = 0;
 
     //! Returns the SIMM bucket mapper used by the configuration
-    virtual const boost::shared_ptr<SimmBucketMapper>& bucketMapper() const = 0;
+    virtual const QuantLib::ext::shared_ptr<SimmBucketMapper>& bucketMapper() const = 0;
 
     /*! Return the CRIF <em>Label2</em> value for the given interest rate index
         \p irIndex. For interest rate indices, this is the CRIF sub curve name
         e.g. 'Libor1m', 'Libor3m' etc.
     */
-    virtual std::string label2(const boost::shared_ptr<QuantLib::InterestRateIndex>& irIndex) const;
+    virtual std::string label2(const QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>& irIndex) const;
 
     /*! Return the CRIF <em>Label2</em> value for the given Libor tenor
         \p p. This is the CRIF sub curve name, e.g. 'Libor1m', 'Libor3m' etc.

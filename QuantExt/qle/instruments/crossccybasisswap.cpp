@@ -30,9 +30,9 @@ using boost::assign::list_of;
 namespace QuantExt {
 
 CrossCcyBasisSwap::CrossCcyBasisSwap(Real payNominal, const Currency& payCurrency, const Schedule& paySchedule,
-                                     const boost::shared_ptr<IborIndex>& payIndex, Spread paySpread, Real payGearing,
+                                     const QuantLib::ext::shared_ptr<IborIndex>& payIndex, Spread paySpread, Real payGearing,
                                      Real recNominal, const Currency& recCurrency, const Schedule& recSchedule,
-                                     const boost::shared_ptr<IborIndex>& recIndex, Spread recSpread, Real recGearing,
+                                     const QuantLib::ext::shared_ptr<IborIndex>& recIndex, Spread recSpread, Real recGearing,
                                      Size payPaymentLag, Size recPaymentLag, boost::optional<bool> payIncludeSpread,
                                      boost::optional<Period> payLookback, boost::optional<Size> payFixingDays,
                                      boost::optional<Size> payRateCutoff, boost::optional<bool> payIsAveraged,
@@ -54,7 +54,7 @@ CrossCcyBasisSwap::CrossCcyBasisSwap(Real payNominal, const Currency& payCurrenc
 
 void CrossCcyBasisSwap::initialize() {
     // Pay leg
-    if (auto on = boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(payIndex_)) {
+    if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndex>(payIndex_)) {
         // ON leg
         if (payIsAveraged_ && *payIsAveraged_) {
             legs_[0] = QuantExt::AverageONLeg(paySchedule_, on)
@@ -90,15 +90,15 @@ void CrossCcyBasisSwap::initialize() {
     currencies_[0] = payCurrency_;
     // Pay leg notional exchange at start.
     Date initialPayDate = paySchedule_.dates().front();
-    boost::shared_ptr<CashFlow> initialPayCF(new SimpleCashFlow(-payNominal_, initialPayDate));
+    QuantLib::ext::shared_ptr<CashFlow> initialPayCF(new SimpleCashFlow(-payNominal_, initialPayDate));
     legs_[0].insert(legs_[0].begin(), initialPayCF);
     // Pay leg notional exchange at end.
     Date finalPayDate = paySchedule_.dates().back();
-    boost::shared_ptr<CashFlow> finalPayCF(new SimpleCashFlow(payNominal_, finalPayDate));
+    QuantLib::ext::shared_ptr<CashFlow> finalPayCF(new SimpleCashFlow(payNominal_, finalPayDate));
     legs_[0].push_back(finalPayCF);
 
     // Receive leg
-    if (auto on = boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(recIndex_)) {
+    if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndex>(recIndex_)) {
         // ON leg
         if (recIsAveraged_ && *recIsAveraged_) {
             legs_[1] = QuantExt::AverageONLeg(recSchedule_, on)
@@ -134,11 +134,11 @@ void CrossCcyBasisSwap::initialize() {
     currencies_[1] = recCurrency_;
     // Receive leg notional exchange at start.
     Date initialRecDate = recSchedule_.dates().front();
-    boost::shared_ptr<CashFlow> initialRecCF(new SimpleCashFlow(-recNominal_, initialRecDate));
+    QuantLib::ext::shared_ptr<CashFlow> initialRecCF(new SimpleCashFlow(-recNominal_, initialRecDate));
     legs_[1].insert(legs_[1].begin(), initialRecCF);
     // Receive leg notional exchange at end.
     Date finalRecDate = recSchedule_.dates().back();
-    boost::shared_ptr<CashFlow> finalRecCF(new SimpleCashFlow(recNominal_, finalRecDate));
+    QuantLib::ext::shared_ptr<CashFlow> finalRecCF(new SimpleCashFlow(recNominal_, finalRecDate));
     legs_[1].push_back(finalRecCF);
 
     // Register the instrument with all cashflows on each leg.

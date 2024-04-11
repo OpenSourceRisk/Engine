@@ -28,12 +28,12 @@
 #include <boost/make_shared.hpp>
 
 using namespace QuantLib;
-using boost::shared_ptr;
+using QuantLib::ext::shared_ptr;
 
 namespace QuantExt {
 
 YoYInflationOptionletVolStripper::YoYInflationOptionletVolStripper(
-    const boost::shared_ptr<CapFloorTermVolSurface>& volSurface, const boost::shared_ptr<YoYInflationIndex>& index,
+    const QuantLib::ext::shared_ptr<CapFloorTermVolSurface>& volSurface, const QuantLib::ext::shared_ptr<YoYInflationIndex>& index,
     const Handle<YieldTermStructure>& nominalTs, VolatilityType type, Real displacement)
     : volSurface_(volSurface), yoyIndex_(index), nominalTs_(nominalTs), type_(type), displacement_(displacement) {
 
@@ -69,18 +69,18 @@ void YoYInflationOptionletVolStripper::performCalculations() {
             Time t = volSurface_->timeFromReference(volSurface_->optionDateFromTenor(optionletTerms[i]));
 
             Real vol = volSurface_->volatility(t, strikes[j]);
-            boost::shared_ptr<ConstantYoYOptionletVolatility> ovs(
+            QuantLib::ext::shared_ptr<ConstantYoYOptionletVolatility> ovs(
                 new ConstantYoYOptionletVolatility(vol, settDays, cal, bdc, dc, obsLag, frequency, false, -1.0, 3.0));
-            boost::shared_ptr<PricingEngine> pe;
+            QuantLib::ext::shared_ptr<PricingEngine> pe;
             Handle<QuantLib::YoYOptionletVolatilitySurface> hovs(ovs);
             if (type_ == ShiftedLognormal) {
                 if (displacement_ == 0.0) {
-                    pe = boost::make_shared<YoYInflationBlackCapFloorEngine>(yoyIndex_, hovs, nominalTs_);
+                    pe = QuantLib::ext::make_shared<YoYInflationBlackCapFloorEngine>(yoyIndex_, hovs, nominalTs_);
                 } else {
-                    pe = boost::make_shared<YoYInflationUnitDisplacedBlackCapFloorEngine>(yoyIndex_, hovs, nominalTs_);
+                    pe = QuantLib::ext::make_shared<YoYInflationUnitDisplacedBlackCapFloorEngine>(yoyIndex_, hovs, nominalTs_);
                 }
             } else if (type_ == Normal) {
-                pe = boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyIndex_, hovs, nominalTs_);
+                pe = QuantLib::ext::make_shared<YoYInflationBachelierCapFloorEngine>(yoyIndex_, hovs, nominalTs_);
             } else {
                 QL_FAIL("unknown volatility type: " << type_);
             }
@@ -131,24 +131,24 @@ void YoYInflationOptionletVolStripper::performCalculations() {
                                                                            nominalTs_, dc, cal, bdc, cStrikes, fStrikes,
                                                                            optionletTerms, cPriceFinal, fPriceFinal);
 
-    boost::shared_ptr<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear>> yoySurface =
-        boost::make_shared<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear>>(ys);
+    QuantLib::ext::shared_ptr<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear>> yoySurface =
+        QuantLib::ext::make_shared<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear>>(ys);
     yoySurface->enableExtrapolation();
 
-    boost::shared_ptr<InterpolatedYoYOptionletStripper<Linear>> yoyStripper =
-        boost::make_shared<InterpolatedYoYOptionletStripper<Linear>>();
+    QuantLib::ext::shared_ptr<InterpolatedYoYOptionletStripper<Linear>> yoyStripper =
+        QuantLib::ext::make_shared<InterpolatedYoYOptionletStripper<Linear>>();
 
     // Create an empty volatility surface to pass to the engine
-    boost::shared_ptr<QuantLib::YoYOptionletVolatilitySurface> ovs =
-        boost::dynamic_pointer_cast<QuantLib::YoYOptionletVolatilitySurface>(
-            boost::make_shared<QuantLib::ConstantYoYOptionletVolatility>(0.0, settDays, cal, bdc, dc, obsLag, frequency,
+    QuantLib::ext::shared_ptr<QuantLib::YoYOptionletVolatilitySurface> ovs =
+        QuantLib::ext::dynamic_pointer_cast<QuantLib::YoYOptionletVolatilitySurface>(
+            QuantLib::ext::make_shared<QuantLib::ConstantYoYOptionletVolatility>(0.0, settDays, cal, bdc, dc, obsLag, frequency,
                                                                          yoySurface->indexIsInterpolated()));
     Handle<QuantLib::YoYOptionletVolatilitySurface> hovs(ovs);
 
-    boost::shared_ptr<YoYInflationBachelierCapFloorEngine> cfEngine =
-        boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyIndex_, hovs, nominalTs_);
+    QuantLib::ext::shared_ptr<YoYInflationBachelierCapFloorEngine> cfEngine =
+        QuantLib::ext::make_shared<YoYInflationBachelierCapFloorEngine>(yoyIndex_, hovs, nominalTs_);
 
-    yoyOptionletVolSurface_ = boost::make_shared<QuantExt::KInterpolatedYoYOptionletVolatilitySurface<Linear>>(
+    yoyOptionletVolSurface_ = QuantLib::ext::make_shared<QuantExt::KInterpolatedYoYOptionletVolatilitySurface<Linear>>(
         settDays, cal, bdc, dc, obsLag, yoySurface, cfEngine, yoyStripper, 0, Linear(), type_, displacement_);
     yoyOptionletVolSurface_->enableExtrapolation();
 }

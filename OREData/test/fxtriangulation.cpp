@@ -63,7 +63,7 @@ public:
         // Initialise FX data
 	std::map<std::string, Handle<Quote>> quotes;
         for (const auto& p : fxtData()) {
-            Handle<Quote> q(boost::make_shared<SimpleQuote>(p.second));
+            Handle<Quote> q(QuantLib::ext::make_shared<SimpleQuote>(p.second));
             quotes[p.first] = q;
         }
 	fx = FXTriangulation(quotes);
