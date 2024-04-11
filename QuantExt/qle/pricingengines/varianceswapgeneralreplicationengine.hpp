@@ -76,8 +76,8 @@ public:
         Real fixedMaxStdDevs = 5.0;
     };
 
-    GeneralisedReplicatingVarianceSwapEngine(const boost::shared_ptr<QuantLib::Index>& index,
-                                             const boost::shared_ptr<GeneralizedBlackScholesProcess>& process,
+    GeneralisedReplicatingVarianceSwapEngine(const QuantLib::ext::shared_ptr<QuantLib::Index>& index,
+                                             const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
                                              const Handle<YieldTermStructure>& discountingTS,
                                              const VarSwapSettings settings = VarSwapSettings(),
                                              const bool staticTodaysSpot = true);
@@ -88,8 +88,8 @@ protected:
     Real calculateAccruedVariance(const Calendar& jointCal) const;
     Real calculateFutureVariance(const Date& maturity) const;
 
-    boost::shared_ptr<Index> index_;
-    boost::shared_ptr<GeneralizedBlackScholesProcess> process_;
+    QuantLib::ext::shared_ptr<Index> index_;
+    QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> process_;
     Handle<YieldTermStructure> discountingTS_;
     VarSwapSettings settings_;
     bool staticTodaysSpot_;

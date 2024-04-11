@@ -23,7 +23,7 @@
 namespace QuantExt {
 
 Real getStrikeFromDelta(Option::Type optionType, Real delta, DeltaVolQuote::DeltaType dt, Real spot, Real domDiscount,
-                        Real forDiscount, boost::shared_ptr<BlackVolTermStructure> vol, Real t, Real accuracy,
+                        Real forDiscount, QuantLib::ext::shared_ptr<BlackVolTermStructure> vol, Real t, Real accuracy,
                         Size maxIterations) {
     Real forward = spot / domDiscount * forDiscount;
     Real result = forward, lastResult;
@@ -53,7 +53,7 @@ Real getStrikeFromDelta(Option::Type optionType, Real delta, DeltaVolQuote::Delt
 }
 
 Real getAtmStrike(DeltaVolQuote::DeltaType dt, DeltaVolQuote::AtmType at, Real spot, Real domDiscount, Real forDiscount,
-                  boost::shared_ptr<BlackVolTermStructure> vol, Real t, Real accuracy, Size maxIterations) {
+                  QuantLib::ext::shared_ptr<BlackVolTermStructure> vol, Real t, Real accuracy, Size maxIterations) {
     Real forward = spot / domDiscount * forDiscount;
     Real result = forward, lastResult;
     Size iterations = 0;

@@ -25,9 +25,9 @@ void AdjustedInMemoryLoader::add(Date date, const string& name, Real value) {
     Real factor = 1.0;
     try {
         auto datum = parseMarketDatum(date, name, Null<Real>());
-        if (auto eqDatum = boost::dynamic_pointer_cast<EquitySpotQuote>(datum))
+        if (auto eqDatum = QuantLib::ext::dynamic_pointer_cast<EquitySpotQuote>(datum))
             factor = factors_.getFactor(eqDatum->eqName(), date);
-        else if (auto eqDatum = boost::dynamic_pointer_cast<EquityForwardQuote>(datum))
+        else if (auto eqDatum = QuantLib::ext::dynamic_pointer_cast<EquityForwardQuote>(datum))
             factor = factors_.getFactor(eqDatum->eqName(), date);        
     } catch (const std::exception& e) {
         DLOG("AdjustedInMemoryLoader failure on " << name << ": " << e.what());

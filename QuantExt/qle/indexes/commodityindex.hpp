@@ -89,7 +89,7 @@ public:
         date is used. If the \c ts is uninitialised, it is ignored and the CommodityIndex instance's price 
         curve is used.
     */
-    virtual boost::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expiryDate = QuantLib::Date(),
+    virtual QuantLib::ext::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expiryDate = QuantLib::Date(),
         const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::none) const = 0;
 
 protected:
@@ -116,7 +116,7 @@ public:
     }
 
     //! Implement the base clone. The \c expiryDate is ignored for a CommoditySpotIndex.
-    boost::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expiryDate = QuantLib::Date(),
+    QuantLib::ext::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expiryDate = QuantLib::Date(),
         const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::none) const override;
 };
 
@@ -137,7 +137,7 @@ public:
     }
 
     //! Implement the base clone.
-    boost::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expiryDate = QuantLib::Date(),
+    QuantLib::ext::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expiryDate = QuantLib::Date(),
         const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::none) const override;
 };
 

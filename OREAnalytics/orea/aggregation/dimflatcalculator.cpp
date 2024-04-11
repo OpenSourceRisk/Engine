@@ -30,10 +30,10 @@ namespace ore {
 namespace analytics {
 
 FlatDynamicInitialMarginCalculator::FlatDynamicInitialMarginCalculator(
-    const boost::shared_ptr<InputParameters>& inputs,
-    const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<NPVCube>& cube,
-    const boost::shared_ptr<CubeInterpretation>& cubeInterpretation,
-    const boost::shared_ptr<AggregationScenarioData>& scenarioData)
+    const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+    const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<NPVCube>& cube,
+    const QuantLib::ext::shared_ptr<CubeInterpretation>& cubeInterpretation,
+    const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData)
     : DynamicInitialMarginCalculator(inputs, portfolio, cube, cubeInterpretation, scenarioData) {
 }
 

@@ -55,7 +55,7 @@ static const std::string window_barrier_script =
 
 // clang-format on
 
-void WindowBarrierOption::build(const boost::shared_ptr<EngineFactory>& factory) {
+void WindowBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
     // set script parameters
 

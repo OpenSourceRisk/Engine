@@ -47,7 +47,7 @@ vector<string> IndexCreditDefaultSwapEngineBuilder::keyImpl(const Currency& ccy,
     return res;
 }
 
-boost::shared_ptr<PricingEngine> MidPointIndexCdsEngineBuilder::engineImpl(
+QuantLib::ext::shared_ptr<PricingEngine> MidPointIndexCdsEngineBuilder::engineImpl(
     const Currency& ccy, const string& creditCurveId, const vector<string>& creditCurveIds,
     const boost::optional<string>& overrideCurve, Real recoveryRate, const bool inCcyDiscountCurve) {
 
@@ -57,7 +57,7 @@ boost::shared_ptr<PricingEngine> MidPointIndexCdsEngineBuilder::engineImpl(
         auto creditCurve = indexCdsDefaultCurve(market_, creditCurveId, configuration(MarketContext::pricing));
         Handle<Quote> mktRecovery = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
         Real recovery = recoveryRate != Null<Real>() ? recoveryRate : mktRecovery->value();
-        return boost::make_shared<QuantExt::MidPointIndexCdsEngine>(
+        return QuantLib::ext::make_shared<QuantExt::MidPointIndexCdsEngine>(
             creditCurve->curve(), recovery,
             market_->discountCurve(
                 ccy.code(), configuration(inCcyDiscountCurve ? MarketContext::irCalibration : MarketContext::pricing)));
@@ -70,7 +70,7 @@ boost::shared_ptr<PricingEngine> MidPointIndexCdsEngineBuilder::engineImpl(
             dpts.push_back(tmp->curve());
             recovery.push_back(recoveryRate != Null<Real>() ? recoveryRate : tmp2->value());
         }
-        return boost::make_shared<QuantExt::MidPointIndexCdsEngine>(
+        return QuantLib::ext::make_shared<QuantExt::MidPointIndexCdsEngine>(
             dpts, recovery,
             market_->discountCurve(
                 ccy.code(), configuration(inCcyDiscountCurve ? MarketContext::irCalibration : MarketContext::pricing)));

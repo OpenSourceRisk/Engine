@@ -51,7 +51,7 @@ using namespace QuantLib;
 
 class AnalyticEuropeanEngineDeltaGamma : public VanillaOption::engine {
 public:
-    AnalyticEuropeanEngineDeltaGamma(const boost::shared_ptr<GeneralizedBlackScholesProcess>& process,
+    AnalyticEuropeanEngineDeltaGamma(const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
                                      const std::vector<Time>& bucketTimeDeltaGamma = std::vector<Time>(),
                                      const std::vector<Time>& bucketTimesVega = std::vector<Time>(),
                                      const bool computeDeltaVega = false, const bool computeGamma = false,
@@ -59,7 +59,7 @@ public:
     void calculate() const override;
 
 private:
-    boost::shared_ptr<GeneralizedBlackScholesProcess> process_;
+    QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> process_;
     const std::vector<Time> bucketTimesDeltaGamma_, bucketTimesVega_;
     const bool computeDeltaVega_, computeGamma_, linearInZero_;
 };

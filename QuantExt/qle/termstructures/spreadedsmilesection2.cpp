@@ -24,7 +24,7 @@
 
 namespace QuantExt {
 
-SpreadedSmileSection2::SpreadedSmileSection2(const boost::shared_ptr<SmileSection>& base,
+SpreadedSmileSection2::SpreadedSmileSection2(const QuantLib::ext::shared_ptr<SmileSection>& base,
                                              const std::vector<Real>& volSpreads, const std::vector<Real>& strikes,
                                              const bool strikesRelativeToAtm, const Real baseAtmLevel,
                                              const Real simulatedAtmLevel, const bool stickyAbsMoney)

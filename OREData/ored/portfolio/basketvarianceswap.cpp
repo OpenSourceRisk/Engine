@@ -26,9 +26,9 @@
 namespace ore {
 namespace data {
 
-void BasketVarianceSwap::build(const boost::shared_ptr<EngineFactory>& factory) {
+void BasketVarianceSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
-    auto builder = boost::dynamic_pointer_cast<ScriptedTradeEngineBuilder>(factory->builder("ScriptedTrade"));
+    auto builder = QuantLib::ext::dynamic_pointer_cast<ScriptedTradeEngineBuilder>(factory->builder("ScriptedTrade"));
 
     // set script parameters
 

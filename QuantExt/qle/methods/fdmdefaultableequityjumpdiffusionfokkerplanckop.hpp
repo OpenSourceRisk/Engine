@@ -36,8 +36,8 @@ class FdmDefaultableEquityJumpDiffusionFokkerPlanckOp : public QuantLib::FdmLine
 public:
     //! this op is implemented in terms of time to maturity T, so that we can use a backward solver to evolve
     FdmDefaultableEquityJumpDiffusionFokkerPlanckOp(
-        const Real T, const boost::shared_ptr<QuantLib::FdmMesher>& mesher,
-        const boost::shared_ptr<const DefaultableEquityJumpDiffusionModel>& model, const Size direction = 0);
+        const Real T, const QuantLib::ext::shared_ptr<QuantLib::FdmMesher>& mesher,
+        const QuantLib::ext::shared_ptr<const DefaultableEquityJumpDiffusionModel>& model, const Size direction = 0);
 
     Size size() const override;
     void setTime(Time t1, Time t2) override;
@@ -54,8 +54,8 @@ public:
 
 private:
     Real T_;
-    boost::shared_ptr<QuantLib::FdmMesher> mesher_;
-    boost::shared_ptr<const DefaultableEquityJumpDiffusionModel> model_;
+    QuantLib::ext::shared_ptr<QuantLib::FdmMesher> mesher_;
+    QuantLib::ext::shared_ptr<const DefaultableEquityJumpDiffusionModel> model_;
     Size direction_;
 
     QuantLib::FirstDerivativeOp dxMap_;

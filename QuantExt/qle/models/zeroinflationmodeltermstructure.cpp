@@ -27,12 +27,12 @@ using QuantLib::Time;
 namespace QuantExt {
 
 QL_DEPRECATED_DISABLE_WARNING
-ZeroInflationModelTermStructure::ZeroInflationModelTermStructure(const boost::shared_ptr<CrossAssetModel>& model,
+ZeroInflationModelTermStructure::ZeroInflationModelTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
                                                                  Size index)
     : ZeroInflationModelTermStructure(model, index, false) {}
 
 
-ZeroInflationModelTermStructure::ZeroInflationModelTermStructure(const boost::shared_ptr<CrossAssetModel>& model,
+ZeroInflationModelTermStructure::ZeroInflationModelTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
                                                                  Size index, bool indexIsInterpolated)
     : ZeroInflationTermStructure(
           inflationTermStructure(model, index)->dayCounter(), inflationTermStructure(model, index)->baseRate(),

@@ -53,28 +53,28 @@ RiskParticipationAgreementEngineBuilderBase::getFxSpots(RiskParticipationAgreeme
     return fxSpots;
 }
 
-boost::shared_ptr<QuantLib::PricingEngine>
+QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
 RiskParticipationAgreementBlackEngineBuilder::engineImpl(const std::string& id, RiskParticipationAgreement* rpa) {
     Size maxDiscretisationPoints = parseInteger(engineParameter("MaxDiscretisationPoints"));
     if (maxDiscretisationPoints == 0)
         maxDiscretisationPoints = Null<Size>();
     string config = configuration(MarketContext::pricing);
     // the first ibor / ois index found
-    boost::shared_ptr<IborIndex> index;
-    auto qlInstr = boost::dynamic_pointer_cast<QuantExt::RiskParticipationAgreement>(rpa->instrument()->qlInstrument());
+    QuantLib::ext::shared_ptr<IborIndex> index;
+    auto qlInstr = QuantLib::ext::dynamic_pointer_cast<QuantExt::RiskParticipationAgreement>(rpa->instrument()->qlInstrument());
     QL_REQUIRE(qlInstr != nullptr, "RiskParticipationAgreementBlackEngineBuilder: internal error, could not "
                                    "cast to RiskParticipationAgreement");
     for (auto const& l : qlInstr->underlying()) {
         for (auto const& c : l) {
-            if (auto floatingCpn = boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(c)) {
+            if (auto floatingCpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(c)) {
                 if (index == nullptr)
-                    index = boost::dynamic_pointer_cast<IborIndex>(floatingCpn->index());
+                    index = QuantLib::ext::dynamic_pointer_cast<IborIndex>(floatingCpn->index());
             }
         }
     }
 
     auto key = index == nullptr ? rpa->npvCurrency() : IndexNameTranslator::instance().oreName(index->name());
-    return boost::make_shared<AnalyticBlackRiskParticipationAgreementEngine>(
+    return QuantLib::ext::make_shared<AnalyticBlackRiskParticipationAgreementEngine>(
         rpa->npvCurrency(), getDiscountCurves(rpa), getFxSpots(rpa),
         market_->defaultCurve(rpa->creditCurveId(), config)->curve(),
         market_->recoveryRate(rpa->creditCurveId(), config), market_->swaptionVol(key, config),
@@ -86,7 +86,7 @@ RiskParticipationAgreementBlackEngineBuilder::engineImpl(const std::string& id, 
         maxDiscretisationPoints);
 }
 
-boost::shared_ptr<QuantLib::PricingEngine>
+QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
 RiskParticipationAgreementXCcyBlackEngineBuilder::engineImpl(const std::string& id, RiskParticipationAgreement* rpa) {
     Size maxDiscretisationPoints = parseInteger(engineParameter("MaxDiscretisationPoints"));
     if (maxDiscretisationPoints == 0)
@@ -103,7 +103,7 @@ RiskParticipationAgreementXCcyBlackEngineBuilder::engineImpl(const std::string& 
     }
     QL_REQUIRE(!ccyPair.empty(),
                "RiskParticipationAgreementXCcyBlackEngineBuilder: no foreign currency found, this is unexpected");
-    return boost::make_shared<AnalyticXCcyBlackRiskParticipationAgreementEngine>(
+    return QuantLib::ext::make_shared<AnalyticXCcyBlackRiskParticipationAgreementEngine>(
         rpa->npvCurrency(), getDiscountCurves(rpa), getFxSpots(rpa),
         market_->defaultCurve(rpa->creditCurveId(), config)->curve(),
         market_->recoveryRate(rpa->creditCurveId(), config), market_->fxVol(ccyPair, config),
@@ -111,7 +111,7 @@ RiskParticipationAgreementXCcyBlackEngineBuilder::engineImpl(const std::string& 
         maxDiscretisationPoints);
 }
 
-boost::shared_ptr<QuantExt::LGM>
+QuantLib::ext::shared_ptr<QuantExt::LGM>
 RiskParticipationAgreementLGMGridEngineBuilder::model(const string& id, const string& key,
                                                       const std::vector<Date>& expiries, const Date& maturity,
                                                       const std::vector<Real>& strikes) {
@@ -134,7 +134,7 @@ RiskParticipationAgreementLGMGridEngineBuilder::model(const string& id, const st
     bool continueOnCalibrationError = globalParameters_.count("ContinueOnCalibrationError") > 0 &&
                                       parseBool(globalParameters_.at("ContinueOnCalibrationError"));
 
-    auto data = boost::make_shared<IrLgmData>();
+    auto data = QuantLib::ext::make_shared<IrLgmData>();
 
     // check for allowed calibration / bermudan strategy settings
     std::vector<std::pair<CalibrationType, CalibrationStrategy>> validCalPairs = {
@@ -217,12 +217,12 @@ RiskParticipationAgreementLGMGridEngineBuilder::model(const string& id, const st
 
     // Build model
     DLOG("Build LGM model");
-    boost::shared_ptr<LgmBuilder> calib = boost::make_shared<LgmBuilder>(
+    QuantLib::ext::shared_ptr<LgmBuilder> calib = QuantLib::ext::make_shared<LgmBuilder>(
         market_, data, configuration(MarketContext::irCalibration), tolerance, continueOnCalibrationError,
         referenceCalibrationGrid, generateAdditionalResults, id);
 
     // In some cases, we do not want to calibrate the model
-    boost::shared_ptr<QuantExt::LGM> model;
+    QuantLib::ext::shared_ptr<QuantExt::LGM> model;
     if (globalParameters_.count("Calibrate") == 0 || parseBool(globalParameters_.at("Calibrate"))) {
         DLOG("Calibrate model (configuration " << configuration(MarketContext::irCalibration) << ")");
         model = calib->model();
@@ -237,7 +237,7 @@ RiskParticipationAgreementLGMGridEngineBuilder::model(const string& id, const st
     return model;
 }
 
-boost::shared_ptr<QuantLib::PricingEngine>
+QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
 RiskParticipationAgreementSwapLGMGridEngineBuilder::engineImpl(const std::string& id, RiskParticipationAgreement* rpa) {
 
     DLOG("Get engine data");
@@ -252,7 +252,7 @@ RiskParticipationAgreementSwapLGMGridEngineBuilder::engineImpl(const std::string
 
     // determine expiries and strikes for calibration basket (simple approach, a la summit)
 
-    auto qlInstr = boost::dynamic_pointer_cast<QuantExt::RiskParticipationAgreement>(rpa->instrument()->qlInstrument());
+    auto qlInstr = QuantLib::ext::dynamic_pointer_cast<QuantExt::RiskParticipationAgreement>(rpa->instrument()->qlInstrument());
     QL_REQUIRE(qlInstr != nullptr, "RiskParticipationAgreementSwapLGMGridEngineBuilder: internal error, could not "
                                    "cast to RiskParticipationAgreement");
 
@@ -263,7 +263,7 @@ RiskParticipationAgreementSwapLGMGridEngineBuilder::engineImpl(const std::string
     Date calibrationMaturity = std::max(qlInstr->underlyingMaturity(), today);
 
     // the first ibor / ois index found
-    boost::shared_ptr<IborIndex> index;
+    QuantLib::ext::shared_ptr<IborIndex> index;
 
     // if protection end <= today there is no model dependent part to value (just fees, possibly), so
     // we just pass a dummy calibration instruments
@@ -279,26 +279,26 @@ RiskParticipationAgreementSwapLGMGridEngineBuilder::engineImpl(const std::string
                 expiries.push_back(mid);
         }
 
-        std::vector<boost::shared_ptr<QuantLib::FixedRateCoupon>> fixedCpns;
-        std::vector<boost::shared_ptr<QuantLib::FloatingRateCoupon>> floatingCpns;
+        std::vector<QuantLib::ext::shared_ptr<QuantLib::FixedRateCoupon>> fixedCpns;
+        std::vector<QuantLib::ext::shared_ptr<QuantLib::FloatingRateCoupon>> floatingCpns;
         for (auto const& l : qlInstr->underlying()) {
             for (auto const& c : l) {
-                if (auto fixedCpn = boost::dynamic_pointer_cast<QuantLib::FixedRateCoupon>(c))
+                if (auto fixedCpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::FixedRateCoupon>(c))
                     fixedCpns.push_back(fixedCpn);
-                if (auto floatingCpn = boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(c)) {
+                if (auto floatingCpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(c)) {
                     floatingCpns.push_back(floatingCpn);
                     if (index == nullptr)
-                        index = boost::dynamic_pointer_cast<IborIndex>(floatingCpn->index());
+                        index = QuantLib::ext::dynamic_pointer_cast<IborIndex>(floatingCpn->index());
 		}
             }
         }
-        auto cpnLt = [](const boost::shared_ptr<Coupon>& x, const boost::shared_ptr<Coupon>& y) {
+        auto cpnLt = [](const QuantLib::ext::shared_ptr<Coupon>& x, const QuantLib::ext::shared_ptr<Coupon>& y) {
             return x->accrualStartDate() < y->accrualStartDate();
         };
         std::sort(fixedCpns.begin(), fixedCpns.end(), cpnLt);
         std::sort(floatingCpns.begin(), floatingCpns.end(), cpnLt);
 
-        auto accLt = [](const boost::shared_ptr<Coupon>& x, const Date& e) { return x->accrualStartDate() < e; };
+        auto accLt = [](const QuantLib::ext::shared_ptr<Coupon>& x, const Date& e) { return x->accrualStartDate() < e; };
         for (auto const& expiry : expiries) {
             // look for the first fixed and float coupon with accrual start >= expiry
             auto firstFix = std::lower_bound(fixedCpns.begin(), fixedCpns.end(), expiry, accLt);
@@ -314,19 +314,19 @@ RiskParticipationAgreementSwapLGMGridEngineBuilder::engineImpl(const std::string
 
     // build model + engine
     DLOG("Building LGM Grid RPA engine for trade " << id);
-    boost::shared_ptr<QuantExt::LGM> lgm =
+    QuantLib::ext::shared_ptr<QuantExt::LGM> lgm =
         model(id, index == nullptr ? rpa->npvCurrency() : IndexNameTranslator::instance().oreName(index->name()),
               expiries, calibrationMaturity, strikes);
     DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
     Handle<DefaultProbabilityTermStructure> creditCurve =
         market_->defaultCurve(rpa->creditCurveId(), configuration(MarketContext::pricing))->curve();
     Handle<Quote> recoveryRate = market_->recoveryRate(rpa->creditCurveId(), configuration(MarketContext::pricing));
-    return boost::make_shared<NumericLgmRiskParticipationAgreementEngine>(
+    return QuantLib::ext::make_shared<NumericLgmRiskParticipationAgreementEngine>(
         rpa->npvCurrency(), getDiscountCurves(rpa), getFxSpots(rpa), lgm, sy, ny, sx, nx, creditCurve, recoveryRate,
         maxGapDays, maxDiscretisationPoints);
 }
 
-boost::shared_ptr<QuantLib::PricingEngine>
+QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
 RiskParticipationAgreementTLockLGMGridEngineBuilder::engineImpl(const std::string& id,
                                                                 RiskParticipationAgreement* rpa) {
 
@@ -347,7 +347,7 @@ RiskParticipationAgreementTLockLGMGridEngineBuilder::engineImpl(const std::strin
     // specified in config)
 
     auto qlInstr =
-        boost::dynamic_pointer_cast<QuantExt::RiskParticipationAgreementTLock>(rpa->instrument()->qlInstrument());
+        QuantLib::ext::dynamic_pointer_cast<QuantExt::RiskParticipationAgreementTLock>(rpa->instrument()->qlInstrument());
     QL_REQUIRE(qlInstr != nullptr, "RiskParticipationAgreementTLockLGMGridEngineBuilder: internal error, could not "
                                    "cast to RiskParticipationAgreementTLock");
 
@@ -376,7 +376,7 @@ RiskParticipationAgreementTLockLGMGridEngineBuilder::engineImpl(const std::strin
     // build model + engine
 
     DLOG("Building LGM Grid RPA engine (tlock) for trade " << id);
-    boost::shared_ptr<QuantExt::LGM> lgm = model(id, rpa->npvCurrency(), expiries, calibrationMaturity, strikes);
+    QuantLib::ext::shared_ptr<QuantExt::LGM> lgm = model(id, rpa->npvCurrency(), expiries, calibrationMaturity, strikes);
     DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
     Handle<DefaultProbabilityTermStructure> creditCurve =
         market_->defaultCurve(rpa->creditCurveId(), configuration(MarketContext::pricing))->curve();
@@ -388,11 +388,11 @@ RiskParticipationAgreementTLockLGMGridEngineBuilder::engineImpl(const std::strin
         auto spread =
             market_->securitySpread(rpa->tlockData().bondData().securityId(), configuration(MarketContext::pricing));
         treasuryCurve =
-            Handle<YieldTermStructure>(boost::make_shared<ZeroSpreadedTermStructure>(treasuryCurve, spread));
+            Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(treasuryCurve, spread));
     } catch (...) {
     }
 
-    return boost::make_shared<NumericLgmRiskParticipationAgreementEngineTLock>(
+    return QuantLib::ext::make_shared<NumericLgmRiskParticipationAgreementEngineTLock>(
         rpa->npvCurrency(), getDiscountCurves(rpa), getFxSpots(rpa), lgm, sy, ny, sx, nx, treasuryCurve, creditCurve,
         recoveryRate, timeStepsPerYear);
 }

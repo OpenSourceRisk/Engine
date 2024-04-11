@@ -31,8 +31,8 @@ namespace QuantExt {
 class PathGeneratorFactory {
 public:
     virtual ~PathGeneratorFactory() {}
-    virtual boost::shared_ptr<MultiPathGeneratorBase> build(const SequenceType s,
-                                                            const boost::shared_ptr<StochasticProcess>& process,
+    virtual QuantLib::ext::shared_ptr<MultiPathGeneratorBase> build(const SequenceType s,
+                                                            const QuantLib::ext::shared_ptr<StochasticProcess>& process,
                                                             const TimeGrid& timeGrid, const BigNatural seed,
                                                             const SobolBrownianGenerator::Ordering ordering,
                                                             const SobolRsg::DirectionIntegers directionIntegers) = 0;
@@ -41,8 +41,8 @@ public:
 //! Standard implementation for path generator factory
 class MultiPathGeneratorFactory : public PathGeneratorFactory {
 public:
-    boost::shared_ptr<MultiPathGeneratorBase> build(const SequenceType s,
-                                                    const boost::shared_ptr<StochasticProcess>& process,
+    QuantLib::ext::shared_ptr<MultiPathGeneratorBase> build(const SequenceType s,
+                                                    const QuantLib::ext::shared_ptr<StochasticProcess>& process,
                                                     const TimeGrid& timeGrid, const BigNatural seed,
                                                     const SobolBrownianGenerator::Ordering ordering,
                                                     const SobolRsg::DirectionIntegers directionIntegers) override {

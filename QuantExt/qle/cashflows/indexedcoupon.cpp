@@ -23,7 +23,7 @@
 
 namespace QuantExt {
 
-IndexedCoupon::IndexedCoupon(const boost::shared_ptr<Coupon>& c, const Real qty, const boost::shared_ptr<Index>& index,
+IndexedCoupon::IndexedCoupon(const QuantLib::ext::shared_ptr<Coupon>& c, const Real qty, const QuantLib::ext::shared_ptr<Index>& index,
                              const Date& fixingDate)
     : Coupon(c->date(), 0.0, c->accrualStartDate(), c->accrualEndDate(), c->referencePeriodStart(),
              c->referencePeriodEnd(), c->exCouponDate()),
@@ -34,7 +34,7 @@ IndexedCoupon::IndexedCoupon(const boost::shared_ptr<Coupon>& c, const Real qty,
     registerWith(index);
 }
 
-IndexedCoupon::IndexedCoupon(const boost::shared_ptr<Coupon>& c, const Real qty, const Real initialFixing)
+IndexedCoupon::IndexedCoupon(const QuantLib::ext::shared_ptr<Coupon>& c, const Real qty, const Real initialFixing)
     : Coupon(c->date(), c->nominal(), c->accrualStartDate(), c->accrualEndDate(), c->referencePeriodStart(),
              c->referencePeriodEnd(), c->exCouponDate()),
       c_(c), qty_(qty), initialFixing_(initialFixing) {
@@ -56,7 +56,7 @@ Real IndexedCoupon::rate() const { return c_->rate(); }
 
 DayCounter IndexedCoupon::dayCounter() const { return c_->dayCounter(); }
 
-boost::shared_ptr<Coupon> IndexedCoupon::underlying() const { return c_; }
+QuantLib::ext::shared_ptr<Coupon> IndexedCoupon::underlying() const { return c_; }
 
 Real IndexedCoupon::quantity() const { return qty_; }
 
@@ -64,7 +64,7 @@ const Date& IndexedCoupon::fixingDate() const { return fixingDate_; }
 
 Real IndexedCoupon::initialFixing() const { return initialFixing_; }
 
-boost::shared_ptr<Index> IndexedCoupon::index() const { return index_; }
+QuantLib::ext::shared_ptr<Index> IndexedCoupon::index() const { return index_; }
 
 void IndexedCoupon::accept(AcyclicVisitor& v) {
     Visitor<IndexedCoupon>* v1 = dynamic_cast<Visitor<IndexedCoupon>*>(&v);
@@ -74,8 +74,8 @@ void IndexedCoupon::accept(AcyclicVisitor& v) {
         Coupon::accept(v);
 }
 
-IndexWrappedCashFlow::IndexWrappedCashFlow(const boost::shared_ptr<CashFlow>& c, const Real qty,
-                                           const boost::shared_ptr<Index>& index, const Date& fixingDate)
+IndexWrappedCashFlow::IndexWrappedCashFlow(const QuantLib::ext::shared_ptr<CashFlow>& c, const Real qty,
+                                           const QuantLib::ext::shared_ptr<Index>& index, const Date& fixingDate)
     : c_(c), qty_(qty), index_(index), fixingDate_(fixingDate), initialFixing_(Null<Real>()) {
     QL_REQUIRE(index, "IndexWrappedCashFlow: index is null");
     QL_REQUIRE(fixingDate != Date(), "IndexWrappedCashFlow: fixingDate is null");
@@ -83,7 +83,7 @@ IndexWrappedCashFlow::IndexWrappedCashFlow(const boost::shared_ptr<CashFlow>& c,
     registerWith(index);
 }
 
-IndexWrappedCashFlow::IndexWrappedCashFlow(const boost::shared_ptr<CashFlow>& c, const Real qty,
+IndexWrappedCashFlow::IndexWrappedCashFlow(const QuantLib::ext::shared_ptr<CashFlow>& c, const Real qty,
                                            const Real initialFixing)
     : c_(c), qty_(qty), initialFixing_(initialFixing) {
     QL_REQUIRE(initialFixing != Null<Real>(), "IndexWrappedCashFlow: initial fixing is null");
@@ -99,7 +99,7 @@ Real IndexWrappedCashFlow::multiplier() const {
     return index_ ? qty_ * index_->fixing(fixingDate_) : qty_ * initialFixing_;
 }
 
-boost::shared_ptr<CashFlow> IndexWrappedCashFlow::underlying() const { return c_; }
+QuantLib::ext::shared_ptr<CashFlow> IndexWrappedCashFlow::underlying() const { return c_; }
 
 Real IndexWrappedCashFlow::quantity() const { return qty_; }
 
@@ -107,7 +107,7 @@ const Date& IndexWrappedCashFlow::fixingDate() const { return fixingDate_; }
 
 Real IndexWrappedCashFlow::initialFixing() const { return initialFixing_; }
 
-boost::shared_ptr<Index> IndexWrappedCashFlow::index() const { return index_; }
+QuantLib::ext::shared_ptr<Index> IndexWrappedCashFlow::index() const { return index_; }
 
 void IndexWrappedCashFlow::accept(AcyclicVisitor& v) {
     Visitor<IndexWrappedCashFlow>* v1 = dynamic_cast<Visitor<IndexWrappedCashFlow>*>(&v);
@@ -117,7 +117,7 @@ void IndexWrappedCashFlow::accept(AcyclicVisitor& v) {
         CashFlow::accept(v);
 }
 
-IndexedCouponLeg::IndexedCouponLeg(const Leg& underlyingLeg, const Real qty, const boost::shared_ptr<Index>& index)
+IndexedCouponLeg::IndexedCouponLeg(const Leg& underlyingLeg, const Real qty, const QuantLib::ext::shared_ptr<Index>& index)
     : underlyingLeg_(underlyingLeg), qty_(qty), index_(index), initialFixing_(Null<Real>()),
       initialNotionalFixing_(Null<Real>()), fixingDays_(0), fixingCalendar_(NullCalendar()),
       fixingConvention_(Preceding), inArrearsFixing_(true) {
@@ -167,7 +167,7 @@ IndexedCouponLeg::operator Leg() const {
         bool firstValuationDate = (i == 0);
         Date fixingDate;
 
-        if (auto cpn = boost::dynamic_pointer_cast<Coupon>(underlyingLeg_[i])) {
+        if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(underlyingLeg_[i])) {
             if (valuationSchedule_.empty()) {
                 fixingDate = inArrearsFixing_ ? cpn->accrualEndDate() : cpn->accrualStartDate();
             } else {
@@ -196,22 +196,22 @@ IndexedCouponLeg::operator Leg() const {
                 fixingDate = index_->fixingCalendar().adjust(fixingDate, Preceding);
 
             if (firstValuationDate && initialFixing_ != Null<Real>()) {
-                resultLeg.push_back(boost::make_shared<IndexedCoupon>(cpn, qty_, initialFixing_));
+                resultLeg.push_back(QuantLib::ext::make_shared<IndexedCoupon>(cpn, qty_, initialFixing_));
             } else {
-                resultLeg.push_back(boost::make_shared<IndexedCoupon>(cpn, qty_, index_, fixingDate));
+                resultLeg.push_back(QuantLib::ext::make_shared<IndexedCoupon>(cpn, qty_, index_, fixingDate));
             }
-        } else if (auto csf = boost::dynamic_pointer_cast<CashFlow>(underlyingLeg_[i])) {
+        } else if (auto csf = QuantLib::ext::dynamic_pointer_cast<CashFlow>(underlyingLeg_[i])) {
             fixingDate = fixingCalendar_.advance(csf->date(), -static_cast<int>(fixingDays_), Days, fixingConvention_);
             if (firstValuationDate && initialNotionalFixing_ != Null<Real>()) {
                 // use firstNotionalFixing if the first flow is a cashflow (not a coupon)
-                resultLeg.push_back(boost::make_shared<IndexWrappedCashFlow>(csf, qty_, initialNotionalFixing_));
+                resultLeg.push_back(QuantLib::ext::make_shared<IndexWrappedCashFlow>(csf, qty_, initialNotionalFixing_));
             } else if (!valuationSchedule_.empty() && valuationSchedule_.dates().size() > 0 &&
                        valuationSchedule_.date(0) == csf->date() && initialFixing_ != Null<Real>()) {
                 // use the initial fixing if the cashflow date equals the first date in the val schedule
-                resultLeg.push_back(boost::make_shared<IndexWrappedCashFlow>(csf, qty_, initialFixing_));
+                resultLeg.push_back(QuantLib::ext::make_shared<IndexWrappedCashFlow>(csf, qty_, initialFixing_));
             } else {
                 // use a flow with free fixing otherwise
-                resultLeg.push_back(boost::make_shared<IndexWrappedCashFlow>(csf, qty_, index_, fixingDate));
+                resultLeg.push_back(QuantLib::ext::make_shared<IndexWrappedCashFlow>(csf, qty_, index_, fixingDate));
             }
         } else {
             QL_FAIL("IndexedCouponLeg: coupon or cashflow required");
@@ -221,46 +221,46 @@ IndexedCouponLeg::operator Leg() const {
     return resultLeg;
 }
 
-boost::shared_ptr<CashFlow> unpackIndexedCouponOrCashFlow(const boost::shared_ptr<CashFlow>& c) {
-    if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c))
+QuantLib::ext::shared_ptr<CashFlow> unpackIndexedCouponOrCashFlow(const QuantLib::ext::shared_ptr<CashFlow>& c) {
+    if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(c))
         return unpackIndexedCoupon(cpn);
     else
         return unpackIndexWrappedCashFlow(c);
 }
 
-boost::shared_ptr<Coupon> unpackIndexedCoupon(const boost::shared_ptr<Coupon>& c) {
-    if (auto cpn = boost::dynamic_pointer_cast<IndexedCoupon>(c)) {
-        boost::shared_ptr<Coupon> unpacked_cpn = cpn->underlying();
+QuantLib::ext::shared_ptr<Coupon> unpackIndexedCoupon(const QuantLib::ext::shared_ptr<Coupon>& c) {
+    if (auto cpn = QuantLib::ext::dynamic_pointer_cast<IndexedCoupon>(c)) {
+        QuantLib::ext::shared_ptr<Coupon> unpacked_cpn = cpn->underlying();
         return unpackIndexedCoupon(unpacked_cpn);
     } else
         return c;
 }
 
-boost::shared_ptr<CashFlow> unpackIndexWrappedCashFlow(const boost::shared_ptr<CashFlow>& c) {
-    if (auto cf = boost::dynamic_pointer_cast<IndexWrappedCashFlow>(c)) {
-        boost::shared_ptr<CashFlow> unpacked_cf = cf->underlying();
+QuantLib::ext::shared_ptr<CashFlow> unpackIndexWrappedCashFlow(const QuantLib::ext::shared_ptr<CashFlow>& c) {
+    if (auto cf = QuantLib::ext::dynamic_pointer_cast<IndexWrappedCashFlow>(c)) {
+        QuantLib::ext::shared_ptr<CashFlow> unpacked_cf = cf->underlying();
         return unpackIndexWrappedCashFlow(unpacked_cf);
     } else
         return c;
 }
 
-Real getIndexedCouponOrCashFlowMultiplier(const boost::shared_ptr<CashFlow>& c) {
-    if (auto cpn = boost::dynamic_pointer_cast<IndexedCoupon>(c)) {
+Real getIndexedCouponOrCashFlowMultiplier(const QuantLib::ext::shared_ptr<CashFlow>& c) {
+    if (auto cpn = QuantLib::ext::dynamic_pointer_cast<IndexedCoupon>(c)) {
         return cpn->multiplier() * getIndexedCouponOrCashFlowMultiplier(cpn->underlying());
-    } else if (auto cf = boost::dynamic_pointer_cast<IndexWrappedCashFlow>(c)) {
+    } else if (auto cf = QuantLib::ext::dynamic_pointer_cast<IndexWrappedCashFlow>(c)) {
         return cf->multiplier() * getIndexedCouponOrCashFlowMultiplier(cf->underlying());
     } else {
         return 1.0;
     }
 }
 
-std::vector<std::tuple<Date, boost::shared_ptr<Index>, Real>>
-getIndexedCouponOrCashFlowFixingDetails(const boost::shared_ptr<CashFlow>& c) {
-    if (auto cpn = boost::dynamic_pointer_cast<IndexedCoupon>(c)) {
+std::vector<std::tuple<Date, QuantLib::ext::shared_ptr<Index>, Real>>
+getIndexedCouponOrCashFlowFixingDetails(const QuantLib::ext::shared_ptr<CashFlow>& c) {
+    if (auto cpn = QuantLib::ext::dynamic_pointer_cast<IndexedCoupon>(c)) {
         auto v = getIndexedCouponOrCashFlowFixingDetails(cpn->underlying());
         v.push_back(std::make_tuple(cpn->fixingDate(), cpn->index(), cpn->multiplier()));
         return v;
-    } else if (auto cf = boost::dynamic_pointer_cast<IndexWrappedCashFlow>(c)) {
+    } else if (auto cf = QuantLib::ext::dynamic_pointer_cast<IndexWrappedCashFlow>(c)) {
         auto v = getIndexedCouponOrCashFlowFixingDetails(cf->underlying());
         v.push_back(std::make_tuple(cf->fixingDate(), cf->index(), cf->multiplier()));
         return v;

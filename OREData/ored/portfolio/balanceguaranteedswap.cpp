@@ -51,7 +51,7 @@ XMLNode* BGSTrancheData::toXML(XMLDocument& doc) const {
     return node;
 }
 
-void BalanceGuaranteedSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void BalanceGuaranteedSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     LOG("BalanceGuaranteedSwap::build() for id \"" << id() << "\" called.");
 
@@ -96,16 +96,16 @@ void BalanceGuaranteedSwap::build(const boost::shared_ptr<EngineFactory>& engine
         QL_FAIL("Invalid leg types " << swap_[0].legType() << " + " << swap_[1].legType());
     }
 
-    boost::shared_ptr<FixedLegData> fixedLegData =
-        boost::dynamic_pointer_cast<FixedLegData>(swap_[fixedLegIndex].concreteLegData());
-    boost::shared_ptr<FloatingLegData> floatingLegData =
-        boost::dynamic_pointer_cast<FloatingLegData>(swap_[floatingLegIndex].concreteLegData());
+    QuantLib::ext::shared_ptr<FixedLegData> fixedLegData =
+        QuantLib::ext::dynamic_pointer_cast<FixedLegData>(swap_[fixedLegIndex].concreteLegData());
+    QuantLib::ext::shared_ptr<FloatingLegData> floatingLegData =
+        QuantLib::ext::dynamic_pointer_cast<FloatingLegData>(swap_[floatingLegIndex].concreteLegData());
 
     QL_REQUIRE(fixedLegData != nullptr, "expected fixed leg data");
     QL_REQUIRE(floatingLegData != nullptr, "expected floating leg data");
 
-    boost::shared_ptr<EngineBuilder> tmp = engineFactory->builder("BalanceGuaranteedSwap");
-    auto builder = boost::dynamic_pointer_cast<FlexiSwapBGSEngineBuilderBase>(tmp);
+    QuantLib::ext::shared_ptr<EngineBuilder> tmp = engineFactory->builder("BalanceGuaranteedSwap");
+    auto builder = QuantLib::ext::dynamic_pointer_cast<FlexiSwapBGSEngineBuilderBase>(tmp);
     QL_REQUIRE(builder, "No BGS Builder found for \"" << id() << "\"");
 
     Schedule fixedSchedule = makeSchedule(swap_[fixedLegIndex].schedule());
@@ -128,7 +128,7 @@ void BalanceGuaranteedSwap::build(const boost::shared_ptr<EngineFactory>& engine
     BusinessDayConvention paymentConvention = parseBusinessDayConvention(swap_[floatingLegIndex].paymentConvention());
     VanillaSwap::Type type = swap_[fixedLegIndex].isPayer() ? VanillaSwap::Payer : VanillaSwap::Receiver;
 
-    auto bgSwap = boost::make_shared<QuantExt::BalanceGuaranteedSwap>(
+    auto bgSwap = QuantLib::ext::make_shared<QuantExt::BalanceGuaranteedSwap>(
         type, trancheNotionals, schedule, referencedTranche, fixedSchedule, fixedRate, fixedDayCounter,
         floatingSchedule, *index, gearings, spreads, caps, floors, floatingDayCounter, paymentConvention);
 
@@ -168,12 +168,12 @@ void BalanceGuaranteedSwap::build(const boost::shared_ptr<EngineFactory>& engine
             hasCapsFloors = true;
     }
     if (hasCapsFloors) {
-        boost::shared_ptr<EngineBuilder> cfBuilder = engineFactory->builder("CapFlooredIborLeg");
+        QuantLib::ext::shared_ptr<EngineBuilder> cfBuilder = engineFactory->builder("CapFlooredIborLeg");
         QL_REQUIRE(cfBuilder, "No builder found for CapFlooredIborLeg");
-        boost::shared_ptr<CapFlooredIborLegEngineBuilder> cappedFlooredIborBuilder =
-            boost::dynamic_pointer_cast<CapFlooredIborLegEngineBuilder>(cfBuilder);
+        QuantLib::ext::shared_ptr<CapFlooredIborLegEngineBuilder> cappedFlooredIborBuilder =
+            QuantLib::ext::dynamic_pointer_cast<CapFlooredIborLegEngineBuilder>(cfBuilder);
         QL_REQUIRE(cappedFlooredIborBuilder != nullptr, "expected CapFlooredIborLegEngineBuilder");
-        boost::shared_ptr<FloatingRateCouponPricer> couponPricer =
+        QuantLib::ext::shared_ptr<FloatingRateCouponPricer> couponPricer =
             cappedFlooredIborBuilder->engine(IndexNameTranslator::instance().oreName(index->name()));
         QuantLib::setCouponPricer(fltLeg, couponPricer);
     }
@@ -184,10 +184,10 @@ void BalanceGuaranteedSwap::build(const boost::shared_ptr<EngineFactory>& engine
     std::vector<Real> strikes;
     Date today = Settings::instance().evaluationDate();
     for (Size i = 0; i < fltLeg.size(); ++i) {
-        auto fltcpn = boost::dynamic_pointer_cast<FloatingRateCoupon>(fltLeg[i]);
+        auto fltcpn = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(fltLeg[i]);
         if (fltcpn != nullptr && fltcpn->fixingDate() > today && i % legRatio == 0) {
             expiryDates.push_back(fltcpn->fixingDate());
-            auto fixcpn = boost::dynamic_pointer_cast<FixedRateCoupon>(fixLeg[i]);
+            auto fixcpn = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(fixLeg[i]);
             QL_REQUIRE(fixcpn != nullptr, "BalanceGuaranteedSwap Builder: expected fixed rate coupon");
             strikes.push_back(fixcpn->rate() - fltcpn->spread());
         }
@@ -200,10 +200,10 @@ void BalanceGuaranteedSwap::build(const boost::shared_ptr<EngineFactory>& engine
     setSensitivityTemplate(*builder);
 
     // add required fixings
-    addToRequiredFixings(fltLeg, boost::make_shared<FixingDateGetter>(requiredFixings_));
+    addToRequiredFixings(fltLeg, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings_));
 
     // FIXME this won't work for exposure, currently not supported
-    instrument_ = boost::make_shared<VanillaInstrument>(bgSwap);
+    instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(bgSwap);
 
     npvCurrency_ = ccy_str;
     notional_ = std::max(currentNotional(fixLeg), currentNotional(fltLeg));

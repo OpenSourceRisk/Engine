@@ -20,7 +20,7 @@
 
 namespace QuantExt {
 
-LgmImpliedDefaultTermStructure::LgmImpliedDefaultTermStructure(const boost::shared_ptr<CrossAssetModel>& model,
+LgmImpliedDefaultTermStructure::LgmImpliedDefaultTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
                                                                const Size index, const Size currency,
                                                                const DayCounter& dc, const bool purelyTimeBased)
     : SurvivalProbabilityStructure(dc == DayCounter() ? model->irlgm1f(0)->termStructure()->dayCounter() : dc),

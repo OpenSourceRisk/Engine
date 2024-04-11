@@ -56,11 +56,11 @@ public:
     FxForwardEngineBuilder() : FxForwardEngineBuilderBase("DiscountedCashflows", "DiscountingFxForwardEngine") {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override {
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override {
         string pair = keyImpl(forCcy, domCcy);
         string tmp = engineParameter("includeSettlementDateFlows", {}, false, "");
         bool includeSettlementDateFlows = tmp == "" ? false : parseBool(tmp);
-        return boost::make_shared<QuantExt::DiscountingFxForwardEngine>(
+        return QuantLib::ext::make_shared<QuantExt::DiscountingFxForwardEngine>(
             domCcy, market_->discountCurve(domCcy.code(), configuration(MarketContext::pricing)), forCcy,
             market_->discountCurve(forCcy.code(), configuration(MarketContext::pricing)),
             market_->fxRate(pair, configuration(MarketContext::pricing)),
@@ -72,15 +72,15 @@ protected:
 class CamAmcFxForwardEngineBuilder : public FxForwardEngineBuilderBase {
 public:
     // for external cam, with additional simulation dates (AMC)
-    CamAmcFxForwardEngineBuilder(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
+    CamAmcFxForwardEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
                                 const std::vector<Date>& simulationDates)
         : FxForwardEngineBuilderBase("CrossAssetModel", "AMC"), cam_(cam), simulationDates_(simulationDates) {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override;
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override;
 
 private:
-    const boost::shared_ptr<QuantExt::CrossAssetModel> cam_;
+    const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
     const std::vector<Date> simulationDates_;
 };
 

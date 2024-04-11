@@ -38,7 +38,7 @@ class NumericLgmRiskParticipationAgreementEngineTLock : public QuantExt::RiskPar
 public:
     NumericLgmRiskParticipationAgreementEngineTLock(
         const std::string& baseCcy, const std::map<std::string, Handle<YieldTermStructure>>& discountCurves,
-        const std::map<std::string, Handle<Quote>>& fxSpots, const boost::shared_ptr<QuantExt::LinearGaussMarkovModel>& model,
+        const std::map<std::string, Handle<Quote>>& fxSpots, const QuantLib::ext::shared_ptr<QuantExt::LinearGaussMarkovModel>& model,
         const Real sy, const Size ny, const Real sx, const Size nx, const Handle<YieldTermStructure>& treasuryCurve,
         const Handle<DefaultProbabilityTermStructure>& defaultCurve, const Handle<Quote>& recoveryRate,
         const Size timeStepsPerYear);
