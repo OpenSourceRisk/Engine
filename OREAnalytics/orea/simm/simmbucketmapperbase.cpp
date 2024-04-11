@@ -62,8 +62,8 @@ const map<RiskType, RiskType> nonVolRiskTypeMap = {{RiskType::IRVol, RiskType::I
                                                    {RiskType::FX_CURV, RiskType::FX_DELTA}};
 
 SimmBucketMapperBase::SimmBucketMapperBase(
-    const boost::shared_ptr<ore::data::ReferenceDataManager>& refDataManager,
-    const boost::shared_ptr<SimmBasicNameMapper>& nameMapper) :
+    const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& refDataManager,
+    const QuantLib::ext::shared_ptr<SimmBasicNameMapper>& nameMapper) :
     refDataManager_(refDataManager), nameMapper_(nameMapper){
 
     // Fill the set of risk types that have buckets
@@ -144,7 +144,7 @@ string SimmBucketMapperBase::bucket(const RiskType& riskType, const string& qual
             bool commIndex = false;
             // first check is there is an entry under equity reference, this may tell us if it is an index
             if (refDataManager_ != nullptr && refDataManager_->hasData("Equity", lookupName)) {
-                auto refData = boost::dynamic_pointer_cast<ore::data::EquityReferenceDatum>(
+                auto refData = QuantLib::ext::dynamic_pointer_cast<ore::data::EquityReferenceDatum>(
                     refDataManager_->getData("Equity", lookupName));
                 if (refData->equityData().isIndex)
                     commIndex = true;
@@ -161,7 +161,7 @@ string SimmBucketMapperBase::bucket(const RiskType& riskType, const string& qual
         } else if (lookupRiskType == RiskType::Equity) {
             // check if it is an index
             if (refDataManager_ != nullptr && refDataManager_->hasData("Equity", lookupName)) {
-                auto refData = boost::dynamic_pointer_cast<ore::data::EquityReferenceDatum>(refDataManager_->getData("Equity", lookupName));
+                auto refData = QuantLib::ext::dynamic_pointer_cast<ore::data::EquityReferenceDatum>(refDataManager_->getData("Equity", lookupName));
                 // if the equity is an index we assign to bucket 11
                 if (refData->equityData().isIndex) {
                     TLOG("Don't have any bucket mappings for the "

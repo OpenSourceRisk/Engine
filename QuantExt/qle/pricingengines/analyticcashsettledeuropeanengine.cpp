@@ -39,13 +39,13 @@ using QuantLib::detail::simple_event;
 namespace QuantExt {
 
 AnalyticCashSettledEuropeanEngine::AnalyticCashSettledEuropeanEngine(
-    const boost::shared_ptr<GeneralizedBlackScholesProcess>& bsp)
+    const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& bsp)
     : underlyingEngine_(bsp), bsp_(bsp) {
     registerWith(bsp_);
 }
 
 AnalyticCashSettledEuropeanEngine::AnalyticCashSettledEuropeanEngine(
-    const boost::shared_ptr<GeneralizedBlackScholesProcess>& bsp, const Handle<YieldTermStructure>& discountCurve)
+    const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& bsp, const Handle<YieldTermStructure>& discountCurve)
     : underlyingEngine_(bsp, discountCurve), bsp_(bsp), discountCurve_(discountCurve) {
     registerWith(bsp_);
     registerWith(discountCurve_);
@@ -54,7 +54,7 @@ AnalyticCashSettledEuropeanEngine::AnalyticCashSettledEuropeanEngine(
 void AnalyticCashSettledEuropeanEngine::calculate() const {
 
     // Same logic as underlying engine for discount curve.
-    boost::shared_ptr<YieldTermStructure> dts =
+    QuantLib::ext::shared_ptr<YieldTermStructure> dts =
         discountCurve_.empty() ? bsp_->riskFreeRate().currentLink() : discountCurve_.currentLink();
 
     // Option expiry date.
@@ -108,7 +108,7 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
 
         // Populate some additional results.
         results_.additionalResults["spot"] = bsp_->x0();
-        auto payoff = boost::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
+        auto payoff = QuantLib::ext::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
         if (payoff)
             results_.additionalResults["strike"] = payoff->strike();
         results_.additionalResults["priceAtExercise"] = priceAtExercise;
@@ -131,7 +131,7 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
 
         // If we have a commodity future index, set the forward date to its expiry to get the right future price 
         // in the Black formula. If not, just use the expiry date => same result as standard QL engine.
-        if (auto cfi = boost::dynamic_pointer_cast<CommodityFuturesIndex>(arguments_.underlying)) {
+        if (auto cfi = QuantLib::ext::dynamic_pointer_cast<CommodityFuturesIndex>(arguments_.underlying)) {
             underlyingArgs->forwardDate = cfi->expiryDate();
         } else {
             underlyingArgs->forwardDate = expiryDate;

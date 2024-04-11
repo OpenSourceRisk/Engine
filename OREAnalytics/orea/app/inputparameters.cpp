@@ -45,8 +45,8 @@ vector<string> getFileNames(const string& fileString, const std::filesystem::pat
 }
 
 InputParameters::InputParameters() {
-    iborFallbackConfig_ = boost::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig());
-    simmBucketMapper_ = boost::make_shared<SimmBucketMapperBase>();
+    iborFallbackConfig_ = QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig());
+    simmBucketMapper_ = QuantLib::ext::make_shared<SimmBucketMapperBase>();
     loadParameters();
 }
 
@@ -63,12 +63,12 @@ void InputParameters::setMarketConfig(const std::string& config, const std::stri
 }
 
 void InputParameters::setRefDataManager(const std::string& xml) {
-    refDataManager_ = boost::make_shared<BasicReferenceDataManager>();
+    refDataManager_ = QuantLib::ext::make_shared<BasicReferenceDataManager>();
     refDataManager_->fromXMLString(xml);
 }
 
 void InputParameters::setRefDataManagerFromFile(const std::string& fileName) {
-    refDataManager_ = boost::make_shared<BasicReferenceDataManager>(fileName);
+    refDataManager_ = QuantLib::ext::make_shared<BasicReferenceDataManager>(fileName);
 }
 
 void InputParameters::setScriptLibrary(const std::string& xml) {
@@ -84,65 +84,65 @@ void InputParameters::setScriptLibraryFromFile(const std::string& fileName) {
 }
 
 void InputParameters::setConventions(const std::string& xml) {
-    conventions_ = boost::make_shared<Conventions>();
+    conventions_ = QuantLib::ext::make_shared<Conventions>();
     conventions_->fromXMLString(xml);
 }
     
 void InputParameters::setConventionsFromFile(const std::string& fileName) {
-    conventions_ = boost::make_shared<Conventions>();
+    conventions_ = QuantLib::ext::make_shared<Conventions>();
     conventions_->fromFile(fileName);
 }
 
 void InputParameters::setCurveConfigs(const std::string& xml) {
-    auto curveConfig = boost::make_shared<CurveConfigurations>();
+    auto curveConfig = QuantLib::ext::make_shared<CurveConfigurations>();
     curveConfig->fromXMLString(xml);
     curveConfigs_.add(curveConfig);
 }
 
 void InputParameters::setCurveConfigsFromFile(const std::string& fileName) {
-    auto curveConfig = boost::make_shared<CurveConfigurations>();
+    auto curveConfig = QuantLib::ext::make_shared<CurveConfigurations>();
     curveConfig->fromFile(fileName);
     curveConfigs_.add(curveConfig);
 }
 
 void InputParameters::setIborFallbackConfig(const std::string& xml) {
-    iborFallbackConfig_= boost::make_shared<IborFallbackConfig>();
+    iborFallbackConfig_= QuantLib::ext::make_shared<IborFallbackConfig>();
     iborFallbackConfig_->fromXMLString(xml);
 }
 
 void InputParameters::setIborFallbackConfigFromFile(const std::string& fileName) {
-    iborFallbackConfig_= boost::make_shared<IborFallbackConfig>();
+    iborFallbackConfig_= QuantLib::ext::make_shared<IborFallbackConfig>();
     iborFallbackConfig_->fromFile(fileName);
 }
 
 void InputParameters::setPricingEngine(const std::string& xml) {
-    pricingEngine_ = boost::make_shared<EngineData>();
+    pricingEngine_ = QuantLib::ext::make_shared<EngineData>();
     pricingEngine_->fromXMLString(xml);
 }
 
 void InputParameters::setPricingEngineFromFile(const std::string& fileName) {
-    pricingEngine_ = boost::make_shared<EngineData>();
+    pricingEngine_ = QuantLib::ext::make_shared<EngineData>();
     pricingEngine_->fromFile(fileName);
 }
 
 void InputParameters::setTodaysMarketParams(const std::string& xml) {
-    todaysMarketParams_ = boost::make_shared<TodaysMarketParameters>();
+    todaysMarketParams_ = QuantLib::ext::make_shared<TodaysMarketParameters>();
     todaysMarketParams_->fromXMLString(xml);
 }
 
 void InputParameters::setTodaysMarketParamsFromFile(const std::string& fileName) {
-    todaysMarketParams_ = boost::make_shared<TodaysMarketParameters>();
+    todaysMarketParams_ = QuantLib::ext::make_shared<TodaysMarketParameters>();
     todaysMarketParams_->fromFile(fileName);
 }
 
 void InputParameters::setPortfolio(const std::string& xml) {
-    portfolio_ = boost::make_shared<Portfolio>(buildFailedTrades_);
+    portfolio_ = QuantLib::ext::make_shared<Portfolio>(buildFailedTrades_);
     portfolio_->fromXMLString(xml);
 }
 
 void InputParameters::setPortfolioFromFile(const std::string& fileNameString, const std::filesystem::path& inputPath) {
     vector<string> files = getFileNames(fileNameString, inputPath);
-    portfolio_ = boost::make_shared<Portfolio>(buildFailedTrades_);
+    portfolio_ = QuantLib::ext::make_shared<Portfolio>(buildFailedTrades_);
     for (auto file : files) {
         LOG("Loading portfolio from file: " << file);
         portfolio_->fromFile(file);
@@ -158,157 +158,157 @@ void InputParameters::setMporCalendar(const std::string& s) {
 }
 
 void InputParameters::setSensiSimMarketParams(const std::string& xml) {
-    sensiSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
+    sensiSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
     sensiSimMarketParams_->fromXMLString(xml);
 }
 
 void InputParameters::setSensiSimMarketParamsFromFile(const std::string& fileName) {
-    sensiSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
+    sensiSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
     sensiSimMarketParams_->fromFile(fileName);
 }
     
 void InputParameters::setSensiScenarioData(const std::string& xml) {
-    sensiScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    sensiScenarioData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
     sensiScenarioData_->fromXMLString(xml);
 }
 
 void InputParameters::setSensiScenarioDataFromFile(const std::string& fileName) {
-    sensiScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    sensiScenarioData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
     sensiScenarioData_->fromFile(fileName);
 }
 
 void InputParameters::setSensiPricingEngine(const std::string& xml) {
-    sensiPricingEngine_ = boost::make_shared<EngineData>();
+    sensiPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
     sensiPricingEngine_->fromXMLString(xml);
 }
 
 void InputParameters::setScenarioSimMarketParams(const std::string& xml) {
-    scenarioSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
+    scenarioSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
     scenarioSimMarketParams_->fromXMLString(xml);
 }
 
 void InputParameters::setScenarioSimMarketParamsFromFile(const std::string& fileName) {
-    scenarioSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
+    scenarioSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
     scenarioSimMarketParams_->fromFile(fileName);
 }
 
 void InputParameters::setHistVarSimMarketParamsFromFile(const std::string& fileName) {
-    histVarSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
+    histVarSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
     histVarSimMarketParams_->fromFile(fileName);
 }
 
 void InputParameters::setSensiPricingEngineFromFile(const std::string& fileName) {
-    sensiPricingEngine_ = boost::make_shared<EngineData>();
+    sensiPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
     sensiPricingEngine_->fromFile(fileName);
 }
 
 void InputParameters::setStressSimMarketParams(const std::string& xml) {
-    stressSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
+    stressSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
     stressSimMarketParams_->fromXMLString(xml);
 }
     
 void InputParameters::setStressSimMarketParamsFromFile(const std::string& fileName) {
-    stressSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
+    stressSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
     stressSimMarketParams_->fromFile(fileName);
 }
     
 void InputParameters::setStressScenarioData(const std::string& xml) {
-    stressScenarioData_ = boost::make_shared<StressTestScenarioData>();
+    stressScenarioData_ = QuantLib::ext::make_shared<StressTestScenarioData>();
     stressScenarioData_->fromXMLString(xml);
 }
     
 void InputParameters::setStressScenarioDataFromFile(const std::string& fileName) {
-    stressScenarioData_ = boost::make_shared<StressTestScenarioData>();
+    stressScenarioData_ = QuantLib::ext::make_shared<StressTestScenarioData>();
     stressScenarioData_->fromFile(fileName);
 }
     
 void InputParameters::setStressPricingEngine(const std::string& xml) {
-    stressPricingEngine_ = boost::make_shared<EngineData>();
+    stressPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
     stressPricingEngine_->fromXMLString(xml);
 }
 
 void InputParameters::setStressPricingEngineFromFile(const std::string& fileName) {
-    stressPricingEngine_ = boost::make_shared<EngineData>();
+    stressPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
     stressPricingEngine_->fromFile(fileName);
 }
 
 void InputParameters::setExposureSimMarketParams(const std::string& xml) {
-    exposureSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
+    exposureSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
     exposureSimMarketParams_->fromXMLString(xml);
 }
     
 void InputParameters::setExposureSimMarketParamsFromFile(const std::string& fileName) {
-    exposureSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
+    exposureSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
     exposureSimMarketParams_->fromFile(fileName);
 }
 
 void InputParameters::setScenarioGeneratorData(const std::string& xml) {
-    scenarioGeneratorData_ = boost::make_shared<ScenarioGeneratorData>();
+    scenarioGeneratorData_ = QuantLib::ext::make_shared<ScenarioGeneratorData>();
     scenarioGeneratorData_->fromXMLString(xml);
 }
 
 void InputParameters::setScenarioGeneratorDataFromFile(const std::string& fileName) {
-    scenarioGeneratorData_ = boost::make_shared<ScenarioGeneratorData>();
+    scenarioGeneratorData_ = QuantLib::ext::make_shared<ScenarioGeneratorData>();
     scenarioGeneratorData_->fromFile(fileName);
 }
 
 void InputParameters::setCrossAssetModelData(const std::string& xml) {
-    crossAssetModelData_ = boost::make_shared<CrossAssetModelData>();
+    crossAssetModelData_ = QuantLib::ext::make_shared<CrossAssetModelData>();
     crossAssetModelData_->fromXMLString(xml);
 }
 
 void InputParameters::setCrossAssetModelDataFromFile(const std::string& fileName) {
-    crossAssetModelData_ = boost::make_shared<CrossAssetModelData>();
+    crossAssetModelData_ = QuantLib::ext::make_shared<CrossAssetModelData>();
     crossAssetModelData_->fromFile(fileName);
 }
 
 void InputParameters::setSimulationPricingEngine(const std::string& xml) {
-    simulationPricingEngine_ = boost::make_shared<EngineData>();
+    simulationPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
     simulationPricingEngine_->fromXMLString(xml);
 }
 
 void InputParameters::setSimulationPricingEngineFromFile(const std::string& fileName) {
-    simulationPricingEngine_ = boost::make_shared<EngineData>();
+    simulationPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
     simulationPricingEngine_->fromFile(fileName);
 }
 
 void InputParameters::setAmcPricingEngine(const std::string& xml) {
-    amcPricingEngine_ = boost::make_shared<EngineData>();
+    amcPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
     amcPricingEngine_->fromXMLString(xml);
 }
 
 void InputParameters::setXvaCgSensiScenarioData(const std::string& xml) {
-    xvaCgSensiScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    xvaCgSensiScenarioData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
     xvaCgSensiScenarioData_->fromXMLString(xml);
 }
 
 void InputParameters::setXvaCgSensiScenarioDataFromFile(const std::string& fileName) {
-    xvaCgSensiScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    xvaCgSensiScenarioData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
     xvaCgSensiScenarioData_->fromFile(fileName);
 }
 
 void InputParameters::setAmcPricingEngineFromFile(const std::string& fileName) {
-    amcPricingEngine_ = boost::make_shared<EngineData>();
+    amcPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
     amcPricingEngine_->fromFile(fileName);
 }
 
 void InputParameters::setNettingSetManager(const std::string& xml) {
-    nettingSetManager_ = boost::make_shared<NettingSetManager>();
+    nettingSetManager_ = QuantLib::ext::make_shared<NettingSetManager>();
     nettingSetManager_->fromXMLString(xml);
 }
 
 void InputParameters::setNettingSetManagerFromFile(const std::string& fileName) {
-    nettingSetManager_ = boost::make_shared<NettingSetManager>();
+    nettingSetManager_ = QuantLib::ext::make_shared<NettingSetManager>();
     nettingSetManager_->fromFile(fileName);
 }
 
 void InputParameters::setCollateralBalances(const std::string& xml) {
-    collateralBalances_ = boost::make_shared<CollateralBalances>();
+    collateralBalances_ = QuantLib::ext::make_shared<CollateralBalances>();
     collateralBalances_->fromXMLString(xml);
 }
 
 void InputParameters::setCollateralBalancesFromFile(const std::string& fileName) {
-    collateralBalances_ = boost::make_shared<CollateralBalances>();
+    collateralBalances_ = QuantLib::ext::make_shared<CollateralBalances>();
     collateralBalances_->fromFile(fileName);
 }
 
@@ -371,11 +371,11 @@ void InputParameters::setCovarianceDataFromBuffer(const std::string& xml) {
 }
 
 void InputParameters::setSensitivityStreamFromFile(const std::string& fileName) {
-    sensitivityStream_ = boost::make_shared<SensitivityFileStream>(fileName);
+    sensitivityStream_ = QuantLib::ext::make_shared<SensitivityFileStream>(fileName);
 }
 
 void InputParameters::setSensitivityStreamFromBuffer(const std::string& buffer) {
-    sensitivityStream_ = boost::make_shared<SensitivityBufferStream>(buffer);
+    sensitivityStream_ = QuantLib::ext::make_shared<SensitivityBufferStream>(buffer);
 }
 
 void InputParameters::setBenchmarkVarPeriod(const std::string& period) { 
@@ -388,7 +388,7 @@ void InputParameters::setHistoricalScenarioReader(const std::string& fileName) {
     QL_REQUIRE(is_regular_file(baseScenarioPath),
                "The provided base scenario file, " << baseScenarioPath << ", is not a file");
     historicalScenarioReader_ =
-        QuantLib::ext::make_shared<HistoricalScenarioFileReader>(fileName, boost::make_shared<SimpleScenarioFactory>());
+        QuantLib::ext::make_shared<HistoricalScenarioFileReader>(fileName, QuantLib::ext::make_shared<SimpleScenarioFactory>());
 }
 
 void InputParameters::setAmcTradeTypes(const std::string& s) {
@@ -457,12 +457,12 @@ void InputParameters::setPortfolioFilterDate(const std::string& s) {
 }
 
 void InputParameters::setCreditSimulationParametersFromFile(const std::string& fileName) {
-    creditSimulationParameters_ = boost::make_shared<CreditSimulationParameters>();
+    creditSimulationParameters_ = QuantLib::ext::make_shared<CreditSimulationParameters>();
     creditSimulationParameters_->fromFile(fileName);
 }
 
 void InputParameters::setCreditSimulationParametersFromBuffer(const std::string& xml) {
-    creditSimulationParameters_ = boost::make_shared<CreditSimulationParameters>();
+    creditSimulationParameters_ = QuantLib::ext::make_shared<CreditSimulationParameters>();
     creditSimulationParameters_->fromXMLString(xml);
 } 
     
@@ -484,32 +484,32 @@ void InputParameters::setCrifFromBuffer(const std::string& csvBuffer, char eol, 
 }
 
 void InputParameters::setSimmNameMapper(const std::string& xml) {
-    simmNameMapper_ = boost::make_shared<SimmBasicNameMapper>();
+    simmNameMapper_ = QuantLib::ext::make_shared<SimmBasicNameMapper>();
     simmNameMapper_->fromXMLString(xml);    
 }
     
 void InputParameters::setSimmNameMapperFromFile(const std::string& fileName) {
-    simmNameMapper_ = boost::make_shared<SimmBasicNameMapper>();
+    simmNameMapper_ = QuantLib::ext::make_shared<SimmBasicNameMapper>();
     simmNameMapper_->fromFile(fileName);    
 }
 
 void InputParameters::setSimmBucketMapper(const std::string& xml) {
     QL_REQUIRE(simmVersion_ != "", "SIMM version not set");
     QL_REQUIRE(simmBucketMapper_ != nullptr, "SIMMbucket mapper not set");
-    //boost::shared_ptr<SimmBucketMapperBase> sbm = boost::dynamic_pointer_cast<SimmBucketMapperBase>();
-    boost::shared_ptr<SimmBucketMapperBase> sbm = boost::dynamic_pointer_cast<SimmBucketMapperBase>(simmBucketMapper_);
+    //QuantLib::ext::shared_ptr<SimmBucketMapperBase> sbm = QuantLib::ext::dynamic_pointer_cast<SimmBucketMapperBase>();
+    QuantLib::ext::shared_ptr<SimmBucketMapperBase> sbm = QuantLib::ext::dynamic_pointer_cast<SimmBucketMapperBase>(simmBucketMapper_);
     sbm->fromXMLString(xml);
 }
     
 void InputParameters::setSimmBucketMapperFromFile(const std::string& fileName) {
     QL_REQUIRE(simmVersion_ != "", "SIMM version not set");
     QL_REQUIRE(simmBucketMapper_ != nullptr, "SIMMbucket mapper not set");
-    boost::shared_ptr<SimmBucketMapperBase> sbm = boost::dynamic_pointer_cast<SimmBucketMapperBase>(simmBucketMapper_);
+    QuantLib::ext::shared_ptr<SimmBucketMapperBase> sbm = QuantLib::ext::dynamic_pointer_cast<SimmBucketMapperBase>(simmBucketMapper_);
     sbm->fromFile(fileName);    
 }
 
 void InputParameters::setSimmCalibrationDataFromFile(const std::string& fileName) {
-    simmCalibrationData_ = boost::make_shared<SimmCalibrationData>();
+    simmCalibrationData_ = QuantLib::ext::make_shared<SimmCalibrationData>();
     simmCalibrationData_->fromFile(fileName);
 }
 
@@ -523,7 +523,7 @@ void InputParameters::insertAnalytic(const std::string& s) {
     analytics_.insert(s);
 }
 
-OutputParameters::OutputParameters(const boost::shared_ptr<Parameters>& params) {
+OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& params) {
     LOG("OutputFileNameMap called");
     npvOutputFileName_ = params->get("npv", "outputFileName", false);
     cashflowOutputFileName_ = params->get("cashflow", "outputFileName", false);
@@ -604,31 +604,31 @@ std::string OutputParameters::outputFileName(const std::string& internalName, co
 
 
 void InputParameters::setParConversionSimMarketParams(const std::string& xml) {
-    parConversionSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
+    parConversionSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
     parConversionSimMarketParams_->fromXMLString(xml);
 }
 
 void InputParameters::setParConversionSimMarketParamsFromFile(const std::string& fileName) {
-    parConversionSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
+    parConversionSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
     parConversionSimMarketParams_->fromFile(fileName);
 }
 
 void InputParameters::setParConversionScenarioData(const std::string& xml) {
-    parConversionScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    parConversionScenarioData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
     parConversionScenarioData_->fromXMLString(xml);
 }
 
 void InputParameters::setParConversionScenarioDataFromFile(const std::string& fileName) {
-    parConversionScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    parConversionScenarioData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
     parConversionScenarioData_->fromFile(fileName);
 }
 void InputParameters::setParConversionPricingEngine(const std::string& xml) {
-    parConversionPricingEngine_ = boost::make_shared<EngineData>();
+    parConversionPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
     parConversionPricingEngine_->fromXMLString(xml);
 }
 
 void InputParameters::setParConversionPricingEngineFromFile(const std::string& fileName) {
-    parConversionPricingEngine_ = boost::make_shared<EngineData>();
+    parConversionPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
     parConversionPricingEngine_->fromFile(fileName);
 }
 
@@ -647,7 +647,7 @@ Date InputParameters::mporDate() {
     return mporDate_;
 }
 
-boost::shared_ptr<SimmConfiguration> InputParameters::getSimmConfiguration() {
+QuantLib::ext::shared_ptr<SimmConfiguration> InputParameters::getSimmConfiguration() {
     QL_REQUIRE(simmBucketMapper() != nullptr,
                "Internal error, load simm bucket mapper before retrieving simmconfiguration");
     return buildSimmConfiguration(simmVersion(), simmBucketMapper(), simmCalibrationData(), mporDays());

@@ -28,7 +28,7 @@
 
 #include <ql/time/date.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 namespace ore {
 namespace analytics {
@@ -56,12 +56,12 @@ public:
     CollateralAccount() {}
     //! Constructor assuming initial collateral account balance is zero
     CollateralAccount( //! CSA details including threshold, minimum transfer amount, margining frequency etc
-        const boost::shared_ptr<NettingSetDefinition>& csaDef,
+        const QuantLib::ext::shared_ptr<NettingSetDefinition>& csaDef,
         //! Today's date
         const Date& date_t0);
     //! Constructor taking an initial collateral account balance
     CollateralAccount( //! CSA details including threshold, minimum transfer amount, margining frequency etc
-        const boost::shared_ptr<NettingSetDefinition>& csaDef,
+        const QuantLib::ext::shared_ptr<NettingSetDefinition>& csaDef,
         //! Initial collateral account balance
         const Real& balance_t0,
         //! Today's date
@@ -102,7 +102,7 @@ public:
     //! Inspectors
     //@{
     /*! csa (netting set) definition */
-    boost::shared_ptr<NettingSetDefinition> csaDef() const { return csaDef_; }
+    QuantLib::ext::shared_ptr<NettingSetDefinition> csaDef() const { return csaDef_; }
     /*! account balance at start date */
     Real balance_t0() const { return balance_t0_; }
     /*! most up-to-date account balance */
@@ -136,7 +136,7 @@ public:
     void closeAccount(const Date& closeDate);
 
 private:
-    boost::shared_ptr<NettingSetDefinition> csaDef_;
+    QuantLib::ext::shared_ptr<NettingSetDefinition> csaDef_;
     Real balance_t0_;
     vector<Real> accountBalances_;
     vector<Date> accountDates_;

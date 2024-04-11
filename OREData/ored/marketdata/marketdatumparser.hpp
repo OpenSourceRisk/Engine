@@ -39,7 +39,7 @@ using std::string;
 //! Function to parse a market datum
 /*! \ingroup marketdata
  */
-boost::shared_ptr<MarketDatum> parseMarketDatum(const Date&, const string&, const Real&);
+QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date&, const string&, const Real&);
 
 //! Get a date from a date string or period
 /*! \ingroup marketdata
@@ -58,7 +58,7 @@ QuantLib::Period fxFwdQuoteTenor(const boost::variant<QuantLib::Period, FXForwar
 
 
 QuantLib::Period fxFwdQuoteStartTenor(const boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString>& term,
-                                      const boost::shared_ptr<FXConvention>& fxConvention = nullptr);
+                                      const QuantLib::ext::shared_ptr<FXConvention>& fxConvention = nullptr);
 
 bool matchFxFwdStringTerm(const boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString>& term,
                           const FXForwardQuote::FxFwdString& fxfwdString);

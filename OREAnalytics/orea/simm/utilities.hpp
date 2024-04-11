@@ -44,9 +44,9 @@ enum class SimmVersion { V1_0, V1_1, V1_2, V1_3, V1_3_38, V2_0, V2_1, V2_2, V2_3
 
 SimmVersion parseSimmVersion(const std::string& version);
 
-boost::shared_ptr<SimmConfiguration>
-buildSimmConfiguration(const std::string& simmVersion, const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
-                       const boost::shared_ptr<SimmCalibrationData>& simmCalibrationData = nullptr,
+QuantLib::ext::shared_ptr<SimmConfiguration>
+buildSimmConfiguration(const std::string& simmVersion, const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+                       const QuantLib::ext::shared_ptr<SimmCalibrationData>& simmCalibrationData = nullptr,
                        const QuantExt::Size& mporDays = 10);
 
 //! If the input *str* is a comma seperated list the method quotation marks " if the csvQuoteChar is '\0'

@@ -41,7 +41,7 @@ Real getRealOrNull(XMLNode* node, const string& name) {
 namespace ore {
 namespace data {
 
-void CliquetOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void CliquetOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     // ISDA taxonomy
     if (underlying_->type() == "Equity") {
@@ -69,7 +69,7 @@ void CliquetOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
 
     // Payoff
     Option::Type type = parseOptionType(callPut_);
-    boost::shared_ptr<PercentageStrikePayoff> payoff = boost::make_shared<PercentageStrikePayoff>(type, moneyness_);
+    QuantLib::ext::shared_ptr<PercentageStrikePayoff> payoff = QuantLib::ext::make_shared<PercentageStrikePayoff>(type, moneyness_);
 
     Schedule schedule;
     schedule = makeSchedule(scheduleData_);
@@ -77,8 +77,8 @@ void CliquetOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
 
     // Vanilla European/American.
     // If price adjustment is necessary we build a simple EU Option
-    boost::shared_ptr<QuantLib::Instrument> instrument;
-    boost::shared_ptr<EuropeanExercise> exerciseDate = boost::make_shared<EuropeanExercise>(expiryDate);
+    QuantLib::ext::shared_ptr<QuantLib::Instrument> instrument;
+    QuantLib::ext::shared_ptr<EuropeanExercise> exerciseDate = QuantLib::ext::make_shared<EuropeanExercise>(expiryDate);
 
     Date paymentDate = schedule.calendar().advance(expiryDate, settlementDays_, Days);
 
@@ -88,19 +88,19 @@ void CliquetOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     Position::Type position = parsePositionType(longShort_);
 
     // Create QuantExt Cliquet Option
-    boost::shared_ptr<Instrument> cliquet = boost::make_shared<QuantExt::CliquetOption>(
+    QuantLib::ext::shared_ptr<Instrument> cliquet = QuantLib::ext::make_shared<QuantExt::CliquetOption>(
         payoff, exerciseDate, valuationDates_, paymentDate, cliquetNotional_, position, localCap_, localFloor_,
         globalCap_, globalFloor_, premium_, parseDate(premiumPayDate_), premiumCcy_);
 
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    boost::shared_ptr<CliquetOptionEngineBuilder> cliquetOptionBuilder =
-        boost::dynamic_pointer_cast<CliquetOptionEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<CliquetOptionEngineBuilder> cliquetOptionBuilder =
+        QuantLib::ext::dynamic_pointer_cast<CliquetOptionEngineBuilder>(builder);
 
     cliquet->setPricingEngine(cliquetOptionBuilder->engine(name(), ccy));
     setSensitivityTemplate(*cliquetOptionBuilder);
 
-    instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(cliquet));
+    instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(new VanillaInstrument(cliquet));
 
     npvCurrency_ = currency_;
     maturity_ = expiryDate;

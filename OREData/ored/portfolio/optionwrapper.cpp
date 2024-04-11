@@ -26,11 +26,11 @@ using namespace std;
 namespace ore {
 namespace data {
 
-OptionWrapper::OptionWrapper(const boost::shared_ptr<Instrument>& inst, const bool isLongOption,
+OptionWrapper::OptionWrapper(const QuantLib::ext::shared_ptr<Instrument>& inst, const bool isLongOption,
                              const std::vector<Date>& exerciseDate, const bool isPhysicalDelivery,
-                             const std::vector<boost::shared_ptr<Instrument>>& undInst, const Real multiplier,
+                             const std::vector<QuantLib::ext::shared_ptr<Instrument>>& undInst, const Real multiplier,
                              const Real undMultiplier,
-                             const std::vector<boost::shared_ptr<QuantLib::Instrument>>& additionalInstruments,
+                             const std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>& additionalInstruments,
                              const std::vector<Real>& additionalMultipliers)
     : InstrumentWrapper(inst, multiplier, additionalInstruments, additionalMultipliers), isLong_(isLongOption),
       isPhysicalDelivery_(isPhysicalDelivery), contractExerciseDates_(exerciseDate),

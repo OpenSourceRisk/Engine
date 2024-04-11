@@ -44,11 +44,11 @@ public:
 			   const QuantLib::Date& futureExpiryDate = QuantLib::Date());
 
     //! Build underlying instrument and link pricing engine
-    void build(const boost::shared_ptr<EngineFactory>& engineFactory) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) override;
 
     //! Add underlying Commodity names
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     //! \name Serialisation
     //@{
@@ -85,7 +85,7 @@ private:
     QuantLib::Date futureExpiryDate_;
 
     //! An index is needed if the option is to be automatically exercised on expiry.
-    boost::shared_ptr<QuantLib::Index> index_;
+    QuantLib::ext::shared_ptr<QuantLib::Index> index_;
 
     //! Hold the external index name if needed e.g. in the case of an FX index.
     std::string indexName_;
