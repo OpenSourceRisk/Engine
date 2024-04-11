@@ -40,7 +40,7 @@ namespace QuantExt {
 
 RepresentativeSwaptionMatcher::RepresentativeSwaptionMatcher(
     const std::vector<Leg>& underlying, const std::vector<bool>& isPayer,
-    const boost::shared_ptr<SwapIndex>& swapIndexBase, const bool useUnderlyingIborIndex,
+    const QuantLib::ext::shared_ptr<SwapIndex>& swapIndexBase, const bool useUnderlyingIborIndex,
     const Handle<YieldTermStructure>& discountCurve, const Real reversion, const Real volatility, const Real flatRate)
     : underlying_(underlying), isPayer_(isPayer), swapIndexBase_(swapIndexBase),
       useUnderlyingIborIndex_(useUnderlyingIborIndex), discountCurve_(discountCurve), reversion_(reversion),
@@ -50,7 +50,7 @@ RepresentativeSwaptionMatcher::RepresentativeSwaptionMatcher(
     Handle<YieldTermStructure> flatCurve;
     if (flatRate != Null<Real>()) {
         flatCurve =
-            Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), flatRate_, ActualActual(ActualActual::ISDA)));
+            Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), flatRate_, ActualActual(ActualActual::ISDA)));
     }
 
     // determine last cashflow date of underlying
@@ -63,92 +63,92 @@ RepresentativeSwaptionMatcher::RepresentativeSwaptionMatcher(
                                                                   << discountCurve_->referenceDate() << ")");
 
     // set up model
-    model_ = boost::make_shared<LGM>(boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+    model_ = QuantLib::ext::make_shared<LGM>(QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
         swapIndexBase_->currency(), flatCurve.empty() ? discountCurve_ : flatCurve, Array(), Array(1, volatility_),
         Array(), Array(1, reversion_)));
 
     // build underlying leg with its ibor / ois coupons linked to model forward curves
-    boost::shared_ptr<IborIndex> modelIborIndexToUse, iborIndexToUse;
+    QuantLib::ext::shared_ptr<IborIndex> modelIborIndexToUse, iborIndexToUse;
     for (Size l = 0; l < underlying_.size(); ++l) {
         for (auto const& c : underlying_[l]) {
-            if (auto i = boost::dynamic_pointer_cast<IborCoupon>(c)) {
+            if (auto i = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(c)) {
                 // standard ibor coupon
                 QL_REQUIRE(!i->isInArrears(), "RepresentativeSwaptionMatcher: can not handle in arrears fixing");
-                boost::shared_ptr<LgmImpliedYtsFwdFwdCorrected> y;
+                QuantLib::ext::shared_ptr<LgmImpliedYtsFwdFwdCorrected> y;
                 auto fc = modelForwardCurves_.find(i->iborIndex()->name());
                 if (fc != modelForwardCurves_.end())
                     y = fc->second;
                 else {
-                    y = boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(
+                    y = QuantLib::ext::make_shared<LgmImpliedYtsFwdFwdCorrected>(
                         model_, flatCurve.empty() ? i->iborIndex()->forwardingTermStructure() : flatCurve);
                     modelForwardCurves_[i->iborIndex()->name()] = y;
                 }
                 auto iborIndexLinkedToModelCurve = i->iborIndex()->clone(Handle<YieldTermStructure>(y));
-                auto tmp = boost::make_shared<IborCoupon>(
+                auto tmp = QuantLib::ext::make_shared<IborCoupon>(
                     i->date(), i->nominal(), i->accrualStartDate(), i->accrualEndDate(), i->fixingDays(),
                     iborIndexLinkedToModelCurve, i->gearing(), i->spread(), i->referencePeriodStart(),
                     i->referencePeriodEnd(), i->dayCounter(), false);
-                tmp->setPricer(boost::make_shared<BlackIborCouponPricer>());
+                tmp->setPricer(QuantLib::ext::make_shared<BlackIborCouponPricer>());
                 modelLinkedUnderlying_.push_back(tmp);
                 if (modelIborIndexToUse == nullptr) {
                     modelIborIndexToUse = iborIndexLinkedToModelCurve;
                     iborIndexToUse = i->iborIndex();
                 }
-            } else if (auto o = boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c)) {
+            } else if (auto o = QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c)) {
                 auto onIndex = o->overnightIndex();
                 QL_REQUIRE(onIndex, "internal error: could not cast o->index() to overnightIndex");
-                boost::shared_ptr<LgmImpliedYtsFwdFwdCorrected> y;
+                QuantLib::ext::shared_ptr<LgmImpliedYtsFwdFwdCorrected> y;
                 auto fc = modelForwardCurves_.find(onIndex->name());
                 if (fc != modelForwardCurves_.end())
                     y = fc->second;
                 else {
-                    y = boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(
+                    y = QuantLib::ext::make_shared<LgmImpliedYtsFwdFwdCorrected>(
                         model_, flatCurve.empty() ? onIndex->forwardingTermStructure() : flatCurve);
                     modelForwardCurves_[onIndex->name()] = y;
                 }
                 auto onIndexLinkedToModelCurve =
-                    boost::dynamic_pointer_cast<OvernightIndex>(onIndex->clone(Handle<YieldTermStructure>(y)));
+                    QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(onIndex->clone(Handle<YieldTermStructure>(y)));
                 QL_REQUIRE(onIndexLinkedToModelCurve,
                            "internal error: could not cast onIndex->clone() to OvernightIndex");
-                auto tmp = boost::make_shared<QuantExt::OvernightIndexedCoupon>(
+                auto tmp = QuantLib::ext::make_shared<QuantExt::OvernightIndexedCoupon>(
                     o->date(), o->nominal(), o->accrualStartDate(), o->accrualEndDate(), onIndexLinkedToModelCurve,
                     o->gearing(), o->spread(), o->referencePeriodStart(), o->referencePeriodEnd(), o->dayCounter(),
                     false, o->includeSpread(), o->lookback(), o->rateCutoff(), o->fixingDays(),
                     o->rateComputationStartDate(), o->rateComputationEndDate());
-                tmp->setPricer(boost::make_shared<OvernightIndexedCouponPricer>());
+                tmp->setPricer(QuantLib::ext::make_shared<OvernightIndexedCouponPricer>());
                 modelLinkedUnderlying_.push_back(tmp);
                 if (modelIborIndexToUse == nullptr) {
                     modelIborIndexToUse = onIndexLinkedToModelCurve;
                     iborIndexToUse = o->overnightIndex();
                 }
-            } else if (auto o = boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c)) {
+            } else if (auto o = QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c)) {
                 auto onIndex = o->overnightIndex();
                 QL_REQUIRE(onIndex, "internal error: could not cast o->index() to overnightIndex");
-                boost::shared_ptr<LgmImpliedYtsFwdFwdCorrected> y;
+                QuantLib::ext::shared_ptr<LgmImpliedYtsFwdFwdCorrected> y;
                 auto fc = modelForwardCurves_.find(onIndex->name());
                 if (fc != modelForwardCurves_.end())
                     y = fc->second;
                 else {
-                    y = boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(
+                    y = QuantLib::ext::make_shared<LgmImpliedYtsFwdFwdCorrected>(
                         model_, flatCurve.empty() ? onIndex->forwardingTermStructure() : flatCurve);
                     modelForwardCurves_[onIndex->name()] = y;
                 }
                 auto onIndexLinkedToModelCurve =
-                    boost::dynamic_pointer_cast<OvernightIndex>(onIndex->clone(Handle<YieldTermStructure>(y)));
+                    QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(onIndex->clone(Handle<YieldTermStructure>(y)));
                 QL_REQUIRE(onIndexLinkedToModelCurve,
                            "internal error: could not cast onIndex->clone() to OvernightIndex");
-                auto tmp = boost::make_shared<QuantExt::AverageONIndexedCoupon>(
+                auto tmp = QuantLib::ext::make_shared<QuantExt::AverageONIndexedCoupon>(
                     o->date(), o->nominal(), o->accrualStartDate(), o->accrualEndDate(), onIndexLinkedToModelCurve,
                     o->gearing(), o->spread(), o->rateCutoff(), o->dayCounter(), o->lookback(), o->fixingDays(),
                     o->rateComputationStartDate(), o->rateComputationEndDate());
-                tmp->setPricer(boost::make_shared<AverageONIndexedCouponPricer>());
+                tmp->setPricer(QuantLib::ext::make_shared<AverageONIndexedCouponPricer>());
                 modelLinkedUnderlying_.push_back(tmp);
                 if (modelIborIndexToUse == nullptr) {
                     modelIborIndexToUse = onIndexLinkedToModelCurve;
                     iborIndexToUse = o->overnightIndex();
                 }
-            } else if (boost::dynamic_pointer_cast<FixedRateCoupon>(c) ||
-                       boost::dynamic_pointer_cast<SimpleCashFlow>(c)) {
+            } else if (QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c) ||
+                       QuantLib::ext::dynamic_pointer_cast<SimpleCashFlow>(c)) {
                 // fixed coupon or simple cashflow
                 modelLinkedUnderlying_.push_back(c);
             } else {
@@ -160,7 +160,7 @@ RepresentativeSwaptionMatcher::RepresentativeSwaptionMatcher(
 
     // build model linked discounting curve
     modelDiscountCurve_ =
-        boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(model_, flatCurve.empty() ? discountCurve_ : flatCurve);
+        QuantLib::ext::make_shared<LgmImpliedYtsFwdFwdCorrected>(model_, flatCurve.empty() ? discountCurve_ : flatCurve);
 
     // identify the ibor index to use for the matching
     if (modelIborIndexToUse == nullptr || !useUnderlyingIborIndex_) {
@@ -169,42 +169,42 @@ RepresentativeSwaptionMatcher::RepresentativeSwaptionMatcher(
             modelIborIndexToUse = swapIndexBase_->iborIndex()->clone(Handle<YieldTermStructure>(fc->second));
         else
             modelIborIndexToUse = swapIndexBase_->iborIndex()->clone(
-                Handle<YieldTermStructure>(boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(
+                Handle<YieldTermStructure>(QuantLib::ext::make_shared<LgmImpliedYtsFwdFwdCorrected>(
                     model_, flatCurve.empty() ? swapIndexBase_->iborIndex()->forwardingTermStructure() : flatCurve)));
         iborIndexToUse = swapIndexBase_->iborIndex();
     }
 
     // build model linked swap index base
     modelSwapIndexForwardCurve_ =
-        boost::dynamic_pointer_cast<LgmImpliedYtsFwdFwdCorrected>(*modelIborIndexToUse->forwardingTermStructure());
+        QuantLib::ext::dynamic_pointer_cast<LgmImpliedYtsFwdFwdCorrected>(*modelIborIndexToUse->forwardingTermStructure());
     QL_REQUIRE(modelSwapIndexForwardCurve_,
                "internal error: could not cast modelIborIndexToUse->forwardingTermStructure() to "
                "LgmImpliedYtsFwdFwdCorrected");
-    modelSwapIndexDiscountCurve_ = boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(
+    modelSwapIndexDiscountCurve_ = QuantLib::ext::make_shared<LgmImpliedYtsFwdFwdCorrected>(
         model_, flatCurve.empty() ? (swapIndexBase_->discountingTermStructure().empty()
                                          ? modelIborIndexToUse->forwardingTermStructure()
                                          : swapIndexBase_->discountingTermStructure())
                                   : flatCurve);
 
     // create the final swap index base to use, i.e. the one with replaced ibor index, if desired
-    swapIndexBaseFinal_ = boost::make_shared<SwapIndex>(
+    swapIndexBaseFinal_ = QuantLib::ext::make_shared<SwapIndex>(
         swapIndexBase_->familyName(), swapIndexBase_->tenor(), swapIndexBase_->fixingDays(), swapIndexBase_->currency(),
         swapIndexBase_->fixingCalendar(), swapIndexBase_->fixedLegTenor(), swapIndexBase_->fixedLegConvention(),
         swapIndexBase_->dayCounter(), iborIndexToUse, Handle<YieldTermStructure>(modelSwapIndexDiscountCurve_));
 
     // clone the swap index base using the model fwd and dsc curves and replacing the ibor tenor, if that applies
-    modelSwapIndexBase_ = boost::make_shared<SwapIndex>(
+    modelSwapIndexBase_ = QuantLib::ext::make_shared<SwapIndex>(
         swapIndexBase_->familyName(), swapIndexBase_->tenor(), swapIndexBase_->fixingDays(), swapIndexBase_->currency(),
         swapIndexBase_->fixingCalendar(), swapIndexBase_->fixedLegTenor(), swapIndexBase_->fixedLegConvention(),
         swapIndexBase_->dayCounter(), modelIborIndexToUse, Handle<YieldTermStructure>(modelSwapIndexDiscountCurve_));
 }
 
 namespace {
-bool includeCashflow(const boost::shared_ptr<CashFlow>& f, const Date& exerciseDate,
+bool includeCashflow(const QuantLib::ext::shared_ptr<CashFlow>& f, const Date& exerciseDate,
                      const RepresentativeSwaptionMatcher::InclusionCriterion criterion) {
     switch (criterion) {
     case RepresentativeSwaptionMatcher::InclusionCriterion::AccrualStartGeqExercise:
-        if (auto c = boost::dynamic_pointer_cast<Coupon>(f))
+        if (auto c = QuantLib::ext::dynamic_pointer_cast<Coupon>(f))
             return c->accrualStartDate() >= exerciseDate;
     case RepresentativeSwaptionMatcher::InclusionCriterion::PayDateGtExercise:
         return f->date() > exerciseDate;
@@ -214,7 +214,7 @@ bool includeCashflow(const boost::shared_ptr<CashFlow>& f, const Date& exerciseD
 }
 } // namespace
 
-boost::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativeSwaption(Date exerciseDate,
+QuantLib::ext::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativeSwaption(Date exerciseDate,
                                                                                   const InclusionCriterion criterion) {
 
     QL_REQUIRE(exerciseDate > discountCurve_->referenceDate(),
@@ -232,10 +232,10 @@ boost::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativeSwaptio
     Real additionalDeterministicNpv = 0.0;
     std::vector<bool> effectiveIsPayer;
     for (Size c = 0; c < modelLinkedUnderlying_.size(); ++c) {
-        boost::shared_ptr<CashFlow> cf = modelLinkedUnderlying_[c];
+        QuantLib::ext::shared_ptr<CashFlow> cf = modelLinkedUnderlying_[c];
         if (!includeCashflow(cf, exerciseDate, criterion))
             continue;
-        if (auto i = boost::dynamic_pointer_cast<IborCoupon>(cf)) {
+        if (auto i = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(cf)) {
             if (today <= i->fixingDate() && i->fixingDate() < exerciseDate) {
 
                 // an ibor coupon with today <= fixing date < exerciseDate is modified such that the fixing date is on
@@ -248,11 +248,11 @@ boost::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativeSwaptio
                 Date newAccrualEnd = std::max(i->accrualEndDate(), newAccrualStart + 1);
                 Real newAccrualTime = i->dayCounter().yearFraction(newAccrualStart, newAccrualEnd);
                 Real oldAccrualTime = i->dayCounter().yearFraction(i->accrualStartDate(), i->accrualEndDate());
-                auto tmp = boost::make_shared<IborCoupon>(
+                auto tmp = QuantLib::ext::make_shared<IborCoupon>(
                     i->date(), i->nominal() * oldAccrualTime / newAccrualTime, newAccrualStart, newAccrualEnd,
                     i->fixingDays(), i->iborIndex(), i->gearing(), i->spread(), i->referencePeriodStart(),
                     i->referencePeriodEnd(), i->dayCounter(), false);
-                tmp->setPricer(boost::make_shared<BlackIborCouponPricer>());
+                tmp->setPricer(QuantLib::ext::make_shared<BlackIborCouponPricer>());
                 effectiveLeg.push_back(tmp);
                 effectiveIsPayer.push_back(modelLinkedUnderlyingIsPayer_[c]);
             } else {
@@ -260,7 +260,7 @@ boost::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativeSwaptio
                 effectiveLeg.push_back(cf);
                 effectiveIsPayer.push_back(modelLinkedUnderlyingIsPayer_[c]);
             }
-        } else if (auto o = boost::dynamic_pointer_cast<OvernightIndexedCoupon>(cf)) {
+        } else if (auto o = QuantLib::ext::dynamic_pointer_cast<OvernightIndexedCoupon>(cf)) {
 
             if (o->fixingDates().empty())
                 continue;
@@ -268,7 +268,7 @@ boost::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativeSwaptio
             // For an OIS coupon, we keep the original coupon, if the first fixing date >= exercise date
 
             if (o->fixingDates().front() >= exerciseDate) {
-                o->setPricer(boost::make_shared<QuantExt::OvernightIndexedCouponPricer>());
+                o->setPricer(QuantLib::ext::make_shared<QuantExt::OvernightIndexedCouponPricer>());
                 effectiveLeg.push_back(o);
                 effectiveIsPayer.push_back(modelLinkedUnderlyingIsPayer_[c]);
             } else {
@@ -293,12 +293,12 @@ boost::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativeSwaptio
                         *std::next(std::lower_bound(o->fixingDates().begin(), o->fixingDates().end(), today), -1);
                     Date lastValueDateBeforeToday = valueDate(lastFixingDateBeforeToday, o);
                     if (lastValueDateBeforeToday > firstValueDate) {
-                        auto tmp = boost::make_shared<OvernightIndexedCoupon>(
+                        auto tmp = QuantLib::ext::make_shared<OvernightIndexedCoupon>(
                             o->date(), o->nominal() * accrualToRatePeriodRatio, firstValueDate,
                             lastValueDateBeforeToday, o->overnightIndex(), o->gearing(), o->spread(),
                             o->referencePeriodStart(), o->referencePeriodEnd(), o->dayCounter(), false,
                             o->includeSpread(), 0 * Days, o->rateCutoff(), o->fixingDays());
-                        tmp->setPricer(boost::make_shared<QuantExt::OvernightIndexedCouponPricer>());
+                        tmp->setPricer(QuantLib::ext::make_shared<QuantExt::OvernightIndexedCouponPricer>());
                         additionalDeterministicNpv += discountCurve_->discount(tmp->date()) * tmp->amount();
                     }
                 }
@@ -311,23 +311,23 @@ boost::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativeSwaptio
                     Date endDate = std::max(lastValueDate, startDate + 1);
                     Real factor = o->dayCounter().yearFraction(firstValueDateGeqToday, lastValueDate) /
                                   o->dayCounter().yearFraction(startDate, endDate);
-                    auto tmp = boost::make_shared<OvernightIndexedCoupon>(
+                    auto tmp = QuantLib::ext::make_shared<OvernightIndexedCoupon>(
                         o->date(), o->nominal() * accrualToRatePeriodRatio * factor, startDate, endDate,
                         o->overnightIndex(), o->gearing(), o->spread(), o->referencePeriodStart(),
                         o->referencePeriodEnd(), o->dayCounter(), false, o->includeSpread(), 0 * Days, o->rateCutoff(),
                         o->fixingDays());
-                    tmp->setPricer(boost::make_shared<OvernightIndexedCouponPricer>());
+                    tmp->setPricer(QuantLib::ext::make_shared<OvernightIndexedCouponPricer>());
                     effectiveLeg.push_back(tmp);
                     effectiveIsPayer.push_back(modelLinkedUnderlyingIsPayer_[c]);
                 }
             }
-        } else if (auto o = boost::dynamic_pointer_cast<AverageONIndexedCoupon>(cf)) {
+        } else if (auto o = QuantLib::ext::dynamic_pointer_cast<AverageONIndexedCoupon>(cf)) {
 
             if (o->fixingDates().empty())
                 continue;
 
             if (o->fixingDates().front() >= exerciseDate) {
-                o->setPricer(boost::make_shared<QuantExt::AverageONIndexedCouponPricer>());
+                o->setPricer(QuantLib::ext::make_shared<QuantExt::AverageONIndexedCouponPricer>());
                 effectiveLeg.push_back(o);
                 effectiveIsPayer.push_back(modelLinkedUnderlyingIsPayer_[c]);
             } else {
@@ -345,11 +345,11 @@ boost::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativeSwaptio
                         *std::next(std::lower_bound(o->fixingDates().begin(), o->fixingDates().end(), today), -1);
                     Date lastValueDateBeforeToday = valueDate(lastFixingDateBeforeToday, o);
                     if (lastValueDateBeforeToday > firstValueDate) {
-                        auto tmp = boost::make_shared<AverageONIndexedCoupon>(
+                        auto tmp = QuantLib::ext::make_shared<AverageONIndexedCoupon>(
                             o->date(), o->nominal() * accrualToRatePeriodRatio, firstValueDate,
                             lastValueDateBeforeToday, o->overnightIndex(), o->gearing(), o->spread(), o->rateCutoff(),
                             o->dayCounter(), 0 * Days, o->fixingDays());
-                        tmp->setPricer(boost::make_shared<QuantExt::AverageONIndexedCouponPricer>());
+                        tmp->setPricer(QuantLib::ext::make_shared<QuantExt::AverageONIndexedCouponPricer>());
                         additionalDeterministicNpv += discountCurve_->discount(tmp->date()) * tmp->amount();
                     }
                 }
@@ -362,17 +362,17 @@ boost::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativeSwaptio
                     Date endDate = std::max(lastValueDate, startDate + 1);
                     Real factor = o->dayCounter().yearFraction(firstValueDateGeqToday, lastValueDate) /
                                   o->dayCounter().yearFraction(startDate, endDate);
-                    auto tmp = boost::make_shared<AverageONIndexedCoupon>(
+                    auto tmp = QuantLib::ext::make_shared<AverageONIndexedCoupon>(
                         o->date(), o->nominal() * accrualToRatePeriodRatio * factor, startDate, endDate,
                         o->overnightIndex(), o->gearing(), o->spread(), o->rateCutoff(), o->dayCounter(), 0 * Days,
                         o->fixingDays());
-                    tmp->setPricer(boost::make_shared<AverageONIndexedCouponPricer>());
+                    tmp->setPricer(QuantLib::ext::make_shared<AverageONIndexedCouponPricer>());
                     effectiveLeg.push_back(tmp);
                     effectiveIsPayer.push_back(modelLinkedUnderlyingIsPayer_[c]);
                 }
             }
-        } else if (boost::dynamic_pointer_cast<FixedRateCoupon>(cf) != nullptr ||
-                   boost::dynamic_pointer_cast<SimpleCashFlow>(cf) != nullptr) {
+        } else if (QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(cf) != nullptr ||
+                   QuantLib::ext::dynamic_pointer_cast<SimpleCashFlow>(cf) != nullptr) {
             effectiveLeg.push_back(cf);
             effectiveIsPayer.push_back(modelLinkedUnderlyingIsPayer_[c]);
         } else {
@@ -381,7 +381,7 @@ boost::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativeSwaptio
     }
 
     if (effectiveLeg.empty())
-        return boost::shared_ptr<Swaption>();
+        return QuantLib::ext::shared_ptr<Swaption>();
 
     // adjust exercise date to a valid fixing date, otherwise MakeVanillaSwap below may fail
     exerciseDate = swapIndexBase_->fixingCalendar().adjust(exerciseDate);
@@ -396,7 +396,7 @@ boost::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativeSwaptio
     Real nominalSum = 0.0, nominalSumAbs = 0.0, strikeGuess = 0.0;
     Size nCpns = 0;
     for (Size c = 0; c < modelLinkedUnderlying_.size(); ++c) {
-        if (auto f = boost::dynamic_pointer_cast<FixedRateCoupon>(modelLinkedUnderlying_[c])) {
+        if (auto f = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(modelLinkedUnderlying_[c])) {
             strikeGuess += f->rate() * std::abs(f->nominal());
             nominalSum += f->nominal() * (modelLinkedUnderlyingIsPayer_[c] ? -1.0 : 1.0);
             nominalSumAbs += std::abs(f->nominal());
@@ -414,7 +414,7 @@ boost::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativeSwaptio
 
     // target function, input components are nominal, strike, maturity, output rel. error in npv, delta, gamma
     struct Matcher : public CostFunction {
-        boost::shared_ptr<VanillaSwap> underlyingSwap(const boost::shared_ptr<SwapIndex> swapIndexBase,
+        QuantLib::ext::shared_ptr<VanillaSwap> underlyingSwap(const QuantLib::ext::shared_ptr<SwapIndex> swapIndexBase,
                                                       const Period& maturity) const {
             // same as in SwapIndex::underlyingSwap() to make sure we are consistent
             return MakeVanillaSwap(maturity, swapIndexBase->iborIndex(), 0.0)
@@ -453,7 +453,7 @@ boost::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativeSwaptio
                 Period lowerMaturity = months * Months;
                 Period upperMaturity = lowerMaturity + 1 * Months;
                 // generate candidate underlying and compute npv for states 0,+h,-h with chosen stepsize
-                boost::shared_ptr<VanillaSwap> underlyingLower, underlyingUpper;
+                QuantLib::ext::shared_ptr<VanillaSwap> underlyingLower, underlyingUpper;
                 if (lowerMaturity > 0 * Months)
                     underlyingLower = underlyingSwap(modelSwapIndexBase, lowerMaturity);
                 underlyingUpper = underlyingSwap(modelSwapIndexBase, upperMaturity);
@@ -500,9 +500,9 @@ boost::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativeSwaptio
         Real h;
         Date exerciseDate;
         Real maxMaturityTime;
-        boost::shared_ptr<SwapIndex> modelSwapIndexBase;
-        boost::shared_ptr<PricingEngine> engine;
-        std::set<boost::shared_ptr<LgmImpliedYtsFwdFwdCorrected>> modelCurves;
+        QuantLib::ext::shared_ptr<SwapIndex> modelSwapIndexBase;
+        QuantLib::ext::shared_ptr<PricingEngine> engine;
+        std::set<QuantLib::ext::shared_ptr<LgmImpliedYtsFwdFwdCorrected>> modelCurves;
         Real npv_target, delta_target, gamma_target;
         // internal
         struct RawResult {
@@ -519,7 +519,7 @@ boost::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativeSwaptio
     matcher.maxMaturityTime = discountCurve_->dayCounter().yearFraction(exerciseDate, Date::maxDate() - 365);
     matcher.exerciseDate = exerciseDate;
     matcher.modelSwapIndexBase = modelSwapIndexBase_;
-    matcher.engine = boost::make_shared<DiscountingSwapEngine>(Handle<YieldTermStructure>(modelDiscountCurve_), false,
+    matcher.engine = QuantLib::ext::make_shared<DiscountingSwapEngine>(Handle<YieldTermStructure>(modelDiscountCurve_), false,
                                                                exerciseDate, exerciseDate);
     for (auto const& c : modelForwardCurves_)
         matcher.modelCurves.insert(c.second);
@@ -569,7 +569,7 @@ boost::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativeSwaptio
     Period maturity = nMonths * Months;
     // rescale notional to adjust for the difference between the calibrated maturity and the actual maturity we set
     nominal *= x[2] * x[2] * 12.0 / static_cast<Real>(nMonths);
-    boost::shared_ptr<VanillaSwap> underlying =
+    QuantLib::ext::shared_ptr<VanillaSwap> underlying =
         MakeVanillaSwap(maturity, swapIndexBaseFinal_->iborIndex(), strike)
             .withEffectiveDate(swapIndexBaseFinal_->valueDate(exerciseDate))
             .withFixedLegCalendar(swapIndexBaseFinal_->fixingCalendar())
@@ -579,13 +579,13 @@ boost::shared_ptr<Swaption> RepresentativeSwaptionMatcher::representativeSwaptio
             .withFixedLegTerminationDateConvention(swapIndexBaseFinal_->fixedLegConvention())
             .receiveFixed(nominal > 0.0)
             .withNominal(std::abs(nominal));
-    underlying->setPricingEngine(boost::make_shared<DiscountingSwapEngine>(discountCurve_));
-    return boost::make_shared<Swaption>(underlying, boost::make_shared<EuropeanExercise>(exerciseDate));
+    underlying->setPricingEngine(QuantLib::ext::make_shared<DiscountingSwapEngine>(discountCurve_));
+    return QuantLib::ext::make_shared<Swaption>(underlying, QuantLib::ext::make_shared<EuropeanExercise>(exerciseDate));
 }
 
 QuantLib::Date
 RepresentativeSwaptionMatcher::valueDate(const QuantLib::Date& fixingDate,
-                                         const boost::shared_ptr<QuantLib::FloatingRateCoupon>& cpn) const {
+                                         const QuantLib::ext::shared_ptr<QuantLib::FloatingRateCoupon>& cpn) const {
     return cpn->index()->fixingCalendar().advance(fixingDate, cpn->fixingDays(), Days, Following);
 }
 } // namespace QuantExt

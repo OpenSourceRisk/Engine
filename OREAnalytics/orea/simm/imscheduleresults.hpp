@@ -65,7 +65,7 @@ public:
              const QuantLib::Real ngr, const QuantLib::Real scheduleIM);
 
     //! Convert Schedule IM amounts to a different currency
-    // void convert(const boost::shared_ptr<ore::data::Market>& market, const std::string& currency);
+    // void convert(const QuantLib::ext::shared_ptr<ore::data::Market>& market, const std::string& currency);
     // void convert(QuantLib::Real fxSpot, const std::string& currency);
 
     /*! Get the initial margin value from the results container for the given combination of

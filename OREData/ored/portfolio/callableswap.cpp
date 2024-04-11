@@ -27,7 +27,7 @@
 namespace ore {
 namespace data {
 
-void CallableSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void CallableSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     LOG("Building CallableSwap " << id());
     swap_.reset();
     swaption_.reset();
@@ -40,8 +40,8 @@ void CallableSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
 
     setSensitivityTemplate(swaption_.sensitivityTemplate());
 
-    instrument_ = boost::make_shared<CompositeInstrumentWrapper>(
-        std::vector<boost::shared_ptr<InstrumentWrapper>>{swap_.instrument(), swaption_.instrument()});
+    instrument_ = QuantLib::ext::make_shared<CompositeInstrumentWrapper>(
+        std::vector<QuantLib::ext::shared_ptr<InstrumentWrapper>>{swap_.instrument(), swaption_.instrument()});
 
     legs_ = swap_.legs();
     legCurrencies_ = swap_.legCurrencies();
@@ -72,7 +72,7 @@ void CallableSwap::fromXML(XMLNode* node) {
     vector<LegData> legData;
     vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(swapNode, "LegData");
     for (Size i = 0; i < nodes.size(); i++) {
-        auto ld = boost::make_shared<ore::data::LegData>();
+        auto ld = QuantLib::ext::make_shared<ore::data::LegData>();
         ld->fromXML(nodes[i]);
         legData.push_back(*ld);
     }

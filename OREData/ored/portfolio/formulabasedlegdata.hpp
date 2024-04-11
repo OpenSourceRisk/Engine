@@ -61,9 +61,9 @@ private:
     bool isInArrears_;
 };
 
-Leg makeFormulaBasedLeg(const LegData& data, const boost::shared_ptr<QuantExt::FormulaBasedIndex>& formulaBasedIndex,
-                        const boost::shared_ptr<EngineFactory>& engineFactory,
-                        const std::map<std::string, boost::shared_ptr<QuantLib::InterestRateIndex>>& indexMaps,
+Leg makeFormulaBasedLeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::FormulaBasedIndex>& formulaBasedIndex,
+                        const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                        const std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>>& indexMaps,
                         const QuantLib::Date& openEndDateReplacement = Null<Date>());
 
 } // namespace data

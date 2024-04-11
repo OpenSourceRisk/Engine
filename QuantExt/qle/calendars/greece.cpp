@@ -25,7 +25,7 @@ using namespace QuantLib;
 Greece::Greece() {
     // all calendar instances on the same market share the same
     // implementation instance
-    impl_ = boost::make_shared<Greece::Impl>();
+    impl_ = QuantLib::ext::make_shared<Greece::Impl>();
 }
 
 bool Greece::Impl::isBusinessDay(const Date& date) const {

@@ -42,15 +42,15 @@ public:
 
     virtual void calculate(
         //! The trade
-        const boost::shared_ptr<Trade>& trade,
+        const QuantLib::ext::shared_ptr<Trade>& trade,
         //! Trade index for writing to the cube
         Size tradeIndex,
         //! The market
-        const boost::shared_ptr<SimMarket>& simMarket,
+        const QuantLib::ext::shared_ptr<SimMarket>& simMarket,
         //! The cube for data on trade level
-        boost::shared_ptr<NPVCube>& outputCube,
+        QuantLib::ext::shared_ptr<NPVCube>& outputCube,
         //! The cube for data on netting set level
-        boost::shared_ptr<NPVCube>& outputCubeNettingSet,
+        QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet,
         //! The date
         const Date& date,
         //! Date index
@@ -62,18 +62,18 @@ public:
 
     virtual void calculateT0(
         //! The trade
-        const boost::shared_ptr<Trade>& trade,
+        const QuantLib::ext::shared_ptr<Trade>& trade,
         //! Trade index for writing to the cube
         Size tradeIndex,
         //! The market
-        const boost::shared_ptr<SimMarket>& simMarket,
+        const QuantLib::ext::shared_ptr<SimMarket>& simMarket,
         //! The cube
-        boost::shared_ptr<NPVCube>& outputCube,
+        QuantLib::ext::shared_ptr<NPVCube>& outputCube,
         //! The cube
-        boost::shared_ptr<NPVCube>& outputCubeNettingSet) = 0;
+        QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet) = 0;
 
     // called once before the valuation engine run
-    virtual void init(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<SimMarket>& simMarket) = 0;
+    virtual void init(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<SimMarket>& simMarket) = 0;
 
     // called after each scenario update before the calculators are run
     virtual void initScenario() = 0;
@@ -89,19 +89,19 @@ public:
     //! base ccy and index to write to
     NPVCalculator(const std::string& baseCcyCode, Size index = 0) : baseCcyCode_(baseCcyCode), index_(index) {}
 
-    virtual void calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
-                           const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
-                           boost::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
+    virtual void calculate(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
+                           const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
+                           QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
                            Size sample, bool isCloseOut = false) override;
 
-    virtual void calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
-                             const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
-                             boost::shared_ptr<NPVCube>& outputCubeNettingSet) override;
+    virtual void calculateT0(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
+                             const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
+                             QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet) override;
 
-    virtual Real npv(Size tradeIndex, const boost::shared_ptr<Trade>& trade,
-                     const boost::shared_ptr<SimMarket>& simMarket);
+    virtual Real npv(Size tradeIndex, const QuantLib::ext::shared_ptr<Trade>& trade,
+                     const QuantLib::ext::shared_ptr<SimMarket>& simMarket);
 
-    void init(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<SimMarket>& simMarket) override;
+    void init(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<SimMarket>& simMarket) override;
     void initScenario() override;
 
 protected:
@@ -121,26 +121,26 @@ protected:
 class CashflowCalculator : public ValuationCalculator {
 public:
     //! Constructor takes the base ccy, date grid and index of cube to write to.
-    CashflowCalculator(const std::string& baseCcyCode, const Date& t0Date, const boost::shared_ptr<DateGrid>& dateGrid,
+    CashflowCalculator(const std::string& baseCcyCode, const Date& t0Date, const QuantLib::ext::shared_ptr<DateGrid>& dateGrid,
                        Size index)
         : baseCcyCode_(baseCcyCode), t0Date_(t0Date), dateGrid_(dateGrid), index_(index) {}
 
-    virtual void calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
-                           const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
-                           boost::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
+    virtual void calculate(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
+                           const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
+                           QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
                            Size sample, bool isCloseOut = false) override;
 
-    virtual void calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
-                             const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
-                             boost::shared_ptr<NPVCube>& outputCubeNettingSet) override {}
+    virtual void calculateT0(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
+                             const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
+                             QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet) override {}
 
-    void init(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<SimMarket>& simMarket) override;
+    void init(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<SimMarket>& simMarket) override;
     void initScenario() override;
 
 private:
     std::string baseCcyCode_;
     Date t0Date_;
-    boost::shared_ptr<DateGrid> dateGrid_;
+    QuantLib::ext::shared_ptr<DateGrid> dateGrid_;
     Size index_;
 
     std::vector<Handle<Quote>> ccyQuotes_;
@@ -158,26 +158,26 @@ private:
 class NPVCalculatorFXT0 : public ValuationCalculator {
 public:
     //! base ccy and index to write to
-    NPVCalculatorFXT0(const std::string& baseCcyCode, const boost::shared_ptr<Market>& t0Market, Size index = 0)
+    NPVCalculatorFXT0(const std::string& baseCcyCode, const QuantLib::ext::shared_ptr<Market>& t0Market, Size index = 0)
         : baseCcyCode_(baseCcyCode), t0Market_(t0Market), index_(index) {}
 
-    virtual void calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
-                           const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
-                           boost::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
+    virtual void calculate(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
+                           const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
+                           QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
                            Size sample, bool isCloseOut = false) override;
 
-    virtual void calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
-                             const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
-                             boost::shared_ptr<NPVCube>& outputCubeNettingSet) override;
+    virtual void calculateT0(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
+                             const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
+                             QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet) override;
 
-    Real npv(Size tradeIndex, const boost::shared_ptr<Trade>& trade, const boost::shared_ptr<SimMarket>& simMarket);
+    Real npv(Size tradeIndex, const QuantLib::ext::shared_ptr<Trade>& trade, const QuantLib::ext::shared_ptr<SimMarket>& simMarket);
 
-    void init(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<SimMarket>& simMarket) override;
+    void init(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<SimMarket>& simMarket) override;
     void initScenario() override {}
 
 private:
     std::string baseCcyCode_;
-    boost::shared_ptr<Market> t0Market_;
+    QuantLib::ext::shared_ptr<Market> t0Market_;
     Size index_;
 
     std::vector<double> fxRates_;

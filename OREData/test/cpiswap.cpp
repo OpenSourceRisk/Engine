@@ -128,19 +128,19 @@ public:
         hGBP->addFixing(Date(18, July, 2016), 0.0061731);
 
         // build UKRPI index
-        boost::shared_ptr<UKRPI> ii;
-        boost::shared_ptr<ZeroInflationTermStructure> cpiTS;
+        QuantLib::ext::shared_ptr<UKRPI> ii;
+        QuantLib::ext::shared_ptr<ZeroInflationTermStructure> cpiTS;
         RelinkableHandle<ZeroInflationTermStructure> hcpi;
-        ii = boost::shared_ptr<UKRPI>(new UKRPI(hcpi));
+        ii = QuantLib::ext::shared_ptr<UKRPI>(new UKRPI(hcpi));
         for (Size i = 0; i < fixingDatesUKRPI.size(); i++) {
             // std::cout << i << ", " << fixingDatesUKRPI[i] << ", " << fixingRatesUKRPI[i] << std::endl;
             ii->addFixing(fixingDatesUKRPI[i], fixingRatesUKRPI[i], true);
         };
         // now build the helpers ...
-        vector<boost::shared_ptr<BootstrapHelper<ZeroInflationTermStructure>>> instruments;
+        vector<QuantLib::ext::shared_ptr<BootstrapHelper<ZeroInflationTermStructure>>> instruments;
         for (Size i = 0; i < datesZCII.size(); i++) {
-            Handle<Quote> quote(boost::shared_ptr<Quote>(new SimpleQuote(ratesZCII[i] / 100.0)));
-            boost::shared_ptr<BootstrapHelper<ZeroInflationTermStructure>> anInstrument(
+            Handle<Quote> quote(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(ratesZCII[i] / 100.0)));
+            QuantLib::ext::shared_ptr<BootstrapHelper<ZeroInflationTermStructure>> anInstrument(
                 new ZeroCouponInflationSwapHelper(
                     quote, Period(2, Months), datesZCII[i], UnitedKingdom(), ModifiedFollowing, ActualActual(ActualActual::ISDA), ii,
                     CPI::AsIndex, yieldCurves_.at(make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP"))));
@@ -150,11 +150,11 @@ public:
         // we can use historical or first ZCIIS for this
         // we know historical is WAY off market-implied, so use market implied flat.
         Rate baseZeroRate = ratesZCII[0] / 100.0;
-        boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(new PiecewiseZeroInflationCurve<Linear>(
+        QuantLib::ext::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(new PiecewiseZeroInflationCurve<Linear>(
             asof_, UnitedKingdom(), ActualActual(ActualActual::ISDA), Period(2, Months), ii->frequency(),
             baseZeroRate, instruments));
         pCPIts->recalculate();
-        cpiTS = boost::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
+        cpiTS = QuantLib::ext::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
         hUKRPI = Handle<ZeroInflationIndex>(
             parseZeroInflationIndex("UKRPI", Handle<ZeroInflationTermStructure>(cpiTS)));
         zeroInflationIndices_[make_pair(Market::defaultConfiguration, "UKRPI")] = hUKRPI;
@@ -166,7 +166,7 @@ public:
 private:
     Handle<YieldTermStructure> intDiscCurve(vector<Date> dates, vector<DiscountFactor> dfs, DayCounter dc,
                                             Calendar cal) {
-        boost::shared_ptr<YieldTermStructure> idc(
+        QuantLib::ext::shared_ptr<YieldTermStructure> idc(
             new QuantLib::InterpolatedDiscountCurve<LogLinear>(dates, dfs, dc, cal));
         return Handle<YieldTermStructure>(idc);
     }
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(testCPISwapPrice) {
     // build market
     Date today(18, July, 2016);
     Settings::instance().evaluationDate() = today;
-    boost::shared_ptr<TestMarket> market = boost::make_shared<TestMarket>();
+    QuantLib::ext::shared_ptr<TestMarket> market = QuantLib::ext::make_shared<TestMarket>();
     Date marketDate = market->asofDate();
     BOOST_CHECK_EQUAL(today, marketDate);
     Settings::instance().evaluationDate() = marketDate;
@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(testCPISwapPrice) {
     bool isPayerLibor = true;
     string indexLibor = "GBP-LIBOR-6M";
     vector<Real> spread(1, 0);
-    LegData legLibor(boost::make_shared<FloatingLegData>(indexLibor, 0, isInArrears, spread), isPayerLibor, "GBP",
+    LegData legLibor(QuantLib::ext::make_shared<FloatingLegData>(indexLibor, 0, isInArrears, spread), isPayerLibor, "GBP",
                      scheduleLibor, "A365F", notional, vector<string>(), paymentConvention);
 
     // GBP CPI Leg
@@ -248,20 +248,20 @@ BOOST_AUTO_TEST_CASE(testCPISwapPrice) {
     std::vector<double> fixedRate(1, 0.02);
     bool interpolated = false;
     LegData legCPI(
-        boost::make_shared<CPILegData>(indexCPI, start, baseCPI, CPIlag, (interpolated ? "Linear" : "Flat"), fixedRate),
+        QuantLib::ext::make_shared<CPILegData>(indexCPI, start, baseCPI, CPIlag, (interpolated ? "Linear" : "Flat"), fixedRate),
         isPayerCPI, "GBP", scheduleCPI, dc, notional, vector<string>(), paymentConvention, false, true);
 
     // Build swap trades
-    boost::shared_ptr<Trade> CPIswap(new ore::data::Swap(env, legLibor, legCPI));
+    QuantLib::ext::shared_ptr<Trade> CPIswap(new ore::data::Swap(env, legLibor, legCPI));
 
     // engine data and factory
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("Swap") = "DiscountedCashflows";
     engineData->engine("Swap") = "DiscountingSwapEngine";
-    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
     // build swaps and portfolio
-    boost::shared_ptr<Portfolio> portfolio(new Portfolio());
+    QuantLib::ext::shared_ptr<Portfolio> portfolio(new Portfolio());
     CPIswap->id() = "CPI_Swap";
 
     portfolio->add(CPIswap);
@@ -279,20 +279,20 @@ BOOST_AUTO_TEST_CASE(testCPISwapPrice) {
                      .withObservationInterpolation(CPI::Flat)
                      .withPaymentDayCounter(ActualActual(ActualActual::ISDA))
                      .withPaymentAdjustment(Following);
-    auto pricer = boost::make_shared<CPICouponPricer>(market->hGBP->forwardingTermStructure());
+    auto pricer = QuantLib::ext::make_shared<CPICouponPricer>(market->hGBP->forwardingTermStructure());
     for (auto const& c : cpiLeg) {
-        if (auto cpn = boost::dynamic_pointer_cast<CPICoupon>(c))
+        if (auto cpn = QuantLib::ext::dynamic_pointer_cast<CPICoupon>(c))
             cpn->setPricer(pricer);
     }
 
     QuantLib::Swap qlSwap(floatLeg, cpiLeg);
-    auto dscEngine = boost::make_shared<DiscountingSwapEngine>(market->hGBP->forwardingTermStructure());
+    auto dscEngine = QuantLib::ext::make_shared<DiscountingSwapEngine>(market->hGBP->forwardingTermStructure());
     qlSwap.setPricingEngine(dscEngine);
     BOOST_TEST_MESSAGE("Leg 1 NPV: ORE = "
-                       << boost::static_pointer_cast<QuantLib::Swap>(CPIswap->instrument()->qlInstrument())->legNPV(0)
+                       << QuantLib::ext::static_pointer_cast<QuantLib::Swap>(CPIswap->instrument()->qlInstrument())->legNPV(0)
                        << " QL = " << qlSwap.legNPV(0));
     BOOST_TEST_MESSAGE("Leg 2 NPV: ORE = "
-                       << boost::static_pointer_cast<QuantLib::Swap>(CPIswap->instrument()->qlInstrument())->legNPV(1)
+                       << QuantLib::ext::static_pointer_cast<QuantLib::Swap>(CPIswap->instrument()->qlInstrument())->legNPV(1)
                        << " QL = " << qlSwap.legNPV(1));
     BOOST_CHECK_CLOSE(CPIswap->instrument()->NPV(), qlSwap.NPV(), 1E-8); // this is 1E-10 rel diff
 }

@@ -28,7 +28,7 @@
 #include <ql/indexes/swapindex.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -41,7 +41,7 @@ public:
     //! Constructor
     SwapConventions(Natural settlementDays, const Period& fixedTenor, const Calendar& fixedCalendar,
                     BusinessDayConvention fixedConvention, const DayCounter& fixedDayCounter,
-                    const boost::shared_ptr<IborIndex>& floatIndex)
+                    const QuantLib::ext::shared_ptr<IborIndex>& floatIndex)
         : settlementDays_(settlementDays), fixedTenor_(fixedTenor), fixedCalendar_(fixedCalendar),
           fixedConvention_(fixedConvention), fixedDayCounter_(fixedDayCounter), floatIndex_(floatIndex) {}
 
@@ -52,7 +52,7 @@ public:
     const Calendar& fixedCalendar() const { return fixedCalendar_; }
     BusinessDayConvention fixedConvention() const { return fixedConvention_; }
     const DayCounter& fixedDayCounter() const { return fixedDayCounter_; }
-    const boost::shared_ptr<IborIndex> floatIndex() const { return floatIndex_; }
+    const QuantLib::ext::shared_ptr<IborIndex> floatIndex() const { return floatIndex_; }
     //@}
 
 private:
@@ -61,7 +61,7 @@ private:
     Calendar fixedCalendar_;
     BusinessDayConvention fixedConvention_;
     DayCounter fixedDayCounter_;
-    boost::shared_ptr<IborIndex> floatIndex_;
+    QuantLib::ext::shared_ptr<IborIndex> floatIndex_;
 };
 
 //! Class that converts a supplied SwaptionVolatilityStructure to one of another type with possibly different shifts
@@ -74,21 +74,21 @@ private:
 class SwaptionVolatilityConverter {
 public:
     //! Construct from SwapConventions
-    SwaptionVolatilityConverter(const Date& asof, const boost::shared_ptr<SwaptionVolatilityStructure>& svsIn,
+    SwaptionVolatilityConverter(const Date& asof, const QuantLib::ext::shared_ptr<SwaptionVolatilityStructure>& svsIn,
                                 const Handle<YieldTermStructure>& discount,
                                 const Handle<YieldTermStructure>& shortDiscount,
-                                const boost::shared_ptr<SwapConventions>& conventions,
-                                const boost::shared_ptr<SwapConventions>& shortConventions,
+                                const QuantLib::ext::shared_ptr<SwapConventions>& conventions,
+                                const QuantLib::ext::shared_ptr<SwapConventions>& shortConventions,
                                 const Period& conventionsTenor, const Period& shortConventionsTenor,
                                 const VolatilityType targetType, const Matrix& targetShifts = Matrix());
     //! Construct from SwapIndex
-    SwaptionVolatilityConverter(const Date& asof, const boost::shared_ptr<SwaptionVolatilityStructure>& svsIn,
-                                const boost::shared_ptr<SwapIndex>& swapIndex,
-                                const boost::shared_ptr<SwapIndex>& shortSwapIndex, const VolatilityType targetType,
+    SwaptionVolatilityConverter(const Date& asof, const QuantLib::ext::shared_ptr<SwaptionVolatilityStructure>& svsIn,
+                                const QuantLib::ext::shared_ptr<SwapIndex>& swapIndex,
+                                const QuantLib::ext::shared_ptr<SwapIndex>& shortSwapIndex, const VolatilityType targetType,
                                 const Matrix& targetShifts = Matrix());
 
     //! Method that returns the converted <tt>SwaptionVolatilityStructure</tt>
-    boost::shared_ptr<SwaptionVolatilityStructure> convert() const;
+    QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> convert() const;
 
     // Convert a single vol associated with a given swaption
     Real convert(const Date& expiry, const Period& swapTenor, Real strikeSpread, const DayCounter& volDayCounter,
@@ -104,13 +104,13 @@ private:
     void checkInputs() const;
 
     // Method that is called depending on the type of svsIn
-    boost::shared_ptr<SwaptionVolatilityStructure>
-    convert(const boost::shared_ptr<SwaptionVolatilityMatrix>& svMatrix) const;
+    QuantLib::ext::shared_ptr<SwaptionVolatilityStructure>
+    convert(const QuantLib::ext::shared_ptr<SwaptionVolatilityMatrix>& svMatrix) const;
 
     const Date asof_;
-    const boost::shared_ptr<SwaptionVolatilityStructure> svsIn_;
+    const QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> svsIn_;
     Handle<YieldTermStructure> discount_, shortDiscount_;
-    const boost::shared_ptr<SwapConventions> conventions_, shortConventions_;
+    const QuantLib::ext::shared_ptr<SwapConventions> conventions_, shortConventions_;
     const Period conventionsTenor_, shortConventionsTenor_;
     const VolatilityType targetType_;
     const Matrix targetShifts_;

@@ -31,7 +31,7 @@
 
 #include <qle/instruments/forwardbond.hpp>
 
-#include <boost/tuple/tuple.hpp>
+#include <ql/tuple.hpp>
 
 namespace QuantExt {
 
@@ -53,7 +53,7 @@ public:
 
     void calculate() const override;
     Real calculateBondNpv(Date, Date) const;
-    boost::tuple<Real, Real> calculateForwardContractPresentValue(Real spotValue, Real cmpPayment, Date npvDate,
+    QuantLib::ext::tuple<Real, Real> calculateForwardContractPresentValue(Real spotValue, Real cmpPayment, Date npvDate,
                                                                   Date computeDate, Date settlementDate,
                                                                   bool cashSettlement, Date cmpPaymentDate,
                                                                   bool dirty) const;

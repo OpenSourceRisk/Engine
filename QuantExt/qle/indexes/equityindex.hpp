@@ -88,7 +88,7 @@ public:
     // @}
     //! \name Additional methods
     //@{
-    virtual boost::shared_ptr<EquityIndex2> clone(const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
+    virtual QuantLib::ext::shared_ptr<EquityIndex2> clone(const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
                                                  const Handle<YieldTermStructure>& dividend) const;
     // @}
 protected:

@@ -26,7 +26,7 @@ using namespace boost::filesystem;
 namespace ore {
 namespace analytics {
 
-void IMScheduleAnalytic::loadCrifRecords(const boost::shared_ptr<ore::data::InMemoryLoader>& loader) {
+void IMScheduleAnalytic::loadCrifRecords(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
     QL_REQUIRE(inputs_, "Inputs not set");
     QL_REQUIRE(!inputs_->crif().empty(), "CRIF loader does not contain any records");
         
@@ -62,7 +62,7 @@ void IMScheduleAnalytic::loadCrifRecords(const boost::shared_ptr<ore::data::InMe
     }
 }
 
-void IMScheduleAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+void IMScheduleAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                          const std::set<std::string>& runTypes) {
 
     if (!analytic()->match(runTypes))
@@ -80,7 +80,7 @@ void IMScheduleAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMe
 
     // Calculate IMSchedule
     LOG("Calculating Schedule IM")
-    auto imSchedule = boost::make_shared<IMScheduleCalculator>(
+    auto imSchedule = QuantLib::ext::make_shared<IMScheduleCalculator>(
         imAnalytic->crif(), inputs_->simmResultCurrency(), analytic()->market(),
         true, inputs_->enforceIMRegulations(), false, imAnalytic->hasSEC(),
         imAnalytic->hasCFTC());
@@ -96,8 +96,8 @@ void IMScheduleAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMe
                                             << fxSpotReport);
     }
 
-    boost::shared_ptr<InMemoryReport> imScheduleSummaryReport = boost::make_shared<InMemoryReport>();
-    boost::shared_ptr<InMemoryReport> imScheduleTradeReport = boost::make_shared<InMemoryReport>();
+    QuantLib::ext::shared_ptr<InMemoryReport> imScheduleSummaryReport = QuantLib::ext::make_shared<InMemoryReport>();
+    QuantLib::ext::shared_ptr<InMemoryReport> imScheduleTradeReport = QuantLib::ext::make_shared<InMemoryReport>();
 
     // Populate the trade-level IM Schedule report
     LOG("Generating Schedule IM reports")

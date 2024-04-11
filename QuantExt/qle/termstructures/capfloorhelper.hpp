@@ -71,7 +71,7 @@ public:
     */
     CapFloorHelper(Type type, const QuantLib::Period& tenor, QuantLib::Rate strike,
                    const QuantLib::Handle<QuantLib::Quote>& quote,
-                   const boost::shared_ptr<QuantLib::IborIndex>& iborIndex,
+                   const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& iborIndex,
                    const QuantLib::Handle<QuantLib::YieldTermStructure>& discountingCurve, bool moving = true,
                    const QuantLib::Date& effectiveDate = QuantLib::Date(), QuoteType quoteType = Premium,
                    QuantLib::VolatilityType quoteVolatilityType = QuantLib::Normal,
@@ -80,7 +80,7 @@ public:
     //! \name Inspectors
     //@{
     //! Return the cap floor instrument underlying the helper
-    boost::shared_ptr<QuantLib::CapFloor> capFloor() const { return capFloor_; }
+    QuantLib::ext::shared_ptr<QuantLib::CapFloor> capFloor() const { return capFloor_; }
     //@}
 
     //! \name BootstrapHelper interface
@@ -105,7 +105,7 @@ private:
     Type type_;
     QuantLib::Period tenor_;
     QuantLib::Rate strike_;
-    boost::shared_ptr<QuantLib::IborIndex> iborIndex_;
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndex_;
     QuantLib::Handle<QuantLib::YieldTermStructure> discountHandle_;
     bool moving_;
     QuantLib::Date effectiveDate_;
@@ -118,13 +118,13 @@ private:
     bool initialised_;
 
     //! The underlying instrument
-    boost::shared_ptr<QuantLib::CapFloor> capFloor_;
+    QuantLib::ext::shared_ptr<QuantLib::CapFloor> capFloor_;
 
     //! The OptionletVolatilityStructure Handle that we link to the \c capFloor_ instrument
     QuantLib::RelinkableHandle<QuantLib::OptionletVolatilityStructure> ovtsHandle_;
 
     //! A copy of the underlying instrument that is used in the npv method
-    boost::shared_ptr<QuantLib::CapFloor> capFloorCopy_;
+    QuantLib::ext::shared_ptr<QuantLib::CapFloor> capFloorCopy_;
 
     //! A method to calculate the cap floor premium from a flat cap floor volatility value
     QuantLib::Real npv(QuantLib::Real quote);

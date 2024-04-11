@@ -45,7 +45,7 @@ void applyFixings(const set<Fixing>& fixings) {
 
     Size count = 0;
     cpu_timer timer;
-    boost::shared_ptr<Index> index;
+    QuantLib::ext::shared_ptr<Index> index;
     std::string lastIndexName;
     for (auto& f : fixings) {
         if(f.name.empty()) {
