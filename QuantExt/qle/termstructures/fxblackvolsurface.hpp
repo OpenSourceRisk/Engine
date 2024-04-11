@@ -49,7 +49,8 @@ public:
                              const DeltaVolQuote::DeltaType deltaType = DeltaVolQuote::DeltaType::Spot,
                              const Real delta = 0.25, const Period& switchTenor = 0 * Days,
                              const DeltaVolQuote::AtmType longTermAtmType = DeltaVolQuote::AtmType::AtmDeltaNeutral,
-                             const DeltaVolQuote::DeltaType longTermDeltaType = DeltaVolQuote::DeltaType::Spot);
+                             const DeltaVolQuote::DeltaType longTermDeltaType = DeltaVolQuote::DeltaType::Spot,
+                             const Period& deltaSwitchTenor = 0 * Days);
 
     //! \name TermStructure interface
     //@{
@@ -95,6 +96,7 @@ protected:
     Interpolation rrCurve_;
     Interpolation bfCurve_;
     Date maxDate_;
+    Period deltaSwitchTenor_;
 };
 
 // inline definitions
@@ -121,9 +123,10 @@ public:
         const DeltaVolQuote::DeltaType deltaType = DeltaVolQuote::DeltaType::Spot, const Real delta = 0.25,
         const Period& switchTenor = 0 * Days,
         const DeltaVolQuote::AtmType longTermAtmType = DeltaVolQuote::AtmType::AtmDeltaNeutral,
-        const DeltaVolQuote::DeltaType longTermDeltaType = DeltaVolQuote::DeltaType::Spot)
+        const DeltaVolQuote::DeltaType longTermDeltaType = DeltaVolQuote::DeltaType::Spot,
+        const Period& deltaSwitchTenor = 0 * Days)
         : FxBlackVolatilitySurface(refDate, dates, atmVols, rr, bf, dc, cal, fx, dom, fore, requireMonotoneVariance,
-                                   atmType, deltaType, delta, switchTenor, longTermAtmType, longTermDeltaType),
+                                   atmType, deltaType, delta, switchTenor, longTermAtmType, longTermDeltaType, deltaSwitchTenor),
           firstApprox_(firstApprox) {}
 
 protected:

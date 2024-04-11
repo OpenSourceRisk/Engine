@@ -31,12 +31,14 @@ FxBlackVolatilitySurface::FxBlackVolatilitySurface(
     const Calendar& cal, const Handle<Quote>& fxSpot, const Handle<YieldTermStructure>& domesticTS,
     const Handle<YieldTermStructure>& foreignTS, bool requireMonotoneVariance, const DeltaVolQuote::AtmType atmType,
     const DeltaVolQuote::DeltaType deltaType, const Real delta, const Period& switchTenor,
-    const DeltaVolQuote::AtmType longTermAtmType, const DeltaVolQuote::DeltaType longTermDeltaType)
+    const DeltaVolQuote::AtmType longTermAtmType, const DeltaVolQuote::DeltaType longTermDeltaType,
+    const Period& deltaSwitchTenor)
     : BlackVolatilityTermStructure(referenceDate, cal), times_(dates.size()), dayCounter_(dayCounter), fxSpot_(fxSpot),
       domesticTS_(domesticTS), foreignTS_(foreignTS),
       atmCurve_(referenceDate, dates, atmVols, dayCounter, requireMonotoneVariance), rr_(rr), bf_(bf),
       atmType_(atmType), deltaType_(deltaType), delta_(delta), switchTenor_(switchTenor),
-      longTermAtmType_(longTermAtmType), longTermDeltaType_(longTermDeltaType) {
+      longTermAtmType_(longTermAtmType), longTermDeltaType_(longTermDeltaType),
+      deltaSwitchTenor_(deltaSwitchTenor) {
 
     QL_REQUIRE(dates.size() >= 1, "at least 1 date required");
     maxDate_ = dates.back();
@@ -112,13 +114,17 @@ boost::shared_ptr<FxSmileSection> FxBlackVannaVolgaVolatilitySurface::blackVolSm
                                                                                         Volatility bf) const {
     QL_REQUIRE(t > 0, "FxBlackVannaVolgaVolatilitySurface::blackVolSmileImpl(): positive expiry time expected");
     Real switchTime = switchTenor_ == 0 * Days ? QL_MAX_REAL : timeFromReference(optionDateFromTenor(switchTenor_));
+    Real deltaSwitchTime = deltaSwitchTenor_ == 0 * Days ? switchTime : timeFromReference(optionDateFromTenor(deltaSwitchTenor_));
     DeltaVolQuote::AtmType at;
     DeltaVolQuote::DeltaType dt;
     if (t < switchTime && !close_enough(t, switchTime)) {
         at = atmType_;
-        dt = deltaType_;
     } else {
         at = longTermAtmType_;
+    }
+    if (t < deltaSwitchTime && !close_enough(t, deltaSwitchTime)) {
+        dt = deltaType_;
+    } else {
         dt = longTermDeltaType_;
     }
     return boost::make_shared<VannaVolgaSmileSection>(spot, rd, rf, t, atm, rr, bf, firstApprox_, at, dt, delta_);
