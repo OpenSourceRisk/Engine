@@ -36,8 +36,8 @@ using namespace QuantLib;
 class FloatingRateFXLinkedNotionalCoupon : public FloatingRateCoupon, public FXLinked {
 public:
     //! FloatingRateFXLinkedNotionalCoupon
-    FloatingRateFXLinkedNotionalCoupon(const Date& fxFixingDate, Real foreignAmount, boost::shared_ptr<FxIndex> fxIndex,
-                                       const boost::shared_ptr<FloatingRateCoupon>& underlying)
+    FloatingRateFXLinkedNotionalCoupon(const Date& fxFixingDate, Real foreignAmount, QuantLib::ext::shared_ptr<FxIndex> fxIndex,
+                                       const QuantLib::ext::shared_ptr<FloatingRateCoupon>& underlying)
         : FloatingRateCoupon(underlying->date(), Null<Real>(), underlying->accrualStartDate(),
                              underlying->accrualEndDate(), underlying->fixingDate(), underlying->index(),
                              underlying->gearing(), underlying->spread(), underlying->referencePeriodStart(),
@@ -52,7 +52,7 @@ public:
 
     //! \name FXLinked interface
     //@{
-    boost::shared_ptr<FXLinked> clone(boost::shared_ptr<FxIndex> fxIndex) override;
+    QuantLib::ext::shared_ptr<FXLinked> clone(QuantLib::ext::shared_ptr<FxIndex> fxIndex) override;
     //@}
 
     //! \name Obverver interface
@@ -88,10 +88,10 @@ public:
     //@}
 
     //! more inspectors
-    boost::shared_ptr<FloatingRateCoupon> underlying() const { return underlying_; }
+    QuantLib::ext::shared_ptr<FloatingRateCoupon> underlying() const { return underlying_; }
 
 private:
-    const boost::shared_ptr<FloatingRateCoupon> underlying_;
+    const QuantLib::ext::shared_ptr<FloatingRateCoupon> underlying_;
 };
 
 // inline definitions
@@ -103,8 +103,8 @@ inline void FloatingRateFXLinkedNotionalCoupon::accept(AcyclicVisitor& v) {
         FloatingRateCoupon::accept(v);
 }
 
-inline boost::shared_ptr<FXLinked> FloatingRateFXLinkedNotionalCoupon::clone(boost::shared_ptr<FxIndex> fxIndex) {
-    return boost::make_shared<FloatingRateFXLinkedNotionalCoupon>(fxFixingDate(), foreignAmount(), fxIndex,
+inline QuantLib::ext::shared_ptr<FXLinked> FloatingRateFXLinkedNotionalCoupon::clone(QuantLib::ext::shared_ptr<FxIndex> fxIndex) {
+    return QuantLib::ext::make_shared<FloatingRateFXLinkedNotionalCoupon>(fxFixingDate(), foreignAmount(), fxIndex,
                                                                   underlying());
 }
 

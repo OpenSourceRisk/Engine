@@ -83,8 +83,8 @@ void EquityCouponPricer::initialize(const EquityCoupon& coupon) {
 
     coupon_ = &coupon;
 
-    equityCurve_ = boost::dynamic_pointer_cast<QuantExt::EquityIndex2>(coupon.equityCurve());
-    fxIndex_ = boost::dynamic_pointer_cast<FxIndex>(coupon.fxIndex());
+    equityCurve_ = QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityIndex2>(coupon.equityCurve());
+    fxIndex_ = QuantLib::ext::dynamic_pointer_cast<FxIndex>(coupon.fxIndex());
     returnType_ = coupon.returnType();
     dividendFactor_ = coupon.dividendFactor();
 }

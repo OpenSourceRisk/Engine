@@ -38,12 +38,12 @@ using namespace QuantLib;
 */
 class YoYInflationOptionletVolStripper {
 public:
-    YoYInflationOptionletVolStripper(const boost::shared_ptr<QuantLib::CapFloorTermVolSurface>& volSurface,
-                                     const boost::shared_ptr<YoYInflationIndex>& index,
+    YoYInflationOptionletVolStripper(const QuantLib::ext::shared_ptr<QuantLib::CapFloorTermVolSurface>& volSurface,
+                                     const QuantLib::ext::shared_ptr<YoYInflationIndex>& index,
                                      const Handle<YieldTermStructure>& nominalTs,
                                      VolatilityType type = ShiftedLognormal, Real displacement = 0.0);
 
-    const boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyInflationCapFloorVolSurface() const {
+    const QuantLib::ext::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyInflationCapFloorVolSurface() const {
         return yoyOptionletVolSurface_;
     }
 
@@ -52,9 +52,9 @@ public:
     void performCalculations();
     //@}
 private:
-    boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyOptionletVolSurface_;
-    boost::shared_ptr<QuantLib::CapFloorTermVolSurface> volSurface_;
-    boost::shared_ptr<YoYInflationIndex> yoyIndex_;
+    QuantLib::ext::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyOptionletVolSurface_;
+    QuantLib::ext::shared_ptr<QuantLib::CapFloorTermVolSurface> volSurface_;
+    QuantLib::ext::shared_ptr<YoYInflationIndex> yoyIndex_;
     Handle<YieldTermStructure> nominalTs_;
     VolatilityType type_;
     Real displacement_;

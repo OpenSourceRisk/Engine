@@ -43,7 +43,7 @@ public:
         We set the trade ID to an empty string if we are going to be netting at portfolio level.
         This is the default. To override this the flag \p keepTradeId may be set to true.
     */
-    CrifLoader(const boost::shared_ptr<SimmConfiguration>& configuration,
+    CrifLoader(const QuantLib::ext::shared_ptr<SimmConfiguration>& configuration,
                const std::vector<std::set<std::string>>& additionalHeaders = {},
                bool updateMapper = false, bool aggregateTrades = true)
         : configuration_(configuration), additionalHeaders_(additionalHeaders), updateMapper_(updateMapper),
@@ -61,7 +61,7 @@ public:
     }
 
     //! SIMM configuration getter
-    const boost::shared_ptr<SimmConfiguration>& simmConfiguration() { return configuration_; }
+    const QuantLib::ext::shared_ptr<SimmConfiguration>& simmConfiguration() { return configuration_; }
 
 protected:
     virtual Crif loadCrifImpl() = 0;
@@ -76,7 +76,7 @@ protected:
     void updateMapping(const CrifRecord& cr) const;
 
     //! Simm configuration that is used during loading of CRIF records
-    boost::shared_ptr<SimmConfiguration> configuration_;
+    QuantLib::ext::shared_ptr<SimmConfiguration> configuration_;
 
     //! Defines accepted column headers, beyond required and optional headers, see crifloader.cpp
     std::vector<std::set<std::string>> additionalHeaders_;
@@ -100,7 +100,7 @@ protected:
 
 class StringStreamCrifLoader : public CrifLoader {
 public:
-    StringStreamCrifLoader(const boost::shared_ptr<SimmConfiguration>& configuration,
+    StringStreamCrifLoader(const QuantLib::ext::shared_ptr<SimmConfiguration>& configuration,
                            const std::vector<std::set<std::string>>& additionalHeaders = {}, bool updateMapper = false,
                            bool aggregateTrades = true, char eol = '\n', char delim = '\t', char quoteChar = '\0',
                            char escapeChar = '\\', const std::string& nullString = "#N/A");
@@ -137,7 +137,7 @@ protected:
 
 class CsvFileCrifLoader : public StringStreamCrifLoader {
 public:
-    CsvFileCrifLoader(const std::string& filename, const boost::shared_ptr<SimmConfiguration>& configuration,
+    CsvFileCrifLoader(const std::string& filename, const QuantLib::ext::shared_ptr<SimmConfiguration>& configuration,
                       const std::vector<std::set<std::string>>& additionalHeaders = {},
                       bool updateMapper = false, bool aggregateTrades = true, char eol = '\n', char delim = '\t',
                       char quoteChar = '\0', char escapeChar = '\\', const std::string& nullString = "#N/A")
@@ -152,7 +152,7 @@ protected:
 
 class CsvBufferCrifLoader : public StringStreamCrifLoader {
 public:
-    CsvBufferCrifLoader(const std::string& buffer, const boost::shared_ptr<SimmConfiguration>& configuration,
+    CsvBufferCrifLoader(const std::string& buffer, const QuantLib::ext::shared_ptr<SimmConfiguration>& configuration,
                         const std::vector<std::set<std::string>>& additionalHeaders = {},
                         bool updateMapper = false, bool aggregateTrades = true, char eol = '\n', char delim = '\t',
                         char quoteChar = '\0', char escapeChar = '\\', const std::string& nullString = "#N/A")

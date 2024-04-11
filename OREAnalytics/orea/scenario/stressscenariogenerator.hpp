@@ -69,35 +69,35 @@ using namespace data;
 class StressScenarioGenerator : public ShiftScenarioGenerator {
 public:
     //! Constructor
-    StressScenarioGenerator(const boost::shared_ptr<StressTestScenarioData>& stressData,
-                            const boost::shared_ptr<Scenario>& baseScenario,
-                            const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-                            const boost::shared_ptr<ScenarioSimMarket>& simMarket,
-                            const boost::shared_ptr<ScenarioFactory>& stressScenarioFactory,
-                            const boost::shared_ptr<Scenario>& baseScenarioAbsolute = nullptr);
+    StressScenarioGenerator(const QuantLib::ext::shared_ptr<StressTestScenarioData>& stressData,
+                            const QuantLib::ext::shared_ptr<Scenario>& baseScenario,
+                            const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+                            const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket,
+                            const QuantLib::ext::shared_ptr<ScenarioFactory>& stressScenarioFactory,
+                            const QuantLib::ext::shared_ptr<Scenario>& baseScenarioAbsolute = nullptr);
     //! Default destructor
     ~StressScenarioGenerator() {}
 
 private:
     void generateScenarios();
-    void addFxShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
-    void addEquityShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
-    void addDiscountCurveShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
-    void addIndexCurveShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
-    void addYieldCurveShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
-    void addFxVolShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
-    void addEquityVolShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
-    void addSwaptionVolShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
-    void addCapFloorVolShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
-    void addSecuritySpreadShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
-    void addDefaultCurveShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
-    void addRecoveryRateShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
+    void addFxShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
+    void addEquityShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
+    void addDiscountCurveShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
+    void addIndexCurveShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
+    void addYieldCurveShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
+    void addFxVolShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
+    void addEquityVolShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
+    void addSwaptionVolShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
+    void addCapFloorVolShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
+    void addSecuritySpreadShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
+    void addDefaultCurveShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
+    void addRecoveryRateShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addSurvivalProbabilityShifts(StressTestScenarioData::StressTestData& data,
-                                      boost::shared_ptr<Scenario>& scenario);
+                                      QuantLib::ext::shared_ptr<Scenario>& scenario);
 
-    boost::shared_ptr<StressTestScenarioData> stressData_;
-    boost::shared_ptr<ScenarioFactory> stressScenarioFactory_;
-    boost::shared_ptr<Scenario> baseScenarioAbsolute_;
+    QuantLib::ext::shared_ptr<StressTestScenarioData> stressData_;
+    QuantLib::ext::shared_ptr<ScenarioFactory> stressScenarioFactory_;
+    QuantLib::ext::shared_ptr<Scenario> baseScenarioAbsolute_;
 };
 } // namespace analytics
 } // namespace ore

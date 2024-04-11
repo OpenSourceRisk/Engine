@@ -29,6 +29,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ql/tuple.hpp>
 
 namespace ore {
 namespace data {
@@ -39,8 +40,8 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
     LOG("Build dependency graph for TodaysMarket configuration " << configuration);
 
     Graph& g = dependencies_[configuration];
-    IndexMap index = boost::get(boost::vertex_index, g);
-    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    IndexMap index = QuantLib::ext::get(boost::vertex_index, g);
+    QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
 
     // add the vertices
     std::set<MarketObject> t = getMarketObjectTypes(); // from todaysmarket parameter
@@ -49,7 +50,7 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
         auto mapping = params_->mapping(o, configuration);
         for (auto const& m : mapping) {
             Vertex v = boost::add_vertex(g);
-            boost::shared_ptr<CurveSpec> spec;
+            QuantLib::ext::shared_ptr<CurveSpec> spec;
             // swap index curves do not have a spec
             if (o != MarketObject::SwapIndexCurve)
                 spec = parseCurveSpec(m.second);
@@ -214,13 +215,13 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
         if (g[*v].obj == MarketObject::SwapIndexCurve) {
             bool foundIbor = false, foundDiscount = false;
             std::string swapIndex = g[*v].name;
-            auto swapCon = boost::dynamic_pointer_cast<data::SwapIndexConvention>(conventions->get(swapIndex));
+            auto swapCon = QuantLib::ext::dynamic_pointer_cast<data::SwapIndexConvention>(conventions->get(swapIndex));
             QL_REQUIRE(swapCon, "Did not find SwapIndexConvention for " << swapIndex);
-            auto con = boost::dynamic_pointer_cast<data::IRSwapConvention>(conventions->get(swapCon->conventions()));
+            auto con = QuantLib::ext::dynamic_pointer_cast<data::IRSwapConvention>(conventions->get(swapCon->conventions()));
             auto conOisComp =
-                boost::dynamic_pointer_cast<data::OisConvention>(conventions->get(swapCon->conventions()));
+                QuantLib::ext::dynamic_pointer_cast<data::OisConvention>(conventions->get(swapCon->conventions()));
             auto conOisAvg =
-                boost::dynamic_pointer_cast<data::AverageOisConvention>(conventions->get(swapCon->conventions()));
+                QuantLib::ext::dynamic_pointer_cast<data::AverageOisConvention>(conventions->get(swapCon->conventions()));
             std::string indexName;
             if(con)
                 indexName = con->indexName();
@@ -269,18 +270,18 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
 
         if (g[*v].obj == MarketObject::YieldCurve || g[*v].obj == MarketObject::DiscountCurve) {
             if (curveConfigs_->hasYieldCurveConfig(g[*v].curveSpec->curveConfigID())) {
-                boost::shared_ptr<YieldCurveConfig> config =
+                QuantLib::ext::shared_ptr<YieldCurveConfig> config =
                     curveConfigs_->yieldCurveConfig(g[*v].curveSpec->curveConfigID());
-                vector<boost::shared_ptr<YieldCurveSegment>> segments = config->curveSegments();
+                vector<QuantLib::ext::shared_ptr<YieldCurveSegment>> segments = config->curveSegments();
                 for (auto s : segments) {
-                    if (auto ccSegment = boost::dynamic_pointer_cast<CrossCcyYieldCurveSegment>(s)) {
+                    if (auto ccSegment = QuantLib::ext::dynamic_pointer_cast<CrossCcyYieldCurveSegment>(s)) {
                         if (ccSegment->foreignDiscountCurveID() == "") {
                             // find the foreign ccy
                             std::string ccy = config->currency();
                             std::string spot = ccSegment->spotRateID();
                             std::string foreignCcy;
                             auto spotDatum = parseMarketDatum(Date(), spot, Real());
-                            if (auto fxq = boost::dynamic_pointer_cast<FXSpotQuote>(spotDatum))
+                            if (auto fxq = QuantLib::ext::dynamic_pointer_cast<FXSpotQuote>(spotDatum))
                                 foreignCcy = ccy == fxq->unitCcy() ? fxq->ccy() : fxq->unitCcy();
 
                             for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
@@ -303,7 +304,7 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
         if (g[*v].obj == MarketObject::EquityVol) {
             bool foundDiscount = false, foundEqCurve = false;
             std::string eqName = g[*v].name;
-            auto eqVolSpec = boost::dynamic_pointer_cast<EquityVolatilityCurveSpec>(g[*v].curveSpec);
+            auto eqVolSpec = QuantLib::ext::dynamic_pointer_cast<EquityVolatilityCurveSpec>(g[*v].curveSpec);
             QL_REQUIRE(eqVolSpec, "could not cast to EquityVolatilityCurveSpec");
             std::string ccy = eqVolSpec->ccy();
             for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
@@ -340,7 +341,7 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
         if (g[*v].obj == MarketObject::CommodityVolatility) {
             bool foundDiscount = false, foundCommCurve = false;
             std::string commName = g[*v].name;
-            auto commVolSpec = boost::dynamic_pointer_cast<CommodityVolatilityCurveSpec>(g[*v].curveSpec);
+            auto commVolSpec = QuantLib::ext::dynamic_pointer_cast<CommodityVolatilityCurveSpec>(g[*v].curveSpec);
             QL_REQUIRE(commVolSpec, "could not cast to CommodityVolatilityCurveSpec");
             std::string ccy = commVolSpec->currency();
             for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
@@ -403,7 +404,7 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
         if (g[*v].obj == MarketObject::FXSpot) {
             bool foundDiscount1 = false, foundDiscount2 = false;
             std::string fxName = g[*v].name;
-            auto fxSpec = boost::dynamic_pointer_cast<FXSpotSpec>(g[*v].curveSpec);
+            auto fxSpec = QuantLib::ext::dynamic_pointer_cast<FXSpotSpec>(g[*v].curveSpec);
             QL_REQUIRE(fxSpec, "could not cast to FXSpotSpec");
             std::string ccy1 = fxSpec->unitCcy();
             std::string ccy2 = fxSpec->ccy();

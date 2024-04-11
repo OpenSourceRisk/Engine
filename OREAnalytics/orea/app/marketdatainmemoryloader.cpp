@@ -25,13 +25,13 @@ using QuantExt::OptionPriceSurface;
 namespace ore {
 namespace analytics {
 
-void MarketDataInMemoryLoaderImpl::loadCorporateActionData(boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+void MarketDataInMemoryLoaderImpl::loadCorporateActionData(QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                                            const map<string, string>& equities) {
     // TODO
 }
 
 void MarketDataInMemoryLoaderImpl::retrieveMarketData(
-    const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+    const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
     const map<Date, set<string>>& quotes,
     const Date& relabelDate) {        
 
@@ -42,7 +42,7 @@ void MarketDataInMemoryLoaderImpl::retrieveMarketData(
     }
 }
 
-void MarketDataInMemoryLoaderImpl::retrieveFixings(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+void MarketDataInMemoryLoaderImpl::retrieveFixings(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
         map<string, RequiredFixings::FixingDates> fixings,
         map<pair<string, Date>, set<Date>> lastAvailableFixingLookupMap) {
     

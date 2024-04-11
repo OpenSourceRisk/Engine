@@ -35,8 +35,8 @@ SpreadedPriceTermStructure::SpreadedPriceTermStructure(
     QL_REQUIRE(times_[0] == 0.0, "SpreadedPriceTermStructure: first time must be 0, got " << times_[0]);
     for (auto const& q : priceSpreads_)
         registerWith(q);
-    interpolation_ = boost::make_shared<FlatExtrapolation>(
-        boost::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin()));
+    interpolation_ = QuantLib::ext::make_shared<FlatExtrapolation>(
+        QuantLib::ext::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin()));
     interpolation_->enableExtrapolation();
     registerWith(referenceCurve_);
 }

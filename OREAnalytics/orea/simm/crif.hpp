@@ -81,7 +81,7 @@ public:
 
     //! For each CRIF record checks if amountCurrency and amount are 
     //! defined and uses these to populate the record's amountUsd
-    void fillAmountUsd(const boost::shared_ptr<ore::data::Market> market);
+    void fillAmountUsd(const QuantLib::ext::shared_ptr<ore::data::Market> market);
     
     //! Check if netting set details are used anywhere, instead of just the netting set ID
     bool hasNettingSetDetails() const;

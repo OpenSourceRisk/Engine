@@ -45,7 +45,7 @@ class InterpolatedCPIVolatilitySurface : public QuantExt::CPIVolatilitySurface, 
 public:
     InterpolatedCPIVolatilitySurface(const std::vector<Period>& optionTenors, const std::vector<Real>& strikes,
                                      const std::vector<std::vector<Handle<Quote>>> quotes,
-                                     const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index,
+                                     const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>& index,
                                      const bool quotedInstrumentsAreInterpolated,
                                      const Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc,
                                      const DayCounter& dc, const Period& observationLag,
@@ -58,7 +58,7 @@ public:
     QL_DEPRECATED
     InterpolatedCPIVolatilitySurface(const std::vector<Period>& optionTenors, const std::vector<Real>& strikes,
                                      const std::vector<std::vector<Handle<Quote>>> quotes,
-                                     const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index,
+                                     const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>& index,
                                      const Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc,
                                      const DayCounter& dc, const Period& observationLag,
                                      const Date& capFloorStartDate = Date(),
@@ -104,7 +104,7 @@ private:
     mutable std::vector<QuantLib::Time> optionTimes_;
     mutable std::vector<QuantLib::Rate> strikes_;
     mutable std::vector<std::vector<Handle<Quote> > > quotes_;
-    boost::shared_ptr<QuantLib::ZeroInflationIndex> index_;
+    QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex> index_;
     mutable Matrix volData_;
     mutable QuantLib::Interpolation2D vols_;
     Interpolator2D interpolator2d_;
@@ -114,7 +114,7 @@ private:
 template <class Interpolator2D>
 InterpolatedCPIVolatilitySurface<Interpolator2D>::InterpolatedCPIVolatilitySurface(
     const std::vector<Period>& optionTenors, const std::vector<Real>& strikes,
-    const std::vector<std::vector<Handle<Quote>>> quotes, const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index,
+    const std::vector<std::vector<Handle<Quote>>> quotes, const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>& index,
     const bool quotedInstrumentsOberserveInterpolated, const Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc, const DayCounter& dc,
     const Period& observationLag, const Date& capFloorStartDate, const Interpolator2D& interpolator2d,
     const QuantLib::VolatilityType volType, const double displacement)
@@ -134,7 +134,7 @@ QL_DEPRECATED_DISABLE_WARNING
 template <class Interpolator2D>
 InterpolatedCPIVolatilitySurface<Interpolator2D>::InterpolatedCPIVolatilitySurface(
     const std::vector<Period>& optionTenors, const std::vector<Real>& strikes,
-    const std::vector<std::vector<Handle<Quote>>> quotes, const boost::shared_ptr<QuantLib::ZeroInflationIndex>& index,
+    const std::vector<std::vector<Handle<Quote>>> quotes, const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>& index,
     const Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc, const DayCounter& dc,
     const Period& observationLag, const Date& capFloorStartDate, const Interpolator2D& interpolator2d,
     const QuantLib::VolatilityType volType, const double displacement)

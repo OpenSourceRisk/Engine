@@ -33,7 +33,7 @@ namespace QuantExt {
 class BRLCdiSwap : public QuantLib::OvernightIndexedSwap {
 public:
     BRLCdiSwap(Type type, QuantLib::Real nominal, const QuantLib::Date& startDate, const QuantLib::Date& endDate,
-               QuantLib::Rate fixedRate, const boost::shared_ptr<BRLCdi>& overnightIndex, QuantLib::Spread spread = 0.0,
+               QuantLib::Rate fixedRate, const QuantLib::ext::shared_ptr<BRLCdi>& overnightIndex, QuantLib::Spread spread = 0.0,
                bool telescopicValueDates = false);
 
     //! \name Results
@@ -46,7 +46,7 @@ private:
     QuantLib::Date startDate_;
     QuantLib::Date endDate_;
     //! QuantLib does not implement the method OvernightIndexedSwap::overnightIndex() so I need this.
-    boost::shared_ptr<QuantLib::OvernightIndex> index_;
+    QuantLib::ext::shared_ptr<QuantLib::OvernightIndex> index_;
 };
 
 } // namespace QuantExt

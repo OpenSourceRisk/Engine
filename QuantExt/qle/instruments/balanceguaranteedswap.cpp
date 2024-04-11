@@ -32,7 +32,7 @@ BalanceGuaranteedSwap::BalanceGuaranteedSwap(
     const VanillaSwap::Type type, const std::vector<std::vector<Real>>& trancheNominals,
     const Schedule& nominalSchedule, const Size referencedTranche, const Schedule& fixedSchedule,
     const std::vector<Real>& fixedRate, const DayCounter& fixedDayCount, const Schedule& floatingSchedule,
-    const boost::shared_ptr<IborIndex>& iborIndex, const std::vector<Real>& gearing, const std::vector<Real>& spread,
+    const QuantLib::ext::shared_ptr<IborIndex>& iborIndex, const std::vector<Real>& gearing, const std::vector<Real>& spread,
     const std::vector<Real>& cappedRate, const std::vector<Real>& flooredRate, const DayCounter& floatingDayCount,
     boost::optional<BusinessDayConvention> paymentConvention)
     : Swap(2), type_(type), trancheNominals_(trancheNominals), nominalSchedule_(nominalSchedule),
@@ -123,7 +123,7 @@ BalanceGuaranteedSwap::BalanceGuaranteedSwap(
     for (Leg::const_iterator i = legs_[1].begin(); i < legs_[1].end(); ++i)
         registerWith(*i);
 
-    auto cpnPricer = boost::make_shared<BlackIborCouponPricer>();
+    auto cpnPricer = QuantLib::ext::make_shared<BlackIborCouponPricer>();
     setCouponPricer(legs_[1], cpnPricer);
 
     switch (type_) {
@@ -166,7 +166,7 @@ void BalanceGuaranteedSwap::setupArguments(PricingEngine::arguments* args) const
     arguments->fixedCoupons = std::vector<Real>(fixedCoupons.size());
 
     for (Size i = 0; i < fixedCoupons.size(); ++i) {
-        auto coupon = boost::dynamic_pointer_cast<FixedRateCoupon>(fixedCoupons[i]);
+        auto coupon = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(fixedCoupons[i]);
         QL_REQUIRE(coupon != nullptr, "BalanceGuaranteedSwap::setupArguments(): expected fixed rate coupon");
         arguments->fixedPayDates[i] = coupon->date();
         arguments->fixedResetDates[i] = coupon->accrualStartDate();
@@ -183,7 +183,7 @@ void BalanceGuaranteedSwap::setupArguments(PricingEngine::arguments* args) const
     arguments->floatingCoupons = std::vector<Real>(floatingCoupons.size());
 
     for (Size i = 0; i < floatingCoupons.size(); ++i) {
-        auto coupon = boost::dynamic_pointer_cast<FloatingRateCoupon>(floatingCoupons[i]);
+        auto coupon = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(floatingCoupons[i]);
         QL_REQUIRE(coupon != nullptr, "BalanceGuaranteedSwap::setupArguments(): expected fixed rate coupon");
         arguments->floatingResetDates[i] = coupon->accrualStartDate();
         arguments->floatingPayDates[i] = coupon->date();

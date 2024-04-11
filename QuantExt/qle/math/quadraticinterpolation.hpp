@@ -81,10 +81,10 @@
                  x_mul_, x_offset_, y_mul_, y_offset_, skip_);
          }
          template <class I1, class I2>
-         boost::shared_ptr<QuadraticInterpolation> interpolatePtr(
+         QuantLib::ext::shared_ptr<QuadraticInterpolation> interpolatePtr(
              const I1& xBegin, const I1& xEnd,
              const I2& yBegin) const {
-             return boost::make_shared<QuadraticInterpolation>(
+             return QuantLib::ext::make_shared<QuadraticInterpolation>(
                  xBegin, xEnd, yBegin,
                  x_mul_, x_offset_, y_mul_, y_offset_, skip_);
          }

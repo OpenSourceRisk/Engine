@@ -77,7 +77,7 @@ public:
         : Trade("BalanceGuaranteedSwap", env), referenceSecurity_(referenceSecurity), tranches_(tranches), swap_(swap) {
     }
 
-    void build(const boost::shared_ptr<ore::data::EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
 
     //! \name Inspectors
     //@{
@@ -94,7 +94,7 @@ public:
     //@}
 
     std::map<ore::data::AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ore::data::ReferenceDataManager>&) const override {
+    underlyingIndices(const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>&) const override {
         return {{ore::data::AssetClass::BOND, {referenceSecurity_}}};
     }
 

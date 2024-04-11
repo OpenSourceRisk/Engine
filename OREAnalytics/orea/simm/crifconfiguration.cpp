@@ -56,7 +56,7 @@ std::string CrifConfiguration::label2(const QuantLib::Period& p) const {
     return label2;
 }
 
-std::string CrifConfiguration::label2(const boost::shared_ptr<QuantLib::InterestRateIndex>& irIndex) const {
+std::string CrifConfiguration::label2(const QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>& irIndex) const {
     std::string label2;
     if (boost::algorithm::starts_with(irIndex->name(), "BMA")) {
         // There was no municipal until later so override this in
@@ -64,7 +64,7 @@ std::string CrifConfiguration::label2(const boost::shared_ptr<QuantLib::Interest
         label2 = "Prime";
     } else if (irIndex->familyName() == "Prime") {
         label2 = "Prime";
-    } else if(boost::dynamic_pointer_cast<QuantExt::TermRateIndex>(irIndex) != nullptr) {
+    } else if(QuantLib::ext::dynamic_pointer_cast<QuantExt::TermRateIndex>(irIndex) != nullptr) {
 	// see ISDA-SIMM-FAQ_Methodology-and-Implementation_20220323_clean.pdf: E.8 Term RFR rate risk should be treated as RFR rate risk
         label2 = "OIS";
     } else {

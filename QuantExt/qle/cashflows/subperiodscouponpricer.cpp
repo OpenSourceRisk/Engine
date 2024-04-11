@@ -25,7 +25,7 @@ void SubPeriodsCouponPricer1::initialize(const FloatingRateCoupon& coupon) {
     coupon_ = dynamic_cast<const SubPeriodsCoupon1*>(&coupon);
     QL_REQUIRE(coupon_, "SubPeriodsCoupon required");
 
-    index_ = boost::dynamic_pointer_cast<InterestRateIndex>(coupon_->index());
+    index_ = QuantLib::ext::dynamic_pointer_cast<InterestRateIndex>(coupon_->index());
     QL_REQUIRE(index_, "InterestRateIndex required");
 
     gearing_ = coupon_->gearing();

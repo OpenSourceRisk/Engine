@@ -32,7 +32,7 @@
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/version.hpp>
 #include <boost/serialization/optional.hpp>
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 namespace ore {
 namespace data {
@@ -268,7 +268,7 @@ std::ostream& operator<<(std::ostream& os, MoneynessStrike::Type type);
 MoneynessStrike::Type parseMoneynessType(const std::string& type);
 
 //! Parse a Strike from its string representation, \p strStrike.
-boost::shared_ptr<BaseStrike> parseBaseStrike(const std::string& strStrike);
+QuantLib::ext::shared_ptr<BaseStrike> parseBaseStrike(const std::string& strStrike);
 
 template <class Archive> void registerBaseStrike(Archive& ar) {
     ar.template register_type<AbsoluteStrike>();

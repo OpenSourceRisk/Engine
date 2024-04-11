@@ -446,10 +446,10 @@ public:
 
     void loadVolatiltyConfigs(XMLNode* node);
 
-    const std::vector<boost::shared_ptr<VolatilityConfig>>& volatilityConfig() { return volatilityConfig_; };
+    const std::vector<QuantLib::ext::shared_ptr<VolatilityConfig>>& volatilityConfig() { return volatilityConfig_; };
 
 private:
-    std::vector<boost::shared_ptr<VolatilityConfig>> volatilityConfig_;
+    std::vector<QuantLib::ext::shared_ptr<VolatilityConfig>> volatilityConfig_;
 };
 
 

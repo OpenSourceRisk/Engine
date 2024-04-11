@@ -58,7 +58,7 @@ EquityDoubleTouchOption::EquityDoubleTouchOption(Envelope& env, OptionData optio
     }
 }
 
-void EquityDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void EquityDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Equity");
@@ -67,7 +67,7 @@ void EquityDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engi
     // skip the transaction level mapping for now
     additionalData_["isdaTransaction"] = string("");
 
-    const boost::shared_ptr<Market> market = engineFactory->market();
+    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
     Date start = ore::data::parseDate(startDate_);
     Calendar cal = ore::data::parseCalendar(calendar_);
 
@@ -97,26 +97,26 @@ void EquityDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engi
 
 
     // create payoff and exercise, as well as leg of underlying instrument
-    boost::shared_ptr<StrikedTypePayoff> payoff(new CashOrNothingPayoff(Option::Call, (levelLow + levelHigh) / 2, 1.0));
+    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff(new CashOrNothingPayoff(Option::Call, (levelLow + levelHigh) / 2, 1.0));
     Leg leg;
 
-    leg.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(1.0, expiryDate)));
+    leg.push_back(QuantLib::ext::shared_ptr<CashFlow>(new SimpleCashFlow(1.0, expiryDate)));
 
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(expiryDate);
+    QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(expiryDate);
 
-    boost::shared_ptr<Instrument> doubleTouch =
-        boost::make_shared<DoubleBarrierOption>(barrierType, levelLow, levelHigh, 0.0, payoff, exercise);
-    boost::shared_ptr<Instrument> underlying = boost::make_shared<Swap>(Leg(), leg);
+    QuantLib::ext::shared_ptr<Instrument> doubleTouch =
+        QuantLib::ext::make_shared<DoubleBarrierOption>(barrierType, levelLow, levelHigh, 0.0, payoff, exercise);
+    QuantLib::ext::shared_ptr<Instrument> underlying = QuantLib::ext::make_shared<Swap>(Leg(), leg);
 
     
 
-    boost::shared_ptr<QuantExt::EquityIndex2> eqIndex = engineFactory->market()->equityCurve(assetName).currentLink();
+    QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> eqIndex = engineFactory->market()->equityCurve(assetName).currentLink();
 
     // set pricing engines
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    boost::shared_ptr<EquityDoubleTouchOptionEngineBuilder> eqDoubleTouchOptBuilder =
-        boost::dynamic_pointer_cast<EquityDoubleTouchOptionEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<EquityDoubleTouchOptionEngineBuilder> eqDoubleTouchOptBuilder =
+        QuantLib::ext::dynamic_pointer_cast<EquityDoubleTouchOptionEngineBuilder>(builder);
     doubleTouch->setPricingEngine(eqDoubleTouchOptBuilder->engine(assetName, ccy));
     setSensitivityTemplate(*eqDoubleTouchOptBuilder);
     if (type_ == "KnockIn") {
@@ -124,21 +124,21 @@ void EquityDoubleTouchOption::build(const boost::shared_ptr<EngineFactory>& engi
         // which we price as a swap
         builder = engineFactory->builder("Swap");
         QL_REQUIRE(builder, "No builder found for Swap");
-        boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
-            boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
+        QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
+            QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
         underlying->setPricingEngine(swapBuilder->engine(parseCurrency(payoffCurrency_), std::string(), std::string()));
     }
 
     bool isLong = (positionType == Position::Long) ? true : false;
 
-    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
     Date lastPremiumDate = addPremiums(
         additionalInstruments, additionalMultipliers, (isLong ? 1.0 : -1.0) * payoffAmount_, option_.premiumData(),
         isLong ? -1.0 : 1.0, ccy, engineFactory, builder->configuration(MarketContext::pricing));
 
     Handle<Quote> spot = market->equitySpot(assetName);
-    instrument_ = boost::make_shared<DoubleBarrierOptionWrapper>(
+    instrument_ = QuantLib::ext::make_shared<DoubleBarrierOptionWrapper>(
         doubleTouch, isLong, expiryDate, false, underlying, barrierType, spot, levelLow, levelHigh, 0, ccy, start, eqIndex, cal,
         payoffAmount_, payoffAmount_, additionalInstruments, additionalMultipliers);
     npvCurrency_ = payoffCurrency_;

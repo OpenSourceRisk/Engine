@@ -214,7 +214,7 @@ void SegmentIDGetter::visit(IborFallbackCurveSegment& s) {
 // YieldCurveConfig
 YieldCurveConfig::YieldCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
                                    const string& discountCurveID,
-                                   const vector<boost::shared_ptr<YieldCurveSegment>>& curveSegments,
+                                   const vector<QuantLib::ext::shared_ptr<YieldCurveSegment>>& curveSegments,
                                    const string& interpolationVariable, const string& interpolationMethod,
                                    const string& zeroDayCounter, bool extrapolation,
                                    const BootstrapConfig& bootstrapConfig, const Size mixedInterpolationCutoff)
@@ -234,7 +234,7 @@ const vector<string>& YieldCurveConfig::quotes() {
 
             // Check if the segment is a CrossCcyYieldCurveSegment and add the FX spot rate to the
             // set of quotes needed for the YieldCurveConfig if it has not already been added.
-            if (auto xccySegment = boost::dynamic_pointer_cast<CrossCcyYieldCurveSegment>(c)) {
+            if (auto xccySegment = QuantLib::ext::dynamic_pointer_cast<CrossCcyYieldCurveSegment>(c)) {
                 if (!addedFxSpot)
                     quotes_.push_back(xccySegment->spotRateID());
             }
@@ -258,7 +258,7 @@ void YieldCurveConfig::fromXML(XMLNode* node) {
     if (segmentsNode) {
         for (XMLNode* child = XMLUtils::getChildNode(segmentsNode); child; child = XMLUtils::getNextSibling(child)) {
 
-            boost::shared_ptr<YieldCurveSegment> segment;
+            QuantLib::ext::shared_ptr<YieldCurveSegment> segment;
             string childName = XMLUtils::getNodeName(child);
 
             if (childName == "Direct") {

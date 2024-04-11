@@ -37,13 +37,13 @@ public:
     public:
         Leg cashLeg;
         bool cashLegPays;
-        boost::shared_ptr<Bond> security;
+        QuantLib::ext::shared_ptr<Bond> security;
         Real securityMultiplier;
         void validate() const override;
     };
     using results = QuantLib::Instrument::results;
     using engine = QuantLib::GenericEngine<arguments, results>;
-    BondRepo(const Leg& cashLeg, const bool cashLegPays, const boost::shared_ptr<Bond>& security,
+    BondRepo(const Leg& cashLeg, const bool cashLegPays, const QuantLib::ext::shared_ptr<Bond>& security,
              const Real securityMultiplier);
 
     // Observable interface
@@ -57,13 +57,13 @@ public:
     //! Inspectors
     const Leg& cashLeg() const { return cashLeg_; }
     bool cashLegPays() const { return cashLegPays_; }
-    boost::shared_ptr<Bond> security() const { return security_; }
+    QuantLib::ext::shared_ptr<Bond> security() const { return security_; }
     Real securityMultiplier() const { return securityMultiplier_; }
 
 private:
     const Leg cashLeg_;
     const bool cashLegPays_;
-    const boost::shared_ptr<Bond> security_;
+    const QuantLib::ext::shared_ptr<Bond> security_;
     const Real securityMultiplier_;
 
     // Instrument interface

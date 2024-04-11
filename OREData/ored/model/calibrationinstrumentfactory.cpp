@@ -24,7 +24,7 @@ using std::string;
 namespace ore {
 namespace data {
 
-boost::shared_ptr<CalibrationInstrument> CalibrationInstrumentFactory::build(const string& instrumentType) {
+QuantLib::ext::shared_ptr<CalibrationInstrument> CalibrationInstrumentFactory::build(const string& instrumentType) {
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     auto it = map_.find(instrumentType);
     if (it == map_.end())
@@ -33,7 +33,7 @@ boost::shared_ptr<CalibrationInstrument> CalibrationInstrumentFactory::build(con
 }
 
 void CalibrationInstrumentFactory::addBuilder(const string& instrumentType,
-                                              function<boost::shared_ptr<CalibrationInstrument>()> builder,
+                                              function<QuantLib::ext::shared_ptr<CalibrationInstrument>()> builder,
                                               const bool allowOverwrite) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
     QL_REQUIRE(map_.insert(std::make_pair(instrumentType, builder)).second,
