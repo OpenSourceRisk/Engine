@@ -146,7 +146,7 @@ public:
     // @}
     
     //! clone the index, the clone will be linked to the provided handles
-    boost::shared_ptr<FxIndex> clone(const Handle<Quote> fxQuote = Handle<Quote>(),
+    QuantLib::ext::shared_ptr<FxIndex> clone(const Handle<Quote> fxQuote = Handle<Quote>(),
                                      const Handle<YieldTermStructure>& sourceYts = Handle<YieldTermStructure>(),
                                      const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>(),
                                      const std::string& familyName = std::string());

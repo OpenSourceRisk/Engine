@@ -173,7 +173,7 @@ namespace data {
 
 // clang-format on
 
-void BasketOption::build(const boost::shared_ptr<EngineFactory>& factory) {
+void BasketOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
     // set script parameters
 

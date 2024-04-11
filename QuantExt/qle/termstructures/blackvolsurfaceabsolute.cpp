@@ -82,11 +82,11 @@ BlackVolatilitySurfaceAbsolute::BlackVolatilitySurfaceAbsolute(
     for (Size i = 0; i < strikeQuotes_.size(); ++i) {
         if (strikes_[i].size() > 1) {
             if (smileInterpolation_ == BlackVolatilitySurfaceAbsolute::SmileInterpolation::Linear) {
-                interpolation_[i] = boost::make_shared<LinearInterpolation>(strikes_[i].begin(), strikes_[i].end(),
+                interpolation_[i] = QuantLib::ext::make_shared<LinearInterpolation>(strikes_[i].begin(), strikes_[i].end(),
                                                                             strikeQuotes_[i].begin());
                 interpolation_[i]->enableExtrapolation();
             } else if (smileInterpolation_ == BlackVolatilitySurfaceAbsolute::SmileInterpolation::Cubic) {
-                interpolation_[i] = boost::make_shared<CubicInterpolation>(strikes_[i].begin(), strikes_[i].end(), strikeQuotes_[i].begin(), CubicInterpolation::Spline, false,
+                interpolation_[i] = QuantLib::ext::make_shared<CubicInterpolation>(strikes_[i].begin(), strikes_[i].end(), strikeQuotes_[i].begin(), CubicInterpolation::Spline, false,
                     CubicInterpolation::SecondDerivative, 0.0, CubicInterpolation::SecondDerivative, 0.0);
                 interpolation_[i]->enableExtrapolation();
             } else {
@@ -94,7 +94,7 @@ BlackVolatilitySurfaceAbsolute::BlackVolatilitySurfaceAbsolute(
             }
         }
         if (flatExtrapolation_) {
-            interpolation_[i] = boost::make_shared<FlatExtrapolation>(interpolation_[i]);
+            interpolation_[i] = QuantLib::ext::make_shared<FlatExtrapolation>(interpolation_[i]);
             interpolation_[i]->enableExtrapolation();
         }
     }

@@ -54,14 +54,14 @@ public:
     /*! Constructor that does not take a reference date. The settlement days is derived from \p sob and the term
         structure will be a \e moving term structure.
     */
-    StrippedOptionletAdapter(const boost::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
+    StrippedOptionletAdapter(const QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
                              const TimeInterpolator& ti = TimeInterpolator(),
                              const SmileInterpolator& si = SmileInterpolator());
 
     /*! Constructor taking an explicit \p referenceDate and the term structure will therefore be not \e moving.
      */
     StrippedOptionletAdapter(const QuantLib::Date& referenceDate,
-                             const boost::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
+                             const QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
                              const TimeInterpolator& ti = TimeInterpolator(),
                              const SmileInterpolator& si = SmileInterpolator());
 
@@ -95,19 +95,19 @@ public:
 
     //! \name Inspectors
     //@{
-    boost::shared_ptr<QuantLib::StrippedOptionletBase> optionletBase() const;
+    QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase> optionletBase() const;
     //@}
 
 protected:
     //! \name OptionletVolatilityStructure interface
     //@{
-    boost::shared_ptr<QuantLib::SmileSection> smileSectionImpl(QuantLib::Time optionTime) const override;
+    QuantLib::ext::shared_ptr<QuantLib::SmileSection> smileSectionImpl(QuantLib::Time optionTime) const override;
     QuantLib::Volatility volatilityImpl(QuantLib::Time length, QuantLib::Rate strike) const override;
     //@}
 
 private:
     //! Base optionlet object that provides the stripped optionlet volatilities
-    boost::shared_ptr<QuantLib::StrippedOptionletBase> optionletBase_;
+    QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase> optionletBase_;
 
     //! The interpolation object in the time direction
     TimeInterpolator ti_;
@@ -129,7 +129,7 @@ private:
 
 template <class TimeInterpolator, class SmileInterpolator>
 StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::StrippedOptionletAdapter(
-    const boost::shared_ptr<QuantLib::StrippedOptionletBase>& sob, const TimeInterpolator& ti,
+    const QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase>& sob, const TimeInterpolator& ti,
     const SmileInterpolator& si)
     : OptionletVolatilityStructure(sob->settlementDays(), sob->calendar(), sob->businessDayConvention(),
                                    sob->dayCounter()),
@@ -140,7 +140,7 @@ StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::StrippedOptionlet
 
 template <class TimeInterpolator, class SmileInterpolator>
 StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::StrippedOptionletAdapter(
-    const QuantLib::Date& referenceDate, const boost::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
+    const QuantLib::Date& referenceDate, const QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
     const TimeInterpolator& ti, const SmileInterpolator& si)
     : OptionletVolatilityStructure(referenceDate, sob->calendar(), sob->businessDayConvention(), sob->dayCounter()),
       optionletBase_(sob), ti_(ti), si_(si), strikeSections_(optionletBase_->optionletMaturities()) {
@@ -240,13 +240,13 @@ inline void StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::deepU
 }
 
 template <class TimeInterpolator, class SmileInterpolator>
-inline boost::shared_ptr<QuantLib::StrippedOptionletBase>
+inline QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase>
 StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::optionletBase() const {
     return optionletBase_;
 }
 
 template <class TimeInterpolator, class SmileInterpolator>
-inline boost::shared_ptr<QuantLib::SmileSection>
+inline QuantLib::ext::shared_ptr<QuantLib::SmileSection>
 StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::smileSectionImpl(QuantLib::Time optionTime) const {
 
     // Some localised typedefs and using declarations to make the code more readable
@@ -266,7 +266,7 @@ StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::smileSectionImpl(
     // If one strike, return a flat smile section
     if (oneStrike_) {
         Volatility vol = volatility(optionTime, optionletBase_->optionletStrikes(0)[0], true);
-        return boost::make_shared<QuantLib::FlatSmileSection>(optionTime, vol, optionletBase_->dayCounter(), atmRate,
+        return QuantLib::ext::make_shared<QuantLib::FlatSmileSection>(optionTime, vol, optionletBase_->dayCounter(), atmRate,
                                                               volatilityType(), displacement());
     }
 
@@ -282,7 +282,7 @@ StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::smileSectionImpl(
     }
 
     // Return the smile section.
-    return boost::make_shared<QuantLib::InterpolatedSmileSection<SmileInterpolator> >(
+    return QuantLib::ext::make_shared<QuantLib::InterpolatedSmileSection<SmileInterpolator> >(
         optionTime, strikes, stdDevs, atmRate, si_, optionletBase_->dayCounter(), volatilityType(), displacement());
 }
 

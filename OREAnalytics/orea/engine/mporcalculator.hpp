@@ -37,23 +37,23 @@ namespace analytics {
 class MPORCalculator : public ValuationCalculator {
 public:
     //! base ccy and index to write to
-    MPORCalculator(const boost::shared_ptr<NPVCalculator>& npvCalc, Size defaultIndex = 0, Size closeOutIndex = 1)
+    MPORCalculator(const QuantLib::ext::shared_ptr<NPVCalculator>& npvCalc, Size defaultIndex = 0, Size closeOutIndex = 1)
         : npvCalc_(npvCalc), defaultIndex_(defaultIndex), closeOutIndex_(closeOutIndex) {}
 
-    void calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
-                   const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
-                   boost::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex, Size sample,
+    void calculate(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
+                   const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
+                   QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex, Size sample,
                    bool isCloseOut = false) override;
 
-    void calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
-                     const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
-                     boost::shared_ptr<NPVCube>& outputCubeNettingSet) override;
+    void calculateT0(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
+                     const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
+                     QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet) override;
 
-    void init(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<SimMarket>& simMarket) override;
+    void init(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<SimMarket>& simMarket) override;
     void initScenario() override;
 
 private:
-    boost::shared_ptr<NPVCalculator> npvCalc_;
+    QuantLib::ext::shared_ptr<NPVCalculator> npvCalc_;
     Size defaultIndex_, closeOutIndex_;
 };
 

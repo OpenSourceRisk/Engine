@@ -52,11 +52,11 @@ public:
     AverageOIS(Type type, Real nominal, const Schedule& fixedSchedule, Rate fixedRate,
                const DayCounter& fixedDayCounter, BusinessDayConvention fixedPaymentAdjustment,
                const Calendar& fixedPaymentCalendar, const Schedule& onSchedule,
-               const boost::shared_ptr<OvernightIndex>& overnightIndex, BusinessDayConvention onPaymentAdjustment,
+               const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex, BusinessDayConvention onPaymentAdjustment,
                const Calendar& onPaymentCalendar, Natural rateCutoff = 0, Spread onSpread = 0.0, Real onGearing = 1.0,
                const DayCounter& onDayCounter = DayCounter(),
-               const boost::shared_ptr<AverageONIndexedCouponPricer>& onCouponPricer =
-                   boost::shared_ptr<AverageONIndexedCouponPricer>(),
+               const QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer>& onCouponPricer =
+                   QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer>(),
                const bool telescopicValueDates = false);
 
     /*! Arithmetic average ON leg vs. fixed leg constructor, allowing for
@@ -65,12 +65,12 @@ public:
     AverageOIS(Type type, std::vector<Real> nominals, const Schedule& fixedSchedule, std::vector<Rate> fixedRates,
                const DayCounter& fixedDayCounter, BusinessDayConvention fixedPaymentAdjustment,
                const Calendar& fixedPaymentCalendar, const Schedule& onSchedule,
-               const boost::shared_ptr<OvernightIndex>& overnightIndex, BusinessDayConvention onPaymentAdjustment,
+               const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex, BusinessDayConvention onPaymentAdjustment,
                const Calendar& onPaymentCalendar, Natural rateCutoff = 0,
                std::vector<Spread> onSpreads = std::vector<Spread>(1, 0.0),
                std::vector<Real> onGearings = std::vector<Real>(1, 1.0), const DayCounter& onDayCounter = DayCounter(),
-               const boost::shared_ptr<AverageONIndexedCouponPricer>& onCouponPricer =
-                   boost::shared_ptr<AverageONIndexedCouponPricer>(),
+               const QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer>& onCouponPricer =
+                   QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer>(),
                const bool telescopicValueDates = false);
 
     //! \name Inspectors
@@ -84,7 +84,7 @@ public:
     const std::vector<Rate>& fixedRates() const { return fixedRates_; }
     const DayCounter& fixedDayCounter() { return fixedDayCounter_; }
 
-    const boost::shared_ptr<OvernightIndex>& overnightIndex() { return overnightIndex_; }
+    const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex() { return overnightIndex_; }
     Natural rateCutoff() { return rateCutoff_; }
     Spread onSpread() const;
     const std::vector<Spread>& onSpreads() const { return onSpreads_; }
@@ -107,7 +107,7 @@ public:
     Spread fairSpread() const;
     //@}
 
-    void setONIndexedCouponPricer(const boost::shared_ptr<AverageONIndexedCouponPricer>& onCouponPricer);
+    void setONIndexedCouponPricer(const QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer>& onCouponPricer);
 
 private:
     void initialize(const Schedule& fixedLegSchedule, const Schedule& onLegSchedule);
@@ -120,14 +120,14 @@ private:
     BusinessDayConvention fixedPaymentAdjustment_;
     Calendar fixedPaymentCalendar_;
 
-    boost::shared_ptr<OvernightIndex> overnightIndex_;
+    QuantLib::ext::shared_ptr<OvernightIndex> overnightIndex_;
     BusinessDayConvention onPaymentAdjustment_;
     Calendar onPaymentCalendar_;
     Natural rateCutoff_;
     std::vector<Spread> onSpreads_;
     std::vector<Real> onGearings_;
     DayCounter onDayCounter_;
-    boost::shared_ptr<AverageONIndexedCouponPricer> onCouponPricer_;
+    QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer> onCouponPricer_;
     bool telescopicValueDates_;
 };
 } // namespace QuantExt

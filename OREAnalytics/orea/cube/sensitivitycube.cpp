@@ -56,7 +56,7 @@ std::ostream& operator<<(std::ostream& out, const SensitivityCube::crossPair& cp
     return out << cp.first << "-" << cp.second;
 }
 
-SensitivityCube::SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube,
+SensitivityCube::SensitivityCube(const QuantLib::ext::shared_ptr<NPVSensiCube>& cube,
                                  const vector<ShiftScenarioDescription>& scenarioDescriptions,
                                  const map<RiskFactorKey, QuantLib::Real>& targetShiftSizes,
                                  const map<RiskFactorKey, QuantLib::Real>& actualShiftSizes,
@@ -66,7 +66,7 @@ SensitivityCube::SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube,
     initialise();
 }
 
-SensitivityCube::SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube,
+SensitivityCube::SensitivityCube(const QuantLib::ext::shared_ptr<NPVSensiCube>& cube,
                                  const vector<string>& scenarioDescriptions,
                                  const map<RiskFactorKey, QuantLib::Real>& targetShiftSizes,
                                  const map<RiskFactorKey, QuantLib::Real>& actualShiftSizes,

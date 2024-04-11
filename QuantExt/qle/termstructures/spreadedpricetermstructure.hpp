@@ -56,7 +56,7 @@ private:
     std::vector<QuantLib::Handle<QuantLib::Quote>> priceSpreads_;
 
     mutable std::vector<QuantLib::Real> data_;
-    boost::shared_ptr<QuantLib::Interpolation> interpolation_;
+    QuantLib::ext::shared_ptr<QuantLib::Interpolation> interpolation_;
 };
 
 } // namespace QuantExt

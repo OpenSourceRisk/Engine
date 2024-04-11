@@ -39,7 +39,7 @@
 
 #include <ql/time/date.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 namespace ore {
 namespace analytics {
@@ -94,19 +94,19 @@ class PostProcess {
 public:
     //! Constructor
     PostProcess( //! Trade portfolio to identify e.g. netting set, maturity, break dates for each trade
-        const boost::shared_ptr<Portfolio>& portfolio,
+        const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
         //! Netting set manager to access CSA details for each netting set
-        const boost::shared_ptr<NettingSetManager>& nettingSetManager,
+        const QuantLib::ext::shared_ptr<NettingSetManager>& nettingSetManager,
         //! Collateral balances (VM, IM, IA)
-        const boost::shared_ptr<CollateralBalances>& collateralBalances,
+        const QuantLib::ext::shared_ptr<CollateralBalances>& collateralBalances,
         //! Market data object to access e.g. discounting and funding curves
-        const boost::shared_ptr<Market>& market,
+        const QuantLib::ext::shared_ptr<Market>& market,
         //! Market configuration to use
         const std::string& configuration,
         //! Input NPV Cube
-        const boost::shared_ptr<NPVCube>& cube,
+        const QuantLib::ext::shared_ptr<NPVCube>& cube,
         //! Subset of simulated market data, index fixings and FX spot rates, associated with the NPV cube
-        const boost::shared_ptr<AggregationScenarioData>& scenarioData,
+        const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData,
         //! Selection of analytics to be produced
         const map<string, bool>& analytics,
         //! Expression currency for all results
@@ -126,10 +126,10 @@ public:
         //! Lending curve name to be used in FVA calculations
         const string& fvaLendingCurve = "",
         //! Dynamic Initial Margin Calculator
-        const boost::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator =
-            boost::shared_ptr<DynamicInitialMarginCalculator>(),
+        const QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator =
+            QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator>(),
         //! Interpreter for cube storage (where to find which data items)
-        const boost::shared_ptr<CubeInterpretation>& cubeInterpretation = boost::shared_ptr<CubeInterpretation>(),
+        const QuantLib::ext::shared_ptr<CubeInterpretation>& cubeInterpretation = QuantLib::ext::shared_ptr<CubeInterpretation>(),
         //! Assume t=0 collateral balance equals NPV (set to 0 if false)
         bool fullInitialCollateralisation = false,
         //! CVA spread sensitivity grid
@@ -153,13 +153,13 @@ public:
         //! Their KVA CVA Risk Weight,
         Real kvaTheirCvaRiskWeight = 0.05,
         //! Input Counterparty Cube
-        const boost::shared_ptr<NPVCube>& cptyCube_ = nullptr,
+        const QuantLib::ext::shared_ptr<NPVCube>& cptyCube_ = nullptr,
         //! Postfix for flipView borrowing curve for fva
         const string& flipViewBorrowingCurvePostfix = "_BORROW",
         //! Postfix for flipView lending curve for fva
         const string& flipViewLendingCurvePostfix = "_LEND",
         //! Credit simulation parameters
-        const boost::shared_ptr<CreditSimulationParameters>& creditSimulationParameters = nullptr,
+        const QuantLib::ext::shared_ptr<CreditSimulationParameters>& creditSimulationParameters = nullptr,
         //! Credit simulation distribution grid
         const std::vector<Real>& creditMigrationDistributionGrid = {},
         //! Credit simulation time steps
@@ -171,7 +171,7 @@ public:
         //! Treatment of cash flows over the margin period of risk
         const MporCashFlowMode mporCashFlowMode = MporCashFlowMode::Unspecified);
 
-    void setDimCalculator(boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator) {
+    void setDimCalculator(QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> dimCalculator) {
         dimCalculator_ = dimCalculator;
     }
 
@@ -294,18 +294,18 @@ public:
     Real nettingSetCollateralFloor(const string& nettingSetId);
 
     //! Inspector for the input NPV cube (by trade, time, scenario)
-    const boost::shared_ptr<NPVCube>& cube() { return cube_; }
+    const QuantLib::ext::shared_ptr<NPVCube>& cube() { return cube_; }
     //! Inspector for the input Cpty cube (by name, time, scenario)
-    const boost::shared_ptr<NPVCube>& cptyCube() { return cptyCube_; }
+    const QuantLib::ext::shared_ptr<NPVCube>& cptyCube() { return cptyCube_; }
     //! Return the  for the input NPV cube after netting and collateral (by netting set, time, scenario)
-    const boost::shared_ptr<NPVCube>& netCube() { return nettedExposureCalculator_->nettedCube(); }
+    const QuantLib::ext::shared_ptr<NPVCube>& netCube() { return nettedExposureCalculator_->nettedCube(); }
     //! Return the dynamic initial margin cube (regression approach)
-    //const boost::shared_ptr<NPVCube>& dimCube() { return dimCube_; }
+    //const QuantLib::ext::shared_ptr<NPVCube>& dimCube() { return dimCube_; }
     //! Write average (over samples) DIM evolution through time for all netting sets
     void exportDimEvolution(ore::data::Report& dimEvolutionReport);
     //! Write DIM as a function of sample netting set NPV for a given time step
     void exportDimRegression(const std::string& nettingSet, const std::vector<Size>& timeSteps,
-                             const std::vector<boost::shared_ptr<ore::data::Report>>& dimRegReports);
+                             const std::vector<QuantLib::ext::shared_ptr<ore::data::Report>>& dimRegReports);
 
     //! get the cvaSpreadSensiShiftSize
     QuantLib::Real cvaSpreadSensiShiftSize() { return cvaSpreadSensiShiftSize_; }
@@ -317,24 +317,24 @@ public:
   
 protected:
     //! Helper function to return the collateral account evolution for a given netting set
-    boost::shared_ptr<vector<boost::shared_ptr<CollateralAccount>>>
-    collateralPaths(const string& nettingSetId, const boost::shared_ptr<NettingSetManager>& nettingSetManager,
-                    const boost::shared_ptr<Market>& market, const std::string& configuration,
-                    const boost::shared_ptr<AggregationScenarioData>& scenarioData, Size dates, Size samples,
+    QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<CollateralAccount>>>
+    collateralPaths(const string& nettingSetId, const QuantLib::ext::shared_ptr<NettingSetManager>& nettingSetManager,
+                    const QuantLib::ext::shared_ptr<Market>& market, const std::string& configuration,
+                    const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData, Size dates, Size samples,
                     const vector<vector<Real>>& nettingSetValue, Real nettingSetValueToday,
                     const Date& nettingSetMaturity);
 
     void updateNettingSetKVA();
     void updateNettingSetCvaSensitivity();
 
-    boost::shared_ptr<Portfolio> portfolio_;
-    boost::shared_ptr<NettingSetManager> nettingSetManager_;
-    boost::shared_ptr<CollateralBalances> collateralBalances_;
-    boost::shared_ptr<Market> market_;
+    QuantLib::ext::shared_ptr<Portfolio> portfolio_;
+    QuantLib::ext::shared_ptr<NettingSetManager> nettingSetManager_;
+    QuantLib::ext::shared_ptr<CollateralBalances> collateralBalances_;
+    QuantLib::ext::shared_ptr<Market> market_;
     const std::string configuration_;
-    boost::shared_ptr<NPVCube> cube_;
-    boost::shared_ptr<NPVCube> cptyCube_;
-    boost::shared_ptr<AggregationScenarioData> scenarioData_;
+    QuantLib::ext::shared_ptr<NPVCube> cube_;
+    QuantLib::ext::shared_ptr<NPVCube> cptyCube_;
+    QuantLib::ext::shared_ptr<AggregationScenarioData> scenarioData_;
     map<string, bool> analytics_;
 
     map<string, vector<Real>> tradeEPE_, tradeENE_;
@@ -352,12 +352,12 @@ protected:
     string fvaBorrowingCurve_;
     string fvaLendingCurve_;
 
-    boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
-    boost::shared_ptr<ExposureCalculator> exposureCalculator_;
-    boost::shared_ptr<NettedExposureCalculator> nettedExposureCalculator_;
-    boost::shared_ptr<ValueAdjustmentCalculator> cvaCalculator_;
-    boost::shared_ptr<ValueAdjustmentCalculator> allocatedCvaCalculator_;
-    boost::shared_ptr<CubeInterpretation> cubeInterpretation_;
+    QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
+    QuantLib::ext::shared_ptr<ExposureCalculator> exposureCalculator_;
+    QuantLib::ext::shared_ptr<NettedExposureCalculator> nettedExposureCalculator_;
+    QuantLib::ext::shared_ptr<ValueAdjustmentCalculator> cvaCalculator_;
+    QuantLib::ext::shared_ptr<ValueAdjustmentCalculator> allocatedCvaCalculator_;
+    QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpretation_;
     bool fullInitialCollateralisation_;
     vector<Period> cvaSpreadSensiGrid_;
     vector<Time> cvaSpreadSensiTimes_;
@@ -371,11 +371,11 @@ protected:
     Real kvaOurCvaRiskWeight_;
     Real kvaTheirCvaRiskWeight_;
 
-    boost::shared_ptr<CreditSimulationParameters> creditSimulationParameters_;
+    QuantLib::ext::shared_ptr<CreditSimulationParameters> creditSimulationParameters_;
     std::vector<Real> creditMigrationDistributionGrid_;
     std::vector<Size> creditMigrationTimeSteps_;
     Matrix creditStateCorrelationMatrix_;
-    boost::shared_ptr<CreditMigrationCalculator> creditMigrationCalculator_;
+    QuantLib::ext::shared_ptr<CreditMigrationCalculator> creditMigrationCalculator_;
     std::vector<Real> creditMigrationUpperBucketBounds_;
     std::vector<std::vector<Real>> creditMigrationCdf_;
     std::vector<std::vector<Real>> creditMigrationPdf_;

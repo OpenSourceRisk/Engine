@@ -58,13 +58,13 @@ buildPerformanceOptimizedDefaultCurves(const std::vector<QuantLib::Handle<QuantL
 
 class CdoEngineBuilder
     : public CachingPricingEngineBuilder<vector<string>, const Currency&, bool, const vector<string>&,
-                                         const boost::shared_ptr<QuantLib::SimpleQuote>&,
+                                         const QuantLib::ext::shared_ptr<QuantLib::SimpleQuote>&,
                                          const QuantLib::Real> {
 public:
     CdoEngineBuilder(const std::string& model, const std::string& engine)
         : CachingEngineBuilder(model, engine, {"SyntheticCDO"}) {}
 
-    virtual boost::shared_ptr<QuantExt::DefaultLossModel>
+    virtual QuantLib::ext::shared_ptr<QuantExt::DefaultLossModel>
     lossModel(const string& qualifier, const vector<Real>& recoveryRates, const Real& detachmentPoint,
               const QuantLib::Date& trancheMaturity, bool homogeneous) = 0;
 
@@ -91,7 +91,7 @@ public:
 
 protected:
     virtual vector<string> keyImpl(const Currency& ccy, bool isIndexCDS, const vector<string>& creditCurves,
-                                   const boost::shared_ptr<QuantLib::SimpleQuote>& calibrationFactor,
+                                   const QuantLib::ext::shared_ptr<QuantLib::SimpleQuote>& calibrationFactor,
                                    const QuantLib::Real fixedRecovery) override {
         vector<string> res;
         res.reserve(creditCurves.size() + 4);
@@ -113,7 +113,7 @@ class GaussCopulaBucketingCdoEngineBuilder : public CdoEngineBuilder {
 public:
     GaussCopulaBucketingCdoEngineBuilder() : CdoEngineBuilder("GaussCopula", "Bucketing") {}
 
-    boost::shared_ptr<QuantExt::DefaultLossModel> lossModel(const string& qualifier, const vector<Real>& recoveryRates,
+    QuantLib::ext::shared_ptr<QuantExt::DefaultLossModel> lossModel(const string& qualifier, const vector<Real>& recoveryRates,
                                                             const Real& detachmentPoint,
                                                             const QuantLib::Date& trancheMaturity,
                                                             bool homogeneous) override {
@@ -133,9 +133,9 @@ public:
                                                       << io::iso_date(bctsRd) << ").");
             Period ttm = (trancheMaturity - bctsRd) * Days;
             correlation.linkTo(
-                boost::make_shared<QuantExt::BaseCorrelationQuote>(bcts, ttm, detachmentPoint, true));
+                QuantLib::ext::make_shared<QuantExt::BaseCorrelationQuote>(bcts, ttm, detachmentPoint, true));
         } else {
-            correlation.linkTo(boost::make_shared<SimpleQuote>(0.0));
+            correlation.linkTo(QuantLib::ext::make_shared<SimpleQuote>(0.0));
         }
         DLOG("Base correlation quote value is " << correlation->value() << " at detachment point " << detachmentPoint);
 
@@ -176,7 +176,7 @@ public:
         }
         
         DLOG("Build ExtendedGaussianConstantLossLM");
-        boost::shared_ptr<QuantExt::ExtendedGaussianConstantLossLM> gaussLM(new QuantExt::ExtendedGaussianConstantLossLM(
+        QuantLib::ext::shared_ptr<QuantExt::ExtendedGaussianConstantLossLM> gaussLM(new QuantExt::ExtendedGaussianConstantLossLM(
             correlation, recoveryRates, recoveryProbabilities, recoveryGrids, LatentModelIntegrationType::GaussianQuadrature, poolSize,
             GaussianCopulaPolicy::initTraits()));
         Real gaussCopulaMin = parseReal(modelParameter("min"));
@@ -189,15 +189,15 @@ public:
         homogeneous = homogeneous && homogeneousPoolWhenJustified;
         LOG("Use " << (homogeneous ? "" : "in") << "homogeneous pool loss model for qualifier " << qualifier);
         DLOG("useQuadrature is set to " << std::boolalpha << useQuadrature);
-        return boost::make_shared<QuantExt::GaussPoolLossModel>(homogeneous, gaussLM, nBuckets, gaussCopulaMax,
+        return QuantLib::ext::make_shared<QuantExt::GaussPoolLossModel>(homogeneous, gaussLM, nBuckets, gaussCopulaMax,
                                                                 gaussCopulaMin, gaussCopulaSteps, useQuadrature,
                                                                 useStochasticRecovery);
     }
 
 protected:
-    virtual boost::shared_ptr<PricingEngine>
+    virtual QuantLib::ext::shared_ptr<PricingEngine>
     engineImpl(const Currency& ccy, bool isIndexCDS, const vector<string>& creditCurves,
-               const boost::shared_ptr<QuantLib::SimpleQuote>& calibrationFactor,
+               const QuantLib::ext::shared_ptr<QuantLib::SimpleQuote>& calibrationFactor,
                const QuantLib::Real fixedRecovery = QuantLib::Null<QuantLib::Real>()) override;
 };
 

@@ -37,8 +37,8 @@ FailedTrade::FailedTrade()
 FailedTrade::FailedTrade(const Envelope& env)
     : Trade("Failed", env) {}
 
-void FailedTrade::build(const boost::shared_ptr<EngineFactory>&) {
-    instrument_ = boost::make_shared<VanillaInstrument>(boost::make_shared<NullInstrument>());
+void FailedTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>&) {
+    instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(QuantLib::ext::make_shared<NullInstrument>());
     notional_ = 0.0;
     notionalCurrency_ = npvCurrency_ = "USD";
     maturity_ = Date::maxDate();

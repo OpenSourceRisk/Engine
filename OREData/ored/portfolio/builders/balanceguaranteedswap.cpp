@@ -24,13 +24,13 @@
 namespace ore {
 namespace data {
 
-boost::shared_ptr<PricingEngine>
+QuantLib::ext::shared_ptr<PricingEngine>
 BalanceGuaranteedSwapFlexiSwapLGMGridEngineBuilder::engineImpl(const string& id, const string& id2, const string& ccy,
                                                                const std::vector<Date>& expiries, const Date& maturity,
                                                                const std::vector<Real>& strikes) {
     DLOG("Building LGM Grid BGS Flexi Swap engine for trade " << id);
 
-    boost::shared_ptr<QuantExt::LGM> lgm = model(id, ccy, expiries, maturity, strikes);
+    QuantLib::ext::shared_ptr<QuantExt::LGM> lgm = model(id, ccy, expiries, maturity, strikes);
 
     DLOG("Get engine data");
     Real sy = parseReal(engineParameter("sy"));
@@ -49,19 +49,19 @@ BalanceGuaranteedSwapFlexiSwapLGMGridEngineBuilder::engineImpl(const string& id,
     }
     Real singleSwaptionThreshold = parseReal(engineParameter("singleSwaptionThreshold"));
 
-    Handle<Quote> minCprMult(boost::make_shared<SimpleQuote>(parseReal(modelParameter("MinCPRMultiplier"))));
-    Handle<Quote> maxCprMult(boost::make_shared<SimpleQuote>(parseReal(modelParameter("MaxCPRMultiplier"))));
+    Handle<Quote> minCprMult(QuantLib::ext::make_shared<SimpleQuote>(parseReal(modelParameter("MinCPRMultiplier"))));
+    Handle<Quote> maxCprMult(QuantLib::ext::make_shared<SimpleQuote>(parseReal(modelParameter("MaxCPRMultiplier"))));
     Handle<Quote> cpr = market_->cpr(id2, configuration(MarketContext::pricing));
     // use makeCompositeQuote from ql 1.16 onwards...
     Handle<Quote> minCpr(
-        boost::make_shared<CompositeQuote<std::multiplies<Real>>>(minCprMult, cpr, std::multiplies<Real>()));
+        QuantLib::ext::make_shared<CompositeQuote<std::multiplies<Real>>>(minCprMult, cpr, std::multiplies<Real>()));
     Handle<Quote> maxCpr(
-        boost::make_shared<CompositeQuote<std::multiplies<Real>>>(maxCprMult, cpr, std::multiplies<Real>()));
+        QuantLib::ext::make_shared<CompositeQuote<std::multiplies<Real>>>(maxCprMult, cpr, std::multiplies<Real>()));
 
     // Build engine
     DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
     Handle<YieldTermStructure> dscCurve = market_->discountCurve(ccy, configuration(MarketContext::pricing));
-    return boost::make_shared<QuantExt::NumericLgmBgsFlexiSwapEngine>(lgm, sy, ny, sx, nx, minCpr, maxCpr, dscCurve,
+    return QuantLib::ext::make_shared<QuantExt::NumericLgmBgsFlexiSwapEngine>(lgm, sy, ny, sx, nx, minCpr, maxCpr, dscCurve,
                                                                       method, singleSwaptionThreshold);
 }
 
