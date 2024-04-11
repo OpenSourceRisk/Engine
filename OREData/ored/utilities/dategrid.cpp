@@ -232,7 +232,6 @@ void DateGrid::addCloseOutDates(const QuantLib::Period& p) {
             else
                 c = calendar_.advance(dates_[i], p, Following, false);
             tmpCloseOutDates.insert(c);
-            std::cout << dates_[i] << " " << c << std::endl;
             valuationCloseOutMap_[dates_[i]] = c;
             tmpDates.insert(dates_[i]);
             tmpDates.insert(c);
@@ -304,7 +303,9 @@ QuantLib::TimeGrid DateGrid::closeOutTimeGrid() const {
 
 QuantLib::Date DateGrid::closeOutDateFromValuationDate(const QuantLib::Date& d) const {
     auto it = valuationCloseOutMap_.find(d);
-    QL_REQUIRE(it != valuationCloseOutMap_.end(), "Not a valid valuationDate");
+    if(it == valuationCloseOutMap_.end()){
+        return Date();
+    } 
     return it->second;
 }
 

@@ -199,14 +199,16 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                     outputCube, outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube);
                 pricingTime += priceTime;
                 updateTime += upTime;
-                std::tie(priceTime, upTime) = populateCube(
-                    closeOutDate, cubeDateIndex, sample, false, mporStickyDate, scenarioUpdated, trades, tradeHasError,
-                    calculators, outputCube, outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube);
-                pricingTime += priceTime;
-                updateTime += upTime;
+                if(closeOutDate != Date()){
+                    std::tie(priceTime, upTime) = populateCube(
+                        closeOutDate, cubeDateIndex, sample, false, mporStickyDate, scenarioUpdated, trades, tradeHasError,
+                        calculators, outputCube, outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube);
+                    pricingTime += priceTime;
+                    updateTime += upTime;
+                }
             }
         } else {
-            std::map<Date, std::queue<size_t>> closeOutDateToValueDateIndex;
+            std::map<Date, std::vector<size_t>> closeOutDateToValueDateIndex;
             for (Size i = 0; i < dates.size(); ++i) {
                 Date d = dates[i];
                 // Process auxiliary close-out dates first (may coincide with a valuation date, see below)
@@ -219,21 +221,24 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                     double upTime = 0;
                     QL_REQUIRE(closeOutDateToValueDateIndex.count(d) == 1 && !closeOutDateToValueDateIndex[d].empty(),
                                "Need to calculate valuation date before close out date");
-                    size_t valueDateIndex = closeOutDateToValueDateIndex[d].front();
-                    closeOutDateToValueDateIndex[d].pop();
-                    std::tie(priceTime, upTime) = populateCube(
-                        d, valueDateIndex, sample, false, false, scenarioUpdated, trades, tradeHasError, calculators,
-                        outputCube, outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube);
-                    pricingTime += priceTime;
-                    updateTime += upTime;
-                    scenarioUpdated = true;
+                    for (size_t& valueDateIndex : closeOutDateToValueDateIndex[d]) {
+                        std::cout << "Close Out Date " << d << " valuationIndex " << valueDateIndex << std::endl;
+                        std::tie(priceTime, upTime) =
+                            populateCube(d, valueDateIndex, sample, false, mporStickyDate, scenarioUpdated, trades,
+                                         tradeHasError, calculators, outputCube, outputCubeNettingSet, counterparties,
+                                         cptyCalculators, outputCptyCube);
+                        pricingTime += priceTime;
+                        updateTime += upTime;
+                        scenarioUpdated = true;
+                    }
                 }
                 if (dg_->isValuationDate()[i]) {
                     double priceTime = 0;
                     double upTime = 0;
                     ++cubeDateIndex;
                     Date closeOutDate = dg_->closeOutDateFromValuationDate(d);
-                    closeOutDateToValueDateIndex[closeOutDate].push(cubeDateIndex);
+                    if(closeOutDate != Date())
+                        closeOutDateToValueDateIndex[closeOutDate].push_back(cubeDateIndex);
                     std::tie(priceTime, upTime) = populateCube(
                         d, cubeDateIndex, sample, true, false, scenarioUpdated, trades, tradeHasError, calculators,
                         outputCube, outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube);
@@ -243,6 +248,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                 }
             }
         }
+
         std::ostringstream detail;
         detail << nTrades << " trade" << (nTrades == 1 ? "" : "s") << ", " << outputCube->samples() << " sample"
                << (outputCube->samples() == 1 ? "" : "s");
