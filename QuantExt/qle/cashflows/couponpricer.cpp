@@ -39,10 +39,10 @@ class PricerSetter : public AcyclicVisitor,
                      public Visitor<QuantExt::SubPeriodsCoupon1>,
                      public Visitor<FormulaBasedCoupon> {
 private:
-    const boost::shared_ptr<FloatingRateCouponPricer> pricer_;
+    const QuantLib::ext::shared_ptr<FloatingRateCouponPricer> pricer_;
 
 public:
-    PricerSetter(const boost::shared_ptr<FloatingRateCouponPricer>& pricer) : pricer_(pricer) {}
+    PricerSetter(const QuantLib::ext::shared_ptr<FloatingRateCouponPricer>& pricer) : pricer_(pricer) {}
 
     void visit(CashFlow& c) override;
     void visit(Coupon& c) override;
@@ -64,10 +64,10 @@ void PricerSetter::visit(Coupon&) {
 
 void PricerSetter::visit(QuantLib::OvernightIndexedCoupon& c) {
     // Special pricer for BRL CDI
-    boost::shared_ptr<BRLCdi> brlCdiIndex = boost::dynamic_pointer_cast<BRLCdi>(c.index());
+    QuantLib::ext::shared_ptr<BRLCdi> brlCdiIndex = QuantLib::ext::dynamic_pointer_cast<BRLCdi>(c.index());
     if (brlCdiIndex) {
-        const boost::shared_ptr<BRLCdiCouponPricer> brlCdiCouponPricer =
-            boost::dynamic_pointer_cast<BRLCdiCouponPricer>(pricer_);
+        const QuantLib::ext::shared_ptr<BRLCdiCouponPricer> brlCdiCouponPricer =
+            QuantLib::ext::dynamic_pointer_cast<BRLCdiCouponPricer>(pricer_);
         QL_REQUIRE(brlCdiCouponPricer, "Pricer not compatible with BRL CDI coupon");
         c.setPricer(brlCdiCouponPricer);
     } else {
@@ -77,10 +77,10 @@ void PricerSetter::visit(QuantLib::OvernightIndexedCoupon& c) {
 
 void PricerSetter::visit(QuantExt::OvernightIndexedCoupon& c) {
     // Special pricer for BRL CDI
-    boost::shared_ptr<BRLCdi> brlCdiIndex = boost::dynamic_pointer_cast<BRLCdi>(c.index());
+    QuantLib::ext::shared_ptr<BRLCdi> brlCdiIndex = QuantLib::ext::dynamic_pointer_cast<BRLCdi>(c.index());
     if (brlCdiIndex) {
-        const boost::shared_ptr<BRLCdiCouponPricer> brlCdiCouponPricer =
-            boost::dynamic_pointer_cast<BRLCdiCouponPricer>(pricer_);
+        const QuantLib::ext::shared_ptr<BRLCdiCouponPricer> brlCdiCouponPricer =
+            QuantLib::ext::dynamic_pointer_cast<BRLCdiCouponPricer>(pricer_);
         QL_REQUIRE(brlCdiCouponPricer, "Pricer not compatible with BRL CDI coupon");
         c.setPricer(brlCdiCouponPricer);
     } else {
@@ -89,8 +89,8 @@ void PricerSetter::visit(QuantExt::OvernightIndexedCoupon& c) {
 }
 
 void PricerSetter::visit(CappedFlooredOvernightIndexedCoupon& c) {
-    const boost::shared_ptr<CappedFlooredOvernightIndexedCouponPricer> p =
-        boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCouponPricer>(pricer_);
+    const QuantLib::ext::shared_ptr<CappedFlooredOvernightIndexedCouponPricer> p =
+        QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCouponPricer>(pricer_);
     // we can set a pricer for the capped floored on coupon or the underlying on coupon
     if (p)
         c.setPricer(p);
@@ -99,34 +99,34 @@ void PricerSetter::visit(CappedFlooredOvernightIndexedCoupon& c) {
 }
 
 void PricerSetter::visit(AverageONIndexedCoupon& c) {
-    const boost::shared_ptr<AverageONIndexedCouponPricer> averageONIndexedCouponPricer =
-        boost::dynamic_pointer_cast<AverageONIndexedCouponPricer>(pricer_);
+    const QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer> averageONIndexedCouponPricer =
+        QuantLib::ext::dynamic_pointer_cast<AverageONIndexedCouponPricer>(pricer_);
     QL_REQUIRE(averageONIndexedCouponPricer, "Pricer not compatible with Average ON Indexed coupon");
     c.setPricer(averageONIndexedCouponPricer);
 }
 
 void PricerSetter::visit(QuantExt::SubPeriodsCoupon1& c) {
-    const boost::shared_ptr<QuantExt::SubPeriodsCouponPricer1> subPeriodsCouponPricer =
-        boost::dynamic_pointer_cast<QuantExt::SubPeriodsCouponPricer1>(pricer_);
+    const QuantLib::ext::shared_ptr<QuantExt::SubPeriodsCouponPricer1> subPeriodsCouponPricer =
+        QuantLib::ext::dynamic_pointer_cast<QuantExt::SubPeriodsCouponPricer1>(pricer_);
     QL_REQUIRE(subPeriodsCouponPricer, "Pricer not compatible with sub-periods coupon");
     c.setPricer(subPeriodsCouponPricer);
 }
 
 void PricerSetter::visit(FormulaBasedCoupon& c) {
-    auto p = boost::dynamic_pointer_cast<FormulaBasedCouponPricer>(pricer_);
+    auto p = QuantLib::ext::dynamic_pointer_cast<FormulaBasedCouponPricer>(pricer_);
     QL_REQUIRE(p, "Pricer not compatible with Formula Based coupon");
     c.setPricer(p);
 }
 } // namespace
 
-void setCouponPricer(const Leg& leg, const boost::shared_ptr<FloatingRateCouponPricer>& pricer) {
+void setCouponPricer(const Leg& leg, const QuantLib::ext::shared_ptr<FloatingRateCouponPricer>& pricer) {
     PricerSetter setter(pricer);
     for (Size i = 0; i < leg.size(); ++i) {
         leg[i]->accept(setter);
     }
 }
 
-void setCouponPricers(const Leg& leg, const std::vector<boost::shared_ptr<FloatingRateCouponPricer> >& pricers) {
+void setCouponPricers(const Leg& leg, const std::vector<QuantLib::ext::shared_ptr<FloatingRateCouponPricer> >& pricers) {
 
     Size nCashFlows = leg.size();
     QL_REQUIRE(nCashFlows > 0, "No cashflows");

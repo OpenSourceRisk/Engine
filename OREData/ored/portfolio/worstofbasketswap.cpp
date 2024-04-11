@@ -26,9 +26,9 @@
 namespace ore {
 namespace data {
 
-void WorstOfBasketSwap::build(const boost::shared_ptr<EngineFactory>& factory) {
+void WorstOfBasketSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
-    auto builder = boost::dynamic_pointer_cast<ScriptedTradeEngineBuilder>(factory->builder("ScriptedTrade"));
+    auto builder = QuantLib::ext::dynamic_pointer_cast<ScriptedTradeEngineBuilder>(factory->builder("ScriptedTrade"));
 
     // set script parameters
 
@@ -116,7 +116,7 @@ void WorstOfBasketSwap::build(const boost::shared_ptr<EngineFactory>& factory) {
         QL_REQUIRE(u->type() == type, "All of Underlyings must be from the same asset class.");
     }
     auto floatingIndex = *factory->market()->iborIndex(floatingIndex_, builder->configuration(MarketContext::pricing));
-    auto ois = boost::dynamic_pointer_cast<OvernightIndex>(floatingIndex);
+    auto ois = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(floatingIndex);
 
     if (ois) {
         DLOG("building WorstOfBasketSwap scripted trade wrapper using (internal) script \'Overnight\'")

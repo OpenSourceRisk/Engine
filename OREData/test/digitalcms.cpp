@@ -62,15 +62,15 @@ public:
             "EUR-EURIBOR-6M", yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")]));
         iborIndices_[make_pair(Market::defaultConfiguration, "EUR-EURIBOR-6M")] = hEUR;
 
-        boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();
+        QuantLib::ext::shared_ptr<Conventions> conventions = QuantLib::ext::make_shared<Conventions>();
         
         // add swap index
-        boost::shared_ptr<ore::data::Convention> swapEURConv(new ore::data::IRSwapConvention(
+        QuantLib::ext::shared_ptr<ore::data::Convention> swapEURConv(new ore::data::IRSwapConvention(
             "EUR-6M-SWAP-CONVENTIONS", "TARGET", "Annual", "MF", "30/360", "EUR-EURIBOR-6M"));
         conventions->add(swapEURConv);
-        boost::shared_ptr<ore::data::Convention> swapIndexEURLongConv1(
+        QuantLib::ext::shared_ptr<ore::data::Convention> swapIndexEURLongConv1(
             new ore::data::SwapIndexConvention("EUR-CMS-2Y", "EUR-6M-SWAP-CONVENTIONS"));
-        boost::shared_ptr<ore::data::Convention> swapIndexEURLongConv2(
+        QuantLib::ext::shared_ptr<ore::data::Convention> swapIndexEURLongConv2(
             new ore::data::SwapIndexConvention("EUR-CMS-30Y", "EUR-6M-SWAP-CONVENTIONS"));
         conventions->add(swapIndexEURLongConv1);
         conventions->add(swapIndexEURLongConv2);
@@ -85,16 +85,16 @@ public:
 
 private:
     Handle<YieldTermStructure> flatRateYts(Real forward) {
-        boost::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, ActualActual(ActualActual::ISDA)));
+        QuantLib::ext::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, ActualActual(ActualActual::ISDA)));
         return Handle<YieldTermStructure>(yts);
     }
     Handle<SwaptionVolatilityStructure> flatRateSvs(Volatility forward) {
-        boost::shared_ptr<SwaptionVolatilityStructure> Svs(
+        QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> Svs(
             new ConstantSwaptionVolatility(0, NullCalendar(), ModifiedFollowing, forward, ActualActual(ActualActual::ISDA)));
         return Handle<SwaptionVolatilityStructure>(Svs);
     }
     Handle<QuantExt::CorrelationTermStructure> flatCorr(Real corr) {
-        boost::shared_ptr<QuantExt::CorrelationTermStructure> cs(
+        QuantLib::ext::shared_ptr<QuantExt::CorrelationTermStructure> cs(
             new QuantExt::FlatCorrelation(0, NullCalendar(), corr, ActualActual(ActualActual::ISDA)));
 
         return Handle<QuantExt::CorrelationTermStructure>(cs);
@@ -124,21 +124,21 @@ struct CommonVars {
     string longShort;
     vector<double> notionals;
 
-    boost::shared_ptr<ore::data::Swap> makeDigitalCmsSpreadOption(bool call, vector<double> strikes,
+    QuantLib::ext::shared_ptr<ore::data::Swap> makeDigitalCmsSpreadOption(bool call, vector<double> strikes,
                                                                   vector<double> payoffs) {
         ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
 
         vector<LegData> legData;
-        boost::shared_ptr<DigitalCMSSpreadLegData> cmsLegData;
+        QuantLib::ext::shared_ptr<DigitalCMSSpreadLegData> cmsLegData;
         if (call) {
-            cmsLegData = boost::make_shared<DigitalCMSSpreadLegData>(
-                boost::make_shared<CMSSpreadLegData>(
+            cmsLegData = QuantLib::ext::make_shared<DigitalCMSSpreadLegData>(
+                QuantLib::ext::make_shared<CMSSpreadLegData>(
                     index1, index2, fixingdays, isinarrears, vector<double>(), vector<string>(), vector<double>(),
                     vector<string>(), vector<double>(), vector<string>(), vector<double>(), vector<string>(), false),
                 Position::Long, false, strikes, vector<string>(), payoffs, vector<string>());
         } else {
-            cmsLegData = boost::make_shared<DigitalCMSSpreadLegData>(
-                boost::make_shared<CMSSpreadLegData>(
+            cmsLegData = QuantLib::ext::make_shared<DigitalCMSSpreadLegData>(
+                QuantLib::ext::make_shared<CMSSpreadLegData>(
                     index1, index2, fixingdays, isinarrears, vector<double>(), vector<string>(), vector<double>(),
                     vector<string>(), vector<double>(), vector<string>(), vector<double>(), vector<string>(), false),
                 Position::Long, false, vector<double>(), vector<string>(), vector<double>(), vector<string>(),
@@ -149,11 +149,11 @@ struct CommonVars {
         legData.push_back(leg);
 
         Envelope env("CP1");
-        boost::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, legData));
+        QuantLib::ext::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, legData));
         return swap;
     }
 
-    boost::shared_ptr<ore::data::Swap> makeCmsSpreadOption(vector<double> spreads) {
+    QuantLib::ext::shared_ptr<ore::data::Swap> makeCmsSpreadOption(vector<double> spreads) {
         ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
 
         vector<LegData> legData;
@@ -161,15 +161,15 @@ struct CommonVars {
                                     vector<double>(), vector<string>(), vector<double>(), vector<string>(),
                                     vector<double>(), vector<string>(), false);
 
-        LegData leg(boost::make_shared<CMSSpreadLegData>(cmsLegData), isPayer, ccy, cmsSchedule, fixDC, notionals);
+        LegData leg(QuantLib::ext::make_shared<CMSSpreadLegData>(cmsLegData), isPayer, ccy, cmsSchedule, fixDC, notionals);
         legData.push_back(leg);
 
         Envelope env("CP1");
-        boost::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, legData));
+        QuantLib::ext::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, legData));
         return swap;
     }
 
-    boost::shared_ptr<ore::data::Swap> makeCmsSpreadFloor(vector<double> floors) {
+    QuantLib::ext::shared_ptr<ore::data::Swap> makeCmsSpreadFloor(vector<double> floors) {
         ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
 
         vector<LegData> legData;
@@ -177,15 +177,15 @@ struct CommonVars {
                                     vector<double>(), vector<string>(), floors, vector<string>(), vector<double>(),
                                     vector<string>(), false);
 
-        LegData leg(boost::make_shared<CMSSpreadLegData>(cmsLegData), isPayer, ccy, cmsSchedule, fixDC, notionals);
+        LegData leg(QuantLib::ext::make_shared<CMSSpreadLegData>(cmsLegData), isPayer, ccy, cmsSchedule, fixDC, notionals);
         legData.push_back(leg);
 
         Envelope env("CP1");
-        boost::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, legData));
+        QuantLib::ext::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, legData));
         return swap;
     }
 
-    boost::shared_ptr<ore::data::Swap> makeCmsSpreadCap(vector<double> caps) {
+    QuantLib::ext::shared_ptr<ore::data::Swap> makeCmsSpreadCap(vector<double> caps) {
         ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
 
         vector<LegData> legData;
@@ -193,11 +193,11 @@ struct CommonVars {
                                     vector<string>(), vector<double>(), vector<string>(), vector<double>(),
                                     vector<string>(), false);
 
-        LegData leg(boost::make_shared<CMSSpreadLegData>(cmsLegData), isPayer, ccy, cmsSchedule, fixDC, notionals);
+        LegData leg(QuantLib::ext::make_shared<CMSSpreadLegData>(cmsLegData), isPayer, ccy, cmsSchedule, fixDC, notionals);
         legData.push_back(leg);
 
         Envelope env("CP1");
-        boost::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, legData));
+        QuantLib::ext::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, legData));
         return swap;
     }
 
@@ -219,10 +219,10 @@ struct CommonVars {
     }
 };
 
-void outputCoupons(boost::shared_ptr<ore::data::Swap> cmsSwap) {
+void outputCoupons(QuantLib::ext::shared_ptr<ore::data::Swap> cmsSwap) {
     Leg leg = cmsSwap->legs().at(0);
     for (auto cf : leg) {
-        boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(cf);
+        QuantLib::ext::shared_ptr<FloatingRateCoupon> frc = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(cf);
         if (frc) {
             BOOST_TEST_MESSAGE("Coupon Date: " << frc->date() << "; Rate: " << frc->rate()
                                                << "; DayCount: " << frc->dayCounter());
@@ -242,12 +242,12 @@ BOOST_AUTO_TEST_CASE(testDigitalCMSSpreadCoupon) {
     BOOST_TEST_MESSAGE("Testing CMS Digital CMS Spread coupon...");
 
     // build market
-    boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
+    QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>();
     Settings::instance().evaluationDate() = market->asofDate();
     CommonVars vars;
 
     // Build and price
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("CMS") = "LinearTSR";
     engineData->engine("CMS") = "LinearTSRPricer";
 
@@ -271,7 +271,7 @@ BOOST_AUTO_TEST_CASE(testDigitalCMSSpreadCoupon) {
     engineData->model("Swap") = "DiscountedCashflows";
     engineData->engine("Swap") = "DiscountingSwapEngineOptimised";
 
-    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
     // test edge cases
     // If strike >> rate then NPV(digital call option) == NPV(option with spread = 0)
@@ -280,12 +280,12 @@ BOOST_AUTO_TEST_CASE(testDigitalCMSSpreadCoupon) {
     {
         double strike = 1.0;
         double pay = 0.0001;
-        boost::shared_ptr<ore::data::Swap> cmsDigitalSwapCall =
+        QuantLib::ext::shared_ptr<ore::data::Swap> cmsDigitalSwapCall =
             vars.makeDigitalCmsSpreadOption(true, vector<double>(1, strike), vector<double>(1, pay));
-        boost::shared_ptr<ore::data::Swap> cmsDigitalSwapPut =
+        QuantLib::ext::shared_ptr<ore::data::Swap> cmsDigitalSwapPut =
             vars.makeDigitalCmsSpreadOption(false, vector<double>(1, strike), vector<double>(1, pay));
-        boost::shared_ptr<ore::data::Swap> cmsSwap1 = vars.makeCmsSpreadOption(vector<double>(1, pay));
-        boost::shared_ptr<ore::data::Swap> cmsSwap2 = vars.makeCmsSpreadOption(vector<double>(1, 0.0));
+        QuantLib::ext::shared_ptr<ore::data::Swap> cmsSwap1 = vars.makeCmsSpreadOption(vector<double>(1, pay));
+        QuantLib::ext::shared_ptr<ore::data::Swap> cmsSwap2 = vars.makeCmsSpreadOption(vector<double>(1, 0.0));
         cmsDigitalSwapCall->build(engineFactory);
         cmsDigitalSwapPut->build(engineFactory);
         cmsSwap1->build(engineFactory);
@@ -314,10 +314,10 @@ BOOST_AUTO_TEST_CASE(testDigitalCMSSpreadCoupon) {
         double strike = 0.0001;
         double pay = 0.0001;
         double eps = 1e-4;
-        boost::shared_ptr<ore::data::Swap> cmsDigitalSwapPut =
+        QuantLib::ext::shared_ptr<ore::data::Swap> cmsDigitalSwapPut =
             vars.makeDigitalCmsSpreadOption(false, vector<double>(1, strike), vector<double>(1, pay));
-        boost::shared_ptr<ore::data::Swap> cmsSwap1 = vars.makeCmsSpreadFloor(vector<double>(1, strike + eps / 2));
-        boost::shared_ptr<ore::data::Swap> cmsSwap2 = vars.makeCmsSpreadFloor(vector<double>(1, strike - eps / 2));
+        QuantLib::ext::shared_ptr<ore::data::Swap> cmsSwap1 = vars.makeCmsSpreadFloor(vector<double>(1, strike + eps / 2));
+        QuantLib::ext::shared_ptr<ore::data::Swap> cmsSwap2 = vars.makeCmsSpreadFloor(vector<double>(1, strike - eps / 2));
         cmsDigitalSwapPut->build(engineFactory);
         cmsSwap1->build(engineFactory);
         cmsSwap2->build(engineFactory);
@@ -327,9 +327,9 @@ BOOST_AUTO_TEST_CASE(testDigitalCMSSpreadCoupon) {
         Leg leg2 = cmsSwap2->legs().at(0);
 
         for (Size i = 0; i < leg.size(); i++) {
-            boost::shared_ptr<DigitalCoupon> dc = boost::dynamic_pointer_cast<DigitalCoupon>(leg[i]);
-            boost::shared_ptr<FloatingRateCoupon> frc1 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg1[i]);
-            boost::shared_ptr<FloatingRateCoupon> frc2 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg2[i]);
+            QuantLib::ext::shared_ptr<DigitalCoupon> dc = QuantLib::ext::dynamic_pointer_cast<DigitalCoupon>(leg[i]);
+            QuantLib::ext::shared_ptr<FloatingRateCoupon> frc1 = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(leg1[i]);
+            QuantLib::ext::shared_ptr<FloatingRateCoupon> frc2 = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(leg2[i]);
 
             double r = pay * (frc1->rate() - frc2->rate()) / eps;
 
@@ -342,10 +342,10 @@ BOOST_AUTO_TEST_CASE(testDigitalCMSSpreadCoupon) {
         double strike = 0.0001;
         double pay = 0.0001;
         double eps = 1e-4;
-        boost::shared_ptr<ore::data::Swap> cmsDigitalSwapCall =
+        QuantLib::ext::shared_ptr<ore::data::Swap> cmsDigitalSwapCall =
             vars.makeDigitalCmsSpreadOption(true, vector<double>(1, strike), vector<double>(1, pay));
-        boost::shared_ptr<ore::data::Swap> cmsSwap1 = vars.makeCmsSpreadCap(vector<double>(1, strike + eps / 2));
-        boost::shared_ptr<ore::data::Swap> cmsSwap2 = vars.makeCmsSpreadCap(vector<double>(1, strike - eps / 2));
+        QuantLib::ext::shared_ptr<ore::data::Swap> cmsSwap1 = vars.makeCmsSpreadCap(vector<double>(1, strike + eps / 2));
+        QuantLib::ext::shared_ptr<ore::data::Swap> cmsSwap2 = vars.makeCmsSpreadCap(vector<double>(1, strike - eps / 2));
         cmsDigitalSwapCall->build(engineFactory);
         cmsSwap1->build(engineFactory);
         cmsSwap2->build(engineFactory);
@@ -355,9 +355,9 @@ BOOST_AUTO_TEST_CASE(testDigitalCMSSpreadCoupon) {
         Leg leg2 = cmsSwap2->legs().at(0);
 
         for (Size i = 0; i < leg.size(); i++) {
-            boost::shared_ptr<DigitalCoupon> dc = boost::dynamic_pointer_cast<DigitalCoupon>(leg[i]);
-            boost::shared_ptr<FloatingRateCoupon> frc1 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg1[i]);
-            boost::shared_ptr<FloatingRateCoupon> frc2 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg2[i]);
+            QuantLib::ext::shared_ptr<DigitalCoupon> dc = QuantLib::ext::dynamic_pointer_cast<DigitalCoupon>(leg[i]);
+            QuantLib::ext::shared_ptr<FloatingRateCoupon> frc1 = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(leg1[i]);
+            QuantLib::ext::shared_ptr<FloatingRateCoupon> frc2 = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(leg2[i]);
 
             double r = pay * (frc1->rate() - frc2->rate()) / eps;
 
@@ -368,12 +368,12 @@ BOOST_AUTO_TEST_CASE(testDigitalCMSSpreadCoupon) {
     {
         double strike = 0.0001;
         double eps = 1e-4;
-        boost::shared_ptr<ore::data::Swap> cmsDigitalSwapPut =
+        QuantLib::ext::shared_ptr<ore::data::Swap> cmsDigitalSwapPut =
             vars.makeDigitalCmsSpreadOption(false, vector<double>(1, strike), vector<double>());
-        boost::shared_ptr<ore::data::Swap> cmsSwap1 = vars.makeCmsSpreadFloor(vector<double>(1, strike + eps / 2));
-        boost::shared_ptr<ore::data::Swap> cmsSwap2 = vars.makeCmsSpreadFloor(vector<double>(1, strike - eps / 2));
-        boost::shared_ptr<ore::data::Swap> cmsSwap3 = vars.makeCmsSpreadFloor(vector<double>(1, strike));
-        boost::shared_ptr<ore::data::Swap> cmsSwap4 = vars.makeCmsSpreadFloor(vector<double>());
+        QuantLib::ext::shared_ptr<ore::data::Swap> cmsSwap1 = vars.makeCmsSpreadFloor(vector<double>(1, strike + eps / 2));
+        QuantLib::ext::shared_ptr<ore::data::Swap> cmsSwap2 = vars.makeCmsSpreadFloor(vector<double>(1, strike - eps / 2));
+        QuantLib::ext::shared_ptr<ore::data::Swap> cmsSwap3 = vars.makeCmsSpreadFloor(vector<double>(1, strike));
+        QuantLib::ext::shared_ptr<ore::data::Swap> cmsSwap4 = vars.makeCmsSpreadFloor(vector<double>());
         cmsDigitalSwapPut->build(engineFactory);
         cmsSwap1->build(engineFactory);
         cmsSwap2->build(engineFactory);
@@ -387,11 +387,11 @@ BOOST_AUTO_TEST_CASE(testDigitalCMSSpreadCoupon) {
         Leg leg4 = cmsSwap4->legs().at(0);
 
         for (Size i = 0; i < leg.size(); i++) {
-            boost::shared_ptr<DigitalCoupon> dc = boost::dynamic_pointer_cast<DigitalCoupon>(leg[i]);
-            boost::shared_ptr<FloatingRateCoupon> frc1 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg1[i]);
-            boost::shared_ptr<FloatingRateCoupon> frc2 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg2[i]);
-            boost::shared_ptr<FloatingRateCoupon> frc3 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg3[i]);
-            boost::shared_ptr<FloatingRateCoupon> frc4 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg4[i]);
+            QuantLib::ext::shared_ptr<DigitalCoupon> dc = QuantLib::ext::dynamic_pointer_cast<DigitalCoupon>(leg[i]);
+            QuantLib::ext::shared_ptr<FloatingRateCoupon> frc1 = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(leg1[i]);
+            QuantLib::ext::shared_ptr<FloatingRateCoupon> frc2 = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(leg2[i]);
+            QuantLib::ext::shared_ptr<FloatingRateCoupon> frc3 = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(leg3[i]);
+            QuantLib::ext::shared_ptr<FloatingRateCoupon> frc4 = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(leg4[i]);
 
             double r = strike * (frc1->rate() - frc2->rate()) / eps;
             double put = -frc4->rate() + frc3->rate();
@@ -405,12 +405,12 @@ BOOST_AUTO_TEST_CASE(testDigitalCMSSpreadCoupon) {
     {
         double strike = 0.0001;
         double eps = 1e-4;
-        boost::shared_ptr<ore::data::Swap> cmsDigitalSwapCall =
+        QuantLib::ext::shared_ptr<ore::data::Swap> cmsDigitalSwapCall =
             vars.makeDigitalCmsSpreadOption(true, vector<double>(1, strike), vector<double>());
-        boost::shared_ptr<ore::data::Swap> cmsSwap1 = vars.makeCmsSpreadCap(vector<double>(1, strike + eps / 2));
-        boost::shared_ptr<ore::data::Swap> cmsSwap2 = vars.makeCmsSpreadCap(vector<double>(1, strike - eps / 2));
-        boost::shared_ptr<ore::data::Swap> cmsSwap3 = vars.makeCmsSpreadCap(vector<double>(1, strike));
-        boost::shared_ptr<ore::data::Swap> cmsSwap4 = vars.makeCmsSpreadCap(vector<double>());
+        QuantLib::ext::shared_ptr<ore::data::Swap> cmsSwap1 = vars.makeCmsSpreadCap(vector<double>(1, strike + eps / 2));
+        QuantLib::ext::shared_ptr<ore::data::Swap> cmsSwap2 = vars.makeCmsSpreadCap(vector<double>(1, strike - eps / 2));
+        QuantLib::ext::shared_ptr<ore::data::Swap> cmsSwap3 = vars.makeCmsSpreadCap(vector<double>(1, strike));
+        QuantLib::ext::shared_ptr<ore::data::Swap> cmsSwap4 = vars.makeCmsSpreadCap(vector<double>());
         cmsDigitalSwapCall->build(engineFactory);
         cmsSwap1->build(engineFactory);
         cmsSwap2->build(engineFactory);
@@ -424,11 +424,11 @@ BOOST_AUTO_TEST_CASE(testDigitalCMSSpreadCoupon) {
         Leg leg4 = cmsSwap4->legs().at(0);
 
         for (Size i = 0; i < leg.size(); i++) {
-            boost::shared_ptr<DigitalCoupon> dc = boost::dynamic_pointer_cast<DigitalCoupon>(leg[i]);
-            boost::shared_ptr<FloatingRateCoupon> frc1 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg1[i]);
-            boost::shared_ptr<FloatingRateCoupon> frc2 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg2[i]);
-            boost::shared_ptr<FloatingRateCoupon> frc3 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg3[i]);
-            boost::shared_ptr<FloatingRateCoupon> frc4 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg4[i]);
+            QuantLib::ext::shared_ptr<DigitalCoupon> dc = QuantLib::ext::dynamic_pointer_cast<DigitalCoupon>(leg[i]);
+            QuantLib::ext::shared_ptr<FloatingRateCoupon> frc1 = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(leg1[i]);
+            QuantLib::ext::shared_ptr<FloatingRateCoupon> frc2 = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(leg2[i]);
+            QuantLib::ext::shared_ptr<FloatingRateCoupon> frc3 = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(leg3[i]);
+            QuantLib::ext::shared_ptr<FloatingRateCoupon> frc4 = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(leg4[i]);
 
             double r = strike * (frc1->rate() - frc2->rate()) / eps;
             double call = frc4->rate() - frc3->rate();

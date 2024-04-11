@@ -26,7 +26,7 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <ored/portfolio/nettingsetdetails.hpp>
 #include <ql/utilities/null.hpp>
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 using ore::data::NettingSetDetails;
 
@@ -112,13 +112,13 @@ public:
     /*!
       adds a new collateral balance to manager
     */
-    void add(const boost::shared_ptr<CollateralBalance>& cb);
+    void add(const QuantLib::ext::shared_ptr<CollateralBalance>& cb);
 
     /*!
       extracts a collateral balance from manager
     */
-    const boost::shared_ptr<CollateralBalance>& get(const std::string& nettingSetId) const;
-    const boost::shared_ptr<CollateralBalance>& get(const NettingSetDetails& nettingSetDetails) const;
+    const QuantLib::ext::shared_ptr<CollateralBalance>& get(const std::string& nettingSetId) const;
+    const QuantLib::ext::shared_ptr<CollateralBalance>& get(const NettingSetDetails& nettingSetDetails) const;
     
     /*!
         gets currentIM for DIM calculation
@@ -127,10 +127,10 @@ public:
     
     void fromXML(ore::data::XMLNode* node) override;
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
-    const std::map<NettingSetDetails, boost::shared_ptr<CollateralBalance>>& collateralBalances();
+    const std::map<NettingSetDetails, QuantLib::ext::shared_ptr<CollateralBalance>>& collateralBalances();
 
 private:
-    std::map<NettingSetDetails, boost::shared_ptr<CollateralBalance>> collateralBalances_;
+    std::map<NettingSetDetails, QuantLib::ext::shared_ptr<CollateralBalance>> collateralBalances_;
 };
 
 } // namespace data

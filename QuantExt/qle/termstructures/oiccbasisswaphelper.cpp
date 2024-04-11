@@ -22,7 +22,7 @@
 #include <qle/pricingengines/oiccbasisswapengine.hpp>
 #include <qle/termstructures/oiccbasisswaphelper.hpp>
 
-using boost::shared_ptr;
+using QuantLib::ext::shared_ptr;
 
 using namespace QuantLib;
 
@@ -30,8 +30,8 @@ namespace QuantExt {
 
 OICCBSHelper::OICCBSHelper(Natural settlementDays,
                            const Period& term, // swap maturity
-                           const boost::shared_ptr<OvernightIndex>& payIndex, const Period& payTenor,
-                           const boost::shared_ptr<OvernightIndex>& recIndex,
+                           const QuantLib::ext::shared_ptr<OvernightIndex>& payIndex, const Period& payTenor,
+                           const QuantLib::ext::shared_ptr<OvernightIndex>& recIndex,
                            const Period& recTenor, // swap maturity
                            const Handle<Quote>& spreadQuote, const Handle<YieldTermStructure>& fixedDiscountCurve,
                            bool spreadQuoteOnPayLeg, bool fixedDiscountOnPayLeg)
@@ -52,8 +52,8 @@ void OICCBSHelper::initializeDates() {
     Schedule recSchedule = MakeSchedule().from(settlementDate).to(settlementDate + term_).withTenor(recTenor_);
     Currency payCurrency = EURCurrency(); // arbitrary here
     Currency recCurrency = GBPCurrency(); // recCcy != payCcy, but FX=1
-    boost::shared_ptr<Quote> fx(new SimpleQuote(1.0));
-    swap_ = boost::shared_ptr<OvernightIndexedCrossCcyBasisSwap>(
+    QuantLib::ext::shared_ptr<Quote> fx(new SimpleQuote(1.0));
+    swap_ = QuantLib::ext::shared_ptr<OvernightIndexedCrossCcyBasisSwap>(
         new OvernightIndexedCrossCcyBasisSwap(10000.0, // arbitrary payNominal
                                               payCurrency, paySchedule, payIndex_,
                                               0.0,     // zero pay spread
@@ -61,11 +61,11 @@ void OICCBSHelper::initializeDates() {
                                               recCurrency, recSchedule, recIndex_,
                                               0.0)); // target receive spread
     if (fixedDiscountOnPayLeg_) {
-        boost::shared_ptr<PricingEngine> engine(new OvernightIndexedCrossCcyBasisSwapEngine(
+        QuantLib::ext::shared_ptr<PricingEngine> engine(new OvernightIndexedCrossCcyBasisSwapEngine(
             fixedDiscountCurve_, payCurrency, termStructureHandle_, recCurrency, Handle<Quote>(fx)));
         swap_->setPricingEngine(engine);
     } else {
-        boost::shared_ptr<PricingEngine> engine(new OvernightIndexedCrossCcyBasisSwapEngine(
+        QuantLib::ext::shared_ptr<PricingEngine> engine(new OvernightIndexedCrossCcyBasisSwapEngine(
             termStructureHandle_, payCurrency, fixedDiscountCurve_, recCurrency, Handle<Quote>(fx)));
         swap_->setPricingEngine(engine);
     }
@@ -77,7 +77,7 @@ void OICCBSHelper::initializeDates() {
 void OICCBSHelper::setTermStructure(YieldTermStructure* t) {
     // do not set the relinkable handle as an observer -
     // force recalculation when needed
-    termStructureHandle_.linkTo(boost::shared_ptr<YieldTermStructure>(t, null_deleter()), false);
+    termStructureHandle_.linkTo(QuantLib::ext::shared_ptr<YieldTermStructure>(t, null_deleter()), false);
     RelativeDateRateHelper::setTermStructure(t);
 }
 

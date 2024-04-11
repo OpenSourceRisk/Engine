@@ -498,48 +498,48 @@ XMLNode* VolatilityApoFutureSurfaceConfig::toXML(XMLDocument& doc) const {
 
 void VolatilityConfigBuilder::loadVolatiltyConfigs(XMLNode* node) {
     for (XMLNode* n = XMLUtils::getChildNode(node, "Constant"); n; n = XMLUtils::getNextSibling(n, "Constant")) {
-        auto vc = boost::make_shared<ConstantVolatilityConfig>();
+        auto vc = QuantLib::ext::make_shared<ConstantVolatilityConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
     }
 
     for (XMLNode* n = XMLUtils::getChildNode(node, "Curve"); n; n = XMLUtils::getNextSibling(n, "Curve")) {
-        auto vc = boost::make_shared<VolatilityCurveConfig>();
+        auto vc = QuantLib::ext::make_shared<VolatilityCurveConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
     }
 
     for (XMLNode* n = XMLUtils::getChildNode(node, "DeltaSurface"); n;
          n = XMLUtils::getNextSibling(n, "DeltaSurface")) {
-        auto vc = boost::make_shared<VolatilityDeltaSurfaceConfig>();
+        auto vc = QuantLib::ext::make_shared<VolatilityDeltaSurfaceConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
     }
 
     for (XMLNode* n = XMLUtils::getChildNode(node, "StrikeSurface"); n;
          n = XMLUtils::getNextSibling(n, "StrikeSurface")) {
-        auto vc = boost::make_shared<VolatilityStrikeSurfaceConfig>();
+        auto vc = QuantLib::ext::make_shared<VolatilityStrikeSurfaceConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
     }
 
     for (XMLNode* n = XMLUtils::getChildNode(node, "MoneynessSurface"); n;
         n = XMLUtils::getNextSibling(n, "MoneynessSurface")) {
-        auto vc = boost::make_shared<VolatilityMoneynessSurfaceConfig>();
+        auto vc = QuantLib::ext::make_shared<VolatilityMoneynessSurfaceConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
     }
 
     for (XMLNode* n = XMLUtils::getChildNode(node, "ApoFutureSurface"); n;
         n = XMLUtils::getNextSibling(n, "ApoFutureSurface")) {
-        auto vc = boost::make_shared<VolatilityApoFutureSurfaceConfig>();
+        auto vc = QuantLib::ext::make_shared<VolatilityApoFutureSurfaceConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
     }
 
     for (XMLNode* n = XMLUtils::getChildNode(node, "ProxySurface"); n;
          n = XMLUtils::getNextSibling(n, "ProxySurface")) {
-        auto vc = boost::make_shared<ProxyVolatilityConfig>();
+        auto vc = QuantLib::ext::make_shared<ProxyVolatilityConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
     }
@@ -551,7 +551,7 @@ void VolatilityConfigBuilder::loadVolatiltyConfigs(XMLNode* node) {
     // sort the volatility configs by priority
     if (volatilityConfig_.size() > 1)
         std::sort(volatilityConfig_.begin(), volatilityConfig_.end(),
-                  [](const boost::shared_ptr<VolatilityConfig>& a, const boost::shared_ptr<VolatilityConfig>& b) {
+                  [](const QuantLib::ext::shared_ptr<VolatilityConfig>& a, const QuantLib::ext::shared_ptr<VolatilityConfig>& b) {
                       QL_REQUIRE(a && b,
                                  "VolatilityConfigBuilder fails to sort the configs, can not compare a nullptr");
                       return *a < *b;

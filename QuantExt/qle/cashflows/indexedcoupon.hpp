@@ -38,10 +38,10 @@ using namespace QuantLib;
 class IndexedCoupon : public Coupon, public Observer {
 public:
     /*! pays c->amount() * qty * index(fixingDate) */
-    IndexedCoupon(const boost::shared_ptr<Coupon>& c, const Real qty, const boost::shared_ptr<Index>& index,
+    IndexedCoupon(const QuantLib::ext::shared_ptr<Coupon>& c, const Real qty, const QuantLib::ext::shared_ptr<Index>& index,
                   const Date& fixingDate);
     /*! pays c->amount() * qty * initialFixing */
-    IndexedCoupon(const boost::shared_ptr<Coupon>& c, const Real qty, const Real initialFixing);
+    IndexedCoupon(const QuantLib::ext::shared_ptr<Coupon>& c, const Real qty, const Real initialFixing);
 
     //! \name Observer interface
     //@{
@@ -59,9 +59,9 @@ public:
 
     //! \name Inspectors
     //@{
-    boost::shared_ptr<Coupon> underlying() const;
+    QuantLib::ext::shared_ptr<Coupon> underlying() const;
     Real quantity() const;
-    boost::shared_ptr<Index> index() const; // might be null
+    QuantLib::ext::shared_ptr<Index> index() const; // might be null
     const Date& fixingDate() const;         // might be null
     Real initialFixing() const;             // might be null
     Real multiplier() const;
@@ -73,9 +73,9 @@ public:
     //@}
 
 private:
-    boost::shared_ptr<Coupon> c_;
+    QuantLib::ext::shared_ptr<Coupon> c_;
     Real qty_;
-    boost::shared_ptr<Index> index_;
+    QuantLib::ext::shared_ptr<Index> index_;
     Date fixingDate_;
     Real initialFixing_;
 };
@@ -87,10 +87,10 @@ private:
 class IndexWrappedCashFlow : public CashFlow, public Observer {
 public:
     /*! pays c->amount() * qty * index(fixingDate) */
-    IndexWrappedCashFlow(const boost::shared_ptr<CashFlow>& c, const Real qty, const boost::shared_ptr<Index>& index,
+    IndexWrappedCashFlow(const QuantLib::ext::shared_ptr<CashFlow>& c, const Real qty, const QuantLib::ext::shared_ptr<Index>& index,
                   const Date& fixingDate);
     /*! pays c->amount() * qty * initialFixing */
-    IndexWrappedCashFlow(const boost::shared_ptr<CashFlow>& c, const Real qty, const Real initialFixing);
+    IndexWrappedCashFlow(const QuantLib::ext::shared_ptr<CashFlow>& c, const Real qty, const Real initialFixing);
 
     //! \name Observer interface
     //@{
@@ -105,9 +105,9 @@ public:
 
     //! \name Inspectors
     //@{
-    boost::shared_ptr<CashFlow> underlying() const;
+    QuantLib::ext::shared_ptr<CashFlow> underlying() const;
     Real quantity() const;
-    boost::shared_ptr<Index> index() const; // might be null
+    QuantLib::ext::shared_ptr<Index> index() const; // might be null
     const Date& fixingDate() const;         // might be null
     Real initialFixing() const;             // might be null
     Real multiplier() const;
@@ -119,29 +119,29 @@ public:
     //@}
 
 private:
-    boost::shared_ptr<CashFlow> c_;
+    QuantLib::ext::shared_ptr<CashFlow> c_;
     Real qty_;
-    boost::shared_ptr<Index> index_;
+    QuantLib::ext::shared_ptr<Index> index_;
     Date fixingDate_;
     Real initialFixing_;
 
 };
 
 // if c casts to Coupon, unpack an indexed coupon, otherwise an index-wrapped cashflow
-boost::shared_ptr<CashFlow> unpackIndexedCouponOrCashFlow(const boost::shared_ptr<CashFlow>& c);
+QuantLib::ext::shared_ptr<CashFlow> unpackIndexedCouponOrCashFlow(const QuantLib::ext::shared_ptr<CashFlow>& c);
 
 // remove all index wrappers around a coupon
-boost::shared_ptr<Coupon> unpackIndexedCoupon(const boost::shared_ptr<Coupon>& c);
+QuantLib::ext::shared_ptr<Coupon> unpackIndexedCoupon(const QuantLib::ext::shared_ptr<Coupon>& c);
 
 // remove all index wrappers around a cashflow
-boost::shared_ptr<CashFlow> unpackIndexWrappedCashFlow(const boost::shared_ptr<CashFlow>& c);
+QuantLib::ext::shared_ptr<CashFlow> unpackIndexWrappedCashFlow(const QuantLib::ext::shared_ptr<CashFlow>& c);
 
 // get cumulated multiplier for indexed coupon or cashflow
-Real getIndexedCouponOrCashFlowMultiplier(const boost::shared_ptr<CashFlow>& c);
+Real getIndexedCouponOrCashFlowMultiplier(const QuantLib::ext::shared_ptr<CashFlow>& c);
 
 // get all fixingDates / indices / multipliers for indexed coupon or index-wrapped cashflow
-std::vector<std::tuple<Date, boost::shared_ptr<Index>, Real>>
-getIndexedCouponOrCashFlowFixingDetails(const boost::shared_ptr<CashFlow>& c);
+std::vector<std::tuple<Date, QuantLib::ext::shared_ptr<Index>, Real>>
+getIndexedCouponOrCashFlowFixingDetails(const QuantLib::ext::shared_ptr<CashFlow>& c);
 
 //! indexed coupon leg
 /*!
@@ -149,7 +149,7 @@ getIndexedCouponOrCashFlowFixingDetails(const boost::shared_ptr<CashFlow>& c);
 */
 class IndexedCouponLeg {
 public:
-    IndexedCouponLeg(const Leg& underlyingLeg, const Real qty, const boost::shared_ptr<Index>& index);
+    IndexedCouponLeg(const Leg& underlyingLeg, const Real qty, const QuantLib::ext::shared_ptr<Index>& index);
     IndexedCouponLeg& withInitialFixing(const Real initialFixing);
     IndexedCouponLeg& withInitialNotionalFixing(const Real initialNotionalFixing);
     IndexedCouponLeg& withValuationSchedule(const Schedule& valuationSchedule);
@@ -163,7 +163,7 @@ public:
 private:
     const Leg underlyingLeg_;
     const Real qty_;
-    const boost::shared_ptr<Index> index_;
+    const QuantLib::ext::shared_ptr<Index> index_;
     Real initialFixing_;
     Real initialNotionalFixing_;
     Schedule valuationSchedule_;

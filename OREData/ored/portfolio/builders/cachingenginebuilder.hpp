@@ -59,11 +59,11 @@ public:
         : EngineBuilder(model, engine, tradeTypes) {}
 
     //! Return a PricingEngine or a FloatingRateCouponPricer
-    boost::shared_ptr<U> engine(Args... params) {
+    QuantLib::ext::shared_ptr<U> engine(Args... params) {
         T key = keyImpl(params...);
         if (engines_.find(key) == engines_.end()) {
             // build first (in case it throws)
-            boost::shared_ptr<U> engine = engineImpl(params...);
+            QuantLib::ext::shared_ptr<U> engine = engineImpl(params...);
             // then add to map
             engines_[key] = engine;
         }
@@ -74,9 +74,9 @@ public:
 
 protected:
     virtual T keyImpl(Args...) = 0;
-    virtual boost::shared_ptr<U> engineImpl(Args...) = 0;
+    virtual QuantLib::ext::shared_ptr<U> engineImpl(Args...) = 0;
 
-    map<T, boost::shared_ptr<U>> engines_;
+    map<T, QuantLib::ext::shared_ptr<U>> engines_;
 };
 
 template <class T, typename... Args>

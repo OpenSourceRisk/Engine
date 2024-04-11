@@ -40,14 +40,14 @@ public:
     /*! Constructor providing the weights for the credit index decomposition and the ids and reference data used for
      */
     DecomposedSensitivityStream(
-        const boost::shared_ptr<SensitivityStream>& ss, const std::string& baseCurrency,
+        const QuantLib::ext::shared_ptr<SensitivityStream>& ss, const std::string& baseCurrency,
         std::map<std::string, std::map<std::string, double>> defaultRiskDecompositionWeights = {},
         const std::set<std::string>& eqComDecompositionTradeIds = {},
         const std::map<std::string, std::map<std::string, double>>& currencyHedgedIndexQuantities = {},
-        const boost::shared_ptr<ore::data::ReferenceDataManager>& refDataManager = nullptr,
-        const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
-        const boost::shared_ptr<SensitivityScenarioData>& scenarioData = nullptr,
-        const boost::shared_ptr<ore::data::Market>& todaysMarket = nullptr);
+        const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& refDataManager = nullptr,
+        const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
+        const QuantLib::ext::shared_ptr<SensitivityScenarioData>& scenarioData = nullptr,
+        const QuantLib::ext::shared_ptr<ore::data::Market>& todaysMarket = nullptr);
     //! Returns the next SensitivityRecord in the stream after filtering
     SensitivityRecord next() override;
     //! Resets the stream so that SensitivityRecord objects can be streamed again
@@ -106,7 +106,7 @@ private:
     std::vector<SensitivityRecord>::iterator itCurrent_;
 
     //! The underlying sensitivity stream that has been wrapped
-    boost::shared_ptr<SensitivityStream> ss_;
+    QuantLib::ext::shared_ptr<SensitivityStream> ss_;
     std::string baseCurrency_;
     //! map of trade ids to the basket consituents with their resp. weights
     std::map<std::string, std::map<std::string, double>> defaultRiskDecompositionWeights_;
@@ -115,11 +115,11 @@ private:
     //! list of trade id, for which a commodity index decomposition should be applied
     std::map<std::string, std::map<std::string, double>> currencyHedgedIndexQuantities_;
     //! refDataManager holding the equity and commodity index decomposition weights
-    boost::shared_ptr<ore::data::ReferenceDataManager> refDataManager_;
-    boost::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
-    boost::shared_ptr<SensitivityScenarioData> ssd_;
+    QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager> refDataManager_;
+    QuantLib::ext::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> ssd_;
     // needed for currency hedged index decomposition
-    boost::shared_ptr<ore::data::Market> todaysMarket_;
+    QuantLib::ext::shared_ptr<ore::data::Market> todaysMarket_;
     // flag if decompose is possible
     bool decompose_;
 };

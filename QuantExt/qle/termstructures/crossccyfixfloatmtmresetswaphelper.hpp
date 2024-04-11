@@ -60,7 +60,7 @@ public:
         const QuantLib::Currency& fixedCurrency, QuantLib::Frequency fixedFrequency,
         QuantLib::BusinessDayConvention fixedConvention,
         const QuantLib::DayCounter& fixedDayCount,
-        const boost::shared_ptr<QuantLib::IborIndex>& index,
+        const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
         const QuantLib::Handle<QuantLib::YieldTermStructure>& floatDiscount,
         const Handle<Quote>& spread = Handle<Quote>(), bool endOfMonth = false, 
         bool resetsOnFloatLeg = true);
@@ -75,7 +75,7 @@ public:
     //@}
     //! \name inspectors
     //@{
-    boost::shared_ptr<CrossCcyFixFloatMtMResetSwap> swap() const { return swap_; }
+    QuantLib::ext::shared_ptr<CrossCcyFixFloatMtMResetSwap> swap() const { return swap_; }
     //@}
     //! \name Visitability
     //@{
@@ -94,13 +94,13 @@ protected:
     QuantLib::Frequency fixedFrequency_;
     QuantLib::BusinessDayConvention fixedConvention_;
     QuantLib::DayCounter fixedDayCount_;
-    boost::shared_ptr<QuantLib::IborIndex> index_;
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> index_;
     QuantLib::Handle<QuantLib::YieldTermStructure> floatDiscount_;
     QuantLib::Handle<QuantLib::Quote> spread_;
     bool endOfMonth_;
     bool resetsOnFloatLeg_;
 
-    boost::shared_ptr<CrossCcyFixFloatMtMResetSwap> swap_;
+    QuantLib::ext::shared_ptr<CrossCcyFixFloatMtMResetSwap> swap_;
 
     RelinkableHandle<YieldTermStructure> termStructureHandle_;
 };

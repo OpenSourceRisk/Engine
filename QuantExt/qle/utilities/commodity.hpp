@@ -29,9 +29,9 @@
 namespace QuantExt {
 
 //! Make a commodity indexed cashflow
-boost::shared_ptr<CashFlow>
+QuantLib::ext::shared_ptr<CashFlow>
 makeCommodityCashflowForBasisFuture(const QuantLib::Date& start, const QuantLib::Date& end,
-                                    const boost::shared_ptr<CommodityIndex>& baseIndex,
-                                    const boost::shared_ptr<FutureExpiryCalculator>& baseFec, bool baseIsAveraging,
+                                    const QuantLib::ext::shared_ptr<CommodityIndex>& baseIndex,
+                                    const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& baseFec, bool baseIsAveraging,
                                     const QuantLib::Date& paymentDate = QuantLib::Date());
 } // namespace Utilities

@@ -42,7 +42,7 @@ public:
         : Trade("CapFloor", env), longShort_(longShort), legData_(leg), caps_(caps), floors_(floors),
           premiumData_(premiumData) {}
 
-    virtual void build(const boost::shared_ptr<EngineFactory>&) override;
+    virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
     //! Inspectors
     //@{

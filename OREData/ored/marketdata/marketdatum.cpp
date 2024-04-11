@@ -160,7 +160,7 @@ std::ostream& operator<<(std::ostream& out, const MarketDatum::InstrumentType& t
 
 EquityOptionQuote::EquityOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType,
                                      string equityName, string ccy, string expiry,
-                                     const boost::shared_ptr<BaseStrike>& strike, bool isCall)
+                                     const QuantLib::ext::shared_ptr<BaseStrike>& strike, bool isCall)
     : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_OPTION), eqName_(equityName), ccy_(ccy),
       expiry_(expiry), strike_(strike), isCall_(isCall) {
 
@@ -194,12 +194,12 @@ EquityDividendYieldQuote::EquityDividendYieldQuote(Real value, Date asofDate, co
 }
 
 IndexCDSOptionQuote::IndexCDSOptionQuote(QuantLib::Real value, const Date& asof, const string& name,
-                                         const string& indexName, const boost::shared_ptr<Expiry>& expiry,
-                                         const string& indexTerm, const boost::shared_ptr<BaseStrike>& strike)
+                                         const string& indexName, const QuantLib::ext::shared_ptr<Expiry>& expiry,
+                                         const string& indexTerm, const QuantLib::ext::shared_ptr<BaseStrike>& strike)
     : MarketDatum(value, asof, name, QuoteType::RATE_LNVOL, InstrumentType::INDEX_CDS_OPTION), indexName_(indexName),
       expiry_(expiry), indexTerm_(indexTerm), strike_(strike) {
 
-    if (auto date = boost::dynamic_pointer_cast<ExpiryDate>(expiry))
+    if (auto date = QuantLib::ext::dynamic_pointer_cast<ExpiryDate>(expiry))
         QL_REQUIRE(asof <= date->expiryDate(), "IndexCDSOptionQuote: Invalid INDEX_CDS_OPTION quote, expiry date "
             << date->expiryDate() << " must be after asof date " << asof);
 }
@@ -276,13 +276,13 @@ QuantLib::Size SeasonalityQuote::applyMonth() const {
 
 CommodityOptionQuote::CommodityOptionQuote(Real value, const Date& asof, const string& name, QuoteType quoteType,
                                            const string& commodityName, const string& quoteCurrency,
-                                           const boost::shared_ptr<Expiry>& expiry,
-                                           const boost::shared_ptr<BaseStrike>& strike,
+                                           const QuantLib::ext::shared_ptr<Expiry>& expiry,
+                                           const QuantLib::ext::shared_ptr<BaseStrike>& strike,
                                            Option::Type optionType)
     : MarketDatum(value, asof, name, quoteType, InstrumentType::COMMODITY_OPTION), commodityName_(commodityName),
       quoteCurrency_(quoteCurrency), expiry_(expiry), strike_(strike), optionType_(optionType) {
 
-    if (auto date = boost::dynamic_pointer_cast<ExpiryDate>(expiry))
+    if (auto date = QuantLib::ext::dynamic_pointer_cast<ExpiryDate>(expiry))
         QL_REQUIRE(asof <= date->expiryDate(), "CommodityOptionQuote: Invalid CommodityOptionQuote, expiry date "
                                                    << date->expiryDate() << " must be after asof date " << asof);
 }
@@ -319,7 +319,7 @@ template <class Archive> void MarketDatum::serialize(Archive& ar, const unsigned
         ar& value;
     } else {
         ar& value;
-        quote_ = Handle<Quote>(boost::make_shared<SimpleQuote>(value));
+        quote_ = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(value));
     }
     ar& asofDate_;
     ar& name_;

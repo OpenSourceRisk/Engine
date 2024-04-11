@@ -93,13 +93,13 @@ struct NormalSABRSpecs {
         return bachelierBlackFormulaStdDevDerivative(strike, forward, stdDev, 1.0);
     }
     typedef NormalSABRWrapper type;
-    boost::shared_ptr<type> instance(const Time t, const Real& forward, const std::vector<Real>& params,
+    QuantLib::ext::shared_ptr<type> instance(const Time t, const Real& forward, const std::vector<Real>& params,
                                      const std::vector<Real>& addParams) {
         std::vector<Real> updatedParams(params);
         if (!addParams.empty()) {
             updatedParams[0] = normalSabrAlphaFromAtmVol(forward, t, addParams.front(), params[1], params[2]);
         }
-        return boost::make_shared<type>(t, forward, updatedParams, addParams);
+        return QuantLib::ext::make_shared<type>(t, forward, updatedParams, addParams);
     }
 };
 } // namespace detail
@@ -116,8 +116,8 @@ public:
         Time t,           // option expiry
         const Real& forward, Real alpha, Real nu, Real rho, bool alphaIsFixed, bool nuIsFixed, bool rhoIsFixed,
         bool vegaWeighted = true, const Size atmStrikeIndex = Null<Size>(), const bool implyAlphaFromAtmVol = false,
-        const boost::shared_ptr<EndCriteria>& endCriteria = boost::shared_ptr<EndCriteria>(),
-        const boost::shared_ptr<OptimizationMethod>& optMethod = boost::shared_ptr<OptimizationMethod>(),
+        const QuantLib::ext::shared_ptr<EndCriteria>& endCriteria = QuantLib::ext::shared_ptr<EndCriteria>(),
+        const QuantLib::ext::shared_ptr<OptimizationMethod>& optMethod = QuantLib::ext::shared_ptr<OptimizationMethod>(),
         const Real errorAccept = 0.0002, const bool useMaxError = false, const Size maxGuesses = 50) {
 
         QL_REQUIRE(
@@ -129,12 +129,12 @@ public:
             addParams.push_back(*std::next(yBegin, atmStrikeIndex));
         }
 
-        impl_ = boost::shared_ptr<Interpolation::Impl>(
+        impl_ = QuantLib::ext::shared_ptr<Interpolation::Impl>(
             new QuantLib::detail::XABRInterpolationImpl<I1, I2, detail::NormalSABRSpecs>(
                 xBegin, xEnd, yBegin, t, forward, boost::assign::list_of(alpha)(nu)(rho),
                 boost::assign::list_of(alphaIsFixed)(nuIsFixed)(rhoIsFixed), vegaWeighted, endCriteria, optMethod,
                 errorAccept, useMaxError, maxGuesses, addParams));
-        coeffs_ = boost::dynamic_pointer_cast<QuantLib::detail::XABRCoeffHolder<detail::NormalSABRSpecs>>(impl_);
+        coeffs_ = QuantLib::ext::dynamic_pointer_cast<QuantLib::detail::XABRCoeffHolder<detail::NormalSABRSpecs>>(impl_);
     }
     Real expiry() const { return coeffs_->t_; }
     Real forward() const { return coeffs_->forward_; }
@@ -147,7 +147,7 @@ public:
     EndCriteria::Type endCriteria() { return coeffs_->XABREndCriteria_; }
 
 private:
-    boost::shared_ptr<QuantLib::detail::XABRCoeffHolder<detail::NormalSABRSpecs>> coeffs_;
+    QuantLib::ext::shared_ptr<QuantLib::detail::XABRCoeffHolder<detail::NormalSABRSpecs>> coeffs_;
 };
 
 //! %SABR interpolation factory and traits
@@ -156,8 +156,8 @@ class NormalSABR {
 public:
     NormalSABR(Time t, Real forward, Real alpha, Real nu, Real rho, bool alphaIsFixed, bool nuIsFixed, bool rhoIsFixed,
                bool vegaWeighted = false,
-               const boost::shared_ptr<EndCriteria> endCriteria = boost::shared_ptr<EndCriteria>(),
-               const boost::shared_ptr<OptimizationMethod> optMethod = boost::shared_ptr<OptimizationMethod>(),
+               const QuantLib::ext::shared_ptr<EndCriteria> endCriteria = QuantLib::ext::shared_ptr<EndCriteria>(),
+               const QuantLib::ext::shared_ptr<OptimizationMethod> optMethod = QuantLib::ext::shared_ptr<OptimizationMethod>(),
                const Real errorAccept = 0.0002, const bool useMaxError = false, const Size maxGuesses = 50)
         : t_(t), forward_(forward), alpha_(alpha), nu_(nu), rho_(rho), alphaIsFixed_(alphaIsFixed),
           nuIsFixed_(nuIsFixed), rhoIsFixed_(rhoIsFixed), vegaWeighted_(vegaWeighted), endCriteria_(endCriteria),
@@ -175,8 +175,8 @@ private:
     Real alpha_, nu_, rho_;
     bool alphaIsFixed_, nuIsFixed_, rhoIsFixed_;
     bool vegaWeighted_;
-    const boost::shared_ptr<EndCriteria> endCriteria_;
-    const boost::shared_ptr<OptimizationMethod> optMethod_;
+    const QuantLib::ext::shared_ptr<EndCriteria> endCriteria_;
+    const QuantLib::ext::shared_ptr<OptimizationMethod> optMethod_;
     const Real errorAccept_;
     const bool useMaxError_;
     const Size maxGuesses_;

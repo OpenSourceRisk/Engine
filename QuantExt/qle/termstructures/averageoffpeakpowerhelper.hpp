@@ -52,11 +52,11 @@ public:
         \param peakHoursPerDay The number of peak hours per day.
     */
     AverageOffPeakPowerHelper(const QuantLib::Handle<QuantLib::Quote>& price,
-        const boost::shared_ptr<CommodityIndex>& index,
+        const QuantLib::ext::shared_ptr<CommodityIndex>& index,
         const QuantLib::Date& start,
         const QuantLib::Date& end,
         const ext::shared_ptr<FutureExpiryCalculator>& calc,
-        const boost::shared_ptr<CommodityIndex>& peakIndex,
+        const QuantLib::ext::shared_ptr<CommodityIndex>& peakIndex,
         const QuantLib::Calendar& peakCalendar,
         QuantLib::Natural peakHoursPerDay = 16);
 
@@ -73,11 +73,11 @@ public:
         \param peakHoursPerDay The number of peak hours per day.
     */
     AverageOffPeakPowerHelper(QuantLib::Real price,
-        const boost::shared_ptr<CommodityIndex>& index,
+        const QuantLib::ext::shared_ptr<CommodityIndex>& index,
         const QuantLib::Date& start,
         const QuantLib::Date& end,
         const ext::shared_ptr<FutureExpiryCalculator>& calc,
-        const boost::shared_ptr<CommodityIndex>& peakIndex,
+        const QuantLib::ext::shared_ptr<CommodityIndex>& peakIndex,
         const QuantLib::Calendar& peakCalendar,
         QuantLib::Natural peakHoursPerDay = 16);
     //@}
@@ -97,17 +97,17 @@ public:
 
 private:
     //! Shared initialisation method.
-    void init(const boost::shared_ptr<CommodityIndex>& index,
+    void init(const QuantLib::ext::shared_ptr<CommodityIndex>& index,
         const QuantLib::Date& start,
         const QuantLib::Date& end,
         const ext::shared_ptr<FutureExpiryCalculator>& calc,
-        const boost::shared_ptr<CommodityIndex>& peakIndex,
+        const QuantLib::ext::shared_ptr<CommodityIndex>& peakIndex,
         const QuantLib::Calendar& peakCalendar,
         QuantLib::Natural peakHoursPerDay);
 
-    boost::shared_ptr<CommodityIndexedAverageCashFlow> businessOffPeak_;
-    boost::shared_ptr<CommodityIndexedAverageCashFlow> holidayOffPeak_;
-    boost::shared_ptr<CommodityIndexedAverageCashFlow> holidayPeak_;
+    QuantLib::ext::shared_ptr<CommodityIndexedAverageCashFlow> businessOffPeak_;
+    QuantLib::ext::shared_ptr<CommodityIndexedAverageCashFlow> holidayOffPeak_;
+    QuantLib::ext::shared_ptr<CommodityIndexedAverageCashFlow> holidayPeak_;
     QuantLib::Natural peakDays_;
     QuantLib::Natural nonPeakDays_;
 

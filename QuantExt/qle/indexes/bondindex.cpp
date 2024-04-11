@@ -27,7 +27,7 @@
 namespace QuantExt {
 
 BondIndex::BondIndex(const std::string& securityName, const bool dirty, const bool relative,
-                     const Calendar& fixingCalendar, const boost::shared_ptr<QuantLib::Bond>& bond,
+                     const Calendar& fixingCalendar, const QuantLib::ext::shared_ptr<QuantLib::Bond>& bond,
                      const Handle<YieldTermStructure>& discountCurve,
                      const Handle<DefaultProbabilityTermStructure>& defaultCurve, const Handle<Quote>& recoveryRate,
                      const Handle<Quote>& securitySpread, const Handle<YieldTermStructure>& incomeCurve,
@@ -50,7 +50,7 @@ BondIndex::BondIndex(const std::string& securityName, const bool dirty, const bo
     registerWith(securitySpread_);
     registerWith(incomeCurve_);
 
-    vanillaBondEngine_ = boost::make_shared<DiscountingRiskyBondEngine>(discountCurve, defaultCurve, recoveryRate,
+    vanillaBondEngine_ = QuantLib::ext::make_shared<DiscountingRiskyBondEngine>(discountCurve, defaultCurve, recoveryRate,
                                                                         securitySpread, 6 * Months, boost::none);
 }
 
@@ -157,7 +157,7 @@ Real BondIndex::pastFixing(const Date& fixingDate) const {
 
 BondFuturesIndex::BondFuturesIndex(const QuantLib::Date& expiryDate, const std::string& securityName, const bool dirty,
                                    const bool relative, const Calendar& fixingCalendar,
-                                   const boost::shared_ptr<QuantLib::Bond>& bond,
+                                   const QuantLib::ext::shared_ptr<QuantLib::Bond>& bond,
                                    const Handle<YieldTermStructure>& discountCurve,
                                    const Handle<DefaultProbabilityTermStructure>& defaultCurve,
                                    const Handle<Quote>& recoveryRate, const Handle<Quote>& securitySpread,

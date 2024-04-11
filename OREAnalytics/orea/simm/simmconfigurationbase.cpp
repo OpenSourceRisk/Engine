@@ -72,7 +72,7 @@ const tuple<string, string, string> SimmConfigurationBase::makeKey(const string&
     return std::make_tuple(bucket, label1, label2);
 }
 
-SimmConfigurationBase::SimmConfigurationBase(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+SimmConfigurationBase::SimmConfigurationBase(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
                                              const std::string& name, const std::string version, Size mporDays)
     : name_(name), version_(version), simmBucketMapper_(simmBucketMapper), mporDays_(mporDays) {}
 

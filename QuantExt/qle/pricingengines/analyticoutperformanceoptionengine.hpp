@@ -43,7 +43,7 @@ private:
     Real correlation(Time t, Real strike = 1) const { return correlationCurve_->correlation(t, strike); }
     Real rho(Time t) const { return std::max(std::min(correlation(t), 0.9999), -0.9999); }
     Real integrand(const Real x, Real phi, Real k, Real m1, Real m2, Real v1, Real v2, Real s1, Real s2, Real i1, Real i2, Real fixingTime) const;
-    Real getTodaysFxConversionRate(const boost::shared_ptr<QuantExt::FxIndex>& fxIndex) const;
+    Real getTodaysFxConversionRate(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex) const;
 
     class integrand_f;
     friend class integrand_f;

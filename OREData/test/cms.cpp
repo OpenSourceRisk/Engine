@@ -60,13 +60,13 @@ public:
             "EUR-EURIBOR-6M", yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")]));
         iborIndices_[make_pair(Market::defaultConfiguration, "EUR-EURIBOR-6M")] = hEUR;
 
-        boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();
+        QuantLib::ext::shared_ptr<Conventions> conventions = QuantLib::ext::make_shared<Conventions>();
         
         // add swap index
-        boost::shared_ptr<ore::data::Convention> swapEURConv(new ore::data::IRSwapConvention(
+        QuantLib::ext::shared_ptr<ore::data::Convention> swapEURConv(new ore::data::IRSwapConvention(
             "EUR-6M-SWAP-CONVENTIONS", "TARGET", "Annual", "MF", "30/360", "EUR-EURIBOR-6M"));
         conventions->add(swapEURConv);
-        boost::shared_ptr<ore::data::Convention> swapIndexEURLongConv(
+        QuantLib::ext::shared_ptr<ore::data::Convention> swapIndexEURLongConv(
             new ore::data::SwapIndexConvention("EUR-CMS-30Y", "EUR-6M-SWAP-CONVENTIONS"));
         conventions->add(swapIndexEURLongConv);
 
@@ -77,11 +77,11 @@ public:
 
 private:
     Handle<YieldTermStructure> flatRateYts(Real forward) {
-        boost::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, ActualActual(ActualActual::ISDA)));
+        QuantLib::ext::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, ActualActual(ActualActual::ISDA)));
         return Handle<YieldTermStructure>(yts);
     }
     Handle<SwaptionVolatilityStructure> flatRateSvs(Volatility forward) {
-        boost::shared_ptr<SwaptionVolatilityStructure> Svs(
+        QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> Svs(
             new ConstantSwaptionVolatility(0, NullCalendar(), ModifiedFollowing, forward, ActualActual(ActualActual::ISDA)));
         return Handle<SwaptionVolatilityStructure>(Svs);
     }
@@ -112,100 +112,100 @@ struct CommonVars {
     vector<string> spreadDates;
 
     // utilities
-    boost::shared_ptr<ore::data::Swap> makeSwap() {
+    QuantLib::ext::shared_ptr<ore::data::Swap> makeSwap() {
         ScheduleData fixedSchedule(ScheduleRules(start, end, fixtenor, calStr, conv, conv, rule));
         ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
 
         // build CMSSwap
-        LegData fixedLegData(boost::make_shared<FixedLegData>(vector<double>(1, fixedRate)), !isPayer, ccy,
+        LegData fixedLegData(QuantLib::ext::make_shared<FixedLegData>(vector<double>(1, fixedRate)), !isPayer, ccy,
                              fixedSchedule, fixDC, notionals);
-        LegData cmsLegData(boost::make_shared<CMSLegData>(index, fixingdays, isinarrears, spread), isPayer, ccy,
+        LegData cmsLegData(QuantLib::ext::make_shared<CMSLegData>(index, fixingdays, isinarrears, spread), isPayer, ccy,
                            cmsSchedule, fixDC, notionals);
 
         Envelope env("CP1");
-        boost::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, fixedLegData, cmsLegData));
+        QuantLib::ext::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, fixedLegData, cmsLegData));
         return swap;
     }
 
-    boost::shared_ptr<ore::data::Swap> makeSwap(Real fixedRate_, string fixtenor_) {
+    QuantLib::ext::shared_ptr<ore::data::Swap> makeSwap(Real fixedRate_, string fixtenor_) {
         ScheduleData fixedSchedule(ScheduleRules(start, end, fixtenor_, calStr, conv, conv, rule));
         ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
 
         // build CMSSwap
-        LegData fixedLegData(boost::make_shared<FixedLegData>(vector<double>(1, fixedRate_)), !isPayer, ccy,
+        LegData fixedLegData(QuantLib::ext::make_shared<FixedLegData>(vector<double>(1, fixedRate_)), !isPayer, ccy,
                              fixedSchedule, fixDC, notionals);
-        LegData cmsLegData(boost::make_shared<CMSLegData>(index, fixingdays, isinarrears, spread), isPayer, ccy,
+        LegData cmsLegData(QuantLib::ext::make_shared<CMSLegData>(index, fixingdays, isinarrears, spread), isPayer, ccy,
                            cmsSchedule, fixDC, notionals);
 
         Envelope env("CP1");
-        boost::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, fixedLegData, cmsLegData));
+        QuantLib::ext::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, fixedLegData, cmsLegData));
         return swap;
     }
 
-    boost::shared_ptr<ore::data::Swap> makeCmsLegSwap() {
+    QuantLib::ext::shared_ptr<ore::data::Swap> makeCmsLegSwap() {
         ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
 
         vector<LegData> legData;
         CMSLegData cmsLegRateData;
-        LegData cmsLegData(boost::make_shared<CMSLegData>(index, fixingdays, isinarrears, spread), isPayer, ccy,
+        LegData cmsLegData(QuantLib::ext::make_shared<CMSLegData>(index, fixingdays, isinarrears, spread), isPayer, ccy,
                            cmsSchedule, fixDC, notionals);
         legData.push_back(cmsLegData);
 
         Envelope env("CP1");
-        boost::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, legData));
+        QuantLib::ext::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, legData));
         return swap;
     }
 
-    boost::shared_ptr<ore::data::Swap> makeCappedCmsLegSwap(vector<double> caps,
+    QuantLib::ext::shared_ptr<ore::data::Swap> makeCappedCmsLegSwap(vector<double> caps,
                                                             vector<string> capDates = vector<string>()) {
         ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
 
         vector<LegData> legData;
         LegData cmsLegData(
-            boost::make_shared<CMSLegData>(index, fixingdays, isinarrears, spread, spreadDates, caps, capDates),
+            QuantLib::ext::make_shared<CMSLegData>(index, fixingdays, isinarrears, spread, spreadDates, caps, capDates),
             isPayer, ccy, cmsSchedule, fixDC, notionals);
         legData.push_back(cmsLegData);
 
         Envelope env("CP1");
-        boost::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, legData));
+        QuantLib::ext::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, legData));
         return swap;
     }
 
-    boost::shared_ptr<ore::data::CapFloor> makeCap(vector<double> caps) {
+    QuantLib::ext::shared_ptr<ore::data::CapFloor> makeCap(vector<double> caps) {
         ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
 
-        LegData cmsLegData(boost::make_shared<CMSLegData>(index, fixingdays, isinarrears, spread, spreadDates), isPayer,
+        LegData cmsLegData(QuantLib::ext::make_shared<CMSLegData>(index, fixingdays, isinarrears, spread, spreadDates), isPayer,
                            ccy, cmsSchedule, fixDC, notionals);
 
         Envelope env("CP1");
-        boost::shared_ptr<ore::data::CapFloor> capfloor(
+        QuantLib::ext::shared_ptr<ore::data::CapFloor> capfloor(
             new ore::data::CapFloor(env, longShort, cmsLegData, caps, vector<double>()));
         return capfloor;
     }
 
-    boost::shared_ptr<ore::data::Swap> makeFlooredCmsLegSwap(vector<double> floors,
+    QuantLib::ext::shared_ptr<ore::data::Swap> makeFlooredCmsLegSwap(vector<double> floors,
                                                              vector<string> floorDates = vector<string>()) {
         ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
 
         vector<LegData> legData;
-        LegData cmsLegData(boost::make_shared<CMSLegData>(index, fixingdays, isinarrears, spread, spreadDates,
+        LegData cmsLegData(QuantLib::ext::make_shared<CMSLegData>(index, fixingdays, isinarrears, spread, spreadDates,
                                                           vector<double>(), vector<string>(), floors, floorDates),
                            isPayer, ccy, cmsSchedule, fixDC, notionals);
         legData.push_back(cmsLegData);
 
         Envelope env("CP1");
-        boost::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, legData));
+        QuantLib::ext::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, legData));
         return swap;
     }
 
-    boost::shared_ptr<ore::data::CapFloor> makeFloor(vector<double> floors) {
+    QuantLib::ext::shared_ptr<ore::data::CapFloor> makeFloor(vector<double> floors) {
         ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
 
-        LegData cmsLegData(boost::make_shared<CMSLegData>(index, fixingdays, isinarrears, spread, spreadDates), isPayer,
+        LegData cmsLegData(QuantLib::ext::make_shared<CMSLegData>(index, fixingdays, isinarrears, spread, spreadDates), isPayer,
                            ccy, cmsSchedule, fixDC, notionals);
 
         Envelope env("CP1");
-        boost::shared_ptr<ore::data::CapFloor> capfloor(
+        QuantLib::ext::shared_ptr<ore::data::CapFloor> capfloor(
             new ore::data::CapFloor(env, longShort, cmsLegData, vector<double>(), floors));
         return capfloor;
     }
@@ -228,10 +228,10 @@ struct CommonVars {
     }
 };
 
-void outputCoupons(boost::shared_ptr<ore::data::Swap> cmsSwap) {
+void outputCoupons(QuantLib::ext::shared_ptr<ore::data::Swap> cmsSwap) {
     Leg leg = cmsSwap->legs().at(1);
     for (auto cf : leg) {
-        boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(cf);
+        QuantLib::ext::shared_ptr<FloatingRateCoupon> frc = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(cf);
         BOOST_TEST_MESSAGE("Coupon Date: " << frc->date() << "; Rate: " << frc->rate()
                                            << "; DayCount: " << frc->dayCounter());
     }
@@ -246,13 +246,13 @@ BOOST_AUTO_TEST_CASE(testCMSAnalyticHagan) {
     BOOST_TEST_MESSAGE("Testing CMS Analytic Hagan price...");
 
     // build market
-    boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
+    QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>();
     Settings::instance().evaluationDate() = market->asofDate();
     CommonVars vars;
-    boost::shared_ptr<ore::data::Swap> cmsSwap = vars.makeSwap();
+    QuantLib::ext::shared_ptr<ore::data::Swap> cmsSwap = vars.makeSwap();
 
     // Build and price
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("CMS") = "Hagan";
     engineData->engine("CMS") = "Analytic";
     map<string, string> engineparams;
@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE(testCMSAnalyticHagan) {
     engineData->model("Swap") = "DiscountedCashflows";
     engineData->engine("Swap") = "DiscountingSwapEngineOptimised";
 
-    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
     cmsSwap->build(engineFactory);
 
@@ -280,14 +280,14 @@ BOOST_AUTO_TEST_CASE(testCMSNumericalHagan) {
     BOOST_TEST_MESSAGE("Testing CMS Numerical Hagan price...");
 
     // build market
-    boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
+    QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>();
     Settings::instance().evaluationDate() = market->asofDate();
 
     CommonVars vars;
-    boost::shared_ptr<ore::data::Swap> cmsSwap = vars.makeSwap();
+    QuantLib::ext::shared_ptr<ore::data::Swap> cmsSwap = vars.makeSwap();
 
     // Build and price
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("CMS") = "Hagan";
     engineData->engine("CMS") = "Numerical";
     map<string, string> engineparams;
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(testCMSNumericalHagan) {
     engineData->model("Swap") = "DiscountedCashflows";
     engineData->engine("Swap") = "DiscountingSwapEngineOptimised";
 
-    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
     cmsSwap->build(engineFactory);
 
@@ -318,14 +318,14 @@ BOOST_AUTO_TEST_CASE(testCMSLinearTsr) {
     BOOST_TEST_MESSAGE("Testing CMS Linear TSR price...");
 
     // build market
-    boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
+    QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>();
     Settings::instance().evaluationDate() = market->asofDate();
 
     CommonVars vars;
-    boost::shared_ptr<ore::data::Swap> cmsSwap = vars.makeSwap();
+    QuantLib::ext::shared_ptr<ore::data::Swap> cmsSwap = vars.makeSwap();
 
     // Build and price
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("CMS") = "LinearTSR";
     engineData->engine("CMS") = "LinearTSRPricer";
     map<string, string> engineparams;
@@ -338,7 +338,7 @@ BOOST_AUTO_TEST_CASE(testCMSLinearTsr) {
     engineData->model("Swap") = "DiscountedCashflows";
     engineData->engine("Swap") = "DiscountingSwapEngineOptimised";
 
-    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
     cmsSwap->build(engineFactory);
 
@@ -355,11 +355,11 @@ BOOST_AUTO_TEST_CASE(cmsCapFloor) {
     BOOST_TEST_MESSAGE("Testing CMS CapFloor price...");
 
     // build market
-    boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
+    QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>();
     Settings::instance().evaluationDate() = market->asofDate();
 
     CommonVars vars;
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("CMS") = "Hagan";
     engineData->engine("CMS") = "Analytic";
     map<string, string> engineparams;
@@ -370,14 +370,14 @@ BOOST_AUTO_TEST_CASE(cmsCapFloor) {
     engineData->model("Swap") = "DiscountedCashflows";
     engineData->engine("Swap") = "DiscountingSwapEngineOptimised";
 
-    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
     BOOST_TEST_MESSAGE(
         "Comparing CMS Cap price to replication by a Single Legged CMS Swap and a Single Leg Capped CMS Swap...");
     vector<double> capRate(1, 0.021);
-    boost::shared_ptr<ore::data::Swap> cmsLegSwap = vars.makeCmsLegSwap();
-    boost::shared_ptr<ore::data::Swap> cappedCmsLegSwap = vars.makeCappedCmsLegSwap(capRate);
-    boost::shared_ptr<ore::data::CapFloor> cap = vars.makeCap(capRate);
+    QuantLib::ext::shared_ptr<ore::data::Swap> cmsLegSwap = vars.makeCmsLegSwap();
+    QuantLib::ext::shared_ptr<ore::data::Swap> cappedCmsLegSwap = vars.makeCappedCmsLegSwap(capRate);
+    QuantLib::ext::shared_ptr<ore::data::CapFloor> cap = vars.makeCap(capRate);
 
     cmsLegSwap->build(engineFactory);
     cappedCmsLegSwap->build(engineFactory);
@@ -416,7 +416,7 @@ BOOST_AUTO_TEST_CASE(cmsCapFloor) {
     BOOST_TEST_MESSAGE("Checking CMS Floor with low Cap is equal to zero...");
     vector<double> floorLow(1, -1.0);
 
-    boost::shared_ptr<ore::data::CapFloor> floor = vars.makeFloor(floorLow);
+    QuantLib::ext::shared_ptr<ore::data::CapFloor> floor = vars.makeFloor(floorLow);
     floor->build(engineFactory);
     Real floorNpv = floor->instrument()->NPV();
     BOOST_TEST_MESSAGE("CMS Floor (Floor of -100%) NPV is " << floorNpv);
@@ -427,7 +427,7 @@ BOOST_AUTO_TEST_CASE(cmsCapFloor) {
 
     cap = vars.makeCap(capRate);
     floor = vars.makeFloor(floorRate);
-    boost::shared_ptr<ore::data::Swap> swap = vars.makeSwap(0.021, "6M");
+    QuantLib::ext::shared_ptr<ore::data::Swap> swap = vars.makeSwap(0.021, "6M");
     cap->build(engineFactory);
     floor->build(engineFactory);
     swap->build(engineFactory);
