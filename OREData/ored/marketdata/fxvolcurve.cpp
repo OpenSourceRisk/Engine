@@ -371,7 +371,7 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
     vol_ = boost::make_shared<QuantExt::BlackVolatilitySurfaceBFRR>(
         asof, dates, smileDeltasScaled, bfQuotes, rrQuotes, atmQuotes, config->dayCounter(), config->calendar(),
         fxSpot_, spotDays_, spotCalendar_, domYts_, forYts_, deltaType_, atmType_, switchTenor_, longTermDeltaType_,
-        longTermAtmType_, riskReversalInFavorOf_, butterflyIsBrokerStyle_, interp);
+        longTermAtmType_, riskReversalInFavorOf_, butterflyIsBrokerStyle_, interp, deltaSwitchTenor_);
 
     vol_->enableExtrapolation();
 }
@@ -524,7 +524,7 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
 
             vol_ = boost::make_shared<QuantExt::FxBlackVannaVolgaVolatilitySurface>(
                 asof, dates, vols[0], vols[1], vols[2], dc, cal, fxSpot_, domYts_, forYts_, false, vvFirstApprox,
-                atmType_, deltaType_, smileDelta / 100.0, switchTenor_, longTermAtmType_, longTermDeltaType_);
+                atmType_, deltaType_, smileDelta / 100.0, switchTenor_, longTermAtmType_, longTermDeltaType_, deltaSwitchTenor_);
         }
     }
     vol_->enableExtrapolation();
