@@ -21,7 +21,6 @@
 #include <ored/utilities/vectorutils.hpp>
 #include <ql/errors.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
-#include <ql/version.hpp>
 
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/math/generallinearleastsquares.hpp>
@@ -109,13 +108,8 @@ void RegressionDynamicInitialMarginCalculator::build() {
     LsmBasisSystem::PolynomialType polynomType = LsmBasisSystem::Monomial;
     Size regressionDimension = regressors_.empty() ? 1 : regressors_.size();
     LOG("DIM regression dimension = " << regressionDimension);
-#if QL_HEX_VERSION > 0x01150000
     std::vector<ext::function<Real(Array)>> v(
         LsmBasisSystem::multiPathBasisSystem(regressionDimension, polynomOrder, polynomType));
-#else // QL 1.14 and below
-    std::vector<boost::function1<Real, Array>> v(
-        LsmBasisSystem::multiPathBasisSystem(regressionDimension, polynomOrder, polynomType));
-#endif
     Real confidenceLevel = QuantLib::InverseCumulativeNormal()(quantile_);
     LOG("DIM confidence level " << confidenceLevel);
 
