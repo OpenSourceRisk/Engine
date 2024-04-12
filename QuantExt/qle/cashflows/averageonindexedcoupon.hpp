@@ -48,7 +48,7 @@ class AverageONIndexedCouponPricer;
 class AverageONIndexedCoupon : public FloatingRateCoupon {
 public:
     AverageONIndexedCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
-                           const boost::shared_ptr<OvernightIndex>& overnightIndex, Real gearing = 1.0,
+                           const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex, Real gearing = 1.0,
                            Spread spread = 0.0, Natural rateCutoff = 0, const DayCounter& dayCounter = DayCounter(),
                            const Period& lookback = 0 * Days, const Size fixingDays = Null<Size>(),
                            const Date& rateComputationStartDate = Null<Date>(),
@@ -84,7 +84,7 @@ public:
     void accept(AcyclicVisitor&) override;
     //@}
 private:
-    boost::shared_ptr<OvernightIndex> overnightIndex_;
+    QuantLib::ext::shared_ptr<OvernightIndex> overnightIndex_;
     std::vector<Date> valueDates_, fixingDates_;
     mutable std::vector<Rate> fixings_;
     Size numPeriods_;
@@ -178,7 +178,7 @@ protected:
  */
 class AverageONLeg {
 public:
-    AverageONLeg(const Schedule& schedule, const boost::shared_ptr<OvernightIndex>& overnightIndex);
+    AverageONLeg(const Schedule& schedule, const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex);
     AverageONLeg& withNotional(Real notional);
     AverageONLeg& withNotionals(const std::vector<Real>& notionals);
     AverageONLeg& withPaymentDayCounter(const DayCounter& dayCounter);
@@ -204,14 +204,14 @@ public:
     AverageONLeg& withLastRecentPeriod(const boost::optional<Period>& lastRecentPeriod);
     AverageONLeg& withLastRecentPeriodCalendar(const Calendar& lastRecentPeriodCalendar);
     AverageONLeg& withPaymentDates(const std::vector<QuantLib::Date>& paymentDates);
-    AverageONLeg& withAverageONIndexedCouponPricer(const boost::shared_ptr<AverageONIndexedCouponPricer>& couponPricer);
+    AverageONLeg& withAverageONIndexedCouponPricer(const QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer>& couponPricer);
     AverageONLeg& withCapFlooredAverageONIndexedCouponPricer(
-        const boost::shared_ptr<CapFlooredAverageONIndexedCouponPricer>& couponPricer);
+        const QuantLib::ext::shared_ptr<CapFlooredAverageONIndexedCouponPricer>& couponPricer);
     operator Leg() const;
 
 private:
     Schedule schedule_;
-    boost::shared_ptr<OvernightIndex> overnightIndex_;
+    QuantLib::ext::shared_ptr<OvernightIndex> overnightIndex_;
     std::vector<Real> notionals_;
     DayCounter paymentDayCounter_;
     BusinessDayConvention paymentAdjustment_;
@@ -231,8 +231,8 @@ private:
     boost::optional<Period> lastRecentPeriod_;
     Calendar lastRecentPeriodCalendar_;
     std::vector<QuantLib::Date> paymentDates_;
-    boost::shared_ptr<AverageONIndexedCouponPricer> couponPricer_;
-    boost::shared_ptr<CapFlooredAverageONIndexedCouponPricer> capFlooredCouponPricer_;
+    QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer> couponPricer_;
+    QuantLib::ext::shared_ptr<CapFlooredAverageONIndexedCouponPricer> capFlooredCouponPricer_;
 };
 
 } // namespace QuantExt

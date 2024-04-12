@@ -80,19 +80,20 @@ protected:
         const std::vector<Handle<YieldTermStructure>>& discountCurves = std::vector<Handle<YieldTermStructure>>(),
         const std::vector<Date>& simulationDates = std::vector<Date>(),
         const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true,
-        const RegressorModel regressorModel = RegressorModel::Simple);
+        const RegressorModel regressorModel = RegressorModel::Simple,
+        const Real regressionVarianceCutoff = Null<Real>());
 
     // run calibration and pricing (called from derived engines)
     void calculate() const;
 
     // return AmcCalculator instance (called from derived engines, calculate must be called before)
-    boost::shared_ptr<AmcCalculator> amcCalculator() const;
+    QuantLib::ext::shared_ptr<AmcCalculator> amcCalculator() const;
 
     // input data from the derived pricing engines, to be set in these engines
     mutable std::vector<Leg> leg_;
     mutable std::vector<Currency> currency_;
     mutable std::vector<bool> payer_;
-    mutable boost::shared_ptr<Exercise> exercise_; // may be empty, if underlying is the actual trade
+    mutable QuantLib::ext::shared_ptr<Exercise> exercise_; // may be empty, if underlying is the actual trade
     mutable Settlement::Type optionSettlement_ = Settlement::Physical;
     mutable bool includeSettlementDateFlows_ = false;
 
@@ -109,9 +110,10 @@ protected:
     std::vector<Size> externalModelIndices_;
     bool minimalObsDate_;
     RegressorModel regressorModel_;
+    Real regressionVarianceCutoff_;
 
     // the generated amc calculator
-    mutable boost::shared_ptr<AmcCalculator> amcCalculator_;
+    mutable QuantLib::ext::shared_ptr<AmcCalculator> amcCalculator_;
 
     // results, these are read from derived engines
     mutable Real resultUnderlyingNpv_, resultValue_;
@@ -138,7 +140,7 @@ private:
         RegressionModel() = default;
         RegressionModel(const Real observationTime, const std::vector<CashflowInfo>& cashflowInfo,
                         const std::function<bool(std::size_t)>& cashflowRelevant, const CrossAssetModel& model,
-                        const RegressorModel regressorModel);
+                        const RegressorModel regressorModel, const Real regressionVarianceCutoff = Null<Real>());
         // pathTimes must contain the observation time and the relevant cashflow simulation times
         void train(const Size polynomOrder, const LsmBasisSystem::PolynomialType polynomType,
                    const RandomVariable& regressand, const std::vector<std::vector<const RandomVariable*>>& paths,
@@ -149,8 +151,10 @@ private:
 
     private:
         Real observationTime_ = Null<Real>();
+        Real regressionVarianceCutoff_ = Null<Real>();
         bool isTrained_ = false;
         std::set<std::pair<Real, Size>> regressorTimesModelIndices_;
+        Matrix coordinateTransform_;
         std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>> basisFns_;
         Array regressionCoeffs_;
     };
@@ -195,7 +199,7 @@ private:
     Real time(const Date& d) const;
 
     // create the info for a given flow
-    CashflowInfo createCashflowInfo(boost::shared_ptr<CashFlow> flow, const Currency& payCcy, bool payer, Size legNo,
+    CashflowInfo createCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const Currency& payCcy, bool payer, Size legNo,
                                     Size cfNo) const;
 
     // get the index of a time in the given simulation times set

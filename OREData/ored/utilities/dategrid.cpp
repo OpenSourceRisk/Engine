@@ -309,7 +309,7 @@ QuantLib::Date DateGrid::closeOutDateFromValuationDate(const QuantLib::Date& d) 
     return it->second;
 }
 
-boost::shared_ptr<DateGrid> generateShiftedDateGrid(const boost::shared_ptr<DateGrid>& dg,
+QuantLib::ext::shared_ptr<DateGrid> generateShiftedDateGrid(const QuantLib::ext::shared_ptr<DateGrid>& dg,
                                                     const QuantLib::Period& shift) {
     DLOG("Building shifted date grid with shift of " << shift);
     vector<Date> defaultDates = dg->dates();
@@ -318,12 +318,12 @@ boost::shared_ptr<DateGrid> generateShiftedDateGrid(const boost::shared_ptr<Date
         Date closeOut = dg->calendar().adjust(d + shift);
         closeOutDates.push_back(closeOut);
     }
-    boost::shared_ptr<DateGrid> newDg = boost::make_shared<DateGrid>(closeOutDates, dg->calendar(), dg->dayCounter());
+    QuantLib::ext::shared_ptr<DateGrid> newDg = QuantLib::ext::make_shared<DateGrid>(closeOutDates, dg->calendar(), dg->dayCounter());
     return newDg;
 }
 
-boost::shared_ptr<DateGrid> combineDateGrids(const boost::shared_ptr<DateGrid>& dg1,
-                                             const boost::shared_ptr<DateGrid>& dg2) {
+QuantLib::ext::shared_ptr<DateGrid> combineDateGrids(const QuantLib::ext::shared_ptr<DateGrid>& dg1,
+                                             const QuantLib::ext::shared_ptr<DateGrid>& dg2) {
     DLOG("Combining date grids");
     vector<Date> combinedVec;
     vector<Date> dates1 = dg1->dates();
@@ -335,7 +335,7 @@ boost::shared_ptr<DateGrid> combineDateGrids(const boost::shared_ptr<DateGrid>& 
     auto last = std::unique(combinedVec.begin(), combinedVec.end());
     combinedVec.erase(last, combinedVec.end());
     // FIXME: Check that grid calendars and day counters match?
-    boost::shared_ptr<DateGrid> newDg = boost::make_shared<DateGrid>(combinedVec, dg1->calendar(), dg1->dayCounter());
+    QuantLib::ext::shared_ptr<DateGrid> newDg = QuantLib::ext::make_shared<DateGrid>(combinedVec, dg1->calendar(), dg1->dayCounter());
     return newDg;
 }
 

@@ -59,38 +59,38 @@ void addFixings(const std::map<Date, Rate> fixings, ZeroInflationIndex& index) {
     }
 };
 
-boost::shared_ptr<Seasonality> buildSeasonalityCurve() {
+QuantLib::ext::shared_ptr<Seasonality> buildSeasonalityCurve() {
     std::vector<double> factors{0.99, 1.01, 0.98, 1.02, 0.97, 1.03, 0.96, 1.04, 0.95, 1.05, 0.94, 1.06};
     Date seasonalityBaseDate(1, Jan, 2022);
-    return boost::make_shared<MultiplicativePriceSeasonality>(seasonalityBaseDate, Monthly, factors);
+    return QuantLib::ext::make_shared<MultiplicativePriceSeasonality>(seasonalityBaseDate, Monthly, factors);
 }
 
-boost::shared_ptr<ZeroInflationCurve>
-buildZeroInflationCurve(CommonData& cd, bool useLastKnownFixing, const boost::shared_ptr<ZeroInflationIndex>& index,
-                        const bool isInterpolated, const boost::shared_ptr<Seasonality>& seasonality = nullptr) {
+QuantLib::ext::shared_ptr<ZeroInflationCurve>
+buildZeroInflationCurve(CommonData& cd, bool useLastKnownFixing, const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index,
+                        const bool isInterpolated, const QuantLib::ext::shared_ptr<Seasonality>& seasonality = nullptr) {
     Date today = Settings::instance().evaluationDate();
-    boost::shared_ptr<SimpleQuote> flatZero = boost::make_shared<SimpleQuote>(0.01);
+    QuantLib::ext::shared_ptr<SimpleQuote> flatZero = QuantLib::ext::make_shared<SimpleQuote>(0.01);
     DayCounter dc = cd.dayCounter;
     Calendar fixingCalendar = NullCalendar();
     BusinessDayConvention bdc = ModifiedFollowing;
 
-    boost::shared_ptr<YieldTermStructure> discountTS =
-        boost::make_shared<FlatForward>(0, NullCalendar(), Handle<Quote>(flatZero), dc);
+    QuantLib::ext::shared_ptr<YieldTermStructure> discountTS =
+        QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), Handle<Quote>(flatZero), dc);
 
-    std::vector<boost::shared_ptr<QuantExt::ZeroInflationTraits::helper>> helpers;
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::ZeroInflationTraits::helper>> helpers;
     for (size_t i = 0; i < cd.zeroCouponQuotes.size(); ++i) {
         Date maturity = today + cd.zeroCouponPillars[i];
         Rate quote = cd.zeroCouponQuotes[i];
-        boost::shared_ptr<QuantExt::ZeroInflationTraits::helper> instrument =
-            boost::make_shared<ZeroCouponInflationSwapHelper>(
-                Handle<Quote>(boost::make_shared<SimpleQuote>(quote)), cd.obsLag, maturity, fixingCalendar, bdc, dc,
+        QuantLib::ext::shared_ptr<QuantExt::ZeroInflationTraits::helper> instrument =
+            QuantLib::ext::make_shared<ZeroCouponInflationSwapHelper>(
+                Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(quote)), cd.obsLag, maturity, fixingCalendar, bdc, dc,
                 index, isInterpolated ? CPI::Linear : CPI::Flat, Handle<YieldTermStructure>(discountTS), today);
         helpers.push_back(instrument);
     }
     Rate baseRate = QuantExt::ZeroInflation::guessCurveBaseRate(useLastKnownFixing, today, today, cd.zeroCouponPillars[0],
                                                                 cd.dayCounter, cd.obsLag, cd.zeroCouponQuotes[0],
                                                                 cd.obsLag, cd.dayCounter, index, isInterpolated);
-    boost::shared_ptr<ZeroInflationCurve> curve = boost::make_shared<QuantExt::PiecewiseZeroInflationCurve<Linear>>(
+    QuantLib::ext::shared_ptr<ZeroInflationCurve> curve = QuantLib::ext::make_shared<QuantExt::PiecewiseZeroInflationCurve<Linear>>(
         today, fixingCalendar, dc, cd.obsLag, index->frequency(), baseRate, helpers, 1e-10, index, useLastKnownFixing);
     if (seasonality) {
         curve->setSeasonality(seasonality);
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveNonInterpolatedLastMonthFixingUnknown
     bool isInterpolated = false;
     bool useLastKnownFixingDateAsBaseDate = false;
     // Build Curve and Index
-    boost::shared_ptr<ZeroInflationIndex> curveBuildIndex = boost::make_shared<EUHICPXT>(false);
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<EUHICPXT>(false);
     addFixings(cd.cpiFixings, *curveBuildIndex);
     auto curve = buildZeroInflationCurve(cd, useLastKnownFixingDateAsBaseDate, curveBuildIndex, isInterpolated);
 
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveNonInterpolatedLastMonthFixing) {
     bool isInterpolated = false;
     bool useLastKnownFixingDateAsBaseDate = true;
     // Build Curve and Index
-    boost::shared_ptr<ZeroInflationIndex> curveBuildIndex = boost::make_shared<EUHICPXT>(false);
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<EUHICPXT>(false);
     addFixings(cd.cpiFixings, *curveBuildIndex);
     auto curve = buildZeroInflationCurve(cd, useLastKnownFixingDateAsBaseDate, curveBuildIndex, isInterpolated);
 
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveInterpolatedLastMonthFixing) {
     bool isInterpolated = true;
     bool useLastKnownFixingDateAsBaseDate = true;
     // Build Curve and Index
-    boost::shared_ptr<ZeroInflationIndex> curveBuildIndex = boost::make_shared<EUHICPXT>(false);
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<EUHICPXT>(false);
     addFixings(cd.cpiFixings, *curveBuildIndex);
     auto curve = buildZeroInflationCurve(cd, useLastKnownFixingDateAsBaseDate, curveBuildIndex, isInterpolated);
 
@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveNonInterpolatedLastMonthFixingUnknown
     bool isInterpolated = false;
     bool useLastKnownFixingDateAsBaseDate = false;
     // Build Curve and Index
-    boost::shared_ptr<ZeroInflationIndex> curveBuildIndex = boost::make_shared<EUHICPXT>(false);
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<EUHICPXT>(false);
     addFixings(cd.cpiFixings, *curveBuildIndex);
     auto seasonalityCurve = buildSeasonalityCurve();
     auto curve = buildZeroInflationCurve(cd, useLastKnownFixingDateAsBaseDate, curveBuildIndex, isInterpolated,
@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveNonInterpolatedLastMonthFixingWithSea
     bool isInterpolated = false;
     bool useLastKnownFixingDateAsBaseDate = true;
     // Build Curve and Index
-    boost::shared_ptr<ZeroInflationIndex> curveBuildIndex = boost::make_shared<EUHICPXT>(false);
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<EUHICPXT>(false);
     addFixings(cd.cpiFixings, *curveBuildIndex);
     auto seasonalityCurve = buildSeasonalityCurve();
     auto curve = buildZeroInflationCurve(cd, useLastKnownFixingDateAsBaseDate, curveBuildIndex, isInterpolated,

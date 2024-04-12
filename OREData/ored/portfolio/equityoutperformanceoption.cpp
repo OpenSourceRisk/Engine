@@ -43,8 +43,8 @@ namespace ore {
 namespace data {
 
 EquityOutperformanceOption::EquityOutperformanceOption(Envelope& env, OptionData option, 
-            const string& currency, Real notional, const boost::shared_ptr<ore::data::Underlying>& underlying1, 
-            const boost::shared_ptr<ore::data::Underlying>& underlying2, 
+            const string& currency, Real notional, const QuantLib::ext::shared_ptr<ore::data::Underlying>& underlying1, 
+            const QuantLib::ext::shared_ptr<ore::data::Underlying>& underlying2, 
             Real initialPrice1, Real initialPrice2, Real strike, const string& initialPriceCurrency1, const string& initialPriceCurrency2,
             Real knockInPrice, Real knockOutPrice, string fxIndex1, string fxIndex2)
     : Trade("EquityOutperformanceOption", env), option_(option), currency_(currency), amount_(notional), 
@@ -53,17 +53,17 @@ EquityOutperformanceOption::EquityOutperformanceOption(Envelope& env, OptionData
         initialPriceCurrency2_(initialPriceCurrency2), fxIndex1_(fxIndex1), fxIndex2_(fxIndex2) {
     }
 
-void EquityOutperformanceOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void EquityOutperformanceOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
-    const boost::shared_ptr<Market> market = engineFactory->market();
+    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
 
     // Only European exercise supported for now
     QL_REQUIRE(option_.style() == "European", "Option Style unknown: " << option_.style());
     QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of excercise dates");
     Currency ccy = parseCurrency(currency_);
 
-    boost::shared_ptr<QuantExt::FxIndex> fxIndex1 = nullptr;
-    boost::shared_ptr<QuantExt::FxIndex> fxIndex2 = nullptr;
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex1 = nullptr;
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex2 = nullptr;
    
     Real initialPrice1 = initialPrice1_;
     if (initialPriceCurrency1_ != "") {
@@ -98,15 +98,15 @@ void EquityOutperformanceOption::build(const boost::shared_ptr<EngineFactory>& e
     }
 
     Date valuationDate = parseDate(option_.exerciseDates().front());
-    boost::shared_ptr<Exercise> exercise;
-    exercise = boost::make_shared<EuropeanExercise>(valuationDate);
+    QuantLib::ext::shared_ptr<Exercise> exercise;
+    exercise = QuantLib::ext::make_shared<EuropeanExercise>(valuationDate);
 
     Option::Type optionType = parseOptionType(option_.callPut());
-    boost::shared_ptr<Instrument> inst = boost::make_shared<QuantExt::OutperformanceOption>(exercise, optionType, strikeReturn_, initialPrice1, initialPrice2, amount_, knockInPrice_, knockOutPrice_, fxIndex1, fxIndex2);
+    QuantLib::ext::shared_ptr<Instrument> inst = QuantLib::ext::make_shared<QuantExt::OutperformanceOption>(exercise, optionType, strikeReturn_, initialPrice1, initialPrice2, amount_, knockInPrice_, knockOutPrice_, fxIndex1, fxIndex2);
 
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    boost::shared_ptr<EquityOutperformanceOptionEngineBuilder> eqOptBuilder = boost::dynamic_pointer_cast<EquityOutperformanceOptionEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<EquityOutperformanceOptionEngineBuilder> eqOptBuilder = QuantLib::ext::dynamic_pointer_cast<EquityOutperformanceOptionEngineBuilder>(builder);
 
     inst->setPricingEngine(eqOptBuilder->engine(name1(), name2(), ccy));
     setSensitivityTemplate(*eqOptBuilder);
@@ -116,12 +116,12 @@ void EquityOutperformanceOption::build(const boost::shared_ptr<EngineFactory>& e
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
     Real mult = bsInd;
 
-    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
     Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(),
                                        -bsInd, ccy, engineFactory, eqOptBuilder->configuration(MarketContext::pricing));
 
-    instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(inst, mult, additionalInstruments, additionalMultipliers));
+    instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(new VanillaInstrument(inst, mult, additionalInstruments, additionalMultipliers));
     npvCurrency_ = currency_;
     maturity_ = std::max(lastPremiumDate, std::max(maturity_, valuationDate));
     notional_ = amount_;

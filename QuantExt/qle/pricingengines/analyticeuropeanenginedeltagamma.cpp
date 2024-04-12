@@ -26,7 +26,7 @@
 namespace QuantExt {
 
 AnalyticEuropeanEngineDeltaGamma::AnalyticEuropeanEngineDeltaGamma(
-    const boost::shared_ptr<GeneralizedBlackScholesProcess>& process, const std::vector<Time>& bucketTimesDeltaGamma,
+    const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process, const std::vector<Time>& bucketTimesDeltaGamma,
     const std::vector<Time>& bucketTimesVega, const bool computeDeltaVega, const bool computeGamma, bool linearInZero)
     : process_(process), bucketTimesDeltaGamma_(bucketTimesDeltaGamma), bucketTimesVega_(bucketTimesVega),
       computeDeltaVega_(computeDeltaVega), computeGamma_(computeGamma), linearInZero_(linearInZero) {
@@ -39,7 +39,7 @@ void AnalyticEuropeanEngineDeltaGamma::calculate() const {
 
     QL_REQUIRE(arguments_.exercise->type() == Exercise::European, "not an European option");
 
-    boost::shared_ptr<StrikedTypePayoff> payoff = boost::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
+    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff = QuantLib::ext::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
     QL_REQUIRE(payoff, "non-striked payoff given");
 
     Real variance = process_->blackVolatility()->blackVariance(arguments_.exercise->lastDate(), payoff->strike());

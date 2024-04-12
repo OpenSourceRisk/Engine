@@ -23,7 +23,7 @@
 namespace ore {
 namespace analytics {
 
-ClonedScenarioGenerator::ClonedScenarioGenerator(const boost::shared_ptr<ScenarioGenerator>& scenarioGenerator,
+ClonedScenarioGenerator::ClonedScenarioGenerator(const QuantLib::ext::shared_ptr<ScenarioGenerator>& scenarioGenerator,
                                                  const std::vector<Date>& dates, const Size nSamples) : dates_(dates) {
     DLOG("Build cloned scenario generator for " << dates.size() << " dates and " << nSamples << " samples.");
     scenarioGenerator->reset();
@@ -35,7 +35,7 @@ ClonedScenarioGenerator::ClonedScenarioGenerator(const boost::shared_ptr<Scenari
     }
 }
 
-boost::shared_ptr<Scenario> ClonedScenarioGenerator::next(const Date& d) {
+QuantLib::ext::shared_ptr<Scenario> ClonedScenarioGenerator::next(const Date& d) {
     if (d == dates_.front()) { // new path
         nDate_++;
         i_ = 0;

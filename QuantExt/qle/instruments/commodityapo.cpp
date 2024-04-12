@@ -22,14 +22,14 @@
 
 namespace QuantExt {
 
-CommodityAveragePriceOption::CommodityAveragePriceOption(const boost::shared_ptr<CommodityIndexedAverageCashFlow>& flow,
+CommodityAveragePriceOption::CommodityAveragePriceOption(const QuantLib::ext::shared_ptr<CommodityIndexedAverageCashFlow>& flow,
                                                          const ext::shared_ptr<Exercise>& exercise, const Real quantity,
                                                          const Real strikePrice, QuantLib::Option::Type type,
                                                          QuantLib::Settlement::Type delivery,
                                                          QuantLib::Settlement::Method settlementMethod,
                                                          const Real barrierLevel, Barrier::Type barrierType,
                                                          Exercise::Type barrierStyle,
-                                                         const boost::shared_ptr<FxIndex>& fxIndex)
+                                                         const QuantLib::ext::shared_ptr<FxIndex>& fxIndex)
     : Option(ext::shared_ptr<Payoff>(), exercise), flow_(flow), quantity_(quantity), strikePrice_(strikePrice),
       type_(type), settlementType_(delivery), settlementMethod_(settlementMethod), fxIndex_(fxIndex),
       barrierLevel_(barrierLevel), barrierType_(barrierType), barrierStyle_(barrierStyle) {

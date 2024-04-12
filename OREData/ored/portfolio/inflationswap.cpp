@@ -38,7 +38,7 @@ void InflationSwap::checkInflationSwap(const vector<LegData>& legData) {
     QL_REQUIRE(hasInflationLeg, "InflationSwap must have at least one inflation leg (e.g. CPI, YY)");
 }
 
-void InflationSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void InflationSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("InflationSwap::build() called for " << id());
 

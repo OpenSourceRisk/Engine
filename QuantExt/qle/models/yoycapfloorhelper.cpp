@@ -48,7 +48,7 @@ YoYCapFloorHelper::YoYCapFloorHelper(const Handle<Quote>& premium,
     Rate strike,
     Natural settlementDays,
     const Period& tenor,
-    const boost::shared_ptr<YoYInflationIndex>& yoyIndex,
+    const QuantLib::ext::shared_ptr<YoYInflationIndex>& yoyIndex,
     const Period& observationLag,
     const Calendar& yoyCalendar,
     BusinessDayConvention yoyConvention,
@@ -91,11 +91,11 @@ void YoYCapFloorHelper::update() {
     notifyObservers();
 }
 
-boost::shared_ptr<YoYInflationCapFloor> YoYCapFloorHelper::yoyCapFloor() const {
+QuantLib::ext::shared_ptr<YoYInflationCapFloor> YoYCapFloorHelper::yoyCapFloor() const {
     return yoyCapFloor_;
 }
 
-void YoYCapFloorHelper::setPricingEngine(const boost::shared_ptr<PricingEngine>& engine) {
+void YoYCapFloorHelper::setPricingEngine(const QuantLib::ext::shared_ptr<PricingEngine>& engine) {
     engine_ = engine;
 }
 
@@ -126,7 +126,7 @@ void YoYCapFloorHelper::createCapFloor() {
 
     // YoY cap floor.
     vector<Rate> strikes{ strike_ };
-    yoyCapFloor_ = boost::make_shared<YoYInflationCapFloor>(type_, yoyLeg, strikes);
+    yoyCapFloor_ = QuantLib::ext::make_shared<YoYInflationCapFloor>(type_, yoyLeg, strikes);
 }
 
 }

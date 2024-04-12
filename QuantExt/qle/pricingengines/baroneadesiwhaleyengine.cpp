@@ -51,7 +51,7 @@ BaroneAdesiWhaleyApproximationEngine::BaroneAdesiWhaleyApproximationEngine(
 }
 
 // critical commodity price
-Real BaroneAdesiWhaleyApproximationEngine::criticalPrice(const boost::shared_ptr<StrikedTypePayoff>& payoff,
+Real BaroneAdesiWhaleyApproximationEngine::criticalPrice(const QuantLib::ext::shared_ptr<StrikedTypePayoff>& payoff,
                                                          DiscountFactor riskFreeDiscount,
                                                          DiscountFactor dividendDiscount, Real variance,
                                                          Real tolerance) {

@@ -57,13 +57,13 @@ RepresentativeFxOptionMatcher::RepresentativeFxOptionMatcher(
 
     // 2a  make a copy of the input fx spot that we can shift later
 
-    auto fxScenarioValue = boost::make_shared<SimpleQuote>(fxSpot->value());
+    auto fxScenarioValue = QuantLib::ext::make_shared<SimpleQuote>(fxSpot->value());
     Handle<Quote> fxSpotScen(fxScenarioValue);
 
     // 2b create the inverse spot, this is convenient when we clone fx linked cashflows below
 
     auto m = [](Real x) { return 1.0 / x; };
-    Handle<Quote> fxSpotScenInv(boost::make_shared<DerivedQuote<decltype(m)>>(fxSpotScen, m));
+    Handle<Quote> fxSpotScenInv(QuantLib::ext::make_shared<DerivedQuote<decltype(m)>>(fxSpotScen, m));
 
     // 3 collect cashflows by their pay currencies and link them to the fx spot copy (if applicable)
 
@@ -86,12 +86,12 @@ RepresentativeFxOptionMatcher::RepresentativeFxOptionMatcher(
 
             // 3b check for non-supported coupon types that are linked to fx
 
-            QL_REQUIRE(!boost::dynamic_pointer_cast<IndexedCoupon>(c),
+            QL_REQUIRE(!QuantLib::ext::dynamic_pointer_cast<IndexedCoupon>(c),
                        "RepresentativeFxOptionMatcher: Indexed Coupons are not supported");
 
-            boost::shared_ptr<CashFlow> res;
+            QuantLib::ext::shared_ptr<CashFlow> res;
 
-            if (auto fxlinked = boost::dynamic_pointer_cast<FXLinked>(c)) {
+            if (auto fxlinked = QuantLib::ext::dynamic_pointer_cast<FXLinked>(c)) {
 
                 // 3c clone fx linked coupons and link them to our scenario fx spot quote
 
@@ -103,7 +103,7 @@ RepresentativeFxOptionMatcher::RepresentativeFxOptionMatcher(
                                << fxlinked->fxIndex()->targetCurrency().code()
                                << " do noth match currencies to be matched (" << forCcy << ", " << domCcy << ")");
 
-                res = boost::dynamic_pointer_cast<CashFlow>(fxlinked->clone(fxlinked->fxIndex()->clone(
+                res = QuantLib::ext::dynamic_pointer_cast<CashFlow>(fxlinked->clone(fxlinked->fxIndex()->clone(
                     fxlinked->fxIndex()->sourceCurrency().code() == forCcy ? fxSpotScen : fxSpotScenInv,
                     fxlinked->fxIndex()->sourceCurve(), fxlinked->fxIndex()->targetCurve())));
                 QL_REQUIRE(res, "RepresentativeFxOptionMatcher: internal error, cloned fx linked cashflow could not be "
@@ -113,12 +113,12 @@ RepresentativeFxOptionMatcher::RepresentativeFxOptionMatcher(
 
                 // 3d for all other coupons, just push a fixed cashflow with the amount
 
-                res = boost::make_shared<SimpleCashFlow>(c->amount(), c->date());
+                res = QuantLib::ext::make_shared<SimpleCashFlow>(c->amount(), c->date());
             }
 
             // 3e push the cashflow with the correct sign to the vector holding the flows in the its pay ccy
 
-            res = boost::make_shared<ScaledCashFlow>(isPayer[i] ? -1.0 : 1.0, res);
+            res = QuantLib::ext::make_shared<ScaledCashFlow>(isPayer[i] ? -1.0 : 1.0, res);
 
             if (currencies[i] == forCcy)
                 forCfs.push_back(res);

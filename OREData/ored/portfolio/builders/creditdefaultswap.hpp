@@ -146,7 +146,7 @@ public:
     MidPointCdsEngineBuilder() : CreditDefaultSwapEngineBuilder("DiscountedCashflows", "MidPointCdsEngine") {}
 
 protected:
-    boost::shared_ptr<PricingEngine>
+    QuantLib::ext::shared_ptr<PricingEngine>
     engineImpl(QuantLib::Currency ccy, std::string creditCurveId,
                QuantLib::Real recoveryRate = QuantLib::Null<QuantLib::Real>()) override {
 
@@ -159,7 +159,7 @@ protected:
             recoveryRate = market_->recoveryRate(creditCurveId, cfg)->value();
         }
 
-        return boost::make_shared<MidPointCdsEngine>(dpts->curve(), recoveryRate, yts);
+        return QuantLib::ext::make_shared<MidPointCdsEngine>(dpts->curve(), recoveryRate, yts);
     }
 };
 
@@ -174,7 +174,7 @@ public:
         : CreditDefaultSwapEngineBuilder("DiscountedCashflows", "MidPointCdsEngineMultiState") {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine>
+    virtual QuantLib::ext::shared_ptr<PricingEngine>
     engineImpl(QuantLib::Currency ccy, std::string creditCurveId,
                QuantLib::Real recoveryRate = QuantLib::Null<QuantLib::Real>()) override {
         Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
@@ -213,14 +213,14 @@ protected:
             dpts.push_back(market_->defaultCurve(stateCreditCurveId, configuration(MarketContext::pricing))->curve());
             recovery.push_back(recoveryRate == Null<Real>()
                                    ? market_->recoveryRate(stateCreditCurveId, configuration(MarketContext::pricing))
-                                   : Handle<Quote>(boost::make_shared<SimpleQuote>(recoveryRate)));
+                                   : Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(recoveryRate)));
         }
         // If there were no rules at all we take the original creditCurveId as the only state
         if (i == 0) {
             dpts.push_back(market_->defaultCurve(creditCurveId, configuration(MarketContext::pricing))->curve());
             recovery.push_back(recoveryRate == Null<Real>()
                                    ? market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing))
-                                   : Handle<Quote>(boost::make_shared<SimpleQuote>(recoveryRate)));
+                                   : Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(recoveryRate)));
             mainResultState = 0;
             DLOG("No rules given, only states are " << creditCurveId << " and default");
         }
@@ -228,7 +228,7 @@ protected:
         QL_REQUIRE(mainResultState != Null<Size>(),
                    "CreditDefaultSwapMultiStateEngineBuilder: No main state found for " << creditCurveId);
         // return engine
-        return boost::make_shared<QuantExt::MidPointCdsEngineMultiState>(dpts, recovery, yts, mainResultState);
+        return QuantLib::ext::make_shared<QuantExt::MidPointCdsEngineMultiState>(dpts, recovery, yts, mainResultState);
     }
 };
 

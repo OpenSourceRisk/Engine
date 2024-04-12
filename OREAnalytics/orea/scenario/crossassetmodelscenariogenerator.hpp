@@ -65,48 +65,48 @@ using namespace QuantExt;
 class CrossAssetModelScenarioGenerator : public ScenarioPathGenerator {
 public:
     //! Constructor
-    CrossAssetModelScenarioGenerator(boost::shared_ptr<QuantExt::CrossAssetModel> model,
-                                     boost::shared_ptr<QuantExt::MultiPathGeneratorBase> multiPathGenerator,
-                                     boost::shared_ptr<ScenarioFactory> scenarioFactory,
-                                     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig,
-                                     QuantLib::Date today, boost::shared_ptr<DateGrid> grid,
-                                     boost::shared_ptr<ore::data::Market> initMarket,
+    CrossAssetModelScenarioGenerator(QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model,
+                                     QuantLib::ext::shared_ptr<QuantExt::MultiPathGeneratorBase> multiPathGenerator,
+                                     QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory,
+                                     QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketConfig,
+                                     QuantLib::Date today, QuantLib::ext::shared_ptr<DateGrid> grid,
+                                     QuantLib::ext::shared_ptr<ore::data::Market> initMarket,
                                      const std::string& configuration = Market::defaultConfiguration);
     //! Default destructor
     ~CrossAssetModelScenarioGenerator(){};
-    std::vector<boost::shared_ptr<Scenario>> nextPath() override;
+    std::vector<QuantLib::ext::shared_ptr<Scenario>> nextPath() override;
     void reset() override { pathGenerator_->reset(); }
 
 private:
-    boost::shared_ptr<QuantExt::CrossAssetModel> model_;
-    boost::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGenerator_;
-    boost::shared_ptr<ScenarioFactory> scenarioFactory_;
-    boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig_;
-    boost::shared_ptr<ore::data::Market> initMarket_;
+    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model_;
+    QuantLib::ext::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGenerator_;
+    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketConfig_;
+    QuantLib::ext::shared_ptr<ore::data::Market> initMarket_;
     const std::string configuration_;
     // generated data
     std::vector<RiskFactorKey> discountCurveKeys_, indexCurveKeys_, yieldCurveKeys_, zeroInflationKeys_,
         yoyInflationKeys_, defaultCurveKeys_, commodityCurveKeys_;
     std::vector<RiskFactorKey> fxKeys_, eqKeys_, cpiKeys_;
     std::vector<RiskFactorKey> crStateKeys_, survivalWeightKeys_, recoveryRateKeys_;
-    std::vector<boost::shared_ptr<QuantExt::CrossAssetModelImpliedFxVolTermStructure>> fxVols_;
-    std::vector<boost::shared_ptr<QuantExt::CrossAssetModelImpliedEqVolTermStructure>> eqVols_;
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::CrossAssetModelImpliedFxVolTermStructure>> fxVols_;
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::CrossAssetModelImpliedEqVolTermStructure>> eqVols_;
     std::vector<std::vector<Period>> ten_dsc_, ten_idx_, ten_yc_, ten_efc_, ten_zinf_, ten_yinf_, ten_dfc_, ten_com_;
     std::vector<bool> modelCcyRelevant_;
     Size n_ccy_, n_eq_, n_inf_, n_cr_, n_indices_, n_curves_, n_com_, n_crstates_, n_survivalweights_;
 
-    vector<boost::shared_ptr<QuantExt::ModelImpliedYieldTermStructure>> curves_, fwdCurves_, yieldCurves_;
-    vector<boost::shared_ptr<QuantExt::ModelImpliedPriceTermStructure>> comCurves_;
-    vector<boost::shared_ptr<IborIndex>> indices_;
+    vector<QuantLib::ext::shared_ptr<QuantExt::ModelImpliedYieldTermStructure>> curves_, fwdCurves_, yieldCurves_;
+    vector<QuantLib::ext::shared_ptr<QuantExt::ModelImpliedPriceTermStructure>> comCurves_;
+    vector<QuantLib::ext::shared_ptr<IborIndex>> indices_;
     vector<Currency> yieldCurveCurrency_;
     vector<string> zeroInflationIndex_, yoyInflationIndex_;
-    vector<tuple<Size, Size, CrossAssetModel::ModelType, boost::shared_ptr<ZeroInflationModelTermStructure>>>
+    vector<tuple<Size, Size, CrossAssetModel::ModelType, QuantLib::ext::shared_ptr<ZeroInflationModelTermStructure>>>
         zeroInfCurves_;
-    vector<tuple<Size, Size, CrossAssetModel::ModelType, boost::shared_ptr<YoYInflationModelTermStructure>>>
+    vector<tuple<Size, Size, CrossAssetModel::ModelType, QuantLib::ext::shared_ptr<YoYInflationModelTermStructure>>>
         yoyInfCurves_;
-    vector<boost::shared_ptr<QuantExt::LgmImpliedDefaultTermStructure>> lgmDefaultCurves_;
-    vector<boost::shared_ptr<QuantExt::CirppImpliedDefaultTermStructure>> cirppDefaultCurves_;
-    vector<boost::shared_ptr<QuantExt::CreditCurve>> survivalWeightsDefaultCurves_;
+    vector<QuantLib::ext::shared_ptr<QuantExt::LgmImpliedDefaultTermStructure>> lgmDefaultCurves_;
+    vector<QuantLib::ext::shared_ptr<QuantExt::CirppImpliedDefaultTermStructure>> cirppDefaultCurves_;
+    vector<QuantLib::ext::shared_ptr<QuantExt::CreditCurve>> survivalWeightsDefaultCurves_;
 };
 
 } // namespace analytics

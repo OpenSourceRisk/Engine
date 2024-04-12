@@ -76,7 +76,7 @@ private:
     void setupExpired() const override;
     //@}
     Date fixingDate_, startDate_, maturityDate_;
-    boost::shared_ptr<IborIndex> index_;
+    QuantLib::ext::shared_ptr<IborIndex> index_;
     Leg leg_;
     // results
     mutable Real fairRate_;
@@ -85,7 +85,7 @@ private:
 //! \ingroup instruments
 class Deposit::arguments : public virtual PricingEngine::arguments {
 public:
-    boost::shared_ptr<IborIndex> index;
+    QuantLib::ext::shared_ptr<IborIndex> index;
     Date maturityDate;
     Leg leg;
     void validate() const override;

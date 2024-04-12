@@ -41,10 +41,10 @@ namespace {
 struct TestData {
     TestData() : refDate(Date(22, Aug, 2016)) {
         Settings::instance().evaluationDate() = refDate;
-        baseDiscount = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(
-            refDate, Handle<Quote>(boost::make_shared<SimpleQuote>(0.02)), Actual365Fixed()));
-        baseForward = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(
-            refDate, Handle<Quote>(boost::make_shared<SimpleQuote>(0.03)), Actual365Fixed()));
+        baseDiscount = Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(
+            refDate, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.02)), Actual365Fixed()));
+        baseForward = Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(
+            refDate, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.03)), Actual365Fixed()));
         pillarDates.push_back(refDate + 1 * Years);
         pillarDates.push_back(refDate + 2 * Years);
         pillarDates.push_back(refDate + 3 * Years);
@@ -56,8 +56,8 @@ struct TestData {
         pillarDates.push_back(refDate + 20 * Years);
         std::vector<Handle<Quote>> tmpDiscSpr, tmpFwdSpr;
         for (Size i = 0; i < pillarDates.size(); ++i) {
-            boost::shared_ptr<SimpleQuote> qd = boost::make_shared<SimpleQuote>(0.0);
-            boost::shared_ptr<SimpleQuote> qf = boost::make_shared<SimpleQuote>(0.0);
+            QuantLib::ext::shared_ptr<SimpleQuote> qd = QuantLib::ext::make_shared<SimpleQuote>(0.0);
+            QuantLib::ext::shared_ptr<SimpleQuote> qf = QuantLib::ext::make_shared<SimpleQuote>(0.0);
             discountSpreads.push_back(qd);
             forwardSpreads.push_back(qf);
             tmpDiscSpr.push_back(Handle<Quote>(qd));
@@ -65,26 +65,26 @@ struct TestData {
             pillarTimes.push_back(baseDiscount->timeFromReference(pillarDates[i]));
         }
         discountCurve =
-            Handle<YieldTermStructure>(boost::make_shared<InterpolatedPiecewiseZeroSpreadedTermStructure<Linear>>(
+            Handle<YieldTermStructure>(QuantLib::ext::make_shared<InterpolatedPiecewiseZeroSpreadedTermStructure<Linear>>(
                 baseDiscount, tmpDiscSpr, pillarDates));
         forwardCurve =
-            Handle<YieldTermStructure>(boost::make_shared<InterpolatedPiecewiseZeroSpreadedTermStructure<Linear>>(
+            Handle<YieldTermStructure>(QuantLib::ext::make_shared<InterpolatedPiecewiseZeroSpreadedTermStructure<Linear>>(
                 baseForward, tmpFwdSpr, pillarDates));
         discountCurve->enableExtrapolation();
         forwardCurve->enableExtrapolation();
-        forwardIndex = boost::make_shared<Euribor>(6 * Months, forwardCurve);
-        lnVol = boost::make_shared<SimpleQuote>(0.20);
-        slnVol = boost::make_shared<SimpleQuote>(0.10);
-        nVol = boost::make_shared<SimpleQuote>(0.0075);
+        forwardIndex = QuantLib::ext::make_shared<Euribor>(6 * Months, forwardCurve);
+        lnVol = QuantLib::ext::make_shared<SimpleQuote>(0.20);
+        slnVol = QuantLib::ext::make_shared<SimpleQuote>(0.10);
+        nVol = QuantLib::ext::make_shared<SimpleQuote>(0.0075);
         slnShift = 0.03;
     }
     Date refDate;
     Handle<YieldTermStructure> baseDiscount, baseForward, discountCurve, forwardCurve;
-    boost::shared_ptr<IborIndex> forwardIndex;
+    QuantLib::ext::shared_ptr<IborIndex> forwardIndex;
     std::vector<Date> pillarDates;
-    std::vector<boost::shared_ptr<SimpleQuote>> discountSpreads, forwardSpreads;
+    std::vector<QuantLib::ext::shared_ptr<SimpleQuote>> discountSpreads, forwardSpreads;
     std::vector<Real> pillarTimes;
-    boost::shared_ptr<SimpleQuote> lnVol, slnVol, nVol;
+    QuantLib::ext::shared_ptr<SimpleQuote> lnVol, slnVol, nVol;
     Real slnShift;
 }; // TestData
 
@@ -106,8 +106,8 @@ public:
     double elapsed() const { return elapsed_; }
 };
 
-void performTest(const TestData& d, const boost::shared_ptr<PricingEngine>& engine0,
-                 const boost::shared_ptr<PricingEngine>& engine, const bool receiveFixed, const Real spread,
+void performTest(const TestData& d, const QuantLib::ext::shared_ptr<PricingEngine>& engine0,
+                 const QuantLib::ext::shared_ptr<PricingEngine>& engine, const bool receiveFixed, const Real spread,
                  const std::string& config) {
 
     BOOST_TEST_MESSAGE(
@@ -116,13 +116,13 @@ void performTest(const TestData& d, const boost::shared_ptr<PricingEngine>& engi
 
     Size n = d.pillarTimes.size();
 
-    boost::shared_ptr<VanillaSwap> swap = MakeVanillaSwap(11 * Years, d.forwardIndex, 0.04, 8 * Years)
+    QuantLib::ext::shared_ptr<VanillaSwap> swap = MakeVanillaSwap(11 * Years, d.forwardIndex, 0.04, 8 * Years)
                                               .receiveFixed(receiveFixed)
                                               .withNominal(10.0)
                                               .withFloatingLegSpread(spread);
     Date exerciseDate = d.refDate + 8 * Years;
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(exerciseDate);
-    boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
+    QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(exerciseDate);
+    QuantLib::ext::shared_ptr<Swaption> swaption = QuantLib::ext::make_shared<Swaption>(swap, exercise);
 
     swaption->setPricingEngine(engine0);
     Real atm0 = swaption->result<Real>("atmForward");
@@ -343,21 +343,21 @@ BOOST_AUTO_TEST_CASE(testNpvDeltasGammaVegas) {
 
     TestData d;
 
-    boost::shared_ptr<PricingEngine> engineLn0 =
-        boost::make_shared<BlackSwaptionEngine>(d.discountCurve, Handle<Quote>(d.lnVol));
-    boost::shared_ptr<PricingEngine> engineSln0 =
-        boost::make_shared<BlackSwaptionEngine>(d.discountCurve, Handle<Quote>(d.slnVol), Actual365Fixed(), d.slnShift);
-    boost::shared_ptr<PricingEngine> engineN0 =
-        boost::make_shared<BachelierSwaptionEngine>(d.discountCurve, Handle<Quote>(d.nVol));
+    QuantLib::ext::shared_ptr<PricingEngine> engineLn0 =
+        QuantLib::ext::make_shared<BlackSwaptionEngine>(d.discountCurve, Handle<Quote>(d.lnVol));
+    QuantLib::ext::shared_ptr<PricingEngine> engineSln0 =
+        QuantLib::ext::make_shared<BlackSwaptionEngine>(d.discountCurve, Handle<Quote>(d.slnVol), Actual365Fixed(), d.slnShift);
+    QuantLib::ext::shared_ptr<PricingEngine> engineN0 =
+        QuantLib::ext::make_shared<BachelierSwaptionEngine>(d.discountCurve, Handle<Quote>(d.nVol));
 
-    boost::shared_ptr<PricingEngine> engineLn =
-        boost::make_shared<BlackSwaptionEngineDeltaGamma>(d.discountCurve, Handle<Quote>(d.lnVol), Actual365Fixed(),
+    QuantLib::ext::shared_ptr<PricingEngine> engineLn =
+        QuantLib::ext::make_shared<BlackSwaptionEngineDeltaGamma>(d.discountCurve, Handle<Quote>(d.lnVol), Actual365Fixed(),
                                                           0.0, d.pillarTimes, d.pillarTimes, d.pillarTimes, true, true);
-    boost::shared_ptr<PricingEngine> engineSln = boost::make_shared<BlackSwaptionEngineDeltaGamma>(
+    QuantLib::ext::shared_ptr<PricingEngine> engineSln = QuantLib::ext::make_shared<BlackSwaptionEngineDeltaGamma>(
         d.discountCurve, Handle<Quote>(d.slnVol), Actual365Fixed(), d.slnShift, d.pillarTimes, d.pillarTimes,
         d.pillarTimes, true, true);
-    boost::shared_ptr<PricingEngine> engineN =
-        boost::make_shared<BachelierSwaptionEngineDeltaGamma>(d.discountCurve, Handle<Quote>(d.nVol), Actual365Fixed(),
+    QuantLib::ext::shared_ptr<PricingEngine> engineN =
+        QuantLib::ext::make_shared<BachelierSwaptionEngineDeltaGamma>(d.discountCurve, Handle<Quote>(d.nVol), Actual365Fixed(),
                                                               d.pillarTimes, d.pillarTimes, d.pillarTimes, true, true);
 
     performTest(d, engineLn0, engineLn, false, 0.0, "lognormal model, payer");

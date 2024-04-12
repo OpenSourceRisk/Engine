@@ -40,8 +40,8 @@ class CliquetOption : public OneAssetOption {
 public:
     class arguments;
     class engine;
-    CliquetOption(const boost::shared_ptr<PercentageStrikePayoff>& payoff,
-                  const boost::shared_ptr<EuropeanExercise>& maturity, const std::set<Date>& valuationDates,
+    CliquetOption(const QuantLib::ext::shared_ptr<PercentageStrikePayoff>& payoff,
+                  const QuantLib::ext::shared_ptr<EuropeanExercise>& maturity, const std::set<Date>& valuationDates,
                   const Date& paymentDate, const Real notional, const Position::Type& longShort,
                   const Real localCap = Null<Real>(), const Real localFloor = Null<Real>(),
                   const Real globalCap = Null<Real>(), const Real globalFloor = Null<Real>(),

@@ -39,7 +39,7 @@ public:
         QuantLib::Rate strike,
         QuantLib::Natural settlementDays,
         const QuantLib::Period& tenor,
-        const boost::shared_ptr<QuantLib::YoYInflationIndex>& yoyIndex,
+        const QuantLib::ext::shared_ptr<QuantLib::YoYInflationIndex>& yoyIndex,
         const QuantLib::Period& observationLag,
         const QuantLib::Calendar& yoyCalendar,
         QuantLib::BusinessDayConvention yoyConvention,
@@ -60,11 +60,11 @@ public:
 
     //! \name YoYCapFloorHelper inspectors
     //@{
-    boost::shared_ptr<QuantLib::YoYInflationCapFloor> yoyCapFloor() const;
+    QuantLib::ext::shared_ptr<QuantLib::YoYInflationCapFloor> yoyCapFloor() const;
     //@}
 
     //! Set the pricing engine to be used by the underlying YoY cap floor
-    void setPricingEngine(const boost::shared_ptr<QuantLib::PricingEngine>& engine);
+    void setPricingEngine(const QuantLib::ext::shared_ptr<QuantLib::PricingEngine>& engine);
 
     //! Return the market premium value
     QuantLib::Real marketValue() const;
@@ -80,10 +80,10 @@ private:
     QuantLib::Handle<QuantLib::Quote> premium_;
 
     //! The underlying YoY cap floor
-    boost::shared_ptr<QuantLib::YoYInflationCapFloor> yoyCapFloor_;
+    QuantLib::ext::shared_ptr<QuantLib::YoYInflationCapFloor> yoyCapFloor_;
 
     //! The pricing engine used to value the YoY swap
-    boost::shared_ptr<QuantLib::PricingEngine> engine_;
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engine_;
 
     // Store variables needed to rebuild the YoY cap floor
     QuantLib::Date evaluationDate_;
@@ -91,7 +91,7 @@ private:
     QuantLib::Rate strike_;
     QuantLib::Natural settlementDays_;
     QuantLib::Period tenor_;
-    boost::shared_ptr<QuantLib::YoYInflationIndex> yoyIndex_;
+    QuantLib::ext::shared_ptr<QuantLib::YoYInflationIndex> yoyIndex_;
     QuantLib::Period observationLag_;
     QuantLib::Calendar yoyCalendar_;
     QuantLib::BusinessDayConvention yoyConvention_;
