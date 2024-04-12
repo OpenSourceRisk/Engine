@@ -418,21 +418,23 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     size_t j = 0;
     for (size_t i = 0; i < pathTimes.size(); ++i) {
         allTimes.push_back(i);
-        auto& d = dates[i];
-        if (grid->isValuationDate()[i]) {
-            valuationTimeIdx.push_back(i);
-            auto closeOutDate = grid->closeOutDateFromValuationDate(d);
-            while (j < pathTimes.size() && dates[j] != closeOutDate) {
-                ++j;
+        if (sgd->withCloseOutLag()) {
+            auto& d = dates[i];
+            if (grid->isValuationDate()[i]) {
+                valuationTimeIdx.push_back(i);
+                auto closeOutDate = grid->closeOutDateFromValuationDate(d);
+                while (j < pathTimes.size() && dates[j] != closeOutDate) {
+                    ++j;
+                }
+                QL_REQUIRE(j < pathTimes.size(),
+                           "AmcValuationEngine:: couldnt find close out date" << to_string(closeOutDate));
+                closeOutTimeIdx.push_back(j);
             }
-            QL_REQUIRE(j < pathTimes.size(), "couldnt find close out date");
-            closeOutTimeIdx.push_back(j);
         }
     }
+    // loop over amc calculators, get result and populate cube
 
-        // loop over amc calculators, get result and populate cube
-
-        timer.start();
+    timer.start();
     for (Size j = 0; j < amcCalculators.size(); ++j) {
         auto resFee = feeContributions(j, sgd, model->irModel(0)->termStructure()->referenceDate(),
                                        outputCube->samples(), tradeFees, model, fxBuffer, irStateBuffer);
