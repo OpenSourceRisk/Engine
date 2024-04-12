@@ -49,7 +49,6 @@ const vector<Real>& FlatDynamicInitialMarginCalculator::dimResults(const std::st
 void FlatDynamicInitialMarginCalculator::build() {
     LOG("FlatDynamicInitialMarginCalculator:build() called");
 
-    Size stopDatesLoop = datesLoopSize_;
     Size samples = cube_->samples();
 
     if (!inputs_->collateralBalances()) {
@@ -65,7 +64,7 @@ void FlatDynamicInitialMarginCalculator::build() {
             LOG("Found initial margin balance " << currentIM << " for netting set " << n);
         }
         
-        for (Size j = 0; j < stopDatesLoop; ++j) {
+        for (Size j = 0; j < cube_->dates().size(); ++j) {
             nettingSetExpectedDIM_[n][j] = currentIM;
             for (Size k = 0; k < samples; ++k)
                 nettingSetDIM_[n][j][k] = currentIM;                
@@ -77,7 +76,6 @@ void FlatDynamicInitialMarginCalculator::build() {
 void FlatDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& dimEvolutionReport) const {
 
     // Size samples = dimCube_->samples();
-    Size stopDatesLoop = datesLoopSize_;
     Date asof = cube_->asof();
 
     dimEvolutionReport.addColumn("TimeStep", Size())
@@ -93,7 +91,7 @@ void FlatDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& d
     for (const auto& [nettingSet, _] : dimCube_->idsAndIndexes()) {
 
         LOG("Export DIM evolution for netting set " << nettingSet);
-        for (Size i = 0; i < stopDatesLoop; ++i) {
+        for (Size i = 0; i < dimCube_->dates().size(); ++i) {
             Date defaultDate = dimCube_->dates()[i];
             Time t = ActualActual(ActualActual::ISDA).yearFraction(asof, defaultDate);
             Size days = cubeInterpretation_->getMporCalendarDays(dimCube_, i);
