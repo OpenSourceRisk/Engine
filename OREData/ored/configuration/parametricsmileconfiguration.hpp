@@ -40,8 +40,8 @@ public:
         ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
         std::string name;
-        double initialValue;
-        bool isFixed;
+        double initialValue = 0.0;
+        bool isFixed = false;
     };
 
     class Calibration : public XMLSerializable {
@@ -49,11 +49,12 @@ public:
         void fromXML(ore::data::XMLNode* node) override;
         ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
-        std::size_t maxCalibrationAttempts;
-        double exitEarlyErrorThreshold;
-        double maxAcceptableError;
+        std::size_t maxCalibrationAttempts = 10;
+        double exitEarlyErrorThreshold = 0.0050;
+        double maxAcceptableError = 0.05;
     };
 
+    ParametricSmileConfiguration() {}
     ParametricSmileConfiguration(std::vector<Parameter> parameters, Calibration calibration);
 
     //! \name XMLSerializable interface
