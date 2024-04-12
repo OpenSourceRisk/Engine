@@ -49,7 +49,6 @@ const vector<Real>& FlatDynamicInitialMarginCalculator::dimResults(const std::st
 void FlatDynamicInitialMarginCalculator::build() {
     LOG("FlatDynamicInitialMarginCalculator:build() called");
 
-    Size stopDatesLoop = datesLoopSize_;
     Size samples = cube_->samples();
 
     if (!inputs_->collateralBalances()) {
@@ -65,7 +64,7 @@ void FlatDynamicInitialMarginCalculator::build() {
             LOG("Found initial margin balance " << currentIM << " for netting set " << n);
         }
         
-        for (Size j = 0; j < stopDatesLoop; ++j) {
+        for (Size j = 0; j < cube_->dates().size(); ++j) {
             nettingSetExpectedDIM_[n][j] = currentIM;
             for (Size k = 0; k < samples; ++k)
                 nettingSetDIM_[n][j][k] = currentIM;                
