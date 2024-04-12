@@ -31,6 +31,36 @@
            FlochKennedy -->
       <!-- <StrikeInterpolation>LinearFlat</StrikeInterpolation> -->
       <StrikeInterpolation>Hagan2002NormalZeroBeta</StrikeInterpolation>
+      <!-- SABR configuration -->
+      <ParametricSmileConfiguration>
+        <Parameters>
+          <Parameter>
+            <Name>alpha</Name>
+            <InitialValue>0.0050</InitialValue>
+            <IsFixed>false</IsFixed>
+          </Parameter>
+          <Parameter>
+            <Name>beta</Name>
+            <InitialValue>0.0</InitialValue>
+            <IsFixed>true</IsFixed>
+          </Parameter>
+          <Parameter>
+            <Name>nu</Name>
+            <InitialValue>0.30</InitialValue>
+            <IsFixed>false</IsFixed>
+          </Parameter>
+          <Parameter>
+            <Name>rho</Name>
+            <InitialValue>0.0</InitialValue>
+            <IsFixed>false</IsFixed>
+          </Parameter>
+        </Parameters>
+        <Calibration>
+          <MaxCalibrationAttempts>10</MaxCalibrationAttempts>
+          <ExitEarlyErrorThreshold>0.005</ExitEarlyErrorThreshold>
+          <MaxAcceptableError>0.05</MaxAcceptableError>
+        </Calibration>
+      </ParametricSmileConfiguration>
       <QuoteIncludesIndexName>false</QuoteIncludesIndexName>
       <BootstrapConfig>
         <Accuracy>0.0000000000010000</Accuracy>
@@ -62,6 +92,36 @@
       <Interpolation>Hagan2002NormalZeroBeta</Interpolation>
       <!-- <Interpolation>Antonov2015FreeBoundaryNormal</Interpolation> -->
       <!-- <Interpolation>KienitzLawsonSwaynePde</Interpolation> -->
+      <!-- SABR configuration -->
+      <ParametricSmileConfiguration>
+        <Parameters>
+          <Parameter>
+            <Name>alpha</Name>
+            <InitialValue>0.0050</InitialValue>
+            <IsFixed>false</IsFixed>
+          </Parameter>
+          <Parameter>
+            <Name>beta</Name>
+            <InitialValue>0.0</InitialValue>
+            <IsFixed>true</IsFixed>
+          </Parameter>
+          <Parameter>
+            <Name>nu</Name>
+            <InitialValue>0.30</InitialValue>
+            <IsFixed>false</IsFixed>
+          </Parameter>
+          <Parameter>
+            <Name>rho</Name>
+            <InitialValue>0.0</InitialValue>
+            <IsFixed>false</IsFixed>
+          </Parameter>
+        </Parameters>
+        <Calibration>
+          <MaxCalibrationAttempts>10</MaxCalibrationAttempts>
+          <ExitEarlyErrorThreshold>0.005</ExitEarlyErrorThreshold>
+          <MaxAcceptableError>0.05</MaxAcceptableError>
+        </Calibration>
+      </ParametricSmileConfiguration>
       <!-- Optional, defaults to Flat, applies to Interpolation = Linear only, it is ignored for the SABR interpolations
            None,
            Flat,
