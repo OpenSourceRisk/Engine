@@ -76,6 +76,7 @@ void FlatDynamicInitialMarginCalculator::build() {
 void FlatDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& dimEvolutionReport) const {
 
     // Size samples = dimCube_->samples();
+    Size stopDatesLoop = datesLoopSize_;
     Date asof = cube_->asof();
 
     dimEvolutionReport.addColumn("TimeStep", Size())
@@ -91,7 +92,7 @@ void FlatDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& d
     for (const auto& [nettingSet, _] : dimCube_->idsAndIndexes()) {
 
         LOG("Export DIM evolution for netting set " << nettingSet);
-        for (Size i = 0; i < dimCube_->dates().size(); ++i) {
+        for (Size i = 0; i < stopDatesLoop; ++i) {
             Date defaultDate = dimCube_->dates()[i];
             Time t = ActualActual(ActualActual::ISDA).yearFraction(asof, defaultDate);
             Size days = cubeInterpretation_->getMporCalendarDays(dimCube_, i);
