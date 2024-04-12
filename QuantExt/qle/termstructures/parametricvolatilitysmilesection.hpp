@@ -45,6 +45,7 @@ private:
     Real optionTime_, swapLength_, atmLevel_;
     boost::shared_ptr<ParametricVolatility> parametricVolatility_;
     ParametricVolatility::MarketQuoteType outputMarketQuoteType_;
+    mutable std::map<Real, Real> cache_;
 };
 
 } // namespace QuantExt

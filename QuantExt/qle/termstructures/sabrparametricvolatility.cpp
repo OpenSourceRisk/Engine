@@ -595,8 +595,6 @@ Real SabrParametricVolatility::evaluate(const Real timeToExpiry, const Real unde
                                         const Real outputLognormalShift,
                                         const boost::optional<QuantLib::Option::Type> outputOptionType) const {
 
-    // TODO add caching
-
     Real alpha = alphaInterpolation_(timeToExpiry, underlyingLength);
     Real beta = betaInterpolation_(timeToExpiry, underlyingLength);
     Real nu = nuInterpolation_(timeToExpiry, underlyingLength);

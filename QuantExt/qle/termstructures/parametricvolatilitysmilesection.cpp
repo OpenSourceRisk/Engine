@@ -30,7 +30,11 @@ ParametricVolatilitySmileSection::ParametricVolatilitySmileSection(
 Real ParametricVolatilitySmileSection::atmLevel() const { return atmLevel_; }
 
 Real ParametricVolatilitySmileSection::volatilityImpl(Rate strike) const {
-    return parametricVolatility_->evaluate(optionTime_, swapLength_, strike, atmLevel_, outputMarketQuoteType_);
+    if(auto v = cache_.find(strike); v!= cache_end())
+        return v->second;
+    Real tmp = parametricVolatility_->evaluate(optionTime_, swapLength_, strike, atmLevel_, outputMarketQuoteType_);
+    cache_[strike] = tmp;
+    return tmp;
 }
 
 } // namespace QuantExt
