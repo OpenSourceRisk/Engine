@@ -59,7 +59,7 @@ public:
                                  on each pricing date.
     */
     AverageFuturePriceHelper(const QuantLib::Handle<QuantLib::Quote>& price,
-        const boost::shared_ptr<CommodityIndex>& index,
+        const QuantLib::ext::shared_ptr<CommodityIndex>& index,
         const QuantLib::Date& start,
         const QuantLib::Date& end,
         const ext::shared_ptr<FutureExpiryCalculator>& calc,
@@ -89,7 +89,7 @@ public:
                                  on each pricing date.
     */
     AverageFuturePriceHelper(QuantLib::Real price,
-        const boost::shared_ptr<CommodityIndex>& index,
+        const QuantLib::ext::shared_ptr<CommodityIndex>& index,
         const QuantLib::Date& start,
         const QuantLib::Date& end,
         const ext::shared_ptr<FutureExpiryCalculator>& calc,
@@ -113,14 +113,14 @@ public:
 
     //! \name Inspectors
     //@{
-    boost::shared_ptr<CommodityIndexedAverageCashFlow> averageCashflow() const;
+    QuantLib::ext::shared_ptr<CommodityIndexedAverageCashFlow> averageCashflow() const;
     //@}
 
     void deepUpdate() override;
 
 private:
     //! Shared initialisation method.
-    void init(const boost::shared_ptr<CommodityIndex>& index,
+    void init(const QuantLib::ext::shared_ptr<CommodityIndex>& index,
         const QuantLib::Date& start,
         const QuantLib::Date& end,
         const ext::shared_ptr<FutureExpiryCalculator>& calc,
@@ -130,7 +130,7 @@ private:
         bool useBusinessDays,
         QuantLib::Natural dailyExpiryOffset);
 
-    boost::shared_ptr<CommodityIndexedAverageCashFlow> averageCashflow_;
+    QuantLib::ext::shared_ptr<CommodityIndexedAverageCashFlow> averageCashflow_;
     QuantLib::RelinkableHandle<PriceTermStructure> termStructureHandle_;
 };
 

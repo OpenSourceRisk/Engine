@@ -46,11 +46,11 @@ public:
         interpreted as the number of USD per unit of \p calculationCcy.
     */
     SimmCalculator(const ore::analytics::Crif& crif,
-                   const boost::shared_ptr<SimmConfiguration>& simmConfiguration,
+                   const QuantLib::ext::shared_ptr<SimmConfiguration>& simmConfiguration,
                    const std::string& calculationCcyCall = "USD",
                    const std::string& calculationCcyPost = "USD",
                    const std::string& resultCcy = "",
-                   const boost::shared_ptr<ore::data::Market> market = nullptr,
+                   const QuantLib::ext::shared_ptr<ore::data::Market> market = nullptr,
                    const bool determineWinningRegulations = true, const bool enforceIMRegulations = false,
                    const bool quiet = false,
                    const std::map<SimmSide, std::set<NettingSetDetails>>& hasSEC =
@@ -113,7 +113,7 @@ private:
     std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::map<std::string, Crif>>> regSensitivities_;
 
     //! The SIMM configuration governing the calculation
-    boost::shared_ptr<SimmConfiguration> simmConfiguration_;
+    QuantLib::ext::shared_ptr<SimmConfiguration> simmConfiguration_;
 
     //! The SIMM exposure calculation currency i.e. the currency for which FX delta risk is ignored
     std::string calculationCcyCall_, calculationCcyPost_;
@@ -122,7 +122,7 @@ private:
     std::string resultCcy_;
 
     //! Market data for FX rates to use for converting amounts to USD
-    boost::shared_ptr<ore::data::Market> market_;
+    QuantLib::ext::shared_ptr<ore::data::Market> market_;
 
     //! If true, no logging is written out
     bool quiet_;

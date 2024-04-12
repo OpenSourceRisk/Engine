@@ -52,22 +52,22 @@ public:
     //! Constructor
     OffPeakPowerIndex(const std::string& underlyingName,
         const QuantLib::Date& expiryDate,
-        const boost::shared_ptr<CommodityFuturesIndex>& offPeakIndex,
-        const boost::shared_ptr<CommodityFuturesIndex>& peakIndex,
+        const QuantLib::ext::shared_ptr<CommodityFuturesIndex>& offPeakIndex,
+        const QuantLib::ext::shared_ptr<CommodityFuturesIndex>& peakIndex,
         QuantLib::Real offPeakHours,
         const QuantLib::Calendar& peakCalendar,
         const Handle<QuantExt::PriceTermStructure>& priceCurve = Handle<QuantExt::PriceTermStructure>());
 
     //! \name Inspectors
     //@{
-    const boost::shared_ptr<CommodityFuturesIndex>& offPeakIndex() const;
-    const boost::shared_ptr<CommodityFuturesIndex>& peakIndex() const;
+    const QuantLib::ext::shared_ptr<CommodityFuturesIndex>& offPeakIndex() const;
+    const QuantLib::ext::shared_ptr<CommodityFuturesIndex>& peakIndex() const;
     QuantLib::Real offPeakHours() const;
     const QuantLib::Calendar& peakCalendar() const;
     //@}
 
     //! Implement the base clone.
-    boost::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expiryDate,
+    QuantLib::ext::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expiryDate,
         const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::none) const override;
 
 protected:
@@ -77,8 +77,8 @@ protected:
     //@}
 
 private:
-    boost::shared_ptr<CommodityFuturesIndex> offPeakIndex_;
-    boost::shared_ptr<CommodityFuturesIndex> peakIndex_;
+    QuantLib::ext::shared_ptr<CommodityFuturesIndex> offPeakIndex_;
+    QuantLib::ext::shared_ptr<CommodityFuturesIndex> peakIndex_;
     QuantLib::Real offPeakHours_;
     QuantLib::Calendar peakCalendar_;
 

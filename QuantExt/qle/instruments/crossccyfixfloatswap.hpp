@@ -48,7 +48,7 @@ public:
                          QuantLib::Natural fixedPaymentLag, const QuantLib::Calendar& fixedPaymentCalendar,
                          QuantLib::Real floatNominal, const QuantLib::Currency& floatCurrency,
                          const QuantLib::Schedule& floatSchedule,
-                         const boost::shared_ptr<QuantLib::IborIndex>& floatIndex, QuantLib::Spread floatSpread,
+                         const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& floatIndex, QuantLib::Spread floatSpread,
                          QuantLib::BusinessDayConvention floatPaymentBdc, QuantLib::Natural floatPaymentLag,
                          const QuantLib::Calendar& floatPaymentCalendar);
     //@}
@@ -75,7 +75,7 @@ public:
     QuantLib::Real floatNominal() const { return floatNominal_; }
     const QuantLib::Currency& floatCurrency() const { return floatCurrency_; }
     const QuantLib::Schedule& floatSchedule() const { return floatSchedule_; }
-    const boost::shared_ptr<QuantLib::IborIndex>& floatIndex() const { return floatIndex_; }
+    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& floatIndex() const { return floatIndex_; }
     QuantLib::Rate floatSpread() const { return floatSpread_; }
     QuantLib::BusinessDayConvention floatPaymentBdc() const { return floatPaymentBdc_; }
     QuantLib::Natural floatPaymentLag() const { return floatPaymentLag_; }
@@ -118,7 +118,7 @@ private:
     QuantLib::Real floatNominal_;
     QuantLib::Currency floatCurrency_;
     QuantLib::Schedule floatSchedule_;
-    boost::shared_ptr<QuantLib::IborIndex> floatIndex_;
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> floatIndex_;
     QuantLib::Spread floatSpread_;
     QuantLib::BusinessDayConvention floatPaymentBdc_;
     QuantLib::Natural floatPaymentLag_;

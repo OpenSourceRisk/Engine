@@ -37,10 +37,10 @@ public:
     /*! Constructor taking the cross asset model, \p model, and the index of the relevant inflation component within
         the model, \p index.
     */
-    DkImpliedZeroInflationTermStructure(const boost::shared_ptr<CrossAssetModel>& model, QuantLib::Size index);
+    DkImpliedZeroInflationTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, QuantLib::Size index);
 
     QL_DEPRECATED
-    DkImpliedZeroInflationTermStructure(const boost::shared_ptr<CrossAssetModel>& model, QuantLib::Size index, bool indexIsInterpolated);
+    DkImpliedZeroInflationTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, QuantLib::Size index, bool indexIsInterpolated);
 
 protected:
     //! \name ZeroInflationTermStructure interface

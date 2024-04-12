@@ -86,7 +86,7 @@ CappedFlooredCPICoupon::CappedFlooredCPICoupon(const ext::shared_ptr<CPICoupon>&
 
     if (isCapped_) {
         Rate effectiveCap = cap_;
-        cpiCap_ = boost::make_shared<CPICapFloor>(
+        cpiCap_ = QuantLib::ext::make_shared<CPICapFloor>(
             Option::Call, underlying_->nominal(), startDate_, underlying_->baseCPI(), underlying_->date(), cal, conv,
             cal, conv, effectiveCap, underlying_->cpiIndex(), underlying_->observationLag(),
             underlying_->observationInterpolation());
@@ -100,7 +100,7 @@ CappedFlooredCPICoupon::CappedFlooredCPICoupon(const ext::shared_ptr<CPICoupon>&
     }
     if (isFloored_) {
         Rate effectiveFloor = floor_;
-        cpiFloor_ = boost::make_shared<CPICapFloor>(
+        cpiFloor_ = QuantLib::ext::make_shared<CPICapFloor>(
             Option::Put, underlying_->nominal(), startDate_, underlying_->baseCPI(), underlying_->date(), cal, conv,
             cal, conv, effectiveFloor, underlying_->cpiIndex(),
             underlying_->observationLag(),
@@ -110,8 +110,8 @@ CappedFlooredCPICoupon::CappedFlooredCPICoupon(const ext::shared_ptr<CPICoupon>&
 
 Rate CappedFlooredCPICoupon::rate() const {
     // rate =  fixedRate * capped/floored index
-    boost::shared_ptr<CappedFlooredCPICouponPricer> blackPricer =
-        boost::dynamic_pointer_cast<CappedFlooredCPICouponPricer>(pricer_);
+    QuantLib::ext::shared_ptr<CappedFlooredCPICouponPricer> blackPricer =
+        QuantLib::ext::dynamic_pointer_cast<CappedFlooredCPICouponPricer>(pricer_);
     QL_REQUIRE(blackPricer, "BlackCPICouponPricer or BachelierCPICouponPricer expected");
     Real capValue = 0.0, floorValue = 0.0;
     if (isCapped_) {
@@ -161,17 +161,17 @@ CappedFlooredCPICashFlow::CappedFlooredCPICashFlow(const ext::shared_ptr<CPICash
     setCommon(cap, floor);
     registerWith(underlying);
 
-    auto index = boost::dynamic_pointer_cast<ZeroInflationIndex>(underlying->index());
+    auto index = QuantLib::ext::dynamic_pointer_cast<ZeroInflationIndex>(underlying->index());
     Calendar cal = index->fixingCalendar();     // not used by the CPICapFloor engine
     BusinessDayConvention conv = Unadjusted; // not used by the CPICapFloor engine
 
     if (isCapped_) {
-        cpiCap_ = boost::make_shared<CPICapFloor>(Option::Call, underlying_->notional(), startDate_,
+        cpiCap_ = QuantLib::ext::make_shared<CPICapFloor>(Option::Call, underlying_->notional(), startDate_,
                                                   underlying_->baseFixing(), underlying_->date(), cal, conv, cal, conv,
                                                   cap_, index, observationLag_, underlying_->interpolation());
     }
     if (isFloored_) {
-        cpiFloor_ = boost::make_shared<CPICapFloor>(Option::Put, underlying_->notional(), startDate_,
+        cpiFloor_ = QuantLib::ext::make_shared<CPICapFloor>(Option::Put, underlying_->notional(), startDate_,
                                                     underlying_->baseFixing(), underlying_->date(), cal, conv, cal,
                                                     conv, floor_, index, observationLag_, underlying_->interpolation());
     }

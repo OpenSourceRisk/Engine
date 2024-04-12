@@ -25,7 +25,7 @@
 
 #include <vector>
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 #include <orea/scenario/scenario.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
@@ -45,7 +45,7 @@ public:
     virtual ~ScenarioGenerator() {}
 
     //! Return the next scenario for the given date.
-    virtual boost::shared_ptr<Scenario> next(const Date& d) = 0;
+    virtual QuantLib::ext::shared_ptr<Scenario> next(const Date& d) = 0;
 
     //! Reset the generator so calls to next() return the first scenario.
     /*! This allows re-generation of scenarios if required. */
@@ -70,7 +70,7 @@ public:
         QL_REQUIRE(dates.front() > today, "date grid must start in the future");
     }
 
-    virtual boost::shared_ptr<Scenario> next(const Date& d) override {
+    virtual QuantLib::ext::shared_ptr<Scenario> next(const Date& d) override {
         if (d == dates_.front()) { // new path
             path_ = nextPath();
             pathStep_ = 0;
@@ -86,14 +86,14 @@ public:
     }
 
 protected:
-    virtual std::vector<boost::shared_ptr<Scenario>> nextPath() = 0;
+    virtual std::vector<QuantLib::ext::shared_ptr<Scenario>> nextPath() = 0;
 
     Date today_;
     vector<Date> dates_;
     Size pathStep_;
     // DayCounter dayCounter_;
     TimeGrid timeGrid_;
-    std::vector<boost::shared_ptr<Scenario>> path_;
+    std::vector<QuantLib::ext::shared_ptr<Scenario>> path_;
 };
 
 // A simple scenario generator that contains a single scenario
@@ -102,12 +102,12 @@ public:
     StaticScenarioGenerator() {}
 
     void reset() override {}
-    boost::shared_ptr<ore::analytics::Scenario> next(const Date&) override { return s_; }
+    QuantLib::ext::shared_ptr<ore::analytics::Scenario> next(const Date&) override { return s_; }
 
-    void setScenario(const boost::shared_ptr<ore::analytics::Scenario>& s) { s_ = s; }
+    void setScenario(const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& s) { s_ = s; }
 
 private:
-    boost::shared_ptr<ore::analytics::Scenario> s_;
+    QuantLib::ext::shared_ptr<ore::analytics::Scenario> s_;
 };
 
 } // namespace analytics

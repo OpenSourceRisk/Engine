@@ -62,31 +62,31 @@ void run_test(bool averaging) {
     std::vector<Real> prices = {100.0, 105.0, 110.0, 115.0, 120.0, 130.0, 150.0};
     DayCounter dc = Actual365Fixed();
     Handle<QuantExt::PriceTermStructure> priceCurve(
-        boost::make_shared<InterpolatedPriceCurve<Linear>>(today, dates, prices, dc, USDCurrency()));
+        QuantLib::ext::make_shared<InterpolatedPriceCurve<Linear>>(today, dates, prices, dc, USDCurrency()));
     priceCurve->enableExtrapolation();
 
     // Market - flat discount curve
-    Handle<Quote> rateQuote(boost::make_shared<SimpleQuote>(0.01));
-    Handle<YieldTermStructure> discountCurve(boost::make_shared<FlatForward>(today, rateQuote, dc, Compounded, Annual));
+    Handle<Quote> rateQuote(QuantLib::ext::make_shared<SimpleQuote>(0.01));
+    Handle<YieldTermStructure> discountCurve(QuantLib::ext::make_shared<FlatForward>(today, rateQuote, dc, Compounded, Annual));
 
     // Market - flat volatility structure
-    Handle<QuantLib::BlackVolTermStructure> vol(boost::make_shared<QuantLib::BlackConstantVol>(today, cal, 0.3, dc));
+    Handle<QuantLib::BlackVolTermStructure> vol(QuantLib::ext::make_shared<QuantLib::BlackConstantVol>(today, cal, 0.3, dc));
 
     // Analytical engine
     Real beta = 0.0;
-    boost::shared_ptr<PricingEngine> analyticalEngine =
-        boost::make_shared<CommoditySwaptionEngine>(discountCurve, vol, beta);
+    QuantLib::ext::shared_ptr<PricingEngine> analyticalEngine =
+        QuantLib::ext::make_shared<CommoditySwaptionEngine>(discountCurve, vol, beta);
 
     // Monte Carlo engine
     Size samples = 10000;
-    boost::shared_ptr<PricingEngine> mcEngine =
-        boost::make_shared<CommoditySwaptionMonteCarloEngine>(discountCurve, vol, samples, beta);
+    QuantLib::ext::shared_ptr<PricingEngine> mcEngine =
+        QuantLib::ext::make_shared<CommoditySwaptionMonteCarloEngine>(discountCurve, vol, samples, beta);
 
-    boost::shared_ptr<PricingEngine> swapEngine = boost::make_shared<DiscountingSwapEngine>(discountCurve);
+    QuantLib::ext::shared_ptr<PricingEngine> swapEngine = QuantLib::ext::make_shared<DiscountingSwapEngine>(discountCurve);
 
     Real quantity = 1.0;
     std::string name = "CL";
-    boost::shared_ptr<CommoditySpotIndex> index = boost::make_shared<CommoditySpotIndex>(name, cal, priceCurve);
+    QuantLib::ext::shared_ptr<CommoditySpotIndex> index = QuantLib::ext::make_shared<CommoditySpotIndex>(name, cal, priceCurve);
 
     // Swap start times
     std::vector<Size> startTimes = {0, 1, 2, 3, 4, 5, 7, 10};
@@ -104,7 +104,7 @@ void run_test(bool averaging) {
             Schedule schedule = MakeSchedule().from(start).to(end).withTenor(1 * Months);
             Leg fixedLeg;
             for (Size j = 1; j < schedule.size(); ++j)
-                fixedLeg.push_back(boost::make_shared<SimpleCashFlow>(quantity * strikePrice, schedule[j]));
+                fixedLeg.push_back(QuantLib::ext::make_shared<SimpleCashFlow>(quantity * strikePrice, schedule[j]));
             Leg floatLeg;
             if (averaging)
                 floatLeg = CommodityIndexedAverageLeg(schedule, index)
@@ -119,18 +119,18 @@ void run_test(bool averaging) {
                                .withPricingLagCalendar(cal)
                                .withSpreads(0.0);
 
-            boost::shared_ptr<QuantLib::Swap> payerSwap = boost::make_shared<QuantLib::Swap>(fixedLeg, floatLeg);
-            boost::shared_ptr<QuantLib::Swap> receiverSwap = boost::make_shared<QuantLib::Swap>(floatLeg, fixedLeg);
+            QuantLib::ext::shared_ptr<QuantLib::Swap> payerSwap = QuantLib::ext::make_shared<QuantLib::Swap>(fixedLeg, floatLeg);
+            QuantLib::ext::shared_ptr<QuantLib::Swap> receiverSwap = QuantLib::ext::make_shared<QuantLib::Swap>(floatLeg, fixedLeg);
 
             payerSwap->setPricingEngine(swapEngine);
             receiverSwap->setPricingEngine(swapEngine);
             BOOST_TEST_MESSAGE("Testing Swap NPV " << payerSwap->NPV() << " " << receiverSwap->NPV());
 
-            boost::shared_ptr<EuropeanExercise> exercise = boost::make_shared<EuropeanExercise>(start);
-            boost::shared_ptr<QuantExt::GenericSwaption> payerSwaption =
-                boost::make_shared<QuantExt::GenericSwaption>(payerSwap, exercise);
-            boost::shared_ptr<QuantExt::GenericSwaption> receiverSwaption =
-                boost::make_shared<QuantExt::GenericSwaption>(receiverSwap, exercise);
+            QuantLib::ext::shared_ptr<EuropeanExercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(start);
+            QuantLib::ext::shared_ptr<QuantExt::GenericSwaption> payerSwaption =
+                QuantLib::ext::make_shared<QuantExt::GenericSwaption>(payerSwap, exercise);
+            QuantLib::ext::shared_ptr<QuantExt::GenericSwaption> receiverSwaption =
+                QuantLib::ext::make_shared<QuantExt::GenericSwaption>(receiverSwap, exercise);
 
             boost::timer::cpu_timer tan;
             payerSwaption->setPricingEngine(analyticalEngine);

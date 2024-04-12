@@ -27,7 +27,7 @@ using boost::algorithm::is_strictly_increasing;
 namespace QuantExt {
 
 DatedStrippedOptionlet::DatedStrippedOptionlet(const Date& referenceDate,
-                                               const boost::shared_ptr<StrippedOptionletBase>& s)
+                                               const QuantLib::ext::shared_ptr<StrippedOptionletBase>& s)
     : referenceDate_(referenceDate), calendar_(s->calendar()), businessDayConvention_(s->businessDayConvention()),
       optionletDates_(s->optionletFixingDates()), nOptionletDates_(s->optionletMaturities()),
       optionletTimes_(s->optionletFixingTimes()), optionletStrikes_(nOptionletDates_, vector<Rate>()),

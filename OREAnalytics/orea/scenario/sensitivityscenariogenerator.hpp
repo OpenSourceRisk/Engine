@@ -102,14 +102,14 @@ using namespace data;
 class SensitivityScenarioGenerator : public ShiftScenarioGenerator {
 public:
     //! Constructor
-    SensitivityScenarioGenerator(const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
-                                 const boost::shared_ptr<Scenario>& baseScenario,
-                                 const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-                                 const boost::shared_ptr<ScenarioSimMarket>& simMarket,
-                                 const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory,
+    SensitivityScenarioGenerator(const QuantLib::ext::shared_ptr<SensitivityScenarioData>& sensitivityData,
+                                 const QuantLib::ext::shared_ptr<Scenario>& baseScenario,
+                                 const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+                                 const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket,
+                                 const QuantLib::ext::shared_ptr<ScenarioFactory>& sensiScenarioFactory,
                                  const bool overrideTenors, const std::string& sensitivityTemplate = std::string(),
                                  const bool continueOnError = false,
-                                 const boost::shared_ptr<Scenario>& baseScenarioAbsolute = nullptr);
+                                 const QuantLib::ext::shared_ptr<Scenario>& baseScenarioAbsolute = nullptr);
     //! Default destructor
     ~SensitivityScenarioGenerator(){};
 
@@ -131,7 +131,7 @@ public:
 
     Size numScenarios() const { return scenarios_.size(); }
 
-    boost::shared_ptr<Scenario> baseScenarioAbsolute() const { return baseScenarioAbsolute_; }
+    QuantLib::ext::shared_ptr<Scenario> baseScenarioAbsolute() const { return baseScenarioAbsolute_; }
 
 private:
     ShiftType getShiftType(SensitivityScenarioData::ShiftData& data) const;
@@ -203,8 +203,8 @@ private:
     ScenarioDescription correlationScenarioDescription(string pair, Size expiryBucket, Size strikeBucket, bool up,
                                                        ShiftScheme shiftScheme);
 
-    boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
-    boost::shared_ptr<ScenarioFactory> sensiScenarioFactory_;
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensitivityData_;
+    QuantLib::ext::shared_ptr<ScenarioFactory> sensiScenarioFactory_;
     std::string sensitivityTemplate_;
     const bool overrideTenors_, continueOnError_;
 
@@ -215,7 +215,7 @@ private:
     //! Holds the base valuesfor each risk factor key
     std::map<RiskFactorKey, QuantLib::Real> baseValues_;
 
-    boost::shared_ptr<Scenario> baseScenarioAbsolute_;
+    QuantLib::ext::shared_ptr<Scenario> baseScenarioAbsolute_;
 };
 } // namespace analytics
 } // namespace ore

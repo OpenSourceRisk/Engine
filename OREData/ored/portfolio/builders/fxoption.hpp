@@ -74,18 +74,18 @@ public:
 class CamAmcFxOptionEngineBuilder : public VanillaOptionEngineBuilder {
 public:
     // for external cam, with additional simulation dates (AMC)
-    CamAmcFxOptionEngineBuilder(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
+    CamAmcFxOptionEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
                                 const std::vector<Date>& simulationDates)
         : VanillaOptionEngineBuilder("CrossAssetModel", "AMC", {"FxOption"}, AssetClass::FX, Date()), cam_(cam),
           simulationDates_(simulationDates) {}
 
 protected:
     // the pricing engine depends on the ccys only, so the base class key implementation will just do fine
-    boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                 const AssetClass& assetClassUnderlying, const Date& expiryDate, const bool useFxSpot) override;
 
 private:
-    const boost::shared_ptr<QuantExt::CrossAssetModel> cam_;
+    const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
     const std::vector<Date> simulationDates_;
 };
     

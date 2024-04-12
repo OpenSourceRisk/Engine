@@ -45,7 +45,7 @@ public:
     const std::string& version() const override { return version_; }
 
     //! Returns the SIMM bucket mapper used by the configuration
-    const boost::shared_ptr<SimmBucketMapper>& bucketMapper() const override { return simmBucketMapper_; }
+    const QuantLib::ext::shared_ptr<SimmBucketMapper>& bucketMapper() const override { return simmBucketMapper_; }
 
     //! Return true if the SIMM risk type \p rt has buckets
     bool hasBuckets(const CrifRecord::RiskType& rt) const override;
@@ -163,17 +163,17 @@ private:
 
 protected:
     //! Constructor taking the SIMM configuration \p name and \p version
-    SimmConfigurationBase(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper, const std::string& name,
+    SimmConfigurationBase(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper, const std::string& name,
                           const std::string version, QuantLib::Size mporDays = 10);
 
     //! SIMM configuration version
     std::string version_;
 
     //! Used to map SIMM <em>Qualifier</em> names to SIMM <em>bucket</em> values
-    boost::shared_ptr<SimmBucketMapper> simmBucketMapper_;
+    QuantLib::ext::shared_ptr<SimmBucketMapper> simmBucketMapper_;
 
     //! Used to get the concentration thresholds for a given risk type and qualifier
-    boost::shared_ptr<SimmConcentration> simmConcentration_;
+    QuantLib::ext::shared_ptr<SimmConcentration> simmConcentration_;
 
     const std::tuple<std::string, std::string, std::string> makeKey(const std::string&, const std::string&,
                                                                     const std::string&) const;

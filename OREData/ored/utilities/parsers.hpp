@@ -83,6 +83,12 @@ QuantLib::Date parseDate(const string& s);
 */
 QuantLib::Real parseReal(const string& s);
 
+//! Convert text to Real, empty string to Null<Real>()
+/*!
+  \ingroup utilities
+*/
+Real parseRealOrNull(const string& s);
+
 //! Attempt to convert text to Real
 /*! Attempts to convert text to Real
     \param[in]  s      The string we wish to convert to a Real

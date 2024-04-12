@@ -25,20 +25,20 @@ SpreadedOptionletVolatility::SpreadedOptionletVolatility(const Handle<OptionletV
                                                          const Handle<Quote>& spread)
     : QuantLib::SpreadedOptionletVolatility(baseVol, spread) {}
 
-boost::shared_ptr<SmileSection> SpreadedOptionletVolatility::smileSectionImpl(const Date& d) const {
-    boost::shared_ptr<QuantLib::SpreadedSmileSection> section =
-        boost::dynamic_pointer_cast<QuantLib::SpreadedSmileSection>(
+QuantLib::ext::shared_ptr<SmileSection> SpreadedOptionletVolatility::smileSectionImpl(const Date& d) const {
+    QuantLib::ext::shared_ptr<QuantLib::SpreadedSmileSection> section =
+        QuantLib::ext::dynamic_pointer_cast<QuantLib::SpreadedSmileSection>(
             QuantLib::SpreadedOptionletVolatility::smileSectionImpl(d));
 
-    return boost::make_shared<SpreadedSmileSection>(section);
+    return QuantLib::ext::make_shared<SpreadedSmileSection>(section);
 }
 
-boost::shared_ptr<SmileSection> SpreadedOptionletVolatility::smileSectionImpl(Time optionTime) const {
-    boost::shared_ptr<QuantLib::SpreadedSmileSection> section =
-        boost::dynamic_pointer_cast<QuantLib::SpreadedSmileSection>(
+QuantLib::ext::shared_ptr<SmileSection> SpreadedOptionletVolatility::smileSectionImpl(Time optionTime) const {
+    QuantLib::ext::shared_ptr<QuantLib::SpreadedSmileSection> section =
+        QuantLib::ext::dynamic_pointer_cast<QuantLib::SpreadedSmileSection>(
             QuantLib::SpreadedOptionletVolatility::smileSectionImpl(optionTime));
 
-    return boost::make_shared<SpreadedSmileSection>(section);
+    return QuantLib::ext::make_shared<SpreadedSmileSection>(section);
 }
 
 Volatility SpreadedOptionletVolatility::volatilityImpl(Time t, Rate s) const {

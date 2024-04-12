@@ -56,11 +56,11 @@ void DiscountingBondTRSEngine::calculate() const {
     Handle<Quote> bondRecoveryRate = arguments_.bondIndex->recoveryRate();
     Handle<YieldTermStructure> bondReferenceYieldCurve =
         bondSpread.empty() ? arguments_.bondIndex->discountCurve()
-                           : Handle<YieldTermStructure>(boost::make_shared<ZeroSpreadedTermStructure>(
+                           : Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
                                  arguments_.bondIndex->discountCurve(), bondSpread));
-    boost::shared_ptr<DefaultProbabilityTermStructure> bondDefaultCurve =
+    QuantLib::ext::shared_ptr<DefaultProbabilityTermStructure> bondDefaultCurve =
         arguments_.bondIndex->defaultCurve().empty()
-            ? boost::make_shared<QuantLib::FlatHazardRate>(today, 0.0, Actual365Fixed())
+            ? QuantLib::ext::make_shared<QuantLib::FlatHazardRate>(today, 0.0, Actual365Fixed())
             : arguments_.bondIndex->defaultCurve().currentLink();
     Rate recoveryVal =
         arguments_.bondIndex->recoveryRate().empty() ? 0.0 : arguments_.bondIndex->recoveryRate()->value();
@@ -97,7 +97,7 @@ void DiscountingBondTRSEngine::calculate() const {
             cfResults.back().currency = ccyStr(arguments_.fundingCurrency);
             cfResults.back().legNumber = fundingLegNo;
             cfResults.back().type = "Funding";
-            if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c)) {
+            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(c)) {
                 cfResults.back().rate = cpn->rate();
                 cfResults.back().accrualPeriod = cpn->accrualPeriod();
                 cfResults.back().accrualStartDate = cpn->accrualStartDate();
@@ -105,7 +105,7 @@ void DiscountingBondTRSEngine::calculate() const {
                 cfResults.back().accruedAmount = cpn->accruedAmount(today);
                 cfResults.back().notional = cpn->nominal();
             }
-            if (auto cpn = boost::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
+            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
                 cfResults.back().fixingDate = cpn->fixingDate();
                 cfResults.back().fixingValue = cpn->index()->fixing(cpn->fixingDate());
             }
@@ -126,7 +126,7 @@ void DiscountingBondTRSEngine::calculate() const {
         cfResults.back().currency = ccyStr(arguments_.fundingCurrency);
         cfResults.back().legNumber = 0;
         cfResults.back().type = "Return";
-        if (auto bc = boost::dynamic_pointer_cast<BondTRSCashFlow>(c)) {
+        if (auto bc = QuantLib::ext::dynamic_pointer_cast<BondTRSCashFlow>(c)) {
             cfResults.back().fixingDate = bc->fixingEndDate();
             cfResults.back().fixingValue = bc->assetEnd();
             cfResults.back().accrualStartDate = bc->fixingStartDate();
@@ -144,7 +144,7 @@ void DiscountingBondTRSEngine::calculate() const {
 
     // 5 handle bond cashflows (leg #1)
 
-    boost::shared_ptr<Bond> bd = arguments_.bondIndex->bond();
+    QuantLib::ext::shared_ptr<Bond> bd = arguments_.bondIndex->bond();
 
     Date start = bd->settlementDate(arguments_.valuationDates.front());
     Date end = bd->settlementDate(arguments_.valuationDates.back());
@@ -219,7 +219,7 @@ void DiscountingBondTRSEngine::calculate() const {
         cfResults.back().currency = ccyStr(arguments_.fundingCurrency);
         cfResults.back().legNumber = 1;
         cfResults.back().type = "BondCashFlowReturn";
-        if (auto cpn = boost::dynamic_pointer_cast<Coupon>(bd->cashflows()[i])) {
+        if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(bd->cashflows()[i])) {
             cfResults.back().rate = cpn->rate();
             cfResults.back().accrualPeriod = cpn->accrualPeriod();
             cfResults.back().accrualStartDate = cpn->accrualStartDate();
@@ -227,7 +227,7 @@ void DiscountingBondTRSEngine::calculate() const {
             cfResults.back().accruedAmount = cpn->accruedAmount(today);
             cfResults.back().notional = cpn->nominal();
         }
-        if (auto cpn = boost::dynamic_pointer_cast<FloatingRateCoupon>(bd->cashflows()[i])) {
+        if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(bd->cashflows()[i])) {
             cfResults.back().fixingDate = cpn->fixingDate();
             cfResults.back().fixingValue = cpn->index()->fixing(cpn->fixingDate());
         }
@@ -247,7 +247,7 @@ void DiscountingBondTRSEngine::calculate() const {
 
         // 5g bond cashflow recovery contribution
 
-        if (auto coupon = boost::dynamic_pointer_cast<Coupon>(bd->cashflows()[i])) {
+        if (auto coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(bd->cashflows()[i])) {
             Date startDate = coupon->accrualStartDate();
             Date endDate = coupon->accrualEndDate();
             Date effectiveStartDate = (startDate <= start && start <= endDate) ? start : startDate;
@@ -281,7 +281,7 @@ void DiscountingBondTRSEngine::calculate() const {
            maturity. The timestepPeriod specified is used as provide the steps for the integration. This only
            applies to bonds with 1 cashflow, identified as a final redemption payment. */
         if (bd->cashflows().size() == 1) {
-            boost::shared_ptr<Redemption> redemption = boost::dynamic_pointer_cast<Redemption>(bd->cashflows()[0]);
+            QuantLib::ext::shared_ptr<Redemption> redemption = QuantLib::ext::dynamic_pointer_cast<Redemption>(bd->cashflows()[0]);
             if (redemption) {
                 Date startDate = (start < today ? today : start);
                 while (startDate < redemption->date()) {

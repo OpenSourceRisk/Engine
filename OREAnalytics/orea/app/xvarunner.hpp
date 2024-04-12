@@ -40,18 +40,18 @@ class XvaRunner {
 public:
     virtual ~XvaRunner() {}
 
-    XvaRunner(const boost::shared_ptr<InputParameters>& inputs,
+    XvaRunner(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
               QuantLib::Date asof, const std::string& baseCurrency,
-              const boost::shared_ptr<ore::data::Portfolio>& portfolio,
-              const boost::shared_ptr<ore::data::NettingSetManager>& netting,
-              const boost::shared_ptr<ore::data::CollateralBalances>& collateralBalances,
-              const boost::shared_ptr<ore::data::EngineData>& engineData,
-              const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
-              const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
-              const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-              const boost::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
-              const boost::shared_ptr<ore::data::CrossAssetModelData>& crossAssetModelData,
-              const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+              const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
+              const QuantLib::ext::shared_ptr<ore::data::NettingSetManager>& netting,
+              const QuantLib::ext::shared_ptr<ore::data::CollateralBalances>& collateralBalances,
+              const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
+              const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
+              const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
+              const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+              const QuantLib::ext::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
+              const QuantLib::ext::shared_ptr<ore::data::CrossAssetModelData>& crossAssetModelData,
+              const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
               const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
               QuantLib::Real dimQuantile = 0.99, QuantLib::Size dimHorizonCalendarDays = 14,
               map<string, bool> analytics = {}, string calculationType = "Symmetric", string dvaName = "",
@@ -59,20 +59,20 @@ public:
               bool storeFlows = false);
 
     // run xva on full portfolio and build post processor
-    void runXva(const boost::shared_ptr<ore::data::Market>& market, bool continueOnErr = true,
+    void runXva(const QuantLib::ext::shared_ptr<ore::data::Market>& market, bool continueOnErr = true,
                 const std::map<std::string, QuantLib::Real>& currentIM = std::map<std::string, QuantLib::Real>());
 
     // get post processor, this requires a previous runXva() or generatePostProcessor() call
-    const boost::shared_ptr<PostProcess>& postProcess() { return postProcess_; }
+    const QuantLib::ext::shared_ptr<PostProcess>& postProcess() { return postProcess_; }
 
     // step 1: build cam model
-    void buildCamModel(const boost::shared_ptr<ore::data::Market>& market, bool continueOnErr = true);
+    void buildCamModel(const QuantLib::ext::shared_ptr<ore::data::Market>& market, bool continueOnErr = true);
 
     // optional step 2: buffer simulation paths, this is required, if a currency filter is used
     void bufferSimulationPaths();
 
     // build sim market, optionally on filtered currencies
-    virtual void buildSimMarket(const boost::shared_ptr<ore::data::Market>& market,
+    virtual void buildSimMarket(const QuantLib::ext::shared_ptr<ore::data::Market>& market,
                         const boost::optional<std::set<std::string>>& currencyFilter = boost::none,
                         const bool continueOnErr = true);
 
@@ -80,65 +80,65 @@ public:
     void buildCube(const boost::optional<std::set<std::string>>& tradeIds, bool continueOnErr = true);
 
     // get generated trade cube from step 5
-    boost::shared_ptr<NPVCube> npvCube() const { return cube_; }
+    QuantLib::ext::shared_ptr<NPVCube> npvCube() const { return cube_; }
 
     // get generated netting set cube from step 5
-    boost::shared_ptr<NPVCube> nettingCube() const { return nettingCube_; }
+    QuantLib::ext::shared_ptr<NPVCube> nettingCube() const { return nettingCube_; }
 
     // get aggregation scenario data from step 5
     QuantLib::Handle<AggregationScenarioData> aggregationScenarioData() { return scenarioData_; }
 
     // partial step 3: build post processor on given cubes / agg scen data (requires runXva() or buildCamModel() call)
     void generatePostProcessor(
-        const boost::shared_ptr<Market>& market, const boost::shared_ptr<NPVCube>& npvCube,
-        const boost::shared_ptr<NPVCube>& nettingCube, const boost::shared_ptr<AggregationScenarioData>& scenarioData,
+        const QuantLib::ext::shared_ptr<Market>& market, const QuantLib::ext::shared_ptr<NPVCube>& npvCube,
+        const QuantLib::ext::shared_ptr<NPVCube>& nettingCube, const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData,
         const bool continueOnErr = true,
         const std::map<std::string, QuantLib::Real>& currentIM = std::map<std::string, QuantLib::Real>());
 
     // get a vector of netting set ids for the given portfolio sorted in alphabetical order, if no portfolio
     // is given here, the netting sets for the global portfolio set in the ctor are returned
-    std::set<std::string> getNettingSetIds(const boost::shared_ptr<Portfolio>& portfolio = nullptr) const;
+    std::set<std::string> getNettingSetIds(const QuantLib::ext::shared_ptr<Portfolio>& portfolio = nullptr) const;
 
 protected:
-    virtual boost::shared_ptr<NPVCube>
-    getNettingSetCube(std::vector<boost::shared_ptr<ValuationCalculator>>& calculators,
-                      const boost::shared_ptr<Portfolio>& portfolio) {
+    virtual QuantLib::ext::shared_ptr<NPVCube>
+    getNettingSetCube(std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>>& calculators,
+                      const QuantLib::ext::shared_ptr<Portfolio>& portfolio) {
         return nullptr;
     };
 
-    virtual boost::shared_ptr<NPVCube> getNpvCube(const Date& asof, const std::set<std::string>& ids,
+    virtual QuantLib::ext::shared_ptr<NPVCube> getNpvCube(const Date& asof, const std::set<std::string>& ids,
                                                   const std::vector<Date>& dates, const Size samples,
                                                   const Size depth) const;
 
-    virtual boost::shared_ptr<DynamicInitialMarginCalculator>
-    getDimCalculator(const boost::shared_ptr<NPVCube>& cube,
-                     const boost::shared_ptr<CubeInterpretation>& cubeInterpreter,
-                     const boost::shared_ptr<AggregationScenarioData>& scenarioData,
-                     const boost::shared_ptr<QuantExt::CrossAssetModel>& model = nullptr,
-                     const boost::shared_ptr<NPVCube>& nettingCube = nullptr,
+    virtual QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator>
+    getDimCalculator(const QuantLib::ext::shared_ptr<NPVCube>& cube,
+                     const QuantLib::ext::shared_ptr<CubeInterpretation>& cubeInterpreter,
+                     const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData,
+                     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& model = nullptr,
+                     const QuantLib::ext::shared_ptr<NPVCube>& nettingCube = nullptr,
                      const std::map<std::string, QuantLib::Real>& currentIM = std::map<std::string, QuantLib::Real>());
 
-    virtual boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>
+    virtual QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>
     projectSsmData(const std::set<std::string>& currencyFilter) const;
 
-    virtual boost::shared_ptr<ore::analytics::ScenarioGenerator> getProjectedScenarioGenerator(
-        const boost::optional<std::set<std::string>>& currencyFilter, const boost::shared_ptr<Market>& market,
-        const boost::shared_ptr<ScenarioSimMarketParameters>& projectedSsmData,
-        const boost::shared_ptr<ScenarioFactory>& scenarioFactory, const bool continueOnErr) const;
+    virtual QuantLib::ext::shared_ptr<ore::analytics::ScenarioGenerator> getProjectedScenarioGenerator(
+        const boost::optional<std::set<std::string>>& currencyFilter, const QuantLib::ext::shared_ptr<Market>& market,
+        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& projectedSsmData,
+        const QuantLib::ext::shared_ptr<ScenarioFactory>& scenarioFactory, const bool continueOnErr) const;
     
-    boost::shared_ptr<InputParameters> inputs_;
+    QuantLib::ext::shared_ptr<InputParameters> inputs_;
     QuantLib::Date asof_;
     std::string baseCurrency_;
-    boost::shared_ptr<ore::data::Portfolio> portfolio_;
-    boost::shared_ptr<ore::data::NettingSetManager> netting_;
-    boost::shared_ptr<ore::data::CollateralBalances> collateralBalances_;
-    boost::shared_ptr<ore::data::EngineData> engineData_;
-    boost::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
-    boost::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;
-    boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
-    boost::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData_;
-    boost::shared_ptr<ore::data::CrossAssetModelData> crossAssetModelData_;
-    boost::shared_ptr<ReferenceDataManager> referenceData_;
+    QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio_;
+    QuantLib::ext::shared_ptr<ore::data::NettingSetManager> netting_;
+    QuantLib::ext::shared_ptr<ore::data::CollateralBalances> collateralBalances_;
+    QuantLib::ext::shared_ptr<ore::data::EngineData> engineData_;
+    QuantLib::ext::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
+    QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
+    QuantLib::ext::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData_;
+    QuantLib::ext::shared_ptr<ore::data::CrossAssetModelData> crossAssetModelData_;
+    QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
     IborFallbackConfig iborFallbackConfig_;
     QuantLib::Real dimQuantile_;
     QuantLib::Size dimHorizonCalendarDays_;
@@ -151,16 +151,16 @@ protected:
     bool storeFlows_;
 
     // generated data
-    boost::shared_ptr<QuantExt::CrossAssetModel> model_;
-    boost::shared_ptr<ScenarioSimMarket> simMarket_;
-    boost::shared_ptr<EngineFactory> simFactory_;
+    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket_;
+    QuantLib::ext::shared_ptr<EngineFactory> simFactory_;
     QuantLib::RelinkableHandle<AggregationScenarioData> scenarioData_;
-    boost::shared_ptr<NPVCube> cube_, nettingCube_;
-    boost::shared_ptr<CubeInterpretation> cubeInterpreter_;
+    QuantLib::ext::shared_ptr<NPVCube> cube_, nettingCube_;
+    QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpreter_;
     std::string calculationType_;
-    boost::shared_ptr<PostProcess> postProcess_;
+    QuantLib::ext::shared_ptr<PostProcess> postProcess_;
 
-    boost::shared_ptr<std::vector<std::vector<QuantLib::Path>>> bufferedPaths_;
+    QuantLib::ext::shared_ptr<std::vector<std::vector<QuantLib::Path>>> bufferedPaths_;
 };
 
 } // namespace analytics
