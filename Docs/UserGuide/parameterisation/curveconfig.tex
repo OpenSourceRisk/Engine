@@ -162,7 +162,7 @@ Listings \ref{lst:fxoptionvol_configuration_atm}, \ref{lst:fxoptionvol_configura
     <DayCounter>A365</DayCounter>
     <Calendar>US,JP</Calendar>
     <Conventions>USD-JPY-FXOPTION</Conventions>
-    <SmileExtrapolation>Linear</SmileExtrapolation>
+    <SmileExtrapolation>UseInterpolator</SmileExtrapolation>
   </FXVolatility>
 \end{minted}
 \caption{FX option volatility configuration Smile / Delta}
@@ -274,11 +274,10 @@ The meaning of each of the elements in Listings \ref{lst:fxoptionvol_configurati
   data input. See \ref{sss:fx_option_conv} for more details.
 \item BaseVolatility1: For `ATMTriangulated' this denotes one of the surfaces we want to triangulate from
 \item BaseVolatility2: For `ATMTriangulated' this denotes one of the surfaces we want to triangulate from
-\item SmileExtrapolation [Optional]: In case of SmileType Delta. Indicates the extrapolation in the smile direction. The
-allowable values are None, UseInterpolator, Linear and Flat. Both Flat and
-None give flat extrapolation in the smile direction. UseInterpolator and
-Linear indicate that the configured interpolation (linear) should be continued in
-the strike direction in order to extrapolate.
+\item SmileExtrapolation [Optional]: Applicable only in case of SmileType Delta. Indicates the extrapolation in the 
+smile direction. The allowable values are None, UseInterpolator (or Linear) and Flat. Both Flat and None give flat 
+extrapolation. UseInterpolator indicates that the configured interpolation should be continued in the strike 
+direction in order to extrapolate. Default if not provided value is Flat.
 \end{itemize}
 
 \subsubsection{Equity Curve Structures}
