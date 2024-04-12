@@ -35,11 +35,11 @@ public:
         \param model the cross asset model to be used in the valuation.
         \param index the index of the inflation component to use within the cross asset model.
     */
-    JyYoYInflationCouponPricer(const boost::shared_ptr<CrossAssetModel>& model,
+    JyYoYInflationCouponPricer(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
         QuantLib::Size index);
 
 private:
-    boost::shared_ptr<CrossAssetModel> model_;
+    QuantLib::ext::shared_ptr<CrossAssetModel> model_;
     QuantLib::Size index_;
 
     QuantLib::Real optionletRate(QuantLib::Option::Type optionType, QuantLib::Real effStrike) const override;
@@ -54,7 +54,7 @@ private:
     \frac{P_r(0,T)}{P_n(0,T)} \frac{P_n(0,S)}{P_r(0,S)} e^{C(S,T)}
     \f]
 */
-QuantLib::Real jyExpectedIndexRatio(const boost::shared_ptr<CrossAssetModel>& model,
+QuantLib::Real jyExpectedIndexRatio(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
     QuantLib::Size index, QuantLib::Time S, QuantLib::Time T, bool indexIsInterpolated);
 
 }

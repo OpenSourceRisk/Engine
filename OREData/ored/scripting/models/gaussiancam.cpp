@@ -48,8 +48,8 @@ GaussianCam::GaussianCam(const Handle<CrossAssetModel>& cam, const Size paths,
                          const std::vector<std::string>& currencies,
                          const std::vector<Handle<YieldTermStructure>>& curves,
                          const std::vector<Handle<Quote>>& fxSpots,
-                         const std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>>& irIndices,
-                         const std::vector<std::pair<std::string, boost::shared_ptr<ZeroInflationIndex>>>& infIndices,
+                         const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
+                         const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
                          const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
                          const std::set<Date>& simulationDates, const McParams& mcParams, const Size timeStepsPerYear,
                          const IborFallbackConfig& iborFallbackConfig,
@@ -111,7 +111,7 @@ void GaussianCam::releaseMemory() {
     irIndexValueCache_.clear();
 }
 
-void GaussianCam::resetNPVMem() { storedRegressionCoeff_.clear(); }
+void GaussianCam::resetNPVMem() { storedRegressionModel_.clear(); }
 
 const Date& GaussianCam::referenceDate() const {
     calculate();
@@ -260,7 +260,7 @@ void GaussianCam::populatePathValues(const Size nSamples, std::map<Date, std::ve
         // we treat the case of a one dimensional process separately for optimisation reasons; we know that in
         // this case we have a single, driftless LGM process for currency 0
 
-        auto lgmProcess = boost::dynamic_pointer_cast<StochasticProcess1D>(cam_->lgm(0)->stateProcess());
+        auto lgmProcess = QuantLib::ext::dynamic_pointer_cast<StochasticProcess1D>(cam_->lgm(0)->stateProcess());
 
         std::vector<Real> stdDevs(times.size() - 1);
         for (Size i = 0; i < times.size() - 1; ++i) {
@@ -292,7 +292,7 @@ void GaussianCam::populatePathValues(const Size nSamples, std::map<Date, std::ve
 
         // case process size > 1 or we have injected paths, we use the normal process interface to evolve the process
 
-        boost::shared_ptr<MultiPathGeneratorBase> pathGen;
+        QuantLib::ext::shared_ptr<MultiPathGeneratorBase> pathGen;
 
         // build a temporary repository of the state prcess values, since we want to access them not path by path
         // below - for efficiency reasons the loop over the paths should be the innermost loop there!
@@ -305,7 +305,7 @@ void GaussianCam::populatePathValues(const Size nSamples, std::map<Date, std::ve
 
             // the usual path generator
 
-            if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
+            if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
                 tmp->resetCache(timeGrid_.size() - 1);
             }
 
@@ -508,17 +508,17 @@ RandomVariable GaussianCam::fwdCompAvg(const bool isAvg, const std::string& inde
                                        const bool nakedOption, const bool localCapFloor) const {
     calculate();
     auto ir = std::find_if(irIndices_.begin(), irIndices_.end(),
-                           [&indexInput](const std::pair<IndexInfo, boost::shared_ptr<InterestRateIndex>>& p) {
+                           [&indexInput](const std::pair<IndexInfo, QuantLib::ext::shared_ptr<InterestRateIndex>>& p) {
                                return p.first.name() == indexInput;
                            });
     QL_REQUIRE(ir != irIndices_.end(),
                "GaussianCam::fwdComp() ir index " << indexInput << " not found, this is unexpected");
     Size irIndexPos = irIndexPositionInCam_[std::distance(irIndices_.begin(), ir)];
     LgmVectorised lgmv(cam_->lgm(irIndexPos)->parametrization());
-    auto on = boost::dynamic_pointer_cast<OvernightIndex>(ir->second);
+    auto on = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(ir->second);
     QL_REQUIRE(on, "GaussianCam::fwdCompAvg(): expected on index for " << indexInput);
     // only used to extract fixing and value dates
-    auto coupon = boost::make_shared<QuantExt::OvernightIndexedCoupon>(
+    auto coupon = QuantLib::ext::make_shared<QuantExt::OvernightIndexedCoupon>(
         end, 1.0, start, end, on, gearing, spread, Date(), Date(), DayCounter(), false, includeSpread, lookback * Days,
         rateCutoff, fixingDays);
     // get model time and state
@@ -609,43 +609,74 @@ RandomVariable GaussianCam::npv(const RandomVariable& amount, const Date& obsdat
         return expectation(amount);
     }
 
-    // generate basis if not yet done
-
-    if (basisFns_.find(state.size()) == basisFns_.end())
-        basisFns_[state.size()] = multiPathBasisSystem(state.size(), mcParams_.regressionOrder, mcParams_.polynomType,
-                                                       std::min(size(), trainingSamples()));
-
-    // if a memSlot is given and coefficients are stored, we use them
+    // the regression model is given by coefficients and an optional coordinate transform
 
     Array coeff;
+    Matrix coordinateTransform;
+
+    // if a memSlot is given and coefficients / coordinate transform are stored, we use them
+
+    bool haveStoredModel = false;
 
     if (memSlot) {
-        auto it = storedRegressionCoeff_.find(*memSlot);
-        if (it != storedRegressionCoeff_.end()) {
-            coeff = it->second.first;
-            QL_REQUIRE(it->second.second == state.size(),
+        if (auto it = storedRegressionModel_.find(*memSlot); it != storedRegressionModel_.end()) {
+            coeff = std::get<0>(it->second);
+            coordinateTransform = std::get<2>(it->second);
+            QL_REQUIRE(std::get<1>(it->second) == state.size(),
                        "GaussianCam::npv(): stored regression coefficients at mem slot "
-                           << *memSlot << " are for state size " << it->second.second << ", actual state size is "
-                           << state.size());
+                           << *memSlot << " are for state size " << std::get<1>(it->second) << ", actual state size is "
+                           << state.size() << " (before possible coordinate transform).");
+            haveStoredModel = true;
         }
     }
 
-    // otherwise compute coefficients and store them if a memSlot is given
+    // if we do not have retrieved a model in the previous step, we create it now
 
-    if (coeff.size() == 0) {
-        coeff = regressionCoefficients(amount, state, basisFns_.at(state.size()), filter,
-                                       RandomVariableRegressionMethod::QR);
+    std::vector<RandomVariable> transformedState;
+
+    if(!haveStoredModel) {
+
+        // factor reduction to reduce dimensionalitty and handle collinearity
+
+        if (mcParams_.regressionVarianceCutoff != Null<Real>()) {
+            coordinateTransform = pcaCoordinateTransform(state, mcParams_.regressionVarianceCutoff);
+            transformedState = applyCoordinateTransform(state, coordinateTransform);
+            state = vec2vecptr(transformedState);
+        }
+
+        // train coefficients
+
+        coeff = regressionCoefficients(amount, state,
+                                       multiPathBasisSystem(state.size(), mcParams_.regressionOrder,
+                                                            mcParams_.polynomType, std::min(size(), trainingSamples())),
+                                       filter, RandomVariableRegressionMethod::QR);
         DLOG("GaussianCam::npv(" << ore::data::to_string(obsdate) << "): regression coefficients are " << coeff
                                  << " (got model state size " << nModelStates << " and " << nAddReg
-                                 << " additional regressors)");
+                                 << " additional regressors, coordinate transform " << coordinateTransform.columns()
+                                 << " -> " << coordinateTransform.rows() << ")");
+
+        // store model if requried
+
         if (memSlot) {
-            storedRegressionCoeff_[*memSlot] = std::make_pair(coeff, state.size());
+            storedRegressionModel_[*memSlot] = std::make_tuple(coeff, nModelStates, coordinateTransform);
+        }
+
+    } else {
+
+        // apply the stored coordinate transform to the state
+
+        if(!coordinateTransform.empty()) {
+            transformedState = applyCoordinateTransform(state, coordinateTransform);
+            state = vec2vecptr(transformedState);
         }
     }
 
     // compute conditional expectation and return the result
 
-    return conditionalExpectation(state, basisFns_.at(state.size()), coeff);
+    return conditionalExpectation(state,
+                                  multiPathBasisSystem(state.size(), mcParams_.regressionOrder, mcParams_.polynomType,
+                                                       std::min(size(), trainingSamples())),
+                                  coeff);
 }
 
 void GaussianCam::toggleTrainingPaths() const {

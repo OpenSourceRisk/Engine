@@ -31,9 +31,9 @@ namespace ore {
 namespace analytics {
 
 ExposureCalculator::ExposureCalculator(
-    const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<NPVCube>& cube,
-    const boost::shared_ptr<CubeInterpretation> cubeInterpretation,
-    const boost::shared_ptr<Market>& market,
+    const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<NPVCube>& cube,
+    const QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpretation,
+    const QuantLib::ext::shared_ptr<Market>& market,
     bool exerciseNextBreak, const string& baseCurrency, const string& configuration,
     const Real quantile, const CollateralExposureHelper::CalculationType calcType, const bool multiPath,
     const bool flipViewXVA)
@@ -47,11 +47,11 @@ ExposureCalculator::ExposureCalculator(
     QL_REQUIRE(portfolio_, "portfolio is null");
 
     if (multiPath) {
-        exposureCube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>(
+        exposureCube_ = QuantLib::ext::make_shared<SinglePrecisionInMemoryCubeN>(
             market->asofDate(), portfolio_->ids(), dates_,
             cube_->samples(), EXPOSURE_CUBE_DEPTH);// EPE, ENE, allocatedEPE, allocatedENE
     } else {
-        exposureCube_ = boost::make_shared<DoublePrecisionInMemoryCubeN>(
+        exposureCube_ = QuantLib::ext::make_shared<DoublePrecisionInMemoryCubeN>(
             market->asofDate(), portfolio_->ids(), dates_,
             1, EXPOSURE_CUBE_DEPTH);// EPE, ENE, allocatedEPE, allocatedENE
     }

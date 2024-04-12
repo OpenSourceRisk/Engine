@@ -31,7 +31,7 @@ using std::vector;
 namespace QuantExt {
 
 DkImpliedYoYInflationTermStructure::DkImpliedYoYInflationTermStructure(
-    const boost::shared_ptr<CrossAssetModel>& model, Size index, bool indexIsInterpolated)
+    const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index, bool indexIsInterpolated)
     : YoYInflationModelTermStructure(model, index, indexIsInterpolated) {}
 
 map<Date, Real> DkImpliedYoYInflationTermStructure::yoyRates(const vector<Date>& dts, const Period& obsLag) const {

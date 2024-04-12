@@ -63,10 +63,10 @@ struct Variances {
 
 class PairwiseVarianceSwapEngine : public QuantExt::PairwiseVarianceSwap::engine {
 public:
-    PairwiseVarianceSwapEngine(const boost::shared_ptr<QuantLib::Index>& index1,
-                               const boost::shared_ptr<QuantLib::Index>& index2,
-                               const boost::shared_ptr<GeneralizedBlackScholesProcess>& process1,
-                               const boost::shared_ptr<GeneralizedBlackScholesProcess>& process2,
+    PairwiseVarianceSwapEngine(const QuantLib::ext::shared_ptr<QuantLib::Index>& index1,
+                               const QuantLib::ext::shared_ptr<QuantLib::Index>& index2,
+                               const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process1,
+                               const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process2,
                                const Handle<YieldTermStructure>& discountingTS, Handle<Quote> correlation);
 
     void calculate() const override;
@@ -75,10 +75,10 @@ protected:
     Variances calculateVariances(const Schedule& valuationSchedule, const Schedule& laggedValuationSchedule,
                                  const Date& evalDate) const;
 
-    boost::shared_ptr<Index> index1_;
-    boost::shared_ptr<Index> index2_;
-    boost::shared_ptr<GeneralizedBlackScholesProcess> process1_;
-    boost::shared_ptr<GeneralizedBlackScholesProcess> process2_;
+    QuantLib::ext::shared_ptr<Index> index1_;
+    QuantLib::ext::shared_ptr<Index> index2_;
+    QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> process1_;
+    QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> process2_;
     Handle<YieldTermStructure> discountingTS_;
     Handle<Quote> correlation_;
 };

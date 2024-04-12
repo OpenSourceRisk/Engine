@@ -39,16 +39,16 @@ using namespace QuantLib;
 class ZeroInflationIndexWrapper : public ZeroInflationIndex {
 public:
 
-    ZeroInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> source);
+    ZeroInflationIndexWrapper(const QuantLib::ext::shared_ptr<ZeroInflationIndex> source);
 
-    QL_DEPRECATED ZeroInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> source,
+    QL_DEPRECATED ZeroInflationIndexWrapper(const QuantLib::ext::shared_ptr<ZeroInflationIndex> source,
                               const CPI::InterpolationType interpolation);
     /*! \warning the forecastTodaysFixing parameter (required by the Index interface) is currently ignored. */
     Rate fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const override;
 
 private:
     Rate forecastFixing(const Date& fixingDate) const;
-    const boost::shared_ptr<ZeroInflationIndex> source_;
+    const QuantLib::ext::shared_ptr<ZeroInflationIndex> source_;
     QL_DEPRECATED const CPI::InterpolationType interpolation_;
 };
 
@@ -66,15 +66,15 @@ private:
 */
 class YoYInflationIndexWrapper : public YoYInflationIndex {
 public:
-    YoYInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> zeroIndex, const bool interpolated,
+    YoYInflationIndexWrapper(const QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex, const bool interpolated,
                              const Handle<YoYInflationTermStructure>& ts = Handle<YoYInflationTermStructure>());
     /*! \warning the forecastTodaysFixing parameter (required by the Index interface) is currently ignored. */
     Rate fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const override;
-    const boost::shared_ptr<ZeroInflationIndex> zeroIndex() const { return zeroIndex_; }
+    const QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex() const { return zeroIndex_; }
 
 private:
     Rate forecastFixing(const Date& fixingDate) const;
-    const boost::shared_ptr<ZeroInflationIndex> zeroIndex_;
+    const QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex_;
 };
 
 } // namespace QuantExt

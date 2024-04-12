@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 #include <ostream>
 #include <string>
@@ -98,8 +98,8 @@ std::ostream& operator<<(std::ostream& os, const CurveSpec::CurveType& t);
 //@{
 bool operator<(const CurveSpec& lhs, const CurveSpec& rhs);
 bool operator==(const CurveSpec& lhs, const CurveSpec& rhs);
-bool operator<(const boost::shared_ptr<CurveSpec>& lhs, const boost::shared_ptr<CurveSpec>& rhs);
-bool operator==(const boost::shared_ptr<CurveSpec>& lhs, const boost::shared_ptr<CurveSpec>& rhs);
+bool operator<(const QuantLib::ext::shared_ptr<CurveSpec>& lhs, const QuantLib::ext::shared_ptr<CurveSpec>& rhs);
+bool operator==(const QuantLib::ext::shared_ptr<CurveSpec>& lhs, const QuantLib::ext::shared_ptr<CurveSpec>& rhs);
 //@}
 
 //! Yield curve description

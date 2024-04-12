@@ -51,7 +51,7 @@ CommodityDigitalAveragePriceOption::CommodityDigitalAveragePriceOption(
       commodityPayRelativeTo_(commodityPayRelativeTo), futureMonthOffset_(futureMonthOffset),
       deliveryRollDays_(deliveryRollDays), includePeriodEnd_(includePeriodEnd), fxIndex_(fxIndex) {}
 
-void CommodityDigitalAveragePriceOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void CommodityDigitalAveragePriceOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     reset();
 
@@ -86,10 +86,10 @@ void CommodityDigitalAveragePriceOption::build(const boost::shared_ptr<EngineFac
 
     setSensitivityTemplate(opt1.sensitivityTemplate());
 
-    boost::shared_ptr<Instrument> inst1 = opt1.instrument()->qlInstrument();
-    boost::shared_ptr<Instrument> inst2 = opt2.instrument()->qlInstrument();
+    QuantLib::ext::shared_ptr<Instrument> inst1 = opt1.instrument()->qlInstrument();
+    QuantLib::ext::shared_ptr<Instrument> inst2 = opt2.instrument()->qlInstrument();
 
-    boost::shared_ptr<CompositeInstrument> composite = boost::make_shared<CompositeInstrument>();
+    QuantLib::ext::shared_ptr<CompositeInstrument> composite = QuantLib::ext::make_shared<CompositeInstrument>();
     // add and subtract such that the long call spread and long put spread have positive values
     if (optionData_.callPut() == "Call") {
         composite->add(inst1);
@@ -104,7 +104,7 @@ void CommodityDigitalAveragePriceOption::build(const boost::shared_ptr<EngineFac
     Position::Type positionType = parsePositionType(optionData_.longShort());
     Real bsIndicator = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
     Real multiplier = digitalCashPayoff_ * bsIndicator / strikeSpread;
-    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
     // FIXME: Do we need to retrieve the engine builder's configuration
     string configuration = Market::defaultConfiguration;
@@ -114,7 +114,7 @@ void CommodityDigitalAveragePriceOption::build(const boost::shared_ptr<EngineFac
         std::max(exDate, addPremiums(additionalInstruments, additionalMultipliers, multiplier,
                                           optionData_.premiumData(), -bsIndicator, ccy, engineFactory, configuration));
 
-    instrument_ = boost::shared_ptr<InstrumentWrapper>(
+    instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
         new VanillaInstrument(composite, multiplier, additionalInstruments, additionalMultipliers));
 
     npvCurrency_ = currency_;
@@ -135,7 +135,7 @@ void CommodityDigitalAveragePriceOption::build(const boost::shared_ptr<EngineFac
 }
 
 std::map<AssetClass, std::set<std::string>> CommodityDigitalAveragePriceOption::underlyingIndices(
-    const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     return {{AssetClass::COM, std::set<std::string>({name_})}};
 }
 

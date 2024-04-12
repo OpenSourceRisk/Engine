@@ -45,12 +45,12 @@ class BMAIndexWrapper : public IborIndex {
 public:
     // TODO: fix the day count convention
     // TODO: fix the end of month
-    BMAIndexWrapper(const boost::shared_ptr<QuantLib::BMAIndex>& bma)
+    BMAIndexWrapper(const QuantLib::ext::shared_ptr<QuantLib::BMAIndex>& bma)
         : IborIndex(bma->name(), bma->tenor(), bma->fixingDays(), bma->currency(), bma->fixingCalendar(),
                     ModifiedFollowing, false, bma->dayCounter(), bma->forwardingTermStructure()),
           bma_(bma) {}
 
-    BMAIndexWrapper(const boost::shared_ptr<QuantLib::BMAIndex>& bma, const Handle<YieldTermStructure>& h)
+    BMAIndexWrapper(const QuantLib::ext::shared_ptr<QuantLib::BMAIndex>& bma, const Handle<YieldTermStructure>& h)
         : IborIndex(bma->name(), bma->tenor(), bma->fixingDays(), bma->currency(), bma->fixingCalendar(),
                     ModifiedFollowing, false, bma->dayCounter(), h),
           bma_(new BMAIndex(h)) {}
@@ -87,18 +87,18 @@ public:
         // read a past fixing from a valid BMA fixing date
         return bma_->fixing(adjustedFixingDate(fixingDate));
     }
-    boost::shared_ptr<IborIndex> clone(const Handle<YieldTermStructure>& h) const override {
-        return boost::shared_ptr<BMAIndexWrapper>(new BMAIndexWrapper(bma(), h));
+    QuantLib::ext::shared_ptr<IborIndex> clone(const Handle<YieldTermStructure>& h) const override {
+        return QuantLib::ext::shared_ptr<BMAIndexWrapper>(new BMAIndexWrapper(bma(), h));
     }
 
     // do we need these?
-    boost::shared_ptr<QuantLib::BMAIndex> bma() const { return bma_; }
+    QuantLib::ext::shared_ptr<QuantLib::BMAIndex> bma() const { return bma_; }
 
     operator QuantLib::BMAIndex &() { return *bma_; }
     operator QuantLib::BMAIndex *() { return &*bma_; }
 
 private:
-    boost::shared_ptr<QuantLib::BMAIndex> bma_;
+    QuantLib::ext::shared_ptr<QuantLib::BMAIndex> bma_;
 };
 } // namespace QuantExt
 

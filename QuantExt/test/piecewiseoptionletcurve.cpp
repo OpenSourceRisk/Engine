@@ -66,7 +66,7 @@ struct CommonVars : public qle::test::TopLevelFixture {
         Settings::instance().evaluationDate() = referenceDate;
 
         // Set cap floor ibor index to EUR-EURIBOR-6M and attach a forwarding curve
-        iborIndex = boost::make_shared<Euribor6M>(testYieldCurves.forward6M);
+        iborIndex = QuantLib::ext::make_shared<Euribor6M>(testYieldCurves.forward6M);
     }
 
     // Valuation date for the test
@@ -88,7 +88,7 @@ struct CommonVars : public qle::test::TopLevelFixture {
     Real tolerance;
 
     // Cap floor ibor index
-    boost::shared_ptr<IborIndex> iborIndex;
+    QuantLib::ext::shared_ptr<IborIndex> iborIndex;
 
     // EUR discount curve test data from file test/yieldcurvemarketdata.hpp
     YieldCurveEUR testYieldCurves;
@@ -290,9 +290,9 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
 
         // This is a combination that should throw an error when creating the helper
         // Don't care about the value of the premium quote
-        Handle<Quote> quote(boost::make_shared<SimpleQuote>(0.01));
+        Handle<Quote> quote(QuantLib::ext::make_shared<SimpleQuote>(0.01));
         BOOST_REQUIRE_THROW(
-            boost::make_shared<CapFloorHelper>(helperType, volatilityColumn.tenors.front(), volatilityColumn.strike,
+            QuantLib::ext::make_shared<CapFloorHelper>(helperType, volatilityColumn.tenors.front(), volatilityColumn.strike,
                                                quote, iborIndex, testYieldCurves.discountEonia, isMoving, Date(),
                                                quoteType, volatilityColumn.type, volatilityColumn.displacement),
             Error);
@@ -300,10 +300,10 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
     } else {
 
         // Form the cap floor helper instrument for each tenor in the strike column
-        vector<boost::shared_ptr<helper> > helpers(volatilityColumn.tenors.size());
+        vector<QuantLib::ext::shared_ptr<helper> > helpers(volatilityColumn.tenors.size());
 
         // Store each cap floor instrument in the strike column and its NPV using the flat cap floor volatilities
-        vector<boost::shared_ptr<CapFloor> > instruments(volatilityColumn.tenors.size());
+        vector<QuantLib::ext::shared_ptr<CapFloor> > instruments(volatilityColumn.tenors.size());
         vector<Real> flatNpvs(volatilityColumn.tenors.size());
 
         BOOST_TEST_MESSAGE("The input values at each tenor are:");
@@ -319,11 +319,11 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
             }
             instruments[i] = MakeCapFloor(capFloorType, volatilityColumn.tenors[i], iborIndex, volatilityColumn.strike);
             if (volatilityColumn.type == ShiftedLognormal) {
-                instruments[i]->setPricingEngine(boost::make_shared<BlackCapFloorEngine>(
+                instruments[i]->setPricingEngine(QuantLib::ext::make_shared<BlackCapFloorEngine>(
                     testYieldCurves.discountEonia, volatility, dayCounter, volatilityColumn.displacement));
             } else {
                 instruments[i]->setPricingEngine(
-                    boost::make_shared<BachelierCapFloorEngine>(testYieldCurves.discountEonia, volatility, dayCounter));
+                    QuantLib::ext::make_shared<BachelierCapFloorEngine>(testYieldCurves.discountEonia, volatility, dayCounter));
             }
             flatNpvs[i] = instruments[i]->NPV();
 
@@ -334,14 +334,14 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
             // Create a volatility or premium quote
             RelinkableHandle<Quote> quote;
             if (quoteType == CapFloorHelper::Volatility) {
-                quote.linkTo(boost::make_shared<SimpleQuote>(volatility));
+                quote.linkTo(QuantLib::ext::make_shared<SimpleQuote>(volatility));
             } else {
-                quote.linkTo(boost::make_shared<SimpleQuote>(flatNpvs[i]));
+                quote.linkTo(QuantLib::ext::make_shared<SimpleQuote>(flatNpvs[i]));
             }
 
             // Create the helper instrument
             helpers[i] =
-                boost::make_shared<CapFloorHelper>(helperType, volatilityColumn.tenors[i], volatilityColumn.strike,
+                QuantLib::ext::make_shared<CapFloorHelper>(helperType, volatilityColumn.tenors[i], volatilityColumn.strike,
                                                    quote, iborIndex, testYieldCurves.discountEonia, isMoving, Date(),
                                                    quoteType, volatilityColumn.type, volatilityColumn.displacement);
         }
@@ -349,17 +349,17 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
         // Create the piecewise optionlet curve, with the given interpolation type, and fail if it is not created
         VolatilityType curveVolatilityType = Normal;
         Real curveDisplacement = 0.0;
-        boost::shared_ptr<OptionletVolatilityStructure> ovCurve;
+        QuantLib::ext::shared_ptr<OptionletVolatilityStructure> ovCurve;
         switch (interpolationType.which()) {
         case 0:
             if (isMoving) {
                 BOOST_TEST_MESSAGE("Using Linear interpolation with a moving reference date");
-                BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<Linear> >(
+                BOOST_REQUIRE_NO_THROW(ovCurve = QuantLib::ext::make_shared<PiecewiseOptionletCurve<Linear> >(
                                            settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType,
                                            curveDisplacement, flatFirstPeriod));
             } else {
                 BOOST_TEST_MESSAGE("Using Linear interpolation with a fixed reference date");
-                BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<Linear> >(
+                BOOST_REQUIRE_NO_THROW(ovCurve = QuantLib::ext::make_shared<PiecewiseOptionletCurve<Linear> >(
                                            referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType,
                                            curveDisplacement, flatFirstPeriod));
             }
@@ -367,12 +367,12 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
         case 1:
             if (isMoving) {
                 BOOST_TEST_MESSAGE("Using BackwardFlat interpolation with a moving reference date");
-                BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BackwardFlat> >(
+                BOOST_REQUIRE_NO_THROW(ovCurve = QuantLib::ext::make_shared<PiecewiseOptionletCurve<BackwardFlat> >(
                                            settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType,
                                            curveDisplacement, flatFirstPeriod));
             } else {
                 BOOST_TEST_MESSAGE("Using BackwardFlat interpolation with a fixed reference date");
-                BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BackwardFlat> >(
+                BOOST_REQUIRE_NO_THROW(ovCurve = QuantLib::ext::make_shared<PiecewiseOptionletCurve<BackwardFlat> >(
                                            referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType,
                                            curveDisplacement, flatFirstPeriod));
             }
@@ -380,12 +380,12 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
         case 2:
             if (isMoving) {
                 BOOST_TEST_MESSAGE("Using LinearFlat interpolation with a moving reference date");
-                BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<LinearFlat> >(
+                BOOST_REQUIRE_NO_THROW(ovCurve = QuantLib::ext::make_shared<PiecewiseOptionletCurve<LinearFlat> >(
                                            settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType,
                                            curveDisplacement, flatFirstPeriod));
             } else {
                 BOOST_TEST_MESSAGE("Using LinearFlat interpolation with a fixed reference date");
-                BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<LinearFlat> >(
+                BOOST_REQUIRE_NO_THROW(ovCurve = QuantLib::ext::make_shared<PiecewiseOptionletCurve<LinearFlat> >(
                                            referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType,
                                            curveDisplacement, flatFirstPeriod));
             }
@@ -394,7 +394,7 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
             if (isMoving) {
                 BOOST_TEST_MESSAGE("Using Cubic interpolation with a moving reference date");
                 BOOST_REQUIRE_NO_THROW(
-                    ovCurve = boost::make_shared<PiecewiseOptionletCurve<Cubic> >(
+                    ovCurve = QuantLib::ext::make_shared<PiecewiseOptionletCurve<Cubic> >(
                         settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement,
                         flatFirstPeriod, Cubic(),
                         QuantExt::IterativeBootstrap<
@@ -403,7 +403,7 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
             } else {
                 BOOST_TEST_MESSAGE("Using Cubic interpolation with a fixed reference date");
                 BOOST_REQUIRE_NO_THROW(
-                    ovCurve = boost::make_shared<PiecewiseOptionletCurve<Cubic> >(
+                    ovCurve = QuantLib::ext::make_shared<PiecewiseOptionletCurve<Cubic> >(
                         referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement,
                         flatFirstPeriod, Cubic(),
                         QuantExt::IterativeBootstrap<
@@ -415,7 +415,7 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
             if (isMoving) {
                 BOOST_TEST_MESSAGE("Using CubicFlat interpolation with a moving reference date");
                 BOOST_REQUIRE_NO_THROW(
-                    ovCurve = boost::make_shared<PiecewiseOptionletCurve<CubicFlat> >(
+                    ovCurve = QuantLib::ext::make_shared<PiecewiseOptionletCurve<CubicFlat> >(
                         settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement,
                         flatFirstPeriod, CubicFlat(),
                         QuantExt::IterativeBootstrap<
@@ -424,7 +424,7 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
             } else {
                 BOOST_TEST_MESSAGE("Using CubicFlat interpolation with a fixed reference date");
                 BOOST_REQUIRE_NO_THROW(
-                    ovCurve = boost::make_shared<PiecewiseOptionletCurve<CubicFlat> >(
+                    ovCurve = QuantLib::ext::make_shared<PiecewiseOptionletCurve<CubicFlat> >(
                         referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement,
                         flatFirstPeriod, CubicFlat(),
                         QuantExt::IterativeBootstrap<
@@ -446,16 +446,16 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
             if (helperType == CapFloorHelper::Automatic && quoteType != CapFloorHelper::Premium) {
                 Real volatility = volatilityColumn.volatilities[i];
                 CapFloor::Type capFloorType =
-                    boost::dynamic_pointer_cast<CapFloorHelper>(helpers[i])->capFloor()->type();
+                    QuantLib::ext::dynamic_pointer_cast<CapFloorHelper>(helpers[i])->capFloor()->type();
                 if (capFloorType != instruments[i]->type()) {
                     // Need to update the instrument and the flat NPV for the test
                     instruments[i] =
                         MakeCapFloor(capFloorType, volatilityColumn.tenors[i], iborIndex, volatilityColumn.strike);
                     if (volatilityColumn.type == ShiftedLognormal) {
-                        instruments[i]->setPricingEngine(boost::make_shared<BlackCapFloorEngine>(
+                        instruments[i]->setPricingEngine(QuantLib::ext::make_shared<BlackCapFloorEngine>(
                             testYieldCurves.discountEonia, volatility, dayCounter, volatilityColumn.displacement));
                     } else {
-                        instruments[i]->setPricingEngine(boost::make_shared<BachelierCapFloorEngine>(
+                        instruments[i]->setPricingEngine(QuantLib::ext::make_shared<BachelierCapFloorEngine>(
                             testYieldCurves.discountEonia, volatility, dayCounter));
                     }
                     flatNpvs[i] = instruments[i]->NPV();
@@ -465,10 +465,10 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
             // Price the instrument using the stripped optionlet structure
             if (ovCurve->volatilityType() == ShiftedLognormal) {
                 instruments[i]->setPricingEngine(
-                    boost::make_shared<BlackCapFloorEngine>(testYieldCurves.discountEonia, hovs));
+                    QuantLib::ext::make_shared<BlackCapFloorEngine>(testYieldCurves.discountEonia, hovs));
             } else {
                 instruments[i]->setPricingEngine(
-                    boost::make_shared<BachelierCapFloorEngine>(testYieldCurves.discountEonia, hovs));
+                    QuantLib::ext::make_shared<BachelierCapFloorEngine>(testYieldCurves.discountEonia, hovs));
             }
             strippedNpv = instruments[i]->NPV();
 
@@ -518,10 +518,10 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testCachedValues,
     BOOST_TEST_MESSAGE("  Flat first period: " << boolalpha << flatFirstPeriod);
 
     // Form the cap floor helper instrument for each tenor in the strike column
-    vector<boost::shared_ptr<helper> > helpers(tenors.size());
+    vector<QuantLib::ext::shared_ptr<helper> > helpers(tenors.size());
     for (Size i = 0; i < tenors.size(); i++) {
-        Handle<Quote> quote(boost::make_shared<SimpleQuote>(volatilities[i]));
-        helpers[i] = boost::make_shared<CapFloorHelper>(helperType, tenors[i], strike, quote, iborIndex,
+        Handle<Quote> quote(QuantLib::ext::make_shared<SimpleQuote>(volatilities[i]));
+        helpers[i] = QuantLib::ext::make_shared<CapFloorHelper>(helperType, tenors[i], strike, quote, iborIndex,
                                                         testYieldCurves.discountEonia, true, Date(), quoteType,
                                                         volatilityType, displacement);
     }
@@ -530,13 +530,13 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testCachedValues,
     // Store the nodes of this optionlet curve to compare with cached values
     VolatilityType curveVolatilityType = Normal;
     Real curveDisplacement = 0.0;
-    boost::shared_ptr<OptionletVolatilityStructure> ovs;
+    QuantLib::ext::shared_ptr<OptionletVolatilityStructure> ovs;
     vector<pair<Date, Real> > curveNodes;
     switch (interpolationType.which()) {
     case 0: {
         BOOST_TEST_MESSAGE("Using Linear interpolation");
-        boost::shared_ptr<PiecewiseOptionletCurve<Linear> > ovCurve =
-            boost::make_shared<PiecewiseOptionletCurve<Linear> >(referenceDate, helpers, calendar, bdc, dayCounter,
+        QuantLib::ext::shared_ptr<PiecewiseOptionletCurve<Linear> > ovCurve =
+            QuantLib::ext::make_shared<PiecewiseOptionletCurve<Linear> >(referenceDate, helpers, calendar, bdc, dayCounter,
                                                                  curveVolatilityType, curveDisplacement,
                                                                  flatFirstPeriod);
         curveNodes = ovCurve->nodes();
@@ -544,8 +544,8 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testCachedValues,
     } break;
     case 1: {
         BOOST_TEST_MESSAGE("Using BackwardFlat interpolation");
-        boost::shared_ptr<PiecewiseOptionletCurve<BackwardFlat> > ovCurve =
-            boost::make_shared<PiecewiseOptionletCurve<BackwardFlat> >(referenceDate, helpers, calendar, bdc,
+        QuantLib::ext::shared_ptr<PiecewiseOptionletCurve<BackwardFlat> > ovCurve =
+            QuantLib::ext::make_shared<PiecewiseOptionletCurve<BackwardFlat> >(referenceDate, helpers, calendar, bdc,
                                                                        dayCounter, curveVolatilityType,
                                                                        curveDisplacement, flatFirstPeriod);
         curveNodes = ovCurve->nodes();
@@ -553,8 +553,8 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testCachedValues,
     } break;
     case 2: {
         BOOST_TEST_MESSAGE("Using LinearFlat interpolation");
-        boost::shared_ptr<PiecewiseOptionletCurve<LinearFlat> > ovCurve =
-            boost::make_shared<PiecewiseOptionletCurve<LinearFlat> >(referenceDate, helpers, calendar, bdc, dayCounter,
+        QuantLib::ext::shared_ptr<PiecewiseOptionletCurve<LinearFlat> > ovCurve =
+            QuantLib::ext::make_shared<PiecewiseOptionletCurve<LinearFlat> >(referenceDate, helpers, calendar, bdc, dayCounter,
                                                                      curveVolatilityType, curveDisplacement,
                                                                      flatFirstPeriod);
         curveNodes = ovCurve->nodes();

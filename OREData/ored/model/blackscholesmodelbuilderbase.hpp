@@ -41,11 +41,11 @@ using namespace QuantLib;
 class BlackScholesModelBuilderBase : public ModelBuilder {
 public:
     BlackScholesModelBuilderBase(const std::vector<Handle<YieldTermStructure>>& curves,
-                                 const std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
+                                 const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
                                  const std::set<Date>& simulationDates, const std::set<Date>& addDates,
                                  const Size timeStepsPerYear);
     BlackScholesModelBuilderBase(const Handle<YieldTermStructure>& curve,
-                                 const boost::shared_ptr<GeneralizedBlackScholesProcess>& process,
+                                 const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
                                  const std::set<Date>& simulationDates, const std::set<Date>& addDates,
                                  const Size timeStepsPerYear);
 
@@ -60,11 +60,11 @@ public:
 protected:
     // generic ctor, you should override setupDateAndTimes() if using this one
     BlackScholesModelBuilderBase(const Handle<YieldTermStructure>& curve,
-                                 const boost::shared_ptr<GeneralizedBlackScholesProcess>& process);
+                                 const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process);
 
     virtual void setupDatesAndTimes() const;
 
-    virtual std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>> getCalibratedProcesses() const = 0;
+    virtual std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>> getCalibratedProcesses() const = 0;
     virtual std::vector<std::vector<Real>> getCurveTimes() const = 0;
     virtual std::vector<std::vector<std::pair<Real, Real>>> getVolTimesStrikes() const = 0;
 
@@ -73,7 +73,7 @@ protected:
     bool calibrationPointsChanged(const bool updateCache) const;
 
     const std::vector<Handle<YieldTermStructure>> curves_;
-    const std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>> processes_;
+    const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>> processes_;
     const std::set<Date> simulationDates_, addDates_;
     const Size timeStepsPerYear_;
 
@@ -83,7 +83,7 @@ protected:
     mutable RelinkableHandle<BlackScholesModelWrapper> model_;
 
     bool forceCalibration_ = false;
-    boost::shared_ptr<MarketObserver> marketObserver_;
+    QuantLib::ext::shared_ptr<MarketObserver> marketObserver_;
 
     std::vector<Handle<BlackVolTermStructure>> vols_;
     std::vector<Handle<YieldTermStructure>> allCurves_;

@@ -29,11 +29,11 @@ class InMemoryLoader : public Loader {
 public:
     InMemoryLoader() {}
 
-    std::vector<boost::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date& d) const override;
-    boost::shared_ptr<MarketDatum> get(const string& name, const QuantLib::Date& d) const override;
-    std::set<boost::shared_ptr<MarketDatum>> get(const std::set<std::string>& names,
+    std::vector<QuantLib::ext::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date& d) const override;
+    QuantLib::ext::shared_ptr<MarketDatum> get(const string& name, const QuantLib::Date& d) const override;
+    std::set<QuantLib::ext::shared_ptr<MarketDatum>> get(const std::set<std::string>& names,
                                                  const QuantLib::Date& asof) const override;
-    std::set<boost::shared_ptr<MarketDatum>> get(const Wildcard& wildcard, const QuantLib::Date& asof) const override;
+    std::set<QuantLib::ext::shared_ptr<MarketDatum>> get(const Wildcard& wildcard, const QuantLib::Date& asof) const override;
     std::set<Fixing> loadFixings() const override { return fixings_; }
     std::set<QuantExt::Dividend> loadDividends() const override { return dividends_; }
     bool hasQuotes(const QuantLib::Date& d) const override;
@@ -51,7 +51,7 @@ public:
     void reset();
 
 protected:
-    std::map<QuantLib::Date, std::set<boost::shared_ptr<MarketDatum>, SharedPtrMarketDatumComparator>> data_;
+    std::map<QuantLib::Date, std::set<QuantLib::ext::shared_ptr<MarketDatum>, SharedPtrMarketDatumComparator>> data_;
     std::set<Fixing> fixings_;
     std::set<QuantExt::Dividend> dividends_;
 };

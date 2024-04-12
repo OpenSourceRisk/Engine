@@ -39,7 +39,7 @@ public:
         is as of today (i.e. the discounted spot) */
     FxBsPiecewiseConstantParametrization(const Currency& currency, const Handle<Quote>& fxSpotToday, const Array& times,
                                          const Array& sigma,
-        const boost::shared_ptr<QuantLib::Constraint>& sigmaConstraint = boost::make_shared<QuantLib::NoConstraint>());
+        const QuantLib::ext::shared_ptr<QuantLib::Constraint>& sigmaConstraint = QuantLib::ext::make_shared<QuantLib::NoConstraint>());
     /*! The term structure is needed in addition because it
         it's day counter and reference date is needed to
         convert dates to times. It should be the term structure
@@ -49,12 +49,12 @@ public:
     FxBsPiecewiseConstantParametrization(const Currency& currency, const Handle<Quote>& fxSpotToday,
                                          const std::vector<Date>& dates, const Array& sigma,
                                          const Handle<YieldTermStructure>& domesticTermStructure,
-        const boost::shared_ptr<QuantLib::Constraint>& sigmaConstraint = boost::make_shared<QuantLib::NoConstraint>());
+        const QuantLib::ext::shared_ptr<QuantLib::Constraint>& sigmaConstraint = QuantLib::ext::make_shared<QuantLib::NoConstraint>());
 
     Real variance(const Time t) const override;
     Real sigma(const Time t) const override;
     const Array& parameterTimes(const Size) const override;
-    const boost::shared_ptr<Parameter> parameter(const Size) const override;
+    const QuantLib::ext::shared_ptr<Parameter> parameter(const Size) const override;
     void update() const override;
 
 protected:
@@ -86,7 +86,7 @@ inline const Array& FxBsPiecewiseConstantParametrization::parameterTimes(const S
     return PiecewiseConstantHelper1::t_;
 }
 
-inline const boost::shared_ptr<Parameter> FxBsPiecewiseConstantParametrization::parameter(const Size i) const {
+inline const QuantLib::ext::shared_ptr<Parameter> FxBsPiecewiseConstantParametrization::parameter(const Size i) const {
     QL_REQUIRE(i == 0, "parameter " << i << " does not exist, only have 0");
     return PiecewiseConstantHelper1::y_;
 }

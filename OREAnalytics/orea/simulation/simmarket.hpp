@@ -79,7 +79,7 @@ public:
     virtual void reset() = 0;
 
     //! Get the fixing manager
-    virtual const boost::shared_ptr<FixingManager>& fixingManager() const = 0;
+    virtual const QuantLib::ext::shared_ptr<FixingManager>& fixingManager() const = 0;
 
 protected:
     Real numeraire_;

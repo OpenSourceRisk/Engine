@@ -303,7 +303,7 @@ void DifferentialEvolution_MT::crossover(const std::vector<Candidate>& oldPopula
 
 void DifferentialEvolution_MT::updateCost(std::vector<Candidate>& population, Problem_MT& p) const {
     struct Worker {
-        Worker(std::vector<Candidate>& p, const Size s, const Size e, const boost::shared_ptr<CostFunction> c)
+        Worker(std::vector<Candidate>& p, const Size s, const Size e, const QuantLib::ext::shared_ptr<CostFunction> c)
             : population(p), start(s), end(e), costFunction(c) {}
         void operator()() {
             for (Size popIter = start; popIter < end; popIter++) {
@@ -319,7 +319,7 @@ void DifferentialEvolution_MT::updateCost(std::vector<Candidate>& population, Pr
         }
         std::vector<Candidate>& population;
         const Size start, end;
-        const boost::shared_ptr<CostFunction> costFunction;
+        const QuantLib::ext::shared_ptr<CostFunction> costFunction;
     };
 
     Size threads = p.costFunctions().size();
@@ -336,13 +336,13 @@ void DifferentialEvolution_MT::updateCost(std::vector<Candidate>& population, Pr
         }
     } while (rest > 0);
 
-    std::vector<boost::shared_ptr<std::thread>> workers(threads);
+    std::vector<QuantLib::ext::shared_ptr<std::thread>> workers(threads);
 
     Size start = 0, end;
     for (Size thread = 0; thread < threads; ++thread) {
         end = std::min(start + chunks[thread], population.size());
         Worker worker(population, start, end, p.costFunctions()[thread]);
-        workers[thread] = boost::make_shared<std::thread>(worker);
+        workers[thread] = QuantLib::ext::make_shared<std::thread>(worker);
         start = end;
     }
 

@@ -58,9 +58,9 @@ BOOST_AUTO_TEST_CASE(testParseConstantVolFromXml) {
     BOOST_CHECK_EQUAL(config.curveID(), "GOLD_USD_VOLS");
     BOOST_CHECK_EQUAL(config.currency(), "USD");
     // Check that we have a constant volatility config.
-    boost::shared_ptr<ConstantVolatilityConfig> vc;
+    QuantLib::ext::shared_ptr<ConstantVolatilityConfig> vc;
     for (auto v : config.volatilityConfig()) {
-        if ((vc = boost::dynamic_pointer_cast<ConstantVolatilityConfig>(v)))
+        if ((vc = QuantLib::ext::dynamic_pointer_cast<ConstantVolatilityConfig>(v)))
             break;
     }
     BOOST_CHECK(vc);
@@ -113,9 +113,9 @@ BOOST_AUTO_TEST_CASE(testParseVolCurveFromXml) {
     BOOST_CHECK_EQUAL(config.curveID(), "GOLD_USD_VOLS");
     BOOST_CHECK_EQUAL(config.currency(), "USD");
     // Check that we have a volatility curve config.
-    boost::shared_ptr<VolatilityCurveConfig> vc;
+    QuantLib::ext::shared_ptr<VolatilityCurveConfig> vc;
     for (auto v : config.volatilityConfig()) {
-        if ((vc = boost::dynamic_pointer_cast<VolatilityCurveConfig>(v)))
+        if ((vc = QuantLib::ext::dynamic_pointer_cast<VolatilityCurveConfig>(v)))
             break;
     }
 
@@ -199,9 +199,9 @@ BOOST_AUTO_TEST_CASE(testParseVolSurfaceFromXml) {
     BOOST_CHECK_EQUAL(config.curveID(), "WTI_USD_VOLS");
     BOOST_CHECK_EQUAL(config.currency(), "USD");
     // Check that we have a volatility strike surface config.
-    boost::shared_ptr<VolatilityStrikeSurfaceConfig> vc;
+    QuantLib::ext::shared_ptr<VolatilityStrikeSurfaceConfig> vc;
     for (auto v : config.volatilityConfig()) {
-        if ((vc = boost::dynamic_pointer_cast<VolatilityStrikeSurfaceConfig>(v)))
+        if ((vc = QuantLib::ext::dynamic_pointer_cast<VolatilityStrikeSurfaceConfig>(v)))
             break;
     }
     BOOST_REQUIRE(vc);

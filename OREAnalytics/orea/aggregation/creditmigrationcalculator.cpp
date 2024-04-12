@@ -23,11 +23,11 @@ namespace ore {
 namespace analytics {
 
 CreditMigrationCalculator::CreditMigrationCalculator(
-    const boost::shared_ptr<Portfolio>& portfolio,
-    const boost::shared_ptr<CreditSimulationParameters>& creditSimulationParameters,
-    const boost::shared_ptr<NPVCube>& cube, const boost::shared_ptr<CubeInterpretation> cubeInterpretation,
-    const boost::shared_ptr<NPVCube>& nettedCube,
-    const boost::shared_ptr<AggregationScenarioData>& aggregationScenarioData,
+    const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+    const QuantLib::ext::shared_ptr<CreditSimulationParameters>& creditSimulationParameters,
+    const QuantLib::ext::shared_ptr<NPVCube>& cube, const QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpretation,
+    const QuantLib::ext::shared_ptr<NPVCube>& nettedCube,
+    const QuantLib::ext::shared_ptr<AggregationScenarioData>& aggregationScenarioData,
     const std::vector<Real>& creditMigrationDistributionGrid, const std::vector<Size>& creditMigrationTimeSteps,
     const Matrix& creditStateCorrelationMatrix, const std::string baseCurrency)
     : portfolio_(portfolio), creditSimulationParameters_(creditSimulationParameters), cube_(cube),

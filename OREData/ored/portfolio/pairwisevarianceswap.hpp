@@ -34,10 +34,10 @@ using std::string;
 
 class PairwiseVarSwap : public Trade {
 public:
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
     const string& longShort() { return longShort_; }
-    const vector<boost::shared_ptr<Underlying>>& underlyings() const { return underlyings_; }
+    const vector<QuantLib::ext::shared_ptr<Underlying>>& underlyings() const { return underlyings_; }
     const string& name(int idx) const { return underlyings_[idx]->name(); }
     const string& currency() { return currency_; }
     double basketStrike() { return basketStrike_; }
@@ -53,7 +53,7 @@ public:
 protected:
     PairwiseVarSwap(AssetClass assetClassUnderlyings)
         : Trade("PairwiseVarianceSwap"), assetClassUnderlyings_(assetClassUnderlyings) {}
-    PairwiseVarSwap(Envelope& env, string longShort, const vector<boost::shared_ptr<Underlying>>& underlyings,
+    PairwiseVarSwap(Envelope& env, string longShort, const vector<QuantLib::ext::shared_ptr<Underlying>>& underlyings,
                     vector<double> underlyingStrikes, vector<double> underlyingNotionals, double basketNotional,
                     double basketStrike, ScheduleData valuationSchedule, string currency, string settlementDate,
                     AssetClass assetClassUnderlyings, ScheduleData laggedValuationSchedule, double payoffLimit = 0.0,
@@ -71,7 +71,7 @@ protected:
     AssetClass assetClassUnderlyings_;
 
 protected:
-    vector<boost::shared_ptr<Underlying>> underlyings_;
+    vector<QuantLib::ext::shared_ptr<Underlying>> underlyings_;
 
 private:
     string longShort_;
@@ -91,7 +91,7 @@ class EqPairwiseVarSwap : public PairwiseVarSwap {
 public:
     EqPairwiseVarSwap() : PairwiseVarSwap(AssetClass::EQ) { tradeType_ = "EquityPairwiseVarianceSwap"; }
     EqPairwiseVarSwap(ore::data::Envelope& env, string longShort,
-                      const vector<boost::shared_ptr<Underlying>>& underlyings, vector<double> underlyingStrikes,
+                      const vector<QuantLib::ext::shared_ptr<Underlying>>& underlyings, vector<double> underlyingStrikes,
                       vector<double> underlyingNotionals, double basketNotional, double basketStrike,
                       ScheduleData valuationSchedule, string currency, string settlementDate,
                       ScheduleData laggedValuationSchedule, double payoffLimit = 0.0, double cap = 0.0,
@@ -104,13 +104,13 @@ public:
 
     //! Add underlying Equity names
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 };
 
 class FxPairwiseVarSwap : public PairwiseVarSwap {
 public:
     FxPairwiseVarSwap() : PairwiseVarSwap(AssetClass::FX) { tradeType_ = "FxPairwiseVarianceSwap"; }
-    FxPairwiseVarSwap(Envelope& env, string longShort, const vector<boost::shared_ptr<Underlying>>& underlyings,
+    FxPairwiseVarSwap(Envelope& env, string longShort, const vector<QuantLib::ext::shared_ptr<Underlying>>& underlyings,
                       vector<double> underlyingStrikes, vector<double> underlyingNotionals, double basketNotional,
                       double basketStrike, ScheduleData valuationSchedule, string currency, string settlementDate,
                       ScheduleData laggedValuationSchedule, double payoffLimit = 0.0, double cap = 0.0,

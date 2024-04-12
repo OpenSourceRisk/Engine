@@ -48,12 +48,12 @@ class EquityMarginCouponPricer;
 class EquityMarginCoupon : public Coupon, public Observer {
 public:
     EquityMarginCoupon(const Date& paymentDate, Real nominal, Rate rate, Real marginFactor, const Date& startDate, const Date& endDate, Natural fixingDays,
-                 const boost::shared_ptr<QuantExt::EquityIndex2>& equityCurve, const DayCounter& dayCounter,
+                 const QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>& equityCurve, const DayCounter& dayCounter,
                  bool isTotalReturn = false, Real dividendFactor = 1.0, bool notionalReset = false,
                  Real initialPrice = Null<Real>(), Real quantity = Null<Real>(), const Date& fixingStartDate = Date(),
                  const Date& fixingEndDate = Date(), const Date& refPeriodStart = Date(),
                  const Date& refPeriodEnd = Date(), const Date& exCouponDate = Date(), Real multiplier = Null<Real>(),
-                 const boost::shared_ptr<FxIndex>& fxIndex = nullptr, const bool initialPriceIsInTargetCcy = false);
+                 const QuantLib::ext::shared_ptr<FxIndex>& fxIndex = nullptr, const bool initialPriceIsInTargetCcy = false);
     
     //! \name CashFlow interface
     //@{
@@ -73,9 +73,9 @@ public:
     //! \name Inspectors
     //@{
     //! equity reference rate curve
-    const boost::shared_ptr<QuantExt::EquityIndex2>& equityCurve() const { return equityCurve_; }
+    const QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>& equityCurve() const { return equityCurve_; }
     //! fx index curve
-    const boost::shared_ptr<FxIndex>& fxIndex() const { return fxIndex_; }
+    const QuantLib::ext::shared_ptr<FxIndex>& fxIndex() const { return fxIndex_; }
     //! total return or price return?
     bool isTotalReturn() const { return isTotalReturn_; }
     //! are dividends scaled (e.g. to account for tax)
@@ -114,13 +114,13 @@ public:
     virtual void accept(AcyclicVisitor&) override;
     //@}
 
-    void setPricer(const boost::shared_ptr<EquityMarginCouponPricer>&);
-    boost::shared_ptr<EquityMarginCouponPricer> pricer() const;
+    void setPricer(const QuantLib::ext::shared_ptr<EquityMarginCouponPricer>&);
+    QuantLib::ext::shared_ptr<EquityMarginCouponPricer> pricer() const;
 
 protected:
-    boost::shared_ptr<EquityMarginCouponPricer> pricer_;
+    QuantLib::ext::shared_ptr<EquityMarginCouponPricer> pricer_;
     Natural fixingDays_;
-    boost::shared_ptr<QuantExt::EquityIndex2> equityCurve_;
+    QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> equityCurve_;
     DayCounter dayCounter_;
     bool isTotalReturn_;
     Real dividendFactor_;
@@ -131,7 +131,7 @@ protected:
     Date fixingStartDate_;
     Date fixingEndDate_;
     Natural paymentLag_;
-    boost::shared_ptr<FxIndex> fxIndex_;
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
     Real marginFactor_;
     InterestRate fixedRate_;
     Real multiplier_;
@@ -152,8 +152,8 @@ inline void EquityMarginCoupon::accept(AcyclicVisitor& v) {
  */
 class EquityMarginLeg {
 public:
-    EquityMarginLeg(const Schedule& schedule, const boost::shared_ptr<QuantExt::EquityIndex2>& equityCurve,
-              const boost::shared_ptr<FxIndex>& fxIndex = nullptr);
+    EquityMarginLeg(const Schedule& schedule, const QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>& equityCurve,
+              const QuantLib::ext::shared_ptr<FxIndex>& fxIndex = nullptr);
 
     EquityMarginLeg& withCouponRates(Rate,
                                   const DayCounter& paymentDayCounter,
@@ -191,8 +191,8 @@ private:
     std::vector<InterestRate> couponRates_;
     Real marginFactor_;
     Schedule schedule_;
-    boost::shared_ptr<QuantExt::EquityIndex2> equityCurve_;
-    boost::shared_ptr<FxIndex> fxIndex_;
+    QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> equityCurve_;
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
     std::vector<Real> notionals_;
     DayCounter paymentDayCounter_;
     Natural paymentLag_;

@@ -163,7 +163,7 @@ private:
     std::string calculationCcy_;
 
     //! Market data for FX rates to use for converting amounts to USD
-    boost::shared_ptr<ore::data::Market> market_;
+    QuantLib::ext::shared_ptr<ore::data::Market> market_;
 
     //! If true, no logging is written out
     bool quiet_;

@@ -47,16 +47,16 @@ public:
         \param configuration            Market configuration to use
         \param referenceCalibrationGrid The reference calibration grid
     */
-    InfJyBuilder(const boost::shared_ptr<Market>& market, const boost::shared_ptr<InfJyData>& data,
+    InfJyBuilder(const QuantLib::ext::shared_ptr<Market>& market, const QuantLib::ext::shared_ptr<InfJyData>& data,
                  const std::string& configuration = Market::defaultConfiguration,
                  const std::string& referenceCalibrationGrid = "", const bool donCalibrate = false);
 
-    using Helpers = std::vector<boost::shared_ptr<QuantLib::CalibrationHelper>>;
+    using Helpers = std::vector<QuantLib::ext::shared_ptr<QuantLib::CalibrationHelper>>;
     
     //! \name Inspectors
     //@{
     std::string inflationIndex() const;
-    boost::shared_ptr<QuantExt::InfJyParameterization> parameterization() const;
+    QuantLib::ext::shared_ptr<QuantExt::InfJyParameterization> parameterization() const;
     Helpers realRateBasket() const;
     Helpers indexBasket() const;
     //@}
@@ -70,24 +70,24 @@ public:
     void setCalibrationDone() const;
 
 private:
-    boost::shared_ptr<Market> market_;
+    QuantLib::ext::shared_ptr<Market> market_;
     std::string configuration_;
-    boost::shared_ptr<InfJyData> data_;
+    QuantLib::ext::shared_ptr<InfJyData> data_;
     std::string referenceCalibrationGrid_;
     bool dontCalibrate_;
     
-    boost::shared_ptr<QuantExt::InfJyParameterization> parameterization_;
-    boost::shared_ptr<QuantExt::MarketObserver> marketObserver_;
+    QuantLib::ext::shared_ptr<QuantExt::InfJyParameterization> parameterization_;
+    QuantLib::ext::shared_ptr<QuantExt::MarketObserver> marketObserver_;
 
     // The rate curve to use
     Handle<YieldTermStructure> rateCurve_;
 
     // We always need a ZeroInflationIndex to build the JY model.
-    boost::shared_ptr<QuantLib::ZeroInflationIndex> zeroInflationIndex_;
+    QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex> zeroInflationIndex_;
 
     // We may need these depending on the calibration instrument types.
     QuantLib::Handle<QuantLib::CPIVolatilitySurface> cpiVolatility_;
-    boost::shared_ptr<QuantLib::YoYInflationIndex> yoyInflationIndex_;
+    QuantLib::ext::shared_ptr<QuantLib::YoYInflationIndex> yoyInflationIndex_;
     QuantLib::Handle<QuantLib::YoYOptionletVolatilitySurface> yoyVolatility_;
 
     // Helper flag used in the forceRecalculate() method.
@@ -140,10 +140,10 @@ private:
     const CalibrationBasket& calibrationBasket(const std::string& parameter) const;
 
     //! Create the real rate parameterisation.
-    boost::shared_ptr<QuantExt::Lgm1fParametrization<ZeroInflationTermStructure>> createRealRateParam() const;
+    QuantLib::ext::shared_ptr<QuantExt::Lgm1fParametrization<ZeroInflationTermStructure>> createRealRateParam() const;
 
     //! Create the inflation index parameterisation.
-    boost::shared_ptr<QuantExt::FxBsParametrization> createIndexParam() const;
+    QuantLib::ext::shared_ptr<QuantExt::FxBsParametrization> createIndexParam() const;
 
     /*! Perform checks and possibly adjust the \p times and \p values array depending on calibration configuration.
     */
@@ -162,7 +162,7 @@ private:
     bool pricesChanged(bool updateCache) const;
 
     //! Return the market value of the given calibration helper
-    QuantLib::Real marketPrice(const boost::shared_ptr<QuantLib::CalibrationHelper>& helper) const;
+    QuantLib::Real marketPrice(const QuantLib::ext::shared_ptr<QuantLib::CalibrationHelper>& helper) const;
 };
 
 }
