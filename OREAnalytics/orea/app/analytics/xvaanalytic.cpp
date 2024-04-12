@@ -758,8 +758,6 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
         map<string, string> nettingSetMap = analytic()->portfolio()->nettingSetMap();
         auto report = boost::make_shared<InMemoryReport>();
         ReportWriter(inputs_->reportNaString()).writeCube(*report, cube_, nettingSetMap);
-        auto csvReprt = boost::make_shared<CSVFileReport>("test_report.csv");
-        ReportWriter(inputs_->reportNaString()).writeCube(*csvReprt, cube_, nettingSetMap);
         analytic()->reports()["XVA"]["rawcube"] = report;
     }
 
