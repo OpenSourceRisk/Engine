@@ -49,8 +49,6 @@ boost::shared_ptr<Scenario> ClonedScenarioGenerator::next(const Date& d) {
     } else {
         auto it = std::find(dates_.begin(), dates_.end(), d);
         size_t pos = (nDate_ - 1) * dates_.size() + std::distance(dates_.begin(), it);
-        std::cout << "ClonedScenarioGenerator::next(" << d << "):" << nDate_ << " " << std::distance(dates_.begin(), it)
-                  << std::endl;
         QL_REQUIRE(it != dates_.end(), "ClonedScenarioGenerator::next(" << d << "): invalid date " << d);
         return scenarios_[pos];
     } 

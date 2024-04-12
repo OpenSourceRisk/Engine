@@ -192,7 +192,6 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                 double upTime = 0;
                 ++cubeDateIndex;
                 Date valueDate = dg_->valuationDates()[i];
-                std::cout << to_string(valueDate) << std::endl;
                 Date closeOutDate = dg_->closeOutDateFromValuationDate(valueDate);
                 std::tie(priceTime, upTime) = populateCube(
                     valueDate, cubeDateIndex, sample, true, false, scenarioUpdated, trades, tradeHasError, calculators,
@@ -222,7 +221,6 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                     QL_REQUIRE(closeOutDateToValueDateIndex.count(d) == 1 && !closeOutDateToValueDateIndex[d].empty(),
                                "Need to calculate valuation date before close out date");
                     for (size_t& valueDateIndex : closeOutDateToValueDateIndex[d]) {
-                        std::cout << "Close Out Date " << d << " valuationIndex " << valueDateIndex << std::endl;
                         std::tie(priceTime, upTime) =
                             populateCube(d, valueDateIndex, sample, false, mporStickyDate, scenarioUpdated, trades,
                                          tradeHasError, calculators, outputCube, outputCubeNettingSet, counterparties,
