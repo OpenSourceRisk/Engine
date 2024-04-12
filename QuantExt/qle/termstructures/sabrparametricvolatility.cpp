@@ -258,12 +258,25 @@ std::tuple<std::vector<Real>, Real, Size>
 SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmile,
                                                    const std::vector<std::pair<Real, bool>>& params) const {
 
-    // check the number of free parameters vs. the number of given market points
+    // determine the number of free parameters
 
     Size noFreeParams = 0;
     for (auto const& p : params)
         if (!p.second)
             ++noFreeParams;
+
+    // if there are no free parameters, we just pass back the fixed parameters as the result
+
+    if(noFreeParams == 0) {
+        std::vector<Real> resultParams;
+        for(auto const& p : params)
+            resultParams.push_back(p.first);
+        return std::make_tuple(resultParams, 0.0, 0);
+    }
+
+    // if we have less data points than free parameters -> exit early
+
+    QL_REQUIRE(noFreeParams <= marketSmile.strikes.size(), "internal: less data points than free parameters");
 
     // define the target function
 
