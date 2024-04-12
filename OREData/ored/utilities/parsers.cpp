@@ -1452,5 +1452,45 @@ std::ostream& operator<<(std::ostream& out, MporCashFlowMode t) {
     return out;
 }
 
+SabrParametricVolatility::ModelVariant parseSabrParametricVolatilityModelVariant(const std::string& s) {
+    static map<string, SabrParametricVolatility::ModelVariant> m = {
+        {"Hagan2002Lognormal", SabrParametricVolatility::ModelVariant::Hagan2002Lognormal},
+        {"Hagan2002Normal", SabrParametricVolatility::ModelVariant::Hagan2002Normal},
+        {"Hagan2002NormalZeroBeta", SabrParametricVolatility::ModelVariant::Hagan2002NormalZeroBeta},
+        {"Antonov2015FreeBoundaryNormal", SabrParametricVolatility::ModelVariant::Antonov2015FreeBoundaryNormal},
+        {"KienitzLawsonSwaynePde", SabrParametricVolatility::ModelVariant::KienitzLawsonSwaynePde},
+        {"FlochKennedy", SabrParametricVolatility::ModelVariant::FlochKennedy}};
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL(
+            "SabrParametricVolatilityModelVariant '"
+            << s
+            << "' not recognized, expected one of 'Hagan2002Lognormal', 'Hagan2002Normal', 'Hagan2002NormalZeroBeta', "
+               "'Antonov2015FreeBoundaryNormal', 'KienitzLawsonSwaynePde', 'FlochKennedy'.");
+    }
+}
+
+std::ostream& operator<<(std::ostream& out, SabrParametricVolatility::ModelVariant m) {
+    if (m == SabrParametricVolatility::ModelVariant::Hagan2002Lognormal) {
+        out << "Hagan2002Lognormal";
+    } else if (m == SabrParametricVolatility::ModelVariant::Hagan2002Normal) {
+        out << "Hagan2002Normal";
+    } else if (m == SabrParametricVolatility::ModelVariant::Hagan2002NormalZeroBeta) {
+        out << "Hagan200NormalZeroBeta";
+    } else if (m == SabrParametricVolatility::ModelVariant::Antonov2015FreeBoundaryNormal) {
+        out << "AntonovNormalZeroBeta";
+    } else if (m == SabrParametricVolatility::ModelVariant::KienitzLawsonSwaynePde) {
+        out << "KienitzLawsonSwaynePde";
+    } else if (m == SabrParametricVolatility::ModelVariant::FlochKennedy) {
+        out << "FlochKennedy";
+    } else {
+        QL_FAIL("SabrParametricVolatility::ModelVariant (" << static_cast<int>(m)
+                                                           << ") not recognized. This is an internal error.");
+    }
+    return out;
+}
+
 } // namespace data
 } // namespace ore

@@ -347,10 +347,20 @@ Any non-negative integer is allowed here. If omitted, it is assumed to be 0. If 
 As referenced above, the allowable values are \lstinline!TermVolatilities! or \lstinline!OptionletVolatilities!. As we are describing here a surface with interpolation on optionlet volatilities, this should be set to \lstinline!OptionletVolatilities! as shown in Listing \ref{lst:capfloorvol_surface_configuration_opt}.
 
 \item \lstinline!TimeInterpolation!:
-Indicates the interpolation and extrapolation, if allowed by the \lstinline!Extrapolation! node, in the time direction. As \lstinline!InterpolateOn! is set to \lstinline!OptionletVolatilities! here, the interpolation is used to interpolate the optionlet volatilities only i.e.\ there is no interpolation on the term cap floor volatility curve. The allowable values are \lstinline!Linear!, \lstinline!LinearFlat!, \lstinline!BackwardFlat!, \lstinline!Cubic! and \lstinline!CubicFlat!. If not set, \lstinline!LinearFlat! is assumed. Note that \lstinline!Linear! indicates linear interpolation and linear extrapolation. \lstinline!LinearFlat! indicates linear interpolation and flat extrapolation. Analogous meanings apply for \lstinline!Cubic! and \lstinline!CubicFlat!.
+Indicates the interpolation and extrapolation, if allowed by the \lstinline!Extrapolation! node, in the time
+direction. As \lstinline!InterpolateOn! is set to \lstinline!OptionletVolatilities! here, the interpolation is used to
+interpolate the optionlet volatilities only i.e.\ there is no interpolation on the term cap floor volatility curve. The
+allowable values are \lstinline!Linear!, \lstinline!LinearFlat!, \lstinline!BackwardFlat!, \lstinline!Cubic!
+and \lstinline!CubicFlat!. If not set, \lstinline!LinearFlat! is assumed. Note that \lstinline!Linear! indicates linear
+interpolation and linear extrapolation. \lstinline!LinearFlat! indicates linear interpolation and flat
+extrapolation. Analogous meanings apply for \lstinline!Cubic! and \lstinline!CubicFlat!.
 
 \item \lstinline!StrikeInterpolation!:
-Indicates the interpolation and extrapolation, if allowed by the \lstinline!Extrapolation! node, in the strike direction. Again, as \lstinline!InterpolateOn! is set to \lstinline!OptionletVolatilities! here, the interpolation is used to interpolate the optionlet volatilities in the strike direction. The allowable values are \lstinline!Linear!, \lstinline!LinearFlat!, \lstinline!Cubic! and \lstinline!CubicFlat!. If not set, \lstinline!LinearFlat! is assumed.
+Indicates the interpolation and extrapolation, if allowed by the \lstinline!Extrapolation! node, in the strike direction. Again, as \lstinline!InterpolateOn! is set to \lstinline!OptionletVolatilities! here, the interpolation is used to interpolate the optionlet volatilities in the strike direction. The allowable values are \lstinline!Linear!, \lstinline!LinearFlat!, \lstinline!Cubic! and \lstinline!CubicFlat! or one of the SABR variants Hagan2002Lognormal, Hagan2002Normal, Hagan2002NormalZeroBeta, Antonov2015FreeBoundaryNormal, KienitzLawsonSwaynePde, FlochKennedy. The SABR variants are only supported for InterpolateOn = OptionVolatilities (or if InputType = OptionletVolatilities). If not set, \lstinline!LinearFlat! is assumed.
+
+\item ParametricSmileConfiguration: Optional. Applies to SABR only. If not given, default values are used. Allows to specify initial values
+  for calibrated parameters, to exclude single parameters from calibration and to set calibration parameters. See
+  listing \ref{lst:capfloorvol_parametric_smile_config}.
 
 \item \lstinline!QuoteIncludesIndexName! [Optional]:
 If true, the quote labels that are looked up in the market data to build the surface include the index name as e.g. in \lstinline!CAPFLOOR/RATE_NVOL/USD/USD-LIBOR-3M/1Y/3M/0/0/0.01!. If false, the index name is not include as in \lstinline!CAPFLOOR/RATE_NVOL/USD/1Y/3M/0/0/0.01!. If the flag is not given, it defaults to false. Including the index name in the market quotes allows to build cap surfaces on different underlying indices with the same tenor. The flag also affects shift quotes as e.g. \lstinline!CAPFLOOR/SHIFT/USD/USD-LIBOR-3M/5Y! (index included in quote) vs. \lstinline!CAPFLOOR/SHIFT/USD/5Y! (index not included in quote).
@@ -556,4 +566,40 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
 \end{minted}
 \caption{Cap floor surface with optionlet volatilities input.}
 \label{lst:capfloorvol_optionlet_surface_configuration}
+\end{longlisting}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<ParametricSmileConfiguration>
+  <Parameters>
+    <Parameter>
+      <Name>alpha</Name>
+      <InitialValue>0.0050</InitialValue>
+      <IsFixed>false</IsFixed>
+    </Parameter>
+    <Parameter>
+      <Name>beta</Name>
+      <InitialValue>0.0</InitialValue>
+      <IsFixed>true</IsFixed>
+    </Parameter>
+    <Parameter>
+      <Name>nu</Name>
+      <InitialValue>0.30</InitialValue>
+      <IsFixed>false</IsFixed>
+    </Parameter>
+    <Parameter>
+      <Name>rho</Name>
+      <InitialValue>0.0</InitialValue>
+      <IsFixed>false</IsFixed>
+    </Parameter>
+  </Parameters>
+  <Calibration>
+    <MaxCalibrationAttempts>10</MaxCalibrationAttempts>
+    <ExitEarlyErrorThreshold>0.005</ExitEarlyErrorThreshold>
+    <MaxAcceptableError>0.05</MaxAcceptableError>
+  </Calibration>
+</ParametricSmileConfiguration>
+\end{minted}
+\caption{Cap floor surface with optionlet volatilities input.}
+\label{lst:capfloorvol_parametric_smile_config}
 \end{longlisting}
