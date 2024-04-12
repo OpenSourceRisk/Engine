@@ -46,7 +46,7 @@ public:
     /*! Constructor that does not take a reference date. The settlement days is derived from \p sob and the term
         structure will be a \e moving term structure.
     */
-    SabrStrippedOptionletAdapter(const boost::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
+    SabrStrippedOptionletAdapter(const QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
                                  const QuantExt::SabrParametricVolatility::ModelVariant modelVariant,
                                  const TimeInterpolator& ti = TimeInterpolator(),
                                  const boost::optional<QuantLib::VolatilityType> outputVolatilityType = boost::none,
@@ -58,7 +58,7 @@ public:
     /*! Constructor taking an explicit \p referenceDate and the term structure will therefore be not \e moving.
      */
     SabrStrippedOptionletAdapter(const QuantLib::Date& referenceDate,
-                                 const boost::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
+                                 const QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
                                  const QuantExt::SabrParametricVolatility::ModelVariant modelVariant,
                                  const TimeInterpolator& ti = TimeInterpolator(),
                                  const boost::optional<QuantLib::VolatilityType> outputVolatilityType = boost::none,
@@ -97,19 +97,22 @@ public:
 
     //! \name Inspectors
     //@{
-    boost::shared_ptr<QuantLib::StrippedOptionletBase> optionletBase() const;
+    QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase> optionletBase() const;
+    QuantLib::ext::shared_ptr<QuantExt::ParametricVolatility> parametricVolatility() const {
+        return parametricVolatility_;
+    }
     //@}
 
 protected:
     //! \name OptionletVolatilityStructure interface
     //@{
-    boost::shared_ptr<QuantLib::SmileSection> smileSectionImpl(QuantLib::Time optionTime) const override;
+    QuantLib::ext::shared_ptr<QuantLib::SmileSection> smileSectionImpl(QuantLib::Time optionTime) const override;
     QuantLib::Volatility volatilityImpl(QuantLib::Time length, QuantLib::Rate strike) const override;
     //@}
 
 private:
     //! Base optionlet object that provides the stripped optionlet volatilities
-    boost::shared_ptr<QuantLib::StrippedOptionletBase> optionletBase_;
+    QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase> optionletBase_;
 
     //! The interpolation object in the time direction
     TimeInterpolator ti_;
@@ -123,14 +126,14 @@ private:
     QuantLib::Real maxAcceptableError_;
 
     //! State
-    mutable std::map<Real, boost::shared_ptr<ParametricVolatilitySmileSection>> cache_;
-    mutable boost::shared_ptr<ParametricVolatility> parametricVolatility_;
+    mutable std::map<Real, QuantLib::ext::shared_ptr<ParametricVolatilitySmileSection>> cache_;
+    mutable QuantLib::ext::shared_ptr<ParametricVolatility> parametricVolatility_;
     mutable std::unique_ptr<FlatExtrapolation> atmInterpolation_;
 };
 
 template <class TimeInterpolator>
 SabrStrippedOptionletAdapter<TimeInterpolator>::SabrStrippedOptionletAdapter(
-    const boost::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
+    const QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
     const QuantExt::SabrParametricVolatility::ModelVariant modelVariant, const TimeInterpolator& ti,
     const boost::optional<QuantLib::VolatilityType> outputVolatilityType,
     const std::vector<std::pair<Real, bool>>& initialModelParameters, const QuantLib::Size maxCalibrationAttempts,
@@ -145,7 +148,7 @@ SabrStrippedOptionletAdapter<TimeInterpolator>::SabrStrippedOptionletAdapter(
 
 template <class TimeInterpolator>
 SabrStrippedOptionletAdapter<TimeInterpolator>::SabrStrippedOptionletAdapter(
-    const QuantLib::Date& referenceDate, const boost::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
+    const QuantLib::Date& referenceDate, const QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
     const QuantExt::SabrParametricVolatility::ModelVariant modelVariant, const TimeInterpolator& ti,
     const boost::optional<QuantLib::VolatilityType> outputVolatilityType,
     const std::vector<std::pair<Real, bool>>& initialModelParameters, const QuantLib::Size maxCalibrationAttempts,
@@ -192,7 +195,7 @@ template <class TimeInterpolator>
 inline void SabrStrippedOptionletAdapter<TimeInterpolator>::performCalculations() const {
     cache_.clear();
 
-    atmInterpolation_ = std::make_unique<FlatExtrapolation>(boost::make_shared<LinearInterpolation>(
+    atmInterpolation_ = std::make_unique<FlatExtrapolation>(QuantLib::ext::make_shared<LinearInterpolation>(
         this->optionletBase()->optionletFixingTimes().begin(), this->optionletBase()->optionletFixingTimes().end(),
         this->optionletBase()->atmOptionletRates().begin()));
     atmInterpolation_->enableExtrapolation();
@@ -214,7 +217,7 @@ inline void SabrStrippedOptionletAdapter<TimeInterpolator>::performCalculations(
                 initialModelParameters_;
     }
 
-    parametricVolatility_ = boost::make_shared<SabrParametricVolatility>(
+    parametricVolatility_ = QuantLib::ext::make_shared<SabrParametricVolatility>(
         modelVariant_, marketSmiles, ParametricVolatility::MarketModelType::Black76,
         volatilityType() == QuantLib::Normal ? ParametricVolatility::MarketQuoteType::NormalVolatility
                                              : ParametricVolatility::MarketQuoteType::ShiftedLognormalVolatility,
@@ -228,13 +231,13 @@ template <class TimeInterpolator> inline void SabrStrippedOptionletAdapter<TimeI
 }
 
 template <class TimeInterpolator>
-inline boost::shared_ptr<QuantLib::StrippedOptionletBase>
+inline QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase>
 SabrStrippedOptionletAdapter<TimeInterpolator>::optionletBase() const {
     return optionletBase_;
 }
 
 template <class TimeInterpolator>
-inline boost::shared_ptr<QuantLib::SmileSection>
+inline QuantLib::ext::shared_ptr<QuantLib::SmileSection>
 SabrStrippedOptionletAdapter<TimeInterpolator>::smileSectionImpl(QuantLib::Time optionTime) const {
     calculate();
     if (auto c = cache_.find(optionTime); c != cache_.end()) {
@@ -242,7 +245,7 @@ SabrStrippedOptionletAdapter<TimeInterpolator>::smileSectionImpl(QuantLib::Time 
     }
     Real forward = atmInterpolation_->operator()(optionTime);
     QuantLib::VolatilityType outVolType = outputVolatilityType_ ? *outputVolatilityType_ : volatilityType();
-    auto tmp = boost::make_shared<ParametricVolatilitySmileSection>(
+    auto tmp = QuantLib::ext::make_shared<ParametricVolatilitySmileSection>(
         optionTime, Null<Real>(), forward, parametricVolatility_,
         outVolType == QuantLib::Normal ? ParametricVolatility::MarketQuoteType::NormalVolatility
                                        : ParametricVolatility::MarketQuoteType::ShiftedLognormalVolatility);
