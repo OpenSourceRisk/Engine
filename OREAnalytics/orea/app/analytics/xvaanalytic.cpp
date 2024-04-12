@@ -362,6 +362,7 @@ void XvaAnalyticImpl::buildClassicCube(const boost::shared_ptr<Portfolio>& portf
             inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, false, false, cubeFactory, {},
             cptyCubeFactory, "xva-simulation");
 
+        engine.setAggregationScenarioData(*scenarioData_);
         engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
 
