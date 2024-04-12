@@ -61,16 +61,15 @@ public:
     const std::vector<Real>& underlyingLenghts() const;
     // calibrated or interpolated model parameters (rows = underlying lenghts, cols = option expiries)
     const QuantLib::Matrix& alpha() const { return alpha_; }
-    const QuantLib::Matrix& beta() const  { return beta_; }
+    const QuantLib::Matrix& beta() const { return beta_; }
     const QuantLib::Matrix& nu() const { return nu_; }
     const QuantLib::Matrix& rho() const { return rho_; }
     const QuantLib::Matrix& lognormalShift() const { return lognormalShift_; }
     const QuantLib::Matrix& numberOfCalibrationAttempts() const { return numberOfCalibrationAttempts_; }
     // calibration error
-    const QuantLib::Matrix& calibrationError() const;
+    const QuantLib::Matrix& calibrationError() const { return calibrationError_; }
     // indicator whether smile params were interpolated (1) or calibrated (0)
-    const QuantLib::Matrix& isInterpolated() const;
-
+    const QuantLib::Matrix& isInterpolated() const { return isInterpolated_; }
 
 private:
     static constexpr double eps1 = .0000001;
