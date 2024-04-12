@@ -660,8 +660,6 @@ QuantLib::ext::shared_ptr<CurveConfigurations> curveConfigurations() {
     // Swaption volatilities
 
     // Common variables for all volatility structures
-    bool extrapolate = true;
-    bool flatExtrapolate = true;
     Actual365Fixed dayCounter;
     BusinessDayConvention bdc = Following;
 
@@ -700,11 +698,14 @@ QuantLib::ext::shared_ptr<CurveConfigurations> curveConfigurations() {
     // clang-format on
 
     // USD Lognormal swaption volatility "curve" configuration
-    configs->add(CurveSpec::CurveType::SwaptionVolatility,
-                 "USD_SW_LN", QuantLib::ext::make_shared<SwaptionVolatilityCurveConfig>(
-        "USD_SW_LN", "USD Lognormal swaption volatilities", SwaptionVolatilityCurveConfig::Dimension::ATM,
-        SwaptionVolatilityCurveConfig::VolatilityType::Lognormal, extrapolate, flatExtrapolate, optionTenors,
-        swapTenors, dayCounter, UnitedStates(UnitedStates::Settlement), bdc, "USD-CMS-1Y", "USD-CMS-30Y"));
+    configs->add(CurveSpec::CurveType::SwaptionVolatility, "USD_SW_LN",
+                 QuantLib::ext::make_shared<SwaptionVolatilityCurveConfig>(
+                     "USD_SW_LN", "USD Lognormal swaption volatilities", SwaptionVolatilityCurveConfig::Dimension::ATM,
+                     SwaptionVolatilityCurveConfig::VolatilityType::Lognormal,
+                     SwaptionVolatilityCurveConfig::VolatilityType::Lognormal,
+                     GenericYieldVolatilityCurveConfig::Interpolation::Linear,
+                     GenericYieldVolatilityCurveConfig::Extrapolation::Flat, optionTenors, swapTenors, dayCounter,
+                     UnitedStates(UnitedStates::Settlement), bdc, "USD-CMS-1Y", "USD-CMS-30Y"));
 
     // Capfloor volatility structure tenors and strikes
     vector<string> capTenors{"1Y", "2Y", "5Y", "7Y", "10Y"};
@@ -713,7 +714,7 @@ QuantLib::ext::shared_ptr<CurveConfigurations> curveConfigurations() {
     // USD Lognormal capfloor volatility "curve" configuration
     configs->add(CurveSpec::CurveType::CapFloorVolatility, "USD_CF_LN", QuantLib::ext::make_shared<CapFloorVolatilityCurveConfig>(
         "USD_CF_LN", "USD Lognormal capfloor volatilities", CapFloorVolatilityCurveConfig::VolatilityType::Lognormal,
-        extrapolate, false, false, capTenors, strikes, dayCounter, 0, UnitedStates(UnitedStates::Settlement), bdc,
+        true, false, false, capTenors, strikes, dayCounter, 0, UnitedStates(UnitedStates::Settlement), bdc,
         "USD-LIBOR-3M", 3 * Months, 0, "Yield/USD/USD1D"));
 
     vector<string> optionTenors2{"1Y"};
@@ -723,12 +724,12 @@ QuantLib::ext::shared_ptr<CurveConfigurations> curveConfigurations() {
     configs->add(CurveSpec::CurveType::Correlation, "EUR-CORR", QuantLib::ext::make_shared<CorrelationCurveConfig>(
         "EUR-CORR", "EUR CMS Correlations", CorrelationCurveConfig::Dimension::Constant,
         CorrelationCurveConfig::CorrelationType::CMSSpread, "EUR-CMS-1Y-10Y-CONVENTION",
-        MarketDatum::QuoteType::RATE, extrapolate, optionTenors2, dayCounter, UnitedStates(UnitedStates::Settlement), bdc,
+        MarketDatum::QuoteType::RATE, true, optionTenors2, dayCounter, UnitedStates(UnitedStates::Settlement), bdc,
         "EUR-CMS-10Y", "EUR-CMS-2Y", "EUR"));
     configs->add(CurveSpec::CurveType::Correlation, "USD-CORR", QuantLib::ext::make_shared<CorrelationCurveConfig>(
         "USD-CORR", "USD CMS Correlations", CorrelationCurveConfig::Dimension::ATM,
         CorrelationCurveConfig::CorrelationType::CMSSpread, "USD-CMS-10Y-2Y-CONVENTION",
-        MarketDatum::QuoteType::PRICE, extrapolate, optionTenors3, Actual360(), TARGET(), ModifiedFollowing,
+        MarketDatum::QuoteType::PRICE, true, optionTenors3, Actual360(), TARGET(), ModifiedFollowing,
         "USD-CMS-10Y", "USD-CMS-2Y", "USD", "USD_SW_LN", "USD1D"));
 
     // clang-format off
