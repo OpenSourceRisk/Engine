@@ -578,6 +578,33 @@ GenericYieldVolCurve::GenericYieldVolCurve(
             }
 
             DLOG("Building calibration info generic yield vols completed.");
+
+            // output SABR calibration to log, if SABR was used
+
+            if (auto sw = QuantLib::ext::dynamic_pointer_cast<QuantExt::SwaptionVolCubeWithATM>(vol_)) {
+                if (auto sabr = QuantLib::ext::dynamic_pointer_cast<QuantExt::SwaptionSabrCube>(sw->cube())) {
+                    if (auto p = QuantLib::ext::dynamic_pointer_cast<QuantExt::SabrParametricVolatility>(
+                            sabr->parametricVolatility())) {
+                        DLOG("SABR parameters:");
+                        DLOG("alpha:");
+                        DLOGGERSTREAM(p->alpha());
+                        DLOG("beta:");
+                        DLOGGERSTREAM(p->beta());
+                        DLOG("nu:");
+                        DLOGGERSTREAM(p->nu());
+                        DLOG("rho:");
+                        DLOGGERSTREAM(p->rho());
+                        DLOG("lognormal shift:");
+                        DLOGGERSTREAM(p->lognormalShift());
+                        DLOG("calibration attempts:");
+                        DLOGGERSTREAM(p->numberOfCalibrationAttempts());
+                        DLOG("calibration error:");
+                        DLOGGERSTREAM(p->calibrationError());
+                        DLOG("isInterpolated:");
+                        DLOGGERSTREAM(p->isInterpolated());
+                    }
+                }
+            }
         }
 
     } catch (std::exception& e) {

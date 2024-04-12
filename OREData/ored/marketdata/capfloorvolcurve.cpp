@@ -1592,6 +1592,40 @@ void CapFloorVolCurve::buildCalibrationInfo(const Date& asof, const CurveConfigu
         TLOG("Strike Spread cube arbitrage analysis completed.");
     }
 
+    // output SABR calibration to log, if SABR was used
+
+    QuantLib::ext::shared_ptr<QuantExt::SabrParametricVolatility> p;
+    if (auto s = QuantLib::ext::dynamic_pointer_cast<SabrStrippedOptionletAdapter<Linear>>(capletVol_))
+        p = QuantExt::ext::dynamic_pointer_cast<SabrParametricVolatility>(s->parametricVolatility());
+    else if (auto s = QuantLib::ext::dynamic_pointer_cast<SabrStrippedOptionletAdapter<LinearFlat>>(capletVol_))
+        p = QuantExt::ext::dynamic_pointer_cast<SabrParametricVolatility>(s->parametricVolatility());
+    else if (auto s = QuantLib::ext::dynamic_pointer_cast<SabrStrippedOptionletAdapter<Cubic>>(capletVol_))
+        p = QuantExt::ext::dynamic_pointer_cast<SabrParametricVolatility>(s->parametricVolatility());
+    else if (auto s = QuantLib::ext::dynamic_pointer_cast<SabrStrippedOptionletAdapter<CubicFlat>>(capletVol_))
+        p = QuantExt::ext::dynamic_pointer_cast<SabrParametricVolatility>(s->parametricVolatility());
+    else if (auto s = QuantLib::ext::dynamic_pointer_cast<SabrStrippedOptionletAdapter<BackwardFlat>>(capletVol_))
+        p = QuantExt::ext::dynamic_pointer_cast<SabrParametricVolatility>(s->parametricVolatility());
+
+    if (p) {
+        DLOG("SABR parameters:");
+        DLOG("alpha:");
+        DLOGGERSTREAM(p->alpha());
+        DLOG("beta:");
+        DLOGGERSTREAM(p->beta());
+        DLOG("nu:");
+        DLOGGERSTREAM(p->nu());
+        DLOG("rho:");
+        DLOGGERSTREAM(p->rho());
+        DLOG("lognormal shift:");
+        DLOGGERSTREAM(p->lognormalShift());
+        DLOG("calibration attempts:");
+        DLOGGERSTREAM(p->numberOfCalibrationAttempts());
+        DLOG("calibration error:");
+        DLOGGERSTREAM(p->calibrationError());
+        DLOG("isInterpolated:");
+        DLOGGERSTREAM(p->isInterpolated());
+    }
+
     DLOG("Building calibration info cap floor vols completed.");
 }
 

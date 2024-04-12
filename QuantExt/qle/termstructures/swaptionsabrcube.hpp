@@ -39,8 +39,8 @@ public:
                      const std::vector<Period>& atmOptionTenors, const std::vector<Period>& atmSwapLengths,
                      const std::vector<Spread>& strikeSpreads,
                      const std::vector<std::vector<Handle<Quote>>>& volSpreads,
-                     const boost::shared_ptr<SwapIndex>& swapIndexBase,
-                     const boost::shared_ptr<SwapIndex>& shortSwapIndexBase,
+                     const QuantLib::ext::shared_ptr<SwapIndex>& swapIndexBase,
+                     const QuantLib::ext::shared_ptr<SwapIndex>& shortSwapIndexBase,
                      const QuantExt::SabrParametricVolatility::ModelVariant modelVariant,
                      const boost::optional<QuantLib::VolatilityType> outputVolatilityType = boost::none,
                      const std::vector<std::pair<Real, bool>>& initialModelParameters = {},
@@ -48,11 +48,13 @@ public:
                      const QuantLib::Real exitEarlyErrorThreshold = 0.005,
                      const QuantLib::Real maxAcceptableError = 0.05);
     void performCalculations() const override;
-    boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const override;
+    QuantLib::ext::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const override;
+
+    QuantLib::ext::shared_ptr<ParametricVolatility> parametricVolatility() const { return parametricVolatility_; }
 
 private:
-    mutable std::map<std::pair<Real, Real>, boost::shared_ptr<ParametricVolatilitySmileSection>> cache_;
-    mutable boost::shared_ptr<ParametricVolatility> parametricVolatility_;
+    mutable std::map<std::pair<Real, Real>, QuantLib::ext::shared_ptr<ParametricVolatilitySmileSection>> cache_;
+    mutable QuantLib::ext::shared_ptr<ParametricVolatility> parametricVolatility_;
     std::vector<Period> atmOptionTenors_, atmSwapTenors_;
     QuantExt::SabrParametricVolatility::ModelVariant modelVariant_;
     boost::optional<QuantLib::VolatilityType> outputVolatilityType_;
