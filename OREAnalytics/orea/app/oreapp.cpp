@@ -423,22 +423,25 @@ void OREApp::run() {
 void OREApp::run(const std::vector<std::string>& marketData,
                  const std::vector<std::string>& fixingData) {
 
-    // only one thread at a time should call run
+    // Only one thread at a time should call run
     static std::mutex _s_mutex;
     std::lock_guard<std::mutex> lock(_s_mutex);
 
-    // clean up after finishing the run
-    CleanUpThreadLocalSingletons cleanupThreadLocalSingletons;
-    CleanUpThreadGlobalSingletons cleanupThreadGloablSingletons;
-    CleanUpLogSingleton cleanupLogSingleton(true, true);
+    // Clean start, but leave Singletons intact after run is completed
+    {
+      CleanUpThreadLocalSingletons cleanupThreadLocalSingletons;
+      CleanUpThreadGlobalSingletons cleanupThreadGloablSingletons;
+      CleanUpLogSingleton cleanupLogSingleton(true, true);
+    }
 
-    if (inputs_ == nullptr)
-        initFromParams();
-    else if (params_ == nullptr)
+    // Use inputs when available, otherwise try params
+    if (inputs_ != nullptr)
         initFromInputs();
+    else if (params_ != nullptr)
+        initFromParams();
     else {
         ALOG("both inputs are empty");
-        return;      
+	return;
     }
 
     runTimer_.start();
