@@ -16,21 +16,25 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <algorithm>
 #include <ored/configuration/genericyieldvolcurveconfig.hpp>
 #include <ored/configuration/reportconfig.hpp>
 #include <ored/marketdata/genericyieldvolcurve.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+
+#include <qle/models/carrmadanarbitragecheck.hpp>
+#include <qle/termstructures/proxyswaptionvolatility.hpp>
+#include <qle/termstructures/swaptionsabrcube.hpp>
+#include <qle/termstructures/swaptionvolcube2.hpp>
+#include <qle/termstructures/swaptionvolcubewithatm.hpp>
+
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
-#include <qle/models/carrmadanarbitragecheck.hpp>
-#include <qle/termstructures/proxyswaptionvolatility.hpp>
-#include <qle/termstructures/swaptionvolcube2.hpp>
-#include <qle/termstructures/swaptionvolcubewithatm.hpp>
+
+#include <algorithm>
 
 using namespace QuantLib;
 using namespace std;
@@ -207,13 +211,15 @@ GenericYieldVolCurve::GenericYieldVolCurve(
             if (quotesRead > 1) {
                 atm = QuantLib::ext::shared_ptr<SwaptionVolatilityStructure>(new SwaptionVolatilityMatrix(
                     asof, config->calendar(), config->businessDayConvention(), optionTenors, underlyingTenors, vols,
-                    config->dayCounter(), config->flatExtrapolation(),
+                    config->dayCounter(),
+                    config->extrapolation() == GenericYieldVolatilityCurveConfig::Extrapolation::Flat,
                     config->volatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
                         ? QuantLib::Normal
                         : QuantLib::ShiftedLognormal,
                     isSln ? shifts : Matrix(vols.rows(), vols.columns(), 0.0)));
 
-                atm->enableExtrapolation(config->extrapolate());
+                atm->enableExtrapolation(config->extrapolation() ==
+                                         GenericYieldVolatilityCurveConfig::Extrapolation::Flat);
                 TLOG("built atm surface with vols:");
                 TLOGGERSTREAM(vols);
                 if (isSln) {
@@ -344,13 +350,43 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                 QL_REQUIRE(swapIndexBase, "Unable to find SwapIndex " << config->swapIndexBase());
                 QL_REQUIRE(shortSwapIndexBase, "Unable to find ShortSwapIndex " << config->shortSwapIndexBase());
 
-                bool vegaWeighedSmileFit = false; // TODO
-
                 Handle<SwaptionVolatilityStructure> hATM(atm);
-                QuantLib::ext::shared_ptr<QuantExt::SwaptionVolCube2> cube = QuantLib::ext::make_shared<QuantExt::SwaptionVolCube2>(
-                    hATM, smileOptionTenors, smileUnderlyingTenors, spreads, volSpreadHandles, swapIndexBase,
-                    shortSwapIndexBase, vegaWeighedSmileFit, config->flatExtrapolation());
-                cube->enableExtrapolation();
+                QuantLib::ext::shared_ptr<QuantLib::SwaptionVolatilityCube> cube;
+                if (config->interpolation() == GenericYieldVolatilityCurveConfig::Interpolation::Linear) {
+                    cube = QuantLib::ext::make_shared<QuantExt::SwaptionVolCube2>(
+                        hATM, smileOptionTenors, smileUnderlyingTenors, spreads, volSpreadHandles, swapIndexBase,
+                        shortSwapIndexBase, false,
+                        config->extrapolation() == GenericYieldVolatilityCurveConfig::Extrapolation::Flat);
+                    cube->enableExtrapolation();
+                } else {
+                    std::vector<std::pair<Real,bool>> initialModelParameters;
+                    Size maxCalibrationAttempts = 10;
+                    Real exitEarlyErrorThreshold = 0.005;
+                    Real maxAcceptableError = 0.05;
+                    if (config->parametricSmileConfiguration()) {
+                        auto alpha = config->parametricSmileConfiguration()->parameter("alpha");
+                        auto beta = config->parametricSmileConfiguration()->parameter("beta");
+                        auto nu = config->parametricSmileConfiguration()->parameter("nu");
+                        auto rho = config->parametricSmileConfiguration()->parameter("rho");
+                        initialModelParameters.push_back(std::make_pair(alpha.initialValue, alpha.isFixed));
+                        initialModelParameters.push_back(std::make_pair(beta.initialValue, beta.isFixed));
+                        initialModelParameters.push_back(std::make_pair(nu.initialValue, nu.isFixed));
+                        initialModelParameters.push_back(std::make_pair(rho.initialValue, rho.isFixed));
+                        maxCalibrationAttempts =
+                            config->parametricSmileConfiguration()->calibration().maxCalibrationAttempts;
+                        exitEarlyErrorThreshold =
+                            config->parametricSmileConfiguration()->calibration().exitEarlyErrorThreshold;
+                        maxAcceptableError = config->parametricSmileConfiguration()->calibration().maxAcceptableError;
+                    }
+                    cube = QuantLib::ext::make_shared<QuantExt::SwaptionSabrCube>(
+                        hATM, smileOptionTenors, smileUnderlyingTenors, optionTenors, underlyingTenors, spreads,
+                        volSpreadHandles, swapIndexBase, shortSwapIndexBase,
+                        QuantExt::SabrParametricVolatility::ModelVariant(config->interpolation()),
+                        config->outputVolatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
+                            ? QuantLib::Normal
+                            : QuantLib::ShiftedLognormal,
+                        initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
+                }
 
                 // Wrap it in a SwaptionVolCubeWithATM
                 vol_ = QuantLib::ext::make_shared<QuantExt::SwaptionVolCubeWithATM>(cube);
@@ -560,6 +596,33 @@ GenericYieldVolCurve::GenericYieldVolCurve(
             }
 
             DLOG("Building calibration info generic yield vols completed.");
+
+            // output SABR calibration to log, if SABR was used
+
+            if (auto sw = QuantLib::ext::dynamic_pointer_cast<QuantExt::SwaptionVolCubeWithATM>(vol_)) {
+                if (auto sabr = QuantLib::ext::dynamic_pointer_cast<QuantExt::SwaptionSabrCube>(sw->cube())) {
+                    if (auto p = QuantLib::ext::dynamic_pointer_cast<QuantExt::SabrParametricVolatility>(
+                            sabr->parametricVolatility())) {
+                        DLOG("SABR parameters:");
+                        DLOG("alpha:");
+                        DLOGGERSTREAM(p->alpha());
+                        DLOG("beta:");
+                        DLOGGERSTREAM(p->beta());
+                        DLOG("nu:");
+                        DLOGGERSTREAM(p->nu());
+                        DLOG("rho:");
+                        DLOGGERSTREAM(p->rho());
+                        DLOG("lognormal shift:");
+                        DLOGGERSTREAM(p->lognormalShift());
+                        DLOG("calibration attempts:");
+                        DLOGGERSTREAM(p->numberOfCalibrationAttempts());
+                        DLOG("calibration error:");
+                        DLOGGERSTREAM(p->calibrationError());
+                        DLOG("isInterpolated:");
+                        DLOGGERSTREAM(p->isInterpolated());
+                    }
+                }
+            }
         }
 
     } catch (std::exception& e) {
