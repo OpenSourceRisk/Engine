@@ -370,7 +370,7 @@ void MarketRiskBacktest::reset(const QuantLib::ext::shared_ptr<MarketRiskGroup>&
 
 void MarketRiskBacktest::addPnlRow(const QuantLib::ext::shared_ptr<BacktestReports>& reports, Size scenarioIdx, 
     bool isCall, const RiskFactorKey& key_1, Real shift_1, Real delta, Real gamma, Real deltaPnl, Real gammaPnl, 
-    const RiskFactorKey& key_2, Real shift_2, const string& tradeId) {
+    const RiskFactorKey& key_2, Real shift_2, const string& tradeId, const string& currency, Real fxSpot) {
 
     // Do we have a report to write to?
     // Is this too slow to do on every call to addPnlRow? Need to find the report each time in any case.
@@ -401,9 +401,9 @@ void MarketRiskBacktest::addPnlRow(const QuantLib::ext::shared_ptr<BacktestRepor
         .add(gamma)
         .add(shift_1)
         .add(shift_2)
-        .add(deltaPnl)
-        .add(gammaPnl)
-        .add(calculationCurrency_);
+        .add(currency.empty() || currency == calculationCurrency_ ? deltaPnl : deltaPnl / fxSpot)
+        .add(currency.empty() || currency == calculationCurrency_ ? gammaPnl : gammaPnl / fxSpot)
+        .add(currency.empty() ? calculationCurrency_ : currency);
 }
 
 void BacktestPNLCalculator::writePNL(Size scenarioIdx, bool isCall, const RiskFactorKey& key_1, Real shift_1,
