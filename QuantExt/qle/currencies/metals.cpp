@@ -26,28 +26,28 @@ namespace QuantExt {
 
 // Troy ounce of Gold
 XAUCurrency::XAUCurrency() {
-    static boost::shared_ptr<Data> xauData(
+    static QuantLib::ext::shared_ptr<Data> xauData(
         new Data("Troy Ounce of Gold", "XAU", 959, "XAU", "", 1, Rounding(), "1$.2f %3%"));
     data_ = xauData;
 }
 
 // Troy ounce of Silver
 XAGCurrency::XAGCurrency() {
-    static boost::shared_ptr<Data> xagData(
+    static QuantLib::ext::shared_ptr<Data> xagData(
         new Data("Troy Ounce of Silver", "XAG", 961, "XAG", "", 1, Rounding(), "1$.2f %3%"));
     data_ = xagData;
 }
 
 // Troy ounce of Platinum
 XPTCurrency::XPTCurrency() {
-    static boost::shared_ptr<Data> xptData(
+    static QuantLib::ext::shared_ptr<Data> xptData(
         new Data("Troy Ounce of Platinum", "XPT", 962, "XPT", "", 1, Rounding(), "1$.2f %3%"));
     data_ = xptData;
 }
 
 // Troy ounce of Palladium
 XPDCurrency::XPDCurrency() {
-    static boost::shared_ptr<Data> xpdData(
+    static QuantLib::ext::shared_ptr<Data> xpdData(
         new Data("Troy Ounce of Palladium", "XPD", 964, "XPD", "", 1, Rounding(), "1$.2f %3%"));
     data_ = xpdData;
 }

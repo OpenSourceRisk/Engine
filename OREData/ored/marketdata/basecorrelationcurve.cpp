@@ -55,7 +55,7 @@ BaseCorrelationCurve::BaseCorrelationCurve(
     BaseCorrelationCurveSpec spec,
     const Loader& loader,
     const CurveConfigurations& curveConfigs,
-    const boost::shared_ptr<ReferenceDataManager>& referenceData)
+    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData)
     : spec_(spec), referenceData_(referenceData) {
 
     DLOG("BaseCorrelationCurve: start building base correlation structure with ID " << spec_.curveConfigID());
@@ -120,7 +120,7 @@ BaseCorrelationCurve::BaseCorrelationCurve(
 
             QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
 
-            auto q = boost::dynamic_pointer_cast<BaseCorrelationQuote>(md);
+            auto q = QuantLib::ext::dynamic_pointer_cast<BaseCorrelationQuote>(md);
             QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to BaseCorrelationQuote");
 
             // Go to next quote if index name in the quote does not match the cds vol configuration name.
@@ -204,7 +204,7 @@ BaseCorrelationCurve::BaseCorrelationCurve(
                     QL_REQUIRE(it_m != data.end() && it_p != data.end(),
                                "BaseCorrelationCurve: do not have a quote for term "
                                    << term << " and detachment point " << fixed << setprecision(9) << dp << ".");
-                    quotes.back().push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(
+                    quotes.back().push_back(Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(
                         alpha * it_m->second->value() + (1 - alpha) * it_p->second->value())));
                 }
             }
@@ -238,7 +238,7 @@ BaseCorrelationCurve::BaseCorrelationCurve(
         for (Size i = 0; i < tmpDps.size(); ++i)
             quotes[i].push_back(quotes[i][tmpTerms.size() - 2]);
 
-        baseCorrelation_ = boost::make_shared<QuantExt::InterpolatedBaseCorrelationTermStructure<QuantExt::BilinearFlat>>(
+        baseCorrelation_ = QuantLib::ext::make_shared<QuantExt::InterpolatedBaseCorrelationTermStructure<QuantExt::BilinearFlat>>(
             config.settlementDays(), config.calendar(), config.businessDayConvention(), tmpTerms, tmpDps, quotes,
             config.dayCounter(), config.startDate(), config.rule());
 
@@ -273,7 +273,7 @@ vector<Real> BaseCorrelationCurve::adjustForLosses(const vector<Real>& detachPoi
         return detachPoints;
     }
 
-    auto crd = boost::dynamic_pointer_cast<CreditIndexReferenceDatum>(
+    auto crd = QuantLib::ext::dynamic_pointer_cast<CreditIndexReferenceDatum>(
         referenceData_->getData(CreditIndexReferenceDatum::TYPE, qualifier));
     if (!crd) {
         DLOG("Index credit data for " << qualifier << " is not of correct type so cannot adjust for losses.");

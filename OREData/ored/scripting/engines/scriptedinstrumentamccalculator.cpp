@@ -36,7 +36,7 @@ std::vector<QuantExt::RandomVariable> ScriptedInstrumentAmcCalculator::simulateP
 
     // inject the global paths into our local model, notice that this will change the size of the model
 
-    auto amcModel = boost::dynamic_pointer_cast<AmcModel>(model_);
+    auto amcModel = QuantLib::ext::dynamic_pointer_cast<AmcModel>(model_);
     QL_REQUIRE(amcModel, "expected an AmcModel");
     amcModel->injectPaths(&pathTimes, &paths, &relevantPathIndex, &relevantTimeIndex, stickyCloseOutRun);
 
@@ -44,7 +44,7 @@ std::vector<QuantExt::RandomVariable> ScriptedInstrumentAmcCalculator::simulateP
 
     // set up copy of initial context to run the script engine on
 
-    auto workingContext = boost::make_shared<Context>(*context_);
+    auto workingContext = QuantLib::ext::make_shared<Context>(*context_);
 
     // amend context to new model size
     amendContextVariablesSizes(workingContext, model_->size());
@@ -52,9 +52,9 @@ std::vector<QuantExt::RandomVariable> ScriptedInstrumentAmcCalculator::simulateP
     // make sure we reset the injected path data after the calculation
     struct InjectedPathReleaser {
         ~InjectedPathReleaser() {
-            boost::dynamic_pointer_cast<AmcModel>(model)->injectPaths(nullptr, nullptr, nullptr, nullptr, false);
+            QuantLib::ext::dynamic_pointer_cast<AmcModel>(model)->injectPaths(nullptr, nullptr, nullptr, nullptr, false);
         }
-        boost::shared_ptr<Model> model;
+        QuantLib::ext::shared_ptr<Model> model;
     };
     InjectedPathReleaser injectedPathReleaser{model_};
 
@@ -99,7 +99,7 @@ std::vector<QuantExt::RandomVariable> ScriptedInstrumentAmcCalculator::simulateP
                "did not find npv result variable '" << npv_ << "' as scalar in context");
     QL_REQUIRE(npv->second.which() == ValueTypeWhich::Number,
                "result variable '" << npv_ << "' must be of type NUMBER, got " << npv->second.which());
-    result[0] = expectation(boost::get<RandomVariable>(npv->second));
+    result[0] = expectation(QuantLib::ext::get<RandomVariable>(npv->second));
 
     // the other components are given as the additional result _AMC_NPV
 
@@ -113,7 +113,7 @@ std::vector<QuantExt::RandomVariable> ScriptedInstrumentAmcCalculator::simulateP
     for (Size i = 0; i < resultSize; ++i) {
         QL_REQUIRE(s->second[i].which() == ValueTypeWhich::Number,
                    "component #" << i << " in _AMC_NPV has wrong type, expected Number");
-        result[i + 1] = boost::get<RandomVariable>(s->second[i]);
+        result[i + 1] = QuantLib::ext::get<RandomVariable>(s->second[i]);
     }
 
     // extract variables that should be static in subsequent sticky close-out runs

@@ -26,7 +26,7 @@ namespace QuantExt {
 
 std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size regressionOrder,
                                                    QuantLib::LsmBasisSystem::PolynomialType polynomType,
-                                                   const double eps) {
+                                                   const double eps, QuantLib::Real regressionVarianceCutoff) {
     std::vector<RandomVariableOp> ops;
 
     // None = 0
@@ -48,11 +48,19 @@ std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size r
     ops.push_back([](const std::vector<const RandomVariable*>& args) { return *args[0] / (*args[1]); });
 
     // ConditionalExpectation = 6
-    ops.push_back([size, regressionOrder, polynomType](const std::vector<const RandomVariable*>& args) {
+    ops.push_back([size, regressionOrder, polynomType,
+                   regressionVarianceCutoff](const std::vector<const RandomVariable*>& args) {
         std::vector<const RandomVariable*> regressor;
         for (auto r = std::next(args.begin(), 2); r != args.end(); ++r) {
             if ((*r)->initialised() && !(*r)->deterministic())
                 regressor.push_back(*r);
+        }
+        std::vector<RandomVariable> transformedRegressor;
+        Matrix coordinateTransform;
+        if (regressionVarianceCutoff != Null<Real>()) {
+            coordinateTransform = pcaCoordinateTransform(regressor, regressionVarianceCutoff);
+            transformedRegressor = applyCoordinateTransform(regressor, coordinateTransform);
+            regressor = vec2vecptr(transformedRegressor);
         }
         if (regressor.empty())
             return expectation(*args[0]);
@@ -121,7 +129,7 @@ std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size r
 
 std::vector<RandomVariableGrad> getRandomVariableGradients(const Size size, const Size regressionOrder,
                                                            const QuantLib::LsmBasisSystem::PolynomialType polynomType,
-                                                           const double eps) {
+                                                           const double eps, const Real regressionVarianceCutoff) {
 
     std::vector<RandomVariableGrad> grads;
 

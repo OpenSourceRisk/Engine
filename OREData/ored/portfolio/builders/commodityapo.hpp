@@ -42,7 +42,7 @@ namespace data {
 */
 class CommodityApoBaseEngineBuilder
     : public CachingPricingEngineBuilder<string, const Currency&, const string&, const string&,
-                                         const boost::shared_ptr<QuantExt::CommodityAveragePriceOption>&> {
+                                         const QuantLib::ext::shared_ptr<QuantExt::CommodityAveragePriceOption>&> {
 public:
     CommodityApoBaseEngineBuilder(const std::string& model, const std::string& engine,
                                   const std::set<std::string>& tradeTypes)
@@ -50,7 +50,7 @@ public:
 
 protected:
     std::string keyImpl(const Currency& ccy, const string& name, const string& id,
-                        const boost::shared_ptr<QuantExt::CommodityAveragePriceOption>&) override {
+                        const QuantLib::ext::shared_ptr<QuantExt::CommodityAveragePriceOption>&) override {
         return id;
     }
 };
@@ -66,9 +66,9 @@ public:
         : CommodityApoBaseEngineBuilder("Black", "AnalyticalApproximation", {"CommodityAveragePriceOption"}) {}
 
 protected:
-    boost::shared_ptr<QuantLib::PricingEngine>
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
     engineImpl(const Currency& ccy, const string& name, const string& id,
-               const boost::shared_ptr<QuantExt::CommodityAveragePriceOption>& apo) override {
+               const QuantLib::ext::shared_ptr<QuantExt::CommodityAveragePriceOption>& apo) override {
 
         Handle<QuantLib::BlackVolTermStructure> vol =
             market_->commodityVolatility(name, configuration(MarketContext::pricing));
@@ -88,10 +88,10 @@ protected:
             dontCalibrate = !parseBool(g->second);
         }
 
-        auto modelBuilder = boost::make_shared<CommodityApoModelBuilder>(yts, vol, apo, dontCalibrate);
+        auto modelBuilder = QuantLib::ext::make_shared<CommodityApoModelBuilder>(yts, vol, apo, dontCalibrate);
         modelBuilders_.insert(std::make_pair(id, modelBuilder));
 
-        return boost::make_shared<QuantExt::CommodityAveragePriceOptionAnalyticalEngine>(yts, modelBuilder->model(),
+        return QuantLib::ext::make_shared<QuantExt::CommodityAveragePriceOptionAnalyticalEngine>(yts, modelBuilder->model(),
                                                                                          beta);
     };
 };
@@ -108,9 +108,9 @@ public:
                                         {"CommodityAveragePriceOption", "CommodityAveragePriceBarrierOption"}) {}
 
 protected:
-    boost::shared_ptr<QuantLib::PricingEngine>
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
     engineImpl(const Currency& ccy, const string& name, const string& id,
-               const boost::shared_ptr<QuantExt::CommodityAveragePriceOption>& apo) override {
+               const QuantLib::ext::shared_ptr<QuantExt::CommodityAveragePriceOption>& apo) override {
 
         Handle<QuantLib::BlackVolTermStructure> vol =
             market_->commodityVolatility(name, configuration(MarketContext::pricing));
@@ -139,10 +139,10 @@ protected:
             dontCalibrate = !parseBool(g->second);
         }
 
-        auto modelBuilder = boost::make_shared<CommodityApoModelBuilder>(yts, vol, apo, dontCalibrate);
+        auto modelBuilder = QuantLib::ext::make_shared<CommodityApoModelBuilder>(yts, vol, apo, dontCalibrate);
         modelBuilders_.insert(std::make_pair(id, modelBuilder));
 
-        return boost::make_shared<QuantExt::CommodityAveragePriceOptionMonteCarloEngine>(yts, modelBuilder->model(),
+        return QuantLib::ext::make_shared<QuantExt::CommodityAveragePriceOptionMonteCarloEngine>(yts, modelBuilder->model(),
                                                                                          samples, beta);
     };
 };

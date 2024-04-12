@@ -34,7 +34,7 @@
 
 #include <boost/none.hpp>
 #include <boost/optional.hpp>
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 #include <set>
 #include <map>
@@ -653,7 +653,7 @@ public:
     YieldCurveConfig() {}
     //! Detailed constructor
     YieldCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
-                     const string& discountCurveID, const vector<boost::shared_ptr<YieldCurveSegment>>& curveSegments,
+                     const string& discountCurveID, const vector<QuantLib::ext::shared_ptr<YieldCurveSegment>>& curveSegments,
                      const string& interpolationVariable = "Discount", const string& interpolationMethod = "LogLinear",
                      const string& zeroDayCounter = "A365", bool extrapolation = true,
                      const BootstrapConfig& bootstrapConfig = BootstrapConfig(),
@@ -672,7 +672,7 @@ public:
     //@{
     const string& currency() const { return currency_; }
     const string& discountCurveID() const { return discountCurveID_; }
-    const vector<boost::shared_ptr<YieldCurveSegment>>& curveSegments() const { return curveSegments_; }
+    const vector<QuantLib::ext::shared_ptr<YieldCurveSegment>>& curveSegments() const { return curveSegments_; }
     const string& interpolationVariable() const { return interpolationVariable_; }
     const string& interpolationMethod() const { return interpolationMethod_; }
     Size mixedInterpolationCutoff() const { return mixedInterpolationCutoff_; }
@@ -699,7 +699,7 @@ private:
     // Mandatory members
     string currency_;
     string discountCurveID_;
-    vector<boost::shared_ptr<YieldCurveSegment>> curveSegments_;
+    vector<QuantLib::ext::shared_ptr<YieldCurveSegment>> curveSegments_;
 
     // Optional members
     string interpolationVariable_;
@@ -711,7 +711,7 @@ private:
 };
 
 // Map form curveID to YieldCurveConfig
-using YieldCurveConfigMap = std::map<string, boost::shared_ptr<YieldCurveConfig>>;
+using YieldCurveConfigMap = std::map<string, QuantLib::ext::shared_ptr<YieldCurveConfig>>;
 
 } // namespace data
 } // namespace ore

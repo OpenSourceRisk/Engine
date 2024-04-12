@@ -121,12 +121,12 @@ private:
     std::vector<bool> isValuationDate_, isCloseOutDate_;
 };
 
-boost::shared_ptr<DateGrid> generateShiftedDateGrid(const boost::shared_ptr<DateGrid>& dg,
+QuantLib::ext::shared_ptr<DateGrid> generateShiftedDateGrid(const QuantLib::ext::shared_ptr<DateGrid>& dg,
                                                     const QuantLib::Period& shift = QuantLib::Period(2,
                                                                                                      QuantLib::Weeks));
 
-boost::shared_ptr<DateGrid> combineDateGrids(const boost::shared_ptr<DateGrid>& dg1,
-                                             const boost::shared_ptr<DateGrid>& dg2);
+QuantLib::ext::shared_ptr<DateGrid> combineDateGrids(const QuantLib::ext::shared_ptr<DateGrid>& dg1,
+                                             const QuantLib::ext::shared_ptr<DateGrid>& dg2);
 
 } // namespace data
 } // namespace ore

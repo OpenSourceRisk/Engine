@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(testMarketDatumParser) {
         Real value = ore::data::parseReal(tokens[2]);
 
         BOOST_CHECK_NO_THROW(ore::data::parseMarketDatum(quoteDate, key, value));
-        boost::shared_ptr<ore::data::MarketDatum> md = ore::data::parseMarketDatum(quoteDate, key, value);
+        QuantLib::ext::shared_ptr<ore::data::MarketDatum> md = ore::data::parseMarketDatum(quoteDate, key, value);
         BOOST_CHECK(md);
         BOOST_CHECK_EQUAL(md->name(), key);
         BOOST_CHECK_EQUAL(md->asofDate(), quoteDate);
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(testEqCurveConfigLoad) {
 
     ore::data::CurveConfigurations cc;
     BOOST_CHECK_NO_THROW(cc.fromXML(node));
-    boost::shared_ptr<ore::data::EquityCurveConfig> ec = cc.equityCurveConfig("SP5");
+    QuantLib::ext::shared_ptr<ore::data::EquityCurveConfig> ec = cc.equityCurveConfig("SP5");
     BOOST_CHECK(ec);
     BOOST_CHECK_EQUAL("SP5", ec->curveID());
     BOOST_CHECK_EQUAL("SP 500 equity price projection curve", 

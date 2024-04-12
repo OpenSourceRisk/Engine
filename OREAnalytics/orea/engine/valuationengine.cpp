@@ -46,9 +46,9 @@ using boost::timer::default_places;
 namespace ore {
 namespace analytics {
 
-ValuationEngine::ValuationEngine(const Date& today, const boost::shared_ptr<DateGrid>& dg,
-                                 const boost::shared_ptr<SimMarket>& simMarket,
-                                 const set<std::pair<string, boost::shared_ptr<ModelBuilder>>>& modelBuilders)
+ValuationEngine::ValuationEngine(const Date& today, const QuantLib::ext::shared_ptr<DateGrid>& dg,
+                                 const QuantLib::ext::shared_ptr<SimMarket>& simMarket,
+                                 const set<std::pair<string, QuantLib::ext::shared_ptr<ModelBuilder>>>& modelBuilders)
     : today_(today), dg_(dg), simMarket_(simMarket), modelBuilders_(modelBuilders) {
 
     QL_REQUIRE(dg_->size() > 0, "Error, DateGrid size must be > 0");
@@ -67,17 +67,17 @@ void ValuationEngine::recalibrateModels() {
     }
 }
 
-void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfolio,
-                                boost::shared_ptr<analytics::NPVCube> outputCube,
-                                vector<boost::shared_ptr<ValuationCalculator>> calculators, bool mporStickyDate,
-                                boost::shared_ptr<analytics::NPVCube> outputCubeNettingSet,
-                                boost::shared_ptr<analytics::NPVCube> outputCptyCube,
-                                vector<boost::shared_ptr<CounterpartyCalculator>> cptyCalculators, bool dryRun) {
+void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>& portfolio,
+                                QuantLib::ext::shared_ptr<analytics::NPVCube> outputCube,
+                                vector<QuantLib::ext::shared_ptr<ValuationCalculator>> calculators, bool mporStickyDate,
+                                QuantLib::ext::shared_ptr<analytics::NPVCube> outputCubeNettingSet,
+                                QuantLib::ext::shared_ptr<analytics::NPVCube> outputCptyCube,
+                                vector<QuantLib::ext::shared_ptr<CounterpartyCalculator>> cptyCalculators, bool dryRun) {
 
     struct SimMarketResetter {
-        SimMarketResetter(boost::shared_ptr<SimMarket> simMarket) : simMarket_(simMarket) {}
+        SimMarketResetter(QuantLib::ext::shared_ptr<SimMarket> simMarket) : simMarket_(simMarket) {}
         ~SimMarketResetter() { simMarket_->reset(); }
-        boost::shared_ptr<SimMarket> simMarket_;
+        QuantLib::ext::shared_ptr<SimMarket> simMarket_;
     } simMarketResetter(simMarket_);
 
     LOG("Build cube with mporStickyDate=" << mporStickyDate << ", dryRun=" << std::boolalpha << dryRun);
@@ -148,7 +148,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
         if (om == ObservationMode::Mode::Unregister) {
             for (const Leg& leg : trade->legs()) {
                 for (Size n = 0; n < leg.size(); n++) {
-                    boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg[n]);
+                    QuantLib::ext::shared_ptr<FloatingRateCoupon> frc = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(leg[n]);
                     if (frc) {
                         frc->unregisterWith(frc->index());
                         trade->instrument()->qlInstrument()->unregisterWith(frc);
@@ -295,11 +295,11 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
     }
 }
 
-void ValuationEngine::runCalculators(bool isCloseOutDate, const std::map<std::string, boost::shared_ptr<Trade>>& trades,
+void ValuationEngine::runCalculators(bool isCloseOutDate, const std::map<std::string, QuantLib::ext::shared_ptr<Trade>>& trades,
                                      std::vector<bool>& tradeHasError,
-                                     const std::vector<boost::shared_ptr<ValuationCalculator>>& calculators,
-                                     boost::shared_ptr<analytics::NPVCube>& outputCube,
-                                     boost::shared_ptr<analytics::NPVCube>& outputCubeNettingSet, const Date& d,
+                                     const std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>>& calculators,
+                                     QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCube,
+                                     QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCubeNettingSet, const Date& d,
                                      const Size cubeDateIndex, const Size sample, const string& label) {
     ObservationMode::Mode om = ObservationMode::instance().mode();
     for (auto& calc : calculators)
@@ -329,8 +329,8 @@ void ValuationEngine::runCalculators(bool isCloseOutDate, const std::map<std::st
 }
 
 void ValuationEngine::runCalculators(bool isCloseOutDate, const std::map<std::string, Size>& counterparties,
-                                     const std::vector<boost::shared_ptr<CounterpartyCalculator>>& calculators,
-                                     boost::shared_ptr<analytics::NPVCube>& cptyCube, const Date& d,
+                                     const std::vector<QuantLib::ext::shared_ptr<CounterpartyCalculator>>& calculators,
+                                     QuantLib::ext::shared_ptr<analytics::NPVCube>& cptyCube, const Date& d,
                                      const Size cubeDateIndex, const Size sample) {
     // loop over counterparties
     for (const auto& [counterparty, idx] : counterparties) {
@@ -340,9 +340,9 @@ void ValuationEngine::runCalculators(bool isCloseOutDate, const std::map<std::st
     }
 }
 
-void ValuationEngine::tradeExercisable(bool enable, const std::map<std::string, boost::shared_ptr<Trade>>& trades) {
+void ValuationEngine::tradeExercisable(bool enable, const std::map<std::string, QuantLib::ext::shared_ptr<Trade>>& trades) {
     for (const auto& [tradeId, trade] : trades) {
-        auto t = boost::dynamic_pointer_cast<OptionWrapper>(trade->instrument());
+        auto t = QuantLib::ext::dynamic_pointer_cast<OptionWrapper>(trade->instrument());
         if (t != nullptr) {
             if (enable)
                 t->enableExercise();
@@ -354,12 +354,12 @@ void ValuationEngine::tradeExercisable(bool enable, const std::map<std::string, 
 
 std::pair<double, double> ValuationEngine::populateCube(
     const QuantLib::Date& d, size_t cubeDateIndex, size_t sample, bool isValueDate, bool isStickyDate,
-    bool scenarioUpdated, const std::map<std::string, boost::shared_ptr<Trade>>& trades,
-    std::vector<bool>& tradeHasError, const std::vector<boost::shared_ptr<ValuationCalculator>>& calculators,
-    boost::shared_ptr<analytics::NPVCube>& outputCube, boost::shared_ptr<analytics::NPVCube>& outputCubeNettingSet,
+    bool scenarioUpdated, const std::map<std::string, QuantLib::ext::shared_ptr<Trade>>& trades,
+    std::vector<bool>& tradeHasError, const std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>>& calculators,
+    QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCube, QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCubeNettingSet,
     const std::map<string, Size>& counterparties,
-    const vector<boost::shared_ptr<CounterpartyCalculator>>& cptyCalculators,
-    boost::shared_ptr<analytics::NPVCube>& outputCptyCube) {
+    const vector<QuantLib::ext::shared_ptr<CounterpartyCalculator>>& cptyCalculators,
+    QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCptyCube) {
     double pricingTime = 0;
     double updateTime = 0;
     QL_REQUIRE(cubeDateIndex >= 0, "first date should be a valuation date");

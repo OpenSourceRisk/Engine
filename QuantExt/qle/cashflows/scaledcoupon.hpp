@@ -37,7 +37,7 @@ using namespace QuantLib;
 */
 class ScaledCashFlow : public CashFlow {
 public:
-    ScaledCashFlow(Real multiplier, boost::shared_ptr<CashFlow> underlying)
+    ScaledCashFlow(Real multiplier, QuantLib::ext::shared_ptr<CashFlow> underlying)
         : multiplier_(multiplier), underlying_(underlying) {}
 
     Date date() const override { return underlying_->date(); }
@@ -45,7 +45,7 @@ public:
 
 private:
     Real multiplier_;
-    boost::shared_ptr<CashFlow> underlying_;
+    QuantLib::ext::shared_ptr<CashFlow> underlying_;
 };
 
 //! scalable coupon
@@ -54,7 +54,7 @@ private:
 */
 class ScaledCoupon : public Coupon, public Observer {
 public:
-    ScaledCoupon(Real multiplier, boost::shared_ptr<Coupon> underlyingCoupon)
+    ScaledCoupon(Real multiplier, QuantLib::ext::shared_ptr<Coupon> underlyingCoupon)
         : Coupon(underlyingCoupon->date(), underlyingCoupon->nominal(), underlyingCoupon->accrualStartDate(),
                  underlyingCoupon->accrualEndDate()),
           multiplier_(multiplier), underlyingCoupon_(underlyingCoupon) {
@@ -72,11 +72,11 @@ public:
     DayCounter dayCounter() const override { return underlyingCoupon_->dayCounter(); }
 
     const Real multiplier() const { return multiplier_; }
-    const boost::shared_ptr<Coupon> underlyingCoupon() const { return underlyingCoupon_; }
+    const QuantLib::ext::shared_ptr<Coupon> underlyingCoupon() const { return underlyingCoupon_; }
 
 private:
     Real multiplier_;
-    boost::shared_ptr<Coupon> underlyingCoupon_;
+    QuantLib::ext::shared_ptr<Coupon> underlyingCoupon_;
 };
 
 } // namespace QuantExt

@@ -57,23 +57,23 @@ SensitivityRecord SensitivityReportStream::processRecord(const vector<Report::Re
     QL_REQUIRE(entries.size() == 10, "On row number " << row_ << ": A sensitivity record needs 10 entries");
 
     SensitivityRecord sr;
-    sr.tradeId = boost::get<std::string>(entries[0]);
-    sr.isPar = parseBool(boost::get<std::string>(entries[1]));
+    sr.tradeId = QuantLib::ext::get<std::string>(entries[0]);
+    sr.isPar = parseBool(QuantLib::ext::get<std::string>(entries[1]));
 
-    auto p = deconstructFactor(boost::get<std::string>(entries[2]));
+    auto p = deconstructFactor(QuantLib::ext::get<std::string>(entries[2]));
     sr.key_1 = p.first;
     sr.desc_1 = p.second;
-    sr.shift_1 = boost::get<Real>(entries[3]);
+    sr.shift_1 = QuantLib::ext::get<Real>(entries[3]);
 
-    p = deconstructFactor(boost::get<std::string>(entries[4]));
+    p = deconstructFactor(QuantLib::ext::get<std::string>(entries[4]));
     sr.key_2 = p.first;
     sr.desc_2 = p.second;
-    sr.shift_2 = boost::get<Real>(entries[5]);
+    sr.shift_2 = QuantLib::ext::get<Real>(entries[5]);
 
-    sr.currency = boost::get<std::string>(entries[6]);
-    sr.baseNpv = boost::get<Real>(entries[7]);
-    sr.delta = boost::get<Real>(entries[8]);
-    sr.gamma = boost::get<Real>(entries[9]);
+    sr.currency = QuantLib::ext::get<std::string>(entries[6]);
+    sr.baseNpv = QuantLib::ext::get<Real>(entries[7]);
+    sr.delta = QuantLib::ext::get<Real>(entries[8]);
+    sr.gamma = QuantLib::ext::get<Real>(entries[9]);
 
     return sr;
 }

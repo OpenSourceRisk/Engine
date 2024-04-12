@@ -64,7 +64,7 @@ Real state(const std::vector<std::vector<std::vector<Real>>>& irStateBuffer, con
     return irStateBuffer[ccyIndex][timeIndex][sample];
 }
 
-Real numRatio(const boost::shared_ptr<CrossAssetModel>& model,
+Real numRatio(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
               const std::vector<std::vector<std::vector<Real>>>& irStateBuffer, const Size ccyIndex,
               const Size timeIndex, const Real time, const Size sample) {
     if (ccyIndex == 0)
@@ -74,14 +74,14 @@ Real numRatio(const boost::shared_ptr<CrossAssetModel>& model,
     return model->numeraire(ccyIndex, time, state_curr) / model->numeraire(0, time, state_base);
 }
 
-Real num(const boost::shared_ptr<CrossAssetModel>& model,
+Real num(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
          const std::vector<std::vector<std::vector<Real>>>& irStateBuffer, const Size ccyIndex, const Size timeIndex,
          const Real time, const Size sample) {
     Real state_curr = state(irStateBuffer, ccyIndex, timeIndex, sample);
     return model->numeraire(ccyIndex, time, state_curr);
 }
 
-Real discount(const boost::shared_ptr<CrossAssetModel>& model,
+Real discount(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
               const std::vector<std::vector<std::vector<Real>>>& irStateBuffer, const Size ccyIndex,
               const Size timeIndex, const Real t, const Real T, const Size sample) {
     Real state_curr = state(irStateBuffer, ccyIndex, timeIndex, sample);
@@ -89,7 +89,7 @@ Real discount(const boost::shared_ptr<CrossAssetModel>& model,
 }
 
 std::vector<QuantExt::RandomVariable>
-simulatePathInterface2(const boost::shared_ptr<AmcCalculator>& amcCalc, const std::vector<Real>& pathTimes,
+simulatePathInterface2(const QuantLib::ext::shared_ptr<AmcCalculator>& amcCalc, const std::vector<Real>& pathTimes,
                        std::vector<std::vector<RandomVariable>>& paths, const std::vector<size_t>& pathIdx,
                        const std::vector<size_t>& timeIdx,
                        const bool moveStateToPreviousTime, const std::string& tradeLabel,
@@ -107,9 +107,9 @@ simulatePathInterface2(const boost::shared_ptr<AmcCalculator>& amcCalc, const st
 }
 
 std::vector<QuantExt::RandomVariable>
-feeContributions(const Size j, const boost::shared_ptr<ScenarioGeneratorData>& sgd, const Date& asof,
+feeContributions(const Size j, const QuantLib::ext::shared_ptr<ScenarioGeneratorData>& sgd, const Date& asof,
                  const Size samples, const std::vector<std::vector<std::tuple<Size, Real, QuantLib::Date>>>& tradeFees,
-                 const boost::shared_ptr<CrossAssetModel>& model,
+                 const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
                  const std::vector<std::vector<std::vector<Real>>>& fxBuffer,
                  const std::vector<std::vector<std::vector<Real>>>& irStateBuffer) {
     std::vector<QuantExt::RandomVariable> result;
@@ -140,13 +140,13 @@ feeContributions(const Size j, const boost::shared_ptr<ScenarioGeneratorData>& s
     return result;
 }
 
-void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
-                   const boost::shared_ptr<QuantExt::CrossAssetModel>& model,
-                   const boost::shared_ptr<ore::data::Market>& market,
-                   const boost::shared_ptr<ore::analytics::ScenarioGeneratorData>& sgd,
+void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
+                   const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& model,
+                   const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+                   const QuantLib::ext::shared_ptr<ore::analytics::ScenarioGeneratorData>& sgd,
                    const std::vector<string>& aggDataIndices, const std::vector<string>& aggDataCurrencies,
-                   const Size aggDataNumberCreditStates, boost::shared_ptr<ore::analytics::AggregationScenarioData> asd,
-                   boost::shared_ptr<NPVCube> outputCube, boost::shared_ptr<ProgressIndicator> progressIndicator) {
+                   const Size aggDataNumberCreditStates, QuantLib::ext::shared_ptr<ore::analytics::AggregationScenarioData> asd,
+                   QuantLib::ext::shared_ptr<NPVCube> outputCube, QuantLib::ext::shared_ptr<ProgressIndicator> progressIndicator) {
 
     std::ostringstream detail;
     detail << portfolio->size() << " trade" << (portfolio->size() == 1 ? "" : "s");
@@ -167,8 +167,8 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
 
     std::vector<Size> asdCurrencyIndex; // FX Spots
     std::vector<string> asdCurrencyCode;
-    std::vector<boost::shared_ptr<LgmImpliedYtsFwdFwdCorrected>> asdIndexCurve; // Ibor Indices
-    std::vector<boost::shared_ptr<Index>> asdIndex;
+    std::vector<QuantLib::ext::shared_ptr<LgmImpliedYtsFwdFwdCorrected>> asdIndexCurve; // Ibor Indices
+    std::vector<QuantLib::ext::shared_ptr<Index>> asdIndex;
     std::vector<Size> asdIndexIndex;
     std::vector<string> asdIndexName;
     if (asd != nullptr) {
@@ -184,7 +184,7 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
         }
         // ibor indices
         for (auto const& i : aggDataIndices) {
-            boost::shared_ptr<IborIndex> tmp;
+            QuantLib::ext::shared_ptr<IborIndex> tmp;
             try {
                 tmp = *market->iborIndex(i);
             } catch (const std::exception& e) {
@@ -192,7 +192,7 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
             }
             Size ccyIndex = model->ccyIndex(tmp->currency());
             asdIndexCurve.push_back(
-                boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(model->lgm(ccyIndex), tmp->forwardingTermStructure()));
+                QuantLib::ext::make_shared<LgmImpliedYtsFwdFwdCorrected>(model->lgm(ccyIndex), tmp->forwardingTermStructure()));
             asdIndex.push_back(tmp->clone(Handle<YieldTermStructure>(asdIndexCurve.back())));
             asdIndexIndex.push_back(ccyIndex);
             asdIndexName.push_back(i);
@@ -204,7 +204,7 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     // extract AMC calculators, fees and some other infos we need from the ore wrapper
 
     LOG("Extract AMC Calculators...");
-    std::vector<boost::shared_ptr<AmcCalculator>> amcCalculators;
+    std::vector<QuantLib::ext::shared_ptr<AmcCalculator>> amcCalculators;
     std::vector<Size> tradeId;
     std::vector<std::string> tradeLabel, tradeType;
     std::vector<Real> effectiveMultiplier;
@@ -230,8 +230,8 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
 
     auto extractAmcCalculator = [&amcCalculators, &tradeId, &tradeLabel, &tradeType, &effectiveMultiplier,
                                  &currencyIndex, &tradeFees, &model,
-                                 &outputCube](const std::pair<std::string, boost::shared_ptr<Trade>>& trade,
-                                              boost::shared_ptr<AmcCalculator> amcCalc, Real multiplier, bool addFees) {
+                                 &outputCube](const std::pair<std::string, QuantLib::ext::shared_ptr<Trade>>& trade,
+                                              QuantLib::ext::shared_ptr<AmcCalculator> amcCalc, Real multiplier, bool addFees) {
         LOG("AMCCalculator extracted for \"" << trade.first << "\"");
         amcCalculators.push_back(amcCalc);
         effectiveMultiplier.push_back(multiplier);
@@ -247,7 +247,7 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
         tradeFees.push_back({});
         if (addFees) {
             for (Size i = 0; i < trade.second->instrument()->additionalInstruments().size(); ++i) {
-                if (auto p = boost::dynamic_pointer_cast<QuantExt::Payment>(
+                if (auto p = QuantLib::ext::dynamic_pointer_cast<QuantExt::Payment>(
                         trade.second->instrument()->additionalInstruments()[i])) {
                     tradeFees.back().push_back(std::make_tuple(model->ccyIndex(p->currency()), p->cashFlow()->amount(),
                                                                p->cashFlow()->date()));
@@ -261,7 +261,7 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     };
 
     for (auto const& trade : portfolio->trades()) {
-        boost::shared_ptr<AmcCalculator> amcCalc;
+        QuantLib::ext::shared_ptr<AmcCalculator> amcCalc;
         try {
             auto inst = trade.second->instrument()->qlInstrument(true);
             QL_REQUIRE(inst != nullptr,
@@ -269,7 +269,7 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
             Real multiplier = trade.second->instrument()->multiplier() * trade.second->instrument()->multiplier2();
 
             // handle composite trades
-            if (auto cInst = boost::dynamic_pointer_cast<CompositeInstrument>(inst)) {
+            if (auto cInst = QuantLib::ext::dynamic_pointer_cast<CompositeInstrument>(inst)) {
                 auto addResults = cInst->additionalResults();
                 std::vector<Real> multipliers;
                 while (true) {
@@ -279,12 +279,12 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                         break;
                     multipliers.push_back(inst->result<Real>(ss.str()));
                 }
-                std::vector<boost::shared_ptr<AmcCalculator>> amcCalcs;
+                std::vector<QuantLib::ext::shared_ptr<AmcCalculator>> amcCalcs;
                 for (Size cmpIdx = 0; cmpIdx < multipliers.size(); ++cmpIdx) {
                     std::stringstream ss;
                     ss << cmpIdx + 1 << "_amcCalculator";
                     if (addResults.find(ss.str()) != addResults.end()) {
-                        amcCalcs.push_back(inst->result<boost::shared_ptr<AmcCalculator>>(ss.str()));
+                        amcCalcs.push_back(inst->result<QuantLib::ext::shared_ptr<AmcCalculator>>(ss.str()));
                     }
                 }
                 QL_REQUIRE(amcCalcs.size() == multipliers.size(),
@@ -296,7 +296,7 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
             }
 
             // handle non-composite trades
-            amcCalc = inst->result<boost::shared_ptr<AmcCalculator>>("amcCalculator");
+            amcCalc = inst->result<QuantLib::ext::shared_ptr<AmcCalculator>>("amcCalculator");
             extractAmcCalculator(trade, amcCalc, multiplier, true);
 
         } catch (const std::exception& e) {
@@ -321,7 +321,7 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     // set up cache for paths
 
     auto process = model->stateProcess();
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
         tmp->resetCache(sgd->getGrid()->timeGrid().size() - 1);
     }
     Size nStates = process->size();
@@ -387,7 +387,7 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                 for (Size j = 0; j < asdIndex.size(); ++j) {
                     asdIndexCurve[j]->move(d, state(irStateBuffer, asdIndexIndex[j], k, i));
                     auto index = asdIndex[j];
-                    if (auto fb = boost::dynamic_pointer_cast<FallbackIborIndex>(asdIndex[j])) {
+                    if (auto fb = QuantLib::ext::dynamic_pointer_cast<FallbackIborIndex>(asdIndex[j])) {
                         // proxy fallback ibor index by its rfr index's fixing
                         index = fb->rfrIndex();
                     }
@@ -603,19 +603,19 @@ void runCoreEngine(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
 
 AMCValuationEngine::AMCValuationEngine(
     const QuantLib::Size nThreads, const QuantLib::Date& today, const QuantLib::Size nSamples,
-    const boost::shared_ptr<ore::data::Loader>& loader,
-    const boost::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData, const std::vector<string>& aggDataIndices,
+    const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
+    const QuantLib::ext::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData, const std::vector<string>& aggDataIndices,
     const std::vector<string>& aggDataCurrencies, const Size aggDataNumberCreditStates,
-    const boost::shared_ptr<CrossAssetModelData>& crossAssetModelData,
-    const boost::shared_ptr<ore::data::EngineData>& engineData,
-    const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
-    const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
+    const QuantLib::ext::shared_ptr<CrossAssetModelData>& crossAssetModelData,
+    const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
+    const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
+    const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
     const std::string& configurationLgmCalibration, const std::string& configurationFxCalibration,
     const std::string& configurationEqCalibration, const std::string& configurationInfCalibration,
     const std::string& configurationCrCalibration, const std::string& configurationFinalModel,
-    const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData,
+    const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData,
     const ore::data::IborFallbackConfig& iborFallbackConfig, const bool handlePseudoCurrenciesTodaysMarket,
-    const std::function<boost::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
+    const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
                                                                    const std::vector<QuantLib::Date>&,
                                                                    const QuantLib::Size)>& cubeFactory)
     : useMultithreading_(true), aggDataIndices_(aggDataIndices), aggDataCurrencies_(aggDataCurrencies),
@@ -638,13 +638,13 @@ AMCValuationEngine::AMCValuationEngine(
     if (!cubeFactory_)
         cubeFactory_ = [](const QuantLib::Date& asof, const std::set<std::string>& ids,
                           const std::vector<QuantLib::Date>& dates, const Size samples) {
-            return boost::make_shared<ore::analytics::DoublePrecisionInMemoryCube>(asof, ids, dates, samples);
+            return QuantLib::ext::make_shared<ore::analytics::DoublePrecisionInMemoryCube>(asof, ids, dates, samples);
         };
 }
 
-AMCValuationEngine::AMCValuationEngine(const boost::shared_ptr<QuantExt::CrossAssetModel>& model,
-                                       const boost::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
-                                       const boost::shared_ptr<Market>& market,
+AMCValuationEngine::AMCValuationEngine(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& model,
+                                       const QuantLib::ext::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
+                                       const QuantLib::ext::shared_ptr<Market>& market,
                                        const std::vector<string>& aggDataIndices,
                                        const std::vector<string>& aggDataCurrencies,
                                        const Size aggDataNumberCreditStates)
@@ -665,8 +665,8 @@ AMCValuationEngine::AMCValuationEngine(const boost::shared_ptr<QuantExt::CrossAs
             << "), align these e.g. by setting the day counter in the simulation parameters to the model day counter");
 }
 
-void AMCValuationEngine::buildCube(const boost::shared_ptr<Portfolio>& portfolio,
-                                   boost::shared_ptr<NPVCube>& outputCube) {
+void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+                                   QuantLib::ext::shared_ptr<NPVCube>& outputCube) {
 
     LOG("Starting single-threaded AMCValuationEngine for " << portfolio->size() << " trades, " << outputCube->samples()
                                                            << " samples and "
@@ -690,7 +690,7 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<Portfolio>& portfolio
         // we can use the mt progress indicator here although we are running on a single thread
         runCoreEngine(portfolio, model_, market_, scenarioGeneratorData_, aggDataIndices_, aggDataCurrencies_,
                       aggDataNumberCreditStates_, asd_, outputCube,
-                      boost::make_shared<ore::analytics::MultiThreadedProgressIndicator>(this->progressIndicators()));
+                      QuantLib::ext::make_shared<ore::analytics::MultiThreadedProgressIndicator>(this->progressIndicators()));
     } catch (const std::exception& e) {
         QL_FAIL("Error during amc val engine run: " << e.what());
     }
@@ -698,7 +698,7 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<Portfolio>& portfolio
     LOG("Finished single-threaded AMCValuationEngine run.");
 }
 
-void AMCValuationEngine::buildCube(const boost::shared_ptr<ore::data::Portfolio>& portfolio) {
+void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio) {
     LOG("Starting multi-threaded AMCValuationEngine for "
         << portfolio->size() << " trades, " << nSamples_ << " samples and " << scenarioGeneratorData_->getGrid()->size()
         << " dates.");
@@ -720,9 +720,9 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<ore::data::Portfolio>
 
     QL_REQUIRE(eff_nThreads > 0, "effective threads are zero, this is not allowed.");
 
-    std::vector<boost::shared_ptr<ore::data::Portfolio>> portfolios;
+    std::vector<QuantLib::ext::shared_ptr<ore::data::Portfolio>> portfolios;
     for (Size i = 0; i < eff_nThreads; ++i)
-        portfolios.push_back(boost::make_shared<ore::data::Portfolio>());
+        portfolios.push_back(QuantLib::ext::make_shared<ore::data::Portfolio>());
 
     Size portfolioIndex = 0;
     for (auto const& t : portfolio->trades()) {
@@ -747,9 +747,9 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<ore::data::Portfolio>
     // build loaders for each thread as clones of the original one
 
     LOG("Cloning loaders for " << eff_nThreads << " threads...");
-    std::vector<boost::shared_ptr<ore::data::ClonedLoader>> loaders;
+    std::vector<QuantLib::ext::shared_ptr<ore::data::ClonedLoader>> loaders;
     for (Size i = 0; i < eff_nThreads; ++i)
-        loaders.push_back(boost::make_shared<ore::data::ClonedLoader>(today_, loader_));
+        loaders.push_back(QuantLib::ext::make_shared<ore::data::ClonedLoader>(today_, loader_));
 
     // build nThreads mini-cubes to which each thread writes its results
 
@@ -770,7 +770,7 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<ore::data::Portfolio>
     // build progress indicator consolidating the results from the threads
 
     auto progressIndicator =
-        boost::make_shared<ore::analytics::MultiThreadedProgressIndicator>(this->progressIndicators());
+        QuantLib::ext::make_shared<ore::analytics::MultiThreadedProgressIndicator>(this->progressIndicators());
 
     // create the thread pool with eff_nThreads and queue size = eff_nThreads as well
 
@@ -804,7 +804,7 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<ore::data::Portfolio>
 
                 // build todays market using cloned market data
 
-                boost::shared_ptr<ore::data::Market> initMarket = boost::make_shared<ore::data::TodaysMarket>(
+                QuantLib::ext::shared_ptr<ore::data::Market> initMarket = QuantLib::ext::make_shared<ore::data::TodaysMarket>(
                     today_, todaysMarketParams_, loaders[id], curveConfigs_, true, true, true, referenceData_, false,
                     iborFallbackConfig_, false, handlePseudoCurrenciesTodaysMarket_);
 
@@ -819,17 +819,17 @@ void AMCValuationEngine::buildCube(const boost::shared_ptr<ore::data::Portfolio>
 
                 // build portfolio against init market
 
-                auto portfolio = boost::make_shared<ore::data::Portfolio>();
+                auto portfolio = QuantLib::ext::make_shared<ore::data::Portfolio>();
                 portfolio->fromXMLString(portfoliosAsString[id]);
 
-                boost::shared_ptr<EngineData> edCopy = boost::make_shared<EngineData>(*engineData_);
+                QuantLib::ext::shared_ptr<EngineData> edCopy = QuantLib::ext::make_shared<EngineData>(*engineData_);
                 edCopy->globalParameters()["GenerateAdditionalResults"] = "false";
                 edCopy->globalParameters()["RunType"] = "NPV";
                 map<MarketContext, string> configurations{{MarketContext::irCalibration, configurationLgmCalibration_},
                                                           {MarketContext::fxCalibration, configurationFxCalibration_},
                                                           {MarketContext::pricing, configurationFinalModel_}};
 
-                auto engineFactory = boost::make_shared<EngineFactory>(
+                auto engineFactory = QuantLib::ext::make_shared<EngineFactory>(
                     edCopy, initMarket, configurations, referenceData_, iborFallbackConfig_,
                     EngineBuilderFactory::instance().generateAmcEngineBuilders(cam, simDates), true);
 

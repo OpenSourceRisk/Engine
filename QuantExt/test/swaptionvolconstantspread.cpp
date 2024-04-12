@@ -43,14 +43,14 @@ struct CommonVars {
         Settings::instance().evaluationDate() = referenceDate;
 
         // Link ibor index to correct forward curve
-        boost::shared_ptr<IborIndex> iborIndex = conventions.floatIndex->clone(yieldCurves.forward6M);
-        boost::shared_ptr<SwapIndex> swapIndex =
+        QuantLib::ext::shared_ptr<IborIndex> iborIndex = conventions.floatIndex->clone(yieldCurves.forward6M);
+        QuantLib::ext::shared_ptr<SwapIndex> swapIndex =
             conventions.swapIndex->clone(yieldCurves.forward6M, yieldCurves.forward6M);
-        boost::shared_ptr<SwapIndex> shortSwapIndex =
+        QuantLib::ext::shared_ptr<SwapIndex> shortSwapIndex =
             conventions.shortSwapIndex->clone(yieldCurves.forward6M, yieldCurves.forward6M);
 
         // Create underlying swap conventions
-        swapConventions = boost::make_shared<SwapConventions>(conventions.settlementDays, conventions.fixedTenor,
+        swapConventions = QuantLib::ext::make_shared<SwapConventions>(conventions.settlementDays, conventions.fixedTenor,
                                                               conventions.fixedCalendar, conventions.fixedConvention,
                                                               conventions.fixedDayCounter, iborIndex);
 
@@ -59,43 +59,43 @@ struct CommonVars {
         QL_REQUIRE(expiryIndex < atmVols.optionTenors.size(), "expiryIndex out of range");
         QL_REQUIRE(termIndex < atmVols.swapTenors.size(), "termIndex out of range");
         shiftedAtmVols[expiryIndex][termIndex] += atmVolShift;
-        atmNormalVolMatrix = boost::make_shared<SwaptionVolatilityMatrix>(
+        atmNormalVolMatrix = QuantLib::ext::make_shared<SwaptionVolatilityMatrix>(
             referenceDate, conventions.fixedCalendar, conventions.fixedConvention, atmVols.optionTenors,
             atmVols.swapTenors, shiftedAtmVols, Actual365Fixed(), true, Normal);
 
-        atmLogNormalVolMatrix = boost::make_shared<SwaptionVolatilityMatrix>(
+        atmLogNormalVolMatrix = QuantLib::ext::make_shared<SwaptionVolatilityMatrix>(
             referenceDate, conventions.fixedCalendar, conventions.fixedConvention, atmVols.optionTenors,
             atmVols.swapTenors, shiftedAtmVols, Actual365Fixed(), true, ShiftedLognormal);
 
-        // boost::make_shared can only handle 9 parameters
-        atmShiftedLogNormalVolMatrix_1 = boost::shared_ptr<SwaptionVolatilityMatrix>(new SwaptionVolatilityMatrix(
+        // QuantLib::ext::make_shared can only handle 9 parameters
+        atmShiftedLogNormalVolMatrix_1 = QuantLib::ext::shared_ptr<SwaptionVolatilityMatrix>(new SwaptionVolatilityMatrix(
             referenceDate, conventions.fixedCalendar, conventions.fixedConvention, atmVols.optionTenors,
             atmVols.swapTenors, shiftedAtmVols, Actual365Fixed(), true, ShiftedLognormal, atmVols.shifts_1));
 
-        atmShiftedLogNormalVolMatrix_2 = boost::shared_ptr<SwaptionVolatilityMatrix>(new SwaptionVolatilityMatrix(
+        atmShiftedLogNormalVolMatrix_2 = QuantLib::ext::shared_ptr<SwaptionVolatilityMatrix>(new SwaptionVolatilityMatrix(
             referenceDate, conventions.fixedCalendar, conventions.fixedConvention, atmVols.optionTenors,
             atmVols.swapTenors, atmVols.slnVols_2, Actual365Fixed(), true, ShiftedLognormal, atmVols.shifts_2));
 
-        normalVolCube = boost::shared_ptr<SwaptionVolCube2>(new SwaptionVolCube2(
+        normalVolCube = QuantLib::ext::shared_ptr<SwaptionVolCube2>(new SwaptionVolCube2(
             Handle<QuantLib::SwaptionVolatilityStructure>(atmNormalVolMatrix), atmVols.optionTenors, atmVols.swapTenors,
             atmVols.strikeSpreads, atmVols.nVolSpreads, swapIndex, shortSwapIndex, false, true));
-        logNormalVolCube = boost::shared_ptr<SwaptionVolCube2>(new SwaptionVolCube2(
+        logNormalVolCube = QuantLib::ext::shared_ptr<SwaptionVolCube2>(new SwaptionVolCube2(
             Handle<QuantLib::SwaptionVolatilityStructure>(atmLogNormalVolMatrix), atmVols.optionTenors,
             atmVols.swapTenors, atmVols.strikeSpreads, atmVols.lnVolSpreads, swapIndex, shortSwapIndex, false, true));
-        shiftedLogNormalVolCube = boost::shared_ptr<SwaptionVolCube2>(new SwaptionVolCube2(
+        shiftedLogNormalVolCube = QuantLib::ext::shared_ptr<SwaptionVolCube2>(new SwaptionVolCube2(
             Handle<QuantLib::SwaptionVolatilityStructure>(atmShiftedLogNormalVolMatrix_1), atmVols.optionTenors,
             atmVols.swapTenors, atmVols.strikeSpreads, atmVols.slnVolSpreads, swapIndex, shortSwapIndex, false, true));
 
-        normalVolCubeConstantSpread = boost::shared_ptr<SwaptionVolatilityConstantSpread>(
+        normalVolCubeConstantSpread = QuantLib::ext::shared_ptr<SwaptionVolatilityConstantSpread>(
             new SwaptionVolatilityConstantSpread(Handle<QuantLib::SwaptionVolatilityStructure>(atmNormalVolMatrix),
                                                  Handle<QuantLib::SwaptionVolatilityStructure>(normalVolCube)));
 
-        logNormalVolCubeConstantSpread = boost::shared_ptr<SwaptionVolatilityConstantSpread>(
+        logNormalVolCubeConstantSpread = QuantLib::ext::shared_ptr<SwaptionVolatilityConstantSpread>(
             new SwaptionVolatilityConstantSpread(Handle<QuantLib::SwaptionVolatilityStructure>(atmLogNormalVolMatrix),
                                                  Handle<QuantLib::SwaptionVolatilityStructure>(logNormalVolCube)));
 
         shiftedLogNormalVolCubeConstantSpread =
-            boost::shared_ptr<SwaptionVolatilityConstantSpread>(new SwaptionVolatilityConstantSpread(
+            QuantLib::ext::shared_ptr<SwaptionVolatilityConstantSpread>(new SwaptionVolatilityConstantSpread(
                 Handle<QuantLib::SwaptionVolatilityStructure>(atmShiftedLogNormalVolMatrix_1),
                 Handle<QuantLib::SwaptionVolatilityStructure>(shiftedLogNormalVolCube)));
     }
@@ -105,14 +105,14 @@ struct CommonVars {
     SwaptionConventionsEUR conventions;
     SwaptionVolatilityEUR atmVols;
     YieldCurveEUR yieldCurves;
-    boost::shared_ptr<SwapConventions> swapConventions;
-    boost::shared_ptr<SwaptionVolatilityStructure> atmNormalVolMatrix;
-    boost::shared_ptr<SwaptionVolatilityStructure> atmLogNormalVolMatrix;
-    boost::shared_ptr<SwaptionVolatilityStructure> atmShiftedLogNormalVolMatrix_1;
-    boost::shared_ptr<SwaptionVolatilityStructure> atmShiftedLogNormalVolMatrix_2;
-    boost::shared_ptr<SwaptionVolatilityStructure> normalVolCube, normalVolCubeConstantSpread;
-    boost::shared_ptr<SwaptionVolatilityStructure> logNormalVolCube, logNormalVolCubeConstantSpread;
-    boost::shared_ptr<SwaptionVolatilityStructure> shiftedLogNormalVolCube, shiftedLogNormalVolCubeConstantSpread;
+    QuantLib::ext::shared_ptr<SwapConventions> swapConventions;
+    QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> atmNormalVolMatrix;
+    QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> atmLogNormalVolMatrix;
+    QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> atmShiftedLogNormalVolMatrix_1;
+    QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> atmShiftedLogNormalVolMatrix_2;
+    QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> normalVolCube, normalVolCubeConstantSpread;
+    QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> logNormalVolCube, logNormalVolCubeConstantSpread;
+    QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> shiftedLogNormalVolCube, shiftedLogNormalVolCubeConstantSpread;
 
     SavedSettings backup;
 };

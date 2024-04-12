@@ -42,18 +42,18 @@ namespace QuantExt {
 */
 class AnalyticXAssetLgmEquityOptionEngine : public VanillaOption::engine {
 public:
-    AnalyticXAssetLgmEquityOptionEngine(const boost::shared_ptr<CrossAssetModel>& model, const Size equityIdx,
+    AnalyticXAssetLgmEquityOptionEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, const Size equityIdx,
                                         const Size ccyIdx);
     void calculate() const override;
 
     /*! the actual option price calculation, exposed to public,
       since it is useful to directly use the core computation
       sometimes */
-    Real value(const Time t0, const Time t, const boost::shared_ptr<StrikedTypePayoff> payoff,
+    Real value(const Time t0, const Time t, const QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff,
                const Real domesticDiscount, const Real eqForward) const;
 
 private:
-    const boost::shared_ptr<CrossAssetModel> model_;
+    const QuantLib::ext::shared_ptr<CrossAssetModel> model_;
     const Size eqIdx_, ccyIdx_;
 };
 

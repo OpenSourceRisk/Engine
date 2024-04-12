@@ -62,7 +62,7 @@ void SpreadedCPIVolatilitySurface::performCalculations() const {
             volSpreadValues_(k, i) = volSpreads_[i][k]->value();
         }
     }
-    volSpreadInterpolation_ = FlatExtrapolator2D(boost::make_shared<BilinearInterpolation>(
+    volSpreadInterpolation_ = FlatExtrapolator2D(QuantLib::ext::make_shared<BilinearInterpolation>(
         optionTimes_.begin(), optionTimes_.end(), strikes_.begin(), strikes_.end(), volSpreadValues_));
     volSpreadInterpolation_.enableExtrapolation();
 }

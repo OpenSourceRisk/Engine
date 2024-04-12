@@ -20,7 +20,7 @@
 
 namespace QuantExt {
 DynamicOptionletVolatilityStructure::DynamicOptionletVolatilityStructure(
-    const boost::shared_ptr<OptionletVolatilityStructure>& source, Natural settlementDays, const Calendar& calendar,
+    const QuantLib::ext::shared_ptr<OptionletVolatilityStructure>& source, Natural settlementDays, const Calendar& calendar,
     ReactionToTimeDecay decayMode)
     : OptionletVolatilityStructure(settlementDays, calendar, source->businessDayConvention(), source->dayCounter()),
       source_(source), decayMode_(decayMode), originalReferenceDate_(source->referenceDate()),
@@ -50,7 +50,7 @@ Date DynamicOptionletVolatilityStructure::maxDate() const {
 
 void DynamicOptionletVolatilityStructure::update() { TermStructure::update(); }
 
-boost::shared_ptr<SmileSection> DynamicOptionletVolatilityStructure::smileSectionImpl(Time optionTime) const {
+QuantLib::ext::shared_ptr<SmileSection> DynamicOptionletVolatilityStructure::smileSectionImpl(Time optionTime) const {
     return source_->smileSection(optionTime);
 }
 

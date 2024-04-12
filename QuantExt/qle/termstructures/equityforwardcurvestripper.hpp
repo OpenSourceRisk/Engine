@@ -34,8 +34,8 @@ namespace QuantExt {
 class EquityForwardCurveStripper : public QuantLib::LazyObject {
 
 public:
-    EquityForwardCurveStripper(const boost::shared_ptr<OptionPriceSurface>& callSurface,
-                               const boost::shared_ptr<OptionPriceSurface>& putSurface,
+    EquityForwardCurveStripper(const QuantLib::ext::shared_ptr<OptionPriceSurface>& callSurface,
+                               const QuantLib::ext::shared_ptr<OptionPriceSurface>& putSurface,
                                QuantLib::Handle<QuantLib::YieldTermStructure>& forecastCurve,
                                QuantLib::Handle<QuantLib::Quote>& equitySpot,
                                QuantLib::Exercise::Type type = QuantLib::Exercise::European);
@@ -51,8 +51,8 @@ public:
     //@}
 
 private:
-    const boost::shared_ptr<OptionPriceSurface> callSurface_;
-    const boost::shared_ptr<OptionPriceSurface> putSurface_;
+    const QuantLib::ext::shared_ptr<OptionPriceSurface> callSurface_;
+    const QuantLib::ext::shared_ptr<OptionPriceSurface> putSurface_;
     QuantLib::Handle<QuantLib::YieldTermStructure> forecastCurve_;
     QuantLib::Handle<QuantLib::Quote> equitySpot_;
     QuantLib::Exercise::Type type_;

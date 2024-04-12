@@ -36,7 +36,7 @@ FixedBMASwap::FixedBMASwap(Type type, Real nominal,
                            // Fixed leg
                            const Schedule& fixedSchedule, Rate fixedRate, const DayCounter& fixedDayCount,
                            // BMA leg
-                           const Schedule& bmaSchedule, const boost::shared_ptr<BMAIndex>& bmaIndex,
+                           const Schedule& bmaSchedule, const QuantLib::ext::shared_ptr<BMAIndex>& bmaIndex,
                            const DayCounter& bmaDayCount)
     : Swap(2), type_(type), nominal_(nominal), fixedRate_(fixedRate) {
 
@@ -132,7 +132,7 @@ void FixedBMASwap::results::reset() {
     fairRate = Null<Rate>();
 }
 
-MakeFixedBMASwap::MakeFixedBMASwap(const Period& swapTenor, const boost::shared_ptr<BMAIndex>& index, Rate fixedRate,
+MakeFixedBMASwap::MakeFixedBMASwap(const Period& swapTenor, const QuantLib::ext::shared_ptr<BMAIndex>& index, Rate fixedRate,
                                    const Period& forwardStart)
     : swapTenor_(swapTenor), bmaIndex_(index), fixedRate_(fixedRate), forwardStart_(forwardStart),
       settlementDays_(bmaIndex_->fixingDays()), fixedCalendar_(index->fixingCalendar()),
@@ -144,11 +144,11 @@ MakeFixedBMASwap::MakeFixedBMASwap(const Period& swapTenor, const boost::shared_
       bmaNextToLastDate_(Date()), bmaDayCount_(index->dayCounter()) {}
 
 MakeFixedBMASwap::operator FixedBMASwap() const {
-    boost::shared_ptr<FixedBMASwap> swap = *this;
+    QuantLib::ext::shared_ptr<FixedBMASwap> swap = *this;
     return *swap;
 }
 
-MakeFixedBMASwap::operator boost::shared_ptr<FixedBMASwap>() const {
+MakeFixedBMASwap::operator QuantLib::ext::shared_ptr<FixedBMASwap>() const {
     Date startDate;
 
     // start dates and end dates
@@ -214,7 +214,7 @@ MakeFixedBMASwap::operator boost::shared_ptr<FixedBMASwap>() const {
         usedFixedRate = temp.fairRate();
     }
 
-    boost::shared_ptr<FixedBMASwap> swap(new FixedBMASwap(type_, nominal_, fixedSchedule, usedFixedRate, fixedDayCount,
+    QuantLib::ext::shared_ptr<FixedBMASwap> swap(new FixedBMASwap(type_, nominal_, fixedSchedule, usedFixedRate, fixedDayCount,
                                                           bmaSchedule, bmaIndex_, bmaDayCount_));
 
     if (engine_ != 0)
@@ -263,11 +263,11 @@ MakeFixedBMASwap& MakeFixedBMASwap::withTerminationDate(const Date& terminationD
 
 MakeFixedBMASwap& MakeFixedBMASwap::withDiscountingTermStructure(const Handle<YieldTermStructure>& d) {
     bool includeSettlementDateFlows = false;
-    engine_ = boost::shared_ptr<PricingEngine>(new DiscountingSwapEngine(d, includeSettlementDateFlows));
+    engine_ = QuantLib::ext::shared_ptr<PricingEngine>(new DiscountingSwapEngine(d, includeSettlementDateFlows));
     return *this;
 }
 
-MakeFixedBMASwap& MakeFixedBMASwap::withPricingEngine(const boost::shared_ptr<PricingEngine>& engine) {
+MakeFixedBMASwap& MakeFixedBMASwap::withPricingEngine(const QuantLib::ext::shared_ptr<PricingEngine>& engine) {
     engine_ = engine;
     return *this;
 }

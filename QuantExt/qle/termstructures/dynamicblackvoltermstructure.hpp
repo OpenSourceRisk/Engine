@@ -105,7 +105,7 @@ private:
     const Date originalReferenceDate_;
     const bool atmKnown_;
     std::vector<Real> forwardCurveSampleGrid_, initialForwards_;
-    boost::shared_ptr<Interpolation> initialForwardCurve_;
+    QuantLib::ext::shared_ptr<Interpolation> initialForwardCurve_;
 };
 
 template <typename mode>
@@ -167,7 +167,7 @@ DynamicBlackVolTermStructure<mode>::DynamicBlackVolTermStructure(const Handle<Bl
             Real t = forwardCurveSampleGrid_[i];
             initialForwards_[i] = spot_->value() / riskfree_->discount(t) * dividend_->discount(t);
         }
-        initialForwardCurve_ = boost::make_shared<FlatExtrapolation>(boost::make_shared<LinearInterpolation>(
+        initialForwardCurve_ = QuantLib::ext::make_shared<FlatExtrapolation>(QuantLib::ext::make_shared<LinearInterpolation>(
             forwardCurveSampleGrid_.begin(), forwardCurveSampleGrid_.end(), initialForwards_.begin()));
         initialForwardCurve_->enableExtrapolation();
     }

@@ -99,13 +99,13 @@ public:
     };
 
     FdConvertibleBondEvents(const Date& today, const DayCounter& dc, const Real N0,
-                            const boost::shared_ptr<QuantExt::EquityIndex2>& equity,
-                            const boost::shared_ptr<FxIndex>& fxConversion);
+                            const QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>& equity,
+                            const QuantLib::ext::shared_ptr<FxIndex>& fxConversion);
 
     // The intended workflow is as follows:
 
     // 1 register events describing the convertible bond features and cashflows
-    void registerBondCashflow(const boost::shared_ptr<CashFlow>& c);
+    void registerBondCashflow(const QuantLib::ext::shared_ptr<CashFlow>& c);
     void registerCall(const ConvertibleBond2::CallabilityData& c);
     void registerMakeWhole(const ConvertibleBond2::MakeWholeData& c);
     void registerPut(const ConvertibleBond2::CallabilityData& c);
@@ -165,8 +165,8 @@ private:
     Date today_;
     DayCounter dc_;
     Real N0_;
-    boost::shared_ptr<QuantExt::EquityIndex2> equity_;
-    boost::shared_ptr<FxIndex> fxConversion_;
+    QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> equity_;
+    QuantLib::ext::shared_ptr<FxIndex> fxConversion_;
 
     std::set<Real> times_;
     TimeGrid grid_;
@@ -175,7 +175,7 @@ private:
     Date lastRedemptionDate_;
 
     // the registered events (before finalise())
-    std::vector<boost::shared_ptr<CashFlow>> registeredBondCashflows_;
+    std::vector<QuantLib::ext::shared_ptr<CashFlow>> registeredBondCashflows_;
     std::vector<ConvertibleBond2::CallabilityData> registeredCallData_, registeredPutData_;
     std::vector<ConvertibleBond2::ConversionRatioData> registeredConversionRatioData_;
     std::vector<ConvertibleBond2::ConversionData> registeredConversionData_;

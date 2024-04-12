@@ -30,7 +30,7 @@ using std::min;
 
 namespace QuantExt {
 
-DatedStrippedOptionletAdapter::DatedStrippedOptionletAdapter(const boost::shared_ptr<DatedStrippedOptionletBase>& s,
+DatedStrippedOptionletAdapter::DatedStrippedOptionletAdapter(const QuantLib::ext::shared_ptr<DatedStrippedOptionletBase>& s,
                                                              const bool flatExtrapolation)
     : OptionletVolatilityStructure(s->referenceDate(), s->calendar(), s->businessDayConvention(), s->dayCounter()),
       optionletStripper_(s), nInterpolations_(s->optionletMaturities()), strikeInterpolations_(nInterpolations_),
@@ -38,7 +38,7 @@ DatedStrippedOptionletAdapter::DatedStrippedOptionletAdapter(const boost::shared
     registerWith(optionletStripper_);
 }
 
-boost::shared_ptr<SmileSection> DatedStrippedOptionletAdapter::smileSectionImpl(Time t) const {
+QuantLib::ext::shared_ptr<SmileSection> DatedStrippedOptionletAdapter::smileSectionImpl(Time t) const {
 
     // Arbitrarily choose the first row of strikes for the smile section independent variable
     // Generally a reasonable choice since:
@@ -55,11 +55,11 @@ boost::shared_ptr<SmileSection> DatedStrippedOptionletAdapter::smileSectionImpl(
     // Use a linear interpolated smile section.
     // TODO: possibly make this configurable?
     if (flatExtrapolation_)
-        return boost::make_shared<InterpolatedSmileSection<LinearFlat> >(t, optionletStrikes, stdDevs, Null<Real>(),
+        return QuantLib::ext::make_shared<InterpolatedSmileSection<LinearFlat> >(t, optionletStrikes, stdDevs, Null<Real>(),
                                                                          LinearFlat(), Actual365Fixed(),
                                                                          volatilityType(), displacement());
     else
-        return boost::make_shared<InterpolatedSmileSection<Linear> >(
+        return QuantLib::ext::make_shared<InterpolatedSmileSection<Linear> >(
             t, optionletStrikes, stdDevs, Null<Real>(), Linear(), Actual365Fixed(), volatilityType(), displacement());
 }
 
@@ -71,8 +71,8 @@ Volatility DatedStrippedOptionletAdapter::volatilityImpl(Time length, Rate strik
         vol[i] = strikeInterpolations_[i]->operator()(strike, true);
 
     const vector<Time>& optionletTimes = optionletStripper_->optionletFixingTimes();
-    boost::shared_ptr<LinearInterpolation> timeInterpolator =
-        boost::make_shared<LinearInterpolation>(optionletTimes.begin(), optionletTimes.end(), vol.begin());
+    QuantLib::ext::shared_ptr<LinearInterpolation> timeInterpolator =
+        QuantLib::ext::make_shared<LinearInterpolation>(optionletTimes.begin(), optionletTimes.end(), vol.begin());
     Real lengthEff = flatExtrapolation_ ? std::max(std::min(length, optionletStripper_->optionletFixingTimes().back()),
                                                    optionletStripper_->optionletFixingTimes().front())
                                         : length;
@@ -83,10 +83,10 @@ void DatedStrippedOptionletAdapter::performCalculations() const {
     for (Size i = 0; i < nInterpolations_; ++i) {
         const vector<Rate>& optionletStrikes = optionletStripper_->optionletStrikes(i);
         const vector<Volatility>& optionletVolatilities = optionletStripper_->optionletVolatilities(i);
-        boost::shared_ptr<Interpolation> tmp = boost::make_shared<LinearInterpolation>(
+        QuantLib::ext::shared_ptr<Interpolation> tmp = QuantLib::ext::make_shared<LinearInterpolation>(
             optionletStrikes.begin(), optionletStrikes.end(), optionletVolatilities.begin());
         if (flatExtrapolation_)
-            strikeInterpolations_[i] = boost::make_shared<FlatExtrapolation>(tmp);
+            strikeInterpolations_[i] = QuantLib::ext::make_shared<FlatExtrapolation>(tmp);
         else
             strikeInterpolations_[i] = tmp;
     }

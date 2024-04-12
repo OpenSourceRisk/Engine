@@ -28,7 +28,7 @@
 namespace ore {
 namespace data {
 
-boost::shared_ptr<QuantExt::LGM> FlexiSwapBGSLGMGridEngineBuilderBase::model(const string& id, const string& key,
+QuantLib::ext::shared_ptr<QuantExt::LGM> FlexiSwapBGSLGMGridEngineBuilderBase::model(const string& id, const string& key,
                                                                              const std::vector<Date>& expiries,
                                                                              const Date& maturity,
                                                                              const std::vector<Real>& strikes) {
@@ -51,7 +51,7 @@ boost::shared_ptr<QuantExt::LGM> FlexiSwapBGSLGMGridEngineBuilderBase::model(con
     bool continueOnCalibrationError = globalParameters_.count("ContinueOnCalibrationError") > 0 &&
                                       parseBool(globalParameters_.at("ContinueOnCalibrationError"));
 
-    auto data = boost::make_shared<IrLgmData>();
+    auto data = QuantLib::ext::make_shared<IrLgmData>();
 
     // check for allowed calibration / bermudan strategy settings
     std::vector<std::pair<CalibrationType, CalibrationStrategy>> validCalPairs = {
@@ -133,12 +133,12 @@ boost::shared_ptr<QuantExt::LGM> FlexiSwapBGSLGMGridEngineBuilderBase::model(con
 
     // Build model
     DLOG("Build LGM model");
-    boost::shared_ptr<LgmBuilder> calib = boost::make_shared<LgmBuilder>(
+    QuantLib::ext::shared_ptr<LgmBuilder> calib = QuantLib::ext::make_shared<LgmBuilder>(
         market_, data, configuration(MarketContext::irCalibration), tolerance, continueOnCalibrationError,
         referenceCalibrationGrid, generateAdditionalResults, id);
 
     // In some cases, we do not want to calibrate the model
-    boost::shared_ptr<QuantExt::LGM> model;
+    QuantLib::ext::shared_ptr<QuantExt::LGM> model;
     if (globalParameters_.count("Calibrate") == 0 || parseBool(globalParameters_.at("Calibrate"))) {
         DLOG("Calibrate model (configuration " << configuration(MarketContext::irCalibration) << ")");
         model = calib->model();
@@ -153,14 +153,14 @@ boost::shared_ptr<QuantExt::LGM> FlexiSwapBGSLGMGridEngineBuilderBase::model(con
     return model;
 }
 
-boost::shared_ptr<PricingEngine> FlexiSwapLGMGridEngineBuilder::engineImpl(const string& id, const string& id2,
+QuantLib::ext::shared_ptr<PricingEngine> FlexiSwapLGMGridEngineBuilder::engineImpl(const string& id, const string& id2,
                                                                            const string& key,
                                                                            const std::vector<Date>& expiries,
                                                                            const Date& maturity,
                                                                            const std::vector<Real>& strikes) {
     DLOG("Building LGM Grid Flexi Swap engine for trade " << id);
 
-    boost::shared_ptr<QuantExt::LGM> lgm = model(id, key, expiries, maturity, strikes);
+    QuantLib::ext::shared_ptr<QuantExt::LGM> lgm = model(id, key, expiries, maturity, strikes);
 
     DLOG("Get engine data");
     Real sy = parseReal(engineParameter("sy"));
@@ -181,23 +181,23 @@ boost::shared_ptr<PricingEngine> FlexiSwapLGMGridEngineBuilder::engineImpl(const
 
     // Build engine
     DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
-    boost::shared_ptr<IborIndex> index;
+    QuantLib::ext::shared_ptr<IborIndex> index;
     string ccy = tryParseIborIndex(key, index) ? index->currency().code() : key;
     Handle<YieldTermStructure> dscCurve = market_->discountCurve(ccy, configuration(MarketContext::pricing));
-    return boost::make_shared<QuantExt::NumericLgmFlexiSwapEngine>(lgm, sy, ny, sx, nx, dscCurve, method,
+    return QuantLib::ext::make_shared<QuantExt::NumericLgmFlexiSwapEngine>(lgm, sy, ny, sx, nx, dscCurve, method,
                                                                    singleSwaptionThreshold);
 }
 
-boost::shared_ptr<PricingEngine>
+QuantLib::ext::shared_ptr<PricingEngine>
 FlexiSwapBGSDiscountingEngineBuilderBase::engineImpl(const string& id, const string& id2, const string& key,
                                                      const std::vector<Date>& expiries, const Date& maturity,
                                                      const std::vector<Real>& strikes) {
     DLOG("Building Discounting Flexi Swap engine for trade " << id);
     DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
-    boost::shared_ptr<IborIndex> index;
+    QuantLib::ext::shared_ptr<IborIndex> index;
     string ccy = tryParseIborIndex(key, index) ? index->currency().code() : key;
     Handle<YieldTermStructure> dscCurve = market_->discountCurve(ccy, configuration(MarketContext::pricing));
-    return boost::make_shared<QuantLib::DiscountingSwapEngine>(dscCurve);
+    return QuantLib::ext::make_shared<QuantLib::DiscountingSwapEngine>(dscCurve);
 }
 
 } // namespace data

@@ -76,7 +76,7 @@ Real AnalyticXCcyBlackRiskParticipationAgreementEngine::protectionLegNpv() const
         Real operator()(Real x, Real y) const { return x / y; }
     };
 
-    Handle<Quote> fxSpot(boost::make_shared<CompositeQuote<divide>>(fxSpots_[forCcy], fxSpots_[domCcy], divide()));
+    Handle<Quote> fxSpot(QuantLib::ext::make_shared<CompositeQuote<divide>>(fxSpots_[forCcy], fxSpots_[domCcy], divide()));
 
     // check if we can reuse the fx option representation, otherwise compute it
 
@@ -111,8 +111,8 @@ Real AnalyticXCcyBlackRiskParticipationAgreementEngine::protectionLegNpv() const
                 if (strike > 0.0 && !close_enough(strike, 0.0)) {
                     // the amounts correspond to an actual FX Option
                     Option::Type type = matcher.amount1() > 0.0 ? Option::Call : Option::Put;
-                    results_.optionRepresentation.push_back(boost::make_shared<VanillaOption>(
-                        boost::make_shared<PlainVanillaPayoff>(type, strike), boost::make_shared<EuropeanExercise>(d)));
+                    results_.optionRepresentation.push_back(QuantLib::ext::make_shared<VanillaOption>(
+                        QuantLib::ext::make_shared<PlainVanillaPayoff>(type, strike), QuantLib::ext::make_shared<EuropeanExercise>(d)));
                     results_.optionMultiplier.push_back(std::abs(matcher.amount1()));
                     instrumentSet = true;
                 }
@@ -122,8 +122,8 @@ Real AnalyticXCcyBlackRiskParticipationAgreementEngine::protectionLegNpv() const
                 Real amount = std::max(0.0, matcher.amount1() * fxSpot->value() / discountCurves_[domCcy]->discount(d) *
                                                     discountCurves_[forCcy]->discount(d) +
                                                 matcher.amount2());
-                results_.optionRepresentation.push_back(boost::make_shared<Swap>(
-                    std::vector<Leg>{{boost::make_shared<SimpleCashFlow>(amount, d)}}, std::vector<bool>{false}));
+                results_.optionRepresentation.push_back(QuantLib::ext::make_shared<Swap>(
+                    std::vector<Leg>{{QuantLib::ext::make_shared<SimpleCashFlow>(amount, d)}}, std::vector<bool>{false}));
                 results_.optionMultiplier.push_back(1.0);
             }
         }
@@ -142,14 +142,14 @@ Real AnalyticXCcyBlackRiskParticipationAgreementEngine::protectionLegNpv() const
 
     // attach an engine to the representative option (or swap)
 
-    auto swapEngine = boost::make_shared<DiscountingSwapEngine>(discountCurves_[domCcy]);
-    auto optionEngine = boost::make_shared<AnalyticEuropeanEngine>(boost::make_shared<GeneralizedBlackScholesProcess>(
+    auto swapEngine = QuantLib::ext::make_shared<DiscountingSwapEngine>(discountCurves_[domCcy]);
+    auto optionEngine = QuantLib::ext::make_shared<AnalyticEuropeanEngine>(QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
         fxSpot, discountCurves_[forCcy], discountCurves_[domCcy], volatility_));
 
     for (auto s : results_.optionRepresentation) {
-        if (auto tmp = boost::dynamic_pointer_cast<VanillaOption>(s))
+        if (auto tmp = QuantLib::ext::dynamic_pointer_cast<VanillaOption>(s))
             s->setPricingEngine(optionEngine);
-        else if (auto tmp = boost::dynamic_pointer_cast<Swap>(s))
+        else if (auto tmp = QuantLib::ext::dynamic_pointer_cast<Swap>(s))
             s->setPricingEngine(swapEngine);
         else {
             QL_FAIL("AnalyticXCcyBlackRiskParticipationAgreementEngine::protectionLegNpv(): internal error, could not "
@@ -175,7 +175,7 @@ Real AnalyticXCcyBlackRiskParticipationAgreementEngine::protectionLegNpv() const
 
     // detach pricing engine from result swaption representation
 
-    boost::shared_ptr<PricingEngine> emptyEngine;
+    QuantLib::ext::shared_ptr<PricingEngine> emptyEngine;
     for (auto s : results_.optionRepresentation)
         s->setPricingEngine(emptyEngine);
 
@@ -184,8 +184,8 @@ Real AnalyticXCcyBlackRiskParticipationAgreementEngine::protectionLegNpv() const
     std::vector<Real> optionStrikes;
     std::vector<Date> optionExerciseDates;
     for (auto const& r : results_.optionRepresentation) {
-        if (auto o = boost::dynamic_pointer_cast<VanillaOption>(r)) {
-            if (auto p = boost::dynamic_pointer_cast<PlainVanillaPayoff>(o->payoff())) {
+        if (auto o = QuantLib::ext::dynamic_pointer_cast<VanillaOption>(r)) {
+            if (auto p = QuantLib::ext::dynamic_pointer_cast<PlainVanillaPayoff>(o->payoff())) {
                 optionStrikes.push_back(p->strike());
             } else {
                 optionStrikes.push_back(0.0);
@@ -195,7 +195,7 @@ Real AnalyticXCcyBlackRiskParticipationAgreementEngine::protectionLegNpv() const
             } else {
                 optionExerciseDates.push_back(Date());
             }
-        } else if (auto s = boost::dynamic_pointer_cast<Swap>(r)) {
+        } else if (auto s = QuantLib::ext::dynamic_pointer_cast<Swap>(r)) {
             optionStrikes.push_back(0.0);
             if (!s->leg(0).empty()) {
                 optionExerciseDates.push_back(s->leg(0).front()->date());

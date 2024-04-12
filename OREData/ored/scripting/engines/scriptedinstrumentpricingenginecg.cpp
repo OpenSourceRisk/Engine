@@ -66,7 +66,7 @@ double externalAverage(const std::vector<double>& v) {
 
 ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
     const std::string& npv, const std::vector<std::pair<std::string, std::string>>& additionalResults,
-    const boost::shared_ptr<ModelCG>& model, const ASTNodePtr ast, const boost::shared_ptr<Context>& context,
+    const QuantLib::ext::shared_ptr<ModelCG>& model, const ASTNodePtr ast, const QuantLib::ext::shared_ptr<Context>& context,
     const Model::McParams& mcParams, const std::string& script, const bool interactive,
     const bool generateAdditionalResults, const bool includePastCashflows, const bool useCachedSensis,
     const bool useExternalComputeFramework)
@@ -86,8 +86,10 @@ ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
         opsExternal_ = getExternalRandomVariableOps();
         gradsExternal_ = getExternalRandomVariableGradients();
     } else {
-        ops_ = getRandomVariableOps(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType);
-        grads_ = getRandomVariableGradients(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType);
+        ops_ = getRandomVariableOps(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType, 0.0,
+                                    mcParams_.regressionVarianceCutoff);
+        grads_ = getRandomVariableGradients(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType, 0.2,
+                                            mcParams_.regressionVarianceCutoff);
     }
 }
 
@@ -103,7 +105,7 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph() const {
 
         // set up copy of initial context to run the cg builder against
 
-        workingContext_ = boost::make_shared<Context>(*context_);
+        workingContext_ = QuantLib::ext::make_shared<Context>(*context_);
 
         // set TODAY in the context
 
@@ -116,7 +118,7 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph() const {
 
         for (auto const& v : workingContext_->scalars) {
             if (v.second.which() == ValueTypeWhich::Number) {
-                auto r = boost::get<RandomVariable>(v.second);
+                auto r = QuantLib::ext::get<RandomVariable>(v.second);
                 QL_REQUIRE(r.deterministic(), "ScriptedInstrumentPricingEngineCG::calculate(): expected variable '"
                                                   << v.first << "' from initial context to be deterministic, got "
                                                   << r);
@@ -127,7 +129,7 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph() const {
         for (auto const& a : workingContext_->arrays) {
             for (Size i = 0; i < a.second.size(); ++i) {
                 if (a.second[i].which() == ValueTypeWhich::Number) {
-                    auto r = boost::get<RandomVariable>(a.second[i]);
+                    auto r = QuantLib::ext::get<RandomVariable>(a.second[i]);
                     QL_REQUIRE(r.deterministic(), "ScriptedInstrumentPricingEngineCG::calculate(): expected variable '"
                                                       << a.first << "[" << i
                                                       << "]' from initial context to be deterministic, got " << r);
@@ -373,7 +375,7 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
 
             // set contents from paylog as additional results
 
-            auto paylog = boost::make_shared<PayLog>();
+            auto paylog = QuantLib::ext::make_shared<PayLog>();
             for (auto const& p : payLogEntries_) {
                 paylog->write(values[p.value],
                               !close_enough(values[p.filter], RandomVariable(values[p.filter].size(), 0.0)), p.obs,

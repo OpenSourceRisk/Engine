@@ -47,7 +47,7 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-void BondTRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("BondTRS::build() called for trade " << id());
 
     // ISDA taxonomy
@@ -56,8 +56,8 @@ void BondTRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     additionalData_["isdaSubProduct"] = string("");
     additionalData_["isdaTransaction"] = string("");
 
-    const boost::shared_ptr<Market> market = engineFactory->market();
-    boost::shared_ptr<EngineBuilder> builder_trs = engineFactory->builder("BondTRS");
+    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
+    QuantLib::ext::shared_ptr<EngineBuilder> builder_trs = engineFactory->builder("BondTRS");
     bondData_ = originalBondData_;
     bondData_.populateFromBondReferenceData(engineFactory->referenceData());
 
@@ -117,7 +117,7 @@ void BondTRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // build fx index for composite bond trs
 
-    boost::shared_ptr<FxIndex> fxIndex;
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex;
     if (!fxIndex_.empty()) {
         fxIndex =
             buildFxIndex(fxIndex_, fundingLegData_.currency(), bondData_.currency(), engineFactory->market(),
@@ -182,14 +182,14 @@ void BondTRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE(fundingLegData_.isPayer() != payTotalReturnLeg_,
                "funding leg and total return lag are both rec or both pay");
     DLOG("Before bondTRS");
-    auto bondTRS = boost::make_shared<QuantExt::BondTRS>(
+    auto bondTRS = QuantLib::ext::make_shared<QuantExt::BondTRS>(
         bondIndex, bondData_.bondNotional(), effectiveInitialPrice,
         std::vector<QuantLib::Leg>{fundingLeg, fundingNotionalLeg}, payTotalReturnLeg_, valuationDates, paymentDates,
         fxIndex, payBondCashFlowsImmediately_, parseCurrency(fundingLegData_.currency()),
         parseCurrency(bondData_.currency()));
     DLOG("After bondTRS");
-    boost::shared_ptr<BondTRSEngineBuilder> trsBondBuilder =
-        boost::dynamic_pointer_cast<BondTRSEngineBuilder>(builder_trs);
+    QuantLib::ext::shared_ptr<BondTRSEngineBuilder> trsBondBuilder =
+        QuantLib::ext::dynamic_pointer_cast<BondTRSEngineBuilder>(builder_trs);
     QL_REQUIRE(trsBondBuilder, "No Builder found for BondTRS: " << id());
     bondTRS->setPricingEngine(trsBondBuilder->engine(fundingLegData_.currency()));
     setSensitivityTemplate(*trsBondBuilder);
@@ -208,7 +208,7 @@ void BondTRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     legPayers_ = {};
 
     // add required bond and fx fixings for return calculation
-    addToRequiredFixings(bondTRS->returnLeg(), boost::make_shared<FixingDateGetter>(requiredFixings_));
+    addToRequiredFixings(bondTRS->returnLeg(), QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings_));
     bondIndexBuilder.addRequiredFixings(requiredFixings_, bondTRS->returnLeg());
 
     // add required fx fixings for bond cashflow conversion (see the engine for details)
@@ -222,7 +222,7 @@ void BondTRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     if (bondData_.isInflationLinked() && useDirtyPrices()) {
         auto inflationIndices = extractAllInflationUnderlyingFromBond(bondIndex->bond());
         for (const auto& cf : bondTRS->returnLeg()) {
-            auto tcf = boost::dynamic_pointer_cast<TRSCashFlow>(cf);
+            auto tcf = QuantLib::ext::dynamic_pointer_cast<TRSCashFlow>(cf);
             if (tcf != nullptr) {
                 for (const auto& [key, index] : inflationIndices) {
                     auto [name, interpolation, couponFrequency, observationLag] = key;
@@ -331,7 +331,7 @@ XMLNode* BondTRS::toXML(XMLDocument& doc) const {
 }
 
 std::map<AssetClass, std::set<std::string>>
-BondTRS::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+BondTRS::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<AssetClass, std::set<std::string>> result;
     result[AssetClass::BOND] = {bondData_.securityId()};
     return result;
