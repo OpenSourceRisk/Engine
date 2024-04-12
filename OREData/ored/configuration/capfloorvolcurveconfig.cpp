@@ -58,14 +58,16 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
     const BusinessDayConvention& businessDayConvention, const std::string& index,
     const QuantLib::Period& rateComputationPeriod, const Size onCapSettlementDays, const string& discountCurve,
     const string& interpolationMethod, const string& interpolateOn, const string& timeInterpolation,
-    const string& strikeInterpolation, const vector<string>& atmTenors, const BootstrapConfig& bootstrapConfig, const string& inputType)
+    const string& strikeInterpolation, const vector<string>& atmTenors, const BootstrapConfig& bootstrapConfig,
+    const string& inputType, const boost::optional<ParametricSmileConfiguration>& parametricSmileConfiguration)
     : CurveConfig(curveID, curveDescription), volatilityType_(volatilityType), extrapolate_(extrapolate),
       flatExtrapolation_(flatExtrapolation), includeAtm_(inlcudeAtm), tenors_(tenors), strikes_(strikes),
       dayCounter_(dayCounter), settleDays_(settleDays), calendar_(calendar),
       businessDayConvention_(businessDayConvention), index_(index), rateComputationPeriod_(rateComputationPeriod),
       onCapSettlementDays_(onCapSettlementDays), discountCurve_(discountCurve),
       interpolationMethod_(interpolationMethod), interpolateOn_(interpolateOn), timeInterpolation_(timeInterpolation),
-      strikeInterpolation_(strikeInterpolation), atmTenors_(atmTenors), bootstrapConfig_(bootstrapConfig), inputType_(inputType) {
+      strikeInterpolation_(strikeInterpolation), atmTenors_(atmTenors), bootstrapConfig_(bootstrapConfig),
+      inputType_(inputType), parametricSmileConfiguration_(parametricSmileConfiguration) {
 
     // Set extrapolation string. "Linear" just means extrapolation allowed and non-flat.
     extrapolation_ = !extrapolate_ ? "None" : (flatExtrapolation_ ? "Flat" : "Linear");
@@ -214,7 +216,13 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
             bootstrapConfig_.fromXML(n);
         }
 
-		// Optional Input Type
+        // Optional parametric smile configuration
+        if(XMLNode* n = XMLUtils::getChildNode(node, "ParametricSmileConfiguration")) {
+            parametricSmileConfiguration_ = ParametricSmileConfiguration();
+            parametricSmileConfiguration_->fromXML(n);
+        }
+
+        // Optional Input Type
         inputType_ = "TermVolatilities";
         if (XMLNode* n = XMLUtils::getChildNode(node, "InputType")) {
             inputType_ = XMLUtils::getNodeValue(n);

@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/configuration/curveconfig.hpp>
+#include <ored/configuration/parametricsmileconfiguration.hpp>
 #include <ored/configuration/reportconfig.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
@@ -76,19 +77,20 @@ public:
         rootNodeLabel_(rootNodeLabel), marketDatumInstrumentLabel_(marketDatumInstrumentLabel),
         qualifierLabel_(qualifierLabel), allowSmile_(allowSmile), requireSwapIndexBases_(requireSwapIndexBases) {}
     //! Detailed constructor
-    GenericYieldVolatilityCurveConfig(const std::string& underlyingLabel, const std::string& rootNodeLabel,
-                                      const std::string& marketDatumInstrumentLabel, const std::string& qualifierLabel,
-                                      const string& curveID, const string& curveDescription, const string& qualifier,
-                                      const Dimension dimension, const VolatilityType volatilityType,
-                                      const VolatilityType outputVolatilityType, const Interpolation interpolation,
-                                      const Extrapolation extrapolation, const vector<string>& optionTenors,
-                                      const vector<string>& underlyingTenors, const DayCounter& dayCounter,
-                                      const Calendar& calendar, const BusinessDayConvention& businessDayConvention,
-                                      const string& shortSwapIndexBase = "", const string& swapIndexBase = "",
-                                      // Only required for smile
-                                      const vector<string>& smileOptionTenors = vector<string>(),
-                                      const vector<string>& smileUnderlyingTenors = vector<string>(),
-                                      const vector<string>& smileSpreads = vector<string>());
+    GenericYieldVolatilityCurveConfig(
+        const std::string& underlyingLabel, const std::string& rootNodeLabel,
+        const std::string& marketDatumInstrumentLabel, const std::string& qualifierLabel, const string& curveID,
+        const string& curveDescription, const string& qualifier, const Dimension dimension,
+        const VolatilityType volatilityType, const VolatilityType outputVolatilityType,
+        const Interpolation interpolation, const Extrapolation extrapolation, const vector<string>& optionTenors,
+        const vector<string>& underlyingTenors, const DayCounter& dayCounter, const Calendar& calendar,
+        const BusinessDayConvention& businessDayConvention, const string& shortSwapIndexBase = "",
+        const string& swapIndexBase = "",
+        // Only required for smile
+        const vector<string>& smileOptionTenors = vector<string>(),
+        const vector<string>& smileUnderlyingTenors = vector<string>(),
+        const vector<string>& smileSpreads = vector<string>(),
+        const boost::optional<ParametricSmileConfiguration>& parametricSmileConfiguration = boost::none);
     //! Detailed contructor for proxy config
     GenericYieldVolatilityCurveConfig(const std::string& underlyingLabel, const std::string& rootNodeLabel,
                                       const std::string& qualifierLabel, const string& curveID,
@@ -133,6 +135,10 @@ public:
     const std::string& proxySourceSwapIndexBase() const { return proxySourceSwapIndexBase_; }
     const std::string& proxyTargetShortSwapIndexBase() const { return proxyTargetShortSwapIndexBase_; }
     const std::string& proxyTargetSwapIndexBase() const { return proxyTargetSwapIndexBase_; }
+    //
+    const boost::optional<ParametricSmileConfiguration> parametricSmileConfiguration() const {
+        return parametricSmileConfiguration_;
+    }
     //
     const ReportConfig& reportConfig() const { return reportConfig_; }
     //@}
@@ -186,6 +192,8 @@ private:
     string proxySourceSwapIndexBase_;
     string proxyTargetShortSwapIndexBase_;
     string proxyTargetSwapIndexBase_;
+
+    boost::optional<ParametricSmileConfiguration> parametricSmileConfiguration_;
 
     ReportConfig reportConfig_;
 };

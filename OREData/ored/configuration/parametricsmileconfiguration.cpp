@@ -43,7 +43,7 @@ void ParametricSmileConfiguration::Calibration::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Calibration");
     maxCalibrationAttempts = parseInteger(XMLUtils::getChildValue(node, "MaxCalibrationAttempts", true));
     exitEarlyErrorThreshold = parseReal(XMLUtils::getChildValue(node, "ExitEarlyErrorThreshold", true));
-    maxAcceptableError = parseBool(XMLUtils::getChildValue(node, "MaxAcceptableError", true));
+    maxAcceptableError = parseReal(XMLUtils::getChildValue(node, "MaxAcceptableError", true));
 }
 
 XMLNode* ParametricSmileConfiguration::Calibration::toXML(XMLDocument& doc) const {
@@ -94,7 +94,7 @@ const ParametricSmileConfiguration::Parameter& ParametricSmileConfiguration::par
     auto p =
         std::find_if(parameters_.begin(), parameters_.end(), [&name](const Parameter& p) { return p.name == name; });
     QL_REQUIRE(p != parameters_.end(), "ParametricSmileConfiguration: parameter '" << name << "' is not present.");
-    return p->second;
+    return *p;
 }
 
 const ParametricSmileConfiguration::Calibration& ParametricSmileConfiguration::calibration() const {

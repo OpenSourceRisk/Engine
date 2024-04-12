@@ -49,7 +49,8 @@ GenericYieldVolatilityCurveConfig::GenericYieldVolatilityCurveConfig(
     const vector<string>& optionTenors, const vector<string>& underlyingTenors, const DayCounter& dayCounter,
     const Calendar& calendar, const BusinessDayConvention& businessDayConvention, const string& shortSwapIndexBase,
     const string& swapIndexBase, const vector<string>& smileOptionTenors, const vector<string>& smileUnderlyingTenors,
-    const vector<string>& smileSpreads)
+    const vector<string>& smileSpreads,
+    const boost::optional<ParametricSmileConfiguration>& parametricSmileConfiguration)
     : CurveConfig(curveID, curveDescription), underlyingLabel_(underlyingLabel), rootNodeLabel_(rootNodeLabel),
       marketDatumInstrumentLabel_(marketDatumInstrumentLabel), qualifierLabel_(qualifierLabel), allowSmile_(true),
       requireSwapIndexBases_(false), qualifier_(qualifier), dimension_(dimension), volatilityType_(volatilityType),
@@ -57,7 +58,8 @@ GenericYieldVolatilityCurveConfig::GenericYieldVolatilityCurveConfig(
       underlyingTenors_(underlyingTenors), dayCounter_(dayCounter), calendar_(calendar),
       businessDayConvention_(businessDayConvention), shortSwapIndexBase_(shortSwapIndexBase),
       swapIndexBase_(swapIndexBase), smileOptionTenors_(smileOptionTenors),
-      smileUnderlyingTenors_(smileUnderlyingTenors), smileSpreads_(smileSpreads) {
+      smileUnderlyingTenors_(smileUnderlyingTenors), smileSpreads_(smileSpreads),
+      parametricSmileConfiguration_(parametricSmileConfiguration) {
 
     QL_REQUIRE(dimension == Dimension::ATM || dimension == Dimension::Smile, "Invalid dimension");
 
@@ -275,6 +277,11 @@ void GenericYieldVolatilityCurveConfig::fromXML(XMLNode* node) {
         // optional quote tag to include
         quoteTag_ = XMLUtils::getChildValue(node, "QuoteTag", false);
 
+        // Optional parametric smile configuration
+        if(XMLNode* n = XMLUtils::getChildNode(node, "ParametricSmileConfiguration")) {
+            parametricSmileConfiguration_ = ParametricSmileConfiguration();
+            parametricSmileConfiguration_->fromXML(n);
+        }
     }
 
     if (auto tmp = XMLUtils::getChildNode(node, "Report")) {

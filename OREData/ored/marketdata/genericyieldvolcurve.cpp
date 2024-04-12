@@ -359,15 +359,33 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                         config->extrapolation() == GenericYieldVolatilityCurveConfig::Extrapolation::Flat);
                     cube->enableExtrapolation();
                 } else {
-                    // TODO provide initial model parameters from config?
-                    // TODO provide error thresholds from config?
+                    std::vector<std::pair<Real,bool>> initialModelParameters;
+                    Size maxCalibrationAttempts = 10;
+                    Real exitEarlyErrorThreshold = 0.005;
+                    Real maxAcceptableError = 0.05;
+                    if (config->parametricSmileConfiguration()) {
+                        auto alpha = config->parametricSmileConfiguration()->parameter("alpha");
+                        auto beta = config->parametricSmileConfiguration()->parameter("beta");
+                        auto nu = config->parametricSmileConfiguration()->parameter("nu");
+                        auto rho = config->parametricSmileConfiguration()->parameter("rho");
+                        initialModelParameters.push_back(std::make_pair(alpha.initialValue, alpha.isFixed));
+                        initialModelParameters.push_back(std::make_pair(beta.initialValue, beta.isFixed));
+                        initialModelParameters.push_back(std::make_pair(nu.initialValue, nu.isFixed));
+                        initialModelParameters.push_back(std::make_pair(rho.initialValue, rho.isFixed));
+                        maxCalibrationAttempts =
+                            config->parametricSmileConfiguration()->calibration().maxCalibrationAttempts;
+                        exitEarlyErrorThreshold =
+                            config->parametricSmileConfiguration()->calibration().exitEarlyErrorThreshold;
+                        maxAcceptableError = config->parametricSmileConfiguration()->calibration().maxAcceptableError;
+                    }
                     cube = QuantLib::ext::make_shared<QuantExt::SwaptionSabrCube>(
                         hATM, smileOptionTenors, smileUnderlyingTenors, optionTenors, underlyingTenors, spreads,
                         volSpreadHandles, swapIndexBase, shortSwapIndexBase,
                         QuantExt::SabrParametricVolatility::ModelVariant(config->interpolation()),
                         config->outputVolatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
                             ? QuantLib::Normal
-                            : QuantLib::ShiftedLognormal);
+                            : QuantLib::ShiftedLognormal,
+                        initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
                 }
 
                 // Wrap it in a SwaptionVolCubeWithATM
