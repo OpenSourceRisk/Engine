@@ -160,6 +160,7 @@ protected:
     bool useCg_;
     bool useAd_;
     bool useExternalComputeDevice_;
+    bool useDoublePrecisionForExternalCalculation_;
     std::string externalComputeDevice_;
     bool includePastCashflows_;
 };
