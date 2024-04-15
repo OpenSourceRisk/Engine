@@ -56,6 +56,9 @@ public:
              const SimmConfiguration::MarginType& mt, const std::string& b, QuantLib::Real im,
              const std::string& resultCurrency, const std::string& calculationCurrency, const bool overwrite);
 
+    void add(const Key& key, QuantLib::Real im, const std::string& resultCurrency,
+             const std::string& calculationCurrency, const bool overwrite);
+
     //! Convert SIMM amounts to a different currency
     void convert(const QuantLib::ext::shared_ptr<ore::data::Market>& market, const std::string& currency);
     void convert(QuantLib::Real fxSpot, const std::string& currency);
