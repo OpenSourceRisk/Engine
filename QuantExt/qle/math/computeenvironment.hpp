@@ -60,6 +60,7 @@ public:
 class ComputeContext {
 public:
     struct Settings {
+        bool useDoublePrecision = false;
         std::size_t regressionOrder = 4;
     };
 
@@ -88,6 +89,10 @@ public:
     virtual void declareOutputVariable(const std::size_t id) = 0;
 
     virtual void finalizeCalculation(std::vector<double*>& output, const Settings& settings) = 0;
+
+    // get device info
+
+    virtual std::vector<std::pair<std::string, std::string>> deviceInfo() const { return {}; }
 
     // debug info
 

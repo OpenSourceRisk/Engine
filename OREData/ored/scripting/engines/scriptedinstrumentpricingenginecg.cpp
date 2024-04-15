@@ -297,7 +297,7 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
 
         if (useExternalComputeFramework_) {
             ComputeEnvironment::instance().context().finalizeCalculation(externalOutputPtr_,
-                                                                         {mcParams_.regressionOrder});
+                                                                         {false, mcParams_.regressionOrder});
             baseNpv_ = results_.value = externalAverage(externalOutput_[0]);
         } else {
             baseNpv_ = results_.value = model_->extractT0Result(values[baseNpvNode]);

@@ -36,7 +36,7 @@
 
 #define MAX_N_PLATFORMS 4U
 #define MAX_N_DEVICES 8U
-#define MAX_N_NAME 64U
+#define MAX_N_DEV_INFO 256U
 #define MAX_BUILD_LOG 65536U
 #define MAX_BUILD_LOG_LOGFILE 1024U
 
@@ -172,7 +172,7 @@ std::string errorText(cl_int err) {
 
 class OpenClContext : public ComputeContext {
 public:
-    OpenClContext(cl_device_id device);
+    OpenClContext(cl_device_id device, const std::vector<std::pair<std::string, std::string>>& deviceInfo);
     ~OpenClContext() override final;
     void init() override final;
 
@@ -189,6 +189,7 @@ public:
     void declareOutputVariable(const std::size_t id) override final;
     void finalizeCalculation(std::vector<double*>& output, const Settings& settings = Settings()) override final;
 
+    std::vector<std::pair<std::string, std::string>> deviceInfo() const override;
     const DebugInfo& debugInfo() const override final;
 
 private:
@@ -205,8 +206,12 @@ private:
     cl_context context_;
     cl_command_queue queue_;
 
+    // set once in the ctor
+    std::vector<std::pair<std::string, std::string>> deviceInfo_;
+
     // will be accumulated over all calcs
     ComputeContext::DebugInfo debugInfo_;
+
 
     // 1a vectors per current calc id
 
@@ -247,22 +252,44 @@ private:
 };
 
 OpenClFramework::OpenClFramework() {
-    std::set<std::string> tmp;
     cl_platform_id platforms[MAX_N_PLATFORMS];
     cl_uint nPlatforms;
     clGetPlatformIDs(MAX_N_PLATFORMS, platforms, &nPlatforms);
     for (std::size_t p = 0; p < nPlatforms; ++p) {
-        char platformName[MAX_N_NAME];
-        clGetPlatformInfo(platforms[p], CL_PLATFORM_NAME, MAX_N_NAME, platformName, NULL);
+        char platformName[MAX_N_DEV_INFO];
+        clGetPlatformInfo(platforms[p], CL_PLATFORM_NAME, MAX_N_DEV_INFO, platformName, NULL);
         cl_device_id devices[MAX_N_DEVICES];
         cl_uint nDevices;
         clGetDeviceIDs(platforms[p], CL_DEVICE_TYPE_ALL, 3, devices, &nDevices);
         for (std::size_t d = 0; d < nDevices; ++d) {
-            char deviceName[MAX_N_NAME]; //, driverVersion[MAX_N_NAME];
-            clGetDeviceInfo(devices[d], CL_DEVICE_NAME, MAX_N_NAME, &deviceName, NULL);
-            // clGetDeviceInfo(devices[d], CL_DRIVER_VERSION, MAX_N_NAME, &driverVersion, NULL);
+            char deviceName[MAX_N_DEV_INFO], driverVersion[MAX_N_DEV_INFO], deviceExtensions[MAX_N_DEV_INFO];
+            cl_device_fp_config doubleFpConfig;
+            std::vector<std::pair<std::string, std::string>> deviceInfo;
+
+            clGetDeviceInfo(devices[d], CL_DEVICE_NAME, MAX_N_DEV_INFO, &deviceName, NULL);
+            clGetDeviceInfo(devices[d], CL_DRIVER_VERSION, MAX_N_DEV_INFO, &driverVersion, NULL);
+            clGetDeviceInfo(devices[d], CL_DEVICE_EXTENSIONS, MAX_N_DEV_INFO, &deviceExtensions, NULL);
+
+            deviceInfo.push_back(std::make_pair("device_name", deviceName));
+            deviceInfo.push_back(std::make_pair("driver_version", driverVersion));
+            deviceInfo.push_back(std::make_pair("device_extensions", deviceExtensions));
+
+#if CL_VERSION_1_2
+            clGetDeviceInfo(devices[d], CL_DEVICE_DOUBLE_FP_CONFIG, sizeof(cl_device_fp_config), &doubleFpConfig, NULL);
+            deviceInfo.push_back(std::make_pair(
+                "device_double_fp_config",
+                ((doubleFpConfig & CL_FP_DENORM) ? std::string("Denorm,") : std::string()) +
+                    ((doubleFpConfig & CL_FP_INF_NAN) ? std::string("InfNan,") : std::string()) +
+                    ((doubleFpConfig & CL_FP_ROUND_TO_NEAREST) ? std::string("RoundNearest,") : std::string()) +
+                    ((doubleFpConfig & CL_FP_ROUND_TO_ZERO) ? std::string("RoundZero,") : std::string()) +
+                    ((doubleFpConfig & CL_FP_FMA) ? std::string("FMA,") : std::string()) +
+                    ((doubleFpConfig & CL_FP_SOFT_FLOAT) ? std::string("SoftFloat,") : std::string())));
+#else
+            deviceInfo.push_back(std::make_pair("device_double_fp_config", "not provided before opencl 1.2"));
+#endif
+
             contexts_["OpenCL/" + std::string(platformName) + "/" + std::string(deviceName)] =
-                new OpenClContext(devices[d]);
+                new OpenClContext(devices[d], deviceInfo);
         }
     }
 }
@@ -273,7 +300,8 @@ OpenClFramework::~OpenClFramework() {
     }
 }
 
-OpenClContext::OpenClContext(cl_device_id device) : initialized_(false), device_(device) {}
+OpenClContext::OpenClContext(cl_device_id device, const std::vector<std::pair<std::string, std::string>>& deviceInfo)
+    : initialized_(false), device_(device), deviceInfo_(deviceInfo) {}
 
 OpenClContext::~OpenClContext() {
     if (initialized_) {
@@ -931,6 +959,8 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output, const Sett
 }
 
 const ComputeContext::DebugInfo& OpenClContext::debugInfo() const { return debugInfo_; }
+
+std::vector<std::pair<std::string, std::string>> OpenClContext::deviceInfo() const { return deviceInfo_; }
 
 #endif
 
