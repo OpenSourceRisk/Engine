@@ -74,6 +74,9 @@ BOOST_AUTO_TEST_CASE(testEnvironmentInit) {
             for (auto const& [field, value] : ComputeEnvironment::instance().context().deviceInfo()) {
                 BOOST_TEST_MESSAGE("      " << std::left << std::setw(30) << field << ": " << value);
             }
+            BOOST_TEST_MESSAGE("      " << std::left << std::setw(30) << "supportsDoublePrecision"
+                                        << ": " << std::boolalpha
+                                        << ComputeEnvironment::instance().context().supportsDoublePrecision());
         }
     };
     BOOST_CHECK_NO_THROW(init());
