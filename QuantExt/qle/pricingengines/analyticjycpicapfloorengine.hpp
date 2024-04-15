@@ -38,7 +38,7 @@ public:
         \param model the cross asset model to be used in the valuation.
         \param index the index of the inflation component to use within the cross asset model.
     */
-    AnalyticJyCpiCapFloorEngine(const boost::shared_ptr<CrossAssetModel>& model,
+    AnalyticJyCpiCapFloorEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
         QuantLib::Size index);
     
     //! \name PricingEngine interface
@@ -47,7 +47,7 @@ public:
     //@}
 
 private:
-    const boost::shared_ptr<CrossAssetModel> model_;
+    const QuantLib::ext::shared_ptr<CrossAssetModel> model_;
     QuantLib::Size index_;
 };
 

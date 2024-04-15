@@ -24,7 +24,7 @@ namespace data {
 
 BlackScholesModelBuilder::BlackScholesModelBuilder(
     const std::vector<Handle<YieldTermStructure>>& curves,
-    const std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
+    const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
     const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
     const std::string& calibration, const std::vector<std::vector<Real>>& calibrationStrikes)
     : BlackScholesModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear),
@@ -37,7 +37,7 @@ BlackScholesModelBuilder::BlackScholesModelBuilder(
 }
 
 BlackScholesModelBuilder::BlackScholesModelBuilder(const Handle<YieldTermStructure>& curve,
-                                                   const boost::shared_ptr<GeneralizedBlackScholesProcess>& process,
+                                                   const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
                                                    const std::set<Date>& simulationDates,
                                                    const std::set<Date>& addDates, const Size timeStepsPerYear,
                                                    const std::string& calibration,
@@ -45,7 +45,7 @@ BlackScholesModelBuilder::BlackScholesModelBuilder(const Handle<YieldTermStructu
     : BlackScholesModelBuilderBase(curve, process, simulationDates, addDates, timeStepsPerYear),
       calibration_(calibration), calibrationStrikes_(1, calibrationStrikes) {}
 
-std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>>
+std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>
 BlackScholesModelBuilder::getCalibratedProcesses() const {
     // nothing to do, return original processes
     return processes_;

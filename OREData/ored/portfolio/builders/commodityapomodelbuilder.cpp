@@ -26,13 +26,13 @@ namespace data {
 
 CommodityApoModelBuilder::CommodityApoModelBuilder(const Handle<YieldTermStructure>& curve,
                                                    const QuantLib::Handle<QuantLib::BlackVolTermStructure>& vol,
-                                                   const boost::shared_ptr<QuantExt::CommodityAveragePriceOption>& apo,
+                                                   const QuantLib::ext::shared_ptr<QuantExt::CommodityAveragePriceOption>& apo,
                                                    const bool dontCalibrate)
-    : BlackScholesModelBuilderBase(curve, boost::make_shared<GeneralizedBlackScholesProcess>(
-                                              Handle<Quote>(boost::make_shared<SimpleQuote>(1.0)),
-                                              Handle<YieldTermStructure>(boost::make_shared<QuantLib::FlatForward>(
+    : BlackScholesModelBuilderBase(curve, QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
+                                              Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0)),
+                                              Handle<YieldTermStructure>(QuantLib::ext::make_shared<QuantLib::FlatForward>(
                                                   0, NullCalendar(), 0.0, Actual365Fixed())),
-                                              Handle<YieldTermStructure>(boost::make_shared<QuantLib::FlatForward>(
+                                              Handle<YieldTermStructure>(QuantLib::ext::make_shared<QuantLib::FlatForward>(
                                                   0, NullCalendar(), 0.0, Actual365Fixed())),
                                               vol)),
       apo_(apo), dontCalibrate_(dontCalibrate) {}
@@ -42,7 +42,7 @@ void CommodityApoModelBuilder::setupDatesAndTimes() const {
     return;
 }
 
-std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>>
+std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>
 CommodityApoModelBuilder::getCalibratedProcesses() const {
     // nothing to do, return original processes
     return processes_;

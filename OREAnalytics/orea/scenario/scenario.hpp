@@ -26,7 +26,7 @@
 #include <map>
 #include <vector>
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 #include <ored/utilities/serializationdate.hpp>
 #include <ql/math/array.hpp>
 #include <ql/time/date.hpp>
@@ -159,10 +159,10 @@ public:
     virtual Real get(const RiskFactorKey& key) const = 0;
 
     //! clones a scenario and returns a pointer to the new object
-    virtual boost::shared_ptr<Scenario> clone() const = 0;
+    virtual QuantLib::ext::shared_ptr<Scenario> clone() const = 0;
 
     //! checks for equality up to numerical differences
-    virtual bool isCloseEnough(const boost::shared_ptr<Scenario>& s) const;
+    virtual bool isCloseEnough(const QuantLib::ext::shared_ptr<Scenario>& s) const;
 
 private:
     friend class boost::serialization::access;

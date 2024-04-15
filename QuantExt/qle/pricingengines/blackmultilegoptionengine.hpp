@@ -40,7 +40,7 @@ public:
 
 protected:
     static bool instrumentIsHandled(const std::vector<Leg>& legs, const std::vector<bool>& payer,
-                                    const std::vector<Currency>& currency, const boost::shared_ptr<Exercise>& exercise,
+                                    const std::vector<Currency>& currency, const QuantLib::ext::shared_ptr<Exercise>& exercise,
                                     const Settlement::Type& settlementType, const Settlement::Method& settlementMethod,
                                     std::vector<std::string>& messages);
 
@@ -54,7 +54,7 @@ protected:
     mutable std::vector<Leg> legs_;
     mutable std::vector<bool> payer_;
     mutable std::vector<Currency> currency_;
-    mutable boost::shared_ptr<Exercise> exercise_;
+    mutable QuantLib::ext::shared_ptr<Exercise> exercise_;
     mutable Settlement::Type settlementType_;
     mutable Settlement::Method settlementMethod_;
 

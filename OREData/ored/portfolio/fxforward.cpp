@@ -30,7 +30,7 @@
 namespace ore {
 namespace data {
 
-void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void FxForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Foreign Exchange");
@@ -70,7 +70,7 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         QL_REQUIRE(payDate >= maturityDate, "FX Forward settlement date should equal or exceed the maturity date.");
     }
 
-    boost::shared_ptr<QuantExt::FxIndex> fxIndex;
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex;
     Currency payCcy;
 
     if (payCurrency_.empty()) {
@@ -111,16 +111,16 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                                                << QuantLib::io::iso_date(payDate));
 
     // get pricing engine builder
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    boost::shared_ptr<FxForwardEngineBuilderBase> fxBuilder =
-        boost::dynamic_pointer_cast<FxForwardEngineBuilderBase>(builder);
+    QuantLib::ext::shared_ptr<FxForwardEngineBuilderBase> fxBuilder =
+        QuantLib::ext::dynamic_pointer_cast<FxForwardEngineBuilderBase>(builder);
 
     string tmp = fxBuilder->engineParameter("includeSettlementDateFlows", {}, false, "");
     includeSettlementDateFlows_ = tmp == "" ? false : parseBool(tmp);    
     
-    boost::shared_ptr<QuantLib::Instrument> instrument =
-        boost::make_shared<QuantExt::FxForward>(boughtAmount_, boughtCcy, soldAmount_, soldCcy, maturityDate, false,
+    QuantLib::ext::shared_ptr<QuantLib::Instrument> instrument =
+        QuantLib::ext::make_shared<QuantExt::FxForward>(boughtAmount_, boughtCcy, soldAmount_, soldCcy, maturityDate, false,
                                                 settlement_ == "Physical", payDate, payCcy, fixingDate, fxIndex,
                                                 includeSettlementDateFlows_);
     instrument_.reset(new VanillaInstrument(instrument));
@@ -135,8 +135,8 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     maturity_ = std::max(payDate, maturityDate);
 
     // Set up Legs
-    legs_ = {{boost::make_shared<SimpleCashFlow>(boughtAmount_, payDate)},
-             {boost::make_shared<SimpleCashFlow>(soldAmount_, payDate)}};
+    legs_ = {{QuantLib::ext::make_shared<SimpleCashFlow>(boughtAmount_, payDate)},
+             {QuantLib::ext::make_shared<SimpleCashFlow>(soldAmount_, payDate)}};
     legCurrencies_ = {boughtCurrency_, soldCurrency_};
     legPayers_ = {false, true};
 

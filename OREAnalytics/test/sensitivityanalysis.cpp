@@ -100,31 +100,31 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     BOOST_TEST_MESSAGE("Today is " << today);
 
     // Init market
-    boost::shared_ptr<Market> initMarket = boost::make_shared<TestMarket>(today);
+    QuantLib::ext::shared_ptr<Market> initMarket = QuantLib::ext::make_shared<TestMarket>(today);
 
     // build scenario sim market parameters
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData =
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData =
         TestConfigurationObjects::setupSimMarketData5();
 
     // sensitivity config
-    boost::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData5();
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData5();
 
     // build scenario sim market
-    boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
-        boost::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData);
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarket> simMarket =
+        QuantLib::ext::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData);
 
     // build scenario factory
-    boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory = boost::make_shared<CloneScenarioFactory>(baseScenario);
+    QuantLib::ext::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
+    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory = QuantLib::ext::make_shared<CloneScenarioFactory>(baseScenario);
 
     // build scenario generator
-    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket,
+    QuantLib::ext::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
+        QuantLib::ext::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket,
                                                          scenarioFactory, false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
     // build portfolio
-    boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> data = QuantLib::ext::make_shared<EngineData>();
     data->model("Swap") = "DiscountedCashflows";
     data->engine("Swap") = "DiscountingSwapEngine";
     data->model("CrossCurrencySwap") = "DiscountedCashflows";
@@ -163,10 +163,10 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     data->engine("CommodityForward") = "DiscountingCommodityForwardEngine";
     data->model("CommodityOption") = "BlackScholes";
     data->engine("CommodityOption") = "AnalyticEuropeanEngine";
-    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
+    QuantLib::ext::shared_ptr<EngineFactory> factory = QuantLib::ext::make_shared<EngineFactory>(data, simMarket);
 
-    // boost::shared_ptr<Portfolio> portfolio = buildSwapPortfolio(portfolioSize, factory);
-    boost::shared_ptr<Portfolio> portfolio(new Portfolio());
+    // QuantLib::ext::shared_ptr<Portfolio> portfolio = buildSwapPortfolio(portfolioSize, factory);
+    QuantLib::ext::shared_ptr<Portfolio> portfolio(new Portfolio());
     portfolio->add(buildSwap("1_Swap_EUR", "EUR", true, 10000000.0, 0, 10, 0.03, 0.00, "1Y", "30/360", "6M", "A360",
                              "EUR-EURIBOR-6M"));
     portfolio->add(buildSwap("2_Swap_USD", "USD", true, 10000000.0, 0, 15, 0.02, 0.00, "6M", "30/360", "3M", "A360",
@@ -207,15 +207,15 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     BOOST_TEST_MESSAGE("Portfolio size after build: " << portfolio->size());
 
     // build the scenario valuation engine
-    boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>(
+    QuantLib::ext::shared_ptr<DateGrid> dg = QuantLib::ext::make_shared<DateGrid>(
         "1,0W"); // TODO - extend the DateGrid interface so that it can actually take a vector of dates as input
-    vector<boost::shared_ptr<ValuationCalculator>> calculators;
-    calculators.push_back(boost::make_shared<NPVCalculator>(simMarketData->baseCcy()));
+    vector<QuantLib::ext::shared_ptr<ValuationCalculator>> calculators;
+    calculators.push_back(QuantLib::ext::make_shared<NPVCalculator>(simMarketData->baseCcy()));
     ValuationEngine engine(today, dg, simMarket,
                            factory->modelBuilders()); // last argument required for model recalibration
     // run scenarios and fill the cube
     cpu_timer t;
-    boost::shared_ptr<NPVCube> cube = boost::make_shared<DoublePrecisionInMemoryCube>(
+    QuantLib::ext::shared_ptr<NPVCube> cube = QuantLib::ext::make_shared<DoublePrecisionInMemoryCube>(
         today, portfolio->ids(), vector<Date>(1, today), scenarioGenerator->samples());
     engine.buildCube(portfolio, cube, calculators);
     t.stop();
@@ -762,7 +762,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     }
 
     // Repeat analysis using the SensitivityAnalysis class and spot check a few deltas and gammas
-    boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
+    QuantLib::ext::shared_ptr<SensitivityAnalysis> sa = QuantLib::ext::make_shared<SensitivityAnalysis>(
         portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, false);
     sa->generateSensitivities();
     map<pair<string, string>, Real> deltaMap;
@@ -861,29 +861,29 @@ void test1dShifts(bool granular) {
     ccys.push_back("GBP");
 
     // Init market
-    boost::shared_ptr<Market> initMarket = boost::make_shared<TestMarket>(today);
+    QuantLib::ext::shared_ptr<Market> initMarket = QuantLib::ext::make_shared<TestMarket>(today);
 
     // build scenario sim market parameters
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData =
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData =
         TestConfigurationObjects::setupSimMarketData2();
 
     // sensitivity config
-    boost::shared_ptr<SensitivityScenarioData> sensiData;
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiData;
     if (granular)
         sensiData = TestConfigurationObjects::setupSensitivityScenarioData2b();
     else
         sensiData = TestConfigurationObjects::setupSensitivityScenarioData2();
 
     // build sim market
-    auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData);
+    auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(initMarket, simMarketData);
 
     // build scenario factory
-    boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory = boost::make_shared<CloneScenarioFactory>(baseScenario);
+    QuantLib::ext::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
+    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory = QuantLib::ext::make_shared<CloneScenarioFactory>(baseScenario);
 
     // build scenario generator
-    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket,
+    QuantLib::ext::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
+        QuantLib::ext::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket,
                                                          scenarioFactory, false);
 
     // cache initial zero rates
@@ -961,25 +961,25 @@ BOOST_AUTO_TEST_CASE(test2dShifts) {
     ccys.push_back("GBP");
 
     // Init market
-    boost::shared_ptr<Market> initMarket = boost::make_shared<TestMarket>(today);
+    QuantLib::ext::shared_ptr<Market> initMarket = QuantLib::ext::make_shared<TestMarket>(today);
 
     // build scenario sim market parameters
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData =
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData =
         TestConfigurationObjects::setupSimMarketData2();
 
     // sensitivity config
-    boost::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData2();
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData2();
 
     // build sim market
-    auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData);
+    auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(initMarket, simMarketData);
 
     // build scenario factory
-    boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory = boost::make_shared<CloneScenarioFactory>(baseScenario);
+    QuantLib::ext::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
+    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory = QuantLib::ext::make_shared<CloneScenarioFactory>(baseScenario);
 
     // build scenario generator
-    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket,
+    QuantLib::ext::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
+        QuantLib::ext::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket,
                                                          scenarioFactory, false);
 
     // cache initial zero rates
@@ -1064,14 +1064,14 @@ BOOST_AUTO_TEST_CASE(testEquityOptionDeltaGamma) {
 
     BOOST_TEST_MESSAGE("Today is " << today);
     // Init market
-    boost::shared_ptr<Market> initMarket = boost::make_shared<TestMarket>(today);
+    QuantLib::ext::shared_ptr<Market> initMarket = QuantLib::ext::make_shared<TestMarket>(today);
 
     // build scenario sim market parameters
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData =
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData =
         TestConfigurationObjects::setupSimMarketData5();
 
     // sensitivity config
-    boost::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData5();
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData5();
 
     map<string, SensitivityScenarioData::VolShiftData>& eqvs = sensiData->equityVolShiftData();
     for (auto& it : eqvs) {
@@ -1083,27 +1083,27 @@ BOOST_AUTO_TEST_CASE(testEquityOptionDeltaGamma) {
     }
 
     // build sim market
-    auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData);
+    auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(initMarket, simMarketData);
 
     // build scenario factory
-    boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory = boost::make_shared<CloneScenarioFactory>(baseScenario);
+    QuantLib::ext::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
+    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory = QuantLib::ext::make_shared<CloneScenarioFactory>(baseScenario);
 
     // build scenario generator
-    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket,
+    QuantLib::ext::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
+        QuantLib::ext::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket,
                                                          scenarioFactory, false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
     // build portfolio
-    boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> data = QuantLib::ext::make_shared<EngineData>();
     data->model("EquityForward") = "DiscountedCashflows";
     data->engine("EquityForward") = "DiscountingEquityForwardEngine";
     data->model("EquityOption") = "BlackScholesMerton";
     data->engine("EquityOption") = "AnalyticEuropeanEngine";
-    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
+    QuantLib::ext::shared_ptr<EngineFactory> factory = QuantLib::ext::make_shared<EngineFactory>(data, simMarket);
 
-    boost::shared_ptr<Portfolio> portfolio(new Portfolio());
+    QuantLib::ext::shared_ptr<Portfolio> portfolio(new Portfolio());
     Size trnCount = 0;
     portfolio->add(buildEquityOption("Call_SP5", "Long", "Call", 2, "SP5", "USD", 2147.56, 1000));
     trnCount++;
@@ -1137,7 +1137,7 @@ BOOST_AUTO_TEST_CASE(testEquityOptionDeltaGamma) {
     map<string, AnalyticInfo> qlInfoMap;
     for (const auto& [tradeId, trade] : portfolio->trades()) {
         AnalyticInfo info;
-        boost::shared_ptr<ore::data::EquityOption> eqoTrn = boost::dynamic_pointer_cast<ore::data::EquityOption>(trade);
+        QuantLib::ext::shared_ptr<ore::data::EquityOption> eqoTrn = QuantLib::ext::dynamic_pointer_cast<ore::data::EquityOption>(trade);
         BOOST_CHECK(eqoTrn);
         info.id = tradeId;
         info.name = eqoTrn->equityName();
@@ -1147,8 +1147,8 @@ BOOST_AUTO_TEST_CASE(testEquityOptionDeltaGamma) {
         string pair = info.npvCcy + simMarketData->baseCcy();
         info.fx = initMarket->fxRate(pair)->value();
         info.baseNpv = trade->instrument()->NPV() * info.fx;
-        boost::shared_ptr<QuantLib::VanillaOption> qlOpt =
-            boost::dynamic_pointer_cast<QuantLib::VanillaOption>(trade->instrument()->qlInstrument());
+        QuantLib::ext::shared_ptr<QuantLib::VanillaOption> qlOpt =
+            QuantLib::ext::dynamic_pointer_cast<QuantLib::VanillaOption>(trade->instrument()->qlInstrument());
         BOOST_CHECK(qlOpt);
         Position::Type positionType = parsePositionType(eqoTrn->option().longShort());
         Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
@@ -1162,7 +1162,7 @@ BOOST_AUTO_TEST_CASE(testEquityOptionDeltaGamma) {
     }
 
     bool recalibrateModels = true; // nothing to calibrate here
-    boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
+    QuantLib::ext::shared_ptr<SensitivityAnalysis> sa = QuantLib::ext::make_shared<SensitivityAnalysis>(
         portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, recalibrateModels);
     sa->generateSensitivities();
 
@@ -1268,14 +1268,14 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
     BOOST_TEST_MESSAGE("Today is " << today);
 
     // Init market
-    boost::shared_ptr<Market> initMarket = boost::make_shared<TestMarket>(today);
+    QuantLib::ext::shared_ptr<Market> initMarket = QuantLib::ext::make_shared<TestMarket>(today);
 
     // build scenario sim market parameters
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData =
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData =
         TestConfigurationObjects::setupSimMarketData5();
 
     // sensitivity config
-    boost::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData5();
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData5();
 
     map<string, SensitivityScenarioData::VolShiftData>& fxvs = sensiData->fxVolShiftData();
     for (auto& it : fxvs) {
@@ -1287,25 +1287,25 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
     }
 
     // build sim market
-    auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData);
+    auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(initMarket, simMarketData);
 
     // build scenario factory
-    boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory = boost::make_shared<CloneScenarioFactory>(baseScenario);
+    QuantLib::ext::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
+    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory = QuantLib::ext::make_shared<CloneScenarioFactory>(baseScenario);
 
     // build scenario generator
-    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket,
+    QuantLib::ext::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
+        QuantLib::ext::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket,
                                                          scenarioFactory, false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
     // build portfolio
-    boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> data = QuantLib::ext::make_shared<EngineData>();
     data->model("FxOption") = "GarmanKohlhagen";
     data->engine("FxOption") = "AnalyticEuropeanEngine";
-    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
+    QuantLib::ext::shared_ptr<EngineFactory> factory = QuantLib::ext::make_shared<EngineFactory>(data, simMarket);
 
-    boost::shared_ptr<Portfolio> portfolio(new Portfolio());
+    QuantLib::ext::shared_ptr<Portfolio> portfolio(new Portfolio());
     Size trnCount = 0;
     portfolio->add(buildFxOption("Call_1", "Long", "Call", 1, "USD", 100000000.0, "EUR", 100000000.0));
     trnCount++;
@@ -1345,7 +1345,7 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
     map<string, AnalyticInfo> qlInfoMap;
     for (const auto& [tradeId, trade] : portfolio->trades()) {
         AnalyticInfo info;
-        boost::shared_ptr<ore::data::FxOption> fxoTrn = boost::dynamic_pointer_cast<ore::data::FxOption>(trade);
+        QuantLib::ext::shared_ptr<ore::data::FxOption> fxoTrn = QuantLib::ext::dynamic_pointer_cast<ore::data::FxOption>(trade);
         BOOST_CHECK(fxoTrn);
         info.id = tradeId;
         info.npvCcy = trade->npvCurrency();
@@ -1359,8 +1359,8 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
         string forPair = info.forCcy + simMarketData->baseCcy();
         info.fxForBase = initMarket->fxRate(forPair)->value();
         info.baseNpv = trade->instrument()->NPV() * info.fx;
-        boost::shared_ptr<QuantLib::VanillaOption> qlOpt =
-            boost::dynamic_pointer_cast<QuantLib::VanillaOption>(trade->instrument()->qlInstrument());
+        QuantLib::ext::shared_ptr<QuantLib::VanillaOption> qlOpt =
+            QuantLib::ext::dynamic_pointer_cast<QuantLib::VanillaOption>(trade->instrument()->qlInstrument());
         BOOST_CHECK(qlOpt);
         Position::Type positionType = parsePositionType(fxoTrn->option().longShort());
         Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
@@ -1376,7 +1376,7 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
 
     bool recalibrateModels = true;           // nothing to calibrate here
     bool useOriginalFxForBaseCcyConv = true; // convert sensi to EUR using original FX rate (not the shifted rate)
-    boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
+    QuantLib::ext::shared_ptr<SensitivityAnalysis> sa = QuantLib::ext::make_shared<SensitivityAnalysis>(
         portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, recalibrateModels, nullptr,
         nullptr, useOriginalFxForBaseCcyConv);
     sa->generateSensitivities();
@@ -1606,14 +1606,14 @@ BOOST_AUTO_TEST_CASE(testCrossGamma) {
     BOOST_TEST_MESSAGE("Today is " << today);
 
     // Init market
-    boost::shared_ptr<Market> initMarket = boost::make_shared<TestMarket>(today);
+    QuantLib::ext::shared_ptr<Market> initMarket = QuantLib::ext::make_shared<TestMarket>(today);
 
     // build scenario sim market parameters
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData =
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData =
         TestConfigurationObjects::setupSimMarketData5();
 
     // sensitivity config
-    boost::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData5();
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData5();
     vector<pair<string, string>>& cgFilter = sensiData->crossGammaFilter();
     BOOST_CHECK_EQUAL(cgFilter.size(), 0);
     cgFilter.push_back(pair<string, string>("DiscountCurve/EUR", "DiscountCurve/EUR"));
@@ -1635,21 +1635,21 @@ BOOST_AUTO_TEST_CASE(testCrossGamma) {
     cgFilter.push_back(pair<string, string>("FXSpot/EURGBP", "DiscountCurve/GBP"));
 
     // build scenario sim market
-    boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
-        boost::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData);
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarket> simMarket =
+        QuantLib::ext::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData);
 
     // build scenario factory
-    boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory = boost::make_shared<CloneScenarioFactory>(baseScenario);
+    QuantLib::ext::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
+    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory = QuantLib::ext::make_shared<CloneScenarioFactory>(baseScenario);
 
     // build scenario generator
-    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket,
+    QuantLib::ext::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
+        QuantLib::ext::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket,
                                                          scenarioFactory, false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
     // build portfolio
-    boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> data = QuantLib::ext::make_shared<EngineData>();
     data->model("Swap") = "DiscountedCashflows";
     data->engine("Swap") = "DiscountingSwapEngine";
     data->model("CrossCurrencySwap") = "DiscountedCashflows";
@@ -1681,10 +1681,10 @@ BOOST_AUTO_TEST_CASE(testCrossGamma) {
     data->engine("CapFloor") = "IborCapEngine";
     data->model("CapFlooredIborLeg") = "BlackOrBachelier";
     data->engine("CapFlooredIborLeg") = "BlackIborCouponPricer";
-    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
+    QuantLib::ext::shared_ptr<EngineFactory> factory = QuantLib::ext::make_shared<EngineFactory>(data, simMarket);
 
-    // boost::shared_ptr<Portfolio> portfolio = buildSwapPortfolio(portfolioSize, factory);
-    boost::shared_ptr<Portfolio> portfolio(new Portfolio());
+    // QuantLib::ext::shared_ptr<Portfolio> portfolio = buildSwapPortfolio(portfolioSize, factory);
+    QuantLib::ext::shared_ptr<Portfolio> portfolio(new Portfolio());
     Size trnCount = 0;
     portfolio->add(buildSwap("1_Swap_EUR", "EUR", true, 10000000.0, 0, 10, 0.03, 0.00, "1Y", "30/360", "6M", "A360",
                              "EUR-EURIBOR-6M"));
@@ -1716,8 +1716,8 @@ BOOST_AUTO_TEST_CASE(testCrossGamma) {
     BOOST_CHECK_EQUAL(trnCount, portfolio->size());
 
     bool useOriginalFxForBaseCcyConv = false;
-    boost::shared_ptr<SensitivityAnalysis> sa =
-        boost::make_shared<SensitivityAnalysis>(portfolio, initMarket, Market::defaultConfiguration, data,
+    QuantLib::ext::shared_ptr<SensitivityAnalysis> sa =
+        QuantLib::ext::make_shared<SensitivityAnalysis>(portfolio, initMarket, Market::defaultConfiguration, data,
                                                 simMarketData, sensiData, useOriginalFxForBaseCcyConv);
     sa->generateSensitivities();
 

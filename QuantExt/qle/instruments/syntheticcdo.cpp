@@ -37,7 +37,7 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-SyntheticCDO::SyntheticCDO(const boost::shared_ptr<QuantExt::Basket>& basket, Protection::Side side,
+SyntheticCDO::SyntheticCDO(const QuantLib::ext::shared_ptr<QuantExt::Basket>& basket, Protection::Side side,
                            const Schedule& schedule, Rate upfrontRate, Rate runningRate, const DayCounter& dayCounter,
                            BusinessDayConvention paymentConvention, bool settlesAccrual,
                            CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime, Date protectionStart,
@@ -81,10 +81,10 @@ SyntheticCDO::SyntheticCDO(const boost::shared_ptr<QuantExt::Basket>& basket, Pr
     QL_REQUIRE(upfrontPayment_->date() >= protectionStart_, "upfront can not be due before contract start");
 
     if (schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015) {
-            accrualRebate_= boost::make_shared<SimpleCashFlow>(QuantLib::CashFlows::accruedAmount(normalizedLeg_, false, protectionStart_+1),
+            accrualRebate_= QuantLib::ext::make_shared<SimpleCashFlow>(QuantLib::CashFlows::accruedAmount(normalizedLeg_, false, protectionStart_+1),
                                                                effectiveUpfrontDate);      
             Date current = std::max((Date)Settings::instance().evaluationDate(), protectionStart_);
-            accrualRebateCurrent_ = boost::make_shared<SimpleCashFlow>(
+            accrualRebateCurrent_ = QuantLib::ext::make_shared<SimpleCashFlow>(
                 CashFlows::accruedAmount(normalizedLeg_, false, current + 1),
                 schedule.calendar().advance(current, 3, Days, paymentConvention));
 
@@ -259,9 +259,9 @@ private:
 Real SyntheticCDO::implicitCorrelation(const std::vector<Real>& recoveries,
                                        const Handle<YieldTermStructure>& discountCurve, Real targetNPV,
                                        Real accuracy) const {
-    boost::shared_ptr<SimpleQuote> correl(new SimpleQuote(0.0));
+    QuantLib::ext::shared_ptr<SimpleQuote> correl(new SimpleQuote(0.0));
 
-    boost::shared_ptr<GaussianLHPLossModel> lhp(new GaussianLHPLossModel(Handle<Quote>(correl), recoveries));
+    QuantLib::ext::shared_ptr<GaussianLHPLossModel> lhp(new GaussianLHPLossModel(Handle<Quote>(correl), recoveries));
 
     // lock
     basket_->setLossModel(lhp);

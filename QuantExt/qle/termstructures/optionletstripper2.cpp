@@ -29,7 +29,7 @@
 
 namespace QuantExt {
 
-OptionletStripper2::OptionletStripper2(const boost::shared_ptr<QuantExt::OptionletStripper>& optionletStripper,
+OptionletStripper2::OptionletStripper2(const QuantLib::ext::shared_ptr<QuantExt::OptionletStripper>& optionletStripper,
                                        const Handle<QuantLib::CapFloorTermVolCurve>& atmCapFloorTermVolCurve,
                                        const Handle<YieldTermStructure>& discount, const VolatilityType type,
                                        const Real displacement)
@@ -74,11 +74,11 @@ void OptionletStripper2::performCalculations() const {
 
         // Create a cap for each pillar point on ATM curve and attach relevant pricing engine i.e. Black if
         // quotes are shifted lognormal and Bachelier if quotes are normal
-        boost::shared_ptr<PricingEngine> engine;
+        QuantLib::ext::shared_ptr<PricingEngine> engine;
         if (inputVolatilityType_ == ShiftedLognormal) {
-            engine = boost::make_shared<BlackCapFloorEngine>(discountCurve, atmOptionVol, dc_, inputDisplacement_);
+            engine = QuantLib::ext::make_shared<BlackCapFloorEngine>(discountCurve, atmOptionVol, dc_, inputDisplacement_);
         } else if (inputVolatilityType_ == Normal) {
-            engine = boost::make_shared<BachelierCapFloorEngine>(discountCurve, atmOptionVol, dc_);
+            engine = QuantLib::ext::make_shared<BachelierCapFloorEngine>(discountCurve, atmOptionVol, dc_);
         } else {
             QL_FAIL("unknown volatility type: " << volatilityType_);
         }
@@ -86,7 +86,7 @@ void OptionletStripper2::performCalculations() const {
         // Using Null<Rate>() as strike => strike will be set to ATM rate. However, to calculate ATM rate, QL requires
         // a BlackCapFloorEngine to be set (not a BachelierCapFloorEngine)! So, need a temp BlackCapFloorEngine with a
         // dummy vol to calculate ATM rate. Needs to be fixed in QL.
-        boost::shared_ptr<PricingEngine> tempEngine = boost::make_shared<BlackCapFloorEngine>(discountCurve, 0.01);
+        QuantLib::ext::shared_ptr<PricingEngine> tempEngine = QuantLib::ext::make_shared<BlackCapFloorEngine>(discountCurve, 0.01);
         caps_[j] = MakeCapFloor(CapFloor::Cap, optionExpiriesTenors[j], index_, Null<Rate>(), 0 * Days)
                        .withPricingEngine(tempEngine);
 
@@ -151,27 +151,27 @@ vector<Real> OptionletStripper2::atmCapFloorPrices() const {
 
 // OptionletStripper2::ObjectiveFunction
 OptionletStripper2::ObjectiveFunction::ObjectiveFunction(
-    const boost::shared_ptr<QuantExt::OptionletStripper>& optionletStripper, const boost::shared_ptr<CapFloor>& cap,
+    const QuantLib::ext::shared_ptr<QuantExt::OptionletStripper>& optionletStripper, const QuantLib::ext::shared_ptr<CapFloor>& cap,
     Real targetValue, const Handle<YieldTermStructure>& discount)
     : cap_(cap), targetValue_(targetValue), discount_(discount) {
-    boost::shared_ptr<OptionletVolatilityStructure> adapter(new StrippedOptionletAdapter(optionletStripper));
+    QuantLib::ext::shared_ptr<OptionletVolatilityStructure> adapter(new StrippedOptionletAdapter(optionletStripper));
     adapter->enableExtrapolation();
 
     // set an implausible value, so that calculation is forced
     // at first operator()(Volatility x) call
-    spreadQuote_ = boost::shared_ptr<SimpleQuote>(new SimpleQuote(-1.0));
+    spreadQuote_ = QuantLib::ext::shared_ptr<SimpleQuote>(new SimpleQuote(-1.0));
 
-    boost::shared_ptr<OptionletVolatilityStructure> spreadedAdapter(
+    QuantLib::ext::shared_ptr<OptionletVolatilityStructure> spreadedAdapter(
         new SpreadedOptionletVolatility(Handle<OptionletVolatilityStructure>(adapter), Handle<Quote>(spreadQuote_)));
 
     // Use the same volatility type as optionletStripper
     // Anything else would not make sense
-    boost::shared_ptr<PricingEngine> engine;
+    QuantLib::ext::shared_ptr<PricingEngine> engine;
     if (optionletStripper->volatilityType() == ShiftedLognormal) {
-        engine = boost::make_shared<BlackCapFloorEngine>(
+        engine = QuantLib::ext::make_shared<BlackCapFloorEngine>(
             discount_, Handle<OptionletVolatilityStructure>(spreadedAdapter), optionletStripper->displacement());
     } else if (optionletStripper->volatilityType() == Normal) {
-        engine = boost::make_shared<BachelierCapFloorEngine>(discount_,
+        engine = QuantLib::ext::make_shared<BachelierCapFloorEngine>(discount_,
                                                              Handle<OptionletVolatilityStructure>(spreadedAdapter));
     } else {
         QL_FAIL("Unknown volatility type: " << optionletStripper->volatilityType());

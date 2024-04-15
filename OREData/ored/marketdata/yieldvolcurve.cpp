@@ -29,20 +29,20 @@ YieldVolCurve::YieldVolCurve(Date asof, YieldVolatilityCurveSpec spec, const Loa
                              const CurveConfigurations& curveConfigs, const bool buildCalibrationInfo)
     : GenericYieldVolCurve(
           asof, loader, curveConfigs, curveConfigs.yieldVolCurveConfig(spec.curveConfigID()), {}, {},
-          [](const boost::shared_ptr<MarketDatum>& md, Period& expiry, Period& term) -> bool {
-              boost::shared_ptr<BondOptionQuote> q = boost::dynamic_pointer_cast<BondOptionQuote>(md);
+          [](const QuantLib::ext::shared_ptr<MarketDatum>& md, Period& expiry, Period& term) -> bool {
+              QuantLib::ext::shared_ptr<BondOptionQuote> q = QuantLib::ext::dynamic_pointer_cast<BondOptionQuote>(md);
               if (q == nullptr)
                   return false;
               expiry = q->expiry();
               term = q->term();
               return q->instrumentType() == MarketDatum::InstrumentType::BOND_OPTION;
           },
-          [](const boost::shared_ptr<MarketDatum>& md, Period& expiry, Period& term, Real& strike) {
-              boost::shared_ptr<SwaptionQuote> q = boost::dynamic_pointer_cast<SwaptionQuote>(md);
+          [](const QuantLib::ext::shared_ptr<MarketDatum>& md, Period& expiry, Period& term, Real& strike) {
+              QuantLib::ext::shared_ptr<SwaptionQuote> q = QuantLib::ext::dynamic_pointer_cast<SwaptionQuote>(md);
               return false;
           },
-          [](const boost::shared_ptr<MarketDatum>& md, Period& term) {
-              boost::shared_ptr<SwaptionShiftQuote> q = boost::dynamic_pointer_cast<SwaptionShiftQuote>(md);
+          [](const QuantLib::ext::shared_ptr<MarketDatum>& md, Period& term) {
+              QuantLib::ext::shared_ptr<SwaptionShiftQuote> q = QuantLib::ext::dynamic_pointer_cast<SwaptionShiftQuote>(md);
               if (q == nullptr)
                   return false;
               term = q->term();

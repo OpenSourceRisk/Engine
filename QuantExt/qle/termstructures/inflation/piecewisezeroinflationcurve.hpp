@@ -51,9 +51,9 @@ public:
     PiecewiseZeroInflationCurve(const QuantLib::Date& referenceDate, const QuantLib::Calendar& calendar,
                                 const QuantLib::DayCounter& dayCounter, const QuantLib::Period& lag,
                                 QuantLib::Frequency frequency, QuantLib::Rate baseZeroRate,
-                                std::vector<boost::shared_ptr<typename Traits::helper>> instruments,
+                                std::vector<QuantLib::ext::shared_ptr<typename Traits::helper>> instruments,
                                 QuantLib::Real accuracy = 1.0e-12,
-                                boost::shared_ptr<QuantLib::ZeroInflationIndex> index = nullptr,
+                                QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex> index = nullptr,
                                 bool useLastAvailableFixingAsBaseDate = false, const Interpolator& i = Interpolator())
         : base_curve(referenceDate, calendar, dayCounter, lag, frequency, baseZeroRate, i),
           instruments_(std::move(instruments)), accuracy_(accuracy), index_(index),
@@ -66,8 +66,8 @@ public:
     //@{
     QuantLib::Date baseDate() const override;
     QuantLib::Date maxDate() const override;
-    void setSeasonality(const boost::shared_ptr<QuantLib::Seasonality>& seasonality =
-                            boost::shared_ptr<QuantLib::Seasonality>()) override;
+    void setSeasonality(const QuantLib::ext::shared_ptr<QuantLib::Seasonality>& seasonality =
+                            QuantLib::ext::shared_ptr<QuantLib::Seasonality>()) override;
     //@
     //! \name Inspectors
     //@{
@@ -88,13 +88,13 @@ private:
     // methods
     void performCalculations() const override;
     // data members
-    std::vector<boost::shared_ptr<typename Traits::helper>> instruments_;
+    std::vector<QuantLib::ext::shared_ptr<typename Traits::helper>> instruments_;
     QuantLib::Real accuracy_;
 
     friend class Bootstrap<this_curve>;
     friend class QuantLib::BootstrapError<this_curve>;
     Bootstrap<this_curve> bootstrap_;
-    boost::shared_ptr<QuantLib::ZeroInflationIndex> index_;
+    QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex> index_;
     bool useLastAvailableFixingAsBaseDate_;
 };
 
@@ -153,7 +153,7 @@ QuantLib::Date PiecewiseZeroInflationCurve<I, B, T>::initialDate() const {
 }
 
 template <class I, template <class> class B, class T>
-void PiecewiseZeroInflationCurve<I, B, T>::setSeasonality(const boost::shared_ptr<QuantLib::Seasonality>& seasonality) {
+void PiecewiseZeroInflationCurve<I, B, T>::setSeasonality(const QuantLib::ext::shared_ptr<QuantLib::Seasonality>& seasonality) {
     // always reset, whether with null or new pointer
     base_curve::seasonality_ = seasonality;
     if (base_curve::seasonality_ != nullptr) {

@@ -46,7 +46,7 @@ const QuantLib::ext::shared_ptr<ore::data::Report>& MarketRiskBacktest::Backtest
 }
 
 MarketRiskBacktest::MarketRiskBacktest(
-    const std::string& baseCurrency,
+    const std::string& calculationCurrency,
     std::unique_ptr<BacktestArgs> btArgs, 
     std::unique_ptr<SensiRunArgs> sensiArgs,
     std::unique_ptr<FullRevalArgs> revalArgs,
@@ -54,9 +54,9 @@ MarketRiskBacktest::MarketRiskBacktest(
     const ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
     const bool breakdown,
     const bool requireTradePnl)
-    : MarketRiskReport(baseCurrency, btArgs->backtestPeriod_, hisScenGen, std::move(sensiArgs), std::move(revalArgs),
+    : MarketRiskReport(calculationCurrency, btArgs->backtestPeriod_, hisScenGen, std::move(sensiArgs), std::move(revalArgs),
                        std::move(mtArgs), breakdown, requireTradePnl),
-      btArgs_(std::move(btArgs)) {    
+      btArgs_(std::move(btArgs)) {
     init();
 }
 
@@ -68,6 +68,12 @@ void MarketRiskBacktest::init() {
     requireTradePnl_ = callTradeIds_ != postTradeIds_;
 
     MarketRiskReport::init();
+}
+
+
+std::vector<ore::data::TimePeriod> MarketRiskBacktest::timePeriods() { 
+    std::vector<TimePeriod> tps{btArgs_->benchmarkPeriod_, btArgs_->backtestPeriod_};
+    return tps;
 }
 
 bool MarketRiskBacktest::runTradeDetail(const ext::shared_ptr<MarketRiskReport::Reports>& reports) {
@@ -364,7 +370,7 @@ void MarketRiskBacktest::reset(const QuantLib::ext::shared_ptr<MarketRiskGroup>&
 
 void MarketRiskBacktest::addPnlRow(const QuantLib::ext::shared_ptr<BacktestReports>& reports, Size scenarioIdx, 
     bool isCall, const RiskFactorKey& key_1, Real shift_1, Real delta, Real gamma, Real deltaPnl, Real gammaPnl, 
-    const RiskFactorKey& key_2, Real shift_2, const string& tradeId) {
+    const RiskFactorKey& key_2, Real shift_2, const string& tradeId, const string& currency, Real fxSpot) {
 
     // Do we have a report to write to?
     // Is this too slow to do on every call to addPnlRow? Need to find the report each time in any case.
@@ -395,9 +401,9 @@ void MarketRiskBacktest::addPnlRow(const QuantLib::ext::shared_ptr<BacktestRepor
         .add(gamma)
         .add(shift_1)
         .add(shift_2)
-        .add(deltaPnl)
-        .add(gammaPnl)
-        .add(baseCurrency_);
+        .add(currency.empty() || currency == calculationCurrency_ ? deltaPnl : deltaPnl / fxSpot)
+        .add(currency.empty() || currency == calculationCurrency_ ? gammaPnl : gammaPnl / fxSpot)
+        .add(currency.empty() ? calculationCurrency_ : currency);
 }
 
 void BacktestPNLCalculator::writePNL(Size scenarioIdx, bool isCall, const RiskFactorKey& key_1, Real shift_1,

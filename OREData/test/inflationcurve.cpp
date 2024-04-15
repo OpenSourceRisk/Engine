@@ -68,14 +68,14 @@ struct TodaysMarketArguments {
 
         filename = inputDir + "/" + marketFile;
         string fixingsFilename = inputDir + "/" + fixingsFile;
-        loader = boost::make_shared<CSVLoader>(TEST_INPUT_FILE(filename), TEST_INPUT_FILE(fixingsFilename), false);
+        loader = QuantLib::ext::make_shared<CSVLoader>(TEST_INPUT_FILE(filename), TEST_INPUT_FILE(fixingsFilename), false);
     }
 
     Date asof;
-    boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();
-    boost::shared_ptr<CurveConfigurations> curveConfigs = boost::make_shared<CurveConfigurations>();
-    boost::shared_ptr<TodaysMarketParameters> todaysMarketParameters = boost::make_shared<TodaysMarketParameters>();
-    boost::shared_ptr<Loader> loader;
+    QuantLib::ext::shared_ptr<Conventions> conventions = QuantLib::ext::make_shared<Conventions>();
+    QuantLib::ext::shared_ptr<CurveConfigurations> curveConfigs = QuantLib::ext::make_shared<CurveConfigurations>();
+    QuantLib::ext::shared_ptr<TodaysMarketParameters> todaysMarketParameters = QuantLib::ext::make_shared<TodaysMarketParameters>();
+    QuantLib::ext::shared_ptr<Loader> loader;
 };
 
 }
@@ -114,8 +114,8 @@ BOOST_DATA_TEST_CASE(testAuCpiZcInflationCurve, bdata::make(auCpiTestDates) * bd
     TodaysMarketArguments tma(asof, "aucpi_zc", marketFile, fixingsFile, conventionsFile);
 
     // Check that the market builds without error.
-    boost::shared_ptr<TodaysMarket> market;
-    BOOST_REQUIRE_NO_THROW(market = boost::make_shared<TodaysMarket>(tma.asof, tma.todaysMarketParameters,
+    QuantLib::ext::shared_ptr<TodaysMarket> market;
+    BOOST_REQUIRE_NO_THROW(market = QuantLib::ext::make_shared<TodaysMarket>(tma.asof, tma.todaysMarketParameters,
         tma.loader, tma.curveConfigs, false, true, false));
 
     // Portfolio containing 2 AU CPI zero coupon swaps, AUD 10M, that should price at 0, i.e. NPV < AUD 0.01.
@@ -126,10 +126,10 @@ BOOST_DATA_TEST_CASE(testAuCpiZcInflationCurve, bdata::make(auCpiTestDates) * bd
     }
     portfolioFile += ".xml";
 
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->fromFile(TEST_INPUT_FILE("aucpi_zc/pricingengine.xml"));
-    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(engineData, market);
-    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
+    QuantLib::ext::shared_ptr<EngineFactory> factory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
+    QuantLib::ext::shared_ptr<Portfolio> portfolio = QuantLib::ext::make_shared<Portfolio>();
     portfolio->fromFile(TEST_INPUT_FILE(portfolioFile));
     portfolio->build(factory);
 

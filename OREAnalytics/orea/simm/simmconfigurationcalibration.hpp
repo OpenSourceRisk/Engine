@@ -34,13 +34,13 @@ namespace analytics {
 */
 class SimmConfigurationCalibration : public SimmConfigurationBase {
 public:
-    SimmConfigurationCalibration(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
-                                 const boost::shared_ptr<SimmCalibration>& simmCalibration,
+    SimmConfigurationCalibration(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+                                 const QuantLib::ext::shared_ptr<SimmCalibration>& simmCalibration,
                                  const QuantLib::Size& mporDays = 10,
                                  const std::string& name = "SIMM Calibration");
 
     //! Return the SIMM <em>Label2</em> value for the given interest rate index
-    std::string labels2(const boost::shared_ptr<QuantLib::InterestRateIndex>& irIndex) const override;
+    std::string label2(const QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>& irIndex) const override;
 
     //! Add SIMM <em>Label2</em> values under certain circumstances.
     void addLabels2(const CrifRecord::RiskType& rt, const std::string& label_2) override;

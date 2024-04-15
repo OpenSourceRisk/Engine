@@ -66,13 +66,14 @@ double externalAverage(const std::vector<double>& v) {
 
 ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
     const std::string& npv, const std::vector<std::pair<std::string, std::string>>& additionalResults,
-    const boost::shared_ptr<ModelCG>& model, const ASTNodePtr ast, const boost::shared_ptr<Context>& context,
+    const QuantLib::ext::shared_ptr<ModelCG>& model, const ASTNodePtr ast, const QuantLib::ext::shared_ptr<Context>& context,
     const Model::McParams& mcParams, const std::string& script, const bool interactive,
-    const bool generateAdditionalResults, const bool useCachedSensis, const bool useExternalComputeFramework)
+    const bool generateAdditionalResults, const bool includePastCashflows, const bool useCachedSensis,
+    const bool useExternalComputeFramework)
     : npv_(npv), additionalResults_(additionalResults), model_(model), ast_(ast), context_(context),
       mcParams_(mcParams), script_(script), interactive_(interactive),
-      generateAdditionalResults_(generateAdditionalResults), useCachedSensis_(useCachedSensis),
-      useExternalComputeFramework_(useExternalComputeFramework) {
+      generateAdditionalResults_(generateAdditionalResults), includePastCashflows_(includePastCashflows),
+      useCachedSensis_(useCachedSensis), useExternalComputeFramework_(useExternalComputeFramework) {
 
     // register with model
 
@@ -85,8 +86,10 @@ ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
         opsExternal_ = getExternalRandomVariableOps();
         gradsExternal_ = getExternalRandomVariableGradients();
     } else {
-        ops_ = getRandomVariableOps(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType);
-        grads_ = getRandomVariableGradients(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType);
+        ops_ = getRandomVariableOps(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType, 0.0,
+                                    mcParams_.regressionVarianceCutoff);
+        grads_ = getRandomVariableGradients(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType, 0.2,
+                                            mcParams_.regressionVarianceCutoff);
     }
 }
 
@@ -102,7 +105,7 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph() const {
 
         // set up copy of initial context to run the cg builder against
 
-        workingContext_ = boost::make_shared<Context>(*context_);
+        workingContext_ = QuantLib::ext::make_shared<Context>(*context_);
 
         // set TODAY in the context
 
@@ -115,7 +118,7 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph() const {
 
         for (auto const& v : workingContext_->scalars) {
             if (v.second.which() == ValueTypeWhich::Number) {
-                auto r = boost::get<RandomVariable>(v.second);
+                auto r = QuantLib::ext::get<RandomVariable>(v.second);
                 QL_REQUIRE(r.deterministic(), "ScriptedInstrumentPricingEngineCG::calculate(): expected variable '"
                                                   << v.first << "' from initial context to be deterministic, got "
                                                   << r);
@@ -126,7 +129,7 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph() const {
         for (auto const& a : workingContext_->arrays) {
             for (Size i = 0; i < a.second.size(); ++i) {
                 if (a.second[i].which() == ValueTypeWhich::Number) {
-                    auto r = boost::get<RandomVariable>(a.second[i]);
+                    auto r = QuantLib::ext::get<RandomVariable>(a.second[i]);
                     QL_REQUIRE(r.deterministic(), "ScriptedInstrumentPricingEngineCG::calculate(): expected variable '"
                                                       << a.first << "[" << i
                                                       << "]' from initial context to be deterministic, got " << r);
@@ -138,7 +141,7 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph() const {
         // build graph
 
         ComputationGraphBuilder cgBuilder(*g, getRandomVariableOpLabels(), ast_, workingContext_, model_);
-        cgBuilder.run(generateAdditionalResults_, script_, interactive_);
+        cgBuilder.run(generateAdditionalResults_, includePastCashflows_, script_, interactive_);
         cgVersion_ = model_->cgVersion();
         DLOG("Built computation graph version " << cgVersion_ << " size is " << g->size());
         TLOGGERSTREAM(ssaForm(*g, getRandomVariableOpLabels()));
@@ -372,7 +375,7 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
 
             // set contents from paylog as additional results
 
-            auto paylog = boost::make_shared<PayLog>();
+            auto paylog = QuantLib::ext::make_shared<PayLog>();
             for (auto const& p : payLogEntries_) {
                 paylog->write(values[p.value],
                               !close_enough(values[p.filter], RandomVariable(values[p.filter].size(), 0.0)), p.obs,
@@ -384,8 +387,12 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
             for (Size i = 0; i < paylog->size(); ++i) {
                 // cashflow is written as expectation of deflated base ccy amount at T0, converted to flow ccy
                 // with the T0 FX Spot and compounded back to the pay date on T0 curves
-                Real fx = model_->getDirectFxSpotT0(paylog->currencies().at(i), model_->baseCcy());
-                Real discount = model_->getDirectDiscountT0(paylog->dates().at(i), paylog->currencies().at(i));
+                Real fx = 1.0;
+                Real discount = 1.0;
+                if (paylog->dates().at(i) > model_->referenceDate()) {
+                    fx = model_->getDirectFxSpotT0(paylog->currencies().at(i), model_->baseCcy());
+                    discount = model_->getDirectDiscountT0(paylog->dates().at(i), paylog->currencies().at(i));
+                }
                 cashFlowResults[i].amount = model_->extractT0Result(paylog->amounts().at(i)) / fx / discount;
                 cashFlowResults[i].payDate = paylog->dates().at(i);
                 cashFlowResults[i].currency = paylog->currencies().at(i);

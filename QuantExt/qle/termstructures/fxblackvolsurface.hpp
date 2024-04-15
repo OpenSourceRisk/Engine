@@ -69,13 +69,13 @@ public:
     /*! Note the smile does not observe the spot or YTS handles, it will
      *  not update when they change
      */
-    boost::shared_ptr<FxSmileSection> blackVolSmile(Time t) const;
+    QuantLib::ext::shared_ptr<FxSmileSection> blackVolSmile(Time t) const;
 
 protected:
     virtual Volatility blackVolImpl(Time t, Real strike) const override;
 
     //! this must be implemented.
-    virtual boost::shared_ptr<FxSmileSection> blackVolSmileImpl(Real spot, Real rd, Real rf, Time t, Volatility atm,
+    virtual QuantLib::ext::shared_ptr<FxSmileSection> blackVolSmileImpl(Real spot, Real rd, Real rf, Time t, Volatility atm,
                                                                 Volatility rr, Volatility bf) const = 0;
 
     std::vector<Time> times_;
@@ -128,7 +128,7 @@ public:
 
 protected:
     bool firstApprox_;
-    virtual boost::shared_ptr<FxSmileSection> blackVolSmileImpl(Real spot, Real rd, Real rf, Time t, Volatility atm,
+    virtual QuantLib::ext::shared_ptr<FxSmileSection> blackVolSmileImpl(Real spot, Real rd, Real rf, Time t, Volatility atm,
                                                                 Volatility rr, Volatility bf) const override;
 };
 } // namespace QuantExt

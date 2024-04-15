@@ -38,7 +38,7 @@ struct CcyComp {
 };
 } // namespace
 
-boost::shared_ptr<PricingEngine> CamAmcCurrencySwapEngineBuilder::engineImpl(const std::vector<Currency>& ccys,
+QuantLib::ext::shared_ptr<PricingEngine> CamAmcCurrencySwapEngineBuilder::engineImpl(const std::vector<Currency>& ccys,
                                                                              const Currency& base) {
 
     std::set<Currency, CcyComp> allCurrencies(ccys.begin(), ccys.end());
@@ -56,8 +56,8 @@ boost::shared_ptr<PricingEngine> CamAmcCurrencySwapEngineBuilder::engineImpl(con
     std::vector<Size> externalModelIndices;
     std::vector<Handle<YieldTermStructure>> discountCurves;
     std::vector<Size> cIdx;
-    std::vector<boost::shared_ptr<IrModel>> lgm;
-    std::vector<boost::shared_ptr<FxBsParametrization>> fx;
+    std::vector<QuantLib::ext::shared_ptr<IrModel>> lgm;
+    std::vector<QuantLib::ext::shared_ptr<FxBsParametrization>> fx;
 
     // base ccy is the base ccy of the external cam by definition
     // but in case we only have one currency, we don't need this
@@ -91,14 +91,14 @@ boost::shared_ptr<PricingEngine> CamAmcCurrencySwapEngineBuilder::engineImpl(con
         }
     }
 
-    Handle<CrossAssetModel> model(boost::make_shared<CrossAssetModel>(lgm, fx, corr));
+    Handle<CrossAssetModel> model(QuantLib::ext::make_shared<CrossAssetModel>(lgm, fx, corr));
 
     // we assume that the model has the pricing discount curves attached already, so
     // we leave the discountCurves vector empty here
 
     // build the pricing engine
 
-    auto engine = boost::make_shared<McCamCurrencySwapEngine>(
+    auto engine = QuantLib::ext::make_shared<McCamCurrencySwapEngine>(
         model, ccys, base, parseSequenceType(engineParameter("Training.Sequence")),
         parseSequenceType(engineParameter("Pricing.Sequence")), parseInteger(engineParameter("Training.Samples")),
         parseInteger(engineParameter("Pricing.Samples")), parseInteger(engineParameter("Training.Seed")),
@@ -107,7 +107,8 @@ boost::shared_ptr<PricingEngine> CamAmcCurrencySwapEngineBuilder::engineImpl(con
         parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering")),
         parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")), discountCurves, simulationDates_,
         externalModelIndices, parseBool(engineParameter("MinObsDate")),
-        parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")));
+        parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
+        parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())));
 
     return engine;
 }

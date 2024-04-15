@@ -39,8 +39,8 @@ namespace data {
 
 CDSVolCurve::CDSVolCurve(Date asof, CDSVolatilityCurveSpec spec, const Loader& loader,
                          const CurveConfigurations& curveConfigs,
-                         const std::map<std::string, boost::shared_ptr<CDSVolCurve>>& requiredCdsVolCurves,
-                         const std::map<std::string, boost::shared_ptr<DefaultCurve>>& requiredCdsCurves) {
+                         const std::map<std::string, QuantLib::ext::shared_ptr<CDSVolCurve>>& requiredCdsVolCurves,
+                         const std::map<std::string, QuantLib::ext::shared_ptr<DefaultCurve>>& requiredCdsCurves) {
 
     try {
 
@@ -57,20 +57,20 @@ CDSVolCurve::CDSVolCurve(Date asof, CDSVolatilityCurveSpec spec, const Loader& l
         strikeType_ = config.strikeType() == "Price" ? CreditVolCurve::Type::Price : CreditVolCurve::Type::Spread;
 
         // Do different things depending on the type of volatility configured
-        boost::shared_ptr<VolatilityConfig> vc = config.volatilityConfig();
-        if (auto cvc = boost::dynamic_pointer_cast<ConstantVolatilityConfig>(vc)) {
+        QuantLib::ext::shared_ptr<VolatilityConfig> vc = config.volatilityConfig();
+        if (auto cvc = QuantLib::ext::dynamic_pointer_cast<ConstantVolatilityConfig>(vc)) {
             buildVolatility(asof, config, *cvc, loader);
-        } else if (auto vcc = boost::dynamic_pointer_cast<VolatilityCurveConfig>(vc)) {
+        } else if (auto vcc = QuantLib::ext::dynamic_pointer_cast<VolatilityCurveConfig>(vc)) {
             buildVolatility(asof, config, *vcc, loader);
-        } else if (auto vssc = boost::dynamic_pointer_cast<VolatilityStrikeSurfaceConfig>(vc)) {
+        } else if (auto vssc = QuantLib::ext::dynamic_pointer_cast<VolatilityStrikeSurfaceConfig>(vc)) {
             buildVolatility(asof, config, *vssc, loader, requiredCdsCurves);
-        } else if (auto vdsc = boost::dynamic_pointer_cast<VolatilityDeltaSurfaceConfig>(vc)) {
+        } else if (auto vdsc = QuantLib::ext::dynamic_pointer_cast<VolatilityDeltaSurfaceConfig>(vc)) {
             QL_FAIL("CDSVolCurve does not support a VolatilityDeltaSurfaceConfig yet.");
-        } else if (auto vmsc = boost::dynamic_pointer_cast<VolatilityMoneynessSurfaceConfig>(vc)) {
+        } else if (auto vmsc = QuantLib::ext::dynamic_pointer_cast<VolatilityMoneynessSurfaceConfig>(vc)) {
             QL_FAIL("CDSVolCurve does not support a VolatilityMoneynessSurfaceConfig yet.");
-        } else if (auto vapo = boost::dynamic_pointer_cast<VolatilityApoFutureSurfaceConfig>(vc)) {
+        } else if (auto vapo = QuantLib::ext::dynamic_pointer_cast<VolatilityApoFutureSurfaceConfig>(vc)) {
             QL_FAIL("VolatilityApoFutureSurfaceConfig does not make sense for CDSVolCurve.");
-        } else if (auto vpc = boost::dynamic_pointer_cast<CDSProxyVolatilityConfig>(vc)) {
+        } else if (auto vpc = QuantLib::ext::dynamic_pointer_cast<CDSProxyVolatilityConfig>(vc)) {
             buildVolatility(asof, spec, config, *vpc, requiredCdsVolCurves, requiredCdsCurves);
         } else {
             QL_FAIL("Unexpected VolatilityConfig in CDSVolatilityConfig");
@@ -90,11 +90,11 @@ void CDSVolCurve::buildVolatility(const Date& asof, const CDSVolatilityCurveConf
 
     LOG("CDSVolCurve: start building constant volatility structure");
 
-    const boost::shared_ptr<MarketDatum>& md = loader.get(cvc.quote(), asof);
+    const QuantLib::ext::shared_ptr<MarketDatum>& md = loader.get(cvc.quote(), asof);
     QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
     QL_REQUIRE(md->instrumentType() == MarketDatum::InstrumentType::INDEX_CDS_OPTION,
         "MarketDatum instrument type '" << md->instrumentType() << "' <> 'MarketDatum::InstrumentType::INDEX_CDS_OPTION'");
-    boost::shared_ptr<IndexCDSOptionQuote> q = boost::dynamic_pointer_cast<IndexCDSOptionQuote>(md);
+    QuantLib::ext::shared_ptr<IndexCDSOptionQuote> q = QuantLib::ext::dynamic_pointer_cast<IndexCDSOptionQuote>(md);
     QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to IndexCDSOptionQuote");
     QL_REQUIRE(q->name() == cvc.quote(),
         "IndexCDSOptionQuote name '" << q->name() << "' <> ConstantVolatilityConfig quote '" << cvc.quote() << "'");
@@ -106,7 +106,7 @@ void CDSVolCurve::buildVolatility(const Date& asof, const CDSVolatilityCurveConf
     std::map<std::tuple<QuantLib::Date, QuantLib::Period, QuantLib::Real>, QuantLib::Handle<QuantLib::Quote>> quotes;
     quotes[std::make_tuple(asof + 1 * Years, 5 * Years, strikeType_ == CreditVolCurve::Type::Price ? 1.0 : 0.0)] =
         quote;
-    vol_ = boost::make_shared<QuantExt::InterpolatingCreditVolCurve>(
+    vol_ = QuantLib::ext::make_shared<QuantExt::InterpolatingCreditVolCurve>(
         asof, calendar_, Following, dayCounter_, std::vector<QuantLib::Period>{},
         std::vector<Handle<QuantExt::CreditCurve>>{}, quotes, strikeType_);
 
@@ -138,7 +138,7 @@ void CDSVolCurve::buildVolatility(const QuantLib::Date& asof, const CDSVolatilit
 
             QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
 
-            auto q = boost::dynamic_pointer_cast<IndexCDSOptionQuote>(md);
+            auto q = QuantLib::ext::dynamic_pointer_cast<IndexCDSOptionQuote>(md);
             QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to IndexCDSOptionQuote");
 
             TLOG("The quote " << q->name() << " matched the pattern");
@@ -184,7 +184,7 @@ void CDSVolCurve::buildVolatility(const QuantLib::Date& asof, const CDSVolatilit
 
             QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
 
-            auto q = boost::dynamic_pointer_cast<IndexCDSOptionQuote>(md);
+            auto q = QuantLib::ext::dynamic_pointer_cast<IndexCDSOptionQuote>(md);
             QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to IndexCDSOptionQuote");
 
             // Find quote name in configured quotes.
@@ -216,7 +216,7 @@ void CDSVolCurve::buildVolatility(const QuantLib::Date& asof, const CDSVolatilit
     }
 
     DLOG("Creating InterpolatingCreditVolCurve object.");
-    vol_ = boost::make_shared<QuantExt::InterpolatingCreditVolCurve>(
+    vol_ = QuantLib::ext::make_shared<QuantExt::InterpolatingCreditVolCurve>(
         asof, calendar_, Following, dayCounter_, std::vector<QuantLib::Period>{},
         std::vector<Handle<QuantExt::CreditCurve>>{}, quotes, strikeType_);
 
@@ -225,7 +225,7 @@ void CDSVolCurve::buildVolatility(const QuantLib::Date& asof, const CDSVolatilit
 
 void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc,
                                   const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader,
-                                  const std::map<std::string, boost::shared_ptr<DefaultCurve>>& requiredCdsCurves) {
+                                  const std::map<std::string, QuantLib::ext::shared_ptr<DefaultCurve>>& requiredCdsCurves) {
 
     LOG("CDSVolCurve: start building 2-D volatility absolute strike surface");
 
@@ -263,7 +263,7 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
     }
 
     // If we do not have an expiry wild card, parse the configured expiries.
-    vector<boost::shared_ptr<Expiry>> configuredExpiries;
+    vector<QuantLib::ext::shared_ptr<Expiry>> configuredExpiries;
     if (!expWc) {
         // Parse the list of expiry strings.
         for (const string& strExpiry : vssc.expiries()) {
@@ -294,7 +294,7 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
         QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
 
         // Go to next quote if not a CDS option quote.
-        auto q = boost::dynamic_pointer_cast<IndexCDSOptionQuote>(md);
+        auto q = QuantLib::ext::dynamic_pointer_cast<IndexCDSOptionQuote>(md);
         QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to IndexCDSOptionQuote");
 
         // Go to next quote if index name in the quote does not match the cds vol configuration name.
@@ -302,7 +302,7 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
             continue;
 
         // This surface is for absolute strikes only.
-        auto strike = boost::dynamic_pointer_cast<AbsoluteStrike>(q->strike());
+        auto strike = QuantLib::ext::dynamic_pointer_cast<AbsoluteStrike>(q->strike());
         if (!strike)
             continue;
 
@@ -321,7 +321,7 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
         // Move to the next quote if it does not.
         if (!expWc) {
             auto expiryIt = find_if(configuredExpiries.begin(), configuredExpiries.end(),
-                                    [&q](boost::shared_ptr<Expiry> e) { return *e == *q->expiry(); });
+                                    [&q](QuantLib::ext::shared_ptr<Expiry> e) { return *e == *q->expiry(); });
             if (expiryIt == configuredExpiries.end())
                 continue;
         }
@@ -362,7 +362,7 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
         effTerms.push_back(vc.terms()[i]);
     }
 
-    vol_ = boost::make_shared<QuantExt::InterpolatingCreditVolCurve>(asof, calendar_, Following, dayCounter_, effTerms,
+    vol_ = QuantLib::ext::make_shared<QuantExt::InterpolatingCreditVolCurve>(asof, calendar_, Following, dayCounter_, effTerms,
                                                                      termCurves, quotes, strikeType_);
     vol_->enableExtrapolation();
 
@@ -371,8 +371,8 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
 
 void CDSVolCurve::buildVolatility(const Date& asof, const CDSVolatilityCurveSpec& spec,
                                   const CDSVolatilityCurveConfig& vc, const CDSProxyVolatilityConfig& pvc,
-                                  const std::map<std::string, boost::shared_ptr<CDSVolCurve>>& requiredCdsVolCurves,
-                                  const std::map<std::string, boost::shared_ptr<DefaultCurve>>& requiredCdsCurves) {
+                                  const std::map<std::string, QuantLib::ext::shared_ptr<CDSVolCurve>>& requiredCdsVolCurves,
+                                  const std::map<std::string, QuantLib::ext::shared_ptr<DefaultCurve>>& requiredCdsCurves) {
     LOG("CDSVolCurve: start building proxy volatility surface");
     auto proxyVolCurve = requiredCdsVolCurves.find(CDSVolatilityCurveSpec(pvc.cdsVolatilityCurve()).name());
     QL_REQUIRE(proxyVolCurve != requiredCdsVolCurves.end(), "CDSVolCurve: Failed to find cds vol curve '"
@@ -392,7 +392,7 @@ void CDSVolCurve::buildVolatility(const Date& asof, const CDSVolatilityCurveSpec
     }
     LOG("Will use " << termCurves.size()
                     << " term curves in target surface to determine atm levels and moneyness-adjustments");
-    vol_ = boost::make_shared<QuantExt::ProxyCreditVolCurve>(
+    vol_ = QuantLib::ext::make_shared<QuantExt::ProxyCreditVolCurve>(
         Handle<CreditVolCurve>(proxyVolCurve->second->volTermStructure()), effTerms, termCurves);
     LOG("CDSVolCurve: finished building proxy volatility surface");
 }
@@ -400,7 +400,7 @@ void CDSVolCurve::buildVolatility(const Date& asof, const CDSVolatilityCurveSpec
 void CDSVolCurve::buildVolatilityExplicit(
     const Date& asof, CDSVolatilityCurveConfig& vc, const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader,
     const vector<Real>& configuredStrikes,
-    const std::map<std::string, boost::shared_ptr<DefaultCurve>>& requiredCdsCurves) {
+    const std::map<std::string, QuantLib::ext::shared_ptr<DefaultCurve>>& requiredCdsCurves) {
 
     LOG("CDSVolCurve: start building 2-D volatility absolute strike surface with explicit strikes and expiries");
 
@@ -419,11 +419,11 @@ void CDSVolCurve::buildVolatilityExplicit(
         QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
 
         // Go to next quote if not a CDS option quote.
-        auto q = boost::dynamic_pointer_cast<IndexCDSOptionQuote>(md);
+        auto q = QuantLib::ext::dynamic_pointer_cast<IndexCDSOptionQuote>(md);
         QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to IndexCDSOptionQuote");
 
         // This surface is for absolute strikes only.
-        auto strike = boost::dynamic_pointer_cast<AbsoluteStrike>(q->strike());
+        auto strike = QuantLib::ext::dynamic_pointer_cast<AbsoluteStrike>(q->strike());
         if (!strike)
             continue;
 
@@ -467,7 +467,7 @@ void CDSVolCurve::buildVolatilityExplicit(
         effTerms.push_back(vc.terms()[i]);
     }
 
-    vol_ = boost::make_shared<QuantExt::InterpolatingCreditVolCurve>(asof, calendar_, Following, dayCounter_, effTerms,
+    vol_ = QuantLib::ext::make_shared<QuantExt::InterpolatingCreditVolCurve>(asof, calendar_, Following, dayCounter_, effTerms,
                                                                      termCurves, quotes, strikeType_);
     vol_->enableExtrapolation();
 
@@ -475,16 +475,16 @@ void CDSVolCurve::buildVolatilityExplicit(
         << "surface with explicit strikes and expiries");
 }
 
-Date CDSVolCurve::getExpiry(const Date& asof, const boost::shared_ptr<Expiry>& expiry) const {
+Date CDSVolCurve::getExpiry(const Date& asof, const QuantLib::ext::shared_ptr<Expiry>& expiry) const {
 
     Date result;
 
-    if (auto expiryDate = boost::dynamic_pointer_cast<ExpiryDate>(expiry)) {
+    if (auto expiryDate = QuantLib::ext::dynamic_pointer_cast<ExpiryDate>(expiry)) {
         result = expiryDate->expiryDate();
-    } else if (auto expiryPeriod = boost::dynamic_pointer_cast<ExpiryPeriod>(expiry)) {
+    } else if (auto expiryPeriod = QuantLib::ext::dynamic_pointer_cast<ExpiryPeriod>(expiry)) {
         // We may need more conventions here eventually.
         result = calendar_.adjust(asof + expiryPeriod->expiryPeriod());
-    } else if (auto fcExpiry = boost::dynamic_pointer_cast<FutureContinuationExpiry>(expiry)) {
+    } else if (auto fcExpiry = QuantLib::ext::dynamic_pointer_cast<FutureContinuationExpiry>(expiry)) {
         QL_FAIL("CDSVolCurve::getExpiry: future continuation expiry not supported for CDS volatility quotes.");
     } else {
         QL_FAIL("CDSVolCurve::getExpiry: cannot determine expiry type.");

@@ -120,7 +120,7 @@ public:
                payment date...
     */
     // RL: QuantExt version
-    SyntheticCDO(const boost::shared_ptr<QuantExt::Basket>& basket, Protection::Side side, const Schedule& schedule,
+    SyntheticCDO(const QuantLib::ext::shared_ptr<QuantExt::Basket>& basket, Protection::Side side, const Schedule& schedule,
                  Rate upfrontRate, Rate runningRate, const DayCounter& dayCounter,
                  BusinessDayConvention paymentConvention, bool settlesAccrual = true,
                  const QuantLib::CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime =
@@ -131,7 +131,7 @@ public:
                  const DayCounter& lastPeriodDayCounter = DayCounter());
 
     // RL: QuantExt version
-    const boost::shared_ptr<QuantExt::Basket>& basket() const { return basket_; }
+    const QuantLib::ext::shared_ptr<QuantExt::Basket>& basket() const { return basket_; }
 
     bool isExpired() const override;
     Rate fairPremium() const;
@@ -152,7 +152,7 @@ public:
     Real leverageFactor() const { return leverageFactor_; }
     //! Last protection date.
     const Date& maturity() const {
-        return boost::dynamic_pointer_cast<FixedRateCoupon>(normalizedLeg_.back())->accrualEndDate();
+        return QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(normalizedLeg_.back())->accrualEndDate();
     }
     /*! The Gaussian Copula LHP implied correlation that makes the
         contract zero value. This is for a flat correlation along
@@ -174,7 +174,7 @@ private:
     void setupExpired() const override;
 
     // RL: QuantExt version
-    boost::shared_ptr<QuantExt::Basket> basket_;
+    QuantLib::ext::shared_ptr<QuantExt::Basket> basket_;
     Protection::Side side_;
     Leg normalizedLeg_;
 
@@ -187,7 +187,7 @@ private:
     QuantLib::CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime_;
     Date protectionStart_;
     Date upfrontDate_;
-    boost::shared_ptr<CashFlow> upfrontPayment_, accrualRebate_, accrualRebateCurrent_;
+    QuantLib::ext::shared_ptr<CashFlow> upfrontPayment_, accrualRebate_, accrualRebateCurrent_;
     Real recoveryRate_;
     
     mutable Real premiumValue_;
@@ -204,7 +204,7 @@ public:
     void validate() const override;
 
     // RL: QuantExt version
-    boost::shared_ptr<QuantExt::Basket> basket;
+    QuantLib::ext::shared_ptr<QuantExt::Basket> basket;
     Protection::Side side;
     Leg normalizedLeg;
 
@@ -213,7 +213,7 @@ public:
     Real leverageFactor;
     DayCounter dayCounter;
     BusinessDayConvention paymentConvention;
-    boost::shared_ptr<CashFlow> upfrontPayment, accrualRebate, accrualRebateCurrent;
+    QuantLib::ext::shared_ptr<CashFlow> upfrontPayment, accrualRebate, accrualRebateCurrent;
     bool settlesAccrual;
     QuantLib::CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime;
     Date protectionStart;

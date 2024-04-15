@@ -122,7 +122,7 @@ public:
         void reset() { var = 0.0; }
     };
 
-    MarketRiskBacktest(const std::string& baseCurrency,
+    MarketRiskBacktest(const std::string& calculationCurrency,
                        std::unique_ptr<BacktestArgs> btArgs,
                        std::unique_ptr<SensiRunArgs> sensiArgs = nullptr,
                        std::unique_ptr<FullRevalArgs> revalArgs = nullptr,
@@ -142,10 +142,11 @@ public:
         
     //! Add a row to the P&L contribution report
     virtual void addPnlRow(const QuantLib::ext::shared_ptr<BacktestReports>& reports, QuantLib::Size scenarioIdx,
-                           bool isCall, 
-        const ore::analytics::RiskFactorKey& key_1, QuantLib::Real shift_1, QuantLib::Real delta, QuantLib::Real gamma, 
-        QuantLib::Real deltaPnl, QuantLib::Real gammaPnl, const ore::analytics::RiskFactorKey& key_2 = ore::analytics::RiskFactorKey(),
-        QuantLib::Real shift_2 = 0.0, const std::string& tradeId = "");
+                           bool isCall, const ore::analytics::RiskFactorKey& key_1, QuantLib::Real shift_1,
+                           QuantLib::Real delta, QuantLib::Real gamma, QuantLib::Real deltaPnl, QuantLib::Real gammaPnl,
+                           const ore::analytics::RiskFactorKey& key_2 = ore::analytics::RiskFactorKey(),
+                           QuantLib::Real shift_2 = 0.0, const std::string& tradeId = "",
+                           const std::string& currency = "", QuantLib::Real fxSpot = 1.0);
 
 protected:
     std::unique_ptr<BacktestArgs> btArgs_;
@@ -214,6 +215,8 @@ protected:
     void writeSummary(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
                       const QuantLib::ext::shared_ptr<ore::analytics::MarketRiskGroup>& riskGroup,
                       const QuantLib::ext::shared_ptr<ore::analytics::TradeGroup>& tradeGroup) override;
+
+   std::vector<ore::data::TimePeriod> timePeriods() override;
 
  private:
     /*! Calculate the number of exceptions given the current \p data and the associated

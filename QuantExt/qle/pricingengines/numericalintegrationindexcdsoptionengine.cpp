@@ -223,13 +223,19 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
         };
 
         Real fepAdjustedForwardSpread;
-        Brent brent;
-        brent.setLowerBound(1.0E-8);
-        try {
-            fepAdjustedForwardSpread = brent.solve(target, 1.0E-7, arguments_.swap->fairSpreadClean(), 0.0001);
-        } catch (const std::exception& e) {
-            QL_FAIL(
-                "NumericalIntegrationIndexCdsOptionEngine::doCalc(): failed to calibrate forward spread: " << e.what());
+        if (target(0.0) > 0.0) {
+            // the target function might not have a zero, because of the continuous annuity approximation
+            // in some extreme situations (e.g. survival prob = 1 everywhere)
+            fepAdjustedForwardSpread = 0.0;
+        } else {
+            Brent brent;
+            brent.setLowerBound(0.0);
+            try {
+                fepAdjustedForwardSpread = brent.solve(target, 1.0E-7, arguments_.swap->fairSpreadClean(), 0.0001);
+            } catch (const std::exception& e) {
+                QL_FAIL("NumericalIntegrationIndexCdsOptionEngine::doCalc(): failed to calibrate forward spread: "
+                        << e.what());
+            }
         }
         results_.additionalResults["fepAdjustedForwardSpread"] = fepAdjustedForwardSpread;
         results_.additionalResults["forwardSpread"] = arguments_.swap->fairSpreadClean();
@@ -308,15 +314,15 @@ Real NumericalIntegrationIndexCdsOptionEngine::forwardRiskyAnnuityStrike(const R
     // CDS with a running spread equal to the strike.
     Real accuracy = 1e-8;
 
-    auto strikeCds = boost::make_shared<CreditDefaultSwap>(
+    auto strikeCds = QuantLib::ext::make_shared<CreditDefaultSwap>(
         Protection::Buyer, 1 / accuracy, strike, schedule, Following, Actual360(), cds.settlesAccrual(),
-        cds.protectionPaymentTime(), cds.protectionStartDate(), boost::shared_ptr<Claim>(), Actual360(true), true,
+        cds.protectionPaymentTime(), cds.protectionStartDate(), QuantLib::ext::shared_ptr<Claim>(), Actual360(true), true,
         cds.tradeDate(), cds.cashSettlementDays());
     // dummy engine
-    strikeCds->setPricingEngine(boost::make_shared<MidPointCdsEngine>(
+    strikeCds->setPricingEngine(QuantLib::ext::make_shared<MidPointCdsEngine>(
         Handle<DefaultProbabilityTermStructure>(
-            boost::make_shared<FlatHazardRate>(0, NullCalendar(), 0.0, Actual365Fixed())),
-        0.0, Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.0, Actual365Fixed()))));
+            QuantLib::ext::make_shared<FlatHazardRate>(0, NullCalendar(), 0.0, Actual365Fixed())),
+        0.0, Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.0, Actual365Fixed()))));
 
     Real hazardRate;
     try {
@@ -328,11 +334,11 @@ Real NumericalIntegrationIndexCdsOptionEngine::forwardRiskyAnnuityStrike(const R
     }
 
     Handle<DefaultProbabilityTermStructure> dph(
-        boost::make_shared<FlatHazardRate>(discountSwapCurrency_->referenceDate(), hazardRate, Actual365Fixed()));
+        QuantLib::ext::make_shared<FlatHazardRate>(discountSwapCurrency_->referenceDate(), hazardRate, Actual365Fixed()));
 
     // Calculate the forward risky strike annuity.
     strikeCds->setPricingEngine(
-        boost::make_shared<QuantExt::MidPointCdsEngine>(dph, indexRecovery_, discountSwapCurrency_));
+        QuantLib::ext::make_shared<QuantExt::MidPointCdsEngine>(dph, indexRecovery_, discountSwapCurrency_));
     Real rpv01_K = std::abs(strikeCds->couponLegNPV() + strikeCds->accrualRebateNPV()) /
                    (strikeCds->notional() * strikeCds->runningSpread());
     results_.additionalResults["riskyAnnuityStrike"] = rpv01_K;

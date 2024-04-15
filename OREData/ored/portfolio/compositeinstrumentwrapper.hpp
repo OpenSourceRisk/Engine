@@ -51,7 +51,7 @@ using QuantLib::Size;
 */
 class CompositeInstrumentWrapper : public ore::data::InstrumentWrapper {
 public:
-    CompositeInstrumentWrapper(const std::vector<boost::shared_ptr<InstrumentWrapper>>& wrappers,
+    CompositeInstrumentWrapper(const std::vector<QuantLib::ext::shared_ptr<InstrumentWrapper>>& wrappers,
                                const std::vector<Handle<Quote>>& fxRates = {}, const Date& valuationDate = Date());
 
     void initialise(const std::vector<QuantLib::Date>& dates) override;
@@ -63,7 +63,7 @@ public:
 
 protected:
     bool isOption_;
-    std::vector<boost::shared_ptr<InstrumentWrapper>> wrappers_;
+    std::vector<QuantLib::ext::shared_ptr<InstrumentWrapper>> wrappers_;
     std::vector<QuantLib::Handle<Quote>> fxRates_;
     Date valuationDate_;
     mutable std::map<std::string, boost::any> additionalResults_;

@@ -48,7 +48,7 @@ CommodityOption::CommodityOption(const Envelope& env, const OptionData& optionDa
     tradeType_ = "CommodityOption";
 }
 
-void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void CommodityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     // ISDA taxonomy, assuming Commodity follows the Equity template
     additionalData_["isdaAssetClass"] = std::string("Commodity");
@@ -65,7 +65,7 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
 
     // Populate the index_ in case the option is automatic exercise.
     // Intentionally use null calendar because we will ask for index value on the expiry date without adjustment.
-    const boost::shared_ptr<Market>& market = engineFactory->market();
+    const QuantLib::ext::shared_ptr<Market>& market = engineFactory->market();
     index_ = *market->commodityIndex(assetName_, engineFactory->configuration(MarketContext::pricing));
     if (!isFuturePrice_ || *isFuturePrice_) {
 
@@ -91,7 +91,7 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
         // Set the VanillaOptionTrade forwardDate_ if the index is a CommodityFuturesIndex - we possibly still have a 
         // CommoditySpotIndex at this point so check. Also, will only work for European exercise.
         auto et = parseExerciseType(option_.style());
-        if (et == Exercise::European && boost::dynamic_pointer_cast<CommodityFuturesIndex>(index_)) {
+        if (et == Exercise::European && QuantLib::ext::dynamic_pointer_cast<CommodityFuturesIndex>(index_)) {
             forwardDate_ = expiryDate;
         }
 
@@ -112,7 +112,7 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
 }
 
 std::map<AssetClass, std::set<std::string>>
-CommodityOption::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+CommodityOption::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     return {{AssetClass::COM, std::set<std::string>({assetName_})}};
 }
 
