@@ -178,16 +178,16 @@ public:
 
     std::pair<std::size_t, bool> initiateCalculation(const std::size_t n, const std::size_t id = 0,
                                                      const std::size_t version = 0,
-                                                     const bool debug = false) override final;
+                                                     const Settings settings = {}) override final;
     std::size_t createInputVariable(double v) override final;
     std::size_t createInputVariable(double* v) override final;
-    std::vector<std::vector<std::size_t>> createInputVariates(const std::size_t dim, const std::size_t steps,
-                                                              const std::uint32_t seed) override final;
+    std::vector<std::vector<std::size_t>> createInputVariates(const std::size_t dim,
+                                                              const std::size_t steps) override final;
     std::size_t applyOperation(const std::size_t randomVariableOpCode,
                                const std::vector<std::size_t>& args) override final;
     void freeVariable(const std::size_t id) override final;
     void declareOutputVariable(const std::size_t id) override final;
-    void finalizeCalculation(std::vector<double*>& output, const Settings& settings = Settings()) override final;
+    void finalizeCalculation(std::vector<double*>& output) override final;
 
     std::vector<std::pair<std::string, std::string>> deviceInfo() const override;
     const DebugInfo& debugInfo() const override final;
@@ -212,7 +212,6 @@ private:
     // will be accumulated over all calcs
     ComputeContext::DebugInfo debugInfo_;
 
-
     // 1a vectors per current calc id
 
     std::vector<std::size_t> size_;
@@ -233,7 +232,7 @@ private:
     std::size_t currentId_ = 0;
     ComputeState currentState_ = ComputeState::idle;
     std::size_t nVars_;
-    bool debug_;
+    Settings settings_;
 
     // 2a indexed by var id
     std::vector<std::size_t> inputVarOffset_;
@@ -398,12 +397,12 @@ cl_mem OpenClContext::initLinearCongruentialRng(const std::size_t n, std::uint32
 }
 
 std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_t n, const std::size_t id,
-                                                                const std::size_t version, const bool debug) {
+                                                                const std::size_t version, const Settings settings) {
 
     QL_REQUIRE(n > 0, "OpenClContext::initiateCalculation(): n must not be zero");
 
     bool newCalc = false;
-    debug_ = debug;
+    settings_ = settings;
 
     if (id == 0) {
 
@@ -503,8 +502,8 @@ std::size_t OpenClContext::createInputVariable(double* v) {
     return nVars_++;
 }
 
-std::vector<std::vector<std::size_t>> OpenClContext::createInputVariates(const std::size_t dim, const std::size_t steps,
-                                                                         const std::uint32_t seed) {
+std::vector<std::vector<std::size_t>> OpenClContext::createInputVariates(const std::size_t dim,
+                                                                         const std::size_t steps) {
     QL_REQUIRE(currentState_ == ComputeState::createInput || currentState_ == ComputeState::createVariates,
                "OpenClContext::createInputVariable(): not in state createInput or createVariates ("
                    << static_cast<int>(currentState_) << ")");
@@ -514,7 +513,7 @@ std::vector<std::vector<std::size_t>> OpenClContext::createInputVariates(const s
                                                 << " has a kernel already, input variates can not be regenerated.");
     currentState_ = ComputeState::createVariates;
     std::vector<std::vector<std::size_t>> resultIds(dim, std::vector<std::size_t>(steps));
-    std::uint32_t currentSeed = seed;
+    std::uint32_t currentSeed = settings_.seed;
     for (std::size_t i = 0; i < dim; ++i) {
         for (std::size_t j = 0; j < steps; ++j) {
             variateSeed_.push_back(currentSeed);
@@ -644,7 +643,7 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
 
     // update num of ops in debug info
 
-    if (debug_)
+    if (settings_.debug)
         debugInfo_.numberOfOperations += 1 * size_[currentId_ - 1];
 
     // return result id
@@ -678,7 +677,7 @@ void OpenClContext::declareOutputVariable(const std::size_t id) {
     nOutputVars_[currentId_ - 1]++;
 }
 
-void OpenClContext::finalizeCalculation(std::vector<double*>& output, const Settings& settings) {
+void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     struct exitGuard {
         exitGuard() {}
         ~exitGuard() {
@@ -702,7 +701,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output, const Sett
 
     // create input and output buffers
 
-    if (debug_) {
+    if (settings_.debug) {
         timerBase = timer.elapsed().wall;
     }
 
@@ -727,7 +726,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output, const Sett
                    "OpenClContext::finalizeCalculation(): creating output buffer fails: " << errorText(err));
     }
 
-    if (debug_) {
+    if (settings_.debug) {
         debugInfo_.nanoSecondsDataCopy += timer.elapsed().wall - timerBase;
     }
 
@@ -814,7 +813,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output, const Sett
         for (std::size_t i = 0; i < variateSeed_.size(); ++i) {
             kernelSource += "  float v" + std::to_string(i + inputVarOffset_.size()) + " = ore_invCumN(" +
                             std::to_string(variateSeed_[i]) + "U * lcrng_mult[i]);\n";
-            if (debug_)
+            if (settings_.debug)
                 debugInfo_.numberOfOperations += 23 * size_[currentId_ - 1];
         }
 
@@ -837,7 +836,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output, const Sett
 
         // std::cerr << "generated kernel: \n" + kernelSource + "\n";
 
-        if (debug_) {
+        if (settings_.debug) {
             timerBase = timer.elapsed().wall;
         }
 
@@ -862,7 +861,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output, const Sett
         hasKernel_[currentId_ - 1] = true;
         inputBufferSize_[currentId_ - 1] = inputBufferSize;
 
-        if (debug_) {
+        if (settings_.debug) {
             debugInfo_.nanoSecondsProgramBuild += timer.elapsed().wall - timerBase;
         }
     } else {
@@ -874,7 +873,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output, const Sett
 
     // write input data to input buffer (asynchronously)
 
-    if (debug_) {
+    if (settings_.debug) {
         timerBase = timer.elapsed().wall;
     }
 
@@ -886,7 +885,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output, const Sett
                    "OpenClContext::finalizeCalculation(): writing to input buffer fails: " << errorText(err));
     }
 
-    if (debug_) {
+    if (settings_.debug) {
         err = clFinish(queue_);
         QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::clFinish(): error in debug mode: " << errorText(err));
         debugInfo_.nanoSecondsDataCopy += timer.elapsed().wall - timerBase;
@@ -907,7 +906,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output, const Sett
 
     // execute kernel
 
-    if (debug_) {
+    if (settings_.debug) {
         err = clFinish(queue_);
         timerBase = timer.elapsed().wall;
     }
@@ -918,7 +917,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output, const Sett
                                inputBufferSize > 0 ? 1 : 0, inputBufferSize > 0 ? &inputBufferEvent : NULL, &runEvent);
     QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::finalizeCalculation(): enqueue kernel fails: " << errorText(err));
 
-    if (debug_) {
+    if (settings_.debug) {
         err = clFinish(queue_);
         QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::clFinish(): error in debug mode: " << errorText(err));
         debugInfo_.nanoSecondsCalculation += timer.elapsed().wall - timerBase;
@@ -926,7 +925,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output, const Sett
 
     // copy the results (asynchronously)
 
-    if (debug_) {
+    if (settings_.debug) {
         timerBase = timer.elapsed().wall;
     }
 
@@ -951,7 +950,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output, const Sett
         }
     }
 
-    if (debug_) {
+    if (settings_.debug) {
         err = clFinish(queue_);
         QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::clFinish(): error in debug mode: " << errorText(err));
         debugInfo_.nanoSecondsDataCopy += timer.elapsed().wall - timerBase;
