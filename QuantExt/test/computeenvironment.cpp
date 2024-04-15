@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(testSimpleCalc) {
         auto w = c.applyOperation(RandomVariableOpCode::Mult, {z, z});
         c.declareOutputVariable(w);
         std::vector<std::vector<double>> output(1, std::vector<double>(n));
-        c.finalizeCalculation(output, {});
+        c.finalizeCalculation(output);
         for (auto const& v : output.front()) {
             BOOST_CHECK_CLOSE(v, 49.0, 1.0E-8);
         }
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(testSimpleCalc) {
         c.createInputVariable(&rx2[0]);
         c.createInputVariable(1.0);
         std::vector<std::vector<double>> output2(1, std::vector<double>(n));
-        c.finalizeCalculation(output2, {});
+        c.finalizeCalculation(output2);
         for (auto const& v : output2.front()) {
             BOOST_CHECK_CLOSE(v, 36.0, 1.0E-8);
         }
@@ -133,7 +133,9 @@ BOOST_AUTO_TEST_CASE(testLargeCalc) {
 
         // first calc
 
-        auto [id, _] = c.initiateCalculation(n, 0, 0, true);
+        ComputeContext::Settings settings;
+        settings.debug = true;
+        auto [id, _] = c.initiateCalculation(n, 0, 0, settings);
         values[0] = c.createInputVariable(&data[0]);
         std::size_t val = values[0];
         for (std::size_t i = 0; i < m; ++i) {
@@ -144,15 +146,15 @@ BOOST_AUTO_TEST_CASE(testLargeCalc) {
             val = val3;
         }
         c.declareOutputVariable(val);
-        c.finalizeCalculation(output, {});
+        c.finalizeCalculation(output);
         BOOST_TEST_MESSAGE("  first calculation result = " << output.front()[0]);
         results.push_back(output.front()[0]);
 
         // second calculation
 
-        c.initiateCalculation(n, id, 0, true);
+        c.initiateCalculation(n, id, 0);
         values[0] = c.createInputVariable(&data[0]);
-        c.finalizeCalculation(output, {});
+        c.finalizeCalculation(output);
         BOOST_TEST_MESSAGE("  second calculation result = " << output.front()[0]);
         results.push_back(output.front()[0]);
 
@@ -205,23 +207,23 @@ BOOST_AUTO_TEST_CASE(testRngGeneration) {
         BOOST_TEST_MESSAGE("testing rng generation on device '" << d << "'.");
         ComputeEnvironment::instance().selectContext(d);
         auto& c = ComputeEnvironment::instance().context();
-        auto [id, _] = c.initiateCalculation(n, 0, 0, true);
-        auto vs = c.createInputVariates(3, 2, 42);
+        auto [id, _] = c.initiateCalculation(n, 0, 0);
+        auto vs = c.createInputVariates(3, 2);
         for (auto const& d : vs) {
             for (auto const& r : d) {
                 c.declareOutputVariable(r);
             }
         }
         std::vector<std::vector<double>> output(6, std::vector<double>(n));
-        c.finalizeCalculation(output, {});
+        c.finalizeCalculation(output);
         outputTimings(c);
         checkRngOutput(output);
 
         BOOST_TEST_MESSAGE("test to replay same calc");
-        auto [id2, newCalc2] = c.initiateCalculation(n, id, 0, false);
+        auto [id2, newCalc2] = c.initiateCalculation(n, id, 0);
         BOOST_CHECK(!newCalc2);
         BOOST_CHECK_EQUAL(id, id2);
-        c.finalizeCalculation(output, {});
+        c.finalizeCalculation(output);
         outputTimings(c);
         checkRngOutput(output);
     }
@@ -235,22 +237,22 @@ BOOST_AUTO_TEST_CASE(testReplayFlowError) {
         BOOST_TEST_MESSAGE("testing replay flow error on device '" << d << "'.");
         ComputeEnvironment::instance().selectContext(d);
         auto& c = ComputeEnvironment::instance().context();
-        auto [id, newCalc] = c.initiateCalculation(n, 0, 0, true);
+        auto [id, newCalc] = c.initiateCalculation(n, 0, 0);
         BOOST_CHECK(newCalc);
         BOOST_CHECK(id > 0);
         auto v1 = c.createInputVariable(1.0);
         auto v2 = c.createInputVariable(1.0);
-        c.finalizeCalculation(output, {});
-        auto [id2, newCalc2] = c.initiateCalculation(n, id, 0, true);
+        c.finalizeCalculation(output);
+        auto [id2, newCalc2] = c.initiateCalculation(n, id, 0);
         BOOST_CHECK(!newCalc2);
         BOOST_CHECK_EQUAL(id, id2);
         c.createInputVariable(1.0);
         c.createInputVariable(1.0);
-        BOOST_CHECK_THROW(c.createInputVariates(1, 1, 42), std::exception);
+        BOOST_CHECK_THROW(c.createInputVariates(1, 1), std::exception);
         BOOST_CHECK_THROW(c.applyOperation(RandomVariableOpCode::Add, {v1, v2}), std::exception);
         BOOST_CHECK_THROW(c.freeVariable(v1), std::exception);
         BOOST_CHECK_THROW(c.declareOutputVariable(v1), std::exception);
-        BOOST_CHECK_NO_THROW(c.finalizeCalculation(output, {}));
+        BOOST_CHECK_NO_THROW(c.finalizeCalculation(output));
     }
 }
 
@@ -274,11 +276,12 @@ void runBacktest(const std::string &d, const std::size_t id, const std::vector<S
     ComputeEnvironment::instance().selectContext(d);
 
     const std::size_t n = 10000;
-    std::size_t externalCalculationId_ = 0;
-    std::size_t cgVersion_ = 1;
-    bool newExternalCalc = false;
+    std::size_t externalCalculationId_;
+    bool newExternalCalc;
+    ComputeContext::Settings settings;
+    settings.regressionOrder = 2;
     std::tie(externalCalculationId_, newExternalCalc) =
-        ComputeEnvironment::instance().context().initiateCalculation(n, externalCalculationId_, cgVersion_);
+        ComputeEnvironment::instance().context().initiateCalculation(n, externalCalculationId_, 1, settings);
     constexpr double max = std::numeric_limits<float>::max();
 
     std::vector<double> v1 = {
@@ -297,7 +300,7 @@ void runBacktest(const std::string &d, const std::size_t id, const std::vector<S
         ComputeEnvironment::instance().context().createInputVariable(x);
 
     std::vector<std::vector<std::size_t>> rv = {{11}};
-    auto gen = ComputeEnvironment::instance().context().createInputVariates(rv.size(), rv.front().size(), 42);
+    auto gen = ComputeEnvironment::instance().context().createInputVariates(rv.size(), rv.front().size());
 
     for (const auto& s : v0) {
         ComputeEnvironment::instance().context().applyOperation(s.randomVariableOpCode, s.args);
@@ -312,8 +315,7 @@ void runBacktest(const std::string &d, const std::size_t id, const std::vector<S
 
     std::vector<std::vector<double>> externalOutput_ = std::vector<std::vector<double>>(1, std::vector<double>(n));
     std::vector<double*> externalOutputPtr_ = std::vector<double*>(1, &externalOutput_.front()[0]);
-    std::size_t regressionOrder = 2;
-    ComputeEnvironment::instance().context().finalizeCalculation(externalOutputPtr_, {false, regressionOrder});
+    ComputeEnvironment::instance().context().finalizeCalculation(externalOutputPtr_);
     auto baseNpv_ = externalAverage(externalOutput_[0]);
     BOOST_CHECK_CLOSE(baseNpv_, expected, 1E-3);
 }
