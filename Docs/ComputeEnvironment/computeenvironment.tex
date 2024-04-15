@@ -251,9 +251,19 @@ interface requires the implementation of the following methods:
     previous calculation. In this case only the input variables and random variates (see below) need to be set to
     retrieve the results of the calculation calling \verb+finalizeCalculation()+. If \verb+id+ is \verb+0+ on the other
     hand, a new calculation \verb+id+ will be generated and returned.
-  \item \verb+version+: The version of a calculation.
-  \item \verb+debug+: A flag indicating whether debug information on the number of performed operations and timings for
-    data copying, kernel building and calculations should be collected.
+  \item \verb+version+: The version of a calculation. This is a freely choosable integer, which is only used to identify
+    different versions. Usually the first version of a calculation will be $0$, then next $1$, etc.
+  \item \verb+Settings+: A struct summarizing settings for the compute environment:
+    \begin{itemize}
+      \item debug: a flag indicating whether debug information on the number of performed operations and timings for
+    data copying, kernel building and calculations should be collected. Defaults to false.
+      \item useDoublePrecision: a flag indicating whether double precision should be used for calculations. Defaults to
+        false.
+      \item rngSequenceType: the sequence type for random number generation. One of MersenneTwister,
+        MersenneTwisterAntithetic, Sobol, Burley2020Sobol, SobolBrownianBridge, Burley2020SobolBrownianBridge
+      \item seed: the seed for the random number generator
+      \item regressionOrder: the regression order to be used within regression models
+    \end{itemize}
   \end{itemize}
   The output parameter is a pair consisting of
   \begin{itemize}
@@ -268,8 +278,6 @@ interface requires the implementation of the following methods:
   \begin{itemize}
   \item \verb+dim+ the dimension (typically the number of assets in a MC simulation)
   \item \verb+steps+ the number of steps (typically the number of time steps in a MC simulation)
-  \item \verb+seed+ the seed of the random number generation, equal seeds must generate identical variates, different
-    seeds might or might not generate different variates
   \end{itemize}
   The output parameter is a vector of a vector of ids for the generated variates. The inner vector loops of the steps,
   the outer vector over the dimensions.
@@ -428,7 +436,7 @@ The next step is the creating of random variates (if this is a new calculation a
 if (useExternalComputeFramework_ && newExternalCalc) {
     auto gen =
         ComputeEnvironment::instance().context().
-                   createInputVariates(rv.size(), rv.front().size(), 42);
+                   createInputVariates(rv.size(), rv.front().size());
     for (Size k = 0; k < rv.size(); ++k) {
         for (Size j = 0; j < rv.front().size(); ++j)
             valuesExternal[rv[k][j]] = ExternalRandomVariable(gen[k][j]);
