@@ -657,7 +657,7 @@ RandomVariable GaussianCam::npv(const RandomVariable& amount, const Date& obsdat
         // store model if requried
 
         if (memSlot) {
-            storedRegressionModel_[*memSlot] = std::make_tuple(coeff, nModelStates, coordinateTransform);
+            storedRegressionModel_[*memSlot] = std::make_tuple(coeff, nModelStates + nAddReg, coordinateTransform);
         }
 
     } else {

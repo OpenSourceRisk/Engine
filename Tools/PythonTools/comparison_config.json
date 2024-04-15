@@ -636,7 +636,8 @@
               "GreenUpTo",
               "AmberUpTo",
               "Zone",
-              "Currency",
+              "DiscountingCurrency",
+              "SIMMResultCurrency",
               "SIMMCalculationCurrency"
             ],
             "abs_tol": null,
@@ -1039,21 +1040,6 @@
         ]
       },
       ".*npv.*\\.csv": {
-        "keys": [
-          "TradeId"
-        ],
-        "column_settings": [
-          {
-            "names": [
-              "NPV",
-              "NPV(Base)"
-            ],
-            "abs_tol": 1e-6,
-            "rel_tol": 1e-12
-          }
-        ]
-      },
-      "npv.csv": {
         "keys": [
           "TradeId"
         ],
