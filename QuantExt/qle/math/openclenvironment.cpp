@@ -252,7 +252,6 @@ private:
 };
 
 OpenClFramework::OpenClFramework() {
-    std::set<std::string> tmp;
     cl_platform_id platforms[MAX_N_PLATFORMS];
     cl_uint nPlatforms;
     clGetPlatformIDs(MAX_N_PLATFORMS, platforms, &nPlatforms);
