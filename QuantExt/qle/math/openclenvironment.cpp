@@ -276,6 +276,7 @@ OpenClFramework::OpenClFramework() {
             deviceInfo.push_back(std::make_pair("driver_version", driverVersion));
             deviceInfo.push_back(std::make_pair("device_extensions", deviceExtensions));
 
+            bool supportsDoublePrecision = false;
 #if CL_VERSION_1_2
             clGetDeviceInfo(devices[d], CL_DEVICE_DOUBLE_FP_CONFIG, sizeof(cl_device_fp_config), &doubleFpConfig, NULL);
             deviceInfo.push_back(std::make_pair(
@@ -286,12 +287,13 @@ OpenClFramework::OpenClFramework() {
                     ((doubleFpConfig & CL_FP_ROUND_TO_ZERO) ? std::string("RoundZero,") : std::string()) +
                     ((doubleFpConfig & CL_FP_FMA) ? std::string("FMA,") : std::string()) +
                     ((doubleFpConfig & CL_FP_SOFT_FLOAT) ? std::string("SoftFloat,") : std::string())));
+            supportsDoublePrecision = supportsDoublePrecision || (doubleFpConfig != 0);
 #else
             deviceInfo.push_back(std::make_pair("device_double_fp_config", "not provided before opencl 1.2"));
+            supportsDoublePrecision = supportsDoublePrecision || std::string(deviceExtensions).find("cl_khr_fp64");
 #endif
-
             contexts_["OpenCL/" + std::string(platformName) + "/" + std::string(deviceName)] =
-                new OpenClContext(devices[d], deviceInfo, std::string(deviceExtensions).find("cl_khr_fp64"));
+                new OpenClContext(devices[d], deviceInfo, supportsDoublePrecision);
         }
     }
 }
