@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(testEnvironmentInit) {
             ComputeEnvironment::instance().context().init();
             BOOST_TEST_MESSAGE("  device '" << d << "' initialized.");
             for (auto const& [field, value] : ComputeEnvironment::instance().context().deviceInfo()) {
-                BOOST_TEST_MESSAGE("      " << std::left << std::setw(30) << field << ": " << value);
+                BOOST_TEST_MESSAGE("      " << std::left << std::setw(30) << field << ": '" << value << "'");
             }
             BOOST_TEST_MESSAGE("      " << std::left << std::setw(30) << "supportsDoublePrecision"
                                         << ": " << std::boolalpha
@@ -279,7 +279,7 @@ void runBacktest(const std::string &d, const std::size_t id, const std::vector<S
     ComputeEnvironment::instance().selectContext(d);
 
     const std::size_t n = 10000;
-    std::size_t externalCalculationId_;
+    std::size_t externalCalculationId_ = 0;
     bool newExternalCalc;
     ComputeContext::Settings settings;
     settings.regressionOrder = 2;
