@@ -182,6 +182,10 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
         if (useExternalComputeFramework_) {
             QL_REQUIRE(ComputeEnvironment::instance().hasContext(),
                        "ScriptedInstrumentPricingEngineCG::calculate(): no compute enviroment context selected.");
+            QL_REQUIRE(!useDoublePrecisionForExternalCalculation_ ||
+                           ComputeEnvironment::instance().context().supportsDoublePrecision(),
+                       "ScriptedInstrumentPricingEngineCG::calculate(): context does not support double precision "
+                       "calculations.");
             ComputeContext::Settings settings;
             settings.debug = false;
             settings.useDoublePrecision = useDoublePrecisionForExternalCalculation_;

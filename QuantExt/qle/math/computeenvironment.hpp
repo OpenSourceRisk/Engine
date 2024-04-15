@@ -103,6 +103,7 @@ public:
     // get device info
 
     virtual std::vector<std::pair<std::string, std::string>> deviceInfo() const { return {}; }
+    virtual bool supportsDoublePrecision() const { return false; }
 
     // debug info
 

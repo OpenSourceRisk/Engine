@@ -172,7 +172,8 @@ std::string errorText(cl_int err) {
 
 class OpenClContext : public ComputeContext {
 public:
-    OpenClContext(cl_device_id device, const std::vector<std::pair<std::string, std::string>>& deviceInfo);
+    OpenClContext(cl_device_id device, const std::vector<std::pair<std::string, std::string>>& deviceInfo,
+                  const bool supportsDoublePrecision);
     ~OpenClContext() override final;
     void init() override final;
 
@@ -190,6 +191,7 @@ public:
     void finalizeCalculation(std::vector<double*>& output) override final;
 
     std::vector<std::pair<std::string, std::string>> deviceInfo() const override;
+    bool supportsDoublePrecision() const override;
     const DebugInfo& debugInfo() const override final;
 
 private:
@@ -208,6 +210,7 @@ private:
 
     // set once in the ctor
     std::vector<std::pair<std::string, std::string>> deviceInfo_;
+    bool supportsDoublePrecision_;
 
     // will be accumulated over all calcs
     ComputeContext::DebugInfo debugInfo_;
@@ -288,7 +291,7 @@ OpenClFramework::OpenClFramework() {
 #endif
 
             contexts_["OpenCL/" + std::string(platformName) + "/" + std::string(deviceName)] =
-                new OpenClContext(devices[d], deviceInfo);
+                new OpenClContext(devices[d], deviceInfo, std::string(deviceExtensions).find("cl_khr_fp64"));
         }
     }
 }
@@ -299,8 +302,10 @@ OpenClFramework::~OpenClFramework() {
     }
 }
 
-OpenClContext::OpenClContext(cl_device_id device, const std::vector<std::pair<std::string, std::string>>& deviceInfo)
-    : initialized_(false), device_(device), deviceInfo_(deviceInfo) {}
+OpenClContext::OpenClContext(cl_device_id device, const std::vector<std::pair<std::string, std::string>>& deviceInfo,
+                             const bool supportsDoublePrecision)
+    : initialized_(false), device_(device), deviceInfo_(deviceInfo), supportsDoublePrecision_(supportsDoublePrecision) {
+}
 
 OpenClContext::~OpenClContext() {
     if (initialized_) {
@@ -960,6 +965,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 const ComputeContext::DebugInfo& OpenClContext::debugInfo() const { return debugInfo_; }
 
 std::vector<std::pair<std::string, std::string>> OpenClContext::deviceInfo() const { return deviceInfo_; }
+bool OpenClContext::supportsDoublePrecision() const { return supportsDoublePrecision_; }
 
 #endif
 

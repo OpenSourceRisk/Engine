@@ -52,6 +52,8 @@ public:
     void declareOutputVariable(const std::size_t id) override final;
     void finalizeCalculation(std::vector<double*>& output) override final;
 
+    bool supportsDoublePrecision() const override { return true; }
+
     const DebugInfo& debugInfo() const override final;
 
 private:

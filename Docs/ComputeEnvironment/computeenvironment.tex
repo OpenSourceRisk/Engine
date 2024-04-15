@@ -89,6 +89,7 @@
 Date & Author & Comment \\
 \hline
 19 June 2023 & Acadia & initial release\\
+15 April 2024 & Acadia & refactor context settings, add supportsDoublePrecision()
 \hline
 \end{supertabular}
 \end{flushleft}
@@ -222,7 +223,7 @@ The \verb+ComputeFramework+ interface requires the implementation of the followi
   Notice that the same device can appear under several frameworks, e.g. a GPU could be accessed both via an OpenCL
   driver or via a CUDA driver.
 \item \verb+getContext()+ should return a raw pointer to a \verb+ComputeContext+ implementation for a given device label
-  or throw an erro if the device label is not valid. See \ref{implComputeContext} for more details.
+  or throw an error if the device label is not valid. See \ref{implComputeContext} for more details.
 \item \verb+Destructor+ The destructor of \verb+ComputeFramework+ is virtual and has an empty default implementation. It
   can be override in implementations to free ressources. For example, the \verb+OpenClFramework+ implementation stores
   raw pointers for each compute contexts that need to be deleted on destruction of the \verb+OpenClFramework+ instance.
@@ -289,6 +290,8 @@ interface requires the implementation of the following methods:
 \item \verb+finalizeCalculation()+: execute the calculation and populate the given vector of vector of floats with the
   result. The inner vector is given as a raw pointer and must have the size of the calculation. The outer vector matches
   the output variables in the order they were declared before.
+\item \verb+deviceInfo()+: provide key-value pairs that describes the device, only used for information purposes
+\item \verb+supportsDoublePreicions()+: should return true if doule precision is supported, otherwise false
 \item \verb+debugInfo()+: provide info on the number of elementary operations and timings on data copying, program build
   and calculations. This info is collected if a new calculation is started with flag debug set to true
 \end{itemize}
