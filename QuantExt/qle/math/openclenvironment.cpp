@@ -264,17 +264,20 @@ OpenClFramework::OpenClFramework() {
         cl_uint nDevices;
         clGetDeviceIDs(platforms[p], CL_DEVICE_TYPE_ALL, 3, devices, &nDevices);
         for (std::size_t d = 0; d < nDevices; ++d) {
-            char deviceName[MAX_N_DEV_INFO], driverVersion[MAX_N_DEV_INFO], deviceExtensions[MAX_N_DEV_INFO];
+            char deviceName[MAX_N_DEV_INFO], driverVersion[MAX_N_DEV_INFO], deviceVersion[MAX_N_DEV_INFO],
+                deviceExtensions[MAX_N_DEV_INFO];
             cl_device_fp_config doubleFpConfig;
             std::vector<std::pair<std::string, std::string>> deviceInfo;
 
             clGetDeviceInfo(devices[d], CL_DEVICE_NAME, MAX_N_DEV_INFO, &deviceName, NULL);
             clGetDeviceInfo(devices[d], CL_DRIVER_VERSION, MAX_N_DEV_INFO, &driverVersion, NULL);
+            clGetDeviceInfo(devices[d], CL_DEVICE_VERSION, MAX_N_DEV_INFO, &deviceVersion, NULL);
             clGetDeviceInfo(devices[d], CL_DEVICE_EXTENSIONS, MAX_N_DEV_INFO, &deviceExtensions, NULL);
 
-            deviceInfo.push_back(std::make_pair("device_name", deviceName));
-            deviceInfo.push_back(std::make_pair("driver_version", driverVersion));
-            deviceInfo.push_back(std::make_pair("device_extensions", deviceExtensions));
+            deviceInfo.push_back(std::make_pair("device_name", std::string(deviceName)));
+            deviceInfo.push_back(std::make_pair("driver_version", std::string(driverVersion)));
+            deviceInfo.push_back(std::make_pair("device_version", std::string(deviceVersion)));
+            deviceInfo.push_back(std::make_pair("device_extensions", std::string(deviceExtensions)));
 
             bool supportsDoublePrecision = false;
 #if CL_VERSION_1_2
