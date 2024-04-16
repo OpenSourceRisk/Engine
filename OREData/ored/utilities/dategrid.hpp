@@ -101,9 +101,7 @@ public:
     QuantLib::TimeGrid closeOutTimeGrid() const;
     //@}
 
-    //! Given a close out date it returns the corresponding value date
-    QuantLib::Date valuationDateFromCloseOutDate(const QuantLib::Date& closeOutDate) const;
-    //@}
+    QuantLib::Date closeOutDateFromValuationDate(const QuantLib::Date& d) const;
 
     //! Accessor methods
     const QuantLib::Date& operator[](QuantLib::Size i) const { return dates_[i]; };
@@ -116,7 +114,7 @@ private:
     QuantLib::Calendar calendar_;
     QuantLib::DayCounter dayCounter_;
     std::vector<QuantLib::Date> dates_;
-    std::map<QuantLib::Date, QuantLib::Date> closeOutToValuation_;
+    std::map<QuantLib::Date, QuantLib::Date> valuationCloseOutMap_;
     std::vector<QuantLib::Period> tenors_;
     std::vector<QuantLib::Time> times_;
     QuantLib::TimeGrid timeGrid_;
