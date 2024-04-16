@@ -192,20 +192,22 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
                 double upTime = 0;
                 ++cubeDateIndex;
                 Date valueDate = dg_->valuationDates()[i];
-                Date closeOutDate = dg_->closeOutDates()[i];
+                Date closeOutDate = dg_->closeOutDateFromValuationDate(valueDate);
                 std::tie(priceTime, upTime) = populateCube(
                     valueDate, cubeDateIndex, sample, true, false, scenarioUpdated, trades, tradeHasError, calculators,
                     outputCube, outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube);
                 pricingTime += priceTime;
                 updateTime += upTime;
-                std::tie(priceTime, upTime) = populateCube(
-                    closeOutDate, cubeDateIndex, sample, false, mporStickyDate, scenarioUpdated, trades, tradeHasError,
-                    calculators, outputCube, outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube);
-                pricingTime += priceTime;
-                updateTime += upTime;
+                if(closeOutDate != Date()){
+                    std::tie(priceTime, upTime) = populateCube(
+                        closeOutDate, cubeDateIndex, sample, false, mporStickyDate, scenarioUpdated, trades, tradeHasError,
+                        calculators, outputCube, outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube);
+                    pricingTime += priceTime;
+                    updateTime += upTime;
+                }
             }
         } else {
-            std::map<Date, size_t> valueDateIndexCache;
+            std::map<Date, std::vector<size_t>> closeOutDateToValueDateIndex;
             for (Size i = 0; i < dates.size(); ++i) {
                 Date d = dates[i];
                 // Process auxiliary close-out dates first (may coincide with a valuation date, see below)
@@ -216,20 +218,25 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
                 if (dg_->isCloseOutDate()[i]) {
                     double priceTime = 0;
                     double upTime = 0;
-                    Date valueDate = dg_->valuationDateFromCloseOutDate(d);
-                    size_t valueDateIndex = valueDateIndexCache[valueDate];
-                    std::tie(priceTime, upTime) = populateCube(
-                        d, valueDateIndex, sample, false, false, scenarioUpdated, trades, tradeHasError, calculators,
-                        outputCube, outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube);
-                    pricingTime += priceTime;
-                    updateTime += upTime;
-                    scenarioUpdated = true;
+                    QL_REQUIRE(closeOutDateToValueDateIndex.count(d) == 1 && !closeOutDateToValueDateIndex[d].empty(),
+                               "Need to calculate valuation date before close out date");
+                    for (size_t& valueDateIndex : closeOutDateToValueDateIndex[d]) {
+                        std::tie(priceTime, upTime) =
+                            populateCube(d, valueDateIndex, sample, false, mporStickyDate, scenarioUpdated, trades,
+                                         tradeHasError, calculators, outputCube, outputCubeNettingSet, counterparties,
+                                         cptyCalculators, outputCptyCube);
+                        pricingTime += priceTime;
+                        updateTime += upTime;
+                        scenarioUpdated = true;
+                    }
                 }
                 if (dg_->isValuationDate()[i]) {
                     double priceTime = 0;
                     double upTime = 0;
                     ++cubeDateIndex;
-                    valueDateIndexCache[d] = cubeDateIndex;
+                    Date closeOutDate = dg_->closeOutDateFromValuationDate(d);
+                    if(closeOutDate != Date())
+                        closeOutDateToValueDateIndex[closeOutDate].push_back(cubeDateIndex);
                     std::tie(priceTime, upTime) = populateCube(
                         d, cubeDateIndex, sample, true, false, scenarioUpdated, trades, tradeHasError, calculators,
                         outputCube, outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube);
@@ -239,6 +246,7 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
                 }
             }
         }
+
         std::ostringstream detail;
         detail << nTrades << " trade" << (nTrades == 1 ? "" : "s") << ", " << outputCube->samples() << " sample"
                << (outputCube->samples() == 1 ? "" : "s");
