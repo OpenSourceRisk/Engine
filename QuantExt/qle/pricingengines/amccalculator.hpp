@@ -48,8 +48,7 @@ public:
     simulatePath(const std::vector<QuantLib::Real>& pathTimes,
                  std::vector<std::vector<QuantExt::RandomVariable>>& paths, 
                  const std::vector<size_t>& relevantPathIndex,
-                 const std::vector<size_t>& relevantTimeIndex,
-                 const bool stickyCloseOutRun) = 0;
+                 const std::vector<size_t>& relevantTimeIndex) = 0;
 };
 
 } // namespace QuantExt

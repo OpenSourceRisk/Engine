@@ -24,39 +24,36 @@ namespace ore {
 namespace analytics {
 
 ClonedScenarioGenerator::ClonedScenarioGenerator(const QuantLib::ext::shared_ptr<ScenarioGenerator>& scenarioGenerator,
-                                                 const std::vector<Date>& dates, const Size nSamples) : dates_(dates) {
+                                                 const std::vector<Date>& dates, const Size nSamples) {
     DLOG("Build cloned scenario generator for " << dates.size() << " dates and " << nSamples << " samples.");
+    for (size_t i = 0; i < dates.size(); ++i) {
+        dates_[dates[i]] = i;
+    }
+    firstDate_ = dates.front();
     scenarioGenerator->reset();
     scenarios_.resize(nSamples * dates_.size());
     for (Size i = 0; i < nSamples; ++i) {
-        for (Size j = 0; j < dates_.size(); ++j) {
-            scenarios_[i * dates_.size() + j] = scenarioGenerator->next(dates_[j])->clone();
-	}
+        for (Size j = 0; j < dates.size(); ++j) {
+            scenarios_[i * dates.size() + j] = scenarioGenerator->next(dates[j])->clone();
+        }
     }
 }
 
 QuantLib::ext::shared_ptr<Scenario> ClonedScenarioGenerator::next(const Date& d) {
-    if (d == dates_.front()) { // new path
-        nDate_++;
-        i_ = 0;
+    if (d == firstDate_) { // new path
+        ++nSim_;
     }
-    size_t currentStep = (nDate_ - 1) * dates_.size() + i_;
+    auto stepIdx = dates_.find(d);
+    QL_REQUIRE(stepIdx != dates_.end(), "ClonedScenarioGenerator::next(" << d << "): invalid date " << d);
+    size_t timePos = stepIdx->second;
+    size_t currentStep = (nSim_ - 1) * dates_.size() + timePos;
     QL_REQUIRE(currentStep < scenarios_.size(),
                "ClonedScenarioGenerator::next(" << d << "): no more scenarios stored.");
-    if (d == dates_[i_]) {
-        i_++;
-        return scenarios_[currentStep];
-    } else {
-        auto it = std::find(dates_.begin(), dates_.end(), d);
-        size_t pos = (nDate_ - 1) * dates_.size() + std::distance(dates_.begin(), it);
-        QL_REQUIRE(it != dates_.end(), "ClonedScenarioGenerator::next(" << d << "): invalid date " << d);
-        return scenarios_[pos];
-    } 
+    return scenarios_[currentStep];
 }
 
 void ClonedScenarioGenerator::reset() { 
-    i_ = 0;
-    nDate_ = 0;
+    nSim_ = 0;
 }
 
 } // namespace analytics
