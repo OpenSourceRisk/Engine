@@ -36,8 +36,10 @@ public:
     virtual void reset() override;
 
 private:
+    std::map<Date, size_t> dates_;
+    Date firstDate_;
+    Size nSim_ = 0;
     std::vector<QuantLib::ext::shared_ptr<Scenario>> scenarios_;
-    Size i_ = 0;
 };
 
 } // namespace analytics
