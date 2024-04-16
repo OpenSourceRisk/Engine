@@ -264,6 +264,7 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
     DLOG("useCg                = " << std::boolalpha << useCg_);
     DLOG("useAd                = " << std::boolalpha << useAd_);
     DLOG("useExternalDevice    = " << std::boolalpha << useExternalComputeDevice_);
+    DLOG("useDblPrecExtCalc    = " << std::boolalpha << useDoublePrecisionForExternalCalculation_);
     DLOG("externalDevice       = " << (useExternalComputeDevice_ ? externalComputeDevice_ : "na"));
     DLOG("calibration          = " << calibration_);
     DLOG("base ccy             = " << baseCcy_);
@@ -327,7 +328,8 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
         bool useExternalDev = useExternalComputeDevice_ && !generateAdditionalResults && !useCachedSensis;
         engine = QuantLib::ext::make_shared<ScriptedInstrumentPricingEngineCG>(
             script.npv(), script.results(), modelCG_, ast_, context, mcParams_, script.code(), interactive_,
-            generateAdditionalResults, includePastCashflows_, useCachedSensis, useExternalDev);
+            generateAdditionalResults, includePastCashflows_, useCachedSensis, useExternalDev,
+            useDoublePrecisionForExternalCalculation_);
         if (useExternalDev) {
             ComputeEnvironment::instance().selectContext(externalComputeDevice_);
         }
@@ -484,6 +486,8 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
     useAd_ = parseBool(engineParameter("UseAD", {resolvedProductTag_}, false, "false"));
     useExternalComputeDevice_ =
         parseBool(engineParameter("UseExternalComputeDevice", {resolvedProductTag_}, false, "false"));
+    useDoublePrecisionForExternalCalculation_ =
+        parseBool(engineParameter("UseDoublePrecisionForExternalCalculation", {resolvedProductTag_}, false, "false"));
     externalComputeDevice_ = engineParameter("ExternalComputeDevice", {}, false, "");
     includePastCashflows_ = parseBool(engineParameter("IncludePastCashflows", {resolvedProductTag_}, false, "false"));
 
