@@ -66,14 +66,16 @@ double externalAverage(const std::vector<double>& v) {
 
 ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
     const std::string& npv, const std::vector<std::pair<std::string, std::string>>& additionalResults,
-    const QuantLib::ext::shared_ptr<ModelCG>& model, const ASTNodePtr ast, const QuantLib::ext::shared_ptr<Context>& context,
-    const Model::McParams& mcParams, const std::string& script, const bool interactive,
-    const bool generateAdditionalResults, const bool includePastCashflows, const bool useCachedSensis,
-    const bool useExternalComputeFramework)
+    const QuantLib::ext::shared_ptr<ModelCG>& model, const ASTNodePtr ast,
+    const QuantLib::ext::shared_ptr<Context>& context, const Model::McParams& mcParams, const std::string& script,
+    const bool interactive, const bool generateAdditionalResults, const bool includePastCashflows,
+    const bool useCachedSensis, const bool useExternalComputeFramework,
+    const bool useDoublePrecisionForExternalCalculation)
     : npv_(npv), additionalResults_(additionalResults), model_(model), ast_(ast), context_(context),
       mcParams_(mcParams), script_(script), interactive_(interactive),
       generateAdditionalResults_(generateAdditionalResults), includePastCashflows_(includePastCashflows),
-      useCachedSensis_(useCachedSensis), useExternalComputeFramework_(useExternalComputeFramework) {
+      useCachedSensis_(useCachedSensis), useExternalComputeFramework_(useExternalComputeFramework),
+      useDoublePrecisionForExternalCalculation_(useDoublePrecisionForExternalCalculation) {
 
     // register with model
 
@@ -180,9 +182,15 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
         if (useExternalComputeFramework_) {
             QL_REQUIRE(ComputeEnvironment::instance().hasContext(),
                        "ScriptedInstrumentPricingEngineCG::calculate(): no compute enviroment context selected.");
+            ComputeContext::Settings settings;
+            settings.debug = false;
+            settings.useDoublePrecision = useDoublePrecisionForExternalCalculation_;
+            settings.rngSequenceType = mcParams_.sequenceType;
+            settings.seed = mcParams_.seed;
+            settings.regressionOrder = mcParams_.regressionOrder;
             std::tie(externalCalculationId_, newExternalCalc) =
                 ComputeEnvironment::instance().context().initiateCalculation(model_->size(), externalCalculationId_,
-                                                                             cgVersion_);
+                                                                             cgVersion_, settings);
             DLOG("initiated external calculation id " << externalCalculationId_ << ", version " << cgVersion_);
         }
 
@@ -224,7 +232,7 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
             if (useExternalComputeFramework_) {
                 if (newExternalCalc) {
                     auto gen =
-                        ComputeEnvironment::instance().context().createInputVariates(rv.size(), rv.front().size(), 42);
+                        ComputeEnvironment::instance().context().createInputVariates(rv.size(), rv.front().size());
                     for (Size k = 0; k < rv.size(); ++k) {
                         for (Size j = 0; j < rv.front().size(); ++j)
                             valuesExternal[rv[k][j]] = ExternalRandomVariable(gen[k][j]);
@@ -296,8 +304,7 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
         // extract npv result and set it
 
         if (useExternalComputeFramework_) {
-            ComputeEnvironment::instance().context().finalizeCalculation(externalOutputPtr_,
-                                                                         {mcParams_.regressionOrder});
+            ComputeEnvironment::instance().context().finalizeCalculation(externalOutputPtr_);
             baseNpv_ = results_.value = externalAverage(externalOutput_[0]);
         } else {
             baseNpv_ = results_.value = model_->extractT0Result(values[baseNpvNode]);
