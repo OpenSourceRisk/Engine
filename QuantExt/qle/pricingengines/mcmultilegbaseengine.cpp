@@ -960,29 +960,40 @@ McMultiLegBaseEngine::MultiLegBaseAmcCalculator::MultiLegBaseAmcCalculator(
 
 std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalculator::simulatePath(
     const std::vector<QuantLib::Real>& pathTimes, std::vector<std::vector<QuantExt::RandomVariable>>& paths,
-    const std::vector<bool>& isRelevantTime, const bool stickyCloseOutRun) {
+    const std::vector<size_t>& relevantPathIndex, const std::vector<size_t>& relevantTimeIndex) {
 
-    // check input path consistency
+        // check input path consistency
 
-    QL_REQUIRE(!paths.empty(), "MultiLegBaseAmcCalculator::simulatePath(): no future path times, this is not allowed.");
+        QL_REQUIRE(!paths.empty(),
+                   "MultiLegBaseAmcCalculator::simulatePath(): no future path times, this is not allowed.");
     QL_REQUIRE(pathTimes.size() == paths.size(),
                "MultiLegBaseAmcCalculator::simulatePath(): inconsistent pathTimes size ("
                    << pathTimes.size() << ") and paths size (" << paths.size() << ") - internal error.");
+    QL_REQUIRE(relevantPathIndex.size() == xvaTimes_.size(),
+               "MultiLegBaseAmcCalculator::simulatePath() inconsistent relevant path indexes ("
+                   << relevantPathIndex.size() << ") and xvaTimes (" << xvaTimes_.size() << ") - internal error.");
+
+    bool stickyCloseOutRun = false;
+
+    for (size_t i = 0; i < relevantPathIndex.size(); ++i) {
+        if (relevantPathIndex[i] != relevantTimeIndex[i]) {
+            stickyCloseOutRun = true;
+            break;
+        }
+    }
 
     /* put together the relevant simulation times on the input paths and check for consistency with xva times,
        also put together the effective paths by filtering on relevant simulation times and model indices */
-
     std::vector<std::vector<const RandomVariable*>> effPaths(
         xvaTimes_.size(), std::vector<const RandomVariable*>(externalModelIndices_.size()));
 
     Size timeIndex = 0;
-    for (Size i = 0; i < pathTimes.size(); ++i) {
-        if (isRelevantTime[i]) {
-            for (Size j = 0; j < externalModelIndices_.size(); ++j) {
-                effPaths[timeIndex][j] = &paths[i][externalModelIndices_[j]];
-            }
-            ++timeIndex;
+    for (Size i = 0; i < relevantPathIndex.size(); ++i) {
+        size_t pathIdx = relevantPathIndex[i];
+        for (Size j = 0; j < externalModelIndices_.size(); ++j) {
+            effPaths[timeIndex][j] = &paths[pathIdx][externalModelIndices_[j]];
         }
+        ++timeIndex;
     }
 
     // init result vector
