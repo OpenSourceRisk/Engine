@@ -92,12 +92,12 @@ std::vector<QuantExt::RandomVariable>
 simulatePathInterface2(const QuantLib::ext::shared_ptr<AmcCalculator>& amcCalc, const std::vector<Real>& pathTimes,
                        std::vector<std::vector<RandomVariable>>& paths, const std::vector<size_t>& pathIdx,
                        const std::vector<size_t>& timeIdx,
-                       const bool moveStateToPreviousTime, const std::string& tradeLabel,
+                       const std::string& tradeLabel,
                        const std::string& tradeType) {
     QL_REQUIRE(pathIdx.size() == timeIdx.size(),
                "internal error, mismatch between relevant path idx and timegrid idx, please contact dev");
     try {
-        return amcCalc->simulatePath(pathTimes, paths, pathIdx, timeIdx, moveStateToPreviousTime);
+        return amcCalc->simulatePath(pathTimes, paths, pathIdx, timeIdx);
     } catch (const std::exception& e) {
         StructuredTradeErrorMessage(tradeLabel, tradeType, "error during amc path simulation for trade.", e.what())
             .log();
@@ -441,7 +441,7 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
 
         if (!sgd->withCloseOutLag()) {
             // no close-out lag, fill depth 0 with npv on path
-            auto res = simulatePathInterface2(amcCalculators[j], pathTimes, paths, allTimes, allTimes, false, tradeLabel[j],
+            auto res = simulatePathInterface2(amcCalculators[j], pathTimes, paths, allTimes, allTimes, tradeLabel[j],
                                               tradeType[j]);
             Real v = outputCube->getT0(tradeId[j], 0);
             outputCube->setT0(v +
@@ -467,10 +467,10 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
             if (sgd->withMporStickyDate()) {
                 // sticky date mpor mode. simulate the valuation times...
                 auto res = simulatePathInterface2(amcCalculators[j], pathTimes, paths, valuationTimeIdx,
-                                                  valuationTimeIdx, false, tradeLabel[j], tradeType[j]);
+                                                  valuationTimeIdx, tradeLabel[j], tradeType[j]);
                 // ... and then the close-out times, but times moved to the valuation times
                 auto resLag = simulatePathInterface2(amcCalculators[j], pathTimes, paths, closeOutTimeIdx,
-                                                     valuationTimeIdx, true, tradeLabel[j], tradeType[j]);
+                                                     valuationTimeIdx, tradeLabel[j], tradeType[j]);
                 Real v = outputCube->getT0(tradeId[j], 0);
                 outputCube->setT0(v +
                                       res[0].at(0) * fx(fxBuffer, currencyIndex[j], 0, 0) *
@@ -519,7 +519,7 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                 }
             } else {
                 // actual date mpor mode: simulate all times in one go
-                auto res = simulatePathInterface2(amcCalculators[j], pathTimes, paths, allTimes, allTimes, false,
+                auto res = simulatePathInterface2(amcCalculators[j], pathTimes, paths, allTimes, allTimes, 
                                                   tradeLabel[j], tradeType[j]);
                 Real v = outputCube->getT0(tradeId[j], 0);
                 outputCube->setT0(v + res[0].at(0) * fx(fxBuffer, currencyIndex[j], 0, 0) *

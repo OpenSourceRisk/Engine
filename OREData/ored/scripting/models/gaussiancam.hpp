@@ -75,8 +75,7 @@ public:
     // AMCModel interface implementation
     void injectPaths(const std::vector<QuantLib::Real>* pathTimes,
                      const std::vector<std::vector<QuantExt::RandomVariable>>* paths,
-                     const std::vector<size_t>* pathIndexes, const std::vector<size_t>* timeIndexes,
-                     const bool stickyCloseOutRun) override;
+                     const std::vector<size_t>* pathIndexes, const std::vector<size_t>* timeIndexes) override;
 
 private:
     // ModelImpl interface implementation
@@ -143,7 +142,6 @@ private:
     const std::vector<std::vector<QuantExt::RandomVariable>>* injectedPaths_ = nullptr;
     const std::vector<size_t>* injectedPathRelevantPathIndexes_;
     const std::vector<size_t>* injectedPathRelevantTimeIndexes_;
-    bool injectedPathStickyCloseOutRun_;
     Size overwriteModelSize_ = Null<Size>();
 
     // stored regression coefficients, state size (before possible transform) and (optional) coordinate transform

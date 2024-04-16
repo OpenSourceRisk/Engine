@@ -690,8 +690,7 @@ Size GaussianCam::trainingSamples() const { return mcParams_.trainingSamples; }
 
 void GaussianCam::injectPaths(const std::vector<QuantLib::Real>* pathTimes,
                               const std::vector<std::vector<QuantExt::RandomVariable>>* paths,
-                              const std::vector<size_t>* pathIndexes, const std::vector<size_t>* timeIndexes,
-                              const bool stickyCloseOutRun) {
+                              const std::vector<size_t>* pathIndexes, const std::vector<size_t>* timeIndexes) {
 
     if (pathTimes == nullptr) {
         // reset injected path data
@@ -699,7 +698,6 @@ void GaussianCam::injectPaths(const std::vector<QuantLib::Real>* pathTimes,
         injectedPaths_ = nullptr;
         injectedPathRelevantPathIndexes_ = nullptr;
         injectedPathRelevantTimeIndexes_ = nullptr;
-        injectedPathStickyCloseOutRun_ = false; // arbitrary
         return;
     }
 
@@ -732,7 +730,6 @@ void GaussianCam::injectPaths(const std::vector<QuantLib::Real>* pathTimes,
     injectedPaths_ = paths;
     injectedPathRelevantPathIndexes_ = pathIndexes;
     injectedPathRelevantTimeIndexes_ = timeIndexes;
-    injectedPathStickyCloseOutRun_ = stickyCloseOutRun;
     update();
 }
 

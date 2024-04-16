@@ -175,8 +175,7 @@ private:
         std::vector<QuantExt::RandomVariable> simulatePath(const std::vector<QuantLib::Real>& pathTimes,
                                                            std::vector<std::vector<QuantExt::RandomVariable>>& paths,
                                                            const std::vector<size_t>& relevantPathIndex,
-                                                           const std::vector<size_t>& relevantTimeIndex,
-                                                           const bool stickyCloseOutRun) override;
+                                                           const std::vector<size_t>& relevantTimeIndex) override;
 
     private:
         std::vector<Size> externalModelIndices_;

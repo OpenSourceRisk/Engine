@@ -32,13 +32,24 @@ QuantLib::Currency ScriptedInstrumentAmcCalculator::npvCurrency() { return parse
 
 std::vector<QuantExt::RandomVariable> ScriptedInstrumentAmcCalculator::simulatePath(
     const std::vector<QuantLib::Real>& pathTimes, std::vector<std::vector<QuantExt::RandomVariable>>& paths,
-    const std::vector<size_t>& relevantPathIndex, const std::vector<size_t>& relevantTimeIndex, const bool stickyCloseOutRun) {
+    const std::vector<size_t>& relevantPathIndex, const std::vector<size_t>& relevantTimeIndex) {
 
+    QL_REQUIRE(relevantPathIndex.size() == relevantTimeIndex.size(),
+               "ScriptedInstrumentAmcCalculator::simulatePath: Mismatch between relevantPathIndex size and "
+               "relevantTimeIndex size, internal error");
+
+    bool stickyCloseOutRun = false;
+    for (size_t i = 0; i < relevantPathIndex.size(); ++i) {
+        if (relevantPathIndex[i] != relevantTimeIndex[i]) {
+            stickyCloseOutRun = true;
+            break;
+        }
+    }
     // inject the global paths into our local model, notice that this will change the size of the model
 
     auto amcModel = QuantLib::ext::dynamic_pointer_cast<AmcModel>(model_);
     QL_REQUIRE(amcModel, "expected an AmcModel");
-    amcModel->injectPaths(&pathTimes, &paths, &relevantPathIndex, &relevantTimeIndex, stickyCloseOutRun);
+    amcModel->injectPaths(&pathTimes, &paths, &relevantPathIndex, &relevantTimeIndex);
 
     // the rest is similar to what is done in the ScriptedInstrumentPricingEngine:
 
@@ -52,7 +63,7 @@ std::vector<QuantExt::RandomVariable> ScriptedInstrumentAmcCalculator::simulateP
     // make sure we reset the injected path data after the calculation
     struct InjectedPathReleaser {
         ~InjectedPathReleaser() {
-            QuantLib::ext::dynamic_pointer_cast<AmcModel>(model)->injectPaths(nullptr, nullptr, nullptr, nullptr, false);
+            QuantLib::ext::dynamic_pointer_cast<AmcModel>(model)->injectPaths(nullptr, nullptr, nullptr, nullptr);
         }
         QuantLib::ext::shared_ptr<Model> model;
     };
