@@ -240,7 +240,8 @@ private:
     // 2a indexed by var id
     std::vector<std::size_t> inputVarOffset_;
     std::vector<bool> inputVarIsScalar_;
-    std::vector<float> inputVarValues_;
+    std::vector<float> inputVarValues32_;
+    std::vector<double> inputVarValues64_;
 
     // 2b collection of variable ids
     std::vector<std::size_t> freedVariables_;
@@ -376,8 +377,12 @@ void OpenClContext::init() {
     context_ = clCreateContext(NULL, 1, &device_, NULL, NULL, &err);
     QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::OpenClContext(): error during clCreateContext(): " << errorText(err));
 
-    // deprecated in open-cl version 2.0, clCreateCommandQueueWithProperties
+#if CL_VERSION_2_0
+    queue_ = clCreateCommandQueueWithProperties(context_, device_, NULL, &err);
+#else
+    // deprecated in cl version 2_0
     queue_ = clCreateCommandQueue(context_, device_, 0, &err);
+#endif
     QL_REQUIRE(err == CL_SUCCESS,
                "OpenClContext::OpenClContext(): error during clCreateCommandQueue(): " << errorText(err));
 
@@ -459,7 +464,8 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
 
     inputVarOffset_.clear();
     inputVarIsScalar_.clear();
-    inputVarValues_.clear();
+    inputVarValues32_.clear();
+    inputVarValues64_.clear();
 
     if (newCalc) {
         freedVariables_.clear();
@@ -491,8 +497,13 @@ std::size_t OpenClContext::createInputVariable(double v) {
     }
     inputVarOffset_.push_back(nextOffset);
     inputVarIsScalar_.push_back(true);
-    inputVarValues_.push_back((float)std::max(std::min(v, (double)std::numeric_limits<float>::max()),
-                                              -(double)std::numeric_limits<float>::max()));
+    if (settings_.useDoublePrecision) {
+        inputVarValues64_.push_back(v);
+    } else {
+        // ensure that v falls into the single precision range
+        inputVarValues32_.push_back((float)std::max(std::min(v, (double)std::numeric_limits<float>::max()),
+                                                  -(double)std::numeric_limits<float>::max()));
+    }
     return nVars_++;
 }
 
@@ -506,9 +517,14 @@ std::size_t OpenClContext::createInputVariable(double* v) {
     }
     inputVarOffset_.push_back(nextOffset);
     inputVarIsScalar_.push_back(false);
-    for (std::size_t i = 0; i < size_[currentId_ - 1]; ++i)
-        inputVarValues_.push_back((float)std::max(std::min(v[i], (double)std::numeric_limits<float>::max()),
-                                                  -(double)std::numeric_limits<float>::max()));
+    for (std::size_t i = 0; i < size_[currentId_ - 1]; ++i) {
+        if (settings_.useDoublePrecision) {
+            inputVarValues64_.push_back(v[i]);
+        } else {
+            inputVarValues32_.push_back((float)std::max(std::min(v[i], (double)std::numeric_limits<float>::max()),
+                                                      -(double)std::numeric_limits<float>::max()));
+        }
+    }
     return nVars_++;
 }
 
@@ -574,8 +590,10 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
 
     // generate ssa entry
 
+    std::string fpTypeStr = settings_.useDoublePrecision ? "double" : "float";
+
     std::string ssaLine =
-        (resultIdNeedsDeclaration ? "float " : "") + std::string("v") + std::to_string(resultId) + " = ";
+        (resultIdNeedsDeclaration ? fpTypeStr + " " : "") + std::string("v") + std::to_string(resultId) + " = ";
 
     switch (randomVariableOpCode) {
     case RandomVariableOpCode::None: {
@@ -705,11 +723,16 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     QL_REQUIRE(output.size() == nOutputVars_[currentId_ - 1],
                "OpenClContext::finalizeCalculation(): output size ("
                    << output.size() << ") inconsistent to kernel output size (" << nOutputVars_[currentId_ - 1] << ")");
+    QL_REQUIRE(!settings_.useDoublePrecision || supportsDoublePrecision(),
+               "OpenClContext::finalizeCalculation(): double precision is configured for this calculation, but not "
+               "supported by the device. Switch to single precision or use an appropriate device.");
 
     boost::timer::cpu_timer timer;
     boost::timer::nanosecond_type timerBase;
 
     // create input and output buffers
+
+    std::size_t fpSize = settings_.useDoublePrecision ? sizeof(double) : sizeof(float);
 
     if (settings_.debug) {
         timerBase = timer.elapsed().wall;
@@ -721,7 +744,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     cl_int err;
     cl_mem inputBuffer;
     if (inputBufferSize > 0) {
-        inputBuffer = clCreateBuffer(context_, CL_MEM_READ_WRITE, sizeof(float) * inputBufferSize, NULL, &err);
+        inputBuffer = clCreateBuffer(context_, CL_MEM_READ_WRITE, fpSize * inputBufferSize, NULL, &err);
         guard.mem.push_back(inputBuffer);
         QL_REQUIRE(err == CL_SUCCESS,
                    "OpenClContext::finalizeCalculation(): creating input buffer fails: " << errorText(err));
@@ -730,7 +753,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     std::size_t outputBufferSize = nOutputVars_[currentId_ - 1] * size_[currentId_ - 1];
     cl_mem outputBuffer;
     if (outputBufferSize > 0) {
-        outputBuffer = clCreateBuffer(context_, CL_MEM_READ_WRITE, sizeof(float) * outputBufferSize, NULL, &err);
+        outputBuffer = clCreateBuffer(context_, CL_MEM_READ_WRITE, fpSize * outputBufferSize, NULL, &err);
         guard.mem.push_back(outputBuffer);
         QL_REQUIRE(err == CL_SUCCESS,
                    "OpenClContext::finalizeCalculation(): creating output buffer fails: " << errorText(err));
@@ -744,68 +767,76 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
     if (!hasKernel_[currentId_ - 1]) {
 
+        std::string fpTypeStr = settings_.useDoublePrecision ? "double" : "float";
+        std::string fpEpsStr = settings_.useDoublePrecision ? "0x1.0p-52" : "0x1.0p-23f";
+        std::string fpSuffix = settings_.useDoublePrecision ? std::string() : "f";
+
+        // clang-format off
         const std::string includeSource =
-            "bool ore_closeEnough(const float x, const float y) {\n"
-            "    const float tol = 42.0f * 1.1920929e-07f;\n"
-            "    float diff = fabs(x - y);\n"
-            "    if (x == 0.0f || y == 0.0f)\n"
+            "bool ore_closeEnough(const " + fpTypeStr + " x, const " + fpTypeStr + " y) {\n"
+            "    const " + fpTypeStr + " tol = 42.0" + fpSuffix + " * " + fpEpsStr + ";\n"
+            "    " + fpTypeStr + " diff = fabs(x - y);\n"
+            "    if (x == 0.0" + fpSuffix + " || y == 0.0" + fpSuffix + ")\n"
             "        return diff < tol * tol;\n"
             "    return diff <= tol * fabs(x) || diff <= tol * fabs(y);\n"
             "}\n"
-            "\n"
-            "float ore_indicatorEq(const float x, const float y) { return ore_closeEnough(x, y) ? 1.0f : 0.0f; }\n\n"
-            "float ore_indicatorGt(const float x, const float y) { return x > y && !ore_closeEnough(x, y); }\n\n"
-            "float ore_indicatorGeq(const float x, const float y) { return x > y || ore_closeEnough(x, y); }\n\n"
-            "float ore_invCumN(const uint x0) {\n"
-            "    const float a1_ = -3.969683028665376e+01f;\n"
-            "    const float a2_ = 2.209460984245205e+02f;\n"
-            "    const float a3_ = -2.759285104469687e+02f;\n"
-            "    const float a4_ = 1.383577518672690e+02f;\n"
-            "    const float a5_ = -3.066479806614716e+01f;\n"
-            "    const float a6_ = 2.506628277459239e+00f;\n"
-            "    const float b1_ = -5.447609879822406e+01f;\n"
-            "    const float b2_ = 1.615858368580409e+02f;\n"
-            "    const float b3_ = -1.556989798598866e+02f;\n"
-            "    const float b4_ = 6.680131188771972e+01f;\n"
-            "    const float b5_ = -1.328068155288572e+01f;\n"
-            "    const float c1_ = -7.784894002430293e-03f;\n"
-            "    const float c2_ = -3.223964580411365e-01f;\n"
-            "    const float c3_ = -2.400758277161838e+00f;\n"
-            "    const float c4_ = -2.549732539343734e+00f;\n"
-            "    const float c5_ = 4.374664141464968e+00f;\n"
-            "    const float c6_ = 2.938163982698783e+00f;\n"
-            "    const float d1_ = 7.784695709041462e-03f;\n"
-            "    const float d2_ = 3.224671290700398e-01f;\n"
-            "    const float d3_ = 2.445134137142996e+00f;\n"
-            "    const float d4_ = 3.754408661907416e+00f;\n"
-            "    const float x_low_ = 0.02425f;\n"
-            "    const float x_high_ = 1.0f - x_low_;\n"
-            "    const float x = x0 / (float)UINT_MAX;\n"
+            "\n" +
+            fpTypeStr + " ore_indicatorEq(const " + fpTypeStr + " x, const " + fpTypeStr + " y) "
+                                                "{ return ore_closeEnough(x, y) ? 1.0" + fpSuffix + " : 0.0" + fpSuffix +"; }\n\n" +
+            fpTypeStr + " ore_indicatorGt(const " + fpTypeStr + " x, const " + fpTypeStr + " y) " +
+                                                "{ return x > y && !ore_closeEnough(x, y); }\n\n" +
+            fpTypeStr + " ore_indicatorGeq(const " + fpTypeStr + " x, const " + fpTypeStr + " y) { return x > y || ore_closeEnough(x, y); }\n\n" +
+            fpTypeStr + " ore_invCumN(const uint x0) {\n"
+            "    const " + fpTypeStr + " a1_ = -3.969683028665376e+01" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " a2_ = 2.209460984245205e+02" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " a3_ = -2.759285104469687e+02" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " a4_ = 1.383577518672690e+02" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " a5_ = -3.066479806614716e+01" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " a6_ = 2.506628277459239e+00" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " b1_ = -5.447609879822406e+01" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " b2_ = 1.615858368580409e+02" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " b3_ = -1.556989798598866e+02" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " b4_ = 6.680131188771972e+01" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " b5_ = -1.328068155288572e+01" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " c1_ = -7.784894002430293e-03" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " c2_ = -3.223964580411365e-01" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " c3_ = -2.400758277161838e+00" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " c4_ = -2.549732539343734e+00" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " c5_ = 4.374664141464968e+00" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " c6_ = 2.938163982698783e+00" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " d1_ = 7.784695709041462e-03" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " d2_ = 3.224671290700398e-01" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " d3_ = 2.445134137142996e+00" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " d4_ = 3.754408661907416e+00" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " x_low_ = 0.02425" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " x_high_ = 1.0" + fpSuffix + " - x_low_;\n"
+            "    const " + fpTypeStr + " x = x0 / (" + fpTypeStr + ")UINT_MAX;\n"
             "    if (x < x_low_ || x_high_ < x) {\n"
             "        if (x0 == UINT_MAX) {\n"
-            "          return 0x1.fffffep127f;\n"
+            "          return 0x1.fffffep127" + fpSuffix + ";\n"
             "        } else if(x0 == 0) {\n"
-            "          return -0x1.fffffep127f;\n"
+            "          return -0x1.fffffep127" + fpSuffix + ";\n"
             "        }\n"
-            "        float z;\n"
+            "        " + fpTypeStr + " z;\n"
             "        if (x < x_low_) {\n"
-            "            z = sqrt(-2.0f * log(x));\n"
+            "            z = sqrt(-2.0" + fpSuffix + " * log(x));\n"
             "            z = (((((c1_ * z + c2_) * z + c3_) * z + c4_) * z + c5_) * z + c6_) /\n"
-            "                ((((d1_ * z + d2_) * z + d3_) * z + d4_) * z + 1.0f);\n"
+            "                ((((d1_ * z + d2_) * z + d3_) * z + d4_) * z + 1.0" + fpSuffix + ");\n"
             "        } else {\n"
             "            z = sqrt(-2.0f * log(1.0f - x));\n"
             "            z = -(((((c1_ * z + c2_) * z + c3_) * z + c4_) * z + c5_) * z + c6_) /\n"
-            "                ((((d1_ * z + d2_) * z + d3_) * z + d4_) * z + 1.0f);\n"
+            "                ((((d1_ * z + d2_) * z + d3_) * z + d4_) * z + 1.0" + fpSuffix + ");\n"
             "        }\n"
             "        return z;\n"
             "    } else {\n"
-            "        float z = x - 0.5f;\n"
-            "        float r = z * z;\n"
+            "        " + fpTypeStr + " z = x - 0.5" + fpSuffix + ";\n"
+            "        " + fpTypeStr + " r = z * z;\n"
             "        z = (((((a1_ * r + a2_) * r + a3_) * r + a4_) * r + a5_) * r + a6_) * z /\n"
-            "            (((((b1_ * r + b2_) * r + b3_) * r + b4_) * r + b5_) * r + 1.0f);\n"
+            "            (((((b1_ * r + b2_) * r + b3_) * r + b4_) * r + b5_) * r + 1.0" + fpSuffix +");\n"
             "        return z;\n"
             "    }\n"
             "}\n\n";
+        // clang-format on
 
         std::string kernelName =
             "ore_kernel_" + std::to_string(currentId_) + "_" + std::to_string(version_[currentId_ - 1]);
@@ -813,15 +844,15 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
         std::string kernelSource = includeSource + "__kernel void " + kernelName +
                                    "(\n"
                                    "   __global uint* lcrng_mult" +
-                                   (inputBufferSize > 0 ? ",\n   __global float* input" : "") +
-                                   (outputBufferSize > 0 ? ",\n   __global float* output" : "") +
+                                   (inputBufferSize > 0 ? ",\n   __global " + fpTypeStr + "* input" : "") +
+                                   (outputBufferSize > 0 ? ",\n   __global " + fpTypeStr + "* output" : "") +
                                    ") {\n"
                                    "unsigned int i = get_global_id(0);\n"
                                    "if(i < " +
                                    std::to_string(size_[currentId_ - 1]) + "U) {\n";
 
         for (std::size_t i = 0; i < variateSeed_.size(); ++i) {
-            kernelSource += "  float v" + std::to_string(i + inputVarOffset_.size()) + " = ore_invCumN(" +
+            kernelSource += "  " + fpTypeStr + " v" + std::to_string(i + inputVarOffset_.size()) + " = ore_invCumN(" +
                             std::to_string(variateSeed_[i]) + "U * lcrng_mult[i]);\n";
             if (settings_.debug)
                 debugInfo_.numberOfOperations += 23 * size_[currentId_ - 1];
@@ -889,8 +920,10 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
     cl_event inputBufferEvent;
     if (inputBufferSize > 0) {
-        err = clEnqueueWriteBuffer(queue_, inputBuffer, CL_FALSE, 0, sizeof(float) * inputBufferSize,
-                                   &inputVarValues_[0], 0, NULL, &inputBufferEvent);
+        err = clEnqueueWriteBuffer(queue_, inputBuffer, CL_FALSE, 0, fpSize * inputBufferSize,
+                                   settings_.useDoublePrecision ? (void*)&inputVarValues64_[0]
+                                                                : (void*)&inputVarValues32_[0],
+                                   0, NULL, &inputBufferEvent);
         QL_REQUIRE(err == CL_SUCCESS,
                    "OpenClContext::finalizeCalculation(): writing to input buffer fails: " << errorText(err));
     }
@@ -941,12 +974,16 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
     std::vector<cl_event> outputBufferEvents;
     if (outputBufferSize > 0) {
-        std::vector<std::vector<float>> outputFloat(output.size(), std::vector<float>(size_[currentId_ - 1]));
+        std::vector<std::vector<float>> outputFloat;
+        if (!settings_.useDoublePrecision) {
+            outputFloat.resize(output.size(), std::vector<float>(size_[currentId_ - 1]));
+        }
         for (std::size_t i = 0; i < output.size(); ++i) {
             outputBufferEvents.push_back(cl_event());
             err = clEnqueueReadBuffer(queue_, outputBuffer, CL_FALSE, i * size_[currentId_ - 1],
-                                      sizeof(float) * size_[currentId_ - 1], &outputFloat[i][0], 1, &runEvent,
-                                      &outputBufferEvents.back());
+                                      fpSize * size_[currentId_ - 1],
+                                      settings_.useDoublePrecision ? (void*)&output[i][0] : (void*)&outputFloat[i][0],
+                                      1, &runEvent, &outputBufferEvents.back());
             QL_REQUIRE(err == CL_SUCCESS,
                        "OpenClContext::finalizeCalculation(): writing to output buffer fails: " << errorText(err));
         }
@@ -954,9 +991,11 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
         QL_REQUIRE(
             err == CL_SUCCESS,
             "OpenClContext::finalizeCalculation(): wait for output buffer events to finish fails: " << errorText(err));
-        // copy from float to double
-        for (std::size_t i = 0; i < output.size(); ++i) {
-            std::copy(outputFloat[i].begin(), outputFloat[i].end(), output[i]);
+        if (!settings_.useDoublePrecision) {
+            // copy from float to double
+            for (std::size_t i = 0; i < output.size(); ++i) {
+                std::copy(outputFloat[i].begin(), outputFloat[i].end(), output[i]);
+            }
         }
     }
 
