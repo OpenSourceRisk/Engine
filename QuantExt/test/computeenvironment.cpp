@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(testSimpleCalcWithDoublePrecision) {
 
         BOOST_TEST_MESSAGE("  do second calc using same kernel");
 
-        c.initiateCalculation(n, id, 0);
+        c.initiateCalculation(n, id, 0, settings);
         std::vector<double> rx2(n, dblPrecNumber);
         c.createInputVariable(&rx2[0]);
         c.createInputVariable(dblPrecNumber);
