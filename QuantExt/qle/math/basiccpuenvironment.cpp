@@ -41,16 +41,18 @@ public:
 
     std::pair<std::size_t, bool> initiateCalculation(const std::size_t n, const std::size_t id = 0,
                                                      const std::size_t version = 0,
-                                                     const bool debug = false) override final;
+                                                     const Settings settings = {}) override final;
     std::size_t createInputVariable(double v) override final;
     std::size_t createInputVariable(double* v) override final;
-    std::vector<std::vector<std::size_t>> createInputVariates(const std::size_t dim, const std::size_t steps,
-                                                              const std::uint32_t seed) override final;
+    std::vector<std::vector<std::size_t>> createInputVariates(const std::size_t dim,
+                                                              const std::size_t steps) override final;
     std::size_t applyOperation(const std::size_t randomVariableOpCode,
                                const std::vector<std::size_t>& args) override final;
     void freeVariable(const std::size_t id) override final;
     void declareOutputVariable(const std::size_t id) override final;
-    void finalizeCalculation(std::vector<double*>& output, const Settings& settings = Settings()) override final;
+    void finalizeCalculation(std::vector<double*>& output) override final;
+
+    bool supportsDoublePrecision() const override { return true; }
 
     const DebugInfo& debugInfo() const override final;
 
@@ -100,7 +102,7 @@ private:
 
     std::size_t currentId_ = 0;
     ComputeState currentState_ = ComputeState::idle;
-    bool debug_;
+    Settings settings_;
     bool newCalc_;
 
     std::vector<RandomVariable> values_;
@@ -140,12 +142,12 @@ void BasicCpuContext::init() {
 }
 
 std::pair<std::size_t, bool> BasicCpuContext::initiateCalculation(const std::size_t n, const std::size_t id,
-                                                                  const std::size_t version, const bool debug) {
+                                                                  const std::size_t version, const Settings settings) {
 
     QL_REQUIRE(n > 0, "BasicCpuContext::initiateCalculation(): n must not be zero");
 
     newCalc_ = false;
-    debug_ = debug;
+    settings_ = settings;
 
     if (id == 0) {
 
@@ -220,10 +222,10 @@ std::size_t BasicCpuContext::createInputVariable(double* v) {
     return numberOfInputVars_[currentId_ - 1]++;
 }
 
-std::vector<std::vector<std::size_t>>
-BasicCpuContext::createInputVariates(const std::size_t dim, const std::size_t steps, const std::uint32_t seed) {
+std::vector<std::vector<std::size_t>> BasicCpuContext::createInputVariates(const std::size_t dim,
+                                                                           const std::size_t steps) {
     QL_REQUIRE(currentState_ == ComputeState::createInput || currentState_ == ComputeState::createVariates,
-               "BasicCpuContext::createInputVariable(): not in state createInput or createVariates ("
+               "BasicCpuContext::createInputVariates(): not in state createInput or createVariates ("
                    << static_cast<int>(currentState_) << ")");
     QL_REQUIRE(currentId_ > 0, "BasicCpuContext::freeVariable(): current id is not set");
     QL_REQUIRE(newCalc_, "BasicCpuContext::createInputVariates(): id (" << currentId_ << ") in version "
@@ -231,7 +233,10 @@ BasicCpuContext::createInputVariates(const std::size_t dim, const std::size_t st
     currentState_ = ComputeState::createVariates;
 
     if (rng_ == nullptr) {
-        rng_ = std::make_unique<MersenneTwisterUniformRng>(seed);
+        QL_REQUIRE(settings_.rngSequenceType == QuantExt::SequenceType::MersenneTwister,
+                   "BasiCpuContext::createInputVariates(): sequence type "
+                       << settings_.rngSequenceType << " not supported, expected 'MersenneTwister'");
+        rng_ = std::make_unique<MersenneTwisterUniformRng>(settings_.seed);
     }
 
     if (variates_.size() < dim * steps) {
@@ -282,7 +287,7 @@ std::size_t BasicCpuContext::applyOperation(const std::size_t randomVariableOpCo
 
     // update num of ops in debug info
 
-    if (debug_)
+    if (settings_.debug)
         debugInfo_.numberOfOperations += 1 * size_[currentId_ - 1];
 
     // return result id
@@ -314,7 +319,7 @@ void BasicCpuContext::declareOutputVariable(const std::size_t id) {
     outputVars_[currentId_ - 1].push_back(id);
 }
 
-void BasicCpuContext::finalizeCalculation(std::vector<double*>& output, const Settings& settings) {
+void BasicCpuContext::finalizeCalculation(std::vector<double*>& output) {
     struct exitGuard {
         exitGuard() {}
         ~exitGuard() { *currentState = ComputeState::idle; }
@@ -331,7 +336,7 @@ void BasicCpuContext::finalizeCalculation(std::vector<double*>& output, const Se
 
     const auto& p = program_[currentId_ - 1];
 
-    auto ops = getRandomVariableOps(size_[currentId_ - 1], settings.regressionOrder);
+    auto ops = getRandomVariableOps(size_[currentId_ - 1], settings_.regressionOrder);
 
     // resize values vector to required size
 
