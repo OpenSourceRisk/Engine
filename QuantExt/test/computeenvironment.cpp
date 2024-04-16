@@ -119,6 +119,52 @@ BOOST_AUTO_TEST_CASE(testSimpleCalc) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(testSimpleCalcWithDoublePrecision) {
+    ComputeEnvironmentFixture fixture;
+    const std::size_t n = 1024;
+    for (auto const& d : ComputeEnvironment::instance().getAvailableDevices()) {
+        BOOST_TEST_MESSAGE("testing simple calc (double precision) on device '" << d << "'.");
+        ComputeEnvironment::instance().selectContext(d);
+        auto& c = ComputeEnvironment::instance().context();
+
+        if (!c.supportsDoublePrecision()) {
+            BOOST_TEST_MESSAGE("device does not support double precision - skipping the test for this device.");
+            continue;
+        }
+
+        BOOST_TEST_MESSAGE("  do first calc");
+
+        double dblPrecNumber = 1.29382757483823819;
+
+        ComputeContext::Settings settings;
+        settings.useDoublePrecision = true;
+        auto [id, _] = c.initiateCalculation(n, 0, 0, settings);
+        std::vector<double> rx(n, dblPrecNumber);
+        auto x = c.createInputVariable(&rx[0]);
+        auto y = c.createInputVariable(dblPrecNumber);
+        auto z = c.applyOperation(RandomVariableOpCode::Add, {x, y});
+        auto w = c.applyOperation(RandomVariableOpCode::Mult, {z, z});
+        c.declareOutputVariable(w);
+        std::vector<std::vector<double>> output(1, std::vector<double>(n));
+        c.finalizeCalculation(output);
+        for (auto const& v : output.front()) {
+            BOOST_CHECK_CLOSE(v, (dblPrecNumber + dblPrecNumber) * (dblPrecNumber + dblPrecNumber), 1.0E-15);
+        }
+
+        BOOST_TEST_MESSAGE("  do second calc using same kernel");
+
+        c.initiateCalculation(n, id, 0);
+        std::vector<double> rx2(n, dblPrecNumber);
+        c.createInputVariable(&rx2[0]);
+        c.createInputVariable(dblPrecNumber);
+        std::vector<std::vector<double>> output2(1, std::vector<double>(n));
+        c.finalizeCalculation(output2);
+        for (auto const& v : output2.front()) {
+            BOOST_CHECK_CLOSE(v, (dblPrecNumber + dblPrecNumber) * (dblPrecNumber + dblPrecNumber), 1.0E-15);
+        }
+    }
+}
+
 BOOST_AUTO_TEST_CASE(testLargeCalc) {
     ComputeEnvironmentFixture fixture;
 
