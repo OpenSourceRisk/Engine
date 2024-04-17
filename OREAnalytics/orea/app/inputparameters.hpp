@@ -177,6 +177,10 @@ public:
     void setHistoricalScenarioReader(const std::string& fileName);
     void setSensitivityStreamFromBuffer(const std::string& buffer);
     void setHistVarSimMarketParamsFromFile(const std::string& fileName);
+    
+    // Setters for PNL Explain
+    void setPNLDate(const std::string& s) { pnlDate_ = parseDate(s); }
+
     void setOutputHistoricalScenarios(const bool b) { outputHistoricalScenarios_ = b; }
 
     // Setters for exposure simulation
@@ -473,6 +477,13 @@ public:
     const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& histVarSimMarketParams() const { return histVarSimMarketParams_; }
     bool outputHistoricalScenarios() const { return outputHistoricalScenarios_; }
     
+    const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& histVarSimMarketParams() { return histVarSimMarketParams_; }
+
+    /*************************
+     * Getters for PNL Explain
+     *************************/    
+    const QuantLib::Date& pnlDate() { return pnlDate_; }
+    
     /*********************************
      * Getters for exposure simulation 
      *********************************/
@@ -752,6 +763,12 @@ protected:
     std::string baseScenarioLoc_;
     bool outputHistoricalScenarios_ = false;
     
+    /*****************
+     * PNL Explain analytics
+     *****************/
+
+    QuantLib::Date pnlDate_;
+
     /*******************
      * EXPOSURE analytic
      *******************/
@@ -923,6 +940,7 @@ private:
     std::string parConversionOutputFileName_;
     std::string parConversionJacobiFileName_;
     std::string parConversionJacobiInverseFileName_;
+    std::string pnlExplainOutputFileName_;
 };
     
 } // namespace analytics

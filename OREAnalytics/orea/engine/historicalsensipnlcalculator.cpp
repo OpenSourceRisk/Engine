@@ -147,6 +147,11 @@ void PNLCalculator::populatePNLs(const std::vector<Real>& allPnls,
     foPnls_.shrink_to_fit();
 }
 
+void PNLCalculator::populateTradePNLs(const TradePnLStore& allPnls, const TradePnLStore& foPnls) {
+    tradePnls_ = allPnls;
+    foTradePnls_ = foPnls;
+}
+
  const bool PNLCalculator::isInTimePeriod(Date startDate, Date endDate) {
     return pnlPeriod_.contains(startDate) && pnlPeriod_.contains(endDate);
 }

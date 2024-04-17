@@ -104,6 +104,12 @@ std::vector<QuantLib::ext::shared_ptr<Analytic>> Analytic::allDependentAnalytics
     return analytics;
 }
 
+QuantLib::ext::shared_ptr<Analytic> Analytic::dependentAnalytic(const std::string& key) const {
+    auto it = dependentAnalytics_.find(key);
+    QL_REQUIRE(it != dependentAnalytics_.end(), "Could not find dependent Analytic " << key);
+    return it->second;
+}
+
 const std::string Analytic::label() const { 
     return impl_ ? impl_->label() : string(); 
 }

@@ -61,20 +61,26 @@ public:
                       const std::vector<QuantLib::Date>& startDates, const std::vector<QuantLib::Date>& endDates);
     
     using TradePnLStore = std::vector<std::vector<QuantLib::Real>>;
-    virtual void populateTradePNLs(const TradePnLStore& allPnls, const TradePnLStore& foPnls) {}
+    void populateTradePNLs(const TradePnLStore& allPnls, const TradePnLStore& foPnls);
 
     const std::vector<QuantLib::Real>& pnls() { return pnls_; };
     const std::vector<QuantLib::Real>& foPnls() { return foPnls_; };
 
+    const TradePnLStore& tradePnls() { return tradePnls_; }
+    const TradePnLStore& foTradePnls() { return foTradePnls_; }
+
     void clear() { 
         pnls_.clear();
         foPnls_.clear();
+        tradePnls_.clear();
+        foTradePnls_.clear();
     }
 
 protected:
     std::vector<QuantLib::Real> pnls_;
     std::vector<QuantLib::Real> foPnls_;
     ore::data::TimePeriod pnlPeriod_;
+    TradePnLStore tradePnls_, foTradePnls_;
 };
 
 class CovarianceCalculator {

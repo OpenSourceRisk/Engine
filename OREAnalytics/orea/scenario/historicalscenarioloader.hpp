@@ -55,6 +55,13 @@ public:
         //! Calendar to use when advancing dates
         const QuantLib::Calendar& calendar);
 
+     /*! Constructor that loads scenarios, read from \p scenarioReader, for given dates */
+    HistoricalScenarioLoader(
+        //! A scenario reader that feeds the loader with scenarios
+        const boost::shared_ptr<HistoricalScenarioReader>& scenarioReader,
+        //! The first date to load a a scenario for
+        const std::set<QuantLib::Date>& dates);
+
     //! Get a Scenario for a given date
     boost::shared_ptr<ore::analytics::Scenario> getHistoricalScenario(const QuantLib::Date& date) const;
     //! Number of scenarios

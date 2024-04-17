@@ -108,7 +108,7 @@ void SensitivityAnalysis::generateSensitivities() {
 
     QL_REQUIRE(useSingleThreadedEngine_ || !nonShiftedBaseCurrencyConversion_,
                "SensitivityAnalysis::generateSensitivities(): multi-threaded engine does not support non-shifted base "
-               "ccy conversion currently. This requires a a small code extension. Contact Dev.");
+               "ccy conversion currently. This requires a small code extension. Contact Dev.");
 
     // collect the sensi template ids that are used in the sensitivity config
 

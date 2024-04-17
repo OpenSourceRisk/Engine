@@ -46,7 +46,9 @@ const QuantLib::ext::shared_ptr<ore::data::Report>& MarketRiskBacktest::Backtest
 }
 
 MarketRiskBacktest::MarketRiskBacktest(
-    const std::string& baseCurrency,
+    const std::string& baseCurrency, 
+    const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+    const std::string& portfolioFilter,
     std::unique_ptr<BacktestArgs> btArgs, 
     std::unique_ptr<SensiRunArgs> sensiArgs,
     std::unique_ptr<FullRevalArgs> revalArgs,
@@ -54,20 +56,20 @@ MarketRiskBacktest::MarketRiskBacktest(
     const ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
     const bool breakdown,
     const bool requireTradePnl)
-    : MarketRiskReport(baseCurrency, btArgs->backtestPeriod_, hisScenGen, std::move(sensiArgs), std::move(revalArgs),
+    : MarketRiskReport(baseCurrency, portfolio, portfolioFilter, btArgs->backtestPeriod_, hisScenGen, std::move(sensiArgs), std::move(revalArgs),
                        std::move(mtArgs), breakdown, requireTradePnl),
-      btArgs_(std::move(btArgs)) {
-    init();
+      btArgs_(std::move(btArgs)) {    
+    initialise();
 }
 
-void MarketRiskBacktest::init() {
+void MarketRiskBacktest::initialise() {
     callTradeIds_ = btArgs_->callTradeIds_;
     postTradeIds_ = btArgs_->postTradeIds_;
     
     // If there is a mismatch between call and post, then we will have to exclude trade-level PnLs from the total (scenario) PnL
     requireTradePnl_ = callTradeIds_ != postTradeIds_;
 
-    MarketRiskReport::init();
+    MarketRiskReport::initialise();
 }
 
 
@@ -96,8 +98,8 @@ void MarketRiskBacktest::addPnlCalculators(const ext::shared_ptr<MarketRiskRepor
 
 
 void MarketRiskBacktest::handleSensiResults(const ext::shared_ptr<MarketRiskReport::Reports>& reports,
-    const ext::shared_ptr<MarketRiskGroup>& riskGroup,
-    const ext::shared_ptr<TradeGroup>& tradeGroup) {
+                                            const ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
+                                            const ext::shared_ptr<TradeGroupBase>& tradeGroup) {
     QL_REQUIRE(pnlCalculators_.size() == 2, "Expecting 2 PNL Calculators for Backtest");
     bmSensiPnls_ = pnlCalculators_[0]->pnls();
     bmFoSensiPnls_ = pnlCalculators_[0]->foPnls();
@@ -117,8 +119,8 @@ void MarketRiskBacktest::handleSensiResults(const ext::shared_ptr<MarketRiskRepo
 }
 
 void MarketRiskBacktest::handleFullRevalResults(const ext::shared_ptr<MarketRiskReport::Reports>& reports,
-    const ext::shared_ptr<ore::analytics::MarketRiskGroup>& riskGroup,
-    const ext::shared_ptr<ore::analytics::TradeGroup>& tradeGroup) {
+                                                const ext::shared_ptr<ore::analytics::MarketRiskGroupBase>& riskGroup,
+                                                const ext::shared_ptr<ore::analytics::TradeGroupBase>& tradeGroup) {
 
     QL_REQUIRE(histPnlGen_, "Must have a Historical PNL Generator");
     pnls_ = histPnlGen_->pnl(btArgs_->backtestPeriod_, tradeIdIdxPairs_);
@@ -133,9 +135,9 @@ void MarketRiskBacktest::handleFullRevalResults(const ext::shared_ptr<MarketRisk
     calculateBenchmarks(fullRevalPostBenchmarks_, btArgs_->confidence_, false, riskGroup, tradeIdIdxPairs_);
 }
 
-void MarketRiskBacktest::writeSummary(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
-                                      const ext::shared_ptr<ore::analytics::MarketRiskGroup>& riskGroup,
-                                      const ext::shared_ptr<ore::analytics::TradeGroup>& tradeGroup) {
+void MarketRiskBacktest::writeReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
+                                      const ext::shared_ptr<ore::analytics::MarketRiskGroupBase>& riskGroup,
+                                      const ext::shared_ptr<ore::analytics::TradeGroupBase>& tradeGroup) {
 
     // Data for the current backtest
     std::string cpty = tradeIdIdxPairs_.empty() ? "INVALID" : counterparty(tradeIdIdxPairs_.begin()->first);
@@ -338,7 +340,7 @@ void MarketRiskBacktest::createReports(const ext::shared_ptr<MarketRiskReport::R
 
 void MarketRiskBacktest::calculateBenchmarks(
     VarBenchmarks& benchmarks, Real confidence, const bool isCall,
-    const QuantLib::ext::shared_ptr<MarketRiskGroup>& riskGroup,
+                                             const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
     std::set<std::pair<std::string, QuantLib::Size>>&
         tradeIdIdxPairs) {    
     for (auto& [type, value] : benchmarks) {
@@ -347,7 +349,7 @@ void MarketRiskBacktest::calculateBenchmarks(
     }
 }
 
-void MarketRiskBacktest::reset(const QuantLib::ext::shared_ptr<MarketRiskGroup>& riskGroup) {
+void MarketRiskBacktest::reset(const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup) {
     MarketRiskReport::reset(riskGroup);
     bmSensiPnls_.clear();
     pnls_.clear();
@@ -412,11 +414,6 @@ void BacktestPNLCalculator::writePNL(Size scenarioIdx, bool isCall, const RiskFa
     if (writePnl_)
         backtest_->addPnlRow(reports_, scenarioIdx, isCall, key_1, shift_1, delta, gamma, deltaPnl, gammaPnl, key_2, shift_2,
                              tradeId);
-}
-
-void BacktestPNLCalculator::populateTradePNLs(const TradePnLStore& allPnls, const TradePnLStore& foPnls) {
-    tradePnls_ = allPnls;
-    foTradePnls_ = foPnls;
 }
 
 } // namespace analytics
