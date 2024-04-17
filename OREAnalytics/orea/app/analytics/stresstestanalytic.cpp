@@ -76,8 +76,8 @@ void StressTestAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMe
         CONSOLEW("Start conversion ");
         std::cout << " Start new" << std::endl;
         scenarioData = convertParScenarioToZeroScenarioData(
-            inputs_->asof(), analytic()->market(), inputs_->stressSimMarketParams(), scenarioData, inputs_->sensiScenarioData(),
-            sensiAnalytic->parSensitivities());
+            inputs_->asof(), analytic()->market(), analytic()->configurations().simMarketParams, scenarioData,
+            inputs_->sensiScenarioData(), sensiAnalytic->parSensitivities());
     }
 
     Settings::instance().evaluationDate() = inputs_->asof();

@@ -728,6 +728,7 @@ protected:
     boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> stressSimMarketParams_;
     boost::shared_ptr<ore::analytics::StressTestScenarioData> stressScenarioData_;
     boost::shared_ptr<ore::data::EngineData> stressPricingEngine_;
+    bool stressOptimiseRiskFactors_ = false;
 
     /*****************
      * VAR analytics

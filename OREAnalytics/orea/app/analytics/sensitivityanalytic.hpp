@@ -41,16 +41,30 @@ public:
 
 class SensitivityAnalytic : public Analytic {
 public:
-    SensitivityAnalytic(const boost::shared_ptr<InputParameters>& inputs, boost::optional<bool> parSensiRun = {})
+    SensitivityAnalytic(const boost::shared_ptr<InputParameters>& inputs, boost::optional<bool> parSensiRun = {},
+                        boost::optional<bool> alignPillars = {}, boost::optional<bool> outputJacobi = {},
+                        boost::optional<bool> optimiseRiskFactors = {})
         : Analytic(std::make_unique<SensitivityAnalyticImpl>(inputs), {"SENSITIVITY"}, inputs, false, false, false,
                    false),
-          parSensiRun_(parSensiRun) {}
+          parSensi_(parSensiRun.get_value_or(inputs->parSensi())),
+          alignPillars_(alignPillars.get_value_or(inputs->alignPillars())),
+          outputJacobi_(outputJacobi.get_value_or(inputs->outputJacobi())),
+          optimiseRiskFactors_(optimiseRiskFactors.get_value_or(inputs->optimiseRiskFactors())) {}
 
     const ParSensitivityAnalysis::ParContainer& parSensitivities() const { return parSensitivities_; }
-    void setParSensitivities(const ParSensitivityAnalysis::ParContainer& sensitivities) { parSensitivities_ = sensitivities; }
+    void setParSensitivities(const ParSensitivityAnalysis::ParContainer& sensitivities) {
+        parSensitivities_ = sensitivities;
+    }
+
+    bool parSensi() const { return parSensi_; }
+    bool outputJacobi() const { return outputJacobi; }
+    bool optimiseRiskFactors() const { return optimiseRiskFactors; }
 
 private:
-    boost::optional<bool> parSensiRun_;
+    bool parSensi_;
+    bool alignPillars_;
+    bool outputJacobi_;
+    bool optimiseRiskFactors_;
     ParSensitivityAnalysis::ParContainer parSensitivities_;
 };
 
