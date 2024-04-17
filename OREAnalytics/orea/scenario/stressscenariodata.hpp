@@ -89,6 +89,8 @@ public:
         bool irCurveParShifts = false;
         bool irCapFloorParShifts = false;
         bool creditCurveParShifts = false;
+
+        bool containsParShifts() const { return irCurveParShifts || irCapFloorParShifts || creditCurveParShifts; };
     };
 
     //! Default constructor

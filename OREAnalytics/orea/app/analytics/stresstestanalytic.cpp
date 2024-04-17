@@ -68,13 +68,14 @@ void StressTestAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMe
         LOG("Convert PAR rate scenario into zero rate scenario");
         QL_REQUIRE(stressAnalytic->hasDependentAnalytic(stressAnalytic->sensiAnalyticLookupKey),
                    "Internal error, need to build par Conversion analytic");
+        // TODO: Check tenors between simulation and sensitivity config matches
         auto sensiAnalytic = stressAnalytic->dependentAnalytic<SensitivityAnalytic>(stressAnalytic->sensiAnalyticLookupKey);
         sensiAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
         sensiAnalytic->configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
         sensiAnalytic->runAnalytic(loader);
         CONSOLEW("Start conversion ");
         std::cout << " Start new" << std::endl;
-        scenarioData = ParToZeroScenario().convertParScenarioToZeroScenarioData(
+        scenarioData = convertParScenarioToZeroScenarioData(
             inputs_->asof(), analytic()->market(), inputs_->stressSimMarketParams(), scenarioData, inputs_->sensiScenarioData(),
             sensiAnalytic->parSensitivities());
     }
@@ -86,7 +87,7 @@ void StressTestAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMe
     std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;
     boost::shared_ptr<StressTest> stressTest = boost::make_shared<StressTest>(
         analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
-        inputs_->stressSimMarketParams(), inputs_->stressScenarioData(), *analytic()->configurations().curveConfig,
+        analytic()->configurations().simMarketParams, scenarioData, *analytic()->configurations().curveConfig,
         *analytic()->configurations().todaysMarketParams, nullptr, inputs_->refDataManager(),
         *inputs_->iborFallbackConfig(), inputs_->continueOnError());
     stressTest->writeReport(report, inputs_->stressThreshold());
@@ -106,7 +107,14 @@ StressTestAnalytic::StressTestAnalytic(const boost::shared_ptr<InputParameters>&
 }
 
 bool StressTestAnalytic::hasParRateScenario(const boost::shared_ptr<StressTestScenarioData>& data) const {
-    return true;
+    if (data != nullptr) {
+        for (const auto& scenario : data->data()) {
+            if (scenario.irCapFloorParShifts || scenario.irCurveParShifts || scenario.creditCurveParShifts) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 } // namespace analytics
