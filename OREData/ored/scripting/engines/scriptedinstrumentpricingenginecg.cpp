@@ -186,7 +186,7 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
             settings.debug = false;
             settings.useDoublePrecision = useDoublePrecisionForExternalCalculation_;
             settings.rngSequenceType = mcParams_.sequenceType;
-            settings.seed = mcParams_.seed;
+            settings.rngSeed = mcParams_.seed;
             settings.regressionOrder = mcParams_.regressionOrder;
             std::tie(externalCalculationId_, newExternalCalc) =
                 ComputeEnvironment::instance().context().initiateCalculation(model_->size(), externalCalculationId_,
