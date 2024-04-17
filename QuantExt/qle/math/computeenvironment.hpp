@@ -66,11 +66,11 @@ public:
     struct Settings {
         Settings()
             : debug(false), useDoublePrecision(false), rngSequenceType(QuantExt::SequenceType::MersenneTwister),
-              seed(42), regressionOrder(4) {}
+              rngSeed(42), regressionOrder(4) {}
         bool debug;
         bool useDoublePrecision;
         QuantExt::SequenceType rngSequenceType;
-        std::size_t seed;
+        std::size_t rngSeed;
         std::size_t regressionOrder;
     };
 
