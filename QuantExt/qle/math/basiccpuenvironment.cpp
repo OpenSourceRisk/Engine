@@ -236,7 +236,7 @@ std::vector<std::vector<std::size_t>> BasicCpuContext::createInputVariates(const
         QL_REQUIRE(settings_.rngSequenceType == QuantExt::SequenceType::MersenneTwister,
                    "BasiCpuContext::createInputVariates(): sequence type "
                        << settings_.rngSequenceType << " not supported, expected 'MersenneTwister'");
-        rng_ = std::make_unique<MersenneTwisterUniformRng>(settings_.seed);
+        rng_ = std::make_unique<MersenneTwisterUniformRng>(settings_.rngSeed);
     }
 
     if (variates_.size() < dim * steps) {

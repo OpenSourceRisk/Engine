@@ -539,7 +539,7 @@ std::vector<std::vector<std::size_t>> OpenClContext::createInputVariates(const s
                                                 << " has a kernel already, input variates can not be regenerated.");
     currentState_ = ComputeState::createVariates;
     std::vector<std::vector<std::size_t>> resultIds(dim, std::vector<std::size_t>(steps));
-    std::uint32_t currentSeed = settings_.seed;
+    std::uint32_t currentSeed = settings_.rngSeed;
     for (std::size_t i = 0; i < dim; ++i) {
         for (std::size_t j = 0; j < steps; ++j) {
             variateSeed_.push_back(currentSeed);
