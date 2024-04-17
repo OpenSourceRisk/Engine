@@ -891,7 +891,7 @@ void OpenClContext::freeVariable(const std::size_t id) {
 
     // we do not free input variables, only variables that were added during the calc
 
-    if (id < inputVarOffset_.size())
+    if (id < inputVarOffset_.size() + nVariates_)
         return;
 
     freedVariables_.push_back(id);
