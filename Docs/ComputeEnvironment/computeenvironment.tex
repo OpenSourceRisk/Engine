@@ -389,7 +389,7 @@ Whenever a new computation i.e. the (re)pricing of a trade is requested a calcul
 \begin{minted}[fontsize=\footnotesize]{xml}
  std::tie(externalCalculationId_, newExternalCalc) =
    ComputeEnvironment::instance().context()
-       .initiateCalculation(model_->size(), externalCalculationId_, cgVersion_);
+       .initiateCalculation(model_->size(), externalCalculationId_, cgVersion_, settings);
 \end{minted}
 
 providing
@@ -400,6 +400,8 @@ providing
   to get a new id and for subsequent calculations of the same trade this id is reused
 \item \verb+cgVersion_+: a version number (initially zero). The version is incremented whenever a repricing requires a
   different sequence of operations to be performed, which is the case when the evaluation date changes
+\item \verb+settings+: the settings to be used, see \ref{implComputeFramework} for details. Notice that for a replayed
+  calculation the settings must match the ones from the initial calculation.
 \end{itemize}
 
 and retrieving the external calc id and a flag indicating whether the calculation requires a resubmission of an

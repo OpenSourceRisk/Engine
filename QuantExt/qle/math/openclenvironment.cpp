@@ -195,8 +195,7 @@ public:
     const DebugInfo& debugInfo() const override final;
 
 private:
-    cl_mem initLinearCongruentialRng(const std::size_t n, std::uint32_t& seedUpdate);
-
+    void updateVariatesPool();
     void releaseMem(cl_mem& m);
     void releaseKernel(cl_kernel& k);
     void releaseProgram(cl_program& p);
@@ -225,16 +224,23 @@ private:
     std::vector<std::size_t> inputBufferSize_;
     std::vector<std::size_t> nOutputVars_;
 
-    // 1b linear congruential rng multipliers per size
+    // 1b variates (shared pool of mersenne twister based normal variates)
 
-    std::map<std::size_t, cl_mem> linearCongruentialMultipliers_;
-    std::map<std::size_t, std::uint32_t> seedUpdate_;
+    std::size_t variatesPoolSize_ = 0;
+    cl_mem variatesPool_;
+    cl_mem variatesMtStateBuffer_;
+    cl_program variatesProgram_;
+    cl_kernel variatesKernelSeedInit_;
+    cl_kernel variatesKernelTwist_;
+    cl_kernel variatesKernelGenerate_;
+    std::vector<cl_event> variatesWaitEvents_;
 
     // 2 curent calc
 
     std::size_t currentId_ = 0;
     ComputeState currentState_ = ComputeState::idle;
     std::size_t nVars_;
+    std::size_t nVariates_;
     Settings settings_;
 
     // 2a indexed by var id
@@ -246,9 +252,6 @@ private:
     // 2b collection of variable ids
     std::vector<std::size_t> freedVariables_;
     std::vector<std::size_t> outputVariables_;
-
-    // 2c variate seeds
-    std::vector<std::uint32_t> variateSeed_;
 
     // 2d kernel ssa
     std::string currentSsa_;
@@ -317,8 +320,14 @@ OpenClContext::~OpenClContext() {
     if (initialized_) {
         cl_int err;
 
-        for (auto& [_, b] : linearCongruentialMultipliers_)
-            releaseMem(b);
+        if (variatesPoolSize_ > 0) {
+            releaseMem(variatesPool_);
+            releaseMem(variatesMtStateBuffer_);
+            releaseKernel(variatesKernelSeedInit_);
+            releaseKernel(variatesKernelTwist_);
+            releaseKernel(variatesKernelGenerate_);
+            releaseProgram(variatesProgram_);
+        }
 
         for (auto& k : kernel_) {
             releaseKernel(k);
@@ -389,28 +398,6 @@ void OpenClContext::init() {
     initialized_ = true;
 }
 
-cl_mem OpenClContext::initLinearCongruentialRng(const std::size_t n, std::uint32_t& seedUpdate) {
-
-    const std::uint32_t a = 1099087573; // same as in the boost compute lg-engine
-
-    std::vector<std::uint32_t> linearCongruentialMultipliers(n);
-    linearCongruentialMultipliers[0] = a;
-    for (std::size_t i = 1; i < n; ++i) {
-        linearCongruentialMultipliers[i] = a * linearCongruentialMultipliers[i - 1];
-    }
-    seedUpdate = linearCongruentialMultipliers.back() * a;
-
-    cl_int err;
-    cl_mem multiplierBuffer = clCreateBuffer(context_, CL_MEM_READ_WRITE, sizeof(std::uint32_t) * n, NULL, &err);
-    QL_REQUIRE(err == CL_SUCCESS,
-               "OpenClContext::initLinearCongruentialRng(): error during clCreateBuffer(): " << errorText(err));
-    err = clEnqueueWriteBuffer(queue_, multiplierBuffer, CL_TRUE, 0, sizeof(std::uint32_t) * n,
-                               &linearCongruentialMultipliers[0], 0, NULL, NULL);
-    QL_REQUIRE(err == CL_SUCCESS,
-               "OpenClContext::initLinearCongruentialRng(): error during clEnqueueWriteBuffer(): " << errorText(err));
-    return multiplierBuffer;
-}
-
 std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_t n, const std::size_t id,
                                                                 const std::size_t version, const Settings settings) {
 
@@ -430,9 +417,6 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
         kernel_.push_back(cl_kernel());
         inputBufferSize_.push_back(0);
         nOutputVars_.push_back(0);
-
-        if (auto l = linearCongruentialMultipliers_.find(n); l == linearCongruentialMultipliers_.end())
-            linearCongruentialMultipliers_[n] = initLinearCongruentialRng(n, seedUpdate_[n]);
 
         currentId_ = hasKernel_.size();
         newCalc = true;
@@ -470,8 +454,7 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
     if (newCalc) {
         freedVariables_.clear();
         outputVariables_.clear();
-
-        variateSeed_.clear();
+        nVariates_ = 0;
 
         // reset ssa
 
@@ -502,7 +485,7 @@ std::size_t OpenClContext::createInputVariable(double v) {
     } else {
         // ensure that v falls into the single precision range
         inputVarValues32_.push_back((float)std::max(std::min(v, (double)std::numeric_limits<float>::max()),
-                                                  -(double)std::numeric_limits<float>::max()));
+                                                    -(double)std::numeric_limits<float>::max()));
     }
     return nVars_++;
 }
@@ -522,10 +505,227 @@ std::size_t OpenClContext::createInputVariable(double* v) {
             inputVarValues64_.push_back(v[i]);
         } else {
             inputVarValues32_.push_back((float)std::max(std::min(v[i], (double)std::numeric_limits<float>::max()),
-                                                      -(double)std::numeric_limits<float>::max()));
+                                                        -(double)std::numeric_limits<float>::max()));
         }
     }
     return nVars_++;
+}
+
+void OpenClContext::updateVariatesPool() {
+
+    QL_REQUIRE(nVariates_ > 0, "OpenClContext::updateVariatesPool(): internal error, got nVariates_ == 0.");
+
+    constexpr std::size_t mt_N = 624; // mersenne twister N
+
+    std::size_t fpSize = settings_.useDoublePrecision ? sizeof(double) : sizeof(float);
+
+    if (variatesPoolSize_ == 0) {
+
+        // build the kernels to fill the variates pool
+
+        std::string fpTypeStr = settings_.useDoublePrecision ? "double" : "float";
+        std::string fpSuffix = settings_.useDoublePrecision ? "" : "f";
+
+        // clang-format off
+        // ported from from QuantLib::InverseCumulativeNormal
+        std::string sourceInvCumN = fpTypeStr + " ore_invCumN(const uint x0) {\n"
+            "    const " + fpTypeStr + " a1_ = -3.969683028665376e+01" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " a2_ = 2.209460984245205e+02" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " a3_ = -2.759285104469687e+02" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " a4_ = 1.383577518672690e+02" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " a5_ = -3.066479806614716e+01" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " a6_ = 2.506628277459239e+00" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " b1_ = -5.447609879822406e+01" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " b2_ = 1.615858368580409e+02" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " b3_ = -1.556989798598866e+02" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " b4_ = 6.680131188771972e+01" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " b5_ = -1.328068155288572e+01" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " c1_ = -7.784894002430293e-03" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " c2_ = -3.223964580411365e-01" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " c3_ = -2.400758277161838e+00" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " c4_ = -2.549732539343734e+00" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " c5_ = 4.374664141464968e+00" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " c6_ = 2.938163982698783e+00" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " d1_ = 7.784695709041462e-03" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " d2_ = 3.224671290700398e-01" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " d3_ = 2.445134137142996e+00" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " d4_ = 3.754408661907416e+00" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " x_low_ = 0.02425" + fpSuffix + ";\n"
+            "    const " + fpTypeStr + " x_high_ = 1.0" + fpSuffix + " - x_low_;\n"
+            "    const " + fpTypeStr + " x = x0 / (" + fpTypeStr + ")UINT_MAX;\n"
+            "    if (x < x_low_ || x_high_ < x) {\n"
+            "        if (x0 == UINT_MAX) {\n"
+            "          return 0x1.fffffep127" + fpSuffix + ";\n"
+            "        } else if(x0 == 0) {\n"
+            "          return -0x1.fffffep127" + fpSuffix + ";\n"
+            "        }\n"
+            "        " + fpTypeStr + " z;\n"
+            "        if (x < x_low_) {\n"
+            "            z = sqrt(-2.0" + fpSuffix + " * log(x));\n"
+            "            z = (((((c1_ * z + c2_) * z + c3_) * z + c4_) * z + c5_) * z + c6_) /\n"
+            "                ((((d1_ * z + d2_) * z + d3_) * z + d4_) * z + 1.0" + fpSuffix + ");\n"
+            "        } else {\n"
+            "            z = sqrt(-2.0f * log(1.0f - x));\n"
+            "            z = -(((((c1_ * z + c2_) * z + c3_) * z + c4_) * z + c5_) * z + c6_) /\n"
+            "                ((((d1_ * z + d2_) * z + d3_) * z + d4_) * z + 1.0" + fpSuffix + ");\n"
+            "        }\n"
+            "        return z;\n"
+            "    } else {\n"
+            "        " + fpTypeStr + " z = x - 0.5" + fpSuffix + ";\n"
+            "        " + fpTypeStr + " r = z * z;\n"
+            "        z = (((((a1_ * r + a2_) * r + a3_) * r + a4_) * r + a5_) * r + a6_) * z /\n"
+            "            (((((b1_ * r + b2_) * r + b3_) * r + b4_) * r + b5_) * r + 1.0" + fpSuffix +");\n"
+            "        return z;\n"
+            "    }\n"
+            "}\n\n";
+
+        // from QuantLib::MersenneTwisterUniformRng
+
+        std::string kernelSourceSeedInit = "__kernel void ore_seedInitialization(const uint s, __global uint* mt) {\n"
+            "  const uint N = 624;\n"
+            "  mt[0]= s & 0xffffffffU;\n"
+            "  for (uint mti=1; mti<N; ++mti) {\n"
+            "    mt[mti] = (1812433253UL * (mt[mti-1] ^ (mt[mti-1] >> 30)) + mti);\n"
+            "    mt[mti] &= 0xffffffffU;\n"
+            "  }\n"
+            "}\n\n";
+
+        std::string kernelSourceTwist = "__kernel void ore_twist(__global uint* mt) {\n"
+            " const uint N = 624;\n"
+            " const uint M = 397;\n"
+            " const uint MATRIX_A = 0x9908b0dfUL;\n"
+            " const uint UPPER_MASK=0x80000000UL;\n"
+            " const uint LOWER_MASK=0x7fffffffUL;\n"
+            " const uint mag01[2]={0x0UL, MATRIX_A};\n"
+            " uint kk;\n"
+            " uint y;\n"
+            " for (kk=0;kk<N-M;++kk) {\n"
+            "     y = (mt[kk]&UPPER_MASK)|(mt[kk+1]&LOWER_MASK);\n"
+            "     mt[kk] = mt[kk+M] ^ (y >> 1) ^ mag01[y & 0x1UL];\n"
+            " }\n"
+            " for (;kk<N-1;kk++) {\n"
+            "     y = (mt[kk]&UPPER_MASK)|(mt[kk+1]&LOWER_MASK);\n"
+            "     mt[kk] = mt[(kk+M)-N] ^ (y >> 1) ^ mag01[y & 0x1UL];\n"
+            " }\n"
+            " y = (mt[N-1]&UPPER_MASK)|(mt[0]&LOWER_MASK);\n"
+            " mt[N-1] = mt[M-1] ^ (y >> 1) ^ mag01[y & 0x1UL];\n"
+            "}\n\n";
+
+        std::string kernelSourceGenerate =
+            "__kernel void ore_generate(const uint offset, __global uint* mt, __global " + fpTypeStr + "* output) {\n"
+            "   uint mti = get_global_id(0);\n"
+            "   uint y = mt[mti];\n"
+            "   y ^= (y >> 11);\n"
+            "   y ^= (y << 7) & 0x9d2c5680U;\n"
+            "   y ^= (y << 15) & 0xefc60000U;\n"
+            "   y ^= (y >> 18);\n"
+            "   output[offset + mti] = ore_invCumN(y);\n"
+            "}\n\n";
+        // clang-format on
+
+        std::string programSource = sourceInvCumN + kernelSourceSeedInit + kernelSourceTwist + kernelSourceGenerate;
+
+        // std::cerr << "generated variates program:\n" + programSource << std::endl;
+
+        const char* programSourcePtr = programSource.c_str();
+        cl_int err;
+        variatesProgram_ = clCreateProgramWithSource(context_, 1, &programSourcePtr, NULL, &err);
+        QL_REQUIRE(err == CL_SUCCESS,
+                   "OpenClContext::updateVariatesPool(): error creating program: " << errorText(err));
+        err = clBuildProgram(variatesProgram_, 1, &device_, NULL, NULL, NULL);
+        if (err != CL_SUCCESS) {
+            char buffer[MAX_BUILD_LOG];
+            clGetProgramBuildInfo(variatesProgram_, device_, CL_PROGRAM_BUILD_LOG, MAX_BUILD_LOG * sizeof(char), buffer,
+                                  NULL);
+            QL_FAIL("OpenClContext::updateVariatesPool(): error during program build: "
+                    << errorText(err) << ": " << std::string(buffer).substr(MAX_BUILD_LOG_LOGFILE));
+        }
+
+        variatesKernelSeedInit_ = clCreateKernel(variatesProgram_, "ore_seedInitialization", &err);
+        QL_REQUIRE(err == CL_SUCCESS,
+                   "OpenClContext::updateVariatesPool(): error creating kernel seedInit: " << errorText(err));
+
+        variatesKernelTwist_ = clCreateKernel(variatesProgram_, "ore_twist", &err);
+        QL_REQUIRE(err == CL_SUCCESS,
+                   "OpenClContext::updateVariatesPool(): error creating kernel twist: " << errorText(err));
+
+        variatesKernelGenerate_ = clCreateKernel(variatesProgram_, "ore_generate", &err);
+        QL_REQUIRE(err == CL_SUCCESS,
+                   "OpenClContext::updateVariatesPool(): error creating kernel generate: " << errorText(err));
+
+        variatesMtStateBuffer_ = clCreateBuffer(context_, CL_MEM_READ_WRITE, fpSize * mt_N, NULL, &err);
+        QL_REQUIRE(err == CL_SUCCESS,
+                   "OpenClContext::updateVariatesPool(): error creating mt state buffer: " << errorText(err));
+
+        cl_uint tmpSeed = (cl_uint)settings_.rngSeed;
+        err = clSetKernelArg(variatesKernelSeedInit_, 0, sizeof(cl_uint), &tmpSeed);
+        err |= clSetKernelArg(variatesKernelSeedInit_, 1, sizeof(cl_mem), &variatesMtStateBuffer_);
+        QL_REQUIRE(err == CL_SUCCESS,
+                   "OpenClContext::updateVariatesPool(): error setting kernel args seed init: " << errorText(err));
+
+        QL_REQUIRE(variatesWaitEvents_.empty(),
+                   "OpenClContext::updateVariatesPool(): internal error, expected empty variatesWaitEvents_ ("
+                       << variatesWaitEvents_.size() << ")");
+        variatesWaitEvents_.push_back(cl_event());
+        constexpr std::size_t sizeOne = 1;
+        err = clEnqueueNDRangeKernel(queue_, variatesKernelSeedInit_, 1, NULL, &sizeOne, NULL, 0, NULL,
+                                     &variatesWaitEvents_.back());
+        QL_REQUIRE(err == CL_SUCCESS,
+                   "OpenClContext::updateVariatesPool(): error running kernel seed init: " << errorText(err));
+    } else {
+        QL_REQUIRE(!variatesWaitEvents_.empty(),
+                   "OpenClContext::updateVariatesPool(): internal error, expected non-empty variatesWaitEvents_ list.");
+    }
+
+    // create new buffer to hold the variates and copy the current buffer contents to the new buffer
+
+    Size alignedSize = 624 * (size_[currentId_ - 1] / 624 + (size_[currentId_ - 1] % 624 == 0 ? 0 : 1));
+
+    cl_int err;
+    cl_mem oldBuffer = variatesPool_;
+    variatesPool_ = clCreateBuffer(context_, CL_MEM_READ_WRITE, fpSize * nVariates_ * alignedSize, NULL, &err);
+    QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::updateVariatesPool(): error creating variates buffer with size "
+                                      << fpSize * nVariates_ * alignedSize << " bytes: " << errorText(err));
+    if (variatesPoolSize_ > 0) {
+        cl_event copyEvent;
+        err = clEnqueueCopyBuffer(queue_, oldBuffer, variatesPool_, 0, 0, fpSize * variatesPoolSize_ * alignedSize, 1,
+                                  &variatesWaitEvents_.back(), &copyEvent);
+        variatesWaitEvents_.push_back(copyEvent);
+        QL_REQUIRE(err == CL_SUCCESS,
+                   "OpenClContext::updateVariatesPool(): error copying existing variates buffer to new buffer: "
+                       << errorText(err));
+    }
+
+    // fill in the new variates
+
+    for (std::size_t currentPoolSize = variatesPoolSize_ * alignedSize; currentPoolSize < nVariates_ * alignedSize;
+         currentPoolSize += mt_N) {
+        err = clSetKernelArg(variatesKernelTwist_, 0, sizeof(cl_mem), &variatesMtStateBuffer_);
+        QL_REQUIRE(err == CL_SUCCESS,
+                   "OpenClContext::updateVariatesPool(): error setting args for kernel twist: " << errorText(err));
+        cl_event twistEvent;
+        err = clEnqueueNDRangeKernel(queue_, variatesKernelTwist_, 1, NULL, &mt_N, NULL, 1, &variatesWaitEvents_.back(),
+                                     &twistEvent);
+        variatesWaitEvents_.push_back(twistEvent);
+        QL_REQUIRE(err == CL_SUCCESS,
+                   "OpenClContext::updateVariatesPool(): error running kernel twist: " << errorText(err));
+
+        err = clSetKernelArg(variatesKernelGenerate_, 0, sizeof(cl_uint), &currentPoolSize);
+        err |= clSetKernelArg(variatesKernelGenerate_, 1, sizeof(cl_mem), &variatesMtStateBuffer_);
+        err |= clSetKernelArg(variatesKernelGenerate_, 2, sizeof(cl_mem), &variatesPool_);
+        QL_REQUIRE(err == CL_SUCCESS,
+                   "OpenClContext::updateVariatesPool(): error settings args for kernel generate: " << errorText(err));
+        cl_event generateEvent;
+        err = clEnqueueNDRangeKernel(queue_, variatesKernelGenerate_, 1, NULL, &mt_N, NULL, 1,
+                                     &variatesWaitEvents_.back(), &generateEvent);
+        variatesWaitEvents_.push_back(generateEvent);
+        QL_REQUIRE(err == CL_SUCCESS,
+                   "OpenClContext::updateVariatesPool(): error running kernel generate: " << errorText(err));
+    }
+
+    // update current variates pool size
+
+    variatesPoolSize_ = nVariates_;
 }
 
 std::vector<std::vector<std::size_t>> OpenClContext::createInputVariates(const std::size_t dim,
@@ -539,14 +739,14 @@ std::vector<std::vector<std::size_t>> OpenClContext::createInputVariates(const s
                                                 << " has a kernel already, input variates can not be regenerated.");
     currentState_ = ComputeState::createVariates;
     std::vector<std::vector<std::size_t>> resultIds(dim, std::vector<std::size_t>(steps));
-    std::uint32_t currentSeed = settings_.seed;
     for (std::size_t i = 0; i < dim; ++i) {
         for (std::size_t j = 0; j < steps; ++j) {
-            variateSeed_.push_back(currentSeed);
-            currentSeed *= seedUpdate_[size_[currentId_ - 1]];
             resultIds[i][j] = nVars_++;
         }
     }
+    nVariates_ += dim * steps;
+    if (nVariates_ > variatesPoolSize_)
+        updateVariatesPool();
     return resultIds;
 }
 
@@ -582,6 +782,8 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
         if (args[i] < inputVarOffset_.size()) {
             argStr[i] = "input[" + std::to_string(inputVarOffset_[args[i]]) + "UL" +
                         (inputVarIsScalar_[args[i]] ? "]" : " + i]");
+        } else if (args[i] < inputVarOffset_.size() + nVariates_) {
+            argStr[i] = "rn[" + std::to_string((args[i] - inputVarOffset_.size()) * size_[currentId_ - 1]) + " + i]";
         } else {
             // variable is an (intermediate) result
             argStr[i] = "v" + std::to_string(args[i]);
@@ -689,7 +891,7 @@ void OpenClContext::freeVariable(const std::size_t id) {
 
     // we do not free input variables, only variables that were added during the calc
 
-    if (id < inputVarOffset_.size())
+    if (id < inputVarOffset_.size() + nVariates_)
         return;
 
     freedVariables_.push_back(id);
@@ -785,89 +987,42 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                                                 "{ return ore_closeEnough(x, y) ? 1.0" + fpSuffix + " : 0.0" + fpSuffix +"; }\n\n" +
             fpTypeStr + " ore_indicatorGt(const " + fpTypeStr + " x, const " + fpTypeStr + " y) " +
                                                 "{ return x > y && !ore_closeEnough(x, y); }\n\n" +
-            fpTypeStr + " ore_indicatorGeq(const " + fpTypeStr + " x, const " + fpTypeStr + " y) { return x > y || ore_closeEnough(x, y); }\n\n" +
-            fpTypeStr + " ore_invCumN(const uint x0) {\n"
-            "    const " + fpTypeStr + " a1_ = -3.969683028665376e+01" + fpSuffix + ";\n"
-            "    const " + fpTypeStr + " a2_ = 2.209460984245205e+02" + fpSuffix + ";\n"
-            "    const " + fpTypeStr + " a3_ = -2.759285104469687e+02" + fpSuffix + ";\n"
-            "    const " + fpTypeStr + " a4_ = 1.383577518672690e+02" + fpSuffix + ";\n"
-            "    const " + fpTypeStr + " a5_ = -3.066479806614716e+01" + fpSuffix + ";\n"
-            "    const " + fpTypeStr + " a6_ = 2.506628277459239e+00" + fpSuffix + ";\n"
-            "    const " + fpTypeStr + " b1_ = -5.447609879822406e+01" + fpSuffix + ";\n"
-            "    const " + fpTypeStr + " b2_ = 1.615858368580409e+02" + fpSuffix + ";\n"
-            "    const " + fpTypeStr + " b3_ = -1.556989798598866e+02" + fpSuffix + ";\n"
-            "    const " + fpTypeStr + " b4_ = 6.680131188771972e+01" + fpSuffix + ";\n"
-            "    const " + fpTypeStr + " b5_ = -1.328068155288572e+01" + fpSuffix + ";\n"
-            "    const " + fpTypeStr + " c1_ = -7.784894002430293e-03" + fpSuffix + ";\n"
-            "    const " + fpTypeStr + " c2_ = -3.223964580411365e-01" + fpSuffix + ";\n"
-            "    const " + fpTypeStr + " c3_ = -2.400758277161838e+00" + fpSuffix + ";\n"
-            "    const " + fpTypeStr + " c4_ = -2.549732539343734e+00" + fpSuffix + ";\n"
-            "    const " + fpTypeStr + " c5_ = 4.374664141464968e+00" + fpSuffix + ";\n"
-            "    const " + fpTypeStr + " c6_ = 2.938163982698783e+00" + fpSuffix + ";\n"
-            "    const " + fpTypeStr + " d1_ = 7.784695709041462e-03" + fpSuffix + ";\n"
-            "    const " + fpTypeStr + " d2_ = 3.224671290700398e-01" + fpSuffix + ";\n"
-            "    const " + fpTypeStr + " d3_ = 2.445134137142996e+00" + fpSuffix + ";\n"
-            "    const " + fpTypeStr + " d4_ = 3.754408661907416e+00" + fpSuffix + ";\n"
-            "    const " + fpTypeStr + " x_low_ = 0.02425" + fpSuffix + ";\n"
-            "    const " + fpTypeStr + " x_high_ = 1.0" + fpSuffix + " - x_low_;\n"
-            "    const " + fpTypeStr + " x = x0 / (" + fpTypeStr + ")UINT_MAX;\n"
-            "    if (x < x_low_ || x_high_ < x) {\n"
-            "        if (x0 == UINT_MAX) {\n"
-            "          return 0x1.fffffep127" + fpSuffix + ";\n"
-            "        } else if(x0 == 0) {\n"
-            "          return -0x1.fffffep127" + fpSuffix + ";\n"
-            "        }\n"
-            "        " + fpTypeStr + " z;\n"
-            "        if (x < x_low_) {\n"
-            "            z = sqrt(-2.0" + fpSuffix + " * log(x));\n"
-            "            z = (((((c1_ * z + c2_) * z + c3_) * z + c4_) * z + c5_) * z + c6_) /\n"
-            "                ((((d1_ * z + d2_) * z + d3_) * z + d4_) * z + 1.0" + fpSuffix + ");\n"
-            "        } else {\n"
-            "            z = sqrt(-2.0f * log(1.0f - x));\n"
-            "            z = -(((((c1_ * z + c2_) * z + c3_) * z + c4_) * z + c5_) * z + c6_) /\n"
-            "                ((((d1_ * z + d2_) * z + d3_) * z + d4_) * z + 1.0" + fpSuffix + ");\n"
-            "        }\n"
-            "        return z;\n"
-            "    } else {\n"
-            "        " + fpTypeStr + " z = x - 0.5" + fpSuffix + ";\n"
-            "        " + fpTypeStr + " r = z * z;\n"
-            "        z = (((((a1_ * r + a2_) * r + a3_) * r + a4_) * r + a5_) * r + a6_) * z /\n"
-            "            (((((b1_ * r + b2_) * r + b3_) * r + b4_) * r + b5_) * r + 1.0" + fpSuffix +");\n"
-            "        return z;\n"
-            "    }\n"
-            "}\n\n";
+            fpTypeStr + " ore_indicatorGeq(const " + fpTypeStr + " x, const " + fpTypeStr + " y) { return x > y || ore_closeEnough(x, y); }\n\n";
         // clang-format on
 
         std::string kernelName =
             "ore_kernel_" + std::to_string(currentId_) + "_" + std::to_string(version_[currentId_ - 1]);
 
-        std::string kernelSource = includeSource + "__kernel void " + kernelName +
-                                   "(\n"
-                                   "   __global uint* lcrng_mult" +
-                                   (inputBufferSize > 0 ? ",\n   __global " + fpTypeStr + "* input" : "") +
-                                   (outputBufferSize > 0 ? ",\n   __global " + fpTypeStr + "* output" : "") +
+        std::vector<std::string> inputArgs;
+        if(inputBufferSize > 0)
+            inputArgs.push_back("__global " + fpTypeStr + "* input");
+        if(nVariates_ > 0)
+            inputArgs.push_back("__global " + fpTypeStr + "* rn");
+        if(outputBufferSize > 0)
+            inputArgs.push_back("__global " + fpTypeStr + "* output");
+
+        std::string kernelSource = includeSource + "__kernel void " + kernelName + "(" + boost::join(inputArgs, ",") +
                                    ") {\n"
                                    "unsigned int i = get_global_id(0);\n"
                                    "if(i < " +
                                    std::to_string(size_[currentId_ - 1]) + "U) {\n";
-
-        for (std::size_t i = 0; i < variateSeed_.size(); ++i) {
-            kernelSource += "  " + fpTypeStr + " v" + std::to_string(i + inputVarOffset_.size()) + " = ore_invCumN(" +
-                            std::to_string(variateSeed_[i]) + "U * lcrng_mult[i]);\n";
-            if (settings_.debug)
-                debugInfo_.numberOfOperations += 23 * size_[currentId_ - 1];
-        }
 
         kernelSource += currentSsa_;
 
         for (std::size_t i = 0; i < nOutputVars_[currentId_ - 1]; ++i) {
             std::size_t offset = i * size_[currentId_ - 1];
             std::string output;
-            if (outputVariables_[i] < inputVarOffset_.size())
+            if (outputVariables_[i] < inputVarOffset_.size()) {
                 output = "input[" + std::to_string(outputVariables_[i]) + "UL" +
                          (inputVarIsScalar_[outputVariables_[i]] ? "]" : " + i] ");
-            else
+            }
+            else if(outputVariables_[i] < inputVarOffset_.size() + nVariates_) {
+                output = "rn[" +
+                         std::to_string((outputVariables_[i] - inputVarOffset_.size()) * size_[currentId_ - 1]) +
+                         " + i]";
+            } else {
                 output = "v" + std::to_string(outputVariables_[i]);
+            }
             std::string ssaLine = "  output[" + std::to_string(offset) + "UL + i] = " + output + ";";
             kernelSource += ssaLine + "\n";
         }
@@ -937,10 +1092,12 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     // set kernel args
 
     std::size_t kidx = 0;
-    err = clSetKernelArg(kernel_[currentId_ - 1], kidx++, sizeof(cl_mem),
-                         &linearCongruentialMultipliers_.at(size_[currentId_ - 1]));
+    err = 0;
     if (inputBufferSize > 0) {
         err |= clSetKernelArg(kernel_[currentId_ - 1], kidx++, sizeof(cl_mem), &inputBuffer);
+    }
+    if (nVariates_ > 0) {
+        err |= clSetKernelArg(kernel_[currentId_ - 1], kidx++, sizeof(cl_mem), &variatesPool_);
     }
     if (outputBufferSize > 0) {
         err |= clSetKernelArg(kernel_[currentId_ - 1], kidx++, sizeof(cl_mem), &outputBuffer);
@@ -954,10 +1111,15 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
         timerBase = timer.elapsed().wall;
     }
 
+    std::vector<cl_event> runWaitEvents;
+    if (inputBufferSize > 0)
+        runWaitEvents.push_back(inputBufferEvent);
+    if (!variatesWaitEvents_.empty())
+        runWaitEvents.push_back(variatesWaitEvents_.back());
+
     cl_event runEvent;
-    err =
-        clEnqueueNDRangeKernel(queue_, kernel_[currentId_ - 1], 1, NULL, &size_[currentId_ - 1], NULL,
-                               inputBufferSize > 0 ? 1 : 0, inputBufferSize > 0 ? &inputBufferEvent : NULL, &runEvent);
+    err = clEnqueueNDRangeKernel(queue_, kernel_[currentId_ - 1], 1, NULL, &size_[currentId_ - 1], NULL,
+                                 runWaitEvents.size(), runWaitEvents.empty() ? NULL : &runWaitEvents[0], &runEvent);
     QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::finalizeCalculation(): enqueue kernel fails: " << errorText(err));
 
     if (settings_.debug) {
