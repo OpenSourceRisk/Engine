@@ -1142,7 +1142,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
         }
         for (std::size_t i = 0; i < output.size(); ++i) {
             outputBufferEvents.push_back(cl_event());
-            err = clEnqueueReadBuffer(queue_, outputBuffer, CL_FALSE, i * size_[currentId_ - 1],
+            err = clEnqueueReadBuffer(queue_, outputBuffer, CL_FALSE, fpSize * i * size_[currentId_ - 1],
                                       fpSize * size_[currentId_ - 1],
                                       settings_.useDoublePrecision ? (void*)&output[i][0] : (void*)&outputFloat[i][0],
                                       1, &runEvent, &outputBufferEvents.back());
