@@ -305,6 +305,41 @@ BOOST_AUTO_TEST_CASE(testReplayFlowError) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(testRngGenerationTmp) {
+    ComputeEnvironmentFixture fixture;
+    const std::size_t n = 1500;
+    for (auto const& d : ComputeEnvironment::instance().getAvailableDevices()) {
+        // if(d!= "OpenCL/Apple/Apple M2 Max")
+        //     continue;
+        BOOST_TEST_MESSAGE("testing rng generation on device '" << d << "'.");
+        ComputeEnvironment::instance().selectContext(d);
+        auto& c = ComputeEnvironment::instance().context();
+        ComputeContext::Settings settings;
+        settings.useDoublePrecision = false; // true
+        c.initiateCalculation(n, 0, 0, settings);
+        auto vs = c.createInputVariates(1, 1);
+        for (auto const& d : vs) {
+            for (auto const& r : d) {
+                c.declareOutputVariable(r);
+            }
+        }
+        auto vs2 = c.createInputVariates(1, 1);
+        for (auto const& d : vs2) {
+            for (auto const& r : d) {
+                c.declareOutputVariable(r);
+            }
+        }
+        std::vector<std::vector<double>> output(2, std::vector<double>(n));
+        c.finalizeCalculation(output);
+
+        for (Size j = 0; j < 2; ++j) {
+            for (Size i = 0; i < n; ++i) {
+                std::cout << d << "," << j << "," << i << "," << std::setprecision(16) << output[j][i] << std::endl;
+            }
+        }
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
