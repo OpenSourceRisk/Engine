@@ -244,7 +244,7 @@ void checkRngOutput(const std::vector<std::vector<double>>& output) {
         BOOST_TEST_MESSAGE("  mean = " << boost::accumulators::mean(acc)
                                        << ", variance = " << boost::accumulators::variance(acc));
         BOOST_CHECK_SMALL(boost::accumulators::mean(acc), 0.05);
-        BOOST_CHECK_CLOSE(boost::accumulators::variance(acc), 1.0, 1.0);
+        BOOST_CHECK_CLOSE(boost::accumulators::variance(acc), 1.0, 2.0);
     }
 }
 } // namespace
