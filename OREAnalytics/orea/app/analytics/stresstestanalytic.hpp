@@ -43,9 +43,7 @@ public:
 class StressTestAnalytic : public Analytic {
 public:
     StressTestAnalytic(const boost::shared_ptr<InputParameters>& inputs);
-
-    bool hasParRateScenario(const boost::shared_ptr<StressTestScenarioData>& data) const;
-
+    
     static constexpr const char* sensiAnalyticLookupKey = "SENSITIVITY";
 };
 

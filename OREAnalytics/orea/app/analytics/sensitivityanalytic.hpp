@@ -56,10 +56,10 @@ public:
         parSensitivities_ = sensitivities;
     }
 
+    bool alignPillars() const { return alignPillars_; }
     bool parSensi() const { return parSensi_; }
-    bool outputJacobi() const { return outputJacobi; }
-    bool optimiseRiskFactors() const { return optimiseRiskFactors; }
-
+    bool outputJacobi() const { return outputJacobi_; }
+    bool optimiseRiskFactors() const { return optimiseRiskFactors_; }
 private:
     bool parSensi_;
     bool alignPillars_;

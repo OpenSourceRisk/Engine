@@ -151,6 +151,7 @@ public:
 
     // Setters for stress testing
     void setStressThreshold(Real r) { stressThreshold_ = r; }
+    void setStressOptimiseRiskFactors(bool optimise) { stressOptimiseRiskFactors_ = optimise; }
     void setStressSimMarketParams(const std::string& xml); 
     void setStressSimMarketParamsFromFile(const std::string& fileName); 
     void setStressScenarioData(const std::string& xml); 
@@ -160,7 +161,8 @@ public:
     void setStressPricingEngine(const boost::shared_ptr<EngineData>& engineData) {
         stressPricingEngine_ = engineData;
     }
-
+    void setStressSensitivityScenarioData(const std::string& xml);
+    void setStressSensitivityScenarioDataFromFile(const std::string& fileName);
     // Setters for VaR
     void setSalvageCovariance(bool b) { salvageCovariance_ = b; }
     void setVarQuantiles(const std::string& s); // parse to vector<Real>
@@ -452,7 +454,10 @@ public:
     const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& stressSimMarketParams() const { return stressSimMarketParams_; }
     const boost::shared_ptr<ore::analytics::StressTestScenarioData>& stressScenarioData() const { return stressScenarioData_; }
     const boost::shared_ptr<ore::data::EngineData>& stressPricingEngine() const { return stressPricingEngine_; }
-
+    const boost::shared_ptr<ore::analytics::SensitivityScenarioData>& stressSensitivityScenarioData() const {
+        return stressSensitivityScenarioData_;
+    }
+    bool stressOptimiseRiskFactors() const { return stressOptimiseRiskFactors_; }
     /*****************
      * Getters for VaR
      *****************/
@@ -727,6 +732,7 @@ protected:
     QuantLib::Real stressThreshold_ = 0.0;
     boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> stressSimMarketParams_;
     boost::shared_ptr<ore::analytics::StressTestScenarioData> stressScenarioData_;
+    boost::shared_ptr<ore::analytics::SensitivityScenarioData> stressSensitivityScenarioData_;
     boost::shared_ptr<ore::data::EngineData> stressPricingEngine_;
     bool stressOptimiseRiskFactors_ = false;
 

@@ -862,6 +862,23 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("stress", "outputThreshold", false);
         if (tmp != "")
             setStressThreshold(parseReal(tmp));
+
+        tmp = params_->get("stress", "optimiseRiskFactors", false);
+        if (tmp != "")
+            setStressOptimiseRiskFactors(parseBool(tmp));
+
+        tmp = params_->get("stress", "optimiseRiskFactors", false);
+        if (tmp != "")
+            setStressOptimiseRiskFactors(parseBool(tmp));
+
+        tmp = params_->get("stress", "sensitivityConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Load sensitivity scenario data from file" << file);
+            setStressSensitivityScenarioDataFromFile(file);
+        } else {
+            WLOG("Sensitivity scenario data not loaded, don't support par stress tests");
+        }
     }
 
     /********************

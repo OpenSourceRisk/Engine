@@ -221,7 +221,17 @@ void InputParameters::setStressScenarioDataFromFile(const std::string& fileName)
     stressScenarioData_ = boost::make_shared<StressTestScenarioData>();
     stressScenarioData_->fromFile(fileName);
 }
-    
+
+void InputParameters::setStressSensitivityScenarioData(const std::string& xml) {
+    stressSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    stressSensitivityScenarioData_->fromXMLString(xml);
+}
+
+void InputParameters::setStressSensitivityScenarioDataFromFile(const std::string& fileName) {
+    stressSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    stressSensitivityScenarioData_->fromFile(fileName);
+}
+
 void InputParameters::setStressPricingEngine(const std::string& xml) {
     stressPricingEngine_ = boost::make_shared<EngineData>();
     stressPricingEngine_->fromXMLString(xml);

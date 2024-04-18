@@ -100,6 +100,13 @@ public:
     //@{
     const vector<StressTestData>& data() const { return data_; }
     const bool useSpreadedTermStructures() const { return useSpreadedTermStructures_; }
+    const bool hasParRateScenario() const {
+        for (const auto& scenario : data_) {
+            if (scenario.containsParShifts())
+                return true;
+        }
+        return false;
+    }
     //@}
 
     //! \name Setters
