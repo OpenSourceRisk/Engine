@@ -24,6 +24,7 @@
 
 #include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/tradefactory.hpp>
+#include <ored/portfolio/referencedata.hpp>
 #include <ostream>
 
 namespace ore {
@@ -70,6 +71,8 @@ public:
     //! \name Inspectors
     //@{
     const string& currency() const { return currency_; }
+    const string& portfolioId() const { return portfolioId_; }
+    const bool& portfolioBasket() const { return portfolioBasket_; }
     const string& notionalCalculation() const { return notionalCalculation_; }
     const vector<boost::shared_ptr<Trade>>& trades() const { return trades_; }
     //@}
@@ -97,11 +100,17 @@ public:
     //@}
 
 private:
+
+    void populateFromReferenceData(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager);
+    void populateFromReferenceData(const boost::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum);
+
     string currency_;
     Real notionalOverride_;
     string notionalCalculation_;
     vector<boost::shared_ptr<Trade>> trades_;
     vector<Handle<Quote>> fxRates_, fxRatesNotional_;
+    string portfolioId_;
+    bool portfolioBasket_;
 };
 
 } // namespace data

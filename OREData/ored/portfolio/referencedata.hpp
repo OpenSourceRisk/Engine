@@ -26,6 +26,7 @@
 #include <ored/portfolio/referencedatafactory.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/underlying.hpp>
+#include <ored/portfolio/trade.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/patterns/singleton.hpp>
 #include <ql/time/date.hpp>
@@ -261,7 +262,7 @@ class CommodityIndexReferenceDatum : public IndexReferenceDatum {
 public:
     static constexpr const char* TYPE = "Commodity";
 
-    CommodityIndexReferenceDatum() {}
+    CommodityIndexReferenceDatum() {setType(TYPE);}
     CommodityIndexReferenceDatum(const string& name) : IndexReferenceDatum(TYPE, name) {}
     CommodityIndexReferenceDatum(const string& name, const QuantLib::Date& validFrom)
         : IndexReferenceDatum(TYPE, name, validFrom) {}
@@ -341,6 +342,85 @@ private:
     std::map<std::string, std::string> fxIndexes_;
     map<string, double> data_;
 };
+
+/*
+<ReferenceDatum id="MSFDSJP">
+ <Type>PortfolioBasket</Type>
+ <PortfolioBasketReferenceData>
+  <Components>
+   <Trade>
+    <TradeType>EquityPosition</TradeType>
+     <Envelope>
+      <CounterParty>{{netting_set_id}}</CounterParty>
+       <NettingSetId>{{netting_set_id}}</NettingSetId>
+       <AdditionalFields>
+        <valuation_date>2023-11-07</valuation_date>
+        <im_model>SIMM</im_model>
+        <post_regulations>SEC</post_regulations>
+        <collect_regulations>SEC</collect_regulations>
+       </AdditionalFields>
+      </Envelope>
+      <EquityPositionData>
+       <Quantity>7006.0</Quantity>
+        <Underlying>
+         <Type>Equity</Type>
+         <Name>CR.N</Name>
+         <IdentifierType>RIC</IdentifierType>
+        </Underlying>
+       </EquityPositionData>
+     </Trade>
+      <Trade id="CashSWAP_USD.CASH">
+       <TradeType>Swap</TradeType>
+        <Envelope>
+          <CounterParty>{{netting_set_id}}</CounterParty>
+           <NettingSetId>{{netting_set_id}}</NettingSetId>
+           <AdditionalFields>
+            <valuation_date>2023-11-07</valuation_date>
+            <im_model>SIMM</im_model>
+            <post_regulations>SEC</post_regulations>
+            <collect_regulations>SEC</collect_regulations>
+           </AdditionalFields>
+          </Envelope>
+          <SwapData>
+           <LegData>
+           <Payer>true</Payer>
+           <LegType>Cashflow</LegType>
+           <Currency>USD</Currency>
+           <CashflowData>
+            <Cashflow>
+             <Amount date="2023-11-08">28641475.824680243</Amount>
+            </Cashflow>
+           </CashflowData>
+       </LegData>
+      </SwapData>
+     </Trade>
+   </Components>
+  </PortfolioBasketReferenceData>
+</ReferenceDatum>
+*/
+class PortfolioBasketReferenceDatum : public ReferenceDatum {
+public:
+    static constexpr const char* TYPE = "PortfolioBasket";
+
+
+    PortfolioBasketReferenceDatum() {
+        setType(TYPE);
+    }
+
+    PortfolioBasketReferenceDatum(const string& id) : ReferenceDatum(TYPE, id) {}
+
+    PortfolioBasketReferenceDatum(const string& id, const QuantLib::Date& validFrom)
+        : ReferenceDatum(TYPE, id, validFrom) {}
+
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+
+    const vector<boost::shared_ptr<Trade>>& getTrades() const { return tradecomponents_; }
+
+private:
+    vector<boost::shared_ptr<Trade>> tradecomponents_;
+};
+
 
 //! CreditIndex Reference data, contains the names and weights of a credit index
 class CreditReferenceDatum : public ReferenceDatum {
