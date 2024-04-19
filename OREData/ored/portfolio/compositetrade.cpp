@@ -38,16 +38,11 @@ void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
     fxRates_.clear();
     fxRatesNotional_.clear();
     legs_.clear();
-<<<<<<< HEAD
 
     populateFromReferenceData(engineFactory->referenceData());
 
     
     for (const boost::shared_ptr<Trade>& trade : trades_) {
-=======
-    QL_REQUIRE(trades_.size() > 0, "Failed to build composite trade.");
-    for (const QuantLib::ext::shared_ptr<Trade>& trade : trades_) {
->>>>>>> master
 
 	    trade->reset();
 	    trade->build(engineFactory);
@@ -56,17 +51,10 @@ void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
         if (sensitivityTemplate_.empty())
             setSensitivityTemplate(trade->sensitivityTemplate());
 
-<<<<<<< HEAD
         Handle<Quote> fx = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
 	    if (trade->npvCurrency() != npvCurrency_)
 	        fx = engineFactory->market()->fxRate(trade->npvCurrency() + npvCurrency_);
 	    fxRates_.push_back(fx);
-=======
-        Handle<Quote> fx = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
-	if (trade->npvCurrency() != npvCurrency_)
-	    fx = engineFactory->market()->fxRate(trade->npvCurrency() + npvCurrency_);
-	fxRates_.push_back(fx);
->>>>>>> master
 
         Handle<Quote> fxNotional = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
         if (trade->notionalCurrency().empty()) {
@@ -84,15 +72,9 @@ void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
 
         QuantLib::ext::shared_ptr<InstrumentWrapper> instrumentWrapper = trade->instrument();
         Real effectiveMultiplier = instrumentWrapper->multiplier();
-<<<<<<< HEAD
 	    if (auto optionWrapper = boost::dynamic_pointer_cast<ore::data::OptionWrapper>(instrumentWrapper)) {
 	        effectiveMultiplier *= optionWrapper->isLong() ? 1.0 : -1.0;
 	    }
-=======
-	if (auto optionWrapper = QuantLib::ext::dynamic_pointer_cast<ore::data::OptionWrapper>(instrumentWrapper)) {
-	    effectiveMultiplier *= optionWrapper->isLong() ? 1.0 : -1.0;
-	}
->>>>>>> master
 
 	    compositeInstrument->add(instrumentWrapper->qlInstrument(), effectiveMultiplier, fx);
 	    for (Size i = 0; i < instrumentWrapper->additionalInstruments().size(); ++i) {
