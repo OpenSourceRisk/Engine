@@ -581,44 +581,45 @@ void OpenClContext::updateVariatesPool() {
 
         // from QuantLib::MersenneTwisterUniformRng
 
-        std::string kernelSourceSeedInit = "__kernel void ore_seedInitialization(const uint s, __global uint* mt) {\n"
-            "  const uint N = 624;\n"
+        std::string kernelSourceSeedInit = "__kernel void ore_seedInitialization(const ulong s, __global ulong* mt) {\n"
+            "  const ulong N = 624;\n"
             "  mt[0]= s & 0xffffffffU;\n"
-            "  for (uint mti=1; mti<N; ++mti) {\n"
+            "  for (ulong mti=1; mti<N; ++mti) {\n"
             "    mt[mti] = (1812433253UL * (mt[mti-1] ^ (mt[mti-1] >> 30)) + mti);\n"
+            "    mt[mti] &= 0xffffffffUL;\n"
             "  }\n"
             "}\n\n";
 
-        std::string kernelSourceTwist = "__kernel void ore_twist(__global uint* mt) {\n"
-            " const uint N = 624;\n"
-            " const uint M = 397;\n"
-            " const uint MATRIX_A = 0x9908b0dfU;\n"
-            " const uint UPPER_MASK=0x80000000U;\n"
-            " const uint LOWER_MASK=0x7fffffffU;\n"
-            " const uint mag01[2]={0x0U, MATRIX_A};\n"
-            " uint kk;\n"
-            " uint y;\n"
+        std::string kernelSourceTwist = "__kernel void ore_twist(__global ulong* mt) {\n"
+            " const ulong N = 624;\n"
+            " const ulong M = 397;\n"
+            " const ulong MATRIX_A = 0x9908b0dfUL;\n"
+            " const ulong UPPER_MASK=0x80000000UL;\n"
+            " const ulong LOWER_MASK=0x7fffffffUL;\n"
+            " const ulong mag01[2]={0x0UL, MATRIX_A};\n"
+            " ulong kk;\n"
+            " ulong y;\n"
             " for (kk=0;kk<N-M;++kk) {\n"
             "     y = (mt[kk]&UPPER_MASK)|(mt[kk+1]&LOWER_MASK);\n"
-            "     mt[kk] = mt[kk+M] ^ (y >> 1) ^ mag01[y & 0x1U];\n"
+            "     mt[kk] = mt[kk+M] ^ (y >> 1) ^ mag01[y & 0x1UL];\n"
             " }\n"
             " for (;kk<N-1;kk++) {\n"
             "     y = (mt[kk]&UPPER_MASK)|(mt[kk+1]&LOWER_MASK);\n"
-            "     mt[kk] = mt[(kk+M)-N] ^ (y >> 1) ^ mag01[y & 0x1U];\n"
+            "     mt[kk] = mt[(kk+M)-N] ^ (y >> 1) ^ mag01[y & 0x1UL];\n"
             " }\n"
             " y = (mt[N-1]&UPPER_MASK)|(mt[0]&LOWER_MASK);\n"
-            " mt[N-1] = mt[M-1] ^ (y >> 1) ^ mag01[y & 0x1U];\n"
+            " mt[N-1] = mt[M-1] ^ (y >> 1) ^ mag01[y & 0x1UL];\n"
             "}\n\n";
 
         std::string kernelSourceGenerate =
-            "__kernel void ore_generate(const uint offset, __global uint* mt, __global " + fpTypeStr + "* output) {\n"
-            "   uint mti = get_global_id(0);\n"
-            "   uint y = mt[mti];\n"
+            "__kernel void ore_generate(const ulong offset, __global ulong* mt, __global " + fpTypeStr + "* output) {\n"
+            "   ulong mti = get_global_id(0);\n"
+            "   ulong y = mt[mti];\n"
             "   y ^= (y >> 11);\n"
             "   y ^= (y << 7) & 0x9d2c5680U;\n"
             "   y ^= (y << 15) & 0xefc60000U;\n"
             "   y ^= (y >> 18);\n"
-            "   output[offset + mti] = ore_invCumN(y);\n"
+            "   output[offset + mti] = ore_invCumN((uint)y);\n"
             "}\n\n";
         // clang-format on
 
@@ -652,12 +653,12 @@ void OpenClContext::updateVariatesPool() {
         QL_REQUIRE(err == CL_SUCCESS,
                    "OpenClContext::updateVariatesPool(): error creating kernel generate: " << errorText(err));
 
-        variatesMtStateBuffer_ = clCreateBuffer(context_, CL_MEM_READ_WRITE, fpSize * mt_N, NULL, &err);
+        variatesMtStateBuffer_ = clCreateBuffer(context_, CL_MEM_READ_WRITE, sizeof(cl_ulong) * mt_N, NULL, &err);
         QL_REQUIRE(err == CL_SUCCESS,
                    "OpenClContext::updateVariatesPool(): error creating mt state buffer: " << errorText(err));
 
-        cl_uint tmpSeed = (cl_uint)settings_.rngSeed;
-        err = clSetKernelArg(variatesKernelSeedInit_, 0, sizeof(cl_uint), &tmpSeed);
+        cl_ulong tmpSeed = (cl_ulong)settings_.rngSeed;
+        err = clSetKernelArg(variatesKernelSeedInit_, 0, sizeof(cl_ulong), &tmpSeed);
         err |= clSetKernelArg(variatesKernelSeedInit_, 1, sizeof(cl_mem), &variatesMtStateBuffer_);
         QL_REQUIRE(err == CL_SUCCESS,
                    "OpenClContext::updateVariatesPool(): error setting kernel args seed init: " << errorText(err));
@@ -709,7 +710,7 @@ void OpenClContext::updateVariatesPool() {
         QL_REQUIRE(err == CL_SUCCESS,
                    "OpenClContext::updateVariatesPool(): error running kernel twist: " << errorText(err));
 
-        err = clSetKernelArg(variatesKernelGenerate_, 0, sizeof(cl_uint), &currentPoolSize);
+        err = clSetKernelArg(variatesKernelGenerate_, 0, sizeof(cl_ulong), &currentPoolSize);
         err |= clSetKernelArg(variatesKernelGenerate_, 1, sizeof(cl_mem), &variatesMtStateBuffer_);
         err |= clSetKernelArg(variatesKernelGenerate_, 2, sizeof(cl_mem), &variatesPool_);
         QL_REQUIRE(err == CL_SUCCESS,
