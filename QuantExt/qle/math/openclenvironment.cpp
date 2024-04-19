@@ -226,14 +226,13 @@ private:
 
     // 1b variates (shared pool of mersenne twister based normal variates)
 
-    std::size_t variatesPoolSize_ = 0;
+    std::size_t variatesPoolSize_ = 0; // count of single random numbers
     cl_mem variatesPool_;
     cl_mem variatesMtStateBuffer_;
     cl_program variatesProgram_;
     cl_kernel variatesKernelSeedInit_;
     cl_kernel variatesKernelTwist_;
     cl_kernel variatesKernelGenerate_;
-    std::vector<cl_event> variatesWaitEvents_;
 
     // 2 curent calc
 
@@ -519,6 +518,7 @@ void OpenClContext::updateVariatesPool() {
 
     std::size_t fpSize = settings_.useDoublePrecision ? sizeof(double) : sizeof(float);
 
+    cl_event initEvent;
     if (variatesPoolSize_ == 0) {
 
         // build the kernels to fill the variates pool
@@ -663,34 +663,34 @@ void OpenClContext::updateVariatesPool() {
         QL_REQUIRE(err == CL_SUCCESS,
                    "OpenClContext::updateVariatesPool(): error setting kernel args seed init: " << errorText(err));
 
-        QL_REQUIRE(variatesWaitEvents_.empty(),
-                   "OpenClContext::updateVariatesPool(): internal error, expected empty variatesWaitEvents_ ("
-                       << variatesWaitEvents_.size() << ")");
-        variatesWaitEvents_.push_back(cl_event());
         constexpr std::size_t sizeOne = 1;
-        err = clEnqueueNDRangeKernel(queue_, variatesKernelSeedInit_, 1, NULL, &sizeOne, NULL, 0, NULL,
-                                     &variatesWaitEvents_.back());
+        err = clEnqueueNDRangeKernel(queue_, variatesKernelSeedInit_, 1, NULL, &sizeOne, NULL, 0, NULL, &initEvent);
         QL_REQUIRE(err == CL_SUCCESS,
                    "OpenClContext::updateVariatesPool(): error running kernel seed init: " << errorText(err));
-    } else {
-        QL_REQUIRE(!variatesWaitEvents_.empty(),
-                   "OpenClContext::updateVariatesPool(): internal error, expected non-empty variatesWaitEvents_ list.");
+    }
+
+    // if the variates pool is big enough, we exit early
+
+    if (variatesPoolSize_ >= nVariates_ * size_[currentId_ - 1]) {
+        if (variatesPoolSize_ == 0)
+            clWaitForEvents(1, &initEvent);
+        return;
     }
 
     // create new buffer to hold the variates and copy the current buffer contents to the new buffer
 
-    Size alignedSize = 624 * (size_[currentId_ - 1] / 624 + (size_[currentId_ - 1] % 624 == 0 ? 0 : 1));
+    Size alignedSize =
+        624 * (nVariates_ * size_[currentId_ - 1] / 624 + (nVariates_ * size_[currentId_ - 1] % 624 == 0 ? 0 : 1));
 
     cl_int err;
     cl_mem oldBuffer = variatesPool_;
-    variatesPool_ = clCreateBuffer(context_, CL_MEM_READ_WRITE, fpSize * nVariates_ * alignedSize, NULL, &err);
+    variatesPool_ = clCreateBuffer(context_, CL_MEM_READ_WRITE, fpSize * alignedSize, NULL, &err);
     QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::updateVariatesPool(): error creating variates buffer with size "
-                                      << fpSize * nVariates_ * alignedSize << " bytes: " << errorText(err));
+                                      << fpSize * alignedSize << " bytes: " << errorText(err));
+    cl_event copyEvent;
     if (variatesPoolSize_ > 0) {
-        cl_event copyEvent;
-        err = clEnqueueCopyBuffer(queue_, oldBuffer, variatesPool_, 0, 0, fpSize * variatesPoolSize_ * alignedSize, 1,
-                                  &variatesWaitEvents_.back(), &copyEvent);
-        variatesWaitEvents_.push_back(copyEvent);
+        err = clEnqueueCopyBuffer(queue_, oldBuffer, variatesPool_, 0, 0, fpSize * variatesPoolSize_, 0, NULL,
+                                  &copyEvent);
         QL_REQUIRE(err == CL_SUCCESS,
                    "OpenClContext::updateVariatesPool(): error copying existing variates buffer to new buffer: "
                        << errorText(err));
@@ -698,15 +698,18 @@ void OpenClContext::updateVariatesPool() {
 
     // fill in the new variates
 
-    for (std::size_t currentPoolSize = variatesPoolSize_ * alignedSize; currentPoolSize < nVariates_ * alignedSize;
+    std::size_t currentPoolSize;
+    cl_event generateEvent;
+    bool haveGenerated = false;
+    for (currentPoolSize = variatesPoolSize_; currentPoolSize < nVariates_ * size_[currentId_ - 1];
          currentPoolSize += mt_N) {
         err = clSetKernelArg(variatesKernelTwist_, 0, sizeof(cl_mem), &variatesMtStateBuffer_);
         QL_REQUIRE(err == CL_SUCCESS,
                    "OpenClContext::updateVariatesPool(): error setting args for kernel twist: " << errorText(err));
         cl_event twistEvent;
-        err = clEnqueueNDRangeKernel(queue_, variatesKernelTwist_, 1, NULL, &mt_N, NULL, 1, &variatesWaitEvents_.back(),
-                                     &twistEvent);
-        variatesWaitEvents_.push_back(twistEvent);
+        err = clEnqueueNDRangeKernel(
+            queue_, variatesKernelTwist_, 1, NULL, &mt_N, NULL, variatesPoolSize_ == 0 || haveGenerated ? 1 : 0,
+            variatesPoolSize_ == 0 ? &initEvent : (haveGenerated ? &generateEvent : NULL), &twistEvent);
         QL_REQUIRE(err == CL_SUCCESS,
                    "OpenClContext::updateVariatesPool(): error running kernel twist: " << errorText(err));
 
@@ -715,17 +718,33 @@ void OpenClContext::updateVariatesPool() {
         err |= clSetKernelArg(variatesKernelGenerate_, 2, sizeof(cl_mem), &variatesPool_);
         QL_REQUIRE(err == CL_SUCCESS,
                    "OpenClContext::updateVariatesPool(): error settings args for kernel generate: " << errorText(err));
-        cl_event generateEvent;
-        err = clEnqueueNDRangeKernel(queue_, variatesKernelGenerate_, 1, NULL, &mt_N, NULL, 1,
-                                     &variatesWaitEvents_.back(), &generateEvent);
-        variatesWaitEvents_.push_back(generateEvent);
+        err = clEnqueueNDRangeKernel(queue_, variatesKernelGenerate_, 1, NULL, &mt_N, NULL, 1, &twistEvent,
+                                     &generateEvent);
         QL_REQUIRE(err == CL_SUCCESS,
                    "OpenClContext::updateVariatesPool(): error running kernel generate: " << errorText(err));
+        haveGenerated = true;
     }
+
+    // wait for events to finish
+
+    std::vector<cl_event> waitList;
+    if (variatesPoolSize_ > 0)
+        waitList.push_back(copyEvent);
+    if (haveGenerated)
+        waitList.push_back(generateEvent);
+    if (!waitList.empty())
+        clWaitForEvents(waitList.size(), &waitList[0]);
+
+    // release old buffer
+
+    if (variatesPoolSize_ > 0)
+        releaseMem(oldBuffer);
 
     // update current variates pool size
 
-    variatesPoolSize_ = nVariates_;
+    QL_REQUIRE(currentPoolSize == alignedSize, "OpenClContext::updateVariatesPool(): internal error, currentPoolSize = "
+                                                   << currentPoolSize << " does not match alignedSize " << alignedSize);
+    variatesPoolSize_ = currentPoolSize;
 }
 
 std::vector<std::vector<std::size_t>> OpenClContext::createInputVariates(const std::size_t dim,
@@ -745,8 +764,7 @@ std::vector<std::vector<std::size_t>> OpenClContext::createInputVariates(const s
         }
     }
     nVariates_ += dim * steps;
-    if (nVariates_ > variatesPoolSize_)
-        updateVariatesPool();
+    updateVariatesPool();
     return resultIds;
 }
 
@@ -780,10 +798,10 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
     std::vector<std::string> argStr(args.size());
     for (std::size_t i = 0; i < args.size(); ++i) {
         if (args[i] < inputVarOffset_.size()) {
-            argStr[i] = "input[" + std::to_string(inputVarOffset_[args[i]]) + "UL" +
+            argStr[i] = "input[" + std::to_string(inputVarOffset_[args[i]]) + "U" +
                         (inputVarIsScalar_[args[i]] ? "]" : " + i]");
         } else if (args[i] < inputVarOffset_.size() + nVariates_) {
-            argStr[i] = "rn[" + std::to_string((args[i] - inputVarOffset_.size()) * size_[currentId_ - 1]) + " + i]";
+            argStr[i] = "rn[" + std::to_string((args[i] - inputVarOffset_.size()) * size_[currentId_ - 1]) + "U + i]";
         } else {
             // variable is an (intermediate) result
             argStr[i] = "v" + std::to_string(args[i]);
@@ -994,11 +1012,11 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             "ore_kernel_" + std::to_string(currentId_) + "_" + std::to_string(version_[currentId_ - 1]);
 
         std::vector<std::string> inputArgs;
-        if(inputBufferSize > 0)
+        if (inputBufferSize > 0)
             inputArgs.push_back("__global " + fpTypeStr + "* input");
-        if(nVariates_ > 0)
+        if (nVariates_ > 0)
             inputArgs.push_back("__global " + fpTypeStr + "* rn");
-        if(outputBufferSize > 0)
+        if (outputBufferSize > 0)
             inputArgs.push_back("__global " + fpTypeStr + "* output");
 
         std::string kernelSource = includeSource + "__kernel void " + kernelName + "(" + boost::join(inputArgs, ",") +
@@ -1013,13 +1031,12 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             std::size_t offset = i * size_[currentId_ - 1];
             std::string output;
             if (outputVariables_[i] < inputVarOffset_.size()) {
-                output = "input[" + std::to_string(outputVariables_[i]) + "UL" +
+                output = "input[" + std::to_string(outputVariables_[i]) + "U" +
                          (inputVarIsScalar_[outputVariables_[i]] ? "]" : " + i] ");
-            }
-            else if(outputVariables_[i] < inputVarOffset_.size() + nVariates_) {
+            } else if (outputVariables_[i] < inputVarOffset_.size() + nVariates_) {
                 output = "rn[" +
                          std::to_string((outputVariables_[i] - inputVarOffset_.size()) * size_[currentId_ - 1]) +
-                         " + i]";
+                         "U + i]";
             } else {
                 output = "v" + std::to_string(outputVariables_[i]);
             }
@@ -1114,8 +1131,6 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     std::vector<cl_event> runWaitEvents;
     if (inputBufferSize > 0)
         runWaitEvents.push_back(inputBufferEvent);
-    if (!variatesWaitEvents_.empty())
-        runWaitEvents.push_back(variatesWaitEvents_.back());
 
     cl_event runEvent;
     err = clEnqueueNDRangeKernel(queue_, kernel_[currentId_ - 1], 1, NULL, &size_[currentId_ - 1], NULL,
