@@ -236,8 +236,8 @@ std::vector<std::vector<std::size_t>> BasicCpuContext::createInputVariates(const
         rng_ = std::make_unique<MersenneTwisterUniformRng>(settings_.rngSeed);
     }
 
-    if (variates_.size() < dim * steps) {
-        for (std::size_t i = variates_.size(); i < dim * steps; ++i) {
+    if (variates_.size() < numberOfVariates_[currentId_ - 1] + dim * steps) {
+        for (std::size_t i = variates_.size(); i < numberOfVariates_[currentId_ - 1] + dim * steps; ++i) {
             variates_.push_back(RandomVariable(size_[currentId_ - 1]));
             for (std::size_t j = 0; j < variates_.back().size(); ++j)
                 variates_.back().set(j, icn_(rng_->nextReal()));
@@ -247,11 +247,11 @@ std::vector<std::vector<std::size_t>> BasicCpuContext::createInputVariates(const
     std::vector<std::vector<std::size_t>> resultIds(dim, std::vector<std::size_t>(steps));
     for (std::size_t i = 0; i < dim; ++i) {
         for (std::size_t j = 0; j < steps; ++j) {
-            resultIds[i][j] = numberOfInputVars_[currentId_ - 1] + i * steps + j;
+            resultIds[i][j] = numberOfInputVars_[currentId_ - 1] + numberOfVariates_[currentId_ - 1] + i * steps + j;
         }
     }
 
-    numberOfVariates_[currentId_ - 1] = dim * steps;
+    numberOfVariates_[currentId_ - 1] += dim * steps;
 
     return resultIds;
 }
@@ -368,8 +368,9 @@ void BasicCpuContext::finalizeCalculation(std::vector<double*>& output) {
         RandomVariable* v;
         if (id < numberOfInputVars_[currentId_ - 1])
             v = &values_[id];
-        else if (id < numberOfInputVars_[currentId_ - 1] + numberOfVariates_[currentId_ - 1])
+        else if (id < numberOfInputVars_[currentId_ - 1] + numberOfVariates_[currentId_ - 1]) {
             v = &variates_[id - numberOfInputVars_[currentId_ - 1]];
+        }
         else
             v = &values_[id - numberOfVariates_[currentId_ - 1]];
         for (Size j = 0; j < size_[currentId_ - 1]; ++j) {
