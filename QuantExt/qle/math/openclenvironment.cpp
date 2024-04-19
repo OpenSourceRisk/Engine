@@ -196,9 +196,13 @@ public:
 
 private:
     void updateVariatesPool();
-    void releaseMem(cl_mem& m);
-    void releaseKernel(cl_kernel& k);
-    void releaseProgram(cl_program& p);
+
+    void runHealthChecks();
+    std::string runHealthCheckProgram(const std::string& source, const std::string& kernelName);
+
+    static void releaseMem(cl_mem& m);
+    static void releaseKernel(cl_kernel& k);
+    static void releaseProgram(cl_program& p);
 
     enum class ComputeState { idle, createInput, createVariates, calc };
 
@@ -367,6 +371,92 @@ void OpenClContext::releaseProgram(cl_program& p) {
     }
 }
 
+std::string OpenClContext::runHealthCheckProgram(const std::string& source, const std::string& kernelName) {
+
+    struct CleanUp {
+        std::vector<cl_program> p;
+        std::vector<cl_kernel> k;
+        std::vector<cl_mem> m;
+        ~CleanUp() {
+            for (auto& pgm : p)
+                OpenClContext::releaseProgram(pgm);
+            for (auto& krn : k)
+                OpenClContext::releaseKernel(krn);
+            for (auto& mem : m)
+                OpenClContext::releaseMem(mem);
+        }
+    } cleanup;
+
+    const char* programPtr = source.c_str();
+
+    cl_int err;
+
+    cl_program program = clCreateProgramWithSource(context_, 1, &programPtr, NULL, &err);
+    if (err != CL_SUCCESS) {
+        return errorText(err);
+    }
+    cleanup.p.push_back(program);
+
+    err = clBuildProgram(program, 1, &device_, NULL, NULL, NULL);
+    if (err != CL_SUCCESS) {
+        return errorText(err);
+    }
+
+    cl_kernel kernel = clCreateKernel(program, kernelName.c_str(), &err);
+    if (err != CL_SUCCESS) {
+        return errorText(err);
+    }
+    cleanup.k.push_back(kernel);
+
+    cl_mem resultBuffer = clCreateBuffer(context_, CL_MEM_READ_WRITE, sizeof(cl_ulong), NULL, &err);
+    if (err != CL_SUCCESS) {
+        return errorText(err);
+    }
+    cleanup.m.push_back(resultBuffer);
+
+    err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &resultBuffer);
+
+    cl_event runEvent;
+    constexpr std::size_t sizeOne = 1;
+    err = clEnqueueNDRangeKernel(queue_, kernel, 1, NULL, &sizeOne, NULL, 0, NULL, &runEvent);
+    if (err != CL_SUCCESS) {
+        return errorText(err);
+    }
+
+    cl_ulong result;
+    err = clEnqueueReadBuffer(queue_, resultBuffer, CL_TRUE, 0, sizeof(cl_ulong), &result, 1, &runEvent, NULL);
+    if (err != CL_SUCCESS) {
+        return errorText(err);
+    }
+
+    return std::to_string(result);
+}
+
+void OpenClContext::runHealthChecks() {
+    deviceInfo_.push_back(std::make_pair("host_sizeof(cl_uint)", std::to_string(sizeof(cl_uint))));
+    deviceInfo_.push_back(std::make_pair("host_sizeof(cl_ulong)", std::to_string(sizeof(cl_ulong))));
+    deviceInfo_.push_back(std::make_pair("host_sizeof(cl_float)", std::to_string(sizeof(cl_float))));
+    deviceInfo_.push_back(std::make_pair("host_sizeof(cl_double)", std::to_string(sizeof(cl_double))));
+
+    std::string kernelGetUintSize =
+        "__kernel void ore_get_uint_size(__global ulong* result) { result[0] = sizeof(uint); }";
+    std::string kernelGetUlongSize =
+        "__kernel void ore_get_ulong_size(__global ulong* result) { result[0] = sizeof(ulong); }";
+    std::string kernelGetFloatSize =
+        "__kernel void ore_get_float_size(__global ulong* result) { result[0] = sizeof(float); }";
+    std::string kernelGetDoubleSize =
+        "__kernel void ore_get_double_size(__global ulong* result) { result[0] = sizeof(double); }";
+
+    deviceInfo_.push_back(
+        std::make_pair("device_sizeof(uint)", runHealthCheckProgram(kernelGetUintSize, "ore_get_uint_size")));
+    deviceInfo_.push_back(
+        std::make_pair("device_sizeof(ulong)", runHealthCheckProgram(kernelGetUlongSize, "ore_get_ulong_size")));
+    deviceInfo_.push_back(
+        std::make_pair("device_sizeof(float)", runHealthCheckProgram(kernelGetFloatSize, "ore_get_float_size")));
+    deviceInfo_.push_back(
+        std::make_pair("device_sizeof(double)", runHealthCheckProgram(kernelGetDoubleSize, "ore_get_double_size")));
+}
+
 void OpenClContext::init() {
 
     if (initialized_) {
@@ -395,6 +485,8 @@ void OpenClContext::init() {
                "OpenClContext::OpenClContext(): error during clCreateCommandQueue(): " << errorText(err));
 
     initialized_ = true;
+
+    runHealthChecks();
 }
 
 std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_t n, const std::size_t id,
@@ -683,7 +775,14 @@ void OpenClContext::updateVariatesPool() {
         624 * (nVariates_ * size_[currentId_ - 1] / 624 + (nVariates_ * size_[currentId_ - 1] % 624 == 0 ? 0 : 1));
 
     cl_int err;
+
     cl_mem oldBuffer = variatesPool_;
+    struct OldBufferReleaser {
+        OldBufferReleaser(cl_mem b) : b(b) {}
+        ~OldBufferReleaser() { OpenClContext::releaseMem(b); }
+        cl_mem b;
+    } oldBufferReleaser(oldBuffer);
+
     variatesPool_ = clCreateBuffer(context_, CL_MEM_READ_WRITE, fpSize * alignedSize, NULL, &err);
     QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::updateVariatesPool(): error creating variates buffer with size "
                                       << fpSize * alignedSize << " bytes: " << errorText(err));
@@ -734,11 +833,6 @@ void OpenClContext::updateVariatesPool() {
         waitList.push_back(generateEvent);
     if (!waitList.empty())
         clWaitForEvents(waitList.size(), &waitList[0]);
-
-    // release old buffer
-
-    if (variatesPoolSize_ > 0)
-        releaseMem(oldBuffer);
 
     // update current variates pool size
 
