@@ -32,32 +32,32 @@ class BondIndexBuilder {
 public:
     BondIndexBuilder(BondData bondData, const bool dirty, const bool relative,
                      const Calendar& fixingCalendar, const bool conditionalOnSurvival, 
-                     const boost::shared_ptr<EngineFactory>& engineFactory,
+                     const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                      QuantLib::Real bidAskAdjustment = 0.0, const bool bondIssueDateFallback = false);
 
     BondIndexBuilder(const Bond& bond, const bool dirty, const bool relative,
                      const Calendar& fixingCalendar, const bool conditionalOnSurvival, 
-                     const boost::shared_ptr<EngineFactory>& engineFactory,
+                     const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                      QuantLib::Real bidAskAdjustment = 0.0, const bool bondIssueDateFallback = false);
 
     BondIndexBuilder(const std::string& securityId, const bool dirty, const bool relative, 
                      const Calendar& fixingCalendar, const bool conditionalOnSurvival, 
-                     const boost::shared_ptr<EngineFactory>& engineFactory, QuantLib::Real bidAskAdjustment = 0.0,
+                     const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, QuantLib::Real bidAskAdjustment = 0.0,
                      const bool bondIssueDateFallback = false);
 
-    boost::shared_ptr<QuantExt::BondIndex> bondIndex() const;
+    QuantLib::ext::shared_ptr<QuantExt::BondIndex> bondIndex() const;
     void addRequiredFixings(RequiredFixings& requiredFixings, Leg leg = {});
     const Bond& bond() const { return bond_; };
     QuantLib::Real priceAdjustment(QuantLib::Real price);
 
 private:
     Bond bond_;
-    boost::shared_ptr<QuantExt::BondIndex> bondIndex_;
+    QuantLib::ext::shared_ptr<QuantExt::BondIndex> bondIndex_;
     RequiredFixings fixings_;
     const bool dirty_;
 
     void buildIndex(const bool relative, const Calendar& fixingCalendar, const bool conditionalOnSurvival, 
-        const boost::shared_ptr<EngineFactory>& engineFactory, 
+        const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, 
         QuantLib::Real bidAskAdjustment, const bool bondIssueDateFallback);
 };
 

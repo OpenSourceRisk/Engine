@@ -43,15 +43,15 @@ BOOST_AUTO_TEST_CASE(testRepricing) {
     Date refDate = Date(8, Dec, 2016);
     Settings::instance().evaluationDate() = refDate;
 
-    std::vector<boost::shared_ptr<RateHelper> > helper;
-    helper.push_back(boost::make_shared<DepositRateHelper>(Handle<Quote>(boost::make_shared<SimpleQuote>(0.02)),
+    std::vector<QuantLib::ext::shared_ptr<RateHelper> > helper;
+    helper.push_back(QuantLib::ext::make_shared<DepositRateHelper>(Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.02)),
                                                            7 * Months, 2, TARGET(), ModifiedFollowing, false,
                                                            Actual360()));
 
     Handle<YieldTermStructure> curve(
-        boost::make_shared<PiecewiseYieldCurve<Discount, LogLinear> >(refDate, helper, Actual365Fixed()));
+        QuantLib::ext::make_shared<PiecewiseYieldCurve<Discount, LogLinear> >(refDate, helper, Actual365Fixed()));
 
-    boost::shared_ptr<PricingEngine> engine = boost::make_shared<DepositEngine>(curve);
+    QuantLib::ext::shared_ptr<PricingEngine> engine = QuantLib::ext::make_shared<DepositEngine>(curve);
 
     Deposit depo(100.0, 0.02, 7 * Months, 2, TARGET(), ModifiedFollowing, false, Actual360(), refDate, true, 0 * Days);
     depo.setPricingEngine(engine);

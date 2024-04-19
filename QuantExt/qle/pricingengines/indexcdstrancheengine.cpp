@@ -97,7 +97,7 @@ void IndexCdsTrancheEngine::calculate() const {
             continue;
         }
 
-        boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(arguments_.normalizedLeg[i]);
+        QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(arguments_.normalizedLeg[i]);
         QL_REQUIRE(coupon, "IndexCdsTrancheEngine expects leg to have Coupon cashflow type.");
 
         // Relevant dates with assumption that future defaults occur at midpoint of (remaining) coupon period.

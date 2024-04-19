@@ -80,8 +80,8 @@ void BRLCdiCouponPricer::initialize(const FloatingRateCoupon& coupon) {
     couponQle_ = dynamic_cast<const QuantExt::OvernightIndexedCoupon*>(&coupon);
     QL_REQUIRE(couponQl_ || couponQle_, "BRLCdiCouponPricer expects an OvernightIndexedCoupon");
 
-    boost::shared_ptr<InterestRateIndex> index = couponQl_ ? couponQl_->index() : couponQle_->index();
-    index_ = boost::dynamic_pointer_cast<BRLCdi>(index);
+    QuantLib::ext::shared_ptr<InterestRateIndex> index = couponQl_ ? couponQl_->index() : couponQle_->index();
+    index_ = QuantLib::ext::dynamic_pointer_cast<BRLCdi>(index);
     QL_REQUIRE(index_, "BRLCdiCouponPricer expects the coupon's index to be BRLCdi");
 }
 

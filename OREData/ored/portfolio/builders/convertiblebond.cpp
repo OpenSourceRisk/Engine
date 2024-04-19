@@ -46,15 +46,15 @@ using namespace QuantExt;
 std::string ConvertibleBondEngineBuilder::keyImpl(
     const std::string& id, const std::string& ccy, const std::string& creditCurveId, const bool hasCreditRisk,
     const std::string& securityId, const std::string& referenceCurveId, const bool isExchangeable,
-    boost::shared_ptr<QuantExt::EquityIndex2> equity, const boost::shared_ptr<QuantExt::FxIndex>& fx,
+    QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> equity, const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fx,
     const std::string& equityCreditCurveId, const QuantLib::Date& startDate, const QuantLib::Date& maturityDate) {
     return id;
 }
 
-boost::shared_ptr<QuantLib::PricingEngine> ConvertibleBondFDDefaultableEquityJumpDiffusionEngineBuilder::engineImpl(
+QuantLib::ext::shared_ptr<QuantLib::PricingEngine> ConvertibleBondFDDefaultableEquityJumpDiffusionEngineBuilder::engineImpl(
     const std::string& id, const std::string& ccy, const std::string& creditCurveId, const bool hasCreditRisk,
     const std::string& securityId, const std::string& referenceCurveId, const bool isExchangeable,
-    boost::shared_ptr<QuantExt::EquityIndex2> equity, const boost::shared_ptr<QuantExt::FxIndex>& fx,
+    QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> equity, const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fx,
     const std::string& equityCreditCurveId, const QuantLib::Date& startDate, const QuantLib::Date& maturityDate) {
 
     std::string config = this->configuration(ore::data::MarketContext::pricing);
@@ -109,14 +109,14 @@ boost::shared_ptr<QuantLib::PricingEngine> ConvertibleBondFDDefaultableEquityJum
     } else {
         // create dummy equity and zero volatility if either of these are left empty (this is used for fixed amount
         // conversion)
-        equity = boost::make_shared<QuantExt::EquityIndex2>(
+        equity = QuantLib::ext::make_shared<QuantExt::EquityIndex2>(
             "dummyFamily", NullCalendar(), fx == nullptr ? parseCurrency(ccy) : fx->sourceCurrency(),
-            Handle<Quote>(boost::make_shared<SimpleQuote>(1.0)),
-            Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.0, Actual365Fixed())),
-            Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.0, Actual365Fixed())));
+            Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0)),
+            Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.0, Actual365Fixed())),
+            Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.0, Actual365Fixed())));
 
-        volatility = Handle<BlackVolTermStructure>(boost::make_shared<BlackConstantVol>(
-            0, NullCalendar(), Handle<Quote>(boost::make_shared<SimpleQuote>(0.0)), Actual365Fixed()));
+        volatility = Handle<BlackVolTermStructure>(QuantLib::ext::make_shared<BlackConstantVol>(
+            0, NullCalendar(), Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0)), Actual365Fixed()));
     }
 
     // get bond related curves
@@ -136,7 +136,7 @@ boost::shared_ptr<QuantLib::PricingEngine> ConvertibleBondFDDefaultableEquityJum
             market_->recoveryRate(creditCurveId, config)->value();
         }
         creditCurve = Handle<DefaultProbabilityTermStructure>(
-            boost::make_shared<FlatHazardRate>(0, NullCalendar(), 0.0, Actual365Fixed()));
+            QuantLib::ext::make_shared<FlatHazardRate>(0, NullCalendar(), 0.0, Actual365Fixed()));
     }
 
     // get (bond) recovery rate, fallback is the recovery rate of the credit curve
@@ -161,7 +161,7 @@ boost::shared_ptr<QuantLib::PricingEngine> ConvertibleBondFDDefaultableEquityJum
         try {
             spread = market_->securitySpread(securityId, config);
         } catch (...) {
-            spread = Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));
+            spread = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0));
         }
     }
 
@@ -179,7 +179,7 @@ boost::shared_ptr<QuantLib::PricingEngine> ConvertibleBondFDDefaultableEquityJum
                 market_->recoveryRate(equityCreditCurveId, config)->value();
             }
             equityCreditCurve = Handle<DefaultProbabilityTermStructure>(
-                boost::make_shared<FlatHazardRate>(0, NullCalendar(), 0.0, Actual365Fixed()));
+                QuantLib::ext::make_shared<FlatHazardRate>(0, NullCalendar(), 0.0, Actual365Fixed()));
         }
     }
 
@@ -187,12 +187,12 @@ boost::shared_ptr<QuantLib::PricingEngine> ConvertibleBondFDDefaultableEquityJum
 
     if (adjustCreditSpreadToRR) {
         Real rr = recovery.empty() ? 0.0 : recovery->value();
-        creditCurve = Handle<DefaultProbabilityTermStructure>(boost::make_shared<AdjustedDefaultCurve>(
-            creditCurve, Handle<Quote>(boost::make_shared<SimpleQuote>((1.0 - creditCurveRecovery) / (1.0 - rr)))));
+        creditCurve = Handle<DefaultProbabilityTermStructure>(QuantLib::ext::make_shared<AdjustedDefaultCurve>(
+            creditCurve, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>((1.0 - creditCurveRecovery) / (1.0 - rr)))));
         if (!equityCreditCurve.empty()) {
-            equityCreditCurve = Handle<DefaultProbabilityTermStructure>(boost::make_shared<AdjustedDefaultCurve>(
+            equityCreditCurve = Handle<DefaultProbabilityTermStructure>(QuantLib::ext::make_shared<AdjustedDefaultCurve>(
                 equityCreditCurve,
-                Handle<Quote>(boost::make_shared<SimpleQuote>((1.0 - equityCreditCurveRecovery) / (1.0 - rr)))));
+                Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>((1.0 - equityCreditCurveRecovery) / (1.0 - rr)))));
         }
     }
 
@@ -201,12 +201,12 @@ boost::shared_ptr<QuantLib::PricingEngine> ConvertibleBondFDDefaultableEquityJum
     if (treatSecuritySpreadAsCreditSpread) {
         Real rr = recovery.empty() ? 0.0 : recovery->value();
 	auto m = [rr](Real x) { return x / ( 1.0 -rr); };
-        Handle<Quote> scaledSecuritySpread(boost::make_shared<DerivedQuote<decltype(m)>>(spread, m));
+        Handle<Quote> scaledSecuritySpread(QuantLib::ext::make_shared<DerivedQuote<decltype(m)>>(spread, m));
         creditCurve = Handle<DefaultProbabilityTermStructure>(
-            boost::make_shared<HazardSpreadedDefaultTermStructure>(creditCurve, scaledSecuritySpread));
+            QuantLib::ext::make_shared<HazardSpreadedDefaultTermStructure>(creditCurve, scaledSecuritySpread));
         if (!equityCreditCurve.empty()) {
             equityCreditCurve = Handle<DefaultProbabilityTermStructure>(
-                boost::make_shared<HazardSpreadedDefaultTermStructure>(equityCreditCurve, scaledSecuritySpread));
+                QuantLib::ext::make_shared<HazardSpreadedDefaultTermStructure>(equityCreditCurve, scaledSecuritySpread));
         }
     }
 
@@ -215,7 +215,7 @@ boost::shared_ptr<QuantLib::PricingEngine> ConvertibleBondFDDefaultableEquityJum
     if (fx != nullptr) {
         auto fxVol = market_->fxVol(equity->currency().code() + ccy, config);
         QuantLib::Handle<QuantExt::CorrelationTermStructure> corrCurve(
-            boost::make_shared<FlatCorrelation>(0, NullCalendar(), 0.0, Actual365Fixed()));
+            QuantLib::ext::make_shared<FlatCorrelation>(0, NullCalendar(), 0.0, Actual365Fixed()));
         try {
             corrCurve = market_->correlationCurve("FX-GENERIC-" + equity->currency().code() + "-" + ccy,
                                                   "EQ-" + equity->name());
@@ -223,8 +223,8 @@ boost::shared_ptr<QuantLib::PricingEngine> ConvertibleBondFDDefaultableEquityJum
             WLOG("correlation curve for FX-GENERIC-" + equity->currency().code()
                  << ", EQ-" << equity->name() << " not found, fall back to zero correlation.");
         }
-        equity = boost::make_shared<CompoEquityIndex>(equity, fx, startDate);
-        volatility = Handle<BlackVolTermStructure>(boost::make_shared<BlackTriangulationATMVolTermStructure>(
+        equity = QuantLib::ext::make_shared<CompoEquityIndex>(equity, fx, startDate);
+        volatility = Handle<BlackVolTermStructure>(QuantLib::ext::make_shared<BlackTriangulationATMVolTermStructure>(
             volatility, fxVol, corrCurve, parseBool(engineParameter("FxVolIsStatic", {}, false, "false"))));
     }
 
@@ -258,14 +258,14 @@ boost::shared_ptr<QuantLib::PricingEngine> ConvertibleBondFDDefaultableEquityJum
 
     // set up model and pricing engine
 
-    auto modelBuilder = boost::make_shared<DefaultableEquityJumpDiffusionModelBuilder>(
+    auto modelBuilder = QuantLib::ext::make_shared<DefaultableEquityJumpDiffusionModelBuilder>(
         calibrationTimes, equity, volatility, isExchangeable ? equityCreditCurve : creditCurve, p, eta, staticMesher,
         modelTimeStepsPerYear, modelStateGridPoints, modelMesherEpsilon, modelMesherScaling, modelMesherConcentration,
         bootstrapMode, false, calibrate, adjustEquityVolatility, adjustEquityForward);
 
     modelBuilders_.insert(std::make_pair(id, modelBuilder));
 
-    return boost::make_shared<FdDefaultableEquityJumpDiffusionConvertibleBondEngine>(
+    return QuantLib::ext::make_shared<FdDefaultableEquityJumpDiffusionConvertibleBondEngine>(
         modelBuilder->model(), referenceCurve, treatSecuritySpreadAsCreditSpread ? Handle<Quote>() : spread,
         isExchangeable ? creditCurve : Handle<DefaultProbabilityTermStructure>(), recovery, Handle<FxIndex>(fx),
         staticMesher, engineTimeStepsPerYear, engineStateGridPoints, engineMesherEpsilon, engineMesherScaling,

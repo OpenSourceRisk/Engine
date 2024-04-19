@@ -34,8 +34,8 @@ SpreadedBlackVolatilityCurve::SpreadedBlackVolatilityCurve(const Handle<BlackVol
     QL_REQUIRE(times_.size() == volSpreads_.size(), "size of time and quote vectors do not match");
     for (Size i = 0; i < volSpreads_.size(); ++i)
         registerWith(volSpreads_[i]);
-    interpolation_ = boost::make_shared<FlatExtrapolation>(
-        boost::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin()));
+    interpolation_ = QuantLib::ext::make_shared<FlatExtrapolation>(
+        QuantLib::ext::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin()));
     interpolation_->enableExtrapolation();
 }
 

@@ -41,13 +41,13 @@ MarketCalibrationReportBase::MarketCalibrationReportBase(const std::string& cali
     calibrationFilters_ = CalibrationFilters(calibrationFilter);
 }
 
-void MarketCalibrationReportBase::populateReport(const boost::shared_ptr<ore::data::Market>& market,
-                                             const boost::shared_ptr<TodaysMarketParameters>& todaysMarketParams,
+void MarketCalibrationReportBase::populateReport(const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+                                             const QuantLib::ext::shared_ptr<TodaysMarketParameters>& todaysMarketParams,
                                              const std::string& label) {
     initialise(label);
     if (market == nullptr)
         return;
-    auto t = boost::dynamic_pointer_cast<TodaysMarket>(market);
+    auto t = QuantLib::ext::dynamic_pointer_cast<TodaysMarket>(market);
     if (!t) {
         DLOG("MarketCalibrationReportBase::populateReport() expected TodaysMarket");
         return;
@@ -135,7 +135,7 @@ void MarketCalibrationReportBase::populateReport(const boost::shared_ptr<ore::da
 }
 
 MarketCalibrationReport::MarketCalibrationReport(const std::string& calibrationFilter, 
-    const boost::shared_ptr<ore::data::Report>& report)
+    const QuantLib::ext::shared_ptr<ore::data::Report>& report)
     : ore::analytics::MarketCalibrationReportBase(calibrationFilter), report_(report) {
     report_->addColumn("MarketObjectType", string())
         .addColumn("MarketObjectId", string())
@@ -147,7 +147,7 @@ MarketCalibrationReport::MarketCalibrationReport(const std::string& calibrationF
         .addColumn("ResultValue", string());
 }
 
-boost::shared_ptr<Report> MarketCalibrationReport::outputCalibrationReport() { 
+QuantLib::ext::shared_ptr<Report> MarketCalibrationReport::outputCalibrationReport() { 
     report_->end();
     return report_;
 }
@@ -170,7 +170,7 @@ const bool MarketCalibrationReport::checkCalibrations(string label, string type,
 }
 
 void MarketCalibrationReport::addYieldCurve(const QuantLib::Date& refdate,
-                                            boost::shared_ptr<ore::data::YieldCurveCalibrationInfo> info,
+                                            QuantLib::ext::shared_ptr<ore::data::YieldCurveCalibrationInfo> info,
                                             const std::string& id, bool isDiscount, const std::string& label) {
     if (info == nullptr)
         return;
@@ -195,7 +195,7 @@ void MarketCalibrationReport::addYieldCurve(const QuantLib::Date& refdate,
     }
 
     // fitted bond curve results
-    auto y = boost::dynamic_pointer_cast<FittedBondCurveCalibrationInfo>(info);
+    auto y = QuantLib::ext::dynamic_pointer_cast<FittedBondCurveCalibrationInfo>(info);
     if (y) {
         addRowReport(yieldStr, id, "fittedBondCurve.fittingMethod", "", "", "", y->fittingMethod);
         for (Size k = 0; k < y->solution.size(); ++k) {
@@ -222,7 +222,7 @@ void MarketCalibrationReport::addYieldCurve(const QuantLib::Date& refdate,
 
 // Add inflation curve data to array
 void MarketCalibrationReport::addInflationCurve(const QuantLib::Date& refdate,
-                                                boost::shared_ptr<ore::data::InflationCurveCalibrationInfo> info,
+                                                QuantLib::ext::shared_ptr<ore::data::InflationCurveCalibrationInfo> info,
                                                 const std::string& id, const std::string& label) {
     if (info == nullptr)
         return;
@@ -241,7 +241,7 @@ void MarketCalibrationReport::addInflationCurve(const QuantLib::Date& refdate,
     addRowReport(inflationStr, id, "baseDate", "", "", "", info->baseDate);
 
     // zero inflation
-    auto z = boost::dynamic_pointer_cast<ZeroInflationCurveCalibrationInfo>(info);
+    auto z = QuantLib::ext::dynamic_pointer_cast<ZeroInflationCurveCalibrationInfo>(info);
     if (z) {
         addRowReport(inflationStr, id, "baseCpi", "", "", "", z->baseCpi);
         for (Size i = 0; i < z->pillarDates.size(); ++i) {
@@ -253,7 +253,7 @@ void MarketCalibrationReport::addInflationCurve(const QuantLib::Date& refdate,
     }
 
     // yoy inflation
-    auto y = boost::dynamic_pointer_cast<YoYInflationCurveCalibrationInfo>(info);
+    auto y = QuantLib::ext::dynamic_pointer_cast<YoYInflationCurveCalibrationInfo>(info);
     if (y) {
         for (Size i = 0; i < y->pillarDates.size(); ++i) {
             std::string key1 = ore::data::to_string(y->pillarDates[i]);
@@ -266,7 +266,7 @@ void MarketCalibrationReport::addInflationCurve(const QuantLib::Date& refdate,
 
 // Add commodity curve data to array
 void MarketCalibrationReport::addCommodityCurve(const QuantLib::Date& refdate,
-                                                boost::shared_ptr<ore::data::CommodityCurveCalibrationInfo> info,
+                                                QuantLib::ext::shared_ptr<ore::data::CommodityCurveCalibrationInfo> info,
                                                 const std::string& id, const std::string& label) {
     if (info == nullptr)
         return;
@@ -292,7 +292,7 @@ void MarketCalibrationReport::addCommodityCurve(const QuantLib::Date& refdate,
 }
 
 void MarketCalibrationReport::addEqFxVol(const string& type,
-                                         boost::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> info,
+                                         QuantLib::ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> info,
                                          const string& id, const string& label) {
     if (info == nullptr)
         return;
@@ -361,21 +361,21 @@ void MarketCalibrationReport::addEqFxVol(const string& type,
 
 // Add fx/eq/comm vol curve data to array
 void MarketCalibrationReport::addFxVol(const QuantLib::Date& refdate,
-                                       boost::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> info,
+                                       QuantLib::ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> info,
                                        const std::string& id, const std::string& label) {
     addEqFxVol("fxVol", info, id, label);
     calibrations_[label]["fxVol"].insert(id);
 }
 
 void MarketCalibrationReport::addEqVol(const QuantLib::Date& refdate,
-                                       boost::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> info,
+                                       QuantLib::ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> info,
                                        const std::string& id, const std::string& label) {
     addEqFxVol("eqVol", info, id, label);
     calibrations_[label]["eqVol"].insert(id);
 }
 
 void MarketCalibrationReport::addCommVol(const QuantLib::Date& refdate,
-                                         boost::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> info,
+                                         QuantLib::ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> info,
                                          const std::string& id, const std::string& label) {
     addEqFxVol("commVol", info, id, label);
     calibrations_[label]["commVol"].insert(id);
@@ -383,7 +383,7 @@ void MarketCalibrationReport::addCommVol(const QuantLib::Date& refdate,
 
 // Add ir vol curve data to array
 void MarketCalibrationReport::addIrVol(const QuantLib::Date& refdate,
-                                       boost::shared_ptr<ore::data::IrVolCalibrationInfo> info, 
+                                       QuantLib::ext::shared_ptr<ore::data::IrVolCalibrationInfo> info, 
                                        const std::string& id, const std::string& label) {
     if (info == nullptr)
         return;

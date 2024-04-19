@@ -25,7 +25,7 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-ClonedLoader::ClonedLoader(const Date& loaderDate, const boost::shared_ptr<Loader>& inLoader)
+ClonedLoader::ClonedLoader(const Date& loaderDate, const QuantLib::ext::shared_ptr<Loader>& inLoader)
     : loaderDate_(loaderDate) {
     for (const auto& md : inLoader->loadQuotes(loaderDate)) {
         data_[loaderDate].insert(md->clone());

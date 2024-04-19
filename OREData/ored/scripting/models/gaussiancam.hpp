@@ -47,8 +47,8 @@ public:
      */
     GaussianCam(const Handle<CrossAssetModel>& cam, const Size paths, const std::vector<std::string>& currencies,
                 const std::vector<Handle<YieldTermStructure>>& curves, const std::vector<Handle<Quote>>& fxSpots,
-                const std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>>& irIndices,
-                const std::vector<std::pair<std::string, boost::shared_ptr<ZeroInflationIndex>>>& infIndices,
+                const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
+                const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
                 const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
                 const std::set<Date>& simulationDates, const McParams& mcParams, const Size timeStepsPerYear = 1,
                 const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
@@ -75,7 +75,7 @@ public:
     // AMCModel interface implementation
     void injectPaths(const std::vector<QuantLib::Real>* pathTimes,
                      const std::vector<std::vector<QuantExt::RandomVariable>>* paths,
-                     const std::vector<bool>* isRelevantTime, const bool stickyCloseOutRun) override;
+                     const std::vector<size_t>* pathIndexes, const std::vector<size_t>* timeIndexes) override;
 
 private:
     // ModelImpl interface implementation
@@ -140,8 +140,8 @@ private:
     // data when paths are injected via the AMCModel interface
     const std::vector<QuantLib::Real>* injectedPathTimes_ = nullptr;
     const std::vector<std::vector<QuantExt::RandomVariable>>* injectedPaths_ = nullptr;
-    const std::vector<bool>* injectedPathIsRelevantTime_;
-    bool injectedPathStickyCloseOutRun_;
+    const std::vector<size_t>* injectedPathRelevantPathIndexes_;
+    const std::vector<size_t>* injectedPathRelevantTimeIndexes_;
     Size overwriteModelSize_ = Null<Size>();
 
     // stored regression coefficients, state size (before possible transform) and (optional) coordinate transform

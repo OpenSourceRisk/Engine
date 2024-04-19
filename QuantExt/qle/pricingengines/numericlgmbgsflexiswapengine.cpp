@@ -22,7 +22,7 @@
 
 namespace QuantExt {
 
-NumericLgmBgsFlexiSwapEngine::NumericLgmBgsFlexiSwapEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model,
+NumericLgmBgsFlexiSwapEngine::NumericLgmBgsFlexiSwapEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
                                                            const Real sy, const Size ny, const Real sx, const Size nx,
                                                            const Handle<Quote>& minCpr, const Handle<Quote>& maxCpr,
                                                            const Handle<YieldTermStructure>& discountCurve,
@@ -112,11 +112,11 @@ void NumericLgmBgsFlexiSwapEngine::calculate() const {
     // recalculate the fixed and floating coupons belonging to the upper Notional
     std::vector<Real> upperFixedCoupons, upperFloatingCoupons;
     for (Size i = 0; i < arguments_.fixedLeg.size(); ++i) {
-        auto cp = boost::dynamic_pointer_cast<QuantLib::Coupon>(arguments_.fixedLeg[i]);
+        auto cp = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(arguments_.fixedLeg[i]);
         upperFixedCoupons.push_back(cp->accrualPeriod() * cp->rate() * upperNotionalFixedBound[i]);
     }
     for (Size i = 0; i < arguments_.floatingLeg.size(); ++i) {
-        auto cp = boost::dynamic_pointer_cast<QuantLib::Coupon>(arguments_.floatingLeg[i]);
+        auto cp = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(arguments_.floatingLeg[i]);
         try {
             upperFloatingCoupons.push_back(cp->accrualPeriod() * cp->rate() * upperNotionalFloatingBound[i]);
         } catch (...) {

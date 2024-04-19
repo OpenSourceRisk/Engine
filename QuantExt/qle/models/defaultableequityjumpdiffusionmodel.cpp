@@ -35,7 +35,7 @@ namespace QuantExt {
 using namespace QuantLib;
 
 DefaultableEquityJumpDiffusionModelBuilder::DefaultableEquityJumpDiffusionModelBuilder(
-    const std::vector<Real>& stepTimes, const boost::shared_ptr<QuantExt::EquityIndex2>& equity,
+    const std::vector<Real>& stepTimes, const QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>& equity,
     const Handle<BlackVolTermStructure>& volatility, const Handle<DefaultProbabilityTermStructure>& creditCurve,
     const Real p, const Real eta, const bool staticMesher, const Size timeStepsPerYear, const Size stateGridPoints,
     const Real mesherEpsilon, const Real mesherScaling, const Real mesherConcentration,
@@ -55,7 +55,7 @@ DefaultableEquityJumpDiffusionModelBuilder::DefaultableEquityJumpDiffusionModelB
 
     // register with observables
 
-    marketObserver_ = boost::make_shared<MarketObserver>();
+    marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
     marketObserver_->registerWith(equity_);
     marketObserver_->registerWith(creditCurve_);
 
@@ -134,7 +134,7 @@ void DefaultableEquityJumpDiffusionModelBuilder::performCalculations() const {
 
         std::vector<Real> h0(stepTimes_.size(), 0.0);
         std::vector<Real> sigma(stepTimes_.size(), 0.10);
-        model_.linkTo(boost::make_shared<DefaultableEquityJumpDiffusionModel>(
+        model_.linkTo(QuantLib::ext::make_shared<DefaultableEquityJumpDiffusionModel>(
             stepTimes_, h0, sigma, equity_, creditCurve_, volatility_->dayCounter(), p_, eta_, adjustEquityForward_));
         if (calibrate_) {
             model_->bootstrap(volatility_, staticMesher_, timeStepsPerYear_, stateGridPoints_, mesherEpsilon_,
@@ -149,7 +149,7 @@ void DefaultableEquityJumpDiffusionModelBuilder::performCalculations() const {
 
 DefaultableEquityJumpDiffusionModel::DefaultableEquityJumpDiffusionModel(
     const std::vector<Real>& stepTimes, const std::vector<Real>& h0, const std::vector<Real>& sigma,
-    const boost::shared_ptr<QuantExt::EquityIndex2>& equity,
+    const QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>& equity,
     const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve, const DayCounter& volDayCounter, const Real p,
     const Real eta, const bool adjustEquityForward)
     : stepTimes_(stepTimes), h0_(h0), sigma_(sigma), equity_(equity), creditCurve_(creditCurve),
@@ -162,7 +162,7 @@ void DefaultableEquityJumpDiffusionModel::update() { notifyObservers(); }
 
 const std::vector<Real>& DefaultableEquityJumpDiffusionModel::stepTimes() const { return stepTimes_; }
 
-boost::shared_ptr<QuantExt::EquityIndex2> DefaultableEquityJumpDiffusionModel::equity() const { return equity_; }
+QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> DefaultableEquityJumpDiffusionModel::equity() const { return equity_; }
 
 Real DefaultableEquityJumpDiffusionModel::totalBlackVariance() const { return totalBlackVariance_; }
 
@@ -358,17 +358,17 @@ void DefaultableEquityJumpDiffusionModel::bootstrap(
             Real xMax = std::log(ma) + sigmaSqrtT * normInvEps * mesherScaling;
 
             if (mesherConcentration != Null<Real>()) {
-                mesher_ = boost::make_shared<Concentrating1dMesher>(xMin, xMax, stateGridPoints,
+                mesher_ = QuantLib::ext::make_shared<Concentrating1dMesher>(xMin, xMax, stateGridPoints,
                                                                     std::make_pair(logSpot, mesherConcentration), true);
             } else {
-                mesher_ = boost::make_shared<Uniform1dMesher>(xMin, xMax, stateGridPoints);
+                mesher_ = QuantLib::ext::make_shared<Uniform1dMesher>(xMin, xMax, stateGridPoints);
             }
         }
 
         // 2.1.2 build operator
 
-        auto fdmOp = boost::make_shared<FdmDefaultableEquityJumpDiffusionFokkerPlanckOp>(
-            stepTimes_.back(), boost::make_shared<FdmMesherComposite>(mesher_), shared_from_this());
+        auto fdmOp = QuantLib::ext::make_shared<FdmDefaultableEquityJumpDiffusionFokkerPlanckOp>(
+            stepTimes_.back(), QuantLib::ext::make_shared<FdmMesherComposite>(mesher_), shared_from_this());
 
         // 2.1.3 build solver
 
@@ -376,8 +376,8 @@ void DefaultableEquityJumpDiffusionModel::bootstrap(
         // the Andersen paper and use Crank-Nicholson after a "few" Rannacher steps (i.e. implicit Euler)
         // TrBDF2 seems to be a specialised scheme for initial Dirac conditons though. Some research required...
 
-        auto solver = boost::make_shared<FdmBackwardSolver>(
-            fdmOp, std::vector<boost::shared_ptr<BoundaryCondition<FdmLinearOp>>>(), nullptr, FdmSchemeDesc::Douglas());
+        auto solver = QuantLib::ext::make_shared<FdmBackwardSolver>(
+            fdmOp, std::vector<QuantLib::ext::shared_ptr<BoundaryCondition<FdmLinearOp>>>(), nullptr, FdmSchemeDesc::Douglas());
 
         constexpr Size dampingSteps = 5;
 
@@ -440,7 +440,7 @@ void DefaultableEquityJumpDiffusionModel::bootstrap(
                 TargetFunction(const Mode mode, const Real strike, const Real marketEquityOption,
                                const Real marketDefaultableBond, Real& h0, Real& sigma, const Array& p,
                                const std::vector<Real>& locations, const Array& dy,
-                               const boost::shared_ptr<FdmBackwardSolver>& solver, const Real t_from, const Real t_to,
+                               const QuantLib::ext::shared_ptr<FdmBackwardSolver>& solver, const Real t_from, const Real t_to,
                                const Size steps, const Size dampingSteps)
                     : mode_(mode), strike_(strike), marketEquityOption_(marketEquityOption),
                       marketDefaultableBond_(marketDefaultableBond), h0_(h0), sigma_(sigma), locations_(locations),
@@ -515,7 +515,7 @@ void DefaultableEquityJumpDiffusionModel::bootstrap(
                 Real &h0_, &sigma_;
                 const std::vector<Real>& locations_;
                 const Array &dy_, &p_;
-                const boost::shared_ptr<FdmBackwardSolver> solver_;
+                const QuantLib::ext::shared_ptr<FdmBackwardSolver> solver_;
                 const Real t_from_, t_to_;
                 const Size steps_, dampingSteps_;
             };

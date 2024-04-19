@@ -53,7 +53,7 @@ public:
     void performCalculations() const override;
     Real modelValue() const override;
     Real blackPrice(Real volatility) const override;
-    boost::shared_ptr<VanillaOption> option() const { return option_; }
+    QuantLib::ext::shared_ptr<VanillaOption> option() const { return option_; }
     Real strike() const {
         calculate();
         return effStrike_;
@@ -71,7 +71,7 @@ private:
     mutable Real tau_;
     mutable Real atm_;
     mutable Option::Type type_;
-    mutable boost::shared_ptr<VanillaOption> option_;
+    mutable QuantLib::ext::shared_ptr<VanillaOption> option_;
     mutable Real effStrike_;
 };
 

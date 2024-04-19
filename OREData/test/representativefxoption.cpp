@@ -46,10 +46,10 @@ struct RepresentativeFxOptionFixture : public ore::test::TopLevelFixture {
 public:
     RepresentativeFxOptionFixture() { Settings::instance().evaluationDate() = today; }
     Date today = Date(20, Apr, 2021);
-    Handle<Quote> eurUsdSpot = Handle<Quote>(boost::make_shared<SimpleQuote>(1.2));
+    Handle<Quote> eurUsdSpot = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.2));
     Actual365Fixed dc;
-    Handle<YieldTermStructure> eurCurve = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(today, 0.01, dc));
-    Handle<YieldTermStructure> usdCurve = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(today, 0.03, dc));
+    Handle<YieldTermStructure> eurCurve = Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(today, 0.01, dc));
+    Handle<YieldTermStructure> usdCurve = Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(today, 0.03, dc));
 };
 
 BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
@@ -66,8 +66,8 @@ BOOST_AUTO_TEST_CASE(testSimpleCashflows) {
 
     Real eurAmount = 35000.0;
     Real usdAmount = 14222.0;
-    Leg eurLeg = {boost::make_shared<SimpleCashFlow>(eurAmount, refDate)};
-    Leg usdLeg = {boost::make_shared<SimpleCashFlow>(usdAmount, refDate)};
+    Leg eurLeg = {QuantLib::ext::make_shared<SimpleCashFlow>(eurAmount, refDate)};
+    Leg usdLeg = {QuantLib::ext::make_shared<SimpleCashFlow>(usdAmount, refDate)};
 
     RepresentativeFxOptionMatcher matcher1({eurLeg, usdLeg}, {true, false}, {"EUR", "USD"}, refDate, "EUR", "USD",
                                            eurCurve, usdCurve, eurUsdSpot, true);
@@ -126,12 +126,12 @@ BOOST_AUTO_TEST_CASE(testFxLinkedCashflow) {
     Date refDate = today + 5 * Years;
     Date fixDate = UnitedStates(UnitedStates::Settlement).advance(refDate, -2 * Days);
 
-    auto fxSpotScen = boost::make_shared<SimpleQuote>(eurUsdSpot->value());
-    auto fxIndex = boost::make_shared<FxIndex>("dummy", 2, EURCurrency(), USDCurrency(), UnitedStates(UnitedStates::Settlement),
+    auto fxSpotScen = QuantLib::ext::make_shared<SimpleQuote>(eurUsdSpot->value());
+    auto fxIndex = QuantLib::ext::make_shared<FxIndex>("dummy", 2, EURCurrency(), USDCurrency(), UnitedStates(UnitedStates::Settlement),
                                                Handle<Quote>(fxSpotScen), eurCurve, usdCurve);
     Real forAmount = 100000.0;
 
-    Leg leg = {boost::make_shared<FXLinkedCashFlow>(refDate, fixDate, forAmount, fxIndex)};
+    Leg leg = {QuantLib::ext::make_shared<FXLinkedCashFlow>(refDate, fixDate, forAmount, fxIndex)};
 
     RepresentativeFxOptionMatcher matcher({leg}, {false}, {"USD"}, today, "EUR", "USD", eurCurve, usdCurve, eurUsdSpot);
 
@@ -166,18 +166,18 @@ BOOST_AUTO_TEST_CASE(testFxLinkedFloatingRateCoupon) {
     Date refDate = today + 5 * Years;
     Date fixDate = UnitedStates(UnitedStates::Settlement).advance(refDate, -2 * Days);
 
-    auto fxSpotScen = boost::make_shared<SimpleQuote>(eurUsdSpot->value());
-    auto fxIndex = boost::make_shared<FxIndex>("dummy", 2, EURCurrency(), USDCurrency(), UnitedStates(UnitedStates::Settlement),
+    auto fxSpotScen = QuantLib::ext::make_shared<SimpleQuote>(eurUsdSpot->value());
+    auto fxIndex = QuantLib::ext::make_shared<FxIndex>("dummy", 2, EURCurrency(), USDCurrency(), UnitedStates(UnitedStates::Settlement),
                                                Handle<Quote>(fxSpotScen), eurCurve, usdCurve);
     Real forAmount = 100000.0;
 
-    auto iborIndex = boost::make_shared<IborIndex>("dummyIbor", 6 * Months, 2, EURCurrency(), TARGET(), Following,
+    auto iborIndex = QuantLib::ext::make_shared<IborIndex>("dummyIbor", 6 * Months, 2, EURCurrency(), TARGET(), Following,
                                                    false, Actual360(), eurCurve);
     Date start(refDate - 6 * Months), end(refDate);
-    auto iborCoupon = boost::make_shared<IborCoupon>(refDate, 1.0, start, end, 2, iborIndex, 1.0, 0.0);
-    iborCoupon->setPricer(boost::make_shared<BlackIborCouponPricer>());
+    auto iborCoupon = QuantLib::ext::make_shared<IborCoupon>(refDate, 1.0, start, end, 2, iborIndex, 1.0, 0.0);
+    iborCoupon->setPricer(QuantLib::ext::make_shared<BlackIborCouponPricer>());
 
-    Leg leg = {boost::make_shared<FloatingRateFXLinkedNotionalCoupon>(fixDate, forAmount, fxIndex, iborCoupon)};
+    Leg leg = {QuantLib::ext::make_shared<FloatingRateFXLinkedNotionalCoupon>(fixDate, forAmount, fxIndex, iborCoupon)};
 
     RepresentativeFxOptionMatcher matcher({leg}, {false}, {"USD"}, today, "EUR", "USD", eurCurve, usdCurve, eurUsdSpot);
 

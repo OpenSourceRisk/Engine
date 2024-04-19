@@ -29,7 +29,7 @@ CrossCcyFixFloatSwap::CrossCcyFixFloatSwap(
     Type type, Real fixedNominal, const Currency& fixedCurrency, const Schedule& fixedSchedule, Rate fixedRate,
     const DayCounter& fixedDayCount, BusinessDayConvention fixedPaymentBdc, Natural fixedPaymentLag,
     const Calendar& fixedPaymentCalendar, Real floatNominal, const Currency& floatCurrency,
-    const Schedule& floatSchedule, const boost::shared_ptr<IborIndex>& floatIndex, Spread floatSpread,
+    const Schedule& floatSchedule, const QuantLib::ext::shared_ptr<IborIndex>& floatIndex, Spread floatSpread,
     BusinessDayConvention floatPaymentBdc, Natural floatPaymentLag, const Calendar& floatPaymentCalendar)
     : CrossCcySwap(2), type_(type), fixedNominal_(fixedNominal), fixedCurrency_(fixedCurrency),
       fixedSchedule_(fixedSchedule), fixedRate_(fixedRate), fixedDayCount_(fixedDayCount),
@@ -53,12 +53,12 @@ CrossCcyFixFloatSwap::CrossCcyFixFloatSwap(
     // Initial notional exchange
     Date aDate = floatSchedule_.dates().front();
     aDate = floatPaymentCalendar_.adjust(aDate, floatPaymentBdc_);
-    boost::shared_ptr<CashFlow> aCashflow = boost::make_shared<SimpleCashFlow>(-floatNominal_, aDate);
+    QuantLib::ext::shared_ptr<CashFlow> aCashflow = QuantLib::ext::make_shared<SimpleCashFlow>(-floatNominal_, aDate);
     floatLeg.insert(floatLeg.begin(), aCashflow);
 
     // Final notional exchange
     aDate = floatLeg.back()->date();
-    aCashflow = boost::make_shared<SimpleCashFlow>(floatNominal_, aDate);
+    aCashflow = QuantLib::ext::make_shared<SimpleCashFlow>(floatNominal_, aDate);
     floatLeg.push_back(aCashflow);
 
     // Build the fixed rate leg
@@ -72,12 +72,12 @@ CrossCcyFixFloatSwap::CrossCcyFixFloatSwap(
     // Initial notional exchange
     aDate = fixedSchedule_.dates().front();
     aDate = fixedPaymentCalendar_.adjust(aDate, fixedPaymentBdc_);
-    aCashflow = boost::make_shared<SimpleCashFlow>(-fixedNominal_, aDate);
+    aCashflow = QuantLib::ext::make_shared<SimpleCashFlow>(-fixedNominal_, aDate);
     fixedLeg.insert(fixedLeg.begin(), aCashflow);
 
     // Final notional exchange
     aDate = fixedLeg.back()->date();
-    aCashflow = boost::make_shared<SimpleCashFlow>(fixedNominal_, aDate);
+    aCashflow = QuantLib::ext::make_shared<SimpleCashFlow>(fixedNominal_, aDate);
     fixedLeg.push_back(aCashflow);
 
     // Deriving from cross currency swap where:

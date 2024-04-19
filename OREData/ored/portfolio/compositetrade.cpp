@@ -30,19 +30,24 @@ namespace ore {
 namespace data {
 using QuantExt::MultiCcyCompositeInstrument;
 
-void CompositeTrade::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Building Composite Trade: " << id());
     npvCurrency_ = currency_;
-    boost::shared_ptr<MultiCcyCompositeInstrument> compositeInstrument =
-	boost::make_shared<MultiCcyCompositeInstrument>();
+    QuantLib::ext::shared_ptr<MultiCcyCompositeInstrument> compositeInstrument =
+	QuantLib::ext::make_shared<MultiCcyCompositeInstrument>();
     fxRates_.clear();
     fxRatesNotional_.clear();
     legs_.clear();
+<<<<<<< HEAD
 
     populateFromReferenceData(engineFactory->referenceData());
 
     
     for (const boost::shared_ptr<Trade>& trade : trades_) {
+=======
+    QL_REQUIRE(trades_.size() > 0, "Failed to build composite trade.");
+    for (const QuantLib::ext::shared_ptr<Trade>& trade : trades_) {
+>>>>>>> master
 
 	    trade->reset();
 	    trade->build(engineFactory);
@@ -51,12 +56,19 @@ void CompositeTrade::build(const boost::shared_ptr<EngineFactory>& engineFactory
         if (sensitivityTemplate_.empty())
             setSensitivityTemplate(trade->sensitivityTemplate());
 
+<<<<<<< HEAD
         Handle<Quote> fx = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
 	    if (trade->npvCurrency() != npvCurrency_)
 	        fx = engineFactory->market()->fxRate(trade->npvCurrency() + npvCurrency_);
 	    fxRates_.push_back(fx);
+=======
+        Handle<Quote> fx = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
+	if (trade->npvCurrency() != npvCurrency_)
+	    fx = engineFactory->market()->fxRate(trade->npvCurrency() + npvCurrency_);
+	fxRates_.push_back(fx);
+>>>>>>> master
 
-        Handle<Quote> fxNotional = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
+        Handle<Quote> fxNotional = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
         if (trade->notionalCurrency().empty()) {
             // trade is not guaranteed to provide a non-null notional, but if it does we require a notional currency
             if (trade->notional() != Null<Real>()) {
@@ -70,11 +82,17 @@ void CompositeTrade::build(const boost::shared_ptr<EngineFactory>& engineFactory
             fxNotional = engineFactory->market()->fxRate(trade->notionalCurrency() + npvCurrency_);
         fxRatesNotional_.push_back(fxNotional);
 
-        boost::shared_ptr<InstrumentWrapper> instrumentWrapper = trade->instrument();
+        QuantLib::ext::shared_ptr<InstrumentWrapper> instrumentWrapper = trade->instrument();
         Real effectiveMultiplier = instrumentWrapper->multiplier();
+<<<<<<< HEAD
 	    if (auto optionWrapper = boost::dynamic_pointer_cast<ore::data::OptionWrapper>(instrumentWrapper)) {
 	        effectiveMultiplier *= optionWrapper->isLong() ? 1.0 : -1.0;
 	    }
+=======
+	if (auto optionWrapper = QuantLib::ext::dynamic_pointer_cast<ore::data::OptionWrapper>(instrumentWrapper)) {
+	    effectiveMultiplier *= optionWrapper->isLong() ? 1.0 : -1.0;
+	}
+>>>>>>> master
 
 	    compositeInstrument->add(instrumentWrapper->qlInstrument(), effectiveMultiplier, fx);
 	    for (Size i = 0; i < instrumentWrapper->additionalInstruments().size(); ++i) {
@@ -89,7 +107,7 @@ void CompositeTrade::build(const boost::shared_ptr<EngineFactory>& engineFactory
 
 	    maturity_ = std::max(maturity_, trade->maturity());
     }
-    instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(compositeInstrument));
+    instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(new VanillaInstrument(compositeInstrument));
 
     notionalCurrency_ = npvCurrency_;
 
@@ -102,7 +120,7 @@ QuantLib::Real CompositeTrade::notional() const {
     vector<Real> notionals;
     vector<Handle<Quote>> fxRates;
     // trade is not guaranteed to provide a non-null notional
-    for (const boost::shared_ptr<Trade>& trade : trades_)
+    for (const QuantLib::ext::shared_ptr<Trade>& trade : trades_)
         notionals.push_back(trade->notional() != Null<Real>() ? trade->notional() : 0.0);
 
     // need to convert the component notionals to the composite currency.
@@ -240,7 +258,7 @@ map<string, RequiredFixings::FixingDates> CompositeTrade::fixings(const Date& se
 }
 
 std::map<AssetClass, std::set<std::string>>
-CompositeTrade::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+CompositeTrade::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     
     map<AssetClass, std::set<std::string>> result;
     for (const auto& t : trades_) {

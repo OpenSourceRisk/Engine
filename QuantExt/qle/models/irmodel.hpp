@@ -38,7 +38,7 @@ public:
     virtual Measure measure() const = 0;
 
     /*! parametrization (as base class) */
-    virtual const boost::shared_ptr<Parametrization> parametrizationBase() const = 0;
+    virtual const QuantLib::ext::shared_ptr<Parametrization> parametrizationBase() const = 0;
 
     /*! yield term structure to which the IrModel is (initially) calibrated */
     virtual Handle<YieldTermStructure> termStructure() const = 0;
@@ -57,7 +57,7 @@ public:
     virtual Size m_aux() const = 0;
 
     /*! stochastic process, this has dimension n() + n_aux() and m() + m_aux() Brownian drivers */
-    virtual boost::shared_ptr<StochasticProcess> stateProcess() const = 0;
+    virtual QuantLib::ext::shared_ptr<StochasticProcess> stateProcess() const = 0;
 
     /*! discount bond depending on state (of dimension n()) */
     virtual QuantLib::Real discountBond(

@@ -34,7 +34,7 @@ public:
     FairSpreadHelper(const TenorBasisSwap& swap, const Handle<YieldTermStructure>& discountCurve, Real nonSpreadLegNPV)
         : nonSpreadLegNPV_(nonSpreadLegNPV) {
 
-        engine_ = boost::shared_ptr<PricingEngine>(new DiscountingSwapEngine(discountCurve));
+        engine_ = QuantLib::ext::shared_ptr<PricingEngine>(new DiscountingSwapEngine(discountCurve));
         arguments_ = dynamic_cast<Swap::arguments*>(engine_->getArguments());
         swap.setupArguments(arguments_);
         spreadLeg_ = arguments_->legs[0];
@@ -45,7 +45,7 @@ public:
         // Change the spread on the leg and recalculate
         Leg::const_iterator it;
         for (it = spreadLeg_.begin(); it != spreadLeg_.end(); ++it) {
-            boost::shared_ptr<QuantExt::SubPeriodsCoupon1> c = boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(*it);
+            QuantLib::ext::shared_ptr<QuantExt::SubPeriodsCoupon1> c = QuantLib::ext::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(*it);
             c->spread() = tempSpread;
         }
         engine_->calculate();
@@ -53,7 +53,7 @@ public:
     }
 
 private:
-    boost::shared_ptr<PricingEngine> engine_;
+    QuantLib::ext::shared_ptr<PricingEngine> engine_;
     Real nonSpreadLegNPV_;
     const Swap::results* results_;
     Swap::arguments* arguments_;
@@ -62,8 +62,8 @@ private:
 } // namespace
 
 TenorBasisSwap::TenorBasisSwap(const Date& effectiveDate, Real nominal, const Period& swapTenor,
-                               const boost::shared_ptr<IborIndex>& payIndex, Spread paySpread,
-                               const Period& payFrequency, const boost::shared_ptr<IborIndex>& recIndex,
+                               const QuantLib::ext::shared_ptr<IborIndex>& payIndex, Spread paySpread,
+                               const Period& payFrequency, const QuantLib::ext::shared_ptr<IborIndex>& recIndex,
                                Spread recSpread, const Period& recFrequency, DateGeneration::Rule rule,
                                bool includeSpread, bool spreadOnRec, QuantExt::SubPeriodsCoupon1::Type type,
                                const bool telescopicValueDates)
@@ -75,9 +75,9 @@ TenorBasisSwap::TenorBasisSwap(const Date& effectiveDate, Real nominal, const Pe
     // Create the default pay and rec schedules
     Date terminationDate = effectiveDate + swapTenor;
 
-    boost::shared_ptr<Libor> payIndexAsLibor = boost::dynamic_pointer_cast<Libor>(payIndex_);
+    QuantLib::ext::shared_ptr<Libor> payIndexAsLibor = QuantLib::ext::dynamic_pointer_cast<Libor>(payIndex_);
     payIndexCalendar_ = payIndexAsLibor != NULL ? payIndexAsLibor->jointCalendar() : payIndex_->fixingCalendar();
-    boost::shared_ptr<Libor> recIndexAsLibor = boost::dynamic_pointer_cast<Libor>(recIndex_);
+    QuantLib::ext::shared_ptr<Libor> recIndexAsLibor = QuantLib::ext::dynamic_pointer_cast<Libor>(recIndex_);
     recIndexCalendar_ =
         recIndexAsLibor != NULL ? recIndexAsLibor->jointCalendar() : recIndex_->fixingCalendar();
 
@@ -106,8 +106,8 @@ TenorBasisSwap::TenorBasisSwap(const Date& effectiveDate, Real nominal, const Pe
 }
 
 TenorBasisSwap::TenorBasisSwap(Real nominal, const Schedule& paySchedule,
-                               const boost::shared_ptr<IborIndex>& payIndex, Spread paySpread,
-                               const Schedule& recSchedule, const boost::shared_ptr<IborIndex>& recIndex,
+                               const QuantLib::ext::shared_ptr<IborIndex>& payIndex, Spread paySpread,
+                               const Schedule& recSchedule, const QuantLib::ext::shared_ptr<IborIndex>& recIndex,
                                Spread recSpread, bool includeSpread, bool spreadOnRec, QuantExt::SubPeriodsCoupon1::Type type,
                                const bool telescopicValueDates)
     : Swap(2), nominals_(std::vector<Real>(1, nominal)), paySchedule_(paySchedule), payIndex_(payIndex),
@@ -119,8 +119,8 @@ TenorBasisSwap::TenorBasisSwap(Real nominal, const Schedule& paySchedule,
 }
 
 TenorBasisSwap::TenorBasisSwap(const std::vector<Real>& nominals, const Schedule& paySchedule,
-                               const boost::shared_ptr<IborIndex>& payIndex, Spread paySpread,
-                               const Schedule& recSchedule, const boost::shared_ptr<IborIndex>& recIndex,
+                               const QuantLib::ext::shared_ptr<IborIndex>& payIndex, Spread paySpread,
+                               const Schedule& recSchedule, const QuantLib::ext::shared_ptr<IborIndex>& recIndex,
                                Spread recSpread, bool includeSpread, bool spreadOnRec, QuantExt::SubPeriodsCoupon1::Type type,
                                const bool telescopicValueDates)
     : Swap(2), nominals_(nominals), paySchedule_(paySchedule), payIndex_(payIndex),
@@ -140,7 +140,7 @@ void TenorBasisSwap::initializeLegs() {
     noSubPeriod_ = true;
 
     // pay leg
-    boost::shared_ptr<OvernightIndex> payIndexON = boost::dynamic_pointer_cast<OvernightIndex>(payIndex_);
+    QuantLib::ext::shared_ptr<OvernightIndex> payIndexON = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(payIndex_);
     Leg payLeg;
 
     if (payIndexON) {
@@ -176,7 +176,7 @@ void TenorBasisSwap::initializeLegs() {
     }         // payIndexON
 
     // receive leg
-    boost::shared_ptr<OvernightIndex> recIndexON = boost::dynamic_pointer_cast<OvernightIndex>(recIndex_);
+    QuantLib::ext::shared_ptr<OvernightIndex> recIndexON = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(recIndex_);
     Leg recLeg;
 
     if (recIndexON) {
@@ -307,8 +307,8 @@ void TenorBasisSwap::fetchResults(const PricingEngine::results* r) const {
         } else {
             // Need the discount curve
             Handle<YieldTermStructure> discountCurve;
-            boost::shared_ptr<DiscountingSwapEngine> engine =
-                boost::dynamic_pointer_cast<DiscountingSwapEngine>(engine_);
+            QuantLib::ext::shared_ptr<DiscountingSwapEngine> engine =
+                QuantLib::ext::dynamic_pointer_cast<DiscountingSwapEngine>(engine_);
             if (engine) {
                 discountCurve = engine->discountCurve();
                 // Calculate a guess

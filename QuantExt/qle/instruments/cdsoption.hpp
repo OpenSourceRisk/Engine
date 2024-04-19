@@ -72,7 +72,7 @@ public:
 
     enum StrikeType { Price, Spread };
 
-    CdsOption(const boost::shared_ptr<CreditDefaultSwap>& swap, const boost::shared_ptr<Exercise>& exercise,
+    CdsOption(const QuantLib::ext::shared_ptr<CreditDefaultSwap>& swap, const QuantLib::ext::shared_ptr<Exercise>& exercise,
               bool knocksOut = true, const Real strike = Null<Real>(),
               const StrikeType strikeType = StrikeType::Spread);
 
@@ -83,7 +83,7 @@ public:
     //@}
     //! \name Inspectors
     //@{
-    const boost::shared_ptr<CreditDefaultSwap>& underlyingSwap() const { return swap_; }
+    const QuantLib::ext::shared_ptr<CreditDefaultSwap>& underlyingSwap() const { return swap_; }
     //@}
     //! \name Calculations
     //@{
@@ -96,7 +96,7 @@ public:
     //@}
 
 private:
-    boost::shared_ptr<CreditDefaultSwap> swap_;
+    QuantLib::ext::shared_ptr<CreditDefaultSwap> swap_;
     bool knocksOut_;
     Real strike_;
     StrikeType strikeType_;
@@ -111,7 +111,7 @@ class CdsOption::arguments : public CreditDefaultSwap::arguments, public Option:
 public:
     arguments() {}
 
-    boost::shared_ptr<CreditDefaultSwap> swap;
+    QuantLib::ext::shared_ptr<CreditDefaultSwap> swap;
     bool knocksOut;
     Real strike;
     StrikeType strikeType;

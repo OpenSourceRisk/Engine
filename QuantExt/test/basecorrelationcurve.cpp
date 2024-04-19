@@ -58,11 +58,11 @@ Handle<QuantExt::BaseCorrelationTermStructure> buildBilinearFlatBaseCorrelationC
     for (const auto& row : correlations) {
         quotes.push_back(std::vector<Handle<Quote>>());
         for (const auto& correl : row) {
-            quotes.back().push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(correl)));
+            quotes.back().push_back(Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(correl)));
         }
     }
 
-    return Handle<QuantExt::BaseCorrelationTermStructure>(boost::make_shared<QuantExt::InterpolatedBaseCorrelationTermStructure<QuantExt::BilinearFlat>>(
+    return Handle<QuantExt::BaseCorrelationTermStructure>(QuantLib::ext::make_shared<QuantExt::InterpolatedBaseCorrelationTermStructure<QuantExt::BilinearFlat>>(
         0, WeekendsOnly(), ModifiedFollowing, cd.tenors, cd.detachmentPoints, quotes, Actual365Fixed(), cd.startDate,
         DateGeneration::CDS2015));
 }
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(testSpreadedCorrelationCurve) {
     for (Size i = 0; i < cd.detachmentPoints.size(); ++i) {
         shifts.push_back(std::vector<Handle<Quote>>());
         for (Size j = 0; j < cd.tenors.size(); ++j) {
-            shifts[i].push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(0.0)));
+            shifts[i].push_back(Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0)));
         }
     }
     
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(testSpreadedCorrelationCurve) {
     BOOST_CHECK_CLOSE(shiftedCurve.correlation(Date(20, Dec, 2026), 0.03), 0.405249307, 1e-10);
     BOOST_CHECK_CLOSE(shiftedCurve.correlation(Date(20, Dec, 2026), 0.07), 0.486937064, 1e-10);
 
-    boost::dynamic_pointer_cast<SimpleQuote>(*shifts[0][1])->setValue(0.01);
+    QuantLib::ext::dynamic_pointer_cast<SimpleQuote>(*shifts[0][1])->setValue(0.01);
 
     BOOST_CHECK_CLOSE(shiftedCurve.correlation(Date(20, Dec, 2026), 0.03), 0.415249307, 1e-10);
     BOOST_CHECK_CLOSE(shiftedCurve.correlation(Date(20, Dec, 2026), 0.07), 0.486937064, 1e-10);
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(testParallelShift) {
     auto curve = buildBilinearFlatBaseCorrelationCurve(cd);
     // Simple parallel shift, we need at least a 2 x 2 matrix for the interpolation
     // but the actual tenor and detachments points doesn't matter
-    auto parallelShift = boost::make_shared<SimpleQuote>(0.0);
+    auto parallelShift = QuantLib::ext::make_shared<SimpleQuote>(0.0);
 
     std::vector<std::vector<Handle<Quote>>> quotes{{Handle<Quote>(parallelShift)}};
 

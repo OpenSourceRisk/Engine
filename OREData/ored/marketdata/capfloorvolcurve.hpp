@@ -48,10 +48,10 @@ public:
     //! Detailed constructor
     CapFloorVolCurve(
         const QuantLib::Date& asof, const CapFloorVolatilityCurveSpec& spec, const Loader& loader,
-        const CurveConfigurations& curveConfigs, boost::shared_ptr<QuantLib::IborIndex> iborIndex,
-        QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve, const boost::shared_ptr<IborIndex> sourceIndex,
-        const boost::shared_ptr<IborIndex> targetIndex,
-        const std::map<std::string, std::pair<boost::shared_ptr<ore::data::CapFloorVolCurve>,
+        const CurveConfigurations& curveConfigs, QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndex,
+        QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve, const QuantLib::ext::shared_ptr<IborIndex> sourceIndex,
+        const QuantLib::ext::shared_ptr<IborIndex> targetIndex,
+        const std::map<std::string, std::pair<QuantLib::ext::shared_ptr<ore::data::CapFloorVolCurve>,
                                               std::pair<std::string, QuantLib::Period>>>& requiredCapFloorVolCurves,
         const bool buildCalibrationInfo);
 
@@ -61,72 +61,72 @@ public:
     const CapFloorVolatilityCurveSpec& spec() const { return spec_; }
 
     //! The result of building the optionlet structure that has been configured
-    const boost::shared_ptr<QuantLib::OptionletVolatilityStructure>& capletVolStructure() const { return capletVol_; }
-    boost::shared_ptr<IrVolCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
+    const QuantLib::ext::shared_ptr<QuantLib::OptionletVolatilityStructure>& capletVolStructure() const { return capletVol_; }
+    QuantLib::ext::shared_ptr<IrVolCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
     //@}
 
 private:
     CapFloorVolatilityCurveSpec spec_;
-    boost::shared_ptr<QuantLib::OptionletVolatilityStructure> capletVol_;
-    boost::shared_ptr<IrVolCalibrationInfo> calibrationInfo_;
+    QuantLib::ext::shared_ptr<QuantLib::OptionletVolatilityStructure> capletVol_;
+    QuantLib::ext::shared_ptr<IrVolCalibrationInfo> calibrationInfo_;
 
     //! Build ATM optionlet curve from term vol
     void termAtmOptCurve(const QuantLib::Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,
-                     boost::shared_ptr<QuantLib::IborIndex> iborIndex,
+                     QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndex,
                      QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve, QuantLib::Real shift);
 
     //! Build optionlet surface from term vol
     void termOptSurface(const QuantLib::Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,
-                    boost::shared_ptr<QuantLib::IborIndex> iborIndex,
+                    QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndex,
                     QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve, QuantLib::Real shift);
 
     //! Build ATM optionlet curve from optionlet vol
     void optAtmOptCurve(const QuantLib::Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,
-                         boost::shared_ptr<QuantLib::IborIndex> iborIndex,
+                         QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndex,
                          QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve, QuantLib::Real shift);
 
     //! Build optionlet surface from optionlet vol
     void optOptSurface(const QuantLib::Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,
-                       boost::shared_ptr<QuantLib::IborIndex> iborIndex,
+                       QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndex,
                        QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve, QuantLib::Real shift);
 
     //! Build a cap floor term volatility surface
-    boost::shared_ptr<QuantExt::CapFloorTermVolSurface>
+    QuantLib::ext::shared_ptr<QuantExt::CapFloorTermVolSurface>
     capSurface(const QuantLib::Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader) const;
 
     //! Build an ATM cap floor term volatility curve
-    boost::shared_ptr<QuantExt::CapFloorTermVolCurve>
+    QuantLib::ext::shared_ptr<QuantExt::CapFloorTermVolCurve>
     atmCurve(const QuantLib::Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader) const;
 
     //! Build proxy curve
     void buildProxyCurve(
-        const CapFloorVolatilityCurveConfig& config, const boost::shared_ptr<IborIndex>& sourceIndex,
-        const boost::shared_ptr<IborIndex>& targetIndex,
-        const std::map<std::string, std::pair<boost::shared_ptr<ore::data::CapFloorVolCurve>,
+        const CapFloorVolatilityCurveConfig& config, const QuantLib::ext::shared_ptr<IborIndex>& sourceIndex,
+        const QuantLib::ext::shared_ptr<IborIndex>& targetIndex,
+        const std::map<std::string, std::pair<QuantLib::ext::shared_ptr<ore::data::CapFloorVolCurve>,
                                               std::pair<std::string, QuantLib::Period>>>& requiredCapFloorVolCurves);
 
     //! Get a shift quote value from the configured quotes
     Real shiftQuote(const QuantLib::Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader) const;
 
     //! Transform QuantExt::OptionletStripper to QuantLib::StrippedOptionlet
-    boost::shared_ptr<QuantLib::StrippedOptionlet> transform(const QuantExt::OptionletStripper& os) const;
+    QuantLib::ext::shared_ptr<QuantLib::StrippedOptionlet> transform(const QuantExt::OptionletStripper& os) const;
 
     //! Create a stripped optionlet curve from ATM optionlet dates and optionlet vols
-    boost::shared_ptr<QuantLib::StrippedOptionlet>
+    QuantLib::ext::shared_ptr<QuantLib::StrippedOptionlet>
     transform(const QuantLib::Date& asof, std::vector<QuantLib::Date> dates,
               const std::vector<QuantLib::Volatility>& volatilities, QuantLib::Natural settleDays,
               const QuantLib::Calendar& cal, QuantLib::BusinessDayConvention bdc,
-              boost::shared_ptr<QuantLib::IborIndex> iborIndex, const QuantLib::DayCounter& dc,
+              QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndex, const QuantLib::DayCounter& dc,
               QuantLib::VolatilityType type, QuantLib::Real displacement) const;
 
     //! Generate fixing days from end date for optionlet vol
     vector<Date> populateFixingDates(const QuantLib::Date& asof, CapFloorVolatilityCurveConfig& config,
-                                     boost::shared_ptr<QuantLib::IborIndex> iborIndex, const vector<Period>& configTenors);
+                                     QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndex, const vector<Period>& configTenors);
 
     //! Build calibration info
     void buildCalibrationInfo(const Date& asof, const CurveConfigurations& curveConfigs,
-                              const boost::shared_ptr<CapFloorVolatilityCurveConfig> config,
-                              const boost::shared_ptr<IborIndex>& iborIndex);
+                              const QuantLib::ext::shared_ptr<CapFloorVolatilityCurveConfig> config,
+                              const QuantLib::ext::shared_ptr<IborIndex>& iborIndex);
 };
 
 } // namespace data

@@ -108,7 +108,7 @@ NPVCubeWithMetaData loadCube(const std::string& filename, const bool doublePreci
 
     std::getline(in, line);
     if (std::string md = getMetaData(line, "scenGenDta", false); !md.empty()) {
-        result.scenarioGeneratorData = boost::make_shared<ScenarioGeneratorData>();
+        result.scenarioGeneratorData = QuantLib::ext::make_shared<ScenarioGeneratorData>();
         result.scenarioGeneratorData->fromXMLString(md);
         std::getline(in, line);
         DLOG("overwrite scenario generator data with meta data from cube: " << md);
@@ -126,15 +126,15 @@ NPVCubeWithMetaData loadCube(const std::string& filename, const bool doublePreci
         DLOG("overwrite storeCreditStateNPVs with meta data from cube: " << md);
     }
 
-    boost::shared_ptr<NPVCube> cube;
+    QuantLib::ext::shared_ptr<NPVCube> cube;
     if (doublePrecision && depth <= 1) {
-        cube = boost::make_shared<DoublePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0);
+        cube = QuantLib::ext::make_shared<DoublePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0);
     } else if (doublePrecision && depth > 1) {
-        cube = boost::make_shared<DoublePrecisionInMemoryCubeN>(asof, ids, dates, samples, depth, 0.0);
+        cube = QuantLib::ext::make_shared<DoublePrecisionInMemoryCubeN>(asof, ids, dates, samples, depth, 0.0);
     } else if (!doublePrecision && depth <= 1) {
-        cube = boost::make_shared<SinglePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0f);
+        cube = QuantLib::ext::make_shared<SinglePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0f);
     } else if (!doublePrecision && depth > 1) {
-        cube = boost::make_shared<SinglePrecisionInMemoryCubeN>(asof, ids, dates, samples, depth, 0.0f);
+        cube = QuantLib::ext::make_shared<SinglePrecisionInMemoryCubeN>(asof, ids, dates, samples, depth, 0.0f);
     }
     result.cube = cube;
 
@@ -231,7 +231,7 @@ void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube, cons
     }
 }
 
-boost::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(const std::string& filename) {
+QuantLib::ext::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(const std::string& filename) {
 
     // open file
 
@@ -268,8 +268,8 @@ boost::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(const std
 
     std::getline(in, line); // header line for data
 
-    boost::shared_ptr<InMemoryAggregationScenarioData> result =
-        boost::make_shared<InMemoryAggregationScenarioData>(dimDates, dimSamples);
+    QuantLib::ext::shared_ptr<InMemoryAggregationScenarioData> result =
+        QuantLib::ext::make_shared<InMemoryAggregationScenarioData>(dimDates, dimSamples);
 
     std::getline(in, line); // header line for data
 

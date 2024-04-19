@@ -49,7 +49,7 @@ public:
         const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true,
         const RegressorModel regressorModel = RegressorModel::Simple,
         const Real regressionVarianceCutoff = Null<Real>());
-    McMultiLegOptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model,
+    McMultiLegOptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
                            const SequenceType calibrationPathGenerator, const SequenceType pricingPathGenerator,
                            const Size calibrationSamples, const Size pricingSamples, const Size calibrationSeed,
                            const Size pricingSeed, const Size polynomOrder,
