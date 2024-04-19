@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 #include <ored/marketdata/curvespec.hpp>
 
 namespace ore {
@@ -32,7 +32,7 @@ namespace data {
 //! function to convert a string into a curve spec
 /*! \ingroup curves
  */
-boost::shared_ptr<CurveSpec> parseCurveSpec(const std::string&);
+QuantLib::ext::shared_ptr<CurveSpec> parseCurveSpec(const std::string&);
 
 //! function to convert a curve configuration node string into a curve spec type
 /*! \ingroup curves

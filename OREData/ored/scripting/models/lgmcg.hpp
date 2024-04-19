@@ -36,13 +36,13 @@ using namespace QuantExt;
 class LgmCG {
 public:
     LgmCG(const std::string& qualifier, QuantExt::ComputationGraph& g,
-          const std::function<boost::shared_ptr<IrLgm1fParametrization>()>& p,
+          const std::function<QuantLib::ext::shared_ptr<IrLgm1fParametrization>()>& p,
           std::vector<std::pair<std::size_t, std::function<double(void)>>>& modelParameters,
           const bool sloppySimDates = false, const std::set<Date>& effSimDates = {})
         : qualifier_(qualifier), g_(g), p_(p), modelParameters_(modelParameters),
           effSimDates_(effSimDates) {}
 
-    boost::shared_ptr<IrLgm1fParametrization> parametrization() const { return p_(); }
+    QuantLib::ext::shared_ptr<IrLgm1fParametrization> parametrization() const { return p_(); }
 
     std::size_t numeraire(const Date& d, const std::size_t x,
                           const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
@@ -57,13 +57,13 @@ public:
                                     const std::string& discountCurveId = "default") const;
 
     /* Handles IborIndex and SwapIndex. Requires observation time t <= fixingDate */
-    std::size_t fixing(const boost::shared_ptr<InterestRateIndex>& index, const Date& fixingDate, const Date& t,
+    std::size_t fixing(const QuantLib::ext::shared_ptr<InterestRateIndex>& index, const Date& fixingDate, const Date& t,
                        const std::size_t x) const;
 
 private:
     std::string qualifier_;
     QuantExt::ComputationGraph& g_;
-    std::function<boost::shared_ptr<IrLgm1fParametrization>()> p_;
+    std::function<QuantLib::ext::shared_ptr<IrLgm1fParametrization>()> p_;
     std::vector<std::pair<std::size_t, std::function<double(void)>>>& modelParameters_;
     std::set<Date> effSimDates_;
 };

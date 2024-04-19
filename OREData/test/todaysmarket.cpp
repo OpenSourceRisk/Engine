@@ -51,7 +51,7 @@ namespace {
 class MarketDataLoader : public Loader {
 public:
     MarketDataLoader();
-    std::vector<boost::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date&) const override;
+    std::vector<QuantLib::ext::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date&) const override;
     std::set<Fixing> loadFixings() const override { return fixings_; }
     std::set<QuantExt::Dividend> loadDividends() const override { return dividends_; }
     void add(QuantLib::Date date, const string& name, QuantLib::Real value) {}
@@ -59,12 +59,12 @@ public:
     void addDividend(const QuantExt::Dividend& div) {}
 
 private:
-    std::map<QuantLib::Date, std::vector<boost::shared_ptr<MarketDatum>>> data_;
+    std::map<QuantLib::Date, std::vector<QuantLib::ext::shared_ptr<MarketDatum>>> data_;
     std::set<Fixing> fixings_;
     std::set<QuantExt::Dividend> dividends_;
 };
 
-vector<boost::shared_ptr<MarketDatum>> MarketDataLoader::loadQuotes(const Date& d) const {
+vector<QuantLib::ext::shared_ptr<MarketDatum>> MarketDataLoader::loadQuotes(const Date& d) const {
     auto it = data_.find(d);
     QL_REQUIRE(it != data_.end(), "Loader has no data for date " << d);
     return it->second;
@@ -417,9 +417,9 @@ MarketDataLoader::MarketDataLoader() {
     }
 }
 
-boost::shared_ptr<TodaysMarketParameters> marketParameters() {
+QuantLib::ext::shared_ptr<TodaysMarketParameters> marketParameters() {
 
-    boost::shared_ptr<TodaysMarketParameters> parameters = boost::make_shared<TodaysMarketParameters>();
+    QuantLib::ext::shared_ptr<TodaysMarketParameters> parameters = QuantLib::ext::make_shared<TodaysMarketParameters>();
 
     // define three curves
     map<string, string> mDiscounting = {{"EUR", "Yield/EUR/EUR1D"}, {"USD", "Yield/USD/USD1D"}};
@@ -481,57 +481,57 @@ boost::shared_ptr<TodaysMarketParameters> marketParameters() {
     return parameters;
 }
 
-boost::shared_ptr<Conventions> conventions() {
-    boost::shared_ptr<Conventions> conventions(new Conventions());
+QuantLib::ext::shared_ptr<Conventions> conventions() {
+    QuantLib::ext::shared_ptr<Conventions> conventions(new Conventions());
 
-    boost::shared_ptr<Convention> zeroConv(new ZeroRateConvention("EUR-ZERO-CONVENTIONS-TENOR-BASED", "A365", "TARGET",
+    QuantLib::ext::shared_ptr<Convention> zeroConv(new ZeroRateConvention("EUR-ZERO-CONVENTIONS-TENOR-BASED", "A365", "TARGET",
                                                                   "Continuous", "Daily", "2", "TARGET", "Following",
                                                                   "false"));
     conventions->add(zeroConv);
 
-    boost::shared_ptr<Convention> depositConv(new DepositConvention("EUR-EONIA-CONVENTIONS", "EUR-EONIA"));
+    QuantLib::ext::shared_ptr<Convention> depositConv(new DepositConvention("EUR-EONIA-CONVENTIONS", "EUR-EONIA"));
     conventions->add(depositConv);
 
-    boost::shared_ptr<Convention> oisConv(new OisConvention("EUR-OIS-CONVENTIONS", "2", "EUR-EONIA", "A360", "TARGET",
+    QuantLib::ext::shared_ptr<Convention> oisConv(new OisConvention("EUR-OIS-CONVENTIONS", "2", "EUR-EONIA", "A360", "TARGET",
                                                             "1", "false", "Annual", "Following", "Following",
                                                             "Backward"));
     conventions->add(oisConv);
 
     // USD Fed Funds curve conventions
-    conventions->add(boost::make_shared<DepositConvention>("USD-FED-FUNDS-CONVENTIONS", "USD-FedFunds"));
-    conventions->add(boost::make_shared<OisConvention>("USD-OIS-CONVENTIONS", "2", "USD-FedFunds", "A360", "US", "2",
+    conventions->add(QuantLib::ext::make_shared<DepositConvention>("USD-FED-FUNDS-CONVENTIONS", "USD-FedFunds"));
+    conventions->add(QuantLib::ext::make_shared<OisConvention>("USD-OIS-CONVENTIONS", "2", "USD-FedFunds", "A360", "US", "2",
                                                        "false", "Annual", "Following", "Following", "Backward"));
 
     // USD 3M curve conventions
-    conventions->add(boost::make_shared<DepositConvention>("USD-LIBOR-CONVENTIONS", "USD-LIBOR"));
-    conventions->add(boost::make_shared<FraConvention>("USD-3M-FRA-CONVENTIONS", "USD-LIBOR-3M"));
-    conventions->add(boost::make_shared<IRSwapConvention>("USD-3M-SWAP-CONVENTIONS", "US", "Semiannual", "MF", "30/360",
+    conventions->add(QuantLib::ext::make_shared<DepositConvention>("USD-LIBOR-CONVENTIONS", "USD-LIBOR"));
+    conventions->add(QuantLib::ext::make_shared<FraConvention>("USD-3M-FRA-CONVENTIONS", "USD-LIBOR-3M"));
+    conventions->add(QuantLib::ext::make_shared<IRSwapConvention>("USD-3M-SWAP-CONVENTIONS", "US", "Semiannual", "MF", "30/360",
                                                           "USD-LIBOR-3M"));
 
     // USD swap index conventions
-    conventions->add(boost::make_shared<SwapIndexConvention>("USD-CMS-1Y", "USD-3M-SWAP-CONVENTIONS", "US"));
-    conventions->add(boost::make_shared<SwapIndexConvention>("USD-CMS-30Y", "USD-3M-SWAP-CONVENTIONS", "US"));
-    conventions->add(boost::make_shared<SwapIndexConvention>("USD-CMS-2Y", "USD-3M-SWAP-CONVENTIONS", "US"));
-    conventions->add(boost::make_shared<SwapIndexConvention>("USD-CMS-10Y", "USD-3M-SWAP-CONVENTIONS", "US"));
+    conventions->add(QuantLib::ext::make_shared<SwapIndexConvention>("USD-CMS-1Y", "USD-3M-SWAP-CONVENTIONS", "US"));
+    conventions->add(QuantLib::ext::make_shared<SwapIndexConvention>("USD-CMS-30Y", "USD-3M-SWAP-CONVENTIONS", "US"));
+    conventions->add(QuantLib::ext::make_shared<SwapIndexConvention>("USD-CMS-2Y", "USD-3M-SWAP-CONVENTIONS", "US"));
+    conventions->add(QuantLib::ext::make_shared<SwapIndexConvention>("USD-CMS-10Y", "USD-3M-SWAP-CONVENTIONS", "US"));
 
     // USD CMS spread option conventions
 
-    conventions->add(boost::make_shared<CmsSpreadOptionConvention>("USD-CMS-10Y-2Y-CONVENTION", "0M", "2D", "3M", "2",
+    conventions->add(QuantLib::ext::make_shared<CmsSpreadOptionConvention>("USD-CMS-10Y-2Y-CONVENTION", "0M", "2D", "3M", "2",
                                                                    "TARGET", "A360", "MF"));
 
     return conventions;
 }
 
-boost::shared_ptr<CurveConfigurations> curveConfigurations() {
-    boost::shared_ptr<CurveConfigurations> configs(new CurveConfigurations());
+QuantLib::ext::shared_ptr<CurveConfigurations> curveConfigurations() {
+    QuantLib::ext::shared_ptr<CurveConfigurations> configs(new CurveConfigurations());
 
     // Vectors to hold quote strings and segments
     vector<string> quotes;
-    vector<boost::shared_ptr<YieldCurveSegment>> segments;
+    vector<QuantLib::ext::shared_ptr<YieldCurveSegment>> segments;
 
     // Eonia curve
     quotes = {"MM/RATE/EUR/0D/1D"};
-    segments.push_back(boost::make_shared<SimpleYieldCurveSegment>("Deposit", "EUR-EONIA-CONVENTIONS", quotes));
+    segments.push_back(QuantLib::ext::make_shared<SimpleYieldCurveSegment>("Deposit", "EUR-EONIA-CONVENTIONS", quotes));
 
     // clang-format off
     quotes = {"IR_SWAP/RATE/EUR/2D/1D/1W",
@@ -558,10 +558,10 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
               "IR_SWAP/RATE/EUR/2D/1D/9Y",
               "IR_SWAP/RATE/EUR/2D/1D/10Y"};
     // clang-format on
-    segments.push_back(boost::make_shared<SimpleYieldCurveSegment>("OIS", "EUR-OIS-CONVENTIONS", quotes));
+    segments.push_back(QuantLib::ext::make_shared<SimpleYieldCurveSegment>("OIS", "EUR-OIS-CONVENTIONS", quotes));
 
     configs->add(CurveSpec::CurveType::Yield, "EUR1D", 
-        boost::make_shared<YieldCurveConfig>("EUR1D", "Eonia Curve", "EUR", "", segments));
+        QuantLib::ext::make_shared<YieldCurveConfig>("EUR1D", "Eonia Curve", "EUR", "", segments));
 
     // Lending curve
     segments.clear();
@@ -571,11 +571,11 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
               "ZERO/YIELD_SPREAD/EUR/BANK_EUR_LEND/A365/10Y",
               "ZERO/YIELD_SPREAD/EUR/BANK_EUR_LEND/A365/20Y"};
     // clang-format on
-    segments.push_back(boost::make_shared<ZeroSpreadedYieldCurveSegment>(
+    segments.push_back(QuantLib::ext::make_shared<ZeroSpreadedYieldCurveSegment>(
         "Zero Spread", "EUR-ZERO-CONVENTIONS-TENOR-BASED", quotes, "EUR1D"));
 
     configs->add(CurveSpec::CurveType::Yield, "BANK_EUR_LEND", 
-        boost::make_shared<YieldCurveConfig>("BANK_EUR_LEND", "Eonia Curve", "EUR", "", segments));
+        QuantLib::ext::make_shared<YieldCurveConfig>("BANK_EUR_LEND", "Eonia Curve", "EUR", "", segments));
 
     // Borrowing curve
     segments.clear();
@@ -585,16 +585,16 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
               "ZERO/YIELD_SPREAD/EUR/BANK_EUR_BORROW/A365/10Y",
               "ZERO/YIELD_SPREAD/EUR/BANK_EUR_BORROW/A365/20Y"};
     // clang-format on
-    segments.push_back(boost::make_shared<ZeroSpreadedYieldCurveSegment>(
+    segments.push_back(QuantLib::ext::make_shared<ZeroSpreadedYieldCurveSegment>(
         "Zero Spread", "EUR-ZERO-CONVENTIONS-TENOR-BASED", quotes, "EUR1D"));
 
     configs->add(CurveSpec::CurveType::Yield, "BANK_EUR_BORROW",
-        boost::make_shared<YieldCurveConfig>("BANK_EUR_LEND", "Eonia Curve", "EUR", "", segments));
+        QuantLib::ext::make_shared<YieldCurveConfig>("BANK_EUR_LEND", "Eonia Curve", "EUR", "", segments));
 
     // USD Fed Funds curve
     segments.clear();
     quotes = {{"MM/RATE/USD/0D/1D"}};
-    segments.push_back(boost::make_shared<SimpleYieldCurveSegment>("Deposit", "USD-FED-FUNDS-CONVENTIONS", quotes));
+    segments.push_back(QuantLib::ext::make_shared<SimpleYieldCurveSegment>("Deposit", "USD-FED-FUNDS-CONVENTIONS", quotes));
 
     // clang-format off
     quotes = {"IR_SWAP/RATE/USD/2D/1D/1M",
@@ -615,16 +615,16 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
               "IR_SWAP/RATE/USD/2D/1D/30Y",
               "IR_SWAP/RATE/USD/2D/1D/50Y"};
     // clang-format on
-    segments.push_back(boost::make_shared<SimpleYieldCurveSegment>("OIS", "USD-OIS-CONVENTIONS", quotes));
+    segments.push_back(QuantLib::ext::make_shared<SimpleYieldCurveSegment>("OIS", "USD-OIS-CONVENTIONS", quotes));
 
     configs->add(CurveSpec::CurveType::Yield, "USD1D",
-        boost::make_shared<YieldCurveConfig>("USD1D", "Fed Funds curve", "USD", "", segments));
+        QuantLib::ext::make_shared<YieldCurveConfig>("USD1D", "Fed Funds curve", "USD", "", segments));
 
     // USD 3M forward curve
     segments.clear();
     quotes = {"MM/RATE/USD/2D/3M"};
     segments.push_back(
-        boost::make_shared<SimpleYieldCurveSegment>("Deposit", "USD-LIBOR-CONVENTIONS", quotes, "USD3M"));
+        QuantLib::ext::make_shared<SimpleYieldCurveSegment>("Deposit", "USD-LIBOR-CONVENTIONS", quotes, "USD3M"));
 
     // clang-format off
     quotes = {"FRA/RATE/USD/3M/3M",
@@ -632,7 +632,7 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
               "FRA/RATE/USD/9M/3M",
               "FRA/RATE/USD/1Y/3M"};
     // clang-format on
-    segments.push_back(boost::make_shared<SimpleYieldCurveSegment>("FRA", "USD-3M-FRA-CONVENTIONS", quotes, "USD3M"));
+    segments.push_back(QuantLib::ext::make_shared<SimpleYieldCurveSegment>("FRA", "USD-3M-FRA-CONVENTIONS", quotes, "USD3M"));
 
     // clang-format off
     quotes = {"IR_SWAP/RATE/USD/2D/3M/2Y",
@@ -652,16 +652,14 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
               "IR_SWAP/RATE/USD/2D/3M/40Y",
               "IR_SWAP/RATE/USD/2D/3M/50Y"};
     // clang-format on
-    segments.push_back(boost::make_shared<SimpleYieldCurveSegment>("Swap", "USD-3M-SWAP-CONVENTIONS", quotes, "USD3M"));
+    segments.push_back(QuantLib::ext::make_shared<SimpleYieldCurveSegment>("Swap", "USD-3M-SWAP-CONVENTIONS", quotes, "USD3M"));
 
     configs->add(CurveSpec::CurveType::Yield, "USD3M",
-        boost::make_shared<YieldCurveConfig>("USD3M", "USD 3M curve", "USD", "USD1D", segments));
+        QuantLib::ext::make_shared<YieldCurveConfig>("USD3M", "USD 3M curve", "USD", "USD1D", segments));
 
     // Swaption volatilities
 
     // Common variables for all volatility structures
-    bool extrapolate = true;
-    bool flatExtrapolate = true;
     Actual365Fixed dayCounter;
     BusinessDayConvention bdc = Following;
 
@@ -700,35 +698,38 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     // clang-format on
 
     // USD Lognormal swaption volatility "curve" configuration
-    configs->add(CurveSpec::CurveType::SwaptionVolatility,
-                 "USD_SW_LN", boost::make_shared<SwaptionVolatilityCurveConfig>(
-        "USD_SW_LN", "USD Lognormal swaption volatilities", SwaptionVolatilityCurveConfig::Dimension::ATM,
-        SwaptionVolatilityCurveConfig::VolatilityType::Lognormal, extrapolate, flatExtrapolate, optionTenors,
-        swapTenors, dayCounter, UnitedStates(UnitedStates::Settlement), bdc, "USD-CMS-1Y", "USD-CMS-30Y"));
+    configs->add(CurveSpec::CurveType::SwaptionVolatility, "USD_SW_LN",
+                 QuantLib::ext::make_shared<SwaptionVolatilityCurveConfig>(
+                     "USD_SW_LN", "USD Lognormal swaption volatilities", SwaptionVolatilityCurveConfig::Dimension::ATM,
+                     SwaptionVolatilityCurveConfig::VolatilityType::Lognormal,
+                     SwaptionVolatilityCurveConfig::VolatilityType::Lognormal,
+                     GenericYieldVolatilityCurveConfig::Interpolation::Linear,
+                     GenericYieldVolatilityCurveConfig::Extrapolation::Flat, optionTenors, swapTenors, dayCounter,
+                     UnitedStates(UnitedStates::Settlement), bdc, "USD-CMS-1Y", "USD-CMS-30Y"));
 
     // Capfloor volatility structure tenors and strikes
     vector<string> capTenors{"1Y", "2Y", "5Y", "7Y", "10Y"};
     vector<string> strikes{"0.005", "0.010", "0.015", "0.020", "0.025", "0.030"};
 
     // USD Lognormal capfloor volatility "curve" configuration
-    configs->add(CurveSpec::CurveType::CapFloorVolatility, "USD_CF_LN", boost::make_shared<CapFloorVolatilityCurveConfig>(
+    configs->add(CurveSpec::CurveType::CapFloorVolatility, "USD_CF_LN", QuantLib::ext::make_shared<CapFloorVolatilityCurveConfig>(
         "USD_CF_LN", "USD Lognormal capfloor volatilities", CapFloorVolatilityCurveConfig::VolatilityType::Lognormal,
-        extrapolate, false, false, capTenors, strikes, dayCounter, 0, UnitedStates(UnitedStates::Settlement), bdc,
+        true, false, false, capTenors, strikes, dayCounter, 0, UnitedStates(UnitedStates::Settlement), bdc,
         "USD-LIBOR-3M", 3 * Months, 0, "Yield/USD/USD1D"));
 
     vector<string> optionTenors2{"1Y"};
 
     vector<string> optionTenors3{"1Y", "2Y"};
     // Correlation curve
-    configs->add(CurveSpec::CurveType::Correlation, "EUR-CORR", boost::make_shared<CorrelationCurveConfig>(
+    configs->add(CurveSpec::CurveType::Correlation, "EUR-CORR", QuantLib::ext::make_shared<CorrelationCurveConfig>(
         "EUR-CORR", "EUR CMS Correlations", CorrelationCurveConfig::Dimension::Constant,
         CorrelationCurveConfig::CorrelationType::CMSSpread, "EUR-CMS-1Y-10Y-CONVENTION",
-        MarketDatum::QuoteType::RATE, extrapolate, optionTenors2, dayCounter, UnitedStates(UnitedStates::Settlement), bdc,
+        MarketDatum::QuoteType::RATE, true, optionTenors2, dayCounter, UnitedStates(UnitedStates::Settlement), bdc,
         "EUR-CMS-10Y", "EUR-CMS-2Y", "EUR"));
-    configs->add(CurveSpec::CurveType::Correlation, "USD-CORR", boost::make_shared<CorrelationCurveConfig>(
+    configs->add(CurveSpec::CurveType::Correlation, "USD-CORR", QuantLib::ext::make_shared<CorrelationCurveConfig>(
         "USD-CORR", "USD CMS Correlations", CorrelationCurveConfig::Dimension::ATM,
         CorrelationCurveConfig::CorrelationType::CMSSpread, "USD-CMS-10Y-2Y-CONVENTION",
-        MarketDatum::QuoteType::PRICE, extrapolate, optionTenors3, Actual360(), TARGET(), ModifiedFollowing,
+        MarketDatum::QuoteType::PRICE, true, optionTenors3, Actual360(), TARGET(), ModifiedFollowing,
         "USD-CMS-10Y", "USD-CMS-2Y", "USD", "USD_SW_LN", "USD1D"));
 
     // clang-format off
@@ -742,15 +743,15 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     };
     // clang-format on
 
-    configs->add(CurveSpec::CurveType::Equity, "SP5", boost::make_shared<EquityCurveConfig>(
+    configs->add(CurveSpec::CurveType::Equity, "SP5", QuantLib::ext::make_shared<EquityCurveConfig>(
         "SP5", "", "USD1D", "USD", "USD", EquityCurveConfig::Type::ForwardPrice, "EQUITY/PRICE/SP5/USD", eqFwdQuotes));
 
     vector<string> eqVolQuotes = {"EQUITY_OPTION/RATE_LNVOL/SP5/USD/1Y/ATMF",
                                   "EQUITY_OPTION/RATE_LNVOL/SP5/USD/2018-02-26/ATMF"};
-    vector<boost::shared_ptr<VolatilityConfig>> vcc;
-    vcc.push_back(boost::make_shared<VolatilityCurveConfig>(eqVolQuotes, "Flat", "Flat"));
+    vector<QuantLib::ext::shared_ptr<VolatilityConfig>> vcc;
+    vcc.push_back(QuantLib::ext::make_shared<VolatilityCurveConfig>(eqVolQuotes, "Flat", "Flat"));
 
-    configs->add(CurveSpec::CurveType::EquityVolatility, "SP5", boost::make_shared<EquityVolatilityCurveConfig>(
+    configs->add(CurveSpec::CurveType::EquityVolatility, "SP5", QuantLib::ext::make_shared<EquityVolatilityCurveConfig>(
         "SP5", "", "USD", vcc, "SP5", "A365", "USD"));
 
     // clang-format off
@@ -765,7 +766,7 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     // clang-format on
 
     configs->add(CurveSpec::CurveType::Commodity, "GOLD_USD",
-        boost::make_shared<CommodityCurveConfig>("GOLD_USD", "", "USD", commodityQuotes, "COMMODITY/PRICE/GOLD/USD"));
+        QuantLib::ext::make_shared<CommodityCurveConfig>("GOLD_USD", "", "USD", commodityQuotes, "COMMODITY/PRICE/GOLD/USD"));
 
     return configs;
 }
@@ -773,13 +774,13 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
 // Fixture to use for this test suite
 class F : public TopLevelFixture {
 public:
-    boost::shared_ptr<TodaysMarket> market;
+    QuantLib::ext::shared_ptr<TodaysMarket> market;
 
     F() {
         Date asof(26, February, 2016);
         Settings::instance().evaluationDate() = asof;
 
-        auto loader = boost::make_shared<MarketDataLoader>();
+        auto loader = QuantLib::ext::make_shared<MarketDataLoader>();
         auto params = marketParameters();
         auto configs = curveConfigurations();
         auto convs = conventions();
@@ -787,7 +788,7 @@ public:
         ore::data::InstrumentConventions::instance().setConventions(convs);
 
         BOOST_TEST_MESSAGE("Creating TodaysMarket Instance");
-        market = boost::make_shared<TodaysMarket>(asof, params, loader, configs);
+        market = QuantLib::ext::make_shared<TodaysMarket>(asof, params, loader, configs);
     }
 
     ~F() {
@@ -970,7 +971,7 @@ BOOST_AUTO_TEST_CASE(testCorrelationCurve) {
     Real fairSpread1Y = 0.00752401;
     Real fairSpread2Y = 0.00755509;
 
-    LegData cms1YLeg(boost::make_shared<CMSSpreadLegData>(
+    LegData cms1YLeg(QuantLib::ext::make_shared<CMSSpreadLegData>(
                          "USD-CMS-10Y", "USD-CMS-2Y", 2, true, std::vector<Real>(1, 0.0), vector<string>(),
                          std::vector<Real>(1, fairSpread1Y), vector<string>(), vector<double>(), vector<string>(),
                          vector<double>(), vector<string>(), true),
@@ -978,7 +979,7 @@ BOOST_AUTO_TEST_CASE(testCorrelationCurve) {
     vector<LegData> legs1Y;
     legs1Y.push_back(cms1YLeg);
 
-    LegData cms2YLeg(boost::make_shared<CMSSpreadLegData>(
+    LegData cms2YLeg(QuantLib::ext::make_shared<CMSSpreadLegData>(
                          "USD-CMS-10Y", "USD-CMS-2Y", 2, true, std::vector<Real>(1, 0.0), vector<string>(),
                          std::vector<Real>(1, fairSpread2Y), vector<string>(), vector<double>(), vector<string>(),
                          vector<double>(), vector<string>(), true),
@@ -995,7 +996,7 @@ BOOST_AUTO_TEST_CASE(testCorrelationCurve) {
     Real expectedNpv2Y = 0.0105279;
 
     // Build and price
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("CMS") = "LinearTSR";
     engineData->engine("CMS") = "LinearTSRPricer";
 
@@ -1020,7 +1021,7 @@ BOOST_AUTO_TEST_CASE(testCorrelationCurve) {
     engineData->model("Swap") = "DiscountedCashflows";
     engineData->engine("Swap") = "DiscountingSwapEngine";
 
-    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
     cmsSpread1YCap.build(engineFactory);
     cmsSpread2YCap.build(engineFactory);

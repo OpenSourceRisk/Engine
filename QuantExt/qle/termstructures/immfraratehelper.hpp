@@ -38,7 +38,7 @@ typedef RelativeDateBootstrapHelper<YieldTermStructure> RelativeDateRateHelper;
 class ImmFraRateHelper : public RelativeDateRateHelper {
 public:
     ImmFraRateHelper(const Handle<Quote>& rate, const Size imm1, const Size imm2,
-                     const boost::shared_ptr<IborIndex>& iborIndex, Pillar::Choice pillar = Pillar::LastRelevantDate,
+                     const QuantLib::ext::shared_ptr<IborIndex>& iborIndex, Pillar::Choice pillar = Pillar::LastRelevantDate,
                      Date customPillarDate = Date());
 
     //! \name RateHelper interface
@@ -56,7 +56,7 @@ private:
     Date fixingDate_;
     Size imm1_, imm2_;
     Pillar::Choice pillarChoice_;
-    boost::shared_ptr<IborIndex> iborIndex_;
+    QuantLib::ext::shared_ptr<IborIndex> iborIndex_;
     RelinkableHandle<YieldTermStructure> termStructureHandle_;
 };
 

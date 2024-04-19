@@ -47,14 +47,14 @@ void MarketRiskReport::init() {
 
     // set run type in engine data, make a copy of this before
     if (fullRevalArgs_ && fullRevalArgs_->engineData_) {
-        fullRevalArgs_->engineData_ = boost::make_shared<EngineData>(*fullRevalArgs_->engineData_);
+        fullRevalArgs_->engineData_ = QuantLib::ext::make_shared<EngineData>(*fullRevalArgs_->engineData_);
         fullRevalArgs_->engineData_->globalParameters()["RunType"] = std::string("HistoricalPnL");
     }
 
     // save a sensi pnl calculator
     if (hisScenGen_) {
         // Build the filtered historical scenario generator
-        hisScenGen_ = boost::make_shared<HistoricalScenarioGeneratorWithFilteredDates>(
+        hisScenGen_ = QuantLib::ext::make_shared<HistoricalScenarioGeneratorWithFilteredDates>(
             timePeriods(), hisScenGen_);
 
         if (fullRevalArgs_ && fullRevalArgs_->simMarket_)
@@ -69,7 +69,7 @@ void MarketRiskReport::init() {
         LOG("Build the portfolio for full reval bt.");
 
         if (!multiThreadArgs_) {
-            factory_ = boost::make_shared<EngineFactory>(fullRevalArgs_->engineData_, fullRevalArgs_->simMarket_,
+            factory_ = QuantLib::ext::make_shared<EngineFactory>(fullRevalArgs_->engineData_, fullRevalArgs_->simMarket_,
                                                          map<MarketContext, string>(), fullRevalArgs_->referenceData_,
                                                          fullRevalArgs_->iborFallbackConfig_);
 
@@ -78,16 +78,16 @@ void MarketRiskReport::init() {
             DLOG("Portfolio built");
 
             LOG("Creating the historical P&L generator (dryRun=" << std::boolalpha << fullRevalArgs_->dryRun_ << ")");
-            ext::shared_ptr<NPVCube> cube = boost::make_shared<DoublePrecisionInMemoryCube>(
+            ext::shared_ptr<NPVCube> cube = QuantLib::ext::make_shared<DoublePrecisionInMemoryCube>(
                 fullRevalArgs_->simMarket_->asofDate(), fullRevalArgs_->portfolio_->ids(),
                 vector<Date>(1, fullRevalArgs_->simMarket_->asofDate()), hisScenGen_->numScenarios());
 
-            histPnlGen_ = boost::make_shared<HistoricalPnlGenerator>(
-                baseCurrency_, fullRevalArgs_->portfolio_, fullRevalArgs_->simMarket_, 
+            histPnlGen_ = QuantLib::ext::make_shared<HistoricalPnlGenerator>(
+                calculationCurrency_, fullRevalArgs_->portfolio_, fullRevalArgs_->simMarket_, 
                 hisScenGen_, cube, factory_->modelBuilders(), fullRevalArgs_->dryRun_);
         } else {
-            histPnlGen_ = boost::make_shared<HistoricalPnlGenerator>(
-                baseCurrency_, fullRevalArgs_->portfolio_, hisScenGen_,
+            histPnlGen_ = QuantLib::ext::make_shared<HistoricalPnlGenerator>(
+                calculationCurrency_, fullRevalArgs_->portfolio_, hisScenGen_,
                 fullRevalArgs_->engineData_,
                 multiThreadArgs_->nThreads_, multiThreadArgs_->today_, multiThreadArgs_->loader_,
                 multiThreadArgs_->curveConfigs_, multiThreadArgs_->todaysMarketParams_,
@@ -101,12 +101,12 @@ void MarketRiskReport::initSimMarket() {
     QL_REQUIRE(multiThreadArgs_ && fullRevalArgs_, "MarketRiskBacktest: must be a multithreaded run");
 
     // called from the ctors that do not take a sim market as an input (the multithreaded ctors)
-    auto initMarket = boost::make_shared<TodaysMarket>(
+    auto initMarket = QuantLib::ext::make_shared<TodaysMarket>(
         multiThreadArgs_->today_, multiThreadArgs_->todaysMarketParams_, multiThreadArgs_->loader_,
         multiThreadArgs_->curveConfigs_, true, true, false, fullRevalArgs_->referenceData_, false,
         fullRevalArgs_->iborFallbackConfig_);
 
-    fullRevalArgs_->simMarket_ = boost::make_shared<ore::analytics::ScenarioSimMarket>(
+    fullRevalArgs_->simMarket_ = QuantLib::ext::make_shared<ore::analytics::ScenarioSimMarket>(
         initMarket, multiThreadArgs_->simMarketData_, multiThreadArgs_->configuration_,
         *multiThreadArgs_->curveConfigs_, *multiThreadArgs_->todaysMarketParams_, true, false, false, false,
         fullRevalArgs_->iborFallbackConfig_);
@@ -127,7 +127,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
     createReports(reports);
 
     // Cube to store Sensi Shifts and vector of keys used in cube, per portfolio
-    map<string, boost::shared_ptr<NPVCube>> sensiShiftCube;
+    map<string, QuantLib::ext::shared_ptr<NPVCube>> sensiShiftCube;
     ext::shared_ptr<SensitivityAggregator> sensiAgg;
     if (sensiBased_)
         // Create a sensitivity aggregator. Will be used if running sensi-based backtest.
@@ -189,7 +189,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
             set<SensitivityRecord> srs;
 
             if (runSensiBased && sensiAgg) {
-                map<string, boost::shared_ptr<NPVCube>>::iterator scube;
+                map<string, QuantLib::ext::shared_ptr<NPVCube>>::iterator scube;
 
                 auto tradeGpId = tradeGroupKey(tradeGroup);
                 srs = sensiAgg->sensitivities(tradeGpId);
@@ -217,7 +217,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
                                  << riskGroup << " and tradeGroup " << tradeGroup << "; Skipping Sensi based PnL.");
                             runSensiBased = false;
                         } else {
-                            scube = sensiShiftCube.insert({portfolio, boost::shared_ptr<NPVCube>()}).first;
+                            scube = sensiShiftCube.insert({portfolio, QuantLib::ext::shared_ptr<NPVCube>()}).first;
                             vector<RiskFactorKey> riskFactorKeys;
                             transform(deltas_.begin(), deltas_.end(), back_inserter(riskFactorKeys),
                                       [](const pair<RiskFactorKey, Real>& kv) { return kv.first; });
@@ -266,7 +266,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
                                 "eigenvalue is "
                                     << evMin);
                             DLOG("Smallest eigenvalue is " << evMin);
-                            salvage_ = boost::make_shared<QuantExt::NoCovarianceSalvage>();
+                            salvage_ = QuantLib::ext::make_shared<QuantExt::NoCovarianceSalvage>();
                         }
                     } else
                         covCalculator = ext::make_shared<CovarianceCalculator>(covariancePeriod());

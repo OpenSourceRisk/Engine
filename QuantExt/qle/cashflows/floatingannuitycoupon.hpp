@@ -37,9 +37,9 @@ using namespace QuantLib;
 */
 class FloatingAnnuityCoupon : public Coupon, public LazyObject {
 public:
-    FloatingAnnuityCoupon(Real annuity, bool underflow, const boost::shared_ptr<Coupon>& previousCoupon,
+    FloatingAnnuityCoupon(Real annuity, bool underflow, const QuantLib::ext::shared_ptr<Coupon>& previousCoupon,
                           const Date& paymentDate, const Date& startDate, const Date& endDate, Natural fixingDays,
-                          const boost::shared_ptr<InterestRateIndex>& index, Real gearing = 1.0, Spread spread = 0.0,
+                          const QuantLib::ext::shared_ptr<InterestRateIndex>& index, Real gearing = 1.0, Spread spread = 0.0,
                           const Date& refPeriodStart = Date(), const Date& refPeriodEnd = Date(),
                           const DayCounter& dayCounter = DayCounter(), bool isInArrears = false);
     //! \name Cashflow interface
@@ -51,7 +51,7 @@ public:
     Rate previousNominal() const;
     Rate rate() const override;
     Real price(const Handle<YieldTermStructure>& discountingCurve) const;
-    const boost::shared_ptr<InterestRateIndex>& index() const;
+    const QuantLib::ext::shared_ptr<InterestRateIndex>& index() const;
     DayCounter dayCounter() const override;
     Rate indexFixing() const;
     Natural fixingDays() const;
@@ -72,19 +72,19 @@ public:
 private:
     Real annuity_;
     bool underflow_;
-    boost::shared_ptr<Coupon> previousCoupon_;
+    QuantLib::ext::shared_ptr<Coupon> previousCoupon_;
     mutable Real nominal_;
 
     // floating rate coupon members
     int fixingDays_;
-    boost::shared_ptr<InterestRateIndex> index_;
+    QuantLib::ext::shared_ptr<InterestRateIndex> index_;
     Real gearing_;
     Real spread_;
     DayCounter dayCounter_;
     bool isInArrears_;
 };
 
-inline const boost::shared_ptr<InterestRateIndex>& FloatingAnnuityCoupon::index() const { return index_; }
+inline const QuantLib::ext::shared_ptr<InterestRateIndex>& FloatingAnnuityCoupon::index() const { return index_; }
 
 inline DayCounter FloatingAnnuityCoupon::dayCounter() const { return dayCounter_; }
 

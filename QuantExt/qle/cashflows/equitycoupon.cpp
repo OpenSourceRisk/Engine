@@ -55,11 +55,11 @@ EquityReturnType parseEquityReturnType(const std::string& str) {
 }
 
 EquityCoupon::EquityCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
-                           Natural fixingDays, const boost::shared_ptr<QuantExt::EquityIndex2>& equityCurve,
+                           Natural fixingDays, const QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>& equityCurve,
                            const DayCounter& dayCounter, EquityReturnType returnType, Real dividendFactor,
                            bool notionalReset, Real initialPrice, Real quantity, const Date& fixingStartDate,
                            const Date& fixingEndDate, const Date& refPeriodStart, const Date& refPeriodEnd, 
-                           const Date& exCouponDate, const boost::shared_ptr<FxIndex>& fxIndex,
+                           const Date& exCouponDate, const QuantLib::ext::shared_ptr<FxIndex>& fxIndex,
                            const bool initialPriceIsInTargetCcy, Real legInitialNotional, const Date& legFixingDate)
     : Coupon(paymentDate, nominal, startDate, endDate, refPeriodStart, refPeriodEnd, exCouponDate),
       fixingDays_(fixingDays), equityCurve_(equityCurve), dayCounter_(dayCounter), returnType_(returnType),
@@ -100,7 +100,7 @@ EquityCoupon::EquityCoupon(const Date& paymentDate, Real nominal, const Date& st
                "EquityCoupon: notional required if notional does not reset");
 }
 
-void EquityCoupon::setPricer(const boost::shared_ptr<EquityCouponPricer>& pricer) {
+void EquityCoupon::setPricer(const QuantLib::ext::shared_ptr<EquityCouponPricer>& pricer) {
     if (pricer_)
         unregisterWith(pricer_);
     pricer_ = pricer;
@@ -176,8 +176,8 @@ std::vector<Date> EquityCoupon::fixingDates() const {
     return fixingDates;
 };
 
-EquityLeg::EquityLeg(const Schedule& schedule, const boost::shared_ptr<QuantExt::EquityIndex2>& equityCurve,
-                     const boost::shared_ptr<FxIndex>& fxIndex)
+EquityLeg::EquityLeg(const Schedule& schedule, const QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>& equityCurve,
+                     const QuantLib::ext::shared_ptr<FxIndex>& fxIndex)
     : schedule_(schedule), equityCurve_(equityCurve), fxIndex_(fxIndex), paymentLag_(0), paymentAdjustment_(Following),
       paymentCalendar_(Calendar()), returnType_(EquityReturnType::Total), initialPrice_(Null<Real>()),
       initialPriceIsInTargetCcy_(false), dividendFactor_(1.0), fixingDays_(0), notionalReset_(false),
@@ -335,12 +335,12 @@ EquityLeg::operator Leg() const {
             notional = detail::get(notionals_, i, 0.0);
         }
 
-        boost::shared_ptr<EquityCoupon> cashflow(new EquityCoupon(
+        QuantLib::ext::shared_ptr<EquityCoupon> cashflow(new EquityCoupon(
             paymentDate, notional, startDate, endDate, fixingDays_, equityCurve_, paymentDayCounter_, returnType_,
             dividendFactor_, notionalReset_, initialPrice, quantity, fixingStartDate, fixingEndDate, Date(), Date(),
             Date(), fxIndex_, initialPriceIsInTargetCcy, legInitialNotional, legFixingDate));
 
-        boost::shared_ptr<EquityCouponPricer> pricer(new EquityCouponPricer);
+        QuantLib::ext::shared_ptr<EquityCouponPricer> pricer(new EquityCouponPricer);
         cashflow->setPricer(pricer);
 
         cashflows.push_back(cashflow);

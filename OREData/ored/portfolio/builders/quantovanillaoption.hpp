@@ -44,7 +44,7 @@ public:
                                      const AssetClass& assetClass, const Date& expiryDate)
         : CachingOptionEngineBuilder(model, engine, tradeTypes, assetClass), expiryDate_(expiryDate) {}
 
-    boost::shared_ptr<PricingEngine> engine(const string& assetName, const Currency& underlyingCcy,
+    QuantLib::ext::shared_ptr<PricingEngine> engine(const string& assetName, const Currency& underlyingCcy,
                                             const Currency& payCcy, const Date& expiryDate) {
         return CachingPricingEngineBuilder<string, const string&, const Currency&, const Currency&, const AssetClass&,
                                            const Date&>::engine(assetName, underlyingCcy, payCcy, assetClass_,
@@ -71,10 +71,10 @@ public:
         : QuantoVanillaOptionEngineBuilder(model, "AnalyticEuropeanEngine", tradeTypes, assetClass, Date()) {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& underlyingCcy,
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& underlyingCcy,
                                                         const Currency& payCcy, const AssetClass& assetClassUnderlying,
                                                         const Date& expiryDate) override {
-        boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
+        QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
             getBlackScholesProcess(assetName, underlyingCcy, assetClassUnderlying);
 
         Handle<YieldTermStructure> discountCurve =
@@ -98,7 +98,7 @@ protected:
         }
             
     QuantLib::Handle<QuantExt::CorrelationTermStructure> corrCurve(
-        boost::make_shared<QuantExt::FlatCorrelation>(0, NullCalendar(), 0.0, Actual365Fixed()));
+        QuantLib::ext::make_shared<QuantExt::FlatCorrelation>(0, NullCalendar(), 0.0, Actual365Fixed()));
     try {
         corrCurve = market_->correlationCurve(fxIndex, underlyingIndex, configuration(MarketContext::pricing));
     } catch (...) {
@@ -106,10 +106,10 @@ protected:
                                          << " found, fall back to zero correlation");
     }
 
-    return boost::make_shared<QuantLib::QuantoEngine<VanillaOption, QuantLib::AnalyticEuropeanEngine>>(
+    return QuantLib::ext::make_shared<QuantLib::QuantoEngine<VanillaOption, QuantLib::AnalyticEuropeanEngine>>(
         gbsp, discountCurve, fxVolatility,
         Handle<Quote>(
-            boost::make_shared<QuantExt::CorrelationValue>(corrCurve, corrCurve->timeFromReference(expiryDate))));
+            QuantLib::ext::make_shared<QuantExt::CorrelationValue>(corrCurve, corrCurve->timeFromReference(expiryDate))));
     }
 };
 

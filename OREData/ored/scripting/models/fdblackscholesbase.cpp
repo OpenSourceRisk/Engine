@@ -57,8 +57,8 @@ FdBlackScholesBase::FdBlackScholesBase(const Size stateGridPoints, const std::st
 FdBlackScholesBase::FdBlackScholesBase(
     const Size stateGridPoints, const std::vector<std::string>& currencies,
     const std::vector<Handle<YieldTermStructure>>& curves, const std::vector<Handle<Quote>>& fxSpots,
-    const std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>>& irIndices,
-    const std::vector<std::pair<std::string, boost::shared_ptr<ZeroInflationIndex>>>& infIndices,
+    const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
+    const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
     const std::set<std::string>& payCcys, const Handle<BlackScholesModelWrapper>& model,
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
@@ -222,13 +222,13 @@ void FdBlackScholesBase::performCalculations() const {
 
     // 1b set up the critical points for the mesher
 
-    std::vector<std::vector<boost::tuple<Real, Real, bool>>> cPoints;
+    std::vector<std::vector<QuantLib::ext::tuple<Real, Real, bool>>> cPoints;
     for (Size i = 0; i < indices_.size(); ++i) {
-        cPoints.push_back(std::vector<boost::tuple<Real, Real, bool>>());
+        cPoints.push_back(std::vector<QuantLib::ext::tuple<Real, Real, bool>>());
         auto f = calibrationStrikes_.find(indices_[i].name());
         if (f != calibrationStrikes_.end()) {
             for (Size j = 0; j < std::min(f->second.size(), mesherMaxConcentratingPoints_); ++j) {
-                cPoints.back().push_back(boost::make_tuple(std::log(f->second[j]), mesherConcentration_, false));
+                cPoints.back().push_back(QuantLib::ext::make_tuple(std::log(f->second[j]), mesherConcentration_, false));
                 TLOG("added critical point at strike " << f->second[j] << " with concentration "
                                                        << mesherConcentration_);
             }
@@ -238,7 +238,7 @@ void FdBlackScholesBase::performCalculations() const {
     // 2 set up mesher if we do not have one already or if we want to rebuild it every time
 
     if (mesher_ == nullptr || !staticMesher_) {
-        mesher_ = boost::make_shared<FdmMesherComposite>(boost::make_shared<QuantExt::FdmBlackScholesMesher>(
+        mesher_ = QuantLib::ext::make_shared<FdmMesherComposite>(QuantLib::ext::make_shared<QuantExt::FdmBlackScholesMesher>(
             size(), model_->processes()[0], timeGrid_.back(),
             calibrationStrikes[0] == Null<Real>()
                 ? atmForward(model_->processes()[0]->x0(), model_->processes()[0]->riskFreeRate(),
@@ -249,24 +249,24 @@ void FdBlackScholesBase::performCalculations() const {
 
     // 3 set up operator using atmf vol and without discounting, floor forward variances at zero
 
-    boost::shared_ptr<QuantExt::FdmQuantoHelper> quantoHelper;
+    QuantLib::ext::shared_ptr<QuantExt::FdmQuantoHelper> quantoHelper;
 
     if (applyQuantoAdjustment_) {
         Real quantoCorr = quantoCorrelationMultiplier_ * getCorrelation()[0][1];
-        quantoHelper = boost::make_shared<QuantExt::FdmQuantoHelper>(
+        quantoHelper = QuantLib::ext::make_shared<QuantExt::FdmQuantoHelper>(
             *curves_[quantoTargetCcyIndex_], *curves_[quantoSourceCcyIndex_],
             *model_->processes()[1]->blackVolatility(), quantoCorr, Null<Real>(), model_->processes()[1]->x0(), false,
             true);
     }
 
     operator_ =
-        boost::make_shared<QuantExt::FdmBlackScholesOp>(mesher_, model_->processes()[0], calibrationStrikes[0], false,
+        QuantLib::ext::make_shared<QuantExt::FdmBlackScholesOp>(mesher_, model_->processes()[0], calibrationStrikes[0], false,
                                                         -static_cast<Real>(Null<Real>()), 0, quantoHelper, false, true);
 
     // 4 set up bwd solver, hardcoded Douglas scheme (= CrankNicholson)
 
-    solver_ = boost::make_shared<FdmBackwardSolver>(
-        operator_, std::vector<boost::shared_ptr<BoundaryCondition<FdmLinearOp>>>(), nullptr, FdmSchemeDesc::Douglas());
+    solver_ = QuantLib::ext::make_shared<FdmBackwardSolver>(
+        operator_, std::vector<QuantLib::ext::shared_ptr<BoundaryCondition<FdmLinearOp>>>(), nullptr, FdmSchemeDesc::Douglas());
 
     // 5 fill random variable with underlying values, these are valid for all times
 
@@ -361,22 +361,22 @@ RandomVariable FdBlackScholesBase::fwdCompAvg(const bool isAvg, const std::strin
                                               const bool localCapFloor) const {
     calculate();
     IndexInfo indexInfo(indexInput);
-    auto index = boost::dynamic_pointer_cast<OvernightIndex>(indexInfo.irIbor());
+    auto index = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(indexInfo.irIbor());
     QL_REQUIRE(index, "BlackScholesBase::fwdCompAvg(): expected on index for " << indexInput);
     // if we want to support cap / floors we need the OIS CF surface
     QL_REQUIRE(cap > 999998.0 && floor < -999998.0,
                "BlackScholesCGBase:fwdCompAvg(): cap (" << cap << ") / floor (" << floor << ") not supported");
-    boost::shared_ptr<QuantLib::FloatingRateCoupon> coupon;
-    boost::shared_ptr<QuantLib::FloatingRateCouponPricer> pricer;
+    QuantLib::ext::shared_ptr<QuantLib::FloatingRateCoupon> coupon;
+    QuantLib::ext::shared_ptr<QuantLib::FloatingRateCouponPricer> pricer;
     if (isAvg) {
-        coupon = boost::make_shared<QuantExt::AverageONIndexedCoupon>(
+        coupon = QuantLib::ext::make_shared<QuantExt::AverageONIndexedCoupon>(
             end, 1.0, start, end, index, gearing, spread, rateCutoff, DayCounter(), lookback * Days, fixingDays);
-        pricer = boost::make_shared<AverageONIndexedCouponPricer>();
+        pricer = QuantLib::ext::make_shared<AverageONIndexedCouponPricer>();
     } else {
-        coupon = boost::make_shared<QuantExt::OvernightIndexedCoupon>(
+        coupon = QuantLib::ext::make_shared<QuantExt::OvernightIndexedCoupon>(
             end, 1.0, start, end, index, gearing, spread, Date(), Date(), DayCounter(), false, includeSpread,
             lookback * Days, rateCutoff, fixingDays);
-        pricer = boost::make_shared<OvernightIndexedCouponPricer>();
+        pricer = QuantLib::ext::make_shared<OvernightIndexedCouponPricer>();
     }
     coupon->setPricer(pricer);
     return RandomVariable(size(), coupon->rate());

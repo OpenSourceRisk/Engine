@@ -40,29 +40,29 @@ GFunctionFactory::YieldCurveModel ycmFromString(const string& s) {
         QL_FAIL("unknown string for YieldCurveModel");
 }
 
-boost::shared_ptr<FloatingRateCouponPricer> AnalyticHaganCmsCouponPricerBuilder::engineImpl(const string& key) {
+QuantLib::ext::shared_ptr<FloatingRateCouponPricer> AnalyticHaganCmsCouponPricerBuilder::engineImpl(const string& key) {
 
     std::string ccyCode = key;
-    boost::shared_ptr<IborIndex> index;
+    QuantLib::ext::shared_ptr<IborIndex> index;
     if (tryParseIborIndex(key, index))
         ccyCode = index->currency().code();
     Real rev = parseReal(engineParameter("MeanReversion", {key, ccyCode}, true));
     string ycmstr = engineParameter("YieldCurveModel");
     GFunctionFactory::YieldCurveModel ycm = ycmFromString(ycmstr);
 
-    Handle<Quote> revQuote(boost::shared_ptr<Quote>(new SimpleQuote(rev)));
+    Handle<Quote> revQuote(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(rev)));
     Handle<SwaptionVolatilityStructure> vol = market_->swaptionVol(key, configuration(MarketContext::pricing));
 
-    boost::shared_ptr<FloatingRateCouponPricer> pricer = boost::make_shared<AnalyticHaganPricer>(vol, ycm, revQuote);
+    QuantLib::ext::shared_ptr<FloatingRateCouponPricer> pricer = QuantLib::ext::make_shared<AnalyticHaganPricer>(vol, ycm, revQuote);
 
     // Return the cached pricer
     return pricer;
 }
 
-boost::shared_ptr<FloatingRateCouponPricer> NumericalHaganCmsCouponPricerBuilder::engineImpl(const string& key) {
+QuantLib::ext::shared_ptr<FloatingRateCouponPricer> NumericalHaganCmsCouponPricerBuilder::engineImpl(const string& key) {
 
     std::string ccyCode = key;
-    boost::shared_ptr<IborIndex> index;
+    QuantLib::ext::shared_ptr<IborIndex> index;
     if (tryParseIborIndex(key, index))
         ccyCode = index->currency().code();
     Real rev = parseReal(engineParameter("MeanReversion", {key, ccyCode}, true));
@@ -72,26 +72,26 @@ boost::shared_ptr<FloatingRateCouponPricer> NumericalHaganCmsCouponPricerBuilder
     Rate ulim = parseReal(engineParameter("UpperLimit"));
     Real prec = parseReal(engineParameter("Precision"));
 
-    Handle<Quote> revQuote(boost::shared_ptr<Quote>(new SimpleQuote(rev)));
+    Handle<Quote> revQuote(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(rev)));
     Handle<SwaptionVolatilityStructure> vol = market_->swaptionVol(key, configuration(MarketContext::pricing));
 
-    boost::shared_ptr<FloatingRateCouponPricer> pricer =
-        boost::make_shared<NumericHaganPricer>(vol, ycm, revQuote, llim, ulim, prec);
+    QuantLib::ext::shared_ptr<FloatingRateCouponPricer> pricer =
+        QuantLib::ext::make_shared<NumericHaganPricer>(vol, ycm, revQuote, llim, ulim, prec);
 
     // Return the cached pricer
     return pricer;
 }
 
-boost::shared_ptr<FloatingRateCouponPricer> LinearTSRCmsCouponPricerBuilder::engineImpl(const string& key) {
+QuantLib::ext::shared_ptr<FloatingRateCouponPricer> LinearTSRCmsCouponPricerBuilder::engineImpl(const string& key) {
 
     std::string ccyCode = key;
-    boost::shared_ptr<IborIndex> index;
+    QuantLib::ext::shared_ptr<IborIndex> index;
     if (tryParseIborIndex(key, index))
         ccyCode = index->currency().code();
     Real rev = parseReal(engineParameter("MeanReversion", {key, ccyCode}, true));
     string policy = engineParameter("Policy");
 
-    Handle<Quote> revQuote(boost::shared_ptr<Quote>(new SimpleQuote(rev)));
+    Handle<Quote> revQuote(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(rev)));
     Handle<SwaptionVolatilityStructure> vol = market_->swaptionVol(key, configuration(MarketContext::pricing));
     Handle<YieldTermStructure> yts = market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
 
@@ -123,8 +123,8 @@ boost::shared_ptr<FloatingRateCouponPricer> LinearTSRCmsCouponPricerBuilder::eng
     } else
         QL_FAIL("unknown string for policy parameter");
 
-    boost::shared_ptr<FloatingRateCouponPricer> pricer =
-        boost::make_shared<LinearTsrPricer>(vol, revQuote, yts, settings);
+    QuantLib::ext::shared_ptr<FloatingRateCouponPricer> pricer =
+        QuantLib::ext::make_shared<LinearTsrPricer>(vol, revQuote, yts, settings);
 
     // Return the cached pricer
     return pricer;

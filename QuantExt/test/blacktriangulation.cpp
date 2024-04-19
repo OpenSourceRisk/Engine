@@ -46,8 +46,8 @@ BOOST_AUTO_TEST_CASE(testBlackVol) {
 
     // Set up one vol and a correlation of 1.
     // BlackTriangulationATM vol should return zero vol for every time and string
-    Handle<BlackVolTermStructure> constantVol1(boost::make_shared<BlackConstantVol>(today, cal, 0.1, dc));
-    Handle<CorrelationTermStructure> rhoOne(boost::make_shared<FlatCorrelation>(today, 1.0, dc));
+    Handle<BlackVolTermStructure> constantVol1(QuantLib::ext::make_shared<BlackConstantVol>(today, cal, 0.1, dc));
+    Handle<CorrelationTermStructure> rhoOne(QuantLib::ext::make_shared<FlatCorrelation>(today, 1.0, dc));
 
     BlackTriangulationATMVolTermStructure btavs(constantVol1, constantVol1, rhoOne);
     // check it
@@ -60,8 +60,8 @@ BOOST_AUTO_TEST_CASE(testBlackVol) {
 
     // Set up a second vol of 0.0 and a non-zero correlation, we should just get
     // the first vol each time
-    Handle<BlackVolTermStructure> constantVol0(boost::make_shared<BlackConstantVol>(today, cal, 0.0, dc));
-    Handle<CorrelationTermStructure> rhoFifty(boost::make_shared<FlatCorrelation>(today, 0.5, dc));
+    Handle<BlackVolTermStructure> constantVol0(QuantLib::ext::make_shared<BlackConstantVol>(today, cal, 0.0, dc));
+    Handle<CorrelationTermStructure> rhoFifty(QuantLib::ext::make_shared<FlatCorrelation>(today, 0.5, dc));
     BlackTriangulationATMVolTermStructure btavs2(constantVol1, constantVol0, rhoFifty);
     for (Time t = 0.1; t < 5.0; t += 0.1) {
         Real k = Null<Real>();
@@ -72,8 +72,8 @@ BOOST_AUTO_TEST_CASE(testBlackVol) {
 
     // Set up a second vol and a correlation of 0
     // Triangulation vol squared should equal sum of squares
-    Handle<BlackVolTermStructure> constantVol2(boost::make_shared<BlackConstantVol>(today, cal, 0.2, dc));
-    Handle<CorrelationTermStructure> rhoZero(boost::make_shared<FlatCorrelation>(today, 0.0, dc));
+    Handle<BlackVolTermStructure> constantVol2(QuantLib::ext::make_shared<BlackConstantVol>(today, cal, 0.2, dc));
+    Handle<CorrelationTermStructure> rhoZero(QuantLib::ext::make_shared<FlatCorrelation>(today, 0.0, dc));
 
     BlackTriangulationATMVolTermStructure btavs3(constantVol1, constantVol2, rhoZero);
     for (Time t = 0.1; t < 5.0; t += 0.1) {
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(testBlackVol) {
 
     // Now test a non-trivial case, assume correlation of 0.8 then
     // vol between 10% and 20% should be 13.4%
-    Handle<CorrelationTermStructure> rhoEighty(boost::make_shared<FlatCorrelation>(today, 0.8, dc));
+    Handle<CorrelationTermStructure> rhoEighty(QuantLib::ext::make_shared<FlatCorrelation>(today, 0.8, dc));
     BlackTriangulationATMVolTermStructure btavs4(constantVol1, constantVol2, rhoEighty);
     for (Time t = 0.1; t < 5.0; t += 0.1) {
         for (Real k = 100; k < 200; k += 10) {

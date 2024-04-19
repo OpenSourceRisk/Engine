@@ -54,7 +54,7 @@ public:
     SwapEngineBuilderDeltaGamma() : SwapEngineBuilderBase("DiscountedCashflows", "DiscountingSwapEngineDeltaGamma") {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const std::string& discountCurve,
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const std::string& discountCurve,
                                                         const std::string& securitySpread) override {
 
         std::vector<Time> bucketTimes = parseListOfValues<Time>(engineParameter("BucketTimes"), &parseReal);
@@ -66,9 +66,9 @@ protected:
                                              ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
                                              : indexOrYieldCurve(market_, discountCurve, configuration(MarketContext::pricing));
         if (!securitySpread.empty())
-            yts = Handle<YieldTermStructure>(boost::make_shared<ZeroSpreadedTermStructure>(
+            yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
                 yts, market_->securitySpread(securitySpread, configuration(MarketContext::pricing))));
-        return boost::make_shared<DiscountingSwapEngineDeltaGamma>(yts, bucketTimes, computeDelta,
+        return QuantLib::ext::make_shared<DiscountingSwapEngineDeltaGamma>(yts, bucketTimes, computeDelta,
                                                                              computeGamma, computeBPS);
     }
 };
@@ -82,7 +82,7 @@ public:
         : CrossCurrencySwapEngineBuilderBase("DiscountedCashflows", "DiscountingCrossCurrencySwapEngineDeltaGamma") {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const std::vector<Currency>& ccys,
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const std::vector<Currency>& ccys,
                                                         const Currency& base) override {
 
         std::vector<Time> bucketTimes = parseListOfValues<Time>(engineParameter("BucketTimes"), &parseReal);
@@ -97,7 +97,7 @@ protected:
             string pair = ccys[i].code() + base.code();
             fxQuotes.push_back(market_->fxRate(pair, configuration(MarketContext::pricing)));
         }
-        return boost::make_shared<DiscountingCurrencySwapEngineDeltaGamma>(
+        return QuantLib::ext::make_shared<DiscountingCurrencySwapEngineDeltaGamma>(
             discountCurves, fxQuotes, ccys, base, bucketTimes, computeDelta, computeGamma, linearInZero,
             applySimmExemptions);
     }
@@ -114,7 +114,7 @@ public:
         : VanillaOptionEngineBuilder(model, "AnalyticEuropeanEngineDeltaGamma", tradeTypes, assetClass, Date()) {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                         const AssetClass& assetClassUnderlying,
                                                         const Date& expiryDate, const bool useFxSpot) override {
         std::vector<Time> bucketTimesDeltaGamma =
@@ -124,10 +124,10 @@ protected:
         bool computeGamma = parseBool(engineParameter("ComputeGamma"));
 
         string pair = assetName + ccy.code();
-        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
+        QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
             getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
 
-        return boost::make_shared<AnalyticEuropeanEngineDeltaGamma>(
+        return QuantLib::ext::make_shared<AnalyticEuropeanEngineDeltaGamma>(
             gbsp, bucketTimesDeltaGamma, bucketTimesVega, computeDeltaVega, computeGamma);
     }
 };
@@ -161,7 +161,7 @@ public:
         : FxForwardEngineBuilderBase("DiscountedCashflows", "DiscountingFxForwardEngineDeltaGamma") {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override {
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override {
 
         std::vector<Time> bucketTimes = parseListOfValues<Time>(engineParameter("BucketTimes"), &parseReal);
         bool computeDelta = parseBool(engineParameter("ComputeDelta"));
@@ -176,7 +176,7 @@ protected:
             market_->discountCurve(forCcy.code(), configuration(MarketContext::pricing));
         Handle<Quote> fx = market_->fxRate(pair, configuration(MarketContext::pricing));
 
-        return boost::make_shared<DiscountingFxForwardEngineDeltaGamma>(
+        return QuantLib::ext::make_shared<DiscountingFxForwardEngineDeltaGamma>(
             domCcy, domCcyCurve, forCcy, forCcyCurve, fx, bucketTimes, computeDelta, computeGamma, linearInZero,
             boost::none, Date(), Date(), applySimmExemptions);
     }

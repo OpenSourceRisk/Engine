@@ -25,7 +25,7 @@ using namespace QuantLib;
 
 namespace ore::data {
 
-Leg makeNonStandardIborLeg(const boost::shared_ptr<IborIndex>& index, const std::vector<Date>& calcDates,
+Leg makeNonStandardIborLeg(const QuantLib::ext::shared_ptr<IborIndex>& index, const std::vector<Date>& calcDates,
                            const std::vector<Date>& payDatesInput, const std::vector<Date>& fixingDatesInput,
                            const std::vector<Date>& resetDatesInput, const Size fixingDays,
                            const std::vector<Real>& notionals, const std::vector<Date>& notionalDatesInput,
@@ -156,12 +156,15 @@ Leg makeNonStandardIborLeg(const boost::shared_ptr<IborIndex>& index, const std:
     for (auto const& d : calcDates)
         effCalcDates.insert(d);
 
-    for (auto const& d : resetDates)
-        effCalcDates.insert(d);
+    for (auto const& d : resetDates) {
+        if (d >= calcDates.front() && d < calcDates.back())
+            effCalcDates.insert(d);
+    }
 
     if (strictNotionalDates) {
         for (auto const& d : notionalDates) {
-            effCalcDates.insert(d);
+            if (d >= calcDates.front() && d < calcDates.back())
+                effCalcDates.insert(d);
         }
     }
 
@@ -209,7 +212,7 @@ Leg makeNonStandardIborLeg(const boost::shared_ptr<IborIndex>& index, const std:
 
         // build coupon
 
-        leg.push_back(boost::make_shared<IborCoupon>(payDate, notional, *startDate, endDate, fixingDate, index, gearing,
+        leg.push_back(QuantLib::ext::make_shared<IborCoupon>(payDate, notional, *startDate, endDate, fixingDate, index, gearing,
                                                      spread, Date(), Date(), dayCounter));
     }
 
@@ -279,7 +282,8 @@ Leg makeNonStandardFixedLeg(const std::vector<Date>& calcDates, const std::vecto
 
     if (strictNotionalDates)
         for (auto const& d : notionalDates) {
-            effCalcDates.insert(d);
+            if (d >= calcDates.front() && d < calcDates.back())
+                effCalcDates.insert(d);
         }
 
     // build coupons
@@ -313,7 +317,7 @@ Leg makeNonStandardFixedLeg(const std::vector<Date>& calcDates, const std::vecto
 
         // build coupon
 
-        leg.push_back(boost::make_shared<FixedRateCoupon>(payDate, notional, rate, dayCounter, *startDate, endDate,
+        leg.push_back(QuantLib::ext::make_shared<FixedRateCoupon>(payDate, notional, rate, dayCounter, *startDate, endDate,
                                                           Date(), Date()));
     }
 

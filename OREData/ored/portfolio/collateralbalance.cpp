@@ -30,8 +30,8 @@ using ore::data::parseReal;
 namespace ore {
 namespace data {
 
-void CollateralBalances::add(const boost::shared_ptr<CollateralBalance>& cb) {
-    std::pair<NettingSetDetails, boost::shared_ptr<CollateralBalance>> newCollateralBalance(cb->nettingSetDetails(),
+void CollateralBalances::add(const QuantLib::ext::shared_ptr<CollateralBalance>& cb) {
+    std::pair<NettingSetDetails, QuantLib::ext::shared_ptr<CollateralBalance>> newCollateralBalance(cb->nettingSetDetails(),
                                                                                             cb);
     collateralBalances_.insert(newCollateralBalance);
 }
@@ -56,14 +56,14 @@ CollateralBalance::CollateralBalance(ore::data::XMLNode* node) {
     fromXML(node);
 }
 
-const boost::shared_ptr<CollateralBalance>& CollateralBalances::get(const NettingSetDetails& nettingSetDetails) const {
+const QuantLib::ext::shared_ptr<CollateralBalance>& CollateralBalances::get(const NettingSetDetails& nettingSetDetails) const {
     if (has(nettingSetDetails))
         return collateralBalances_.find(nettingSetDetails)->second;
     else
         QL_FAIL("CollateralBalance not found in manager: " << nettingSetDetails);
 }
 
-const boost::shared_ptr<CollateralBalance>& CollateralBalances::get(const std::string& nettingSetId) const {
+const QuantLib::ext::shared_ptr<CollateralBalance>& CollateralBalances::get(const std::string& nettingSetId) const {
     return get(NettingSetDetails(nettingSetId));
 }
 
@@ -128,7 +128,7 @@ void CollateralBalances::fromXML(XMLNode* node) {
     std::vector<XMLNode*> nettingSetNodes = XMLUtils::getChildrenNodes(node, "CollateralBalance");
     for (unsigned i = 0; i < nettingSetNodes.size(); i++) {
         try {
-            boost::shared_ptr<CollateralBalance> cb(new CollateralBalance(nettingSetNodes[i]));
+            QuantLib::ext::shared_ptr<CollateralBalance> cb(new CollateralBalance(nettingSetNodes[i]));
             add(cb);
         } catch (const std::exception& ex) {
             ore::data::StructuredConfigurationErrorMessage("Collateral balances", "",
@@ -146,7 +146,7 @@ XMLNode* CollateralBalances::toXML(XMLDocument& doc) const {
     return node;
 }
 
-const std::map<NettingSetDetails, boost::shared_ptr<CollateralBalance>>& CollateralBalances::collateralBalances() {
+const std::map<NettingSetDetails, QuantLib::ext::shared_ptr<CollateralBalance>>& CollateralBalances::collateralBalances() {
     return collateralBalances_;
 }
 

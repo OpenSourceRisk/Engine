@@ -50,7 +50,7 @@ void IMScheduleResults::add(const CrifRecord::ProductClass& pc, const string& ca
     }
 }
 
-// void IMScheduleResults::convert(const boost::shared_ptr<ore::data::Market>& market, const string& currency) {
+// void IMScheduleResults::convert(const QuantLib::ext::shared_ptr<ore::data::Market>& market, const string& currency) {
 //     // Get corresponding FX spot rate
 //     Real fxSpot = market->fxRate(ccy_ + currency)->value();
 //

@@ -26,8 +26,8 @@
 
 namespace QuantExt {
 
-OvernightFallbackCurve::OvernightFallbackCurve(const boost::shared_ptr<OvernightIndex>& originalIndex,
-                                     const boost::shared_ptr<OvernightIndex>& rfrIndex, const Real spread,
+OvernightFallbackCurve::OvernightFallbackCurve(const QuantLib::ext::shared_ptr<OvernightIndex>& originalIndex,
+                                     const QuantLib::ext::shared_ptr<OvernightIndex>& rfrIndex, const Real spread,
                                      const Date& switchDate)
     : YieldTermStructure(originalIndex->forwardingTermStructure()->dayCounter()), originalIndex_(originalIndex),
       rfrIndex_(rfrIndex), spread_(spread), switchDate_(switchDate) {
@@ -38,9 +38,9 @@ OvernightFallbackCurve::OvernightFallbackCurve(const boost::shared_ptr<Overnight
     enableExtrapolation();
 }
 
-boost::shared_ptr<OvernightIndex> OvernightFallbackCurve::originalIndex() const { return originalIndex_; }
+QuantLib::ext::shared_ptr<OvernightIndex> OvernightFallbackCurve::originalIndex() const { return originalIndex_; }
 
-boost::shared_ptr<OvernightIndex> OvernightFallbackCurve::rfrIndex() const { return rfrIndex_; }
+QuantLib::ext::shared_ptr<OvernightIndex> OvernightFallbackCurve::rfrIndex() const { return rfrIndex_; }
 
 Real OvernightFallbackCurve::spread() const { return spread_; }
 

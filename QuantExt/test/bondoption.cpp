@@ -55,12 +55,12 @@ BOOST_AUTO_TEST_CASE(testBondOption) {
     Settings::instance().includeReferenceDateEvents() = true;
 
     // bond market data
-    Handle<Quote> rateQuote(boost::make_shared<SimpleQuote>(0.1));
-    Handle<Quote> issuerSpreadQuote(boost::make_shared<SimpleQuote>(0.0));
+    Handle<Quote> rateQuote(QuantLib::ext::make_shared<SimpleQuote>(0.1));
+    Handle<Quote> issuerSpreadQuote(QuantLib::ext::make_shared<SimpleQuote>(0.0));
     DayCounter dc = Actual365Fixed();
-    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(today, rateQuote, dc, Compounded, Semiannual));
-    Handle<DefaultProbabilityTermStructure> dpts(boost::make_shared<FlatHazardRate>(today, issuerSpreadQuote, dc));
-    Handle<Quote> bondSpecificSpread(boost::make_shared<SimpleQuote>(0.0));
+    Handle<YieldTermStructure> yts(QuantLib::ext::make_shared<FlatForward>(today, rateQuote, dc, Compounded, Semiannual));
+    Handle<DefaultProbabilityTermStructure> dpts(QuantLib::ext::make_shared<FlatHazardRate>(today, issuerSpreadQuote, dc));
+    Handle<Quote> bondSpecificSpread(QuantLib::ext::make_shared<SimpleQuote>(0.0));
 
     // build the underlying fixed rate bond
     Date startDate = today;
@@ -80,17 +80,17 @@ BOOST_AUTO_TEST_CASE(testBondOption) {
 
     // bond option market data
     // discount curve
-    Handle<Quote> discountQuote(boost::make_shared<SimpleQuote>(0.1));
+    Handle<Quote> discountQuote(QuantLib::ext::make_shared<SimpleQuote>(0.1));
     Handle<YieldTermStructure> discountTS(
-        boost::make_shared<FlatForward>(today, discountQuote, dc, Compounded, Semiannual));
+        QuantLib::ext::make_shared<FlatForward>(today, discountQuote, dc, Compounded, Semiannual));
 
     // lognormal yield vola
-    boost::shared_ptr<QuantLib::SwaptionVolatilityStructure> svs(
+    QuantLib::ext::shared_ptr<QuantLib::SwaptionVolatilityStructure> svs(
         new QuantLib::ConstantSwaptionVolatility(Settings::instance().evaluationDate(), NullCalendar(),
                                                  ModifiedFollowing, 0.5, Actual365Fixed(), ShiftedLognormal, 0.0));
 
     // pricing engine with lognormal yield vola
-    boost::shared_ptr<PricingEngine> bondOptionEngine(new QuantExt::BlackBondOptionEngine(
+    QuantLib::ext::shared_ptr<PricingEngine> bondOptionEngine(new QuantExt::BlackBondOptionEngine(
         discountTS, Handle<QuantLib::SwaptionVolatilityStructure>(svs), discountTS));
 
     // build bond option
@@ -101,38 +101,38 @@ BOOST_AUTO_TEST_CASE(testBondOption) {
     QuantLib::Bond::Price callabilityPrice = QuantLib::Bond::Price(strikePrice, QuantLib::Bond::Price::Dirty);
     Callability::Type callabilityType = Callability::Call;
     Date exerciseDate = Date(5, Dec, 2016);
-    boost::shared_ptr<Callability> callability(new Callability(callabilityPrice, callabilityType, exerciseDate));
-    CallabilitySchedule callabilitySchedule = std::vector<boost::shared_ptr<Callability>>(1, callability);
+    QuantLib::ext::shared_ptr<Callability> callability(new Callability(callabilityPrice, callabilityType, exerciseDate));
+    CallabilitySchedule callabilitySchedule = std::vector<QuantLib::ext::shared_ptr<Callability>>(1, callability);
 
-    boost::shared_ptr<QuantLib::Bond> bond(
+    QuantLib::ext::shared_ptr<QuantLib::Bond> bond(
         new QuantLib::FixedRateBond(settlementDays, faceAmount, schedule, rates, dc, bdc, redemption, issueDate));
-    boost::shared_ptr<QuantExt::BondOption> bondOption(new QuantExt::BondOption(bond, callabilitySchedule));
+    QuantLib::ext::shared_ptr<QuantExt::BondOption> bondOption(new QuantExt::BondOption(bond, callabilitySchedule));
     bondOption->setPricingEngine(bondOptionEngine);
 
     // build tief OTM bond option
     Real otmStrikePrice = notional * 2;
     QuantLib::Bond::Price otmCallabilityPrice = QuantLib::Bond::Price(otmStrikePrice, QuantLib::Bond::Price::Dirty);
-    boost::shared_ptr<Callability> otmCallability(new Callability(otmCallabilityPrice, callabilityType, exerciseDate));
-    CallabilitySchedule otmCallabilitySchedule = std::vector<boost::shared_ptr<Callability>>(1, otmCallability);
+    QuantLib::ext::shared_ptr<Callability> otmCallability(new Callability(otmCallabilityPrice, callabilityType, exerciseDate));
+    CallabilitySchedule otmCallabilitySchedule = std::vector<QuantLib::ext::shared_ptr<Callability>>(1, otmCallability);
 
-    boost::shared_ptr<QuantExt::BondOption> otmBondOption(new QuantExt::BondOption(bond, otmCallabilitySchedule));
+    QuantLib::ext::shared_ptr<QuantExt::BondOption> otmBondOption(new QuantExt::BondOption(bond, otmCallabilitySchedule));
     otmBondOption->setPricingEngine(bondOptionEngine);
 
     // build tief ITM bond option
     Real itmStrikePrice = notional / 2;
     QuantLib::Bond::Price itmCallabilityPrice = QuantLib::Bond::Price(itmStrikePrice, QuantLib::Bond::Price::Dirty);
-    boost::shared_ptr<Callability> itmCallability(new Callability(itmCallabilityPrice, callabilityType, exerciseDate));
-    CallabilitySchedule itmCallabilitySchedule = std::vector<boost::shared_ptr<Callability>>(1, itmCallability);
+    QuantLib::ext::shared_ptr<Callability> itmCallability(new Callability(itmCallabilityPrice, callabilityType, exerciseDate));
+    CallabilitySchedule itmCallabilitySchedule = std::vector<QuantLib::ext::shared_ptr<Callability>>(1, itmCallability);
 
-    boost::shared_ptr<QuantExt::BondOption> itmBondOption(new QuantExt::BondOption(bond, itmCallabilitySchedule));
+    QuantLib::ext::shared_ptr<QuantExt::BondOption> itmBondOption(new QuantExt::BondOption(bond, itmCallabilitySchedule));
     itmBondOption->setPricingEngine(bondOptionEngine);
 
     // build zero bond option
-    boost::shared_ptr<QuantLib::Bond> zerobond(new QuantLib::FixedRateBond(
+    QuantLib::ext::shared_ptr<QuantLib::Bond> zerobond(new QuantLib::FixedRateBond(
         settlementDays, faceAmount,
         Schedule(startDate, endDate, Period(Once), calendar, bdc, bdcEnd, DateGeneration::Backward, false),
         std::vector<Rate>(1, 0.0), dc, bdc, redemption, issueDate));
-    boost::shared_ptr<QuantExt::BondOption> zeroBondOption(new QuantExt::BondOption(zerobond, callabilitySchedule));
+    QuantLib::ext::shared_ptr<QuantExt::BondOption> zeroBondOption(new QuantExt::BondOption(zerobond, callabilitySchedule));
     zeroBondOption->setPricingEngine(bondOptionEngine);
 
     BOOST_TEST_MESSAGE("normal bond option price = " << bondOption->NPV());
@@ -152,16 +152,16 @@ BOOST_AUTO_TEST_CASE(testBondOption) {
     QuantLib::Bond::Price putCallCallabilityPrice =
         QuantLib::Bond::Price(putCallStrikePrice, QuantLib::Bond::Price::Dirty);
 
-    boost::shared_ptr<Callability> callCallability(
+    QuantLib::ext::shared_ptr<Callability> callCallability(
         new Callability(putCallCallabilityPrice, Callability::Call, exerciseDate));
-    CallabilitySchedule callCallabilitySchedule = std::vector<boost::shared_ptr<Callability>>(1, callCallability);
-    boost::shared_ptr<QuantExt::BondOption> bondCallOption(new QuantExt::BondOption(bond, callCallabilitySchedule));
+    CallabilitySchedule callCallabilitySchedule = std::vector<QuantLib::ext::shared_ptr<Callability>>(1, callCallability);
+    QuantLib::ext::shared_ptr<QuantExt::BondOption> bondCallOption(new QuantExt::BondOption(bond, callCallabilitySchedule));
     bondCallOption->setPricingEngine(bondOptionEngine);
 
-    boost::shared_ptr<Callability> putCallability(
+    QuantLib::ext::shared_ptr<Callability> putCallability(
         new Callability(putCallCallabilityPrice, Callability::Put, exerciseDate));
-    CallabilitySchedule putCallabilitySchedule = std::vector<boost::shared_ptr<Callability>>(1, putCallability);
-    boost::shared_ptr<QuantExt::BondOption> bondPutOption(new QuantExt::BondOption(bond, putCallabilitySchedule));
+    CallabilitySchedule putCallabilitySchedule = std::vector<QuantLib::ext::shared_ptr<Callability>>(1, putCallability);
+    QuantLib::ext::shared_ptr<QuantExt::BondOption> bondPutOption(new QuantExt::BondOption(bond, putCallabilitySchedule));
     bondPutOption->setPricingEngine(bondOptionEngine);
 
     Real discount = discountTS->discount(exerciseDate);
@@ -181,11 +181,11 @@ BOOST_AUTO_TEST_CASE(testBondOption) {
 
     // test put-call parity with normal yield vola
     // normal yield vola
-    boost::shared_ptr<QuantLib::SwaptionVolatilityStructure> svs_normal(new QuantLib::ConstantSwaptionVolatility(
+    QuantLib::ext::shared_ptr<QuantLib::SwaptionVolatilityStructure> svs_normal(new QuantLib::ConstantSwaptionVolatility(
         Settings::instance().evaluationDate(), NullCalendar(), ModifiedFollowing, 0.5, Actual365Fixed(), Normal));
 
     // pricing engine with lognormal yield vola
-    boost::shared_ptr<PricingEngine> bondOptionEngineNormal(new QuantExt::BlackBondOptionEngine(
+    QuantLib::ext::shared_ptr<PricingEngine> bondOptionEngineNormal(new QuantExt::BlackBondOptionEngine(
         discountTS, Handle<QuantLib::SwaptionVolatilityStructure>(svs_normal), discountTS));
 
     bondCallOption->setPricingEngine(bondOptionEngineNormal);

@@ -46,7 +46,7 @@ public:
         : DurationAdjustedCmsCouponPricerBuilder("LinearTSR", "LinearTSRPricer") {}
 
 protected:
-    boost::shared_ptr<FloatingRateCouponPricer> engineImpl(const string& key) override;
+    QuantLib::ext::shared_ptr<FloatingRateCouponPricer> engineImpl(const string& key) override;
 };
 
 } // namespace data

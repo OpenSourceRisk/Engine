@@ -653,8 +653,8 @@ Real aux_fx_covariance(const CrossAssetModel& x, const Size j, const Time t0, co
 Real com_com_covariance(const CrossAssetModel& x, const Size k, const Size l, const Time t0, const Time dt) {
     Real res = integral(x, P(rcc(k, l), coms(k), coms(l)), t0, t0 + dt);
     // FIXME: cover the Ornsrein-Uhlenbeck case in the integral framework
-    auto cmk = boost::dynamic_pointer_cast<CommoditySchwartzModel>(x.comModel(k));
-    auto cml = boost::dynamic_pointer_cast<CommoditySchwartzModel>(x.comModel(l));
+    auto cmk = QuantLib::ext::dynamic_pointer_cast<CommoditySchwartzModel>(x.comModel(k));
+    auto cml = QuantLib::ext::dynamic_pointer_cast<CommoditySchwartzModel>(x.comModel(l));
     QL_REQUIRE(cmk && cml, "CommoditySchwartzModel expected in com-com covariance calculation");
     QL_REQUIRE(cmk->parametrization()->driftFreeState() == cml->parametrization()->driftFreeState(),
                "commodity state types do not match");

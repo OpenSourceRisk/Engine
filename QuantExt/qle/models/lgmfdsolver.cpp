@@ -25,26 +25,26 @@
 
 namespace QuantExt {
 
-LgmFdSolver::LgmFdSolver(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime,
+LgmFdSolver::LgmFdSolver(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime,
                          const QuantLib::FdmSchemeDesc scheme, const Size stateGridPoints, const Size timeStepsPerYear,
                          const Real mesherEpsilon)
     : model_(model), maxTime_(maxTime), scheme_(scheme), stateGridPoints_(stateGridPoints),
       timeStepsPerYear_(timeStepsPerYear), mesherEpsilon_(mesherEpsilon) {
-    mesher_ = boost::make_shared<FdmMesherComposite>(boost::make_shared<FdmSimpleProcess1dMesher>(
-        stateGridPoints, boost::dynamic_pointer_cast<StochasticProcess1D>(model->stateProcess()), maxTime_,
+    mesher_ = QuantLib::ext::make_shared<FdmMesherComposite>(QuantLib::ext::make_shared<FdmSimpleProcess1dMesher>(
+        stateGridPoints, QuantLib::ext::dynamic_pointer_cast<StochasticProcess1D>(model->stateProcess()), maxTime_,
         timeStepsPerYear_, mesherEpsilon_));
     mesherLocations_ = RandomVariable(mesher_->locations(0));
-    operator_ = boost::make_shared<QuantExt::FdmLgmOp>(
-        mesher_, boost::dynamic_pointer_cast<StochasticProcess1D>(model->stateProcess()));
-    solver_ = boost::make_shared<FdmBackwardSolver>(
-        operator_, std::vector<boost::shared_ptr<BoundaryCondition<FdmLinearOp>>>(), nullptr, scheme_);
+    operator_ = QuantLib::ext::make_shared<QuantExt::FdmLgmOp>(
+        mesher_, QuantLib::ext::dynamic_pointer_cast<StochasticProcess1D>(model->stateProcess()));
+    solver_ = QuantLib::ext::make_shared<FdmBackwardSolver>(
+        operator_, std::vector<QuantLib::ext::shared_ptr<BoundaryCondition<FdmLinearOp>>>(), nullptr, scheme_);
 }
 
 Size LgmFdSolver::gridSize() const { return stateGridPoints_; }
 
 RandomVariable LgmFdSolver::stateGrid(Real) const { return mesherLocations_; }
 
-const boost::shared_ptr<LinearGaussMarkovModel>& LgmFdSolver::model() const { return model_; }
+const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& LgmFdSolver::model() const { return model_; }
 
 RandomVariable LgmFdSolver::rollback(const RandomVariable& v, const Real t1, const Real t0, Size steps) const {
     if (QuantLib::close_enough(t0, t1) || v.deterministic())
