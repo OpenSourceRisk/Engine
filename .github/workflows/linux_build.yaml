@@ -3,6 +3,8 @@ name: C/C++ CI Ubuntu
 on:
   push:
     branches: [master]
+    tags:
+       - 'v*'
   release:
    types: [published]
   pull_request:
