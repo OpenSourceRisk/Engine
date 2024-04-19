@@ -39,6 +39,9 @@ namespace ore {
 namespace data {
 using namespace QuantLib;
 
+class VolatilityParameter;
+class ReversionParameter;
+
 //! Linear Gauss Markov Model Parameters
 /*!
   This class contains the description of a Linear Gauss Markov interest rate model
@@ -111,9 +114,11 @@ public:
     std::vector<Real>& aValues() { return aValues_; }
     Real& shiftHorizon() { return shiftHorizon_; }
     Real& scaling() { return scaling_; }
-    std::vector<std::string>& optionExpiries() { return optionExpiries_; }
-    std::vector<std::string>& optionTerms() { return optionTerms_; }
-    std::vector<std::string>& optionStrikes() { return optionStrikes_; }
+    std::vector<std::string>& optionExpiries() const { return optionExpiries_; }
+    std::vector<std::string>& optionTerms() const { return optionTerms_; }
+    std::vector<std::string>& optionStrikes() const { return optionStrikes_; }
+    ReversionParameter reversionParameter() const;
+    VolatilityParameter volatilityParameter() const;
     //@}
 
     //! \name Operators
@@ -134,9 +139,9 @@ private:
     std::vector<Time> aTimes_;
     std::vector<Real> aValues_;
     Real shiftHorizon_, scaling_;
-    std::vector<std::string> optionExpiries_;
-    std::vector<std::string> optionTerms_;
-    std::vector<std::string> optionStrikes_;
+    mutable std::vector<std::string> optionExpiries_;
+    mutable std::vector<std::string> optionTerms_;
+    mutable std::vector<std::string> optionStrikes_;
 };
 
 //! Enum parsers used in CrossAssetModelBuilder's fromXML
