@@ -315,7 +315,8 @@ BOOST_AUTO_TEST_CASE(testRngGenerationTmp) {
         ComputeEnvironment::instance().selectContext(d);
         auto& c = ComputeEnvironment::instance().context();
         ComputeContext::Settings settings;
-        settings.useDoublePrecision = false; // true
+        settings.useDoublePrecision = c.supportsDoublePrecision();
+        BOOST_TEST_MESSAGE("using double precision = " << std::boolalpha << settings.useDoublePrecision);
         c.initiateCalculation(n, 0, 0, settings);
         auto vs = c.createInputVariates(1, 1);
         for (auto const& d : vs) {
