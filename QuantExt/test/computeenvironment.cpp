@@ -309,12 +309,11 @@ BOOST_AUTO_TEST_CASE(testRngGenerationTmp) {
     ComputeEnvironmentFixture fixture;
     const std::size_t n = 1500;
     for (auto const& d : ComputeEnvironment::instance().getAvailableDevices()) {
-        // if(d!= "OpenCL/Apple/Apple M2 Max")
-        //     continue;
         BOOST_TEST_MESSAGE("testing rng generation on device '" << d << "'.");
         ComputeEnvironment::instance().selectContext(d);
         auto& c = ComputeEnvironment::instance().context();
         ComputeContext::Settings settings;
+        settings.rngSequenceType = QuantExt::SequenceType::MersenneTwister;
         settings.useDoublePrecision = c.supportsDoublePrecision();
         BOOST_TEST_MESSAGE("using double precision = " << std::boolalpha << settings.useDoublePrecision);
         c.initiateCalculation(n, 0, 0, settings);
@@ -333,9 +332,15 @@ BOOST_AUTO_TEST_CASE(testRngGenerationTmp) {
         std::vector<std::vector<double>> output(2, std::vector<double>(n));
         c.finalizeCalculation(output);
 
+        auto sg = GenericPseudoRandom<MersenneTwisterUniformRng, InverseCumulativeNormal>::make_sequence_generator(
+            1, settings.rngSeed);
+
+        double tol = settings.useDoublePrecision ? 1E-7 : 1E-3;
+
         for (Size j = 0; j < 2; ++j) {
             for (Size i = 0; i < n; ++i) {
-                std::cout << d << "," << j << "," << i << "," << std::setprecision(16) << output[j][i] << std::endl;
+                Real ref = sg.nextSequence().value[0];
+                BOOST_CHECK_SMALL(output[j][i] - ref, tol);
             }
         }
     }
