@@ -147,7 +147,7 @@ void CompositeTrade::fromXML(XMLNode* node) {
     if (portfolioBasket_ && portfolioId_.empty()) {
         QL_REQUIRE(tradesNode, "Required a Portfolio Id or a Components Node.");
     }
-    if (!(tradesNode == nullptr)) {
+    if ((portfolioBasket_ && portfolioId_.empty()) || (!portfolioBasket_)) {
     
         vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(tradesNode, "Trade");
         for (Size i = 0; i < nodes.size(); i++) {
@@ -266,26 +266,24 @@ const std::map<std::string, boost::any>& CompositeTrade::additionalData() const 
 
 void CompositeTrade::populateFromReferenceData(const boost::shared_ptr<ReferenceDataManager>& referenceData) {
 
-    if (!portfolioId_.empty()) {
-        if (!referenceData || !referenceData->hasData(PortfolioBasketReferenceDatum::TYPE, portfolioId_)) {
-            DLOG("Could not get PortfolioBasketReferenceDatum for Id " << portfolioId_
-                                                                       << " leave data in trade unchanged");
-        } else {
+    if (!portfolioId_.empty() && (referenceData->hasData(PortfolioBasketReferenceDatum::TYPE, portfolioId_))) {
             auto ptfRefData = boost::dynamic_pointer_cast<PortfolioBasketReferenceDatum>(
                 referenceData->getData(PortfolioBasketReferenceDatum::TYPE, portfolioId_));
             QL_REQUIRE(ptfRefData, "could not cast to PortfolioBasketReferenceDatum, this is unexpected");
-            populateFromReferenceData(ptfRefData);
-        }
+            getTradesFromReferenceData(ptfRefData);
+    } else {
+        DLOG("Could not get PortfolioBasketReferenceDatum for Id " << portfolioId_ << " leave data in trade unchanged");
     }
    
 }
 
-void CompositeTrade::populateFromReferenceData(const boost::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum) {
+void CompositeTrade::getTradesFromReferenceData(const boost::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum) {
 
     DLOG("populating portfolio basket data from reference data");
     QL_REQUIRE(ptfReferenceDatum, "populateFromReferenceData(): empty cbo reference datum given");
 
     auto refData = ptfReferenceDatum->getTrades();
+    trades_.clear();
     for (Size i = 0; i < refData.size(); i++) {
         trades_.push_back(refData[i]);
     }

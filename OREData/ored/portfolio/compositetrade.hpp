@@ -102,7 +102,7 @@ public:
 private:
 
     void populateFromReferenceData(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager);
-    void populateFromReferenceData(const boost::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum);
+    void getTradesFromReferenceData(const boost::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum);
 
     string currency_;
     Real notionalOverride_;

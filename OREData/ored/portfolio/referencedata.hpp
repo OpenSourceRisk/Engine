@@ -415,10 +415,10 @@ public:
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
-    const vector<boost::shared_ptr<Trade>>& getTrades() const { return tradecomponents_; }
+    const vector<QuantLib::ext::shared_ptr<Trade>>& getTrades() const { return tradecomponents_; }
 
 private:
-    vector<boost::shared_ptr<Trade>> tradecomponents_;
+    vector<QuantLib::ext::shared_ptr<Trade>> tradecomponents_;
 };
 
 

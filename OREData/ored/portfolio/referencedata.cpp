@@ -473,8 +473,8 @@ void PortfolioBasketReferenceDatum::fromXML(XMLNode* node) {
             }
             
             DLOG("Parsing composite trade " << this->id() << " node " << k << " with id: " << id);
-
-            boost::shared_ptr<Trade> trade;
+            
+            QuantLib::ext::shared_ptr<Trade> trade;
             try {
                 trade = TradeFactory::instance().build(tradeType);
                 trade->id() = id;
