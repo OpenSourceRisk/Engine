@@ -1,0 +1,30 @@
+<Portfolio>
+
+    <Trade id="1:EquityOption">
+    <TradeType>EquityOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <EquityOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>true</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2023-11-07</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <Name>RIC:.STOXX50E</Name>
+      <Currency>EUR</Currency>
+      <Strike>4350</Strike>
+      <StrikeCurrency>EUR</StrikeCurrency>
+      <Quantity>1000</Quantity>
+    </EquityOptionData>
+  </Trade>
+
+
+</Portfolio>
