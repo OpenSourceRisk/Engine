@@ -19,10 +19,15 @@ different shift sizes applied to each point of the curve (or surface / cube).
 In case of the swaption volatility shifts, the single value given as {\tt Shift} (without the attributes {\tt expiry}
 and {\tt term}) represents a default value that is used whenever no explicit value is given for a expiry / term pair.
 
+UseSpreadedTermStructures: If set to true, spreaded termstructures over t0 will be used for the scenario calculation, to
+improve the alignment of the scenario sim market and t0 curves.
+
+
 \begin{longlisting}
 %\hrule\medskip
   \begin{minted}[fontsize=\scriptsize]{xml}
 <StressTesting>
+  <UseSpreadedTermStructures>false</UseSpreadedTermStructures>
   <StressTest id="parallel_rates">
     <DiscountCurves>
       <DiscountCurve ccy="EUR">
