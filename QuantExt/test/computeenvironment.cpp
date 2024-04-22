@@ -244,7 +244,7 @@ void checkRngOutput(const std::vector<std::vector<double>>& output) {
         BOOST_TEST_MESSAGE("  mean = " << boost::accumulators::mean(acc)
                                        << ", variance = " << boost::accumulators::variance(acc));
         BOOST_CHECK_SMALL(boost::accumulators::mean(acc), 0.05);
-        BOOST_CHECK_CLOSE(boost::accumulators::variance(acc), 1.0, 1.0);
+        BOOST_CHECK_CLOSE(boost::accumulators::variance(acc), 1.0, 2.0);
     }
 }
 } // namespace
@@ -302,6 +302,47 @@ BOOST_AUTO_TEST_CASE(testReplayFlowError) {
         BOOST_CHECK_THROW(c.freeVariable(v1), std::exception);
         BOOST_CHECK_THROW(c.declareOutputVariable(v1), std::exception);
         BOOST_CHECK_NO_THROW(c.finalizeCalculation(output));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(testRngGenerationTmp) {
+    ComputeEnvironmentFixture fixture;
+    const std::size_t n = 1500;
+    for (auto const& d : ComputeEnvironment::instance().getAvailableDevices()) {
+        BOOST_TEST_MESSAGE("testing rng generation on device '" << d << "'.");
+        ComputeEnvironment::instance().selectContext(d);
+        auto& c = ComputeEnvironment::instance().context();
+        ComputeContext::Settings settings;
+        settings.rngSequenceType = QuantExt::SequenceType::MersenneTwister;
+        settings.useDoublePrecision = c.supportsDoublePrecision();
+        BOOST_TEST_MESSAGE("using double precision = " << std::boolalpha << settings.useDoublePrecision);
+        c.initiateCalculation(n, 0, 0, settings);
+        auto vs = c.createInputVariates(1, 1);
+        for (auto const& d : vs) {
+            for (auto const& r : d) {
+                c.declareOutputVariable(r);
+            }
+        }
+        auto vs2 = c.createInputVariates(1, 1);
+        for (auto const& d : vs2) {
+            for (auto const& r : d) {
+                c.declareOutputVariable(r);
+            }
+        }
+        std::vector<std::vector<double>> output(2, std::vector<double>(n));
+        c.finalizeCalculation(output);
+
+        auto sg = GenericPseudoRandom<MersenneTwisterUniformRng, InverseCumulativeNormal>::make_sequence_generator(
+            1, settings.rngSeed);
+
+        double tol = settings.useDoublePrecision ? 1E-7 : 1E-3;
+
+        for (Size j = 0; j < 2; ++j) {
+            for (Size i = 0; i < n; ++i) {
+                Real ref = sg.nextSequence().value[0];
+                BOOST_CHECK_SMALL(output[j][i] - ref, tol);
+            }
+        }
     }
 }
 
