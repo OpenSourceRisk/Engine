@@ -45,7 +45,7 @@ using namespace QuantLib;
 
 class ModelImpliedYieldTermStructure : public YieldTermStructure {
 public:
-    ModelImpliedYieldTermStructure(const boost::shared_ptr<IrModel>& model, const DayCounter& dc = DayCounter(),
+    ModelImpliedYieldTermStructure(const QuantLib::ext::shared_ptr<IrModel>& model, const DayCounter& dc = DayCounter(),
                                    const bool purelyTimeBased = false);
 
     Date maxDate() const override;
@@ -64,7 +64,7 @@ public:
 protected:
     Real discountImpl(Time t) const override;
 
-    const boost::shared_ptr<IrModel> model_;
+    const QuantLib::ext::shared_ptr<IrModel> model_;
     const bool purelyTimeBased_;
     Date referenceDate_;
     Real relativeTime_;
@@ -79,7 +79,7 @@ protected:
 */
 class ModelImpliedYtsFwdFwdCorrected : public ModelImpliedYieldTermStructure {
 public:
-    ModelImpliedYtsFwdFwdCorrected(const boost::shared_ptr<IrModel>& model,
+    ModelImpliedYtsFwdFwdCorrected(const QuantLib::ext::shared_ptr<IrModel>& model,
                                    const Handle<YieldTermStructure> targetCurve, const DayCounter& dc = DayCounter(),
                                    const bool purelyTimeBased = false);
 
@@ -101,7 +101,7 @@ private:
 */
 class ModelImpliedYtsSpotCorrected : public ModelImpliedYieldTermStructure {
 public:
-    ModelImpliedYtsSpotCorrected(const boost::shared_ptr<IrModel>& model, const Handle<YieldTermStructure> targetCurve,
+    ModelImpliedYtsSpotCorrected(const QuantLib::ext::shared_ptr<IrModel>& model, const Handle<YieldTermStructure> targetCurve,
                                  const DayCounter& dc, const bool purelyTimeBased);
 
 protected:

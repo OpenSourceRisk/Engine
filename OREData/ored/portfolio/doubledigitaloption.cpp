@@ -37,7 +37,7 @@ std::pair<std::string, std::string> getLowerAndUpperBound(const std::string& typ
     }
 }
 
-void DoubleDigitalOption::build(const boost::shared_ptr<EngineFactory>& factory) {
+void DoubleDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
     // set script parameters
 
@@ -153,7 +153,7 @@ void DoubleDigitalOption::fromXML(XMLNode* node) {
     initIndices();
 }
 
-XMLNode* DoubleDigitalOption::toXML(XMLDocument& doc) {
+XMLNode* DoubleDigitalOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* tradeNode = doc.allocNode("DoubleDigitalOptionData");
     XMLUtils::appendNode(node, tradeNode);

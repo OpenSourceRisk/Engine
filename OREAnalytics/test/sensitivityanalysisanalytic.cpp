@@ -75,46 +75,46 @@ using testsuite::buildSwap;
 using testsuite::TestMarket;
 
 namespace {
-boost::shared_ptr<data::Conventions> conv() {
-    boost::shared_ptr<data::Conventions> conventions(new data::Conventions());
+QuantLib::ext::shared_ptr<data::Conventions> conv() {
+    QuantLib::ext::shared_ptr<data::Conventions> conventions(new data::Conventions());
 
-    boost::shared_ptr<data::Convention> swapIndexConv(
+    QuantLib::ext::shared_ptr<data::Convention> swapIndexConv(
         new data::SwapIndexConvention("EUR-CMS-2Y", "EUR-6M-SWAP-CONVENTIONS"));
     conventions->add(swapIndexConv);
 
-    // boost::shared_ptr<data::Convention> swapConv(
+    // QuantLib::ext::shared_ptr<data::Convention> swapConv(
     //     new data::IRSwapConvention("EUR-6M-SWAP-CONVENTIONS", "TARGET", "Annual", "MF", "30/360", "EUR-EURIBOR-6M"));
-    conventions->add(boost::make_shared<data::IRSwapConvention>("EUR-6M-SWAP-CONVENTIONS", "TARGET", "A", "MF",
+    conventions->add(QuantLib::ext::make_shared<data::IRSwapConvention>("EUR-6M-SWAP-CONVENTIONS", "TARGET", "A", "MF",
                                                                 "30/360", "EUR-EURIBOR-6M"));
-    conventions->add(boost::make_shared<data::IRSwapConvention>("USD-3M-SWAP-CONVENTIONS", "TARGET", "Q", "MF",
+    conventions->add(QuantLib::ext::make_shared<data::IRSwapConvention>("USD-3M-SWAP-CONVENTIONS", "TARGET", "Q", "MF",
                                                                 "30/360", "USD-LIBOR-3M"));
-    conventions->add(boost::make_shared<data::IRSwapConvention>("USD-6M-SWAP-CONVENTIONS", "TARGET", "Q", "MF",
+    conventions->add(QuantLib::ext::make_shared<data::IRSwapConvention>("USD-6M-SWAP-CONVENTIONS", "TARGET", "Q", "MF",
                                                                 "30/360", "USD-LIBOR-6M"));
-    conventions->add(boost::make_shared<data::IRSwapConvention>("GBP-6M-SWAP-CONVENTIONS", "TARGET", "A", "MF",
+    conventions->add(QuantLib::ext::make_shared<data::IRSwapConvention>("GBP-6M-SWAP-CONVENTIONS", "TARGET", "A", "MF",
                                                                 "30/360", "GBP-LIBOR-6M"));
-    conventions->add(boost::make_shared<data::IRSwapConvention>("JPY-6M-SWAP-CONVENTIONS", "TARGET", "A", "MF",
+    conventions->add(QuantLib::ext::make_shared<data::IRSwapConvention>("JPY-6M-SWAP-CONVENTIONS", "TARGET", "A", "MF",
                                                                 "30/360", "JPY-LIBOR-6M"));
-    conventions->add(boost::make_shared<data::IRSwapConvention>("CHF-6M-SWAP-CONVENTIONS", "TARGET", "A", "MF",
+    conventions->add(QuantLib::ext::make_shared<data::IRSwapConvention>("CHF-6M-SWAP-CONVENTIONS", "TARGET", "A", "MF",
                                                                 "30/360", "CHF-LIBOR-6M"));
 
-    conventions->add(boost::make_shared<data::DepositConvention>("EUR-DEP-CONVENTIONS", "EUR-EURIBOR"));
-    conventions->add(boost::make_shared<data::DepositConvention>("USD-DEP-CONVENTIONS", "USD-LIBOR"));
-    conventions->add(boost::make_shared<data::DepositConvention>("GBP-DEP-CONVENTIONS", "GBP-LIBOR"));
-    conventions->add(boost::make_shared<data::DepositConvention>("JPY-DEP-CONVENTIONS", "JPY-LIBOR"));
-    conventions->add(boost::make_shared<data::DepositConvention>("CHF-DEP-CONVENTIONS", "CHF-LIBOR"));
+    conventions->add(QuantLib::ext::make_shared<data::DepositConvention>("EUR-DEP-CONVENTIONS", "EUR-EURIBOR"));
+    conventions->add(QuantLib::ext::make_shared<data::DepositConvention>("USD-DEP-CONVENTIONS", "USD-LIBOR"));
+    conventions->add(QuantLib::ext::make_shared<data::DepositConvention>("GBP-DEP-CONVENTIONS", "GBP-LIBOR"));
+    conventions->add(QuantLib::ext::make_shared<data::DepositConvention>("JPY-DEP-CONVENTIONS", "JPY-LIBOR"));
+    conventions->add(QuantLib::ext::make_shared<data::DepositConvention>("CHF-DEP-CONVENTIONS", "CHF-LIBOR"));
 
-    conventions->add(boost::make_shared<FXConvention>("EUR-USD-FX", "0", "EUR", "USD", "10000", "EUR,USD"));
-    conventions->add(boost::make_shared<FXConvention>("EUR-GBP-FX", "0", "EUR", "GBP", "10000", "EUR,GBP"));
-    conventions->add(boost::make_shared<FXConvention>("EUR-CHF-FX", "0", "EUR", "CHF", "10000", "EUR,CHF"));
-    conventions->add(boost::make_shared<FXConvention>("EUR-JPY-FX", "0", "EUR", "JPY", "10000", "EUR,JPY"));
+    conventions->add(QuantLib::ext::make_shared<FXConvention>("EUR-USD-FX", "0", "EUR", "USD", "10000", "EUR,USD"));
+    conventions->add(QuantLib::ext::make_shared<FXConvention>("EUR-GBP-FX", "0", "EUR", "GBP", "10000", "EUR,GBP"));
+    conventions->add(QuantLib::ext::make_shared<FXConvention>("EUR-CHF-FX", "0", "EUR", "CHF", "10000", "EUR,CHF"));
+    conventions->add(QuantLib::ext::make_shared<FXConvention>("EUR-JPY-FX", "0", "EUR", "JPY", "10000", "EUR,JPY"));
 
     InstrumentConventions::instance().setConventions(conventions);
 
     return conventions;
 }
 
-boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() {
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData(
+QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() {
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData(
         new analytics::ScenarioSimMarketParameters());
 
     simMarketData->baseCcy() = "EUR";
@@ -151,8 +151,8 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
     return simMarketData;
 }
 
-boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
-    boost::shared_ptr<SensitivityScenarioData> sensiData = boost::make_shared<SensitivityScenarioData>();
+QuantLib::ext::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiData = QuantLib::ext::make_shared<SensitivityScenarioData>();
 
     SensitivityScenarioData::CurveShiftData cvsData;
 
@@ -187,22 +187,22 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
                               5 * Years,  7 * Years, 10 * Years, 20 * Years};
     swvsData.shiftTerms = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years};
 
-    sensiData->discountCurveShiftData()["EUR"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
-    sensiData->discountCurveShiftData()["USD"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
-    sensiData->discountCurveShiftData()["GBP"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
-    sensiData->discountCurveShiftData()["JPY"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
-    sensiData->discountCurveShiftData()["CHF"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
+    sensiData->discountCurveShiftData()["EUR"] = QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
+    sensiData->discountCurveShiftData()["USD"] = QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
+    sensiData->discountCurveShiftData()["GBP"] = QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
+    sensiData->discountCurveShiftData()["JPY"] = QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
+    sensiData->discountCurveShiftData()["CHF"] = QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
 
     sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"] =
-        boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
     sensiData->indexCurveShiftData()["USD-LIBOR-3M"] =
-        boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
     sensiData->indexCurveShiftData()["GBP-LIBOR-6M"] =
-        boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
     sensiData->indexCurveShiftData()["JPY-LIBOR-6M"] =
-        boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
     sensiData->indexCurveShiftData()["CHF-LIBOR-6M"] =
-        boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
 
     sensiData->fxShiftData()["EURUSD"] = fxsData;
     sensiData->fxShiftData()["EURGBP"] = fxsData;
@@ -222,10 +222,10 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     sensiData->swaptionVolShiftData()["CHF"] = swvsData;
 
     sensiData->capFloorVolShiftData()["EUR"] =
-        boost::make_shared<ore::analytics::SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
     sensiData->capFloorVolShiftData()["EUR"]->indexName = "EUR-EURIBOR-6M";
     sensiData->capFloorVolShiftData()["USD"] =
-        boost::make_shared<ore::analytics::SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
     sensiData->capFloorVolShiftData()["USD"]->indexName = "USD-LIBOR-3M";
 
     sensiData->crossGammaFilter() = {{"DiscountCurve/EUR", "DiscountCurve/EUR"},
@@ -266,19 +266,19 @@ BOOST_AUTO_TEST_CASE(testSensitivities) {
     BOOST_TEST_MESSAGE("Today is " << today);
 
     // Init market
-    boost::shared_ptr<Market> initMarket = boost::make_shared<TestMarket>(today);
+    QuantLib::ext::shared_ptr<Market> initMarket = QuantLib::ext::make_shared<TestMarket>(today);
 
     // build scenario sim market parameters
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = setupSimMarketData5();
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = setupSimMarketData5();
 
     // sensitivity config
-    boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData5();
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData5();
 
     // build scenario sim market
     conv();
 
     // build portfolio
-    boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> data = QuantLib::ext::make_shared<EngineData>();
     data->model("Swap") = "DiscountedCashflows";
     data->engine("Swap") = "DiscountingSwapEngine";
     data->model("CrossCurrencySwap") = "DiscountedCashflows";
@@ -286,8 +286,8 @@ BOOST_AUTO_TEST_CASE(testSensitivities) {
     data->model("FxOption") = "GarmanKohlhagen";
     data->engine("FxOption") = "AnalyticEuropeanEngine";
 
-    // boost::shared_ptr<Portfolio> portfolio = buildSwapPortfolio(portfolioSize, factory);
-    boost::shared_ptr<Portfolio> portfolio(new Portfolio());
+    // QuantLib::ext::shared_ptr<Portfolio> portfolio = buildSwapPortfolio(portfolioSize, factory);
+    QuantLib::ext::shared_ptr<Portfolio> portfolio(new Portfolio());
     portfolio->add(
         buildSwap("1_Swap_EUR", "EUR", true, 10.0, 0, 10, 0.03, 0.00, "1Y", "30/360", "6M", "A360", "EUR-EURIBOR-6M"));
     portfolio->add(buildFxOption("7_FxOption_EUR_USD", "Long", "Call", 3, "EUR", 10.0, "USD", 11.0));
@@ -948,7 +948,7 @@ BOOST_AUTO_TEST_CASE(testSensitivities) {
         {"7_FxOption_EUR_USD DiscountCurve/USD/9/15Y DiscountCurve/USD/10/20Y", 0},
         {"7_FxOption_EUR_USD DiscountCurve/USD/9/15Y DiscountCurve/USD/11/30Y", 0}};
     // sensitivity analysis
-    boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
+    QuantLib::ext::shared_ptr<SensitivityAnalysis> sa = QuantLib::ext::make_shared<SensitivityAnalysis>(
         portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, false);
     sa->generateSensitivities();
     map<pair<string, string>, Real> deltaMap;

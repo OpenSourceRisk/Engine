@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 #include <ored/utilities/serializationdate.hpp>
 #include <ored/utilities/serializationperiod.hpp>
 #include <ql/time/date.hpp>
@@ -161,7 +161,7 @@ private:
 std::ostream& operator<<(std::ostream& os, const Expiry& expiry);
 
 //! Parse an Expiry from its string representation, \p strExpiry.
-boost::shared_ptr<Expiry> parseExpiry(const std::string& strExpiry);
+QuantLib::ext::shared_ptr<Expiry> parseExpiry(const std::string& strExpiry);
 
 } // namespace data
 } // namespace ore

@@ -43,7 +43,7 @@ public:
     GenericIborIndex(const Period& tenor, const Currency& ccy,
                      const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>());
     Rate pastFixing(const Date& fixingDate) const override;
-    boost::shared_ptr<IborIndex> clone(const Handle<YieldTermStructure>& h) const override;
+    QuantLib::ext::shared_ptr<IborIndex> clone(const Handle<YieldTermStructure>& h) const override;
 };
 
 } // namespace QuantExt

@@ -39,7 +39,7 @@ std::ostream& operator<<(std::ostream& out, const CashFlowResults& t) {
     return out;
 }
 
-CashFlowResults standardCashFlowResults(const boost::shared_ptr<CashFlow>& c, const Real multiplier,
+CashFlowResults standardCashFlowResults(const QuantLib::ext::shared_ptr<CashFlow>& c, const Real multiplier,
                                         const std::string& type, const Size legNo, const Currency& currency,
                                         const Handle<YieldTermStructure>& discountCurve) {
 
@@ -56,7 +56,7 @@ CashFlowResults standardCashFlowResults(const boost::shared_ptr<CashFlow>& c, co
     return cfResults;
 }
 
-CashFlowResults populateCashFlowResultsFromCashflow(const boost::shared_ptr<QuantLib::CashFlow>& c,
+CashFlowResults populateCashFlowResultsFromCashflow(const QuantLib::ext::shared_ptr<QuantLib::CashFlow>& c,
                                                     const QuantLib::Real multiplier, const QuantLib::Size legNo,
                                                     const QuantLib::Currency& currency) {
 
@@ -72,7 +72,7 @@ CashFlowResults populateCashFlowResultsFromCashflow(const boost::shared_ptr<Quan
 
     cfResults.legNumber = legNo;
 
-    if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c)) {
+    if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(c)) {
         cfResults.rate = cpn->rate();
         cfResults.accrualStartDate = cpn->accrualStartDate();
         cfResults.accrualEndDate = cpn->accrualEndDate();
@@ -80,17 +80,17 @@ CashFlowResults populateCashFlowResultsFromCashflow(const boost::shared_ptr<Quan
         cfResults.accruedAmount = cpn->accruedAmount(today);
         cfResults.notional = cpn->nominal();
         cfResults.type = "Interest";
-        if (auto ptrFloat = boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(cpn)) {
+        if (auto ptrFloat = QuantLib::ext::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(cpn)) {
             cfResults.fixingDate = ptrFloat->fixingDate();
             cfResults.fixingValue = ptrFloat->index()->fixing(cfResults.fixingDate);
             if (cfResults.fixingDate > today)
                 cfResults.type = "InterestProjected";
-        } else if (auto ptrInfl = boost::dynamic_pointer_cast<QuantLib::InflationCoupon>(cpn)) {
+        } else if (auto ptrInfl = QuantLib::ext::dynamic_pointer_cast<QuantLib::InflationCoupon>(cpn)) {
             // We return the last fixing inside the coupon period
             cfResults.fixingDate = ptrInfl->fixingDate();
             cfResults.fixingValue = ptrInfl->indexFixing();
             cfResults.type = "Inflation";
-        } else if (auto ptrBMA = boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(cpn)) {
+        } else if (auto ptrBMA = QuantLib::ext::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(cpn)) {
             // We return the last fixing inside the coupon period
             cfResults.fixingDate = ptrBMA->fixingDates().end()[-2];
             cfResults.fixingValue = ptrBMA->pricer()->swapletRate();
@@ -99,11 +99,11 @@ CashFlowResults populateCashFlowResultsFromCashflow(const boost::shared_ptr<Quan
         }
     } else {
         cfResults.type = "Notional";
-        if (auto ptrIndCf = boost::dynamic_pointer_cast<QuantLib::IndexedCashFlow>(c)) {
+        if (auto ptrIndCf = QuantLib::ext::dynamic_pointer_cast<QuantLib::IndexedCashFlow>(c)) {
             cfResults.fixingDate = ptrIndCf->fixingDate();
             cfResults.fixingValue = ptrIndCf->index()->fixing(cfResults.fixingDate);
             cfResults.type = "Index";
-        } else if (auto ptrFxlCf = boost::dynamic_pointer_cast<QuantExt::FXLinkedCashFlow>(c)) {
+        } else if (auto ptrFxlCf = QuantLib::ext::dynamic_pointer_cast<QuantExt::FXLinkedCashFlow>(c)) {
             // We return the last fixing inside the coupon period
             cfResults.fixingDate = ptrFxlCf->fxFixingDate();
             cfResults.fixingValue = ptrFxlCf->fxRate();

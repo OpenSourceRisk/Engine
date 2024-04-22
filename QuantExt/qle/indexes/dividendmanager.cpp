@@ -28,13 +28,13 @@ using boost::algorithm::to_upper_copy;
 namespace QuantExt {
 
 void applyDividends(const set<Dividend>& dividends) {
-    map<string, boost::shared_ptr<EquityIndex2>> cache;
-    boost::shared_ptr<EquityIndex2> index;
+    map<string, QuantLib::ext::shared_ptr<EquityIndex2>> cache;
+    QuantLib::ext::shared_ptr<EquityIndex2> index;
     std::string lastIndexName;
     for (auto& d: dividends) {
         try {
             if (lastIndexName != d.name) {
-                index = boost::make_shared<EquityIndex2>(d.name, NullCalendar(), Currency());
+                index = QuantLib::ext::make_shared<EquityIndex2>(d.name, NullCalendar(), Currency());
                 lastIndexName = d.name;
             }
             index->addDividend(d, true);
@@ -66,6 +66,10 @@ void DividendManager::setHistory(const string& name, const std::set<Dividend>& h
     data_[to_upper_copy(name)] = history;
 }
 
-boost::shared_ptr<Observable> DividendManager::notifier(const string& name) { return data_[to_upper_copy(name)]; }
+QuantLib::ext::shared_ptr<Observable> DividendManager::notifier(const string& name) { return data_[to_upper_copy(name)]; }
 
+void DividendManager::clearHistory(const std::string& name) { data_.erase(name); }
+
+void DividendManager::clearHistories() { data_.clear(); }
+  
 }

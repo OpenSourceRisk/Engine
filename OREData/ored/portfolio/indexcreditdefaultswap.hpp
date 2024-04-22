@@ -36,11 +36,11 @@ public:
     IndexCreditDefaultSwap(const Envelope& env, const IndexCreditDefaultSwapData& swap, const BasketData& basket)
         : Trade("IndexCreditDefaultSwap", env), swap_(swap), basket_(basket) {}
 
-    virtual void build(const boost::shared_ptr<EngineFactory>&) override;
+    virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
     QuantLib::Real notional() const override;
 
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    virtual XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     const IndexCreditDefaultSwapData& swap() const { return swap_; }
 

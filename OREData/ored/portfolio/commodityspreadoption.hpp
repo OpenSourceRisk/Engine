@@ -35,7 +35,7 @@ public:
         //! \name Serialisation
         //@{
         void fromXML(XMLNode* node) override;
-        XMLNode* toXML(XMLDocument& doc) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
         //@}
     private:
         ScheduleData schedule_;
@@ -51,7 +51,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     const std::vector<ore::data::LegData>& legData() const { return legData_; }
@@ -60,7 +60,7 @@ public:
     boost::optional<OptionStripData> optionStrip() { return optionStrip_; }
 
 private:
-    boost::shared_ptr<ore::data::LegData> createLegData() const { return boost::make_shared<ore::data::LegData>(); }
+    QuantLib::ext::shared_ptr<ore::data::LegData> createLegData() const { return QuantLib::ext::make_shared<ore::data::LegData>(); }
 
     std::vector<ore::data::LegData> legData_;
     ore::data::OptionData optionData_;
@@ -77,12 +77,12 @@ public:
         : ore::data::Trade("CommoditySpreadOption"), csoData_(data) {}
 
     //! Implement the build method
-    void build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) override;
+    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory) override;
 
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Inspectors
@@ -95,7 +95,7 @@ public:
 
     //! Add underlying Commodity names
     std::map<ore::data::AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
 private:
     CommoditySpreadOptionData csoData_;

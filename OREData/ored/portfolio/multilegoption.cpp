@@ -34,7 +34,7 @@ namespace data {
 
 using namespace QuantExt;
 
-void MultiLegOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void MultiLegOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("Building MultiLegOption " << id());
 
@@ -54,7 +54,7 @@ void MultiLegOption::build(const boost::shared_ptr<EngineFactory>& engineFactory
     Real multiplier = positionType == Position::Long ? 1.0 : -1.0;
 
     auto builder =
-        boost::dynamic_pointer_cast<MultiLegOptionEngineBuilderBase>(engineFactory->builder("MultiLegOption"));
+        QuantLib::ext::dynamic_pointer_cast<MultiLegOptionEngineBuilderBase>(engineFactory->builder("MultiLegOption"));
     QL_REQUIRE(builder != nullptr, "wrong builder, expected multi leg option engine builder");
 
     // build underlying legs
@@ -78,7 +78,7 @@ void MultiLegOption::build(const boost::shared_ptr<EngineFactory>& engineFactory
 
     // build exercise option
 
-    boost::shared_ptr<Exercise> exercise;
+    QuantLib::ext::shared_ptr<Exercise> exercise;
     vector<Date> exDates;
     if (hasOption()) {
         for (Size i = 0; i < optionData_.exerciseDates().size(); ++i) {
@@ -89,7 +89,7 @@ void MultiLegOption::build(const boost::shared_ptr<EngineFactory>& engineFactory
     }
     if (!exDates.empty()) {
         std::sort(exDates.begin(), exDates.end());
-        exercise = boost::make_shared<BermudanExercise>(exDates);
+        exercise = QuantLib::ext::make_shared<BermudanExercise>(exDates);
         DLOG("Added exercise with " << exDates.size() << " alive exercise dates.");
     } else {
         DLOG("No exercise added, instrument is equal to the underlying");
@@ -97,7 +97,7 @@ void MultiLegOption::build(const boost::shared_ptr<EngineFactory>& engineFactory
 
     // build instrument
 
-    auto multiLegOption = boost::make_shared<QuantExt::MultiLegOption>(underlyingLegs, underlyingPayers,
+    auto multiLegOption = QuantLib::ext::make_shared<QuantExt::MultiLegOption>(underlyingLegs, underlyingPayers,
                                                                        underlyingCurrencies, exercise, settleType);
 
     DLOG("QLE Instrument built.")
@@ -105,7 +105,7 @@ void MultiLegOption::build(const boost::shared_ptr<EngineFactory>& engineFactory
     // extract underlying fixing dates and indices (needed in the engine builder for model calibration below)
     // also add currencies from indices
     vector<Date> underlyingFixingDates;
-    vector<boost::shared_ptr<InterestRateIndex>> underlyingIndices;
+    vector<QuantLib::ext::shared_ptr<InterestRateIndex>> underlyingIndices;
     vector<Currency> allCurrencies;
     for (auto const& c : underlyingCurrencies) {
         if (std::find(allCurrencies.begin(), allCurrencies.end(), c) == allCurrencies.end()) {
@@ -114,8 +114,8 @@ void MultiLegOption::build(const boost::shared_ptr<EngineFactory>& engineFactory
     }
     for (auto const& l : underlyingLegs) {
         for (auto const& c : l) {
-            auto flr = boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(c);
-            auto cfc = boost::dynamic_pointer_cast<QuantLib::CappedFlooredCoupon>(c);
+            auto flr = QuantLib::ext::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(c);
+            auto cfc = QuantLib::ext::dynamic_pointer_cast<QuantLib::CappedFlooredCoupon>(c);
             if (cfc != nullptr)
                 flr = cfc->underlying();
             if (flr != nullptr) {
@@ -132,7 +132,7 @@ void MultiLegOption::build(const boost::shared_ptr<EngineFactory>& engineFactory
 
     DLOG("Extracted underlying currencies, indices and fixing dates.")
 
-    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
     Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, multiplier,
                                        optionData_.premiumData(), -multiplier, parseCurrency(legCurrencies_.front()),
@@ -152,7 +152,7 @@ void MultiLegOption::build(const boost::shared_ptr<EngineFactory>& engineFactory
     // build instrument
     // WARNING: we don't support an option wrapper here, i.e. the vanilla simulation will not work properly
     instrument_ =
-        boost::make_shared<VanillaInstrument>(multiLegOption, multiplier, additionalInstruments, additionalMultipliers);
+        QuantLib::ext::make_shared<VanillaInstrument>(multiLegOption, multiplier, additionalInstruments, additionalMultipliers);
 
     // popular trade members
 
@@ -161,7 +161,7 @@ void MultiLegOption::build(const boost::shared_ptr<EngineFactory>& engineFactory
     notional_ = currentNotional(legs_.front());
     maturity_ = std::max(lastPremiumDate, multiLegOption->maturityDate());
     // npv currency is base currency of the pricing model
-    auto moe = boost::dynamic_pointer_cast<McMultiLegOptionEngine>(engine);
+    auto moe = QuantLib::ext::dynamic_pointer_cast<McMultiLegOptionEngine>(engine);
     QL_REQUIRE(moe != nullptr, "MultiLegOption::build(): expected McMultiLegOptionEngine from engine builder");
     npvCurrency_ = moe->model()->irlgm1f(0)->currency().code();
 
@@ -187,7 +187,7 @@ void MultiLegOption::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* MultiLegOption::toXML(XMLDocument& doc) {
+XMLNode* MultiLegOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* n0 = doc.allocNode("MultiLegOptionData");
     XMLUtils::appendNode(node, n0);

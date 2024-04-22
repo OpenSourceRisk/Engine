@@ -37,9 +37,9 @@ public:
     DoubleDigitalOption() : ScriptedTrade("DoubleDigitalOption") {}
     DoubleDigitalOption(const Envelope& env, const string& expiry, const string& settlement, const string& binaryPayout,
                         const string& binaryLevel1, const string& binaryLevel2, const string& type1,
-                        const string& type2, const string& position, const boost::shared_ptr<Underlying>& underlying1,
-                        const boost::shared_ptr<Underlying>& underlying2, const string& payCcy,
-                        const boost::shared_ptr<Conventions>& conventions = nullptr,
+                        const string& type2, const string& position, const QuantLib::ext::shared_ptr<Underlying>& underlying1,
+                        const QuantLib::ext::shared_ptr<Underlying>& underlying2, const string& payCcy,
+                        const QuantLib::ext::shared_ptr<Conventions>& conventions = nullptr,
                         const std::string& binaryLevelUpper1 = std::string(),
                         const std::string& binaryLevelUpper2 = std::string())
         : ScriptedTrade("DoubleDigitalOption", env), expiry_(expiry), settlement_(settlement),
@@ -49,15 +49,15 @@ public:
           underlying2_(underlying2) {
         initIndices();
     }
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
 private:
     void initIndices();
     string expiry_, settlement_, binaryPayout_, binaryLevel1_, binaryLevel2_, type1_, type2_, position_, payCcy_,
         binaryLevelUpper1_, binaryLevelUpper2_;
-    boost::shared_ptr<Underlying> underlying1_, underlying2_;
+    QuantLib::ext::shared_ptr<Underlying> underlying1_, underlying2_;
 };
 
 } // namespace data

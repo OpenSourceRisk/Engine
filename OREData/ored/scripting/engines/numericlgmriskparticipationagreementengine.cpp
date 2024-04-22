@@ -36,7 +36,7 @@ using namespace QuantExt;
     
 NumericLgmRiskParticipationAgreementEngine::NumericLgmRiskParticipationAgreementEngine(
     const std::string& baseCcy, const std::map<std::string, Handle<YieldTermStructure>>& discountCurves,
-    const std::map<std::string, Handle<Quote>>& fxSpots, const boost::shared_ptr<LinearGaussMarkovModel>& model,
+    const std::map<std::string, Handle<Quote>>& fxSpots, const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
     const Real sy, const Size ny, const Real sx, const Size nx,
     const Handle<DefaultProbabilityTermStructure>& defaultCurve, const Handle<Quote>& recoveryRate,
     const Size maxGapDays, const Size maxDiscretisationPoints)
@@ -80,19 +80,19 @@ RandomVariable computeIborRate(const RandomVariable& fixing, const Real spread, 
 
 class IborCouponAnalyzer {
 public:
-    explicit IborCouponAnalyzer(const boost::shared_ptr<CashFlow>& c) {
-        scf_ = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(c);
+    explicit IborCouponAnalyzer(const QuantLib::ext::shared_ptr<CashFlow>& c) {
+        scf_ = QuantLib::ext::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(c);
         if (scf_)
             cf_ = scf_->underlying();
         else
-            cf_ = boost::dynamic_pointer_cast<CappedFlooredCoupon>(c);
-        boost::shared_ptr<CashFlow> cc = c;
+            cf_ = QuantLib::ext::dynamic_pointer_cast<CappedFlooredCoupon>(c);
+        QuantLib::ext::shared_ptr<CashFlow> cc = c;
         if (cf_)
             cc = cf_->underlying();
-        ibor_ = boost::dynamic_pointer_cast<IborCoupon>(cc);
+        ibor_ = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(cc);
     }
     // might be nulltr if input cf is not a (capped/floored) ibor coupon
-    boost::shared_ptr<IborCoupon> underlying() const { return ibor_; }
+    QuantLib::ext::shared_ptr<IborCoupon> underlying() const { return ibor_; }
     // QL_MAX_REAL if not a capped/flored coupon or if no cap present
     Real cap() const {
         if (cf_ && cf_->cap() != Null<Real>())
@@ -111,24 +111,24 @@ public:
     bool nakedOption() const { return scf_ != nullptr; }
 
 private:
-    boost::shared_ptr<CappedFlooredCoupon> cf_;
-    boost::shared_ptr<StrippedCappedFlooredCoupon> scf_;
-    boost::shared_ptr<IborCoupon> ibor_;
+    QuantLib::ext::shared_ptr<CappedFlooredCoupon> cf_;
+    QuantLib::ext::shared_ptr<StrippedCappedFlooredCoupon> scf_;
+    QuantLib::ext::shared_ptr<IborCoupon> ibor_;
 };
 
 class ONCouponAnalyzer {
 public:
-    explicit ONCouponAnalyzer(const boost::shared_ptr<CashFlow>& c) {
-        cfcomp_ = boost::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCoupon>(c);
-        cfavg_ = boost::dynamic_pointer_cast<QuantExt::CappedFlooredAverageONIndexedCoupon>(c);
+    explicit ONCouponAnalyzer(const QuantLib::ext::shared_ptr<CashFlow>& c) {
+        cfcomp_ = QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCoupon>(c);
+        cfavg_ = QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredAverageONIndexedCoupon>(c);
         if (cfcomp_ != nullptr)
             comp_ = cfcomp_->underlying();
         else
-            comp_ = boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c);
+            comp_ = QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c);
         if (cfavg_ != nullptr)
             avg_ = cfavg_->underlying();
         else
-            avg_ = boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c);
+            avg_ = QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c);
     }
 
     bool isONCoupon() const { return comp_ != nullptr || avg_ != nullptr; }
@@ -164,7 +164,7 @@ public:
         }
     }
 
-    boost::shared_ptr<OvernightIndex> overnightIndex() const {
+    QuantLib::ext::shared_ptr<OvernightIndex> overnightIndex() const {
         if (comp_ != nullptr)
             return comp_->overnightIndex();
         else if (avg_ != nullptr)
@@ -299,10 +299,10 @@ public:
     }
 
 private:
-    boost::shared_ptr<QuantExt::OvernightIndexedCoupon> comp_;
-    boost::shared_ptr<QuantExt::AverageONIndexedCoupon> avg_;
-    boost::shared_ptr<QuantExt::CappedFlooredOvernightIndexedCoupon> cfcomp_;
-    boost::shared_ptr<QuantExt::CappedFlooredAverageONIndexedCoupon> cfavg_;
+    QuantLib::ext::shared_ptr<QuantExt::OvernightIndexedCoupon> comp_;
+    QuantLib::ext::shared_ptr<QuantExt::AverageONIndexedCoupon> avg_;
+    QuantLib::ext::shared_ptr<QuantExt::CappedFlooredOvernightIndexedCoupon> cfcomp_;
+    QuantLib::ext::shared_ptr<QuantExt::CappedFlooredAverageONIndexedCoupon> cfavg_;
 };
 
 Size getEventIndex(const std::vector<Date>& eventDates, const Date& d) {
@@ -371,8 +371,8 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
                 if (onCouponAnalyzer.fixingDates().empty())
                     continue;
                 couponDates.push_back(std::max(onCouponAnalyzer.fixingDates().front(), referenceDate_));
-            } else if (boost::dynamic_pointer_cast<FixedRateCoupon>(c) != nullptr ||
-                       boost::dynamic_pointer_cast<SimpleCashFlow>(c) != nullptr) {
+            } else if (QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c) != nullptr ||
+                       QuantLib::ext::dynamic_pointer_cast<SimpleCashFlow>(c) != nullptr) {
                 couponDates.push_back(c->date());
             } else {
                 QL_FAIL("NumericLgmRiskParticipationAgreementEngine: unsupported coupon type  when constructing event "
@@ -391,7 +391,7 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
         for (auto const& d : arguments_.exercise->dates()) {
             if (d > referenceDate_) {
                 callDates.push_back(d);
-                if (auto r = boost::dynamic_pointer_cast<QuantExt::RebatedExercise>(arguments_.exercise)) {
+                if (auto r = QuantLib::ext::dynamic_pointer_cast<QuantExt::RebatedExercise>(arguments_.exercise)) {
                     callRebates.push_back(r->rebate(idx));
                     callRebatePayDates.push_back(r->rebatePaymentDate(idx));
                 } else {
@@ -424,7 +424,7 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
     std::vector<std::vector<Real>> fixedCoupons(eventDates.size());
     std::vector<std::vector<int>> fixedCouponsLatestRelevantCallEventIndex(eventDates.size());
 
-    std::vector<std::vector<boost::shared_ptr<InterestRateIndex>>> floatingIndices(eventDates.size());
+    std::vector<std::vector<QuantLib::ext::shared_ptr<InterestRateIndex>>> floatingIndices(eventDates.size());
     std::vector<std::vector<Real>> floatingGearings(eventDates.size());
     std::vector<std::vector<Real>> floatingSpreads(eventDates.size());
     std::vector<std::vector<Real>> floatingCaps(eventDates.size());
@@ -601,14 +601,14 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
                         floatingCouponsLatestRelevantCallEventIndex[i].push_back(
                             getLatestRelevantCallIndex(onCouponAnalyzer.accrualStartDate(), callDates, eventDates));
                     }
-                } else if (auto cpn = boost::dynamic_pointer_cast<FixedRateCoupon>(c)) {
+                } else if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c)) {
                     if (c->date() == eventDates[i]) {
                         // genuine fixed rate coupon
                         fixedCoupons[i].push_back((isPayer ? -1.0 : 1.0) * cpn->amount());
                         fixedCouponsLatestRelevantCallEventIndex[i].push_back(
                             getLatestRelevantCallIndex(cpn->accrualStartDate(), callDates, eventDates));
                     }
-                } else if (boost::dynamic_pointer_cast<SimpleCashFlow>(c) != nullptr) {
+                } else if (QuantLib::ext::dynamic_pointer_cast<SimpleCashFlow>(c) != nullptr) {
                     if (c->date() == eventDates[i]) {
                         // simple cash flow
                         fixedCoupons[i].push_back((isPayer ? -1.0 : 1.0) * c->amount());
@@ -659,7 +659,6 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
                 u.second = RandomVariable(gridSize(), 0.0);
             }
         }
-
         // rollback swaption PV
 
         if (i < static_cast<int>(eventDates.size()) - 1) {
@@ -670,7 +669,7 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
 
         for (Size k = 0; k < floatingIndices[i].size(); ++k) {
             RandomVariable rate;
-            if (auto on = boost::dynamic_pointer_cast<OvernightIndex>(floatingIndices[i][k])) {
+            if (auto on = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(floatingIndices[i][k])) {
                 if (onIsAveraging[i][k]) {
                     rate =
                         lgm.averagedOnRate(on, onFixingDates[i][k], onValueDates[i][k], onDt[i][k], onRateCutoff[i][k],
@@ -684,7 +683,7 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
                                                 floatingFloors[i][k], onLocalCapFloor[i][k], nakedOption[i][k],
                                                 eventTimes[i], states);
                 }
-            } else if (auto ibor = boost::dynamic_pointer_cast<IborIndex>(floatingIndices[i][k])) {
+            } else if (auto ibor = QuantLib::ext::dynamic_pointer_cast<IborIndex>(floatingIndices[i][k])) {
                 rate = computeIborRate(lgm.fixing(ibor, eventDates[i], eventTimes[i], states), floatingSpreads[i][k],
                                        floatingGearings[i][k], floatingFloors[i][k], floatingCaps[i][k],
                                        nakedOption[i][k]);
@@ -712,7 +711,7 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
                 for (Size k = 0; k < floatingIndices[t].size(); ++k) {
                     if (payTimes[t][k] > eventTimes[i] && !QuantLib::close_enough(eventTimes[i], payTimes[t][k])) {
                         RandomVariable rate;
-                        if (auto on = boost::dynamic_pointer_cast<OvernightIndex>(floatingIndices[t][k])) {
+                        if (auto on = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(floatingIndices[t][k])) {
                             if (onIsAveraging[t][k]) {
                                 rate = lgm.averagedOnRate(
                                     on, onFixingDates[t][k], onValueDates[t][k], onDt[t][k], onRateCutoff[t][k],
@@ -726,7 +725,7 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
                                     onLookback[t][k], floatingCaps[t][k], floatingFloors[t][k], onLocalCapFloor[t][k],
                                     nakedOption[t][k], eventTimes[i], states);
                             }
-                        } else if (auto ibor = boost::dynamic_pointer_cast<IborIndex>(floatingIndices[t][k])) {
+                        } else if (auto ibor = QuantLib::ext::dynamic_pointer_cast<IborIndex>(floatingIndices[t][k])) {
                             rate = computeIborRate(
                                 lgm.fixing(ibor, ibor->fixingCalendar().adjust(eventDates[i]), eventTimes[i], states),
                                 floatingSpreads[t][k], floatingGearings[t][k], floatingFloors[t][k], floatingCaps[t][k],
@@ -748,7 +747,7 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
                 for (Size k = 0; k < floatingIndices[t].size(); ++k) {
                     if (payTimes[t][k] > eventTimes[i] && !QuantLib::close_enough(eventTimes[i], payTimes[t][k])) {
                         RandomVariable rate;
-                        if (auto on = boost::dynamic_pointer_cast<OvernightIndex>(floatingIndices[t][k])) {
+                        if (auto on = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(floatingIndices[t][k])) {
                             if (onIsAveraging[t][k]) {
                                 rate = lgm.averagedOnRate(
                                     on, onFixingDates[t][k], onValueDates[t][k], onDt[t][k], onRateCutoff[t][k],
@@ -762,7 +761,7 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
                                     onLookback[t][k], floatingCaps[t][k], floatingFloors[t][k], onLocalCapFloor[t][k],
                                     nakedOption[t][k], eventTimes[i], states);
                             }
-                        } else if (auto ibor = boost::dynamic_pointer_cast<IborIndex>(floatingIndices[t][k])) {
+                        } else if (auto ibor = QuantLib::ext::dynamic_pointer_cast<IborIndex>(floatingIndices[t][k])) {
                             rate = computeIborRate(
                                 lgm.fixing(ibor, ibor->fixingCalendar().adjust(eventDates[i]), eventTimes[i], states),
                                 floatingSpreads[t][k], floatingGearings[t][k], floatingFloors[t][k], floatingCaps[t][k],
@@ -790,6 +789,23 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
                                  callRebateValue);
         }
 
+        // Handle Premium
+        // If PremiumDate > EventDate we  include them in swaptionPv
+
+        for (int j = 0; j < arguments_.premium.size(); j++) {
+            Real premiumAmount = 0;
+            if (arguments_.exerciseIsLong) {
+                premiumAmount = - arguments_.premium[j]->amount();
+            } else {
+                premiumAmount = arguments_.premium[j]->amount();
+            }
+
+            if (arguments_.premium[j]->date() > eventDates[i]) {
+                swaptionPv += RandomVariable(gridSize(), premiumAmount) /
+                             lgm.numeraire(eventTimes[i], states, discountCurves_[arguments_.underlyingCcys[0]]);
+            }
+        }
+        
         // compute positive pv as of event date
 
         RandomVariable tmp = swaptionPv;

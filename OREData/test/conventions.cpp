@@ -40,9 +40,9 @@ void testIborIndexConvention(const string& id, const string& fixingCalendar, con
     const Size settlementDays, const string& businessDayConvention, const bool endOfMonth, 
     const string& internalId = "") {
     // Check construction raises no errors
-    boost::shared_ptr<IborIndexConvention> convention;
+    QuantLib::ext::shared_ptr<IborIndexConvention> convention;
     BOOST_CHECK_NO_THROW(
-        convention = boost::make_shared<IborIndexConvention>(id, fixingCalendar, dayCounter,
+        convention = QuantLib::ext::make_shared<IborIndexConvention>(id, fixingCalendar, dayCounter,
             settlementDays, businessDayConvention, endOfMonth));
 
     // Check object
@@ -65,9 +65,9 @@ BOOST_AUTO_TEST_CASE(testCrossCcyFixFloatSwapConventionConstruction) {
     BOOST_TEST_MESSAGE("Testing cross currency fix float convention construction");
 
     // Check construction raises no errors
-    boost::shared_ptr<CrossCcyFixFloatSwapConvention> convention;
+    QuantLib::ext::shared_ptr<CrossCcyFixFloatSwapConvention> convention;
     BOOST_CHECK_NO_THROW(
-        convention = boost::make_shared<CrossCcyFixFloatSwapConvention>("USD-TRY-XCCY-FIX-FLOAT", "2", "US,UK,TRY", "F",
+        convention = QuantLib::ext::make_shared<CrossCcyFixFloatSwapConvention>("USD-TRY-XCCY-FIX-FLOAT", "2", "US,UK,TRY", "F",
                                                                         "TRY", "Annual", "F", "A360", "USD-LIBOR-3M"));
 
     // Check object
@@ -84,12 +84,12 @@ BOOST_AUTO_TEST_CASE(testCrossCcyFixFloatSwapConventionConstruction) {
 
     // Check end of month when not default
     BOOST_CHECK_NO_THROW(
-        convention = boost::make_shared<CrossCcyFixFloatSwapConvention>(
+        convention = QuantLib::ext::make_shared<CrossCcyFixFloatSwapConvention>(
             "USD-TRY-XCCY-FIX-FLOAT", "2", "US,UK,TRY", "F", "TRY", "Annual", "F", "A360", "USD-LIBOR-3M", "false"));
     BOOST_CHECK(!convention->eom());
 
     BOOST_CHECK_NO_THROW(
-        convention = boost::make_shared<CrossCcyFixFloatSwapConvention>(
+        convention = QuantLib::ext::make_shared<CrossCcyFixFloatSwapConvention>(
             "USD-TRY-XCCY-FIX-FLOAT", "2", "US,UK,TRY", "F", "TRY", "Annual", "F", "A360", "USD-LIBOR-3M", "true"));
     BOOST_CHECK(convention->eom());
 }
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(testCrossCcyFixFloatSwapConventionFromXml) {
     xml.append("</CrossCurrencyFixFloat>");
 
     // Parse convention from XML
-    boost::shared_ptr<CrossCcyFixFloatSwapConvention> convention = boost::make_shared<CrossCcyFixFloatSwapConvention>();
+    QuantLib::ext::shared_ptr<CrossCcyFixFloatSwapConvention> convention = QuantLib::ext::make_shared<CrossCcyFixFloatSwapConvention>();
     BOOST_CHECK_NO_THROW(convention->fromXMLString(xml));
 
     // Check parsed object
@@ -144,17 +144,17 @@ BOOST_AUTO_TEST_CASE(testCrossCcyFixFloatSwapConventionToXml) {
     BOOST_TEST_MESSAGE("Testing writing of cross currency fix float convention to XML");
 
     // Construct the convention
-    boost::shared_ptr<CrossCcyFixFloatSwapConvention> convention;
+    QuantLib::ext::shared_ptr<CrossCcyFixFloatSwapConvention> convention;
     BOOST_CHECK_NO_THROW(
-        convention = boost::make_shared<CrossCcyFixFloatSwapConvention>("USD-TRY-XCCY-FIX-FLOAT", "2", "US,UK,TRY", "F",
+        convention = QuantLib::ext::make_shared<CrossCcyFixFloatSwapConvention>("USD-TRY-XCCY-FIX-FLOAT", "2", "US,UK,TRY", "F",
                                                                         "TRY", "Annual", "F", "A360", "USD-LIBOR-3M"));
 
     // Write the convention to a string
     string xml = convention->toXMLString();
 
     // Read the convention back from the string using fromXMLString
-    boost::shared_ptr<CrossCcyFixFloatSwapConvention> readConvention =
-        boost::make_shared<CrossCcyFixFloatSwapConvention>();
+    QuantLib::ext::shared_ptr<CrossCcyFixFloatSwapConvention> readConvention =
+        QuantLib::ext::make_shared<CrossCcyFixFloatSwapConvention>();
     BOOST_CHECK_NO_THROW(readConvention->fromXMLString(xml));
 
     // The read convention should equal the original convention
@@ -181,11 +181,11 @@ BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionConstruction) {
     prohibitedExpiries.insert(PE(Date(31, Dec, 2021)));
     prohibitedExpiries.insert(PE(Date(30, Dec, 2022)));
  
-    boost::shared_ptr<CommodityFutureConvention> convention;
+    QuantLib::ext::shared_ptr<CommodityFutureConvention> convention;
     CommodityFutureConvention::DayOfMonth dayOfMonth("31");
     CommodityFutureConvention::CalendarDaysBefore optionExpiryBusinessDayBefore("3");
     CommodityFutureConvention::OptionExpiryAnchorDateRule optionExpiryDateRule(optionExpiryBusinessDayBefore);
-    BOOST_CHECK_NO_THROW(convention = boost::make_shared<CommodityFutureConvention>(
+    BOOST_CHECK_NO_THROW(convention = QuantLib::ext::make_shared<CommodityFutureConvention>(
                              "ICE:B", dayOfMonth, "Monthly", "ICE_FuturesEU", "UK", 2, "Jan", "0", "Preceding", true,
                              false, optionExpiryDateRule, prohibitedExpiries));
 
@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionFromXml) {
     xml.append("</CommodityFuture>");
 
     // Parse convention from XML
-    boost::shared_ptr<CommodityFutureConvention> convention = boost::make_shared<CommodityFutureConvention>();
+    QuantLib::ext::shared_ptr<CommodityFutureConvention> convention = QuantLib::ext::make_shared<CommodityFutureConvention>();
     BOOST_CHECK_NO_THROW(convention->fromXMLString(xml));
 
     // Check parsed object
@@ -291,11 +291,11 @@ BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionToXml) {
     prohibitedExpiries.insert(PE(Date(31, Dec, 2021), false, Preceding, true, ModifiedPreceding));
     prohibitedExpiries.insert(PE(Date(31, Dec, 2021), false, Following));
 
-    boost::shared_ptr<CommodityFutureConvention> convention;
+    QuantLib::ext::shared_ptr<CommodityFutureConvention> convention;
     CommodityFutureConvention::DayOfMonth dayOfMonth("31");
     CommodityFutureConvention::CalendarDaysBefore optionExpiryBusinessDayBefore("3");
     CommodityFutureConvention::OptionExpiryAnchorDateRule optionExpiryDateRule(optionExpiryBusinessDayBefore);
-    BOOST_CHECK_NO_THROW(convention = boost::make_shared<CommodityFutureConvention>(
+    BOOST_CHECK_NO_THROW(convention = QuantLib::ext::make_shared<CommodityFutureConvention>(
                              "ICE:B", dayOfMonth, "Monthly", "ICE_FuturesEU", "UK", 2, "Jan", "0", "Preceding", true,
                              false, optionExpiryDateRule, prohibitedExpiries));
 
@@ -303,7 +303,7 @@ BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionToXml) {
     string xml = convention->toXMLString();
 
     // Read the convention back from the string using fromXMLString
-    boost::shared_ptr<CommodityFutureConvention> readConvention = boost::make_shared<CommodityFutureConvention>();
+    QuantLib::ext::shared_ptr<CommodityFutureConvention> readConvention = QuantLib::ext::make_shared<CommodityFutureConvention>();
     BOOST_CHECK_NO_THROW(readConvention->fromXMLString(xml));
 
     // The read convention should equal the original convention

@@ -21,6 +21,7 @@
 
 #include <ored/portfolio/trademonetary.hpp>
 #include <ql/interestrate.hpp>
+#include <ql/tuple.hpp>
 #include <boost/variant.hpp>
 
 namespace ore {
@@ -53,19 +54,19 @@ public:
     std::string currency();
     const QuantLib::Compounding& compounding();
 
-    StrikePrice& strikePrice() { return boost::get<StrikePrice>(strike_); }
-    StrikeYield& strikeYield() { return boost::get<StrikeYield>(strike_); }
+    StrikePrice& strikePrice() const { return boost::get<StrikePrice>(strike_); }
+    StrikeYield& strikeYield() const { return boost::get<StrikeYield>(strike_); }
 
     void setValue(const QuantLib::Real& value);
     void setCurrency(const std::string& currency);
 
     void fromXML(XMLNode* node, const bool isRequired = true, const bool allowYieldStrike = false);
-    XMLNode* toXML(XMLDocument& doc);
+    XMLNode* toXML(XMLDocument& doc) const;
 
-    const bool empty();
+    const bool empty() const;
 
 private:
-    boost::variant<StrikeYield, StrikePrice> strike_;
+    mutable boost::variant<StrikeYield, StrikePrice> strike_;
     Type type_;
     bool onlyStrike_ = false;
     bool noStrikePriceNode_ = false;

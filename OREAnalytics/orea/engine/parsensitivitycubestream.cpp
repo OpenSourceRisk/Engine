@@ -29,7 +29,7 @@ namespace analytics {
 
 // Note: iterator initialisation below works because currentDeltas_ is
 //       (empty) initialised before itCurrent_
-ParSensitivityCubeStream::ParSensitivityCubeStream(const boost::shared_ptr<ZeroToParCube>& cube, const string& currency)
+ParSensitivityCubeStream::ParSensitivityCubeStream(const QuantLib::ext::shared_ptr<ZeroToParCube>& cube, const string& currency)
     : zeroCubeIdx_(0), cube_(cube), currency_(currency), itCurrent_(currentDeltas_.begin()) {
     QL_REQUIRE(!cube_->zeroCubes().empty(), "ParSensitivityCubeStream: cube contains no zero cubes");
     tradeIdx_ = cube_->zeroCubes().front()->tradeIdx().begin();
