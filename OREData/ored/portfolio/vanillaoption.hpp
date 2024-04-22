@@ -40,6 +40,7 @@ class VanillaOptionTrade : public Trade {
 public:
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
+    void setNotionalAndCurrencies();
 
     //! \name Inspectors
     //@{
@@ -52,11 +53,6 @@ public:
     const QuantLib::Date paymentDate() const { return paymentDate_; }
     //@}
 
-    //! \name Serialisation
-    //@{
-    virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) const override;
-    //@}
 protected:
     VanillaOptionTrade(AssetClass assetClassUnderlying)
         : Trade("VanillaOption"), assetClassUnderlying_(assetClassUnderlying), quantity_(0) {}
