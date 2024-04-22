@@ -1492,5 +1492,20 @@ std::ostream& operator<<(std::ostream& out, SabrParametricVolatility::ModelVaria
     return out;
 }
 
+std::ostream& operator<<(std::ostream& os, Exercise::Type type) {
+    if (type == Exercise::European) {
+        os << "European";
+    } else if (type == Exercise::Bermudan) {
+        os << "Bermudan";
+    } else if (type == Exercise::American) {
+        os << "American";
+    } else {
+        QL_FAIL("Exercise::Type (" << static_cast<int>(type)
+                                   << " not recognized. Expected 'European', 'Bermudan', or 'American'.");
+    }
+
+    return os;
+}
+
 } // namespace data
 } // namespace ore
