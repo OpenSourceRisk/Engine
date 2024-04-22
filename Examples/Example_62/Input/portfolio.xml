@@ -1,33 +1,5 @@
 <Portfolio>
 
-  <!--
-  <Trade id="1:EquityOptionA">
-    <TradeType>EquityOption</TradeType>
-    <Envelope>
-      <CounterParty>CPTY</CounterParty>
-      <NettingSetId>CPTY</NettingSetId>
-      <AdditionalFields/>
-    </Envelope>
-    <EquityOptionData>
-      <OptionData>
-        <LongShort>Long</LongShort>
-        <OptionType>Call</OptionType>
-        <Style>European</Style>
-        <Settlement>Cash</Settlement>
-        <PayOffAtExpiry>true</PayOffAtExpiry>
-        <ExerciseDates>
-          <ExerciseDate>2023-11-07</ExerciseDate>
-        </ExerciseDates>
-      </OptionData>
-      <Name>RIC:.STOXX50E</Name>
-      <Currency>EUR</Currency>
-      <Strike>4350</Strike>
-      <StrikeCurrency>EUR</StrikeCurrency>
-      <Quantity>1000</Quantity>
-    </EquityOptionData>
-  </Trade>
-  -->
- 
   <Trade id="1:EquityOption">
     <TradeType>ScriptedTrade</TradeType>
     <Envelope>
@@ -131,7 +103,7 @@
         </Number>
         <Number>
           <Name>BarrierLevel</Name>
-          <Value>5000</Value>
+          <Value>50000</Value>
         </Number>
         <Number>
           <Name>BarrierType</Name>
@@ -182,7 +154,7 @@
       <Data>
         <Number>
           <Name>Strike</Name>
-          <Value>4400</Value>
+          <Value>4200</Value>
         </Number>
         <Number>
           <Name>FixingAmount</Name>
@@ -250,7 +222,7 @@
         </Number>
         <Number>
           <Name>KnockOutLevel</Name>
-          <Value>5000</Value>
+          <Value>50000</Value>
         </Number>
         <Number>
           <Name>KnockOutType</Name>
@@ -268,196 +240,46 @@
     </ScriptedTradeData>
   </Trade>
 
-  <!-- Does not work with AD yet: "SORT not yet supported by ComputationGraphBuilder" -->
-  <!--
-  <Trade id="4:RainbowCallSpreadOption">
+  <Trade id="4:AsianBasketOption">
     <TradeType>ScriptedTrade</TradeType>
     <Envelope>
-      <CounterParty>CPTY</CounterParty>
-      <NettingSetId>CPTY</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
-    <EuropeanRainbowCallSpreadOptionData>
-      <Expiry type="event">2028-01-31</Expiry>
-      <Settlement type="event">2028-02-20</Settlement>
+    <AsianBasketOptionData>
+      <Expiry type="event">2024-10-15</Expiry>
+      <Settlement type="event">2024-10-20</Settlement>
+      <ObservationDates type="event">
+	<ScheduleData>
+          <Rules>
+            <StartDate>2023-10-15</StartDate>
+            <EndDate>2024-10-15</EndDate>
+            <Tenor>1D</Tenor>
+            <Calendar>US</Calendar>
+            <Convention>F</Convention>
+            <TermConvention>F</TermConvention>
+            <Rule>Forward</Rule>
+          </Rules>
+	</ScheduleData>
+      </ObservationDates>
+      <PutCall type="optionType">Call</PutCall>
       <LongShort type="longShort">Long</LongShort>
-      <Notional type="number">1000000</Notional>
+      <Notional type="number">10000</Notional>
+      <Strike type="number">4500</Strike>
       <Underlyings type="index">
 	<Value>EQ-RIC:.SPX</Value>
 	<Value>EQ-RIC:.STOXX50E</Value>
       </Underlyings>
-      <InitialStrikes type="number">
-	<Value>4520</Value>
-	<Value>4340</Value>
-      </InitialStrikes>
       <Weights type="number">
-	<Value>0.6</Value>
-	<Value>0.4</Value>
+	<Value>0.5</Value>
+	<Value>0.5</Value>
       </Weights>
-      <Floor type="number">0</Floor>
-      <Cap type="number">1000000</Cap>    
-      <PayCcy type="currency">USD</PayCcy>
-    </EuropeanRainbowCallSpreadOptionData>
-  </Trade>
-  -->
-  
-  <Trade id="4:WorstOfBasketSwap">
-    <TradeType>ScriptedTrade</TradeType>
-    <Envelope>
-      <CounterParty>CPTY</CounterParty>
-      <NettingSetId>CPTY</NettingSetId>
-      <AdditionalFields/>
-    </Envelope>
-    <WorstOfBasketSwapData>
-      <LongShort type="longShort">Long</LongShort>
-      <Quantity type="number">1955000</Quantity>
-      <InitialFixedRate type="number">0.015</InitialFixedRate>
-      <Underlyings type="index">
-	<Value>EQ-RIC:.STOXX50E</Value>
-	<Value>EQ-RIC:.SPX</Value>
-      </Underlyings>
-      <InitialPrices type="number">
-	<Value>3337</Value>
-	<Value>3518</Value>
-      </InitialPrices>
-      <DeterminationDates type="event">
-	<ScheduleData>
-          <Dates>
-            <Dates>
-              <Date>2023-08-07</Date>
-              <Date>2024-02-07</Date>
-              <Date>2024-08-07</Date>
-              <Date>2025-02-07</Date>
-              <Date>2025-08-07</Date>
-            </Dates>
-            <Calendar>TARGET</Calendar>
-            <Convention>MF</Convention>
-          </Dates>
-	</ScheduleData>
-      </DeterminationDates>
-      <SettlementDates type="event">
-	<ScheduleData>
-          <Dates>
-            <Dates>
-              <Date>2023-08-21</Date>
-              <Date>2024-02-21</Date>
-              <Date>2024-08-21</Date>
-              <Date>2025-02-21</Date>
-              <Date>2025-08-21</Date>
-            </Dates>
-            <Calendar>TARGET</Calendar>
-            <Convention>MF</Convention>
-          </Dates>
-      </ScheduleData>
-      </SettlementDates>
-      <KnockOutLevels type="number">
-	<Value>1.0</Value>
-	<Value>1.0</Value>
-	<Value>1.0</Value>
-	<Value>1.0</Value>
-      </KnockOutLevels>
-      <CouponTriggerLevels type="number">
-	<Value>0.75</Value>
-	<Value>0.75</Value>
-	<Value>0.75</Value>
-	<Value>0.75</Value>
-      </CouponTriggerLevels>
-      <KnockInLevel type="number">0.75</KnockInLevel>
-      <CouponRate type="number">0.04</CouponRate>
-      <AccumulatingCoupons type="bool">true</AccumulatingCoupons>
-      <FloatingIndex type="index">EUR-ESTER</FloatingIndex>
-      <FloatingSpread type="number">0.002</FloatingSpread>
-      <FloatingDayCountFraction type="dayCounter">Actual/360</FloatingDayCountFraction>
-      <FixingSchedule type="event">
-	<DerivedSchedule>
-          <BaseSchedule>DeterminationDates</BaseSchedule>
-          <Shift>-2D</Shift>
-          <Calendar>TARGET</Calendar>
-          <Convention>MF</Convention>
-	</DerivedSchedule>
-      </FixingSchedule>
-      <Strike type="number">1.0</Strike>
       <PayCcy type="currency">EUR</PayCcy>
-    </WorstOfBasketSwapData>
-  </Trade>
-
-  <Trade id="5:KnockOutSwap">
-    <TradeType>KnockOutSwap</TradeType>
-    <Envelope>
-      <CounterParty>CPTY</CounterParty>
-      <NettingSetId/>
-      <AdditionalFields/>
-    </Envelope>
-    <KnockOutSwapData>
-      <!-- BarrierData and BarrierStartDate specify the knock out terms -->
-      <BarrierData>
-	<Type>UpAndOut</Type>
-	<Levels>
-          <Level>0.20</Level>
-	</Levels>
-      </BarrierData>
-      <BarrierStartDate>2024-10-01</BarrierStartDate>
-      <!-- we require exactly one Floating and one Fixed Leg -->
-      <LegData>
-	<LegType>Floating</LegType>
-	<Payer>false</Payer>
-	<Currency>EUR</Currency>
-	<DayCounter>A360</DayCounter>
-	<PaymentConvention>MF</PaymentConvention>
-	<Notionals>
-          <Notional>100000000.00</Notional>
-	</Notionals>
-	<FloatingLegData>
-          <Index>EUR-ESTER</Index>
-	</FloatingLegData>
-	<ScheduleData>
-          <Rules>
-            <StartDate>2023-10-01</StartDate>
-            <EndDate>2028-10-01</EndDate>
-            <Tenor>3M</Tenor>
-            <Calendar>TARGET</Calendar>
-            <Convention>ModifiedFollowing</Convention>
-            <TermConvention/>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
-	</ScheduleData>
-      </LegData>
-      <LegData>
-	<LegType>Fixed</LegType>
-	<Payer>true</Payer>
-	<Currency>EUR</Currency>
-	<Notionals>
-          <Notional>100000000.00</Notional>
-	</Notionals>
-	<DayCounter>ACT/ACT</DayCounter>
-	<PaymentConvention>Following</PaymentConvention>
-	<FixedLegData>
-          <Rates>
-            <Rate>0.05</Rate>
-          </Rates>
-	</FixedLegData>
-	<ScheduleData>
-          <Rules>
-            <StartDate>2023-10-01</StartDate>
-            <EndDate>2028-10-01</EndDate>
-            <Tenor>3M</Tenor>
-            <Calendar>TARGET</Calendar>
-            <Convention>ModifiedFollowing</Convention>
-            <TermConvention>ModifiedFollowing</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
-	</ScheduleData>
-      </LegData>
-    </KnockOutSwapData>
+    </AsianBasketOptionData>
   </Trade>
   
-  <Trade id="6:TaRF">
+  <Trade id="5:TaRF">
     <TradeType>ScriptedTrade</TradeType>
     <Envelope>
       <CounterParty>CPTY</CounterParty>
@@ -465,7 +287,7 @@
       <AdditionalFields/>
     </Envelope>
     <TaRFData>
-      <FixingAmount type="number">100.00</FixingAmount>
+      <FixingAmount type="number">100000.00</FixingAmount>
       <LongShort type="longShort">Long</LongShort>
       <Underlying type="index">FX-ECB-EUR-USD</Underlying>
       <PayCcy type="currency">EUR</PayCcy>
@@ -495,35 +317,40 @@
       </SettlementDates>
       <RangeLowerBounds type="number">
         <Value>0</Value>
-        <Value>0.9</Value>
         <Value>1.0</Value>
-        <Value>1.1</Value>
         <Value>1.2</Value>
       </RangeLowerBounds>
       <RangeUpperBounds type="number">
-        <Value>0.9</Value>
         <Value>1.0</Value>
-        <Value>1.1</Value>
         <Value>1.2</Value>
         <Value>1000</Value>
       </RangeUpperBounds>
       <RangeLeverages type="number">
+	<!--
         <Value>2</Value>
         <Value>1</Value>
-        <Value>0.5</Value>
         <Value>-1</Value>
-        <Value>-2</Value>
+	-->
+        <Value>1</Value>
+        <Value>1</Value>
+        <Value>1</Value>
       </RangeLeverages>
       <RangeStrikes type="number">
+	<!--
 	<Value>0.5</Value>
-	<Value>0.9</Value>
 	<Value>1.0</Value>
-	<Value>1.1</Value>
 	<Value>1.2</Value>
+	-->
+	<Value>0.5</Value>
+	<Value>0.5</Value>
+	<Value>0.5</Value>
       </RangeStrikes>
-      <KnockOutProfitAmount type="number">50000</KnockOutProfitAmount>
+      <!--
+      <KnockOutProfitAmount type="number">2500000</KnockOutProfitAmount>
+      -->
+      <KnockOutProfitAmount type="number">5000000</KnockOutProfitAmount>
       <KnockOutProfitEvents type="number">0</KnockOutProfitEvents>
-      <TargetAmount type="number">50000</TargetAmount>
+      <TargetAmount type="number">0</TargetAmount>
       <TargetType type="number">1</TargetType>
     </TaRFData>
   </Trade>
