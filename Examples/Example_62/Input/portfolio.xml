@@ -1,6 +1,7 @@
 <Portfolio>
 
-  <Trade id="1:EquityOption">
+  <!--
+  <Trade id="1:EquityOptionA">
     <TradeType>EquityOption</TradeType>
     <Envelope>
       <CounterParty>CPTY</CounterParty>
@@ -25,8 +26,9 @@
       <Quantity>1000</Quantity>
     </EquityOptionData>
   </Trade>
-
-  <Trade id="2:EquityOption">
+  -->
+ 
+  <Trade id="1:EquityOption">
     <TradeType>ScriptedTrade</TradeType>
     <Envelope>
       <CounterParty>CPTY</CounterParty>
@@ -71,8 +73,8 @@
       </Data>
     </ScriptedTradeData>
   </Trade>
-  
-  <Trade id="3:EquityBarrierOption">
+
+  <Trade id="2:EquityBarrierOption">
     <TradeType>ScriptedTrade</TradeType>
     <Envelope>
       <CounterParty>CPTY</CounterParty>
@@ -96,11 +98,11 @@
         </Number>
         <Number>
           <Name>PutCall</Name>
-          <Value>1</Value> <!-- 1:Call -1:Put -->
+          <Value>1</Value> 
         </Number>
         <Number>
           <Name>LongShort</Name>
-          <Value>1</Value> <!-- 1:Long -1:Short -->
+          <Value>1</Value> 
         </Number>
         <Currency>
           <Name>PayCcy</Name>
@@ -119,10 +121,9 @@
           <Value>1000</Value>
         </Number>
         
-        <!-- barrier option specifics -->
         <Number>
           <Name>PayoffType</Name>
-          <Value>0</Value><!-- 0:Vanilla 1:CashOrNothing -->
+          <Value>0</Value>
         </Number>
         <Number>
           <Name>Amount</Name>
@@ -134,7 +135,7 @@
         </Number>
         <Number>
           <Name>BarrierType</Name>
-          <Value>4</Value> <!-- 1:DownIn 2:UpIn 3:DownOut 4:UpOut -->
+          <Value>4</Value>
         </Number>
         <Number>
           <Name>BarrierRebate</Name>
@@ -146,7 +147,7 @@
         </Currency>
         <Number>
           <Name>BarrierRebatePayTime</Name>
-          <Value>1</Value> <!-- 0:atHit 1:atExpiry -->
+          <Value>1</Value>
         </Number>
         <Event>
           <Name>BarrierMonitoringDates</Name>
@@ -169,7 +170,7 @@
     </ScriptedTradeData>
   </Trade>
   
-  <Trade id="4:EquityAccumulator">
+  <Trade id="3:EquityAccumulator">
     <TradeType>ScriptedTrade</TradeType>
     <Envelope>
       <CounterParty>CPTY</CounterParty>
@@ -253,11 +254,11 @@
         </Number>
         <Number>
           <Name>KnockOutType</Name>
-          <Value>4</Value><!-- 1:DownIn 2:UpIn 3:DownOut 4:UpOut -->
+          <Value>4</Value>
         </Number>
         <Number>
           <Name>AmericanKO</Name>
-          <Value>-1</Value><!-- 1:true -1:false -->
+          <Value>-1</Value>
         </Number>
         <Number>
           <Name>GuaranteedFixings</Name>
@@ -267,7 +268,9 @@
     </ScriptedTradeData>
   </Trade>
 
-  <Trade id="5:RainbowCallSpreadOption">
+  <!-- Does not work with AD yet: "SORT not yet supported by ComputationGraphBuilder" -->
+  <!--
+  <Trade id="4:RainbowCallSpreadOption">
     <TradeType>ScriptedTrade</TradeType>
     <Envelope>
       <CounterParty>CPTY</CounterParty>
@@ -296,8 +299,9 @@
       <PayCcy type="currency">USD</PayCcy>
     </EuropeanRainbowCallSpreadOptionData>
   </Trade>
-
-  <Trade id="6:WorstOfBasketSwap">
+  -->
+  
+  <Trade id="4:WorstOfBasketSwap">
     <TradeType>ScriptedTrade</TradeType>
     <Envelope>
       <CounterParty>CPTY</CounterParty>
@@ -377,7 +381,7 @@
     </WorstOfBasketSwapData>
   </Trade>
 
-  <Trade id="7:TaRF">
+  <Trade id="5:TaRF">
     <TradeType>ScriptedTrade</TradeType>
     <Envelope>
       <CounterParty>CPTY</CounterParty>
