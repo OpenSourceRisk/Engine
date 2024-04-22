@@ -39,7 +39,8 @@ using std::string;
 class VanillaOptionTrade : public Trade {
 public:
     //! Build QuantLib/QuantExt instrument, link pricing engine
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
+    void setNotionalAndCurrencies();
 
     //! \name Inspectors
     //@{
@@ -52,17 +53,12 @@ public:
     const QuantLib::Date paymentDate() const { return paymentDate_; }
     //@}
 
-    //! \name Serialisation
-    //@{
-    virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
-    //@}
 protected:
     VanillaOptionTrade(AssetClass assetClassUnderlying)
         : Trade("VanillaOption"), assetClassUnderlying_(assetClassUnderlying), quantity_(0) {}
     VanillaOptionTrade(const Envelope& env, AssetClass assetClassUnderlying, OptionData option, string assetName,
                        string currency, double quantity, TradeStrike strike,
-                       const boost::shared_ptr<QuantLib::Index>& index = nullptr, const std::string& indexName = "",
+                       const QuantLib::ext::shared_ptr<QuantLib::Index>& index = nullptr, const std::string& indexName = "",
                        QuantLib::Date forwardDate = QuantLib::Date())
         : Trade("VanillaOption", env), assetClassUnderlying_(assetClassUnderlying), option_(option),
           assetName_(assetName), currency_(currency), quantity_(quantity), strike_(strike), index_(index),
@@ -77,7 +73,7 @@ protected:
     TradeStrike strike_;
 
     //! An index is needed if the option is to be automatically exercised on expiry.
-    boost::shared_ptr<QuantLib::Index> index_;
+    QuantLib::ext::shared_ptr<QuantLib::Index> index_;
 
     //! Hold the external index name if needed e.g. in the case of an FX index.
     std::string indexName_;

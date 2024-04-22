@@ -26,7 +26,7 @@
 namespace ore {
 namespace data {
 
-void BestEntryOption::build(const boost::shared_ptr<EngineFactory>& factory) {
+void BestEntryOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
     // set script parameters
 
@@ -113,27 +113,27 @@ void BestEntryOption::build(const boost::shared_ptr<EngineFactory>& factory) {
     // build trade
 
     ScriptedTrade::build(factory);
+}
 
-    // ISDA taxonomy
+void BestEntryOption::setIsdaTaxonomyFields() {
+    ScriptedTrade::setIsdaTaxonomyFields();
+
     // asset class set in the base class already
     std::string assetClass = boost::any_cast<std::string>(additionalData_["isdaAssetClass"]);
     if (assetClass == "Equity") {
         additionalData_["isdaBaseProduct"] = string("Other");
-        additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");  
-    }
-    else if (assetClass == "Commodity") {
+        additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    } else if (assetClass == "Commodity") {
         // isda taxonomy missing for this class, using the same as equity
         additionalData_["isdaBaseProduct"] = string("Other");
-        additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");  
-    }
-    else if (assetClass == "Foreign Exchange") {
+        additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    } else if (assetClass == "Foreign Exchange") {
         additionalData_["isdaBaseProduct"] = string("Complex Exotic");
-        additionalData_["isdaSubProduct"] = string("Generic");  
-    }
-    else {
+        additionalData_["isdaSubProduct"] = string("Generic");
+    } else {
         WLOG("ISDA taxonomy incomplete for trade " << id());
     }
-    additionalData_["isdaTransaction"] = string("");  
+    additionalData_["isdaTransaction"] = string("");
 }
 
 void BestEntryOption::initIndices() { indices_.emplace_back("Index", "Underlying", scriptedIndexName(underlying_)); }
@@ -172,7 +172,7 @@ void BestEntryOption::fromXML(XMLNode* node) {
     initIndices();
 }
 
-XMLNode* BestEntryOption::toXML(XMLDocument& doc) {
+XMLNode* BestEntryOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* tradeNode = doc.allocNode(tradeType() + "Data");
     XMLUtils::appendNode(node, tradeNode);

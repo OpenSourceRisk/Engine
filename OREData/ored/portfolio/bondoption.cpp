@@ -46,21 +46,37 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-void BondOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Building Bond Option: " << id());
+    
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Interest Rate");
+    additionalData_["isdaBaseProduct"] = string("Option");
+    additionalData_["isdaSubProduct"] = string("Debt Option");
+    additionalData_["isdaTransaction"] = string("");  
 
-    const boost::shared_ptr<Market> market = engineFactory->market();
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("BondOption");
+    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("BondOption");
     bondData_ = originalBondData_;
     bondData_.populateFromBondReferenceData(engineFactory->referenceData());
 
     Calendar calendar = parseCalendar(bondData_.calendar());
-    boost::shared_ptr<QuantExt::BondOption> bondoption;
+    QuantLib::ext::shared_ptr<QuantExt::BondOption> bondoption;
 
     // FIXME this won't work for zero bonds (but their implementation is incomplete anyhow, see bond.cpp)
-    underlying_ = boost::make_shared<ore::data::Bond>(Envelope(), bondData_);
+    underlying_ = QuantLib::ext::make_shared<ore::data::Bond>(Envelope(), bondData_);
+
     underlying_->build(engineFactory);
-    auto qlBondInstr = boost::dynamic_pointer_cast<QuantLib::Bond>(underlying_->instrument()->qlInstrument());
+
+    legs_ = underlying_->legs();
+    legCurrencies_ = underlying_->legCurrencies();
+    legPayers_ = std::vector<bool>(legs_.size(), false); // always receive (long option view)
+    npvCurrency_ = underlying_->bondData().currency();
+    notional_ = underlying_->notional() * bondData_.bondNotional();
+    notionalCurrency_ = underlying_->bondData().currency();
+    maturity_ = std::max(optionData_.premiumData().latestPremiumDate(), underlying_->maturity());
+
+    auto qlBondInstr = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(underlying_->instrument()->qlInstrument());
     QL_REQUIRE(qlBondInstr, "BondOption::build(): could not cast to QuantLib::Bond");
     for (auto const p : underlying_->legPayers()) {
         QL_REQUIRE(!p, "BondOption::build(): underlying leg must be receiver");
@@ -97,19 +113,19 @@ void BondOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE(optionData_.exerciseDates().size() == 1,
                "BondOption::build(): exactly one option date required, found " << optionData_.exerciseDates().size());
     Date exerciseDate = parseDate(optionData_.exerciseDates().back());
-    boost::shared_ptr<Callability> callability;
+    QuantLib::ext::shared_ptr<Callability> callability;
     callability.reset(new Callability(callabilityPrice, callabilityType, exerciseDate));
-    CallabilitySchedule callabilitySchedule = std::vector<boost::shared_ptr<Callability>>(1, callability);
+    CallabilitySchedule callabilitySchedule = std::vector<QuantLib::ext::shared_ptr<Callability>>(1, callability);
 
     bondoption.reset(new QuantExt::BondOption(qlBondInstr, callabilitySchedule, knocksOut_));
 
     Currency currency = parseCurrency(underlying_->bondData().currency());
 
-    boost::shared_ptr<BondOptionEngineBuilder> bondOptionBuilder =
-        boost::dynamic_pointer_cast<BondOptionEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<BondOptionEngineBuilder> bondOptionBuilder =
+        QuantLib::ext::dynamic_pointer_cast<BondOptionEngineBuilder>(builder);
     QL_REQUIRE(bondOptionBuilder, "No Builder found for bondOption: " << id());
 
-    boost::shared_ptr<BlackBondOptionEngine> blackEngine = boost::dynamic_pointer_cast<BlackBondOptionEngine>(
+    QuantLib::ext::shared_ptr<BlackBondOptionEngine> blackEngine = QuantLib::ext::dynamic_pointer_cast<BlackBondOptionEngine>(
         bondOptionBuilder->engine(id(), currency, bondData_.creditCurveId(), bondData_.hasCreditRisk(),
                                   bondData_.securityId(), bondData_.referenceCurveId(), bondData_.volatilityCurveId()));
     bondoption->setPricingEngine(blackEngine);
@@ -118,30 +134,16 @@ void BondOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Real multiplier =
         bondData_.bondNotional() * (parsePositionType(optionData_.longShort()) == Position::Long ? 1.0 : -1.0);
 
-    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, multiplier,
-                                       optionData_.premiumData(), multiplier > 0.0 ? -1.0 : 1.0, currency,
-                                       engineFactory, bondOptionBuilder->configuration(MarketContext::pricing));
+    addPremiums(additionalInstruments, additionalMultipliers, multiplier, optionData_.premiumData(),
+                multiplier > 0.0 ? -1.0 : 1.0, currency, engineFactory,
+                bondOptionBuilder->configuration(MarketContext::pricing));
 
     instrument_.reset(new VanillaInstrument(bondoption, multiplier, additionalInstruments, additionalMultipliers));
-
-    legs_ = underlying_->legs();
-    legCurrencies_ = underlying_->legCurrencies();
-    legPayers_ = std::vector<bool>(legs_.size(), false); // always receive (long option view)
-    npvCurrency_ = underlying_->bondData().currency();
-    maturity_ = std::max(lastPremiumDate, underlying_->maturity());
-    notional_ = underlying_->notional() * bondData_.bondNotional();
-    notionalCurrency_ = underlying_->bondData().currency();
-
+    
     // the required fixings are (at most) those of the underlying
     requiredFixings_ = underlying_->requiredFixings();
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Interest Rate");
-    additionalData_["isdaBaseProduct"] = string("Option");
-    additionalData_["isdaSubProduct"] = string("Debt");  
-    additionalData_["isdaTransaction"] = string("");  
 }
 
 void BondOption::fromXML(XMLNode* node) {
@@ -164,7 +166,7 @@ void BondOption::fromXML(XMLNode* node) {
     bondData_ = originalBondData_;
 }
 
-XMLNode* BondOption::toXML(XMLDocument& doc) {
+XMLNode* BondOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
 
     XMLNode* bondOptionNode = doc.allocNode("BondOptionData");
@@ -181,7 +183,7 @@ XMLNode* BondOption::toXML(XMLDocument& doc) {
 }
 
 std::map<AssetClass, std::set<std::string>>
-BondOption::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+BondOption::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<AssetClass, std::set<std::string>> result;
     result[AssetClass::BOND] = {bondData_.securityId()};
     return result;

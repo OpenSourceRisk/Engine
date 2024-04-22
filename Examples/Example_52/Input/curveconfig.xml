@@ -4,7 +4,7 @@
 
     <YieldCurve>
       <CurveId>USD-SOFR</CurveId>
-      <CurveDescription />
+      <CurveDescription/>
       <Currency>USD</Currency>
       <DiscountCurve>USD-SOFR</DiscountCurve>
       <Segments>

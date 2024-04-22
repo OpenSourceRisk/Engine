@@ -23,7 +23,7 @@
 namespace QuantExt {
 
 MultiLegOption::MultiLegOption(const std::vector<Leg>& legs, const std::vector<bool>& payer,
-                               const std::vector<Currency>& currency, const boost::shared_ptr<Exercise>& exercise,
+                               const std::vector<Currency>& currency, const QuantLib::ext::shared_ptr<Exercise>& exercise,
                                const Settlement::Type settlementType, Settlement::Method settlementMethod)
     : legs_(legs), payer_(payer), currency_(currency), exercise_(exercise), settlementType_(settlementType),
       settlementMethod_(settlementMethod) {
@@ -47,7 +47,7 @@ MultiLegOption::MultiLegOption(const std::vector<Leg>& legs, const std::vector<b
     for (auto const& l : legs_) {
         for (auto const& c : l) {
             registerWith(c);
-            if (auto lazy = boost::dynamic_pointer_cast<LazyObject>(c))
+            if (auto lazy = QuantLib::ext::dynamic_pointer_cast<LazyObject>(c))
                 lazy->alwaysForwardNotifications();
         }
     }
@@ -57,7 +57,7 @@ MultiLegOption::MultiLegOption(const std::vector<Leg>& legs, const std::vector<b
 void MultiLegOption::deepUpdate() {
     for (auto& l : legs_) {
         for (auto& c : l) {
-            if (auto lazy = boost::dynamic_pointer_cast<LazyObject>(c))
+            if (auto lazy = QuantLib::ext::dynamic_pointer_cast<LazyObject>(c))
                 lazy->deepUpdate();
         }
     }

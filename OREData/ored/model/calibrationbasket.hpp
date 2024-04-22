@@ -62,26 +62,26 @@ public:
     CalibrationBasket();
 
     //! Detailed constructor
-    CalibrationBasket(const std::vector<boost::shared_ptr<CalibrationInstrument>>& instruments);
+    CalibrationBasket(const std::vector<QuantLib::ext::shared_ptr<CalibrationInstrument>>& instruments);
 
     //! \name Inspectors
     //@{
     const std::string& instrumentType() const;
-    const std::vector<boost::shared_ptr<CalibrationInstrument>>& instruments() const;
+    const std::vector<QuantLib::ext::shared_ptr<CalibrationInstrument>>& instruments() const;
     const std::string& parameter() const;
     //@}
 
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! Returns \c true if the calibration basket is empty.
     bool empty() const;
 
 private:
-    std::vector<boost::shared_ptr<CalibrationInstrument>> instruments_;
+    std::vector<QuantLib::ext::shared_ptr<CalibrationInstrument>> instruments_;
     std::string instrumentType_;
     //! The parameter tag may be given so that builders know how to use the calibration basket.
     std::string parameter_;

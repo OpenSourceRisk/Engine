@@ -80,7 +80,7 @@ public:
     //! Inspector for the current value of model parameter kappa (direct)
     Real kappaParameter() const;
     //! Inspector for current value of the model parameter vector (inverse values)
-    const boost::shared_ptr<Parameter> parameter(const Size) const override;
+    const QuantLib::ext::shared_ptr<Parameter> parameter(const Size) const override;
     //! Inspector for today's price curve
     Handle<QuantExt::PriceTermStructure> priceCurve() { return priceCurve_; }
     //! Variance V(t,T) used in the computation of F(t,T)
@@ -97,8 +97,8 @@ private:
     const Handle<QuantExt::PriceTermStructure> priceCurve_;
     const Handle<Quote> fxSpotToday_;
     std::string comName_;
-    const boost::shared_ptr<PseudoParameter> sigma_;
-    const boost::shared_ptr<PseudoParameter> kappa_;
+    const QuantLib::ext::shared_ptr<PseudoParameter> sigma_;
+    const QuantLib::ext::shared_ptr<PseudoParameter> kappa_;
     bool driftFreeState_;
 };
 
@@ -136,7 +136,7 @@ inline Real CommoditySchwartzParametrization::kappaParameter() const {
     return direct(0, kappa_->params()[0]);
 }
 
-inline const boost::shared_ptr<Parameter> CommoditySchwartzParametrization::parameter(const Size i) const {
+inline const QuantLib::ext::shared_ptr<Parameter> CommoditySchwartzParametrization::parameter(const Size i) const {
     QL_REQUIRE(i < 2, "parameter " << i << " does not exist, only have 0 and 1");
     if (i == 0)
         return sigma_;

@@ -17,6 +17,10 @@
 */
 
 #include <ored/utilities/timeperiod.hpp>
+#include <ored/utilities/parsers.hpp>
+
+using std::vector;
+using std::string;
 
 namespace ore {
 namespace data {
@@ -50,6 +54,27 @@ std::ostream& operator<<(std::ostream& out, const TimePeriod& t) {
             out << " + ";
     }
     return out;
+}
+
+TimePeriod totalTimePeriod(std::vector<std::string> timePeriods, Size mporDays, const QuantLib::Calendar& calendar) {
+    vector<Date> allDates;
+    for (const string& s : timePeriods) {
+        auto dates = parseListOfValues<Date>(s, &parseDate);
+        for (const auto& d : dates)
+            allDates.push_back(d);
+    }
+
+    TimePeriod period(allDates);
+
+    Date minDate = *std::min_element(period.startDates().begin(), period.startDates().end());
+    Date maxDate = *std::max_element(period.endDates().begin(), period.endDates().end());
+
+    vector<Date> finalDates;
+    finalDates.push_back(minDate);
+    finalDates.push_back(maxDate);
+
+    TimePeriod totalPeriod(finalDates, mporDays, calendar);
+    return totalPeriod;
 }
 
 } // namespace data

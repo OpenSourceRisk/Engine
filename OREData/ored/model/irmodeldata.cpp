@@ -113,7 +113,7 @@ void IrModelData::fromXML(XMLNode* node) {
     LOG(name_ + " with calibrationType_ = " << qualifier_);
 }
 
-XMLNode* IrModelData::toXML(XMLDocument& doc) {
+XMLNode* IrModelData::toXML(XMLDocument& doc) const {
 
     XMLNode* irModelNode = doc.allocNode(name_);
 
@@ -122,7 +122,7 @@ XMLNode* IrModelData::toXML(XMLDocument& doc) {
 }
 
 std::string IrModelData::ccy() const{
-    boost::shared_ptr<QuantLib::IborIndex> index;
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> index;
     return tryParseIborIndex(qualifier_, index) ? index->currency().code() : qualifier_;
 }
 

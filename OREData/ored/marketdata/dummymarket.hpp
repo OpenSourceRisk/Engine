@@ -78,7 +78,7 @@ public:
 
     Handle<QuantExt::CreditCurve> defaultCurve(const string&, const string&) const override {
         return Handle<QuantExt::CreditCurve>(
-            boost::make_shared<QuantExt::CreditCurve>(Handle<DefaultProbabilityTermStructure>()));
+            QuantLib::ext::make_shared<QuantExt::CreditCurve>(Handle<DefaultProbabilityTermStructure>()));
     }
     Handle<Quote> recoveryRate(const string&, const string&) const override { return Handle<Quote>(); }
 

@@ -3,10 +3,6 @@
 An index CDS option, trade type \lstinline!IndexCreditDefaultSwapOption!, is an option to enter into an index CDS at a specified strike spread or strike price. The Index CDS Option is set up using an \lstinline!IndexCreditDefaultSwapOptionData! node as shown in Listing \ref{lst:indexcdsoptiondata}. Its child nodes have the following meanings:
 
 \begin{itemize}
-\item
-\lstinline!KnockOut!: A boolean node that determines whether front end protection is included or not. When this node evaluates to \lstinline!false!, front end protection is included. When this node evaluates to \lstinline!true!, front end protection is not included.
-
-Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
 
 \item
 \lstinline!IndexTerm! [Optional]: An optional node giving the term of the underlying index CDS e.g.\ 3Y, 5Y, 7Y, 10Y etc. The main function of this node is to allow for different index CDS option volatility structures for different terms of the same index series e.g.\ a CDX HY Series 34 5Y volatility structure and a CDX HY Series 34 10Y volatility structure. If this node is omitted, the market is searched for a CDS volatility surface with ID equal to the value of the \lstinline!CreditCurveId! node under \lstinline!IndexCreditDefaultSwapData!. There will generally be one \lstinline!CreditCurveId! for each index CDS series e.g.\ \lstinline!CDXHYS34V1! for CDX HY Series 34 Version 1. Consequently, there can only be one CDS volatility surface for this index CDS series. When \lstinline!IndexTerm! is populated with the underlying index term, the market is searched for a CDS volatility surface with ID equal to the value of the \lstinline!CreditCurveId! node with suffix \lstinline!-[IndexTerm]!. For example, if the \lstinline!CreditCurveId! node on an index CDS option trade is \lstinline!CDXHYS34V1! and the \lstinline!IndexTerm! node is populated with \lstinline!5Y!, the market will be searched for a CDS volatility surface with ID \lstinline!CDXHYS34V1-5Y! and this will be used in the trade valuation. In this way, different volatility surfaces can be used to value different terms of the same CDS index series.
@@ -83,7 +79,6 @@ Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}. Can 
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
 <IndexCreditDefaultSwapOptionData>
-  <KnockOut>N</KnockOut>
   <IndexTerm>5Y</IndexTerm>
   <OptionData>
       <LongShort>Long</LongShort>

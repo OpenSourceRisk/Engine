@@ -35,9 +35,16 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-void EquityEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void EquityEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
-    const boost::shared_ptr<Market> market = engineFactory->market();
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Equity");
+    additionalData_["isdaBaseProduct"] = string("Other");
+    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");
+
+    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
 
     // Only European Single Barrier supported for now
     QL_REQUIRE(option_.style() == "European", "Option Style unknown: " << option_.style());
@@ -63,41 +70,41 @@ void EquityEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& 
 
     // Exercise
     Date expiryDate = parseDate(option_.exerciseDates().front());
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(expiryDate);
+    QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(expiryDate);
 
     Barrier::Type barrierType = parseBarrierType(barrier_.type());
 
     // Payoff - European Option with strike K
-    boost::shared_ptr<StrikedTypePayoff> payoffVanillaK(new PlainVanillaPayoff(type, strike_.value()));
+    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoffVanillaK(new PlainVanillaPayoff(type, strike_.value()));
     // Payoff - European Option with strike B
-    boost::shared_ptr<StrikedTypePayoff> payoffVanillaB(new PlainVanillaPayoff(type, level));
+    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoffVanillaB(new PlainVanillaPayoff(type, level));
     // Payoff - Digital Option with barrier B payoff abs(B - K)
-    boost::shared_ptr<StrikedTypePayoff> payoffDigital(new CashOrNothingPayoff(type, level, fabs(level - strike_.value())));
+    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoffDigital(new CashOrNothingPayoff(type, level, fabs(level - strike_.value())));
 
-    boost::shared_ptr<Instrument> digital = boost::make_shared<VanillaOption>(payoffDigital, exercise);
-    boost::shared_ptr<Instrument> vanillaK = boost::make_shared<VanillaOption>(payoffVanillaK, exercise);
-    boost::shared_ptr<Instrument> vanillaB = boost::make_shared<VanillaOption>(payoffVanillaB, exercise);
+    QuantLib::ext::shared_ptr<Instrument> digital = QuantLib::ext::make_shared<VanillaOption>(payoffDigital, exercise);
+    QuantLib::ext::shared_ptr<Instrument> vanillaK = QuantLib::ext::make_shared<VanillaOption>(payoffVanillaK, exercise);
+    QuantLib::ext::shared_ptr<Instrument> vanillaB = QuantLib::ext::make_shared<VanillaOption>(payoffVanillaB, exercise);
 
-    boost::shared_ptr<StrikedTypePayoff> rebatePayoff;
+    QuantLib::ext::shared_ptr<StrikedTypePayoff> rebatePayoff;
     if (barrierType == Barrier::Type::UpIn || barrierType == Barrier::Type::DownOut) {
         // Payoff - Up&Out / Down&In Digital Option with barrier B payoff rebate
-        rebatePayoff = boost::make_shared<CashOrNothingPayoff>(Option::Put, level, rebate);
+        rebatePayoff = QuantLib::ext::make_shared<CashOrNothingPayoff>(Option::Put, level, rebate);
     } else if (barrierType == Barrier::Type::UpOut || barrierType == Barrier::Type::DownIn) {
         // Payoff - Up&In / Down&Out Digital Option with barrier B payoff rebate
-        rebatePayoff = boost::make_shared<CashOrNothingPayoff>(Option::Call, level, rebate);
+        rebatePayoff = QuantLib::ext::make_shared<CashOrNothingPayoff>(Option::Call, level, rebate);
     }
-    boost::shared_ptr<Instrument> rebateInstrument = boost::make_shared<VanillaOption>(rebatePayoff, exercise);
+    QuantLib::ext::shared_ptr<Instrument> rebateInstrument = QuantLib::ext::make_shared<VanillaOption>(rebatePayoff, exercise);
 
     // set pricing engines
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("EquityOption");
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("EquityOption");
     QL_REQUIRE(builder, "No builder found for EquityOption");
-    boost::shared_ptr<EquityEuropeanOptionEngineBuilder> eqOptBuilder =
-        boost::dynamic_pointer_cast<EquityEuropeanOptionEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<EquityEuropeanOptionEngineBuilder> eqOptBuilder =
+        QuantLib::ext::dynamic_pointer_cast<EquityEuropeanOptionEngineBuilder>(builder);
 
     builder = engineFactory->builder("EquityDigitalOption");
     QL_REQUIRE(builder, "No builder found for EquityDigitalOption");
-    boost::shared_ptr<EquityDigitalOptionEngineBuilder> eqDigitalOptBuilder =
-        boost::dynamic_pointer_cast<EquityDigitalOptionEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<EquityDigitalOptionEngineBuilder> eqDigitalOptBuilder =
+        QuantLib::ext::dynamic_pointer_cast<EquityDigitalOptionEngineBuilder>(builder);
 
     digital->setPricingEngine(eqDigitalOptBuilder->engine(assetName_, ccy));
     vanillaK->setPricingEngine(eqOptBuilder->engine(assetName_, ccy, expiryDate));
@@ -105,7 +112,7 @@ void EquityEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& 
     rebateInstrument->setPricingEngine(eqDigitalOptBuilder->engine(assetName_, ccy));
     setSensitivityTemplate(*eqDigitalOptBuilder);
 
-    boost::shared_ptr<CompositeInstrument> qlInstrument = boost::make_shared<CompositeInstrument>();
+    QuantLib::ext::shared_ptr<CompositeInstrument> qlInstrument = QuantLib::ext::make_shared<CompositeInstrument>();
     qlInstrument->add(rebateInstrument);
     if (type == Option::Call) {
         if (barrierType == Barrier::Type::UpIn || barrierType == Barrier::Type::DownOut) {
@@ -151,13 +158,13 @@ void EquityEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& 
     Position::Type positionType = parsePositionType(option_.longShort());
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
 
-    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
     Date lastPremiumDate =
         addPremiums(additionalInstruments, additionalMultipliers, quantity_ * bsInd, option_.premiumData(), -bsInd, ccy,
                     engineFactory, eqOptBuilder->configuration(MarketContext::pricing));
 
-    instrument_ = boost::shared_ptr<InstrumentWrapper>(
+    instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
         new VanillaInstrument(qlInstrument, quantity_ * bsInd, additionalInstruments, additionalMultipliers));
 
     npvCurrency_ = ccy.code(); 
@@ -168,13 +175,6 @@ void EquityEuropeanBarrierOption::build(const boost::shared_ptr<EngineFactory>& 
     additionalData_["quantity"] = quantity_;
     additionalData_["strike"] = strike_.value();
     additionalData_["strikeCurrency"] = strike_.currency();
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Equity");
-    additionalData_["isdaBaseProduct"] = string("Other");
-    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
-    // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = string("");
 }
 
 void EquityEuropeanBarrierOption::fromXML(XMLNode* node) {
@@ -197,7 +197,7 @@ void EquityEuropeanBarrierOption::fromXML(XMLNode* node) {
     quantity_ = XMLUtils::getChildValueAsDouble(eqNode, "Quantity", true);
 }
 
-XMLNode* EquityEuropeanBarrierOption::toXML(XMLDocument& doc) {
+XMLNode* EquityEuropeanBarrierOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* eqNode = doc.allocNode("EquityEuropeanBarrierOptionData");
     XMLUtils::appendNode(node, eqNode);

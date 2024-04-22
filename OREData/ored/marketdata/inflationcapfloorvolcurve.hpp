@@ -45,37 +45,37 @@ public:
     InflationCapFloorVolCurve() {}
     InflationCapFloorVolCurve(Date asof, InflationCapFloorVolatilityCurveSpec spec, const Loader& loader,
                               const CurveConfigurations& curveConfigs,
-                              map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-                              map<string, boost::shared_ptr<InflationCurve>>& inflationCurves);
+                              map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
+                              map<string, QuantLib::ext::shared_ptr<InflationCurve>>& inflationCurves);
 
     //! \name Inspectors
     //@{
     const InflationCapFloorVolatilityCurveSpec& spec() const { return spec_; }
     //! Caplet/Floorlet curve or surface i.e. result of stripping
-    const boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyInflationCapFloorVolSurface() const {
+    const QuantLib::ext::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyInflationCapFloorVolSurface() const {
         return yoyVolSurface_;
     }
-    const boost::shared_ptr<QuantLib::CPIVolatilitySurface> cpiInflationCapFloorVolSurface() const {
+    const QuantLib::ext::shared_ptr<QuantLib::CPIVolatilitySurface> cpiInflationCapFloorVolSurface() const {
         return cpiVolSurface_;
     }
 
     //@}
 private:
     void buildFromVolatilities(Date asof, InflationCapFloorVolatilityCurveSpec spec, const Loader& loader,
-                               const boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>& config,
-                               map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-                               map<string, boost::shared_ptr<InflationCurve>>& inflationCurves);
+                               const QuantLib::ext::shared_ptr<InflationCapFloorVolatilityCurveConfig>& config,
+                               map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
+                               map<string, QuantLib::ext::shared_ptr<InflationCurve>>& inflationCurves);
     void buildFromPrices(Date asof, InflationCapFloorVolatilityCurveSpec spec, const Loader& loader,
-                         const boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>& config,
-                         map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-                         map<string, boost::shared_ptr<InflationCurve>>& inflationCurves);
+                         const QuantLib::ext::shared_ptr<InflationCapFloorVolatilityCurveConfig>& config,
+                         map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
+                         map<string, QuantLib::ext::shared_ptr<InflationCurve>>& inflationCurves);
 
     InflationCapFloorVolatilityCurveSpec spec_;
-    boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyVolSurface_;
-    boost::shared_ptr<QuantLib::CPIVolatilitySurface> cpiVolSurface_;
-    boost::shared_ptr<InflationTermStructure> surface_;
+    QuantLib::ext::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyVolSurface_;
+    QuantLib::ext::shared_ptr<QuantLib::CPIVolatilitySurface> cpiVolSurface_;
+    QuantLib::ext::shared_ptr<InflationTermStructure> surface_;
     bool useMarketYoyCurve_;
-    boost::shared_ptr<YoYInflationTermStructure> yoyTs_;
+    QuantLib::ext::shared_ptr<YoYInflationTermStructure> yoyTs_;
     Handle<YieldTermStructure> discountCurve_;
 };
 } // namespace data

@@ -37,7 +37,7 @@ class CBO::engine : public GenericEngine<CBO::arguments, CBO::results> {
 protected:
     // virtual Real expectedTrancheLoss(const Date&) const = 0;
     virtual void initialize() const { remainingBasket_ = this->arguments_.basket; }
-    mutable boost::shared_ptr<BondBasket> remainingBasket_;
+    mutable QuantLib::ext::shared_ptr<BondBasket> remainingBasket_;
 };
 
 //--------------------------------------------------------------------------

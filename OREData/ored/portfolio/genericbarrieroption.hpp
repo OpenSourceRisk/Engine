@@ -36,7 +36,7 @@ namespace data {
 class GenericBarrierOption : public ScriptedTrade {
 public:
     explicit GenericBarrierOption(const std::string& tradeType = "GenericBarrierOption") : ScriptedTrade(tradeType) {}
-    GenericBarrierOption(std::vector<boost::shared_ptr<Underlying>> underlyings, const OptionData& optionData,
+    GenericBarrierOption(std::vector<QuantLib::ext::shared_ptr<Underlying>> underlyings, const OptionData& optionData,
                          const std::vector<BarrierData>& barriers, const ScheduleData& barrierMonitoringDates,
                          const std::vector<BarrierData>& transatlanticBarrier, const std::string& payCurrency,
                          const std::string& settlementDate, const std::string& quantity, const std::string& strike,
@@ -48,7 +48,7 @@ public:
         initIndices();
     }
 
-    GenericBarrierOption(boost::shared_ptr<Underlying>& underlying, const OptionData& optionData,
+    GenericBarrierOption(QuantLib::ext::shared_ptr<Underlying>& underlying, const OptionData& optionData,
                          const std::vector<BarrierData>& barriers, const ScheduleData& barrierMonitoringDates,
                          const BarrierData& transatlanticBarrier, const std::string& payCurrency,
                          const std::string& settlementDate, const std::string& quantity, const std::string& strike,
@@ -61,9 +61,9 @@ public:
         transatlanticBarrier_.push_back(transatlanticBarrier);
         initIndices();
     }
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
     //! \name Inspectors
     //@{
@@ -77,8 +77,8 @@ public:
 
 private:
     void initIndices();
-    QuantLib::Calendar getUnderlyingCalendar(const boost::shared_ptr<EngineFactory>& factory) const;
-    std::vector<boost::shared_ptr<ore::data::Underlying>> underlyings_;
+    QuantLib::Calendar getUnderlyingCalendar(const QuantLib::ext::shared_ptr<EngineFactory>& factory) const;
+    std::vector<QuantLib::ext::shared_ptr<ore::data::Underlying>> underlyings_;
     OptionData optionData_;
     std::vector<BarrierData> barriers_;
     ScheduleData barrierMonitoringDates_;
@@ -93,7 +93,7 @@ public:
     EquityGenericBarrierOption() : GenericBarrierOption("EquityGenericBarrierOption") {}
 
     std::map<ore::data::AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const override {
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const override {
         return {{ore::data::AssetClass::EQ, names()}};
     }
 };

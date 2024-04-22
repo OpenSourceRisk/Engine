@@ -24,14 +24,14 @@
 
 namespace QuantExt {
 
-CompoEquityIndex::CompoEquityIndex(const boost::shared_ptr<QuantExt::EquityIndex2>& source,
-                                   const boost::shared_ptr<FxIndex>& fxIndex, const Date& dividendCutoffDate)
+CompoEquityIndex::CompoEquityIndex(const QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>& source,
+                                   const QuantLib::ext::shared_ptr<FxIndex>& fxIndex, const Date& dividendCutoffDate)
     : QuantExt::EquityIndex2(source->familyName() + "_compo_" + fxIndex->targetCurrency().code(),
                   JointCalendar(source->fixingCalendar(), fxIndex->fixingCalendar()), fxIndex->targetCurrency(),
-                  Handle<Quote>(boost::make_shared<CompositeQuote<std::function<Real(Real, Real)>>>(
+                  Handle<Quote>(QuantLib::ext::make_shared<CompositeQuote<std::function<Real(Real, Real)>>>(
                       source->equitySpot(), fxIndex->fxQuote(),
                       std::function<Real(Real, Real)>([](Real x, Real y) { return x * y; }))),
-                  Handle<YieldTermStructure>(boost::make_shared<DiscountRatioModifiedCurve>(
+                  Handle<YieldTermStructure>(QuantLib::ext::make_shared<DiscountRatioModifiedCurve>(
                       source->equityForecastCurve(), fxIndex->targetCurve(), fxIndex->sourceCurve())),
                   source->equityDividendCurve()),
       source_(source), fxIndex_(fxIndex), dividendCutoffDate_(dividendCutoffDate) {
@@ -39,7 +39,7 @@ CompoEquityIndex::CompoEquityIndex(const boost::shared_ptr<QuantExt::EquityIndex
     LazyObject::registerWith(fxIndex_);
 }
 
-boost::shared_ptr<QuantExt::EquityIndex2> CompoEquityIndex::source() const { return source_; }
+QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> CompoEquityIndex::source() const { return source_; }
 
 void CompoEquityIndex::addDividend(const Dividend& dividend, bool forceOverwrite) {
     if (dividendCutoffDate_ == Date() || dividend.exDate >= dividendCutoffDate_) {
@@ -70,10 +70,10 @@ Real CompoEquityIndex::pastFixing(const Date& fixingDate) const {
     return source_->fixing(fixingDate) * fxIndex_->fixing(fixingDate);
 }
 
-boost::shared_ptr<QuantExt::EquityIndex2> CompoEquityIndex::clone(const Handle<Quote> spotQuote,
+QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> CompoEquityIndex::clone(const Handle<Quote> spotQuote,
                                                        const Handle<YieldTermStructure>& rate,
                                                        const Handle<YieldTermStructure>& dividend) const {
-    return boost::make_shared<CompoEquityIndex>(source_->clone(spotQuote, rate, dividend), fxIndex_);
+    return QuantLib::ext::make_shared<CompoEquityIndex>(source_->clone(spotQuote, rate, dividend), fxIndex_);
 }
 
 } // namespace QuantExt

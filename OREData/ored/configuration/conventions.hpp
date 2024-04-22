@@ -116,20 +116,20 @@ public:
     Conventions() {}
 
     /*! Returns the convention if found and throws if not */
-    boost::shared_ptr<Convention> get(const string& id) const;
+    QuantLib::ext::shared_ptr<Convention> get(const string& id) const;
 
     /*! Get a convention with the given \p id and \p type. If no convention of the given \p type with the given \p id
         is found, the first element of the returned pair is \c false and the second element is a \c nullptr. If a
         convention is found, the first element of the returned pair is \c true and the second element holds the
         convention.
     */
-    std::pair<bool, boost::shared_ptr<Convention>> get(const std::string& id, const Convention::Type& type) const;
+    std::pair<bool, QuantLib::ext::shared_ptr<Convention>> get(const std::string& id, const Convention::Type& type) const;
 
     /*! Get all conventions of a given type */
-    std::set<boost::shared_ptr<Convention>> get(const Convention::Type& type) const;
+    std::set<QuantLib::ext::shared_ptr<Convention>> get(const Convention::Type& type) const;
     
     /*! Find a convention for an FX pair */
-    boost::shared_ptr<Convention> getFxConvention(const string& ccy1, const string& ccy2) const;
+    QuantLib::ext::shared_ptr<Convention> getFxConvention(const string& ccy1, const string& ccy2) const;
 
     //! Checks if we have a convention with the given \p id
     bool has(const std::string& id) const;
@@ -142,16 +142,16 @@ public:
 
     /*! Add a convention. This will overwrite an existing convention
         with the same id */
-    void add(const boost::shared_ptr<Convention>& convention) const;
+    void add(const QuantLib::ext::shared_ptr<Convention>& convention) const;
 
     //! \name Serialisation
     //@{0
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
 private:
-    mutable map<string, boost::shared_ptr<Convention>> data_;
+    mutable map<string, QuantLib::ext::shared_ptr<Convention>> data_;
     mutable map<string, std::pair<string, string>> unparsed_;
     mutable std::set<string> used_;
     mutable boost::shared_mutex mutex_;
@@ -163,15 +163,15 @@ class InstrumentConventions : public QuantLib::Singleton<InstrumentConventions, 
     friend class QuantLib::Singleton<InstrumentConventions, std::integral_constant<bool, true>>;
 
 private:
-    InstrumentConventions() { conventions_[Date()] = boost::make_shared<ore::data::Conventions>(); }
+    InstrumentConventions() { conventions_[Date()] = QuantLib::ext::make_shared<ore::data::Conventions>(); }
 
-    mutable std::map<QuantLib::Date, boost::shared_ptr<ore::data::Conventions>> conventions_;
+    mutable std::map<QuantLib::Date, QuantLib::ext::shared_ptr<ore::data::Conventions>> conventions_;
     mutable boost::shared_mutex mutex_;
     mutable std::size_t numberOfEmittedWarnings_ = 0;
 
 public:
-    const boost::shared_ptr<ore::data::Conventions>& conventions(QuantLib::Date d = QuantLib::Date()) const;
-    void setConventions(const boost::shared_ptr<ore::data::Conventions>& conventions,
+    const QuantLib::ext::shared_ptr<ore::data::Conventions>& conventions(QuantLib::Date d = QuantLib::Date()) const;
+    void setConventions(const QuantLib::ext::shared_ptr<ore::data::Conventions>& conventions,
                         QuantLib::Date d = QuantLib::Date());
     void clear() { conventions_.clear(); }
 };
@@ -219,7 +219,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 
@@ -276,7 +276,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 
@@ -317,7 +317,7 @@ public:
     //@}
     //! \name Inspectors
     //@{
-    boost::shared_ptr<IborIndex> index() const;
+    QuantLib::ext::shared_ptr<IborIndex> index() const;
     QuantLib::RateAveraging::Type overnightIndexFutureNettingType() const { return overnightIndexFutureNettingType_; }
     DateGenerationRule dateGenerationRule() const { return dateGenerationRule_; }
     //@}
@@ -325,7 +325,7 @@ public:
     //! Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override {}
     //@}
 
@@ -351,14 +351,14 @@ public:
 
     //! \name Inspectors
     //@{
-    boost::shared_ptr<IborIndex> index() const;
+    QuantLib::ext::shared_ptr<IborIndex> index() const;
     const string& indexName() const { return strIndex_; }
     //@}
 
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override {}
     //@}
 
@@ -388,7 +388,7 @@ public:
     //@{
     Natural spotLag() const { return spotLag_; }
     const string& indexName() const { return strIndex_; }
-    boost::shared_ptr<OvernightIndex> index() const;
+    QuantLib::ext::shared_ptr<OvernightIndex> index() const;
     const DayCounter& fixedDayCounter() const { return fixedDayCounter_; }
     // might be empty to retain bwd compatibility
     const Calendar& fixedCalendar() const { return fixedCalendar_; }
@@ -404,7 +404,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 
@@ -451,7 +451,7 @@ public:
     const bool endOfMonth() const { return endOfMonth_; }
 
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
 
 private:
@@ -478,7 +478,7 @@ public:
     const Size settlementDays() const { return settlementDays_; }
 
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
 
 private:
@@ -500,7 +500,7 @@ public:
     const string& fixingCalendar() const { return fixingCalendar_; }
 
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override {};
 
 private:
@@ -532,7 +532,7 @@ public:
     BusinessDayConvention fixedConvention() const { return fixedConvention_; }
     const DayCounter& fixedDayCounter() const { return fixedDayCounter_; }
     const string& indexName() const { return strIndex_; }
-    boost::shared_ptr<IborIndex> index() const;
+    QuantLib::ext::shared_ptr<IborIndex> index() const;
     // For sub period
     bool hasSubPeriod() const { return hasSubPeriod_; }
     Frequency floatFrequency() const { return floatFrequency_; } // returns NoFrequency for normal swaps
@@ -542,7 +542,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 
@@ -592,7 +592,7 @@ public:
     BusinessDayConvention fixedPaymentConvention() const { return fixedPaymentConvention_; }
     Frequency fixedFrequency() const { return fixedFrequency_; }
     const string& indexName() const { return strIndex_; }
-    boost::shared_ptr<OvernightIndex> index() const;
+    QuantLib::ext::shared_ptr<OvernightIndex> index() const;
     const Period& onTenor() const { return onTenor_; }
     Natural rateCutoff() const { return rateCutoff_; }
     //@}
@@ -600,7 +600,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 private:
@@ -638,21 +638,21 @@ public:
     //! Default constructor
     TenorBasisSwapConvention() {}
     //! Detailed constructor
-    TenorBasisSwapConvention(const string& id, const string& longIndex, const string& shortIndex,
-                             const string& shortPayTenor = "", const string& longPayTenor = "",
-                             const string& spreadOnShort = "", const string& includeSpread = "", 
+    TenorBasisSwapConvention(const string& id, const string& payIndex, const string& receiveIndex,
+                             const string& receiveFrequency = "", const string& payFrequency = "",
+                             const string& spreadOnRec = "", const string& includeSpread = "", 
                              const string& subPeriodsCouponType = "");
     //@}
 
     //! \name Inspectors
     //@{
-    boost::shared_ptr<IborIndex> longIndex() const;
-    boost::shared_ptr<IborIndex> shortIndex() const;
-    const string& longIndexName() const { return strLongIndex_; }
-    const string& shortIndexName() const { return strShortIndex_; }
-    const Period& shortPayTenor() const { return shortPayTenor_; }
-    const Period& longPayTenor() const { return longPayTenor_; }
-    bool spreadOnShort() const { return spreadOnShort_; }
+    QuantLib::ext::shared_ptr<IborIndex> payIndex() const;
+    QuantLib::ext::shared_ptr<IborIndex> receiveIndex() const;
+    const string& payIndexName() const { return strPayIndex_; }
+    const string& receiveIndexName() const { return strReceiveIndex_; }
+    const Period& receiveFrequency() const { return receiveFrequency_; }
+    const Period& payFrequency() const { return payFrequency_; }
+    bool spreadOnRec() const { return spreadOnRec_; }
     bool includeSpread() const { return includeSpread_; }
     SubPeriodsCoupon1::Type subPeriodsCouponType() const { return subPeriodsCouponType_; }
     //@}
@@ -660,23 +660,23 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 
 private:
-    Period shortPayTenor_;
-    Period longPayTenor_;
-    bool spreadOnShort_;
+    Period receiveFrequency_;
+    Period payFrequency_;
+    bool spreadOnRec_;
     bool includeSpread_;
     SubPeriodsCoupon1::Type subPeriodsCouponType_;
 
     // Strings to store the inputs
-    string strLongIndex_;
-    string strShortIndex_;
-    string strShortPayTenor_;
-    string strLongPayTenor_;
-    string strSpreadOnShort_;
+    string strPayIndex_;
+    string strReceiveIndex_;
+    string strReceiveFrequency_;
+    string strPayFrequency_;
+    string strSpreadOnRec_;
     string strIncludeSpread_;
     string strSubPeriodsCouponType_;
 };
@@ -705,18 +705,18 @@ public:
     Frequency longFixedFrequency() const { return longFixedFrequency_; }
     BusinessDayConvention longFixedConvention() const { return longFixedConvention_; }
     const DayCounter& longFixedDayCounter() const { return longFixedDayCounter_; }
-    boost::shared_ptr<IborIndex> longIndex() const;
+    QuantLib::ext::shared_ptr<IborIndex> longIndex() const;
     Frequency shortFixedFrequency() const { return shortFixedFrequency_; }
     BusinessDayConvention shortFixedConvention() const { return shortFixedConvention_; }
     const DayCounter& shortFixedDayCounter() const { return shortFixedDayCounter_; }
-    boost::shared_ptr<IborIndex> shortIndex() const;
+    QuantLib::ext::shared_ptr<IborIndex> shortIndex() const;
     bool longMinusShort() const { return longMinusShort_; }
     //@}
 
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 
@@ -759,8 +759,8 @@ public:
 
     //! \name Inspectors
     //@{
-    boost::shared_ptr<IborIndex> liborIndex() const;
-    boost::shared_ptr<QuantExt::BMAIndexWrapper> bmaIndex() const;
+    QuantLib::ext::shared_ptr<IborIndex> liborIndex() const;
+    QuantLib::ext::shared_ptr<QuantExt::BMAIndexWrapper> bmaIndex() const;
     const string& liborIndexName() const { return strLiborIndex_; }
     const string& bmaIndexName() const { return strBmaIndex_; }
     //@}
@@ -768,7 +768,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 
@@ -809,7 +809,7 @@ public:
     //! \name Serialisation
     //
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 
@@ -863,8 +863,8 @@ public:
     Natural settlementDays() const { return settlementDays_; }
     const Calendar& settlementCalendar() const { return settlementCalendar_; }
     BusinessDayConvention rollConvention() const { return rollConvention_; }
-    boost::shared_ptr<IborIndex> flatIndex() const;
-    boost::shared_ptr<IborIndex> spreadIndex() const;
+    QuantLib::ext::shared_ptr<IborIndex> flatIndex() const;
+    QuantLib::ext::shared_ptr<IborIndex> spreadIndex() const;
     const string& flatIndexName() const { return strFlatIndex_; }
     const string& spreadIndexName() const { return strSpreadIndex_; }
 
@@ -893,7 +893,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 private:
@@ -973,7 +973,7 @@ public:
     QuantLib::Frequency fixedFrequency() const { return fixedFrequency_; }
     QuantLib::BusinessDayConvention fixedConvention() const { return fixedConvention_; }
     const QuantLib::DayCounter& fixedDayCounter() const { return fixedDayCounter_; }
-    boost::shared_ptr<QuantLib::IborIndex> index() const;
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> index() const;
     bool eom() const { return eom_; }
     bool isResettable() const { return isResettable_; }
     bool floatIndexIsResettable() const { return floatIndexIsResettable_; }
@@ -982,7 +982,7 @@ public:
     //! \name Serialisation interface
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Convention interface
@@ -1052,7 +1052,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node0) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 private:
@@ -1096,12 +1096,12 @@ public:
                             const string& strObservationLag, const string& strAdjustInfObsDates,
                             const string& strInfCalendar, const string& strInfConvention,
                             PublicationRoll publicationRoll = PublicationRoll::None,
-                            const boost::shared_ptr<ScheduleData>& publicationScheduleData = nullptr);
+                            const QuantLib::ext::shared_ptr<ScheduleData>& publicationScheduleData = nullptr);
 
     const Calendar& fixCalendar() const { return fixCalendar_; }
     BusinessDayConvention fixConvention() const { return fixConvention_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
-    boost::shared_ptr<ZeroInflationIndex> index() const;
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> index() const;
     const string& indexName() const { return strIndex_; }
     bool interpolated() const { return interpolated_; }
     Period observationLag() const { return observationLag_; }
@@ -1112,14 +1112,14 @@ public:
     const Schedule& publicationSchedule() const { return publicationSchedule_; }
 
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
 
 private:
     Calendar fixCalendar_;
     BusinessDayConvention fixConvention_;
     DayCounter dayCounter_;
-    boost::shared_ptr<ZeroInflationIndex> index_;
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> index_;
     bool interpolated_;
     Period observationLag_;
     bool adjustInfObsDates_;
@@ -1138,7 +1138,7 @@ private:
     string strInfCalendar_;
     string strInfConvention_;
     PublicationRoll publicationRoll_;
-    boost::shared_ptr<ScheduleData> publicationScheduleData_;
+    QuantLib::ext::shared_ptr<ScheduleData> publicationScheduleData_;
 };
 
 //! Container for storing Bond Spread Rate conventions
@@ -1184,7 +1184,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 
@@ -1240,7 +1240,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 private:
@@ -1292,7 +1292,7 @@ public:
     //! \name Serialisation
     //
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 
@@ -1406,7 +1406,7 @@ public:
         //! Serialisation
         //@{
         void fromXML(XMLNode* node) override;
-        XMLNode* toXML(XMLDocument& doc) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
         //@}
 
     private:
@@ -1445,7 +1445,7 @@ public:
         const QuantLib::Calendar& peakCalendar() const { return peakCalendar_; }
 
         void fromXML(XMLNode* node) override;
-        XMLNode* toXML(XMLDocument& doc) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
         void build();
 
     private:
@@ -1477,7 +1477,7 @@ public:
         QuantLib::BusinessDayConvention optionBdc() const { return optionBdc_; }
 
         void fromXML(XMLNode* node) override;
-        XMLNode* toXML(XMLDocument& doc) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
 
     private:
         QuantLib::Date expiry_;
@@ -1608,7 +1608,7 @@ public:
     //! Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! Implementation
@@ -1721,7 +1721,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     virtual void build() override;
     //@}
 private:
@@ -1766,7 +1766,7 @@ public:
     const QuantLib::Currency& currency() const { return currency_; }
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     void build() override;
 
 private:
@@ -1810,7 +1810,7 @@ public:
     QuantLib::Real guess() const { return guess_; }
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     void build() override;
 
 private:

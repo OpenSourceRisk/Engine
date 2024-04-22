@@ -57,7 +57,7 @@ public:
     Real operator()(Real x) const { return pricer->integrand(x); }
 };
 
-LognormalCmsSpreadPricer::LognormalCmsSpreadPricer(const boost::shared_ptr<CmsCouponPricer> cmsPricer,
+LognormalCmsSpreadPricer::LognormalCmsSpreadPricer(const QuantLib::ext::shared_ptr<CmsCouponPricer> cmsPricer,
                                                    const Handle<QuantExt::CorrelationTermStructure>& correlation,
                                                    const Handle<YieldTermStructure>& couponDiscountCurve,
                                                    const Size integrationPoints,
@@ -70,9 +70,9 @@ LognormalCmsSpreadPricer::LognormalCmsSpreadPricer(const boost::shared_ptr<CmsCo
     registerWith(cmsPricer_);
 
     QL_REQUIRE(integrationPoints >= 4, "at least 4 integration points should be used (" << integrationPoints << ")");
-    integrator_ = boost::make_shared<GaussHermiteIntegration>(integrationPoints);
+    integrator_ = QuantLib::ext::make_shared<GaussHermiteIntegration>(integrationPoints);
 
-    cnd_ = boost::make_shared<CumulativeNormalDistribution>(0.0, 1.0);
+    cnd_ = QuantLib::ext::make_shared<CumulativeNormalDistribution>(0.0, 1.0);
 
     if (volatilityType == boost::none) {
         QL_REQUIRE(shift1 == Null<Real>() && shift2 == Null<Real>(),
@@ -164,12 +164,12 @@ void LognormalCmsSpreadPricer::initialize(const FloatingRateCoupon& coupon) {
     QL_REQUIRE(gearing1_ > 0.0 && gearing2_ < 0.0, "gearing1 (" << gearing1_ << ") should be positive while gearing2 ("
                                                                 << gearing2_ << ") should be negative");
 
-    c1_ = boost::shared_ptr<CmsCoupon>(
+    c1_ = QuantLib::ext::shared_ptr<CmsCoupon>(
         new CmsCoupon(coupon_->date(), coupon_->nominal(), coupon_->accrualStartDate(), coupon_->accrualEndDate(),
                       coupon_->fixingDays(), index_->swapIndex1(), 1.0, 0.0, coupon_->referencePeriodStart(),
                       coupon_->referencePeriodEnd(), coupon_->dayCounter(), coupon_->isInArrears()));
 
-    c2_ = boost::shared_ptr<CmsCoupon>(
+    c2_ = QuantLib::ext::shared_ptr<CmsCoupon>(
         new CmsCoupon(coupon_->date(), coupon_->nominal(), coupon_->accrualStartDate(), coupon_->accrualEndDate(),
                       coupon_->fixingDays(), index_->swapIndex2(), 1.0, 0.0, coupon_->referencePeriodStart(),
                       coupon_->referencePeriodEnd(), coupon_->dayCounter(), coupon_->isInArrears()));
@@ -187,8 +187,8 @@ void LognormalCmsSpreadPricer::initialize(const FloatingRateCoupon& coupon) {
         adjustedRate1_ = c1_->adjustedFixing();
         adjustedRate2_ = c2_->adjustedFixing();
 
-        boost::shared_ptr<SwaptionVolatilityStructure> swvol = *cmsPricer_->swaptionVolatility();
-        boost::shared_ptr<SwaptionVolatilityCube> swcub = boost::dynamic_pointer_cast<SwaptionVolatilityCube>(swvol);
+        QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> swvol = *cmsPricer_->swaptionVolatility();
+        QuantLib::ext::shared_ptr<SwaptionVolatilityCube> swcub = QuantLib::ext::dynamic_pointer_cast<SwaptionVolatilityCube>(swvol);
 
         if (inheritedVolatilityType_ && volType_ == ShiftedLognormal) {
             shift1_ = swvol->shift(fixingDate_, index_->swapIndex1()->tenor());

@@ -32,9 +32,9 @@ namespace QuantExt {
 
 class FxBsModel : public FxModel {
 public:
-    explicit FxBsModel(const boost::shared_ptr<FxBsParametrization>& parametrization);
+    explicit FxBsModel(const QuantLib::ext::shared_ptr<FxBsParametrization>& parametrization);
 
-    const boost::shared_ptr<Parametrization> parametrizationBase() const override { return parametrization_; }
+    const QuantLib::ext::shared_ptr<Parametrization> parametrizationBase() const override { return parametrization_; }
 
     Handle<Quote> fxSpotToday() const override { return parametrization_->fxSpotToday(); }
     Size n() const override { return 1; }
@@ -44,10 +44,10 @@ public:
                     const Real r_for) const override;
 
 private:
-    boost::shared_ptr<FxBsParametrization> parametrization_;
+    QuantLib::ext::shared_ptr<FxBsParametrization> parametrization_;
 };
 
-inline FxBsModel::FxBsModel(const boost::shared_ptr<FxBsParametrization>& parametrization)
+inline FxBsModel::FxBsModel(const QuantLib::ext::shared_ptr<FxBsParametrization>& parametrization)
     : parametrization_(parametrization) {
     QL_REQUIRE(parametrization != nullptr, "FxBsModel: parametrization is null");
 }

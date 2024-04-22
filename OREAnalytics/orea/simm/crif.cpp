@@ -324,7 +324,7 @@ bool Crif::hasNettingSetDetails() const {
     return hasNettingSetDetails;
 }
 
-void Crif::fillAmountUsd(const boost::shared_ptr<ore::data::Market> market) {
+void Crif::fillAmountUsd(const QuantLib::ext::shared_ptr<ore::data::Market> market) {
     if (!market) {
         WLOG("CrifLoader::fillAmountUsd() was called, but market object is empty.")
         return;

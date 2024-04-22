@@ -175,7 +175,7 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
         Real xMin = std::log(mi) - sigmaSqrtT * normInvEps * mesherScaling_;
         Real xMax = std::log(ma) + sigmaSqrtT * normInvEps * mesherScaling_;
 
-        mesher_ = boost::make_shared<Uniform1dMesher>(xMin, xMax, stateGridPoints_);
+        mesher_ = QuantLib::ext::make_shared<Uniform1dMesher>(xMin, xMax, stateGridPoints_);
     }
 
     // 4 set up functions accrual(t), notional(t), recovery(t, S)
@@ -187,7 +187,7 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
     for (auto const& c : arguments_.cashflows) {
         if (c->date() <= today)
             continue;
-        if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c)) {
+        if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(c)) {
             if (!close_enough(cpn->nominal(), notionals.back())) {
                 notionalTimes.push_back(model_->timeFromReference(c->date()));
                 notionals.push_back(cpn->nominal());
@@ -251,14 +251,14 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
 
     // 5 build operator
 
-    auto fdmOp = boost::make_shared<FdmDefaultableEquityJumpDiffusionOp>(
-        boost::make_shared<FdmMesherComposite>(mesher_), *model_, 0, recovery, discountingCurve_, discountingSpread_,
+    auto fdmOp = QuantLib::ext::make_shared<FdmDefaultableEquityJumpDiffusionOp>(
+        QuantLib::ext::make_shared<FdmMesherComposite>(mesher_), *model_, 0, recovery, discountingCurve_, discountingSpread_,
         creditCurve_, addRecovery);
 
     // 6 build solver
 
-    auto solver = boost::make_shared<FdmBackwardSolver>(
-        fdmOp, std::vector<boost::shared_ptr<BoundaryCondition<FdmLinearOp>>>(), nullptr, FdmSchemeDesc::Douglas());
+    auto solver = QuantLib::ext::make_shared<FdmBackwardSolver>(
+        fdmOp, std::vector<QuantLib::ext::shared_ptr<BoundaryCondition<FdmLinearOp>>>(), nullptr, FdmSchemeDesc::Douglas());
 
     // 7 prepare event container
 

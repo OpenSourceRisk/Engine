@@ -21,8 +21,8 @@
 namespace QuantExt {
 
 BondTRSCashFlow::BondTRSCashFlow(const Date& paymentDate, const Date& fixingStartDate, const Date& fixingEndDate,
-                                 const Real bondNotional, const boost::shared_ptr<BondIndex>& bondIndex,
-                                 const Real initialPrice, const boost::shared_ptr<FxIndex>& fxIndex)
+                                 const Real bondNotional, const QuantLib::ext::shared_ptr<BondIndex>& bondIndex,
+                                 const Real initialPrice, const QuantLib::ext::shared_ptr<FxIndex>& fxIndex)
     : TRSCashFlow(paymentDate, fixingStartDate, fixingEndDate, bondNotional, bondIndex, initialPrice, fxIndex)  {}
 
 const Real BondTRSCashFlow::notional(Date date) const {
@@ -37,8 +37,8 @@ void BondTRSCashFlow::setFixingStartDate(QuantLib::Date fixingDate) {
 }
 
 BondTRSLeg::BondTRSLeg(const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates,
-                       const Real bondNotional, const boost::shared_ptr<BondIndex>& bondIndex,
-                       const boost::shared_ptr<FxIndex>& fxIndex)
+                       const Real bondNotional, const QuantLib::ext::shared_ptr<BondIndex>& bondIndex,
+                       const QuantLib::ext::shared_ptr<FxIndex>& fxIndex)
     : valuationDates_(valuationDates), paymentDates_(paymentDates), bondNotional_(bondNotional), bondIndex_(bondIndex),
       fxIndex_(fxIndex) {}
 
@@ -53,7 +53,7 @@ BondTRSLeg::operator Leg() const {
 
     for (Size i = 0; i < valuationDates_.size() - 1; ++i) {
         initialPrice = i == 0 ? initialPrice_ : Null<Real>();
-        leg.push_back(boost::make_shared<BondTRSCashFlow>(paymentDates_[i], valuationDates_[i], valuationDates_[i + 1],
+        leg.push_back(QuantLib::ext::make_shared<BondTRSCashFlow>(paymentDates_[i], valuationDates_[i], valuationDates_[i + 1],
                                                           bondNotional_, bondIndex_, initialPrice, fxIndex_));
     }
     return leg;
