@@ -381,7 +381,83 @@
     </WorstOfBasketSwapData>
   </Trade>
 
-  <Trade id="5:TaRF">
+  <Trade id="5:KnockOutSwap">
+    <TradeType>KnockOutSwap</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId/>
+      <AdditionalFields/>
+    </Envelope>
+    <KnockOutSwapData>
+      <!-- BarrierData and BarrierStartDate specify the knock out terms -->
+      <BarrierData>
+	<Type>UpAndOut</Type>
+	<Levels>
+          <Level>0.20</Level>
+	</Levels>
+      </BarrierData>
+      <BarrierStartDate>2024-10-01</BarrierStartDate>
+      <!-- we require exactly one Floating and one Fixed Leg -->
+      <LegData>
+	<LegType>Floating</LegType>
+	<Payer>false</Payer>
+	<Currency>EUR</Currency>
+	<DayCounter>A360</DayCounter>
+	<PaymentConvention>MF</PaymentConvention>
+	<Notionals>
+          <Notional>100000000.00</Notional>
+	</Notionals>
+	<FloatingLegData>
+          <Index>EUR-ESTER</Index>
+	</FloatingLegData>
+	<ScheduleData>
+          <Rules>
+            <StartDate>2023-10-01</StartDate>
+            <EndDate>2028-10-01</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>ModifiedFollowing</Convention>
+            <TermConvention/>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+	</ScheduleData>
+      </LegData>
+      <LegData>
+	<LegType>Fixed</LegType>
+	<Payer>true</Payer>
+	<Currency>EUR</Currency>
+	<Notionals>
+          <Notional>100000000.00</Notional>
+	</Notionals>
+	<DayCounter>ACT/ACT</DayCounter>
+	<PaymentConvention>Following</PaymentConvention>
+	<FixedLegData>
+          <Rates>
+            <Rate>0.05</Rate>
+          </Rates>
+	</FixedLegData>
+	<ScheduleData>
+          <Rules>
+            <StartDate>2023-10-01</StartDate>
+            <EndDate>2028-10-01</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>ModifiedFollowing</Convention>
+            <TermConvention>ModifiedFollowing</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+	</ScheduleData>
+      </LegData>
+    </KnockOutSwapData>
+  </Trade>
+  
+  <Trade id="6:TaRF">
     <TradeType>ScriptedTrade</TradeType>
     <Envelope>
       <CounterParty>CPTY</CounterParty>
