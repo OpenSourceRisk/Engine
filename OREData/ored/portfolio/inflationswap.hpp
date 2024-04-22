@@ -48,7 +48,8 @@ public:
     void checkInflationSwap(const vector<LegData>& legData);
 
     //! Trade interface
-    virtual void build(const boost::shared_ptr<EngineFactory>&) override;
+    virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
+    void setIsdaTaxonomyFields() override;
 };
 } // namespace data
 } // namespace ore

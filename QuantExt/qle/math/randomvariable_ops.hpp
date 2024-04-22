@@ -39,7 +39,7 @@ using RandomVariableOp = std::function<RandomVariable(const std::vector<const Ra
 std::vector<RandomVariableOp>
 getRandomVariableOps(const Size size, const Size regressionOrder = 2,
                      const QuantLib::LsmBasisSystem::PolynomialType polynomType = QuantLib::LsmBasisSystem::Monomial,
-                     const double eps = 0.0);
+                     const double eps = 0.0, QuantLib::Real regressionVarianceCutoff = Null<Real>());
 
 // random variable gradients
 
@@ -50,7 +50,7 @@ using RandomVariableGrad =
 std::vector<RandomVariableGrad> getRandomVariableGradients(
     const Size size, const Size regressionOrder = 2,
     const QuantLib::LsmBasisSystem::PolynomialType polynomType = QuantLib::LsmBasisSystem::Monomial,
-    const double eps = 0.2);
+    const double eps = 0.2, QuantLib::Real regressionVarianceCutoff = Null<Real>());
 
 // random variable flags which values are needed to compute the gradient
 

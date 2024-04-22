@@ -51,7 +51,7 @@ class OptionletStripperWithAtm : public QuantExt::OptionletStripper {
 
 public:
     //! Constructor
-    OptionletStripperWithAtm(const boost::shared_ptr<QuantExt::OptionletStripper>& osBase,
+    OptionletStripperWithAtm(const QuantLib::ext::shared_ptr<QuantExt::OptionletStripper>& osBase,
                              const QuantLib::Handle<CapFloorTermVolCurve>& atmCurve,
                              const QuantLib::Handle<QuantLib::YieldTermStructure>& discount =
                                  QuantLib::Handle<QuantLib::YieldTermStructure>(),
@@ -81,14 +81,14 @@ private:
     class ObjectiveFunction {
     public:
         ObjectiveFunction(const QuantLib::Handle<QuantLib::OptionletVolatilityStructure>& ovs,
-                          const boost::shared_ptr<QuantLib::CapFloor>& cap, QuantLib::Real targetValue,
+                          const QuantLib::ext::shared_ptr<QuantLib::CapFloor>& cap, QuantLib::Real targetValue,
                           const QuantLib::Handle<QuantLib::YieldTermStructure>& discount);
 
         Real operator()(QuantLib::Volatility volSpread) const;
 
     private:
-        boost::shared_ptr<QuantLib::SimpleQuote> spreadQuote_;
-        boost::shared_ptr<QuantLib::CapFloor> cap_;
+        QuantLib::ext::shared_ptr<QuantLib::SimpleQuote> spreadQuote_;
+        QuantLib::ext::shared_ptr<QuantLib::CapFloor> cap_;
         QuantLib::Real targetValue_;
         QuantLib::Handle<QuantLib::YieldTermStructure> discount_;
     };
@@ -102,14 +102,14 @@ private:
         Real operator()(QuantLib::Volatility volSpread) const;
 
     private:
-        boost::shared_ptr<QuantLib::SimpleQuote> spreadQuote_;
+        QuantLib::ext::shared_ptr<QuantLib::SimpleQuote> spreadQuote_;
         Leg cap_;
         QuantLib::Real targetValue_;
         QuantLib::Handle<QuantLib::YieldTermStructure> discount_;
     };
 
     //! Base optionlet stripper
-    boost::shared_ptr<QuantExt::OptionletStripper> osBase_;
+    QuantLib::ext::shared_ptr<QuantExt::OptionletStripper> osBase_;
 
     //! ATM volatility curve
     QuantLib::Handle<CapFloorTermVolCurve> atmCurve_;
@@ -141,13 +141,13 @@ private:
     mutable std::vector<QuantLib::Rate> atmStrikes_;
     mutable std::vector<QuantLib::Real> atmPrices_;
     mutable std::vector<QuantLib::Volatility> volSpreads_;
-    mutable std::vector<boost::shared_ptr<QuantLib::CapFloor> > caps_;
+    mutable std::vector<QuantLib::ext::shared_ptr<QuantLib::CapFloor> > caps_;
     mutable std::vector<QuantLib::Leg> capsOIS_;
 };
 
 template <class TimeInterpolator, class SmileInterpolator>
 OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::OptionletStripperWithAtm(
-    const boost::shared_ptr<QuantExt::OptionletStripper>& osBase,
+    const QuantLib::ext::shared_ptr<QuantExt::OptionletStripper>& osBase,
     const QuantLib::Handle<CapFloorTermVolCurve>& atmCurve,
     const QuantLib::Handle<QuantLib::YieldTermStructure>& discount, const QuantLib::VolatilityType atmVolatilityType,
     QuantLib::Real atmDisplacement, QuantLib::Size maxEvaluations, QuantLib::Real accuracy, const TimeInterpolator& ti,
@@ -201,7 +201,7 @@ void OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::performCalcu
     using QuantLib::YieldTermStructure;
     using std::vector;
 
-    bool isOis = boost::dynamic_pointer_cast<OvernightIndex>(index_) != nullptr;
+    bool isOis = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index_) != nullptr;
 
     // Possible update based on underlying optionlet stripper data
     optionletDates_ = osBase_->optionletFixingDates();
@@ -231,11 +231,11 @@ void OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::performCalcu
         if (isOis) {
 
             Volatility atmVol = atmCurve_->volatility(atmTimes[j], 0.01);
-            auto pricer = boost::make_shared<BlackOvernightIndexedCouponPricer>(
-                Handle<OptionletVolatilityStructure>(boost::make_shared<ConstantOptionletVolatility>(
+            auto pricer = QuantLib::ext::make_shared<BlackOvernightIndexedCouponPricer>(
+                Handle<OptionletVolatilityStructure>(QuantLib::ext::make_shared<ConstantOptionletVolatility>(
                     0, NullCalendar(), Unadjusted, atmVol, Actual365Fixed(), volatilityType(), false)));
             capsOIS_[j] =
-                MakeOISCapFloor(CapFloor::Cap, atmTenors[j], boost::dynamic_pointer_cast<OvernightIndex>(index_),
+                MakeOISCapFloor(CapFloor::Cap, atmTenors[j], QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index_),
                                 osBase_->rateComputationPeriod(), Null<Real>(), discountCurve)
                 .withCouponPricer(pricer);
             QL_REQUIRE(!capsOIS_[j].empty(),
@@ -247,11 +247,11 @@ void OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::performCalcu
 
             // Create a cap for each pillar point on ATM curve and attach relevant pricing engine
             Volatility atmVol = atmCurve_->volatility(atmTimes[j], 0.01);
-            boost::shared_ptr<PricingEngine> engine;
+            QuantLib::ext::shared_ptr<PricingEngine> engine;
             if (atmVolatilityType_ == ShiftedLognormal) {
-                engine = boost::make_shared<BlackCapFloorEngine>(discountCurve, atmVol, dayCounter_, atmDisplacement_);
+                engine = QuantLib::ext::make_shared<BlackCapFloorEngine>(discountCurve, atmVol, dayCounter_, atmDisplacement_);
             } else if (atmVolatilityType_ == Normal) {
-                engine = boost::make_shared<BachelierCapFloorEngine>(discountCurve, atmVol, dayCounter_);
+                engine = QuantLib::ext::make_shared<BachelierCapFloorEngine>(discountCurve, atmVol, dayCounter_);
             } else {
                 QL_FAIL("Unknown volatility type: " << atmVolatilityType_);
             }
@@ -259,7 +259,7 @@ void OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::performCalcu
             // Using Null<Rate>() as strike => strike will be set to ATM rate. However, to calculate ATM rate, QL
             // requires a BlackCapFloorEngine to be set (not a BachelierCapFloorEngine)! So, need a temp
             // BlackCapFloorEngine with a dummy vol to calculate ATM rate. Needs to be fixed in QL.
-            boost::shared_ptr<PricingEngine> tempEngine = boost::make_shared<BlackCapFloorEngine>(discountCurve, 0.01);
+            QuantLib::ext::shared_ptr<PricingEngine> tempEngine = QuantLib::ext::make_shared<BlackCapFloorEngine>(discountCurve, 0.01);
             caps_[j] =
                 MakeCapFloor(CapFloor::Cap, atmTenors[j], index_, Null<Rate>(), 0 * Days).withPricingEngine(tempEngine);
 
@@ -271,8 +271,8 @@ void OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::performCalcu
     }
 
     // Create an optionlet volatility structure from the underlying stripped optionlet surface
-    boost::shared_ptr<OptionletVolatilityStructure> ovs =
-        boost::make_shared<QuantExt::StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator> >(
+    QuantLib::ext::shared_ptr<OptionletVolatilityStructure> ovs =
+        QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator> >(
             atmCurve_->referenceDate(), osBase_);
     ovs->enableExtrapolation();
 
@@ -331,7 +331,7 @@ inline std::vector<QuantLib::Volatility> OptionletStripperWithAtm<TimeInterpolat
 template <class TimeInterpolator, class SmileInterpolator>
 OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::ObjectiveFunction::ObjectiveFunction(
     const QuantLib::Handle<QuantLib::OptionletVolatilityStructure>& ovs,
-    const boost::shared_ptr<QuantLib::CapFloor>& cap, QuantLib::Real targetValue,
+    const QuantLib::ext::shared_ptr<QuantLib::CapFloor>& cap, QuantLib::Real targetValue,
     const QuantLib::Handle<QuantLib::YieldTermStructure>& discount)
     : cap_(cap), targetValue_(targetValue), discount_(discount) {
 
@@ -342,17 +342,17 @@ OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::ObjectiveFunction
     using QuantLib::SimpleQuote;
 
     // set an implausible value, so that calculation is forced at first operator()(Volatility x) call
-    spreadQuote_ = boost::make_shared<SimpleQuote>(-1.0);
+    spreadQuote_ = QuantLib::ext::make_shared<SimpleQuote>(-1.0);
 
     // Spreaded optionlet volatility structure that will be used to price the ATM cap
     Handle<OptionletVolatilityStructure> spreadedOvs = Handle<OptionletVolatilityStructure>(
-        boost::make_shared<QuantExt::SpreadedOptionletVolatility>(ovs, Handle<Quote>(spreadQuote_)));
+        QuantLib::ext::make_shared<QuantExt::SpreadedOptionletVolatility>(ovs, Handle<Quote>(spreadQuote_)));
 
     // Attach the relevant engine to the cap with the spreaded optionlet volatility structure
     if (ovs->volatilityType() == ShiftedLognormal) {
-        cap_->setPricingEngine(boost::make_shared<BlackCapFloorEngine>(discount_, spreadedOvs, ovs->displacement()));
+        cap_->setPricingEngine(QuantLib::ext::make_shared<BlackCapFloorEngine>(discount_, spreadedOvs, ovs->displacement()));
     } else if (ovs->volatilityType() == Normal) {
-        cap_->setPricingEngine(boost::make_shared<BachelierCapFloorEngine>(discount_, spreadedOvs));
+        cap_->setPricingEngine(QuantLib::ext::make_shared<BachelierCapFloorEngine>(discount_, spreadedOvs));
     } else {
         QL_FAIL("Unknown volatility type: " << ovs->volatilityType());
     }
@@ -371,15 +371,15 @@ OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::ObjectiveFunction
     using QuantLib::SimpleQuote;
 
     // set an implausible value, so that calculation is forced at first operator()(Volatility x) call
-    spreadQuote_ = boost::make_shared<SimpleQuote>(-1.0);
+    spreadQuote_ = QuantLib::ext::make_shared<SimpleQuote>(-1.0);
 
     // Spreaded optionlet volatility structure that will be used to price the ATM cap
     Handle<OptionletVolatilityStructure> spreadedOvs = Handle<OptionletVolatilityStructure>(
-        boost::make_shared<QuantExt::SpreadedOptionletVolatility>(ovs, Handle<Quote>(spreadQuote_)));
+        QuantLib::ext::make_shared<QuantExt::SpreadedOptionletVolatility>(ovs, Handle<Quote>(spreadQuote_)));
 
-    auto pricer = boost::make_shared<BlackOvernightIndexedCouponPricer>(spreadedOvs, false);
+    auto pricer = QuantLib::ext::make_shared<BlackOvernightIndexedCouponPricer>(spreadedOvs, false);
     for (auto& c : cap_) {
-        if (auto f = boost::dynamic_pointer_cast<FloatingRateCoupon>(c))
+        if (auto f = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c))
             f->setPricer(pricer);
     }
 }

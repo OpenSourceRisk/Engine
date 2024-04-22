@@ -36,17 +36,17 @@ namespace QuantExt {
 
 class LgmConvolutionSolver2 : public LgmBackwardSolver {
 public:
-    LgmConvolutionSolver2(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny,
+    LgmConvolutionSolver2(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny,
                           const Real sx, const Size nx);
     Size gridSize() const override { return 2 * mx_ + 1; }
     RandomVariable stateGrid(const Real t) const override;
     // steps are always ignored, since we can take large steps
     RandomVariable rollback(const RandomVariable& v, const Real t1, const Real t0,
                             Size steps = Null<Size>()) const override;
-    const boost::shared_ptr<LinearGaussMarkovModel>& model() const override { return model_; }
+    const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model() const override { return model_; }
 
 private:
-    boost::shared_ptr<LinearGaussMarkovModel> model_;
+    QuantLib::ext::shared_ptr<LinearGaussMarkovModel> model_;
     int mx_, my_, nx_;
     Real h_;
     std::vector<Real> y_, w_;

@@ -33,13 +33,40 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-void VarSwap::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
+void VarSwap::build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory) {
     Currency ccy = ore::data::parseCurrency(currency_);
     Position::Type longShort = ore::data::parsePositionType(longShort_);
     start_ = ore::data::parseDate(startDate_);
     Date endDate = ore::data::parseDate(endDate_);
     cal_ = ore::data::parseCalendar(calendar_);
     MomentType momentType = parseMomentType(momentType_);
+
+    // ISDA taxonomy
+    if (assetClassUnderlying_ == AssetClass::FX) {
+        additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+        additionalData_["isdaBaseProduct"] = string("Simple Exotic");
+        additionalData_["isdaSubProduct"] = string("Vol/Var");
+    } else if (assetClassUnderlying_ == AssetClass::EQ) {
+        additionalData_["isdaAssetClass"] = string("Equity");
+        additionalData_["isdaBaseProduct"] = string("Swap");
+        if (momentType == MomentType::Variance)
+            additionalData_["isdaSubProduct"] = string("Parameter Return Variance");
+        else
+            additionalData_["isdaSubProduct"] = string("Parameter Return Volatility");
+    } else if (assetClassUnderlying_ == AssetClass::COM) {
+        // guessing, that we should treat Commodities as Equities
+        additionalData_["isdaAssetClass"] = string("Commodity");
+        additionalData_["isdaBaseProduct"] = string("Swap");
+        MomentType momentType = parseMomentType(momentType_);
+        if (momentType == MomentType::Variance)
+            additionalData_["isdaSubProduct"] = string("Parameter Return Variance");
+        else
+            additionalData_["isdaSubProduct"] = string("Parameter Return Volatility");
+    } else {
+        WLOG("ISDA taxonomy not set for trade " << id());
+    }
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");  
 
     if (cal_.empty()) {
         cal_ = ore::data::parseCalendar(ccy.code());
@@ -55,20 +82,20 @@ void VarSwap::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFac
     Real varianceStrike = strike_ * strike_;
     Real varianceNotional = notional_ / (2 * 100 * strike_);
 
-    boost::shared_ptr<QuantExt::VarianceSwap2> varSwap(new QuantExt::VarianceSwap2(
+    QuantLib::ext::shared_ptr<QuantExt::VarianceSwap2> varSwap(new QuantExt::VarianceSwap2(
         longShort, varianceStrike, momentType == MomentType::Variance ? varianceNotional : notional_, start_, endDate,
         cal_, addPastDividends_));
 
     // Pricing Engine
-    boost::shared_ptr<ore::data::EngineBuilder> builder = engineFactory->builder(tradeType_);
+    QuantLib::ext::shared_ptr<ore::data::EngineBuilder> builder = engineFactory->builder(tradeType_);
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    boost::shared_ptr<VarSwapEngineBuilder> varSwapBuilder = boost::dynamic_pointer_cast<VarSwapEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<VarSwapEngineBuilder> varSwapBuilder = QuantLib::ext::dynamic_pointer_cast<VarSwapEngineBuilder>(builder);
 
     varSwap->setPricingEngine(varSwapBuilder->engine(name(), ccy, assetClassUnderlying_, momentType));
     setSensitivityTemplate(*varSwapBuilder);
 
     // set up other Trade details
-    instrument_ = boost::shared_ptr<ore::data::InstrumentWrapper>(new ore::data::VanillaInstrument(varSwap));
+    instrument_ = QuantLib::ext::shared_ptr<ore::data::InstrumentWrapper>(new ore::data::VanillaInstrument(varSwap));
 
     npvCurrency_ = currency_;
     notionalCurrency_ = currency_;
@@ -78,37 +105,6 @@ void VarSwap::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFac
     for (Date d = cal_.advance(start_, -1 * Days); d <= endDate; d = cal_.advance(d, 1 * Days)) {
         requiredFixings_.addFixingDate(d, indexName_, varSwap->maturityDate());
     }
-
-    // ISDA taxonomy
-    if (assetClassUnderlying_ == AssetClass::FX) {
-        additionalData_["isdaAssetClass"] = string("Foreign Exchange");
-        additionalData_["isdaBaseProduct"] = string("Simple Exotic");
-        additionalData_["isdaSubProduct"] = string("Vol/Var");
-    }
-    else if (assetClassUnderlying_ == AssetClass::EQ) {
-        additionalData_["isdaAssetClass"] = string("Equity");
-        additionalData_["isdaBaseProduct"] = string("Swap");
-        MomentType momentType = parseMomentType(momentType_);
-        if (momentType == MomentType::Variance)
-            additionalData_["isdaSubProduct"] = string("Parameter Return Variance");
-        else
-            additionalData_["isdaSubProduct"] = string("Parameter Return Volatility");
-    }
-    else if (assetClassUnderlying_ == AssetClass::COM) {
-        // guessing, that we should treat Commodities as Equities
-        additionalData_["isdaAssetClass"] = string("Commodity");
-        additionalData_["isdaBaseProduct"] = string("Swap");
-        MomentType momentType = parseMomentType(momentType_);
-        if (momentType == MomentType::Variance)
-            additionalData_["isdaSubProduct"] = string("Parameter Return Variance");
-        else
-            additionalData_["isdaSubProduct"] = string("Parameter Return Volatility");
-    }
-    else {
-        WLOG("ISDA taxonomy not set for trade " << id());
-    }
-    // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = string("");  
 }
 
 QuantLib::Real VarSwap::notional() const {
@@ -155,7 +151,7 @@ void VarSwap::fromXML(XMLNode* node) {
     initIndexName();
 }
 
-XMLNode* VarSwap::toXML(ore::data::XMLDocument& doc) {
+XMLNode* VarSwap::toXML(ore::data::XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* vNode;
     if (oldXml_) {
@@ -190,12 +186,12 @@ void VarSwap::initIndexName() {
 }
 
 std::map<AssetClass, std::set<std::string>>
-EqVarSwap::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+EqVarSwap::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     return {{AssetClass::EQ, std::set<std::string>({name()})}};
 }
 
 std::map<AssetClass, std::set<std::string>>
-ComVarSwap::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+ComVarSwap::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     return {{AssetClass::COM, std::set<std::string>({name()})}};
 }
 

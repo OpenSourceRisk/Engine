@@ -78,7 +78,7 @@ void InfDkData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* InfDkData::toXML(XMLDocument& doc) {
+XMLNode* InfDkData::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("DodgsonKainth");
     InflationModelData::append(doc, node);
@@ -113,11 +113,11 @@ void InfDkData::populateCalibrationBaskets(XMLNode* node) {
     }
 
     // Create a vector of CPI cap floor calibration instruments.
-    vector<boost::shared_ptr<CalibrationInstrument>> instruments;
+    vector<QuantLib::ext::shared_ptr<CalibrationInstrument>> instruments;
     for (Size i = 0; i < maturities.size(); ++i) {
         auto p = parseDateOrPeriod(maturities[i]);
-        boost::shared_ptr<BaseStrike> s = parseBaseStrike(strikes[i]);
-        instruments.push_back(boost::make_shared<CpiCapFloor>(type, p, s));
+        QuantLib::ext::shared_ptr<BaseStrike> s = parseBaseStrike(strikes[i]);
+        instruments.push_back(QuantLib::ext::make_shared<CpiCapFloor>(type, p, s));
     }
 
     // Populate the calibrationBaskets_ member.

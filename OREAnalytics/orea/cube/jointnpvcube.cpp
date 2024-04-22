@@ -26,12 +26,12 @@
 namespace ore {
 namespace analytics {
 
-JointNPVCube::JointNPVCube(const boost::shared_ptr<NPVCube>& cube1, const boost::shared_ptr<NPVCube>& cube2,
+JointNPVCube::JointNPVCube(const QuantLib::ext::shared_ptr<NPVCube>& cube1, const QuantLib::ext::shared_ptr<NPVCube>& cube2,
                            const std::set<std::string>& ids, const bool requireUniqueIds,
                            const std::function<Real(Real a, Real x)>& accumulator, const Real accumulatorInit)
     : JointNPVCube({cube1, cube2}, ids, requireUniqueIds, accumulator, accumulatorInit) {}
 
-JointNPVCube::JointNPVCube(const std::vector<boost::shared_ptr<NPVCube>>& cubes, const std::set<std::string>& ids,
+JointNPVCube::JointNPVCube(const std::vector<QuantLib::ext::shared_ptr<NPVCube>>& cubes, const std::set<std::string>& ids,
                            const bool requireUniqueIds, const std::function<Real(Real a, Real x)>& accumulator,
                            const Real accumulatorInit)
     : NPVCube(), cubes_(cubes), accumulator_(accumulator), accumulatorInit_(accumulatorInit) {
@@ -107,7 +107,7 @@ const std::vector<QuantLib::Date>& JointNPVCube::dates() const { return cubes_[0
 
 QuantLib::Date JointNPVCube::asof() const { return cubes_[0]->asof(); }
 
-std::set<std::pair<boost::shared_ptr<NPVCube>, Size>> JointNPVCube::cubeAndId(Size id) const {
+std::set<std::pair<QuantLib::ext::shared_ptr<NPVCube>, Size>> JointNPVCube::cubeAndId(Size id) const {
     QL_REQUIRE(id < cubeAndId_.size(),
                "JointNPVCube: id (" << id << ") out of range, have " << cubeAndId_.size() << " ids");
     return cubeAndId_[id];

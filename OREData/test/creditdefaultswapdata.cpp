@@ -35,7 +35,7 @@ LegData premiumLegData() {
     ScheduleData scheduleData(
         ScheduleRules("2019-10-02", "2024-12-20", "3M", "WeekendsOnly", "Following", "Unadjusted", "CDS2015"));
 
-    auto fixedLegData = boost::make_shared<FixedLegData>(vector<Real>(1, 0.01));
+    auto fixedLegData = QuantLib::ext::make_shared<FixedLegData>(vector<Real>(1, 0.01));
 
     return LegData(fixedLegData, true, "EUR", scheduleData, "A360", vector<Real>(1, 1000000), vector<string>(),
                    "Following");

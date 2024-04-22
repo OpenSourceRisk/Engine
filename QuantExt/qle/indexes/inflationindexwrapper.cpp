@@ -23,12 +23,12 @@
 namespace QuantExt {
 
 QL_DEPRECATED_DISABLE_WARNING
-ZeroInflationIndexWrapper::ZeroInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> source)
+ZeroInflationIndexWrapper::ZeroInflationIndexWrapper(const QuantLib::ext::shared_ptr<ZeroInflationIndex> source)
     : ZeroInflationIndex(source->familyName(), source->region(), source->revised(), source->frequency(), source->availabilityLag(), source->currency(),
                          source->zeroInflationTermStructure()),
       source_(source), interpolation_(QuantLib::CPI::InterpolationType::Flat) {}
 
-ZeroInflationIndexWrapper::ZeroInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> source,
+ZeroInflationIndexWrapper::ZeroInflationIndexWrapper(const QuantLib::ext::shared_ptr<ZeroInflationIndex> source,
                                                      const CPI::InterpolationType interpolation)
     : ZeroInflationIndex(source->familyName(), source->region(), source->revised(), source->interpolated(),
                          source->frequency(), source->availabilityLag(), source->currency(),
@@ -61,7 +61,7 @@ Rate ZeroInflationIndexWrapper::fixing(const Date& fixingDate, bool /*forecastTo
     QL_DEPRECATED_ENABLE_WARNING
 }
 
-YoYInflationIndexWrapper::YoYInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> zeroIndex,
+YoYInflationIndexWrapper::YoYInflationIndexWrapper(const QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex,
                                                    const bool interpolated, const Handle<YoYInflationTermStructure>& ts)
     : YoYInflationIndex(zeroIndex, interpolated, ts),
       zeroIndex_(zeroIndex) {

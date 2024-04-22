@@ -60,13 +60,13 @@ void EquityMarginLegData::fromXML(XMLNode* node) {
     XMLNode* equityNode = XMLUtils::getChildNode(node, "EquityLegData");
     QL_REQUIRE(equityNode, "no equityLegData provided");
 
-    boost::shared_ptr<ore::data::EquityLegData> ld = boost::make_shared<EquityLegData>();
+    QuantLib::ext::shared_ptr<ore::data::EquityLegData> ld = QuantLib::ext::make_shared<EquityLegData>();
     ld->fromXML(equityNode);
     equityLegData_ = ld;
 
 }
 
-XMLNode* EquityMarginLegData::toXML(XMLDocument& doc) {
+XMLNode* EquityMarginLegData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Rates", "Rate", rates_, "startDate", rateDates_);
     XMLUtils::addChild(doc, node, "InitialMarginFactor", initialMarginFactor_);
@@ -76,12 +76,12 @@ XMLNode* EquityMarginLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
-QuantExt::Leg makeEquityMarginLeg(const LegData& data, const boost::shared_ptr<EquityIndex2>& equityCurve,
-                                  const boost::shared_ptr<QuantExt::FxIndex>& fxIndex,
+QuantExt::Leg makeEquityMarginLeg(const LegData& data, const QuantLib::ext::shared_ptr<EquityIndex2>& equityCurve,
+                                  const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex,
                                   const QuantLib::Date& openEndDateReplacement) {
-    boost::shared_ptr<EquityMarginLegData> eqMarginLegData = boost::dynamic_pointer_cast<EquityMarginLegData>(data.concreteLegData());
+    QuantLib::ext::shared_ptr<EquityMarginLegData> eqMarginLegData = QuantLib::ext::dynamic_pointer_cast<EquityMarginLegData>(data.concreteLegData());
     QL_REQUIRE(eqMarginLegData, "Wrong LegType, expected EquityMargin, got " << data.legType());
-    boost::shared_ptr<ore::data::EquityLegData> eqLegData = eqMarginLegData->equityLegData();
+    QuantLib::ext::shared_ptr<ore::data::EquityLegData> eqLegData = eqMarginLegData->equityLegData();
     QL_REQUIRE(eqLegData, "expected equityLegData");
     QuantExt::Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
     DayCounter dc = parseDayCounter(data.dayCounter());

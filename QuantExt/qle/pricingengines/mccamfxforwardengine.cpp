@@ -31,10 +31,12 @@ McCamFxForwardEngine::McCamFxForwardEngine(
     const Size polynomOrder, const LsmBasisSystem::PolynomialType polynomType,
     const SobolBrownianGenerator::Ordering ordering, const SobolRsg::DirectionIntegers directionIntegers,
     const std::vector<Handle<YieldTermStructure>>& discountCurves, const std::vector<Date>& simulationDates,
-    const std::vector<Size>& externalModelIndices, const bool minimalObsDate, const RegressorModel regressorModel)
+    const std::vector<Size>& externalModelIndices, const bool minimalObsDate, const RegressorModel regressorModel,
+    const Real regressionVarianceCutoff)
     : McMultiLegBaseEngine(model, calibrationPathGenerator, pricingPathGenerator, calibrationSamples, pricingSamples,
                            calibrationSeed, pricingSeed, polynomOrder, polynomType, ordering, directionIntegers,
-                           discountCurves, simulationDates, externalModelIndices, minimalObsDate, regressorModel),
+                           discountCurves, simulationDates, externalModelIndices, minimalObsDate, regressorModel,
+                           regressionVarianceCutoff),
       domesticCcy_(domesticCcy), foreignCcy_(foreignCcy), npvCcy_(npvCcy) {
     registerWith(model_);
     for (auto const& h : discountCurves)
@@ -43,14 +45,15 @@ McCamFxForwardEngine::McCamFxForwardEngine(
 
 void McCamFxForwardEngine::calculate() const {
 
-    Leg foreignLeg{boost::make_shared<SimpleCashFlow>(arguments_.nominal1, arguments_.payDate)};
-    Leg domesticLeg{boost::make_shared<SimpleCashFlow>(arguments_.nominal2, arguments_.payDate)};
+    Leg foreignLeg{QuantLib::ext::make_shared<SimpleCashFlow>(arguments_.nominal1, arguments_.payDate)};
+    Leg domesticLeg{QuantLib::ext::make_shared<SimpleCashFlow>(arguments_.nominal2, arguments_.payDate)};
 
     leg_ = {foreignLeg, domesticLeg};
     currency_ = {foreignCcy_, domesticCcy_};
     payer_ = {false, true};
     exercise_ = nullptr;
-
+    includeSettlementDateFlows_ = arguments_.includeSettlementDateFlows;
+        
     McMultiLegBaseEngine::calculate();
 
     // convert base ccy result from McMultiLegbaseEngine to desired npv currency

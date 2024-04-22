@@ -50,6 +50,8 @@ public:
         : premiumData_(1, PremiumDatum(amount, ccy, payDate)) {}
     explicit PremiumData(const std::vector<PremiumDatum>& premiumData) : premiumData_(premiumData) {}
 
+    QuantLib::Date latestPremiumDate() const;
+
     //! \name Inspectors
     //@{
     const std::vector<PremiumDatum>& premiumData() const { return premiumData_; }
@@ -58,7 +60,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
 private:

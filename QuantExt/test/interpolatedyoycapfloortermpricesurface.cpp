@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(testInterpolatedYoyCapFloorTermPriceSurface) {
     Settings::instance().evaluationDate() = asof_;
 
     Handle<YieldTermStructure> nominalTs =
-        Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, TARGET(), 0.005, Actual365Fixed()));
+        Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(0, TARGET(), 0.005, Actual365Fixed()));
 
     std::vector<Rate> capStrikes;
     capStrikes.push_back(0.01);
@@ -149,40 +149,40 @@ BOOST_AUTO_TEST_CASE(testInterpolatedYoyCapFloorTermPriceSurface) {
     std::vector<Real> fixingRatesEUHICPXT(15, 100);
 
     Handle<ZeroInflationIndex> hEUHICPXT;
-    boost::shared_ptr<EUHICPXT> ii = boost::shared_ptr<EUHICPXT>(new EUHICPXT());
-    boost::shared_ptr<ZeroInflationTermStructure> cpiTS;
+    QuantLib::ext::shared_ptr<EUHICPXT> ii = QuantLib::ext::shared_ptr<EUHICPXT>(new EUHICPXT());
+    QuantLib::ext::shared_ptr<ZeroInflationTermStructure> cpiTS;
     for (Size i = 0; i < fixingDatesEUHICPXT.size(); i++) {
         ii->addFixing(fixingDatesEUHICPXT[i], fixingRatesEUHICPXT[i], true);
     };
     // now build the helpers ...
-    std::vector<boost::shared_ptr<BootstrapHelper<ZeroInflationTermStructure> > > instruments;
+    std::vector<QuantLib::ext::shared_ptr<BootstrapHelper<ZeroInflationTermStructure> > > instruments;
     for (Size i = 0; i < datesZCII.size(); i++) {
-        Handle<Quote> quote(boost::shared_ptr<Quote>(new SimpleQuote(ratesZCII[i] / 100.0)));
-        boost::shared_ptr<BootstrapHelper<ZeroInflationTermStructure> > anInstrument(new ZeroCouponInflationSwapHelper(
+        Handle<Quote> quote(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(ratesZCII[i] / 100.0)));
+        QuantLib::ext::shared_ptr<BootstrapHelper<ZeroInflationTermStructure> > anInstrument(new ZeroCouponInflationSwapHelper(
         quote, Period(3, Months), datesZCII[i], TARGET(), ModifiedFollowing, Actual365Fixed(), ii, CPI::AsIndex, nominalTs));
         instruments.push_back(anInstrument);
     };
 
     Rate baseZeroRate = ratesZCII[0] / 100.0;
-    boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(new PiecewiseZeroInflationCurve<Linear>(
+    QuantLib::ext::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(new PiecewiseZeroInflationCurve<Linear>(
         asof_, TARGET(), Actual365Fixed(), Period(3, Months), Monthly, baseZeroRate, instruments));
     pCPIts->recalculate();
-    cpiTS = boost::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
+    cpiTS = QuantLib::ext::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
 
-    boost::shared_ptr<EUHICPXT> zii(new EUHICPXT(Handle<ZeroInflationTermStructure>(pCPIts)));
-    boost::shared_ptr<ZeroInflationIndex> zeroIndex = boost::dynamic_pointer_cast<ZeroInflationIndex>(zii);
+    QuantLib::ext::shared_ptr<EUHICPXT> zii(new EUHICPXT(Handle<ZeroInflationTermStructure>(pCPIts)));
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex = QuantLib::ext::dynamic_pointer_cast<ZeroInflationIndex>(zii);
 
-    boost::shared_ptr<YoYInflationIndex> yoyIndex;
+    QuantLib::ext::shared_ptr<YoYInflationIndex> yoyIndex;
 
     yoyIndex =
-        boost::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex, true, Handle<YoYInflationTermStructure>());
+        QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex, true, Handle<YoYInflationTermStructure>());
 
     QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> ys(
         0, Period(3, Months), yoyIndex, 1, nominalTs, Actual365Fixed(), TARGET(), Following, capStrikes, floorStrikes,
         maturities, capPrice, floorPrice);
 
-    boost::shared_ptr<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> > yoySurface =
-        boost::make_shared<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> >(ys);
+    QuantLib::ext::shared_ptr<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> > yoySurface =
+        QuantLib::ext::make_shared<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> >(ys);
 
     // check the cap and floor prices from the surface
     Real tol = 1.0E-8;

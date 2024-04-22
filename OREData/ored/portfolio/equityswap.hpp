@@ -48,8 +48,10 @@ public:
     void checkEquitySwap(const vector<LegData>& legData);
 
     //! Trade interface
-    virtual void build(const boost::shared_ptr<EngineFactory>&) override;
+    virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
+    void setIsdaTaxonomyFields() override;
     QuantLib::Real notional() const override;
+    std::string notionalCurrency() const override;
 
 private:
     Size equityLegIndex_, irLegIndex_;

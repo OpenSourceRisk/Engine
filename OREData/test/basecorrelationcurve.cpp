@@ -41,22 +41,22 @@ namespace bdata = boost::unit_test::data;
 
 namespace {
 
-boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const string& inputDir) {
+QuantLib::ext::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const string& inputDir) {
 
-    auto conventions = boost::make_shared<Conventions>();
+    auto conventions = QuantLib::ext::make_shared<Conventions>();
     // conventions->fromFile(TEST_INPUT_FILE(string(inputDir + "/conventions.xml")));
     InstrumentConventions::instance().setConventions(conventions);
     
-    auto curveConfigs = boost::make_shared<CurveConfigurations>();
+    auto curveConfigs = QuantLib::ext::make_shared<CurveConfigurations>();
     curveConfigs->fromFile(TEST_INPUT_FILE(string(inputDir + "/curveconfig.xml")));
 
-    auto todaysMarketParameters = boost::make_shared<TodaysMarketParameters>();
+    auto todaysMarketParameters = QuantLib::ext::make_shared<TodaysMarketParameters>();
     todaysMarketParameters->fromFile(TEST_INPUT_FILE(string(inputDir + "/todaysmarket.xml")));
 
-    auto loader = boost::make_shared<CSVLoader>(TEST_INPUT_FILE(string(inputDir + "/market.txt")),
+    auto loader = QuantLib::ext::make_shared<CSVLoader>(TEST_INPUT_FILE(string(inputDir + "/market.txt")),
                                                 TEST_INPUT_FILE(string(inputDir + "/fixings.txt")), false);
 
-    return boost::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs);
+    return QuantLib::ext::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs);
 }
 
 }

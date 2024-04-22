@@ -247,10 +247,10 @@ BOOST_AUTO_TEST_CASE(testEquityForwardCurveStripperEuropean) {
     }
 
     // build option price surfaces from the market data
-    boost::shared_ptr<OptionPriceSurface> callSurface =
-        boost::make_shared<OptionPriceSurface>(today, expiries, strikes, callPremiums, Actual365Fixed());
-    boost::shared_ptr<OptionPriceSurface> putSurface =
-        boost::make_shared<OptionPriceSurface>(today, expiries, strikes, putPremiums, Actual365Fixed());
+    QuantLib::ext::shared_ptr<OptionPriceSurface> callSurface =
+        QuantLib::ext::make_shared<OptionPriceSurface>(today, expiries, strikes, callPremiums, Actual365Fixed());
+    QuantLib::ext::shared_ptr<OptionPriceSurface> putSurface =
+        QuantLib::ext::make_shared<OptionPriceSurface>(today, expiries, strikes, putPremiums, Actual365Fixed());
 
     // forecast curve - discount rates taken bootstrapped EUR-EONIA curve on asof date
     vector<Time> forecastTimes({ 0.00000, 0.00273, 0.03287, 0.05205, 0.07123, 0.09315, 0.17534, 0.26301, 0.34246,
@@ -265,17 +265,17 @@ BOOST_AUTO_TEST_CASE(testEquityForwardCurveStripperEuropean) {
 
     vector<Handle<Quote> > forecastQuotes;
     for (Size i = 0; i < forecastValues.size(); i++)
-        forecastQuotes.push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(forecastValues[i])));
+        forecastQuotes.push_back(Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(forecastValues[i])));
 
     Handle<YieldTermStructure> forecastCurve(
-        boost::make_shared<InterpolatedDiscountCurve>(forecastTimes, forecastQuotes, 0, TARGET(), Actual365Fixed()));
+        QuantLib::ext::make_shared<InterpolatedDiscountCurve>(forecastTimes, forecastQuotes, 0, TARGET(), Actual365Fixed()));
 
     // equity spot for asof date
-    Handle<Quote> equitySpot = Handle<Quote>(boost::make_shared<SimpleQuote>(3502.63));
+    Handle<Quote> equitySpot = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(3502.63));
 
     // equity forward stripper
-    boost::shared_ptr<QuantExt::EquityForwardCurveStripper> efcs =
-        boost::make_shared<QuantExt::EquityForwardCurveStripper>(callSurface, putSurface, forecastCurve, equitySpot,
+    QuantLib::ext::shared_ptr<QuantExt::EquityForwardCurveStripper> efcs =
+        QuantLib::ext::make_shared<QuantExt::EquityForwardCurveStripper>(callSurface, putSurface, forecastCurve, equitySpot,
                                                                  Exercise::Type::European);
 
     // get terms and quotes from the stripper
@@ -407,10 +407,10 @@ BOOST_AUTO_TEST_CASE(testEquityForwardCurveStripperAmerican) {
     }
 
     // build option price surfaces from the market data
-    boost::shared_ptr<OptionPriceSurface> callSurface =
-        boost::make_shared<OptionPriceSurface>(today, expiries, strikes, callPremiums, Actual365Fixed());
-    boost::shared_ptr<OptionPriceSurface> putSurface =
-        boost::make_shared<OptionPriceSurface>(today, expiries, strikes, putPremiums, Actual365Fixed());
+    QuantLib::ext::shared_ptr<OptionPriceSurface> callSurface =
+        QuantLib::ext::make_shared<OptionPriceSurface>(today, expiries, strikes, callPremiums, Actual365Fixed());
+    QuantLib::ext::shared_ptr<OptionPriceSurface> putSurface =
+        QuantLib::ext::make_shared<OptionPriceSurface>(today, expiries, strikes, putPremiums, Actual365Fixed());
 
     // forecast curve - discount rates taken bootstrapped EUR-EONIA curve on asof date
     vector<Time> forecastTimes({ 0.00000, 0.00273, 0.03287, 0.05205, 0.07123, 0.09315, 0.17534, 0.26301, 0.34246,
@@ -425,17 +425,17 @@ BOOST_AUTO_TEST_CASE(testEquityForwardCurveStripperAmerican) {
 
     vector<Handle<Quote> > forecastQuotes;
     for (Size i = 0; i < forecastValues.size(); i++)
-        forecastQuotes.push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(forecastValues[i])));
+        forecastQuotes.push_back(Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(forecastValues[i])));
 
     Handle<YieldTermStructure> forecastCurve(
-        boost::make_shared<InterpolatedDiscountCurve>(forecastTimes, forecastQuotes, 0, TARGET(), Actual365Fixed()));
+        QuantLib::ext::make_shared<InterpolatedDiscountCurve>(forecastTimes, forecastQuotes, 0, TARGET(), Actual365Fixed()));
 
     // equity spot for asof date
-    Handle<Quote> equitySpot = Handle<Quote>(boost::make_shared<SimpleQuote>(211.95));
+    Handle<Quote> equitySpot = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(211.95));
 
     // equity forward stripper
-    boost::shared_ptr<QuantExt::EquityForwardCurveStripper> efcs =
-        boost::make_shared<QuantExt::EquityForwardCurveStripper>(callSurface, putSurface, forecastCurve, equitySpot,
+    QuantLib::ext::shared_ptr<QuantExt::EquityForwardCurveStripper> efcs =
+        QuantLib::ext::make_shared<QuantExt::EquityForwardCurveStripper>(callSurface, putSurface, forecastCurve, equitySpot,
                                                                  Exercise::Type::American);
 
     // get terms and quotes from the stripper

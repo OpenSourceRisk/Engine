@@ -43,14 +43,14 @@ public:
           settlementDirty_(settlementDirty), compensationPayment_(compensationPayment),
           compensationPaymentDate_(compensationPaymentDate), longInForward_(longInForward), dv01_(dv01) {}
 
-    virtual void build(const boost::shared_ptr<EngineFactory>&) override;
+    virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
 
     //! Add underlying Bond names
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     //! inspectors
     const BondData& bondData() const { return bondData_; }

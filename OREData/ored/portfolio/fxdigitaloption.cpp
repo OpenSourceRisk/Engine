@@ -31,7 +31,16 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-void FxDigitalOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void FxDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
+    additionalData_["isdaSubProduct"] = string("Digital");  
+    additionalData_["isdaTransaction"] = string("");  
+
+    additionalData_["payoffAmount"] = payoffAmount_;
+    additionalData_["payoffCurrency"] = payoffCurrency_;
 
     // Only European Vanilla supported for now
     QL_REQUIRE(option_.style() == "European", "Option Style unknown: " << option_.style());
@@ -63,21 +72,26 @@ void FxDigitalOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
     DLOG("Setting up FxDigitalOption with strike " << strike << " foreign " << forCcy << " domestic " << domCcy);
 
     // Set up the CashOrNothing
-    boost::shared_ptr<StrikedTypePayoff> payoff(new CashOrNothingPayoff(type, strike, payoffAmount_));
+    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff(new CashOrNothingPayoff(type, strike, payoffAmount_));
+
+    npvCurrency_ = domCcy.code(); // don't use domesticCurrency_ as it might be flipped
+    notional_ = payoffAmount_;
+    notionalCurrency_ = payoffCurrency_ != "" ? payoffCurrency_ : domesticCurrency_; // see logic above
 
     // Exercise
     Date expiryDate = parseDate(option_.exerciseDates().front());
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(expiryDate);
+    QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(expiryDate);
+    maturity_ = std::max(option_.premiumData().latestPremiumDate(), expiryDate);
 
     // QL does not have an FXDigitalOption, so we add a vanilla one here and wrap
     // it in a composite.
-    boost::shared_ptr<Instrument> vanilla = boost::make_shared<VanillaOption>(payoff, exercise);
+    QuantLib::ext::shared_ptr<Instrument> vanilla = QuantLib::ext::make_shared<VanillaOption>(payoff, exercise);
 
     // set pricing engines
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    boost::shared_ptr<FxDigitalOptionEngineBuilder> fxOptBuilder =
-        boost::dynamic_pointer_cast<FxDigitalOptionEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<FxDigitalOptionEngineBuilder> fxOptBuilder =
+        QuantLib::ext::dynamic_pointer_cast<FxDigitalOptionEngineBuilder>(builder);
     vanilla->setPricingEngine(fxOptBuilder->engine(forCcy, domCcy, flipResults));
     setSensitivityTemplate(*fxOptBuilder);
 
@@ -85,29 +99,13 @@ void FxDigitalOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
     Real mult = bsInd;
 
-    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
+    addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(), -bsInd, domCcy,
+                engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
 
-    Date lastPremiumDate =
-        addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(), -bsInd, domCcy,
-                    engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
-
-    instrument_ = boost::shared_ptr<InstrumentWrapper>(
+    instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
         new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));
-
-    npvCurrency_ = domCcy.code(); // don't use domesticCurrency_ as it might be flipped
-    notional_ = payoffAmount_;
-    notionalCurrency_ = payoffCurrency_ != "" ? payoffCurrency_ : domesticCurrency_; // see logic above
-    maturity_ = std::max(lastPremiumDate, expiryDate);
-
-    additionalData_["payoffAmount"] = payoffAmount_;
-    additionalData_["payoffCurrency"] = payoffCurrency_;
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
-    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
-    additionalData_["isdaSubProduct"] = string("Digital");  
-    additionalData_["isdaTransaction"] = string("");  
 }
 
 void FxDigitalOption::fromXML(XMLNode* node) {
@@ -122,7 +120,7 @@ void FxDigitalOption::fromXML(XMLNode* node) {
     domesticCurrency_ = XMLUtils::getChildValue(fxNode, "DomesticCurrency", true);
 }
 
-XMLNode* FxDigitalOption::toXML(XMLDocument& doc) {
+XMLNode* FxDigitalOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fxNode = doc.allocNode("FxDigitalOptionData");
     XMLUtils::appendNode(node, fxNode);
