@@ -611,5 +611,11 @@ QuantExt::SabrParametricVolatility::ModelVariant parseSabrParametricVolatilityMo
 */
 std::ostream& operator<<(std::ostream& out, QuantExt::SabrParametricVolatility::ModelVariant m);
 
+//! Write QuantLib::Exercise::Type
+/*!
+\ingroup utilities
+*/
+std::ostream& operator<<(std::ostream& os, QuantLib::Exercise::Type type);
+
 } // namespace data
 } // namespace ore
