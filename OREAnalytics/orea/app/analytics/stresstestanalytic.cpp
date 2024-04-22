@@ -16,11 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/app/analytics/stresstestanalytic.hpp>
 #include <orea/app/analytics/sensitivityanalytic.hpp>
-#include <orea/engine/partozeroscenario.hpp>
+#include <orea/app/analytics/stresstestanalytic.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/engine/observationmode.hpp>
+#include <orea/engine/partozeroscenario.hpp>
 #include <orea/engine/stresstest.hpp>
 
 using namespace ore::data;
@@ -30,10 +30,13 @@ namespace ore {
 namespace analytics {
 
 void StressTestAnalyticImpl::setUpConfigurations() {
-    QL_REQUIRE(inputs_->stressScenarioData() != nullptr,
-               "StressTestAnalytic: No StressScenarioData found, check input");
+    const auto stressData =  inputs_->stressScenarioData();
     analytic()->configurations().simulationConfigRequired = true;
-    analytic()->configurations().sensitivityConfigRequired = inputs_->stressScenarioData()->hasParRateScenario();
+    if (stressData != nullptr) {
+        analytic()->configurations().sensitivityConfigRequired = stressData->hasParRateScenario();
+    } else {
+        analytic()->configurations().sensitivityConfigRequired = false;
+    }
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().simMarketParams = inputs_->stressSimMarketParams();
     analytic()->configurations().sensiScenarioData = inputs_->stressSensitivityScenarioData();
@@ -66,13 +69,14 @@ void StressTestAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMe
     CONSOLEW("Risk: Stress Test Report");
     LOG("Stress Test Analysis called");
     boost::shared_ptr<StressTestScenarioData> scenarioData = inputs_->stressScenarioData();
-    if (scenarioData->hasParRateScenario()) {
+    if (scenarioData != nullptr && scenarioData->hasParRateScenario()) {
         LOG("Convert PAR rate scenario into zero rate scenario");
         QL_REQUIRE(stressAnalytic->hasDependentAnalytic(stressAnalytic->sensiAnalyticLookupKey),
                    "Internal error, need to build par Conversion analytic");
         // TODO: Check tenors between simulation and sensitivity config matches
         LOG("Stress Test Analytic: Run Par Sensitivity Analysis");
-        auto sensiAnalytic = stressAnalytic->dependentAnalytic<SensitivityAnalytic>(stressAnalytic->sensiAnalyticLookupKey);
+        auto sensiAnalytic =
+            stressAnalytic->dependentAnalytic<SensitivityAnalytic>(stressAnalytic->sensiAnalyticLookupKey);
         sensiAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
         sensiAnalytic->configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
         sensiAnalytic->runAnalytic(loader);
@@ -80,12 +84,13 @@ void StressTestAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMe
         LOG("Convert ParStressScenarios into ZeroStress Scenario");
         scenarioData = convertParScenarioToZeroScenarioData(
             inputs_->asof(), analytic()->market(), analytic()->configurations().simMarketParams, scenarioData,
-            inputs_->stressSensitivityScenarioData(), sensiAnalytic->parSensitivities());
+            inputs_->stressSensitivityScenarioData(),
+            sensiAnalytic->parSensitivities().get_value_or(ParSensitivityAnalysis::ParContainer()));
         LOG("Finished par to zero scenarios conversion");
     }
 
     Settings::instance().evaluationDate() = inputs_->asof();
-    
+
     std::string marketConfig = inputs_->marketConfig("pricing");
     std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders;
     std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;
@@ -101,11 +106,11 @@ void StressTestAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMe
 
 StressTestAnalytic::StressTestAnalytic(const boost::shared_ptr<InputParameters>& inputs)
     : Analytic(std::make_unique<StressTestAnalyticImpl>(inputs), {"STRESS"}, inputs, false, false, false, false) {
-    QL_REQUIRE(inputs->stressScenarioData(),
-               "StressTestAnalytic: No stress scenariodata found, please check your inputs");
+    auto stressData = inputs->stressScenarioData();
     // Should only be settable for CRIF analytic
-    if(inputs->stressScenarioData()->hasParRateScenario()){
-        auto sensitivityAnalytic = boost::make_shared<SensitivityAnalytic>(inputs, true, true, false, inputs->stressOptimiseRiskFactors());
+    if (stressData != nullptr && stressData->hasParRateScenario()) {
+        auto sensitivityAnalytic =
+            boost::make_shared<SensitivityAnalytic>(inputs, true, true, false, inputs->stressOptimiseRiskFactors());
         dependentAnalytics_[sensiAnalyticLookupKey] = sensitivityAnalytic;
     }
 }

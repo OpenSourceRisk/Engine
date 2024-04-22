@@ -49,7 +49,6 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
 
         XMLNode* parShiftsNode = XMLUtils::getChildNode(testCase, "ParShifts");
         if (parShiftsNode) {
-            std::cout << "Found ParShiftsNode" << std::endl;
             test.irCurveParShifts = XMLUtils::getChildValueAsBool(parShiftsNode, "IRCurves", false, false);
             test.irCapFloorParShifts =
                 XMLUtils::getChildValueAsBool(parShiftsNode, "CapFloorVolatilities", false, false);
@@ -361,7 +360,7 @@ XMLNode* StressTestScenarioData::toXML(ore::data::XMLDocument& doc) const {
             }
         }
         // Credit
-        curveShiftDataToXml(doc, testNode, test.survivalProbabilityShifts, "ccy", "SurvivalProbability",
+        curveShiftDataToXml(doc, testNode, test.survivalProbabilityShifts, "name", "SurvivalProbability",
                             "SurvivalProbabilities");
         spotShiftDataToXml(doc, testNode, test.recoveryRateShifts, "id", "RecoveryRate");
         spotShiftDataToXml(doc, testNode, test.securitySpreadShifts, "security", "SecuritySpread");

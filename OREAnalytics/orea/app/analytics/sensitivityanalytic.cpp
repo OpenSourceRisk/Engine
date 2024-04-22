@@ -46,7 +46,7 @@ void SensitivityAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InM
 
     Settings::instance().evaluationDate() = inputs_->asof();
     ObservationMode::instance().setMode(inputs_->observationModel());
-    SensitivityAnalytic* sensitivityAnalytic = static_cast<SensitivityAnalytic*>(analytic());
+    //SensitivityAnalytic* sensitivityAnalytic = static_cast<SensitivityAnalytic*>(analytic());
     QL_REQUIRE(inputs_->portfolio(), "SensitivityAnalytic::run: No portfolio loaded.");
 
     CONSOLEW("SensitivityAnalytic: Build Market");
@@ -97,11 +97,11 @@ void SensitivityAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InM
     // FIXME: Why are these disabled?
     set<RiskFactorKey::KeyType> typesDisabled{RiskFactorKey::KeyType::OptionletVolatility};
     boost::shared_ptr<ParSensitivityAnalysis> parAnalysis = nullptr;
-    if (sensitivityAnalytic->parSensi() || sensitivityAnalytic->alignPillars()) {
+    if (parSensi_ || alignPillars_) {
         parAnalysis = boost::make_shared<ParSensitivityAnalysis>(
             inputs_->asof(), analytic()->configurations().simMarketParams,
             *analytic()->configurations().sensiScenarioData, Market::defaultConfiguration, true, typesDisabled);
-        if (sensitivityAnalytic->alignPillars()) {
+        if (alignPillars_) {
             LOG("Sensi analysis - align pillars (for the par conversion or because alignPillars is enabled)");
             parAnalysis->alignPillars();
             sensiAnalysis->overrideTenors(true);
@@ -134,10 +134,10 @@ void SensitivityAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InM
                                       sensiAnalysis->scenarioGenerator()->keyToFactor());
     analytic()->reports()[label()]["sensitivity_config"] = simmSensitivityConfigReport;
 
-    if (sensitivityAnalytic->parSensi()) {
+    if (parSensi_) {
         LOG("Sensi analysis - par conversion");
 
-        if (sensitivityAnalytic->optimiseRiskFactors()) {
+        if (optimiseRiskFactors_) {
             std::set<RiskFactorKey> collectRiskFactors;
             // collect risk factors of all cubes ...
             for (auto const& c : sensiAnalysis->sensiCubes()) {
@@ -149,7 +149,7 @@ void SensitivityAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InM
             LOG("optimiseRiskFactors active : parSensi risk factors set to zeroSensi risk factors");
         }
         parAnalysis->computeParInstrumentSensitivities(sensiAnalysis->simMarket());
-        sensitivityAnalytic->setParSensitivities(parAnalysis->parSensitivities());
+        parSensitivities_ = parAnalysis->parSensitivities();
         boost::shared_ptr<ParSensitivityConverter> parConverter =
             boost::make_shared<ParSensitivityConverter>(parAnalysis->parSensitivities(), parAnalysis->shiftSizes());
         auto parCube =
@@ -163,7 +163,7 @@ void SensitivityAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InM
         ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*parSensiReport, pss, inputs_->sensiThreshold());
         analytic()->reports()[label()]["par_sensitivity"] = parSensiReport;
 
-        if (sensitivityAnalytic->outputJacobi()) {
+        if (outputJacobi_) {
             boost::shared_ptr<InMemoryReport> jacobiReport = boost::make_shared<InMemoryReport>();
             writeParConversionMatrix(parAnalysis->parSensitivities(), *jacobiReport);
             analytic()->reports()[label()]["jacobi"] = jacobiReport;

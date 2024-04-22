@@ -29,7 +29,13 @@ class SensitivityAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "SENSITIVITY";
 
-    SensitivityAnalyticImpl(const boost::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+    SensitivityAnalyticImpl(const boost::shared_ptr<InputParameters>& inputs, boost::optional<bool> parSensiRun = {},
+                            boost::optional<bool> alignPillars = {}, boost::optional<bool> outputJacobi = {},
+                            boost::optional<bool> optimiseRiskFactors = {})
+        : Analytic::Impl(inputs), parSensi_(parSensiRun.get_value_or(inputs->parSensi())),
+          alignPillars_(alignPillars.get_value_or(inputs->alignPillars())),
+          outputJacobi_(outputJacobi.get_value_or(inputs->outputJacobi())),
+          optimiseRiskFactors_(optimiseRiskFactors.get_value_or(inputs->optimiseRiskFactors())) {
         setLabel(LABEL);
     }
 
@@ -37,6 +43,16 @@ public:
                      const std::set<std::string>& runTypes = {}) override;
 
     void setUpConfigurations() override;
+
+    ParSensitivityAnalysis::ParContainer parSensitivities() const { return parSensitivities_; }
+
+private:
+    bool parSensi_;
+    bool alignPillars_;
+    bool outputJacobi_;
+    bool optimiseRiskFactors_;
+    ParSensitivityAnalysis::ParContainer parSensitivities_;
+
 };
 
 class SensitivityAnalytic : public Analytic {
@@ -44,28 +60,20 @@ public:
     SensitivityAnalytic(const boost::shared_ptr<InputParameters>& inputs, boost::optional<bool> parSensiRun = {},
                         boost::optional<bool> alignPillars = {}, boost::optional<bool> outputJacobi = {},
                         boost::optional<bool> optimiseRiskFactors = {})
-        : Analytic(std::make_unique<SensitivityAnalyticImpl>(inputs), {"SENSITIVITY"}, inputs, false, false, false,
-                   false),
-          parSensi_(parSensiRun.get_value_or(inputs->parSensi())),
-          alignPillars_(alignPillars.get_value_or(inputs->alignPillars())),
-          outputJacobi_(outputJacobi.get_value_or(inputs->outputJacobi())),
-          optimiseRiskFactors_(optimiseRiskFactors.get_value_or(inputs->optimiseRiskFactors())) {}
+        : Analytic(std::make_unique<SensitivityAnalyticImpl>(inputs, parSensiRun, alignPillars, outputJacobi, optimiseRiskFactors), {"SENSITIVITY"}, inputs, false, false, false,
+                   false) {}
 
-    const ParSensitivityAnalysis::ParContainer& parSensitivities() const { return parSensitivities_; }
-    void setParSensitivities(const ParSensitivityAnalysis::ParContainer& sensitivities) {
-        parSensitivities_ = sensitivities;
+    boost::optional<ParSensitivityAnalysis::ParContainer> parSensitivities() const {
+        SensitivityAnalyticImpl* impl = nullptr;
+        if(impl_ != nullptr){
+            impl = dynamic_cast<SensitivityAnalyticImpl*>(impl_.get());
+        }
+        if (impl != nullptr) {
+            return impl->parSensitivities();
+        } else {
+            return {};
+        }
     }
-
-    bool alignPillars() const { return alignPillars_; }
-    bool parSensi() const { return parSensi_; }
-    bool outputJacobi() const { return outputJacobi_; }
-    bool optimiseRiskFactors() const { return optimiseRiskFactors_; }
-private:
-    bool parSensi_;
-    bool alignPillars_;
-    bool outputJacobi_;
-    bool optimiseRiskFactors_;
-    ParSensitivityAnalysis::ParContainer parSensitivities_;
 };
 
 } // namespace analytics
