@@ -28,8 +28,8 @@ namespace QuantExt {
 CrossCcyBasisMtMResetSwapHelper::CrossCcyBasisMtMResetSwapHelper(
     const Handle<Quote>& spreadQuote, const Handle<Quote>& spotFX, Natural settlementDays,
     const Calendar& settlementCalendar, const Period& swapTenor, BusinessDayConvention rollConvention,
-    const boost::shared_ptr<QuantLib::IborIndex>& foreignCcyIndex,
-    const boost::shared_ptr<QuantLib::IborIndex>& domesticCcyIndex,
+    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& foreignCcyIndex,
+    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& domesticCcyIndex,
     const Handle<YieldTermStructure>& foreignCcyDiscountCurve,
     const Handle<YieldTermStructure>& domesticCcyDiscountCurve,
     const Handle<YieldTermStructure>& foreignCcyFxFwdRateCurve,
@@ -137,18 +137,18 @@ void CrossCcyBasisMtMResetSwapHelper::initializeDates() {
     Real foreignNominal = 1.0;
     // build an FX index for forward rate projection (TODO - review settlement and calendar)
 
-    boost::shared_ptr<FxIndex> fxIdx =
-        boost::make_shared<FxIndex>("dummy", settlementDays_, foreignCurrency_, domesticCurrency_, settlementCalendar_,
+    QuantLib::ext::shared_ptr<FxIndex> fxIdx =
+        QuantLib::ext::make_shared<FxIndex>("dummy", settlementDays_, foreignCurrency_, domesticCurrency_, settlementCalendar_,
                                     spotFX_, foreignCcyFxFwdRateCurveRLH_, domesticCcyFxFwdRateCurveRLH_);
 
-    swap_ = boost::make_shared<CrossCcyBasisMtMResetSwap>(
+    swap_ = QuantLib::ext::make_shared<CrossCcyBasisMtMResetSwap>(
         foreignNominal, foreignCurrency_, foreignLegSchedule, foreignCcyIndex_, 0.0, domesticCurrency_,
         domesticLegSchedule, domesticCcyIndex_, 0.0, fxIdx, true, foreignPaymentLag_, domesticPaymentLag_,
         foreignIncludeSpread_, foreignLookback_, foreignFixingDays_, foreignRateCutoff_, foreignIsAveraged_,
         domesticIncludeSpread_, domesticLookback_, domesticFixingDays_, domesticRateCutoff_, domesticIsAveraged_,
         telescopicValueDates_);
 
-    boost::shared_ptr<PricingEngine> engine = boost::make_shared<CrossCcySwapEngine>(
+    QuantLib::ext::shared_ptr<PricingEngine> engine = QuantLib::ext::make_shared<CrossCcySwapEngine>(
         domesticCurrency_, domesticDiscountRLH_, foreignCurrency_, foreignDiscountRLH_, spotFX_);
     swap_->setPricingEngine(engine);
 
@@ -163,8 +163,8 @@ void CrossCcyBasisMtMResetSwapHelper::initializeDates() {
             Date endDate = latestDate_;
             if (numCashflows > 0) {
                 for (Size i = numCashflows - 1; i >= 0; i--) {
-                    boost::shared_ptr<FloatingRateCoupon> lastFloating =
-                        boost::dynamic_pointer_cast<FloatingRateCoupon>(swap_->leg(0)[i]);
+                    QuantLib::ext::shared_ptr<FloatingRateCoupon> lastFloating =
+                        QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(swap_->leg(0)[i]);
                     if (!lastFloating)
                         continue;
                     else {
@@ -182,8 +182,8 @@ void CrossCcyBasisMtMResetSwapHelper::initializeDates() {
             Date endDate = latestDate_;
             if (numCashflows > 0) {
                 for (Size i = numCashflows - 1; i >= 0; i--) {
-                    boost::shared_ptr<FloatingRateCoupon> lastFloating =
-                        boost::dynamic_pointer_cast<FloatingRateCoupon>(swap_->leg(1)[i]);
+                    QuantLib::ext::shared_ptr<FloatingRateCoupon> lastFloating =
+                        QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(swap_->leg(1)[i]);
                     if (!lastFloating)
                         continue;
                     else {
@@ -202,7 +202,7 @@ void CrossCcyBasisMtMResetSwapHelper::initializeDates() {
 void CrossCcyBasisMtMResetSwapHelper::setTermStructure(YieldTermStructure* t) {
 
     bool observer = false;
-    boost::shared_ptr<YieldTermStructure> temp(t, null_deleter());
+    QuantLib::ext::shared_ptr<YieldTermStructure> temp(t, null_deleter());
 
     termStructureHandle_.linkTo(temp, observer);
 

@@ -25,6 +25,7 @@
 
 #include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/configuration/curveconfig.hpp>
+#include <ored/configuration/parametricsmileconfiguration.hpp>
 #include <ored/configuration/reportconfig.hpp>
 #include <ql/termstructures/volatility/volatilitytype.hpp>
 #include <ql/time/calendar.hpp>
@@ -62,7 +63,8 @@ public:
         const std::string& interpolationMethod = "BicubicSpline", const std::string& interpolateOn = "TermVolatilities",
         const std::string& timeInterpolation = "LinearFlat", const std::string& strikeInterpolation = "LinearFlat",
         const std::vector<std::string>& atmTenors = {}, const BootstrapConfig& bootstrapConfig = BootstrapConfig(),
-        const string& inputType = "TermVolatilities");
+        const string& inputType = "TermVolatilities",
+        const boost::optional<ParametricSmileConfiguration>& parametricSmileConfiguration = boost::none);
 
     //! Detailled constructor for proxy config
     CapFloorVolatilityCurveConfig(const std::string& curveID, const std::string& curveDescription,
@@ -74,7 +76,7 @@ public:
     //! \name XMLSerializable interface
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Inspectors
@@ -111,6 +113,10 @@ public:
     const std::string& proxyTargetIndex() const { return proxyTargetIndex_; };
     const QuantLib::Period& proxySourceRateComputationPeriod() const { return proxySourceRateComputationPeriod_; }
     const QuantLib::Period& proxyTargetRateComputationPeriod() const { return proxyTargetRateComputationPeriod_; }
+    //
+    const boost::optional<ParametricSmileConfiguration> parametricSmileConfiguration() const {
+        return parametricSmileConfiguration_;
+    }
     //
     const ReportConfig& reportConfig() const { return reportConfig_; }
     //@}
@@ -150,6 +156,8 @@ private:
     std::string proxyTargetIndex_;
     QuantLib::Period proxySourceRateComputationPeriod_;
     QuantLib::Period proxyTargetRateComputationPeriod_;
+    //
+    boost::optional<ParametricSmileConfiguration> parametricSmileConfiguration_;
     //
     ReportConfig reportConfig_;
 

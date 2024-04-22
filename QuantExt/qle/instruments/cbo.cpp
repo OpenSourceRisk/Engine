@@ -24,7 +24,7 @@
 
 namespace QuantExt {
 
-CBO::CBO(const boost::shared_ptr<BondBasket>& basket, const Schedule& schedule,
+CBO::CBO(const QuantLib::ext::shared_ptr<BondBasket>& basket, const Schedule& schedule,
          Rate seniorFee, const DayCounter& feeDayCounter, const std::vector<Tranche>& tranches,
          Rate subordinatedFee, Rate equityKicker, const Currency& ccy,
          const std::string& investedTrancheName)

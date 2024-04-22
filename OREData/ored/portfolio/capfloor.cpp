@@ -46,9 +46,15 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("CapFloor::build() called for trade " << id() << ", leg type is " << legData_.legType());
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Interest Rate");
+    additionalData_["isdaBaseProduct"] = string("CapFloor");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");  
 
     QL_REQUIRE((legData_.legType() == "Floating") || (legData_.legType() == "CMS") ||
                    (legData_.legType() == "DurationAdjustedCMS") || (legData_.legType() == "CMSSpread") ||
@@ -66,9 +72,9 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     }
 
     legs_.clear();
-    boost::shared_ptr<EngineBuilder> builder;
+    QuantLib::ext::shared_ptr<EngineBuilder> builder;
     std::string underlyingIndex;
-    boost::shared_ptr<QuantLib::Instrument> qlInstrument;
+    QuantLib::ext::shared_ptr<QuantLib::Instrument> qlInstrument;
 
     // Account for long / short multiplier. In the following we expect the qlInstrument to be set up
     // as a long cap resp. a long floor resp. as a collar which by definition is a long cap + short floor
@@ -78,16 +84,16 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     if (legData_.legType() == "Floating") {
 
-        boost::shared_ptr<FloatingLegData> floatData =
-            boost::dynamic_pointer_cast<FloatingLegData>(legData_.concreteLegData());
+        QuantLib::ext::shared_ptr<FloatingLegData> floatData =
+            QuantLib::ext::dynamic_pointer_cast<FloatingLegData>(legData_.concreteLegData());
         QL_REQUIRE(floatData, "Wrong LegType, expected Floating, got " << legData_.legType());
         underlyingIndex = floatData->index();
         Handle<IborIndex> hIndex =
             engineFactory->market()->iborIndex(underlyingIndex, engineFactory->configuration(MarketContext::pricing));
         QL_REQUIRE(!hIndex.empty(), "Could not find ibor index " << underlyingIndex << " in market.");
-        boost::shared_ptr<IborIndex> index = hIndex.currentLink();
-        bool isBma = boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(index) != nullptr;
-        bool isOis = boost::dynamic_pointer_cast<QuantExt::OvernightIndex>(index) != nullptr;
+        QuantLib::ext::shared_ptr<IborIndex> index = hIndex.currentLink();
+        bool isBma = QuantLib::ext::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(index) != nullptr;
+        bool isOis = QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndex>(index) != nullptr;
 
         QL_REQUIRE(floatData->caps().empty() && floatData->floors().empty(),
                    "CapFloor build error, Floating leg section must not have caps and floors");
@@ -98,7 +104,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             // coupon pricers and at the same time in the QuaantLib::CapFloor instrument and pricing engine.
             // The only remaining unsupported case are ibor coupons with sub periods
             LegData tmpLegData = legData_;
-            boost::shared_ptr<FloatingLegData> tmpFloatData = boost::make_shared<FloatingLegData>(*floatData);
+            QuantLib::ext::shared_ptr<FloatingLegData> tmpFloatData = QuantLib::ext::make_shared<FloatingLegData>(*floatData);
             tmpFloatData->floors() = floors_;
             tmpFloatData->caps() = caps_;
             tmpFloatData->nakedOption() = true;
@@ -110,17 +116,17 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             // the StrippedCappedFlooredCoupon used to extract the naked options assumes a long floor
             // and a short cap while we have documented a collar to be a short floor and long cap
             qlInstrument =
-                boost::make_shared<QuantLib::Swap>(legs_, std::vector<bool>{!floors_.empty() && !caps_.empty()});
+                QuantLib::ext::make_shared<QuantLib::Swap>(legs_, std::vector<bool>{!floors_.empty() && !caps_.empty()});
             if (engineFactory->engineData()->hasProduct("Swap")) {
                 builder = engineFactory->builder("Swap");
-                boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
-                    boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
+                QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
+                    QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
                 QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
                 qlInstrument->setPricingEngine(swapBuilder->engine(parseCurrency(legData_.currency()), std::string(), std::string()));
                 setSensitivityTemplate(*swapBuilder);
             } else {
                 qlInstrument->setPricingEngine(
-                    boost::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
+                    QuantLib::ext::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
             }
             maturity_ = CashFlows::maturityDate(legs_.front());
         } else {
@@ -152,20 +158,20 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 caps_.resize(legs_[0].size(), caps_[0]);
 
             // Create QL CapFloor instrument
-            qlInstrument = boost::make_shared<QuantLib::CapFloor>(capFloorType, legs_[0], caps_, floors_);
+            qlInstrument = QuantLib::ext::make_shared<QuantLib::CapFloor>(capFloorType, legs_[0], caps_, floors_);
 
-            boost::shared_ptr<CapFloorEngineBuilder> capFloorBuilder =
-                boost::dynamic_pointer_cast<CapFloorEngineBuilder>(builder);
+            QuantLib::ext::shared_ptr<CapFloorEngineBuilder> capFloorBuilder =
+                QuantLib::ext::dynamic_pointer_cast<CapFloorEngineBuilder>(builder);
             qlInstrument->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
             setSensitivityTemplate(*capFloorBuilder);
 
-            maturity_ = boost::dynamic_pointer_cast<QuantLib::CapFloor>(qlInstrument)->maturityDate();
+            maturity_ = QuantLib::ext::dynamic_pointer_cast<QuantLib::CapFloor>(qlInstrument)->maturityDate();
         }
 
     } else if (legData_.legType() == "CMS") {
         builder = engineFactory->builder("Swap");
 
-        boost::shared_ptr<CMSLegData> cmsData = boost::dynamic_pointer_cast<CMSLegData>(legData_.concreteLegData());
+        QuantLib::ext::shared_ptr<CMSLegData> cmsData = QuantLib::ext::dynamic_pointer_cast<CMSLegData>(legData_.concreteLegData());
         QL_REQUIRE(cmsData, "Wrong LegType, expected CMS");
 
         underlyingIndex = cmsData->swapIndex();
@@ -173,10 +179,10 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             engineFactory->market()->swapIndex(underlyingIndex, builder->configuration(MarketContext::pricing));
         QL_REQUIRE(!hIndex.empty(), "Could not find swap index " << underlyingIndex << " in market.");
 
-        boost::shared_ptr<SwapIndex> index = hIndex.currentLink();
+        QuantLib::ext::shared_ptr<SwapIndex> index = hIndex.currentLink();
 
         LegData tmpLegData = legData_;
-        boost::shared_ptr<CMSLegData> tmpFloatData = boost::make_shared<CMSLegData>(*cmsData);
+        QuantLib::ext::shared_ptr<CMSLegData> tmpFloatData = QuantLib::ext::make_shared<CMSLegData>(*cmsData);
         tmpFloatData->floors() = floors_;
         tmpFloatData->caps() = caps_;
         tmpFloatData->nakedOption() = true;
@@ -187,25 +193,25 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         // if both caps and floors are given, we have to use a payer leg, since in this case
         // the StrippedCappedFlooredCoupon used to extract the naked options assumes a long floor
         // and a short cap while we have documented a collar to be a short floor and long cap
-        qlInstrument = boost::make_shared<QuantLib::Swap>(legs_, std::vector<bool>{!floors_.empty() && !caps_.empty()});
+        qlInstrument = QuantLib::ext::make_shared<QuantLib::Swap>(legs_, std::vector<bool>{!floors_.empty() && !caps_.empty()});
         if (engineFactory->engineData()->hasProduct("Swap")) {
             builder = engineFactory->builder("Swap");
-            boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
-                boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
+            QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
+                QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
             QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
             qlInstrument->setPricingEngine(swapBuilder->engine(parseCurrency(legData_.currency()), std::string(), std::string()));
             setSensitivityTemplate(*swapBuilder);
         } else {
             qlInstrument->setPricingEngine(
-                boost::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
+                QuantLib::ext::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
         }
         maturity_ = CashFlows::maturityDate(legs_.front());
 
     } else if (legData_.legType() == "DurationAdjustedCMS") {
-        auto cmsData = boost::dynamic_pointer_cast<DurationAdjustedCmsLegData>(legData_.concreteLegData());
+        auto cmsData = QuantLib::ext::dynamic_pointer_cast<DurationAdjustedCmsLegData>(legData_.concreteLegData());
         QL_REQUIRE(cmsData, "Wrong LegType, expected DurationAdjustedCmsLegData");
         LegData tmpLegData = legData_;
-        auto tmpCmsData = boost::make_shared<DurationAdjustedCmsLegData>(*cmsData);
+        auto tmpCmsData = QuantLib::ext::make_shared<DurationAdjustedCmsLegData>(*cmsData);
         tmpCmsData->floors() = floors_;
         tmpCmsData->caps() = caps_;
         tmpCmsData->nakedOption() = true;
@@ -216,26 +222,26 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         // if both caps and floors are given, we have to use a payer leg, since in this case
         // the StrippedCappedFlooredCoupon used to extract the naked options assumes a long floor
         // and a short cap while we have documented a collar to be a short floor and long cap
-        qlInstrument = boost::make_shared<QuantLib::Swap>(legs_, std::vector<bool>{!floors_.empty() && !caps_.empty()});
+        qlInstrument = QuantLib::ext::make_shared<QuantLib::Swap>(legs_, std::vector<bool>{!floors_.empty() && !caps_.empty()});
         if (engineFactory->engineData()->hasProduct("Swap")) {
             builder = engineFactory->builder("Swap");
-            boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
-                boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
+            QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
+                QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
             QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
             qlInstrument->setPricingEngine(swapBuilder->engine(parseCurrency(legData_.currency()), std::string(), std::string()));
             setSensitivityTemplate(*swapBuilder);
         } else {
             qlInstrument->setPricingEngine(
-                boost::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
+                QuantLib::ext::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
         }
         maturity_ = CashFlows::maturityDate(legs_.front());
     } else if (legData_.legType() == "CMSSpread") {
         builder = engineFactory->builder("Swap");
-        boost::shared_ptr<CMSSpreadLegData> cmsSpreadData =
-            boost::dynamic_pointer_cast<CMSSpreadLegData>(legData_.concreteLegData());
+        QuantLib::ext::shared_ptr<CMSSpreadLegData> cmsSpreadData =
+            QuantLib::ext::dynamic_pointer_cast<CMSSpreadLegData>(legData_.concreteLegData());
         QL_REQUIRE(cmsSpreadData, "Wrong LegType, expected CMSSpread");
         LegData tmpLegData = legData_;
-        boost::shared_ptr<CMSSpreadLegData> tmpFloatData = boost::make_shared<CMSSpreadLegData>(*cmsSpreadData);
+        QuantLib::ext::shared_ptr<CMSSpreadLegData> tmpFloatData = QuantLib::ext::make_shared<CMSSpreadLegData>(*cmsSpreadData);
         tmpFloatData->floors() = floors_;
         tmpFloatData->caps() = caps_;
         tmpFloatData->nakedOption() = true;
@@ -246,17 +252,17 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         // if both caps and floors are given, we have to use a payer leg, since in this case
         // the StrippedCappedFlooredCoupon used to extract the naked options assumes a long floor
         // and a short cap while we have documented a collar to be a short floor and long cap
-        qlInstrument = boost::make_shared<QuantLib::Swap>(legs_, std::vector<bool>{!floors_.empty() && !caps_.empty()});
+        qlInstrument = QuantLib::ext::make_shared<QuantLib::Swap>(legs_, std::vector<bool>{!floors_.empty() && !caps_.empty()});
         if (engineFactory->engineData()->hasProduct("Swap")) {
             builder = engineFactory->builder("Swap");
-            boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
-                boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
+            QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
+                QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
             QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
             qlInstrument->setPricingEngine(swapBuilder->engine(parseCurrency(legData_.currency()), std::string(), std::string()));
             setSensitivityTemplate(*swapBuilder);
         } else {
             qlInstrument->setPricingEngine(
-                boost::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
+                QuantLib::ext::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
         }
         maturity_ = CashFlows::maturityDate(legs_.front());
     } else if (legData_.legType() == "CPI") {
@@ -264,7 +270,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
         builder = engineFactory->builder("CpiCapFloor");
 
-        boost::shared_ptr<CPILegData> cpiData = boost::dynamic_pointer_cast<CPILegData>(legData_.concreteLegData());
+        QuantLib::ext::shared_ptr<CPILegData> cpiData = QuantLib::ext::dynamic_pointer_cast<CPILegData>(legData_.concreteLegData());
         QL_REQUIRE(cpiData, "Wrong LegType, expected CPI");
 
         underlyingIndex = cpiData->index();
@@ -290,13 +296,13 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
         Real baseCPI = cpiData->baseCPI();
 
-        boost::shared_ptr<InflationSwapConvention> cpiSwapConvention = nullptr;
+        QuantLib::ext::shared_ptr<InflationSwapConvention> cpiSwapConvention = nullptr;
 
         auto inflationConventions = InstrumentConventions::instance().conventions()->get(
             underlyingIndex + "_INFLATIONSWAP", Convention::Type::InflationSwap);
 
         if (inflationConventions.first)
-            cpiSwapConvention = boost::dynamic_pointer_cast<InflationSwapConvention>(inflationConventions.second);
+            cpiSwapConvention = QuantLib::ext::dynamic_pointer_cast<InflationSwapConvention>(inflationConventions.second);
 
         Period observationLag;
         if (cpiData->observationLag().empty()) {
@@ -345,18 +351,18 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         if (caps_.size() == 1)
             caps_.resize(legs_[0].size(), caps_[0]);
 
-        boost::shared_ptr<CpiCapFloorEngineBuilder> capFloorBuilder =
-            boost::dynamic_pointer_cast<CpiCapFloorEngineBuilder>(builder);
+        QuantLib::ext::shared_ptr<CpiCapFloorEngineBuilder> capFloorBuilder =
+            QuantLib::ext::dynamic_pointer_cast<CpiCapFloorEngineBuilder>(builder);
 
         // Create QL CPI CapFloor instruments and add to a composite
-        qlInstrument = boost::make_shared<CompositeInstrument>();
+        qlInstrument = QuantLib::ext::make_shared<CompositeInstrument>();
         maturity_ = Date::minDate();
         for (Size i = 0; i < legs_[0].size(); ++i) {
             DLOG("Create composite " << i);
             Real nominal, gearing;
             Date paymentDate;
-            boost::shared_ptr<CPICoupon> coupon = boost::dynamic_pointer_cast<CPICoupon>(legs_[0][i]);
-            boost::shared_ptr<CPICashFlow> cashflow = boost::dynamic_pointer_cast<CPICashFlow>(legs_[0][i]);
+            QuantLib::ext::shared_ptr<CPICoupon> coupon = QuantLib::ext::dynamic_pointer_cast<CPICoupon>(legs_[0][i]);
+            QuantLib::ext::shared_ptr<CPICashFlow> cashflow = QuantLib::ext::dynamic_pointer_cast<CPICashFlow>(legs_[0][i]);
             if (coupon) {
                 nominal = coupon->nominal();
                 gearing = coupon->fixedRate() * coupon->accrualPeriod();
@@ -370,24 +376,24 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             }
 
             if (capFloorType == QuantLib::CapFloor::Cap || capFloorType == QuantLib::CapFloor::Collar) {
-                boost::shared_ptr<CPICapFloor> capfloor = boost::make_shared<CPICapFloor>(
+                QuantLib::ext::shared_ptr<CPICapFloor> capfloor = QuantLib::ext::make_shared<CPICapFloor>(
                     Option::Call, nominal, startDate, baseCPI, paymentDate, cal, conv, cal, conv, caps_[i], zeroIndex,
                     observationLag, interpolationMethod);
                 capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
                 setSensitivityTemplate(*capFloorBuilder);
-                boost::dynamic_pointer_cast<QuantLib::CompositeInstrument>(qlInstrument)->add(capfloor, gearing);
+                QuantLib::ext::dynamic_pointer_cast<QuantLib::CompositeInstrument>(qlInstrument)->add(capfloor, gearing);
                 maturity_ = std::max(maturity_, capfloor->payDate());
             }
 
             if (capFloorType == QuantLib::CapFloor::Floor || capFloorType == QuantLib::CapFloor::Collar) {
                 // for collars we want a long cap, short floor
                 Real sign = capFloorType == QuantLib::CapFloor::Floor ? 1.0 : -1.0;
-                boost::shared_ptr<CPICapFloor> capfloor = boost::make_shared<CPICapFloor>(
+                QuantLib::ext::shared_ptr<CPICapFloor> capfloor = QuantLib::ext::make_shared<CPICapFloor>(
                     Option::Put, nominal, startDate, baseCPI, paymentDate, cal, conv, cal, conv, floors_[i], zeroIndex,
                     observationLag, interpolationMethod);
                 capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
                 setSensitivityTemplate(*capFloorBuilder);
-                boost::dynamic_pointer_cast<QuantLib::CompositeInstrument>(qlInstrument)->add(capfloor, sign * gearing);
+                QuantLib::ext::dynamic_pointer_cast<QuantLib::CompositeInstrument>(qlInstrument)->add(capfloor, sign * gearing);
                 maturity_ = std::max(maturity_, capfloor->payDate());
             }
         }
@@ -395,7 +401,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     } else if (legData_.legType() == "YY") {
         builder = engineFactory->builder("YYCapFloor");
 
-        boost::shared_ptr<YoYLegData> yyData = boost::dynamic_pointer_cast<YoYLegData>(legData_.concreteLegData());
+        QuantLib::ext::shared_ptr<YoYLegData> yyData = QuantLib::ext::dynamic_pointer_cast<YoYLegData>(legData_.concreteLegData());
         QL_REQUIRE(yyData, "Wrong LegType, expected YY");
 
         underlyingIndex = yyData->index();
@@ -411,7 +417,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 underlyingIndex, builder->configuration(MarketContext::pricing));
             QL_REQUIRE(!zeroIndex.empty(), "Could not find inflation index (of type either zero or yoy) "
                                                << underlyingIndex << " in market.");
-            yoyIndex = Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
+            yoyIndex = Handle<YoYInflationIndex>(QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(
                 zeroIndex.currentLink(), false));
         }
 
@@ -437,24 +443,24 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
         // Create QL YoY Inflation CapFloor instrument
         if (capFloorType == QuantLib::CapFloor::Cap) {
-            qlInstrument = boost::shared_ptr<YoYInflationCapFloor>(new YoYInflationCap(legs_[0], caps_));
+            qlInstrument = QuantLib::ext::shared_ptr<YoYInflationCapFloor>(new YoYInflationCap(legs_[0], caps_));
         } else if (capFloorType == QuantLib::CapFloor::Floor) {
-            qlInstrument = boost::shared_ptr<YoYInflationCapFloor>(new YoYInflationFloor(legs_[0], floors_));
+            qlInstrument = QuantLib::ext::shared_ptr<YoYInflationCapFloor>(new YoYInflationFloor(legs_[0], floors_));
         } else if (capFloorType == QuantLib::CapFloor::Collar) {
-            qlInstrument = boost::shared_ptr<YoYInflationCapFloor>(
+            qlInstrument = QuantLib::ext::shared_ptr<YoYInflationCapFloor>(
                 new YoYInflationCapFloor(QuantLib::YoYInflationCapFloor::Collar, legs_[0], caps_, floors_));
         } else {
             QL_FAIL("unknown YoYInflation cap/floor type");
         }
 
-        boost::shared_ptr<YoYCapFloorEngineBuilder> capFloorBuilder =
-            boost::dynamic_pointer_cast<YoYCapFloorEngineBuilder>(builder);
+        QuantLib::ext::shared_ptr<YoYCapFloorEngineBuilder> capFloorBuilder =
+            QuantLib::ext::dynamic_pointer_cast<YoYCapFloorEngineBuilder>(builder);
         qlInstrument->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
         setSensitivityTemplate(*capFloorBuilder);
 
         // Wrap the QL instrument in a vanilla instrument
 
-        maturity_ = boost::dynamic_pointer_cast<QuantLib::YoYInflationCapFloor>(qlInstrument)->maturityDate();
+        maturity_ = QuantLib::ext::dynamic_pointer_cast<QuantLib::YoYInflationCapFloor>(qlInstrument)->maturityDate();
     } else {
         QL_FAIL("Invalid legType " << legData_.legType() << " for CapFloor");
     }
@@ -471,7 +477,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // add premiums
 
-    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
     maturity_ = std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, multiplier, premiumData_,
                                                 -multiplier, parseCurrency(legData_.currency()), engineFactory,
@@ -479,10 +485,10 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // set instrument
     instrument_ =
-        boost::make_shared<VanillaInstrument>(qlInstrument, multiplier, additionalInstruments, additionalMultipliers);
+        QuantLib::ext::make_shared<VanillaInstrument>(qlInstrument, multiplier, additionalInstruments, additionalMultipliers);
 
     // axdd required fixings
-    auto fdg = boost::make_shared<FixingDateGetter>(requiredFixings_);
+    auto fdg = QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings_);
     for (auto const& l : legs_)
         addToRequiredFixings(l, fdg);
 
@@ -490,19 +496,13 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     for (auto const& l : legs_) {
         if (!l.empty()) {
             startDate = std::min(startDate, l.front()->date());
-            boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(l.front());
+            QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(l.front());
             if (coupon)
                 startDate = std::min(startDate, coupon->accrualStartDate());
         }
     }
 
     additionalData_["startDate"] = to_string(startDate);
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Interest Rate");
-    additionalData_["isdaBaseProduct"] = string("CapFloor");
-    additionalData_["isdaSubProduct"] = string("");  
-    additionalData_["isdaTransaction"] = string("");  
 }
 
 const std::map<std::string, boost::any>& CapFloor::additionalData() const {
@@ -512,11 +512,11 @@ const std::map<std::string, boost::any>& CapFloor::additionalData() const {
     additionalData_["legType"] = legData_.legType();
     additionalData_["isPayer"] = legData_.isPayer();
     additionalData_["notionalCurrency"] = legData_.currency();
-    for (Size j = 0; j < legs_[0].size(); ++j) {
-        boost::shared_ptr<CashFlow> flow = legs_[0][j];
+    for (Size j = 0; !legs_.empty() && j < legs_[0].size(); ++j) {
+        QuantLib::ext::shared_ptr<CashFlow> flow = legs_[0][j];
         // pick flow with earliest future payment date on this leg
         if (flow->date() > asof) {
-            boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(flow);
+            QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
             if (coupon) {
                 Real currentNotional = 0;
                 try {
@@ -527,7 +527,7 @@ const std::map<std::string, boost::any>& CapFloor::additionalData() const {
                 }
                 additionalData_["currentNotional"] = currentNotional;
 
-                boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(flow);
+                QuantLib::ext::shared_ptr<FloatingRateCoupon> frc = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(flow);
                 if (frc) {
                     additionalData_["index"] = frc->index()->name();
                 }
@@ -535,8 +535,8 @@ const std::map<std::string, boost::any>& CapFloor::additionalData() const {
             break;
         }
     }
-    if (legs_[0].size() > 0) {
-        boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(legs_[0][0]);
+    if (!legs_.empty() && legs_[0].size() > 0) {
+        QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(legs_[0][0]);
         if (coupon) {
             Real originalNotional = 0.0;
             try {
@@ -567,165 +567,177 @@ const std::map<std::string, boost::any>& CapFloor::additionalData() const {
     vector<Real> floorletAmounts;
 
     try {
-        for (const auto& flow : legs_[0]) {
-            // pick flow with earliest future payment date on this leg
-            if (flow->date() > asof) {
-                amounts.push_back(flow->amount());
-                paymentDates.push_back(flow->date());
-                boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(flow);
-                if (coupon) {
-                    currentNotionals.push_back(coupon->nominal());
-                    rates.push_back(coupon->rate());
-                    boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(flow);
-                    if (frc) {
-                        fixingDates.push_back(frc->fixingDate());
+        if (!legs_.empty()) {
+            for (const auto& flow : legs_[0]) {
+                // pick flow with earliest future payment date on this leg
+                if (flow->date() > asof) {
+                    amounts.push_back(flow->amount());
+                    paymentDates.push_back(flow->date());
+                    QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
+                    if (coupon) {
+                        currentNotionals.push_back(coupon->nominal());
+                        rates.push_back(coupon->rate());
+                        QuantLib::ext::shared_ptr<FloatingRateCoupon> frc =
+                            QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(flow);
+                        if (frc) {
+                            fixingDates.push_back(frc->fixingDate());
 
-                        // indexFixing for overnight indices
-                        if (auto on = boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(frc)) {
-                            indexFixings.push_back((on->rate() - on->spread()) / on->gearing());
-                        } else if (auto on = boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(frc)) {
-                            indexFixings.push_back((on->rate() - on->effectiveSpread()) / on->gearing());
-                        } else if (auto c = boost::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCoupon>(
-                                       frc)) {
-                            indexFixings.push_back((c->underlying()->rate() - c->underlying()->effectiveSpread()) /
-                                                   c->underlying()->gearing());
-                        } else if (auto c = boost::dynamic_pointer_cast<QuantExt::CappedFlooredAverageONIndexedCoupon>(frc)) {
-                            indexFixings.push_back((c->underlying()->rate() - c->underlying()->spread()) /
-                                                   c->underlying()->gearing());
-                        } 
-                        // indexFixing for BMA and subPeriod Coupons
-                        else if (auto c = boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(frc)) {
-                            indexFixings.push_back((c->rate() - c->spread()) / c->gearing());
-                        } else if (auto c = boost::dynamic_pointer_cast<QuantExt::CappedFlooredAverageBMACoupon>(frc)) {
-                            indexFixings.push_back((c->underlying()->rate() - c->underlying()->spread()) / c->underlying()->gearing());
-                        } else if (auto sp = boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(frc))
-                            indexFixings.push_back((sp->rate() - sp->spread()) / sp->gearing());
-                        else {
-                            // this sets indexFixing to the last single overnight fixing
-                            indexFixings.push_back(frc->indexFixing());
-                        }
-
-                        spreads.push_back(frc->spread());
-
-                        // The below code adds cap/floor levels, vols, and amounts
-                        // for capped/floored Ibor coupons and overnight coupons
-                        boost::shared_ptr<CashFlow> c = flow;
-                        if (auto strippedCfc = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(flow)) {
-                            c = strippedCfc->underlying();
-                        }
-
-                        if (auto cfc = boost::dynamic_pointer_cast<CappedFlooredCoupon>(c)) {
-                            // enfore coupon pricer to hold the results of the current coupon
-                            cfc->deepUpdate();
-                            cfc->amount();
-                            boost::shared_ptr<IborCouponPricer> pricer =
-                                boost::dynamic_pointer_cast<IborCouponPricer>(cfc->pricer());
-                            if (pricer && (cfc->fixingDate() > asof)) {
-                                // We write the vols if an Ibor coupon pricer is found and the fixing date is in the
-                                // future
-                                if (cfc->isCapped()) {
-                                    caps.push_back(cfc->cap());
-                                    const Rate effectiveCap = cfc->effectiveCap();
-                                    effectiveCaps.push_back(effectiveCap);
-                                    capletVols.push_back(
-                                        pricer->capletVolatility()->volatility(cfc->fixingDate(), effectiveCap));
-                                    capletAmounts.push_back(pricer->capletRate(effectiveCap) * coupon->accrualPeriod() *
-                                                            coupon->nominal());
-                                }
-                                if (cfc->isFloored()) {
-                                    floors.push_back(cfc->floor());
-                                    const Rate effectiveFloor = cfc->effectiveFloor();
-                                    effectiveFloors.push_back(effectiveFloor);
-                                    floorletVols.push_back(
-                                        pricer->capletVolatility()->volatility(cfc->fixingDate(), effectiveFloor));
-                                    floorletAmounts.push_back(pricer->floorletRate(effectiveFloor) *
-                                                              coupon->accrualPeriod() * coupon->nominal());
-                                }
+                            // indexFixing for overnight indices
+                            if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(frc)) {
+                                indexFixings.push_back((on->rate() - on->spread()) / on->gearing());
+                            } else if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(frc)) {
+                                indexFixings.push_back((on->rate() - on->effectiveSpread()) / on->gearing());
+                            } else if (auto c =
+                                           QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCoupon>(
+                                               frc)) {
+                                indexFixings.push_back((c->underlying()->rate() - c->underlying()->effectiveSpread()) /
+                                                       c->underlying()->gearing());
+                            } else if (auto c =
+                                           QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredAverageONIndexedCoupon>(
+                                               frc)) {
+                                indexFixings.push_back((c->underlying()->rate() - c->underlying()->spread()) /
+                                                       c->underlying()->gearing());
                             }
-                        } else if (auto tmp = boost::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCoupon>(c)) {
-                            tmp->deepUpdate();
-                            tmp->amount();
-                            boost::shared_ptr<QuantExt::CappedFlooredOvernightIndexedCouponPricer> pricer =
-                                boost::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCouponPricer>(
-                                    tmp->pricer());
-                            if (pricer && (tmp->fixingDate() > asof)) {
-                                if (tmp->isCapped()) {
-                                    caps.push_back(tmp->cap());
-                                    const Rate effectiveCap = tmp->effectiveCap();
-                                    effectiveCaps.push_back(effectiveCap);
-                                    capletVols.push_back(
-                                        pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveCap));
-                                    capletAmounts.push_back(pricer->capletRate(effectiveCap) * coupon->accrualPeriod() *
-                                                            coupon->nominal());
-                                    effectiveCapletVols.push_back(tmp->effectiveCapletVolatility());
-                                }
-                                if (tmp->isFloored()) {
-                                    floors.push_back(tmp->floor());
-                                    const Rate effectiveFloor = tmp->effectiveFloor();
-                                    effectiveFloors.push_back(effectiveFloor);
-                                    floorletVols.push_back(
-                                        pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveFloor));
-                                    floorletAmounts.push_back(pricer->floorletRate(effectiveFloor) *
-                                                              coupon->accrualPeriod() * coupon->nominal());
-                                    effectiveFloorletVols.push_back(tmp->effectiveFloorletVolatility());
-                                }
-                            }
-                        } else if (auto tmp =
-                                       boost::dynamic_pointer_cast<QuantExt::CappedFlooredAverageONIndexedCoupon>(c)) {
-                            tmp->deepUpdate();
-                            tmp->amount();
-                            boost::shared_ptr<QuantExt::CapFlooredAverageONIndexedCouponPricer> pricer =
-                                boost::dynamic_pointer_cast<QuantExt::CapFlooredAverageONIndexedCouponPricer>(
-                                    tmp->pricer());
-                            if (pricer && (tmp->fixingDate() > asof)) {
-                                if (tmp->isCapped()) {
-                                    caps.push_back(tmp->cap());
-                                    const Rate effectiveCap = tmp->effectiveCap();
-                                    effectiveCaps.push_back(effectiveCap);
-                                    capletVols.push_back(
-                                        pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveCap));
-                                    capletAmounts.push_back(pricer->capletRate(effectiveCap) * coupon->accrualPeriod() *
-                                                            coupon->nominal());
-                                    effectiveCapletVols.push_back(tmp->effectiveCapletVolatility());
-                                }
-                                if (tmp->isFloored()) {
-                                    floors.push_back(tmp->floor());
-                                    const Rate effectiveFloor = tmp->effectiveFloor();
-                                    effectiveFloors.push_back(effectiveFloor);
-                                    floorletVols.push_back(
-                                        pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveFloor));
-                                    floorletAmounts.push_back(pricer->floorletRate(effectiveFloor) *
-                                                              coupon->accrualPeriod() * coupon->nominal());
-                                    effectiveFloorletVols.push_back(tmp->effectiveFloorletVolatility());
-                                }
+                            // indexFixing for BMA and subPeriod Coupons
+                            else if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(frc)) {
+                                indexFixings.push_back((c->rate() - c->spread()) / c->gearing());
+                            } else if (auto c =
+                                           QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredAverageBMACoupon>(frc)) {
+                                indexFixings.push_back((c->underlying()->rate() - c->underlying()->spread()) /
+                                                       c->underlying()->gearing());
+                            } else if (auto sp = QuantLib::ext::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(frc))
+                                indexFixings.push_back((sp->rate() - sp->spread()) / sp->gearing());
+                            else {
+                                // this sets indexFixing to the last single overnight fixing
+                                indexFixings.push_back(frc->indexFixing());
                             }
 
-                        } else if (auto tmp = boost::dynamic_pointer_cast<QuantExt::CappedFlooredAverageBMACoupon>(c)) {
-                            tmp->deepUpdate();
-                            tmp->amount();
-                            boost::shared_ptr<QuantExt::CapFlooredAverageBMACouponPricer> pricer =
-                                boost::dynamic_pointer_cast<QuantExt::CapFlooredAverageBMACouponPricer>(
-                                    tmp->pricer());
-                            if (pricer && (tmp->fixingDate() > asof)) {
-                                if (tmp->isCapped()) {
-                                    caps.push_back(tmp->cap());
-                                    const Rate effectiveCap = tmp->effectiveCap();
-                                    effectiveCaps.push_back(effectiveCap);
-                                    capletVols.push_back(
-                                        pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveCap));
-                                    capletAmounts.push_back(pricer->capletRate(effectiveCap) * coupon->accrualPeriod() *
-                                                            coupon->nominal());
-                                    effectiveCapletVols.push_back(tmp->effectiveCapletVolatility());
+                            spreads.push_back(frc->spread());
+
+                            // The below code adds cap/floor levels, vols, and amounts
+                            // for capped/floored Ibor coupons and overnight coupons
+                            QuantLib::ext::shared_ptr<CashFlow> c = flow;
+                            if (auto strippedCfc = QuantLib::ext::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(flow)) {
+                                c = strippedCfc->underlying();
+                            }
+
+                            if (auto cfc = QuantLib::ext::dynamic_pointer_cast<CappedFlooredCoupon>(c)) {
+                                // enfore coupon pricer to hold the results of the current coupon
+                                cfc->deepUpdate();
+                                cfc->amount();
+                                QuantLib::ext::shared_ptr<IborCouponPricer> pricer =
+                                    QuantLib::ext::dynamic_pointer_cast<IborCouponPricer>(cfc->pricer());
+                                if (pricer && (cfc->fixingDate() > asof)) {
+                                    // We write the vols if an Ibor coupon pricer is found and the fixing date is in the
+                                    // future
+                                    if (cfc->isCapped()) {
+                                        caps.push_back(cfc->cap());
+                                        const Rate effectiveCap = cfc->effectiveCap();
+                                        effectiveCaps.push_back(effectiveCap);
+                                        capletVols.push_back(
+                                            pricer->capletVolatility()->volatility(cfc->fixingDate(), effectiveCap));
+                                        capletAmounts.push_back(pricer->capletRate(effectiveCap) *
+                                                                coupon->accrualPeriod() * coupon->nominal());
+                                    }
+                                    if (cfc->isFloored()) {
+                                        floors.push_back(cfc->floor());
+                                        const Rate effectiveFloor = cfc->effectiveFloor();
+                                        effectiveFloors.push_back(effectiveFloor);
+                                        floorletVols.push_back(
+                                            pricer->capletVolatility()->volatility(cfc->fixingDate(), effectiveFloor));
+                                        floorletAmounts.push_back(pricer->floorletRate(effectiveFloor) *
+                                                                  coupon->accrualPeriod() * coupon->nominal());
+                                    }
                                 }
-                                if (tmp->isFloored()) {
-                                    floors.push_back(tmp->floor());
-                                    const Rate effectiveFloor = tmp->effectiveFloor();
-                                    effectiveFloors.push_back(effectiveFloor);
-                                    floorletVols.push_back(
-                                        pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveFloor));
-                                    floorletAmounts.push_back(pricer->floorletRate(effectiveFloor) *
-                                                              coupon->accrualPeriod() * coupon->nominal());
-                                    effectiveFloorletVols.push_back(tmp->effectiveFloorletVolatility());
+                            } else if (auto tmp =
+                                           QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCoupon>(
+                                               c)) {
+                                tmp->deepUpdate();
+                                tmp->amount();
+                                QuantLib::ext::shared_ptr<QuantExt::CappedFlooredOvernightIndexedCouponPricer> pricer =
+                                    QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCouponPricer>(
+                                        tmp->pricer());
+                                if (pricer && (tmp->fixingDate() > asof)) {
+                                    if (tmp->isCapped()) {
+                                        caps.push_back(tmp->cap());
+                                        const Rate effectiveCap = tmp->effectiveCap();
+                                        effectiveCaps.push_back(effectiveCap);
+                                        capletVols.push_back(
+                                            pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveCap));
+                                        capletAmounts.push_back(pricer->capletRate(effectiveCap) *
+                                                                coupon->accrualPeriod() * coupon->nominal());
+                                        effectiveCapletVols.push_back(tmp->effectiveCapletVolatility());
+                                    }
+                                    if (tmp->isFloored()) {
+                                        floors.push_back(tmp->floor());
+                                        const Rate effectiveFloor = tmp->effectiveFloor();
+                                        effectiveFloors.push_back(effectiveFloor);
+                                        floorletVols.push_back(
+                                            pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveFloor));
+                                        floorletAmounts.push_back(pricer->floorletRate(effectiveFloor) *
+                                                                  coupon->accrualPeriod() * coupon->nominal());
+                                        effectiveFloorletVols.push_back(tmp->effectiveFloorletVolatility());
+                                    }
+                                }
+                            } else if (auto tmp =
+                                           QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredAverageONIndexedCoupon>(
+                                               c)) {
+                                tmp->deepUpdate();
+                                tmp->amount();
+                                QuantLib::ext::shared_ptr<QuantExt::CapFlooredAverageONIndexedCouponPricer> pricer =
+                                    QuantLib::ext::dynamic_pointer_cast<QuantExt::CapFlooredAverageONIndexedCouponPricer>(
+                                        tmp->pricer());
+                                if (pricer && (tmp->fixingDate() > asof)) {
+                                    if (tmp->isCapped()) {
+                                        caps.push_back(tmp->cap());
+                                        const Rate effectiveCap = tmp->effectiveCap();
+                                        effectiveCaps.push_back(effectiveCap);
+                                        capletVols.push_back(
+                                            pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveCap));
+                                        capletAmounts.push_back(pricer->capletRate(effectiveCap) *
+                                                                coupon->accrualPeriod() * coupon->nominal());
+                                        effectiveCapletVols.push_back(tmp->effectiveCapletVolatility());
+                                    }
+                                    if (tmp->isFloored()) {
+                                        floors.push_back(tmp->floor());
+                                        const Rate effectiveFloor = tmp->effectiveFloor();
+                                        effectiveFloors.push_back(effectiveFloor);
+                                        floorletVols.push_back(
+                                            pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveFloor));
+                                        floorletAmounts.push_back(pricer->floorletRate(effectiveFloor) *
+                                                                  coupon->accrualPeriod() * coupon->nominal());
+                                        effectiveFloorletVols.push_back(tmp->effectiveFloorletVolatility());
+                                    }
+                                }
+
+                            } else if (auto tmp =
+                                           QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredAverageBMACoupon>(c)) {
+                                tmp->deepUpdate();
+                                tmp->amount();
+                                QuantLib::ext::shared_ptr<QuantExt::CapFlooredAverageBMACouponPricer> pricer =
+                                    QuantLib::ext::dynamic_pointer_cast<QuantExt::CapFlooredAverageBMACouponPricer>(
+                                        tmp->pricer());
+                                if (pricer && (tmp->fixingDate() > asof)) {
+                                    if (tmp->isCapped()) {
+                                        caps.push_back(tmp->cap());
+                                        const Rate effectiveCap = tmp->effectiveCap();
+                                        effectiveCaps.push_back(effectiveCap);
+                                        capletVols.push_back(
+                                            pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveCap));
+                                        capletAmounts.push_back(pricer->capletRate(effectiveCap) *
+                                                                coupon->accrualPeriod() * coupon->nominal());
+                                        effectiveCapletVols.push_back(tmp->effectiveCapletVolatility());
+                                    }
+                                    if (tmp->isFloored()) {
+                                        floors.push_back(tmp->floor());
+                                        const Rate effectiveFloor = tmp->effectiveFloor();
+                                        effectiveFloors.push_back(effectiveFloor);
+                                        floorletVols.push_back(
+                                            pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveFloor));
+                                        floorletAmounts.push_back(pricer->floorletRate(effectiveFloor) *
+                                                                  coupon->accrualPeriod() * coupon->nominal());
+                                        effectiveFloorletVols.push_back(tmp->effectiveFloorletVolatility());
+                                    }
                                 }
                             }
                         }
@@ -773,7 +785,7 @@ void CapFloor::fromXML(XMLNode* node) {
     premiumData_.fromXML(capFloorNode);
 }
 
-XMLNode* CapFloor::toXML(XMLDocument& doc) {
+XMLNode* CapFloor::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* capFloorNode = doc.allocNode("CapFloorData");
     XMLUtils::appendNode(node, capFloorNode);

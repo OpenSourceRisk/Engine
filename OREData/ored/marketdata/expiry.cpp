@@ -107,12 +107,12 @@ template <class Archive> void FutureContinuationExpiry::serialize(Archive& ar, c
 
 ostream& operator<<(ostream& os, const Expiry& expiry) { return os << expiry.toString(); }
 
-boost::shared_ptr<Expiry> parseExpiry(const string& strExpiry) {
+QuantLib::ext::shared_ptr<Expiry> parseExpiry(const string& strExpiry) {
 
     QL_REQUIRE(strExpiry.size() > 1, "Expiry string must have at least 2 characters");
 
     if (strExpiry.at(0) == 'c') {
-        auto expiry = boost::make_shared<FutureContinuationExpiry>();
+        auto expiry = QuantLib::ext::make_shared<FutureContinuationExpiry>();
         expiry->fromString(strExpiry);
         return expiry;
     } else {
@@ -121,9 +121,9 @@ boost::shared_ptr<Expiry> parseExpiry(const string& strExpiry) {
         bool isDate;
         parseDateOrPeriod(strExpiry, date, period, isDate);
         if (isDate) {
-            return boost::make_shared<ExpiryDate>(date);
+            return QuantLib::ext::make_shared<ExpiryDate>(date);
         } else {
-            return boost::make_shared<ExpiryPeriod>(period);
+            return QuantLib::ext::make_shared<ExpiryPeriod>(period);
         }
     }
 }

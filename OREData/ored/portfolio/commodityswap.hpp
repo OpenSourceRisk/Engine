@@ -42,12 +42,12 @@ public:
     CommoditySwap(const ore::data::Envelope& env, const std::vector<ore::data::LegData>& legs)
         : Trade("CommoditySwap", env), legData_(legs) {}
 
-    void build(const boost::shared_ptr<ore::data::EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
     QuantLib::Real notional() const override;
 
     //! Add underlying Commodity names
     std::map<ore::data::AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     //! \name Inspectors
     //@{
@@ -57,19 +57,19 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(ore::data::XMLNode* node) override;
-    virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
 
     const std::map<std::string,boost::any>& additionalData() const override;
 
 private:
-    boost::shared_ptr<ore::data::LegData> createLegData() const { return boost::make_shared<ore::data::LegData>(); }
+    QuantLib::ext::shared_ptr<ore::data::LegData> createLegData() const { return QuantLib::ext::make_shared<ore::data::LegData>(); }
 
     // Perform checks before attempting to build
     void check() const;
 
     // Build a leg
-    void buildLeg(const boost::shared_ptr<ore::data::EngineFactory>& ef,
+    void buildLeg(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& ef,
         const ore::data::LegData& legDatum, const std::string& configuration);
 
     std::vector<ore::data::LegData> legData_;

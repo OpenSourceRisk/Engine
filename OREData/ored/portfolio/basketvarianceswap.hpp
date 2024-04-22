@@ -37,15 +37,17 @@ public:
     BasketVarianceSwap(const Envelope& env, const string& longShort, const string& notional, const string& strike,
                        const string& currency, const string& cap, const string& floor, const string& settlementDate,
                        const ScheduleData& valuationSchedule, bool squaredPayoff,
-                       const vector<boost::shared_ptr<Underlying>> underlyings)
+                       const vector<QuantLib::ext::shared_ptr<Underlying>> underlyings)
         : longShort_(longShort), notional_(notional), strike_(strike), currency_(currency), cap_(cap), floor_(floor),
           settlementDate_(settlementDate), valuationSchedule_(valuationSchedule), squaredPayoff_(squaredPayoff),
           underlyings_(underlyings) {
         initIndices();
     }
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
+    // This is called within ScriptedTrade::build()
+    void setIsdaTaxonomyFields() override;
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
 private:
     void initIndices();
@@ -54,7 +56,7 @@ private:
     string settlementDate_;
     ScheduleData valuationSchedule_;
     bool squaredPayoff_;
-    vector<boost::shared_ptr<Underlying>> underlyings_;
+    vector<QuantLib::ext::shared_ptr<Underlying>> underlyings_;
 };
 
 class EquityBasketVarianceSwap : public BasketVarianceSwap {

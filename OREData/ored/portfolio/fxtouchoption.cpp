@@ -62,9 +62,22 @@ FxTouchOption::FxTouchOption(Envelope& env, OptionData option, BarrierData barri
     }
 }
 
-void FxTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
-    const boost::shared_ptr<Market> market = engineFactory->market();
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
+    additionalData_["isdaSubProduct"] = string("Barrier");
+    additionalData_["isdaTransaction"] = string("");
+
+    additionalData_["payoffAmount"] = payoffAmount_;
+    additionalData_["payoffCurrency"] = payoffCurrency_;
+
+    npvCurrency_ = payoffCurrency_;
+    notional_ = payoffAmount_;
+    notionalCurrency_ = payoffCurrency_;
+
+    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
 
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for FxOption");
     QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of exercise dates");
@@ -149,7 +162,7 @@ void FxTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     // from this point on it's important not to use domesticCurrency_, foreignCurrency_, barrier_.level(), etc
     // rather the local variables (fgnCcy, domCcy, level, etc) should be used as they may have been flipped.
 
-    boost::shared_ptr<QuantExt::FxIndex> fxIndex;
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex;
     if (!fxIndex_.empty())
         fxIndex = buildFxIndex(fxIndex_, domCcy.code(), fgnCcy.code(), engineFactory->market(),
                                engineFactory->configuration(MarketContext::pricing));
@@ -158,23 +171,23 @@ void FxTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     auto buildBarrierOptionWrapperInstr = [this, type, level, engineFactory, domCcy, fgnCcy, flipResults, positionType,
                                            market, barrierType, rebate, fxIndex, cal,
                                            start](const Date& expiryDate, const Date& payDate) {
-        boost::shared_ptr<StrikedTypePayoff> payoff(new CashOrNothingPayoff(type, level, 1.0));
+        QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff(new CashOrNothingPayoff(type, level, 1.0));
         Leg leg;
 
-        leg.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(1.0, payDate)));
+        leg.push_back(QuantLib::ext::shared_ptr<CashFlow>(new SimpleCashFlow(1.0, payDate)));
         // Hard code payoff at expiry to true - we ignore in pricing; QPR-10669
         bool payoffFlag = true;
 
-        boost::shared_ptr<Exercise> exercise = boost::make_shared<AmericanExercise>(expiryDate, payoffFlag);
+        QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<AmericanExercise>(expiryDate, payoffFlag);
 
-        boost::shared_ptr<Instrument> barrier = boost::make_shared<VanillaOption>(payoff, exercise);
-        boost::shared_ptr<Instrument> underlying = boost::make_shared<Swap>(Leg(), leg);
+        QuantLib::ext::shared_ptr<Instrument> barrier = QuantLib::ext::make_shared<VanillaOption>(payoff, exercise);
+        QuantLib::ext::shared_ptr<Instrument> underlying = QuantLib::ext::make_shared<Swap>(Leg(), leg);
 
         // set pricing engines
-        boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
+        QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
         QL_REQUIRE(builder, "No builder found for " << tradeType_);
-        boost::shared_ptr<FxTouchOptionEngineBuilder> fxTouchOptBuilder =
-            boost::dynamic_pointer_cast<FxTouchOptionEngineBuilder>(builder);
+        QuantLib::ext::shared_ptr<FxTouchOptionEngineBuilder> fxTouchOptBuilder =
+            QuantLib::ext::dynamic_pointer_cast<FxTouchOptionEngineBuilder>(builder);
         barrier->setPricingEngine(fxTouchOptBuilder->engine(fgnCcy, domCcy, type_, payDate, flipResults));
         setSensitivityTemplate(*fxTouchOptBuilder);
         if (type_ == "One-Touch") {
@@ -182,14 +195,14 @@ void FxTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
             // which we price as a swap
             builder = engineFactory->builder("Swap");
             QL_REQUIRE(builder, "No builder found for Swap");
-            boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
-                boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
+            QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
+                QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
             underlying->setPricingEngine(swapBuilder->engine(domCcy, std::string(), std::string()));
         }
 
         bool isLong = (positionType == Position::Long) ? true : false;
 
-        std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+        std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
         std::vector<Real> additionalMultipliers;
         Date lastPremiumDate =
             addPremiums(additionalInstruments, additionalMultipliers, (isLong ? 1.0 : -1.0) * payoffAmount_,
@@ -198,7 +211,7 @@ void FxTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
 
         Handle<Quote> spot = market->fxRate(fgnCcy.code() + domCcy.code());
 
-        auto barrierOptionWrapper = boost::make_shared<SingleBarrierOptionWrapper>(
+        auto barrierOptionWrapper = QuantLib::ext::make_shared<SingleBarrierOptionWrapper>(
             barrier, isLong, expiryDate, false, underlying, barrierType, spot, level, rebate, domCcy, start, fxIndex,
             cal, payoffAmount_, payoffAmount_, additionalInstruments, additionalMultipliers);
         
@@ -234,19 +247,8 @@ void FxTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     }
 
     instrument_ = barrierOptionWrapper;
-    npvCurrency_ = payoffCurrency_;
-    notional_ = payoffAmount_;
-    notionalCurrency_ = payoffCurrency_;
+
     // maturity_ is set in buildBarrierOptionWrapperInstr()
-
-    additionalData_["payoffAmount"] = payoffAmount_;
-    additionalData_["payoffCurrency"] = payoffCurrency_;
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
-    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
-    additionalData_["isdaSubProduct"] = string("Barrier");
-    additionalData_["isdaTransaction"] = string("");  
 }
 
 bool FxTouchOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {
@@ -291,7 +293,7 @@ void FxTouchOption::fromXML(XMLNode* node) {
     payoffAmount_ = XMLUtils::getChildValueAsDouble(fxNode, "PayoffAmount", true);
 }
 
-XMLNode* FxTouchOption::toXML(XMLDocument& doc) {
+XMLNode* FxTouchOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fxNode = doc.allocNode("FxTouchOptionData");
     XMLUtils::appendNode(node, fxNode);

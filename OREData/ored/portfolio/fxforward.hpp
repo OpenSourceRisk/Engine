@@ -45,8 +45,10 @@ public:
           boughtAmount_(boughtAmount), soldCurrency_(soldCurrency), soldAmount_(soldAmount), settlement_(settlement),
           fxIndex_(fxIndex), payDate_(payDate) {}
 
+    bool isExpired(const Date& d) override;
+    
     //! Build QuantLib/QuantExt instrument, link pricing engine
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
     QuantLib::Real notional() const override;
     std::string notionalCurrency() const override;
 
@@ -59,13 +61,14 @@ public:
     double soldAmount() const { return soldAmount_; }
     //! Settlement Type can be set to "Cash" for NDF. Default value is "Physical"
     const string& settlement() const { return settlement_; }
+    const string& fxIndex() const { return fxIndex_; }
     const string& paymentDate() const { return payDate_; }
     //@}
 
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
 private:
@@ -80,6 +83,8 @@ private:
     string payDate_;
     string payLag_;
     string payCalendar_;
-    string payConvention_;};
+    string payConvention_;
+    bool includeSettlementDateFlows_;
+};
 } // namespace data
 } // namespace ore

@@ -34,35 +34,35 @@
         NAME, &ore::data::createReferenceDatumBuilder<ore::data::ReferenceDatumBuilder<CLASS>>, OVERWRITE);
 
 #define ORE_REGISTER_BOND_BUILDER(NAME, CLASS, OVERWRITE)                                                              \
-    ore::data::BondFactory::instance().addBuilder(NAME, boost::make_shared<CLASS>(), OVERWRITE);
+    ore::data::BondFactory::instance().addBuilder(NAME, QuantLib::ext::make_shared<CLASS>(), OVERWRITE);
 
 #define ORE_REGISTER_TRADE_BUILDER(NAME, CLASS, OVERWRITE)                                                             \
-    ore::data::TradeFactory::instance().addBuilder(NAME, boost::make_shared<ore::data::TradeBuilder<CLASS>>(),         \
+    ore::data::TradeFactory::instance().addBuilder(NAME, QuantLib::ext::make_shared<ore::data::TradeBuilder<CLASS>>(),         \
                                                    OVERWRITE);
 
 #define ORE_REGISTER_LEGBUILDER(NAME, CLASS, OVERWRITE)                                                                \
-    ore::data::EngineBuilderFactory::instance().addLegBuilder([]() { return boost::make_shared<CLASS>(); }, OVERWRITE);
+    ore::data::EngineBuilderFactory::instance().addLegBuilder([]() { return QuantLib::ext::make_shared<CLASS>(); }, OVERWRITE);
 
 #define ORE_REGISTER_AMC_ENGINE_BUILDER(CLASS, OVERWRITE)                                                              \
     ore::data::EngineBuilderFactory::instance().addAmcEngineBuilder(                                                   \
-        [](const boost::shared_ptr<QuantExt::CrossAssetModel>& cam, const std::vector<ore::data::Date>& grid) {        \
-            return boost::make_shared<CLASS>(cam, grid);                                                               \
+        [](const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam, const std::vector<ore::data::Date>& grid) {        \
+            return QuantLib::ext::make_shared<CLASS>(cam, grid);                                                               \
         },                                                                                                             \
         OVERWRITE);
 
 #define ORE_REGISTER_AMCCG_ENGINE_BUILDER(CLASS, OVERWRITE)                                                            \
     ore::data::EngineBuilderFactory::instance().addAmcCgEngineBuilder(                                                 \
-        [](const boost::shared_ptr<ore::data::ModelCG>& model, const std::vector<ore::data::Date>& grid) {             \
-            return boost::make_shared<CLASS>(model, grid);                                                             \
+        [](const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model, const std::vector<ore::data::Date>& grid) {             \
+            return QuantLib::ext::make_shared<CLASS>(model, grid);                                                             \
         },                                                                                                             \
         OVERWRITE);
 
 #define ORE_REGISTER_ENGINE_BUILDER(CLASS, OVERWRITE)                                                                  \
-    ore::data::EngineBuilderFactory::instance().addEngineBuilder([]() { return boost::make_shared<CLASS>(); },         \
+    ore::data::EngineBuilderFactory::instance().addEngineBuilder([]() { return QuantLib::ext::make_shared<CLASS>(); },         \
                                                                  OVERWRITE);
 
 #define ORE_REGISTER_TRS_UNDERLYING_BUILDER(NAME, CLASS, OVERWRITE)                                                    \
-    ore::data::TrsUnderlyingBuilderFactory::instance().addBuilder(NAME, boost::make_shared<CLASS>(), OVERWRITE);
+    ore::data::TrsUnderlyingBuilderFactory::instance().addBuilder(NAME, QuantLib::ext::make_shared<CLASS>(), OVERWRITE);
 
 #define ORE_REGISTER_COMPUTE_FRAMEWORK_CREATOR(NAME, CLASS, OVERWRITE)                                                 \
     QuantExt::ComputeFrameworkRegistry::instance().add(NAME, &QuantExt::createComputeFrameworkCreator<CLASS>, OVERWRITE);

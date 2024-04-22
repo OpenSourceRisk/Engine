@@ -33,7 +33,7 @@ namespace {
 class CommonData {
 public:
     // Variables
-    boost::shared_ptr<CommodityIndex> index;
+    QuantLib::ext::shared_ptr<CommodityIndex> index;
     USDCurrency currency;
     Position::Type position;
     Real quantity;
@@ -44,7 +44,7 @@ public:
     SavedSettings backup;
 
     // Default constructor
-    CommonData() : index(boost::make_shared<CommoditySpotIndex>("GOLD_USD", NullCalendar())),
+    CommonData() : index(QuantLib::ext::make_shared<CommoditySpotIndex>("GOLD_USD", NullCalendar())),
         currency(USDCurrency()), position(Position::Long), quantity(100), maturity(19, Feb, 2019), strike(50.0) {}
 };
 } // namespace

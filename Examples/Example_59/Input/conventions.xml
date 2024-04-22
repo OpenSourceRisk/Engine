@@ -20,8 +20,8 @@
 	</FRA>
 	<TenorBasisSwap>
 		<Id>DKK-CIBOR-3M-6M-BASIS</Id>
-		<LongIndex>DKK-CIBOR-6M</LongIndex>
-		<ShortIndex>DKK-CIBOR-3M</ShortIndex>
+		<PayIndex>DKK-CIBOR-6M</PayIndex>
+		<ReceiveIndex>DKK-CIBOR-3M</ReceiveIndex>
 	</TenorBasisSwap>
 	<Swap>
 		<Id>DKK-CIBOR-3M-SWAP</Id>
@@ -244,8 +244,8 @@
 	</Deposit>
 	<TenorBasisSwap>
 		<Id>JPY-LIBOR-3M-6M-BASIS</Id>
-		<LongIndex>JPY-LIBOR-6M</LongIndex>
-		<ShortIndex>JPY-LIBOR-3M</ShortIndex>
+		<PayIndex>JPY-LIBOR-6M</PayIndex>
+		<ReceiveIndex>JPY-LIBOR-3M</ReceiveIndex>
 	</TenorBasisSwap>
 	<Swap>
 		<Id>JPY-LIBOR-3M-SWAP</Id>
@@ -303,8 +303,8 @@
 	</Deposit>
 	<TenorBasisSwap>
 		<Id>NOK-NIBOR-3M-6M-BASIS</Id>
-		<LongIndex>NOK-NIBOR-6M</LongIndex>
-		<ShortIndex>NOK-NIBOR-3M</ShortIndex>
+		<PayIndex>NOK-NIBOR-6M</PayIndex>
+		<ReceiveIndex>NOK-NIBOR-3M</ReceiveIndex>
 	</TenorBasisSwap>
 	<Swap>
 		<Id>NOK-NIBOR-3M-SWAP</Id>
@@ -485,10 +485,10 @@
 	</CrossCurrencyBasis>
 	<TenorBasisSwap>
 		<Id>USD-LIBOR-3M-6M-BASIS</Id>
-		<LongIndex>USD-LIBOR-6M</LongIndex>
-		<ShortIndex>USD-LIBOR-3M</ShortIndex>
-		<ShortPayTenor>6M</ShortPayTenor>
-		<SpreadOnShort>true</SpreadOnShort>
+		<PayIndex>USD-LIBOR-6M</PayIndex>
+		<ReceiveIndex>USD-LIBOR-3M</ReceiveIndex>
+		<ReceiveFrequency>6M</ReceiveFrequency>
+		<SpreadOnRec>true</SpreadOnRec>
 		<IncludeSpread>false</IncludeSpread>
 		<SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
 	</TenorBasisSwap>

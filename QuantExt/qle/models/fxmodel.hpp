@@ -32,7 +32,7 @@ namespace QuantExt {
 class FxModel : public LinkableCalibratedModel {
 public:
     /*! parametrization (as base class) */
-    virtual const boost::shared_ptr<Parametrization> parametrizationBase() const = 0;
+    virtual const QuantLib::ext::shared_ptr<Parametrization> parametrizationBase() const = 0;
 
     /*! today's fx rate on which the model is based */
     virtual Handle<Quote> fxSpotToday() const = 0;

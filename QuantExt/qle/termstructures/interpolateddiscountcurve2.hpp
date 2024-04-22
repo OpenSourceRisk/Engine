@@ -62,9 +62,9 @@ public:
         }
         if (interpolation_ == Interpolation::logLinear) {
             dataInterpolation_ =
-                boost::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
+                QuantLib::ext::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
         } else {
-            dataInterpolation_ = boost::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin());
+            dataInterpolation_ = QuantLib::ext::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin());
         }
         registerWith(Settings::instance().evaluationDate());
     }
@@ -85,9 +85,9 @@ public:
         }
         if (interpolation_ == Interpolation::logLinear) {
             dataInterpolation_ =
-                boost::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
+                QuantLib::ext::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
         } else {
-            dataInterpolation_ = boost::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin());
+            dataInterpolation_ = QuantLib::ext::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin());
         }
         registerWith(Settings::instance().evaluationDate());
     }
@@ -148,7 +148,7 @@ private:
     Extrapolation extrapolation_;
     mutable std::vector<Real> data_;
     mutable Date today_;
-    boost::shared_ptr<QuantLib::Interpolation> dataInterpolation_;
+    QuantLib::ext::shared_ptr<QuantLib::Interpolation> dataInterpolation_;
 };
 
 } // namespace QuantExt

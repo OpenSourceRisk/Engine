@@ -53,8 +53,8 @@ IndexCreditDefaultSwapOptionEngineBuilder::keyImpl(const QuantLib::Currency& ccy
 
 namespace {
 template <class ENGINE>
-boost::shared_ptr<QuantLib::PricingEngine>
-genericEngineImpl(const std::string& curve, const boost::shared_ptr<Market> market,
+QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
+genericEngineImpl(const std::string& curve, const QuantLib::ext::shared_ptr<Market> market,
                   const std::string& configurationInCcy, const std::string& configurationPricing,
                   const QuantLib::Currency& ccy, const std::string& creditCurveId, const std::string& volCurveId,
                   const std::vector<std::string>& creditCurveIds) {
@@ -66,7 +66,7 @@ genericEngineImpl(const std::string& curve, const boost::shared_ptr<Market> mark
     if (curve == "Index") {
         auto creditCurve = market->defaultCurve(creditCurveId, configurationPricing);
         QuantLib::Handle<QuantLib::Quote> recovery = market->recoveryRate(creditCurveId, configurationPricing);
-        return boost::make_shared<ENGINE>(creditCurve->curve(), recovery->value(), ytsInCcy, ytsPricing, vol);
+        return QuantLib::ext::make_shared<ENGINE>(creditCurve->curve(), recovery->value(), ytsInCcy, ytsPricing, vol);
     } else if (curve == "Underlying") {
         std::vector<QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>> dpts;
         std::vector<QuantLib::Real> recovery;
@@ -80,7 +80,7 @@ genericEngineImpl(const std::string& curve, const boost::shared_ptr<Market> mark
             indexRecovery = market->recoveryRate(creditCurveId, configurationPricing)->value();
         } catch (...) {
         }
-        return boost::make_shared<ENGINE>(dpts, recovery, ytsInCcy, ytsPricing, vol, indexRecovery);
+        return QuantLib::ext::make_shared<ENGINE>(dpts, recovery, ytsInCcy, ytsPricing, vol, indexRecovery);
     } else {
         QL_FAIL("IndexCdsOptionEngineBuilder: Curve Parameter value \""
                 << curve << "\" not recognised, expected Underlying or Index");
@@ -88,7 +88,7 @@ genericEngineImpl(const std::string& curve, const boost::shared_ptr<Market> mark
 }
 } // namespace
 
-boost::shared_ptr<QuantLib::PricingEngine>
+QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
 BlackIndexCdsOptionEngineBuilder::engineImpl(const QuantLib::Currency& ccy, const std::string& creditCurveId,
                                              const std::string& volCurveId,
                                              const std::vector<std::string>& creditCurveIds) {
@@ -98,7 +98,7 @@ BlackIndexCdsOptionEngineBuilder::engineImpl(const QuantLib::Currency& ccy, cons
         configuration(ore::data::MarketContext::pricing), ccy, creditCurveId, volCurveId, creditCurveIds);
 }
 
-boost::shared_ptr<QuantLib::PricingEngine> NumericalIntegrationIndexCdsOptionEngineBuilder::engineImpl(
+QuantLib::ext::shared_ptr<QuantLib::PricingEngine> NumericalIntegrationIndexCdsOptionEngineBuilder::engineImpl(
     const QuantLib::Currency& ccy, const std::string& creditCurveId, const std::string& volCurveId,
     const std::vector<std::string>& creditCurveIds) {
     std::string curve = engineParameter("FepCurve", {}, false, "Underlying");

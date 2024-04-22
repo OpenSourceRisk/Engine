@@ -46,7 +46,7 @@ public:
     //@{
     Handle<QuantLib::CPIVolatilitySurface> volatility() { return vol_; }
     Handle<YieldTermStructure> yieldCurve() { return yts_; }
-    boost::shared_ptr<PricingEngine> engine() { return engine_; }
+    QuantLib::ext::shared_ptr<PricingEngine> engine() { return engine_; }
     //@}
 
     //! \name Observer interface
@@ -56,7 +56,7 @@ public:
 protected:
     Handle<QuantLib::CPIVolatilitySurface> vol_;
     Handle<YieldTermStructure> yts_;
-    boost::shared_ptr<PricingEngine> engine_;
+    QuantLib::ext::shared_ptr<PricingEngine> engine_;
 };
 
 //! Black CPI CashFlow Pricer.
@@ -84,11 +84,11 @@ public:
     Handle<YieldTermStructure> yieldCurve() { return nominalTermStructure(); }
     Handle<QuantLib::CPIVolatilitySurface> volatility() { return capletVolatility(); }
 
-    boost::shared_ptr<PricingEngine> engine() { return engine_; }
+    QuantLib::ext::shared_ptr<PricingEngine> engine() { return engine_; }
 
 protected:
     // engine to price the underlying cap/floor
-    boost::shared_ptr<PricingEngine> engine_;
+    QuantLib::ext::shared_ptr<PricingEngine> engine_;
 };
 
 

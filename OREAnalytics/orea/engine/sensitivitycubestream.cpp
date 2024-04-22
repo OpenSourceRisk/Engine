@@ -30,10 +30,10 @@ namespace analytics {
 
 using crossPair = SensitivityCube::crossPair;
 
-SensitivityCubeStream::SensitivityCubeStream(const boost::shared_ptr<SensitivityCube>& cube, const string& currency)
-    : SensitivityCubeStream(std::vector<boost::shared_ptr<SensitivityCube>>{cube}, currency) {}
+SensitivityCubeStream::SensitivityCubeStream(const QuantLib::ext::shared_ptr<SensitivityCube>& cube, const string& currency)
+    : SensitivityCubeStream(std::vector<QuantLib::ext::shared_ptr<SensitivityCube>>{cube}, currency) {}
 
-SensitivityCubeStream::SensitivityCubeStream(const std::vector<boost::shared_ptr<SensitivityCube>>& cubes,
+SensitivityCubeStream::SensitivityCubeStream(const std::vector<QuantLib::ext::shared_ptr<SensitivityCube>>& cubes,
                                              const string& currency)
     : cubes_(cubes), currency_(currency), canComputeGamma_(false) {
 
@@ -55,6 +55,9 @@ SensitivityCubeStream::SensitivityCubeStream(const std::vector<boost::shared_ptr
 }
 
 SensitivityRecord SensitivityCubeStream::next() {
+
+    if (cubes_.size() == 0)
+        return SensitivityRecord();
 
     while (tradeIdx_ != cubes_[currentCubeIdx_]->tradeIdx().end() && currentDeltaKey_ == currentDeltaKeys_.end() &&
            currentCrossGammaKey_ == currentCrossGammaKeys_.end()) {
@@ -143,8 +146,10 @@ void SensitivityCubeStream::updateForNewTrade() {
 
 void SensitivityCubeStream::reset() {
     currentCubeIdx_ = 0;
-    tradeIdx_ = cubes_[currentCubeIdx_]->tradeIdx().begin();
-    updateForNewTrade();
+    if (cubes_.size() > 0) {
+        tradeIdx_ = cubes_[currentCubeIdx_]->tradeIdx().begin();
+        updateForNewTrade();
+    }
 }
 
 } // namespace analytics

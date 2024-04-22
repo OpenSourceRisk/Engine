@@ -31,7 +31,7 @@ CpiCapFloor::CpiCapFloor() : CalibrationInstrument("CpiCapFloor"), type_(CapFloo
 
 CpiCapFloor::CpiCapFloor(CapFloor::Type type,
     const boost::variant<QuantLib::Date, Period> & maturity,
-    const boost::shared_ptr<BaseStrike>& strike)
+    const QuantLib::ext::shared_ptr<BaseStrike>& strike)
     : CalibrationInstrument("CpiCapFloor"),
       type_(type),
       maturity_(maturity),
@@ -45,7 +45,7 @@ const boost::variant<Date, Period>& CpiCapFloor::maturity() const {
     return maturity_;
 }
 
-const boost::shared_ptr<BaseStrike>& CpiCapFloor::strike() const { return strike_; }
+const QuantLib::ext::shared_ptr<BaseStrike>& CpiCapFloor::strike() const { return strike_; }
 
 void CpiCapFloor::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, instrumentType_);
@@ -54,7 +54,7 @@ void CpiCapFloor::fromXML(XMLNode* node) {
     strike_ = parseBaseStrike(XMLUtils::getChildValue(node, "Strike", true));
 }
 
-XMLNode* CpiCapFloor::toXML(XMLDocument& doc) {
+XMLNode* CpiCapFloor::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode(instrumentType_);
     XMLUtils::addChild(doc, node, "Type", to_string(type_));
     XMLUtils::addChild(doc, node, "Maturity", to_string(maturity_));
