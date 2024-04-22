@@ -45,42 +45,30 @@ void EquityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     // skip the transaction level mapping for now
     additionalData_["isdaTransaction"] = string("");
 
+    additionalData_["strikeCurrency"] = strikeCurrency_;
+    additionalData_["quantity"] = quantity_;
+
     Currency ccy = parseCurrencyWithMinors(currency_);
-
-    // get the equity currency from the market
-    Currency equityCcy = engineFactory->market()->equityCurve(eqName())->currency();
-
-    // ensure forward currency matches the equity currency
-    QL_REQUIRE(!equityCcy.empty(), "No equity currency in equityCurve for equity " << eqName());
-    QL_REQUIRE(ccy == equityCcy, "EquityForward currency " << ccy << " does not match equity currency " << equityCcy << " for trade " << id());
 
     // convert strike to the major currency if needed
     Real strike;
     if (!strikeCurrency_.empty()) {
-        Currency strikeCcy = parseCurrencyWithMinors(strikeCurrency_);
         strike = convertMinorToMajorCurrency(strikeCurrency_, strike_);
         // ensure strike currency matches equity currency
-        QL_REQUIRE(strikeCcy == equityCcy, "Strike currency " << ccy << " does not match equity currency " << equityCcy << " for trade " << id());
     } else {        
         WLOG("No Strike Currency provide for trade " << id() << ", assuming trade currency " << ccy);
         strike = convertMinorToMajorCurrency(currency_, strike_);
     }
+    additionalData_["strike"] = strike;
 
     QuantLib::Position::Type longShort = parsePositionType(longShort_);
     Date maturity = parseDate(maturityDate_);
 
     string name = eqName();
+    additionalData_["underlyingSecurityId"] = name;
 
     QuantLib::ext::shared_ptr<Instrument> inst =
         QuantLib::ext::make_shared<QuantExt::EquityForward>(name, ccy, longShort, quantity_, maturity, strike);
-
-    // Pricing engine
-    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
-    QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    QuantLib::ext::shared_ptr<EquityForwardEngineBuilder> eqFwdBuilder =
-        QuantLib::ext::dynamic_pointer_cast<EquityForwardEngineBuilder>(builder);
-    inst->setPricingEngine(eqFwdBuilder->engine(name, ccy));
-    setSensitivityTemplate(*eqFwdBuilder);
 
     // set up other Trade details
     instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(new VanillaInstrument(inst));
@@ -91,10 +79,28 @@ void EquityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     notional_ = strike * quantity_;
     notionalCurrency_ = ccy.code();
 
-    additionalData_["underlyingSecurityId"] = name;
-    additionalData_["strike"] = strike;
-    additionalData_["strikeCurrency"] = strikeCurrency_;
-    additionalData_["quantity"] = quantity_;
+    // We check the ccys here at the end of the build to ensure that the rest of the build above
+    // (which does not require the market) runs first
+
+    // get the equity currency from the market
+    Currency equityCcy = engineFactory->market()->equityCurve(eqName())->currency();
+
+    // ensure forward currency matches the equity currency
+    QL_REQUIRE(!equityCcy.empty(), "No equity currency in equityCurve for equity " << eqName());
+    QL_REQUIRE(ccy == equityCcy, "EquityForward currency " << ccy << " does not match equity currency " << equityCcy << " for trade " << id());
+    
+    if (!strikeCurrency_.empty()) {
+        Currency strikeCcy = parseCurrencyWithMinors(strikeCurrency_);
+        QL_REQUIRE(strikeCcy == equityCcy, "Strike currency " << ccy << " does not match equity currency " << equityCcy << " for trade " << id());
+    }
+
+    // Pricing engine
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
+    QL_REQUIRE(builder, "No builder found for " << tradeType_);
+    QuantLib::ext::shared_ptr<EquityForwardEngineBuilder> eqFwdBuilder =
+        QuantLib::ext::dynamic_pointer_cast<EquityForwardEngineBuilder>(builder);
+    inst->setPricingEngine(eqFwdBuilder->engine(name, ccy));
+    setSensitivityTemplate(*eqFwdBuilder);
 }
     
 void EquityForward::fromXML(XMLNode* node) {
