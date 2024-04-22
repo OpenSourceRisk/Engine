@@ -60,6 +60,7 @@ public:
     double boughtAmount() const { return boughtAmount_; }
     double soldAmount() const { return soldAmount_; }
     const std::string& fxIndex() const { return fxIndex_; }
+    Real strike() const;
     //@}
 
     //! \name Serialisation

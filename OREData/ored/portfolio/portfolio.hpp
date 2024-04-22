@@ -43,7 +43,8 @@ class ReferenceDataManager;
 class Portfolio : public XMLSerializable {
 public:
     //! Default constructor
-    explicit Portfolio(bool buildFailedTrades = true) : buildFailedTrades_(buildFailedTrades) {}
+    explicit Portfolio(bool buildFailedTrades = true, bool ignoreTradeBuildFail = false)
+        : buildFailedTrades_(buildFailedTrades), ignoreTradeBuildFail_(ignoreTradeBuildFail) {}
 
     //! Add a trade to the portfolio
     void add(const QuantLib::ext::shared_ptr<Trade>& trade);
@@ -109,6 +110,9 @@ public:
     //! Does this portfolio build failed trades?
     bool buildFailedTrades() const { return buildFailedTrades_; }
 
+    //! Keep trade in the portfolio even after build fail
+    bool ignoreTradeBuildFail() const { return ignoreTradeBuildFail_; }
+
     /*! Return the fixings that will be requested in order to price every Trade in this Portfolio given
         the \p settlementDate. The map key is the ORE name of the index and the map value is the set of fixing dates.
 
@@ -125,15 +129,16 @@ public:
                       const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr);
 
 private:
-    bool buildFailedTrades_;
+    bool buildFailedTrades_, ignoreTradeBuildFail_;
     std::map<std::string, QuantLib::ext::shared_ptr<Trade>> trades_;
     std::map<AssetClass, std::set<std::string>> underlyingIndicesCache_;
 };
 
-std::pair<QuantLib::ext::shared_ptr<Trade>, bool> buildTrade(QuantLib::ext::shared_ptr<Trade>& trade,
-                                                     const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                                                     const std::string& context, const bool buildFailedTrades,
-                                                     const bool emitStructuredError);
+std::pair<QuantLib::ext::shared_ptr<Trade>, bool> buildTrade(
+    QuantLib::ext::shared_ptr<Trade>& trade,
+    const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+    const std::string& context, const bool ignoreTradeBuildFail,
+    const bool buildFailedTrades, const bool emitStructuredError);
 
 } // namespace data
 } // namespace ore

@@ -65,7 +65,17 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
 
     // FIXME this won't work for zero bonds (but their implementation is incomplete anyhow, see bond.cpp)
     underlying_ = QuantLib::ext::make_shared<ore::data::Bond>(Envelope(), bondData_);
+
     underlying_->build(engineFactory);
+
+    legs_ = underlying_->legs();
+    legCurrencies_ = underlying_->legCurrencies();
+    legPayers_ = std::vector<bool>(legs_.size(), false); // always receive (long option view)
+    npvCurrency_ = underlying_->bondData().currency();
+    notional_ = underlying_->notional() * bondData_.bondNotional();
+    notionalCurrency_ = underlying_->bondData().currency();
+    maturity_ = std::max(optionData_.premiumData().latestPremiumDate(), underlying_->maturity());
+
     auto qlBondInstr = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(underlying_->instrument()->qlInstrument());
     QL_REQUIRE(qlBondInstr, "BondOption::build(): could not cast to QuantLib::Bond");
     for (auto const p : underlying_->legPayers()) {
@@ -126,20 +136,12 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, multiplier,
-                                       optionData_.premiumData(), multiplier > 0.0 ? -1.0 : 1.0, currency,
-                                       engineFactory, bondOptionBuilder->configuration(MarketContext::pricing));
+    addPremiums(additionalInstruments, additionalMultipliers, multiplier, optionData_.premiumData(),
+                multiplier > 0.0 ? -1.0 : 1.0, currency, engineFactory,
+                bondOptionBuilder->configuration(MarketContext::pricing));
 
     instrument_.reset(new VanillaInstrument(bondoption, multiplier, additionalInstruments, additionalMultipliers));
-
-    legs_ = underlying_->legs();
-    legCurrencies_ = underlying_->legCurrencies();
-    legPayers_ = std::vector<bool>(legs_.size(), false); // always receive (long option view)
-    npvCurrency_ = underlying_->bondData().currency();
-    maturity_ = std::max(lastPremiumDate, underlying_->maturity());
-    notional_ = underlying_->notional() * bondData_.bondNotional();
-    notionalCurrency_ = underlying_->bondData().currency();
-
+    
     // the required fixings are (at most) those of the underlying
     requiredFixings_ = underlying_->requiredFixings();
 }

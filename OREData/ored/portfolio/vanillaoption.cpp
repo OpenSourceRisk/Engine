@@ -37,11 +37,13 @@ namespace ore {
 namespace data {
 
 void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory) {
-    Currency ccy = parseCurrencyWithMinors(currency_);
+    setNotionalAndCurrencies();
+
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for VanillaOption");
 
     // If underlying currency is empty, then set to payment currency by default.
     // If non-empty, then check if the currencies are different for a Quanto payoff
+    Currency ccy = parseCurrencyWithMinors(currency_);
     Currency underlyingCurrency = underlyingCurrency_.empty() ? ccy : underlyingCurrency_;
     bool sameCcy = underlyingCurrency == ccy;
     
@@ -243,6 +245,10 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
 
     instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
         new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));
+}
+
+void VanillaOptionTrade::setNotionalAndCurrencies() {
+    Currency ccy = parseCurrencyWithMinors(currency_);
     npvCurrency_ = ccy.code();
 
     // Notional - we really need todays spot to get the correct notional.
@@ -251,13 +257,5 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
     // the following is correct for vanilla (sameCcy = true) and quanto (sameCcy = false)
     notionalCurrency_ = ccy.code();
 }
-
-void VanillaOptionTrade::fromXML(XMLNode* node) { Trade::fromXML(node); }
-
-XMLNode* VanillaOptionTrade::toXML(XMLDocument& doc) const {
-    XMLNode* node = Trade::toXML(doc);
-    return node;
-}
-
 } // namespace data
 } // namespace ore
