@@ -106,27 +106,6 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
         useXbsCurves = useXbsCurves && (eligibleForXbs.find(legData_[i].legType()) != eligibleForXbs.end());
     }
 
-    QuantLib::ext::shared_ptr<EngineBuilder> builder =
-        isXCCY_ ? engineFactory->builder("CrossCurrencySwap") : engineFactory->builder("Swap");
-    auto configuration = builder->configuration(MarketContext::pricing);
-
-    for (Size i = 0; i < numLegs; ++i) {
-        legPayers_[i] = legData_[i].isPayer();
-        auto legBuilder = engineFactory->legBuilder(legData_[i].legType());
-        legs_[i] =
-            legBuilder->buildLeg(legData_[i], engineFactory, requiredFixings_, configuration, Null<Date>(), useXbsCurves);
-        DLOG("Swap::build(): currency[" << i << "] = " << currencies[i]);
-        
-        // add notional leg, if applicable
-        auto leg = buildNotionalLeg(legData_[i], legs_[i], requiredFixings_, engineFactory->market(), configuration);
-        applyIndexing(leg, legData_[i], engineFactory, requiredFixings_, Null<Date>(), useXbsCurves);
-        if (!leg.empty()) {
-            legs_.push_back(leg);
-            legPayers_.push_back(legPayers_[i]);
-            currencies.push_back(currencies[i]);
-        }
-    } // for legs
-
     // The npv currency, notional currency and current notional are taken from the first leg that
     // appears in the XML that has a notional. If no such leg exists the notional currency
     // and current notional are left empty and the npv currency is set to the first leg's currency
@@ -172,6 +151,27 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
 
     Currency npvCcy = parseCurrency(npvCurrency_);
     DLOG("npv currency is " << npvCurrency_);
+
+    QuantLib::ext::shared_ptr<EngineBuilder> builder =
+        isXCCY_ ? engineFactory->builder("CrossCurrencySwap") : engineFactory->builder("Swap");
+    auto configuration = builder->configuration(MarketContext::pricing);
+
+    for (Size i = 0; i < numLegs; ++i) {
+        legPayers_[i] = legData_[i].isPayer();
+        auto legBuilder = engineFactory->legBuilder(legData_[i].legType());
+        legs_[i] = legBuilder->buildLeg(legData_[i], engineFactory, requiredFixings_, configuration, Null<Date>(),
+                                        useXbsCurves);
+        DLOG("Swap::build(): currency[" << i << "] = " << currencies[i]);
+
+        // add notional leg, if applicable
+        auto leg = buildNotionalLeg(legData_[i], legs_[i], requiredFixings_, engineFactory->market(), configuration);
+        applyIndexing(leg, legData_[i], engineFactory, requiredFixings_, Null<Date>(), useXbsCurves);
+        if (!leg.empty()) {
+            legs_.push_back(leg);
+            legPayers_.push_back(legPayers_[i]);
+            currencies.push_back(currencies[i]);
+        }
+    } // for legs
 
     if (isXCCY_) {
         QuantLib::ext::shared_ptr<QuantExt::CurrencySwap> swap(
