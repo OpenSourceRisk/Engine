@@ -111,9 +111,9 @@
   <xs:complexType name="swapType">
     <xs:all>
       <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="xs:string" name="FixedCalendar" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="FixedCalendar" minOccurs="0" maxOccurs="1"/>
       <xs:element type="frequencyType" name="FixedFrequency" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="businessDayConvention" name="FixedConvention" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="FixedConvention" minOccurs="0" maxOccurs="1"/>
       <xs:element type="dayCounter" name="FixedDayCounter" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="Index" minOccurs="1" maxOccurs="1"/>
       <xs:element type="frequencyType" name="FloatFrequency" minOccurs="0" maxOccurs="1"/>
