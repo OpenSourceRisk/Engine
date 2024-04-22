@@ -66,6 +66,13 @@ void FxDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     additionalData_["isdaSubProduct"] = string("Barrier");  
     additionalData_["isdaTransaction"] = string("");  
 
+    additionalData_["payoffAmount"] = payoffAmount_;
+    additionalData_["payoffCurrency"] = payoffCurrency_;
+
+    npvCurrency_ = payoffCurrency_;
+    notional_ = payoffAmount_;
+    notionalCurrency_ = payoffCurrency_;
+
     const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
     Date start = ore::data::parseDate(startDate_);
     Calendar cal = ore::data::parseCalendar(calendar_);
@@ -104,6 +111,7 @@ void FxDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
         }
     }
     QL_REQUIRE(payDate >= expiryDate, "Settlement date cannot be earlier than expiry date");
+    maturity_ = std::max(option_.premiumData().latestPremiumDate(), payDate);
 
     Real levelLow = barrier_.levels()[0].value();
     Real levelHigh = barrier_.levels()[1].value();
@@ -164,19 +172,15 @@ void FxDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    Date lastPremiumDate =
-        addPremiums(additionalInstruments, additionalMultipliers, (isLong ? 1.0 : -1.0) * payoffAmount_,
-                    option_.premiumData(), isLong ? -1.0 : 1.0, parseCurrency(payoffCurrency_), engineFactory,
-                    builder->configuration(MarketContext::pricing));
+    addPremiums(additionalInstruments, additionalMultipliers, (isLong ? 1.0 : -1.0) * payoffAmount_,
+                option_.premiumData(), isLong ? -1.0 : 1.0, parseCurrency(payoffCurrency_), engineFactory,
+                builder->configuration(MarketContext::pricing));
 
     Handle<Quote> spot = market->fxSpot(fgnCcy.code() + domCcy.code());
     instrument_ = QuantLib::ext::make_shared<DoubleBarrierOptionWrapper>(
         doubleTouch, isLong, expiryDate, false, underlying, barrierType, spot, levelLow, levelHigh, 0, domCcy,
         start, fxIndex, cal, payoffAmount_, payoffAmount_, additionalInstruments, additionalMultipliers);
-    npvCurrency_ = payoffCurrency_;
-    notional_ = payoffAmount_;
-    notionalCurrency_ = payoffCurrency_;
-    maturity_ = std::max(lastPremiumDate, payDate);
+
 
     Calendar fixingCal = fxIndex ? fxIndex->fixingCalendar() : cal;
     if (start != Date()) {
@@ -184,8 +188,6 @@ void FxDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
             requiredFixings_.addFixingDate(d, fxIndex_, payDate);
     }
 
-    additionalData_["payoffAmount"] = payoffAmount_;
-    additionalData_["payoffCurrency"] = payoffCurrency_;
 }
 
 bool FxDoubleTouchOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {

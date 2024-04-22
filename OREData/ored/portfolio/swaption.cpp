@@ -70,6 +70,14 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     additionalData_["isdaSubProduct"] = string("Swaption");
     additionalData_["isdaTransaction"] = string("");
 
+    // 4 fill currencies and set notional to null (will be retrieved via notional())
+
+    npvCurrency_ = notionalCurrency_ = "USD"; // only if no legs are given, not relevant in this case
+
+    if (!legData_.empty()) {
+        npvCurrency_ = notionalCurrency_ = legData_[0].currency();
+    }
+
     // 2 build underlying swap and copy its required fixings
 
     underlying_ = QuantLib::ext::make_shared<ore::data::Swap>(Envelope(), legData_);
@@ -87,14 +95,6 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     settlementMethod_ = optionData_.settlementMethod() == "" ? defaultSettlementMethod(settlementType_)
                                                              : parseSettlementMethod(optionData_.settlementMethod());
     positionType_ = parsePositionType(optionData_.longShort());
-
-    // 4 fill currencies and set notional to null (will be retrieved via notional())
-
-    npvCurrency_ = notionalCurrency_ = "USD"; // only if no legs are given, not relevant in this case
-
-    if (!legData_.empty()) {
-        npvCurrency_ = notionalCurrency_ = legData_[0].currency();
-    }
 
     notional_ = Null<Real>();
 

@@ -55,18 +55,18 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
     check();
 
-    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
-    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("CommoditySwap");
-    QuantLib::ext::shared_ptr<CommoditySwapEngineBuilder> engineBuilder =
-        QuantLib::ext::dynamic_pointer_cast<CommoditySwapEngineBuilder>(builder);
-    const string& configuration = builder->configuration(MarketContext::pricing);
-
     // Arbitrarily choose NPV currency from 1st leg. Already checked that both leg currencies equal.
     npvCurrency_ = legData_[0].currency();
 
     // Set notional to N/A for now, but reset this for a commodity fixed respectively floating leg below.
     notional_ = Null<Real>();
     notionalCurrency_ = legData_[0].currency();
+
+    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("CommoditySwap");
+    QuantLib::ext::shared_ptr<CommoditySwapEngineBuilder> engineBuilder =
+        QuantLib::ext::dynamic_pointer_cast<CommoditySwapEngineBuilder>(builder);
+    const string& configuration = builder->configuration(MarketContext::pricing);
 
     // Build the commodity swap legs
     
@@ -292,7 +292,7 @@ QuantLib::Real CommoditySwap::notional() const {
     Real currentAmount = Null<Real>();
     // Get maximum current cash flow amount (quantity * strike, quantity * spot/forward price) across legs
     // include gearings and spreads; note that the swap is in a single currency.
-    for (Size i = 0; i < legData_.size(); ++i) {
+    for (Size i = 0; i < legs_.size(); ++i) {
         for (Size j = 0; j < legs_[i].size(); ++j) {
             QuantLib::ext::shared_ptr<CashFlow> flow = legs_[i][j];
             // pick flow with earliest payment date on this leg

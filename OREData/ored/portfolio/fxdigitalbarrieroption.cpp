@@ -45,7 +45,7 @@ void FxDigitalBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory
     additionalData_["isdaAssetClass"] = string("Foreign Exchange");
     additionalData_["isdaBaseProduct"] = string("Simple Exotic");
     additionalData_["isdaSubProduct"] = string("Digital");  
-    additionalData_["isdaTransaction"] = string("");  
+    additionalData_["isdaTransaction"] = string("");
 
     const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
 
@@ -101,16 +101,27 @@ void FxDigitalBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory
     }
     DLOG("Setting up FxDigitalBarrierOption with strike " << strike << " level " << level << " foreign/bought "
                                                           << boughtCcy << " domestic/sold " << soldCcy);
+
     // from this point on it's important not to use domesticCurrency_, foreignCurrency_, strike_, barrier_.level(), etc
     // rather the local variables (boughtCcy, soldCcy, strike, level, etc) should be used as they may have been flipped.
 
-    // Create a CashOrNothing payoff for digital options
-    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff(new CashOrNothingPayoff(type, strike, payoffAmount_));
+    additionalData_["payoffAmount"] = payoffAmount_;
+    additionalData_["payoffCurrency"] = payoffCurrency_;
+    additionalData_["effectiveForeignCurrency"] = boughtCcy.code();
+    additionalData_["effectiveDomesticCurrency"] = soldCcy.code();
 
+    npvCurrency_ = soldCcy.code(); // sold is the domestic
+    notional_ = payoffAmount_;
+    notionalCurrency_ = payoffCurrency_ != "" ? payoffCurrency_ : domesticCurrency_; // see logic above
+    
     // Exercise
     // Digital Barrier Options assume an American exercise that pays at expiry
     Date expiryDate = parseDate(option_.exerciseDates().front());
     QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(expiryDate);
+    maturity_ = std::max(option_.premiumData().latestPremiumDate(), expiryDate);
+
+    // Create a CashOrNothing payoff for digital options
+    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff(new CashOrNothingPayoff(type, strike, payoffAmount_));
 
     // QL does not have an FXDigitalBarrierOption, so we add a barrier option here and wrap
     // it in a composite
@@ -149,9 +160,9 @@ void FxDigitalBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory
     // 2) add fee payment as additional trade leg for cash flow reporting
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers,
-                                       positionType == Position::Long ? 1.0 : -1.0, option_.premiumData(), -bsInd,
-                                       soldCcy, engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
+    addPremiums(additionalInstruments, additionalMultipliers, positionType == Position::Long ? 1.0 : -1.0,
+                option_.premiumData(), -bsInd, soldCcy, engineFactory,
+                fxOptBuilder->configuration(MarketContext::pricing));
 
     Settlement::Type settleType = parseSettlementType(option_.settlement());
 
@@ -161,21 +172,11 @@ void FxDigitalBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory
         settleType == Settlement::Physical ? true : false, vanilla, barrierType, spot, level, rebate, soldCcy,
         start, fxIndex, cal, 1, 1, additionalInstruments, additionalMultipliers));
 
-    npvCurrency_ = soldCcy.code(); // sold is the domestic
-    notional_ = payoffAmount_;
-    notionalCurrency_ = payoffCurrency_ != "" ? payoffCurrency_ : domesticCurrency_; // see logic above
-    maturity_ = std::max(lastPremiumDate, expiryDate);
-
     if (start != Date()) {
         for (Date d = start; d <= expiryDate; d = cal.advance(d, 1 * Days)) {
             requiredFixings_.addFixingDate(d, fxIndex_, expiryDate);
         }
     }
-
-    additionalData_["payoffAmount"] = payoffAmount_;
-    additionalData_["payoffCurrency"] = payoffCurrency_;
-    additionalData_["effectiveForeignCurrency"] = boughtCcy.code();
-    additionalData_["effectiveDomesticCurrency"] = soldCcy.code();
 }
 
 bool checkBarrier(Real spot, Barrier::Type type, Real barrier) {
