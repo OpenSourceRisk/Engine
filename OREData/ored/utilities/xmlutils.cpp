@@ -28,6 +28,7 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string/erase.hpp>
 
 // we only want to include these here.
 #if defined(__clang__)
@@ -62,9 +63,10 @@ namespace {
 // handle rapid xml parser errors
 
 void handle_rapidxml_parse_error(const rapidxml::parse_error& e) {
-    // limit to first 30 chars.
-    string where(e.where<char>(), std::min<std::size_t>(strlen(e.where<char>()), 30));
-    QL_FAIL("RapidXML Parse Error : " << e.what() << ". where=" << where);
+    string where = e.where<char>();
+    boost::erase_all(where, "\n");
+    boost::erase_all(where, "\r");
+    QL_FAIL("RapidXML Parse Error (" << e.what() << ") at '" << where.substr(0, 400) << "'");
 }
 
 

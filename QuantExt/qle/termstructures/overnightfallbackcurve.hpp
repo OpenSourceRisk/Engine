@@ -30,11 +30,11 @@ using namespace QuantLib;
 
 class OvernightFallbackCurve : public QuantLib::YieldTermStructure {
 public:
-    OvernightFallbackCurve(const boost::shared_ptr<OvernightIndex>& originalIndex,
-			   const boost::shared_ptr<OvernightIndex>& rfrIndex, const Real spread, const Date& switchDate);
+    OvernightFallbackCurve(const QuantLib::ext::shared_ptr<OvernightIndex>& originalIndex,
+			   const QuantLib::ext::shared_ptr<OvernightIndex>& rfrIndex, const Real spread, const Date& switchDate);
 
-    boost::shared_ptr<OvernightIndex> originalIndex() const;
-    boost::shared_ptr<OvernightIndex> rfrIndex() const;
+    QuantLib::ext::shared_ptr<OvernightIndex> originalIndex() const;
+    QuantLib::ext::shared_ptr<OvernightIndex> rfrIndex() const;
     Real spread() const;
     const Date& switchDate() const;
 
@@ -46,8 +46,8 @@ public:
 private:
     Real discountImpl(QuantLib::Time t) const override;
 
-    boost::shared_ptr<OvernightIndex> originalIndex_;
-    boost::shared_ptr<OvernightIndex> rfrIndex_;
+    QuantLib::ext::shared_ptr<OvernightIndex> originalIndex_;
+    QuantLib::ext::shared_ptr<OvernightIndex> rfrIndex_;
     Real spread_;
     Date switchDate_;
 };

@@ -50,7 +50,7 @@ class CommoditySchwartzData {
 public:
     //! Default constructor
     CommoditySchwartzData(bool driftFreeState = false,
-                          boost::shared_ptr<OptimizationMethod> optimizationMethod = boost::make_shared<LevenbergMarquardt>(1E-8, 1E-8, 1E-8),
+                          QuantLib::ext::shared_ptr<OptimizationMethod> optimizationMethod = QuantLib::ext::make_shared<LevenbergMarquardt>(1E-8, 1E-8, 1E-8),
                           EndCriteria endCriteria = EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8),
                           Constraint constraint = Constraint(),
                           BlackCalibrationHelper::CalibrationErrorType calibrationErrorType = BlackCalibrationHelper::RelativePriceError)
@@ -63,7 +63,7 @@ public:
                           bool calibrateKappa, Real kappa,
                           std::vector<std::string> optionExpiries = std::vector<std::string>(),
                           std::vector<std::string> optionStrikes = std::vector<std::string>(),
-                          boost::shared_ptr<OptimizationMethod> optimizationMethod = boost::make_shared<LevenbergMarquardt>(1E-8, 1E-8, 1E-8),
+                          QuantLib::ext::shared_ptr<OptimizationMethod> optimizationMethod = QuantLib::ext::make_shared<LevenbergMarquardt>(1E-8, 1E-8, 1E-8),
                           EndCriteria endCriteria = EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8),
                           Constraint constraint = Constraint(),
                           BlackCalibrationHelper::CalibrationErrorType calibrationErrorType = BlackCalibrationHelper::RelativePriceError,
@@ -89,7 +89,7 @@ public:
     std::vector<std::string>& optionExpiries() { return optionExpiries_; }
     std::vector<std::string>& optionStrikes() { return optionStrikes_; }
     bool& driftFreeState() { return driftFreeState_; }
-    boost::shared_ptr<OptimizationMethod>& optimizationMethod() { return optimizationMethod_; }
+    QuantLib::ext::shared_ptr<OptimizationMethod>& optimizationMethod() { return optimizationMethod_; }
     EndCriteria& endCriteria() { return endCriteria_; }
     Constraint& constraint() { return constraint_; }
     BlackCalibrationHelper::CalibrationErrorType calibrationErrorType() { return calibrationErrorType_; }
@@ -120,7 +120,7 @@ private:
     std::vector<std::string> optionExpiries_;
     std::vector<std::string> optionStrikes_;
     bool driftFreeState_;
-    boost::shared_ptr<OptimizationMethod> optimizationMethod_;
+    QuantLib::ext::shared_ptr<OptimizationMethod> optimizationMethod_;
     EndCriteria endCriteria_;
     Constraint constraint_;
     BlackCalibrationHelper::CalibrationErrorType calibrationErrorType_;

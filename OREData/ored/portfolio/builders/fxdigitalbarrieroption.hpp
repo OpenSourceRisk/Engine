@@ -57,7 +57,7 @@ protected:
         return forCcy.code() + domCcy.code() + ore::data::to_string(expiryDate);
     }
 
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy,
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy,
                                                         const Date& expiryDate) override {
         // We follow the way FdBlackScholesBarrierEngine determines maturity for time grid generation
         Handle<YieldTermStructure> riskFreeRate =
@@ -85,14 +85,14 @@ protected:
                 timePoints[timePoints.size() - i - 1] = timePointsArray[i];
             timePoints.insert(std::upper_bound(timePoints.begin(), timePoints.end(), 0.99 / 365), 0.99 / 365);
             vol = Handle<BlackVolTermStructure>(
-                boost::make_shared<QuantExt::BlackMonotoneVarVolTermStructure>(vol, timePoints));
+                QuantLib::ext::make_shared<QuantExt::BlackMonotoneVarVolTermStructure>(vol, timePoints));
             vol->enableExtrapolation();
         }
-        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
+        QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
             market_->fxSpot(pair, configuration(ore::data::MarketContext::pricing)),
             market_->discountCurve(forCcy.code(), configuration(ore::data::MarketContext::pricing)),
             market_->discountCurve(domCcy.code(), configuration(ore::data::MarketContext::pricing)), vol);
-        return boost::make_shared<FdBlackScholesBarrierEngine>(gbsp, tGrid, xGrid, dampingSteps, scheme);
+        return QuantLib::ext::make_shared<FdBlackScholesBarrierEngine>(gbsp, tGrid, xGrid, dampingSteps, scheme);
     }
 };
 

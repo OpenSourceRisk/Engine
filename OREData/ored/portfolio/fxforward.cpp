@@ -30,19 +30,50 @@
 namespace ore {
 namespace data {
 
-void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void FxForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Foreign Exchange");
     additionalData_["isdaBaseProduct"] = string(settlement_ == "Cash" ? "NDF" : "Forward");
     additionalData_["isdaSubProduct"] = string("");
     additionalData_["isdaTransaction"] = string("");  
+        
+    additionalData_["soldCurrency"] = soldCurrency_;
+    additionalData_["boughtCurrency"] = boughtCurrency_;
+    additionalData_["soldAmount"] = soldAmount_;
+    additionalData_["boughtAmount"] = boughtAmount_;
+    additionalData_["valueDate"] = maturityDate_;
+    additionalData_["settlement"] = settlement_;
 
     // If you Buy EURUSD forward, then you buy EUR and sell USD.
     // EUR = foreign, USD = Domestic.
     // You pay in USD, so the Domestic / Sold ccy is the "payer" currency
     Currency boughtCcy = parseCurrency(boughtCurrency_);
     Currency soldCcy = parseCurrency(soldCurrency_);
+
+    Currency payCcy;
+    if (payCurrency_.empty()) {
+        // If settlement currency is not set, set it to the domestic currency.
+        payCcy = soldCcy;
+    } else {
+        payCcy = parseCurrency(payCurrency_);
+        QL_REQUIRE(payCcy == boughtCcy || payCcy == soldCcy,
+                   "Settlement currency must be either " << boughtCcy.code() << " or " << soldCcy.code() << ".");
+    }
+
+    npvCurrency_ = payCcy.code();
+
+    // The notional and notional ccy will be set in the engine anyway,
+    // but we also set this here as a default/fallback in case the engine builder fails.
+    if (settlement_ == "Physical") {
+        notional_ = soldAmount_;
+        notionalCurrency_ = soldCurrency_;
+    } else {
+        // for cash settled forwards we take the notional from the settlement ccy leg
+        notional_ = soldCcy == payCcy ? soldAmount_ : boughtAmount_;
+        notionalCurrency_ = payCcy.code();
+    }
+
     Date maturityDate = parseDate(maturityDate_);
 
     // Derive settlement date from payment data parameters
@@ -70,17 +101,9 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         QL_REQUIRE(payDate >= maturityDate, "FX Forward settlement date should equal or exceed the maturity date.");
     }
 
-    boost::shared_ptr<QuantExt::FxIndex> fxIndex;
-    Currency payCcy;
-
-    if (payCurrency_.empty()) {
-        // If settlement currency is not set, set it to the domestic currency.
-        payCcy = soldCcy;
-    } else {
-        payCcy = parseCurrency(payCurrency_);
-        QL_REQUIRE(payCcy == boughtCcy || payCcy == soldCcy,
-                   "Settlement currency must be either " << boughtCcy.code() << " or " << soldCcy.code() << ".");
-    }
+    additionalData_["payDate"] = payDate;
+    maturity_ = std::max(payDate, maturityDate);
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex;
 
     Date fixingDate;
     if (settlement_ == "Cash") {
@@ -104,6 +127,12 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                            << maturityDate << ") < payDate (" << payDate << ")");
         }
     }
+    if (fixingDate != Date()) {
+        if (fixingDate <= payDate)
+            additionalData_["fixingDate"] = fixingDate;
+        else
+            additionalData_["adjustedValueDate"] = fixingDate;
+    }
 
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for FxForward");
 
@@ -111,16 +140,16 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                                                << QuantLib::io::iso_date(payDate));
 
     // get pricing engine builder
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    boost::shared_ptr<FxForwardEngineBuilderBase> fxBuilder =
-        boost::dynamic_pointer_cast<FxForwardEngineBuilderBase>(builder);
+    QuantLib::ext::shared_ptr<FxForwardEngineBuilderBase> fxBuilder =
+        QuantLib::ext::dynamic_pointer_cast<FxForwardEngineBuilderBase>(builder);
 
     string tmp = fxBuilder->engineParameter("includeSettlementDateFlows", {}, false, "");
     includeSettlementDateFlows_ = tmp == "" ? false : parseBool(tmp);    
     
-    boost::shared_ptr<QuantLib::Instrument> instrument =
-        boost::make_shared<QuantExt::FxForward>(boughtAmount_, boughtCcy, soldAmount_, soldCcy, maturityDate, false,
+    QuantLib::ext::shared_ptr<QuantLib::Instrument> instrument =
+        QuantLib::ext::make_shared<QuantExt::FxForward>(boughtAmount_, boughtCcy, soldAmount_, soldCcy, maturityDate, false,
                                                 settlement_ == "Physical", payDate, payCcy, fixingDate, fxIndex,
                                                 includeSettlementDateFlows_);
     instrument_.reset(new VanillaInstrument(instrument));
@@ -129,30 +158,11 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     instrument_->qlInstrument()->setPricingEngine(fxBuilder->engine(boughtCcy, soldCcy));
     setSensitivityTemplate(*fxBuilder);
 
-    npvCurrency_ = payCcy.code();
-    notional_ = Null<Real>(); // soldAmount_;
-    notionalCurrency_ = "";   // soldCurrency_;
-    maturity_ = std::max(payDate, maturityDate);
-
     // Set up Legs
-    legs_ = {{boost::make_shared<SimpleCashFlow>(boughtAmount_, payDate)},
-             {boost::make_shared<SimpleCashFlow>(soldAmount_, payDate)}};
+    legs_ = {{QuantLib::ext::make_shared<SimpleCashFlow>(boughtAmount_, payDate)},
+             {QuantLib::ext::make_shared<SimpleCashFlow>(soldAmount_, payDate)}};
     legCurrencies_ = {boughtCurrency_, soldCurrency_};
     legPayers_ = {false, true};
-
-    additionalData_["soldCurrency"] = soldCurrency_;
-    additionalData_["boughtCurrency"] = boughtCurrency_;
-    additionalData_["soldAmount"] = soldAmount_;
-    additionalData_["boughtAmount"] = boughtAmount_;
-    additionalData_["valueDate"] = maturityDate_;
-    if (fixingDate != Date()) {
-        if (fixingDate <= payDate)
-            additionalData_["fixingDate"] = fixingDate;
-        else
-            additionalData_["adjustedValueDate"] = fixingDate;
-    }
-    additionalData_["payDate"] = payDate;
-    additionalData_["settlement"] = settlement_;
 }
 
 bool FxForward::isExpired(const Date& date) {
@@ -170,8 +180,8 @@ QuantLib::Real FxForward::notional() const {
         if (strcmp(e.what(), "currentNotional not provided"))
             ALOG("error when retrieving notional: " << e.what());
     }
-    // if not provided, return null
-    return Null<Real>();
+    // if not provided, return original/fallback amount
+    return notional_;
 }
 
 std::string FxForward::notionalCurrency() const {
@@ -182,8 +192,8 @@ std::string FxForward::notionalCurrency() const {
         if (strcmp(e.what(), "notionalCurrency not provided"))
             ALOG("error when retrieving notional ccy: " << e.what());
     }
-    // if not provided, return an empty string
-    return "";
+    // if not provided, return original/fallback value
+    return notionalCurrency_;
 }
 
 void FxForward::fromXML(XMLNode* node) {

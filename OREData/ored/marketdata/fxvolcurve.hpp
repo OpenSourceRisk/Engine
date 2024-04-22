@@ -52,21 +52,21 @@ public:
     //! Detailed constructor
     FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
                const ore::data::FXTriangulation& fxSpots,
-               const std::map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-               const std::map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
-               const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
+               const std::map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
+               const std::map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& fxVols,
+               const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& correlationCurves,
                const bool buildCalibrationInfo);
     //@}
 
     //! \name Inspectors
     //@{
     const FXVolatilityCurveSpec& spec() const { return spec_; }
-    const boost::shared_ptr<BlackVolTermStructure>& volTermStructure() { return vol_; }
-    boost::shared_ptr<FxEqCommVolCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
+    const QuantLib::ext::shared_ptr<BlackVolTermStructure>& volTermStructure() { return vol_; }
+    QuantLib::ext::shared_ptr<FxEqCommVolCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
     //@}
 private:
     FXVolatilityCurveSpec spec_;
-    boost::shared_ptr<BlackVolTermStructure> vol_;
+    QuantLib::ext::shared_ptr<BlackVolTermStructure> vol_;
     Handle<Quote> fxSpot_;
     Handle<YieldTermStructure> domYts_, forYts_;
     string sourceCcy_, targetCcy_;
@@ -83,35 +83,35 @@ private:
     QuantLib::Option::Type riskReversalInFavorOf_;
     bool butterflyIsBrokerStyle_;
 
-    boost::shared_ptr<FxEqCommVolCalibrationInfo> calibrationInfo_;
+    QuantLib::ext::shared_ptr<FxEqCommVolCalibrationInfo> calibrationInfo_;
 
     void init(Date asof, FXVolatilityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
-              const FXTriangulation& fxSpots, const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-              const std::map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
-              const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
+              const FXTriangulation& fxSpots, const map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
+              const std::map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& fxVols,
+              const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& correlationCurves,
               const bool buildCalibrationInfo);
 
     void buildATMTriangulated(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
-                              boost::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
-                              const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-                              const std::map<std::string, boost::shared_ptr<FXVolCurve>>& fxVols,
-                              const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves);
+                              QuantLib::ext::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
+                              const map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
+                              const std::map<std::string, QuantLib::ext::shared_ptr<FXVolCurve>>& fxVols,
+                              const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& correlationCurves);
 
     void buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
-                              boost::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
-                              const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves);
+                              QuantLib::ext::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
+                              const map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves);
 
     void buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
-                             boost::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
-                             const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves);
+                             QuantLib::ext::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
+                             const map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves);
 
     void buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
-                                   boost::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
-                                   const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves);
+                                   QuantLib::ext::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
+                                   const map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves);
 
     void buildSmileAbsoluteCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
-                                 boost::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
-                                 const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves);
+                                 QuantLib::ext::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
+                                 const map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves);
 
 };
 } // namespace data

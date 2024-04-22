@@ -31,6 +31,7 @@
 #include <orea/app/analytics/varanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/app/analyticsmanager.hpp>
+#include <orea/app/cleanupsingletons.hpp>
 #include <orea/app/inputparameters.hpp>
 #include <orea/app/marketcalibrationreport.hpp>
 #include <orea/app/marketdatacsvloader.hpp>
@@ -122,6 +123,7 @@
 #include <orea/scenario/stressscenariodata.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
 #include <orea/simm/crif.hpp>
+#include <orea/simm/crifconfiguration.hpp>
 #include <orea/simm/crifloader.hpp>
 #include <orea/simm/crifrecord.hpp>
 #include <orea/simm/imschedulecalculator.hpp>

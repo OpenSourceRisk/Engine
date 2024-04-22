@@ -41,7 +41,7 @@ public:
     MarketObserver() : updated_(true){};
 
     //! Add an observable
-    void addObservable(boost::shared_ptr<Observable> observable);
+    void addObservable(QuantLib::ext::shared_ptr<Observable> observable);
     //! Observer interface
     void update() override;
     //! Returns true if has been updated, reset updated flag if required
@@ -54,7 +54,7 @@ private:
 
 // implementation
 
-inline void MarketObserver::addObservable(boost::shared_ptr<Observable> observable) {
+inline void MarketObserver::addObservable(QuantLib::ext::shared_ptr<Observable> observable) {
     registerWith(observable);
     updated_ = true;
 }

@@ -31,7 +31,7 @@
 
 #include <boost/fusion/container/vector.hpp>
 #include <boost/fusion/include/at_c.hpp>
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 #include <iostream>
 #include <string>
@@ -43,7 +43,7 @@ namespace data {
 using namespace QuantLib;
 
 struct ASTNode;
-using ASTNodePtr = boost::shared_ptr<ASTNode>;
+using ASTNodePtr = QuantLib::ext::shared_ptr<ASTNode>;
 
 struct LocationInfo {
     LocationInfo() : initialised(false) {}

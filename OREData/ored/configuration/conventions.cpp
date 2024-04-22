@@ -69,7 +69,7 @@ namespace data {
 
 Convention::Convention(const string& id, Type type) : type_(type), id_(id) {}
 
-const boost::shared_ptr<ore::data::Conventions>& InstrumentConventions::conventions(QuantLib::Date d) const {
+const QuantLib::ext::shared_ptr<ore::data::Conventions>& InstrumentConventions::conventions(QuantLib::Date d) const {
     QL_REQUIRE(!conventions_.empty(), "InstrumentConventions: No conventions provided.");
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     Date dt = d == Date() ? Settings::instance().evaluationDate() : d;
@@ -90,7 +90,7 @@ const boost::shared_ptr<ore::data::Conventions>& InstrumentConventions::conventi
 }
 
 void InstrumentConventions::setConventions(
-    const boost::shared_ptr<ore::data::Conventions>& conventions, QuantLib::Date d) {
+    const QuantLib::ext::shared_ptr<ore::data::Conventions>& conventions, QuantLib::Date d) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
     conventions_[d] = conventions;
 }
@@ -256,7 +256,7 @@ XMLNode* FutureConvention::toXML(XMLDocument& doc) const {
     return node;
 }
 
-boost::shared_ptr<IborIndex> FutureConvention::index() const { return parseIborIndex(strIndex_); }
+QuantLib::ext::shared_ptr<IborIndex> FutureConvention::index() const { return parseIborIndex(strIndex_); }
 
 FraConvention::FraConvention(const string& id, const string& index) : Convention(id, Type::FRA), strIndex_(index) {
     parseIborIndex(strIndex_);
@@ -280,7 +280,7 @@ XMLNode* FraConvention::toXML(XMLDocument& doc) const {
     return node;
 }
 
-boost::shared_ptr<IborIndex> FraConvention::index() const { return parseIborIndex(strIndex_); }
+QuantLib::ext::shared_ptr<IborIndex> FraConvention::index() const { return parseIborIndex(strIndex_); }
 
 OisConvention::OisConvention(const string& id, const string& spotLag, const string& index,
                              const string& fixedDayCounter, const string& fixedCalendar, const string& paymentLag,
@@ -358,8 +358,8 @@ XMLNode* OisConvention::toXML(XMLDocument& doc) const {
     return node;
 }
 
-boost::shared_ptr<OvernightIndex> OisConvention::index() const {
-    auto tmp = boost::dynamic_pointer_cast<OvernightIndex>(parseIborIndex(strIndex_));
+QuantLib::ext::shared_ptr<OvernightIndex> OisConvention::index() const {
+    auto tmp = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(parseIborIndex(strIndex_));
     QL_REQUIRE(tmp, "The index string '" << strIndex_ << "' does not represent an overnight index.");
     return tmp;
 }
@@ -474,11 +474,20 @@ IRSwapConvention::IRSwapConvention(const string& id, const string& fixedCalendar
 }
 
 void IRSwapConvention::build() {
-    fixedCalendar_ = parseCalendar(strFixedCalendar_);
     fixedFrequency_ = parseFrequency(strFixedFrequency_);
-    fixedConvention_ = parseBusinessDayConvention(strFixedConvention_);
     fixedDayCounter_ = parseDayCounter(strFixedDayCounter_);
-    parseIborIndex(strIndex_);
+    auto ind = parseIborIndex(strIndex_);
+
+    if (strFixedCalendar_.empty())
+        fixedCalendar_ = ind->fixingCalendar();
+    else
+        fixedCalendar_ = parseCalendar(strFixedCalendar_);
+
+    if (strFixedConvention_.empty())
+        fixedConvention_ = ind->businessDayConvention();
+    else
+        fixedConvention_ = parseBusinessDayConvention(strFixedConvention_);
+
     if (hasSubPeriod_) {
         floatFrequency_ = parseFrequency(strFloatFrequency_);
         subPeriodsCouponType_ = parseSubPeriodsCouponType(strSubPeriodsCouponType_);
@@ -495,13 +504,13 @@ void IRSwapConvention::fromXML(XMLNode* node) {
     id_ = XMLUtils::getChildValue(node, "Id", true);
 
     // Get string values from xml
-    strFixedCalendar_ = XMLUtils::getChildValue(node, "FixedCalendar", true);
     strFixedFrequency_ = XMLUtils::getChildValue(node, "FixedFrequency", true);
-    strFixedConvention_ = XMLUtils::getChildValue(node, "FixedConvention", true);
     strFixedDayCounter_ = XMLUtils::getChildValue(node, "FixedDayCounter", true);
     strIndex_ = XMLUtils::getChildValue(node, "Index", true);
 
     // optional
+    strFixedCalendar_ = XMLUtils::getChildValue(node, "FixedCalendar", false);
+    strFixedConvention_ = XMLUtils::getChildValue(node, "FixedConvention", false);
     strFloatFrequency_ = XMLUtils::getChildValue(node, "FloatFrequency", false);
     strSubPeriodsCouponType_ = XMLUtils::getChildValue(node, "SubPeriodsCouponType", false);
     hasSubPeriod_ = (strFloatFrequency_ != "");
@@ -526,7 +535,7 @@ XMLNode* IRSwapConvention::toXML(XMLDocument& doc) const {
     return node;
 }
 
-boost::shared_ptr<IborIndex> IRSwapConvention::index() const { return parseIborIndex(strIndex_); }
+QuantLib::ext::shared_ptr<IborIndex> IRSwapConvention::index() const { return parseIborIndex(strIndex_); }
 
 AverageOisConvention::AverageOisConvention(const string& id, const string& spotLag, const string& fixedTenor,
                                            const string& fixedDayCounter, const string& fixedCalendar,
@@ -593,8 +602,8 @@ XMLNode* AverageOisConvention::toXML(XMLDocument& doc) const {
     return node;
 }
 
-boost::shared_ptr<OvernightIndex> AverageOisConvention::index() const {
-    auto tmp = boost::dynamic_pointer_cast<OvernightIndex>(parseIborIndex(strIndex_));
+QuantLib::ext::shared_ptr<OvernightIndex> AverageOisConvention::index() const {
+    auto tmp = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(parseIborIndex(strIndex_));
     QL_REQUIRE(tmp, "The index string '" << strIndex_ << "' does not represent an overnight index.");
     return tmp;
 }
@@ -613,8 +622,8 @@ void TenorBasisSwapConvention::build() {
     parseIborIndex(strPayIndex_);
     parseIborIndex(strReceiveIndex_);
 
-    boost::shared_ptr<OvernightIndex> payON = boost::dynamic_pointer_cast<OvernightIndex>(payIndex());
-    boost::shared_ptr<OvernightIndex> recON = boost::dynamic_pointer_cast<OvernightIndex>(receiveIndex());
+    QuantLib::ext::shared_ptr<OvernightIndex> payON = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(payIndex());
+    QuantLib::ext::shared_ptr<OvernightIndex> recON = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(receiveIndex());
 
     if (strReceiveFrequency_.empty()) {
         if (recON) {
@@ -724,8 +733,8 @@ XMLNode* TenorBasisSwapConvention::toXML(XMLDocument& doc) const {
     return node;
 }
 
-boost::shared_ptr<IborIndex> TenorBasisSwapConvention::payIndex() const { return parseIborIndex(strPayIndex_); }
-boost::shared_ptr<IborIndex> TenorBasisSwapConvention::receiveIndex() const { return parseIborIndex(strReceiveIndex_); }
+QuantLib::ext::shared_ptr<IborIndex> TenorBasisSwapConvention::payIndex() const { return parseIborIndex(strPayIndex_); }
+QuantLib::ext::shared_ptr<IborIndex> TenorBasisSwapConvention::receiveIndex() const { return parseIborIndex(strReceiveIndex_); }
 
 TenorBasisTwoSwapConvention::TenorBasisTwoSwapConvention(
     const string& id, const string& calendar, const string& longFixedFrequency, const string& longFixedConvention,
@@ -774,8 +783,8 @@ void TenorBasisTwoSwapConvention::fromXML(XMLNode* node) {
     build();
 }
 
-boost::shared_ptr<IborIndex> TenorBasisTwoSwapConvention::longIndex() const { return parseIborIndex(strLongIndex_); }
-boost::shared_ptr<IborIndex> TenorBasisTwoSwapConvention::shortIndex() const { return parseIborIndex(strShortIndex_); }
+QuantLib::ext::shared_ptr<IborIndex> TenorBasisTwoSwapConvention::longIndex() const { return parseIborIndex(strLongIndex_); }
+QuantLib::ext::shared_ptr<IborIndex> TenorBasisTwoSwapConvention::shortIndex() const { return parseIborIndex(strShortIndex_); }
 
 XMLNode* TenorBasisTwoSwapConvention::toXML(XMLDocument& doc) const {
 
@@ -827,13 +836,13 @@ XMLNode* BMABasisSwapConvention::toXML(XMLDocument& doc) const {
     return node;
 }
 
-boost::shared_ptr<QuantExt::BMAIndexWrapper> BMABasisSwapConvention::bmaIndex() const {
-    auto tmp = boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(parseIborIndex(strBmaIndex_));
+QuantLib::ext::shared_ptr<QuantExt::BMAIndexWrapper> BMABasisSwapConvention::bmaIndex() const {
+    auto tmp = QuantLib::ext::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(parseIborIndex(strBmaIndex_));
     QL_REQUIRE(tmp, "the index string '" << strBmaIndex_ << "' does not represent a BMA / SIFMA index.");
     return tmp;
 }
 
-boost::shared_ptr<IborIndex> BMABasisSwapConvention::liborIndex() const { return parseIborIndex(strLiborIndex_); }
+QuantLib::ext::shared_ptr<IborIndex> BMABasisSwapConvention::liborIndex() const { return parseIborIndex(strLiborIndex_); }
 
 FXConvention::FXConvention(const string& id, const string& spotDays, const string& sourceCurrency,
                            const string& targetCurrency, const string& pointsFactor, const string& advanceCalendar,
@@ -930,7 +939,7 @@ void CrossCcyBasisSwapConvention::build() {
 
     if (strFlatTenor_.empty()) {
         auto tmp = flatIndex();
-        if (boost::dynamic_pointer_cast<OvernightIndex>(tmp))
+        if (QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(tmp))
             flatTenor_ = 3 * Months;
         else
             flatTenor_ = tmp->tenor();
@@ -940,7 +949,7 @@ void CrossCcyBasisSwapConvention::build() {
 
     if (strSpreadTenor_.empty()) {
         auto tmp = spreadIndex();
-        if (boost::dynamic_pointer_cast<OvernightIndex>(tmp))
+        if (QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(tmp))
             spreadTenor_ = 3 * Months;
         else
             spreadTenor_ = tmp->tenor();
@@ -1065,8 +1074,8 @@ XMLNode* CrossCcyBasisSwapConvention::toXML(XMLDocument& doc) const {
     return node;
 }
 
-boost::shared_ptr<IborIndex> CrossCcyBasisSwapConvention::flatIndex() const { return parseIborIndex(strFlatIndex_); }
-boost::shared_ptr<IborIndex> CrossCcyBasisSwapConvention::spreadIndex() const {
+QuantLib::ext::shared_ptr<IborIndex> CrossCcyBasisSwapConvention::flatIndex() const { return parseIborIndex(strFlatIndex_); }
+QuantLib::ext::shared_ptr<IborIndex> CrossCcyBasisSwapConvention::spreadIndex() const {
     return parseIborIndex(strSpreadIndex_);
 }
 
@@ -1144,7 +1153,7 @@ XMLNode* CrossCcyFixFloatSwapConvention::toXML(XMLDocument& doc) const {
     return node;
 }
 
-boost::shared_ptr<QuantLib::IborIndex> CrossCcyFixFloatSwapConvention::index() const {
+QuantLib::ext::shared_ptr<QuantLib::IborIndex> CrossCcyFixFloatSwapConvention::index() const {
     return parseIborIndex(strIndex_);
 }
 
@@ -1233,7 +1242,7 @@ InflationSwapConvention::InflationSwapConvention(const string& id, const string&
                                                  const string& strObservationLag, const string& strAdjustInfObsDates,
                                                  const string& strInfCalendar, const string& strInfConvention,
                                                  PublicationRoll publicationRoll,
-                                                 const boost::shared_ptr<ScheduleData>& publicationScheduleData)
+                                                 const QuantLib::ext::shared_ptr<ScheduleData>& publicationScheduleData)
     : Convention(id, Type::InflationSwap), strFixCalendar_(strFixCalendar), strFixConvention_(strFixConvention),
       strDayCounter_(strDayCounter), strIndex_(strIndex), strInterpolated_(strInterpolated),
       strObservationLag_(strObservationLag), strAdjustInfObsDates_(strAdjustInfObsDates),
@@ -1286,7 +1295,7 @@ void InflationSwapConvention::fromXML(XMLNode* node) {
         XMLNode* n = XMLUtils::getChildNode(node, "PublicationSchedule");
         QL_REQUIRE(n, "PublicationRoll is " << publicationRoll_ << " for " << id() <<
             " so expect non-empty PublicationSchedule.");
-        publicationScheduleData_ = boost::make_shared<ScheduleData>();
+        publicationScheduleData_ = QuantLib::ext::make_shared<ScheduleData>();
         publicationScheduleData_->fromXML(n);
     }
 
@@ -1321,7 +1330,7 @@ XMLNode* InflationSwapConvention::toXML(XMLDocument& doc) const {
     return node;
 }
 
-boost::shared_ptr<ZeroInflationIndex> InflationSwapConvention::index() const {
+QuantLib::ext::shared_ptr<ZeroInflationIndex> InflationSwapConvention::index() const {
     return parseZeroInflationIndex(strIndex_, Handle<ZeroInflationTermStructure>());
 }
 
@@ -2487,7 +2496,7 @@ void Conventions::fromXML(XMLNode* node) {
     for (XMLNode* child = XMLUtils::getChildNode(node); child; child = XMLUtils::getNextSibling(child)) {
 
         string type = XMLUtils::getNodeName(child);
-        boost::shared_ptr<Convention> convention;
+        QuantLib::ext::shared_ptr<Convention> convention;
 
         /* we need to build conventions of type
 
@@ -2502,11 +2511,11 @@ void Conventions::fromXML(XMLNode* node) {
            - FX conventions are searched by currencies, not id */
 
         if (type == "IborIndex") {
-            convention = boost::make_shared<IborIndexConvention>();
+            convention = QuantLib::ext::make_shared<IborIndexConvention>();
         } else if (type == "FX") {
-            convention = boost::make_shared<FXConvention>();
+            convention = QuantLib::ext::make_shared<FXConvention>();
         } else if (type == "OvernightIndex") {
-            convention = boost::make_shared<OvernightIndexConvention>();
+            convention = QuantLib::ext::make_shared<OvernightIndexConvention>();
         }
 
         string id = "unknown";
@@ -2538,7 +2547,7 @@ XMLNode* Conventions::toXML(XMLDocument& doc) const {
 
     XMLNode* conventionsNode = doc.allocNode("Conventions");
 
-    map<string, boost::shared_ptr<Convention>>::const_iterator it;
+    map<string, QuantLib::ext::shared_ptr<Convention>>::const_iterator it;
     for (it = data_.begin(); it != data_.end(); ++it) {
         if (used_.find(it->first) != used_.end())
             XMLUtils::appendNode(conventionsNode, it->second->toXML(doc));
@@ -2573,7 +2582,7 @@ std::string flip(const std::string& id, const std::string& sep = "-") {
 }
 }
 
-boost::shared_ptr<Convention> Conventions::get(const string& id) const {
+QuantLib::ext::shared_ptr<Convention> Conventions::get(const string& id) const {
 
     {
         boost::shared_lock<boost::shared_mutex> lock(mutex_);
@@ -2603,49 +2612,49 @@ boost::shared_ptr<Convention> Conventions::get(const string& id) const {
         QL_FAIL("Convention '" << id << "' not found.");
     }
 
-    boost::shared_ptr<Convention> convention;
+    QuantLib::ext::shared_ptr<Convention> convention;
     if (type == "Zero") {
-        convention = boost::make_shared<ZeroRateConvention>();
+        convention = QuantLib::ext::make_shared<ZeroRateConvention>();
     } else if (type == "Deposit") {
-        convention = boost::make_shared<DepositConvention>();
+        convention = QuantLib::ext::make_shared<DepositConvention>();
     } else if (type == "Future") {
-        convention = boost::make_shared<FutureConvention>();
+        convention = QuantLib::ext::make_shared<FutureConvention>();
     } else if (type == "FRA") {
-        convention = boost::make_shared<FraConvention>();
+        convention = QuantLib::ext::make_shared<FraConvention>();
     } else if (type == "OIS") {
-        convention = boost::make_shared<OisConvention>();
+        convention = QuantLib::ext::make_shared<OisConvention>();
     } else if (type == "Swap") {
-        convention = boost::make_shared<IRSwapConvention>();
+        convention = QuantLib::ext::make_shared<IRSwapConvention>();
     } else if (type == "AverageOIS") {
-        convention = boost::make_shared<AverageOisConvention>();
+        convention = QuantLib::ext::make_shared<AverageOisConvention>();
     } else if (type == "TenorBasisSwap") {
-        convention = boost::make_shared<TenorBasisSwapConvention>();
+        convention = QuantLib::ext::make_shared<TenorBasisSwapConvention>();
     } else if (type == "TenorBasisTwoSwap") {
-        convention=boost::make_shared<TenorBasisTwoSwapConvention>();
+        convention=QuantLib::ext::make_shared<TenorBasisTwoSwapConvention>();
     } else if (type == "BMABasisSwap") {
-        convention = boost::make_shared<BMABasisSwapConvention>();
+        convention = QuantLib::ext::make_shared<BMABasisSwapConvention>();
     } else if (type == "CrossCurrencyBasis") {
-        convention=boost::make_shared<CrossCcyBasisSwapConvention>();
+        convention=QuantLib::ext::make_shared<CrossCcyBasisSwapConvention>();
     } else if (type == "CrossCurrencyFixFloat") {
-        convention=boost::make_shared<CrossCcyFixFloatSwapConvention>();
+        convention=QuantLib::ext::make_shared<CrossCcyFixFloatSwapConvention>();
     } else if (type == "CDS") {
-        convention=boost::make_shared<CdsConvention>();
+        convention=QuantLib::ext::make_shared<CdsConvention>();
     } else if (type == "SwapIndex") {
-        convention=boost::make_shared<SwapIndexConvention>();
+        convention=QuantLib::ext::make_shared<SwapIndexConvention>();
     } else if (type == "InflationSwap") {
-        convention=boost::make_shared<InflationSwapConvention>();
+        convention=QuantLib::ext::make_shared<InflationSwapConvention>();
     } else if (type == "CmsSpreadOption") {
-        convention=boost::make_shared<CmsSpreadOptionConvention>();
+        convention=QuantLib::ext::make_shared<CmsSpreadOptionConvention>();
     } else if (type == "CommodityForward") {
-        convention = boost::make_shared<CommodityForwardConvention>();
+        convention = QuantLib::ext::make_shared<CommodityForwardConvention>();
     } else if (type == "CommodityFuture") {
-        convention = boost::make_shared<CommodityFutureConvention>();
+        convention = QuantLib::ext::make_shared<CommodityFutureConvention>();
     } else if (type == "FxOption") {
-        convention = boost::make_shared<FxOptionConvention>();
+        convention = QuantLib::ext::make_shared<FxOptionConvention>();
     } else if (type == "ZeroInflationIndex") {
-        convention = boost::make_shared<ZeroInflationIndexConvention>();
+        convention = QuantLib::ext::make_shared<ZeroInflationIndexConvention>();
     } else if (type == "BondYield") {
-        convention = boost::make_shared<BondYieldConvention>();
+        convention = QuantLib::ext::make_shared<BondYieldConvention>();
     } else {
         QL_FAIL("Convention '" << id << "' has unknown type '" + type + "' not recognized.");
     }
@@ -2663,10 +2672,10 @@ boost::shared_ptr<Convention> Conventions::get(const string& id) const {
     return convention;
 }
 
-boost::shared_ptr<Convention> Conventions::getFxConvention(const string& ccy1, const string& ccy2) const {
+QuantLib::ext::shared_ptr<Convention> Conventions::getFxConvention(const string& ccy1, const string& ccy2) const {
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     for (auto c : data_) {
-        auto fxCon = boost::dynamic_pointer_cast<FXConvention>(c.second);
+        auto fxCon = QuantLib::ext::dynamic_pointer_cast<FXConvention>(c.second);
         if (fxCon) {
             string source = fxCon->sourceCurrency().code();
             string target = fxCon->targetCurrency().code();
@@ -2679,7 +2688,7 @@ boost::shared_ptr<Convention> Conventions::getFxConvention(const string& ccy1, c
     QL_FAIL("FX convention for ccys '" << ccy1 << "' and '" << ccy2 << "' not found.");
 }
 
-pair<bool, boost::shared_ptr<Convention>> Conventions::get(const string& id, const Convention::Type& type) const {
+pair<bool, QuantLib::ext::shared_ptr<Convention>> Conventions::get(const string& id, const Convention::Type& type) const {
     try {
         auto c = get(id);
         if (c->type() == type) {
@@ -2691,8 +2700,8 @@ pair<bool, boost::shared_ptr<Convention>> Conventions::get(const string& id, con
     return make_pair(false, nullptr);
 }
 
-std::set<boost::shared_ptr<Convention>> Conventions::get(const Convention::Type& type) const {
-    std::set<boost::shared_ptr<Convention>> result;
+std::set<QuantLib::ext::shared_ptr<Convention>> Conventions::get(const Convention::Type& type) const {
+    std::set<QuantLib::ext::shared_ptr<Convention>> result;
     std::set<std::string> unparsedIds;
     std::string typeStr = ore::data::to_string(type);
     {
@@ -2729,7 +2738,7 @@ bool Conventions::has(const std::string& id, const Convention::Type& type) const
     return get(id, type).first;
 }
 
-void Conventions::add(const boost::shared_ptr<Convention>& convention) const {
+void Conventions::add(const QuantLib::ext::shared_ptr<Convention>& convention) const {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
     const string& id = convention->id();
     QL_REQUIRE(data_.find(id) == data_.end(), "Convention already exists for id " << id);

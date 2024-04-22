@@ -3652,6 +3652,13 @@ to a Swap instrument represented as scripted trade.
 Demonstration of the {\tt Scenario} analytic which has been added to export the simulation market's base scenario
 as a file.
 
+%--------------------------------------------------------------------
+\subsection{Overlapping close-out grids}% Example 61
+\label{example:61}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_61} demonstrates ORE's capability to handle xVA simulations using American Monte-Carlo with overlapping close-out grids.
+
 \clearpage
 %========================================================
 \section{Launchers and Visualisation}\label{sec:visualisation}
@@ -3951,6 +3958,7 @@ the list above.
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="outputFileName">npv.csv</Parameter>
     <Parameter name="additionalResults">Y</Parameter>
+    <Parameter name="additionalResultsReportPrecision">6</Parameter>
   </Analytic>      
   <Analytic type="cashflow">
     <Parameter name="active">Y</Parameter>

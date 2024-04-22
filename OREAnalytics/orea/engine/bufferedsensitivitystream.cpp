@@ -21,7 +21,7 @@
 namespace ore {
 namespace analytics {
 
-BufferedSensitivityStream::BufferedSensitivityStream(const boost::shared_ptr<SensitivityStream>& stream)
+BufferedSensitivityStream::BufferedSensitivityStream(const QuantLib::ext::shared_ptr<SensitivityStream>& stream)
     : stream_(stream) {}
 
 SensitivityRecord BufferedSensitivityStream::next() {

@@ -44,7 +44,7 @@ class Trade;
 class AbstractTradeBuilder {
 public:
     virtual ~AbstractTradeBuilder() {}
-    virtual boost::shared_ptr<Trade> build() const = 0;
+    virtual QuantLib::ext::shared_ptr<Trade> build() const = 0;
 };
 
 //! Template TradeBuilder class
@@ -53,7 +53,7 @@ public:
 */
 template <class T> class TradeBuilder : public AbstractTradeBuilder {
 public:
-    virtual boost::shared_ptr<Trade> build() const override { return boost::make_shared<T>(); }
+    virtual QuantLib::ext::shared_ptr<Trade> build() const override { return QuantLib::ext::make_shared<T>(); }
 };
 
 //! TradeFactory
@@ -61,17 +61,17 @@ public:
   \ingroup tradedata
 */
 class TradeFactory : public QuantLib::Singleton<TradeFactory, std::integral_constant<bool, true>> {
-    std::map<std::string, boost::shared_ptr<AbstractTradeBuilder>> builders_;
+    std::map<std::string, QuantLib::ext::shared_ptr<AbstractTradeBuilder>> builders_;
     mutable boost::shared_mutex mutex_;
 
 public:
-    std::map<std::string, boost::shared_ptr<AbstractTradeBuilder>> getBuilders() const;
-    boost::shared_ptr<AbstractTradeBuilder> getBuilder(const std::string& tradeType) const;
-    void addBuilder(const std::string& tradeType, const boost::shared_ptr<AbstractTradeBuilder>& builder,
+    std::map<std::string, QuantLib::ext::shared_ptr<AbstractTradeBuilder>> getBuilders() const;
+    QuantLib::ext::shared_ptr<AbstractTradeBuilder> getBuilder(const std::string& tradeType) const;
+    void addBuilder(const std::string& tradeType, const QuantLib::ext::shared_ptr<AbstractTradeBuilder>& builder,
                     const bool allowOverwrite = false);
 
     //! Build, throws for unknown className
-    boost::shared_ptr<Trade> build(const std::string& className) const;
+    QuantLib::ext::shared_ptr<Trade> build(const std::string& className) const;
 };
 
 } // namespace data

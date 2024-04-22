@@ -24,7 +24,7 @@ namespace QuantExt {
 
 Belgium::Belgium(Market market) {
     // all calendar instances share the same implementation instance
-    static boost::shared_ptr<Calendar::Impl> impl(new Belgium::SettlementImpl);
+    static QuantLib::ext::shared_ptr<Calendar::Impl> impl(new Belgium::SettlementImpl);
     impl_ = impl;
 }
 

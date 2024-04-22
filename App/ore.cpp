@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
     string inputFile(argv[1]);
 
     try {
-        auto params = boost::make_shared<Parameters>();
+        auto params = QuantLib::ext::make_shared<Parameters>();
         params->fromFile(inputFile);
         OREApp ore(params, true);
         ore.run();

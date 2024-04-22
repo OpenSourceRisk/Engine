@@ -45,7 +45,7 @@ public:
     enum class BootstrapMode { Alternating, Simultaneously };
 
     DefaultableEquityJumpDiffusionModelBuilder(
-        const std::vector<Real>& stepTimes, const boost::shared_ptr<QuantExt::EquityIndex2>& equity,
+        const std::vector<Real>& stepTimes, const QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>& equity,
         const Handle<QuantLib::BlackVolTermStructure>& volatility,
         const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve, const Real p = 0.0, const Real eta = 1.0,
         const bool staticMesher = false, const Size timeStepsPerYear = 24, const Size stateGridPoints = 100,
@@ -67,7 +67,7 @@ private:
 
     // input data
     std::vector<Real> stepTimes_;
-    boost::shared_ptr<QuantExt::EquityIndex2> equity_;
+    QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> equity_;
     Handle<BlackVolTermStructure> volatility_;
     Handle<DefaultProbabilityTermStructure> creditCurve_;
     Real p_, eta_;
@@ -84,7 +84,7 @@ private:
     bool adjustEquityForward_;
 
     bool forceCalibration_ = false;
-    boost::shared_ptr<MarketObserver> marketObserver_;
+    QuantLib::ext::shared_ptr<MarketObserver> marketObserver_;
 
     mutable std::vector<Real> cachedForwards_;
     mutable std::vector<Real> cachedVariances_;
@@ -94,7 +94,7 @@ private:
 
 class DefaultableEquityJumpDiffusionModel : public QuantLib::Observable,
                                             public QuantLib::Observer,
-                                            public boost::enable_shared_from_this<DefaultableEquityJumpDiffusionModel> {
+                                            public QuantLib::ext::enable_shared_from_this<DefaultableEquityJumpDiffusionModel> {
 public:
     /*   Jump-Diffusion model for a defaultable equity
 
@@ -119,14 +119,14 @@ public:
 
     DefaultableEquityJumpDiffusionModel(const std::vector<Real>& stepTimes, const std::vector<Real>& h0,
                                         const std::vector<Real>& sigma,
-                                        const boost::shared_ptr<QuantExt::EquityIndex2>& equity,
+                                        const QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>& equity,
                                         const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve,
                                         const DayCounter& volDayCounter, const Real p = 0.0, const Real eta = 1.0,
                                         const bool adjustEquityForward = true);
 
     // inspectors for input data
     const std::vector<Real>& stepTimes() const;
-    boost::shared_ptr<QuantExt::EquityIndex2> equity() const;
+    QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> equity() const;
     Real totalBlackVariance() const;
     const DayCounter& volDayCounter() const;
     Handle<QuantLib::DefaultProbabilityTermStructure> creditCurve() const;
@@ -167,14 +167,14 @@ private:
     // input data
     std::vector<Real> stepTimes_;
     mutable std::vector<Real> h0_, sigma_;
-    boost::shared_ptr<QuantExt::EquityIndex2> equity_;
+    QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> equity_;
     Handle<DefaultProbabilityTermStructure> creditCurve_;
     DayCounter volDayCounter_;
     Real p_, eta_;
     bool adjustEquityForward_;
 
     // mesher used to solve Fokker-Planck equation
-    mutable boost::shared_ptr<Fdm1dMesher> mesher_;
+    mutable QuantLib::ext::shared_ptr<Fdm1dMesher> mesher_;
 
     // input black variance at last time step
     mutable Real totalBlackVariance_ = 1.0;

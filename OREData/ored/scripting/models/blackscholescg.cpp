@@ -45,8 +45,8 @@ BlackScholesCG::BlackScholesCG(const Size paths, const std::string& currency, co
 BlackScholesCG::BlackScholesCG(
     const Size paths, const std::vector<std::string>& currencies, const std::vector<Handle<YieldTermStructure>>& curves,
     const std::vector<Handle<Quote>>& fxSpots,
-    const std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>>& irIndices,
-    const std::vector<std::pair<std::string, boost::shared_ptr<ZeroInflationIndex>>>& infIndices,
+    const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
+    const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
     const Handle<BlackScholesModelWrapper>& model,
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
@@ -283,7 +283,7 @@ void BlackScholesCG::performCalculations() const {
     // dates, which we treat as model parameters
 
     auto sqrtCovCalc =
-        boost::make_shared<SqrtCovCalculator>(indices_, indexCurrencies_, correlations_, effectiveSimulationDates_,
+        QuantLib::ext::make_shared<SqrtCovCalculator>(indices_, indexCurrencies_, correlations_, effectiveSimulationDates_,
                                               timeGrid_, positionInTimeGrid_, model_, calibrationStrikes);
 
     std::vector<std::vector<std::size_t>> drift(effectiveSimulationDates_.size() - 1,
@@ -413,7 +413,7 @@ void BlackScholesCG::performCalculations() const {
 namespace {
 struct comp {
     comp(const std::string& indexInput) : indexInput_(indexInput) {}
-    template <typename T> bool operator()(const std::pair<IndexInfo, boost::shared_ptr<T>>& p) const {
+    template <typename T> bool operator()(const std::pair<IndexInfo, QuantLib::ext::shared_ptr<T>>& p) const {
         return p.first.name() == indexInput_;
     }
     const std::string indexInput_;

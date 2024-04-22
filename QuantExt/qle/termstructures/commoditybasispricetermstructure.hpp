@@ -35,9 +35,9 @@ class CommodityBasisPriceTermStructure : public PriceTermStructure {
 public:
     CommodityBasisPriceTermStructure(const QuantLib::Date& referenceDate, const QuantLib::Calendar& cal,
                                      const QuantLib::DayCounter& dc,
-                                     const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
-                                     const boost::shared_ptr<CommodityIndex>& baseIndex,
-                                     const boost::shared_ptr<FutureExpiryCalculator>& baseFec, bool addBasis = true,
+                                     const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& basisFec,
+                                     const QuantLib::ext::shared_ptr<CommodityIndex>& baseIndex,
+                                     const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& baseFec, bool addBasis = true,
                                      QuantLib::Size monthOffset = 0, bool averagingBaseCashflow = false,
                                      bool priceAsHistoricalFixing = true)
         : PriceTermStructure(referenceDate, cal, dc), basisFec_(basisFec),
@@ -47,9 +47,9 @@ public:
     }
 
     CommodityBasisPriceTermStructure(const QuantLib::Date& referenceDate,
-                                     const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
-                                     const boost::shared_ptr<CommodityIndex>& baseIndex,
-                                     const boost::shared_ptr<FutureExpiryCalculator>& baseFec, bool addBasis = true,
+                                     const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& basisFec,
+                                     const QuantLib::ext::shared_ptr<CommodityIndex>& baseIndex,
+                                     const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& baseFec, bool addBasis = true,
                                      QuantLib::Size monthOffset = 0, bool averagingBaseCashflow = false,
                                      bool priceAsHistoricalFixing = true)
         : PriceTermStructure(referenceDate, QuantLib::NullCalendar(), baseIndex->priceCurve()->dayCounter()), basisFec_(basisFec),
@@ -60,18 +60,18 @@ public:
 
 
     //! Inspectors
-    const boost::shared_ptr<FutureExpiryCalculator>& basisFutureExpiryCalculator() const { return basisFec_; }
-    const boost::shared_ptr<CommodityIndex>& baseIndex() const { return baseIndex_; }
-    const boost::shared_ptr<FutureExpiryCalculator>& baseFutureExpiryCalculator() const { return baseFec_; }
+    const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& basisFutureExpiryCalculator() const { return basisFec_; }
+    const QuantLib::ext::shared_ptr<CommodityIndex>& baseIndex() const { return baseIndex_; }
+    const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& baseFutureExpiryCalculator() const { return baseFec_; }
     bool addBasis() const { return addBasis_; }
     bool averagingBaseCashflow() const { return averagingBaseCashflow_; }
     bool priceAsHistoricalFixing() const { return priceAsHistoricalFixing_; }
     QuantLib::Size monthOffset() const { return monthOffset_; }
 
 protected:
-    boost::shared_ptr<FutureExpiryCalculator> basisFec_;
-    boost::shared_ptr<CommodityIndex> baseIndex_;
-    boost::shared_ptr<FutureExpiryCalculator> baseFec_;
+    QuantLib::ext::shared_ptr<FutureExpiryCalculator> basisFec_;
+    QuantLib::ext::shared_ptr<CommodityIndex> baseIndex_;
+    QuantLib::ext::shared_ptr<FutureExpiryCalculator> baseFec_;
     bool addBasis_;
     QuantLib::Size monthOffset_;
     bool averagingBaseCashflow_;

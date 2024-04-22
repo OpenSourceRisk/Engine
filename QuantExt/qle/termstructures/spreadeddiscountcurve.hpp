@@ -64,7 +64,7 @@ private:
     Interpolation interpolation_;
     Extrapolation extrapolation_;
     mutable std::vector<Real> data_;
-    boost::shared_ptr<QuantLib::Interpolation> dataInterpolation_;
+    QuantLib::ext::shared_ptr<QuantLib::Interpolation> dataInterpolation_;
 };
 
 } // namespace QuantExt

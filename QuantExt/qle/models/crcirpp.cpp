@@ -40,12 +40,12 @@ Real nccs(const Real df, const Real ncp, const Real x, const bool cumulative) {
 } // namespace
 
 CrCirpp::CrCirpp(
-    const boost::shared_ptr<CrCirppParametrization>& parametrization)
+    const QuantLib::ext::shared_ptr<CrCirppParametrization>& parametrization)
     : parametrization_(parametrization) {
 
     // FIXME hardcoded discretisation schema
     stateProcess_ =
-        boost::make_shared<CrCirppStateProcess>(this, CrCirppStateProcess::Discretization::BrigoAlfonsi);
+        QuantLib::ext::make_shared<CrCirppStateProcess>(this, CrCirppStateProcess::Discretization::BrigoAlfonsi);
     QL_REQUIRE(stateProcess_ != NULL, "stateProcess has null pointer in CrCirpp ctor!");
 
     arguments_.resize(4);
@@ -83,7 +83,7 @@ Handle<DefaultProbabilityTermStructure> CrCirpp::defaultCurve(std::vector<Date> 
             Real t = tsDayCounter.yearFraction(today, dates[i]);
             survivalProbabilities.push_back(survivalProbability(0.0, t, parametrization_->y0(t)));
         }
-        boost::shared_ptr<DefaultProbabilityTermStructure> defaultCurve(
+        QuantLib::ext::shared_ptr<DefaultProbabilityTermStructure> defaultCurve(
             new InterpolatedSurvivalProbabilityCurve<LogLinear>(dates, survivalProbabilities, tsDayCounter));
         defaultCurve->enableExtrapolation();
         return Handle<DefaultProbabilityTermStructure>(defaultCurve);

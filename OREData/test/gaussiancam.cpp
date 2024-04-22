@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(testRepricingCalibrationInstruments) {
 
     Date asof(7, July, 2019);
     Settings::instance().evaluationDate() = asof;
-    auto testMarket = boost::make_shared<OredTestMarket>(asof);
+    auto testMarket = QuantLib::ext::make_shared<OredTestMarket>(asof);
 
     // build IR-FX-EQ CAM
 
@@ -73,11 +73,11 @@ BOOST_AUTO_TEST_CASE(testRepricingCalibrationInstruments) {
     std::vector<Date> calibrationTerms(calibrationExpiriesStr.size(), Date(7, Jul, 2029));
     std::vector<std::string> calibrationTermsStr(calibrationExpiriesStr.size(), "2029-07-07");
 
-    std::vector<boost::shared_ptr<IrModelData>> irConfigs;
-    std::vector<boost::shared_ptr<FxBsData>> fxConfigs;
-    std::vector<boost::shared_ptr<EqBsData>> eqConfigs;
+    std::vector<QuantLib::ext::shared_ptr<IrModelData>> irConfigs;
+    std::vector<QuantLib::ext::shared_ptr<FxBsData>> fxConfigs;
+    std::vector<QuantLib::ext::shared_ptr<EqBsData>> eqConfigs;
 
-    auto configEUR = boost::make_shared<IrLgmData>();
+    auto configEUR = QuantLib::ext::make_shared<IrLgmData>();
     configEUR->qualifier() = "EUR";
     configEUR->reversionType() = LgmData::ReversionType::HullWhite;
     configEUR->volatilityType() = LgmData::VolatilityType::Hagan;
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(testRepricingCalibrationInstruments) {
     configEUR->optionTerms() = calibrationTermsStr;
     configEUR->optionStrikes() = std::vector<std::string>(calibrationExpiriesStr.size(), "ATM");
 
-    auto configUSD = boost::make_shared<IrLgmData>();
+    auto configUSD = QuantLib::ext::make_shared<IrLgmData>();
     configUSD->qualifier() = "USD";
     configUSD->reversionType() = LgmData::ReversionType::HullWhite;
     configUSD->volatilityType() = LgmData::VolatilityType::Hagan;
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(testRepricingCalibrationInstruments) {
     irConfigs.push_back(configEUR);
     irConfigs.push_back(configUSD);
 
-    auto configFX = boost::make_shared<FxBsData>();
+    auto configFX = QuantLib::ext::make_shared<FxBsData>();
     configFX->foreignCcy() = "USD";
     configFX->domesticCcy() = "EUR";
     configFX->calibrationType() = CalibrationType::Bootstrap;
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(testRepricingCalibrationInstruments) {
     configFX->optionStrikes() = std::vector<std::string>(calibrationExpiriesStr.size(), "ATMF");
     fxConfigs.push_back(configFX);
 
-    auto configEQ = boost::make_shared<EqBsData>();
+    auto configEQ = QuantLib::ext::make_shared<EqBsData>();
     configEQ->eqName() = "SP5";
     configEQ->currency() = "USD";
     configEQ->calibrationType() = CalibrationType::Bootstrap;
@@ -143,15 +143,15 @@ BOOST_AUTO_TEST_CASE(testRepricingCalibrationInstruments) {
     eqConfigs.push_back(configEQ);
 
     CorrelationMatrixBuilder cmb;
-    cmb.addCorrelation("IR:EUR", "IR:USD", Handle<Quote>(boost::make_shared<SimpleQuote>(0.6)));
-    cmb.addCorrelation("IR:EUR", "FX:EURUSD", Handle<Quote>(boost::make_shared<SimpleQuote>(0.2)));
-    cmb.addCorrelation("IR:EUR", "EQ:SP5", Handle<Quote>(boost::make_shared<SimpleQuote>(0.2)));
-    cmb.addCorrelation("IR:USD", "FX:EURUSD", Handle<Quote>(boost::make_shared<SimpleQuote>(0.3)));
-    cmb.addCorrelation("IR:USD", "EQ:SP5", Handle<Quote>(boost::make_shared<SimpleQuote>(0.5)));
-    cmb.addCorrelation("FX:EURUSD", "EQ:SP5", Handle<Quote>(boost::make_shared<SimpleQuote>(0.4)));
+    cmb.addCorrelation("IR:EUR", "IR:USD", Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.6)));
+    cmb.addCorrelation("IR:EUR", "FX:EURUSD", Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.2)));
+    cmb.addCorrelation("IR:EUR", "EQ:SP5", Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.2)));
+    cmb.addCorrelation("IR:USD", "FX:EURUSD", Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.3)));
+    cmb.addCorrelation("IR:USD", "EQ:SP5", Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.5)));
+    cmb.addCorrelation("FX:EURUSD", "EQ:SP5", Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.4)));
 
-    auto camBuilder = boost::make_shared<CrossAssetModelBuilder>(
-        testMarket, boost::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, cmb.correlations()));
+    auto camBuilder = QuantLib::ext::make_shared<CrossAssetModelBuilder>(
+        testMarket, QuantLib::ext::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, cmb.correlations()));
     auto model = camBuilder->model();
 
     //  set up gaussian cam adapter with simulation dates = calibration expiries
@@ -160,20 +160,20 @@ BOOST_AUTO_TEST_CASE(testRepricingCalibrationInstruments) {
     std::vector<Handle<YieldTermStructure>> modelCurves = {testMarket->discountCurve("EUR"),
                                                            testMarket->discountCurve("USD")};
     std::vector<Handle<Quote>> modelFxSpots = {testMarket->fxRate("USDEUR")};
-    std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>> irIndices = {
+    std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>> irIndices = {
         std::make_pair("EUR-EURIBOR-6M", *testMarket->iborIndex("EUR-EURIBOR-6M"))};
     std::vector<std::string> indices = {"FX-GENERIC-USD-EUR", "EQ-SP5"};
     std::vector<std::string> indexCurrencies = {"USD", "USD"};
-    auto gaussianCam = boost::make_shared<GaussianCam>(
+    auto gaussianCam = QuantLib::ext::make_shared<GaussianCam>(
         model, paths, modelCcys, modelCurves, modelFxSpots, irIndices,
-        std::vector<std::pair<std::string, boost::shared_ptr<ZeroInflationIndex>>>(), indices, indexCurrencies,
+        std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>(), indices, indexCurrencies,
         std::set<Date>(calibrationExpiries.begin(), calibrationExpiries.end()), Model::McParams());
 
     // generate MC prices for the calibration instruments and compare them with analytical prices
 
     // FX instruments
 
-    auto context = boost::make_shared<Context>();
+    auto context = QuantLib::ext::make_shared<Context>();
     context->scalars["Option"] = RandomVariable(paths, 0.0);
     context->scalars["Underlying"] = IndexVec{paths, "FX-GENERIC-USD-EUR"};
     context->scalars["PayCcy"] = CurrencyVec{paths, "EUR"};
@@ -192,14 +192,14 @@ BOOST_AUTO_TEST_CASE(testRepricingCalibrationInstruments) {
         context->scalars["Expiry"] = EventVec{paths, calibrationExpiries[i]};
         context->scalars["Strike"] = RandomVariable(paths, atmf);
         optionEngine.run();
-        Real scriptPrice = expectation(boost::get<RandomVariable>(context->scalars["Option"])).at(0);
+        Real scriptPrice = expectation(QuantLib::ext::get<RandomVariable>(context->scalars["Option"])).at(0);
         // compute the analytical price
-        auto process = boost::make_shared<GeneralizedBlackScholesProcess>(
+        auto process = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
             testMarket->fxRate("USDEUR"), testMarket->discountCurve("USD"), testMarket->discountCurve("EUR"),
             testMarket->fxVol("USDEUR"));
-        auto engine = boost::make_shared<AnalyticEuropeanEngine>(process);
-        VanillaOption option(boost::make_shared<PlainVanillaPayoff>(Option::Call, atmf),
-                             boost::make_shared<EuropeanExercise>(calibrationExpiries[i]));
+        auto engine = QuantLib::ext::make_shared<AnalyticEuropeanEngine>(process);
+        VanillaOption option(QuantLib::ext::make_shared<PlainVanillaPayoff>(Option::Call, atmf),
+                             QuantLib::ext::make_shared<EuropeanExercise>(calibrationExpiries[i]));
         option.setPricingEngine(engine);
         Real analyticalPrice = option.NPV();
         // compare script and analytical price
@@ -222,14 +222,14 @@ BOOST_AUTO_TEST_CASE(testRepricingCalibrationInstruments) {
         context->scalars["Expiry"] = EventVec{paths, calibrationExpiries[i]};
         context->scalars["Strike"] = RandomVariable(paths, atmf);
         optionEngine.run();
-        Real scriptPrice = expectation(boost::get<RandomVariable>(context->scalars["Option"])).at(0);
+        Real scriptPrice = expectation(QuantLib::ext::get<RandomVariable>(context->scalars["Option"])).at(0);
         // compute the analytical price
-        auto process = boost::make_shared<GeneralizedBlackScholesProcess>(
+        auto process = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
             testMarket->equitySpot("SP5"), testMarket->equityDividendCurve("SP5"),
             testMarket->equityForecastCurve("SP5"), testMarket->equityVol("SP5"));
-        auto engine = boost::make_shared<AnalyticEuropeanEngine>(process, testMarket->discountCurve("USD"));
-        VanillaOption option(boost::make_shared<PlainVanillaPayoff>(Option::Call, atmf),
-                             boost::make_shared<EuropeanExercise>(calibrationExpiries[i]));
+        auto engine = QuantLib::ext::make_shared<AnalyticEuropeanEngine>(process, testMarket->discountCurve("USD"));
+        VanillaOption option(QuantLib::ext::make_shared<PlainVanillaPayoff>(Option::Call, atmf),
+                             QuantLib::ext::make_shared<EuropeanExercise>(calibrationExpiries[i]));
         option.setPricingEngine(engine);
         Real analyticalPrice = option.NPV() * testMarket->fxRate("USDEUR")->value();
         // compare script and analytical price
@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(testRepricingCalibrationInstruments) {
 
     // IR instruments
 
-    context = boost::make_shared<Context>();
+    context = QuantLib::ext::make_shared<Context>();
     context->scalars["Option"] = RandomVariable(paths, 0.0);
     context->scalars["FloatIndex"] = IndexVec{paths, "EUR-EURIBOR-6M"};
     context->scalars["PayCurrency"] = CurrencyVec{paths, "EUR"};
@@ -278,15 +278,15 @@ BOOST_AUTO_TEST_CASE(testRepricingCalibrationInstruments) {
         Real optionTime = swvol->timeFromReference(calibrationExpiries[i]);
         Real swapLength = swvol->swapLength(calibrationExpiries[i], calibrationTerms[i]);
         // dummy strike (we don't have a smile in the market)
-        Handle<Quote> vol(boost::make_shared<SimpleQuote>(swvol->volatility(optionTime, swapLength, 0.01)));
+        Handle<Quote> vol(QuantLib::ext::make_shared<SimpleQuote>(swvol->volatility(optionTime, swapLength, 0.01)));
         // atm swaption helper
-        auto helper = boost::make_shared<SwaptionHelper>(
+        auto helper = QuantLib::ext::make_shared<SwaptionHelper>(
             calibrationExpiries[i], Date(7, July, 2029), vol, iborIndex, fixedLegTenor, fixedDayCounter,
             floatDayCounter, testMarket->discountCurve("EUR"), BlackCalibrationHelper::RelativePriceError, Null<Real>(),
             1.0, swvol->volatilityType(), swvol->shift(optionTime, swapLength));
         Real atmStrike = helper->underlyingSwap()->fairRate();
         // script price
-        auto workingContext = boost::make_shared<Context>(*context);
+        auto workingContext = QuantLib::ext::make_shared<Context>(*context);
         std::vector<ValueType> fixedSchedule, floatSchedule, fixingSchedule;
         for (auto const& d : helper->underlyingSwap()->fixedSchedule().dates())
             fixedSchedule.push_back(EventVec{paths, d});
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(testRepricingCalibrationInstruments) {
         workingContext->scalars["FixedRate"] = RandomVariable(paths, atmStrike);
         ScriptEngine swaptionEngine(swaptionAst, workingContext, gaussianCam);
         swaptionEngine.run(swaptionScript);
-        Real scriptPrice = expectation(boost::get<RandomVariable>(workingContext->scalars["Option"])).at(0);
+        Real scriptPrice = expectation(QuantLib::ext::get<RandomVariable>(workingContext->scalars["Option"])).at(0);
         // analytical price
         Real analyticalPrice = helper->marketValue();
         // compare script and analytical price

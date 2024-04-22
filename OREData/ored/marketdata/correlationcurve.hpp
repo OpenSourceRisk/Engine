@@ -50,26 +50,26 @@ public:
     CorrelationCurve() {}
     //! Detailed constructor
     CorrelationCurve(Date asof, CorrelationCurveSpec spec, const Loader& loader,
-                     const CurveConfigurations& curveConfigs, map<string, boost::shared_ptr<SwapIndex>>& swapIndices,
-                     map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-                     map<string, boost::shared_ptr<GenericYieldVolCurve>>& swaptionVolCurves);
+                     const CurveConfigurations& curveConfigs, map<string, QuantLib::ext::shared_ptr<SwapIndex>>& swapIndices,
+                     map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
+                     map<string, QuantLib::ext::shared_ptr<GenericYieldVolCurve>>& swaptionVolCurves);
     //@}
 
     //! \name Inspectors
     //@{
     const CorrelationCurveSpec& spec() const { return spec_; }
 
-    const boost::shared_ptr<QuantExt::CorrelationTermStructure>& corrTermStructure() { return corr_; }
+    const QuantLib::ext::shared_ptr<QuantExt::CorrelationTermStructure>& corrTermStructure() { return corr_; }
     //@}
 private:
-    void calibrateCMSSpreadCorrelations(const boost::shared_ptr<CorrelationCurveConfig>& config, Date asof,
+    void calibrateCMSSpreadCorrelations(const QuantLib::ext::shared_ptr<CorrelationCurveConfig>& config, Date asof,
                                         const vector<Handle<Quote>>& prices, vector<Handle<Quote>>& quotes,
-                                        boost::shared_ptr<QuantExt::CorrelationTermStructure>& curve,
-                                        map<string, boost::shared_ptr<SwapIndex>>& swapIndices,
-                                        map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-                                        map<string, boost::shared_ptr<GenericYieldVolCurve>>& swaptionVolCurves);
+                                        QuantLib::ext::shared_ptr<QuantExt::CorrelationTermStructure>& curve,
+                                        map<string, QuantLib::ext::shared_ptr<SwapIndex>>& swapIndices,
+                                        map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
+                                        map<string, QuantLib::ext::shared_ptr<GenericYieldVolCurve>>& swaptionVolCurves);
     CorrelationCurveSpec spec_;
-    boost::shared_ptr<QuantExt::CorrelationTermStructure> corr_;
+    QuantLib::ext::shared_ptr<QuantExt::CorrelationTermStructure> corr_;
 
     //! Calibration cost function class
     class CalibrationFunction;

@@ -47,9 +47,10 @@ public:
     };
 
     ComputationGraphBuilder(ComputationGraph& g, const std::vector<std::string>& opLabels, const ASTNodePtr root,
-                            const boost::shared_ptr<Context> context, const boost::shared_ptr<ModelCG> model = nullptr)
+                            const QuantLib::ext::shared_ptr<Context> context, const QuantLib::ext::shared_ptr<ModelCG> model = nullptr)
         : g_(g), opLabels_(opLabels), root_(root), context_(context), model_(model) {}
-    void run(const bool generatePayLog, const std::string& script = "", bool interactive = false);
+    void run(const bool generatePayLog, const bool includePastCashflows = false, const std::string& script = "",
+             bool interactive = false);
     const std::set<std::size_t>& keepNodes() const { return keepNodes_; }
     const std::vector<PayLogEntry>& payLogEntries() const { return payLogEntries_; }
 
@@ -58,8 +59,8 @@ private:
 
     const std::vector<std::string> opLabels_;
     const ASTNodePtr root_;
-    const boost::shared_ptr<Context> context_;
-    const boost::shared_ptr<ModelCG> model_;
+    const QuantLib::ext::shared_ptr<Context> context_;
+    const QuantLib::ext::shared_ptr<ModelCG> model_;
 
     std::set<std::size_t> keepNodes_;
     std::vector<PayLogEntry> payLogEntries_;
