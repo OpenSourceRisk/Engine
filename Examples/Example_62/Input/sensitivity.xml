@@ -51,8 +51,8 @@
   <FxVolatilities>
     <FxVolatility ccypair="EURUSD">
       <ShiftType>Relative</ShiftType>
-      <ShiftSize>0.01</ShiftSize>
-      <ShiftScheme>Forward</ShiftScheme>
+      <ShiftSize>0.001</ShiftSize>
+      <ShiftScheme>Central</ShiftScheme>
       <ShiftExpiries>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftExpiries>
       <ShiftStrikes>-7,-6,-5,-4,-3,-2,-1,-0.5,-0.25,-0.1,-0.05,0.0,0.05,0.1,0.25,0.5,1,2,3,4,5,6,7</ShiftStrikes>
     </FxVolatility>
@@ -60,27 +60,27 @@
   <EquitySpots>
     <EquitySpot equity="RIC:.SPX">
       <ShiftType>Relative</ShiftType>
-      <ShiftSize>0.01</ShiftSize>
-      <ShiftScheme>Forward</ShiftScheme>
+      <ShiftSize>0.001</ShiftSize>
+      <ShiftScheme>Central</ShiftScheme>
     </EquitySpot>
     <EquitySpot equity="RIC:.STOXX50E">
       <ShiftType>Relative</ShiftType>
-      <ShiftSize>0.01</ShiftSize>
-      <ShiftScheme>Forward</ShiftScheme>
+      <ShiftSize>0.001</ShiftSize>
+      <ShiftScheme>Central</ShiftScheme>
     </EquitySpot>
   </EquitySpots>
   <EquityVolatilities>
     <EquityVolatility equity="RIC:.SPX">
       <ShiftType>Relative</ShiftType>
-      <ShiftSize>0.01</ShiftSize>
-      <ShiftScheme>Forward</ShiftScheme>
+      <ShiftSize>0.001</ShiftSize>
+      <ShiftScheme>Central</ShiftScheme>
       <ShiftExpiries>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftExpiries>
       <ShiftStrikes>-3,-2,-1,-0.5,-0.25,-0.1,-0.05,0.0,0.05,0.1,0.25,0.5,1,2,3</ShiftStrikes>
     </EquityVolatility>
     <EquityVolatility equity="RIC:.STOXX50E">
       <ShiftType>Relative</ShiftType>
-      <ShiftSize>0.01</ShiftSize>
-      <ShiftScheme>Forward</ShiftScheme>
+      <ShiftSize>0.001</ShiftSize>
+      <ShiftScheme>Central</ShiftScheme>
       <ShiftExpiries>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftExpiries>
       <ShiftStrikes>-3,-2,-1,-0.5,-0.25,-0.1,-0.05,0.0,0.05,0.1,0.25,0.5,1,2,3</ShiftStrikes>
     </EquityVolatility>
