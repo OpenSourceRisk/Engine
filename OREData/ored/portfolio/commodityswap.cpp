@@ -76,7 +76,9 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     // the map entry gets overwritten and the fixed leg with empty tag matches a random floating leg with empty tag. 
     // This is by design i.e. use tags if you want to link specific legs.
     map<string, Leg> floatingLegs;
-    for (const auto& legDatum : legData_) {
+    vector<Size> legsIdx;
+    for (Size t = 0; t < legData_.size(); t++) {
+        const auto& legDatum = legData_.at(t);
 
         const string& type = legDatum.legType();
         if (type == "CommodityFixed")
@@ -84,6 +86,7 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
         // Build the leg and add it to legs_
         buildLeg(engineFactory, legDatum, configuration);
+        legsIdx.push_back(t);
 
         // Only add to map if CommodityFloatingLegData
         if (auto cfld = QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(legDatum.concreteLegData())) {
@@ -92,7 +95,8 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     }
 
     // Build any fixed legs skipped above.
-    for (const auto& legDatum : legData_) {
+    for (Size t = 0; t < legData_.size();  t++) {
+        const auto& legDatum = legData_.at(t);
 
         // take a copy, since we might modify the leg datum below
         auto effLegDatum = legDatum;
@@ -144,8 +148,21 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
         // Build the leg and add it to legs_
         buildLeg(engineFactory, effLegDatum, configuration);
+        legsIdx.push_back(t);
     }
 
+    // Reposition the leg-based data to match the original order according to legData_
+    vector<Leg> legsTmp;
+    vector<bool> legPayersTmp;
+    vector<string> legCurrenciesTmp;
+    for (const Size idx : legsIdx) {
+        legsTmp.push_back(legs_.at(idx));
+        legPayersTmp.push_back(legPayers_.at(idx));
+        legCurrenciesTmp.push_back(legCurrencies_.at(idx));
+    }
+    legs_ = legsTmp;
+    legPayers_ = legPayersTmp;
+    legCurrencies_ = legCurrenciesTmp;
 
     // Create the QuantLib swap instrument and assign pricing engine
     auto swap = QuantLib::ext::make_shared<QuantLib::Swap>(legs_, legPayers_);
