@@ -73,6 +73,10 @@ void BarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     Real rebate = barrier_.rebate() / tradeMultiplier();
     QL_REQUIRE(rebate >= 0, "rebate must be non-negative");
 
+    
+    // set the maturity
+    maturity_ = std::max(option_.premiumData().latestPremiumDate(), payDate);
+
     // fx base
     // Payoff
     Option::Type type = parseOptionType(option_.callPut());
@@ -164,12 +168,8 @@ void BarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
     // Add additional premium payments
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
-    Date lastPremiumDate =
-        addPremiums(additionalInstruments, additionalMultipliers, bsInd * tradeMultiplier(), option_.premiumData(),
-                    -bsInd, tradeCurrency(), engineFactory, engineFactory->configuration(MarketContext::pricing));
-
-    // set the maturity
-    maturity_ = std::max(lastPremiumDate, payDate);
+    addPremiums(additionalInstruments, additionalMultipliers, bsInd * tradeMultiplier(), option_.premiumData(), -bsInd,
+                tradeCurrency(), engineFactory, engineFactory->configuration(MarketContext::pricing));
 }
 
 
@@ -217,19 +217,22 @@ void FxOptionWithBarrier::build(const QuantLib::ext::shared_ptr<ore::data::Engin
     additionalData_["isdaSubProduct"] = string("Barrier");    
     additionalData_["isdaTransaction"] = string("");  
     
-    spotQuote_ = ef->market()->fxSpot(boughtCurrency_ + soldCurrency_);
-    fxIndex_ = ef->market()->fxIndex(indexFixingName(), ef->configuration(MarketContext::pricing)).currentLink();
-
-    BarrierOption::build(ef); 
-    
-    npvCurrency_ = soldCurrency_; // sold is the domestic
-    notional_ = soldAmount_;
-    notionalCurrency_ = soldCurrency_; // sold is the domestic
-
     additionalData_["boughAmount"] = boughtAmount_;
     additionalData_["boughtCurrency"] = boughtCurrency_;
     additionalData_["soldAmount"] = soldAmount_;
     additionalData_["soldCurrency"] = soldCurrency_;
+
+    npvCurrency_ = soldCurrency_; // sold is the domestic
+    notional_ = soldAmount_;
+    notionalCurrency_ = soldCurrency_; // sold is the domestic
+
+    QuantLib::Date expiryDate = parseDate(option().exerciseDates().front());
+    maturity_ = std::max(option().premiumData().latestPremiumDate(), expiryDate);
+
+    spotQuote_ = ef->market()->fxSpot(boughtCurrency_ + soldCurrency_);
+    fxIndex_ = ef->market()->fxIndex(indexFixingName(), ef->configuration(MarketContext::pricing)).currentLink();
+
+    BarrierOption::build(ef); 
 }
 
 void FxOptionWithBarrier::additionalFromXml(XMLNode* node) {
@@ -257,9 +260,12 @@ void EquityOptionWithBarrier::build(const QuantLib::ext::shared_ptr<ore::data::E
     additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");  
     additionalData_["isdaTransaction"] = string("");  
 
-    eqIndex_ = ef->market()->equityCurve(equityName()).currentLink();
+    additionalData_["quantity"] = quantity_;
+    additionalData_["strike"] = tradeStrike_.value();
+    additionalData_["strikeCurrency"] = tradeStrike_.currency();
 
-    BarrierOption::build(ef);
+    QuantLib::Date expiryDate = parseDate(option().exerciseDates().front());
+    maturity_ = std::max(option().premiumData().latestPremiumDate(), expiryDate);
 
     if (tradeStrike_.currency().empty())
         tradeStrike_.setCurrency(currencyStr_);
@@ -271,9 +277,9 @@ void EquityOptionWithBarrier::build(const QuantLib::ext::shared_ptr<ore::data::E
     notional_ = tradeStrike_.value() * quantity_;
     notionalCurrency_ = parseCurrencyWithMinors(tradeStrike_.currency()).code();
 
-    additionalData_["quantity"] = quantity_;
-    additionalData_["strike"] = tradeStrike_.value();
-    additionalData_["strikeCurrency"] = tradeStrike_.currency();
+    eqIndex_ = ef->market()->equityCurve(equityName()).currentLink();
+
+    BarrierOption::build(ef);
 }
 
 void EquityOptionWithBarrier::additionalFromXml(XMLNode* node) {

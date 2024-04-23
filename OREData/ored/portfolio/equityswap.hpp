@@ -51,6 +51,7 @@ public:
     virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
     void setIsdaTaxonomyFields() override;
     QuantLib::Real notional() const override;
+    std::string notionalCurrency() const override;
 
 private:
     Size equityLegIndex_, irLegIndex_;

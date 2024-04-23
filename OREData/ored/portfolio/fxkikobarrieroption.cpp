@@ -51,6 +51,15 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     additionalData_["isdaSubProduct"] = string("Barrier");  
     additionalData_["isdaTransaction"] = string("");  
 
+    additionalData_["boughAmount"] = boughtAmount_;
+    additionalData_["boughtCurrency"] = boughtCurrency_;
+    additionalData_["soldAmount"] = soldAmount_;
+    additionalData_["soldCurrency"] = soldCurrency_;
+
+    npvCurrency_ = soldCurrency_; // sold is the domestic
+    notional_ = soldAmount_;
+    notionalCurrency_ = soldCurrency_;
+
     Date today = Settings::instance().evaluationDate();
     const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
     Date start = ore::data::parseDate(startDate_);
@@ -80,6 +89,8 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
 
     // Exercise
     Date expiryDate = parseDate(option_.exerciseDates().front());
+    maturity_ = std::max(expiryDate, option_.premiumData().latestPremiumDate());
+
     QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(expiryDate);
 
     // build underlying vanilla option
@@ -183,9 +194,9 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    Date lastPremiumDate = addPremiums(
-        additionalInstruments, additionalMultipliers, (positionType == Position::Long ? 1.0 : -1.0) * boughtAmount_,
-        option_.premiumData(), -bsInd, soldCcy, engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
+    addPremiums(additionalInstruments, additionalMultipliers,
+                (positionType == Position::Long ? 1.0 : -1.0) * boughtAmount_, option_.premiumData(), -bsInd, soldCcy,
+                engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
 
     // we build a knock out option
     QuantLib::ext::shared_ptr<Instrument> barrier =
@@ -275,20 +286,10 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
         instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(new CompositeInstrumentWrapper(iw, fxRates, today));
     }
 
-    npvCurrency_ = soldCurrency_; // sold is the domestic
-    notional_ = soldAmount_;
-    notionalCurrency_ = soldCurrency_;
-    maturity_ = std::max(expiryDate, lastPremiumDate);
-
     if (start != Date()) {
         for (Date d = start; d <= expiryDate; d = cal.advance(d, 1 * Days))
             requiredFixings_.addFixingDate(d, fxIndex_, expiryDate);
     }
-
-    additionalData_["boughAmount"] = boughtAmount_;
-    additionalData_["boughtCurrency"] = boughtCurrency_;
-    additionalData_["soldAmount"] = soldAmount_;
-    additionalData_["soldCurrency"] = soldCurrency_;
 }
 
 bool FxKIKOBarrierOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {
