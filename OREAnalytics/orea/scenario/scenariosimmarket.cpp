@@ -2722,6 +2722,7 @@ ScenarioSimMarket::ScenarioSimMarket(
         auto tmpAbs = QuantLib::ext::make_shared<SimpleScenario>(initMarket->asofDate(), "BASE", 1.0);
         for (auto const& data : simData_) {
             tmp->add(data.first, data.second->value());
+            tmpAbs->add(data.first, data.second->value());
         }
         for (auto const& data : absoluteSimData_) {
             tmpAbs->add(data.first, data.second);
