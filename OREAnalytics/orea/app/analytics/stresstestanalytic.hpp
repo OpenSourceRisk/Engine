@@ -43,8 +43,6 @@ public:
 class StressTestAnalytic : public Analytic {
 public:
     StressTestAnalytic(const boost::shared_ptr<InputParameters>& inputs);
-    
-    static constexpr const char* sensiAnalyticLookupKey = "SENSITIVITY";
 };
 
 } // namespace analytics

@@ -25,6 +25,7 @@
 #include <orea/engine/parsensitivityanalysis.hpp>
 #include <orea/scenario/scenario.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
+#include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/stressscenariodata.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
@@ -35,15 +36,11 @@ namespace ore {
 namespace analytics {
 
 boost::shared_ptr<ore::analytics::StressTestScenarioData> convertParScenarioToZeroScenarioData(
-    const QuantLib::Date& asof, const boost::shared_ptr<ore::data::Market>& market,
+    const QuantLib::Date& asof, const boost::shared_ptr<ore::analytics::ScenarioSimMarket>& market,
     const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParameters,
     const boost::shared_ptr<ore::analytics::StressTestScenarioData>& stressTestData,
     const boost::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiData,
-    const std::map<std::pair<ore::analytics::RiskFactorKey, ore::analytics::RiskFactorKey>, double>& parSensitivities,
-    const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
-    const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
-    const bool continueOnError = false, const bool useSpreadedTermStructures = false,
-    const ore::data::IborFallbackConfig& iborFallbackConfig = ore::data::IborFallbackConfig::defaultConfig());
+    const std::map<std::pair<ore::analytics::RiskFactorKey, ore::analytics::RiskFactorKey>, double>& parSensitivities);
 
 } // namespace analytics
 } // namespace ore

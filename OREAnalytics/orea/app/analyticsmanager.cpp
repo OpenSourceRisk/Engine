@@ -63,7 +63,6 @@ AnalyticsManager::AnalyticsManager(const boost::shared_ptr<InputParameters>& inp
     addAnalytic("PARCONVERSION", boost::make_shared<ParConversionAnalytic>(inputs_));
     addAnalytic("SCENARIO_STATISTICS", boost::make_shared<ScenarioStatisticsAnalytic>(inputs_));
     addAnalytic("SCENARIO", boost::make_shared<ScenarioAnalytic>(inputs_));
-    addAnalytic("SENSITIVITY", boost::make_shared<SensitivityAnalytic>(inputs_));
     addAnalytic("STRESS", boost::make_shared<StressTestAnalytic>(inputs_));
 }
 

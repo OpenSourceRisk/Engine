@@ -158,7 +158,6 @@ getTodaysAndTargetQuotes(const Date& asof, const boost::shared_ptr<ScenarioSimMa
                          const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketParameters) {
 
     TodaysImpliedAndTargetQuotes results;
-
     // Populate Zero Domain BaseValues and Times
     for (const auto& key : market->baseScenarioAbsolute()->keys()) {
         results.scenarioBaseValue[key] = market->baseScenarioAbsolute()->get(key);
@@ -175,17 +174,11 @@ getTodaysAndTargetQuotes(const Date& asof, const boost::shared_ptr<ScenarioSimMa
             populateRiskFactorTime(results, key, asof, *market->yieldCurve(curveName),
                                    simMarketParameters->yieldCurveTenors(curveName));
         } else if (key.keytype == RiskFactorKey::KeyType::SurvivalProbability) {
-            std::cout << "SurvivalProb " << key << std::endl;
             const std::string& curveName = key.name;
             populateRiskFactorTime(results, key, asof, *market->defaultCurve(curveName)->curve(),
                                    simMarketParameters->defaultTenors(curveName));
-        } else if (key.keytype == RiskFactorKey::KeyType::OptionletVolatility) {
-            const std::string& indexName = key.name;
-            populateRiskFactorTime(results, key, asof, *market->capFloorVol(indexName),
-                                   simMarketParameters->capFloorVolExpiries(indexName));
         }
     }
-
     // Populate Par Domain Base and Target Value
     for (const auto& [key, helper] : parInstruments.parHelpers_) {
         double fairRate = impliedQuote(helper);
@@ -210,7 +203,6 @@ getTodaysAndTargetQuotes(const Date& asof, const boost::shared_ptr<ScenarioSimMa
                 populateTargetParRate(results, key, it->second, simMarketParameters->yieldCurveTenors(curveName));
             }
         } else if (key.keytype == RiskFactorKey::KeyType::SurvivalProbability) {
-            std::cout << "CDS " << key << std::endl;
             const std::string& curveName = key.name;
             if (auto it = stressScenario.survivalProbabilityShifts.find(curveName);
                 it != stressScenario.survivalProbabilityShifts.end()) {
@@ -218,7 +210,7 @@ getTodaysAndTargetQuotes(const Date& asof, const boost::shared_ptr<ScenarioSimMa
             }
         }
     }
-
+    
     for (const auto& [key, cap] : parInstruments.parCaps_) {
         if (key.keytype == RiskFactorKey::KeyType::OptionletVolatility) {
             QL_REQUIRE(parInstruments.parCapsYts_.count(key) > 0,
@@ -236,7 +228,6 @@ getTodaysAndTargetQuotes(const Date& asof, const boost::shared_ptr<ScenarioSimMa
             }
         }
     }
-
     return results;
 }
 
@@ -301,7 +292,7 @@ convertScenario(const ore::analytics::StressTestScenarioData::StressTestData& sc
     convertedScenario.label = scenario.label;
     auto connectedComponents = sensiGraph.connectedComponents();
     DLOG("ParToZeroScenario: Found " << connectedComponents.size() << " connected components");
-
+    simMarket->reset();
     auto targetParRates = getTodaysAndTargetQuotes(asof, simMarket, scenario, instruments, simMarketParameters);
 
     size_t i = 0;
@@ -321,14 +312,13 @@ convertScenario(const ore::analytics::StressTestScenarioData::StressTestData& sc
             const auto& edgeIt = sensiGraph.parToZeroEdges.find(parKey);
             zeroRatesSet.insert(edgeIt->second.begin(), edgeIt->second.end());   
         }
-        std::cout << goal.size() << std::endl;
+
 
         std::vector<RiskFactorKey> zeroKeys(zeroRatesSet.begin(), zeroRatesSet.end());
         for (const auto& zeroKey : zeroKeys) {
             DLOG("Zero Key " << zeroKey << " " << targetParRates.scenarioBaseValue[zeroKey] << " "
                              << targetParRates.time[zeroKey]);
         }
-        std::cout << zeroKeys.size() << std::endl;
         QuantLib::Array initialGuess(zeroKeys.size(), 1.0);
 
         PositiveConstraint noConstraint;
@@ -336,12 +326,8 @@ convertScenario(const ore::analytics::StressTestScenarioData::StressTestData& sc
         EndCriteria endCriteria(1000, 10, 1e-8, 1e-8, 1e-8);
         TargetFunction target(simMarket, goal, parKeys, zeroKeys, instruments);
         Problem problem(target, noConstraint, initialGuess);
-        boost::timer::cpu_timer optimizationTimer;
-        optimizationTimer.start();
         lm.minimize(problem, endCriteria);
-        std::cout << optimizationTimer.elapsed().wall * 1e-9 << std::endl;
         auto solution = problem.currentValue();
-        std::cout << "ParToZeroScenario: Mean-squared-error: " << problem.functionValue() << std::endl;
         LOG("ParToZeroScenario: Mean-squared-error: " << problem.functionValue());
         for (size_t i = 0; i < zeroKeys.size(); ++i) {
             if (solutions.count(zeroKeys[i]) > 0) {
@@ -424,18 +410,11 @@ convertScenario(const ore::analytics::StressTestScenarioData::StressTestData& sc
 }
 
 boost::shared_ptr<ore::analytics::StressTestScenarioData> convertParScenarioToZeroScenarioData(
-    const QuantLib::Date& asof, const boost::shared_ptr<ore::data::Market>& market,
+    const QuantLib::Date& asof, const boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
     const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParameters,
     const boost::shared_ptr<ore::analytics::StressTestScenarioData>& stressTestData,
     const boost::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiData,
-    const std::map<std::pair<ore::analytics::RiskFactorKey, ore::analytics::RiskFactorKey>, double>& parSensitivities,
-    const ore::data::CurveConfigurations& curveConfigs, const ore::data::TodaysMarketParameters& todaysMarketParams,
-    const bool continueOnError, const bool useSpreadedTermStructures,
-    const ore::data::IborFallbackConfig& iborFallbackConfig) {
-
-    constexpr bool handlePseudoCurrencies = true;
-    constexpr bool allowPartialScenarios = true;
-    constexpr bool cacheSimData = false;
+    const std::map<std::pair<ore::analytics::RiskFactorKey, ore::analytics::RiskFactorKey>, double>& parSensitivities) {
 
     // Check that the stress scenario matches the sensitivity scenario data
     for (const auto& scenario : stressTestData->data()) {
@@ -455,19 +434,13 @@ boost::shared_ptr<ore::analytics::StressTestScenarioData> convertParScenarioToZe
     }
 
     // Check if we have a IR par scenario
-    LOG("ParToZeroScenario: Build Simulation Market");
-    boost::shared_ptr<ScenarioSimMarket> simMarket = boost::make_shared<ScenarioSimMarket>(
-        market, simMarketParameters, Market::defaultConfiguration, curveConfigs, todaysMarketParams, continueOnError,
-        stressTestData->useSpreadedTermStructures(), cacheSimData, allowPartialScenarios, iborFallbackConfig,
-        handlePseudoCurrencies);
-
+   
     LOG("ParToZeroScenario: Build ParInstruments");
     ParSensitivityInstrumentBuilder::Instruments instruments;
     ParSensitivityInstrumentBuilder().createParInstruments(
         instruments, asof, simMarketParameters, *sensiData, {},
-        {RiskFactorKey::KeyType::DiscountCurve, RiskFactorKey::KeyType::YieldCurve, RiskFactorKey::KeyType::IndexCurve,
-         RiskFactorKey::KeyType::OptionletVolatility, RiskFactorKey::KeyType::SurvivalProbability},
-        {}, continueOnError, Market::defaultConfiguration, simMarket);
+        {RiskFactorKey::KeyType::DiscountCurve, RiskFactorKey::KeyType::YieldCurve, RiskFactorKey::KeyType::IndexCurve, RiskFactorKey::KeyType::SurvivalProbability},
+        {}, false, Market::defaultConfiguration, simMarket);
 
     simMarket->reset();
 
@@ -487,7 +460,7 @@ boost::shared_ptr<ore::analytics::StressTestScenarioData> convertParScenarioToZe
         }
     }
     results->useSpreadedTermStructures() = stressTestData->useSpreadedTermStructures();
-    results->toFile("./stressTest_zero.xml");
+    //results->toFile("./stressTest_zero.xml");
     return results;
 }
 
