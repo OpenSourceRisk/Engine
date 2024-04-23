@@ -215,13 +215,14 @@ void IndexCreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory
                 swap_.creditCurveId() + "')").log();
     }
 
+    maturity_ = cds->coupons().back()->date();
+
     cds->setPricingEngine(cdsBuilder->engine(parseCurrency(npvCurrency_), swap_.creditCurveIdWithTerm(),
                                              basketCreditCurves, boost::none, swap_.recoveryRate(), false));
     setSensitivityTemplate(*cdsBuilder);
 
     instrument_.reset(new VanillaInstrument(cds));
 
-    maturity_ = cds->coupons().back()->date();
 
     legs_ = {cds->coupons()};
     legCurrencies_ = {npvCurrency_};
