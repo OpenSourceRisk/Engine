@@ -51,7 +51,7 @@ void ScenarioAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryL
     auto ssm = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), scenarioAnalytic->configurations().simMarketParams, Market::defaultConfiguration,
         *scenarioAnalytic->configurations().curveConfig, *scenarioAnalytic->configurations().todaysMarketParams, true,
-        false, false, false, *inputs_->iborFallbackConfig());
+        true, false, false, *inputs_->iborFallbackConfig());
 
     setScenarioSimMarket(ssm);
     auto scenario = ssm->baseScenario();
