@@ -35,10 +35,20 @@ namespace analytics {
  */
 class SimpleScenarioFactory : public ScenarioFactory {
 public:
+    explicit SimpleScenarioFactory(const bool useCommonSharedDataBlock = false)
+        : useCommonSharedDataBlock_(useCommonSharedDataBlock) {}
     const QuantLib::ext::shared_ptr<Scenario> buildScenario(Date asof, const std::string& label = "",
-                                                    Real numeraire = 0.0) const override {
-        return QuantLib::ext::make_shared<SimpleScenario>(asof, label, numeraire);
+                                                            Real numeraire = 0.0) const override {
+        auto tmp = QuantLib::ext::make_shared<SimpleScenario>(asof, label, numeraire,
+                                                              useCommonSharedDataBlock_ ? sharedData_ : nullptr);
+        if (useCommonSharedDataBlock_ && sharedData_ == nullptr)
+            sharedData_ = tmp->sharedData();
+        return tmp;
     }
+
+private:
+    bool useCommonSharedDataBlock_ = false;
+    mutable QuantLib::ext::shared_ptr<SimpleScenario::SharedData> sharedData_;
 };
 
 } // namespace analytics
