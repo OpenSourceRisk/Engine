@@ -35,11 +35,11 @@
 namespace ore {
 namespace analytics {
 
-boost::shared_ptr<ore::analytics::StressTestScenarioData> convertParScenarioToZeroScenarioData(
-    const QuantLib::Date& asof, const boost::shared_ptr<ore::analytics::ScenarioSimMarket>& market,
-    const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParameters,
-    const boost::shared_ptr<ore::analytics::StressTestScenarioData>& stressTestData,
-    const boost::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiData,
+QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> convertParScenarioToZeroScenarioData(
+    const QuantLib::Date& asof, const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& market,
+    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParameters,
+    const QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData>& stressTestData,
+    const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiData,
     const std::map<std::pair<ore::analytics::RiskFactorKey, ore::analytics::RiskFactorKey>, double>& parSensitivities);
 
 } // namespace analytics

@@ -45,7 +45,7 @@ void StressTestAnalyticImpl::setUpConfigurations() {
     setGenerateAdditionalResults(true);
 }
 
-void StressTestAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                          const std::set<std::string>& runTypes) {
     if (!analytic()->match(runTypes))
         return;
@@ -63,13 +63,13 @@ void StressTestAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMe
     CONSOLEW("StressTestAnalytic: Build Portfolio");
     analytic()->buildPortfolio();
     CONSOLE("OK");
-    boost::shared_ptr<InMemoryReport> report = boost::make_shared<InMemoryReport>();
+    QuantLib::ext::shared_ptr<InMemoryReport> report = QuantLib::ext::make_shared<InMemoryReport>();
     // This hook allows modifying the portfolio in derived classes before running the analytics below,
     // e.g. to apply SIMM exemptions.
     analytic()->modifyPortfolio();
     CONSOLEW("Risk: Stress Test Report");
     LOG("Stress Test Analysis called");
-    boost::shared_ptr<StressTestScenarioData> scenarioData = inputs_->stressScenarioData();
+    QuantLib::ext::shared_ptr<StressTestScenarioData> scenarioData = inputs_->stressScenarioData();
     if (scenarioData != nullptr && scenarioData->hasParRateScenario()) {
         LOG("Found par rate scenarios, convert them to zero rate scenarios");
         auto sensiScenarioData = analytic()->configurations().sensiScenarioData;
@@ -90,16 +90,16 @@ void StressTestAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMe
         parAnalysis->alignPillars();
         
         // Build Simmarket
-        auto simMarket = boost::make_shared<ScenarioSimMarket>(
+        auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
             analytic()->market(), simMarketParam, Market::defaultConfiguration,
             curveConfigs ? *curveConfigs : ore::data::CurveConfigurations(),
             todaysMarketParams ? *todaysMarketParams : ore::data::TodaysMarketParameters(), false,
             sensiScenarioData->useSpreadedTermStructures(), false, true, *inputs_->iborFallbackConfig());
         // Build ScenarioGenerator
-        auto scenarioGenerator = boost::make_shared<SensitivityScenarioGenerator>(
+        auto scenarioGenerator = QuantLib::ext::make_shared<SensitivityScenarioGenerator>(
             analytic()->configurations().sensiScenarioData, simMarket->baseScenario(),
             analytic()->configurations().simMarketParams, simMarket,
-            boost::make_shared<DeltaScenarioFactory>(simMarket->baseScenario()), true, "", false,
+            QuantLib::ext::make_shared<DeltaScenarioFactory>(simMarket->baseScenario()), true, "", false,
             simMarket->baseScenarioAbsolute());
         simMarket->scenarioGenerator() = scenarioGenerator;
         // Compute ParSensitivities
@@ -115,9 +115,9 @@ void StressTestAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMe
     Settings::instance().evaluationDate() = inputs_->asof();
 
     std::string marketConfig = inputs_->marketConfig("pricing");
-    std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders;
-    std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;
-    boost::shared_ptr<StressTest> stressTest = boost::make_shared<StressTest>(
+    std::vector<QuantLib::ext::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders;
+    std::vector<QuantLib::ext::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;
+    QuantLib::ext::shared_ptr<StressTest> stressTest = QuantLib::ext::make_shared<StressTest>(
         analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
         analytic()->configurations().simMarketParams, scenarioData, *analytic()->configurations().curveConfig,
         *analytic()->configurations().todaysMarketParams, nullptr, inputs_->refDataManager(),
@@ -127,7 +127,7 @@ void StressTestAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMe
     CONSOLE("OK");
 }
 
-StressTestAnalytic::StressTestAnalytic(const boost::shared_ptr<InputParameters>& inputs)
+StressTestAnalytic::StressTestAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
     : Analytic(std::make_unique<StressTestAnalyticImpl>(inputs), {"STRESS"}, inputs, false, false, false, false) {}
 } // namespace analytics
 } // namespace ore

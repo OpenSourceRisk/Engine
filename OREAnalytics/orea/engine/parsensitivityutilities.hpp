@@ -32,7 +32,7 @@ namespace ore {
 namespace analytics {
 
 //! Computes the implied quote
-Real impliedQuote(const boost::shared_ptr<QuantLib::Instrument>& i);
+Real impliedQuote(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& i);
 
 //! true if key type and name are equal, do not care about the index though
 bool riskFactorKeysAreSimilar(const ore::analytics::RiskFactorKey& x, const ore::analytics::RiskFactorKey& y);

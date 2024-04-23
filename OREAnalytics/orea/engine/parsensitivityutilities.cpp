@@ -53,26 +53,28 @@ namespace {
    This class is copied from QuantLib's capfloor.cpp and generalised to cover both normal and lognormal volatilities */
 class ImpliedCapFloorVolHelper {
 public:
-    ImpliedCapFloorVolHelper(const QuantLib::Instrument& cap,
-                             const std::function<boost::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator,
-                             const Real targetValue);
+    ImpliedCapFloorVolHelper(
+        const QuantLib::Instrument& cap,
+        const std::function<QuantLib::ext::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator,
+        const Real targetValue);
     Real operator()(Volatility x) const;
     Real derivative(Volatility x) const;
 
 private:
     Real targetValue_;
-    boost::shared_ptr<PricingEngine> engine_;
-    boost::shared_ptr<SimpleQuote> vol_;
+    QuantLib::ext::shared_ptr<PricingEngine> engine_;
+    QuantLib::ext::shared_ptr<SimpleQuote> vol_;
     const Instrument::results* results_;
 };
 
 ImpliedCapFloorVolHelper::ImpliedCapFloorVolHelper(
     const QuantLib::Instrument& cap,
-    const std::function<boost::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator, const Real targetValue)
+    const std::function<QuantLib::ext::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator,
+    const Real targetValue)
     : targetValue_(targetValue) {
     // set an implausible value, so that calculation is forced
     // at first ImpliedCapFloorVolHelper::operator()(Volatility x) call
-    vol_ = boost::shared_ptr<SimpleQuote>(new SimpleQuote(-1));
+    vol_ = QuantLib::ext::shared_ptr<SimpleQuote>(new SimpleQuote(-1));
     engine_ = engineGenerator(Handle<Quote>(vol_));
     cap.setupArguments(engine_->getArguments());
     results_ = dynamic_cast<const Instrument::results*>(engine_->getResults());
@@ -96,27 +98,27 @@ Real ImpliedCapFloorVolHelper::derivative(Volatility x) const {
     return boost::any_cast<Real>(vega_->second);
 }
 
-std::function<boost::shared_ptr<PricingEngine>(const Handle<Quote>&)>
+std::function<QuantLib::ext::shared_ptr<PricingEngine>(const Handle<Quote>&)>
 pricingEngineGeneratorFactory(const CapFloor& cap, const Handle<YieldTermStructure>& d, VolatilityType type,
                               Real displacement, const Handle<Index>& index) {
-    std::function<boost::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator;
+    std::function<QuantLib::ext::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator;
     if (type == ShiftedLognormal)
         engineGenerator = [&d, displacement](const Handle<Quote>& h) {
-            return boost::make_shared<BlackCapFloorEngine>(d, h, Actual365Fixed(), displacement);
+            return QuantLib::ext::make_shared<BlackCapFloorEngine>(d, h, Actual365Fixed(), displacement);
         };
     else if (type == Normal)
         engineGenerator = [&d](const Handle<Quote>& h) {
-            return boost::make_shared<BachelierCapFloorEngine>(d, h, Actual365Fixed());
+            return QuantLib::ext::make_shared<BachelierCapFloorEngine>(d, h, Actual365Fixed());
         };
     else
         QL_FAIL("volatility type " << type << " not implemented");
     return engineGenerator;
 }
 
-std::function<boost::shared_ptr<PricingEngine>(const Handle<Quote>&)>
+std::function<QuantLib::ext::shared_ptr<PricingEngine>(const Handle<Quote>&)>
 pricingEngineGeneratorFactory(const YoYInflationCapFloor& cap, const Handle<YieldTermStructure>& d, VolatilityType type,
                               Real displacement, const Handle<YoYInflationIndex>& index) {
-    std::function<boost::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator;
+    std::function<QuantLib::ext::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator;
     if (type == ShiftedLognormal) {
         if (close_enough(displacement, 0.0))
             engineGenerator = [&d, &index](const Handle<Quote>& h) {
@@ -124,28 +126,28 @@ pricingEngineGeneratorFactory(const YoYInflationCapFloor& cap, const Handle<Yiel
                 // calendar, bdc not needed here, settlement days should be zero so that the
                 // reference date is = evaluation date
                 auto c = Handle<QuantLib::YoYOptionletVolatilitySurface>(
-                    boost::make_shared<QuantExt::ConstantYoYOptionletVolatility>(
+                    QuantLib::ext::make_shared<QuantExt::ConstantYoYOptionletVolatility>(
                         h, 0, NullCalendar(), Unadjusted, Actual365Fixed(),
                         index->yoyInflationTermStructure()->observationLag(), index->frequency(),
                         index->interpolated()));
-                return boost::make_shared<QuantExt::YoYInflationBlackCapFloorEngine>(*index, c, d);
+                return QuantLib::ext::make_shared<QuantExt::YoYInflationBlackCapFloorEngine>(*index, c, d);
             };
         else
             engineGenerator = [&d, &index](const Handle<Quote>& h) {
                 auto c = Handle<QuantLib::YoYOptionletVolatilitySurface>(
-                    boost::make_shared<QuantExt::ConstantYoYOptionletVolatility>(
+                    QuantLib::ext::make_shared<QuantExt::ConstantYoYOptionletVolatility>(
                         h, 0, NullCalendar(), Unadjusted, Actual365Fixed(),
                         index->yoyInflationTermStructure()->observationLag(), index->frequency(),
                         index->interpolated()));
-                return boost::make_shared<QuantExt::YoYInflationUnitDisplacedBlackCapFloorEngine>(*index, c, d);
+                return QuantLib::ext::make_shared<QuantExt::YoYInflationUnitDisplacedBlackCapFloorEngine>(*index, c, d);
             };
     } else if (type == Normal)
         engineGenerator = [&d, &index](const Handle<Quote>& h) {
             auto c = Handle<QuantLib::YoYOptionletVolatilitySurface>(
-                boost::make_shared<QuantExt::ConstantYoYOptionletVolatility>(
+                QuantLib::ext::make_shared<QuantExt::ConstantYoYOptionletVolatility>(
                     h, 0, NullCalendar(), Unadjusted, Actual365Fixed(),
                     index->yoyInflationTermStructure()->observationLag(), index->frequency(), index->interpolated()));
-            return boost::make_shared<QuantExt::YoYInflationBachelierCapFloorEngine>(*index, c, d);
+            return QuantLib::ext::make_shared<QuantExt::YoYInflationBachelierCapFloorEngine>(*index, c, d);
         };
     else
         QL_FAIL("volatility type " << type << " not implemented");
@@ -231,37 +233,37 @@ Volatility impliedVolatilityWrapper(const CapFloorType& cap, Real targetValue, c
 }
 } // namespace
 
-Real impliedQuote(const boost::shared_ptr<Instrument>& i) {
-    if (boost::dynamic_pointer_cast<VanillaSwap>(i))
-        return boost::dynamic_pointer_cast<VanillaSwap>(i)->fairRate();
-    if (boost::dynamic_pointer_cast<Deposit>(i))
-        return boost::dynamic_pointer_cast<Deposit>(i)->fairRate();
-    if (boost::dynamic_pointer_cast<QuantLib::ForwardRateAgreement>(i))
-        return boost::dynamic_pointer_cast<QuantLib::ForwardRateAgreement>(i)->forwardRate();
-    if (boost::dynamic_pointer_cast<OvernightIndexedSwap>(i))
-        return boost::dynamic_pointer_cast<OvernightIndexedSwap>(i)->fairRate();
-    if (boost::dynamic_pointer_cast<CrossCcyBasisMtMResetSwap>(i))
-        return boost::dynamic_pointer_cast<CrossCcyBasisMtMResetSwap>(i)->fairSpread();
-    if (boost::dynamic_pointer_cast<CrossCcyBasisSwap>(i))
-        return boost::dynamic_pointer_cast<CrossCcyBasisSwap>(i)->fairPaySpread();
-    if (boost::dynamic_pointer_cast<FxForward>(i))
-        return boost::dynamic_pointer_cast<FxForward>(i)->fairForwardRate().rate();
-    if (boost::dynamic_pointer_cast<QuantExt::CreditDefaultSwap>(i))
-        return boost::dynamic_pointer_cast<QuantExt::CreditDefaultSwap>(i)->fairSpreadClean();
-    if (boost::dynamic_pointer_cast<ZeroCouponInflationSwap>(i))
-        return boost::dynamic_pointer_cast<ZeroCouponInflationSwap>(i)->fairRate();
-    if (boost::dynamic_pointer_cast<YearOnYearInflationSwap>(i))
-        return boost::dynamic_pointer_cast<YearOnYearInflationSwap>(i)->fairRate();
-    if (boost::dynamic_pointer_cast<TenorBasisSwap>(i)) {
-        if (boost::dynamic_pointer_cast<TenorBasisSwap>(i)->spreadOnRec())
-            return boost::dynamic_pointer_cast<TenorBasisSwap>(i)->fairRecLegSpread();
+Real impliedQuote(const QuantLib::ext::shared_ptr<Instrument>& i) {
+    if (QuantLib::ext::dynamic_pointer_cast<VanillaSwap>(i))
+        return QuantLib::ext::dynamic_pointer_cast<VanillaSwap>(i)->fairRate();
+    if (QuantLib::ext::dynamic_pointer_cast<Deposit>(i))
+        return QuantLib::ext::dynamic_pointer_cast<Deposit>(i)->fairRate();
+    if (QuantLib::ext::dynamic_pointer_cast<QuantLib::ForwardRateAgreement>(i))
+        return QuantLib::ext::dynamic_pointer_cast<QuantLib::ForwardRateAgreement>(i)->forwardRate();
+    if (QuantLib::ext::dynamic_pointer_cast<OvernightIndexedSwap>(i))
+        return QuantLib::ext::dynamic_pointer_cast<OvernightIndexedSwap>(i)->fairRate();
+    if (QuantLib::ext::dynamic_pointer_cast<CrossCcyBasisMtMResetSwap>(i))
+        return QuantLib::ext::dynamic_pointer_cast<CrossCcyBasisMtMResetSwap>(i)->fairSpread();
+    if (QuantLib::ext::dynamic_pointer_cast<CrossCcyBasisSwap>(i))
+        return QuantLib::ext::dynamic_pointer_cast<CrossCcyBasisSwap>(i)->fairPaySpread();
+    if (QuantLib::ext::dynamic_pointer_cast<FxForward>(i))
+        return QuantLib::ext::dynamic_pointer_cast<FxForward>(i)->fairForwardRate().rate();
+    if (QuantLib::ext::dynamic_pointer_cast<QuantExt::CreditDefaultSwap>(i))
+        return QuantLib::ext::dynamic_pointer_cast<QuantExt::CreditDefaultSwap>(i)->fairSpreadClean();
+    if (QuantLib::ext::dynamic_pointer_cast<ZeroCouponInflationSwap>(i))
+        return QuantLib::ext::dynamic_pointer_cast<ZeroCouponInflationSwap>(i)->fairRate();
+    if (QuantLib::ext::dynamic_pointer_cast<YearOnYearInflationSwap>(i))
+        return QuantLib::ext::dynamic_pointer_cast<YearOnYearInflationSwap>(i)->fairRate();
+    if (QuantLib::ext::dynamic_pointer_cast<TenorBasisSwap>(i)) {
+        if (QuantLib::ext::dynamic_pointer_cast<TenorBasisSwap>(i)->spreadOnRec())
+            return QuantLib::ext::dynamic_pointer_cast<TenorBasisSwap>(i)->fairRecLegSpread();
         else
-            return boost::dynamic_pointer_cast<TenorBasisSwap>(i)->fairPayLegSpread();
+            return QuantLib::ext::dynamic_pointer_cast<TenorBasisSwap>(i)->fairPayLegSpread();
     }
-    if (boost::dynamic_pointer_cast<FixedBMASwap>(i))
-        return boost::dynamic_pointer_cast<FixedBMASwap>(i)->fairRate();
-    if (boost::dynamic_pointer_cast<SubPeriodsSwap>(i))
-        return boost::dynamic_pointer_cast<SubPeriodsSwap>(i)->fairRate();
+    if (QuantLib::ext::dynamic_pointer_cast<FixedBMASwap>(i))
+        return QuantLib::ext::dynamic_pointer_cast<FixedBMASwap>(i)->fairRate();
+    if (QuantLib::ext::dynamic_pointer_cast<SubPeriodsSwap>(i))
+        return QuantLib::ext::dynamic_pointer_cast<SubPeriodsSwap>(i)->fairRate();
     QL_FAIL("SensitivityAnalysis: impliedQuote: unknown instrument (is null = " << std::boolalpha << (i == nullptr)
                                                                                 << ")");
 }

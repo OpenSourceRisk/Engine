@@ -31,7 +31,6 @@
 #include <ql/math/optimization/constraint.hpp>
 #include <ql/math/optimization/costfunction.hpp>
 #include <ql/math/optimization/levenbergmarquardt.hpp>
-#include <boost/timer/timer.hpp>
 namespace ore {
 namespace analytics {
 
@@ -144,7 +143,7 @@ void populateTargetParRate(TodaysImpliedAndTargetQuotes& results, const RiskFact
 }
 
 void populateRiskFactorTime(TodaysImpliedAndTargetQuotes& results, const RiskFactorKey& key, const QuantLib::Date& asof,
-                            const boost::shared_ptr<TermStructure>& ts,
+                            const QuantLib::ext::shared_ptr<TermStructure>& ts,
                             const std::vector<QuantLib::Period>& simulationTenors) {
     size_t i = key.index;
     double t = ts->dayCounter().yearFraction(asof, asof + simulationTenors[i]);
@@ -152,10 +151,10 @@ void populateRiskFactorTime(TodaysImpliedAndTargetQuotes& results, const RiskFac
 }
 
 TodaysImpliedAndTargetQuotes
-getTodaysAndTargetQuotes(const Date& asof, const boost::shared_ptr<ScenarioSimMarket>& market,
+getTodaysAndTargetQuotes(const Date& asof, const QuantLib::ext::shared_ptr<ScenarioSimMarket>& market,
                          const StressTestScenarioData::StressTestData& stressScenario,
                          const ParSensitivityInstrumentBuilder::Instruments& parInstruments,
-                         const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketParameters) {
+                         const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketParameters) {
 
     TodaysImpliedAndTargetQuotes results;
     // Populate Zero Domain BaseValues and Times
@@ -233,7 +232,7 @@ getTodaysAndTargetQuotes(const Date& asof, const boost::shared_ptr<ScenarioSimMa
 
 struct TargetFunction : public QuantLib::CostFunction {
 
-    TargetFunction(const boost::shared_ptr<ScenarioSimMarket>& simMarket, const vector<double>& goal,
+    TargetFunction(const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket, const vector<double>& goal,
                    const vector<RiskFactorKey>& parKeys, const vector<RiskFactorKey>& zeroKeys,
                    const ParSensitivityInstrumentBuilder::Instruments& parInstruments)
         : simMarket(simMarket), goal(goal), parKeys(parKeys), zeroKeys(zeroKeys), parInstruments_(parInstruments) {}
@@ -274,7 +273,7 @@ struct TargetFunction : public QuantLib::CostFunction {
         return QuantLib::Array(error.begin(), error.end());
     }
 
-    const boost::shared_ptr<ScenarioSimMarket>& simMarket;
+    const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket;
     const vector<double>& goal;
     const vector<RiskFactorKey>& parKeys;
     const vector<RiskFactorKey>& zeroKeys;
@@ -284,8 +283,8 @@ struct TargetFunction : public QuantLib::CostFunction {
 ore::analytics::StressTestScenarioData::StressTestData
 convertScenario(const ore::analytics::StressTestScenarioData::StressTestData& scenario, const QuantLib::Date& asof,
                 const ParSensitivityInstrumentBuilder::Instruments& instruments, const SensitivityBiGraph& sensiGraph,
-                const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParameters, 
-                const boost::shared_ptr<ScenarioSimMarket>& simMarket, bool useSpreadedTermstructure) {
+                const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParameters, 
+                const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket, bool useSpreadedTermstructure) {
     LOG("ParToZeroScenario: converting parshifts to zero shifts in scenario " << scenario.label);
     // Copy scenario
     StressTestScenarioData::StressTestData convertedScenario;
@@ -409,11 +408,11 @@ convertScenario(const ore::analytics::StressTestScenarioData::StressTestData& sc
     return convertedScenario;
 }
 
-boost::shared_ptr<ore::analytics::StressTestScenarioData> convertParScenarioToZeroScenarioData(
-    const QuantLib::Date& asof, const boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
-    const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParameters,
-    const boost::shared_ptr<ore::analytics::StressTestScenarioData>& stressTestData,
-    const boost::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiData,
+QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> convertParScenarioToZeroScenarioData(
+    const QuantLib::Date& asof, const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
+    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParameters,
+    const QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData>& stressTestData,
+    const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiData,
     const std::map<std::pair<ore::analytics::RiskFactorKey, ore::analytics::RiskFactorKey>, double>& parSensitivities) {
 
     // Check that the stress scenario matches the sensitivity scenario data
@@ -448,7 +447,7 @@ boost::shared_ptr<ore::analytics::StressTestScenarioData> convertParScenarioToZe
     SensitivityBiGraph sensiGraph(parSensitivities);
 
     DLOG("ParToZeroScenario: Begin Stress Scenarios conversion");
-    boost::shared_ptr<StressTestScenarioData> results = boost::make_shared<StressTestScenarioData>();
+    QuantLib::ext::shared_ptr<StressTestScenarioData> results = QuantLib::ext::make_shared<StressTestScenarioData>();
     results->useSpreadedTermStructures() = stressTestData->useSpreadedTermStructures();
     for (const StressTestScenarioData::StressTestData& scenario : stressTestData->data()) {
         if (!scenario.containsParShifts()) {
