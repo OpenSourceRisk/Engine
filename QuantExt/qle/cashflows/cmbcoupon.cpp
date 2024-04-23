@@ -197,11 +197,11 @@ CmbLeg::operator Leg() const {
     Leg leg;
     for (Size i = 0; i < schedule_.size() - 1; i++) {
         Date paymentDate = paymentCalendar_.adjust(schedule_[i + 1], paymentAdjustment_);
-	boost::shared_ptr<CmbCoupon> coupon
-	    = boost::make_shared<CmbCoupon>(paymentDate, notionals_[i], schedule_[i], schedule_[i + 1],
+	QuantLib::ext::shared_ptr<CmbCoupon> coupon
+	    = QuantLib::ext::make_shared<CmbCoupon>(paymentDate, notionals_[i], schedule_[i], schedule_[i + 1],
 					    fixingDays_[i], bondIndices_[i], gearings_[i], spreads_[i], Date(), Date(),
 					    paymentDayCounter_, inArrears_);	
-	auto pricer = boost::make_shared<CmbCouponPricer>();
+	auto pricer = QuantLib::ext::make_shared<CmbCouponPricer>();
 	coupon->setPricer(pricer);
 	leg.push_back(coupon);
     }

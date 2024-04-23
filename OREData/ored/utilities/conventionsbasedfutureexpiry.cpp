@@ -28,7 +28,7 @@ namespace data {
 
 ConventionsBasedFutureExpiry::ConventionsBasedFutureExpiry(const std::string& commName, Size maxIterations)
     : maxIterations_(maxIterations) {
-    auto p = boost::dynamic_pointer_cast<CommodityFutureConvention>(
+    auto p = QuantLib::ext::dynamic_pointer_cast<CommodityFutureConvention>(
         InstrumentConventions::instance().conventions()->get(commName));
     QL_REQUIRE(p, "ConventionsBasedFutureExpiry: could not cast to CommodityFutureConvention for '"
                       << commName << "', this is an internal error. Contact support.");

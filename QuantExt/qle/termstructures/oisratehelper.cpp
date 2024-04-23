@@ -26,7 +26,7 @@
 namespace QuantExt {
 
 OISRateHelper::OISRateHelper(Natural settlementDays, const Period& swapTenor, const Handle<Quote>& fixedRate,
-                             const boost::shared_ptr<OvernightIndex>& overnightIndex, const DayCounter& fixedDayCounter,
+                             const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex, const DayCounter& fixedDayCounter,
                              const Calendar& fixedCalendar, Natural paymentLag, bool endOfMonth,
                              Frequency paymentFrequency, BusinessDayConvention fixedConvention,
                              BusinessDayConvention paymentAdjustment, DateGeneration::Rule rule,
@@ -45,8 +45,8 @@ OISRateHelper::OISRateHelper(Natural settlementDays, const Period& swapTenor, co
     QL_REQUIRE(!(onIndexHasCurve && haveDiscountCurve), "Have both curves nothing to solve for.");
 
     if (!onIndexHasCurve) {
-        boost::shared_ptr<IborIndex> clonedIborIndex(overnightIndex_->clone(termStructureHandle_));
-        overnightIndex_ = boost::dynamic_pointer_cast<OvernightIndex>(clonedIborIndex);
+        QuantLib::ext::shared_ptr<IborIndex> clonedIborIndex(overnightIndex_->clone(termStructureHandle_));
+        overnightIndex_ = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(clonedIborIndex);
         overnightIndex_->unregisterWith(termStructureHandle_);
     }
 
@@ -112,7 +112,7 @@ void OISRateHelper::setTermStructure(YieldTermStructure* t) {
     // force recalculation when needed
     bool observer = false;
 
-    boost::shared_ptr<YieldTermStructure> temp(t, null_deleter());
+    QuantLib::ext::shared_ptr<YieldTermStructure> temp(t, null_deleter());
     termStructureHandle_.linkTo(temp, observer);
 
     if (discountHandle_.empty())
@@ -139,7 +139,7 @@ void OISRateHelper::accept(AcyclicVisitor& v) {
 }
 
 DatedOISRateHelper::DatedOISRateHelper(const Date& startDate, const Date& endDate, const Handle<Quote>& fixedRate,
-                                       const boost::shared_ptr<OvernightIndex>& overnightIndex,
+                                       const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex,
                                        const DayCounter& fixedDayCounter, const Calendar& fixedCalendar,
                                        Natural paymentLag, Frequency paymentFrequency,
                                        BusinessDayConvention fixedConvention, BusinessDayConvention paymentAdjustment,
@@ -157,8 +157,8 @@ DatedOISRateHelper::DatedOISRateHelper(const Date& startDate, const Date& endDat
     QL_REQUIRE(!(onIndexHasCurve && haveDiscountCurve), "Have both curves nothing to solve for.");
 
     if (!onIndexHasCurve) {
-        boost::shared_ptr<IborIndex> clonedIborIndex(overnightIndex_->clone(termStructureHandle_));
-        overnightIndex_ = boost::dynamic_pointer_cast<OvernightIndex>(clonedIborIndex);
+        QuantLib::ext::shared_ptr<IborIndex> clonedIborIndex(overnightIndex_->clone(termStructureHandle_));
+        overnightIndex_ = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(clonedIborIndex);
         overnightIndex_->unregisterWith(termStructureHandle_);
     }
 
@@ -218,7 +218,7 @@ void DatedOISRateHelper::setTermStructure(YieldTermStructure* t) {
     // force recalculation when needed
     bool observer = false;
 
-    boost::shared_ptr<YieldTermStructure> temp(t, null_deleter());
+    QuantLib::ext::shared_ptr<YieldTermStructure> temp(t, null_deleter());
     termStructureHandle_.linkTo(temp, observer);
 
     if (discountHandle_.empty())

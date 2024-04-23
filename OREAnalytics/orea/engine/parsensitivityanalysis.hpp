@@ -60,7 +60,7 @@ public:
 
     //! Constructor
     ParSensitivityAnalysis(const QuantLib::Date& asof,
-                           const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams,
+                           const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams,
                            const ore::analytics::SensitivityScenarioData& sensitivityData,
                            const string& marketConfiguration = Market::defaultConfiguration,
                            const bool continueOnError = false,
@@ -69,7 +69,7 @@ public:
     virtual ~ParSensitivityAnalysis() {}
 
     //! Compute par instrument sensitivities
-    void computeParInstrumentSensitivities(const boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket);
+    void computeParInstrumentSensitivities(const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket);
 
     //! Return computed par sensitivities. Empty if they have not been computed yet.
     const ParContainer& parSensitivities() const { return parSensi_; }
@@ -103,12 +103,12 @@ private:
 
     //! Populate `shiftSizes_` for \p key given the implied fair par rate \p parRate
     void populateShiftSizes(const ore::analytics::RiskFactorKey& key, QuantLib::Real parRate,
-                            const boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket);
+                            const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket);
 
     //! As of date for the calculation of the par sensitivities
     QuantLib::Date asof_;
     //! Simulation market parameters
-    boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketParams_;
+    QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketParams_;
     //! Sensitivity data
     ore::analytics::SensitivityScenarioData sensitivityData_;
     //! sensitivity of par rates w.r.t. raw rate shifts (including optionlet/cap volatility)

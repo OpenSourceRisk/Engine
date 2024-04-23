@@ -45,7 +45,7 @@ public:
         Natural settlementDays, const Calendar& calendar, const DayCounter& dayCounter, const Period& lag,
         Frequency frequency, bool indexIsInterpolated, const std::vector<Time>& times,
         const std::vector<Handle<Quote>>& rates,
-        const boost::shared_ptr<Seasonality>& seasonality = boost::shared_ptr<Seasonality>(),
+        const QuantLib::ext::shared_ptr<Seasonality>& seasonality = QuantLib::ext::shared_ptr<Seasonality>(),
         const Interpolator& interpolator = Interpolator());
 
     //! \name InflationTermStructure interface
@@ -91,7 +91,7 @@ template <class Interpolator>
 YoYInflationCurveObserverMoving<Interpolator>::YoYInflationCurveObserverMoving(
     Natural settlementDays, const Calendar& calendar, const DayCounter& dayCounter, const Period& lag,
     Frequency frequency, bool indexIsInterpolated, const std::vector<Time>& times,
-    const std::vector<Handle<Quote>>& rates, const boost::shared_ptr<Seasonality>& seasonality,
+    const std::vector<Handle<Quote>>& rates, const QuantLib::ext::shared_ptr<Seasonality>& seasonality,
     const Interpolator& interpolator)
     : YoYInflationTermStructure(settlementDays, calendar, dayCounter, rates[0]->value(), lag, frequency, indexIsInterpolated, seasonality),
       InterpolatedCurve<Interpolator>(std::vector<Time>(), std::vector<Real>(), interpolator), quotes_(rates), indexIsInterpolated_(indexIsInterpolated) {

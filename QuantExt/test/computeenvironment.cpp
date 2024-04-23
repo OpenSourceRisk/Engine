@@ -71,6 +71,12 @@ BOOST_AUTO_TEST_CASE(testEnvironmentInit) {
             ComputeEnvironment::instance().selectContext(d);
             ComputeEnvironment::instance().context().init();
             BOOST_TEST_MESSAGE("  device '" << d << "' initialized.");
+            for (auto const& [field, value] : ComputeEnvironment::instance().context().deviceInfo()) {
+                BOOST_TEST_MESSAGE("      " << std::left << std::setw(30) << field << ": '" << value << "'");
+            }
+            BOOST_TEST_MESSAGE("      " << std::left << std::setw(30) << "supportsDoublePrecision"
+                                        << ": " << std::boolalpha
+                                        << ComputeEnvironment::instance().context().supportsDoublePrecision());
         }
     };
     BOOST_CHECK_NO_THROW(init());
@@ -94,7 +100,7 @@ BOOST_AUTO_TEST_CASE(testSimpleCalc) {
         auto w = c.applyOperation(RandomVariableOpCode::Mult, {z, z});
         c.declareOutputVariable(w);
         std::vector<std::vector<double>> output(1, std::vector<double>(n));
-        c.finalizeCalculation(output, {});
+        c.finalizeCalculation(output);
         for (auto const& v : output.front()) {
             BOOST_CHECK_CLOSE(v, 49.0, 1.0E-8);
         }
@@ -106,9 +112,55 @@ BOOST_AUTO_TEST_CASE(testSimpleCalc) {
         c.createInputVariable(&rx2[0]);
         c.createInputVariable(1.0);
         std::vector<std::vector<double>> output2(1, std::vector<double>(n));
-        c.finalizeCalculation(output2, {});
+        c.finalizeCalculation(output2);
         for (auto const& v : output2.front()) {
             BOOST_CHECK_CLOSE(v, 36.0, 1.0E-8);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(testSimpleCalcWithDoublePrecision) {
+    ComputeEnvironmentFixture fixture;
+    const std::size_t n = 1024;
+    for (auto const& d : ComputeEnvironment::instance().getAvailableDevices()) {
+        BOOST_TEST_MESSAGE("testing simple calc (double precision) on device '" << d << "'.");
+        ComputeEnvironment::instance().selectContext(d);
+        auto& c = ComputeEnvironment::instance().context();
+
+        if (!c.supportsDoublePrecision()) {
+            BOOST_TEST_MESSAGE("device does not support double precision - skipping the test for this device.");
+            continue;
+        }
+
+        BOOST_TEST_MESSAGE("  do first calc");
+
+        double dblPrecNumber = 1.29382757483823819;
+
+        ComputeContext::Settings settings;
+        settings.useDoublePrecision = true;
+        auto [id, _] = c.initiateCalculation(n, 0, 0, settings);
+        std::vector<double> rx(n, dblPrecNumber);
+        auto x = c.createInputVariable(&rx[0]);
+        auto y = c.createInputVariable(dblPrecNumber);
+        auto z = c.applyOperation(RandomVariableOpCode::Add, {x, y});
+        auto w = c.applyOperation(RandomVariableOpCode::Mult, {z, z});
+        c.declareOutputVariable(w);
+        std::vector<std::vector<double>> output(1, std::vector<double>(n));
+        c.finalizeCalculation(output);
+        for (auto const& v : output.front()) {
+            BOOST_CHECK_CLOSE(v, (dblPrecNumber + dblPrecNumber) * (dblPrecNumber + dblPrecNumber), 1.0E-15);
+        }
+
+        BOOST_TEST_MESSAGE("  do second calc using same kernel");
+
+        c.initiateCalculation(n, id, 0, settings);
+        std::vector<double> rx2(n, dblPrecNumber);
+        c.createInputVariable(&rx2[0]);
+        c.createInputVariable(dblPrecNumber);
+        std::vector<std::vector<double>> output2(1, std::vector<double>(n));
+        c.finalizeCalculation(output2);
+        for (auto const& v : output2.front()) {
+            BOOST_CHECK_CLOSE(v, (dblPrecNumber + dblPrecNumber) * (dblPrecNumber + dblPrecNumber), 1.0E-15);
         }
     }
 }
@@ -130,7 +182,9 @@ BOOST_AUTO_TEST_CASE(testLargeCalc) {
 
         // first calc
 
-        auto [id, _] = c.initiateCalculation(n, 0, 0, true);
+        ComputeContext::Settings settings;
+        settings.debug = true;
+        auto [id, _] = c.initiateCalculation(n, 0, 0, settings);
         values[0] = c.createInputVariable(&data[0]);
         std::size_t val = values[0];
         for (std::size_t i = 0; i < m; ++i) {
@@ -141,15 +195,15 @@ BOOST_AUTO_TEST_CASE(testLargeCalc) {
             val = val3;
         }
         c.declareOutputVariable(val);
-        c.finalizeCalculation(output, {});
+        c.finalizeCalculation(output);
         BOOST_TEST_MESSAGE("  first calculation result = " << output.front()[0]);
         results.push_back(output.front()[0]);
 
         // second calculation
 
-        c.initiateCalculation(n, id, 0, true);
+        c.initiateCalculation(n, id, 0);
         values[0] = c.createInputVariable(&data[0]);
-        c.finalizeCalculation(output, {});
+        c.finalizeCalculation(output);
         BOOST_TEST_MESSAGE("  second calculation result = " << output.front()[0]);
         results.push_back(output.front()[0]);
 
@@ -190,7 +244,7 @@ void checkRngOutput(const std::vector<std::vector<double>>& output) {
         BOOST_TEST_MESSAGE("  mean = " << boost::accumulators::mean(acc)
                                        << ", variance = " << boost::accumulators::variance(acc));
         BOOST_CHECK_SMALL(boost::accumulators::mean(acc), 0.05);
-        BOOST_CHECK_CLOSE(boost::accumulators::variance(acc), 1.0, 1.0);
+        BOOST_CHECK_CLOSE(boost::accumulators::variance(acc), 1.0, 2.0);
     }
 }
 } // namespace
@@ -202,23 +256,23 @@ BOOST_AUTO_TEST_CASE(testRngGeneration) {
         BOOST_TEST_MESSAGE("testing rng generation on device '" << d << "'.");
         ComputeEnvironment::instance().selectContext(d);
         auto& c = ComputeEnvironment::instance().context();
-        auto [id, _] = c.initiateCalculation(n, 0, 0, true);
-        auto vs = c.createInputVariates(3, 2, 42);
+        auto [id, _] = c.initiateCalculation(n, 0, 0);
+        auto vs = c.createInputVariates(3, 2);
         for (auto const& d : vs) {
             for (auto const& r : d) {
                 c.declareOutputVariable(r);
             }
         }
         std::vector<std::vector<double>> output(6, std::vector<double>(n));
-        c.finalizeCalculation(output, {});
+        c.finalizeCalculation(output);
         outputTimings(c);
         checkRngOutput(output);
 
         BOOST_TEST_MESSAGE("test to replay same calc");
-        auto [id2, newCalc2] = c.initiateCalculation(n, id, 0, false);
+        auto [id2, newCalc2] = c.initiateCalculation(n, id, 0);
         BOOST_CHECK(!newCalc2);
         BOOST_CHECK_EQUAL(id, id2);
-        c.finalizeCalculation(output, {});
+        c.finalizeCalculation(output);
         outputTimings(c);
         checkRngOutput(output);
     }
@@ -232,22 +286,63 @@ BOOST_AUTO_TEST_CASE(testReplayFlowError) {
         BOOST_TEST_MESSAGE("testing replay flow error on device '" << d << "'.");
         ComputeEnvironment::instance().selectContext(d);
         auto& c = ComputeEnvironment::instance().context();
-        auto [id, newCalc] = c.initiateCalculation(n, 0, 0, true);
+        auto [id, newCalc] = c.initiateCalculation(n, 0, 0);
         BOOST_CHECK(newCalc);
         BOOST_CHECK(id > 0);
         auto v1 = c.createInputVariable(1.0);
         auto v2 = c.createInputVariable(1.0);
-        c.finalizeCalculation(output, {});
-        auto [id2, newCalc2] = c.initiateCalculation(n, id, 0, true);
+        c.finalizeCalculation(output);
+        auto [id2, newCalc2] = c.initiateCalculation(n, id, 0);
         BOOST_CHECK(!newCalc2);
         BOOST_CHECK_EQUAL(id, id2);
         c.createInputVariable(1.0);
         c.createInputVariable(1.0);
-        BOOST_CHECK_THROW(c.createInputVariates(1, 1, 42), std::exception);
+        BOOST_CHECK_THROW(c.createInputVariates(1, 1), std::exception);
         BOOST_CHECK_THROW(c.applyOperation(RandomVariableOpCode::Add, {v1, v2}), std::exception);
         BOOST_CHECK_THROW(c.freeVariable(v1), std::exception);
         BOOST_CHECK_THROW(c.declareOutputVariable(v1), std::exception);
-        BOOST_CHECK_NO_THROW(c.finalizeCalculation(output, {}));
+        BOOST_CHECK_NO_THROW(c.finalizeCalculation(output));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(testRngGenerationTmp) {
+    ComputeEnvironmentFixture fixture;
+    const std::size_t n = 1500;
+    for (auto const& d : ComputeEnvironment::instance().getAvailableDevices()) {
+        BOOST_TEST_MESSAGE("testing rng generation on device '" << d << "'.");
+        ComputeEnvironment::instance().selectContext(d);
+        auto& c = ComputeEnvironment::instance().context();
+        ComputeContext::Settings settings;
+        settings.rngSequenceType = QuantExt::SequenceType::MersenneTwister;
+        settings.useDoublePrecision = c.supportsDoublePrecision();
+        BOOST_TEST_MESSAGE("using double precision = " << std::boolalpha << settings.useDoublePrecision);
+        c.initiateCalculation(n, 0, 0, settings);
+        auto vs = c.createInputVariates(1, 1);
+        for (auto const& d : vs) {
+            for (auto const& r : d) {
+                c.declareOutputVariable(r);
+            }
+        }
+        auto vs2 = c.createInputVariates(1, 1);
+        for (auto const& d : vs2) {
+            for (auto const& r : d) {
+                c.declareOutputVariable(r);
+            }
+        }
+        std::vector<std::vector<double>> output(2, std::vector<double>(n));
+        c.finalizeCalculation(output);
+
+        auto sg = GenericPseudoRandom<MersenneTwisterUniformRng, InverseCumulativeNormal>::make_sequence_generator(
+            1, settings.rngSeed);
+
+        double tol = settings.useDoublePrecision ? 1E-7 : 1E-3;
+
+        for (Size j = 0; j < 2; ++j) {
+            for (Size i = 0; i < n; ++i) {
+                Real ref = sg.nextSequence().value[0];
+                BOOST_CHECK_SMALL(output[j][i] - ref, tol);
+            }
+        }
     }
 }
 

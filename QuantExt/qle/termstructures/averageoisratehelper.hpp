@@ -45,7 +45,7 @@ public:
                          const Period& fixedTenor, const DayCounter& fixedDayCounter, const Calendar& fixedCalendar,
                          BusinessDayConvention fixedConvention, BusinessDayConvention fixedPaymentAdjustment,
                          // ON leg
-                         const boost::shared_ptr<OvernightIndex>& overnightIndex, const Period& onTenor,
+                         const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex, const Period& onTenor,
                          const Handle<Quote>& onSpread, Natural rateCutoff,
                          // Exogenous discount curve
                          const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
@@ -59,7 +59,7 @@ public:
     //! \name AverageOISRateHelper inspectors
     //@{
     Spread onSpread() const;
-    boost::shared_ptr<AverageOIS> averageOIS() const;
+    QuantLib::ext::shared_ptr<AverageOIS> averageOIS() const;
     //@}
     //! \name Visitability
     //@{
@@ -67,7 +67,7 @@ public:
     //@}
 protected:
     void initializeDates() override;
-    boost::shared_ptr<AverageOIS> averageOIS_;
+    QuantLib::ext::shared_ptr<AverageOIS> averageOIS_;
     // Swap
     Period spotLagTenor_;
     Period swapTenor_;
@@ -78,7 +78,7 @@ protected:
     BusinessDayConvention fixedConvention_;
     BusinessDayConvention fixedPaymentAdjustment_;
     // ON leg
-    boost::shared_ptr<OvernightIndex> overnightIndex_;
+    QuantLib::ext::shared_ptr<OvernightIndex> overnightIndex_;
     Period onTenor_;
     Handle<Quote> onSpread_;
     Natural rateCutoff_;

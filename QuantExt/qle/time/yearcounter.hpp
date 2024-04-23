@@ -36,7 +36,7 @@ namespace QuantExt {
 */
 class YearCounter : public QuantLib::DayCounter {
 public:
-    YearCounter() : QuantLib::DayCounter(boost::shared_ptr<DayCounter::Impl>(new YearCounter::Impl())) {}
+    YearCounter() : QuantLib::DayCounter(QuantLib::ext::shared_ptr<DayCounter::Impl>(new YearCounter::Impl())) {}
 
 private:
     class Impl : public DayCounter::Impl {

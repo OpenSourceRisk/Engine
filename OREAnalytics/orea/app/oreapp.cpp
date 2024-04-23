@@ -25,6 +25,7 @@
 #pragma warning(disable : 4503)
 #endif
 
+#include <orea/app/cleanupsingletons.hpp>
 #include <orea/app/marketdatacsvloader.hpp>
 #include <orea/app/marketdatainmemoryloader.hpp>
 #include <orea/app/oreapp.hpp>
@@ -40,6 +41,7 @@
 
 #include <qle/version.hpp>
 
+
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <ql/time/daycounters/all.hpp>
@@ -47,6 +49,8 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/timer/timer.hpp>
+
+#include <mutex>
 
 using namespace std;
 using namespace ore::data;
@@ -67,7 +71,7 @@ std::set<std::string> OREApp::getSupportedAnalyticTypes() {
     return analyticsManager_->validAnalytics();
 }
 
-const boost::shared_ptr<Analytic>& OREApp::getAnalytic(std::string type) {
+const QuantLib::ext::shared_ptr<Analytic>& OREApp::getAnalytic(std::string type) {
     QL_REQUIRE(analyticsManager_, "analyticsManager_ not set yet, call analytics first");
     return analyticsManager_->getAnalytic(type);
 }
@@ -89,12 +93,12 @@ std::set<std::string> OREApp::getReportNames() {
     return names;
 }
 
-boost::shared_ptr<PlainInMemoryReport> OREApp::getReport(std::string reportName) {
+QuantLib::ext::shared_ptr<PlainInMemoryReport> OREApp::getReport(std::string reportName) {
     QL_REQUIRE(analyticsManager_, "analyticsManager_ not set yet, call analytics first");
     for (const auto& rep : analyticsManager_->reports()) {
         for (auto b : rep.second) {
             if (reportName == b.first)
-                return boost::make_shared<PlainInMemoryReport>(b.second);
+                return QuantLib::ext::make_shared<PlainInMemoryReport>(b.second);
         }
     }
     QL_FAIL("report " << reportName << " not found in results");
@@ -117,7 +121,7 @@ std::set<std::string> OREApp::getCubeNames() {
     return names;
 }
     
-boost::shared_ptr<NPVCube> OREApp::getCube(std::string cubeName) {
+QuantLib::ext::shared_ptr<NPVCube> OREApp::getCube(std::string cubeName) {
     QL_REQUIRE(analyticsManager_, "analyticsManager_ not set yet, call analytics first");
     for (const auto& c : analyticsManager_->npvCubes()) {
         for (auto b : c.second) {
@@ -145,7 +149,7 @@ std::set<std::string> OREApp::getMarketCubeNames() {
     return names;
 }
     
-boost::shared_ptr<AggregationScenarioData> OREApp::getMarketCube(std::string cubeName) {
+QuantLib::ext::shared_ptr<AggregationScenarioData> OREApp::getMarketCube(std::string cubeName) {
     QL_REQUIRE(analyticsManager_, "analyticsManager_ not set yet, call analytics first");
     for (const auto& c : analyticsManager_->mktCubes()) {
         for (auto b : c.second) {
@@ -157,7 +161,7 @@ boost::shared_ptr<AggregationScenarioData> OREApp::getMarketCube(std::string cub
 }
 
 std::vector<std::string> OREApp::getErrors() {
-    return structuredLogger_->messages();
+    return errorMessages_;
 }
 
 Real OREApp::getRunTime() {
@@ -165,7 +169,7 @@ Real OREApp::getRunTime() {
     return seconds.count();
 }
     
-boost::shared_ptr<CSVLoader> OREApp::buildCsvLoader(const boost::shared_ptr<Parameters>& params) {
+QuantLib::ext::shared_ptr<CSVLoader> OREApp::buildCsvLoader(const QuantLib::ext::shared_ptr<Parameters>& params) {
     bool implyTodaysFixings = false;
     vector<string> marketFiles = {};
     vector<string> fixingFiles = {};
@@ -198,7 +202,7 @@ boost::shared_ptr<CSVLoader> OREApp::buildCsvLoader(const boost::shared_ptr<Para
         WLOG("dividend data file not found");
     }
 
-    auto loader = boost::make_shared<CSVLoader>(marketFiles, fixingFiles, dividendFiles, implyTodaysFixings);
+    auto loader = QuantLib::ext::make_shared<CSVLoader>(marketFiles, fixingFiles, dividendFiles, implyTodaysFixings);
 
     return loader;
 }
@@ -220,19 +224,19 @@ void OREApp::analytics() {
 
         // Create a market data loader that reads market data, fixings, dividends from csv files
         auto csvLoader = buildCsvLoader(params_);
-        auto loader = boost::make_shared<MarketDataCsvLoader>(inputs_, csvLoader);
+        auto loader = QuantLib::ext::make_shared<MarketDataCsvLoader>(inputs_, csvLoader);
 
         // Create the analytics manager
-        analyticsManager_ = boost::make_shared<AnalyticsManager>(inputs_, loader);
+        analyticsManager_ = QuantLib::ext::make_shared<AnalyticsManager>(inputs_, loader);
         LOG("Available analytics: " << to_string(analyticsManager_->validAnalytics()));
         CONSOLEW("Requested analytics");
         CONSOLE(to_string(inputs_->analytics()));
         LOG("Requested analytics: " << to_string(inputs_->analytics()));
 
-        boost::shared_ptr<MarketCalibrationReportBase> mcr;
+        QuantLib::ext::shared_ptr<MarketCalibrationReportBase> mcr;
         if (inputs_->outputTodaysMarketCalibration()) {
-            auto marketCalibrationReport = boost::make_shared<ore::data::InMemoryReport>();
-            mcr = boost::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport);
+            auto marketCalibrationReport = QuantLib::ext::make_shared<ore::data::InMemoryReport>();
+            mcr = QuantLib::ext::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport);
         }
 
         // Run the requested analytics
@@ -287,86 +291,84 @@ void OREApp::analytics() {
     LOG("ORE analytics done");
 }
 
-OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console, 
-               const boost::filesystem::path& logRootPath)
-    : params_(params), inputs_(nullptr) {
 
-    if (console) {
+void OREApp::initFromParams() {
+    if (console_) {
         ConsoleLog::instance().switchOn();
     }
 
-    string outputPath = params_->get("setup", "outputPath");
-    string logFile = outputPath + "/" + params_->get("setup", "logFile");
-    Size logMask = 15;
+    outputPath_ = params_->get("setup", "outputPath");
+    logFile_ = outputPath_ + "/" + params_->get("setup", "logFile");
+    logMask_ = 15;
     // Get log mask if available
     if (params_->has("setup", "logMask")) {
-        logMask = static_cast<Size>(parseInteger(params_->get("setup", "logMask")));
+        logMask_ = static_cast<Size>(parseInteger(params_->get("setup", "logMask")));
     }
 
-    string progressLogFile, structuredLogFile;
-    Size progressLogRotationSize = 0;
-    bool progressLogToConsole = false;
-    Size structuredLogRotationSize = 0;
+    progressLogRotationSize_ = 0;
+    progressLogToConsole_ = false;
+    structuredLogRotationSize_ = 0;
     
     if (params_->hasGroup("logging")) {
-        string logFileOverride = params_->get("logging", "logFile", false);
-        if (!logFileOverride.empty()) {
-            logFile = outputPath + '/' + logFileOverride;
-        }
-        string logMaskOverride = params_->get("logging", "logMask", false);
-        if (!logMaskOverride.empty()) {
-            logMask = static_cast<Size>(parseInteger(logMaskOverride));
-        }
-        progressLogFile = params_->get("logging", "progressLogFile", false);
-        if (!progressLogFile.empty()) {
-            progressLogFile = outputPath + '/' + progressLogFile;
-        }
-        string tmp = params_->get("logging", "progressLogRotationSize", false);
+        string tmp = params_->get("logging", "logFile", false);
         if (!tmp.empty()) {
-            progressLogRotationSize = static_cast<Size>(parseInteger(tmp));
+            logFile_ = outputPath_ + '/' + tmp;
+        }
+        tmp = params_->get("logging", "logMask", false);
+        if (!tmp.empty()) {
+            logMask_ = static_cast<Size>(parseInteger(tmp));
+        }
+        tmp = params_->get("logging", "progressLogFile", false);
+        if (!tmp.empty()) {
+            progressLogFile_ = outputPath_ + '/' + tmp;
+        }
+        tmp = params_->get("logging", "progressLogRotationSize", false);
+        if (!tmp.empty()) {
+            progressLogRotationSize_ = static_cast<Size>(parseInteger(tmp));
         }
         tmp = params_->get("logging", "progressLogToConsole", false);
         if (!tmp.empty()) {
-            progressLogToConsole = ore::data::parseBool(tmp);
+            progressLogToConsole_ = ore::data::parseBool(tmp);
         }
-        structuredLogFile = params_->get("logging", "structuredLogFile", false);
-        if (!structuredLogFile.empty()) {
-            structuredLogFile = outputPath + '/' + structuredLogFile;
+        tmp = params_->get("logging", "structuredLogFile", false);
+        if (!tmp.empty()) {
+            structuredLogFile_ = outputPath_ + '/' + tmp;
         }
         tmp = params_->get("logging", "structuredLogRotationSize", false);
         if (!tmp.empty()) {
-            structuredLogRotationSize = static_cast<Size>(parseInteger(tmp));
+            structuredLogRotationSize_ = static_cast<Size>(parseInteger(tmp));
         }
     }
     
-    setupLog(outputPath, logFile, logMask, logRootPath, progressLogFile, progressLogRotationSize, progressLogToConsole,
-             structuredLogFile, structuredLogRotationSize);
+    setupLog(outputPath_, logFile_, logMask_, logRootPath_, progressLogFile_, progressLogRotationSize_, progressLogToConsole_,
+             structuredLogFile_, structuredLogRotationSize_);
 
     // Log the input parameters
     params_->log();
 
     // Read all inputs from params and files referenced in params
     CONSOLEW("Loading inputs");
-    inputs_ = boost::make_shared<OREAppInputParameters>(params_);
+    inputs_ = QuantLib::ext::make_shared<OREAppInputParameters>(params_);
     inputs_->loadParameters();
-    outputs_ = boost::make_shared<OutputParameters>(params_);
+    outputs_ = QuantLib::ext::make_shared<OutputParameters>(params_);
     CONSOLE("OK");
-        
+
     Settings::instance().evaluationDate() = inputs_->asof();
-}
-
-OREApp::OREApp(const boost::shared_ptr<InputParameters>& inputs, const std::string& logFile, Size logLevel,
-               bool console, const boost::filesystem::path& logRootPath)
-    : params_(nullptr), inputs_(inputs) {
-
+    LOG("initFromParameters done, requested analytics:" << to_string(inputs_->analytics()));
+} 
+  
+void OREApp::initFromInputs() {
     // Initialise Singletons
     Settings::instance().evaluationDate() = inputs_->asof();
     InstrumentConventions::instance().setConventions(inputs_->conventions());
-    if (console) {
+    if (console_) {
         ConsoleLog::instance().switchOn();
     }
 
-    setupLog(inputs_->resultsPath().string(), logFile, logLevel, logRootPath);
+    outputPath_ = inputs_->resultsPath().string();
+    setupLog(outputPath_, logFile_, logMask_, logRootPath_, progressLogFile_, progressLogRotationSize_, progressLogToConsole_,
+             structuredLogFile_, structuredLogRotationSize_);
+    LOG("initFromInputs done, requested analytics:" << to_string(inputs_->analytics()));
 }
 
 OREApp::~OREApp() {
@@ -375,6 +377,27 @@ OREApp::~OREApp() {
 }
 
 void OREApp::run() {
+
+    // Only one thread at a time should call run
+    static std::mutex _s_mutex;
+    std::lock_guard<std::mutex> lock(_s_mutex);
+
+    // Clean start, but leave Singletons intact after run is completed
+    {
+      CleanUpThreadLocalSingletons cleanupThreadLocalSingletons;
+      CleanUpThreadGlobalSingletons cleanupThreadGloablSingletons;
+      CleanUpLogSingleton cleanupLogSingleton(true, true);
+    }
+
+    // Use inputs when available, otherwise try params
+    if (inputs_ != nullptr)
+        initFromInputs();
+    else if (params_ != nullptr)
+        initFromParams();
+    else {
+        ALOG("both inputs are empty");
+	return;
+    }
 
     runTimer_.start();
     
@@ -389,6 +412,9 @@ void OREApp::run() {
 
     runTimer_.stop();
 
+    // cache the error messages because we reset the loggers 
+    errorMessages_ = structuredLogger_->messages();
+
     CONSOLE("run time: " << runTimer_.format(default_places, "%w") << " sec");
     CONSOLE("ORE done.");
     LOG("ORE done.");
@@ -396,6 +422,28 @@ void OREApp::run() {
 
 void OREApp::run(const std::vector<std::string>& marketData,
                  const std::vector<std::string>& fixingData) {
+
+    // Only one thread at a time should call run
+    static std::mutex _s_mutex;
+    std::lock_guard<std::mutex> lock(_s_mutex);
+
+    // Clean start, but leave Singletons intact after run is completed
+    {
+      CleanUpThreadLocalSingletons cleanupThreadLocalSingletons;
+      CleanUpThreadGlobalSingletons cleanupThreadGloablSingletons;
+      CleanUpLogSingleton cleanupLogSingleton(true, true);
+    }
+
+    // Use inputs when available, otherwise try params
+    if (inputs_ != nullptr)
+        initFromInputs();
+    else if (params_ != nullptr)
+        initFromParams();
+    else {
+        ALOG("both inputs are empty");
+	return;
+    }
+
     runTimer_.start();
 
     try {
@@ -417,19 +465,19 @@ void OREApp::run(const std::vector<std::string>& marketData,
         InstrumentConventions::instance().setConventions(inputs_->conventions());
 
         // Create a market data loader that takes input from the provided vectors
-        auto loader = boost::make_shared<MarketDataInMemoryLoader>(inputs_, marketData, fixingData);
+        auto loader = QuantLib::ext::make_shared<MarketDataInMemoryLoader>(inputs_, marketData, fixingData);
 
         // Create the analytics manager
-        analyticsManager_ = boost::make_shared<AnalyticsManager>(inputs_, loader);
+        analyticsManager_ = QuantLib::ext::make_shared<AnalyticsManager>(inputs_, loader);
         LOG("Available analytics: " << to_string(analyticsManager_->validAnalytics()));
         CONSOLEW("Requested analytics:");
         CONSOLE(to_string(inputs_->analytics()));
         LOG("Requested analytics: " << to_string(inputs_->analytics()));
 
-        boost::shared_ptr<MarketCalibrationReportBase> mcr;
+        QuantLib::ext::shared_ptr<MarketCalibrationReportBase> mcr;
         if (inputs_->outputTodaysMarketCalibration()) {
-            auto marketCalibrationReport = boost::make_shared<ore::data::InMemoryReport>();
-            mcr = boost::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport);
+            auto marketCalibrationReport = QuantLib::ext::make_shared<ore::data::InMemoryReport>();
+            mcr = QuantLib::ext::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport);
         }
 
         // Run the requested analytics
@@ -465,7 +513,7 @@ void OREApp::setupLog(const std::string& path, const std::string& file, Size mas
     }
     QL_REQUIRE(boost::filesystem::is_directory(p), "output path '" << path << "' is not a directory.");
 
-    Log::instance().registerLogger(boost::make_shared<FileLogger>(file));
+    Log::instance().registerLogger(QuantLib::ext::make_shared<FileLogger>(file));
     boost::filesystem::path oreRootPath =
         logRootPath.empty() ? boost::filesystem::path(__FILE__).parent_path().parent_path().parent_path().parent_path()
                             : logRootPath;
@@ -474,20 +522,20 @@ void OREApp::setupLog(const std::string& path, const std::string& file, Size mas
     Log::instance().switchOn();
 
     // Progress logger
-    auto progressLogger = boost::make_shared<ProgressLogger>();
+    auto progressLogger = QuantLib::ext::make_shared<ProgressLogger>();
     string progressLogFilePath = progressLogFile.empty() ? path + "/log_progress.json" : progressLogFile;
     progressLogger->setFileLog(progressLogFilePath, path, progressLogRotationSize);
     progressLogger->setCoutLog(progressLogToConsole);
     Log::instance().registerIndependentLogger(progressLogger);
 
     // Structured message logger
-    structuredLogger_ = boost::make_shared<StructuredLogger>();
+    structuredLogger_ = QuantLib::ext::make_shared<StructuredLogger>();
     string structuredLogFilePath = structuredLogFile.empty() ? path + "/log_structured.json" : structuredLogFile;
     structuredLogger_->setFileLog(structuredLogFilePath, path, structuredLogRotationSize);
     Log::instance().registerIndependentLogger(structuredLogger_);
 
     // Event message logger
-    auto eventLogger = boost::make_shared<EventLogger>();
+    auto eventLogger = QuantLib::ext::make_shared<EventLogger>();
     eventLogger->setFileLog(path + "/log_event_");
     ore::data::Log::instance().registerIndependentLogger(eventLogger);
 }
@@ -698,6 +746,10 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->get("npv", "additionalResults", false);
     if (tmp != "")
         setOutputAdditionalResults(parseBool(tmp));
+
+    tmp = params_->get("npv", "additionalResultsReportPrecision", false);
+    if (tmp != "")
+        setAdditionalResultsReportPrecision(parseInteger(tmp));
 
     /*************
      * CASHFLOW
@@ -985,12 +1037,14 @@ void OREAppInputParameters::loadParameters() {
             setOutputHistoricalScenarios(parseBool(tmp));
     }
 
-    /****************
-     * SIMM
-     ****************/
+    /**********************
+     * SIMM and IM Schedule
+     **********************/
 
+    LOG("SIMM");
     tmp = params_->get("simm", "active", false);
-    if (!tmp.empty() && parseBool(tmp)) {
+    bool doSimm = !tmp.empty() ? parseBool(tmp) : false;
+    if (doSimm) {
         insertAnalytic("SIMM");
 
         tmp = params_->get("simm", "version", false);
@@ -1049,6 +1103,77 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("simm", "writeIntermediateReports", false);
         if (tmp != "")
             setWriteSimmIntermediateReports(parseBool(tmp));
+    }
+
+    LOG("IM SCHEDULE");
+    tmp = params_->get("imschedule", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        insertAnalytic("IM_SCHEDULE");
+
+        tmp = params_->get("imschedule", "version", false);
+        if (tmp != "") {
+            string tmpSimm = params_->get("simm", "version", false);
+            QL_REQUIRE(!doSimm || tmp == tmpSimm, "version for imschedule and simm should match");
+            setSimmVersion(tmp);
+        } else if (simmVersion() == "") {
+            LOG("set SIMM version for IM Schedule to 2.6, required to load CRIF")
+            setSimmVersion("2.6");
+        }
+
+        tmp = params_->get("imschedule", "crif", false);
+        if (tmp != "") {
+            string tmpSimm = params_->get("simm", "crif", false);
+            QL_REQUIRE(!doSimm || tmp == tmpSimm, "crif files for imschedule and simm should match");
+            string file = (inputPath / tmp).generic_string();
+            setCrifFromFile(file, csvEolChar(), csvSeparator(), '\"', csvEscapeChar());
+        }
+        
+        tmp = params_->get("imschedule", "calculationCurrency", false);
+        if (tmp != "") {
+            string tmpSimm = params_->get("simm", "calculationCurrency", false);
+            QL_REQUIRE(!doSimm || tmp == tmpSimm, "calculation currency for for imschedule and simm should match");
+            setSimmCalculationCurrencyCall(tmp);
+            setSimmCalculationCurrencyPost(tmp);
+        } else {
+            QL_REQUIRE(baseCurrency() != "", "either base currency or calculation currency is required");
+        }
+
+        tmp = params_->get("imschedule", "calculationCurrencyCall", false);
+        if (tmp != "") {
+            string tmpSimm = params_->get("simm", "calculationCurrencyCall", false);
+            QL_REQUIRE(!doSimm || tmp == tmpSimm, "calculation currency for imschedule and simm should match");
+            setSimmCalculationCurrencyCall(tmp);
+        }
+
+        tmp = params_->get("imschedule", "calculationCurrencyPost", false);
+        if (tmp != "") {
+            string tmpSimm = params_->get("simm", "calculationCurrencyPost", false);
+            QL_REQUIRE(!doSimm || tmp == tmpSimm, "calculation currency for imschedule and simm should match");
+            setSimmCalculationCurrencyPost(tmp);
+        }
+
+        tmp = params_->get("imschedule", "resultCurrency", false);
+        if (tmp != "") {
+            string tmpSimm = params_->get("simm", "resultCurrency", false);
+            QL_REQUIRE(!doSimm || tmp == tmpSimm, "result currency for imschedule and simm should match");
+            setSimmResultCurrency(tmp);
+        }
+        else
+            setSimmResultCurrency(simmCalculationCurrencyCall());
+
+        tmp = params_->get("imschedule", "reportingCurrency", false);
+        if (tmp != "") {
+            string tmpSimm = params_->get("simm", "reportingCurrency", false);
+            QL_REQUIRE(!doSimm || tmp == tmpSimm, "reporting currency for imschedule and simm should match");
+            setSimmReportingCurrency(tmp);
+        }
+
+        tmp = params_->get("imschedule", "enforceIMRegulations", false);
+        if (tmp != "") {
+            string tmpSimm = params_->get("simm", "enforceIMRegulations", false);
+            QL_REQUIRE(!doSimm || tmp == tmpSimm, "enforceIMRegulations for imschedule and simm should match");
+            setEnforceIMRegulations(parseBool(tmp));
+        }
     }
 
     /************
@@ -1587,6 +1712,10 @@ void OREAppInputParameters::loadParameters() {
             LOG("Lazy market build being overridden to \"false\" for MARKETDATA analytic.")
         setLazyMarketBuilding(false);
     }
+
+    LOG("analytics: " << analytics().size());
+    for (auto a: analytics())
+        LOG("analytic: " << a);
 
     LOG("buildInputParameters done");
 }

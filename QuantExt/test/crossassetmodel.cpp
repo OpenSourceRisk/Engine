@@ -132,24 +132,24 @@ namespace {
 
 struct BermudanTestData {
     BermudanTestData()
-        : evalDate(12, January, 2015), yts(boost::make_shared<FlatForward>(evalDate, 0.02, Actual365Fixed())),
-          euribor6m(boost::make_shared<Euribor>(6 * Months, yts)), effectiveDate(TARGET().advance(evalDate, 2 * Days)),
+        : evalDate(12, January, 2015), yts(QuantLib::ext::make_shared<FlatForward>(evalDate, 0.02, Actual365Fixed())),
+          euribor6m(QuantLib::ext::make_shared<Euribor>(6 * Months, yts)), effectiveDate(TARGET().advance(evalDate, 2 * Days)),
           startDate(TARGET().advance(effectiveDate, 1 * Years)), maturityDate(TARGET().advance(startDate, 9 * Years)),
           fixedSchedule(startDate, maturityDate, 1 * Years, TARGET(), ModifiedFollowing, ModifiedFollowing,
                         DateGeneration::Forward, false),
           floatingSchedule(startDate, maturityDate, 6 * Months, TARGET(), ModifiedFollowing, ModifiedFollowing,
                            DateGeneration::Forward, false),
           underlying(
-              boost::make_shared<VanillaSwap>(VanillaSwap(VanillaSwap::Payer, 1.0, fixedSchedule, 0.02, Thirty360(Thirty360::BondBasis),
+              QuantLib::ext::make_shared<VanillaSwap>(VanillaSwap(VanillaSwap::Payer, 1.0, fixedSchedule, 0.02, Thirty360(Thirty360::BondBasis),
                                                           floatingSchedule, euribor6m, 0.0, Actual360()))),
           reversion(0.03) {
         Settings::instance().evaluationDate() = evalDate;
         for (Size i = 0; i < 9; ++i) {
             exerciseDates.push_back(TARGET().advance(fixedSchedule[i], -2 * Days));
         }
-        exercise = boost::make_shared<BermudanExercise>(exerciseDates, false);
+        exercise = QuantLib::ext::make_shared<BermudanExercise>(exerciseDates, false);
 
-        swaption = boost::make_shared<Swaption>(underlying, exercise);
+        swaption = QuantLib::ext::make_shared<Swaption>(underlying, exercise);
         stepDates = std::vector<Date>(exerciseDates.begin(), exerciseDates.end() - 1);
         sigmas = std::vector<Real>(stepDates.size() + 1);
         for (Size i = 0; i < sigmas.size(); ++i) {
@@ -165,14 +165,14 @@ struct BermudanTestData {
     SavedSettings backup;
     Date evalDate;
     Handle<YieldTermStructure> yts;
-    boost::shared_ptr<IborIndex> euribor6m;
+    QuantLib::ext::shared_ptr<IborIndex> euribor6m;
     Date effectiveDate, startDate, maturityDate;
     Schedule fixedSchedule, floatingSchedule;
-    boost::shared_ptr<VanillaSwap> underlying;
+    QuantLib::ext::shared_ptr<VanillaSwap> underlying;
     std::vector<Date> exerciseDates, stepDates;
     std::vector<Real> sigmas;
-    boost::shared_ptr<Exercise> exercise;
-    boost::shared_ptr<Swaption> swaption;
+    QuantLib::ext::shared_ptr<Exercise> exercise;
+    QuantLib::ext::shared_ptr<Swaption> swaption;
     Array stepTimes_a, sigmas_a, kappas_a;
     Real reversion;
 }; // BermudanTestData
@@ -192,24 +192,24 @@ BOOST_AUTO_TEST_CASE(testBermudanLgm1fGsr) {
 
     // we use the Hull White adaptor for the LGM parametrization
     // which should lead to equal Bermudan swaption prices
-    boost::shared_ptr<IrLgm1fParametrization> lgm_p = boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+    QuantLib::ext::shared_ptr<IrLgm1fParametrization> lgm_p = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
         EURCurrency(), d.yts, d.stepTimes_a, d.sigmas_a, d.stepTimes_a, d.kappas_a);
 
     // fix any T forward measure
-    boost::shared_ptr<Gsr> gsr = boost::make_shared<Gsr>(d.yts, d.stepDates, d.sigmas, d.reversion, 50.0);
+    QuantLib::ext::shared_ptr<Gsr> gsr = QuantLib::ext::make_shared<Gsr>(d.yts, d.stepDates, d.sigmas, d.reversion, 50.0);
 
-    boost::shared_ptr<LinearGaussMarkovModel> lgm = boost::make_shared<LinearGaussMarkovModel>(lgm_p);
+    QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm = QuantLib::ext::make_shared<LinearGaussMarkovModel>(lgm_p);
 
-    boost::shared_ptr<Gaussian1dModel> lgm_g1d = boost::make_shared<Gaussian1dCrossAssetAdaptor>(lgm);
+    QuantLib::ext::shared_ptr<Gaussian1dModel> lgm_g1d = QuantLib::ext::make_shared<Gaussian1dCrossAssetAdaptor>(lgm);
 
-    boost::shared_ptr<PricingEngine> swaptionEngineGsr =
-        boost::make_shared<Gaussian1dSwaptionEngine>(gsr, 64, 7.0, true, false);
+    QuantLib::ext::shared_ptr<PricingEngine> swaptionEngineGsr =
+        QuantLib::ext::make_shared<Gaussian1dSwaptionEngine>(gsr, 64, 7.0, true, false);
 
-    boost::shared_ptr<PricingEngine> swaptionEngineLgm =
-        boost::make_shared<Gaussian1dSwaptionEngine>(lgm_g1d, 64, 7.0, true, false);
+    QuantLib::ext::shared_ptr<PricingEngine> swaptionEngineLgm =
+        QuantLib::ext::make_shared<Gaussian1dSwaptionEngine>(lgm_g1d, 64, 7.0, true, false);
 
-    boost::shared_ptr<PricingEngine> swaptionEngineLgm2 =
-        boost::make_shared<NumericLgmSwaptionEngine>(lgm, 7.0, 16, 7.0, 32);
+    QuantLib::ext::shared_ptr<PricingEngine> swaptionEngineLgm2 =
+        QuantLib::ext::make_shared<NumericLgmSwaptionEngine>(lgm, 7.0, 16, 7.0, 32);
 
     d.swaption->setPricingEngine(swaptionEngineGsr);
     Real npvGsr = d.swaption->NPV();
@@ -238,15 +238,15 @@ BOOST_AUTO_TEST_CASE(testBermudanLgmInvariances) {
 
     BermudanTestData d;
 
-    boost::shared_ptr<IrLgm1fParametrization> lgm_p2 = boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+    QuantLib::ext::shared_ptr<IrLgm1fParametrization> lgm_p2 = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
         EURCurrency(), d.yts, d.stepTimes_a, d.sigmas_a, d.stepTimes_a, d.kappas_a);
 
-    boost::shared_ptr<LinearGaussMarkovModel> lgm2 = boost::make_shared<LinearGaussMarkovModel>(lgm_p2);
+    QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm2 = QuantLib::ext::make_shared<LinearGaussMarkovModel>(lgm_p2);
 
-    boost::shared_ptr<Gaussian1dModel> lgm_g1d2 = boost::make_shared<Gaussian1dCrossAssetAdaptor>(lgm2);
+    QuantLib::ext::shared_ptr<Gaussian1dModel> lgm_g1d2 = QuantLib::ext::make_shared<Gaussian1dCrossAssetAdaptor>(lgm2);
 
-    boost::shared_ptr<PricingEngine> swaptionEngineLgm2 =
-        boost::make_shared<Gaussian1dSwaptionEngine>(lgm_g1d2, 64, 7.0, true, false);
+    QuantLib::ext::shared_ptr<PricingEngine> swaptionEngineLgm2 =
+        QuantLib::ext::make_shared<Gaussian1dSwaptionEngine>(lgm_g1d2, 64, 7.0, true, false);
 
     d.swaption->setPricingEngine(swaptionEngineLgm2);
     Real npvLgm = d.swaption->NPV();
@@ -274,16 +274,16 @@ BOOST_AUTO_TEST_CASE(testNonstandardBermudanSwaption) {
 
     BermudanTestData d;
 
-    boost::shared_ptr<NonstandardSwaption> ns_swaption = boost::make_shared<NonstandardSwaption>(*d.swaption);
+    QuantLib::ext::shared_ptr<NonstandardSwaption> ns_swaption = QuantLib::ext::make_shared<NonstandardSwaption>(*d.swaption);
 
-    boost::shared_ptr<IrLgm1fParametrization> lgm_p = boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+    QuantLib::ext::shared_ptr<IrLgm1fParametrization> lgm_p = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
         EURCurrency(), d.yts, d.stepTimes_a, d.sigmas_a, d.stepTimes_a, d.kappas_a);
 
-    boost::shared_ptr<LinearGaussMarkovModel> lgm = boost::make_shared<LinearGaussMarkovModel>(lgm_p);
+    QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm = QuantLib::ext::make_shared<LinearGaussMarkovModel>(lgm_p);
 
-    boost::shared_ptr<PricingEngine> engine = boost::make_shared<NumericLgmSwaptionEngine>(lgm, 7.0, 16, 7.0, 32);
-    boost::shared_ptr<PricingEngine> ns_engine =
-        boost::make_shared<NumericLgmNonstandardSwaptionEngine>(lgm, 7.0, 16, 7.0, 32);
+    QuantLib::ext::shared_ptr<PricingEngine> engine = QuantLib::ext::make_shared<NumericLgmSwaptionEngine>(lgm, 7.0, 16, 7.0, 32);
+    QuantLib::ext::shared_ptr<PricingEngine> ns_engine =
+        QuantLib::ext::make_shared<NumericLgmNonstandardSwaptionEngine>(lgm, 7.0, 16, 7.0, 32);
 
     d.swaption->setPricingEngine(engine);
     ns_swaption->setPricingEngine(ns_engine);
@@ -310,22 +310,22 @@ BOOST_AUTO_TEST_CASE(testLgm1fCalibration) {
 
     Date evalDate(12, January, 2015);
     Settings::instance().evaluationDate() = evalDate;
-    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(evalDate, 0.02, Actual365Fixed()));
-    boost::shared_ptr<IborIndex> euribor6m = boost::make_shared<Euribor>(6 * Months, yts);
+    Handle<YieldTermStructure> yts(QuantLib::ext::make_shared<FlatForward>(evalDate, 0.02, Actual365Fixed()));
+    QuantLib::ext::shared_ptr<IborIndex> euribor6m = QuantLib::ext::make_shared<Euribor>(6 * Months, yts);
 
     // coterminal basket 1y-9y, 2y-8y, ... 9y-1y
 
-    std::vector<boost::shared_ptr<BlackCalibrationHelper> > basket;
+    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper> > basket;
     Real impliedVols[] = { 0.4, 0.39, 0.38, 0.35, 0.35, 0.34, 0.33, 0.32, 0.31 };
     std::vector<Date> expiryDates;
 
     for (Size i = 0; i < 9; ++i) {
-        boost::shared_ptr<BlackCalibrationHelper> helper = boost::make_shared<SwaptionHelper>(
-            (i + 1) * Years, (9 - i) * Years, Handle<Quote>(boost::make_shared<SimpleQuote>(impliedVols[i])), euribor6m,
+        QuantLib::ext::shared_ptr<BlackCalibrationHelper> helper = QuantLib::ext::make_shared<SwaptionHelper>(
+            (i + 1) * Years, (9 - i) * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(impliedVols[i])), euribor6m,
             1 * Years, Thirty360(Thirty360::BondBasis), Actual360(), yts);
         basket.push_back(helper);
         expiryDates.push_back(
-            boost::static_pointer_cast<SwaptionHelper>(helper)->swaption()->exercise()->dates().back());
+            QuantLib::ext::static_pointer_cast<SwaptionHelper>(helper)->swaption()->exercise()->dates().back());
     }
 
     std::vector<Date> stepDates(expiryDates.begin(), expiryDates.end() - 1);
@@ -343,18 +343,18 @@ BOOST_AUTO_TEST_CASE(testLgm1fCalibration) {
     Array lgmInitialSigmas2_a(lgmInitialSigmas2.begin(), lgmInitialSigmas2.end());
     Array kappas_a(lgmInitialSigmas2_a.size(), kappa);
 
-    boost::shared_ptr<IrLgm1fParametrization> lgm_p = boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+    QuantLib::ext::shared_ptr<IrLgm1fParametrization> lgm_p = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
         EURCurrency(), yts, stepTimes_a, lgmInitialSigmas2_a, stepTimes_a, kappas_a);
 
     // fix any T forward measure
-    boost::shared_ptr<Gsr> gsr = boost::make_shared<Gsr>(yts, stepDates, gsrInitialSigmas, kappa, 50.0);
+    QuantLib::ext::shared_ptr<Gsr> gsr = QuantLib::ext::make_shared<Gsr>(yts, stepDates, gsrInitialSigmas, kappa, 50.0);
 
-    boost::shared_ptr<LinearGaussMarkovModel> lgm = boost::make_shared<LinearGaussMarkovModel>(lgm_p);
+    QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm = QuantLib::ext::make_shared<LinearGaussMarkovModel>(lgm_p);
 
-    boost::shared_ptr<PricingEngine> swaptionEngineGsr =
-        boost::make_shared<Gaussian1dSwaptionEngine>(gsr, 64, 7.0, true, false);
+    QuantLib::ext::shared_ptr<PricingEngine> swaptionEngineGsr =
+        QuantLib::ext::make_shared<Gaussian1dSwaptionEngine>(gsr, 64, 7.0, true, false);
 
-    boost::shared_ptr<PricingEngine> swaptionEngineLgm = boost::make_shared<AnalyticLgmSwaptionEngine>(lgm);
+    QuantLib::ext::shared_ptr<PricingEngine> swaptionEngineLgm = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(lgm);
 
     // calibrate GSR
 
@@ -399,32 +399,32 @@ BOOST_AUTO_TEST_CASE(testLgm1fCalibration) {
     // calibrate LGM as component of CrossAssetModel
 
     // create a second set of parametrization ...
-    boost::shared_ptr<IrLgm1fParametrization> lgm_p21 = boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+    QuantLib::ext::shared_ptr<IrLgm1fParametrization> lgm_p21 = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
         USDCurrency(), yts, stepTimes_a, lgmInitialSigmas2_a, stepTimes_a, kappas_a);
-    boost::shared_ptr<IrLgm1fParametrization> lgm_p22 = boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+    QuantLib::ext::shared_ptr<IrLgm1fParametrization> lgm_p22 = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
         EURCurrency(), yts, stepTimes_a, lgmInitialSigmas2_a, stepTimes_a, kappas_a);
 
     // ... and a fx parametrization ...
     Array notimes_a(0);
     Array sigma_a(1, 0.10);
-    boost::shared_ptr<FxBsParametrization> fx_p = boost::make_shared<FxBsPiecewiseConstantParametrization>(
-        EURCurrency(), Handle<Quote>(boost::make_shared<SimpleQuote>(1.00)), notimes_a, sigma_a);
+    QuantLib::ext::shared_ptr<FxBsParametrization> fx_p = QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(
+        EURCurrency(), Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.00)), notimes_a, sigma_a);
 
     // ... and set up an crossasset model with USD as domestic currency ...
-    std::vector<boost::shared_ptr<Parametrization> > parametrizations;
+    std::vector<QuantLib::ext::shared_ptr<Parametrization> > parametrizations;
     parametrizations.push_back(lgm_p21);
     parametrizations.push_back(lgm_p22);
     parametrizations.push_back(fx_p);
     Matrix rho(3, 3, 0.0);
     rho[0][0] = rho[1][1] = rho[2][2] = 1.0;
-    boost::shared_ptr<CrossAssetModel> xmodel =
-        boost::make_shared<CrossAssetModel>(parametrizations, rho, SalvagingAlgorithm::None);
+    QuantLib::ext::shared_ptr<CrossAssetModel> xmodel =
+        QuantLib::ext::make_shared<CrossAssetModel>(parametrizations, rho, SalvagingAlgorithm::None);
 
     // .. whose EUR component we calibrate as before and compare the
     // result against the 1d case and as well check that the USD
     // component was not touched by the calibration.
 
-    boost::shared_ptr<PricingEngine> swaptionEngineLgm2 = boost::make_shared<AnalyticLgmSwaptionEngine>(xmodel, 1);
+    QuantLib::ext::shared_ptr<PricingEngine> swaptionEngineLgm2 = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(xmodel, 1);
 
     for (Size i = 0; i < basket.size(); ++i) {
         basket[i]->setPricingEngine(swaptionEngineLgm2);
@@ -464,9 +464,9 @@ BOOST_AUTO_TEST_CASE(testCcyLgm3fForeignPayouts) {
 
     Settings::instance().evaluationDate() = referenceDate;
 
-    Handle<YieldTermStructure> eurYts(boost::make_shared<FlatForward>(referenceDate, 0.02, Actual365Fixed()));
+    Handle<YieldTermStructure> eurYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.02, Actual365Fixed()));
 
-    Handle<YieldTermStructure> usdYts(boost::make_shared<FlatForward>(referenceDate, 0.05, Actual365Fixed()));
+    Handle<YieldTermStructure> usdYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.05, Actual365Fixed()));
 
     // use different grids for the EUR and USD  models and the FX volatility
     // process to test the piecewise numerical integration ...
@@ -522,24 +522,24 @@ BOOST_AUTO_TEST_CASE(testCcyLgm3fForeignPayouts) {
         fxTimes[i] = eurYts->timeFromReference(volstepdatesFx[i]);
     }
 
-    boost::shared_ptr<IrLgm1fParametrization> eurLgmParam = boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(
+    QuantLib::ext::shared_ptr<IrLgm1fParametrization> eurLgmParam = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(
         EURCurrency(), eurYts, alphaTimesEur, alphaEur, kappaTimesEur, kappaEur);
 
-    boost::shared_ptr<IrLgm1fParametrization> usdLgmParam = boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(
+    QuantLib::ext::shared_ptr<IrLgm1fParametrization> usdLgmParam = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(
         USDCurrency(), usdYts, alphaTimesUsd, alphaUsd, kappaTimesUsd, kappaUsd);
 
     // USD per EUR (foreign per domestic)
-    Handle<Quote> usdEurSpotToday(boost::make_shared<SimpleQuote>(0.90));
+    Handle<Quote> usdEurSpotToday(QuantLib::ext::make_shared<SimpleQuote>(0.90));
 
-    boost::shared_ptr<FxBsParametrization> fxUsdEurBsParam =
-        boost::make_shared<FxBsPiecewiseConstantParametrization>(USDCurrency(), usdEurSpotToday, fxTimes, fxSigmas);
+    QuantLib::ext::shared_ptr<FxBsParametrization> fxUsdEurBsParam =
+        QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(USDCurrency(), usdEurSpotToday, fxTimes, fxSigmas);
 
-    std::vector<boost::shared_ptr<Parametrization> > singleModels;
+    std::vector<QuantLib::ext::shared_ptr<Parametrization> > singleModels;
     singleModels.push_back(eurLgmParam);
     singleModels.push_back(usdLgmParam);
     singleModels.push_back(fxUsdEurBsParam);
 
-    boost::shared_ptr<CrossAssetModel> ccLgm = boost::make_shared<CrossAssetModel>(singleModels);
+    QuantLib::ext::shared_ptr<CrossAssetModel> ccLgm = QuantLib::ext::make_shared<CrossAssetModel>(singleModels);
 
     Size eurIdx = ccLgm->ccyIndex(EURCurrency());
     Size usdIdx = ccLgm->ccyIndex(USDCurrency());
@@ -549,11 +549,11 @@ BOOST_AUTO_TEST_CASE(testCcyLgm3fForeignPayouts) {
     ccLgm->setCorrelation(CrossAssetModel::AssetType::IR, eurIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, 0.8);
     ccLgm->setCorrelation(CrossAssetModel::AssetType::IR, usdIdx, CrossAssetModel::AssetType::FX, eurUsdIdx, -0.5);
 
-    boost::shared_ptr<LinearGaussMarkovModel> eurLgm = boost::make_shared<LinearGaussMarkovModel>(eurLgmParam);
-    boost::shared_ptr<LinearGaussMarkovModel> usdLgm = boost::make_shared<LinearGaussMarkovModel>(usdLgmParam);
+    QuantLib::ext::shared_ptr<LinearGaussMarkovModel> eurLgm = QuantLib::ext::make_shared<LinearGaussMarkovModel>(eurLgmParam);
+    QuantLib::ext::shared_ptr<LinearGaussMarkovModel> usdLgm = QuantLib::ext::make_shared<LinearGaussMarkovModel>(usdLgmParam);
 
-    boost::shared_ptr<StochasticProcess> process = ccLgm->stateProcess();
-    boost::shared_ptr<StochasticProcess> usdProcess = usdLgm->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> process = ccLgm->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> usdProcess = usdLgm->stateProcess();
 
     // path generation
 
@@ -566,10 +566,10 @@ BOOST_AUTO_TEST_CASE(testCcyLgm3fForeignPayouts) {
     TimeGrid grid(T, steps);
     PseudoRandom::rsg_type sg2 = PseudoRandom::make_sequence_generator(steps, seed);
 
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
         tmp->resetCache(grid.size() - 1);
     }
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(usdProcess)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(usdProcess)) {
         tmp->resetCache(grid.size() - 1);
     }
     MultiPathGeneratorMersenneTwister pg(process, grid, seed, false);
@@ -607,12 +607,12 @@ BOOST_AUTO_TEST_CASE(testCcyLgm3fForeignPayouts) {
         stat3(std::max(fx - 0.9, 0.0) / eurLgm->numeraire(T, zeur));
     }
 
-    boost::shared_ptr<VanillaOption> fxOption =
-        boost::make_shared<VanillaOption>(boost::make_shared<PlainVanillaPayoff>(Option::Call, 0.9),
-                                          boost::make_shared<EuropeanExercise>(referenceDate + 5 * 365));
+    QuantLib::ext::shared_ptr<VanillaOption> fxOption =
+        QuantLib::ext::make_shared<VanillaOption>(QuantLib::ext::make_shared<PlainVanillaPayoff>(Option::Call, 0.9),
+                                          QuantLib::ext::make_shared<EuropeanExercise>(referenceDate + 5 * 365));
 
-    boost::shared_ptr<AnalyticCcLgmFxOptionEngine> ccLgmFxOptionEngine =
-        boost::make_shared<AnalyticCcLgmFxOptionEngine>(ccLgm, 0);
+    QuantLib::ext::shared_ptr<AnalyticCcLgmFxOptionEngine> ccLgmFxOptionEngine =
+        QuantLib::ext::make_shared<AnalyticCcLgmFxOptionEngine>(ccLgm, 0);
 
     ccLgmFxOptionEngine->cache();
 
@@ -674,10 +674,10 @@ namespace {
 
 struct Lgm5fTestData {
     Lgm5fTestData()
-        : referenceDate(30, July, 2015), eurYts(boost::make_shared<FlatForward>(referenceDate, 0.02, Actual365Fixed())),
-          usdYts(boost::make_shared<FlatForward>(referenceDate, 0.05, Actual365Fixed())),
-          gbpYts(boost::make_shared<FlatForward>(referenceDate, 0.04, Actual365Fixed())),
-          fxEurUsd(boost::make_shared<SimpleQuote>(0.90)), fxEurGbp(boost::make_shared<SimpleQuote>(1.35)), c(5, 5) {
+        : referenceDate(30, July, 2015), eurYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.02, Actual365Fixed())),
+          usdYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.05, Actual365Fixed())),
+          gbpYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.04, Actual365Fixed())),
+          fxEurUsd(QuantLib::ext::make_shared<SimpleQuote>(0.90)), fxEurGbp(QuantLib::ext::make_shared<SimpleQuote>(1.35)), c(5, 5) {
 
         Settings::instance().evaluationDate() = referenceDate;
         volstepdates.push_back(Date(15, July, 2016));
@@ -727,16 +727,16 @@ struct Lgm5fTestData {
         usdKappa_a = Array(1, 0.03);
         gbpKappa_a = Array(1, 0.04);
 
-        eurLgm_p = boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYts, volsteptimes_a,
+        eurLgm_p = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYts, volsteptimes_a,
                                                                                eurVols_a, notimes_a, eurKappa_a);
-        usdLgm_p = boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(USDCurrency(), usdYts, volsteptimes_a,
+        usdLgm_p = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(USDCurrency(), usdYts, volsteptimes_a,
                                                                                usdVols_a, notimes_a, usdKappa_a);
-        gbpLgm_p = boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(GBPCurrency(), gbpYts, volsteptimes_a,
+        gbpLgm_p = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(GBPCurrency(), gbpYts, volsteptimes_a,
                                                                                gbpVols_a, notimes_a, gbpKappa_a);
 
-        fxUsd_p = boost::make_shared<FxBsPiecewiseConstantParametrization>(USDCurrency(), fxEurUsd, volsteptimesFx_a,
+        fxUsd_p = QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(USDCurrency(), fxEurUsd, volsteptimesFx_a,
                                                                            fxSigmasUsd_a);
-        fxGbp_p = boost::make_shared<FxBsPiecewiseConstantParametrization>(GBPCurrency(), fxEurGbp, volsteptimesFx_a,
+        fxGbp_p = QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(GBPCurrency(), fxEurGbp, volsteptimesFx_a,
                                                                            fxSigmasGbp_a);
 
         singleModels.push_back(eurLgm_p);
@@ -754,9 +754,9 @@ struct Lgm5fTestData {
         c[4][0] = 0.3; c[4][1] = -0.1; c[4][2] = 0.1; c[4][3] = 0.3;  c[4][4] = 1.0;  // FX GBP-EUR
         // clang-format on
 
-        ccLgmExact = boost::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
+        ccLgmExact = QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
                                                          IrModel::Measure::LGM, CrossAssetModel::Discretization::Exact);
-        ccLgmEuler = boost::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
+        ccLgmEuler = QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
                                                          IrModel::Measure::LGM, CrossAssetModel::Discretization::Euler);
     }
 
@@ -769,23 +769,23 @@ struct Lgm5fTestData {
     Handle<Quote> fxEurUsd, fxEurGbp;
     Array eurVols_a, usdVols_a, gbpVols_a, fxSigmasUsd_a, fxSigmasGbp_a;
     Array notimes_a, eurKappa_a, usdKappa_a, gbpKappa_a;
-    boost::shared_ptr<IrLgm1fParametrization> eurLgm_p, usdLgm_p, gbpLgm_p;
-    boost::shared_ptr<FxBsParametrization> fxUsd_p, fxGbp_p;
-    std::vector<boost::shared_ptr<Parametrization> > singleModels;
+    QuantLib::ext::shared_ptr<IrLgm1fParametrization> eurLgm_p, usdLgm_p, gbpLgm_p;
+    QuantLib::ext::shared_ptr<FxBsParametrization> fxUsd_p, fxGbp_p;
+    std::vector<QuantLib::ext::shared_ptr<Parametrization> > singleModels;
     Matrix c;
-    boost::shared_ptr<CrossAssetModel> ccLgmExact, ccLgmEuler;
+    QuantLib::ext::shared_ptr<CrossAssetModel> ccLgmExact, ccLgmEuler;
 }; // LGM5FTestData
 
 struct IrFxCrModelTestData {
     IrFxCrModelTestData(bool includeCirr = false)
         : referenceDate(30, July, 2015), N(includeCirr ? 11 : 8),
-          eurYts(boost::make_shared<FlatForward>(referenceDate, 0.02, Actual365Fixed())),
-          usdYts(boost::make_shared<FlatForward>(referenceDate, 0.05, Actual365Fixed())),
-          gbpYts(boost::make_shared<FlatForward>(referenceDate, 0.04, Actual365Fixed())),
-          fxEurUsd(boost::make_shared<SimpleQuote>(0.90)), fxEurGbp(boost::make_shared<SimpleQuote>(1.35)),
-          n1Ts(boost::make_shared<FlatHazardRate>(referenceDate, 0.01, Actual365Fixed())),
-          n2Ts(boost::make_shared<FlatHazardRate>(referenceDate, 0.05, Actual365Fixed())),
-          n3Ts(boost::make_shared<FlatHazardRate>(referenceDate, 0.10, Actual365Fixed())), n1Alpha(0.01), n1Kappa(0.01),
+          eurYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.02, Actual365Fixed())),
+          usdYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.05, Actual365Fixed())),
+          gbpYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.04, Actual365Fixed())),
+          fxEurUsd(QuantLib::ext::make_shared<SimpleQuote>(0.90)), fxEurGbp(QuantLib::ext::make_shared<SimpleQuote>(1.35)),
+          n1Ts(QuantLib::ext::make_shared<FlatHazardRate>(referenceDate, 0.01, Actual365Fixed())),
+          n2Ts(QuantLib::ext::make_shared<FlatHazardRate>(referenceDate, 0.05, Actual365Fixed())),
+          n3Ts(QuantLib::ext::make_shared<FlatHazardRate>(referenceDate, 0.10, Actual365Fixed())), n1Alpha(0.01), n1Kappa(0.01),
           n2Alpha(0.015), n2Kappa(0.015), n3Alpha(0.0050), n3Kappa(0.0050),
           cirppKappa(0.206), cirppTheta(0.04), cirppSigma(sqrt(2 * cirppKappa * cirppTheta) - 1E-10),
           cirppY0(cirppTheta), c(N, N, 0.0) {
@@ -838,29 +838,29 @@ struct IrFxCrModelTestData {
         usdKappa_a = Array(1, 0.03);
         gbpKappa_a = Array(1, 0.04);
 
-        eurLgm_p = boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYts, volsteptimes_a,
+        eurLgm_p = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYts, volsteptimes_a,
                                                                                eurVols_a, notimes_a, eurKappa_a);
-        usdLgm_p = boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(USDCurrency(), usdYts, volsteptimes_a,
+        usdLgm_p = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(USDCurrency(), usdYts, volsteptimes_a,
                                                                                usdVols_a, notimes_a, usdKappa_a);
-        gbpLgm_p = boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(GBPCurrency(), gbpYts, volsteptimes_a,
+        gbpLgm_p = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(GBPCurrency(), gbpYts, volsteptimes_a,
                                                                                gbpVols_a, notimes_a, gbpKappa_a);
 
-        fxUsd_p = boost::make_shared<FxBsPiecewiseConstantParametrization>(USDCurrency(), fxEurUsd, volsteptimesFx_a,
+        fxUsd_p = QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(USDCurrency(), fxEurUsd, volsteptimesFx_a,
                                                                            fxSigmasUsd_a);
-        fxGbp_p = boost::make_shared<FxBsPiecewiseConstantParametrization>(GBPCurrency(), fxEurGbp, volsteptimesFx_a,
+        fxGbp_p = QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(GBPCurrency(), fxEurGbp, volsteptimesFx_a,
                                                                            fxSigmasGbp_a);
 
         // credit LGM
-        n1_p = boost::make_shared<CrLgm1fConstantParametrization>(EURCurrency(), n1Ts, n1Alpha, n1Kappa);
-        n2_p = boost::make_shared<CrLgm1fConstantParametrization>(EURCurrency(), n2Ts, n2Alpha, n2Kappa);
-        n3_p = boost::make_shared<CrLgm1fConstantParametrization>(EURCurrency(), n3Ts, n3Alpha, n3Kappa);
+        n1_p = QuantLib::ext::make_shared<CrLgm1fConstantParametrization>(EURCurrency(), n1Ts, n1Alpha, n1Kappa);
+        n2_p = QuantLib::ext::make_shared<CrLgm1fConstantParametrization>(EURCurrency(), n2Ts, n2Alpha, n2Kappa);
+        n3_p = QuantLib::ext::make_shared<CrLgm1fConstantParametrization>(EURCurrency(), n3Ts, n3Alpha, n3Kappa);
 
         // credit cir++ (shifted = true), parameters are taken from CrCirppModelTest
-        n1_cirpp = boost::make_shared<CrCirppConstantWithFellerParametrization>(
+        n1_cirpp = QuantLib::ext::make_shared<CrCirppConstantWithFellerParametrization>(
             EURCurrency(), n1Ts, cirppKappa, cirppTheta, cirppSigma, cirppY0, true);
-        n2_cirpp = boost::make_shared<CrCirppConstantWithFellerParametrization>(
+        n2_cirpp = QuantLib::ext::make_shared<CrCirppConstantWithFellerParametrization>(
             USDCurrency(), n2Ts, cirppKappa, cirppTheta, cirppSigma, cirppY0, true);
-        n3_cirpp = boost::make_shared<CrCirppConstantWithFellerParametrization>(
+        n3_cirpp = QuantLib::ext::make_shared<CrCirppConstantWithFellerParametrization>(
             GBPCurrency(), n3Ts, cirppKappa, cirppTheta, cirppSigma, cirppY0, true);
 
         singleModels.push_back(eurLgm_p);
@@ -922,14 +922,14 @@ struct IrFxCrModelTestData {
         BOOST_TEST_MESSAGE("salvaged correlation matrix is\n" << cs);
         if (includeCirr)
             modelExact = modelEuler =
-                boost::make_shared<CrossAssetModel>(singleModels, cs, SalvagingAlgorithm::None, IrModel::Measure::LGM,
+                QuantLib::ext::make_shared<CrossAssetModel>(singleModels, cs, SalvagingAlgorithm::None, IrModel::Measure::LGM,
                                                     CrossAssetModel::Discretization::Euler);
         else {
             modelExact =
-                boost::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None, IrModel::Measure::LGM,
+                QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None, IrModel::Measure::LGM,
                                                     CrossAssetModel::Discretization::Exact);
             modelEuler =
-                boost::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None, IrModel::Measure::LGM,
+                QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None, IrModel::Measure::LGM,
                                                     CrossAssetModel::Discretization::Euler);
         }
         BOOST_TEST_MESSAGE("cam+ model built.");
@@ -946,20 +946,20 @@ struct IrFxCrModelTestData {
     Handle<Quote> fxEurUsd, fxEurGbp;
     Array eurVols_a, usdVols_a, gbpVols_a, fxSigmasUsd_a, fxSigmasGbp_a;
     Array notimes_a, eurKappa_a, usdKappa_a, gbpKappa_a;
-    boost::shared_ptr<IrLgm1fParametrization> eurLgm_p, usdLgm_p, gbpLgm_p;
-    boost::shared_ptr<FxBsParametrization> fxUsd_p, fxGbp_p;
+    QuantLib::ext::shared_ptr<IrLgm1fParametrization> eurLgm_p, usdLgm_p, gbpLgm_p;
+    QuantLib::ext::shared_ptr<FxBsParametrization> fxUsd_p, fxGbp_p;
     // cr
     Handle<DefaultProbabilityTermStructure> n1Ts, n2Ts, n3Ts;
     // LGM
-    boost::shared_ptr<CrLgm1fParametrization> n1_p, n2_p, n3_p;
+    QuantLib::ext::shared_ptr<CrLgm1fParametrization> n1_p, n2_p, n3_p;
     Real n1Alpha, n1Kappa, n2Alpha, n2Kappa, n3Alpha, n3Kappa;
     // CIR++
-    boost::shared_ptr<CrCirppParametrization> n1_cirpp, n2_cirpp, n3_cirpp;
+    QuantLib::ext::shared_ptr<CrCirppParametrization> n1_cirpp, n2_cirpp, n3_cirpp;
     Real cirppKappa, cirppTheta, cirppSigma, cirppY0;
     // model
-    std::vector<boost::shared_ptr<Parametrization> > singleModels;
+    std::vector<QuantLib::ext::shared_ptr<Parametrization> > singleModels;
     Matrix c;
-    boost::shared_ptr<CrossAssetModel> modelExact, modelEuler;
+    QuantLib::ext::shared_ptr<CrossAssetModel> modelExact, modelEuler;
 }; // IrFxCrModelTestData
 
 } // anonymous namespace
@@ -971,7 +971,7 @@ BOOST_AUTO_TEST_CASE(testLgm5fFxCalibration) {
     Lgm5fTestData d;
 
     // we test the 5f model against the 3f model eur-gbp
-    std::vector<boost::shared_ptr<Parametrization> > singleModelsProjected;
+    std::vector<QuantLib::ext::shared_ptr<Parametrization> > singleModelsProjected;
     singleModelsProjected.push_back(d.eurLgm_p);
     singleModelsProjected.push_back(d.gbpLgm_p);
     singleModelsProjected.push_back(d.fxGbp_p);
@@ -987,17 +987,17 @@ BOOST_AUTO_TEST_CASE(testLgm5fFxCalibration) {
         }
     }
 
-    boost::shared_ptr<CrossAssetModel> ccLgmProjected =
-        boost::make_shared<CrossAssetModel>(singleModelsProjected, cProjected, SalvagingAlgorithm::None);
+    QuantLib::ext::shared_ptr<CrossAssetModel> ccLgmProjected =
+        QuantLib::ext::make_shared<CrossAssetModel>(singleModelsProjected, cProjected, SalvagingAlgorithm::None);
 
-    boost::shared_ptr<AnalyticCcLgmFxOptionEngine> ccLgmFxOptionEngineUsd =
-        boost::make_shared<AnalyticCcLgmFxOptionEngine>(d.ccLgmExact, 0);
+    QuantLib::ext::shared_ptr<AnalyticCcLgmFxOptionEngine> ccLgmFxOptionEngineUsd =
+        QuantLib::ext::make_shared<AnalyticCcLgmFxOptionEngine>(d.ccLgmExact, 0);
 
-    boost::shared_ptr<AnalyticCcLgmFxOptionEngine> ccLgmFxOptionEngineGbp =
-        boost::make_shared<AnalyticCcLgmFxOptionEngine>(d.ccLgmExact, 1);
+    QuantLib::ext::shared_ptr<AnalyticCcLgmFxOptionEngine> ccLgmFxOptionEngineGbp =
+        QuantLib::ext::make_shared<AnalyticCcLgmFxOptionEngine>(d.ccLgmExact, 1);
 
-    boost::shared_ptr<AnalyticCcLgmFxOptionEngine> ccLgmProjectedFxOptionEngineGbp =
-        boost::make_shared<AnalyticCcLgmFxOptionEngine>(ccLgmProjected, 0);
+    QuantLib::ext::shared_ptr<AnalyticCcLgmFxOptionEngine> ccLgmProjectedFxOptionEngineGbp =
+        QuantLib::ext::make_shared<AnalyticCcLgmFxOptionEngine>(ccLgmProjected, 0);
 
     ccLgmFxOptionEngineUsd->cache();
     ccLgmFxOptionEngineGbp->cache();
@@ -1005,15 +1005,15 @@ BOOST_AUTO_TEST_CASE(testLgm5fFxCalibration) {
 
     // while the initial fx vol starts at 0.2 for usd and 0.15 for gbp
     // we calibrate to helpers with 0.15 and 0.2 target implied vol
-    std::vector<boost::shared_ptr<BlackCalibrationHelper> > helpersUsd, helpersGbp;
+    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper> > helpersUsd, helpersGbp;
     for (Size i = 0; i <= d.volstepdatesFx.size(); ++i) {
-        boost::shared_ptr<BlackCalibrationHelper> tmpUsd = boost::make_shared<FxEqOptionHelper>(
+        QuantLib::ext::shared_ptr<BlackCalibrationHelper> tmpUsd = QuantLib::ext::make_shared<FxEqOptionHelper>(
             i < d.volstepdatesFx.size() ? d.volstepdatesFx[i] : d.volstepdatesFx.back() + 365, 0.90, d.fxEurUsd,
-            Handle<Quote>(boost::make_shared<SimpleQuote>(0.15)), d.ccLgmExact->irlgm1f(0)->termStructure(),
+            Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.15)), d.ccLgmExact->irlgm1f(0)->termStructure(),
             d.ccLgmExact->irlgm1f(1)->termStructure());
-        boost::shared_ptr<BlackCalibrationHelper> tmpGbp = boost::make_shared<FxEqOptionHelper>(
+        QuantLib::ext::shared_ptr<BlackCalibrationHelper> tmpGbp = QuantLib::ext::make_shared<FxEqOptionHelper>(
             i < d.volstepdatesFx.size() ? d.volstepdatesFx[i] : d.volstepdatesFx.back() + 365, 1.35, d.fxEurGbp,
-            Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)), d.ccLgmExact->irlgm1f(0)->termStructure(),
+            Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.20)), d.ccLgmExact->irlgm1f(0)->termStructure(),
             d.ccLgmExact->irlgm1f(2)->termStructure());
         tmpUsd->setPricingEngine(ccLgmFxOptionEngineUsd);
         tmpGbp->setPricingEngine(ccLgmFxOptionEngineGbp);
@@ -1087,51 +1087,51 @@ BOOST_AUTO_TEST_CASE(testLgm5fFullCalibration) {
 
     // calibration baskets
 
-    std::vector<boost::shared_ptr<BlackCalibrationHelper> > basketEur, basketUsd, basketGbp, basketEurUsd, basketEurGbp;
+    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper> > basketEur, basketUsd, basketGbp, basketEurUsd, basketEurGbp;
 
-    boost::shared_ptr<IborIndex> euribor6m = boost::make_shared<Euribor>(6 * Months, d.eurYts);
-    boost::shared_ptr<IborIndex> usdLibor3m = boost::make_shared<USDLibor>(3 * Months, d.usdYts);
-    boost::shared_ptr<IborIndex> gbpLibor3m = boost::make_shared<GBPLibor>(3 * Months, d.gbpYts);
+    QuantLib::ext::shared_ptr<IborIndex> euribor6m = QuantLib::ext::make_shared<Euribor>(6 * Months, d.eurYts);
+    QuantLib::ext::shared_ptr<IborIndex> usdLibor3m = QuantLib::ext::make_shared<USDLibor>(3 * Months, d.usdYts);
+    QuantLib::ext::shared_ptr<IborIndex> gbpLibor3m = QuantLib::ext::make_shared<GBPLibor>(3 * Months, d.gbpYts);
 
     for (Size i = 0; i <= d.volstepdates.size(); ++i) {
         Date tmp = i < d.volstepdates.size() ? d.volstepdates[i] : d.volstepdates.back() + 365;
         // EUR: atm+200bp, 150bp normal vol
-        basketEur.push_back(boost::shared_ptr<SwaptionHelper>(new SwaptionHelper(
-            tmp, 10 * Years, Handle<Quote>(boost::make_shared<SimpleQuote>(0.015)), euribor6m, 1 * Years, Thirty360(Thirty360::BondBasis),
+        basketEur.push_back(QuantLib::ext::shared_ptr<SwaptionHelper>(new SwaptionHelper(
+            tmp, 10 * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.015)), euribor6m, 1 * Years, Thirty360(Thirty360::BondBasis),
             Actual360(), d.eurYts, BlackCalibrationHelper::RelativePriceError, 0.04, 1.0, Normal)));
         // USD: atm, 20%, lognormal vol
-        basketUsd.push_back(boost::shared_ptr<SwaptionHelper>(
-            new SwaptionHelper(tmp, 10 * Years, Handle<Quote>(boost::make_shared<SimpleQuote>(0.30)), usdLibor3m,
+        basketUsd.push_back(QuantLib::ext::shared_ptr<SwaptionHelper>(
+            new SwaptionHelper(tmp, 10 * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.30)), usdLibor3m,
                                1 * Years, Thirty360(Thirty360::BondBasis), Actual360(), d.usdYts,
                                BlackCalibrationHelper::RelativePriceError, Null<Real>(), 1.0, ShiftedLognormal, 0.0)));
         // GBP: atm-200bp, 10%, shifted lognormal vol with shift = 2%
-        basketGbp.push_back(boost::shared_ptr<SwaptionHelper>(new SwaptionHelper(
-            tmp, 10 * Years, Handle<Quote>(boost::make_shared<SimpleQuote>(0.30)), gbpLibor3m, 1 * Years, Thirty360(Thirty360::BondBasis),
+        basketGbp.push_back(QuantLib::ext::shared_ptr<SwaptionHelper>(new SwaptionHelper(
+            tmp, 10 * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.30)), gbpLibor3m, 1 * Years, Thirty360(Thirty360::BondBasis),
             Actual360(), d.usdYts, BlackCalibrationHelper::RelativePriceError, 0.02, 1.0, ShiftedLognormal, 0.02)));
     }
 
     for (Size i = 0; i < d.volstepdatesFx.size(); ++i) {
         Date tmp = i < d.volstepdatesFx.size() ? d.volstepdatesFx[i] : d.volstepdatesFx.back() + 365;
         // EUR-USD: atm, 30% (lognormal) vol
-        basketEurUsd.push_back(boost::make_shared<FxEqOptionHelper>(
-            tmp, Null<Real>(), d.fxEurUsd, Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)), d.eurYts, d.usdYts,
+        basketEurUsd.push_back(QuantLib::ext::make_shared<FxEqOptionHelper>(
+            tmp, Null<Real>(), d.fxEurUsd, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.20)), d.eurYts, d.usdYts,
             BlackCalibrationHelper::RelativePriceError));
         // EUR-GBP: atm, 10% (lognormal) vol
-        basketEurGbp.push_back(boost::make_shared<FxEqOptionHelper>(
-            tmp, Null<Real>(), d.fxEurGbp, Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)), d.eurYts, d.gbpYts,
+        basketEurGbp.push_back(QuantLib::ext::make_shared<FxEqOptionHelper>(
+            tmp, Null<Real>(), d.fxEurGbp, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.20)), d.eurYts, d.gbpYts,
             BlackCalibrationHelper::RelativePriceError));
     }
 
     // pricing engines
 
-    boost::shared_ptr<PricingEngine> eurSwEng = boost::make_shared<AnalyticLgmSwaptionEngine>(d.ccLgmExact, 0);
-    boost::shared_ptr<PricingEngine> usdSwEng = boost::make_shared<AnalyticLgmSwaptionEngine>(d.ccLgmExact, 1);
-    boost::shared_ptr<PricingEngine> gbpSwEng = boost::make_shared<AnalyticLgmSwaptionEngine>(d.ccLgmExact, 2);
+    QuantLib::ext::shared_ptr<PricingEngine> eurSwEng = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(d.ccLgmExact, 0);
+    QuantLib::ext::shared_ptr<PricingEngine> usdSwEng = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(d.ccLgmExact, 1);
+    QuantLib::ext::shared_ptr<PricingEngine> gbpSwEng = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(d.ccLgmExact, 2);
 
-    boost::shared_ptr<AnalyticCcLgmFxOptionEngine> eurUsdFxoEng =
-        boost::make_shared<AnalyticCcLgmFxOptionEngine>(d.ccLgmExact, 0);
-    boost::shared_ptr<AnalyticCcLgmFxOptionEngine> eurGbpFxoEng =
-        boost::make_shared<AnalyticCcLgmFxOptionEngine>(d.ccLgmExact, 1);
+    QuantLib::ext::shared_ptr<AnalyticCcLgmFxOptionEngine> eurUsdFxoEng =
+        QuantLib::ext::make_shared<AnalyticCcLgmFxOptionEngine>(d.ccLgmExact, 0);
+    QuantLib::ext::shared_ptr<AnalyticCcLgmFxOptionEngine> eurGbpFxoEng =
+        QuantLib::ext::make_shared<AnalyticCcLgmFxOptionEngine>(d.ccLgmExact, 1);
 
     eurUsdFxoEng->cache();
     eurGbpFxoEng->cache();
@@ -1218,8 +1218,8 @@ BOOST_AUTO_TEST_CASE(testLgm5fMoments) {
 
     Lgm5fTestData d;
 
-    boost::shared_ptr<StochasticProcess> p_exact = d.ccLgmExact->stateProcess();
-    boost::shared_ptr<StochasticProcess> p_euler = d.ccLgmEuler->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> p_exact = d.ccLgmExact->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> p_euler = d.ccLgmEuler->stateProcess();
 
     Real T = 10.0;                            // horizon at which we compare the moments
     Size steps = static_cast<Size>(T * 10.0); // number of simulation steps
@@ -1230,10 +1230,10 @@ BOOST_AUTO_TEST_CASE(testLgm5fMoments) {
 
     TimeGrid grid(T, steps);
 
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
         tmp->resetCache(grid.size() - 1);
     }
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
         tmp->resetCache(grid.size() - 1);
     }
     MultiPathGeneratorSobolBrownianBridge pgen(p_euler, grid);
@@ -1301,21 +1301,21 @@ BOOST_AUTO_TEST_CASE(testLgm5fMoments) {
                     tol = tolLn;
                 }
             }
-            if (std::fabs(covariance(v_eu[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
-                                                         << ") is inconsistent with numerical "
-                                                            "value (Euler discretization, "
-                                                         << covariance(v_eu[i][j]) << "), error is "
-                                                         << v_an[i][j] - covariance(v_eu[i][j]) << " tolerance is "
-                                                         << tol);
+            if (std::fabs(boost::accumulators::covariance(v_eu[i][j]) - v_an[i][j]) > tol) {
+                BOOST_ERROR("analytical covariance at ("
+                            << i << "," << j << ") (" << v_an[i][j]
+                            << ") is inconsistent with numerical "
+                               "value (Euler discretization, "
+                            << boost::accumulators::covariance(v_eu[i][j]) << "), error is "
+                            << v_an[i][j] - boost::accumulators::covariance(v_eu[i][j]) << " tolerance is " << tol);
             }
-            if (std::fabs(covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
-                                                         << ") is inconsistent with numerical "
-                                                            "value (Exact discretization, "
-                                                         << covariance(v_eu2[i][j]) << "), error is "
-                                                         << v_an[i][j] - covariance(v_eu2[i][j]) << " tolerance is "
-                                                         << tol);
+            if (std::fabs(boost::accumulators::covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
+                BOOST_ERROR("analytical covariance at ("
+                            << i << "," << j << ") (" << v_an[i][j]
+                            << ") is inconsistent with numerical "
+                               "value (Exact discretization, "
+                            << boost::accumulators::covariance(v_eu2[i][j]) << "), error is "
+                            << v_an[i][j] - boost::accumulators::covariance(v_eu2[i][j]) << " tolerance is " << tol);
             }
         }
     }
@@ -1330,7 +1330,7 @@ BOOST_AUTO_TEST_CASE(testLgmGsrEquivalence) {
 
     Date evalDate(12, January, 2015);
     Settings::instance().evaluationDate() = evalDate;
-    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(evalDate, 0.02, Actual365Fixed()));
+    Handle<YieldTermStructure> yts(QuantLib::ext::make_shared<FlatForward>(evalDate, 0.02, Actual365Fixed()));
 
     Real T[] = { 10.0, 20.0, 50.0, 100.0 };
     Real sigma[] = { 0.0050, 0.01, 0.02 };
@@ -1343,7 +1343,7 @@ BOOST_AUTO_TEST_CASE(testLgmGsrEquivalence) {
                 std::vector<Date> stepDates;
                 std::vector<Real> sigmas(1, sigma[j]);
 
-                boost::shared_ptr<Gsr> gsr = boost::make_shared<Gsr>(yts, stepDates, sigmas, kappa[k], T[i]);
+                QuantLib::ext::shared_ptr<Gsr> gsr = QuantLib::ext::make_shared<Gsr>(yts, stepDates, sigmas, kappa[k], T[i]);
 
                 Array stepTimes_a(0);
                 Array sigmas_a(1, sigma[j]);
@@ -1352,16 +1352,16 @@ BOOST_AUTO_TEST_CASE(testLgmGsrEquivalence) {
                 // for shift = -H(T) we change the LGM measure to the T forward
                 // measure effectively
                 Real shift = close_enough(kappa[k], 0.0) ? -T[i] : -(1.0 - std::exp(-kappa[k] * T[i])) / kappa[k];
-                boost::shared_ptr<IrLgm1fParametrization> lgm_p =
-                    boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(EURCurrency(), yts, stepTimes_a,
+                QuantLib::ext::shared_ptr<IrLgm1fParametrization> lgm_p =
+                    QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(EURCurrency(), yts, stepTimes_a,
                                                                                  sigmas_a, stepTimes_a, kappas_a);
                 lgm_p->shift() = shift;
 
-                boost::shared_ptr<LinearGaussMarkovModel> lgm = boost::make_shared<LinearGaussMarkovModel>(lgm_p);
+                QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm = QuantLib::ext::make_shared<LinearGaussMarkovModel>(lgm_p);
 
-                boost::shared_ptr<StochasticProcess1D> gsr_process = gsr->stateProcess();
-                boost::shared_ptr<StochasticProcess1D> lgm_process =
-                    boost::dynamic_pointer_cast<StochasticProcess1D>(lgm->stateProcess());
+                QuantLib::ext::shared_ptr<StochasticProcess1D> gsr_process = gsr->stateProcess();
+                QuantLib::ext::shared_ptr<StochasticProcess1D> lgm_process =
+                    QuantLib::ext::dynamic_pointer_cast<StochasticProcess1D>(lgm->stateProcess());
 
                 Size N = 10000; // number of paths
                 Size seed = 123456;
@@ -1427,13 +1427,13 @@ BOOST_AUTO_TEST_CASE(testLgmMcWithShift) {
     // tolerances for error of mean
     Real eom_tol[] = { 0.17, 0.05, 0.02, 0.01, 0.005, 1.0E-12 };
 
-    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(0, NullCalendar(), 0.02, Actual365Fixed()));
+    Handle<YieldTermStructure> yts(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.02, Actual365Fixed()));
 
-    boost::shared_ptr<IrLgm1fParametrization> lgm =
-        boost::make_shared<IrLgm1fConstantParametrization>(EURCurrency(), yts, 0.01, 0.01);
-    boost::shared_ptr<StochasticProcess> p = boost::make_shared<IrLgm1fStateProcess>(lgm);
+    QuantLib::ext::shared_ptr<IrLgm1fParametrization> lgm =
+        QuantLib::ext::make_shared<IrLgm1fConstantParametrization>(EURCurrency(), yts, 0.01, 0.01);
+    QuantLib::ext::shared_ptr<StochasticProcess> p = QuantLib::ext::make_shared<IrLgm1fStateProcess>(lgm);
 
-    boost::shared_ptr<LinearGaussMarkovModel> model = boost::make_shared<LinearGaussMarkovModel>(lgm);
+    QuantLib::ext::shared_ptr<LinearGaussMarkovModel> model = QuantLib::ext::make_shared<LinearGaussMarkovModel>(lgm);
 
     Size steps = 1;
     Size paths = 10000;
@@ -1482,8 +1482,8 @@ BOOST_AUTO_TEST_CASE(testIrFxCrCirppMartingaleProperty) {
     IrFxCrModelTestData d(false);
     IrFxCrModelTestData d_cirpp(true);
 
-    boost::shared_ptr<StochasticProcess> process1 = d.modelExact->stateProcess();
-    boost::shared_ptr<StochasticProcess> process2 = d_cirpp.modelEuler->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> process1 = d.modelExact->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> process2 = d_cirpp.modelEuler->stateProcess();
 
     Size n = 10000;                         // number of paths
     Size seed = 18;                         // rng seed
@@ -1495,12 +1495,12 @@ BOOST_AUTO_TEST_CASE(testIrFxCrCirppMartingaleProperty) {
     LowDiscrepancy::rsg_type sg2 = LowDiscrepancy::make_sequence_generator(process2->factors() * steps, seed);
 
     TimeGrid grid1(T, 1);
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process1)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process1)) {
         tmp->resetCache(grid1.size() - 1);
     }
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg1(process1, grid1, sg1, false);
     TimeGrid grid2(T, steps);
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process2)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process2)) {
         tmp->resetCache(grid2.size() - 1);
     }
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg2(process2, grid2, sg2, false);
@@ -1710,8 +1710,8 @@ BOOST_AUTO_TEST_CASE(testIrFxCrMoments) {
 
     IrFxCrModelTestData d;
 
-    boost::shared_ptr<StochasticProcess> p_exact = d.modelExact->stateProcess();
-    boost::shared_ptr<StochasticProcess> p_euler = d.modelEuler->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> p_exact = d.modelExact->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> p_euler = d.modelEuler->stateProcess();
 
     Real T = 2.0;                           // horizon at which we compare the moments
     Size steps = static_cast<Size>(T * 10); // number of simulation steps (Euler and exact)
@@ -1723,12 +1723,12 @@ BOOST_AUTO_TEST_CASE(testIrFxCrMoments) {
     Size seed = 18;
     TimeGrid grid(T, steps);
 
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
         tmp->resetCache(grid.size() - 1);
     }
     MultiPathGeneratorSobolBrownianBridge pgen(p_euler, grid, SobolBrownianGenerator::Diagonal, seed,
                                                SobolRsg::JoeKuoD7);
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
         tmp->resetCache(grid.size() - 1);
     }
     MultiPathGeneratorSobolBrownianBridge pgen2(p_exact, grid, SobolBrownianGenerator::Diagonal, seed,
@@ -1773,7 +1773,7 @@ BOOST_AUTO_TEST_CASE(testIrFxCrMoments) {
     for (Size i = 0; i < 11; ++i) {
         std::ostringstream tmp;
         for (Size j = 0; j <= i; ++j) {
-            tmp << covariance(v_eu[i][j]) << " ";
+            tmp << boost::accumulators::covariance(v_eu[i][j]) << " ";
         }
         BOOST_TEST_MESSAGE(tmp.str());
     }
@@ -1783,7 +1783,7 @@ BOOST_AUTO_TEST_CASE(testIrFxCrMoments) {
     for (Size i = 0; i < 11; ++i) {
         std::ostringstream tmp;
         for (Size j = 0; j <= i; ++j) {
-            tmp << covariance(v_eu2[i][j]) << " ";
+            tmp << boost::accumulators::covariance(v_eu2[i][j]) << " ";
         }
         BOOST_TEST_MESSAGE(tmp.str());
     }
@@ -1818,21 +1818,21 @@ BOOST_AUTO_TEST_CASE(testIrFxCrMoments) {
 
     for (Size i = 0; i < 11; ++i) {
         for (Size j = 0; j <= i; ++j) {
-            if (std::fabs(covariance(v_eu[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
-                                                         << ") is inconsistent with numerical "
-                                                            "value (Euler discretization, "
-                                                         << covariance(v_eu[i][j]) << "), error is "
-                                                         << v_an[i][j] - covariance(v_eu[i][j]) << " tolerance is "
-                                                         << tol);
+            if (std::fabs(boost::accumulators::covariance(v_eu[i][j]) - v_an[i][j]) > tol) {
+                BOOST_ERROR("analytical covariance at ("
+                            << i << "," << j << ") (" << v_an[i][j]
+                            << ") is inconsistent with numerical "
+                               "value (Euler discretization, "
+                            << boost::accumulators::covariance(v_eu[i][j]) << "), error is "
+                            << v_an[i][j] - boost::accumulators::covariance(v_eu[i][j]) << " tolerance is " << tol);
             }
-            if (std::fabs(covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
-                                                         << ") is inconsistent with numerical "
-                                                            "value (exact discretization, "
-                                                         << covariance(v_eu2[i][j]) << "), error is "
-                                                         << v_an[i][j] - covariance(v_eu2[i][j]) << " tolerance is "
-                                                         << tol);
+            if (std::fabs(boost::accumulators::covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
+                BOOST_ERROR("analytical covariance at ("
+                            << i << "," << j << ") (" << v_an[i][j]
+                            << ") is inconsistent with numerical "
+                               "value (exact discretization, "
+                            << boost::accumulators::covariance(v_eu2[i][j]) << "), error is "
+                            << v_an[i][j] - boost::accumulators::covariance(v_eu2[i][j]) << " tolerance is " << tol);
             }
         }
     }
@@ -1850,7 +1850,7 @@ BOOST_AUTO_TEST_CASE(testIrFxCrCorrelationRecovery) {
             std::ostringstream ln, sn;
             ln << "Dummy " << id;
             sn << "DUM " << id;
-            data_ = boost::make_shared<Data>(ln.str(), sn.str(), id, sn.str(), "", 100, Rounding(), "%3% %1$.2f");
+            data_ = QuantLib::ext::make_shared<Data>(ln.str(), sn.str(), id, sn.str(), "", 100, Rounding(), "%3% %1$.2f");
         }
     };
 
@@ -1864,12 +1864,12 @@ BOOST_AUTO_TEST_CASE(testIrFxCrCorrelationRecovery) {
 
     MersenneTwisterUniformRng mt(42);
 
-    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(0, NullCalendar(), 0.01, Actual365Fixed()));
+    Handle<YieldTermStructure> yts(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.01, Actual365Fixed()));
 
     Handle<DefaultProbabilityTermStructure> hts(
-        boost::make_shared<FlatHazardRate>(0, NullCalendar(), 0.01, Actual365Fixed()));
+        QuantLib::ext::make_shared<FlatHazardRate>(0, NullCalendar(), 0.01, Actual365Fixed()));
 
-    Handle<Quote> fxspot(boost::make_shared<SimpleQuote>(1.00));
+    Handle<Quote> fxspot(QuantLib::ext::make_shared<SimpleQuote>(1.00));
 
     Array notimes(0);
     Array fxsigma(1, 0.10);
@@ -1917,34 +1917,34 @@ BOOST_AUTO_TEST_CASE(testIrFxCrCorrelationRecovery) {
 
             // set up model
 
-            std::vector<boost::shared_ptr<Parametrization> > parametrizations;
+            std::vector<QuantLib::ext::shared_ptr<Parametrization> > parametrizations;
 
             // IR
             for (Size i = 0; i < currencies[ii]; ++i) {
                 parametrizations.push_back(
-                    boost::make_shared<IrLgm1fConstantParametrization>(pseudoCcy[i], yts, 0.01, 0.01));
+                    QuantLib::ext::make_shared<IrLgm1fConstantParametrization>(pseudoCcy[i], yts, 0.01, 0.01));
             }
             // FX
             for (Size i = 0; i < currencies[ii] - 1; ++i) {
-                parametrizations.push_back(boost::make_shared<FxBsPiecewiseConstantParametrization>(
+                parametrizations.push_back(QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(
                     pseudoCcy[i + 1], fxspot, notimes, fxsigma));
             }
             // CR
             for (Size i = 0; i < creditnames[jj]; ++i) {
                 parametrizations.push_back(
-                    boost::make_shared<CrLgm1fConstantParametrization>(pseudoCcy[0], hts, 0.01, 0.01));
+                    QuantLib::ext::make_shared<CrLgm1fConstantParametrization>(pseudoCcy[0], hts, 0.01, 0.01));
             }
 
             // get QuantLib::Error: negative eigenvalue(s) (-3.649315e-16) with SalvagingAlgorithm::None
-            boost::shared_ptr<CrossAssetModel> modelExact =
-                boost::make_shared<CrossAssetModel>(parametrizations, c, SalvagingAlgorithm::Spectral,
+            QuantLib::ext::shared_ptr<CrossAssetModel> modelExact =
+                QuantLib::ext::make_shared<CrossAssetModel>(parametrizations, c, SalvagingAlgorithm::Spectral,
                                                     IrModel::Measure::LGM, CrossAssetModel::Discretization::Exact);
-            boost::shared_ptr<CrossAssetModel> modelEuler =
-                boost::make_shared<CrossAssetModel>(parametrizations, c, SalvagingAlgorithm::Spectral,
+            QuantLib::ext::shared_ptr<CrossAssetModel> modelEuler =
+                QuantLib::ext::make_shared<CrossAssetModel>(parametrizations, c, SalvagingAlgorithm::Spectral,
                                                     IrModel::Measure::LGM, CrossAssetModel::Discretization::Euler);
 
-            boost::shared_ptr<StochasticProcess> peuler = modelEuler->stateProcess();
-            boost::shared_ptr<StochasticProcess> pexact = modelExact->stateProcess();
+            QuantLib::ext::shared_ptr<StochasticProcess> peuler = modelEuler->stateProcess();
+            QuantLib::ext::shared_ptr<StochasticProcess> pexact = modelExact->stateProcess();
 
             Matrix c1 = peuler->covariance(dt, peuler->initialValues(), dt);
             Matrix c2 = pexact->covariance(0.0, peuler->initialValues(), dt);
@@ -2007,18 +2007,18 @@ struct IrFxInfCrComModelTestData {
     IrFxInfCrComModelTestData(bool infEurIsDK = true, bool infGbpIsDK = true, bool flatVols = false, bool driftFreeState = false)
         : referenceDate(30, July, 2015),
           dc(Actual365Fixed()),
-          eurYts(boost::make_shared<FlatForward>(referenceDate, 0.02, dc)),
-          usdYts(boost::make_shared<FlatForward>(referenceDate, 0.05, dc)),
-          gbpYts(boost::make_shared<FlatForward>(referenceDate, 0.04, dc)),
-          fxEurUsd(boost::make_shared<SimpleQuote>(0.90)),
-          fxEurGbp(boost::make_shared<SimpleQuote>(1.35)),
-          n1Ts(boost::make_shared<FlatHazardRate>(referenceDate, 0.01, dc)),
-          comTS(boost::make_shared<InterpolatedPriceCurve<Linear>>(comTerms, comPrices, dc, USDCurrency())) {
+          eurYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.02, dc)),
+          usdYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.05, dc)),
+          gbpYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.04, dc)),
+          fxEurUsd(QuantLib::ext::make_shared<SimpleQuote>(0.90)),
+          fxEurGbp(QuantLib::ext::make_shared<SimpleQuote>(1.35)),
+          n1Ts(QuantLib::ext::make_shared<FlatHazardRate>(referenceDate, 0.01, dc)),
+          comTS(QuantLib::ext::make_shared<InterpolatedPriceCurve<Linear>>(comTerms, comPrices, dc, USDCurrency())) {
         
         Settings::instance().evaluationDate() = referenceDate;
         
         // Store the individual models that will be fed to the CAM.
-        vector<boost::shared_ptr<Parametrization> > singleModels;
+        vector<QuantLib::ext::shared_ptr<Parametrization> > singleModels;
 
         // IR parameterisations
         addSingleIrModel(flatVols, EURCurrency(), eurYts, 0.02, 0.0050, 0.0080, singleModels);
@@ -2033,7 +2033,7 @@ struct IrFxInfCrComModelTestData {
         vector<Date> infDates{ Date(30, April, 2015), Date(30, July, 2015) };
         vector<Real> infRates{ 0.01, 0.01 };
         
-        infEurTs = Handle<ZeroInflationTermStructure>(boost::make_shared<ZeroInflationCurve>(
+        infEurTs = Handle<ZeroInflationTermStructure>(QuantLib::ext::make_shared<ZeroInflationCurve>(
             referenceDate, TARGET(), dc, 3 * Months, Monthly, infDates, infRates));
         infEurTs->enableExtrapolation();
         
@@ -2042,49 +2042,49 @@ struct IrFxInfCrComModelTestData {
         Real infEurAlpha = 0.01;
         Real infEurKappa = 0.01;
         if (infEurIsDK) {
-            singleModels.push_back(boost::make_shared<InfDkConstantParametrization>(
+            singleModels.push_back(QuantLib::ext::make_shared<InfDkConstantParametrization>(
                 EURCurrency(), infEurTs, infEurAlpha, infEurKappa));
         } else {
             Real infEurSigma = 0.15;
-            Handle<Quote> baseCpiQuote(boost::make_shared<SimpleQuote>(1.0));
-            auto index = boost::make_shared<EUHICP>(false);
-            auto realRateParam = boost::make_shared<Lgm1fConstantParametrization<ZeroInflationTermStructure>>(
+            Handle<Quote> baseCpiQuote(QuantLib::ext::make_shared<SimpleQuote>(1.0));
+            auto index = QuantLib::ext::make_shared<EUHICP>(false);
+            auto realRateParam = QuantLib::ext::make_shared<Lgm1fConstantParametrization<ZeroInflationTermStructure>>(
                 EURCurrency(), infEurTs, infEurAlpha, infEurKappa);
-            auto indexParam = boost::make_shared<FxBsConstantParametrization>(
+            auto indexParam = QuantLib::ext::make_shared<FxBsConstantParametrization>(
                 EURCurrency(), baseCpiQuote, infEurSigma);
-            singleModels.push_back(boost::make_shared<InfJyParameterization>(realRateParam, indexParam, index));
+            singleModels.push_back(QuantLib::ext::make_shared<InfJyParameterization>(realRateParam, indexParam, index));
         }
 
-        infGbpTs = Handle<ZeroInflationTermStructure>(boost::make_shared<ZeroInflationCurve>(referenceDate,
+        infGbpTs = Handle<ZeroInflationTermStructure>(QuantLib::ext::make_shared<ZeroInflationCurve>(referenceDate,
             UnitedKingdom(), dc, 3 * Months, Monthly, infDates, infRates));
         infGbpTs->enableExtrapolation();
 
         Real infGbpAlpha = 0.01;
         Real infGbpKappa = 0.01;
         if (infGbpIsDK) {
-            singleModels.push_back(boost::make_shared<InfDkConstantParametrization>(
+            singleModels.push_back(QuantLib::ext::make_shared<InfDkConstantParametrization>(
                 GBPCurrency(), infGbpTs, infGbpAlpha, infGbpKappa));
         } else {
             Real infGbpSigma = 0.10;
-            Handle<Quote> baseCpiQuote(boost::make_shared<SimpleQuote>(1.0));
-            auto index = boost::make_shared<UKRPI>(false);
-            auto realRateParam = boost::make_shared<Lgm1fConstantParametrization<ZeroInflationTermStructure>>(
+            Handle<Quote> baseCpiQuote(QuantLib::ext::make_shared<SimpleQuote>(1.0));
+            auto index = QuantLib::ext::make_shared<UKRPI>(false);
+            auto realRateParam = QuantLib::ext::make_shared<Lgm1fConstantParametrization<ZeroInflationTermStructure>>(
                 GBPCurrency(), infGbpTs, infGbpAlpha, infGbpKappa);
-            auto indexParam = boost::make_shared<FxBsConstantParametrization>(
+            auto indexParam = QuantLib::ext::make_shared<FxBsConstantParametrization>(
                 GBPCurrency(), baseCpiQuote, infGbpSigma);
-            singleModels.push_back(boost::make_shared<InfJyParameterization>(realRateParam, indexParam, index));
+            singleModels.push_back(QuantLib::ext::make_shared<InfJyParameterization>(realRateParam, indexParam, index));
         }
 
         // Add the credit parameterisation.
-        singleModels.push_back(boost::make_shared<CrLgm1fConstantParametrization>(
+        singleModels.push_back(QuantLib::ext::make_shared<CrLgm1fConstantParametrization>(
             EURCurrency(), n1Ts, 0.01, 0.01));
 
         // Add commodity parameterisations
         bool df = driftFreeState;
-        comParametrizationA = boost::make_shared<CommoditySchwartzParametrization>(USDCurrency(), "WTI", comTS, fxEurUsd, 0.1, 0.05, df);
-        comParametrizationB = boost::make_shared<CommoditySchwartzParametrization>(USDCurrency(), "NG", comTS, fxEurUsd, 0.15, 0.05, df);
-        comModelA = boost::make_shared<CommoditySchwartzModel>(comParametrizationA);
-        comModelB = boost::make_shared<CommoditySchwartzModel>(comParametrizationB);
+        comParametrizationA = QuantLib::ext::make_shared<CommoditySchwartzParametrization>(USDCurrency(), "WTI", comTS, fxEurUsd, 0.1, 0.05, df);
+        comParametrizationB = QuantLib::ext::make_shared<CommoditySchwartzParametrization>(USDCurrency(), "NG", comTS, fxEurUsd, 0.15, 0.05, df);
+        comModelA = QuantLib::ext::make_shared<CommoditySchwartzModel>(comParametrizationA);
+        comModelB = QuantLib::ext::make_shared<CommoditySchwartzModel>(comParametrizationB);
         singleModels.push_back(comParametrizationA);
         singleModels.push_back(comParametrizationB);
 
@@ -2093,10 +2093,10 @@ struct IrFxInfCrComModelTestData {
         BOOST_TEST_MESSAGE("correlation matrix is\n" << c);
 
         BOOST_TEST_MESSAGE("creating CAM with exact discretization");
-        modelExact = boost::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
+        modelExact = QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
                                                          IrModel::Measure::LGM, CrossAssetModel::Discretization::Exact);
         BOOST_TEST_MESSAGE("creating CAM with Euler discretization");
-        modelEuler = boost::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
+        modelEuler = QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
                                                          IrModel::Measure::LGM, CrossAssetModel::Discretization::Euler);
         BOOST_TEST_MESSAGE("test date done");
     }
@@ -2104,11 +2104,11 @@ struct IrFxInfCrComModelTestData {
     // Add an IR model with flat or time depending volatilities.
     void addSingleIrModel(bool flatVols, const Currency& ccy, Handle<YieldTermStructure> yts, Real kappa,
         Volatility lowerBound, Volatility upperBound,
-        vector<boost::shared_ptr<Parametrization> >& singleModels) {
+        vector<QuantLib::ext::shared_ptr<Parametrization> >& singleModels) {
 
         // If use flat vols, add the parameterisation and return.
         if (flatVols) {
-            singleModels.push_back(boost::make_shared<IrLgm1fConstantParametrization>(ccy, yts, lowerBound, kappa));
+            singleModels.push_back(QuantLib::ext::make_shared<IrLgm1fConstantParametrization>(ccy, yts, lowerBound, kappa));
             return;
         }
 
@@ -2131,18 +2131,18 @@ struct IrFxInfCrComModelTestData {
             vols[i] = lowerBound + (upperBound - lowerBound) * std::exp(-0.3 * i);
         }
 
-        singleModels.push_back(boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(
+        singleModels.push_back(QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(
             ccy, yts, vTimes, vols, Array(), Array(1, kappa)));
     }
 
     // Add an FX model with flat or time depending volatilities.
     void addSingleFxModel(bool flatVols, const Currency& ccy, Handle<Quote> spot,
         Volatility lowerBound, Volatility upperBound,
-        vector<boost::shared_ptr<Parametrization> >& singleModels) {
+        vector<QuantLib::ext::shared_ptr<Parametrization> >& singleModels) {
 
         // If use flat vols, add the parameterisation and return.
         if (flatVols) {
-            singleModels.push_back(boost::make_shared<FxBsConstantParametrization>(ccy, spot, lowerBound));
+            singleModels.push_back(QuantLib::ext::make_shared<FxBsConstantParametrization>(ccy, spot, lowerBound));
             return;
         }
 
@@ -2165,7 +2165,7 @@ struct IrFxInfCrComModelTestData {
             vols[i] = lowerBound + (upperBound - lowerBound) * std::exp(-0.3 * i);
         }
 
-        singleModels.push_back(boost::make_shared<FxBsPiecewiseConstantParametrization>(
+        singleModels.push_back(QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(
             ccy, spot, vTimes, vols));
     }
 
@@ -2266,12 +2266,12 @@ struct IrFxInfCrComModelTestData {
     
     // Commodities
     Handle<QuantExt::PriceTermStructure> comTS;
-    boost::shared_ptr<CommoditySchwartzParametrization> comParametrizationA, comParametrizationB;
-    boost::shared_ptr<CommoditySchwartzModel> comModelA, comModelB;
-    boost::shared_ptr<CommoditySchwartzStateProcess> comProcessA, comProcessB;
+    QuantLib::ext::shared_ptr<CommoditySchwartzParametrization> comParametrizationA, comParametrizationB;
+    QuantLib::ext::shared_ptr<CommoditySchwartzModel> comModelA, comModelB;
+    QuantLib::ext::shared_ptr<CommoditySchwartzStateProcess> comProcessA, comProcessB;
 
     // Model
-    boost::shared_ptr<CrossAssetModel> modelExact, modelEuler;
+    QuantLib::ext::shared_ptr<CrossAssetModel> modelExact, modelEuler;
 
 }; // IrFxInfCrModelTestData
 
@@ -2295,9 +2295,9 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
     IrFxInfCrComModelTestData d(infEurIsDk, infGbpIsDk, flatVols, driftFreeState);
 
     BOOST_TEST_MESSAGE("get exact state process");
-    boost::shared_ptr<StochasticProcess> process1 = d.modelExact->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> process1 = d.modelExact->stateProcess();
     BOOST_TEST_MESSAGE("get Euler state process");
-    boost::shared_ptr<StochasticProcess> process2 = d.modelEuler->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> process2 = d.modelEuler->stateProcess();
 
     Size n = 5000;                         // number of paths
     Size seed = 18;                         // rng seed
@@ -2311,12 +2311,12 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
 
     BOOST_TEST_MESSAGE("build multi path generator");
     TimeGrid grid1(T, 1);
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process1)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process1)) {
         tmp->resetCache(grid1.size() - 1);
     }
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg1(process1, grid1, sg1, false);
     TimeGrid grid2(T, steps);
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process2)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process2)) {
         tmp->resetCache(grid2.size() - 1);
     }
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg2(process2, grid2, sg2, false);
@@ -2560,8 +2560,8 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMoments,
 
     Size n = d.modelExact->dimension();
 
-    boost::shared_ptr<StochasticProcess> p_exact = d.modelExact->stateProcess();
-    boost::shared_ptr<StochasticProcess> p_euler = d.modelExact->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> p_exact = d.modelExact->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> p_euler = d.modelExact->stateProcess();
 
     Real T = 2.0;                            // horizon at which we compare the moments
     Size steps = static_cast<Size>(T * 10); // number of simulation steps (Euler and exact)
@@ -2573,10 +2573,10 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMoments,
     Size seed = 18;
     TimeGrid grid(T, steps);
 
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
         tmp->resetCache(grid.size() - 1);
     }
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
         tmp->resetCache(grid.size() - 1);
     }
     MultiPathGeneratorSobolBrownianBridge pgen(p_euler, grid, SobolBrownianGenerator::Diagonal, seed,
@@ -2630,7 +2630,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMoments,
     for (Size i = 0; i < n; ++i) {
         std::ostringstream tmp;
         for (Size j = 0; j <= i; ++j) {
-            tmp << covariance(v_eu[i][j]) << " ";
+            tmp << boost::accumulators::covariance(v_eu[i][j]) << " ";
         }
         BOOST_TEST_MESSAGE(tmp.str());
     }
@@ -2640,7 +2640,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMoments,
     for (Size i = 0; i < n; ++i) {
         std::ostringstream tmp;
         for (Size j = 0; j <= i; ++j) {
-            tmp << covariance(v_eu2[i][j]) << " ";
+            tmp << boost::accumulators::covariance(v_eu2[i][j]) << " ";
         }
         BOOST_TEST_MESSAGE(tmp.str());
     }
@@ -2675,21 +2675,21 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMoments,
 
     for (Size i = 0; i < n; ++i) {
         for (Size j = 0; j <= i; ++j) {
-            if (std::fabs(covariance(v_eu[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
-                                                         << ") is inconsistent with numerical "
-                                                            "value (Euler discretization, "
-                                                         << covariance(v_eu[i][j]) << "), error is "
-                                                         << v_an[i][j] - covariance(v_eu[i][j]) << " tolerance is "
-                                                         << tol);
+            if (std::fabs(boost::accumulators::covariance(v_eu[i][j]) - v_an[i][j]) > tol) {
+                BOOST_ERROR("analytical covariance at ("
+                            << i << "," << j << ") (" << v_an[i][j]
+                            << ") is inconsistent with numerical "
+                               "value (Euler discretization, "
+                            << boost::accumulators::covariance(v_eu[i][j]) << "), error is "
+                            << v_an[i][j] - boost::accumulators::covariance(v_eu[i][j]) << " tolerance is " << tol);
             }
-            if (std::fabs(covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
-                                                         << ") is inconsistent with numerical "
-                                                            "value (exact discretization, "
-                                                         << covariance(v_eu2[i][j]) << "), error is "
-                                                         << v_an[i][j] - covariance(v_eu2[i][j]) << " tolerance is "
-                                                         << tol);
+            if (std::fabs(boost::accumulators::covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
+                BOOST_ERROR("analytical covariance at ("
+                            << i << "," << j << ") (" << v_an[i][j]
+                            << ") is inconsistent with numerical "
+                               "value (exact discretization, "
+                            << boost::accumulators::covariance(v_eu2[i][j]) << "), error is "
+                            << v_an[i][j] - boost::accumulators::covariance(v_eu2[i][j]) << " tolerance is " << tol);
             }
         }
     }
@@ -2700,16 +2700,16 @@ namespace {
 
 struct IrFxInfCrEqModelTestData {
     IrFxInfCrEqModelTestData()
-        : referenceDate(30, July, 2015), eurYts(boost::make_shared<FlatForward>(referenceDate, 0.02, Actual365Fixed())),
-          usdYts(boost::make_shared<FlatForward>(referenceDate, 0.05, Actual365Fixed())),
-          gbpYts(boost::make_shared<FlatForward>(referenceDate, 0.04, Actual365Fixed())),
-          fxEurUsd(boost::make_shared<SimpleQuote>(0.90)), fxEurGbp(boost::make_shared<SimpleQuote>(1.35)),
-          fxEurEur(boost::make_shared<SimpleQuote>(1.00)), infEurAlpha(0.01), infEurKappa(0.01), infGbpAlpha(0.01),
-          infGbpKappa(0.01), n1Ts(boost::make_shared<FlatHazardRate>(referenceDate, 0.01, Actual365Fixed())),
-          n1Alpha(0.01), n1Kappa(0.01), spSpotToday(boost::make_shared<SimpleQuote>(2100)),
-          lhSpotToday(boost::make_shared<SimpleQuote>(12.50)),
-          eqDivSp(boost::make_shared<FlatForward>(referenceDate, 0.01, Actual365Fixed())),
-          eqDivLh(boost::make_shared<FlatForward>(referenceDate, 0.0075, Actual365Fixed())), c(10, 10, 0.0) {
+        : referenceDate(30, July, 2015), eurYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.02, Actual365Fixed())),
+          usdYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.05, Actual365Fixed())),
+          gbpYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.04, Actual365Fixed())),
+          fxEurUsd(QuantLib::ext::make_shared<SimpleQuote>(0.90)), fxEurGbp(QuantLib::ext::make_shared<SimpleQuote>(1.35)),
+          fxEurEur(QuantLib::ext::make_shared<SimpleQuote>(1.00)), infEurAlpha(0.01), infEurKappa(0.01), infGbpAlpha(0.01),
+          infGbpKappa(0.01), n1Ts(QuantLib::ext::make_shared<FlatHazardRate>(referenceDate, 0.01, Actual365Fixed())),
+          n1Alpha(0.01), n1Kappa(0.01), spSpotToday(QuantLib::ext::make_shared<SimpleQuote>(2100)),
+          lhSpotToday(QuantLib::ext::make_shared<SimpleQuote>(12.50)),
+          eqDivSp(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.01, Actual365Fixed())),
+          eqDivLh(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.0075, Actual365Fixed())), c(10, 10, 0.0) {
 
         std::vector<Date> infDates;
         std::vector<Real> infRates;
@@ -2717,9 +2717,9 @@ struct IrFxInfCrEqModelTestData {
         infDates.push_back(Date(30, July, 2015));
         infRates.push_back(0.01);
         infRates.push_back(0.01);
-        infEurTs = Handle<ZeroInflationTermStructure>(boost::make_shared<ZeroInflationCurve>(
+        infEurTs = Handle<ZeroInflationTermStructure>(QuantLib::ext::make_shared<ZeroInflationCurve>(
             referenceDate, TARGET(), Actual365Fixed(), 3 * Months, Monthly, infDates, infRates));
-        infGbpTs = Handle<ZeroInflationTermStructure>(boost::make_shared<ZeroInflationCurve>(
+        infGbpTs = Handle<ZeroInflationTermStructure>(QuantLib::ext::make_shared<ZeroInflationCurve>(
             referenceDate, UnitedKingdom(), Actual365Fixed(), 3 * Months, Monthly, infDates, infRates));
         infEurTs->enableExtrapolation();
         infGbpTs->enableExtrapolation();
@@ -2807,30 +2807,30 @@ struct IrFxInfCrEqModelTestData {
         usdKappa_a = Array(1, 0.03);
         gbpKappa_a = Array(1, 0.04);
 
-        eurLgm_p = boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYts, volsteptimes_a,
+        eurLgm_p = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYts, volsteptimes_a,
                                                                                eurVols_a, notimes_a, eurKappa_a);
-        usdLgm_p = boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(USDCurrency(), usdYts, volsteptimes_a,
+        usdLgm_p = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(USDCurrency(), usdYts, volsteptimes_a,
                                                                                usdVols_a, notimes_a, usdKappa_a);
-        gbpLgm_p = boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(GBPCurrency(), gbpYts, volsteptimes_a,
+        gbpLgm_p = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(GBPCurrency(), gbpYts, volsteptimes_a,
                                                                                gbpVols_a, notimes_a, gbpKappa_a);
 
-        fxUsd_p = boost::make_shared<FxBsPiecewiseConstantParametrization>(USDCurrency(), fxEurUsd, volsteptimesFx_a,
+        fxUsd_p = QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(USDCurrency(), fxEurUsd, volsteptimesFx_a,
                                                                            fxSigmasUsd_a);
-        fxGbp_p = boost::make_shared<FxBsPiecewiseConstantParametrization>(GBPCurrency(), fxEurGbp, volsteptimesFx_a,
+        fxGbp_p = QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(GBPCurrency(), fxEurGbp, volsteptimesFx_a,
                                                                            fxSigmasGbp_a);
 
         // inflation
-        infEur_p = boost::make_shared<InfDkConstantParametrization>(EURCurrency(), infEurTs, infEurAlpha, infEurKappa);
-        infGbp_p = boost::make_shared<InfDkConstantParametrization>(GBPCurrency(), infGbpTs, infGbpAlpha, infGbpKappa);
+        infEur_p = QuantLib::ext::make_shared<InfDkConstantParametrization>(EURCurrency(), infEurTs, infEurAlpha, infEurKappa);
+        infGbp_p = QuantLib::ext::make_shared<InfDkConstantParametrization>(GBPCurrency(), infGbpTs, infGbpAlpha, infGbpKappa);
 
         // credit
-        n1_p = boost::make_shared<CrLgm1fConstantParametrization>(EURCurrency(), n1Ts, n1Alpha, n1Kappa);
+        n1_p = QuantLib::ext::make_shared<CrLgm1fConstantParametrization>(EURCurrency(), n1Ts, n1Alpha, n1Kappa);
 
         // equity
-        boost::shared_ptr<EqBsParametrization> eqSpBsParam = boost::make_shared<EqBsPiecewiseConstantParametrization>(
+        QuantLib::ext::shared_ptr<EqBsParametrization> eqSpBsParam = QuantLib::ext::make_shared<EqBsPiecewiseConstantParametrization>(
             USDCurrency(), "SP", spSpotToday, fxEurUsd, eqSpTimes, spSigmas, usdYts, eqDivSp);
 
-        boost::shared_ptr<EqBsParametrization> eqLhBsParam = boost::make_shared<EqBsPiecewiseConstantParametrization>(
+        QuantLib::ext::shared_ptr<EqBsParametrization> eqLhBsParam = QuantLib::ext::make_shared<EqBsPiecewiseConstantParametrization>(
             EURCurrency(), "LH", lhSpotToday, fxEurEur, eqLhTimes, lhSigmas, eurYts, eqDivLh);
 
         singleModels.push_back(eurLgm_p);
@@ -2866,9 +2866,9 @@ struct IrFxInfCrEqModelTestData {
 
         BOOST_TEST_MESSAGE("correlation matrix is\n" << c);
 
-        modelExact = boost::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
+        modelExact = QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
                                                          IrModel::Measure::LGM, CrossAssetModel::Discretization::Exact);
-        modelEuler = boost::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
+        modelEuler = QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
                                                          IrModel::Measure::LGM, CrossAssetModel::Discretization::Euler);
     }
 
@@ -2882,16 +2882,16 @@ struct IrFxInfCrEqModelTestData {
     Handle<Quote> fxEurUsd, fxEurGbp, fxEurEur;
     Array eurVols_a, usdVols_a, gbpVols_a, fxSigmasUsd_a, fxSigmasGbp_a;
     Array notimes_a, eurKappa_a, usdKappa_a, gbpKappa_a;
-    boost::shared_ptr<IrLgm1fParametrization> eurLgm_p, usdLgm_p, gbpLgm_p;
-    boost::shared_ptr<FxBsParametrization> fxUsd_p, fxGbp_p;
+    QuantLib::ext::shared_ptr<IrLgm1fParametrization> eurLgm_p, usdLgm_p, gbpLgm_p;
+    QuantLib::ext::shared_ptr<FxBsParametrization> fxUsd_p, fxGbp_p;
     // inf
     Handle<ZeroInflationTermStructure> infEurTs, infGbpTs;
-    boost::shared_ptr<InfDkParametrization> infEur_p, infGbp_p;
+    QuantLib::ext::shared_ptr<InfDkParametrization> infEur_p, infGbp_p;
     Real infEurAlpha, infEurKappa, infGbpAlpha, infGbpKappa;
     Real infLag;
     // cr
     Handle<DefaultProbabilityTermStructure> n1Ts, n2Ts, n3Ts;
-    boost::shared_ptr<CrLgm1fParametrization> n1_p, n2_p, n3_p;
+    QuantLib::ext::shared_ptr<CrLgm1fParametrization> n1_p, n2_p, n3_p;
     Real n1Alpha, n1Kappa, n2Alpha, n2Kappa, n3Alpha, n3Kappa;
     // eq
     std::vector<Date> volstepdatesEqSp, volstepdatesEqLh;
@@ -2900,9 +2900,9 @@ struct IrFxInfCrEqModelTestData {
     Handle<Quote> spSpotToday, lhSpotToday;
     Handle<YieldTermStructure> eqDivSp, eqDivLh;
     // model
-    std::vector<boost::shared_ptr<Parametrization> > singleModels;
+    std::vector<QuantLib::ext::shared_ptr<Parametrization> > singleModels;
     Matrix c;
-    boost::shared_ptr<CrossAssetModel> modelExact, modelEuler;
+    QuantLib::ext::shared_ptr<CrossAssetModel> modelExact, modelEuler;
 }; // IrFxInfCrEqModelTestData
 
 } // anonymous namespace
@@ -2914,8 +2914,8 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMartingaleProperty) {
 
     IrFxInfCrEqModelTestData d;
 
-    boost::shared_ptr<StochasticProcess> process1 = d.modelExact->stateProcess();
-    boost::shared_ptr<StochasticProcess> process2 = d.modelEuler->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> process1 = d.modelExact->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> process2 = d.modelEuler->stateProcess();
 
     Size n = 50000;                         // number of paths
     Size seed = 18;                         // rng seed
@@ -2929,12 +2929,12 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMartingaleProperty) {
     LowDiscrepancy::rsg_type sg2 = LowDiscrepancy::make_sequence_generator(process2->factors() * steps, seed);
 
     TimeGrid grid1(T, 1);
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process1)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process1)) {
         tmp->resetCache(grid1.size() - 1);
     }
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg1(process1, grid1, sg1, false);
     TimeGrid grid2(T, steps);
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process2)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process2)) {
         tmp->resetCache(grid2.size() - 1);
     }
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg2(process2, grid2, sg2, false);
@@ -3159,8 +3159,8 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMoments) {
 
     const Size n = 13; // d.modelExact->dimension();
 
-    boost::shared_ptr<StochasticProcess> p_exact = d.modelExact->stateProcess();
-    boost::shared_ptr<StochasticProcess> p_euler = d.modelExact->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> p_exact = d.modelExact->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> p_euler = d.modelExact->stateProcess();
 
     Real T = 2.0;                           // horizon at which we compare the moments
     Size steps = static_cast<Size>(T * 10); // number of simulation steps (Euler and exact)
@@ -3172,12 +3172,12 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMoments) {
     Size seed = 18;
     TimeGrid grid(T, steps);
 
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
         tmp->resetCache(grid.size() - 1);
     }
     MultiPathGeneratorSobolBrownianBridge pgen(p_euler, grid, SobolBrownianGenerator::Diagonal, seed,
                                                SobolRsg::JoeKuoD7);
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
         tmp->resetCache(grid.size() - 1);
     }
     MultiPathGeneratorSobolBrownianBridge pgen2(p_exact, grid, SobolBrownianGenerator::Diagonal, seed,
@@ -3222,7 +3222,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMoments) {
     for (Size i = 0; i < n; ++i) {
         std::ostringstream tmp;
         for (Size j = 0; j <= i; ++j) {
-            tmp << covariance(v_eu[i][j]) << " ";
+            tmp << boost::accumulators::covariance(v_eu[i][j]) << " ";
         }
         BOOST_TEST_MESSAGE(tmp.str());
     }
@@ -3232,7 +3232,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMoments) {
     for (Size i = 0; i < n; ++i) {
         std::ostringstream tmp;
         for (Size j = 0; j <= i; ++j) {
-            tmp << covariance(v_eu2[i][j]) << " ";
+            tmp << boost::accumulators::covariance(v_eu2[i][j]) << " ";
         }
         BOOST_TEST_MESSAGE(tmp.str());
     }
@@ -3270,21 +3270,22 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMoments) {
 
     for (Size i = 0; i < n; ++i) {
         for (Size j = 0; j <= i; ++j) {
-            if (std::fabs(covariance(v_eu[i][j]) - v_an[i][j]) > tolEuler) {
-                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
-                                                         << ") is inconsistent with numerical "
-                                                            "value (Euler discretization, "
-                                                         << covariance(v_eu[i][j]) << "), error is "
-                                                         << v_an[i][j] - covariance(v_eu[i][j]) << " tolerance is "
-                                                         << tolEuler);
+            if (std::fabs(boost::accumulators::covariance(v_eu[i][j]) - v_an[i][j]) > tolEuler) {
+                BOOST_ERROR("analytical covariance at ("
+                            << i << "," << j << ") (" << v_an[i][j]
+                            << ") is inconsistent with numerical "
+                               "value (Euler discretization, "
+                            << boost::accumulators::covariance(v_eu[i][j]) << "), error is "
+                            << v_an[i][j] - boost::accumulators::covariance(v_eu[i][j]) << " tolerance is "
+                            << tolEuler);
             }
-            if (std::fabs(covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
-                                                         << ") is inconsistent with numerical "
-                                                            "value (exact discretization, "
-                                                         << covariance(v_eu2[i][j]) << "), error is "
-                                                         << v_an[i][j] - covariance(v_eu2[i][j]) << " tolerance is "
-                                                         << tol);
+            if (std::fabs(boost::accumulators::covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
+                BOOST_ERROR("analytical covariance at ("
+                            << i << "," << j << ") (" << v_an[i][j]
+                            << ") is inconsistent with numerical "
+                               "value (exact discretization, "
+                            << boost::accumulators::covariance(v_eu2[i][j]) << "), error is "
+                            << v_an[i][j] - boost::accumulators::covariance(v_eu2[i][j]) << " tolerance is " << tol);
             }
         }
     }
@@ -3295,12 +3296,12 @@ namespace {
 
 struct IrFxEqModelTestData {
     IrFxEqModelTestData()
-        : referenceDate(30, July, 2015), eurYts(boost::make_shared<FlatForward>(referenceDate, 0.02, Actual365Fixed())),
-          usdYts(boost::make_shared<FlatForward>(referenceDate, 0.05, Actual365Fixed())),
-          eqDivSp(boost::make_shared<FlatForward>(referenceDate, 0.01, Actual365Fixed())),
-          eqDivLh(boost::make_shared<FlatForward>(referenceDate, 0.0075, Actual365Fixed())),
-          usdEurSpotToday(boost::make_shared<SimpleQuote>(0.90)), eurEurSpotToday(boost::make_shared<SimpleQuote>(1.0)),
-          spSpotToday(boost::make_shared<SimpleQuote>(2100)), lhSpotToday(boost::make_shared<SimpleQuote>(12.50)) {
+        : referenceDate(30, July, 2015), eurYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.02, Actual365Fixed())),
+          usdYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.05, Actual365Fixed())),
+          eqDivSp(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.01, Actual365Fixed())),
+          eqDivLh(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.0075, Actual365Fixed())),
+          usdEurSpotToday(QuantLib::ext::make_shared<SimpleQuote>(0.90)), eurEurSpotToday(QuantLib::ext::make_shared<SimpleQuote>(1.0)),
+          spSpotToday(QuantLib::ext::make_shared<SimpleQuote>(2100)), lhSpotToday(QuantLib::ext::make_shared<SimpleQuote>(12.50)) {
 
         SavedSettings backup;
 
@@ -3390,21 +3391,21 @@ struct IrFxEqModelTestData {
             eqLhTimes[i] = eurYts->timeFromReference(volstepdatesEqLh[i]);
         }
 
-        boost::shared_ptr<IrLgm1fParametrization> eurLgmParam =
-            boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYts, alphaTimesEur, alphaEur,
+        QuantLib::ext::shared_ptr<IrLgm1fParametrization> eurLgmParam =
+            QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYts, alphaTimesEur, alphaEur,
                                                                         kappaTimesEur, kappaEur);
 
-        boost::shared_ptr<IrLgm1fParametrization> usdLgmParam =
-            boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(USDCurrency(), usdYts, alphaTimesUsd, alphaUsd,
+        QuantLib::ext::shared_ptr<IrLgm1fParametrization> usdLgmParam =
+            QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(USDCurrency(), usdYts, alphaTimesUsd, alphaUsd,
                                                                         kappaTimesUsd, kappaUsd);
 
-        boost::shared_ptr<FxBsParametrization> fxUsdEurBsParam =
-            boost::make_shared<FxBsPiecewiseConstantParametrization>(USDCurrency(), usdEurSpotToday, fxTimes, fxSigmas);
+        QuantLib::ext::shared_ptr<FxBsParametrization> fxUsdEurBsParam =
+            QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(USDCurrency(), usdEurSpotToday, fxTimes, fxSigmas);
 
-        boost::shared_ptr<EqBsParametrization> eqSpBsParam = boost::make_shared<EqBsPiecewiseConstantParametrization>(
+        QuantLib::ext::shared_ptr<EqBsParametrization> eqSpBsParam = QuantLib::ext::make_shared<EqBsPiecewiseConstantParametrization>(
             USDCurrency(), "SP", spSpotToday, usdEurSpotToday, eqSpTimes, spSigmas, usdYts, eqDivSp);
 
-        boost::shared_ptr<EqBsParametrization> eqLhBsParam = boost::make_shared<EqBsPiecewiseConstantParametrization>(
+        QuantLib::ext::shared_ptr<EqBsParametrization> eqLhBsParam = QuantLib::ext::make_shared<EqBsPiecewiseConstantParametrization>(
             EURCurrency(), "LH", lhSpotToday, eurEurSpotToday, eqLhTimes, lhSigmas, eurYts, eqDivLh);
 
         singleModels.resize(0);
@@ -3414,9 +3415,9 @@ struct IrFxEqModelTestData {
         singleModels.push_back(eqSpBsParam);
         singleModels.push_back(eqLhBsParam);
 
-        ccLgmEuler = boost::make_shared<CrossAssetModel>(singleModels, Matrix(), SalvagingAlgorithm::None,
+        ccLgmEuler = QuantLib::ext::make_shared<CrossAssetModel>(singleModels, Matrix(), SalvagingAlgorithm::None,
                                                          IrModel::Measure::LGM, CrossAssetModel::Discretization::Exact);
-        ccLgmExact = boost::make_shared<CrossAssetModel>(singleModels, Matrix(), SalvagingAlgorithm::None,
+        ccLgmExact = QuantLib::ext::make_shared<CrossAssetModel>(singleModels, Matrix(), SalvagingAlgorithm::None,
                                                          IrModel::Measure::LGM, CrossAssetModel::Discretization::Exact);
 
         eurIdx = ccLgmEuler->ccyIndex(EURCurrency());
@@ -3447,8 +3448,8 @@ struct IrFxEqModelTestData {
     Handle<YieldTermStructure> eurYts, usdYts;
     Handle<YieldTermStructure> eqDivSp, eqDivLh;
     Handle<Quote> usdEurSpotToday, eurEurSpotToday, spSpotToday, lhSpotToday;
-    std::vector<boost::shared_ptr<Parametrization> > singleModels;
-    boost::shared_ptr<CrossAssetModel> ccLgmExact, ccLgmEuler;
+    std::vector<QuantLib::ext::shared_ptr<Parametrization> > singleModels;
+    QuantLib::ext::shared_ptr<CrossAssetModel> ccLgmExact, ccLgmEuler;
     Size eurIdx, usdIdx, eurUsdIdx, eqSpIdx, eqLhIdx;
     std::vector<Date> volstepdatesEqSp, volstepdatesEqLh;
 }; // IrFxEqModelTestData
@@ -3463,8 +3464,8 @@ BOOST_AUTO_TEST_CASE(testEqLgm5fPayouts) {
     IrFxEqModelTestData d;
     Settings::instance().evaluationDate() = d.referenceDate;
 
-    boost::shared_ptr<StochasticProcess> process = d.ccLgmExact->stateProcess();
-    boost::shared_ptr<StochasticProcess> process2 = d.ccLgmEuler->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> process = d.ccLgmExact->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> process2 = d.ccLgmEuler->stateProcess();
 
     // path generation
 
@@ -3479,11 +3480,11 @@ BOOST_AUTO_TEST_CASE(testEqLgm5fPayouts) {
     TimeGrid grid_euler(T, steps_euler);
     PseudoRandom::rsg_type sg2 = PseudoRandom::make_sequence_generator(steps, seed);
 
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
         tmp->resetCache(grid.size() - 1);
     }
     MultiPathGeneratorMersenneTwister pg(process, grid, seed, false);
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process2)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process2)) {
         tmp->resetCache(grid_euler.size() - 1);
     }
     MultiPathGeneratorMersenneTwister pg2(process2, grid_euler, seed, false);
@@ -3533,37 +3534,37 @@ BOOST_AUTO_TEST_CASE(testEqLgm5fPayouts) {
 
     Date tradeMaturity = d.referenceDate + 5 * 365;
 
-    boost::shared_ptr<EquityForward> lhFwdTrade =
-        boost::make_shared<EquityForward>("LH", EURCurrency(), Position::Long, 1, tradeMaturity, strikeLh);
-    boost::shared_ptr<EquityForward> spFwdTrade =
-        boost::make_shared<EquityForward>("SP", USDCurrency(), Position::Long, 1, tradeMaturity, strikeSp);
+    QuantLib::ext::shared_ptr<EquityForward> lhFwdTrade =
+        QuantLib::ext::make_shared<EquityForward>("LH", EURCurrency(), Position::Long, 1, tradeMaturity, strikeLh);
+    QuantLib::ext::shared_ptr<EquityForward> spFwdTrade =
+        QuantLib::ext::make_shared<EquityForward>("SP", USDCurrency(), Position::Long, 1, tradeMaturity, strikeSp);
 
-    boost::shared_ptr<VanillaOption> lhCall =
-        boost::make_shared<VanillaOption>(boost::make_shared<PlainVanillaPayoff>(Option::Call, strikeLh),
-                                          boost::make_shared<EuropeanExercise>(d.referenceDate + 5 * 365));
-    boost::shared_ptr<VanillaOption> lhPut =
-        boost::make_shared<VanillaOption>(boost::make_shared<PlainVanillaPayoff>(Option::Put, strikeLh),
-                                          boost::make_shared<EuropeanExercise>(d.referenceDate + 5 * 365));
-    boost::shared_ptr<VanillaOption> spCall =
-        boost::make_shared<VanillaOption>(boost::make_shared<PlainVanillaPayoff>(Option::Call, strikeSp),
-                                          boost::make_shared<EuropeanExercise>(d.referenceDate + 5 * 365));
-    boost::shared_ptr<VanillaOption> spPut =
-        boost::make_shared<VanillaOption>(boost::make_shared<PlainVanillaPayoff>(Option::Put, strikeSp),
-                                          boost::make_shared<EuropeanExercise>(d.referenceDate + 5 * 365));
+    QuantLib::ext::shared_ptr<VanillaOption> lhCall =
+        QuantLib::ext::make_shared<VanillaOption>(QuantLib::ext::make_shared<PlainVanillaPayoff>(Option::Call, strikeLh),
+                                          QuantLib::ext::make_shared<EuropeanExercise>(d.referenceDate + 5 * 365));
+    QuantLib::ext::shared_ptr<VanillaOption> lhPut =
+        QuantLib::ext::make_shared<VanillaOption>(QuantLib::ext::make_shared<PlainVanillaPayoff>(Option::Put, strikeLh),
+                                          QuantLib::ext::make_shared<EuropeanExercise>(d.referenceDate + 5 * 365));
+    QuantLib::ext::shared_ptr<VanillaOption> spCall =
+        QuantLib::ext::make_shared<VanillaOption>(QuantLib::ext::make_shared<PlainVanillaPayoff>(Option::Call, strikeSp),
+                                          QuantLib::ext::make_shared<EuropeanExercise>(d.referenceDate + 5 * 365));
+    QuantLib::ext::shared_ptr<VanillaOption> spPut =
+        QuantLib::ext::make_shared<VanillaOption>(QuantLib::ext::make_shared<PlainVanillaPayoff>(Option::Put, strikeSp),
+                                          QuantLib::ext::make_shared<EuropeanExercise>(d.referenceDate + 5 * 365));
 
-    boost::shared_ptr<DiscountingEquityForwardEngine> lhFwdEngine =
-        boost::make_shared<DiscountingEquityForwardEngine>(d.eurYts, d.eqDivLh, d.lhSpotToday, d.eurYts);
-    boost::shared_ptr<DiscountingEquityForwardEngine> spFwdEngine =
-        boost::make_shared<DiscountingEquityForwardEngine>(d.usdYts, d.eqDivSp, d.spSpotToday, d.usdYts);
+    QuantLib::ext::shared_ptr<DiscountingEquityForwardEngine> lhFwdEngine =
+        QuantLib::ext::make_shared<DiscountingEquityForwardEngine>(d.eurYts, d.eqDivLh, d.lhSpotToday, d.eurYts);
+    QuantLib::ext::shared_ptr<DiscountingEquityForwardEngine> spFwdEngine =
+        QuantLib::ext::make_shared<DiscountingEquityForwardEngine>(d.usdYts, d.eqDivSp, d.spSpotToday, d.usdYts);
 
     lhFwdTrade->setPricingEngine(lhFwdEngine);
     spFwdTrade->setPricingEngine(spFwdEngine);
 
-    boost::shared_ptr<AnalyticXAssetLgmEquityOptionEngine> spEqOptionEngine =
-        boost::make_shared<AnalyticXAssetLgmEquityOptionEngine>(
+    QuantLib::ext::shared_ptr<AnalyticXAssetLgmEquityOptionEngine> spEqOptionEngine =
+        QuantLib::ext::make_shared<AnalyticXAssetLgmEquityOptionEngine>(
             d.ccLgmExact, d.eqSpIdx, d.ccLgmExact->ccyIndex(d.ccLgmExact->eqbs(d.eqSpIdx)->currency()));
-    boost::shared_ptr<AnalyticXAssetLgmEquityOptionEngine> lhEqOptionEngine =
-        boost::make_shared<AnalyticXAssetLgmEquityOptionEngine>(
+    QuantLib::ext::shared_ptr<AnalyticXAssetLgmEquityOptionEngine> lhEqOptionEngine =
+        QuantLib::ext::make_shared<AnalyticXAssetLgmEquityOptionEngine>(
             d.ccLgmExact, d.eqLhIdx, d.ccLgmExact->ccyIndex(d.ccLgmExact->eqbs(d.eqLhIdx)->currency()));
 
     lhCall->setPricingEngine(lhEqOptionEngine);
@@ -3612,27 +3613,27 @@ BOOST_AUTO_TEST_CASE(testEqLgm5fCalibration) {
     Settings::instance().evaluationDate() = d.referenceDate;
 
     // calibration baskets
-    std::vector<boost::shared_ptr<BlackCalibrationHelper> > basketSp, basketLh;
+    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper> > basketSp, basketLh;
 
     for (Size i = 0; i < d.volstepdatesEqSp.size(); ++i) {
         Date tmp = i < d.volstepdatesEqSp.size() ? d.volstepdatesEqSp[i] : d.volstepdatesEqSp.back() + 365;
-        basketSp.push_back(boost::make_shared<FxEqOptionHelper>(
-            tmp, Null<Real>(), d.spSpotToday, Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)), d.usdYts, d.eqDivSp,
+        basketSp.push_back(QuantLib::ext::make_shared<FxEqOptionHelper>(
+            tmp, Null<Real>(), d.spSpotToday, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.20)), d.usdYts, d.eqDivSp,
             BlackCalibrationHelper::RelativePriceError));
     }
     for (Size i = 0; i < d.volstepdatesEqLh.size(); ++i) {
         Date tmp = i < d.volstepdatesEqLh.size() ? d.volstepdatesEqLh[i] : d.volstepdatesEqLh.back() + 365;
-        basketLh.push_back(boost::make_shared<FxEqOptionHelper>(
-            tmp, Null<Real>(), d.lhSpotToday, Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)), d.eurYts, d.eqDivLh,
+        basketLh.push_back(QuantLib::ext::make_shared<FxEqOptionHelper>(
+            tmp, Null<Real>(), d.lhSpotToday, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.20)), d.eurYts, d.eqDivLh,
             BlackCalibrationHelper::RelativePriceError));
     }
 
     // pricing engines
-    boost::shared_ptr<AnalyticXAssetLgmEquityOptionEngine> spEqOptionEngine =
-        boost::make_shared<AnalyticXAssetLgmEquityOptionEngine>(
+    QuantLib::ext::shared_ptr<AnalyticXAssetLgmEquityOptionEngine> spEqOptionEngine =
+        QuantLib::ext::make_shared<AnalyticXAssetLgmEquityOptionEngine>(
             d.ccLgmExact, d.eqSpIdx, d.ccLgmExact->ccyIndex(d.ccLgmExact->eqbs(d.eqSpIdx)->currency()));
-    boost::shared_ptr<AnalyticXAssetLgmEquityOptionEngine> lhEqOptionEngine =
-        boost::make_shared<AnalyticXAssetLgmEquityOptionEngine>(
+    QuantLib::ext::shared_ptr<AnalyticXAssetLgmEquityOptionEngine> lhEqOptionEngine =
+        QuantLib::ext::make_shared<AnalyticXAssetLgmEquityOptionEngine>(
             d.ccLgmExact, d.eqLhIdx, d.ccLgmExact->ccyIndex(d.ccLgmExact->eqbs(d.eqLhIdx)->currency()));
 
     // assign engines to calibration instruments
@@ -3680,8 +3681,8 @@ BOOST_AUTO_TEST_CASE(testEqLgm5fMoments) {
     IrFxEqModelTestData d;
     Settings::instance().evaluationDate() = d.referenceDate;
 
-    boost::shared_ptr<StochasticProcess> p_exact = d.ccLgmExact->stateProcess();
-    boost::shared_ptr<StochasticProcess> p_euler = d.ccLgmEuler->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> p_exact = d.ccLgmExact->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> p_euler = d.ccLgmEuler->stateProcess();
 
     Real T = 2.0;                                   // horizon at which we compare the moments
     Size steps_euler = static_cast<Size>(T * 50.0); // number of simulation steps
@@ -3695,12 +3696,12 @@ BOOST_AUTO_TEST_CASE(testEqLgm5fMoments) {
     TimeGrid grid_euler(T, steps_euler);
     TimeGrid grid_exact(T, steps_exact);
 
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
         tmp->resetCache(grid_euler.size() - 1);
     }
     MultiPathGeneratorSobolBrownianBridge pgen(p_euler, grid_euler);
 
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
         tmp->resetCache(grid_exact.size() - 1);
     }
     MultiPathGeneratorSobolBrownianBridge pgen2(p_exact, grid_exact);
@@ -3769,21 +3770,21 @@ BOOST_AUTO_TEST_CASE(testEqLgm5fMoments) {
                     tol = tolLn;
                 }
             }
-            if (std::fabs(covariance(v_eu[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
-                                                         << ") is inconsistent with numerical "
-                                                            "value (Euler discretization, "
-                                                         << covariance(v_eu[i][j]) << "), error is "
-                                                         << v_an[i][j] - covariance(v_eu[i][j]) << " tolerance is "
-                                                         << tol);
+            if (std::fabs(boost::accumulators::covariance(v_eu[i][j]) - v_an[i][j]) > tol) {
+                BOOST_ERROR("analytical covariance at ("
+                            << i << "," << j << ") (" << v_an[i][j]
+                            << ") is inconsistent with numerical "
+                               "value (Euler discretization, "
+                            << boost::accumulators::covariance(v_eu[i][j]) << "), error is "
+                            << v_an[i][j] - boost::accumulators::covariance(v_eu[i][j]) << " tolerance is " << tol);
             }
-            if (std::fabs(covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
-                                                         << ") is inconsistent with numerical "
-                                                            "value (Exact discretization, "
-                                                         << covariance(v_eu2[i][j]) << "), error is "
-                                                         << v_an[i][j] - covariance(v_eu2[i][j]) << " tolerance is "
-                                                         << tol);
+            if (std::fabs(boost::accumulators::covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
+                BOOST_ERROR("analytical covariance at ("
+                            << i << "," << j << ") (" << v_an[i][j]
+                            << ") is inconsistent with numerical "
+                               "value (Exact discretization, "
+                            << boost::accumulators::covariance(v_eu2[i][j]) << "), error is "
+                            << v_an[i][j] - boost::accumulators::covariance(v_eu2[i][j]) << " tolerance is " << tol);
             }
         }
     }
@@ -3791,10 +3792,10 @@ BOOST_AUTO_TEST_CASE(testEqLgm5fMoments) {
     BOOST_TEST_MESSAGE("Testing correlation matrix recovery in presence of equity simulation");
 
     // reset caching so that we can retrieve further info from the processes
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
         tmp->resetCache(0);
     }
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
         tmp->resetCache(grid_euler.size() - 1);
     }
 
@@ -3842,10 +3843,10 @@ BOOST_AUTO_TEST_CASE(testEqLgm5fMoments) {
     }
     for (Size i = 0; i < 5; ++i) {
         for (Size j = 0; j <= i; ++j) {
-            Real cov = covariance(v_eu[i][j]);
+            Real cov = boost::accumulators::covariance(v_eu[i][j]);
             BOOST_TEST_MESSAGE(i << ";" << j << ";"
                                  << "EULER;" << v_an[i][j] << ";" << cov);
-            Real cov2 = covariance(v_eu2[i][j]);
+            Real cov2 = boost::accumulators::covariance(v_eu2[i][j]);
             BOOST_TEST_MESSAGE(i << ";" << j << ";"
                                  << "EXACT;" << v_an[i][j] << ";" << cov2);
         }
@@ -3863,7 +3864,7 @@ BOOST_AUTO_TEST_CASE(testCorrelationRecovery) {
             std::ostringstream ln, sn;
             ln << "Dummy " << id;
             sn << "DUM " << id;
-            data_ = boost::make_shared<Data>(ln.str(), sn.str(), id, sn.str(), "", 100, Rounding(), "%3% %1$.2f");
+            data_ = QuantLib::ext::make_shared<Data>(ln.str(), sn.str(), id, sn.str(), "", 100, Rounding(), "%3% %1$.2f");
         }
     };
 
@@ -3876,9 +3877,9 @@ BOOST_AUTO_TEST_CASE(testCorrelationRecovery) {
 
     MersenneTwisterUniformRng mt(42);
 
-    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(0, NullCalendar(), 0.01, Actual365Fixed()));
+    Handle<YieldTermStructure> yts(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.01, Actual365Fixed()));
 
-    Handle<Quote> fxspot(boost::make_shared<SimpleQuote>(1.00));
+    Handle<Quote> fxspot(QuantLib::ext::make_shared<SimpleQuote>(1.00));
 
     Array notimes(0);
     Array fxsigma(1, 0.10);
@@ -3925,28 +3926,28 @@ BOOST_AUTO_TEST_CASE(testCorrelationRecovery) {
 
         // set up model
 
-        std::vector<boost::shared_ptr<Parametrization> > parametrizations;
+        std::vector<QuantLib::ext::shared_ptr<Parametrization> > parametrizations;
 
         // IR
         for (Size i = 0; i < currencies[ii]; ++i) {
             parametrizations.push_back(
-                boost::make_shared<IrLgm1fConstantParametrization>(pseudoCcy[i], yts, 0.01, 0.01));
+                QuantLib::ext::make_shared<IrLgm1fConstantParametrization>(pseudoCcy[i], yts, 0.01, 0.01));
         }
         // FX
         for (Size i = 0; i < currencies[ii] - 1; ++i) {
             parametrizations.push_back(
-                boost::make_shared<FxBsPiecewiseConstantParametrization>(pseudoCcy[i + 1], fxspot, notimes, fxsigma));
+                QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(pseudoCcy[i + 1], fxspot, notimes, fxsigma));
         }
 
-        boost::shared_ptr<CrossAssetModel> modelExact =
-            boost::make_shared<CrossAssetModel>(parametrizations, c, SalvagingAlgorithm::None, IrModel::Measure::LGM,
+        QuantLib::ext::shared_ptr<CrossAssetModel> modelExact =
+            QuantLib::ext::make_shared<CrossAssetModel>(parametrizations, c, SalvagingAlgorithm::None, IrModel::Measure::LGM,
                                                 CrossAssetModel::Discretization::Exact);
-        boost::shared_ptr<CrossAssetModel> modelEuler =
-            boost::make_shared<CrossAssetModel>(parametrizations, c, SalvagingAlgorithm::None, IrModel::Measure::LGM,
+        QuantLib::ext::shared_ptr<CrossAssetModel> modelEuler =
+            QuantLib::ext::make_shared<CrossAssetModel>(parametrizations, c, SalvagingAlgorithm::None, IrModel::Measure::LGM,
                                                 CrossAssetModel::Discretization::Euler);
 
-        boost::shared_ptr<StochasticProcess> peuler = modelExact->stateProcess();
-        boost::shared_ptr<StochasticProcess> pexact = modelEuler->stateProcess();
+        QuantLib::ext::shared_ptr<StochasticProcess> peuler = modelExact->stateProcess();
+        QuantLib::ext::shared_ptr<StochasticProcess> pexact = modelEuler->stateProcess();
 
         Matrix c1 = peuler->covariance(dt, peuler->initialValues(), dt);
         Matrix c2 = pexact->covariance(0.0, peuler->initialValues(), dt);
@@ -3990,7 +3991,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrCorrelationRecovery) {
             std::ostringstream ln, sn;
             ln << "Dummy " << id;
             sn << "DUM " << id;
-            data_ = boost::make_shared<Data>(ln.str(), sn.str(), id, sn.str(), "", 100, Rounding(), "%3% %1$.2f");
+            data_ = QuantLib::ext::make_shared<Data>(ln.str(), sn.str(), id, sn.str(), "", 100, Rounding(), "%3% %1$.2f");
         }
     };
 
@@ -4005,7 +4006,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrCorrelationRecovery) {
 
     MersenneTwisterUniformRng mt(42);
 
-    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(0, NullCalendar(), 0.01, Actual365Fixed()));
+    Handle<YieldTermStructure> yts(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.01, Actual365Fixed()));
 
     std::vector<Date> infDates;
     std::vector<Real> infRates;
@@ -4014,13 +4015,13 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrCorrelationRecovery) {
     infRates.push_back(0.01);
     infRates.push_back(0.01);
     Handle<ZeroInflationTermStructure> its(
-        boost::make_shared<ZeroInflationCurve>(Settings::instance().evaluationDate(), NullCalendar(), Actual365Fixed(),
+        QuantLib::ext::make_shared<ZeroInflationCurve>(Settings::instance().evaluationDate(), NullCalendar(), Actual365Fixed(),
                                                3 * Months, Monthly, infDates, infRates));
 
     Handle<DefaultProbabilityTermStructure> hts(
-        boost::make_shared<FlatHazardRate>(0, NullCalendar(), 0.01, Actual365Fixed()));
+        QuantLib::ext::make_shared<FlatHazardRate>(0, NullCalendar(), 0.01, Actual365Fixed()));
 
-    Handle<Quote> fxspot(boost::make_shared<SimpleQuote>(1.00));
+    Handle<Quote> fxspot(QuantLib::ext::make_shared<SimpleQuote>(1.00));
 
     Array notimes(0);
     Array fxsigma(1, 0.10);
@@ -4069,39 +4070,39 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrCorrelationRecovery) {
 
                 // set up model
 
-                std::vector<boost::shared_ptr<Parametrization> > parametrizations;
+                std::vector<QuantLib::ext::shared_ptr<Parametrization> > parametrizations;
 
                 // IR
                 for (Size i = 0; i < currencies[ii]; ++i) {
                     parametrizations.push_back(
-                        boost::make_shared<IrLgm1fConstantParametrization>(pseudoCcy[i], yts, 0.01, 0.01));
+                        QuantLib::ext::make_shared<IrLgm1fConstantParametrization>(pseudoCcy[i], yts, 0.01, 0.01));
                 }
                 // FX
                 for (Size i = 0; i < currencies[ii] - 1; ++i) {
-                    parametrizations.push_back(boost::make_shared<FxBsPiecewiseConstantParametrization>(
+                    parametrizations.push_back(QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(
                         pseudoCcy[i + 1], fxspot, notimes, fxsigma));
                 }
                 // INF
                 for (Size i = 0; i < cpiindexes[kk]; ++i) {
                     parametrizations.push_back(
-                        boost::make_shared<InfDkConstantParametrization>(pseudoCcy[0], its, 0.01, 0.01));
+                        QuantLib::ext::make_shared<InfDkConstantParametrization>(pseudoCcy[0], its, 0.01, 0.01));
                 }
                 // CR
                 for (Size i = 0; i < creditnames[jj]; ++i) {
                     parametrizations.push_back(
-                        boost::make_shared<CrLgm1fConstantParametrization>(pseudoCcy[0], hts, 0.01, 0.01));
+                        QuantLib::ext::make_shared<CrLgm1fConstantParametrization>(pseudoCcy[0], hts, 0.01, 0.01));
                 }
 
                 // get QuantLib::Error: negative eigenvalue(s) (-3.649315e-16) with SalvagingAlgorithm::None
-                boost::shared_ptr<CrossAssetModel> modelEuler =
-                    boost::make_shared<CrossAssetModel>(parametrizations, c, SalvagingAlgorithm::Spectral,
+                QuantLib::ext::shared_ptr<CrossAssetModel> modelEuler =
+                    QuantLib::ext::make_shared<CrossAssetModel>(parametrizations, c, SalvagingAlgorithm::Spectral,
                                                         IrModel::Measure::LGM, CrossAssetModel::Discretization::Euler);
-                boost::shared_ptr<CrossAssetModel> modelExact =
-                    boost::make_shared<CrossAssetModel>(parametrizations, c, SalvagingAlgorithm::Spectral,
+                QuantLib::ext::shared_ptr<CrossAssetModel> modelExact =
+                    QuantLib::ext::make_shared<CrossAssetModel>(parametrizations, c, SalvagingAlgorithm::Spectral,
                                                         IrModel::Measure::LGM, CrossAssetModel::Discretization::Exact);
 
-                boost::shared_ptr<StochasticProcess> peuler = modelEuler->stateProcess();
-                boost::shared_ptr<StochasticProcess> pexact = modelExact->stateProcess();
+                QuantLib::ext::shared_ptr<StochasticProcess> peuler = modelEuler->stateProcess();
+                QuantLib::ext::shared_ptr<StochasticProcess> pexact = modelExact->stateProcess();
 
                 Matrix c1 = peuler->covariance(dt, peuler->initialValues(), dt);
                 Matrix c2 = pexact->covariance(0.0, peuler->initialValues(), dt);
@@ -4172,7 +4173,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqCorrelationRecovery) {
             std::ostringstream ln, sn;
             ln << "Dummy " << id;
             sn << "DUM " << id;
-            data_ = boost::make_shared<Data>(ln.str(), sn.str(), id, sn.str(), "", 100, Rounding(), "%3% %1$.2f");
+            data_ = QuantLib::ext::make_shared<Data>(ln.str(), sn.str(), id, sn.str(), "", 100, Rounding(), "%3% %1$.2f");
         }
     };
 
@@ -4188,7 +4189,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqCorrelationRecovery) {
 
     MersenneTwisterUniformRng mt(42);
 
-    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(0, NullCalendar(), 0.01, Actual365Fixed()));
+    Handle<YieldTermStructure> yts(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.01, Actual365Fixed()));
 
     std::vector<Date> infDates;
     std::vector<Real> infRates;
@@ -4197,13 +4198,13 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqCorrelationRecovery) {
     infRates.push_back(0.01);
     infRates.push_back(0.01);
     Handle<ZeroInflationTermStructure> its(
-        boost::make_shared<ZeroInflationCurve>(Settings::instance().evaluationDate(), NullCalendar(), Actual365Fixed(),
+        QuantLib::ext::make_shared<ZeroInflationCurve>(Settings::instance().evaluationDate(), NullCalendar(), Actual365Fixed(),
                                                3 * Months, Monthly, infDates, infRates));
 
     Handle<DefaultProbabilityTermStructure> hts(
-        boost::make_shared<FlatHazardRate>(0, NullCalendar(), 0.01, Actual365Fixed()));
+        QuantLib::ext::make_shared<FlatHazardRate>(0, NullCalendar(), 0.01, Actual365Fixed()));
 
-    Handle<Quote> fxspot(boost::make_shared<SimpleQuote>(1.00)), eqspot(boost::make_shared<SimpleQuote>(1.00));
+    Handle<Quote> fxspot(QuantLib::ext::make_shared<SimpleQuote>(1.00)), eqspot(QuantLib::ext::make_shared<SimpleQuote>(1.00));
 
     Array notimes(0);
     Array fxsigma(1, 0.10), eqsigma(1, 0.10);
@@ -4253,44 +4254,44 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqCorrelationRecovery) {
 
                     // set up model
 
-                    std::vector<boost::shared_ptr<Parametrization> > parametrizations;
+                    std::vector<QuantLib::ext::shared_ptr<Parametrization> > parametrizations;
 
                     // IR
                     for (Size i = 0; i < currencies[ii]; ++i) {
                         parametrizations.push_back(
-                            boost::make_shared<IrLgm1fConstantParametrization>(pseudoCcy[i], yts, 0.01, 0.01));
+                            QuantLib::ext::make_shared<IrLgm1fConstantParametrization>(pseudoCcy[i], yts, 0.01, 0.01));
                     }
                     // FX
                     for (Size i = 0; i < currencies[ii] - 1; ++i) {
-                        parametrizations.push_back(boost::make_shared<FxBsPiecewiseConstantParametrization>(
+                        parametrizations.push_back(QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(
                             pseudoCcy[i + 1], fxspot, notimes, fxsigma));
                     }
                     // INF
                     for (Size i = 0; i < cpiindexes[kk]; ++i) {
                         parametrizations.push_back(
-                            boost::make_shared<InfDkConstantParametrization>(pseudoCcy[0], its, 0.01, 0.01));
+                            QuantLib::ext::make_shared<InfDkConstantParametrization>(pseudoCcy[0], its, 0.01, 0.01));
                     }
                     // CR
                     for (Size i = 0; i < creditnames[jj]; ++i) {
                         parametrizations.push_back(
-                            boost::make_shared<CrLgm1fConstantParametrization>(pseudoCcy[0], hts, 0.01, 0.01));
+                            QuantLib::ext::make_shared<CrLgm1fConstantParametrization>(pseudoCcy[0], hts, 0.01, 0.01));
                     }
                     // EQ
                     for (Size i = 0; i < eqs[ee]; ++i) {
-                        parametrizations.push_back(boost::make_shared<EqBsPiecewiseConstantParametrization>(
+                        parametrizations.push_back(QuantLib::ext::make_shared<EqBsPiecewiseConstantParametrization>(
                             pseudoCcy[0], "dummy", eqspot, fxspot, notimes, eqsigma, yts, yts));
                     }
 
                     // get QuantLib::Error: negative eigenvalue(s) (-3.649315e-16) with SalvagingAlgorithm::None
-                    boost::shared_ptr<CrossAssetModel> modelEuler = boost::make_shared<CrossAssetModel>(
+                    QuantLib::ext::shared_ptr<CrossAssetModel> modelEuler = QuantLib::ext::make_shared<CrossAssetModel>(
                         parametrizations, c, SalvagingAlgorithm::Spectral, IrModel::Measure::LGM,
                         CrossAssetModel::Discretization::Euler);
-                    boost::shared_ptr<CrossAssetModel> modelExact = boost::make_shared<CrossAssetModel>(
+                    QuantLib::ext::shared_ptr<CrossAssetModel> modelExact = QuantLib::ext::make_shared<CrossAssetModel>(
                         parametrizations, c, SalvagingAlgorithm::Spectral, IrModel::Measure::LGM,
                         CrossAssetModel::Discretization::Exact);
 
-                    boost::shared_ptr<StochasticProcess> peuler = modelEuler->stateProcess();
-                    boost::shared_ptr<StochasticProcess> pexact = modelExact->stateProcess();
+                    QuantLib::ext::shared_ptr<StochasticProcess> peuler = modelEuler->stateProcess();
+                    QuantLib::ext::shared_ptr<StochasticProcess> pexact = modelExact->stateProcess();
 
                     Matrix c1 = peuler->covariance(dt, peuler->initialValues(), dt);
                     Matrix c2 = pexact->covariance(0.0, peuler->initialValues(), dt);
@@ -4370,9 +4371,9 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByAlpha) {
     Settings::instance().evaluationDate() = Date(30, July, 2015);
 
     // IR
-    Handle<YieldTermStructure> eurYts(boost::make_shared<FlatForward>(refDate, 0.01, Actual365Fixed()));
-    boost::shared_ptr<Parametrization> ireur_p =
-        boost::make_shared<IrLgm1fConstantParametrization>(EURCurrency(), eurYts, 0.01, 0.01);
+    Handle<YieldTermStructure> eurYts(QuantLib::ext::make_shared<FlatForward>(refDate, 0.01, Actual365Fixed()));
+    QuantLib::ext::shared_ptr<Parametrization> ireur_p =
+        QuantLib::ext::make_shared<IrLgm1fConstantParametrization>(EURCurrency(), eurYts, 0.01, 0.01);
 
     // INF
     Real baseCPI = 100.0;
@@ -4382,23 +4383,23 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByAlpha) {
     infDates.push_back(Date(30, July, 2015));
     infRates.push_back(0.0075);
     infRates.push_back(0.0075);
-    Handle<ZeroInflationTermStructure> infEurTs(boost::make_shared<ZeroInflationCurve>(
+    Handle<ZeroInflationTermStructure> infEurTs(QuantLib::ext::make_shared<ZeroInflationCurve>(
         refDate, TARGET(), Actual365Fixed(), 3 * Months, Monthly, infDates, infRates));
     infEurTs->enableExtrapolation();
-    Handle<ZeroInflationIndex> infIndex(boost::make_shared<EUHICPXT>(false, infEurTs));
+    Handle<ZeroInflationIndex> infIndex(QuantLib::ext::make_shared<EUHICPXT>(false, infEurTs));
     
     infIndex->addFixing(Date(1, April, 2015), 100);
 
     Real premium[] = { 0.0044, 0.0085, 0.0127, 0.0160, 0.0186 };
 
-    std::vector<boost::shared_ptr<BlackCalibrationHelper> > cpiHelpers;
+    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper> > cpiHelpers;
     Array volStepTimes(4), noTimes(0);
     Array infVols(5, 0.01), infRev(1, 1.5); // !!
 
     Time T;
     for (Size i = 1; i <= 5; ++i) {
         Date maturity = refDate + i * Years;
-        boost::shared_ptr<CpiCapFloorHelper> h(new CpiCapFloorHelper(Option::Put, baseCPI, maturity, TARGET(),
+        QuantLib::ext::shared_ptr<CpiCapFloorHelper> h(new CpiCapFloorHelper(Option::Put, baseCPI, maturity, TARGET(),
                                                                      ModifiedFollowing, TARGET(), ModifiedFollowing,
                                                                      0.01, infIndex, 3 * Months, premium[i - 1]));
         Real t = inflationYearFraction(Monthly, false, Actual365Fixed(), infEurTs->baseDate(),
@@ -4409,22 +4410,22 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByAlpha) {
         T = t;
     }
 
-    boost::shared_ptr<InfDkPiecewiseConstantParametrization> infeur_p =
-        boost::make_shared<InfDkPiecewiseConstantParametrization>(EURCurrency(), infEurTs, volStepTimes, infVols,
+    QuantLib::ext::shared_ptr<InfDkPiecewiseConstantParametrization> infeur_p =
+        QuantLib::ext::make_shared<InfDkPiecewiseConstantParametrization>(EURCurrency(), infEurTs, volStepTimes, infVols,
                                                                   noTimes, infRev);
 
-    std::vector<boost::shared_ptr<Parametrization> > parametrizations;
+    std::vector<QuantLib::ext::shared_ptr<Parametrization> > parametrizations;
     parametrizations.push_back(ireur_p);
     parametrizations.push_back(infeur_p);
 
-    boost::shared_ptr<CrossAssetModel> model =
-        boost::make_shared<CrossAssetModel>(parametrizations, Matrix(), SalvagingAlgorithm::None);
+    QuantLib::ext::shared_ptr<CrossAssetModel> model =
+        QuantLib::ext::make_shared<CrossAssetModel>(parametrizations, Matrix(), SalvagingAlgorithm::None);
 
     model->setCorrelation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::INF, 0, 0.33);
 
     // pricing engine
-    boost::shared_ptr<AnalyticDkCpiCapFloorEngine> engine =
-        boost::make_shared<AnalyticDkCpiCapFloorEngine>(model, 0, baseCPI);
+    QuantLib::ext::shared_ptr<AnalyticDkCpiCapFloorEngine> engine =
+        QuantLib::ext::make_shared<AnalyticDkCpiCapFloorEngine>(model, 0, baseCPI);
 
     for (Size i = 0; i < cpiHelpers.size(); ++i) {
         cpiHelpers[i]->setPricingEngine(engine);
@@ -4446,10 +4447,10 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByAlpha) {
     Size seed = 18; // rng seed
     Size steps = 1; // number of discretization steps
 
-    boost::shared_ptr<StochasticProcess> process = model->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> process = model->stateProcess();
     LowDiscrepancy::rsg_type sg = LowDiscrepancy::make_sequence_generator(process->factors() * steps, seed);
     TimeGrid grid(T, steps);
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
         tmp->resetCache(grid.size() - 1);
     }
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg(process, grid, sg, false);
@@ -4502,9 +4503,9 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByH) {
     Settings::instance().evaluationDate() = Date(30, July, 2015);
 
     // IR
-    Handle<YieldTermStructure> eurYts(boost::make_shared<FlatForward>(refDate, 0.01, Actual365Fixed()));
-    boost::shared_ptr<Parametrization> ireur_p =
-        boost::make_shared<IrLgm1fConstantParametrization>(EURCurrency(), eurYts, 0.01, 0.01);
+    Handle<YieldTermStructure> eurYts(QuantLib::ext::make_shared<FlatForward>(refDate, 0.01, Actual365Fixed()));
+    QuantLib::ext::shared_ptr<Parametrization> ireur_p =
+        QuantLib::ext::make_shared<IrLgm1fConstantParametrization>(EURCurrency(), eurYts, 0.01, 0.01);
 
     // INF
     Real baseCPI = 100.0;
@@ -4514,10 +4515,10 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByH) {
     infDates.push_back(Date(30, July, 2015));
     infRates.push_back(0.0075);
     infRates.push_back(0.0075);
-    Handle<ZeroInflationTermStructure> infEurTs(boost::make_shared<ZeroInflationCurve>(
+    Handle<ZeroInflationTermStructure> infEurTs(QuantLib::ext::make_shared<ZeroInflationCurve>(
         refDate, TARGET(), Actual365Fixed(), 3 * Months, Monthly, infDates, infRates));
     infEurTs->enableExtrapolation();
-    Handle<ZeroInflationIndex> infIndex(boost::make_shared<EUHICPXT>(false, infEurTs));
+    Handle<ZeroInflationIndex> infIndex(QuantLib::ext::make_shared<EUHICPXT>(false, infEurTs));
     infIndex->addFixing(Date(1, April, 2015), 100);
     Size nMat = 14;
     Real premium[] = { 0.000555, 0.000813, 0.000928, 0.00127, 0.001616, 0.0019, 0.0023,
@@ -4525,7 +4526,7 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByH) {
     Period maturity[] = { 1 * Years, 2 * Years, 3 * Years,  4 * Years,  5 * Years,  6 * Years,  7 * Years,
                           8 * Years, 9 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years, 30 * Years };
 
-    std::vector<boost::shared_ptr<BlackCalibrationHelper> > cpiHelpers;
+    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper> > cpiHelpers;
     Array volStepTimes(13), noTimes(0);
     Array infVols(14, 0.0030), infRev(14, 1.0); // init vol and rev !!
     Real strike = 0.00;                         // strike !!
@@ -4533,7 +4534,7 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByH) {
     Time T = Null<Time>();
     for (Size i = 1; i <= nMat; ++i) {
         Date mat = refDate + maturity[i - 1];
-        boost::shared_ptr<CpiCapFloorHelper> h(new CpiCapFloorHelper(Option::Put, baseCPI, mat, TARGET(),
+        QuantLib::ext::shared_ptr<CpiCapFloorHelper> h(new CpiCapFloorHelper(Option::Put, baseCPI, mat, TARGET(),
                                                                      ModifiedFollowing, TARGET(), ModifiedFollowing,
                                                                      strike, infIndex, 3 * Months, premium[i - 1]));
         Real t = inflationYearFraction(Monthly, false, Actual365Fixed(), infEurTs->baseDate(),
@@ -4544,22 +4545,22 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByH) {
         T = t;
     }
 
-    boost::shared_ptr<InfDkPiecewiseLinearParametrization> infeur_p =
-        boost::make_shared<InfDkPiecewiseLinearParametrization>(EURCurrency(), infEurTs, volStepTimes, infVols,
+    QuantLib::ext::shared_ptr<InfDkPiecewiseLinearParametrization> infeur_p =
+        QuantLib::ext::make_shared<InfDkPiecewiseLinearParametrization>(EURCurrency(), infEurTs, volStepTimes, infVols,
                                                                 volStepTimes, infRev);
 
-    std::vector<boost::shared_ptr<Parametrization> > parametrizations;
+    std::vector<QuantLib::ext::shared_ptr<Parametrization> > parametrizations;
     parametrizations.push_back(ireur_p);
     parametrizations.push_back(infeur_p);
 
-    boost::shared_ptr<CrossAssetModel> model =
-        boost::make_shared<CrossAssetModel>(parametrizations, Matrix(), SalvagingAlgorithm::None);
+    QuantLib::ext::shared_ptr<CrossAssetModel> model =
+        QuantLib::ext::make_shared<CrossAssetModel>(parametrizations, Matrix(), SalvagingAlgorithm::None);
 
     model->setCorrelation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::INF, 0, 0.33);
 
     // pricing engine
-    boost::shared_ptr<AnalyticDkCpiCapFloorEngine> engine =
-        boost::make_shared<AnalyticDkCpiCapFloorEngine>(model, 0, baseCPI);
+    QuantLib::ext::shared_ptr<AnalyticDkCpiCapFloorEngine> engine =
+        QuantLib::ext::make_shared<AnalyticDkCpiCapFloorEngine>(model, 0, baseCPI);
 
     for (Size i = 0; i < cpiHelpers.size(); ++i) {
         cpiHelpers[i]->setPricingEngine(engine);
@@ -4583,10 +4584,10 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByH) {
     Size seed = 18;  // rng seed
     Size steps = 1;  // number of discretization steps
 
-    boost::shared_ptr<StochasticProcess> process = model->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> process = model->stateProcess();
     LowDiscrepancy::rsg_type sg = LowDiscrepancy::make_sequence_generator(process->factors() * steps, seed);
     TimeGrid grid(T, steps);
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
         tmp->resetCache(grid.size() - 1);
     }
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg(process, grid, sg, false);
@@ -4639,19 +4640,19 @@ BOOST_AUTO_TEST_CASE(testCrCalibration) {
     Settings::instance().evaluationDate() = Date(30, July, 2015);
 
     // IR (zero vol)
-    Handle<YieldTermStructure> eurYts(boost::make_shared<FlatForward>(refDate, 0.01, Actual365Fixed()));
-    boost::shared_ptr<Parametrization> ireur_p =
-        boost::make_shared<IrLgm1fConstantParametrization>(EURCurrency(), eurYts, 0.00, 0.01);
+    Handle<YieldTermStructure> eurYts(QuantLib::ext::make_shared<FlatForward>(refDate, 0.01, Actual365Fixed()));
+    QuantLib::ext::shared_ptr<Parametrization> ireur_p =
+        QuantLib::ext::make_shared<IrLgm1fConstantParametrization>(EURCurrency(), eurYts, 0.00, 0.01);
 
     // CR
-    Handle<DefaultProbabilityTermStructure> prob(boost::make_shared<FlatHazardRate>(refDate, 0.01, Actual365Fixed()));
+    Handle<DefaultProbabilityTermStructure> prob(QuantLib::ext::make_shared<FlatHazardRate>(refDate, 0.01, Actual365Fixed()));
 
     Size nMat = 10;
     Real impliedVols[] = { 0.10, 0.12, 0.14, 0.16, 0.18, 0.2, 0.21, 0.215, 0.22, 0.225 };
     Period maturity[] = { 1 * Years, 2 * Years, 3 * Years, 4 * Years, 5 * Years,
                           6 * Years, 7 * Years, 8 * Years, 9 * Years, 10 * Years };
 
-    std::vector<boost::shared_ptr<BlackCalibrationHelper> > cdsoHelpers;
+    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper> > cdsoHelpers;
     Array volStepTimes(nMat - 1), noTimes(0);
     Array crVols(nMat, 0.0030), crRev(nMat, 0.01); // init vol and rev
 
@@ -4667,8 +4668,8 @@ BOOST_AUTO_TEST_CASE(testCrCalibration) {
                                 DateGeneration::CDS, false);
         QL_REQUIRE(schedule.date(0) >= mat,
                    "CDS start (" << schedule.date(0) << ") should be on or after option maturity (" << mat << ")");
-        boost::shared_ptr<CdsOptionHelper> h(
-            new CdsOptionHelper(mat, Handle<Quote>(boost::make_shared<SimpleQuote>(impliedVols[i - 1])),
+        QuantLib::ext::shared_ptr<CdsOptionHelper> h(
+            new CdsOptionHelper(mat, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(impliedVols[i - 1])),
                                 Protection::Buyer, schedule, Following, Actual360(), prob, 0.4, eurYts));
         Real t = eurYts->timeFromReference(mat);
         cdsoHelpers.push_back(h);
@@ -4678,22 +4679,22 @@ BOOST_AUTO_TEST_CASE(testCrCalibration) {
         lastMat = mat;
     }
 
-    boost::shared_ptr<CrLgm1fPiecewiseConstantParametrization> creur_p =
-        boost::make_shared<CrLgm1fPiecewiseConstantParametrization>(EURCurrency(), prob, volStepTimes, crVols,
+    QuantLib::ext::shared_ptr<CrLgm1fPiecewiseConstantParametrization> creur_p =
+        QuantLib::ext::make_shared<CrLgm1fPiecewiseConstantParametrization>(EURCurrency(), prob, volStepTimes, crVols,
                                                                     volStepTimes, crRev);
 
-    std::vector<boost::shared_ptr<Parametrization> > parametrizations;
+    std::vector<QuantLib::ext::shared_ptr<Parametrization> > parametrizations;
     parametrizations.push_back(ireur_p);
     parametrizations.push_back(creur_p);
 
-    boost::shared_ptr<CrossAssetModel> model =
-        boost::make_shared<CrossAssetModel>(parametrizations, Matrix(), SalvagingAlgorithm::None);
+    QuantLib::ext::shared_ptr<CrossAssetModel> model =
+        QuantLib::ext::make_shared<CrossAssetModel>(parametrizations, Matrix(), SalvagingAlgorithm::None);
 
     model->setCorrelation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::CR, 0, 0.33);
 
     // pricing engine
-    boost::shared_ptr<AnalyticLgmCdsOptionEngine> engine =
-        boost::make_shared<AnalyticLgmCdsOptionEngine>(model, 0, 0, 0.4);
+    QuantLib::ext::shared_ptr<AnalyticLgmCdsOptionEngine> engine =
+        QuantLib::ext::make_shared<AnalyticLgmCdsOptionEngine>(model, 0, 0, 0.4);
 
     for (Size i = 0; i < cdsoHelpers.size(); ++i) {
         cdsoHelpers[i]->setPricingEngine(engine);
@@ -4730,27 +4731,27 @@ BOOST_AUTO_TEST_CASE(testCrCalibration) {
     Size seed = 18;  // rng seed
     Size steps = 1;  // number of discretization steps
 
-    boost::shared_ptr<StochasticProcess> process = model->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> process = model->stateProcess();
     LowDiscrepancy::rsg_type sg = LowDiscrepancy::make_sequence_generator(process->factors() * steps, seed);
     TimeGrid grid(T, steps);
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
         tmp->resetCache(grid.size() - 1);
     }
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg(process, grid, sg, false);
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > cdso;
 
-    boost::shared_ptr<CreditDefaultSwap> underlying =
-        boost::static_pointer_cast<CdsOptionHelper>(cdsoHelpers.back())->underlying();
+    QuantLib::ext::shared_ptr<CreditDefaultSwap> underlying =
+        QuantLib::ext::static_pointer_cast<CdsOptionHelper>(cdsoHelpers.back())->underlying();
     Real K = underlying->fairSpreadClean();
     BOOST_TEST_MESSAGE("Last CDSO fair spread is " << K);
 
     Settings::instance().evaluationDate() = lastMat;
-    boost::shared_ptr<LgmImpliedDefaultTermStructure> probMc =
-        boost::make_shared<LgmImpliedDefaultTermStructure>(model, 0, 0);
-    boost::shared_ptr<LgmImpliedYieldTermStructure> ytsMc =
-        boost::make_shared<LgmImpliedYieldTermStructure>(model->lgm(0));
-    boost::shared_ptr<QuantExt::MidPointCdsEngine> dynamicEngine = boost::make_shared<QuantExt::MidPointCdsEngine>(
+    QuantLib::ext::shared_ptr<LgmImpliedDefaultTermStructure> probMc =
+        QuantLib::ext::make_shared<LgmImpliedDefaultTermStructure>(model, 0, 0);
+    QuantLib::ext::shared_ptr<LgmImpliedYieldTermStructure> ytsMc =
+        QuantLib::ext::make_shared<LgmImpliedYieldTermStructure>(model->lgm(0));
+    QuantLib::ext::shared_ptr<QuantExt::MidPointCdsEngine> dynamicEngine = QuantLib::ext::make_shared<QuantExt::MidPointCdsEngine>(
         Handle<DefaultProbabilityTermStructure>(probMc), 0.4, Handle<YieldTermStructure>(ytsMc));
     underlying->setPricingEngine(dynamicEngine);
 

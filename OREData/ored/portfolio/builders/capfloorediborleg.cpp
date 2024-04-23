@@ -17,6 +17,7 @@
 */
 
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
+#include <ql/termstructures/volatility/optionlet/constantoptionletvol.hpp>
 #include <ored/utilities/log.hpp>
 
 #include <boost/make_shared.hpp>
@@ -24,13 +25,19 @@
 namespace ore {
 namespace data {
 
-boost::shared_ptr<FloatingRateCouponPricer> CapFlooredIborLegEngineBuilder::engineImpl(const std::string& index) {
+QuantLib::ext::shared_ptr<FloatingRateCouponPricer> CapFlooredIborLegEngineBuilder::engineImpl(const std::string& index) {
 
     std::string ccyCode = parseIborIndex(index)->currency().code();
     Handle<YieldTermStructure> yts = market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
-    Handle<OptionletVolatilityStructure> ovs = market_->capFloorVol(index, configuration(MarketContext::pricing));
+    Handle<OptionletVolatilityStructure> ovs;
+    if (parseBool(engineParameter("ZeroVolatility", {}, false, "false"))) {
+        ovs = Handle<OptionletVolatilityStructure>(QuantLib::ext::make_shared<ConstantOptionletVolatility>(
+            0, NullCalendar(), Unadjusted, 0.0, Actual365Fixed(), Normal));
+    } else {
+        ovs = market_->capFloorVol(index, configuration(MarketContext::pricing));
+    }
     BlackIborCouponPricer::TimingAdjustment timingAdjustment = BlackIborCouponPricer::Black76;
-    boost::shared_ptr<SimpleQuote> correlation = boost::make_shared<SimpleQuote>(1.0);
+    QuantLib::ext::shared_ptr<SimpleQuote> correlation = QuantLib::ext::make_shared<SimpleQuote>(1.0);
     // for backwards compatibility we do not require the additional timing adjustment fields
     if (engineParameters_.find("TimingAdjustment") != engineParameters_.end()) {
         string adjStr = engineParameter("TimingAdjustment");
@@ -43,7 +50,7 @@ boost::shared_ptr<FloatingRateCouponPricer> CapFlooredIborLegEngineBuilder::engi
         }
         correlation->setValue(parseReal(engineParameter("Correlation")));
     }
-    return boost::make_shared<BlackIborCouponPricer>(ovs, timingAdjustment, Handle<Quote>(correlation));
+    return QuantLib::ext::make_shared<BlackIborCouponPricer>(ovs, timingAdjustment, Handle<Quote>(correlation));
 }
 
 } // namespace data

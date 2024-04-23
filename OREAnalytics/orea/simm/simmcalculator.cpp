@@ -63,9 +63,9 @@ typedef SimmConfiguration::Regulation Regulation;
 typedef SimmConfiguration::SimmSide SimmSide;
 
 SimmCalculator::SimmCalculator(const ore::analytics::Crif& crif,
-                               const boost::shared_ptr<SimmConfiguration>& simmConfiguration,
+                               const QuantLib::ext::shared_ptr<SimmConfiguration>& simmConfiguration,
                                const string& calculationCcyCall, const string& calculationCcyPost,
-                               const string& resultCcy, const boost::shared_ptr<Market> market,
+                               const string& resultCcy, const QuantLib::ext::shared_ptr<Market> market,
                                const bool determineWinningRegulations, const bool enforceIMRegulations,
                                const bool quiet, const map<SimmSide, set<NettingSetDetails>>& hasSEC,
                                const map<SimmSide, set<NettingSetDetails>>& hasCFTC)
@@ -897,10 +897,16 @@ pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& ne
 
     bool riskClassIsFX = rt == RiskType::FX || rt == RiskType::FXVol;
 
+    // precomputed
+    map<std::pair<std::string,std::string>, std::vector<CrifRecord>> crifByQualifierAndBucket;
+    map<std::string, std::vector<CrifRecord>> crifByBucket;
+
     // Find the set of buckets and associated qualifiers for the netting set details, product class and risk type
     map<string, set<string>> buckets;
     for(const auto& it : crif.filterBy(nettingSetDetails, pc, rt)) {
         buckets[it.bucket].insert(it.qualifier);
+        crifByQualifierAndBucket[std::make_pair(it.qualifier,it.bucket)].push_back(it);
+        crifByBucket[it.bucket].push_back(it);
     }
 
     // If there are no buckets, return early and set bool to false to indicate margin does not apply
@@ -925,7 +931,8 @@ pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& ne
 
         // Get the concentration risk for each qualifier in current bucket i.e. $CR_k$ from SIMM docs
         map<string, Real> concentrationRisk;
-        for (const auto& qualifier : buckets.at(bucket)) {
+
+        for (const auto& qualifier : kv.second) {
 
             // Do not include Risk_FX components in the calculation currency in the SIMM calculation
             if (rt == RiskType::FX && qualifier == calcCcy) {
@@ -938,7 +945,7 @@ pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& ne
             }
 
             // Pair of iterators to start and end of sensitivities with current qualifier
-            auto pQualifier = crif.filterByQualifierAndBucket(nettingSetDetails, pc, rt, qualifier, bucket);
+            auto pQualifier = crifByQualifierAndBucket[std::make_pair(qualifier,bucket)];
 
             // One pass to get the concentration risk for this qualifier
             for (auto it = pQualifier.begin(); it != pQualifier.end(); ++it) {
@@ -955,9 +962,10 @@ pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& ne
             concentrationRisk[qualifier] = max(1.0, sqrt(std::abs(concentrationRisk[qualifier])));
         }
 
+
         // Calculate the margin component for the current bucket
         // Pair of iterators to start and end of sensitivities within current bucket
-        auto pBucket = crif.filterByBucket(nettingSetDetails, pc, rt, bucket);
+        auto pBucket = crifByBucket[bucket];
         for (auto itOuter = pBucket.begin(); itOuter != pBucket.end(); ++itOuter) {
             // Do not include Risk_FX components in the calculation currency in the SIMM calculation
             if (rt == RiskType::FX && itOuter->qualifier == calcCcy) {
@@ -975,6 +983,8 @@ pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& ne
             // Weighted sensitivity i.e. $WS_{k}$ from SIMM docs
             Real wsOuter =
                 rwOuter * (itOuter->amountResultCcy * sigmaOuter * hvr) * concentrationRisk[itOuter->qualifier];
+            // Get concentration risk for outer qualifier
+            Real outerConcentrationRisk = concentrationRisk.at(itOuter->qualifier);
             // Update weighted sensitivity sum
             sumWeightedSensis[bucket] += wsOuter;
             // Add diagonal element to bucket margin
@@ -991,12 +1001,12 @@ pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& ne
                     continue;
                 }
                 // Correlation, $\rho_{k,l}$ in the SIMM docs
-                Real corr = simmConfiguration_->correlation(rt, itOuter->qualifier, itOuter->label1, itOuter->label2,
-                                                            rt, itInner->qualifier, itInner->label1, itInner->label2,
-                                                            calcCcy);
+                Real corr =
+                    simmConfiguration_->correlation(rt, itOuter->qualifier, itOuter->label1, itOuter->label2, rt,
+                                                    itInner->qualifier, itInner->label1, itInner->label2, calcCcy);
                 // $f_{k,l}$ from the SIMM docs
-                Real f = min(concentrationRisk.at(itOuter->qualifier), concentrationRisk.at(itInner->qualifier)) /
-                         max(concentrationRisk.at(itOuter->qualifier), concentrationRisk.at(itInner->qualifier));
+                Real f = min(outerConcentrationRisk, concentrationRisk.at(itInner->qualifier)) /
+                         max(outerConcentrationRisk, concentrationRisk.at(itInner->qualifier));
                 // Add cross element to delta margin
                 Real sigmaInner = simmConfiguration_->sigma(rt, itInner->qualifier, itInner->label1, calcCcy);
                 Real rwInner = simmConfiguration_->weight(rt, itInner->qualifier, itInner->label1, calcCcy);

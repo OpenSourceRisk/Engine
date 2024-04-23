@@ -111,7 +111,7 @@ public:
     //! \name Constructors
     //@{
     PiecewiseOptionletCurve(const QuantLib::Date& referenceDate,
-                            const std::vector<boost::shared_ptr<helper> >& instruments,
+                            const std::vector<QuantLib::ext::shared_ptr<helper> >& instruments,
                             const QuantLib::Calendar& calendar, QuantLib::BusinessDayConvention bdc,
                             const QuantLib::DayCounter& dayCounter,
                             QuantLib::VolatilityType volatilityType = QuantLib::Normal,
@@ -120,7 +120,7 @@ public:
                             const Bootstrap<this_curve>& bootstrap = Bootstrap<this_curve>());
 
     PiecewiseOptionletCurve(QuantLib::Natural settlementDays,
-                            const std::vector<boost::shared_ptr<helper> >& instruments,
+                            const std::vector<QuantLib::ext::shared_ptr<helper> >& instruments,
                             const QuantLib::Calendar& calendar, QuantLib::BusinessDayConvention bdc,
                             const QuantLib::DayCounter& dayCounter,
                             QuantLib::VolatilityType volatilityType = QuantLib::Normal,
@@ -161,7 +161,7 @@ private:
     //@}
 
     //! Vector of helper instruments to be matched
-    std::vector<boost::shared_ptr<helper> > instruments_;
+    std::vector<QuantLib::ext::shared_ptr<helper> > instruments_;
 
     //! Accuracy of the match
     QuantLib::Real accuracy_;
@@ -176,7 +176,7 @@ private:
 
 template <class Interpolator, template <class> class Bootstrap>
 PiecewiseOptionletCurve<Interpolator, Bootstrap>::PiecewiseOptionletCurve(
-    const QuantLib::Date& referenceDate, const std::vector<boost::shared_ptr<helper> >& instruments,
+    const QuantLib::Date& referenceDate, const std::vector<QuantLib::ext::shared_ptr<helper> >& instruments,
     const QuantLib::Calendar& calendar, QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dayCounter,
     QuantLib::VolatilityType volatilityType, QuantLib::Real displacement, bool flatFirstPeriod, const Interpolator& i,
     const Bootstrap<this_curve>& bootstrap)
@@ -187,7 +187,7 @@ PiecewiseOptionletCurve<Interpolator, Bootstrap>::PiecewiseOptionletCurve(
 
 template <class Interpolator, template <class> class Bootstrap>
 PiecewiseOptionletCurve<Interpolator, Bootstrap>::PiecewiseOptionletCurve(
-    QuantLib::Natural settlementDays, const std::vector<boost::shared_ptr<helper> >& instruments,
+    QuantLib::Natural settlementDays, const std::vector<QuantLib::ext::shared_ptr<helper> >& instruments,
     const QuantLib::Calendar& calendar, QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dayCounter,
     QuantLib::VolatilityType volatilityType, QuantLib::Real displacement, bool flatFirstPeriod, const Interpolator& i,
     const Bootstrap<this_curve>& bootstrap)

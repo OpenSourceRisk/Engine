@@ -57,7 +57,7 @@ void Portfolio::fromXML(XMLNode* node) {
         QL_REQUIRE(id != "", "No id attribute in Trade Node");
         DLOG("Parsing trade id:" << id);
         
-        boost::shared_ptr<Trade> trade;
+        QuantLib::ext::shared_ptr<Trade> trade;
         bool failedToLoad = true;
         try {
             trade = TradeFactory::instance().build(tradeType);
@@ -78,7 +78,7 @@ void Portfolio::fromXML(XMLNode* node) {
                 // this loads only type, id and envelope, but type will be set to the original trade's type
                 trade->fromXML(nodes[i]);
                 // create a dummy trade of type "Dummy"
-                boost::shared_ptr<FailedTrade> failedTrade = boost::make_shared<FailedTrade>();
+                QuantLib::ext::shared_ptr<FailedTrade> failedTrade = QuantLib::ext::make_shared<FailedTrade>();
                 // copy id and envelope
                 failedTrade->id() = id;
                 failedTrade->setUnderlyingTradeType(tradeType);
@@ -118,15 +118,15 @@ void Portfolio::removeMatured(const Date& asof) {
     }
 }
 
-void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory, const std::string& context,
+void Portfolio::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, const std::string& context,
                       const bool emitStructuredError) {
     LOG("Building Portfolio of size " << trades_.size() << " for context = '" << context << "'");
     auto trade = trades_.begin();
     Size initialSize = trades_.size();
     Size failedTrades = 0;
     while (trade != trades_.end()) {
-        auto [ft, success] =
-            buildTrade((*trade).second, engineFactory, context, buildFailedTrades(), emitStructuredError);
+        auto [ft, success] = buildTrade((*trade).second, engineFactory, context, ignoreTradeBuildFail(),
+                                        buildFailedTrades(), emitStructuredError);
         if (success) {
             ++trade;
         } else if (ft) {
@@ -158,7 +158,7 @@ set<string> Portfolio::ids() const {
     return ids;
 }
 
-const std::map<std::string, boost::shared_ptr<Trade>>& Portfolio::trades() const { return trades_; }
+const std::map<std::string, QuantLib::ext::shared_ptr<Trade>>& Portfolio::trades() const { return trades_; }
 
 map<string, string> Portfolio::nettingSetMap() const {
     map<string, string> nettingSetMap;
@@ -182,7 +182,7 @@ map<string, set<string>> Portfolio::counterpartyNettingSets() const {
     return cpNettingSets;
 }
 
-void Portfolio::add(const boost::shared_ptr<Trade>& trade) {
+void Portfolio::add(const QuantLib::ext::shared_ptr<Trade>& trade) {
     QL_REQUIRE(!has(trade->id()), "Attempted to add a trade to the portfolio with an id, which already exists.");
     underlyingIndicesCache_.clear();
     trades_[trade->id()] = trade;
@@ -190,7 +190,7 @@ void Portfolio::add(const boost::shared_ptr<Trade>& trade) {
 
 bool Portfolio::has(const string& id) { return trades_.find(id) != trades_.end(); }
 
-boost::shared_ptr<Trade> Portfolio::get(const string& id) const {
+QuantLib::ext::shared_ptr<Trade> Portfolio::get(const string& id) const {
     auto it = trades_.find(id);
     if (it != trades_.end())
         return it->second;
@@ -230,7 +230,7 @@ map<string, RequiredFixings::FixingDates> Portfolio::fixings(const Date& settlem
 }
 
 std::map<AssetClass, std::set<std::string>>
-Portfolio::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) {
+Portfolio::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) {
 
     if (!underlyingIndicesCache_.empty())
         return underlyingIndicesCache_;
@@ -255,7 +255,7 @@ Portfolio::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& refe
 
 std::set<std::string>
 Portfolio::underlyingIndices(AssetClass assetClass,
-                             const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) {
+                             const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) {
 
     std::map<AssetClass, std::set<std::string>> indices = underlyingIndices(referenceDataManager);
     auto it = indices.find(assetClass);
@@ -265,10 +265,10 @@ Portfolio::underlyingIndices(AssetClass assetClass,
     return std::set<std::string>();
 }
 
-std::pair<boost::shared_ptr<Trade>, bool> buildTrade(boost::shared_ptr<Trade>& trade,
-                                                     const boost::shared_ptr<EngineFactory>& engineFactory,
-                                                     const std::string& context, const bool buildFailedTrades,
-                                                     const bool emitStructuredError) {
+std::pair<QuantLib::ext::shared_ptr<Trade>, bool> buildTrade(QuantLib::ext::shared_ptr<Trade>& trade,
+                                                     const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                                                     const std::string& context, const bool ignoreTradeBuildFail,
+                                                     const bool buildFailedTrades, const bool emitStructuredError) {
     try {
         trade->reset();
         trade->build(engineFactory);
@@ -281,18 +281,15 @@ std::pair<boost::shared_ptr<Trade>, bool> buildTrade(boost::shared_ptr<Trade>& t
         } else {
             ALOG("Error building trade '" << trade->id() << "' for context '" + context + "': " + e.what());
         }
-        if (buildFailedTrades) {
-            boost::shared_ptr<FailedTrade> failed = boost::make_shared<FailedTrade>();
+        if (ignoreTradeBuildFail) {
+            return std::make_pair(trade, false);
+        } else if (buildFailedTrades) {
+            QuantLib::ext::shared_ptr<FailedTrade> failed = QuantLib::ext::make_shared<FailedTrade>();
             failed->id() = trade->id();
             failed->setUnderlyingTradeType(trade->tradeType());
             failed->setEnvelope(trade->envelope());
             failed->build(engineFactory);
             failed->resetPricingStats(trade->getNumberOfPricings(), trade->getCumulativePricingTime());
-            try {
-                failed->setAdditionalData(trade->additionalData());
-            } catch (...) {
-                // We try to get the additional fields, but only if it is possible
-            }
             LOG("Built failed trade with id " << failed->id());
             return std::make_pair(failed, false);
         } else {

@@ -110,7 +110,7 @@ public:
     //! \name Constructors
     //@{
     PiecewisePriceCurve(const QuantLib::Date& referenceDate,
-        const std::vector<boost::shared_ptr<helper> >& instruments,
+        const std::vector<QuantLib::ext::shared_ptr<helper> >& instruments,
         const QuantLib::DayCounter& dayCounter,
         const QuantLib::Currency& currency,
         const Interpolator& i = Interpolator(),
@@ -136,7 +136,7 @@ public:
     //@}
 
     //! Return the i-th instrument
-    const boost::shared_ptr<helper>& instrument(QuantLib::Size i) const;
+    const QuantLib::ext::shared_ptr<helper>& instrument(QuantLib::Size i) const;
 
 private:
     //! \name LazyObject interface
@@ -149,7 +149,7 @@ private:
     QuantLib::Real priceImpl(QuantLib::Time t) const override;
     //@}
 
-    std::vector<boost::shared_ptr<helper> > instruments_;
+    std::vector<QuantLib::ext::shared_ptr<helper> > instruments_;
     Real accuracy_;
 
     friend class Bootstrap<this_curve>;
@@ -161,7 +161,7 @@ private:
 template <class Interpolator, template <class> class Bootstrap>
 PiecewisePriceCurve<Interpolator, Bootstrap>::PiecewisePriceCurve(
     const QuantLib::Date& referenceDate,
-    const std::vector<boost::shared_ptr<helper> >& instruments,
+    const std::vector<QuantLib::ext::shared_ptr<helper> >& instruments,
     const QuantLib::DayCounter& dayCounter,
     const QuantLib::Currency& currency,
     const Interpolator& i,
@@ -174,7 +174,7 @@ PiecewisePriceCurve<Interpolator, Bootstrap>::PiecewisePriceCurve(
     std::sort(instruments_.begin(), instruments_.end(), QuantLib::detail::BootstrapHelperSorter());
 
     auto it = std::find_if(instruments_.begin(), instruments_.end(), 
-        [&referenceDate](const boost::shared_ptr<helper>& inst) { return inst->pillarDate() > referenceDate; });
+        [&referenceDate](const QuantLib::ext::shared_ptr<helper>& inst) { return inst->pillarDate() > referenceDate; });
     QL_REQUIRE(it != instruments_.end(), "PiecewisePriceCurve: all instruments are expired.");
     if (it != instruments_.begin()) {
         instruments_.erase(instruments_.begin(), it);
@@ -220,7 +220,7 @@ const std::vector<QuantLib::Real>& PiecewisePriceCurve<Interpolator, Bootstrap>:
 }
 
 template <class Interpolator, template <class> class Bootstrap>
-const boost::shared_ptr<QuantLib::BootstrapHelper<PriceTermStructure> >& 
+const QuantLib::ext::shared_ptr<QuantLib::BootstrapHelper<PriceTermStructure> >& 
 PiecewisePriceCurve<Interpolator, Bootstrap>::instrument(QuantLib::Size i) const {
     QL_REQUIRE(i < instruments_.size(), "Index (" << i << ") greater than the number of instruments (" <<
         instruments_.size() << ").");

@@ -29,8 +29,8 @@ namespace QuantExt {
 
 OffPeakPowerIndex::OffPeakPowerIndex(const string& underlyingName,
     const Date& expiryDate,
-    const boost::shared_ptr<CommodityFuturesIndex>& offPeakIndex,
-    const boost::shared_ptr<CommodityFuturesIndex>& peakIndex,
+    const QuantLib::ext::shared_ptr<CommodityFuturesIndex>& offPeakIndex,
+    const QuantLib::ext::shared_ptr<CommodityFuturesIndex>& peakIndex,
     Real offPeakHours,
     const Calendar& peakCalendar,
     const Handle<PriceTermStructure>& priceCurve)
@@ -49,11 +49,11 @@ OffPeakPowerIndex::OffPeakPowerIndex(const string& underlyingName,
     QL_REQUIRE(peakIndex_, msgPrefix << "the peak index should not be null.");
 }
 
-const boost::shared_ptr<CommodityFuturesIndex>& OffPeakPowerIndex::offPeakIndex() const {
+const QuantLib::ext::shared_ptr<CommodityFuturesIndex>& OffPeakPowerIndex::offPeakIndex() const {
     return offPeakIndex_;
 }
 
-const boost::shared_ptr<CommodityFuturesIndex>& OffPeakPowerIndex::peakIndex() const {
+const QuantLib::ext::shared_ptr<CommodityFuturesIndex>& OffPeakPowerIndex::peakIndex() const {
     return peakIndex_;
 }
 
@@ -65,13 +65,13 @@ const Calendar& OffPeakPowerIndex::peakCalendar() const {
     return peakCalendar_;
 }
 
-boost::shared_ptr<CommodityIndex> OffPeakPowerIndex::clone(const Date& expiry,
+QuantLib::ext::shared_ptr<CommodityIndex> OffPeakPowerIndex::clone(const Date& expiry,
     const boost::optional<Handle<PriceTermStructure>>& ts) const {
     const auto& pts = ts ? *ts : priceCurve();
     const auto& ed = expiry == Date() ? expiryDate() : expiry;
-    auto offPeakIndex = boost::dynamic_pointer_cast<CommodityFuturesIndex>(offPeakIndex_->clone(ed));
-    auto peakIndex = boost::dynamic_pointer_cast<CommodityFuturesIndex>(peakIndex_->clone(ed));
-    return boost::make_shared<OffPeakPowerIndex>(underlyingName(), ed, offPeakIndex,
+    auto offPeakIndex = QuantLib::ext::dynamic_pointer_cast<CommodityFuturesIndex>(offPeakIndex_->clone(ed));
+    auto peakIndex = QuantLib::ext::dynamic_pointer_cast<CommodityFuturesIndex>(peakIndex_->clone(ed));
+    return QuantLib::ext::make_shared<OffPeakPowerIndex>(underlyingName(), ed, offPeakIndex,
         peakIndex, offPeakHours_, peakCalendar_, pts);
 }
 

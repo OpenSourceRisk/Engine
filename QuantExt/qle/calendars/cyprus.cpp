@@ -25,7 +25,7 @@ namespace QuantExt {
     Cyprus::Cyprus() {
         // all calendar instances on the same market share the same
         // implementation instance
-        impl_ = boost::make_shared<Cyprus::Impl>();
+        impl_ = QuantLib::ext::make_shared<Cyprus::Impl>();
     }
 
     bool Cyprus::Impl::isBusinessDay(const Date& date) const {

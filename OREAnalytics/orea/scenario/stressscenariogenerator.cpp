@@ -27,12 +27,12 @@ using namespace std;
 namespace ore {
 namespace analytics {
 
-StressScenarioGenerator::StressScenarioGenerator(const boost::shared_ptr<StressTestScenarioData>& stressData,
-                                                 const boost::shared_ptr<Scenario>& baseScenario,
-                                                 const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-                                                 const boost::shared_ptr<ScenarioSimMarket>& simMarket,
-                                                 const boost::shared_ptr<ScenarioFactory>& stressScenarioFactory,
-                                                 const boost::shared_ptr<Scenario>& baseScenarioAbsolute)
+StressScenarioGenerator::StressScenarioGenerator(const QuantLib::ext::shared_ptr<StressTestScenarioData>& stressData,
+                                                 const QuantLib::ext::shared_ptr<Scenario>& baseScenario,
+                                                 const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+                                                 const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket,
+                                                 const QuantLib::ext::shared_ptr<ScenarioFactory>& stressScenarioFactory,
+                                                 const QuantLib::ext::shared_ptr<Scenario>& baseScenarioAbsolute)
     : ShiftScenarioGenerator(baseScenario, simMarketData, simMarket), stressData_(stressData),
       stressScenarioFactory_(stressScenarioFactory),
       baseScenarioAbsolute_(baseScenarioAbsolute == nullptr ? baseScenario : baseScenarioAbsolute) {
@@ -47,7 +47,7 @@ void StressScenarioGenerator::generateScenarios() {
     for (Size i = 0; i < stressData_->data().size(); ++i) {
         StressTestScenarioData::StressTestData data = stressData_->data().at(i);
         DLOG("Generate stress scenario #" << i << " '" << data.label << "'");
-        boost::shared_ptr<Scenario> scenario = stressScenarioFactory_->buildScenario(asof, data.label);
+        QuantLib::ext::shared_ptr<Scenario> scenario = stressScenarioFactory_->buildScenario(asof, data.label);
 
         if (simMarketData_->simulateFxSpots())
             addFxShifts(data, scenario);
@@ -77,7 +77,7 @@ void StressScenarioGenerator::generateScenarios() {
 }
 
 void StressScenarioGenerator::addFxShifts(StressTestScenarioData::StressTestData& std,
-                                          boost::shared_ptr<Scenario>& scenario) {
+                                          QuantLib::ext::shared_ptr<Scenario>& scenario) {
     for (auto d : std.fxShifts) {
         string ccypair = d.first; // foreign + domestic;
 
@@ -115,7 +115,7 @@ void StressScenarioGenerator::addFxShifts(StressTestScenarioData::StressTestData
 }
 
 void StressScenarioGenerator::addEquityShifts(StressTestScenarioData::StressTestData& std,
-                                              boost::shared_ptr<Scenario>& scenario) {
+                                              QuantLib::ext::shared_ptr<Scenario>& scenario) {
     for (auto d : std.equityShifts) {
         string equity = d.first;
         StressTestScenarioData::SpotShiftData data = d.second;
@@ -134,7 +134,7 @@ void StressScenarioGenerator::addEquityShifts(StressTestScenarioData::StressTest
 }
 
 void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::StressTestData& std,
-                                                     boost::shared_ptr<Scenario>& scenario) {
+                                                     QuantLib::ext::shared_ptr<Scenario>& scenario) {
     Date asof = baseScenario_->asof();
 
     for (auto d : std.discountCurveShifts) {
@@ -194,7 +194,7 @@ void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::Str
 }
 
 void StressScenarioGenerator::addSurvivalProbabilityShifts(StressTestScenarioData::StressTestData& std,
-                                                           boost::shared_ptr<Scenario>& scenario) {
+                                                           QuantLib::ext::shared_ptr<Scenario>& scenario) {
     Date asof = baseScenario_->asof();
 
     for (auto d : std.survivalProbabilityShifts) {
@@ -254,7 +254,7 @@ void StressScenarioGenerator::addSurvivalProbabilityShifts(StressTestScenarioDat
 }
 
 void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::StressTestData& std,
-                                                  boost::shared_ptr<Scenario>& scenario) {
+                                                  QuantLib::ext::shared_ptr<Scenario>& scenario) {
     Date asof = baseScenario_->asof();
 
     for (auto d : std.indexCurveShifts) {
@@ -315,7 +315,7 @@ void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::Stress
 }
 
 void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::StressTestData& std,
-                                                  boost::shared_ptr<Scenario>& scenario) {
+                                                  QuantLib::ext::shared_ptr<Scenario>& scenario) {
     Date asof = baseScenario_->asof();
 
     for (auto d : std.yieldCurveShifts) {
@@ -380,7 +380,7 @@ void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::Stress
 }
 
 void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestData& std,
-                                             boost::shared_ptr<Scenario>& scenario) {
+                                             QuantLib::ext::shared_ptr<Scenario>& scenario) {
     Date asof = baseScenario_->asof();
 
     for (auto d : std.fxVolShifts) {
@@ -442,7 +442,7 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
 }
 
 void StressScenarioGenerator::addEquityVolShifts(StressTestScenarioData::StressTestData& std,
-                                                 boost::shared_ptr<Scenario>& scenario) {
+                                                 QuantLib::ext::shared_ptr<Scenario>& scenario) {
     Date asof = baseScenario_->asof();
 
     for (auto d : std.equityVolShifts) {
@@ -503,7 +503,7 @@ void StressScenarioGenerator::addEquityVolShifts(StressTestScenarioData::StressT
 }
 
 void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::StressTestData& std,
-                                                   boost::shared_ptr<Scenario>& scenario) {
+                                                   QuantLib::ext::shared_ptr<Scenario>& scenario) {
     Date asof = baseScenario_->asof();
 
     for (auto d : std.swaptionVolShifts) {
@@ -593,7 +593,7 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
 }
 
 void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::StressTestData& std,
-                                                   boost::shared_ptr<Scenario>& scenario) {
+                                                   QuantLib::ext::shared_ptr<Scenario>& scenario) {
     Date asof = baseScenario_->asof();
 
     for (auto d : std.capVolShifts) {
@@ -667,7 +667,7 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
 }
 
 void StressScenarioGenerator::addSecuritySpreadShifts(StressTestScenarioData::StressTestData& std,
-                                                      boost::shared_ptr<Scenario>& scenario) {
+                                                      QuantLib::ext::shared_ptr<Scenario>& scenario) {
     for (auto d : std.securitySpreadShifts) {
         string bond = d.first;
         TLOG("Apply stress scenario to security spread " << bond);
@@ -686,7 +686,7 @@ void StressScenarioGenerator::addSecuritySpreadShifts(StressTestScenarioData::St
 }
 
 void StressScenarioGenerator::addRecoveryRateShifts(StressTestScenarioData::StressTestData& std,
-                                                    boost::shared_ptr<Scenario>& scenario) {
+                                                    QuantLib::ext::shared_ptr<Scenario>& scenario) {
     for (auto d : std.recoveryRateShifts) {
         string isin = d.first;
         TLOG("Apply stress scenario to recovery rate " << isin);

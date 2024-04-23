@@ -45,9 +45,9 @@ bool operator==(const CurveSpec& lhs, const CurveSpec& rhs) {
     return lhs.name() == rhs.name();
 }
 
-bool operator<(const boost::shared_ptr<CurveSpec>& lhs, const boost::shared_ptr<CurveSpec>& rhs) { return *lhs < *rhs; }
+bool operator<(const QuantLib::ext::shared_ptr<CurveSpec>& lhs, const QuantLib::ext::shared_ptr<CurveSpec>& rhs) { return *lhs < *rhs; }
 
-bool operator==(const boost::shared_ptr<CurveSpec>& lhs, const boost::shared_ptr<CurveSpec>& rhs) {
+bool operator==(const QuantLib::ext::shared_ptr<CurveSpec>& lhs, const QuantLib::ext::shared_ptr<CurveSpec>& rhs) {
     return *lhs == *rhs;
 }
 

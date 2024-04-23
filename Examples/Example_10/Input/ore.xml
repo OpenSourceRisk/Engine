@@ -51,7 +51,7 @@
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting.xml</Parameter>
-      <Parameter name="collateralBalancesFile">collateralbalances.xml</Parameter>
+      <!-- <Parameter name="collateralBalancesFile">collateralbalances.xml</Parameter> -->
       <Parameter name="cubeFile">cube.csv.gz</Parameter>
       <Parameter name="scenarioFile">scenariodata.csv.gz</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>

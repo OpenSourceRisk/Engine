@@ -34,8 +34,8 @@ class PricingAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "PRICING";
 
-    PricingAnalyticImpl(const boost::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) { setLabel(LABEL); }
-    void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader, 
+    PricingAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) { setLabel(LABEL); }
+    void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, 
         const std::set<std::string>& runTypes = {}) override;
 
     void setUpConfigurations() override;
@@ -43,11 +43,11 @@ public:
 
 class PricingAnalytic : public Analytic {
 public:
-    PricingAnalytic(const boost::shared_ptr<InputParameters>& inputs)
+    PricingAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
         : Analytic(std::make_unique<PricingAnalyticImpl>(inputs),
             {"NPV", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY"},
                    inputs) {}
 };
  
 } // namespace analytics
-} // namespace oreplus
+} // namespace ore

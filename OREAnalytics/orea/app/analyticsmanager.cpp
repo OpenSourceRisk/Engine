@@ -23,6 +23,7 @@
 #include <orea/app/analytics/sensitivityanalytic.hpp>
 #include <orea/app/analytics/simmanalytic.hpp>
 #include <orea/app/analytics/stresstestanalytic.hpp>
+#include <orea/app/analytics/imscheduleanalytic.hpp>
 #include <orea/app/analytics/varanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/app/analyticsmanager.hpp>
@@ -50,20 +51,21 @@ Size matches(const std::set<std::string>& requested, const std::set<std::string>
     return count;
 }
     
-AnalyticsManager::AnalyticsManager(const boost::shared_ptr<InputParameters>& inputs, 
-                                   const boost::shared_ptr<MarketDataLoader>& marketDataLoader)
+AnalyticsManager::AnalyticsManager(const QuantLib::ext::shared_ptr<InputParameters>& inputs, 
+                                   const QuantLib::ext::shared_ptr<MarketDataLoader>& marketDataLoader)
     : inputs_(inputs), marketDataLoader_(marketDataLoader) {    
     
-    addAnalytic("MARKETDATA", boost::make_shared<MarketDataAnalytic>(inputs));
-    addAnalytic("PRICING", boost::make_shared<PricingAnalytic>(inputs));
-    addAnalytic("PARAMETRIC_VAR", boost::make_shared<ParametricVarAnalytic>(inputs_));
-    addAnalytic("HISTSIM_VAR", boost::make_shared<HistoricalSimulationVarAnalytic>(inputs_));
-    addAnalytic("XVA", boost::make_shared<XvaAnalytic>(inputs_));
-    addAnalytic("SIMM", boost::make_shared<SimmAnalytic>(inputs_));
-    addAnalytic("PARCONVERSION", boost::make_shared<ParConversionAnalytic>(inputs_));
-    addAnalytic("SCENARIO_STATISTICS", boost::make_shared<ScenarioStatisticsAnalytic>(inputs_));
-    addAnalytic("SCENARIO", boost::make_shared<ScenarioAnalytic>(inputs_));
-    addAnalytic("STRESS", boost::make_shared<StressTestAnalytic>(inputs_));
+    addAnalytic("MARKETDATA", QuantLib::ext::make_shared<MarketDataAnalytic>(inputs));
+    addAnalytic("PRICING", QuantLib::ext::make_shared<PricingAnalytic>(inputs));
+    addAnalytic("PARAMETRIC_VAR", QuantLib::ext::make_shared<ParametricVarAnalytic>(inputs_));
+    addAnalytic("HISTSIM_VAR", QuantLib::ext::make_shared<HistoricalSimulationVarAnalytic>(inputs_));
+    addAnalytic("XVA", QuantLib::ext::make_shared<XvaAnalytic>(inputs_));
+    addAnalytic("SIMM", QuantLib::ext::make_shared<SimmAnalytic>(inputs_));
+    addAnalytic("IM_SCHEDULE", QuantLib::ext::make_shared<IMScheduleAnalytic>(inputs_));
+    addAnalytic("PARCONVERSION", QuantLib::ext::make_shared<ParConversionAnalytic>(inputs_));
+    addAnalytic("SCENARIO_STATISTICS", QuantLib::ext::make_shared<ScenarioStatisticsAnalytic>(inputs_));
+    addAnalytic("SCENARIO", QuantLib::ext::make_shared<ScenarioAnalytic>(inputs_));
+    addAnalytic("STRESS", QuantLib::ext::make_shared<StressTestAnalytic>(inputs_));
 }
 
 void AnalyticsManager::clear() {
@@ -72,7 +74,7 @@ void AnalyticsManager::clear() {
     validAnalytics_.clear();
 }
     
-void AnalyticsManager::addAnalytic(const std::string& label, const boost::shared_ptr<Analytic>& analytic) {
+void AnalyticsManager::addAnalytic(const std::string& label, const QuantLib::ext::shared_ptr<Analytic>& analytic) {
     // Allow overriding, but warn 
     if (analytics_.find(label) != analytics_.end()) {
         WLOG("Overwriting analytic with label " << label);
@@ -105,7 +107,7 @@ bool AnalyticsManager::hasAnalytic(const std::string& type) {
     return va.find(type) != va.end();
 }
 
-const boost::shared_ptr<Analytic>& AnalyticsManager::getAnalytic(const std::string& type) const {
+const QuantLib::ext::shared_ptr<Analytic>& AnalyticsManager::getAnalytic(const std::string& type) const {
     for (const auto& a : analytics_) {
         const std::set<std::string>& types = a.second->analyticTypes();
         if (types.find(type) != types.end())
@@ -115,23 +117,23 @@ const boost::shared_ptr<Analytic>& AnalyticsManager::getAnalytic(const std::stri
 }
 
 std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> AnalyticsManager::todaysMarketParams() {
-    std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> tmps;
+    std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> tmps;
     for (const auto& a : analytics_) {
-        std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> atmps = a.second->todaysMarketParams();
+        std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> atmps = a.second->todaysMarketParams();
         tmps.insert(end(tmps), begin(atmps), end(atmps));
     }
     return tmps;
 }
 
 void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
-                                    const boost::shared_ptr<MarketCalibrationReportBase>& marketCalibrationReport) {
+                                    const QuantLib::ext::shared_ptr<MarketCalibrationReportBase>& marketCalibrationReport) {
 
     requestedAnalytics_ = analyticTypes;
     
     if (analytics_.size() == 0)
         return;
 
-    std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> tmps = todaysMarketParams();
+    std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> tmps = todaysMarketParams();
     std::set<Date> marketDates;
     for (const auto& a : analytics_) {
         auto mdates = a.second->marketDates();
@@ -154,9 +156,9 @@ void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
             marketDataLoader_->populateLoader(tmps, marketDates);
         }
         
-        boost::shared_ptr<InMemoryReport> mdReport = boost::make_shared<InMemoryReport>();
-        boost::shared_ptr<InMemoryReport> fixingReport = boost::make_shared<InMemoryReport>();
-        boost::shared_ptr<InMemoryReport> dividendReport = boost::make_shared<InMemoryReport>();
+        QuantLib::ext::shared_ptr<InMemoryReport> mdReport = QuantLib::ext::make_shared<InMemoryReport>();
+        QuantLib::ext::shared_ptr<InMemoryReport> fixingReport = QuantLib::ext::make_shared<InMemoryReport>();
+        QuantLib::ext::shared_ptr<InMemoryReport> dividendReport = QuantLib::ext::make_shared<InMemoryReport>();
 
         ore::analytics::ReportWriter(inputs_->reportNaString())
             .writeMarketData(*mdReport, marketDataLoader_->loader(), inputs_->asof(),
@@ -185,7 +187,7 @@ void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
     }
 
     if (inputs_->portfolio()) {
-        auto pricingStatsReport = boost::make_shared<InMemoryReport>();
+        auto pricingStatsReport = QuantLib::ext::make_shared<InMemoryReport>();
         ReportWriter(inputs_->reportNaString())
             .writePricingStats(*pricingStatsReport, inputs_->portfolio());
         reports_["STATS"]["pricingstats"] = pricingStatsReport;
@@ -194,7 +196,7 @@ void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
     if (marketCalibrationReport) {
         auto report = marketCalibrationReport->outputCalibrationReport();
         if (report) {
-            if (auto rpt = boost::dynamic_pointer_cast<InMemoryReport>(report))
+            if (auto rpt = QuantLib::ext::dynamic_pointer_cast<InMemoryReport>(report))
                 reports_["MARKET"]["todaysmarketcalibration"] = rpt;
         }
     }
@@ -263,7 +265,7 @@ void AnalyticsManager::toFile(const ore::analytics::Analytic::analytic_reports& 
         string analytic = rep.first;
         for (auto b : rep.second) {
             string reportName = b.first;
-            boost::shared_ptr<InMemoryReport> report = b.second;
+            QuantLib::ext::shared_ptr<InMemoryReport> report = b.second;
             string fileName;
             auto it = hits.find(reportName);
             QL_REQUIRE(it != hits.end(), "something wrong here");

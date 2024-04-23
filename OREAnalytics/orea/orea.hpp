@@ -22,6 +22,7 @@
 #include <orea/aggregation/staticcreditxvacalculator.hpp>
 #include <orea/aggregation/xvacalculator.hpp>
 #include <orea/app/analytic.hpp>
+#include <orea/app/analytics/imscheduleanalytic.hpp>
 #include <orea/app/analytics/parconversionanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/analytics/scenarioanalytic.hpp>
@@ -32,6 +33,7 @@
 #include <orea/app/analytics/varanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/app/analyticsmanager.hpp>
+#include <orea/app/cleanupsingletons.hpp>
 #include <orea/app/inputparameters.hpp>
 #include <orea/app/marketcalibrationreport.hpp>
 #include <orea/app/marketdatacsvloader.hpp>
@@ -66,6 +68,7 @@
 #include <orea/engine/historicalpnlgenerator.hpp>
 #include <orea/engine/historicalsensipnlcalculator.hpp>
 #include <orea/engine/historicalsimulationvar.hpp>
+#include <orea/engine/marketriskbacktest.hpp>
 #include <orea/engine/marketriskreport.hpp>
 #include <orea/engine/mporcalculator.hpp>
 #include <orea/engine/multistatenpvcalculator.hpp>
@@ -90,6 +93,7 @@
 #include <orea/engine/stresstest.hpp>
 #include <orea/engine/valuationcalculator.hpp>
 #include <orea/engine/valuationengine.hpp>
+#include <orea/engine/varbacktest.hpp>
 #include <orea/engine/varcalculator.hpp>
 #include <orea/engine/xvaenginecg.hpp>
 #include <orea/engine/zerotoparcube.hpp>
@@ -124,8 +128,11 @@
 #include <orea/scenario/stressscenariodata.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
 #include <orea/simm/crif.hpp>
+#include <orea/simm/crifconfiguration.hpp>
 #include <orea/simm/crifloader.hpp>
 #include <orea/simm/crifrecord.hpp>
+#include <orea/simm/imschedulecalculator.hpp>
+#include <orea/simm/imscheduleresults.hpp>
 #include <orea/simm/simmbasicnamemapper.hpp>
 #include <orea/simm/simmbucketmapper.hpp>
 #include <orea/simm/simmbucketmapperbase.hpp>

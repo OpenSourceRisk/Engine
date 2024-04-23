@@ -143,16 +143,5 @@ EquityCurveConfig::Type parseEquityCurveConfigType(const std::string& str) {
     QL_FAIL("Invalid EquityCurveConfig::Type " << str);
 }
 
-std::ostream& operator<<(std::ostream& out, Exercise::Type t) {
-    switch (t) {
-    case Exercise::American:
-        return out << "American";
-    case Exercise::European:
-        return out << "European";
-    default:
-        QL_FAIL("invalid Exercise::Type(" << int(t) << ")");
-    }
-}
-
 } // namespace data
 } // namespace ore

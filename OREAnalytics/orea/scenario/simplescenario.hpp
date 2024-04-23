@@ -68,7 +68,7 @@ public:
     void add(const RiskFactorKey& key, Real value) override;
     Real get(const RiskFactorKey& key) const override;
 
-    boost::shared_ptr<Scenario> clone() const override;
+    QuantLib::ext::shared_ptr<Scenario> clone() const override;
 
     //! get data map
     const std::map<RiskFactorKey, Real> data() const { return data_; }

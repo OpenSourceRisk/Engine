@@ -87,13 +87,13 @@ namespace analytics {
 
 //! Constructor
 ParSensitivityAnalysis::ParSensitivityAnalysis(const Date& asof,
-                                               const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketParams,
+                                               const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketParams,
                                                const SensitivityScenarioData& sensitivityData,
                                                const string& marketConfiguration, const bool continueOnError,
                                                const set<RiskFactorKey::KeyType>& typesDisabled)
     : asof_(asof), simMarketParams_(simMarketParams), sensitivityData_(sensitivityData),
       marketConfiguration_(marketConfiguration), continueOnError_(continueOnError), typesDisabled_(typesDisabled) {
-    const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
+    const QuantLib::ext::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
     QL_REQUIRE(conventions != nullptr, "conventions are empty");
     ParSensitivityInstrumentBuilder().createParInstruments(instruments_, asof_, simMarketParams_, sensitivityData_,
                                                            typesDisabled_, parTypes_, relevantRiskFactors_,
@@ -151,7 +151,7 @@ void writeSensitivity(const RiskFactorKey& a, const RiskFactorKey& b, const Real
 }
 } // namespace
 
-void ParSensitivityAnalysis::computeParInstrumentSensitivities(const boost::shared_ptr<ScenarioSimMarket>& simMarket) {
+void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket) {
 
     LOG("Cache base scenario par rates and flat vols");
 
@@ -191,14 +191,14 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const boost::shar
     TodaysFixingsRemover fixingRemover(instruments_.removeTodaysFixingIndices_);
 
     // We must have a ShiftScenarioGenerator
-    boost::shared_ptr<ScenarioGenerator> simMarketScenGen = simMarket->scenarioGenerator();
-    boost::shared_ptr<ShiftScenarioGenerator> scenarioGenerator =
-        boost::dynamic_pointer_cast<ShiftScenarioGenerator>(simMarketScenGen);
+    QuantLib::ext::shared_ptr<ScenarioGenerator> simMarketScenGen = simMarket->scenarioGenerator();
+    QuantLib::ext::shared_ptr<ShiftScenarioGenerator> scenarioGenerator =
+        QuantLib::ext::dynamic_pointer_cast<ShiftScenarioGenerator>(simMarketScenGen);
 
     struct SimMarketResetter {
-        SimMarketResetter(boost::shared_ptr<SimMarket> simMarket) : simMarket_(simMarket) {}
+        SimMarketResetter(QuantLib::ext::shared_ptr<SimMarket> simMarket) : simMarket_(simMarket) {}
         ~SimMarketResetter() { simMarket_->reset(); }
-        boost::shared_ptr<SimMarket> simMarket_;
+        QuantLib::ext::shared_ptr<SimMarket> simMarket_;
     } simMarketResetter(simMarket);
 
     simMarket->reset();
@@ -565,7 +565,7 @@ void ParSensitivityAnalysis::disable(const set<RiskFactorKey::KeyType>& types) {
 }
 
 void ParSensitivityAnalysis::populateShiftSizes(const RiskFactorKey& key, Real parRate,
-                                                const boost::shared_ptr<ScenarioSimMarket>& simMarket) {
+                                                const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket) {
 
     // Get zero and par shift size for the key
     Real zeroShiftSize = getShiftSize(key, sensitivityData_, simMarket);
@@ -855,25 +855,25 @@ void ParSensitivityConverter::writeConversionMatrix(Report& report) const {
 class ImpliedCapFloorVolHelper {
 public:
     ImpliedCapFloorVolHelper(const QuantLib::Instrument& cap,
-                             const std::function<boost::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator,
+                             const std::function<QuantLib::ext::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator,
                              const Real targetValue);
     Real operator()(Volatility x) const;
     Real derivative(Volatility x) const;
 
 private:
     Real targetValue_;
-    boost::shared_ptr<PricingEngine> engine_;
-    boost::shared_ptr<SimpleQuote> vol_;
+    QuantLib::ext::shared_ptr<PricingEngine> engine_;
+    QuantLib::ext::shared_ptr<SimpleQuote> vol_;
     const Instrument::results* results_;
 };
 
 ImpliedCapFloorVolHelper::ImpliedCapFloorVolHelper(
     const QuantLib::Instrument& cap,
-    const std::function<boost::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator, const Real targetValue)
+    const std::function<QuantLib::ext::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator, const Real targetValue)
     : targetValue_(targetValue) {
     // set an implausible value, so that calculation is forced
     // at first ImpliedCapFloorVolHelper::operator()(Volatility x) call
-    vol_ = boost::shared_ptr<SimpleQuote>(new SimpleQuote(-1));
+    vol_ = QuantLib::ext::shared_ptr<SimpleQuote>(new SimpleQuote(-1));
     engine_ = engineGenerator(Handle<Quote>(vol_));
     cap.setupArguments(engine_->getArguments());
     results_ = dynamic_cast<const Instrument::results*>(engine_->getResults());
@@ -902,14 +902,14 @@ Volatility impliedVolatility(const CapFloor& cap, Real targetValue, const Handle
                              Natural maxEvaluations, Volatility minVolLognormal, Volatility maxVolLognormal,
                              Volatility minVolNormal, Volatility maxVolNormal, const Handle<Index>& notUsed) {
     QL_REQUIRE(!cap.isExpired(), "instrument expired");
-    std::function<boost::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator;
+    std::function<QuantLib::ext::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator;
     if (type == ShiftedLognormal)
         engineGenerator = [&d, displacement](const Handle<Quote>& h) {
-            return boost::make_shared<BlackCapFloorEngine>(d, h, Actual365Fixed(), displacement);
+            return QuantLib::ext::make_shared<BlackCapFloorEngine>(d, h, Actual365Fixed(), displacement);
         };
     else if (type == Normal)
         engineGenerator = [&d](const Handle<Quote>& h) {
-            return boost::make_shared<BachelierCapFloorEngine>(d, h, Actual365Fixed());
+            return QuantLib::ext::make_shared<BachelierCapFloorEngine>(d, h, Actual365Fixed());
         };
     else
         QL_FAIL("volatility type " << type << " not implemented");
@@ -927,7 +927,7 @@ Volatility impliedVolatility(const QuantLib::YoYInflationCapFloor& cap, Real tar
                              Volatility maxVolLognormal, Volatility minVolNormal, Volatility maxVolNormal,
                              const Handle<YoYInflationIndex>& index) {
     QL_REQUIRE(!cap.isExpired(), "instrument expired");
-    std::function<boost::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator;
+    std::function<QuantLib::ext::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator;
     if (type == ShiftedLognormal) {
         if (close_enough(displacement, 0.0))
             engineGenerator = [&d, &index](const Handle<Quote>& h) {
@@ -935,28 +935,28 @@ Volatility impliedVolatility(const QuantLib::YoYInflationCapFloor& cap, Real tar
                 // calendar, bdc not needed here, settlement days should be zero so that the
                 // reference date is = evaluation date
                 auto c = Handle<QuantLib::YoYOptionletVolatilitySurface>(
-                    boost::make_shared<QuantExt::ConstantYoYOptionletVolatility>(
+                    QuantLib::ext::make_shared<QuantExt::ConstantYoYOptionletVolatility>(
                         h, 0, NullCalendar(), Unadjusted, Actual365Fixed(),
                         index->yoyInflationTermStructure()->observationLag(), index->frequency(),
                         index->interpolated()));
-                return boost::make_shared<QuantExt::YoYInflationBlackCapFloorEngine>(*index, c, d);
+                return QuantLib::ext::make_shared<QuantExt::YoYInflationBlackCapFloorEngine>(*index, c, d);
             };
         else
             engineGenerator = [&d, &index](const Handle<Quote>& h) {
                 auto c = Handle<QuantLib::YoYOptionletVolatilitySurface>(
-                    boost::make_shared<QuantExt::ConstantYoYOptionletVolatility>(
+                    QuantLib::ext::make_shared<QuantExt::ConstantYoYOptionletVolatility>(
                         h, 0, NullCalendar(), Unadjusted, Actual365Fixed(),
                         index->yoyInflationTermStructure()->observationLag(), index->frequency(),
                         index->interpolated()));
-                return boost::make_shared<QuantExt::YoYInflationUnitDisplacedBlackCapFloorEngine>(*index, c, d);
+                return QuantLib::ext::make_shared<QuantExt::YoYInflationUnitDisplacedBlackCapFloorEngine>(*index, c, d);
             };
     } else if (type == Normal)
         engineGenerator = [&d, &index](const Handle<Quote>& h) {
             auto c = Handle<QuantLib::YoYOptionletVolatilitySurface>(
-                boost::make_shared<QuantExt::ConstantYoYOptionletVolatility>(
+                QuantLib::ext::make_shared<QuantExt::ConstantYoYOptionletVolatility>(
                     h, 0, NullCalendar(), Unadjusted, Actual365Fixed(),
                     index->yoyInflationTermStructure()->observationLag(), index->frequency(), index->interpolated()));
-            return boost::make_shared<QuantExt::YoYInflationBachelierCapFloorEngine>(*index, c, d);
+            return QuantLib::ext::make_shared<QuantExt::YoYInflationBachelierCapFloorEngine>(*index, c, d);
         };
     else
         QL_FAIL("volatility type " << type << " not implemented");

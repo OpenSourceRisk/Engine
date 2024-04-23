@@ -53,20 +53,20 @@ LocalVolModelBuilder::LocalVolModelBuilder(
     }
 }
 
-std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>> LocalVolModelBuilder::getCalibratedProcesses() const {
+std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>> LocalVolModelBuilder::getCalibratedProcesses() const {
 
     QL_REQUIRE(lvType_ != Type::AndreasenHuge || !calibrationMoneyness_.empty(), "no calibration moneyness provided");
 
     calculate();
     
-    std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>> processes;
+    std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>> processes;
 
     for (Size l = 0; l < processes_.size(); ++l) {
 
         Handle<LocalVolTermStructure> localVol;
         if (dontCalibrate_) {
             localVol = Handle<LocalVolTermStructure>(
-                boost::make_shared<LocalConstantVol>(0, NullCalendar(), 0.10, ActualActual(ActualActual::ISDA)));
+                QuantLib::ext::make_shared<LocalConstantVol>(0, NullCalendar(), 0.10, ActualActual(ActualActual::ISDA)));
         } else if (lvType_ == Type::AndreasenHuge) {
             // for checking arbitrage free input prices, just for logging purposes at this point
             // notice that we need a uniform strike grid here, so this is not the same as the one below
@@ -95,10 +95,10 @@ std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>> LocalVolModelBuil
                     if (std::fabs(calibrationMoneyness_[i]) > 3.72)
                         continue;
                     auto option =
-                        boost::make_shared<VanillaOption>(boost::make_shared<PlainVanillaPayoff>(Option::Call, strike),
-                                                          boost::make_shared<EuropeanExercise>(d));
-                    calSet.push_back(std::make_pair(option, boost::make_shared<SimpleQuote>(marketVol)));
-                    option->setPricingEngine(boost::make_shared<AnalyticEuropeanEngine>(processes_[l]));
+                        QuantLib::ext::make_shared<VanillaOption>(QuantLib::ext::make_shared<PlainVanillaPayoff>(Option::Call, strike),
+                                                          QuantLib::ext::make_shared<EuropeanExercise>(d));
+                    calSet.push_back(std::make_pair(option, QuantLib::ext::make_shared<SimpleQuote>(marketVol)));
+                    option->setPricingEngine(QuantLib::ext::make_shared<AnalyticEuropeanEngine>(processes_[l]));
                     callPrices.back().push_back(option->NPV());
                     if (d == *effectiveSimulationDates_.rbegin()) {
                         checkMoneynesses.push_back(strike / atmLevel);
@@ -122,32 +122,32 @@ std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>> LocalVolModelBuil
             }
 
             // TODO using some hardcoded values here, expose to configuration?
-            auto ah = boost::make_shared<AndreasenHugeVolatilityInterpl>(
+            auto ah = QuantLib::ext::make_shared<AndreasenHugeVolatilityInterpl>(
                 calSet, processes_[l]->stateVariable(), processes_[l]->riskFreeRate(), processes_[l]->dividendYield(),
                 AndreasenHugeVolatilityInterpl::CubicSpline, AndreasenHugeVolatilityInterpl::Call, 500, Null<Real>(),
                 Null<Real>());
-            localVol = Handle<LocalVolTermStructure>(boost::make_shared<AndreasenHugeLocalVolAdapter>(ah));
+            localVol = Handle<LocalVolTermStructure>(QuantLib::ext::make_shared<AndreasenHugeLocalVolAdapter>(ah));
             //localVol->enableExtrapolation();
             DLOG("Andreasen-Huge local vol calibration for process #"
                  << l
                  << ": "
                     "calibration error min="
-                 << std::scientific << std::setprecision(6) << boost::get<0>(ah->calibrationError()) << " max="
-                 << boost::get<1>(ah->calibrationError()) << " avg=" << boost::get<2>(ah->calibrationError()));
+                 << std::scientific << std::setprecision(6) << QuantLib::ext::get<0>(ah->calibrationError()) << " max="
+                 << QuantLib::ext::get<1>(ah->calibrationError()) << " avg=" << QuantLib::ext::get<2>(ah->calibrationError()));
         } else if (lvType_ == Type::Dupire) {
             localVol = Handle<LocalVolTermStructure>(
-                boost::make_shared<LocalVolSurface>(processes_[l]->blackVolatility(), processes_[l]->riskFreeRate(),
+                QuantLib::ext::make_shared<LocalVolSurface>(processes_[l]->blackVolatility(), processes_[l]->riskFreeRate(),
                                                     processes_[l]->dividendYield(), processes_[l]->stateVariable()));
         } else if (lvType_ == Type::DupireFloored) {
             localVol = Handle<LocalVolTermStructure>(
-                boost::make_shared<NoExceptLocalVolSurface>(processes_[l]->blackVolatility(), processes_[l]->riskFreeRate(),
+                QuantLib::ext::make_shared<NoExceptLocalVolSurface>(processes_[l]->blackVolatility(), processes_[l]->riskFreeRate(),
                                                             processes_[l]->dividendYield(), processes_[l]->stateVariable(),
                                                             0.0));
         } else {
             QL_FAIL("unexpected local vol type");
         }
 
-        processes.push_back(boost::make_shared<GeneralizedBlackScholesProcess>(
+        processes.push_back(QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
             processes_[l]->stateVariable(), processes_[l]->dividendYield(), processes_[l]->riskFreeRate(),
             processes_[l]->blackVolatility(), localVol));
     }
