@@ -852,8 +852,8 @@ std::vector<std::vector<std::size_t>> OpenClContext::createInputVariates(const s
                                                 << " has a kernel already, input variates can not be regenerated.");
     currentState_ = ComputeState::createVariates;
     std::vector<std::vector<std::size_t>> resultIds(dim, std::vector<std::size_t>(steps));
-    for (std::size_t i = 0; i < dim; ++i) {
-        for (std::size_t j = 0; j < steps; ++j) {
+    for (std::size_t j = 0; j < steps; ++j) {
+        for (std::size_t i = 0; i < dim; ++i) {
             resultIds[i][j] = nVars_++;
         }
     }
