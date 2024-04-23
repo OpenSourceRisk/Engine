@@ -25,69 +25,72 @@
 
 #include <orea/scenario/scenario.hpp>
 
-#include <boost/serialization/export.hpp>
-#include <boost/serialization/map.hpp>
-#include <boost/serialization/vector.hpp>
-
 namespace ore {
 namespace analytics {
 using std::string;
 
-//-----------------------------------------------------------------------------------------------
-//! Simple Scenario class
-/*! This implementation stores the data in several maps within in each scenario class instance.
-  This contains redundant information (keys) across scenario instances which can cause issues
-  when many scenario instances are managed in memory.
-
-  \ingroup scenario
-*/
+/*! Simple Scenario class
+    \ingroup scenario */
 class SimpleScenario : public Scenario {
 public:
-    //! Constructor
-    SimpleScenario() {}
-    //! Constructor
-    SimpleScenario(Date asof, const std::string& label = "", Real numeraire = 0)
-        : asof_(asof), numeraire_(numeraire), label_(label) {}
+    struct SharedData {
+        bool isAbsolute = true;
+        std::vector<RiskFactorKey> keys;
+        std::map<RiskFactorKey, std::size_t> keyIndex;
+        std::map<std::pair<RiskFactorKey::KeyType, std::string>, Size> dimensionality;
+        std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<Real>>> coordinates;
+        std::size_t keysHash = 0;
+    };
 
-    //! Return the scenario asof date
+    SimpleScenario() {}
+    SimpleScenario(Date asof, const std::string& label = std::string(), Real numeraire = 0,
+                   const boost::shared_ptr<SharedData>& sharedData = nullptr);
+
     const Date& asof() const override { return asof_; }
 
-    //! Return the scenario label
     const std::string& label() const override { return label_; }
-    //! set the label
     void label(const string& s) override { label_ = s; }
 
-    //! Get Numeraire ratio n = N(t) / N(0) so that Price(0) = N(0) * E [Price(t) / N(t) ]
     Real getNumeraire() const override { return numeraire_; }
-    //! Set the Numeraire ratio n = N(t) / N(0) so that Price(0) = N(0) * E [Price(t) / N(t) ]
     void setNumeraire(Real n) override { numeraire_ = n; }
+
+    bool isAbsolute() const override { return sharedData_->isAbsolute; }
+    Size dimensionality(const RiskFactorKey::KeyType type, const std::string& name) const override;
+    const std::vector<Real>& coordinates(const RiskFactorKey::KeyType type, const std::string& name,
+                                         const Size dimension) const override;
+
+    void setAbsolute(const bool isAbsolute);
+    void setDimensionality(const RiskFactorKey::KeyType type, const std::string& name, const Size dimensionality);
+    void setCoordinates(const RiskFactorKey::KeyType type, const std::string& name,
+                        const std::vector<std::vector<Real>> coordinates);
+
+    void generateKeysHash();
 
     //! Check, get, add a single market point
     bool has(const RiskFactorKey& key) const override;
-    const std::vector<RiskFactorKey>& keys() const override { return keys_; }
+    const std::vector<RiskFactorKey>& keys() const override { return sharedData_->keys; }
     void add(const RiskFactorKey& key, Real value) override;
     Real get(const RiskFactorKey& key) const override;
 
+    //! This does _not_ close the shared data
     QuantLib::ext::shared_ptr<Scenario> clone() const override;
 
-    //! get data map
-    const std::map<RiskFactorKey, Real> data() const { return data_; }
+    //! get shared data block (for construction of sister scenarios)
+    const boost::shared_ptr<SharedData>& sharedData() const { return sharedData_; }
+
+    //! get data, order is the same as in keys()
+    const std::vector<Real>& data() const { return data_; }
+    //! get hash for keys
+    std::size_t keysHash() const { return sharedData_->keysHash; }
 
 private:
-    friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int) {
-        ar& boost::serialization::base_object<Scenario>(*this);
-        ar& asof_;
-        ar& numeraire_;
-        ar& data_;
-        ar& keys_;
-        ar& label_;
-    }
+    bool constructedWithSharedData_ = false;
+    QuantLib::ext::shared_ptr<SharedData> sharedData_;
     Date asof_;
-    Real numeraire_;
-    std::map<RiskFactorKey, Real> data_;
-    std::vector<RiskFactorKey> keys_;
     std::string label_;
+    Real numeraire_ = 0.0;
+    std::vector<Real> data_;
 };
+
 } // namespace analytics
 } // namespace ore

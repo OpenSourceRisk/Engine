@@ -23,14 +23,18 @@
 
 #pragma once
 
-#include <map>
-#include <vector>
+#include <ored/utilities/serializationdate.hpp>
 
 #include <ql/shared_ptr.hpp>
-#include <ored/utilities/serializationdate.hpp>
 #include <ql/math/array.hpp>
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
+
+#include <boost/functional/hash.hpp>
+
+#include <map>
+#include <vector>
+
 
 namespace ore {
 namespace analytics {
@@ -102,6 +106,8 @@ private:
     }
 };
 
+std::size_t hash_value(const RiskFactorKey& k);
+
 inline bool operator<(const RiskFactorKey& lhs, const RiskFactorKey& rhs) {
     return std::tie(lhs.keytype, lhs.name, lhs.index) < std::tie(rhs.keytype, rhs.name, rhs.index);
 }
@@ -157,6 +163,14 @@ public:
     virtual void add(const RiskFactorKey& key, Real value) = 0;
     //! Get an element from the scenario
     virtual Real get(const RiskFactorKey& key) const = 0;
+
+    //! Is this an absolute or difference scenario?
+    virtual bool isAbsolute() const = 0;
+    //! Get dimensionality of key type and name
+    virtual Size dimensionality(const RiskFactorKey::KeyType type, const std::string& name) const = 0;
+    //! Get coordinates for a key type, name, dimension
+    virtual const std::vector<Real>& coordinates(const RiskFactorKey::KeyType type, const std::string& name,
+                                                 const Size dimension) const = 0;
 
     //! clones a scenario and returns a pointer to the new object
     virtual QuantLib::ext::shared_ptr<Scenario> clone() const = 0;
