@@ -355,7 +355,7 @@
     </TaRFData>
   </Trade>
 
-  <Trade id="6:TaRF">
+  <Trade id="6:TaRF_2">
     <TradeType>ScriptedTrade</TradeType>
     <Envelope>
       <CounterParty>CPTY</CounterParty>
