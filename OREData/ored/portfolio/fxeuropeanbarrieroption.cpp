@@ -127,7 +127,7 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
     //       B <= K
     //         Long European Put Option with strike K
 
-    Real strike = soldAmount_ / boughtAmount_;
+    Real strike = this->strike();
     Option::Type type = parseOptionType(option_.callPut());
 
     // Exercise
@@ -149,6 +149,10 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
         }
         QL_REQUIRE(paymentDate >= expiryDate, "Payment date must be greater than or equal to expiry date.");
     }
+
+    // delayed pay date is only affecting the maturity
+    maturity_ = std::max({option_.premiumData().latestPremiumDate(), paymentDate});
+
     QuantLib::ext::shared_ptr<Instrument> digital;
     QuantLib::ext::shared_ptr<Instrument> vanillaK;
     QuantLib::ext::shared_ptr<Instrument> vanillaB;
@@ -300,9 +304,8 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    Date lastPremiumDate =
-        addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(), -bsInd, soldCcy,
-                    engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
+    addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(), -bsInd, soldCcy,
+                engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
 
     instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
         new VanillaInstrument(qlInstrument, mult, additionalInstruments, additionalMultipliers));
@@ -310,7 +313,6 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
     npvCurrency_ = soldCurrency_; // sold is the domestic
     notional_ = soldAmount_;
     notionalCurrency_ = soldCurrency_;
-    maturity_ = std::max({lastPremiumDate, paymentDate}); // delayed pay date is only affecting the maturity
 
     additionalData_["boughtCurrency"] = boughtCurrency_;
     additionalData_["boughtAmount"] = boughtAmount_;
@@ -349,6 +351,10 @@ XMLNode* FxEuropeanBarrierOption::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, fxNode, "FXIndex", fxIndex_);
 
     return node;
+}
+
+Real FxEuropeanBarrierOption::strike() const {
+    return soldAmount_ / boughtAmount_;
 }
 } // namespace data
 } // namespace ore
