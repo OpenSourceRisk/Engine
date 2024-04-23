@@ -46,7 +46,7 @@ void VolatilityConfig::fromXMLNode(XMLNode* node) {
 }
 
 void VolatilityConfig::toXMLNode(XMLDocument& doc, XMLNode* node) const {
-    XMLUtils::addAttribute(doc, node, "priority", to_string(priority_));
+    XMLUtils::addAttribute(doc, node, "priority", std::to_string(priority_));
     if (!calendarStr_.empty())
         XMLUtils::addChild(doc, node, "Calendar", calendarStr_);
 }
@@ -126,7 +126,7 @@ void QuoteBasedVolatilityConfig::toBaseNode(XMLDocument& doc, XMLNode* node) con
     // Check first for premium
     if (quoteType_ == MarketDatum::QuoteType::PRICE) {
         XMLUtils::addChild(doc, node, "QuoteType", "Premium");
-        XMLUtils::addChild(doc, node, "ExerciseType", to_string(exerciseType_));
+        XMLUtils::addChild(doc, node, "ExerciseType", ore::data::to_string(exerciseType_));
         return;
     }
 

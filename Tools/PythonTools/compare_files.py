@@ -14,6 +14,7 @@ import re
 import jsondiff
 from lxml import etree
 from xmldiff import main, formatting
+from pathlib import Path
 
 
 def is_float(num: str):
@@ -567,7 +568,7 @@ def compare_files_xml(name, file_1, file_2):
     logger.debug('%s: Comparing file %s against %s using xml diff', name, file_1, file_2)
     diff = main.diff_files(file_1, file_2, formatter=formatting.DiffFormatter())
     if len(diff) > 0:
-        logger.warning(diff)
+        logger.warning(f"XML diff ({name}.{Path(file_1).name}):\n{diff}")
         return False
     else:
         return True

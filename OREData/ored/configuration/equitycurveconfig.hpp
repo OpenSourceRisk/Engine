@@ -118,7 +118,6 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& out, EquityCurveConfig::Type t);
-std::ostream& operator<<(std::ostream& out, QuantLib::Exercise::Type t);
 
 EquityCurveConfig::Type parseEquityCurveConfigType(const std::string& str);
 

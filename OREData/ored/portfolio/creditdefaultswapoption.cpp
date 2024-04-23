@@ -234,6 +234,10 @@ void CreditDefaultSwapOption::buildNoDefault(const QuantLib::ext::shared_ptr<Eng
         payConvention, dc, swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(),
         QuantLib::ext::shared_ptr<Claim>(), lastPeriodDayCounter, true, swap_.tradeDate(), swap_.cashSettlementDays());
 
+    // Copying here what is done for the index CDS option. The comment there is:
+    // Align option product maturities with ISDA AANA/GRID guidance as of November 2020.
+    maturity_ = std::max(cds->coupons().back()->date(), option_.premiumData().latestPremiumDate());
+
     // Set engine on the underlying CDS.
     auto cdsBuilder = QuantLib::ext::dynamic_pointer_cast<CreditDefaultSwapEngineBuilder>(
         engineFactory->builder("CreditDefaultSwap"));
@@ -275,10 +279,6 @@ void CreditDefaultSwapOption::buildNoDefault(const QuantLib::ext::shared_ptr<Eng
     cdsOption->setPricingEngine(cdsOptionEngineBuilder->engine(ccy, swap_.creditCurveId(), term_));
     setSensitivityTemplate(*cdsOptionEngineBuilder);
 
-    // Copying here what is done for the index CDS option. The comment there is:
-    // Align option product maturities with ISDA AANA/GRID guidance as of November 2020.
-    maturity_ = cds->coupons().back()->date();
-
     // Set Trade members.
     legs_ = { cds->coupons() };
     legCurrencies_ = { npvCurrency_ };
@@ -288,8 +288,7 @@ void CreditDefaultSwapOption::buildNoDefault(const QuantLib::ext::shared_ptr<Eng
     vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     vector<Real> additionalMultipliers;
     string marketConfig = cdsOptionEngineBuilder->configuration(MarketContext::pricing);
-    maturity_ =
-        std::max(maturity_, addPremium(engineFactory, ccy, marketConfig, additionalInstruments, additionalMultipliers));
+    addPremium(engineFactory, ccy, marketConfig, additionalInstruments, additionalMultipliers);
 
     // Instrument wrapper depends on the settlement type.
     Position::Type positionType = parsePositionType(option_.longShort());
