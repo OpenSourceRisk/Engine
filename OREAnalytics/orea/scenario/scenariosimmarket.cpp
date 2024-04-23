@@ -2716,6 +2716,7 @@ ScenarioSimMarket::ScenarioSimMarket(
         for (auto const& data : simData_) {
             baseScenario_->add(data.first, data.second->value());
         }
+        baseScenario_->setAbsolute(true);
         baseScenarioAbsolute_ = baseScenario_;
     } else {
         baseScenarioAbsolute_ = QuantLib::ext::make_shared<SimpleScenario>(initMarket->asofDate(), "BASE", 1.0);
@@ -2726,6 +2727,8 @@ ScenarioSimMarket::ScenarioSimMarket(
         for (auto const& data : absoluteSimData_) {
             baseScenarioAbsolute_->add(data.first, data.second);
         }
+        baseScenario_->setAbsolute(false);
+        baseScenarioAbsolute_->setAbsolute(true);
     }
     LOG("building base scenario done");
 }

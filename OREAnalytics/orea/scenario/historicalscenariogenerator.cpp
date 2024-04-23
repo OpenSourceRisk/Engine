@@ -490,7 +490,7 @@ QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGe
 
     hsr->load(simParams, marketParams);
 
-    auto scenarioFactory = QuantLib::ext::make_shared<SimpleScenarioFactory>();
+    auto scenarioFactory = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
 
     QuantLib::ext::shared_ptr<HistoricalScenarioLoader> scenarioLoader = QuantLib::ext::make_shared<HistoricalScenarioLoader>(
         hsr, period.startDates().front(), period.endDates().front(), calendar);

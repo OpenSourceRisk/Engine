@@ -41,6 +41,8 @@ public:
         - have the same coordinates for all risk factor keys (if any) */
     explicit SimpleScenarioFactory(const bool useCommonSharedDataBlock = false)
         : useCommonSharedDataBlock_(useCommonSharedDataBlock) {}
+    explicit SimpleScenarioFactory(const QuantLib::ext::shared_ptr<SimpleScenario::SharedData>& sharedData)
+        : useCommonSharedDataBlock_(true), sharedData_(sharedData) {}
     const QuantLib::ext::shared_ptr<Scenario> buildScenario(Date asof, const std::string& label = "",
                                                             Real numeraire = 0.0) const override {
         auto tmp = QuantLib::ext::make_shared<SimpleScenario>(asof, label, numeraire,
