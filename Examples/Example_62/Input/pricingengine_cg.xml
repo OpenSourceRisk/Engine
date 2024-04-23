@@ -42,6 +42,7 @@
       <Parameter name="TimeStepsPerYear">24</Parameter>
       <Parameter name="UseCG">true</Parameter>
       <Parameter name="UseAD">false</Parameter><!-- bump -->
+      <Parameter name="ExternalDeviceCompatibilityMode">true</Parameter>
       <Parameter name="Interactive">false</Parameter>
     </EngineParameters>
   </Product>
