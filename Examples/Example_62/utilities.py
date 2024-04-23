@@ -295,3 +295,94 @@ def getStateScenarios(gzFileName, keyNumber, dateIndex):
     values[0] = values[1]
     
     return values
+
+def match_sensi_reports(ore1, ore2, deltaHeader1, deltaHeader2, debug=False):
+    sensi1 = ore1.getReport("sensitivity")
+    sensi2 = ore2.getReport("sensitivity")
+
+    if (debug == True):
+        print("ORE 1:")
+        display(format_report(sensi1))
+        print("ORE 2:")
+        display(format_report(sensi2))
+
+    trade1 = sensi1.dataAsString(0)
+    factor1 = sensi1.dataAsString(2)
+    currency1 = sensi1.dataAsString(6)
+    delta1 = sensi1.dataAsReal(8) 
+
+    trade2 = sensi2.dataAsString(0)
+    factor2 = sensi2.dataAsString(2)
+    currency2 = sensi2.dataAsString(6)
+    delta2 = sensi2.dataAsReal(8) 
+
+    print ("%-25s %-45s %10s %10s %10s %10s" % ("Trade", "Factor", "Currency", deltaHeader1, deltaHeader2, "Diff"))
+    for j in range(0, sensi2.rows()):
+        matched = False
+        for i in range(0, sensi1.rows()):
+            if (trade1[i] == trade2[j] and factor1[i] == factor2[j]):
+                diff = delta1[i] - delta2[j]
+                print("%-25s %-45s %10s %10.2f %10.2f %10.2f" % (trade1[i], factor1[i], currency1[i], delta1[i], delta2[j], diff))
+                matched = True
+        if (matched == False):      
+            print("%-25s %-45s %10s %10s %10.2f %10s" % (trade2[j], factor2[j], currency2[j], "----", delta2[j], "----"))
+
+    for i in range(0, sensi1.rows()):
+        matched = False
+        for j in range(0, sensi2.rows()):
+            if (trade1[i] == trade2[j] and factor1[i] == factor2[j]):
+                matched = True
+        if (matched == False):      
+            print("%-25s %-45s %10s %10.2f %10s %10s" % (trade1[i], factor1[i], currency1[i], delta1[i], "----", "----"))
+
+
+def match_pricingstats_12(ore1, ore2, header2, debug = False):
+    pricingstats1 = ore1.getReport("pricingstats")
+    pricingstats2 = ore2.getReport("pricingstats")
+
+    if (debug == True):
+        print("pricing stats 1 (micro seconds):")
+        display(format_report(pricingstats1))
+        print("pricing stats 2 (micro seconds):")
+        display(format_report(pricingstats2))
+
+    tradeid = pricingstats1.dataAsString(0)
+    tradetype = pricingstats1.dataAsString(1)
+    pricings = pricingstats1.dataAsSize(2)
+    cumulative = pricingstats1.dataAsSize(3) 
+    average = pricingstats1.dataAsSize(4) 
+    average2 = pricingstats2.dataAsSize(4) 
+    cumulative2 = pricingstats2.dataAsSize(3)
+
+    print()
+    print ("%-25s %-9s %21s %14s %12s" % ("TradeId", "Pricings", "CumulativeTimingBump", "AvgTimingBump", header2))
+    for i in range(1, pricingstats1.rows()):
+        print("%-25s %9d %21d %14d %12.2f" % (tradeid[i], pricings[i], cumulative[i], average[i], cumulative[i]/cumulative2[i]))
+    print()
+
+def match_pricingstats_123(ore1, ore2, ore3, header2, header3, debug = False):
+    pricingstats1 = ore1.getReport("pricingstats")
+    pricingstats2 = ore2.getReport("pricingstats")
+    pricingstats3 = ore3.getReport("pricingstats")
+
+    if (debug == True):
+        print("pricing stats 1 (micro seconds):")
+        display(format_report(pricingstats1))
+        print("pricing stats 2 (micro seconds):")
+        display(format_report(pricingstats2))
+        print("pricing stats 3 (micro seconds):")
+        display(format_report(pricingstats3))
+
+    tradeid = pricingstats1.dataAsString(0)
+    tradetype = pricingstats1.dataAsString(1)
+    pricings = pricingstats1.dataAsSize(2)
+    cumulative = pricingstats1.dataAsSize(3) 
+    average = pricingstats1.dataAsSize(4) 
+    cumulative2 = pricingstats2.dataAsSize(3)
+    cumulative3 = pricingstats3.dataAsSize(3)
+
+    print()
+    print ("%-25s %-9s %21s %14s %12s %13s" % ("TradeId", "Pricings", "CumulativeTimingBump", "AvgTimingBump", header2, header3))
+    for i in range(1, pricingstats1.rows()):
+        print("%-25s %9d %21d %14d %12.2f %13.2f" % (tradeid[i], pricings[i], cumulative[i], average[i], cumulative[i]/cumulative2[i], cumulative[i]/cumulative3[i]))
+    print()

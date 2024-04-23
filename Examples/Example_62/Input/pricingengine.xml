@@ -40,7 +40,8 @@
       <Parameter name="StateGridPoints">100</Parameter>
       <Parameter name="RegressionOrder">6</Parameter>
       <Parameter name="TimeStepsPerYear">24</Parameter>
-      <Parameter name="UseAD">true</Parameter> <!-- AD -->
+      <Parameter name="UseCG">false</Parameter>
+      <Parameter name="UseAD">false</Parameter><!-- bump -->
       <Parameter name="Interactive">false</Parameter>
     </EngineParameters>
   </Product>

@@ -34,12 +34,17 @@
     <Engine>Generic</Engine>
     <EngineParameters>
       <Parameter name="Engine">MC</Parameter>
+      <Parameter name="SequenceType">MersenneTwister</Parameter>
       <Parameter name="Samples">10000</Parameter>
+      <Parameter name="Seed">42</Parameter>
       <Parameter name="StateGridPoints">100</Parameter>
       <Parameter name="RegressionOrder">6</Parameter>
       <Parameter name="TimeStepsPerYear">24</Parameter>
-      <Parameter name="UseAD">false</Parameter><!-- bump -->
       <Parameter name="Interactive">false</Parameter>
+      <Parameter name="UseCG">true</Parameter>
+      <Parameter name="UseExternalComputeDevice">true</Parameter>
+      <Parameter name="ExternalComputeDevice">OpenCL/Apple/Apple M2 Max</Parameter>
+      <!--<Parameter name="ExternalComputeDevice">BasicCpu/Default/Default</Parameter>-->
     </EngineParameters>
   </Product>
 
