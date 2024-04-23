@@ -2711,24 +2711,25 @@ ScenarioSimMarket::ScenarioSimMarket(
     }
 
     LOG("building base scenario");
-    baseScenario_ = QuantLib::ext::make_shared<SimpleScenario>(initMarket->asofDate(), "BASE", 1.0);
+    auto tmp = QuantLib::ext::make_shared<SimpleScenario>(initMarket->asofDate(), "BASE", 1.0);
     if (!useSpreadedTermStructures_) {
         for (auto const& data : simData_) {
-            baseScenario_->add(data.first, data.second->value());
+            tmp->add(data.first, data.second->value());
         }
-        baseScenario_->setAbsolute(true);
-        baseScenarioAbsolute_ = baseScenario_;
+        tmp->setAbsolute(true);
+        baseScenarioAbsolute_ = baseScenario_ = tmp;
     } else {
-        baseScenarioAbsolute_ = QuantLib::ext::make_shared<SimpleScenario>(initMarket->asofDate(), "BASE", 1.0);
+        auto tmpAbs = QuantLib::ext::make_shared<SimpleScenario>(initMarket->asofDate(), "BASE", 1.0);
         for (auto const& data : simData_) {
-            baseScenario_->add(data.first, data.second->value());
-            baseScenarioAbsolute_->add(data.first, data.second->value());
+            tmp->add(data.first, data.second->value());
         }
         for (auto const& data : absoluteSimData_) {
-            baseScenarioAbsolute_->add(data.first, data.second);
+            tmpAbs->add(data.first, data.second);
         }
-        baseScenario_->setAbsolute(false);
-        baseScenarioAbsolute_->setAbsolute(true);
+        tmp->setAbsolute(false);
+        tmpAbs->setAbsolute(true);
+        baseScenario_ = tmp;
+        baseScenarioAbsolute_ = tmpAbs;
     }
     LOG("building base scenario done");
 }
