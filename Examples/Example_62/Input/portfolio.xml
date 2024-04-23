@@ -103,7 +103,7 @@
         </Number>
         <Number>
           <Name>BarrierLevel</Name>
-          <Value>50000</Value>
+          <Value>50000</Value><!-- lower this to 5000 -->
         </Number>
         <Number>
           <Name>BarrierType</Name>
@@ -222,7 +222,7 @@
         </Number>
         <Number>
           <Name>KnockOutLevel</Name>
-          <Value>50000</Value>
+          <Value>50000</Value><!-- lower this closer to ATM -->
         </Number>
         <Number>
           <Name>KnockOutType</Name>
