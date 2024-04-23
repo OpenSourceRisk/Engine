@@ -43,6 +43,7 @@ public:
     };
 
     SimpleScenario() {}
+    //! if sharedData is not provided, the instance will create its own shared data block
     SimpleScenario(Date asof, const std::string& label = std::string(), Real numeraire = 0,
                    const boost::shared_ptr<SharedData>& sharedData = nullptr);
 
@@ -59,14 +60,8 @@ public:
     const std::vector<Real>& coordinates(const RiskFactorKey::KeyType type, const std::string& name,
                                          const Size dimension) const override;
 
-    void setAbsolute(const bool isAbsolute);
-    void setDimensionality(const RiskFactorKey::KeyType type, const std::string& name, const Size dimensionality);
-    void setCoordinates(const RiskFactorKey::KeyType type, const std::string& name,
-                        const std::vector<std::vector<Real>> coordinates);
+    std::size_t keysHash() const override { return sharedData_->keysHash; }
 
-    void generateKeysHash();
-
-    //! Check, get, add a single market point
     bool has(const RiskFactorKey& key) const override;
     const std::vector<RiskFactorKey>& keys() const override { return sharedData_->keys; }
     void add(const RiskFactorKey& key, Real value) override;
@@ -75,16 +70,18 @@ public:
     //! This does _not_ close the shared data
     QuantLib::ext::shared_ptr<Scenario> clone() const override;
 
+    void setAbsolute(const bool isAbsolute);
+    void setDimensionality(const RiskFactorKey::KeyType type, const std::string& name, const Size dimensionality);
+    void setCoordinates(const RiskFactorKey::KeyType type, const std::string& name,
+                        const std::vector<std::vector<Real>> coordinates);
+
     //! get shared data block (for construction of sister scenarios)
     const boost::shared_ptr<SharedData>& sharedData() const { return sharedData_; }
 
     //! get data, order is the same as in keys()
     const std::vector<Real>& data() const { return data_; }
-    //! get hash for keys
-    std::size_t keysHash() const { return sharedData_->keysHash; }
 
 private:
-    bool constructedWithSharedData_ = false;
     QuantLib::ext::shared_ptr<SharedData> sharedData_;
     Date asof_;
     std::string label_;

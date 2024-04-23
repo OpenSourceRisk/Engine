@@ -26,8 +26,7 @@ namespace analytics {
 
 SimpleScenario::SimpleScenario(Date asof, const std::string& label, Real numeraire,
                                const boost::shared_ptr<SharedData>& sharedData)
-    : constructedWithSharedData_(sharedData != nullptr),
-      sharedData_(sharedData == nullptr ? QuantExt::ext::make_shared<SharedData>() : sharedData), asof_(asof),
+    : sharedData_(sharedData == nullptr ? QuantExt::ext::make_shared<SharedData>() : sharedData), asof_(asof),
       label_(label), numeraire_(numeraire) {}
 
 bool SimpleScenario::has(const RiskFactorKey& key) const {
@@ -35,45 +34,24 @@ bool SimpleScenario::has(const RiskFactorKey& key) const {
 }
 
 void SimpleScenario::add(const RiskFactorKey& key, Real value) {
-
-    if (constructedWithSharedData_) {
-        QL_REQUIRE(data_.size() < sharedData_->keys.size(),
-                   "Key " << key << " (" << value
-                          << ") can not be added to SimpleScenario, because it was constructed with shared data and "
-                          << sharedData_->keys.size() << " keys, which are all set.");
-        QL_REQUIRE(sharedData_->keys[data_.size()] == key,
-                   "Key " << key << " (" << value
-                          << ") can not be added to SimpleScenario, because it was constructued with shared data from "
-                             "which we expect the key "
-                          << sharedData_->keys[data_.size()] << " to be set next.");
-        data_.push_back(value);
-        return;
-    }
-
+    Size dataIndex;
     if (auto i = sharedData_->keyIndex.find(key); i != sharedData_->keyIndex.end()) {
-        // overwrite existing value
-        data_[i->second] = value;
+        dataIndex = i->second;
     } else {
-        // create new value
-        QL_REQUIRE(
-            sharedData_->keysHash == 0,
-            "Key " << key << " (" << value
-                   << ") can not be added to SimpleScenario, because the hash of the keys is already generated.");
-
+        dataIndex = sharedData_->keyIndex[key] = sharedData_->keys.size();
         sharedData_->keys.push_back(key);
-        data_.push_back(value);
-        sharedData_->keyIndex[key] = data_.size() - 1;
+        boost::hash_combine(sharedData_->keysHash, key);
     }
+
+    if(data_.size() <= dataIndex)
+        data_.resize(dataIndex+1,Null<Real>());
+    
+    data_[dataIndex] = value;
 }
 
 Real SimpleScenario::get(const RiskFactorKey& key) const {
     auto i = sharedData_->keyIndex.find(key);
     QL_REQUIRE(i != sharedData_->keyIndex.end(), "SimpleScenario does not provide data for key " << key);
-    // scenario might not have been constructed fully, therefore we have to check
-    QL_REQUIRE(data_.size() > i->second, "SimpleScenario data does not cover index "
-                                             << i->second << " belonging to key " << key
-                                             << ", probably because the scenario was constructed with more keys in the "
-                                                "shared data block than afterwards added via add().");
     return data_[i->second];
 }
 
@@ -108,11 +86,6 @@ void SimpleScenario::setDimensionality(const RiskFactorKey::KeyType type, const 
 void SimpleScenario::setCoordinates(const RiskFactorKey::KeyType type, const std::string& name,
                                     const std::vector<std::vector<Real>> coordinates) {
     sharedData_->coordinates[std::make_pair(type, name)] = coordinates;
-}
-
-void SimpleScenario::generateKeysHash() {
-    QL_REQUIRE(sharedData_->keysHash == 0, "SimpleScenario::generateKeysHash(): keys hash is already generated.");
-    sharedData_->keysHash = boost::hash_range(sharedData_->keys.begin(), sharedData_->keys.end());
 }
 
 } // namespace analytics

@@ -178,6 +178,9 @@ public:
     //! checks for equality up to numerical differences
     virtual bool isCloseEnough(const QuantLib::ext::shared_ptr<Scenario>& s) const;
 
+    //! return fingerprint identifying the set of rf keys of the scenarios, or 0 if not provided by the implementation
+    virtual std::size_t keysHash() const { return 0; }
+
 private:
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive&, const unsigned int) {}
