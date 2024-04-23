@@ -25,11 +25,6 @@
 
 #include <orea/scenario/scenario.hpp>
 
-#include <boost/make_shared.hpp>
-#include <boost/serialization/export.hpp>
-#include <boost/serialization/map.hpp>
-#include <boost/serialization/vector.hpp>
-
 namespace ore {
 namespace analytics {
 using namespace QuantLib;
@@ -71,6 +66,15 @@ public:
     void add(const ore::analytics::RiskFactorKey& key, Real value) override;
     Real get(const ore::analytics::RiskFactorKey& key) const override;
 
+    bool isAbsolute() const override { return baseScenario_->isAbsolute(); }
+    Size dimensionality(const RiskFactorKey::KeyType type, const std::string& name) const override {
+        return baseScenario_->dimensionality(type, name);
+    }
+    const std::vector<Real>& coordinates(const RiskFactorKey::KeyType type, const std::string& name,
+                                         const Size dimension) const override {
+        return baseScenario_->coordinates(type, name, dimension);
+    }
+
     //! Get delta
     QuantLib::ext::shared_ptr<Scenario> delta() const { return delta_; }
 
@@ -81,14 +85,7 @@ public:
 protected:
     QuantLib::ext::shared_ptr<Scenario> baseScenario_;
     QuantLib::ext::shared_ptr<Scenario> delta_;
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int) {
-        ar& boost::serialization::base_object<Scenario>(*this);
-        ar& baseScenario_;
-        ar& delta_;
-    }
 };
+
 } // namespace sensitivity
 } // namespace ore
