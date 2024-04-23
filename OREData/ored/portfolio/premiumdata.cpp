@@ -25,6 +25,15 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
+QuantLib::Date PremiumData::latestPremiumDate() const {
+    QuantLib::Date latestPaymentDate = Date::minDate();
+
+    for (const PremiumDatum& d : premiumData_)
+        latestPaymentDate = std::max(latestPaymentDate, d.payDate);
+
+    return latestPaymentDate;
+}
+
 void PremiumData::fromXML(XMLNode* node) {
 
     // support deprecated variant, where data is given in single fields under the root node

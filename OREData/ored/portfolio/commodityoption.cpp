@@ -57,11 +57,19 @@ void CommodityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engi
     // skip the transaction level mapping for now
     additionalData_["isdaTransaction"] = std::string("");
 
+    additionalData_["quantity"] = quantity_;
+    additionalData_["strike"] = strike_.value();
+    additionalData_["strikeCurrency"] = currency_;    
+
     // Checks
     QL_REQUIRE((strike_.value() > 0) || close_enough(strike_.value(),0.0), "Commodity option requires a non-negative strike");
     if (close_enough(strike_.value(), 0.0)) {
         strike_.setValue(0.0);
     }
+
+    // This is called in VanillaOptionTrade::build(), but we want to call it first here,
+    // in case the build fails before it reaches VanillaOptionTrade::build()
+    VanillaOptionTrade::setNotionalAndCurrencies();
 
     // Populate the index_ in case the option is automatic exercise.
     // Intentionally use null calendar because we will ask for index value on the expiry date without adjustment.
@@ -105,10 +113,6 @@ void CommodityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engi
                                 << " and strike " << strike_.value() << " is "
                                 << market->commodityVolatility(assetName_)->blackVol(expiryDate_, strike_.value()));
     }
-
-    additionalData_["quantity"] = quantity_;
-    additionalData_["strike"] = strike_.value();
-    additionalData_["strikeCurrency"] = currency_;    
 }
 
 std::map<AssetClass, std::set<std::string>>
