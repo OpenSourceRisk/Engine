@@ -16,10 +16,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/make_shared.hpp>
 #include <orea/scenario/simplescenario.hpp>
 #include <ored/utilities/log.hpp>
+
 #include <ql/errors.hpp>
+#include <ql/utilities/null.hpp>
+
+#include <boost/make_shared.hpp>
 
 namespace ore {
 namespace analytics {
@@ -43,9 +46,9 @@ void SimpleScenario::add(const RiskFactorKey& key, Real value) {
         boost::hash_combine(sharedData_->keysHash, key);
     }
 
-    if(data_.size() <= dataIndex)
-        data_.resize(dataIndex+1,Null<Real>());
-    
+    if (data_.size() <= dataIndex)
+        data_.resize(dataIndex + 1, QuantLib::Null<Real>());
+
     data_[dataIndex] = value;
 }
 
