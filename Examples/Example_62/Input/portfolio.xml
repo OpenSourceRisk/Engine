@@ -354,4 +354,81 @@
       <TargetType type="number">1</TargetType>
     </TaRFData>
   </Trade>
+
+  <Trade id="6:TaRF">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <TaRFData>
+      <FixingAmount type="number">100000.00</FixingAmount>
+      <LongShort type="longShort">Long</LongShort>
+      <Underlying type="index">FX-ECB-EUR-USD</Underlying>
+      <PayCcy type="currency">EUR</PayCcy>
+      <FixingDates type="event">
+        <ScheduleData>
+          <Rules>
+            <StartDate>2024-01-22</StartDate>
+            <EndDate>2025-01-22</EndDate>
+            <Tenor>1W</Tenor>
+            <Calendar>US</Calendar>
+            <Convention>F</Convention>
+            <TermConvention>F</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </FixingDates>
+      <SettlementDates type="event">
+	<DerivedSchedule>
+          <BaseSchedule>FixingDates</BaseSchedule>
+          <Shift>0D</Shift>
+          <Calendar>NullCalendar</Calendar>
+          <Convention>U</Convention>
+	</DerivedSchedule>
+      </SettlementDates>
+      <RangeLowerBounds type="number">
+        <Value>0</Value>
+        <Value>1.0</Value>
+        <Value>1.2</Value>
+      </RangeLowerBounds>
+      <RangeUpperBounds type="number">
+        <Value>1.0</Value>
+        <Value>1.2</Value>
+        <Value>1000</Value>
+      </RangeUpperBounds>
+      <RangeLeverages type="number">
+	<!--
+        <Value>2</Value>
+        <Value>1</Value>
+        <Value>-1</Value>
+	-->
+        <Value>1</Value>
+        <Value>1</Value>
+        <Value>1</Value>
+      </RangeLeverages>
+      <RangeStrikes type="number">
+	<!--
+	<Value>0.5</Value>
+	<Value>1.0</Value>
+	<Value>1.2</Value>
+	-->
+	<Value>0.5</Value>
+	<Value>0.5</Value>
+	<Value>0.5</Value>
+      </RangeStrikes>
+      <KnockOutProfitAmount type="number">2500000</KnockOutProfitAmount>
+      <!--
+	  <KnockOutProfitAmount type="number">5000000</KnockOutProfitAmount>
+      -->
+      <KnockOutProfitEvents type="number">0</KnockOutProfitEvents>
+      <TargetAmount type="number">0</TargetAmount>
+      <TargetType type="number">1</TargetType>
+    </TaRFData>
+  </Trade>
+
 </Portfolio>
