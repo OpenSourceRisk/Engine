@@ -35,6 +35,10 @@ namespace analytics {
  */
 class SimpleScenarioFactory : public ScenarioFactory {
 public:
+    /*! use shared data block only if it is guarateed that all scenarios created by this factory:
+        - are all absolute or all relative
+        - provide values for exactly the same set of risk factor keys
+        - have the same coordinates for all risk factor keys (if any) */
     explicit SimpleScenarioFactory(const bool useCommonSharedDataBlock = false)
         : useCommonSharedDataBlock_(useCommonSharedDataBlock) {}
     const QuantLib::ext::shared_ptr<Scenario> buildScenario(Date asof, const std::string& label = "",
