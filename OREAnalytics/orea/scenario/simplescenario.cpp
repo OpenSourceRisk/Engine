@@ -26,7 +26,7 @@ namespace analytics {
 
 SimpleScenario::SimpleScenario(Date asof, const std::string& label, Real numeraire,
                                const boost::shared_ptr<SharedData>& sharedData)
-    : sharedData_(sharedData == nullptr ? QuantExt::ext::make_shared<SharedData>() : sharedData), asof_(asof),
+    : sharedData_(sharedData == nullptr ? QuantLib::ext::make_shared<SharedData>() : sharedData), asof_(asof),
       label_(label), numeraire_(numeraire) {}
 
 bool SimpleScenario::has(const RiskFactorKey& key) const {
