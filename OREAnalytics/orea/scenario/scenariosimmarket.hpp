@@ -167,6 +167,7 @@ protected:
 
     std::vector<QuantLib::ext::shared_ptr<SimpleQuote>> cachedSimData_;
     std::vector<bool> cachedSimDataActive_;
+    std::size_t cachedSimDataKeysHash_ = 0;
 
     std::set<RiskFactorKey::KeyType> nonSimulatedFactors_;
 

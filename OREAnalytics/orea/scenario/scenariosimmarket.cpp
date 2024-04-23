@@ -2782,7 +2782,7 @@ void ScenarioSimMarket::applyScenario(const QuantLib::ext::shared_ptr<Scenario>&
     auto deltaScenario = QuantLib::ext::dynamic_pointer_cast<DeltaScenario>(scenario);
 
     /*! our assumption is that either all or none of the scenarios we apply are 
-        delta scenarios  or the base scenario */
+        delta scenarios or the base scenario */
 
     if (deltaScenario != nullptr) {
         for (auto const& key : diffToBaseKeys_) {
@@ -2812,25 +2812,27 @@ void ScenarioSimMarket::applyScenario(const QuantLib::ext::shared_ptr<Scenario>&
     }
 
     // 2 apply scenario based on cached indices for simData_ for a SimpleScenario
-    //   this assumes that all scenarios have an identical key structure in their data map
-
+    //   the scenario's keysHash() is used to make sure consistent keys are used
+    //   if keysHash() is zero, this check is not effective (for backwards compatibility)
     if (cacheSimData_) {
         if (auto s = QuantLib::ext::dynamic_pointer_cast<SimpleScenario>(scenario)) {
 
             // fill cache
 
-            if (cachedSimData_.empty()) {
+            if (cachedSimData_.empty() || s->keysHash() != cachedSimDataKeysHash_) {
+                cachedSimData_.clear();
+                cachedSimDataKeysHash_ = s->keysHash();
                 Size count = 0;
-                for (auto const& d : s->data()) {
-                    auto it = simData_.find(d.first);
+                for (auto const& key : s->keys()) {
+                    auto it = simData_.find(key);
                     if (it == simData_.end()) {
-                        WLOG("simulation data point missing for key " << d.first);
+                        WLOG("simulation data point missing for key " << key);
                         cachedSimData_.push_back(QuantLib::ext::shared_ptr<SimpleQuote>());
                         cachedSimDataActive_.push_back(false);
                     } else {
                         ++count;
                         cachedSimData_.push_back(it->second);
-                        cachedSimDataActive_.push_back(filter_->allow(d.first));
+                        cachedSimDataActive_.push_back(filter_->allow(key));
                     }
                 }
                 if (count != simData_.size() && !allowPartialScenarios_) {
@@ -2848,7 +2850,7 @@ void ScenarioSimMarket::applyScenario(const QuantLib::ext::shared_ptr<Scenario>&
             Size i = 0;
             for (auto const& q : s->data()) {
                 if (cachedSimDataActive_[i])
-                    cachedSimData_[i]->setValue(q.second);
+                    cachedSimData_[i]->setValue(q);
                 ++i;
             }
 
