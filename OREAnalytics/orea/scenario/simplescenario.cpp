@@ -72,7 +72,7 @@ const std::vector<Real>& SimpleScenario::coordinates(const RiskFactorKey::KeyTyp
     return i->second[dimension];
 }
 
-void SimpleScenario::setAbsolute(const bool isAbsolute) { sharedData_->isAbsolute = isAbsolute; }
+void SimpleScenario::setAbsolute(const bool isAbsolute) { isAbsolute_ = isAbsolute; }
 
 void SimpleScenario::setCoordinates(const RiskFactorKey::KeyType type, const std::string& name,
                                     const std::vector<std::vector<Real>>& coordinates) {

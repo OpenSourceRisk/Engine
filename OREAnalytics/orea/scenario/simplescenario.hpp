@@ -34,7 +34,6 @@ using std::string;
 class SimpleScenario : public Scenario {
 public:
     struct SharedData {
-        bool isAbsolute = true;
         std::vector<RiskFactorKey> keys;
         std::map<RiskFactorKey, std::size_t> keyIndex;
         std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<Real>>> coordinates;
@@ -54,7 +53,7 @@ public:
     Real getNumeraire() const override { return numeraire_; }
     void setNumeraire(Real n) override { numeraire_ = n; }
 
-    bool isAbsolute() const override { return sharedData_->isAbsolute; }
+    bool isAbsolute() const override { return isAbsolute_; }
     const std::vector<Real>& coordinates(const RiskFactorKey::KeyType type, const std::string& name,
                                          const Size dimension) const override;
 
@@ -80,6 +79,7 @@ public:
 
 private:
     QuantLib::ext::shared_ptr<SharedData> sharedData_;
+    bool isAbsolute_ = true;
     Date asof_;
     std::string label_;
     Real numeraire_ = 0.0;
