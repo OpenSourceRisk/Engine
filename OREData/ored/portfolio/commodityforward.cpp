@@ -76,8 +76,24 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     // Create the underlying commodity index for the forward
     const QuantLib::ext::shared_ptr<Market>& market = engineFactory->market();
     QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex = nullptr;
-    auto index = *market->commodityIndex(commodityName_, engineFactory->configuration(MarketContext::pricing));
+
+    npvCurrency_ = fixingDate_ == Date() ? currency_ : payCcy_;
+
+    // notional_ = strike_ * quantity_;
+    notional_ = strike_ * quantity_;
+    notionalCurrency_ = currency_;
+
+    additionalData_["quantity"] = quantity_;
+    additionalData_["strike"] = strike_;
+    additionalData_["strikeCurrency"] = currency_;
+    if (fixingDate_ != Date()) {
+        additionalData_["settlementCurrency"] = payCcy_;
+        additionalData_["fixingDate"] = fixingDate_;
+        additionalData_["fxIndex"] = fxIndex;
+    }
+
     maturity_ = parseDate(maturityDate_);
+    auto index = *market->commodityIndex(commodityName_, engineFactory->configuration(MarketContext::pricing));
     bool isFutureAccordingToConventions = InstrumentConventions::instance().conventions()->has(commodityName_, Convention::Type::CommodityFuture);
 
     // adjust the maturity date if not a valid fixing date for the index
@@ -104,7 +120,7 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     Date paymentDate = paymentDate_;
     bool physicallySettled = true;
     if (physicallySettled_ && !(*physicallySettled_)) {
-        // If cash settled and given a payment date that is not greater than the maturity date, set it equal to the 
+        // If cash settled and given a payment date that is not greater than the maturity date, set it equal to the
         // maturity date and log a warning to continue processing.
         physicallySettled = false;
         if (paymentDate_ != Date() && paymentDate_ < maturity_) {
@@ -152,20 +168,6 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
 
     // set up other Trade details
     instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(commodityForward);
-    npvCurrency_ = fixingDate_==Date() ? currency_ : payCcy_;
-
-    // notional_ = strike_ * quantity_;
-    notional_ = strike_ * quantity_;
-    notionalCurrency_ = currency_;
-
-    additionalData_["quantity"] = quantity_;
-    additionalData_["strike"] = strike_;
-    additionalData_["strikeCurrency"] = currency_;
-    if(fixingDate_ != Date()) {
-        additionalData_["settlementCurrency"] = payCcy_;
-        additionalData_["fixingDate"] = fixingDate_;
-        additionalData_["fxIndex"] = fxIndex;
-    }
 }
 
 Real CommodityForward::notional() const { return notional_; }

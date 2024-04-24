@@ -94,6 +94,8 @@ void CommodityOptionStrip::build(const QuantLib::ext::shared_ptr<EngineFactory>&
     // skip the transaction level mapping for now
     additionalData_["isdaTransaction"] = std::string();
 
+    npvCurrency_ = notionalCurrency_ = legData_.currency();
+
     // Check that the leg data is of type CommodityFloating
     auto conLegData = legData_.concreteLegData();
     commLegData_ = QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(conLegData);
@@ -112,9 +114,6 @@ void CommodityOptionStrip::build(const QuantLib::ext::shared_ptr<EngineFactory>&
 
     // We update the notional_ in either buildAPOs or buildStandardOptions below.
     notional_ = Null<Real>();
-
-    npvCurrency_ = legData_.currency();
-    notionalCurrency_ = legData_.currency();
 
     // Build the strip of option trades
     legData_.concreteLegData();

@@ -68,7 +68,14 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     additionalData_["isdaAssetClass"] = string("Foreign Exchange");
     additionalData_["isdaBaseProduct"] = string("Simple Exotic");
     additionalData_["isdaSubProduct"] = string("Barrier");
-    additionalData_["isdaTransaction"] = string("");  
+    additionalData_["isdaTransaction"] = string("");
+
+    additionalData_["payoffAmount"] = payoffAmount_;
+    additionalData_["payoffCurrency"] = payoffCurrency_;
+
+    npvCurrency_ = payoffCurrency_;
+    notional_ = payoffAmount_;
+    notionalCurrency_ = payoffCurrency_;
 
     const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
 
@@ -240,13 +247,8 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     }
 
     instrument_ = barrierOptionWrapper;
-    npvCurrency_ = payoffCurrency_;
-    notional_ = payoffAmount_;
-    notionalCurrency_ = payoffCurrency_;
-    // maturity_ is set in buildBarrierOptionWrapperInstr()
 
-    additionalData_["payoffAmount"] = payoffAmount_;
-    additionalData_["payoffCurrency"] = payoffCurrency_;
+    // maturity_ is set in buildBarrierOptionWrapperInstr()
 }
 
 bool FxTouchOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {

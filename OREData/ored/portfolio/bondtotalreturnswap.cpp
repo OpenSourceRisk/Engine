@@ -76,6 +76,9 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
                "if funding leg ccy (" << fundingLegData_.currency() << ") != bond ccy (" << bondData_.currency()
                                       << "), a fx index must be given");
 
+    npvCurrency_ = fundingLegData_.currency();
+    notionalCurrency_ = bondData_.currency();
+
     // build return leg valuation and payment schedule
     DLOG("build valuation and payment dates vectors");
 
@@ -194,12 +197,9 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
     bondTRS->setPricingEngine(trsBondBuilder->engine(fundingLegData_.currency()));
     setSensitivityTemplate(*trsBondBuilder);
     instrument_.reset(new VanillaInstrument(bondTRS));
-
-    npvCurrency_ = fundingLegData_.currency();
     // maturity_ = std::max(valuationDates.back(), paymentDates.back());
     maturity_ = bondIndex->bond()->maturityDate();
     notional_ = bondIndex->bond()->notional() * bondData_.bondNotional();
-    notionalCurrency_ = bondData_.currency();
 
     // cashflows will be generated as additional results in the pricing engine
 

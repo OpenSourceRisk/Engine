@@ -64,6 +64,9 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     bondData_ = originalBondData_;
     bondData_.populateFromBondReferenceData(engineFactory->referenceData());
 
+    npvCurrency_ = currency_ = bondData_.coupons().front().currency();
+    notionalCurrency_ = currency_;
+
     QL_REQUIRE(!bondData_.referenceCurveId().empty(), "reference curve id required");
     QL_REQUIRE(!bondData_.settlementDays().empty(), "settlement days required");
 
@@ -129,16 +132,13 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     Leg leg = joinLegs(separateLegs);
     auto bond = QuantLib::ext::make_shared<QuantLib::Bond>(settlementDays, calendar, issueDate, leg);
 
-    npvCurrency_ = currency_ = bondData_.coupons().front().currency();
-    maturity_ = bond->cashflows().back()->date();
-    notional_ = currentNotional(bond->cashflows()) * bondData_.bondNotional();
-    notionalCurrency_ = currency_;
-
     // cashflows will be generated as additional results in the pricing engine
     legs_ = {};
     legCurrencies_ = {npvCurrency_};
     legPayers_ = {firstLegIsPayer};
     Currency currency = parseCurrency(currency_);
+    maturity_ = bond->cashflows().back()->date();
+    notional_ = currentNotional(bond->cashflows()) * bondData_.bondNotional();
 
     // first ctor is for vanilla fwd bonds, second for tlocks with a lock rate specifying the payoff
     QuantLib::ext::shared_ptr<QuantLib::Instrument> fwdBond =

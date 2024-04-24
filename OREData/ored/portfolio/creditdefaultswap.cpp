@@ -61,6 +61,9 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     auto legData = swap_.leg(); // copy
     const auto& notionals = swap_.leg().notionals();
 
+    npvCurrency_ = legData.currency();
+    notionalCurrency_ = legData.currency();
+
     QL_REQUIRE(legData.legType() == "Fixed", "CreditDefaultSwap requires Fixed leg");
     Schedule schedule = makeSchedule(legData.schedule());
     QL_REQUIRE(schedule.size() > 1, "CreditDefaultSwap requires at least two dates in the schedule");
@@ -129,10 +132,10 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
             swap_.cashSettlementDays());
     }
 
+    maturity_ = cds->coupons().back()->date();
+
     QuantLib::ext::shared_ptr<CreditDefaultSwapEngineBuilder> cdsBuilder =
         QuantLib::ext::dynamic_pointer_cast<CreditDefaultSwapEngineBuilder>(builder);
-
-    npvCurrency_ = legData.currency();
 
     QL_REQUIRE(cdsBuilder, "No Builder found for CreditDefaultSwap: " << id());
     cds->setPricingEngine(cdsBuilder->engine(parseCurrency(npvCurrency_), swap_.creditCurveId(), swap_.recoveryRate()));
@@ -140,12 +143,9 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
 
     instrument_.reset(new VanillaInstrument(cds));
 
-    maturity_ = cds->coupons().back()->date();
-
     legs_ = {cds->coupons()};
     legCurrencies_ = {npvCurrency_};
     legPayers_ = {legData.isPayer()};
-    notionalCurrency_ = legData.currency();
 
     if (swap_.protectionStart() != Date())
         additionalData_["startDate"] = to_string(swap_.protectionStart());
@@ -175,12 +175,13 @@ const std::map<std::string, boost::any>& CreditDefaultSwap::additionalData() con
 QuantLib::Real CreditDefaultSwap::notional() const {
     Date asof = Settings::instance().evaluationDate();
     // get the current notional from CDS premium leg
-    for (Size i = 0; i < legs_[0].size(); ++i) {
-        QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(legs_[0][i]);
-        if (coupon->date() > asof)
-            return coupon->nominal();
+    if (!legs_.empty()) {
+        for (Size i = 0; i < legs_[0].size(); ++i) {
+            QuantLib::ext::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(legs_[0][i]);
+            if (coupon->date() > asof)
+                return coupon->nominal();
+        }
     }
-
     // if no coupons are given, return the initial notional by default
     return notional_;
 }
