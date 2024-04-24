@@ -138,7 +138,8 @@ protected:
     void applyScenario(const QuantLib::ext::shared_ptr<Scenario>& scenario);
 
     void writeSimData(std::map<RiskFactorKey, QuantLib::ext::shared_ptr<SimpleQuote>>& simDataTmp,
-                      std::map<RiskFactorKey, Real>& absoluteSimDataTmp);
+                      std::map<RiskFactorKey, Real>& absoluteSimDataTmp, const RiskFactorKey::KeyType keyType,
+                      const std::string& name, const std::vector<std::vector<Real>>& coordinates);
 
     void addYieldCurve(const QuantLib::ext::shared_ptr<Market>& initMarket, const std::string& configuration,
                        const RiskFactorKey::KeyType rf, const string& key, const vector<Period>& tenors,
@@ -175,6 +176,9 @@ protected:
     // so that we can set up the base scenario with absolute values
     bool useSpreadedTermStructures_;
     std::map<RiskFactorKey, Real> absoluteSimData_;
+
+    // hold meta data for the scenarios stored in simData_, absoluteSimData_
+    std::set<std::tuple<RiskFactorKey::KeyType, std::string, std::vector<std::vector<Real>>>> coordinatesData_;
 
     bool cacheSimData_;
     bool allowPartialScenarios_;
