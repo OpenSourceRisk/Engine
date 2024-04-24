@@ -37,7 +37,7 @@ jobs:
             platform: x64
             boost-lib: 64
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: get QuantLib
       run: |
         git submodule update --init
@@ -70,7 +70,7 @@ jobs:
         cmake --build . -j 2 --verbose
     - name: Save executables as artifacts
       if: startsWith(github.ref, 'refs/tags/v')
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ore-windows-${{ matrix.arch }}
         path: D:\a\Engine\Engine\build\App\ore.exe
