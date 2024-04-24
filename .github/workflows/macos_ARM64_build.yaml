@@ -3,6 +3,8 @@ name: C/C++ MacOS
 on:
   push:
     branches: [master]
+    tags:
+       - 'v*'
   release:
    types: [published]
   pull_request:
@@ -25,7 +27,7 @@ jobs:
   build:
     runs-on: macos-11
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: get QuantLib
       run: |
         git submodule update --init
@@ -45,7 +47,7 @@ jobs:
         cmake --install .
     - name: Save executables as artifacts
       if: startsWith(github.ref, 'refs/tags/v')
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ore-macos-arm64
         path: /Users/runner/work/Engine/Engine/build/App/ore
