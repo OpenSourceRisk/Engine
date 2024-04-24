@@ -44,11 +44,10 @@ public:
     DeltaScenario() {}
     //! Constructor
     DeltaScenario(const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& baseScenario,
-                  const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& incrementalScenario)
-        : baseScenario_(baseScenario), delta_(incrementalScenario) {}
+                  const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& incrementalScenario);
 
-    //! Return the scenario asof date
     const Date& asof() const override { return delta_->asof(); }
+    void setAsof(const Date& d) override { delta_->setAsof(d); }
 
     //! Return the scenario label
     const std::string& label() const override { return delta_->label(); }
@@ -67,9 +66,11 @@ public:
     Real get(const ore::analytics::RiskFactorKey& key) const override;
 
     bool isAbsolute() const override { return baseScenario_->isAbsolute(); }
-    const std::vector<Real>& coordinates(const RiskFactorKey::KeyType type, const std::string& name,
-                                         const Size dimension) const override {
-        return baseScenario_->coordinates(type, name, dimension);
+    void setAbsolute(const bool b) override { baseScenario_->setAbsolute(b); }
+
+    const std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<Real>>>&
+    coordinates() const override {
+        return baseScenario_->coordinates();
     }
 
     //! Get base

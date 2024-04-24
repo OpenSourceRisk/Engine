@@ -62,16 +62,6 @@ QuantLib::ext::shared_ptr<Scenario> SimpleScenario::clone() const {
     return QuantLib::ext::make_shared<SimpleScenario>(*this);
 }
 
-const std::vector<Real>& SimpleScenario::coordinates(const RiskFactorKey::KeyType type, const std::string& name,
-                                                     const Size dimension) const {
-    auto i = sharedData_->coordinates.find(std::make_pair(type, name));
-    QL_REQUIRE(i != sharedData_->coordinates.end(),
-               "SimpleScenario does not provide coordinates for " << type << ", " << name);
-    QL_REQUIRE(i->second.size() > dimension, "SimpleScenario does not provide coordinates for dimension "
-                                                 << dimension << " for " << type << ", " << name);
-    return i->second[dimension];
-}
-
 void SimpleScenario::setAbsolute(const bool isAbsolute) { isAbsolute_ = isAbsolute; }
 
 void SimpleScenario::setCoordinates(const RiskFactorKey::KeyType type, const std::string& name,

@@ -46,6 +46,7 @@ public:
                    const boost::shared_ptr<SharedData>& sharedData = nullptr);
 
     const Date& asof() const override { return asof_; }
+    void setAsof(const Date& d) override { asof_ = d; }
 
     const std::string& label() const override { return label_; }
     void label(const string& s) override { label_ = s; }
@@ -54,8 +55,10 @@ public:
     void setNumeraire(Real n) override { numeraire_ = n; }
 
     bool isAbsolute() const override { return isAbsolute_; }
-    const std::vector<Real>& coordinates(const RiskFactorKey::KeyType type, const std::string& name,
-                                         const Size dimension) const override;
+    const std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<Real>>>&
+    coordinates() const override {
+        return sharedData_->coordinates;
+    }
 
     std::size_t keysHash() const override { return sharedData_->keysHash; }
 
@@ -67,7 +70,7 @@ public:
     //! This does _not_ close the shared data
     QuantLib::ext::shared_ptr<Scenario> clone() const override;
 
-    void setAbsolute(const bool isAbsolute);
+    void setAbsolute(const bool isAbsolute) override;
     void setCoordinates(const RiskFactorKey::KeyType type, const std::string& name,
                         const std::vector<std::vector<Real>>& coordinates);
 

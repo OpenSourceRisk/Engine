@@ -144,6 +144,8 @@ public:
 
     //! Return the scenario asof date
     virtual const Date& asof() const = 0;
+    //! Set the asof date
+    virtual void setAsof(const Date& d) = 0;
 
     //! Get the scenario label
     virtual const string& label() const = 0;
@@ -166,9 +168,11 @@ public:
 
     //! Is this an absolute or difference scenario?
     virtual bool isAbsolute() const = 0;
-    //! Get coordinates for a key type, name, dimension
-    virtual const std::vector<Real>& coordinates(const RiskFactorKey::KeyType type, const std::string& name,
-                                                 const Size dimension) const = 0;
+    //! Set if this is an absolute scenario
+    virtual void setAbsolute(const bool b) = 0;
+    //! Get coordinates
+    virtual const std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<Real>>>&
+    coordinates() const = 0;
 
     //! clones a scenario and returns a pointer to the new object
     virtual QuantLib::ext::shared_ptr<Scenario> clone() const = 0;
