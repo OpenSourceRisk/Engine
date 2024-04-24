@@ -166,8 +166,6 @@ public:
 
     //! Is this an absolute or difference scenario?
     virtual bool isAbsolute() const = 0;
-    //! Get dimensionality of key type and name
-    virtual Size dimensionality(const RiskFactorKey::KeyType type, const std::string& name) const = 0;
     //! Get coordinates for a key type, name, dimension
     virtual const std::vector<Real>& coordinates(const RiskFactorKey::KeyType type, const std::string& name,
                                                  const Size dimension) const = 0;

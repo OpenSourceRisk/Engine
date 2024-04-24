@@ -62,13 +62,6 @@ QuantLib::ext::shared_ptr<Scenario> SimpleScenario::clone() const {
     return QuantLib::ext::make_shared<SimpleScenario>(*this);
 }
 
-Size SimpleScenario::dimensionality(const RiskFactorKey::KeyType type, const std::string& name) const {
-    auto i = sharedData_->dimensionality.find(std::make_pair(type, name));
-    QL_REQUIRE(i != sharedData_->dimensionality.end(),
-               "SimpleScenario does not provide dimensionality for " << type << ", " << name);
-    return i->second;
-}
-
 const std::vector<Real>& SimpleScenario::coordinates(const RiskFactorKey::KeyType type, const std::string& name,
                                                      const Size dimension) const {
     auto i = sharedData_->coordinates.find(std::make_pair(type, name));
@@ -81,13 +74,8 @@ const std::vector<Real>& SimpleScenario::coordinates(const RiskFactorKey::KeyTyp
 
 void SimpleScenario::setAbsolute(const bool isAbsolute) { sharedData_->isAbsolute = isAbsolute; }
 
-void SimpleScenario::setDimensionality(const RiskFactorKey::KeyType type, const std::string& name,
-                                       const Size dimensionality) {
-    sharedData_->dimensionality[std::make_pair(type, name)] = dimensionality;
-}
-
 void SimpleScenario::setCoordinates(const RiskFactorKey::KeyType type, const std::string& name,
-                                    const std::vector<std::vector<Real>> coordinates) {
+                                    const std::vector<std::vector<Real>>& coordinates) {
     sharedData_->coordinates[std::make_pair(type, name)] = coordinates;
 }
 

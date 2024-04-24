@@ -67,9 +67,6 @@ public:
     Real get(const ore::analytics::RiskFactorKey& key) const override;
 
     bool isAbsolute() const override { return baseScenario_->isAbsolute(); }
-    Size dimensionality(const RiskFactorKey::KeyType type, const std::string& name) const override {
-        return baseScenario_->dimensionality(type, name);
-    }
     const std::vector<Real>& coordinates(const RiskFactorKey::KeyType type, const std::string& name,
                                          const Size dimension) const override {
         return baseScenario_->coordinates(type, name, dimension);

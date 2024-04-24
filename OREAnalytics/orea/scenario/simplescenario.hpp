@@ -37,7 +37,6 @@ public:
         bool isAbsolute = true;
         std::vector<RiskFactorKey> keys;
         std::map<RiskFactorKey, std::size_t> keyIndex;
-        std::map<std::pair<RiskFactorKey::KeyType, std::string>, Size> dimensionality;
         std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<Real>>> coordinates;
         std::size_t keysHash = 0;
     };
@@ -56,7 +55,6 @@ public:
     void setNumeraire(Real n) override { numeraire_ = n; }
 
     bool isAbsolute() const override { return sharedData_->isAbsolute; }
-    Size dimensionality(const RiskFactorKey::KeyType type, const std::string& name) const override;
     const std::vector<Real>& coordinates(const RiskFactorKey::KeyType type, const std::string& name,
                                          const Size dimension) const override;
 
@@ -71,9 +69,8 @@ public:
     QuantLib::ext::shared_ptr<Scenario> clone() const override;
 
     void setAbsolute(const bool isAbsolute);
-    void setDimensionality(const RiskFactorKey::KeyType type, const std::string& name, const Size dimensionality);
     void setCoordinates(const RiskFactorKey::KeyType type, const std::string& name,
-                        const std::vector<std::vector<Real>> coordinates);
+                        const std::vector<std::vector<Real>>& coordinates);
 
     //! get shared data block (for construction of sister scenarios)
     const boost::shared_ptr<SharedData>& sharedData() const { return sharedData_; }
