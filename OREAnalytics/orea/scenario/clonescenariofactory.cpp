@@ -29,7 +29,7 @@ CloneScenarioFactory::CloneScenarioFactory(const QuantLib::ext::shared_ptr<Scena
 }
 
 const QuantLib::ext::shared_ptr<Scenario> CloneScenarioFactory::buildScenario(Date asof, const std::string& label,
-                                                                      Real numeraire) const {
+                                                                              Real numeraire) const {
     QuantLib::ext::shared_ptr<Scenario> newScen = baseScenario_->clone();
     QL_REQUIRE(asof == newScen->asof(),
                "unexpected asof date (" << asof << "), does not match base - " << baseScenario_->asof());
