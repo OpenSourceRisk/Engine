@@ -156,7 +156,7 @@
     </xs:sequence>
   </xs:complexType>
   
-	<xs:element name="PortfolioBasketReferenceData">
+	<xs:complexType name="PortfolioBasketReferenceData">
 		<xs:complexType>
 			<xs:sequence>
 				<xs:element name="Components">
@@ -172,6 +172,6 @@
 				</xs:element>
 			</xs:sequence>
 		</xs:complexType>
-	</xs:element>
+	</xs:complexType>
 
 </xs:schema>
