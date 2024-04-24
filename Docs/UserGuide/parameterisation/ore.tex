@@ -299,16 +299,21 @@ needed for subsequent XVA analytics.
 <Analytics>
   <Analytic type="simulation">
     <Parameter name="active">Y</Parameter>
+    <Parameter name="amc">Y</Parameter>
+    <Parameter name="amcCg">Y</Parameter>
+    <Parameter name="xvaCgSensitivityConfigFile">xvasensiconfig.xml</Parameter>
+    <Parameter name="amcTradeTypes">Swap</Parameter>
+    <Parameter name="amcPricingEnginesFile">pricingengine_amc.xml</Parameter> -> not documented
     <Parameter name="simulationConfigFile">simulation.xml</Parameter>
     <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="storeFlows">Y</Parameter>
     <Parameter name="storeSurvivalProbabilities">Y</Parameter>
-    <Parameter name="cubeFile">cube_A.csv.gz</Parameter>
-    <Parameter name="nettingSetCubeFile">nettingSetCube_A.csv.gz</Parameter>
-    <Parameter name="cptyCubeFile">cptyCube_A.csv.gz</Parameter>
+    <Parameter name="salvageCorrelationMatrix">true</Parameter>
+    <Parameter name="scenariodump">scenariodump.csv</Parameter>
     <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
-    <Parameter name="aggregationScenarioDump">scenariodump.csv</Parameter>
+    <Parameter name="storeCreditStateNPVs">8</Parameter>
+    <Parameter name="cubeFile">cube_A.csv.gz</Parameter>
   </Analytic>
 </Analytics>      
 \end{minted}
@@ -390,6 +395,8 @@ to txt or csv in which case an uncompressed version of the file is written to di
     <Parameter name="dimOutputGridPoints">0</Parameter>
     <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
     <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
+    <Parameter name="nettingSetCubeFile">nettingSetCube_A.csv.gz</Parameter>
+    <Parameter name="cptyCubeFile">cptyCube_A.csv.gz</Parameter>
     <Parameter name="fullInitialCollateralisation">true</Parameter>
     <Parameter name="flipViewXVA">N</Parameter>
     <Parameter name="flipViewBorrowingCurvePostfix">_BORROW</Parameter>
