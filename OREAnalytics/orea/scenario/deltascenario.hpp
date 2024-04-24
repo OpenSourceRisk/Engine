@@ -72,6 +72,9 @@ public:
         return baseScenario_->coordinates(type, name, dimension);
     }
 
+    //! Get base
+    QuantLib::ext::shared_ptr<Scenario> base() const { return baseScenario_; }
+
     //! Get delta
     QuantLib::ext::shared_ptr<Scenario> delta() const { return delta_; }
 
