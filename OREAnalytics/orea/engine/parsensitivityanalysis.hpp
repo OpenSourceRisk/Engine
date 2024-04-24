@@ -201,6 +201,19 @@ public:
     //! Write the inverse of the transposed Jacobian to the \p reportOut
     void writeConversionMatrix(ore::data::Report& reportOut) const;
 
+    ParSensitivityAnalysis::ParContainer inverseJacobian() const { ParSensitivityAnalysis::ParContainer results;
+        Size parIdx = 0;
+        for (const auto& parKey : parKeys_) {
+            Size rawIdx = 0;
+            for (const auto& rawKey : rawKeys_) {
+                results[{rawKey, parKey}] = jacobi_transp_inv_(parIdx, rawIdx);
+                rawIdx++;
+            }
+            parIdx++;
+        }
+        return results;
+    }
+
 private:
     std::set<ore::analytics::RiskFactorKey> rawKeys_;
     std::set<ore::analytics::RiskFactorKey> parKeys_;

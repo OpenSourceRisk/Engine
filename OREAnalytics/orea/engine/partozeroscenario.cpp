@@ -35,6 +35,57 @@ namespace ore {
 namespace analytics {
 
 //! Build a bi-graph from the parSensitivites and search for connectedComponents
+
+class SimpleRiskFactorGraph {
+public:
+    SimpleRiskFactorGraph(const ParSensitivityAnalysis::ParContainer& parWithRespectToZero) {
+
+        std::map<RiskFactorKey, size_t> order;
+        std::map<RiskFactorKey, std::set<RiskFactorKey>> dependencies;
+        for (const auto& [key, value] : parWithRespectToZero) {
+            const auto& [parKey, zeroKey] = key;
+            if (order.count(parKey) == 0) {
+                order[parKey] = 0;
+            }
+            if (!QuantLib::close_enough(value, 0.0)) {
+                parToZeroEdges[parKey].insert(zeroKey);
+                if (zeroKey != parKey) {
+                    order[parKey] = order[parKey] + 1;
+                    dependencies[zeroKey].insert(parKey);
+                }
+            }
+        }
+
+        std::queue<RiskFactorKey> zeroOrderParKeys;
+        for (const auto& [key, n] : order) {
+            if (n == 0) {
+                zeroOrderParKeys.push(key);
+            }
+        }
+
+        while (!zeroOrderParKeys.empty()) {
+            auto key = zeroOrderParKeys.front();
+            DLOG("Process zero order key " << key);
+            zeroOrderParKeys.pop();
+            orderedKeys.push_back(key);
+            for (const auto& dependentKey : dependencies[key]) {
+                std::cout << "Reduce Order of dependent key " << dependentKey << std::endl;
+                order[dependentKey] -= 1;
+                if (order[dependentKey] == 0) {
+                    zeroOrderParKeys.push(dependentKey);
+                }
+            }
+        }
+    }
+
+    const std::vector<RiskFactorKey>& orderedRiskFactors() const { return orderedKeys; }
+
+private:
+    std::map<RiskFactorKey, std::set<RiskFactorKey>> parToZeroEdges;
+    std::map<RiskFactorKey, std::set<RiskFactorKey>> zeroToParEdges;
+    std::vector<RiskFactorKey> orderedKeys;
+};
+
 struct SensitivityBiGraph {
     // Connection from a parInstrument to all zeroRates it's fair rate depends on
     std::map<RiskFactorKey, std::set<RiskFactorKey>> parToZeroEdges;
@@ -160,19 +211,19 @@ getTodaysAndTargetQuotes(const Date& asof, const QuantLib::ext::shared_ptr<Scena
     // Populate Zero Domain BaseValues and Times
     for (const auto& key : market->baseScenarioAbsolute()->keys()) {
         results.scenarioBaseValue[key] = market->baseScenarioAbsolute()->get(key);
-        if (key.keytype == RiskFactorKey::KeyType::DiscountCurve) {
+        if (stressScenario.irCurveParShifts && key.keytype == RiskFactorKey::KeyType::DiscountCurve) {
             const std::string& ccy = key.name;
             populateRiskFactorTime(results, key, asof, *market->discountCurve(ccy),
                                    simMarketParameters->yieldCurveTenors(ccy));
-        } else if (key.keytype == RiskFactorKey::KeyType::IndexCurve) {
+        } else if (stressScenario.irCurveParShifts && key.keytype == RiskFactorKey::KeyType::IndexCurve) {
             const std::string& indexName = key.name;
             populateRiskFactorTime(results, key, asof, *market->iborIndex(indexName)->forwardingTermStructure(),
                                    simMarketParameters->yieldCurveTenors(indexName));
-        } else if (key.keytype == RiskFactorKey::KeyType::YieldCurve) {
+        } else if (stressScenario.irCurveParShifts && key.keytype == RiskFactorKey::KeyType::YieldCurve) {
             const std::string& curveName = key.name;
             populateRiskFactorTime(results, key, asof, *market->yieldCurve(curveName),
                                    simMarketParameters->yieldCurveTenors(curveName));
-        } else if (key.keytype == RiskFactorKey::KeyType::SurvivalProbability) {
+        } else if (stressScenario.creditCurveParShifts && key.keytype == RiskFactorKey::KeyType::SurvivalProbability) {
             const std::string& curveName = key.name;
             populateRiskFactorTime(results, key, asof, *market->defaultCurve(curveName)->curve(),
                                    simMarketParameters->defaultTenors(curveName));
@@ -234,12 +285,16 @@ struct TargetFunction : public QuantLib::CostFunction {
 
     TargetFunction(const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket, const vector<double>& goal,
                    const vector<RiskFactorKey>& parKeys, const vector<RiskFactorKey>& zeroKeys,
-                   const ParSensitivityInstrumentBuilder::Instruments& parInstruments)
-        : simMarket(simMarket), goal(goal), parKeys(parKeys), zeroKeys(zeroKeys), parInstruments_(parInstruments) {}
+                   const ParSensitivityInstrumentBuilder::Instruments& parInstruments, const std::map<RiskFactorKey, double>& solutions)
+        : simMarket(simMarket), goal(goal), parKeys(parKeys), zeroKeys(zeroKeys), parInstruments_(parInstruments), solutions_(solutions) {}
 
     QuantLib::Array values(const QuantLib::Array& x) const override {
         simMarket->reset();
         auto trialScenario = simMarket->baseScenario()->clone();
+
+        for(const auto& [key, delta] : solutions_){
+            trialScenario->add(key, delta);
+        }
 
         for (size_t i = 0; i < zeroKeys.size(); ++i) {
             double delta = x[i];
@@ -255,7 +310,7 @@ struct TargetFunction : public QuantLib::CostFunction {
                 key.keytype == RiskFactorKey::KeyType::SurvivalProbability) {
                 double fairParRate = impliedQuote(parInstruments_.parHelpers_.at(key));
                 error.push_back((goal[i] - fairParRate) * 1e6);
-            } else if (key.keytype == RiskFactorKey::KeyType::OptionletVolatility) {
+            } /*else if (key.keytype == RiskFactorKey::KeyType::OptionletVolatility) {
                 auto capIt = parInstruments_.parCaps_.find(key);
                 QL_REQUIRE(capIt != parInstruments_.parCaps_.end(), "");
                 const auto& cap = capIt->second;
@@ -268,7 +323,7 @@ struct TargetFunction : public QuantLib::CostFunction {
                                                       parInstruments_.parCapsVts_.at(key)->volatilityType(),
                                                       parInstruments_.parCapsVts_.at(key)->displacement());
                 error.push_back((goal[i] - parVol) * 1e6);
-            }
+            }*/
         }
         return QuantLib::Array(error.begin(), error.end());
     }
@@ -278,52 +333,88 @@ struct TargetFunction : public QuantLib::CostFunction {
     const vector<RiskFactorKey>& parKeys;
     const vector<RiskFactorKey>& zeroKeys;
     const ParSensitivityInstrumentBuilder::Instruments& parInstruments_;
+    const std::map<RiskFactorKey, double>& solutions_;
 };
 
 ore::analytics::StressTestScenarioData::StressTestData
 convertScenario(const ore::analytics::StressTestScenarioData::StressTestData& scenario, const QuantLib::Date& asof,
-                const ParSensitivityInstrumentBuilder::Instruments& instruments, const SensitivityBiGraph& sensiGraph,
+                const ParSensitivityInstrumentBuilder::Instruments& instruments, const SimpleRiskFactorGraph& sensiGraph,
                 const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParameters, 
                 const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket, bool useSpreadedTermstructure) {
     LOG("ParToZeroScenario: converting parshifts to zero shifts in scenario " << scenario.label);
     // Copy scenario
-    StressTestScenarioData::StressTestData convertedScenario;
+    StressTestScenarioData::StressTestData convertedScenario = scenario;
+
+    std::set<RiskFactorKey::KeyType> excludedParRates;
+
+    if (scenario.irCapFloorParShifts) {
+        std::cout << "Remove Caplet shifts " << std::endl;
+        convertedScenario.capVolShifts.clear();
+    } else{
+        excludedParRates.insert(RiskFactorKey::KeyType::OptionletVolatility);
+    }
+    if (scenario.creditCurveParShifts) {
+        convertedScenario.survivalProbabilityShifts.clear();
+    } else{
+        excludedParRates.insert(RiskFactorKey::KeyType::SurvivalProbability);
+    }
+    if(scenario.irCurveParShifts){
+        convertedScenario.discountCurveShifts.clear();
+        convertedScenario.indexCurveShifts.clear();
+        convertedScenario.yieldCurveShifts.clear();
+    }else{
+        excludedParRates.insert(RiskFactorKey::KeyType::DiscountCurve);
+        excludedParRates.insert(RiskFactorKey::KeyType::YieldCurve);
+        excludedParRates.insert(RiskFactorKey::KeyType::IndexCurve);
+    }
+
     convertedScenario.label = scenario.label;
-    auto connectedComponents = sensiGraph.connectedComponents();
+    const auto& connectedComponents = sensiGraph.orderedRiskFactors();
     DLOG("ParToZeroScenario: Found " << connectedComponents.size() << " connected components");
     simMarket->reset();
     auto targetParRates = getTodaysAndTargetQuotes(asof, simMarket, scenario, instruments, simMarketParameters);
 
     size_t i = 0;
     map<RiskFactorKey, double> solutions;
+    
     for (const auto& component : connectedComponents) {
-        DLOG(i++ << "th componentent with size " << component.size());
-
+        DLOG(i++ << "th componentent with key " << component);
+        std::vector<RiskFactorKey> zeroKeys;
         std::vector<RiskFactorKey> parKeys;
         std::vector<double> goal;
-        std::set<RiskFactorKey> zeroRatesSet;
+        goal.push_back(targetParRates.targetParQuote[component]);
+        parKeys.push_back(component);
+        zeroKeys.push_back(component);
+        DLOG("Par Key " << component << "Fair Par Rate " << targetParRates.baseParQuote[component] << " Target "
+                        << targetParRates.targetParQuote[component]);
+        DLOG("Zero Key " << component << " " << targetParRates.scenarioBaseValue[component] << " "
+                         << targetParRates.time[component]);
+        /*
+            for (const auto& parKey : component) {
+                DLOG("Par Key " << parKey << "Fair Par Rate " << targetParRates.baseParQuote[parKey] << " Target "
+                               << targetParRates.targetParQuote[parKey]);
 
-        for (const auto& parKey : component) {
-            DLOG("Par Key " << parKey << "Fair Par Rate " << targetParRates.baseParQuote[parKey] << " Target "
-                           << targetParRates.targetParQuote[parKey]);
-            goal.push_back(targetParRates.targetParQuote[parKey]);
-            parKeys.push_back(parKey);
-            const auto& edgeIt = sensiGraph.parToZeroEdges.find(parKey);
-            zeroRatesSet.insert(edgeIt->second.begin(), edgeIt->second.end());   
-        }
+                goal.push_back(targetParRates.targetParQuote[parKey]);
+                parKeys.push_back(parKey);
+                const auto& edgeIt = sensiGraph.parToZeroEdges.find(parKey);
+                zeroRatesSet.insert(edgeIt->second.begin(), edgeIt->second.end());
+            }
 
 
-        std::vector<RiskFactorKey> zeroKeys(zeroRatesSet.begin(), zeroRatesSet.end());
-        for (const auto& zeroKey : zeroKeys) {
+            std::vector<RiskFactorKey> zeroKeys(zeroRatesSet.begin(), zeroRatesSet.end());
+            
+
+            for (const auto& zeroKey : zeroKeys) {
             DLOG("Zero Key " << zeroKey << " " << targetParRates.scenarioBaseValue[zeroKey] << " "
                              << targetParRates.time[zeroKey]);
         }
+        */
         QuantLib::Array initialGuess(zeroKeys.size(), 1.0);
 
         PositiveConstraint noConstraint;
         LevenbergMarquardt lm;
         EndCriteria endCriteria(1000, 10, 1e-8, 1e-8, 1e-8);
-        TargetFunction target(simMarket, goal, parKeys, zeroKeys, instruments);
+        TargetFunction target(simMarket, goal, parKeys, zeroKeys, instruments, solutions);
         Problem problem(target, noConstraint, initialGuess);
         lm.minimize(problem, endCriteria);
         auto solution = problem.currentValue();
@@ -444,7 +535,7 @@ QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> convertParScen
     simMarket->reset();
 
     DLOG("Build sensitivity graph")
-    SensitivityBiGraph sensiGraph(parSensitivities);
+    SimpleRiskFactorGraph sensiGraph(parSensitivities);
 
     DLOG("ParToZeroScenario: Begin Stress Scenarios conversion");
     QuantLib::ext::shared_ptr<StressTestScenarioData> results = QuantLib::ext::make_shared<StressTestScenarioData>();
@@ -459,7 +550,7 @@ QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> convertParScen
         }
     }
     results->useSpreadedTermStructures() = stressTestData->useSpreadedTermStructures();
-    //results->toFile("./stressTest_zero.xml");
+    results->toFile("./stressTest_zero.xml");
     return results;
 }
 
