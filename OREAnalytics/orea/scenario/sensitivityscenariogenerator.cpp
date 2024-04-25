@@ -340,7 +340,7 @@ void SensitivityScenarioGenerator::generateFxScenarios(bool up) {
             sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
 
         Real newRate = relShift ? rate * (1.0 + size) : (rate + size);
-        scenario->add(key, newRate);
+        scenario->add(key, sensitivityData_->useSpreadedTermStructures() ? newRate / rate : newRate);
 
         storeShiftData(key, rate, newRate);
 
@@ -382,7 +382,7 @@ void SensitivityScenarioGenerator::generateEquityScenarios(bool up) {
 
         Real newRate = relShift ? rate * (1.0 + size) : (rate + size);
         // Real newRate = up ? rate * (1.0 + getShiftSize(data)) : rate * (1.0 - getShiftSize(data));
-        scenario->add(key, newRate);
+        scenario->add(key, sensitivityData_->useSpreadedTermStructures() ? newRate / rate : newRate);
 
         storeShiftData(key, rate, newRate);
 
@@ -456,7 +456,6 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->yieldCurveTenors(ccy)[j];
             times[j] = dc.yearFraction(asof, d);
-            DLOG("tenor " << j << " date " << d << " time " << times[j]);
 
             RiskFactorKey key(RiskFactorKey::KeyType::DiscountCurve, ccy, j);
             valid = valid && tryGetBaseScenarioValue(baseScenarioAbsolute_, key, quote, continueOnError_);
@@ -494,8 +493,6 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
                     if (sensitivityData_->useSpreadedTermStructures()) {
                         Real discount = exp(-zeros[k] * times[k]);
                         scenario->add(key, shiftedDiscount / discount);
-                        DLOG(key << "," << std::setprecision(12) << shiftTimes[k] << "," << discount << ","
-                                 << shiftedDiscount);
                     } else {
                         scenario->add(key, shiftedDiscount);
                     }
@@ -1221,8 +1218,6 @@ void SensitivityScenarioGenerator::generateGenericYieldVolScenarios(bool up, Ris
                     Size loopStart = atmOnly ? 0 : l;
                     Size loopEnd = atmOnly ? n_strike : loopStart + 1;
 
-                    DLOG("Generic Yield vol looping over " << loopStart << " to " << loopEnd << " for strike "
-                                                           << shiftStrikes[l]);
                     for (Size ll = loopStart; ll < loopEnd; ++ll) {
                         applyShift(j, k, shiftSize, up, shiftType, shiftExpiryTimes, shiftTermTimes, volExpiryTimes,
                                    volTermTimes, volData[ll], shiftedVolData[ll], true);
@@ -1493,8 +1488,6 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up)
 
             QuantLib::ext::shared_ptr<Scenario> scenario =
                 sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
-            DLOG("generate survival probability scenario, name " << name << ", bucket " << j << ", up " << up
-                                                                << ", desc " << scenarioDescriptions_.back());
 
             // apply averaged hazard rate shift at tenor point j
             applyShift(j, shiftSize, up, shiftType, shiftTimes, hazardRates, times, shiftedHazardRates, true);
@@ -2511,7 +2504,7 @@ void SensitivityScenarioGenerator::generateSecuritySpreadScenarios(bool up) {
             continue;
         Real newSpread = relShift ? base_spread * (1.0 + size) : (base_spread + size);
         // Real newRate = up ? rate * (1.0 + getShiftSize(data)) : rate * (1.0 - getShiftSize(data));
-        scenario->add(key, newSpread);
+        scenario->add(key, sensitivityData_->useSpreadedTermStructures() ? newSpread - base_spread : newSpread);
 
         storeShiftData(key, base_spread, newSpread);
 
