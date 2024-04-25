@@ -61,16 +61,15 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const QuantLib::
                          const string& marketConfigurationInCcy,
                          const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData,
                          const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-                         const IborFallbackConfig& iborFallbackConfig, const bool continueOnCalibrationError,
+                         const IborFallbackConfig& iborFallbackConfig,
+			 const bool bumpCvaSensis, const bool continueOnCalibrationError,
                          const bool continueOnError, const std::string& context)
     : asof_(asof), loader_(loader), curveConfigs_(curveConfigs),
       todaysMarketParams_(todaysMarketParams), simMarketData_(simMarketData), engineData_(engineData),
       crossAssetModelData_(crossAssetModelData), scenarioGeneratorData_(scenarioGeneratorData), portfolio_(portfolio),
       marketConfiguration_(marketConfiguration), marketConfigurationInCcy_(marketConfigurationInCcy),
       sensitivityData_(sensitivityData), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
-      continueOnCalibrationError_(continueOnCalibrationError), continueOnError_(continueOnError), context_(context) {
-
-    bool bumpCvaSensis = false;
+      bumpCvaSensis_(bumpCvaSensis), continueOnCalibrationError_(continueOnCalibrationError), continueOnError_(continueOnError), context_(context) {
 
     // Just for performance testing, duplicate the trades in input portfolio as specified by env var N
 
@@ -281,7 +280,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const QuantLib::
     LOG("XvaEngineCG: do forward evaluation");
 
     Real eps = 0.0; // smoothing parameter for indicator functions
-    ops_ = getRandomVariableOps(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial, bumpCvaSensis ? eps : 0.0,
+    ops_ = getRandomVariableOps(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial, bumpCvaSensis_ ? eps : 0.0,
                                 Null<Real>()); // todo set regression variance cutoff
     grads_ = getRandomVariableGradients(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial, eps);
     opNodeRequirements_ = getRandomVariableOpNodeRequirements();
@@ -300,7 +299,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const QuantLib::
         keepNodes[n] = true;
     }
 
-    if (bumpCvaSensis) {
+    if (bumpCvaSensis_) {
         for (auto const& rv : model_->randomVariates())
             for (auto const& v : rv)
                 keepNodes[v] = true;
@@ -317,17 +316,17 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const QuantLib::
     // Write epe / ene profile out
 
     {
-        InMemoryReport epeReport;
-        epeReport.addColumn("Date", Date()).addColumn("EPE", double(), 4).addColumn("ENE", double(), 4);
+        epeReport_ = QuantLib::ext::make_shared<InMemoryReport>();
+        epeReport_->addColumn("Date", Date()).addColumn("EPE", double(), 4).addColumn("ENE", double(), 4);
 
         for (Size i = 0; i < simulationDates.size() + 1; ++i) {
-            epeReport.next();
-            epeReport.add(i == 0 ? model_->referenceDate() : *std::next(simulationDates.begin(), i - 1))
+            epeReport_->next();
+            epeReport_->add(i == 0 ? model_->referenceDate() : *std::next(simulationDates.begin(), i - 1))
                 .add(expectation(max(values[pfExposureNodes[i]], RandomVariable(model_->size(), 0.0))).at(0))
                 .add(expectation(max(-values[pfExposureNodes[i]], RandomVariable(model_->size(), 0.0))).at(0));
         }
-        epeReport.end();
-        epeReport.toFile("Output/xvacg-exposure.csv");
+        epeReport_->end();
+        epeReport_->toFile("Output/xvacg-exposure.csv");
     }
 
     Real cva = expectation(values[cvaNode]).at(0);
@@ -341,7 +340,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const QuantLib::
 
     std::vector<double> modelParamDerivatives(baseModelParams_.size());
 
-    if (!bumpCvaSensis) {
+    if (!bumpCvaSensis_) {
 
         LOG("XvaEngineCG: run backward derivatives");
 
@@ -420,7 +419,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const QuantLib::
             model_->calculate();
             ++activeScenarios;
 
-            if (!bumpCvaSensis) {
+            if (!bumpCvaSensis_) {
 
                 // calcuate CVA sensi using ad derivatives
 
@@ -460,13 +459,13 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const QuantLib::
     // write out sensi report
 
     {
-        QuantLib::ext::shared_ptr<InMemoryReport> scenarioReport = QuantLib::ext::make_shared<InMemoryReport>();
+        sensiReport_ = QuantLib::ext::make_shared<InMemoryReport>();
         auto sensiCube = QuantLib::ext::make_shared<SensitivityCube>(
             resultCube, sensiScenarioGenerator_->scenarioDescriptions(), sensiScenarioGenerator_->shiftSizes(),
             sensiScenarioGenerator_->shiftSizes(), sensiScenarioGenerator_->shiftSchemes());
         auto sensiStream = QuantLib::ext::make_shared<SensitivityCubeStream>(sensiCube, simMarketData_->baseCcy());
-        ReportWriter().writeScenarioReport(*scenarioReport, {sensiCube}, 0.0);
-        scenarioReport->toFile("Output/xvacg-cva-sensi-scenario.csv");
+        ReportWriter().writeScenarioReport(*sensiReport_, {sensiCube}, 0.0);
+        sensiReport_->toFile("Output/xvacg-cva-sensi-scenario.csv");
     }
 
     // Output statistics
