@@ -53,6 +53,7 @@ public:
         Size trainingSamples = Null<Size>();
         QuantExt::SequenceType sequenceType = QuantExt::SequenceType::SobolBrownianBridge;
         QuantExt::SequenceType trainingSequenceType = QuantExt::SequenceType::MersenneTwister;
+        bool externalDeviceCompatibilityMode = false;
         Size regressionOrder = 2;
         QuantLib::LsmBasisSystem::PolynomialType polynomType = QuantLib::LsmBasisSystem::PolynomialType::Monomial;
         QuantLib::SobolBrownianGenerator::Ordering sobolOrdering = QuantLib::SobolBrownianGenerator::Steps;
