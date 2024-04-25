@@ -200,9 +200,9 @@ private:
     void runHealthChecks();
     std::string runHealthCheckProgram(const std::string& source, const std::string& kernelName);
 
-    static void releaseMem(cl_mem& m);
-    static void releaseKernel(cl_kernel& k);
-    static void releaseProgram(cl_program& p);
+    static void releaseMem(cl_mem& m, const std::string& desc);
+    static void releaseKernel(cl_kernel& k, const std::string& desc);
+    static void releaseProgram(cl_program& p, const std::string& desc);
 
     enum class ComputeState { idle, createInput, createVariates, calc };
 
@@ -324,20 +324,20 @@ OpenClContext::~OpenClContext() {
         cl_int err;
 
         if (variatesPoolSize_ > 0) {
-            releaseMem(variatesPool_);
-            releaseMem(variatesMtStateBuffer_);
-            releaseKernel(variatesKernelSeedInit_);
-            releaseKernel(variatesKernelTwist_);
-            releaseKernel(variatesKernelGenerate_);
-            releaseProgram(variatesProgram_);
+            releaseMem(variatesPool_, "variates pool");
+            releaseMem(variatesMtStateBuffer_, "variates state buffer");
+            releaseKernel(variatesKernelSeedInit_, "variates seed init");
+            releaseKernel(variatesKernelTwist_, "variates twist");
+            releaseKernel(variatesKernelGenerate_, "variates generate");
+            releaseProgram(variatesProgram_, "variates");
         }
 
         for (auto& k : kernel_) {
-            releaseKernel(k);
+            releaseKernel(k, "ore kernel");
         }
 
         for (auto& p : program_) {
-            releaseProgram(p);
+            releaseProgram(p, "ore program");
         }
 
         if (err = clReleaseCommandQueue(queue_); err != CL_SUCCESS) {
@@ -350,24 +350,27 @@ OpenClContext::~OpenClContext() {
     }
 }
 
-void OpenClContext::releaseMem(cl_mem& m) {
+void OpenClContext::releaseMem(cl_mem& m, const std::string& description) {
     cl_int err;
     if (err = clReleaseMemObject(m); err != CL_SUCCESS) {
-        std::cerr << "OpenClContext: error during clReleaseMemObject: " + errorText(err) << std::endl;
+        std::cerr << "OpenClContext: error during clReleaseMemObject '" << description << "': " + errorText(err)
+                  << std::endl;
     }
 }
 
-void OpenClContext::releaseKernel(cl_kernel& k) {
+void OpenClContext::releaseKernel(cl_kernel& k, const std::string& description) {
     cl_int err;
     if (err = clReleaseKernel(k); err != CL_SUCCESS) {
-        std::cerr << "OpenClContext: error during clReleaseKernel: " + errorText(err) << std::endl;
+        std::cerr << "OpenClContext: error during clReleaseKernel'" << description << "': " + errorText(err)
+                  << std::endl;
     }
 }
 
-void OpenClContext::releaseProgram(cl_program& p) {
+void OpenClContext::releaseProgram(cl_program& p, const std::string& description) {
     cl_int err;
     if (err = clReleaseProgram(p); err != CL_SUCCESS) {
-        std::cerr << "OpenClContext: error during clReleaseProgram: " + errorText(err) << std::endl;
+        std::cerr << "OpenClContext: error during clReleaseProgram'" << description << "': " + errorText(err)
+                  << std::endl;
     }
 }
 
@@ -379,11 +382,11 @@ std::string OpenClContext::runHealthCheckProgram(const std::string& source, cons
         std::vector<cl_mem> m;
         ~CleanUp() {
             for (auto& pgm : p)
-                OpenClContext::releaseProgram(pgm);
+                OpenClContext::releaseProgram(pgm, "health check");
             for (auto& krn : k)
-                OpenClContext::releaseKernel(krn);
+                OpenClContext::releaseKernel(krn, "health check");
             for (auto& mem : m)
-                OpenClContext::releaseMem(mem);
+                OpenClContext::releaseMem(mem, "health check");
         }
     } cleanup;
 
@@ -525,8 +528,8 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
         if (version != version_[id - 1]) {
             hasKernel_[id - 1] = false;
             version_[id - 1] = version;
-            releaseKernel(kernel_[id - 1]);
-            releaseProgram(program_[id - 1]);
+            releaseKernel(kernel_[id - 1], "kernel id " + std::to_string(id));
+            releaseProgram(program_[id - 1], "program id " + std::to_string(id));
             newCalc = true;
         }
 
@@ -777,11 +780,16 @@ void OpenClContext::updateVariatesPool() {
     cl_int err;
 
     cl_mem oldBuffer = variatesPool_;
+
     struct OldBufferReleaser {
-        OldBufferReleaser(cl_mem b) : b(b) {}
-        ~OldBufferReleaser() { OpenClContext::releaseMem(b); }
+        OldBufferReleaser(cl_mem b, bool active) : b(b), active(active) {}
+        ~OldBufferReleaser() {
+            if (active)
+                OpenClContext::releaseMem(b, "expired variates buffer");
+        }
         cl_mem b;
-    } oldBufferReleaser(oldBuffer);
+        bool active;
+    } oldBufferReleaser(oldBuffer, variatesPoolSize_ > 0);
 
     variatesPool_ = clCreateBuffer(context_, CL_MEM_READ_WRITE, fpSize * alignedSize, NULL, &err);
     QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::updateVariatesPool(): error creating variates buffer with size "
@@ -852,8 +860,8 @@ std::vector<std::vector<std::size_t>> OpenClContext::createInputVariates(const s
                                                 << " has a kernel already, input variates can not be regenerated.");
     currentState_ = ComputeState::createVariates;
     std::vector<std::vector<std::size_t>> resultIds(dim, std::vector<std::size_t>(steps));
-    for (std::size_t i = 0; i < dim; ++i) {
-        for (std::size_t j = 0; j < steps; ++j) {
+    for (std::size_t j = 0; j < steps; ++j) {
+        for (std::size_t i = 0; i < dim; ++i) {
             resultIds[i][j] = nVars_++;
         }
     }
