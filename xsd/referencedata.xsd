@@ -156,22 +156,16 @@
     </xs:sequence>
   </xs:complexType>
   
-	<xs:complexType name="PortfolioBasketReferenceData">
-		<xs:complexType>
-			<xs:sequence>
-				<xs:element name="Components">
-					<xs:complexType>
-						<xs:sequence>
-							<xs:element name="Trade" minOccurs="0" maxOccurs="unbounded">
-								<xs:complexType>
-								  <xs:attribute type="xs:string" name="id"/>
-								</xs:complexType>
-							</xs:element>
-						</xs:sequence>
-					</xs:complexType>
-				</xs:element>
-			</xs:sequence>
-		</xs:complexType>
+	<xs:complexType name="portfolioBasketReferenceDatum">
+		<xs:sequence>
+			<xs:element name="Components">
+				<xs:complexType>
+				<xs:sequence>
+					<xs:element type="xs:string" name="Trade" minOccurs="1" maxOccurs="unbounded"/>
+				</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
 	</xs:complexType>
 
 </xs:schema>
