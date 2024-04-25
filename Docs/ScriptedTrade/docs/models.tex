@@ -153,6 +153,10 @@ The engine parameters have the following meaning:
 \item UseExternalComputingDevice: If true and RunType is not NPV (generating additional results) and AD sensitivities
   are {\em not} used, an external compute device is used for the calculations.
 \item UseDoublePrecisionForExternalCalculation: Use double precision for external computations. Defaults to false.
+\item ExternalDeviceCompatibilityMode: Only applies if UseCG is enabled. Defaults to false. If enabled, random number
+  generation for internal calculations using the CG is aligned as closely as possible with what is usually implemented
+  for external calculations, i.e. if enabled, the MersenneTwister random number generation is done in
+  step-dimension-path order. If disabled, the ``classic'' order path-step-dimension is used.
 \item ExternalComputeDevice: The external compute device to use if UseExternalComputingDevice is effective.
 \end{itemize}
 
