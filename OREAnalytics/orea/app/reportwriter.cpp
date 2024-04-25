@@ -1533,6 +1533,55 @@ void ReportWriter::writeCube(ore::data::Report& report, const QuantLib::ext::sha
     LOG("Cube report written");
 }
 
+void ReportWriter::writeForwardRatesReport(ore::data::Report& report, const std::string& configuration,
+                                           const DateGrid& grid, const TodaysMarketParameters& marketConfig,
+                                           const boost::shared_ptr<Market>& market,
+                                           const bool continueOnError) {
+    LOG("Write forward rates report");
+    report.addColumn("Index", string()).addColumn("Tenor", Period()).addColumn("FixingDate", Date()).addColumn("Rate", double(), 8);
+
+    QL_REQUIRE(marketConfig.hasConfiguration(configuration), "curve configuration " << configuration << " not found");
+    map<string, string> indexCurves = marketConfig.mapping(MarketObject::IndexCurve, configuration);
+
+
+    for (auto const& it : indexCurves) {
+        try {
+            auto index = market->iborIndex(it.first);
+            for (Size j = 0; j < grid.size(); ++j) {
+                Date date = grid[j];
+                report.next().add(it.first).add(grid.tenors()[j]).add(date).add(index->fixing(index->fixingCalendar().adjust(date, Preceding)));
+            }
+            // if we output SOFR, we also output SOFR average rates for 30D, 90D, 180D
+            if (it.first == "USD-SOFR") {
+                static const std::vector<int> avgDays = {30, 90, 180};
+                for (auto const& p : avgDays) {
+                    for (Size j = 0; j < grid.size(); ++j) {
+                        Date date = grid[j];
+                        auto on = boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(*index);
+                        QL_REQUIRE(on, "could not cast USD-SOFR to overnight index, this is unexpected, skip output of "
+                                       "USD-SOFR-AVG rates");
+                        QuantExt::OvernightIndexedCoupon cpn(date, 1.0, date - 1, date, on, 1.0, 0.0, Date(), Date(),
+                                                             DayCounter(), false, false, 0 * Days, 0, 0, date - p, date);
+                        cpn.setPricer(boost::make_shared<QuantExt::OvernightIndexedCouponPricer>());
+                        report.next().add("USD-SOFR-AVG-" + std::to_string(p) + "D").add(grid.tenors()[j]).add(date).add(cpn.rate());
+                    }
+                }
+            }
+            // end SOFR average rate output
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                WLOG("skip index '" << it.first << "': " << e.what());
+            } else {
+                QL_FAIL("index '" << it.first << "':" << e.what());
+            }
+        }
+    }
+
+    report.end();
+    LOG("Forward rates report generation done.");
+
+}
+
 // Ease notation again
 typedef CrifRecord::ProductClass ProductClass;
 typedef SimmConfiguration::RiskClass RiskClass;
