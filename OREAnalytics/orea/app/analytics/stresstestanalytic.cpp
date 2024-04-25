@@ -235,10 +235,11 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
         // Compute ParSensitivities
         parAnalysis->computeParInstrumentSensitivities(simMarket);
         
+        /*
         boost::shared_ptr<ParSensitivityConverter> parConverter =
             boost::make_shared<ParSensitivityConverter>(parAnalysis->parSensitivities(), parAnalysis->shiftSizes());
 
-        /*
+        
         RiskFactorGraph sensiGraph(parAnalysis->parSensitivities(), parConverter->inverseJacobian());
         size_t counter = 0;
         std::cout << "Debug sensigraph" << std::endl;
