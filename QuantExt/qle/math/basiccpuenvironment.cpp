@@ -247,7 +247,7 @@ std::vector<std::vector<std::size_t>> BasicCpuContext::createInputVariates(const
     std::vector<std::vector<std::size_t>> resultIds(dim, std::vector<std::size_t>(steps));
     for (std::size_t i = 0; i < dim; ++i) {
         for (std::size_t j = 0; j < steps; ++j) {
-            resultIds[i][j] = numberOfInputVars_[currentId_ - 1] + numberOfVariates_[currentId_ - 1] + i * steps + j;
+            resultIds[i][j] = numberOfInputVars_[currentId_ - 1] + numberOfVariates_[currentId_ - 1] + j * dim + i;
         }
     }
 
