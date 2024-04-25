@@ -225,7 +225,8 @@ void SensitivityScenarioGenerator::generateScenarios() {
                 continue;
 
             // build cross scenario
-            QuantLib::ext::shared_ptr<Scenario> crossScenario = sensiScenarioFactory_->buildScenario(asof);
+            QuantLib::ext::shared_ptr<Scenario> crossScenario =
+                sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
 
             for (auto const& k : baseScenario_->keys()) {
                 Real v1 = scenarios_[i]->get(k);
@@ -335,7 +336,8 @@ void SensitivityScenarioGenerator::generateFxScenarios(bool up) {
         if (!tryGetBaseScenarioValue(baseScenarioAbsolute_, key, rate, continueOnError_))
             continue;
 
-        QuantLib::ext::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+        QuantLib::ext::shared_ptr<Scenario> scenario =
+            sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
 
         Real newRate = relShift ? rate * (1.0 + size) : (rate + size);
         scenario->add(key, newRate);
@@ -375,7 +377,8 @@ void SensitivityScenarioGenerator::generateEquityScenarios(bool up) {
         if (!tryGetBaseScenarioValue(baseScenarioAbsolute_, key, rate, continueOnError_))
             continue;
 
-        QuantLib::ext::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+        QuantLib::ext::shared_ptr<Scenario> scenario =
+            sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
 
         Real newRate = relShift ? rate * (1.0 + size) : (rate + size);
         // Real newRate = up ? rate * (1.0 + getShiftSize(data)) : rate * (1.0 - getShiftSize(data));
@@ -477,7 +480,8 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
-            QuantLib::ext::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+            QuantLib::ext::shared_ptr<Scenario> scenario =
+                sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
             // apply zero rate shift at tenor point j
             applyShift(j, shiftSize, up, shiftType, shiftTimes, zeros, times, shiftedZeros, true);
 
@@ -581,7 +585,8 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
-            QuantLib::ext::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+            QuantLib::ext::shared_ptr<Scenario> scenario =
+                sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
 
             // apply zero rate shift at tenor point j
             applyShift(j, shiftSize, up, shiftType, shiftTimes, zeros, times, shiftedZeros, true);
@@ -682,7 +687,8 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
-            QuantLib::ext::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+            QuantLib::ext::shared_ptr<Scenario> scenario =
+                sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
 
             // apply zero rate shift at tenor point j
             applyShift(j, shiftSize, up, shiftType, shiftTimes, zeros, times, shiftedZeros, true);
@@ -783,7 +789,8 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
-            QuantLib::ext::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+            QuantLib::ext::shared_ptr<Scenario> scenario =
+                sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
 
             // apply zero rate shift at tenor point j
             applyShift(j, shiftSize, up, shiftType, shiftTimes, zeros, times, shiftedZeros, true);
@@ -898,7 +905,8 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
             for (Size strikeBucket = 0; strikeBucket < shiftStrikes.size(); ++strikeBucket) {
-                QuantLib::ext::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+                QuantLib::ext::shared_ptr<Scenario> scenario =
+                    sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
 
                 applyShift(j, strikeBucket, shiftSize, up, shiftType, shiftTimes, shiftStrikes, times, vol_strikes,
                            values, shiftedValues, true);
@@ -1017,7 +1025,8 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(bool up) {
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
             for (Size strikeBucket = 0; strikeBucket < shiftStrikes.size(); ++strikeBucket) {
-                QuantLib::ext::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+                QuantLib::ext::shared_ptr<Scenario> scenario =
+                    sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
 
                 applyShift(strikeBucket, j, shiftSize, up, shiftType, shiftStrikes, shiftTimes, vol_strikes, times,
                            values, shiftedValues, true);
@@ -1205,7 +1214,8 @@ void SensitivityScenarioGenerator::generateGenericYieldVolScenarios(bool up, Ris
             for (Size k = 0; k < shiftTermTimes.size(); ++k) {
                 for (Size l = 0; l < shiftStrikes.size(); ++l) {
                     Size strikeBucket = l;
-                    QuantLib::ext::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+                    QuantLib::ext::shared_ptr<Scenario> scenario =
+                        sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
 
                     // if simulating atm only we shift all strikes otherwise we shift each strike individually
                     Size loopStart = atmOnly ? 0 : l;
@@ -1370,7 +1380,8 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
         // loop over shift expiries and terms
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j) {
             for (Size k = 0; k < shiftStrikes.size(); ++k) {
-                QuantLib::ext::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+                QuantLib::ext::shared_ptr<Scenario> scenario =
+                    sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
 
                 applyShift(j, k, shiftSize, up, shiftType, shiftExpiryTimes, shiftStrikes, volExpiryTimes, volStrikes,
                            volData, shiftedVolData, true);
@@ -1480,7 +1491,8 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up)
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
-            QuantLib::ext::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+            QuantLib::ext::shared_ptr<Scenario> scenario =
+                sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
             DLOG("generate survival probability scenario, name " << name << ", bucket " << j << ", up " << up
                                                                 << ", desc " << scenarioDescriptions_.back());
 
@@ -1576,7 +1588,8 @@ void SensitivityScenarioGenerator::generateCdsVolScenarios(bool up) {
         // loop over shift expiries and terms
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j) {
             Size strikeBucket = 0; // FIXME
-            QuantLib::ext::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+            QuantLib::ext::shared_ptr<Scenario> scenario =
+                sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
 
             applyShift(j, shiftSize, up, shiftType, shiftExpiryTimes, volData, volExpiryTimes, shiftedVolData, true);
             // add shifted vol data to the scenario
@@ -1669,7 +1682,8 @@ void SensitivityScenarioGenerator::generateZeroInflationScenarios(bool up) {
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
-            QuantLib::ext::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+            QuantLib::ext::shared_ptr<Scenario> scenario =
+                sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
 
             // apply zero rate shift at tenor point j
             applyShift(j, shiftSize, up, shiftType, shiftTimes, zeros, times, shiftedZeros, true);
@@ -1772,7 +1786,8 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(bool up) {
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
-            QuantLib::ext::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+            QuantLib::ext::shared_ptr<Scenario> scenario =
+                sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
 
             // apply zero rate shift at tenor point j
             applyShift(j, shiftSize, up, shiftType, shiftTimes, yoys, times, shiftedYoys, true);
@@ -1880,7 +1895,8 @@ void SensitivityScenarioGenerator::generateYoYInflationCapFloorVolScenarios(bool
         // loop over shift expiries and terms
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j) {
             for (Size k = 0; k < shiftStrikes.size(); ++k) {
-                QuantLib::ext::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+                QuantLib::ext::shared_ptr<Scenario> scenario =
+                    sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
 
                 applyShift(j, k, shiftSize, up, shiftType, shiftExpiryTimes, shiftStrikes, volExpiryTimes, volStrikes,
                            volData, shiftedVolData, true);
@@ -1991,7 +2007,8 @@ void SensitivityScenarioGenerator::generateZeroInflationCapFloorVolScenarios(boo
         // loop over shift expiries and terms
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j) {
             for (Size k = 0; k < shiftStrikes.size(); ++k) {
-                QuantLib::ext::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+                QuantLib::ext::shared_ptr<Scenario> scenario =
+                    sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
 
                 applyShift(j, k, shiftSize, up, shiftType, shiftExpiryTimes, shiftStrikes, volExpiryTimes, volStrikes,
                            volData, shiftedVolData, true);
@@ -2094,7 +2111,8 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(bool up) {
         // loop over shift levels and terms
         for (Size j = 0; j < shiftLevels.size(); ++j) {
             for (Size k = 0; k < shiftTermTimes.size(); ++k) {
-                QuantLib::ext::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+                QuantLib::ext::shared_ptr<Scenario> scenario =
+                    sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
 
                 applyShift(j, k, shiftSize, up, shiftType, shiftLevels, shiftTermTimes, levels, termTimes, bcData,
                            shiftedBcData, true);
@@ -2210,7 +2228,8 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
         // Generate the scenarios for each shift
         for (Size j = 0; j < data.shiftTenors.size(); ++j) {
 
-            QuantLib::ext::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+            QuantLib::ext::shared_ptr<Scenario> scenario =
+                sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
 
             // Apply shift at tenor point j
             applyShift(j, shiftSize, up, shiftType, shiftTimes, basePrices, times, shiftedPrices, true);
@@ -2318,7 +2337,8 @@ void SensitivityScenarioGenerator::generateCommodityVolScenarios(bool up) {
         for (Size sj = 0; sj < sd.shiftExpiries.size(); ++sj) {
             for (Size si = 0; si < sd.shiftStrikes.size(); ++si) {
 
-                QuantLib::ext::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+                QuantLib::ext::shared_ptr<Scenario> scenario =
+                    sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
 
                 applyShift(si, sj, getShiftSize(sd), up, shiftType, sd.shiftStrikes, shiftTimes, moneyness, times,
                            baseValues, shiftedValues, true);
@@ -2423,7 +2443,8 @@ void SensitivityScenarioGenerator::generateCorrelationScenarios(bool up) {
         // loop over shift expiries and terms
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j) {
             for (Size k = 0; k < shiftStrikes.size(); ++k) {
-                QuantLib::ext::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+                QuantLib::ext::shared_ptr<Scenario> scenario =
+                    sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
 
                 applyShift(j, k, shiftSize, up, shiftType, shiftExpiryTimes, shiftStrikes, corrExpiryTimes, corrStrikes,
                            corrData, shiftedCorrData, true);
@@ -2481,7 +2502,8 @@ void SensitivityScenarioGenerator::generateSecuritySpreadScenarios(bool up) {
         Real size = up ? getShiftSize(data) : -1.0 * getShiftSize(data);
         bool relShift = (type == ShiftType::Relative);
 
-        QuantLib::ext::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+        QuantLib::ext::shared_ptr<Scenario> scenario =
+            sensiScenarioFactory_->buildScenario(asof, !sensitivityData_->useSpreadedTermStructures());
 
         RiskFactorKey key(RiskFactorKey::KeyType::SecuritySpread, bond);
         Real base_spread;

@@ -47,7 +47,8 @@ void StressScenarioGenerator::generateScenarios() {
     for (Size i = 0; i < stressData_->data().size(); ++i) {
         StressTestScenarioData::StressTestData data = stressData_->data().at(i);
         DLOG("Generate stress scenario #" << i << " '" << data.label << "'");
-        QuantLib::ext::shared_ptr<Scenario> scenario = stressScenarioFactory_->buildScenario(asof, data.label);
+        QuantLib::ext::shared_ptr<Scenario> scenario =
+            stressScenarioFactory_->buildScenario(asof, !stressData_->useSpreadedTermStructures(), data.label);
 
         if (simMarketData_->simulateFxSpots())
             addFxShifts(data, scenario);
