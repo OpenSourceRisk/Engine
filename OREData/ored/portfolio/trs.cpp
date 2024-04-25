@@ -301,13 +301,6 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     creditQualifierMapping_.clear();
     notionalCurrency_ = returnData_.currency();
 
-    // propagate additional data from underlyings to trs trade
-    for (Size i = 0; i < underlying_.size(); ++i) {
-        for (auto const& [key, value] : underlying_[i]->additionalData()) {
-            additionalData_["und_ad_" + std::to_string(i + 1) + "_" + key] = value;
-        }
-    }
-
     // checks
 
     std::set<bool> fundingLegPayers;
@@ -346,6 +339,13 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
         // populate sensi template from first underlying, we have to make _some_ assumption here!
         if (sensitivityTemplate_.empty()) {
             setSensitivityTemplate(underlying_[i]->sensitivityTemplate());
+        }
+    }
+
+    // propagate additional data from underlyings to trs trade
+    for (Size i = 0; i < underlying_.size(); ++i) {
+        for (auto const& [key, value] : underlying_[i]->additionalData()) {
+            additionalData_["und_ad_" + std::to_string(i + 1) + "_" + key] = value;
         }
     }
 
