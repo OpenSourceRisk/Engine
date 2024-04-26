@@ -46,9 +46,9 @@ namespace {
 Rate atmStrike(const Date& optionD, const Period& swapTenor, const QuantLib::ext::shared_ptr<SwapIndex> swapIndexBase,
                const QuantLib::ext::shared_ptr<SwapIndex> shortSwapIndexBase) {
     if (swapTenor > shortSwapIndexBase->tenor()) {
-        return swapIndexBase->clone(swapTenor)->fixing(optionD);
+        return swapIndexBase->clone(swapTenor)->fixing(swapIndexBase->fixingCalendar().adjust(optionD));
     } else {
-        return shortSwapIndexBase->clone(swapTenor)->fixing(optionD);
+        return shortSwapIndexBase->clone(swapTenor)->fixing(shortSwapIndexBase->fixingCalendar().adjust(optionD));
     }
 }
 } // namespace

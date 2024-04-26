@@ -74,9 +74,6 @@ public:
 
     void setT0Scenario(const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& scenario) { t0Scenario_ = scenario; }
     void setT1Scenario(const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& scenario) { t1Scenario_ = scenario; }
-    void createShiftSpreadedScenario(const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& base,
-				     const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& scen1,
-				     const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& scen2);
 
 private:
     QuantLib::Date mporDate_;

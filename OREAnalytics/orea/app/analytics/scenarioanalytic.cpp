@@ -25,8 +25,10 @@ namespace ore {
 namespace analytics {
 	
 // ScenarioAnalytic
-ScenarioAnalytic::ScenarioAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-    : Analytic(std::make_unique<ScenarioAnalyticImpl>(inputs), {"SCENARIO"}, inputs, true, false, false, false) {}
+ScenarioAnalytic::ScenarioAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                                   const bool useSpreadedTermStructures)
+    : Analytic(std::make_unique<ScenarioAnalyticImpl>(inputs, useSpreadedTermStructures), {"SCENARIO"}, inputs, true,
+               false, false, false) {}
 
 void ScenarioAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
@@ -51,7 +53,7 @@ void ScenarioAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryL
     auto ssm = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), scenarioAnalytic->configurations().simMarketParams, Market::defaultConfiguration,
         *scenarioAnalytic->configurations().curveConfig, *scenarioAnalytic->configurations().todaysMarketParams, true,
-        true, false, false, *inputs_->iborFallbackConfig());
+        useSpreadedTermStructures_, false, false, *inputs_->iborFallbackConfig());
 
     setScenarioSimMarket(ssm);
     auto scenario = ssm->baseScenario();

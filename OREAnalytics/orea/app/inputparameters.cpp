@@ -387,8 +387,8 @@ void InputParameters::setHistoricalScenarioReader(const std::string& fileName) {
     QL_REQUIRE(exists(baseScenarioPath), "The provided base scenario file, " << baseScenarioPath << ", does not exist");
     QL_REQUIRE(is_regular_file(baseScenarioPath),
                "The provided base scenario file, " << baseScenarioPath << ", is not a file");
-    historicalScenarioReader_ =
-        QuantLib::ext::make_shared<HistoricalScenarioFileReader>(fileName, QuantLib::ext::make_shared<SimpleScenarioFactory>());
+    historicalScenarioReader_ = QuantLib::ext::make_shared<HistoricalScenarioFileReader>(
+        fileName, QuantLib::ext::make_shared<SimpleScenarioFactory>(false));
 }
 
 void InputParameters::setAmcTradeTypes(const std::string& s) {

@@ -22,6 +22,7 @@
 #include <orea/engine/observationmode.hpp>
 #include <orea/scenario/simplescenario.hpp>
 #include <orea/scenario/scenariowriter.hpp>
+#include <orea/scenario/scenarioutilities.hpp>
 
 #include <ored/marketdata/structuredcurveerror.hpp>
 
@@ -142,14 +143,14 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     QuantLib::ext::shared_ptr<Scenario> asofBaseScenario = simMarket->baseScenarioAbsolute();
     QuantLib::ext::shared_ptr<Scenario> mporBaseScenario = mporAnalytic->scenarioSimMarket()->baseScenarioAbsolute();
 
-    // Create a shift scenario as spread between t1 market and t0 market, to be applied to t0
-    QuantLib::ext::shared_ptr<ore::analytics::Scenario> t0Scenario = QuantLib::ext::make_shared<SimpleScenario>(inputs_->asof(), "t0", 1.0);
-    pnlAnalytic->createShiftSpreadedScenario(t0Scenario, asofBaseScenario, mporBaseScenario);
+    QuantLib::ext::shared_ptr<ore::analytics::Scenario> t0Scenario =
+        getDifferenceScenario(asofBaseScenario, mporBaseScenario, inputs_->asof(), 1.0); 
     pnlAnalytic->setT0Scenario(t0Scenario);
 
     // Create the inverse shift scenario as spread between t0 market and t1 market, to be applied to t1
-    QuantLib::ext::shared_ptr<ore::analytics::Scenario> t1Scenario = QuantLib::ext::make_shared<SimpleScenario>(pnlAnalytic->mporDate(), "t1", 1.0);
-    pnlAnalytic->createShiftSpreadedScenario(t1Scenario, mporBaseScenario, asofBaseScenario);
+
+    QuantLib::ext::shared_ptr<ore::analytics::Scenario> t1Scenario =
+        getDifferenceScenario(mporBaseScenario, asofBaseScenario, pnlAnalytic->mporDate(), 1.0); 
     pnlAnalytic->setT1Scenario(t1Scenario);
 
     /********************************************************************************************
@@ -298,58 +299,6 @@ set<QuantLib::Date> PnlAnalytic::marketDates() const {
     set<QuantLib::Date> dates = Analytic::marketDates();
     dates.insert(mporDate_);
     return dates;
-}
-
-void PnlAnalytic::createShiftSpreadedScenario(const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& base,
-					      const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& scen1,
-					      const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& scen2) {
-
-    for (const auto& k : scen1->keys()) {
-        auto spread = 0.0;
-        if (scen2->has(k)) {
-            switch (k.keytype) {
-            case RFType::DiscountCurve:
-            case RFType::YieldCurve:
-            case RFType::IndexCurve:
-            case RFType::DividendYield:
-                spread = scen2->get(k) / scen1->get(k);
-                break;
-            case RFType::FXVolatility:
-            case RFType::EquityVolatility:
-            case RFType::CommodityVolatility:
-            case RFType::ZeroInflationCapFloorVolatility:
-            case RFType::YieldVolatility:
-            case RFType::SwaptionVolatility:
-            case RFType::YoYInflationCapFloorVolatility:
-            case RFType::OptionletVolatility:
-            case RFType::CommodityCurve:
-            case RFType::SurvivalProbability:
-            case RFType::CDSVolatility:
-            case RFType::ZeroInflationCurve:
-            case RFType::YoYInflationCurve:
-            case RFType::BaseCorrelation:
-            case RFType::Correlation:
-                spread = scen2->get(k) - scen1->get(k);
-                break;
-            case RFType::FXSpot:
-            case RFType::EquitySpot:
-            case RFType::RecoveryRate:
-            case RFType::CPIIndex:
-            case RFType::SecuritySpread:
-            case RFType::CPR:
-                spread = scen2->get(k);
-                break;
-            default:
-                QL_FAIL("Invalid key type " << k.keytype);
-            }
-        }
-        else {
-            string errorStr = "Scenario key " + ore::data::to_string(k) + " is missing for date " +
-                              ore::data::to_string(scen2->asof());
-            ore::analytics::StructuredCurveErrorMessage(ore::data::to_string(k), "Missing Key in Scenario", errorStr).log();
-        }
-        base->add(k, spread);
-    }
 }
 
 } // namespace analytics
