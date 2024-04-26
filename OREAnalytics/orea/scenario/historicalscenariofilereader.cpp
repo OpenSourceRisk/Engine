@@ -74,7 +74,8 @@ QuantLib::ext::shared_ptr<ore::analytics::Scenario> HistoricalScenarioFileReader
         Date date = parseDate(file_.get("Date"));
         Real numeraire = parseReal(file_.get("Numeraire"));
         TLOG("Creating scenario for date " << io::iso_date(date));
-        QuantLib::ext::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(date, "", numeraire);
+        QuantLib::ext::shared_ptr<Scenario> scenario =
+            scenarioFactory_->buildScenario(date, true, std::string(), numeraire);
         Real value;
         for (Size k = 0; k < keys_.size(); ++k) {
             if (ore::data::tryParseReal(file_.get(k + 3), value))
