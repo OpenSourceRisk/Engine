@@ -50,7 +50,7 @@
       <Parameter name="mporDays">10</Parameter>
       <Parameter name="mporCalendar">US</Parameter>
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>
-      <Parameter name="outputFileName">pnl.csv</Parameter>-->
+      <Parameter name="outputFileName">pnl.csv</Parameter>
       </Analytic>
   </Analytics>
 </ORE>
