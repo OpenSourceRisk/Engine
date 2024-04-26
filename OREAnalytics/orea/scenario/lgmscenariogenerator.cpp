@@ -47,7 +47,7 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> LgmScenarioGenerator::nextPath(
     for (Size i = 0; i < dates_.size(); i++) {
         Real t = timeGrid_[i + 1]; // recall: time grid has inserted t=0
 
-        scenarios[i] = scenarioFactory_->buildScenario(dates_[i]);
+        scenarios[i] = scenarioFactory_->buildScenario(dates_[i], true);
 
         // Set numeraire, numeraire currency and the (deterministic) domestic discount
         // Asset index 0 in sample.value[0][i+1] refers to the domestic currency process,
