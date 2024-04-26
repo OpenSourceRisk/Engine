@@ -405,6 +405,43 @@ convertScenario(const ore::analytics::StressTestScenarioData::StressTestData& pa
         DLOG(key << ";" << rate << ";" << tgt << ";" << tgt - rate);
     }
     simMarket->reset();
+    /*
+    auto tenors = simMarketParameters->capFloorVolExpiries("EUR-EURIBOR-6M");
+    auto strikes = simMarketParameters->capFloorVolStrikes("EUR-EURIBOR-6M");
+    for (size_t i = 0; i < strikes.size(); i++) {
+        std::cout << "Optimize strike " << strikes[i] << std::endl;
+        std::vector<double> goals(tenors.size(), 0.0);
+        Array initialValue(tenors.size(), 0.0);
+        std::vector<RiskFactorKey> parKeys;
+        for (size_t j = 0; j < tenors.size(); ++j) {
+            RiskFactorKey key(capFloorRiskFactors.front().keytype, capFloorRiskFactors.front().name,
+                              j * strikes.size() + i);
+            std::cout << "Get target " << key << " " << targets[key] << std::endl;
+            goals[j] = targets[key];
+            parKeys.push_back(key);
+        }
+        NoConstraint constraint;
+        TargetFunctionCapFloor targetFunction(simMarket, goals, parKeys, instruments, trialScenario);
+        Problem problem(targetFunction, constraint, initialValue);
+        LevenbergMarquardt lm;
+        try {
+            std::cout << "Start Optim" << strikes[i] << std::endl;
+            lm.minimize(problem, EndCriteria(1000, 50, 1e-8, 1e-8, 1e-8));
+            std::cout << "Found solution " << problem.currentValue() << std::endl;
+            for (size_t j = 0; j < tenors.size(); ++j) {
+                trialScenario->add(parKeys[j], problem.currentValue()[j]);
+            }
+            simMarket->applyScenario(trialScenario);
+            for (size_t j = 0; j < tenors.size(); ++j) {
+                std::cout << "Error" << parKeys[j] << ": " << impliedCapVolatility(parKeys[j], instruments) - targets[parKeys[j]] << std::endl;
+            }
+        } catch (std::exception& e) {
+            // trialScenario->add(component, simMarket->baseScenario()->get(component));
+            std::cout << " Error " << e.what();
+        }
+    }
+    */
+    
     for (size_t i = 0; i < capFloorRiskFactors.size(); ++i) {
         RiskFactorKey component(capFloorRiskFactors.front().keytype, capFloorRiskFactors.front().name, i);
         LOG("Find zero shift for capFloor " << component);
@@ -415,41 +452,42 @@ convertScenario(const ore::analytics::StressTestScenarioData::StressTestData& pa
         DLOG("Par Key " << component << "Fair Par Rate " << fairRate << " Target " << target);
         std::cout << "Par Key " << component << "Fair Par Rate " << fairRate << " Target " << target << std::endl;
         DLOG("Zero Key " << component << " " << baseScenarioValue);
-        /*
+        
         auto targetFunction = [&target, &instruments, &component, &trialScenario, &simMarket](double x) {
             trialScenario->add(component, x);
             simMarket->applyScenario(trialScenario);
             return (impliedCapVolatility(component, instruments) - target);
         };
-        */
+        
         double targetVol;
-        // Brent brent;
-
-        NoConstraint constraints;
-        Array initialValue(1, 0.0);
-        std::vector<double> goals{target};
-        std::vector<RiskFactorKey> parKeys{component};
-        TargetFunctionCapFloor targetFunction(simMarket, goals, parKeys, instruments, trialScenario);
-        Problem problem(targetFunction, constraints, initialValue);
-        LevenbergMarquardt lm;
+        Brent brent;
+        
+        //NoConstraint constraints;
+        //Array initialValue(1, 0.0);
+        //std::vector<double> goals{target};
+        //std::vector<RiskFactorKey> parKeys{component};
+        //TargetFunctionCapFloor targetFunction(simMarket, goals, parKeys, instruments, trialScenario);
+        //Problem problem(targetFunction, constraints, initialValue);
+        //LevenbergMarquardt lm;
         try {
-            std::cout << "Start Optim" << component << std::endl;
-            lm.minimize(problem, EndCriteria(200, 30, 1e-6, 1e-6, 1e-6));
-            std::cout << "Found solution " << problem.currentValue() << std::endl;
-            targetVol = problem.currentValue()[0];
-            // targetVol = brent.solve(targetFunction, 1e-8, 0, -simMarket->baseScenarioAbsolute()->get(component),
-            //                        4 * simMarket->baseScenarioAbsolute()->get(component));
+         //   std::cout << "Start Optim" << component << std::endl;
+        //    lm.minimize(problem, EndCriteria(200, 30, 1e-6, 1e-6, 1e-6));
+        //    std::cout << "Found solution " << problem.currentValue() << std::endl;
+        //    targetVol = problem.currentValue()[0];
+             targetVol = brent.solve(targetFunction, 1e-8, 0, -simMarket->baseScenarioAbsolute()->get(component),
+                                    4 * simMarket->baseScenarioAbsolute()->get(component));
             trialScenario->add(component, targetVol);
-        } catch(std::exception& e){
+        } catch (std::exception& e) {
             // trialScenario->add(component, simMarket->baseScenario()->get(component));
-            std::cout << " Error: " << component << " : " << e.what();
+            //std::cout << " Error: " << component << " : " << e.what();
         }
-        LOG("ParToZeroScenario: Mean-squared-error: " << targetFunction.value(problem.currentValue()));
-        simMarket->reset();
-        std::cout << "Fair Market Rate " << impliedCapVolatility(component, instruments) << std::endl;
+        //LOG("ParToZeroScenario: Mean-squared-error: " << targetFunction.value(problem.currentValue()));
+        //simMarket->reset();
+        //std::cout << "Fair Market Rate " << impliedCapVolatility(component, instruments) << std::endl;
         simMarket->applyScenario(trialScenario);
-        std::cout << "Implied Vol after shift " << impliedCapVolatility(component, instruments) << std::endl;
-        std::cout << "Target " << targets[component] << std::endl;
+        std::cout << "found solution " << targetVol << std::endl;
+        std::cout << "Error" << component << ": " << impliedCapVolatility(component, instruments) - targets[component]
+                  << std::endl;
         // std::cout << "ParToZeroScenario: Mean-squared-error: " << targetFunction.value(problem.currentValue())
         //          << std::endl;
         double zeroShift = getCapFloorStressShift(component, parStressScenario, simMarketParameters);
@@ -464,6 +502,7 @@ convertScenario(const ore::analytics::StressTestScenarioData::StressTestData& pa
         updateTargetStressTestScenarioData(zeroStressScenario, component, zeroShift, simMarketParameters);
         // Convert result into a zero shift
     }
+    
     LOG("Finished Scenario conversion");
     zeroStressScenario.irCurveParShifts = false;
     zeroStressScenario.creditCurveParShifts = false;

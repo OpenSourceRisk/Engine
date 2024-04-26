@@ -221,6 +221,7 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
         // Align Cap Floor Strikes
         for (const auto& [index, data] : analytic()->configurations().sensiScenarioData->capFloorVolShiftData()) {
             analytic()->configurations().simMarketParams->setCapFloorVolStrikes(index, data->shiftStrikes);
+            analytic()->configurations().simMarketParams->setCapFloorVolAdjustOptionletPillars(true);
         }
         // Build Simmarket
         auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
