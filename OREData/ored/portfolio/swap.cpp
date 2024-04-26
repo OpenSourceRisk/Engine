@@ -338,7 +338,9 @@ std::string isdaSubProductSwap(const std::string& tradeId, const vector<LegData>
                  type == "CMSSpread" ||
                  type == "DigitalCMSSpread" ||
                  type == "CMB" ||
-                 type == "Equity")
+                 type == "Equity"||
+                 type == "DurationAdjustedCMS"||
+                 type == "FormulaBased")
             nFloating++;
         else {
             ALOG("leg type " << type << " not mapped for trade " << tradeId);
