@@ -610,8 +610,12 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
             analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
             inputs_->amcPricingEngine(), inputs_->crossAssetModelData(), inputs_->scenarioGeneratorData(),
             inputs_->portfolio(), inputs_->marketConfig("simulation"), inputs_->marketConfig("simulation"),
-            inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig());
-        return;
+            inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
+	    inputs_->cvaBumpSensis());
+
+	analytic()->reports()["XVA"]["xvacg-exposure"] = engine.exposureReport();
+	analytic()->reports()["XVA"]["xvacg-cva-sensi-scenario"] = engine.sensiReport();
+	return;
     }
 
     LOG("XVA analytic called with asof " << io::iso_date(inputs_->asof()));
