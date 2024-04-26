@@ -161,7 +161,11 @@
 			<xs:element name="Components">
 				<xs:complexType>
 				<xs:sequence>
-					<xs:element type="xs:string" name="Trade" minOccurs="1" maxOccurs="unbounded"/>
+					<xs:element name="Trade" maxOccurs="unbounded">
+						<xs:complexType>
+						  <xs:attribute type="xs:string" name="id"/>
+						</xs:complexType>
+					  </xs:element>
 				</xs:sequence>
 				</xs:complexType>
 			</xs:element>
