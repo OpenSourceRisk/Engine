@@ -128,6 +128,9 @@ public:
       types, no matter whether useSpreadedTermStructures is true or false. */
     virtual QuantLib::ext::shared_ptr<Scenario> baseScenarioAbsolute() const { return baseScenarioAbsolute_; }
 
+    /*! Return true if this instance uses spreaded term structures */
+    bool useSpreadedTermStructures() const { return useSpreadedTermStructures_; }
+
     //! Return the fixing manager
     const QuantLib::ext::shared_ptr<FixingManager>& fixingManager() const override { return fixingManager_; }
 

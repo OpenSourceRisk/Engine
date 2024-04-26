@@ -23,9 +23,83 @@
 namespace ore {
 namespace analytics {
 
-Real getDifferenceScenario(const RiskFactorKey::KeyType keyType, const Real v1, const Real v2) { return 0.0; }
+Real getDifferenceScenario(const RiskFactorKey::KeyType keyType, const Real v1, const Real v2) {
+    switch (keyType) {
+    case RiskFactorKey::KeyType::SwaptionVolatility:
+    case RiskFactorKey::KeyType::YieldVolatility:
+    case RiskFactorKey::KeyType::OptionletVolatility:
+    case RiskFactorKey::KeyType::FXVolatility:
+    case RiskFactorKey::KeyType::EquityVolatility:
+    case RiskFactorKey::KeyType::CDSVolatility:
+    case RiskFactorKey::KeyType::BaseCorrelation:
+    case RiskFactorKey::KeyType::ZeroInflationCurve:
+    case RiskFactorKey::KeyType::YoYInflationCurve:
+    case RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility:
+    case RiskFactorKey::KeyType::YoYInflationCapFloorVolatility:
+    case RiskFactorKey::KeyType::CommodityCurve:
+    case RiskFactorKey::KeyType::CommodityVolatility:
+    case RiskFactorKey::KeyType::SecuritySpread:
+    case RiskFactorKey::KeyType::Correlation:
+    case RiskFactorKey::KeyType::CPR:
+        return v2 - v1;
 
-Real addDifferenceToScenario(const RiskFactorKey::KeyType keyType, const Real v, const Real d) { return 0.0; }
+    case RiskFactorKey::KeyType::DiscountCurve:
+    case RiskFactorKey::KeyType::YieldCurve:
+    case RiskFactorKey::KeyType::IndexCurve:
+    case RiskFactorKey::KeyType::FXSpot:
+    case RiskFactorKey::KeyType::EquitySpot:
+    case RiskFactorKey::KeyType::DividendYield:
+    case RiskFactorKey::KeyType::SurvivalProbability:
+    case RiskFactorKey::KeyType::RecoveryRate:
+    case RiskFactorKey::KeyType::CPIIndex:
+        return v2 / v1;
+
+    case RiskFactorKey::KeyType::None:
+    case RiskFactorKey::KeyType::SurvivalWeight:
+    case RiskFactorKey::KeyType::CreditState:
+        QL_FAIL("getDifferenceScenario(): key type "
+                << keyType << " not expected, and not covered. This is an internal error, contact dev.");
+    };
+}
+
+Real addDifferenceToScenario(const RiskFactorKey::KeyType keyType, const Real v, const Real d) {
+    switch (keyType) {
+    case RiskFactorKey::KeyType::SwaptionVolatility:
+    case RiskFactorKey::KeyType::YieldVolatility:
+    case RiskFactorKey::KeyType::OptionletVolatility:
+    case RiskFactorKey::KeyType::FXVolatility:
+    case RiskFactorKey::KeyType::EquityVolatility:
+    case RiskFactorKey::KeyType::CDSVolatility:
+    case RiskFactorKey::KeyType::BaseCorrelation:
+    case RiskFactorKey::KeyType::ZeroInflationCurve:
+    case RiskFactorKey::KeyType::YoYInflationCurve:
+    case RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility:
+    case RiskFactorKey::KeyType::YoYInflationCapFloorVolatility:
+    case RiskFactorKey::KeyType::CommodityCurve:
+    case RiskFactorKey::KeyType::CommodityVolatility:
+    case RiskFactorKey::KeyType::SecuritySpread:
+    case RiskFactorKey::KeyType::Correlation:
+    case RiskFactorKey::KeyType::CPR:
+        return v + d;
+
+    case RiskFactorKey::KeyType::DiscountCurve:
+    case RiskFactorKey::KeyType::YieldCurve:
+    case RiskFactorKey::KeyType::IndexCurve:
+    case RiskFactorKey::KeyType::FXSpot:
+    case RiskFactorKey::KeyType::EquitySpot:
+    case RiskFactorKey::KeyType::DividendYield:
+    case RiskFactorKey::KeyType::SurvivalProbability:
+    case RiskFactorKey::KeyType::RecoveryRate:
+    case RiskFactorKey::KeyType::CPIIndex:
+        return v * d;
+
+    case RiskFactorKey::KeyType::None:
+    case RiskFactorKey::KeyType::SurvivalWeight:
+    case RiskFactorKey::KeyType::CreditState:
+        QL_FAIL("addDifferenceToScenario(): key type "
+                << keyType << " not expected, and not covered. This is an internal error, contact dev.");
+    };
+}
 
 QuantLib::ext::shared_ptr<Scenario> getDifferenceScenario(const QuantLib::ext::shared_ptr<Scenario>& s1,
                                                           const QuantLib::ext::shared_ptr<Scenario>& s2,
