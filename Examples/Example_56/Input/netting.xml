@@ -7,8 +7,8 @@
       <Bilateral>Bilateral</Bilateral>
       <CSACurrency>EUR</CSACurrency>
       <Index>EUR-EONIA</Index>
-      <ThresholdPay>100000</ThresholdPay>
-      <ThresholdReceive>100000</ThresholdReceive>
+      <ThresholdPay>0</ThresholdPay>
+      <ThresholdReceive>0</ThresholdReceive>
       <MinimumTransferAmountPay>0</MinimumTransferAmountPay>
       <MinimumTransferAmountReceive>0</MinimumTransferAmountReceive>
       <IndependentAmount>
@@ -19,38 +19,9 @@
         <CallFrequency>1D</CallFrequency>
         <PostFrequency>1D</PostFrequency>
       </MarginingFrequency>
-      <MarginPeriodOfRisk>0W</MarginPeriodOfRisk>
-      <CollateralCompoundingSpreadReceive>0.00</CollateralCompoundingSpreadReceive>
-      <CollateralCompoundingSpreadPay>0.00</CollateralCompoundingSpreadPay>
-      <EligibleCollaterals>
-        <Currencies>
-          <Currency>EUR</Currency>
-        </Currencies>
-      </EligibleCollaterals>
-    </CSADetails>
-  </NettingSet>
-  <NettingSet>
-    <NettingSetId>CPTY_B</NettingSetId>
-    <ActiveCSAFlag>true</ActiveCSAFlag>
-    <CSADetails>
-      <Bilateral>Bilateral</Bilateral>
-      <CSACurrency>EUR</CSACurrency>
-      <Index>EUR-EONIA</Index>
-      <ThresholdPay>0</ThresholdPay>
-      <ThresholdReceive>0</ThresholdReceive>
-      <MinimumTransferAmountPay>5000000</MinimumTransferAmountPay>
-      <MinimumTransferAmountReceive>5000000</MinimumTransferAmountReceive>
-      <IndependentAmount>
-        <IndependentAmountHeld>0</IndependentAmountHeld>
-        <IndependentAmountType>FIXED</IndependentAmountType>
-      </IndependentAmount>
-      <MarginingFrequency>
-        <CallFrequency>1D</CallFrequency>
-        <PostFrequency>1D</PostFrequency>
-      </MarginingFrequency>
       <MarginPeriodOfRisk>2W</MarginPeriodOfRisk>
-      <CollateralCompoundingSpreadReceive>0.00</CollateralCompoundingSpreadReceive>
-      <CollateralCompoundingSpreadPay>0.00</CollateralCompoundingSpreadPay>
+      <CollateralCompoundingSpreadReceive>0.0</CollateralCompoundingSpreadReceive>
+      <CollateralCompoundingSpreadPay>0.0</CollateralCompoundingSpreadPay>
       <EligibleCollaterals>
         <Currencies>
           <Currency>EUR</Currency>
