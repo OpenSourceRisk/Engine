@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(testCSVScenarioGenerator) {
     sw.reset();
 
     // Read in scenarios from file
-    QuantLib::ext::shared_ptr<SimpleScenarioFactory> ssf = QuantLib::ext::make_shared<SimpleScenarioFactory>();
+    QuantLib::ext::shared_ptr<SimpleScenarioFactory> ssf = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
     CSVScenarioGenerator csvsgen(filename, ssf);
 
     // Compare scenarios by looping over risk keys

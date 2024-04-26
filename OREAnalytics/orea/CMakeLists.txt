@@ -95,6 +95,7 @@ scenario/scenariogeneratortransform.cpp
 scenario/scenarioshiftcalculator.cpp
 scenario/scenariosimmarket.cpp
 scenario/scenariosimmarketparameters.cpp
+scenario/scenarioutilities.cpp
 scenario/scenariowriter.cpp
 scenario/sensitivityscenariodata.cpp
 scenario/sensitivityscenariogenerator.cpp
@@ -255,6 +256,7 @@ scenario/scenariogeneratortransform.hpp
 scenario/scenarioshiftcalculator.hpp
 scenario/scenariosimmarket.hpp
 scenario/scenariosimmarketparameters.hpp
+scenario/scenarioutilities.hpp
 scenario/scenariowriter.hpp
 scenario/sensitivityscenariodata.hpp
 scenario/sensitivityscenariogenerator.hpp
