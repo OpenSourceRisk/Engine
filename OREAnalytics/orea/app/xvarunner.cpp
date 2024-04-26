@@ -133,7 +133,7 @@ void XvaRunner::buildSimMarket(const QuantLib::ext::shared_ptr<ore::data::Market
         projectedSsmData = simMarketData_;
     }
 
-    QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>();
+    QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
     QuantLib::ext::shared_ptr<ScenarioGenerator> sg =
         getProjectedScenarioGenerator(currencyFilter, market, projectedSsmData, sf, continueOnErr);
     simMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(market, projectedSsmData, Market::defaultConfiguration,

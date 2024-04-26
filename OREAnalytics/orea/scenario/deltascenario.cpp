@@ -25,6 +25,15 @@ namespace analytics {
 
 // Delta Scenario class
 
+DeltaScenario::DeltaScenario(const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& baseScenario,
+                             const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& incrementalScenario)
+    : baseScenario_(baseScenario), delta_(incrementalScenario) {
+    QL_REQUIRE(
+        baseScenario->isAbsolute() == incrementalScenario->isAbsolute(),
+        "DeltaScenario(): base and incremental scenario must be both absolute or both difference, got isAbsolute = "
+            << std::boolalpha << baseScenario->isAbsolute() << ", " << incrementalScenario->isAbsolute());
+}
+
 void DeltaScenario::add(const ore::analytics::RiskFactorKey& key, Real value) {
     QL_REQUIRE(baseScenario_->has(key), "base scenario must also possess key");
     if (baseScenario_->get(key) != value)

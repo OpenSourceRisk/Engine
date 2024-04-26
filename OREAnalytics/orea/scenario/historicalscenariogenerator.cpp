@@ -238,7 +238,7 @@ QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGenerator::next(const Date
 
     // build the scenarios
     QL_REQUIRE(d >= baseScenario_->asof(), "Cannot generate a scenario in the past");
-    QuantLib::ext::shared_ptr<Scenario> scen = scenarioFactory_->buildScenario(d, "", 1.0);
+    QuantLib::ext::shared_ptr<Scenario> scen = scenarioFactory_->buildScenario(d, true, std::string(), 1.0);
 
     // loop over all keys
     calculationDetails_.resize(baseScenario_->keys().size());
@@ -322,7 +322,7 @@ QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGeneratorRandom::next(cons
     // build the scenarios
     QL_REQUIRE(d >= baseScenario()->asof(),
                "HistoricalScenarioGeneratorRandom: Cannot generate a scenario in the past");
-    QuantLib::ext::shared_ptr<Scenario> scen = scenarioFactory_->buildScenario(d, "", 1.0);
+    QuantLib::ext::shared_ptr<Scenario> scen = scenarioFactory_->buildScenario(d, true, std::string(), 1.0);
 
     // loop over all keys
     for (auto key : baseScenario()->keys()) {
@@ -490,7 +490,7 @@ QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGe
 
     hsr->load(simParams, marketParams);
 
-    auto scenarioFactory = QuantLib::ext::make_shared<SimpleScenarioFactory>();
+    auto scenarioFactory = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
 
     QuantLib::ext::shared_ptr<HistoricalScenarioLoader> scenarioLoader = QuantLib::ext::make_shared<HistoricalScenarioLoader>(
         hsr, period.startDates().front(), period.endDates().front(), calendar);
