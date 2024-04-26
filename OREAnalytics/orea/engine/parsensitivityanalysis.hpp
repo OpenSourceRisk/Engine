@@ -97,6 +97,8 @@ public:
     //! Return the set of key types disabled for this instance of ParSensitivityAnalysis.
     const std::set<ore::analytics::RiskFactorKey::KeyType>& typesDisabled() const { return typesDisabled_; }
 
+    const ParSensitivityInstrumentBuilder::Instruments& parInstruments() const { return instruments_; }
+
 private:
     //! Augment relevant risk factors
     void augmentRelevantRiskFactors();

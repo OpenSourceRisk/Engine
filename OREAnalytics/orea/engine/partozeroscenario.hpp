@@ -40,7 +40,8 @@ QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> convertParScen
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParameters,
     const QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData>& stressTestData,
     const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiData,
-    const std::map<std::pair<ore::analytics::RiskFactorKey, ore::analytics::RiskFactorKey>, double>& parSensitivities);
+    const std::map<std::pair<ore::analytics::RiskFactorKey, ore::analytics::RiskFactorKey>, double>& parSensitivities,
+    const ParSensitivityInstrumentBuilder::Instruments& instruments);
 
 } // namespace analytics
 } // namespace ore

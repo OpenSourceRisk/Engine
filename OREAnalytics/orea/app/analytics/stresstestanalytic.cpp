@@ -219,7 +219,7 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
         LOG("Stresstest analytic - align pillars (for the par conversion)");
         parAnalysis->alignPillars();
         // Align Cap Floor Strikes
-        for (const auto [index, data] : analytic()->configurations().sensiScenarioData->capFloorVolShiftData()) {
+        for (const auto& [index, data] : analytic()->configurations().sensiScenarioData->capFloorVolShiftData()) {
             analytic()->configurations().simMarketParams->setCapFloorVolStrikes(index, data->shiftStrikes);
         }
         // Build Simmarket
@@ -237,33 +237,12 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
         simMarket->scenarioGenerator() = scenarioGenerator;
         // Compute ParSensitivities
         parAnalysis->computeParInstrumentSensitivities(simMarket);
-        
-        /*
-        boost::shared_ptr<ParSensitivityConverter> parConverter =
-            boost::make_shared<ParSensitivityConverter>(parAnalysis->parSensitivities(), parAnalysis->shiftSizes());
-
-        
-        RiskFactorGraph sensiGraph(parAnalysis->parSensitivities(), parConverter->inverseJacobian());
-        size_t counter = 0;
-        std::cout << "Debug sensigraph" << std::endl;
-        for (const auto& component : sensiGraph.orderedRiskFactors()) {
-            std::cout << "Ordered Component " << (++counter) << " contains out of " << component->parRates.size()
-                      << " parRates and with order " << component->order << std::endl;
-            for (const auto& key : component->parRates) {
-                std::cout << "ParRate " << key << std::endl;
-            }
-            for (const auto& key : component->zeroRates) {
-                std::cout << "ZeroRate " << key << std::endl;
-            }
-        }
-        */
-
         LOG("Stress Test Analytic: Par Sensitivity Analysis finished");
         LOG("Convert ParStressScenarios into ZeroStress Scenario");
         
         scenarioData = convertParScenarioToZeroScenarioData(
             inputs_->asof(), simMarket, analytic()->configurations().simMarketParams, scenarioData,
-            inputs_->stressSensitivityScenarioData(), parAnalysis->parSensitivities());
+            inputs_->stressSensitivityScenarioData(), parAnalysis->parSensitivities(), parAnalysis->parInstruments());
         
         LOG("Finished par to zero scenarios conversion");
     }
