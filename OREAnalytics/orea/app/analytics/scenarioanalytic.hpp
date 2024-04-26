@@ -30,7 +30,10 @@ class ScenarioAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "SCENARIO";
 
-    ScenarioAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) { setLabel(LABEL); }
+    ScenarioAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs, const bool useSpreadedTermStructures = false) : 
+        Analytic::Impl(inputs), useSpreadedTermStructures_(useSpreadedTermStructures) {
+        setLabel(LABEL);
+    }
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
@@ -48,11 +51,13 @@ public:
 private:
     QuantLib::ext::shared_ptr<ore::analytics::Scenario> scenario_;
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket> scenarioSimMarket_;
+    bool useSpreadedTermStructures_ = false;
 };
 
 class ScenarioAnalytic : public Analytic {
 public:
-    ScenarioAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs);
+    ScenarioAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                     const bool useSpreadedTermStructures = false);
 
     const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& scenario() const {
         auto sai = static_cast<ScenarioAnalyticImpl*>(impl_.get());
