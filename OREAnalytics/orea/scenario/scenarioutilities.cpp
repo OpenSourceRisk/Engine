@@ -130,7 +130,7 @@ QuantLib::ext::shared_ptr<Scenario> getDifferenceScenario(const QuantLib::ext::s
     result->setAbsolute(false);
 
     for (auto const& k : s1->keys()) {
-        result->add(k, getDifferenceScenario(k.keytype, s2->get(k), s1->get(k)));
+        result->add(k, getDifferenceScenario(k.keytype, s1->get(k), s2->get(k)));
     }
 
     return result;
