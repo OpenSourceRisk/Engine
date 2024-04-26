@@ -25,11 +25,6 @@
 
 #include <orea/scenario/scenario.hpp>
 
-#include <boost/make_shared.hpp>
-#include <boost/serialization/export.hpp>
-#include <boost/serialization/map.hpp>
-#include <boost/serialization/vector.hpp>
-
 namespace ore {
 namespace analytics {
 using namespace QuantLib;
@@ -49,11 +44,10 @@ public:
     DeltaScenario() {}
     //! Constructor
     DeltaScenario(const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& baseScenario,
-                  const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& incrementalScenario)
-        : baseScenario_(baseScenario), delta_(incrementalScenario) {}
+                  const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& incrementalScenario);
 
-    //! Return the scenario asof date
     const Date& asof() const override { return delta_->asof(); }
+    void setAsof(const Date& d) override { delta_->setAsof(d); }
 
     //! Return the scenario label
     const std::string& label() const override { return delta_->label(); }
@@ -71,6 +65,17 @@ public:
     void add(const ore::analytics::RiskFactorKey& key, Real value) override;
     Real get(const ore::analytics::RiskFactorKey& key) const override;
 
+    bool isAbsolute() const override { return baseScenario_->isAbsolute(); }
+    void setAbsolute(const bool b) override { baseScenario_->setAbsolute(b); }
+
+    const std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<Real>>>&
+    coordinates() const override {
+        return baseScenario_->coordinates();
+    }
+
+    //! Get base
+    QuantLib::ext::shared_ptr<Scenario> base() const { return baseScenario_; }
+
     //! Get delta
     QuantLib::ext::shared_ptr<Scenario> delta() const { return delta_; }
 
@@ -81,14 +86,7 @@ public:
 protected:
     QuantLib::ext::shared_ptr<Scenario> baseScenario_;
     QuantLib::ext::shared_ptr<Scenario> delta_;
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int) {
-        ar& boost::serialization::base_object<Scenario>(*this);
-        ar& baseScenario_;
-        ar& delta_;
-    }
 };
+
 } // namespace sensitivity
 } // namespace ore
