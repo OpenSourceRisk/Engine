@@ -343,7 +343,7 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
     for (Size i = 0; i < dates_.size(); i++) {
         Real t = timeGrid_[i + 1]; // recall: time grid has inserted t=0
 
-        scenarios[i] = scenarioFactory_->buildScenario(dates_[i]);
+        scenarios[i] = scenarioFactory_->buildScenario(dates_[i], true);
 
         // populate IR states
         copyPathToArray(sample.value, i + 1, model_->pIdx(CrossAssetModel::AssetType::IR, 0), ir_state[0]);

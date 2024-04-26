@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(testHistoricalScenarioGeneratorTransform) {
     histScenariosLoader->historicalScenarios() = scenarios;
     histScenariosLoader->dates() = vector<Date>{d1, d2};
     QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> histScenarios = QuantLib::ext::make_shared<HistoricalScenarioGenerator>(
-        histScenariosLoader, QuantLib::ext::make_shared<SimpleScenarioFactory>(), TARGET(), nullptr, 1);
+        histScenariosLoader, QuantLib::ext::make_shared<SimpleScenarioFactory>(true), TARGET(), nullptr, 1);
     histScenarios->baseScenario() = s1;
 
     // Init market
