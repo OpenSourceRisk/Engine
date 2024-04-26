@@ -163,6 +163,11 @@
 				<xs:sequence>
 					<xs:element name="Trade" maxOccurs="unbounded">
 						<xs:complexType>
+						  <xs:sequence>
+							<xs:element type="oreTradeType" name="TradeType"/>
+							<xs:element type="envelope" name="Envelope" minOccurs="0"/>
+							<xs:group ref="oreTradeData"/>
+						  </xs:sequence>
 						  <xs:attribute type="xs:string" name="id"/>
 						</xs:complexType>
 					  </xs:element>
