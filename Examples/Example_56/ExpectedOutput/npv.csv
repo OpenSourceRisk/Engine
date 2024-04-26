@@ -1,2 +1,2 @@
 #TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency,Notional,NotionalCurrency,Notional(Base),NettingSet,CounterParty
-Swp,ScriptedTrade,2036-03-03,20.073770,5263.703751,EUR,5263.703751,EUR,#N/A,#N/A,#N/A,CPTY_A,CPTY_A
+Swp,ScriptedTrade,2036-03-03,20.073770,6455.193944,EUR,6455.193944,EUR,#N/A,#N/A,#N/A,CPTY_A,CPTY_A
