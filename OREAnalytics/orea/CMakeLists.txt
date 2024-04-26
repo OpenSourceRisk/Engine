@@ -25,6 +25,7 @@ app/analytics/scenariostatisticsanalytic.cpp
 app/analytics/simmanalytic.cpp
 app/analytics/varanalytic.cpp
 app/analytics/xvaanalytic.cpp
+app/analytics/pnlanalytic.cpp
 app/analyticsmanager.cpp
 app/cleanupsingletons.cpp
 app/inputparameters.cpp
@@ -171,6 +172,7 @@ app/analytics/scenariostatisticsanalytic.hpp
 app/analytics/simmanalytic.hpp
 app/analytics/varanalytic.hpp
 app/analytics/xvaanalytic.hpp
+app/analytics/pnlanalytic.hpp
 app/analyticsmanager.hpp
 app/cleanupsingletons.hpp
 app/inputparameters.hpp

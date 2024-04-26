@@ -24,6 +24,7 @@
 #include <orea/app/analytics/imscheduleanalytic.hpp>
 #include <orea/app/analytics/varanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
+#include <orea/app/analytics/pnlanalytic.hpp>
 #include <orea/app/analyticsmanager.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
@@ -63,6 +64,7 @@ AnalyticsManager::AnalyticsManager(const QuantLib::ext::shared_ptr<InputParamete
     addAnalytic("PARCONVERSION", QuantLib::ext::make_shared<ParConversionAnalytic>(inputs_));
     addAnalytic("SCENARIO_STATISTICS", QuantLib::ext::make_shared<ScenarioStatisticsAnalytic>(inputs_));
     addAnalytic("SCENARIO", QuantLib::ext::make_shared<ScenarioAnalytic>(inputs_));
+    addAnalytic("PNL", boost::make_shared<PnlAnalytic>(inputs_));
 }
 
 void AnalyticsManager::clear() {
@@ -149,7 +151,7 @@ void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
     if (requireMarketData) {
         // load the market data
         if (tmps.size() > 0) {
-            LOG("AnalyticsManager::runAnalytics: populate loader");
+            LOG("AnalyticsManager::runAnalytics: populate loader for dates: " << to_string(marketDates));
             marketDataLoader_->populateLoader(tmps, marketDates);
         }
         
