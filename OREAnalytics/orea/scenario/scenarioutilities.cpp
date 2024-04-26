@@ -125,7 +125,7 @@ QuantLib::ext::shared_ptr<Scenario> getDifferenceScenario(const QuantLib::ext::s
 
     auto result = s1->clone();
     result->setAsof(asof);
-    result->label("differenceScenario(" + s1->label() + "," + s2->label());
+    result->label("differenceScenario(" + s1->label() + "," + s2->label() + ")");
     result->setNumeraire(targetScenarioNumeraire);
     result->setAbsolute(false);
 
@@ -155,7 +155,7 @@ QuantLib::ext::shared_ptr<Scenario> addDifferenceToScenario(const QuantLib::ext:
 
     auto result = s->clone();
     result->setAsof(asof);
-    result->label("sumScenario(" + s->label() + "," + d->label());
+    result->label("sumScenario(" + s->label() + "," + d->label() + ")");
     result->setNumeraire(targetScenarioNumeraire);
     result->setAbsolute(s->isAbsolute());
 
