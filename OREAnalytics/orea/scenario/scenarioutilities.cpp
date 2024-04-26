@@ -57,6 +57,7 @@ Real getDifferenceScenario(const RiskFactorKey::KeyType keyType, const Real v1, 
     case RiskFactorKey::KeyType::None:
     case RiskFactorKey::KeyType::SurvivalWeight:
     case RiskFactorKey::KeyType::CreditState:
+    default:
         QL_FAIL("getDifferenceScenario(): key type "
                 << keyType << " not expected, and not covered. This is an internal error, contact dev.");
     };
@@ -96,6 +97,7 @@ Real addDifferenceToScenario(const RiskFactorKey::KeyType keyType, const Real v,
     case RiskFactorKey::KeyType::None:
     case RiskFactorKey::KeyType::SurvivalWeight:
     case RiskFactorKey::KeyType::CreditState:
+    default:
         QL_FAIL("addDifferenceToScenario(): key type "
                 << keyType << " not expected, and not covered. This is an internal error, contact dev.");
     };
