@@ -254,7 +254,8 @@ void test_lgm(bool sobol, bool antithetic, bool brownianBridge) {
     // We assume different implementations of the scenario objects which are more or less
     // optimized w.r.t. memory usage. Hence we use the scenario factory here to avoid
     // switching in the scenario generator class below.
-    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory(new SimpleScenarioFactory);
+    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory =
+        QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
 
     // Scenario Generator
     QuantLib::ext::shared_ptr<LgmScenarioGenerator> scenGen =
@@ -665,7 +666,7 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket2) {
     sgd->setGrid(grid);
 
     ScenarioGeneratorBuilder sgb(sgd);
-    QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>();
+    QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
     QuantLib::ext::shared_ptr<ScenarioGenerator> sg = sgb.build(model, sf, simMarketConfig, today, d.market);
     // QuantLib::ext::shared_ptr<DateGrid> grid = sb.dateGrid();
 
@@ -808,7 +809,7 @@ BOOST_AUTO_TEST_CASE(testVanillaSwapExposure) {
     sgd->setGrid(grid);
 
     ScenarioGeneratorBuilder sgb(sgd);
-    QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>();
+    QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
     QuantLib::ext::shared_ptr<ScenarioGenerator> sg = sgb.build(model, sf, simMarketConfig, today, d.market);
     // QuantLib::ext::shared_ptr<DateGrid> grid = sb.dateGrid();
 
@@ -947,7 +948,7 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposure) {
     sgd->setGrid(grid);
 
     ScenarioGeneratorBuilder sgb(sgd);
-    QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>();
+    QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
     QuantLib::ext::shared_ptr<ScenarioGenerator> sg = sgb.build(model, sf, simMarketConfig, today, d.market);
     // QuantLib::ext::shared_ptr<DateGrid> grid = sb.dateGrid();
 
@@ -1067,7 +1068,7 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposureZeroIrVol) {
     sgd->setGrid(grid);
 
     ScenarioGeneratorBuilder sgb(sgd);
-    QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>();
+    QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
     QuantLib::ext::shared_ptr<ScenarioGenerator> sg = sgb.build(model, sf, simMarketConfig, today, d.market);
     // QuantLib::ext::shared_ptr<DateGrid> grid = sb.dateGrid();
 
@@ -1192,7 +1193,7 @@ BOOST_AUTO_TEST_CASE(testCpiSwapExposure) {
     sgd->setGrid(grid);
 
     ScenarioGeneratorBuilder sgb(sgd);
-    QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>();
+    QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
     QuantLib::ext::shared_ptr<ScenarioGenerator> sg = sgb.build(model, sf, simMarketConfig, today, d.market);
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
