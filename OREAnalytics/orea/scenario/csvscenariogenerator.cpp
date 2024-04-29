@@ -69,7 +69,7 @@ QuantLib::ext::shared_ptr<Scenario> CSVScenarioGenerator::next(const Date& d) {
     QL_REQUIRE(to_string(d) == tokens[0], "Incompatible date " << tokens[0] << " in " << filename_);
 
     // Build scenario
-    const QuantLib::ext::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(d);
+    const QuantLib::ext::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(d, true);
 
     // Fill scenario with RiskFactorKeys
     QL_REQUIRE(keys_.size() == tokens.size() - 3, "Erroneus line in " << filename_);
