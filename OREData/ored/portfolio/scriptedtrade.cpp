@@ -121,14 +121,14 @@ void ScriptedTrade::setIsdaTaxonomyFields() {
         additionalData_["isdaSubProduct"] = string("Other");
         additionalData_["isdaTransaction"] = string("");
     } else if (scheduleProductClass_ == "Commodity") {
-        WLOG("ISDA taxonomy for trade " << id() << " and product class " << scheduleProductClass_
+        DLOG("ISDA taxonomy for trade " << id() << " and product class " << scheduleProductClass_
                                         << " follows the Equity template");
         additionalData_["isdaAssetClass"] = string("Commodity");
         additionalData_["isdaBaseProduct"] = string("Other");
         additionalData_["isdaSubProduct"] = string("");
         additionalData_["isdaTransaction"] = string("");
     } else {
-        ALOG("ISDA taxonomy not set for trade " << id() << " and product class " << scheduleProductClass_);
+        DLOG("ISDA taxonomy not set for trade " << id() << " and product class " << scheduleProductClass_);
     }
 }
 
@@ -143,7 +143,7 @@ QuantLib::Real ScriptedTrade::notional() const {
     } catch (const std::exception& e) {
         if (st->lastCalculationWasValid()) {
             // calculation was valid, just the result is not provided
-            ALOG("error when retrieving notional: " << e.what() << ", return null");
+            DLOG("notional was not retrieved: " << e.what() << ", return null");
         } else {
             // calculation threw an error, propagate this
             QL_FAIL(e.what());
@@ -164,14 +164,14 @@ std::string ScriptedTrade::notionalCurrency() const {
     } catch (const std::exception& e) {
         if (st->lastCalculationWasValid()) {
             // calculation was valid, just the result is not provided
-            ALOG("error when retrieving notional ccy: " << e.what() << ", return empty string");
+            DLOG("notional ccy was not retrieved: " << e.what() << ", return empty string");
         } else {
             // calculation threw an error, propagate this
             QL_FAIL(e.what());
         }
     }
     // if not provided, return an empty string
-    return "";
+    return std::string();
 }
 
 void ScriptedTrade::clear() {
