@@ -39,10 +39,11 @@ public:
     //! Constructor
     DeltaScenarioFactory(const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& baseScenario,
                          const QuantLib::ext::shared_ptr<ore::analytics::ScenarioFactory>& scenarioFactory =
-                             QuantLib::ext::make_shared<ore::analytics::SimpleScenarioFactory>());
+                             QuantLib::ext::make_shared<ore::analytics::SimpleScenarioFactory>(false));
     //! returns a new scenario, using the base scenario as a starting point
-    const QuantLib::ext::shared_ptr<ore::analytics::Scenario> buildScenario(QuantLib::Date asof, const std::string& label = "",
-                                                                    QuantLib::Real numeraire = 0.0) const override;
+    const QuantLib::ext::shared_ptr<ore::analytics::Scenario>
+    buildScenario(QuantLib::Date asof, bool isAbsolute, const std::string& label = "",
+                  QuantLib::Real numeraire = 0.0) const override;
 
 private:
     QuantLib::ext::shared_ptr<ore::analytics::Scenario> baseScenario_;
