@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/utilities/initbuilders.hpp
+/*! \file orea/app/initbuilders.hpp
     \brief add builders to factories
 */
 
@@ -67,8 +67,12 @@
 #define ORE_REGISTER_COMPUTE_FRAMEWORK_CREATOR(NAME, CLASS, OVERWRITE)                                                 \
     QuantExt::ComputeFrameworkRegistry::instance().add(NAME, &QuantExt::createComputeFrameworkCreator<CLASS>, OVERWRITE);
 
-namespace ore::data {
+#define ORE_REGISTER_ANALYTIC_BUILDER(NAME, SUBANALYTICS, CLASS, OVERWRITE)                                                             \
+    ore::analytics::AnalyticFactory::instance().addBuilder(                                                             \
+        NAME, SUBANALYTICS, QuantLib::ext::make_shared<ore::analytics::AnalyticBuilder<CLASS>>(), OVERWRITE);
 
-void initBuilders();
+namespace ore::analytics {
 
-} // namespace ore::data
+void initBuilders(const bool registerOREAnalytics = true);
+
+} // namespace ore::analytics
