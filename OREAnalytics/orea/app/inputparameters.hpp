@@ -767,7 +767,7 @@ protected:
     bool salvageCorrelationMatrix_ = false;
     bool amc_ = false;
     bool amcCg_ = false;
-    bool cvaBumpSensis_ = false;
+    bool xvaCgBumpSensis_ = false;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaCgSensiScenarioData_;
     std::set<std::string> amcTradeTypes_;
     std::string exposureBaseCurrency_ = "";
