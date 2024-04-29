@@ -205,9 +205,9 @@ double impliedCapVolatility(const RiskFactorKey& key, const ParSensitivityInstru
     return parVol;
 }
 
-    void updateTargetStressTestScenarioData(StressTestScenarioData::StressTestData& stressScenario,
-                                            const RiskFactorKey& key, const double zeroShift,
-                                            const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketParameters) {
+void updateTargetStressTestScenarioData(StressTestScenarioData::StressTestData& stressScenario,
+                                        const RiskFactorKey& key, const double zeroShift,
+                                        const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketParameters) {
     if (key.keytype == RiskFactorKey::KeyType::DiscountCurve) {
         if (stressScenario.discountCurveShifts.count(key.name) == 0) {
             StressTestScenarioData::CurveShiftData newData;
@@ -241,13 +241,13 @@ double impliedCapVolatility(const RiskFactorKey& key, const ParSensitivityInstru
         } else {
             stressScenario.survivalProbabilityShifts.at(key.name).shifts[key.index] = zeroShift;
         }
-    } else if (key.keytype == RiskFactorKey::KeyType::OptionletVolatility){
+    } else if (key.keytype == RiskFactorKey::KeyType::OptionletVolatility) {
         if (stressScenario.capVolShifts.count(key.name) == 0) {
             StressTestScenarioData::CapFloorVolShiftData newData;
             newData.shiftType = ShiftType::Absolute;
             newData.shiftExpiries = simMarketParameters->capFloorVolExpiries(key.name);
             newData.shiftStrikes = simMarketParameters->capFloorVolStrikes(key.name);
-            for (size_t i = 0; i < newData.shiftExpiries.size(); ++i){
+            for (size_t i = 0; i < newData.shiftExpiries.size(); ++i) {
                 newData.shifts[newData.shiftExpiries[i]] = std::vector<double>(newData.shiftStrikes.size(), 0.0);
             }
             const size_t nStrikes = newData.shiftStrikes.size();
@@ -310,10 +310,12 @@ convertScenario(const ore::analytics::StressTestScenarioData::StressTestData& pa
     std::map<RiskFactorKey, double> targets;
     // Optimize IR curves and Credit curves
     for (const auto& component : connectedComponents) {
-        if (component.keytype == RiskFactorKey::KeyType::DiscountCurve ||
-            component.keytype == RiskFactorKey::KeyType::YieldCurve ||
-            component.keytype == RiskFactorKey::KeyType::IndexCurve ||
-            component.keytype == RiskFactorKey::KeyType::SurvivalProbability) {
+        if(excludedParRates.count(component.keytype) == 1){
+            DLOG("Skip " << component << ", since " << component.keytype << " are zero shifts");
+        } else if (component.keytype == RiskFactorKey::KeyType::DiscountCurve ||
+                   component.keytype == RiskFactorKey::KeyType::YieldCurve ||
+                   component.keytype == RiskFactorKey::KeyType::IndexCurve ||
+                   component.keytype == RiskFactorKey::KeyType::SurvivalProbability) {
             curveRiskFactors.push_back(component);
             auto parInstrument = instruments.parHelpers_.at(component);
             const double fairRate = impliedQuote(parInstrument);
@@ -390,17 +392,17 @@ convertScenario(const ore::analytics::StressTestScenarioData::StressTestData& pa
         const double baseScenarioValue = baseScenarioValues[component];
         DLOG("Par Key " << component << "Fair Par Rate " << fairRate << " Target " << target);
         DLOG("Zero Key " << component << " " << baseScenarioValue);
-        
+
         auto targetFunction = [&target, &instruments, &component, &trialScenario, &simMarket](double x) {
             trialScenario->add(component, x);
             simMarket->applyScenario(trialScenario);
             return (impliedCapVolatility(component, instruments) - target);
         };
-        
+
         double targetVol;
         Brent brent;
         try {
-             targetVol = brent.solve(targetFunction, 1e-8, 0, -simMarket->baseScenarioAbsolute()->get(component),
+            targetVol = brent.solve(targetFunction, 1e-8, 0, -simMarket->baseScenarioAbsolute()->get(component),
                                     4 * simMarket->baseScenarioAbsolute()->get(component));
             trialScenario->add(component, targetVol);
         } catch (std::exception& e) {

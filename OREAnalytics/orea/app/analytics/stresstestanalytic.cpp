@@ -31,141 +31,11 @@ using namespace boost::filesystem;
 namespace ore {
 namespace analytics {
 
-class RiskFactorGraph {
-public:
-    struct StronglyConnectedComponent {
-        std::set<RiskFactorKey> parRates;
-        std::set<RiskFactorKey> zeroRates;
-        std::set<RiskFactorKey> dependOn;
-        size_t order = 0;
-    };
-
-    RiskFactorGraph(const ParSensitivityAnalysis::ParContainer& parWithRespectToZero,
-                    const ParSensitivityAnalysis::ParContainer& zeroWithRespectToPar) {
-
-        for (const auto& [key, value] : parWithRespectToZero) {
-            const auto& [parKey, zeroKey] = key;
-            if (!QuantLib::close_enough(value, 0.0)) {
-                parToZeroEdges[parKey].insert(zeroKey);
-            }
-        }
-        for (const auto& [key, value] : zeroWithRespectToPar) {
-            const auto& [zeroKey, parKey] = key;
-            if (!QuantLib::close_enough(value, 0.0)) {
-                zeroToParEdges[zeroKey].insert(parKey);
-            }
-        }
-
-        std::cout << " Find strongly connected components" << std::endl;
-        std::set<RiskFactorKey> parNodeVisited;
-        std::set<RiskFactorKey> zeroNodeVisited;
-        std::queue<RiskFactorKey> queue;
-
-        // Collect all connected parQuotes
-        std::map<RiskFactorKey, std::vector<ext::shared_ptr<StronglyConnectedComponent>>> dependencies_;
-        std::vector<ext::shared_ptr<StronglyConnectedComponent>> components;
-        for (const auto& [parKey, _] : parToZeroEdges) {
-
-            auto stronglyConnectedCompenent = ext::make_shared<StronglyConnectedComponent>();
-            if (parNodeVisited.count(parKey) == 0) {
-                queue.push(parKey);
-            }
-            while (!queue.empty()) {
-                auto currentNode = queue.front();
-                queue.pop();
-                std::cout << "visit parKey" << currentNode << std::endl;
-                stronglyConnectedCompenent->parRates.insert(currentNode);
-                parNodeVisited.insert(currentNode);
-                // Breadth-first-Search
-                for (const auto& zeroNode : parToZeroEdges.at(currentNode)) {
-                    // If that zeroNode hasn't been visited yet, add all non visited strongly connectedParNotes to
-                    // the Queue
-                    if (zeroNodeVisited.count(zeroNode) == 0 && zeroToParEdges[zeroNode].count(currentNode) == 1) {
-                        stronglyConnectedCompenent->zeroRates.insert(zeroNode);
-                        zeroNodeVisited.insert(zeroNode);
-                        for (const auto& connectedParNode : zeroToParEdges.at(zeroNode)) {
-                            const bool isStronglyConnected = parToZeroEdges[connectedParNode].count(zeroNode) == 1;
-                            const bool isNotVisited = parNodeVisited.count(connectedParNode) == 0;
-                            if (isStronglyConnected && isNotVisited) {
-                                queue.push(connectedParNode);
-                            }
-                        }
-                    } else {
-                        stronglyConnectedCompenent->dependOn.insert(zeroNode);
-                        stronglyConnectedCompenent->order++;
-                        dependencies_[zeroNode].push_back(stronglyConnectedCompenent);
-                    }
-                }
-            }
-            if (!stronglyConnectedCompenent->parRates.empty()) {
-                components.push_back(stronglyConnectedCompenent);
-            }
-        }
-
-        DLOG("Found " << components.size() << " strongly connected parRates");
-        size_t counter = 0;
-        for (const auto& component : components) {
-            DLOG("Component " << (++counter) << " contains out of " << component->parRates.size()
-                              << " parRates and with order " << component->order);
-            for (const auto& key : component->parRates) {
-                DLOG("ParRate " << key);
-            }
-            for (const auto& key : component->zeroRates) {
-                DLOG("ZeroRate " << key);
-            }
-            for (const auto& key : component->dependOn) {
-                DLOG("Depend on ZeroRate " << key);
-            }
-        }
-        std::queue<ext::shared_ptr<StronglyConnectedComponent>> dependendQueue;
-
-        // Find all components without dependencies
-        for (auto& component : components) {
-            if (component->order == 0) {
-                dependendQueue.push(component);
-            }
-        }
-
-        while (!dependendQueue.empty()) {
-            auto component = dependendQueue.front();
-            dependendQueue.pop();
-            orderedComponents.push_back(component);
-            DLOG("Component without dependency");
-            for (const auto& key : component->parRates) {
-                DLOG("ParRate " << key);
-            }
-            for (const auto& key : component->zeroRates) {
-                DLOG("ZeroRate " << key);
-                for (auto& comp : dependencies_[key]) {
-                    QL_REQUIRE(comp->order > 0, "SOmething went wrong");
-                    comp->order = comp->order - 1;
-                    if (comp->order == 0) {
-                        dependendQueue.push(comp);
-                    }
-                }
-            }
-            for (const auto& key : component->dependOn) {
-                DLOG("Depend on ZeroRate " << key);
-            }
-        }
-        QL_REQUIRE(orderedComponents.size() == components.size(), "Couldn't resovle evaluation order from dependency ");
-    }
-
-    const std::vector<ext::shared_ptr<RiskFactorGraph::StronglyConnectedComponent>>& orderedRiskFactors() {
-        return orderedComponents;
-    }
-
-private:
-    std::map<RiskFactorKey, std::set<RiskFactorKey>> parToZeroEdges;
-    std::map<RiskFactorKey, std::set<RiskFactorKey>> zeroToParEdges;
-    std::vector<ext::shared_ptr<StronglyConnectedComponent>> orderedComponents;
-};
-
 void StressTestAnalyticImpl::setUpConfigurations() {
     const auto stressData =  inputs_->stressScenarioData();
     analytic()->configurations().simulationConfigRequired = true;
     if (stressData != nullptr) {
-        analytic()->configurations().sensitivityConfigRequired = stressData->hasParRateScenario();
+        analytic()->configurations().sensitivityConfigRequired = stressData->hasScenarioWithParShifts();
     } else {
         analytic()->configurations().sensitivityConfigRequired = false;
     }
@@ -200,7 +70,7 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     CONSOLEW("Risk: Stress Test Report");
     LOG("Stress Test Analysis called");
     QuantLib::ext::shared_ptr<StressTestScenarioData> scenarioData = inputs_->stressScenarioData();
-    if (scenarioData != nullptr && scenarioData->hasParRateScenario()) {
+    if (scenarioData != nullptr && scenarioData->hasScenarioWithParShifts()) {
         LOG("Found par rate scenarios, convert them to zero rate scenarios");
         auto sensiScenarioData = analytic()->configurations().sensiScenarioData;
         auto simMarketParam = analytic()->configurations().simMarketParams;
@@ -212,6 +82,17 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
                    "Dont have sensitivity scenario data for stresstest, can not convert scenarios, check input");
 
         set<RiskFactorKey::KeyType> typesDisabled{};
+        if(!scenarioData->withIrCurveParShifts()){
+            typesDisabled.insert(RiskFactorKey::KeyType::DiscountCurve);
+            typesDisabled.insert(RiskFactorKey::KeyType::YieldCurve);
+            typesDisabled.insert(RiskFactorKey::KeyType::IndexCurve);
+        }
+        if (!scenarioData->withCreditCurveParShifts()) {
+            typesDisabled.insert(RiskFactorKey::KeyType::SurvivalProbability);
+        }
+        if (!scenarioData->withIrCapFloorParShifts()) {
+            typesDisabled.insert(RiskFactorKey::KeyType::OptionletVolatility);
+        }
 
         auto parAnalysis = ext::make_shared<ParSensitivityAnalysis>(inputs_->asof(), simMarketParam, *sensiScenarioData,
                                                                     Market::defaultConfiguration, true, typesDisabled);
@@ -219,9 +100,11 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
         LOG("Stresstest analytic - align pillars (for the par conversion)");
         parAnalysis->alignPillars();
         // Align Cap Floor Strikes
-        for (const auto& [index, data] : analytic()->configurations().sensiScenarioData->capFloorVolShiftData()) {
-            analytic()->configurations().simMarketParams->setCapFloorVolStrikes(index, data->shiftStrikes);
-            analytic()->configurations().simMarketParams->setCapFloorVolAdjustOptionletPillars(true);
+        if(typesDisabled.count(RiskFactorKey::KeyType::OptionletVolatility)== 0){
+            for (const auto& [index, data] : analytic()->configurations().sensiScenarioData->capFloorVolShiftData()) {
+                analytic()->configurations().simMarketParams->setCapFloorVolStrikes(index, data->shiftStrikes);
+                analytic()->configurations().simMarketParams->setCapFloorVolAdjustOptionletPillars(true);
+            }
         }
         // Build Simmarket
         auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(

@@ -95,7 +95,7 @@ public:
         bool irCapFloorParShifts = false;
         bool creditCurveParShifts = false;
 
-        bool containsParShifts() const { return irCurveParShifts || irCapFloorParShifts || creditCurveParShifts; };
+        bool containsParShifts() const { return irCurveParShifts || irCapFloorParShifts || creditCurveParShifts; };        
     };
 
     //! Default constructor
@@ -105,9 +105,34 @@ public:
     //@{
     const vector<StressTestData>& data() const { return data_; }
     const bool useSpreadedTermStructures() const { return useSpreadedTermStructures_; }
-    const bool hasParRateScenario() const {
+    
+    const bool hasScenarioWithParShifts() const {
         for (const auto& scenario : data_) {
             if (scenario.containsParShifts())
+                return true;
+        }
+        return false;
+    }
+
+    const bool withIrCurveParShifts() const {
+        for (const auto& scenario : data_) {
+            if (scenario.irCurveParShifts)
+                return true;
+        }
+        return false;
+    }
+
+    const bool withCreditCurveParShifts() const {
+        for (const auto& scenario : data_) {
+            if (scenario.creditCurveParShifts)
+                return true;
+        }
+        return false;
+    }
+
+    const bool withIrCapFloorParShifts() const {
+        for (const auto& scenario : data_) {
+            if (scenario.irCapFloorParShifts)
                 return true;
         }
         return false;
