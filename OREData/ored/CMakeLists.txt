@@ -358,6 +358,7 @@ utilities/csvfilereader.cpp
 utilities/currencyconfig.cpp
 utilities/currencyhedgedequityindexdecomposition.cpp
 utilities/currencyparser.cpp
+utilities/databuilders.cpp
 utilities/dategrid.cpp
 utilities/fileio.cpp
 utilities/flowanalysis.cpp
@@ -761,6 +762,7 @@ utilities/csvfilereader.hpp
 utilities/currencyconfig.hpp
 utilities/currencyhedgedequityindexdecomposition.hpp
 utilities/currencyparser.hpp
+utilities/databuilders.hpp
 utilities/dategrid.hpp
 utilities/fileio.hpp
 utilities/flowanalysis.hpp
