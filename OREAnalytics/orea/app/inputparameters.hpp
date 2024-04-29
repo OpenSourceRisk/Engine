@@ -302,6 +302,12 @@ public:
     void setCashflowHorizon(const std::string& s); // parse to Date 
     void setPortfolioFilterDate(const std::string& s); // parse to Date
 
+    // Setters for xvaStress
+    void setXvaStressSimMarketParams(const std::string& xml);
+    void setXvaStressSimMarketParamsFromFile(const std::string& f);
+    void setXvaStressScenarioData(const std::string& s);
+    void setXvaStressScenarioDataFromFile(const std::string& s);
+
     // Setters for SIMM
     void setSimmVersion(const std::string& s) { simmVersion_ = s; }
     
@@ -351,7 +357,6 @@ public:
     // Setters for ScenarioStatistics
     void setScenarioDistributionSteps(const Size s) { scenarioDistributionSteps_ = s; }
     void setScenarioOutputZeroRate(const bool b) { scenarioOutputZeroRate_ = b; }
-
 
     // Set list of analytics that shall be run
     void setAnalytics(const std::string& s); // parse to set<string>
@@ -574,6 +579,8 @@ public:
     std::vector<Size> creditMigrationTimeSteps() const { return creditMigrationTimeSteps_; }
     const QuantLib::ext::shared_ptr<CreditSimulationParameters>& creditSimulationParameters() const { return creditSimulationParameters_; }
     const std::string& creditMigrationOutputFiles() const { return creditMigrationOutputFiles_; }
+    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& xvaStressSimMarketParams() const { return xvaStressSimMarketParams_; }
+    const QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData>& xvaStressScenarioData() const { return xvaStressScenarioData_; }
     
     /**************************************************
      * Getters for cashflow npv and dynamic backtesting
@@ -847,6 +854,8 @@ protected:
     std::vector<Size> creditMigrationTimeSteps_;
     QuantLib::ext::shared_ptr<CreditSimulationParameters> creditSimulationParameters_;
     std::string creditMigrationOutputFiles_;
+    QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> xvaStressSimMarketParams_;
+    QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> xvaStressScenarioData_;
 
     /***************
      * SIMM analytic
@@ -922,6 +931,7 @@ private:
     std::string jacobiFileName_;
     std::string jacobiInverseFileName_;
     std::string stressTestFileName_;
+    std::string xvaStressTestFileName_;
     std::string varFileName_;
     std::string parConversionOutputFileName_;
     std::string parConversionJacobiFileName_;

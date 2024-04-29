@@ -287,6 +287,26 @@ void InputParameters::setXvaCgSensiScenarioDataFromFile(const std::string& fileN
     xvaCgSensiScenarioData_->fromFile(fileName);
 }
 
+void InputParameters::setXvaStressSimMarketParams(const std::string& xml) {
+    xvaStressSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
+    xvaStressSimMarketParams_->fromXMLString(xml);
+}
+
+void InputParameters::setXvaStressSimMarketParamsFromFile(const std::string& fileName) {
+    xvaStressSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
+    xvaStressSimMarketParams_->fromFile(fileName);
+}
+
+void InputParameters::setXvaStressScenarioData(const std::string& xml) {
+    xvaStressScenarioData_ = QuantLib::ext::make_shared<StressTestScenarioData>();
+    xvaStressScenarioData_->fromXMLString(xml);
+}
+
+void InputParameters::setXvaStressScenarioDataFromFile(const std::string& fileName) {
+    xvaStressScenarioData_ = QuantLib::ext::make_shared<StressTestScenarioData>();
+    xvaStressScenarioData_->fromFile(fileName);
+}
+
 void InputParameters::setAmcPricingEngineFromFile(const std::string& fileName) {
     amcPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
     amcPricingEngine_->fromFile(fileName);
@@ -544,6 +564,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     jacobiInverseFileName_ = params->get("sensitivity", "jacobiInverseOutputFile", false);    
     sensitivityScenarioFileName_ = params->get("sensitivity", "scenarioOutputFile", false);    
     stressTestFileName_ = params->get("stress", "scenarioOutputFile", false);
+    xvaStressTestFileName_ = params->get("xvaStress", "scenarioOutputFile", false);
     varFileName_ = params->get("parametricVar", "outputFile", false);
     if (varFileName_.empty())
         varFileName_ = params->get("historicalSimulationVar", "outputFile", false);
@@ -567,6 +588,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     fileNameMap_["jacobi"] = jacobiFileName_;
     fileNameMap_["jacobi_inverse"] = jacobiInverseFileName_;
     fileNameMap_["stress"] = stressTestFileName_;
+    fileNameMap_["xva_stress"] = xvaStressTestFileName_;
     fileNameMap_["var"] = varFileName_;
     fileNameMap_["parConversionSensitivity"] = parConversionOutputFileName_;
     fileNameMap_["parConversionJacobi"] = parConversionJacobiFileName_;

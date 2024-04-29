@@ -24,6 +24,7 @@
 #include <orea/app/analytics/imscheduleanalytic.hpp>
 #include <orea/app/analytics/varanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
+#include <orea/app/analytics/xvastressanalytic.hpp>
 #include <orea/app/analyticsmanager.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
@@ -58,6 +59,7 @@ AnalyticsManager::AnalyticsManager(const QuantLib::ext::shared_ptr<InputParamete
     addAnalytic("PARAMETRIC_VAR", QuantLib::ext::make_shared<ParametricVarAnalytic>(inputs_));
     addAnalytic("HISTSIM_VAR", QuantLib::ext::make_shared<HistoricalSimulationVarAnalytic>(inputs_));
     addAnalytic("XVA", QuantLib::ext::make_shared<XvaAnalytic>(inputs_));
+    addAnalytic("XVA_STRESS", QuantLib::ext::make_shared<XvaStressAnalytic>(inputs_));
     addAnalytic("SIMM", QuantLib::ext::make_shared<SimmAnalytic>(inputs_));
     addAnalytic("IM_SCHEDULE", QuantLib::ext::make_shared<IMScheduleAnalytic>(inputs_));
     addAnalytic("PARCONVERSION", QuantLib::ext::make_shared<ParConversionAnalytic>(inputs_));
