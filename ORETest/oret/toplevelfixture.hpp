@@ -32,7 +32,7 @@
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/calendarparser.hpp>
 #include <ored/utilities/currencyparser.hpp>
-#include <orea/app/initbuilders.hpp>
+#include <ored/utilities/databuilders.hpp>
 
 using QuantExt::SavedObservableSettings;
 using QuantLib::IndexManager;
@@ -51,7 +51,7 @@ public:
     /*! Constructor
         Add things here that you want to happen at the start of every test case
     */
-    TopLevelFixture() { ore::analytics::initBuilders(); }
+    TopLevelFixture() { ore::data::dataBuilders(); }
 
     /*! Destructor
         Add things here that you want to happen after _every_ test case
