@@ -248,7 +248,7 @@ void OREApp::analytics() {
         }
 
         // Run the requested analytics
-        analyticsManager_->runAnalytics(inputs_->analytics(), mcr);
+        analyticsManager_->runAnalytics(mcr);
 
         // Write reports to files in the results path
         Analytic::analytic_reports reports = analyticsManager_->reports();
@@ -489,7 +489,7 @@ void OREApp::run(const std::vector<std::string>& marketData,
         }
 
         // Run the requested analytics
-        analyticsManager_->runAnalytics(inputs_->analytics(), mcr);
+        analyticsManager_->runAnalytics(mcr);
 
         MEM_LOG_USING_LEVEL(ORE_WARNING)
         // Leave any report writing to the calling aplication

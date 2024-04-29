@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/utilities/initbuilders.hpp>
+#include <orea/app/initbuilders.hpp>
 
 #include <ored/model/calibrationinstrumentfactory.hpp>
 #include <ored/model/calibrationinstruments/cpicapfloor.hpp>
@@ -208,15 +208,29 @@
 #include <ored/portfolio/windowbarrieroption.hpp>
 #include <ored/portfolio/worstofbasketswap.hpp>
 
+#include <orea/app/analytic.hpp>
+#include <orea/app/analytics/analyticfactory.hpp>
+#include <orea/app/analytics/imscheduleanalytic.hpp>
+#include <orea/app/analytics/parconversionanalytic.hpp>
+#include <orea/app/analytics/pnlanalytic.hpp>
+#include <orea/app/analytics/pricinganalytic.hpp>
+#include <orea/app/analytics/scenarioanalytic.hpp>
+#include <orea/app/analytics/scenariostatisticsanalytic.hpp>
+#include <orea/app/analytics/simmanalytic.hpp>
+#include <orea/app/analytics/varanalytic.hpp>
+#include <orea/app/analytics/xvaanalytic.hpp>
+
 #include <qle/math/basiccpuenvironment.hpp>
 #include <qle/math/openclenvironment.hpp>
 
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/shared_mutex.hpp>
 
-namespace ore::data {
+namespace ore::analytics {
 
-void initBuilders() {
+using namespace ore::data;
+
+void initBuilders(const bool registerOREAnalytics) {
 
     static boost::shared_mutex mutex;
     static bool hasRun = false;
@@ -543,6 +557,20 @@ void initBuilders() {
 
     ORE_REGISTER_COMPUTE_FRAMEWORK_CREATOR("OpenCL", QuantExt::OpenClFramework, false);
     ORE_REGISTER_COMPUTE_FRAMEWORK_CREATOR("BasicCpu", QuantExt::BasicCpuFramework, false);
+
+    if (registerOREAnalytics) {
+        ORE_REGISTER_ANALYTIC_BUILDER("MARKETDATA", {}, MarketDataAnalytic, false)
+        ORE_REGISTER_ANALYTIC_BUILDER("HISTSIM_VAR", {}, HistoricalSimulationVarAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("IM_SCHEDULE", {}, IMScheduleAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("PARAMETRIC_VAR", {}, ParametricVarAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("PARCONVERSION", {}, ParConversionAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("PNL", {}, PnlAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("PRICING", pricingAnalyticSubAnalytics, PricingAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("SCENARIO", {}, ScenarioAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("SCENARIO_STATISTICS", {}, ScenarioStatisticsAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("SIMM", {}, SimmAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("XVA", xvaAnalyticSubAnalytics, XvaAnalytic, false);        
+    }
 }
 
-} // namespace ore::data
+} // namespace ore::analytics
