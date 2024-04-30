@@ -711,7 +711,7 @@ XML serializable like the {\tt Portfolio} object.
 
 \subsubsection{Pricing Engines, Engine Factory}
 Each trade is linked with a pricing engine during the trade's build process. In order to limit the number of engines to be constructed (and to limit memory usage), ORE reuses engines as far as possible. This is achieved by the {\tt EngineBuilder},
-{\tt EngineFactory} and {\tt LegBuilder} classes. Currently, ORE provides 36 concrete ``default'' engine and leg builders when the {\tt EngineFactory} is constructed, see ored/utilities/initbuilders.cpp. The design here is extensible so that developers can add their own engine builders to the
+{\tt EngineFactory} and {\tt LegBuilder} classes. Currently, ORE provides 36 concrete ``default'' engine and leg builders when the {\tt EngineFactory} is constructed, see orea/app/initbuilders.cpp. The design here is extensible so that developers can add their own engine builders to the
 factory when extending ORE. For this purpose the {\tt EngineFactory} class provides the {\tt addExtraBuilders} member function.
 
 Figure \ref{fig_OREDPortfolio} shows the relationships of these classes:

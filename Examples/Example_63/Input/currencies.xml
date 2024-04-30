@@ -1,0 +1,28 @@
+<CurrencyConfig>
+  <!-- PGK -->
+  <Currency>
+    <Name>Papua New Guinean kina</Name>
+    <ISOCode>PGK</ISOCode>
+    <NumericCode>598</NumericCode>
+    <Symbol>K</Symbol>
+    <FractionSymbol></FractionSymbol>
+    <!-- 1 kina = 100 toea -->
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+    <Format>%3% %1$.2f</Format>
+  </Currency>
+  <!-- SOS -->
+  <Currency>
+    <Name>Somali shilling</Name>
+    <ISOCode>SOS</ISOCode>
+    <NumericCode>706</NumericCode>
+    <Symbol>K</Symbol>
+    <FractionSymbol></FractionSymbol>
+    <!-- 1 shilling = 100 senti -->
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+    <Format>%3% %1$.2f</Format>
+  </Currency>
+</CurrencyConfig>
