@@ -262,7 +262,7 @@ class CommodityIndexReferenceDatum : public IndexReferenceDatum {
 public:
     static constexpr const char* TYPE = "Commodity";
 
-    CommodityIndexReferenceDatum() {setType(TYPE);}
+    CommodityIndexReferenceDatum() {}
     CommodityIndexReferenceDatum(const string& name) : IndexReferenceDatum(TYPE, name) {}
     CommodityIndexReferenceDatum(const string& name, const QuantLib::Date& validFrom)
         : IndexReferenceDatum(TYPE, name, validFrom) {}
