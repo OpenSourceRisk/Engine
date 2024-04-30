@@ -508,8 +508,11 @@ XMLNode* PortfolioBasketReferenceDatum::toXML(XMLDocument& doc) const {
         XMLNode* node = ReferenceDatum::toXML(doc);
         XMLNode* rdNode = XMLUtils::addChild(doc, node, type() + "ReferenceData");
         XMLUtils::appendNode(node, rdNode);
-        XMLUtils::addChild(doc, rdNode, "Components");
-        //I need to add back the trade object but it is a shared_ptr Trade so need to convert into XML
+        XMLNode* cNode = XMLUtils::addChild(doc, rdNode, "Components");
+        for (auto& u : tradecomponents_) {
+            auto test = u->toXML(doc);
+            XMLUtils::appendNode(cNode, test);
+        }
 
         return node;
     }

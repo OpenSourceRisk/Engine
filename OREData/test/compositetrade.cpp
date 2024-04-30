@@ -20,6 +20,8 @@
 
 #include <boost/make_shared.hpp>
 #include <boost/test/unit_test.hpp>
+#include <boost/test/data/test_case.hpp>
+#include <oret/datapaths.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/builders/equityforward.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
@@ -209,6 +211,103 @@ BOOST_AUTO_TEST_CASE(testMultiCcyComposite) {
     eurusdRate->setValue(1.25);
     npv_usd_composite = usdComp.instrument()->NPV();
     BOOST_CHECK_CLOSE(npv_usd_composite, npv_eurCall * 1.25 + npv_usdCall / 1.0, 0.01);
+}
+
+BOOST_AUTO_TEST_CASE(testCompositeReferenceData) {
+    BOOST_TEST_MESSAGE("Testing Composite Trade with and w/o reference data...");
+
+    SavedSettings backup;
+
+    InstrumentConventions::instance().setConventions(QuantLib::ext::make_shared<Conventions>());
+
+    // build CompositeTrade with referencedata
+    auto rdm = QuantLib::ext::make_shared<BasicReferenceDataManager>(TEST_INPUT_FILE("reference_data.xml"));
+    auto ptfReferenceDatum = boost::dynamic_pointer_cast<PortfolioBasketReferenceDatum>(rdm->getData("PortfolioBasket", "MSFDSJP"));
+    auto refData = ptfReferenceDatum->getTrades();
+    QuantLib::ext::shared_ptr<Trade> eqRefCall = refData[0];
+    QuantLib::ext::shared_ptr<Trade> eqRefPut = refData[1];
+
+    Envelope env("CP1");
+    CompositeTrade RefData("EUR", {eqRefCall, eqRefPut}, "Mean", 0.0, env);
+    RefData.id() = "Reference Data Test";
+
+    // build market
+    QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>();
+    Settings::instance().evaluationDate() = market->asofDate();
+    Date expiry = market->asofDate() + 6 * Months + 1 * Days;
+    ostringstream o;
+    o << QuantLib::io::iso_date(expiry);
+    string exp_str = o.str();
+
+    // build CompositeTrade without referencedata
+    OptionData callData("Long", "Call", "European", true, vector<string>(1, exp_str));
+    OptionData putData("Short", "Put", "European", true, vector<string>(1, exp_str));
+    //Envelope env("CP1");
+    TradeStrike tradeStrike(95.0, "EUR");
+    QuantLib::ext::shared_ptr<Trade> eqCall =
+        QuantLib::ext::make_shared<EquityOption>(env, callData, EquityUnderlying("eurCorp"), "EUR", 1.0, tradeStrike);
+    eqCall->id() = "Long Call";
+    QuantLib::ext::shared_ptr<Trade> eqPut =
+        QuantLib::ext::make_shared<EquityOption>(env, putData, EquityUnderlying("eurCorp"), "EUR", 1.0, tradeStrike);
+    eqPut->id() = "Short Put";
+    CompositeTrade noRefData("EUR", {eqCall, eqPut}, "Mean", 0.0, env);
+    noRefData.id() = "No Reference Data Test";
+
+    // Build and price
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
+    engineData->model("EquityOption") = "BlackScholesMerton";
+    engineData->engine("EquityOption") = "AnalyticEuropeanEngine";
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory =
+        QuantLib::ext::make_shared<EngineFactory>(engineData, market);
+
+    noRefData.build(engineFactory);
+    RefData.build(engineFactory);
+
+    Real npv_composite_NoRefData = noRefData.instrument()->NPV();
+    Real npv_composite_RefData = RefData.instrument()->NPV();
+
+    BOOST_CHECK_CLOSE(npv_composite_NoRefData, npv_composite_RefData, 0.01);
+    BOOST_CHECK_CLOSE(noRefData.notional(), RefData.notional(), 0.01);
+}
+
+BOOST_AUTO_TEST_CASE(testConstructionWithCompositeTradeReferenceData) {
+
+    // CompoiteTrade with Reference Data
+    auto rdm = QuantLib::ext::make_shared<BasicReferenceDataManager>(TEST_INPUT_FILE("reference_data.xml"));
+    auto ptfReferenceDatum =
+        boost::dynamic_pointer_cast<PortfolioBasketReferenceDatum>(rdm->getData("PortfolioBasket", "MSFDSJP"));
+    
+    string xmlRefData = ptfReferenceDatum->toXMLString();
+    PortfolioBasketReferenceDatum xmlPortfolioBasket("MSFDSJP");
+    xmlPortfolioBasket.fromXMLString(xmlRefData);
+    
+    BOOST_CHECK_EQUAL(ptfReferenceDatum->id(), xmlPortfolioBasket.id());
+    BOOST_CHECK_EQUAL(ptfReferenceDatum->getTrades()[0]->notional(), xmlPortfolioBasket.getTrades()[0]->notional());
+    BOOST_CHECK_EQUAL(ptfReferenceDatum->getTrades()[1]->notional(), xmlPortfolioBasket.getTrades()[1]->notional());
+    BOOST_CHECK_EQUAL(ptfReferenceDatum->getTrades()[0]->id(), xmlPortfolioBasket.getTrades()[0]->id());
+    BOOST_CHECK_EQUAL(ptfReferenceDatum->getTrades()[1]->id(), xmlPortfolioBasket.getTrades()[1]->id());
+
+    auto refData = ptfReferenceDatum->getTrades();
+    QuantLib::ext::shared_ptr<Trade> eqRefCall = refData[0];
+    QuantLib::ext::shared_ptr<Trade> eqRefPut = refData[1];
+
+    Envelope env("CP1");
+    CompositeTrade compRefData("EUR", {eqRefCall, eqRefPut}, "Mean", 0.0, env);
+
+    // Use toXml to serialise to string
+    string xmlStr = compRefData.toXMLString();
+    CompositeTrade xmlComposite;
+    xmlComposite.fromXMLString(xmlStr);
+
+    BOOST_CHECK_EQUAL(compRefData.id(), xmlComposite.id());
+    BOOST_CHECK_EQUAL(compRefData.currency(), xmlComposite.currency());
+    BOOST_CHECK_EQUAL(compRefData.notionalCalculation(), xmlComposite.notionalCalculation());
+    BOOST_CHECK_EQUAL(compRefData.trades()[0]->tradeType(), xmlComposite.trades()[0]->tradeType());
+    BOOST_CHECK_EQUAL(compRefData.trades()[0]->notional(), xmlComposite.trades()[0]->notional());
+    BOOST_CHECK_EQUAL(compRefData.trades()[1]->tradeType(), xmlComposite.trades()[1]->tradeType());
+    BOOST_CHECK_EQUAL(compRefData.trades()[1]->notional(), xmlComposite.trades()[1]->notional());
+
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()
