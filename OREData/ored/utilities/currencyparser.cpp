@@ -229,7 +229,8 @@ void CurrencyParser::reset() {
                    {"ZAR", ZARCurrency()}, {"ZMW", ZMWCurrency()}};
 
     minorCurrencies_ = {{"GBp", GBPCurrency()}, {"GBX", GBPCurrency()}, {"ILa", ILSCurrency()}, {"ILX", ILSCurrency()},
-                        {"KWf", KWDCurrency()}, {"ZAc", ZARCurrency()}, {"ZAC", ZARCurrency()}, {"ZAX", ZARCurrency()}};
+                        {"ILs", ILSCurrency()}, {"KWf", KWDCurrency()}, {"ILA", ILSCurrency()}, {"ZAc", ZARCurrency()},
+                        {"ZAC", ZARCurrency()}, {"ZAX", ZARCurrency()}};
 
     preciousMetals_ = {{"XAG", XAGCurrency()}, {"XAU", XAUCurrency()}, {"XPT", XPTCurrency()}, {"XPD", XPDCurrency()}};
 
