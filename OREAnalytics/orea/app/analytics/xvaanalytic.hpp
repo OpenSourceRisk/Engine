@@ -79,10 +79,13 @@ protected:
     bool runXva_ = false;
 };
 
+static const std::set<std::string> xvaAnalyticSubAnalytics{"XVA", "EXPOSURE"};
+
 class XvaAnalytic : public Analytic {
 public:
     XvaAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<XvaAnalyticImpl>(inputs), {"XVA", "EXPOSURE"}, inputs, false, false, false, false) {}
+        : Analytic(std::make_unique<XvaAnalyticImpl>(inputs), xvaAnalyticSubAnalytics, inputs, false, false, false,
+                   false) {}
 };
 
 } // namespace analytics
