@@ -1817,6 +1817,24 @@
             "rel_tol": null
           }
         ]
+      },
+      "saccr.json": {
+        "settings": [
+          {
+            "names": [
+              "addOn",
+              "cC",
+              "eAD",
+              "multiplier",
+              "npv",
+              "pfe",
+              "rC",
+              "rW"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
+          }
+        ]
       }
     }
   }
