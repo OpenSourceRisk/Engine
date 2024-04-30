@@ -18,6 +18,11 @@
 
 #include <orea/app/analytics/xvastressanalytic.hpp>
 
+#include <orea/app/analytics/xvaanalytic.hpp>
+#include <orea/scenario/clonescenariofactory.hpp>
+#include <orea/scenario/stressscenariogenerator.hpp>
+#include <orea/scenario/scenariosimmarket.hpp>
+
 namespace ore {
 namespace analytics {
 
@@ -27,18 +32,73 @@ XvaStressAnalyticImpl::XvaStressAnalyticImpl(const QuantLib::ext::shared_ptr<Inp
 }
 
 void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
-                                        const std::set<std::string>& runTypes) {}
+                                        const std::set<std::string>& runTypes) {
 
-void XvaStressAnalyticImpl::setUpConfigurations() {}
+    // basic setup
 
-void XvaStressAnalyticImpl::buildScenarioSimMarket() {}
+    LOG("Running XVA Stress analytic.");
 
-void XvaStressAnalyticImpl::buildCrossAssetModel(bool continueOnError) {}
+    Settings::instance().evaluationDate() = inputs_->asof();
 
-void XvaStressAnalyticImpl::buildScenarioGenerator(bool continueOnError) {}
+    QL_REQUIRE(inputs_->portfolio(), "XvaStressAnalytic::run: No portfolio loaded.");
+
+    Settings::instance().evaluationDate() = inputs_->asof();
+    std::string marketConfig = inputs_->marketConfig("pricing"); // FIXME
+
+    auto xvaAnalytic = analytic()->dependentAnalytic<XvaAnalytic>("XVA");
+
+    // build t0, sim market, stress scenario generator
+
+    CONSOLEW("XVA_STRESS: Build T0 and Sim Markets and Stress Scenario Generator");
+
+    analytic()->buildMarket(loader);
+
+    auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
+        analytic()->market(), inputs_->xvaStressSimMarketParams(), marketConfig,
+        *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
+        inputs_->continueOnError(), inputs_->xvaStressScenarioData()->useSpreadedTermStructures(), false, false,
+        *inputs_->iborFallbackConfig(), true);
+
+    auto baseScenario = simMarket->baseScenario();
+    auto scenarioFactory = QuantLib::ext::make_shared<CloneScenarioFactory>(baseScenario);
+    auto scenarioGenerator = QuantLib::ext::make_shared<StressScenarioGenerator>(
+        inputs_->stressScenarioData(), baseScenario, inputs_->xvaStressSimMarketParams(), simMarket, scenarioFactory,
+        simMarket->baseScenarioAbsolute());
+    simMarket->scenarioGenerator() = scenarioGenerator;
+
+    CONSOLE("OK");
+
+    // generate the stress scenarios and run dependent xva analytic under each of them
+
+    CONSOLEW("XVA_STRESS: Running stress scenarios");
+
+    // base scenario run
+
+    xvaAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
+
+    // debug
+    xvaAnalytic->reports()["XVA"]["xva"]->toFile("tmp_t0.csv");
+
+    // stress scenario runs
+
+    // ...
+
+    // set the result report
+
+    // analytic()->reports()["XVA_STRESS"]["xva_stress"] = report;
+
+    LOG("Running XVA Stress analytic finished.");
+}
+
+void XvaStressAnalyticImpl::setUpConfigurations() {
+    analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
+    analytic()->configurations().simMarketParams = inputs_->xvaStressSimMarketParams();
+}
 
 XvaStressAnalytic::XvaStressAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-    : Analytic(std::make_unique<XvaStressAnalyticImpl>(inputs), {"XVA_STRESS"}, inputs, true, false, true, true) {}
+    : Analytic(std::make_unique<XvaStressAnalyticImpl>(inputs), {"XVA_STRESS"}, inputs, true, false, false, false) {
+    dependentAnalytics_["XVA"] = QuantLib::ext::make_shared<XvaAnalytic>(inputs);
+}
 
 } // namespace analytics
 } // namespace ore

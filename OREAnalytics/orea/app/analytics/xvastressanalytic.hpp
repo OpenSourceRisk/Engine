@@ -30,21 +30,15 @@ namespace analytics {
 class XvaStressAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "XVA_STRESS";
-
-    XvaStressAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs);
+    explicit XvaStressAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs);
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
-
-protected:
-    void buildScenarioSimMarket();
-    void buildCrossAssetModel(bool continueOnError);
-    void buildScenarioGenerator(bool continueOnError);
 };
 
 class XvaStressAnalytic : public Analytic {
 public:
-    XvaStressAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs);
+    explicit XvaStressAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs);
 };
 
 } // namespace analytics
