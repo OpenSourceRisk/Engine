@@ -78,11 +78,18 @@ void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
 	    compositeInstrument->add(instrumentWrapper->additionalInstruments()[i],
 				     instrumentWrapper->additionalMultipliers()[i]);
 	}
-
-	// For cashflows
-	legs_.insert(legs_.end(), trade->legs().begin(), trade->legs().end());
-	legPayers_.insert(legPayers_.end(), trade->legPayers().begin(), trade->legPayers().end());
-	legCurrencies_.insert(legCurrencies_.end(), trade->legCurrencies().begin(), trade->legCurrencies().end());
+    
+    bool isDuplicate = false;
+    try {
+        if (instrumentWrapper->additionalResults().find("cashFlowResults") != trade->instrument()->additionalResults().end())
+            isDuplicate = true;
+    } catch (...) {}
+    if (!isDuplicate) {
+        // For cashflows
+        legs_.insert(legs_.end(), trade->legs().begin(), trade->legs().end());
+        legPayers_.insert(legPayers_.end(), trade->legPayers().begin(), trade->legPayers().end());
+        legCurrencies_.insert(legCurrencies_.end(), trade->legCurrencies().begin(), trade->legCurrencies().end());
+    }
 
 	maturity_ = std::max(maturity_, trade->maturity());
     }
