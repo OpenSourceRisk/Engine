@@ -2857,12 +2857,11 @@
       <xs:element type="currencyCode" name="Currency"/>
       <xs:element type="notionalCalculation" name="NotionalCalculation" minOccurs="0"/>
       <xs:element type="xs:float" name="NotionalOverride" minOccurs="0"/>
-	  <xs:element type="xs:boolean" name="PortfolioBasket" minOccurs="0" maxOccurs="1"/>
-	  <xs:element type="xs:string" name="BasketName" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:boolean" name="PortfolioBasket" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="BasketName" minOccurs="0" maxOccurs="1"/>
       <xs:element type="compositeTradeComponents" name="Components" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
-  
 
   <xs:complexType name="rangeBound">
     <xs:all>
