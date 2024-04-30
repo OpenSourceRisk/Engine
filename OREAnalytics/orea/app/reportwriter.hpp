@@ -201,6 +201,17 @@ public:
                                             const QuantLib::ext::shared_ptr<ore::data::Report> report,
                                             const bool hasNettingSetDetails = false);
 
+    virtual void writePnlReport(ore::data::Report& report,
+	const ext::shared_ptr<InMemoryReport>& t0NpvReport,
+	const ext::shared_ptr<InMemoryReport>& t0NpvLaggedReport,
+	const ext::shared_ptr<InMemoryReport>& t1NpvLaggedReport,
+	const ext::shared_ptr<InMemoryReport>& t1NpvReport,
+	const ext::shared_ptr<InMemoryReport>& t0CashFlowReport,			
+	const Date& startDate, const Date& endDate,
+	const std::string& baseCurrency,
+	const ext::shared_ptr<ore::data::Market>& market, const std::string& configuration,
+	const ext::shared_ptr<Portfolio>& portfolio);
+
 protected:
     std::string nullString_;
     void addMarketDatum(ore::data::Report& report, const ore::data::MarketDatum& md,
