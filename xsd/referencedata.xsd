@@ -29,7 +29,7 @@
       <xs:element type="bondBasketData" name="BondBasketData"/>
       <xs:element type="referenceDatum" name="CreditReferenceData"/>
       <xs:element type="referenceDatum" name="EquityReferenceData"/>
-	  <xs:element type="portfolioBasketReferenceDatum" name="PortfolioBasketReferenceData"/>
+      <xs:element type="portfolioBasketReferenceDatum" name="PortfolioBasketReferenceData"/>
     </xs:choice>
   </xs:group>
 
