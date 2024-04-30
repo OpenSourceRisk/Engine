@@ -320,6 +320,8 @@ void CalendarParser::reset() {
         {"GBX", UnitedKingdom()},
         {"ILa", QuantLib::Israel()},
         {"ILX", QuantLib::Israel()},
+        {"ILs", QuantLib::Israel()},
+        {"ILA", QuantLib::Israel()},
         {"ZAc", SouthAfrica()},
         {"ZAC", SouthAfrica()},
         {"ZAX", SouthAfrica()},
