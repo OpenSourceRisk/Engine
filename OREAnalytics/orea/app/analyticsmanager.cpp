@@ -230,6 +230,15 @@ Analytic::analytic_mktcubes const AnalyticsManager::mktCubes() {
     return results;
 }
 
+Analytic::analytic_stresstests const AnalyticsManager::stressTests() {
+    Analytic::analytic_stresstests results;
+    for (auto a : analytics_) {
+        auto rs = a.second->stressTests();
+        results.insert(rs.begin(), rs.end());
+    }
+    return results;
+}
+
 std::map<std::string, Size> checkReportNames(const ore::analytics::Analytic::analytic_reports& rpts) {                                     
     std::map<std::string, Size> m;
     for (const auto& rep : rpts) {

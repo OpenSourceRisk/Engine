@@ -276,7 +276,18 @@ void OREApp::analytics() {
                 LOG("write market cube " << reportName << " to file " << fileName);
                 saveAggregationScenarioData(fileName, *b.second);
             }
-        }        
+        }
+
+        for (auto a: analyticsManager_->stressTests()){
+            for(auto b: a.second){
+                string reportName = b.first;
+                std::string fileName =
+                    inputs_->resultsPath().string() + "/" + outputs_->outputFileName(reportName, "xml");
+                LOG("write converted stress test scenario definition " << reportName << " to file " << fileName);
+                b.second->toFile(fileName);
+            }
+        }
+
     }
     catch (std::exception& e) {
         ostringstream oss;

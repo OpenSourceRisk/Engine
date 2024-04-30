@@ -22,7 +22,6 @@
 #include <orea/engine/parsensitivityanalysis.hpp>
 #include <orea/engine/partozeroscenario.hpp>
 #include <orea/engine/stresstest.hpp>
-#include <orea/scenario/deltascenariofactory.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 
 using namespace ore::data;
@@ -71,64 +70,12 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     LOG("Stress Test Analysis called");
     QuantLib::ext::shared_ptr<StressTestScenarioData> scenarioData = inputs_->stressScenarioData();
     if (scenarioData != nullptr && scenarioData->hasScenarioWithParShifts()) {
-        LOG("Found par rate scenarios, convert them to zero rate scenarios");
-        auto sensiScenarioData = analytic()->configurations().sensiScenarioData;
-        auto simMarketParam = analytic()->configurations().simMarketParams;
-        auto curveConfigs = analytic()->configurations().curveConfig;
-        auto todaysMarketParams = analytic()->configurations().todaysMarketParams;
-
-        // Build simmarket with a dummy scenario generator
-        QL_REQUIRE(sensiScenarioData != nullptr,
-                   "Dont have sensitivity scenario data for stresstest, can not convert scenarios, check input");
-
-        set<RiskFactorKey::KeyType> typesDisabled{};
-        if(!scenarioData->withIrCurveParShifts()){
-            typesDisabled.insert(RiskFactorKey::KeyType::DiscountCurve);
-            typesDisabled.insert(RiskFactorKey::KeyType::YieldCurve);
-            typesDisabled.insert(RiskFactorKey::KeyType::IndexCurve);
-        }
-        if (!scenarioData->withCreditCurveParShifts()) {
-            typesDisabled.insert(RiskFactorKey::KeyType::SurvivalProbability);
-        }
-        if (!scenarioData->withIrCapFloorParShifts()) {
-            typesDisabled.insert(RiskFactorKey::KeyType::OptionletVolatility);
-        }
-
-        auto parAnalysis = ext::make_shared<ParSensitivityAnalysis>(inputs_->asof(), simMarketParam, *sensiScenarioData,
-                                                                    Market::defaultConfiguration, true, typesDisabled);
-
-        LOG("Stresstest analytic - align pillars (for the par conversion)");
-        parAnalysis->alignPillars();
-        // Align Cap Floor Strikes
-        if(typesDisabled.count(RiskFactorKey::KeyType::OptionletVolatility)== 0){
-            for (const auto& [index, data] : analytic()->configurations().sensiScenarioData->capFloorVolShiftData()) {
-                analytic()->configurations().simMarketParams->setCapFloorVolStrikes(index, data->shiftStrikes);
-                analytic()->configurations().simMarketParams->setCapFloorVolAdjustOptionletPillars(true);
-            }
-        }
-        // Build Simmarket
-        auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
-            analytic()->market(), simMarketParam, Market::defaultConfiguration,
-            curveConfigs ? *curveConfigs : ore::data::CurveConfigurations(),
-            todaysMarketParams ? *todaysMarketParams : ore::data::TodaysMarketParameters(), false,
-            sensiScenarioData->useSpreadedTermStructures(), false, true, *inputs_->iborFallbackConfig());
-        // Build ScenarioGenerator
-        auto scenarioGenerator = QuantLib::ext::make_shared<SensitivityScenarioGenerator>(
-            analytic()->configurations().sensiScenarioData, simMarket->baseScenario(),
-            analytic()->configurations().simMarketParams, simMarket,
-            QuantLib::ext::make_shared<DeltaScenarioFactory>(simMarket->baseScenario()), true, "", false,
-            simMarket->baseScenarioAbsolute());
-        simMarket->scenarioGenerator() = scenarioGenerator;
-        // Compute ParSensitivities
-        parAnalysis->computeParInstrumentSensitivities(simMarket);
-        LOG("Stress Test Analytic: Par Sensitivity Analysis finished");
-        LOG("Convert ParStressScenarios into ZeroStress Scenario");
-        
-        scenarioData = convertParScenarioToZeroScenarioData(
-            inputs_->asof(), simMarket, analytic()->configurations().simMarketParams, scenarioData,
-            inputs_->stressSensitivityScenarioData(), parAnalysis->parSensitivities(), parAnalysis->parInstruments());
-        
-        LOG("Finished par to zero scenarios conversion");
+        ParStressTestConverter converter(
+            inputs_->asof(), analytic()->configurations().todaysMarketParams,
+            analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
+            analytic()->configurations().curveConfig, analytic()->market(), inputs_->iborFallbackConfig());
+        scenarioData = converter.convertStressScenarioData(scenarioData);
+        analytic()->stressTests()[label()]["stress_zero_scenarios"] = scenarioData;
     }
 
     Settings::instance().evaluationDate() = inputs_->asof();

@@ -59,7 +59,8 @@ public:
     Analytic::analytic_reports const reports();
     Analytic::analytic_npvcubes const npvCubes();
     Analytic::analytic_mktcubes const mktCubes();
-
+    Analytic::analytic_stresstests const stressTests();
+    
     // Write all reports to files, reportNames map can be used to replace standard report names
     // with custom names
     void toFile(const Analytic::analytic_reports& reports, const std::string& outputPath,
