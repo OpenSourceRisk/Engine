@@ -79,10 +79,12 @@ void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
 				     instrumentWrapper->additionalMultipliers()[i]);
 	}
     
-    if (trade->instrument()->additionalResults().find("cashFlowResults") !=
-            trade->instrument()->additionalResults().end()) {
-        DLOG("Skip adding leg based cashflow results since additional results based legs are present");
-    } else {
+    bool isDuplicate = false;
+    try {
+        if (instrumentWrapper->additionalResults().find("cashFlowResults") != trade->instrument()->additionalResults().end())
+            isDuplicate = true;
+    } catch (...) {}
+    if (!isDuplicate) {
         // For cashflows
         legs_.insert(legs_.end(), trade->legs().begin(), trade->legs().end());
         legPayers_.insert(legPayers_.end(), trade->legPayers().begin(), trade->legPayers().end());
