@@ -387,6 +387,7 @@
 #include <ored/utilities/currencyconfig.hpp>
 #include <ored/utilities/currencyhedgedequityindexdecomposition.hpp>
 #include <ored/utilities/currencyparser.hpp>
+#include <ored/utilities/databuilders.hpp>
 #include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/fileio.hpp>
 #include <ored/utilities/flowanalysis.hpp>
@@ -394,7 +395,6 @@
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/inflationstartdate.hpp>
-#include <ored/utilities/initbuilders.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/osutils.hpp>
