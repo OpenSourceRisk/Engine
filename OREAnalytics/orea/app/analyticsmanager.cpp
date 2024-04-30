@@ -48,7 +48,8 @@ AnalyticsManager::AnalyticsManager(const QuantLib::ext::shared_ptr<InputParamete
 
     for (const auto& a : inputs_->analytics()) {
         auto ap = AnalyticFactory::instance().build(a, inputs);
-        addAnalytic(ap.first, ap.second);
+        if (ap.second)
+            addAnalytic(ap.first, ap.second);
     }
 }
 

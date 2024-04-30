@@ -290,7 +290,7 @@ PnlAnalytic::PnlAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& input
                     : inputs_->mporCalendar().advance(inputs_->asof(), int(inputs_->mporDays()), QuantExt::Days);
     LOG("ASOF date " << io::iso_date(inputs_->asof()));
     LOG("MPOR date " << io::iso_date(mporDate_));
-    auto mporAnalytic = boost::make_shared<ScenarioAnalytic>(inputs);
+    auto mporAnalytic = boost::make_shared<ScenarioAnalytic>(inputs, useSpreadedTermStructures_);
     mporAnalytic->configurations().curveConfig = inputs->curveConfigs().get("mpor");
     dependentAnalytics_[mporLookupKey] = mporAnalytic;
 }
