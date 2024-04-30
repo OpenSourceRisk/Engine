@@ -38,6 +38,7 @@
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/currencies/currencycomparator.hpp>
 #include <qle/instruments/cashflowresults.hpp>
+#include <qle/cashflows/durationadjustedcmscoupon.hpp>
 
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/indexedcashflow.hpp>
@@ -401,7 +402,11 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                         swaptionTenor = cms->swapIndex()->tenor();
                                         qlIndexName = cms->swapIndex()->iborIndex()->name();
                                         usesSwaptionVol = true;
-                                    } else if (auto ibor = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(tmp->underlying())) {
+                                    }else if(auto cms = boost::dynamic_pointer_cast<DurationAdjustedCmsCoupon>(tmp->underlying())) {
+                                        swaptionTenor = cms->swapIndex()->tenor();
+                                        qlIndexName = cms->swapIndex()->iborIndex()->name();
+                                        usesSwaptionVol = true;
+                                    }else if (auto ibor = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(tmp->underlying())) {
                                         qlIndexName = ibor->index()->name();
                                         usesCapVol = true;
                                     }
