@@ -46,7 +46,8 @@ std::pair<std::string,
                 return std::make_pair(ba.first, ba.second.second);
         }
     }
-    QL_FAIL("AnalyticFactory::getBuilder(" << analyticName << "): no builder found");
+    WLOG("AnalyticFactory::getBuilder(" << analyticName << "): no builder found");
+    return std::make_pair(analyticName, nullptr);
 }
 
 void AnalyticFactory::addBuilder(const std::string& className, const std::set<std::string>& subAnalytics,
@@ -60,7 +61,10 @@ void AnalyticFactory::addBuilder(const std::string& className, const std::set<st
 std::pair<std::string, QuantLib::ext::shared_ptr<Analytic>> AnalyticFactory::build(const string& subAnalytic,
     const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs) const {
     auto builder = getBuilder(subAnalytic);
-    return std::make_pair(builder.first, builder.second->build(inputs));
+    QuantLib::ext::shared_ptr<Analytic> a;
+    if (builder.second)
+        a = builder.second->build(inputs);
+    return std::make_pair(builder.first, a);
 }
 
 } // namespace analytics

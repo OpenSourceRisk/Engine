@@ -78,7 +78,7 @@ public:
 private:
     QuantLib::Date mporDate_;
     QuantLib::ext::shared_ptr<ore::analytics::Scenario> t0Scenario_, t1Scenario_;
-    bool useSpreadedTermStructures_;
+    bool useSpreadedTermStructures_ = true;
 };
 
 } // namespace analytics
