@@ -39,8 +39,6 @@ CpiCapFloorHelper::CpiCapFloorHelper(Option::Type type, Real baseCPI, const Date
                    errorType == BlackCalibrationHelper::RelativePriceError,
                "CpiCapFloorHelper supports only PriceError and "
                "RelativePriceError error types");
-    QL_REQUIRE(marketPremium > 0.0 && !close_enough(marketPremium, 0.0),
-               "can not calibrate to market premium " << marketPremium);
     marketValue_ = marketPremium;
 }
 
