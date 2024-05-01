@@ -17,6 +17,7 @@
 */
 
 #include <orea/app/analytics/parconversionanalytic.hpp>
+#include <orea/app/analytics/pnlexplainanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/analytics/scenarioanalytic.hpp>
 #include <orea/app/analytics/scenariostatisticsanalytic.hpp>

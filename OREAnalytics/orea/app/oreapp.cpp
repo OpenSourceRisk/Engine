@@ -1059,9 +1059,20 @@ void OREAppInputParameters::loadParameters() {
             setOutputHistoricalScenarios(parseBool(tmp));
     }
 
-    /**********************
+    /****************
+     * PNL Explain
+     ****************/
+    tmp = params_->get("pnlExplain", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        insertAnalytic("PNL_EXPLAIN");
+        
+        tmp = params_->get("pnlExplain", "pnlDate", false);
+        if (tmp != "")
+            setPNLDate(tmp);
+    }
+    /****************
      * SIMM and IM Schedule
-     **********************/
+     ****************/
 
     LOG("SIMM");
     tmp = params_->get("simm", "active", false);

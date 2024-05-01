@@ -24,6 +24,7 @@
 #pragma once
 
 #include <qle/math/covariancesalvage.hpp>
+#include <ored/portfolio/portfolio.hpp>
 #include <ored/utilities/progressbar.hpp>
 #include <orea/engine/historicalpnlgenerator.hpp>
 #include <orea/engine/historicalsensipnlcalculator.hpp>
@@ -96,8 +97,8 @@ public:
     //! Used to pass information
     struct Data {
         std::string counterparty;
-        QuantLib::ext::shared_ptr<ore::analytics::TradeGroup> tradeGroup;
-        QuantLib::ext::shared_ptr<ore::analytics::MarketRiskGroup> riskGroup;
+        QuantLib::ext::shared_ptr<ore::analytics::TradeGroupBase> tradeGroup;
+        QuantLib::ext::shared_ptr<ore::analytics::MarketRiskGroupBase> riskGroup;
     };
     
     //! Used to store results for writing rows in the summary report
@@ -123,6 +124,8 @@ public:
     };
 
     MarketRiskBacktest(const std::string& calculationCurrency,
+                       const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
+                       const std::string& portfolioFilter,
                        std::unique_ptr<BacktestArgs> btArgs,
                        std::unique_ptr<SensiRunArgs> sensiArgs = nullptr,
                        std::unique_ptr<FullRevalArgs> revalArgs = nullptr,
@@ -132,8 +135,6 @@ public:
                        const bool requireTradePnl = false);
 
     virtual ~MarketRiskBacktest() {}
-
-    void init() override;
 
     /*! Check if the given scenario \p filter turns off all risk factors in the
         historical scenario generator
@@ -150,6 +151,8 @@ public:
 
 protected:
     std::unique_ptr<BacktestArgs> btArgs_;
+
+    void initialise() override;
     
     //! pointers to the VAR benchmarks
     typedef std::map<VarType, std::pair<QuantLib::ext::shared_ptr<ore::analytics::VarCalculator>, QuantLib::Real>>
@@ -169,7 +172,7 @@ protected:
     virtual QuantLib::Real postValue(const Data& data) = 0;
     virtual std::string counterparty(const std::string& tradeId) const = 0;
     virtual void setUpBenchmarks() = 0;
-    virtual void reset(const QuantLib::ext::shared_ptr<ore::analytics::MarketRiskGroup>& riskGroup) override;
+    virtual void reset(const QuantLib::ext::shared_ptr<ore::analytics::MarketRiskGroupBase>& riskGroup) override;
 
     void createReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
     virtual bool runTradeDetail(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
@@ -177,15 +180,14 @@ protected:
     void addPnlCalculators(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
     
     void handleSensiResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
-                            const QuantLib::ext::shared_ptr<ore::analytics::MarketRiskGroup>& riskGroup,
-                            const QuantLib::ext::shared_ptr<ore::analytics::TradeGroup>& tradeGroup) override;
+                            const QuantLib::ext::shared_ptr<ore::analytics::MarketRiskGroupBase>& riskGroup,
+                            const QuantLib::ext::shared_ptr<ore::analytics::TradeGroupBase>& tradeGroup) override;
 
     void handleFullRevalResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
-                                const QuantLib::ext::shared_ptr<ore::analytics::MarketRiskGroup>& riskGroup,
-                                const QuantLib::ext::shared_ptr<ore::analytics::TradeGroup>& tradeGroup) override;
+                                const QuantLib::ext::shared_ptr<ore::analytics::MarketRiskGroupBase>& riskGroup,
+                                const QuantLib::ext::shared_ptr<ore::analytics::TradeGroupBase>& tradeGroup) override;
 
-    virtual bool
-    runFullReval(const QuantLib::ext::shared_ptr<ore::analytics::MarketRiskGroup>& riskGroup) const override {
+    virtual bool runFullReval(const QuantLib::ext::shared_ptr<ore::analytics::MarketRiskGroupBase>& riskGroup) const {
         return true;
     }
 
@@ -194,7 +196,7 @@ protected:
                                      const std::vector<QuantLib::Real>& foSensiPnls,
                                      const std::vector<QuantLib::Real>& bmFoSensiPnls,
                                      const ore::analytics::TradePnLStore& foTradePnls,
-                                     const QuantLib::ext::shared_ptr<ore::analytics::MarketRiskGroup>& riskGroup){};
+                                     const QuantLib::ext::shared_ptr<ore::analytics::MarketRiskGroupBase>& riskGroup){};
     
     //! Add a row to the detail report
     virtual void addDetailRow(const QuantLib::ext::shared_ptr<BacktestReports>& reports, const Data& data, bool isCall,
@@ -209,12 +211,12 @@ protected:
 
     //! Calculate and update the benchmarks
     virtual void calculateBenchmarks(VarBenchmarks& benchmarks, QuantLib::Real confidence, const bool isCall,
-                                     const QuantLib::ext::shared_ptr<ore::analytics::MarketRiskGroup>& riskGroup,
+                                     const QuantLib::ext::shared_ptr<ore::analytics::MarketRiskGroupBase>& riskGroup,
                                      std::set<std::pair<std::string, QuantLib::Size>>& tradeIdIdxPairs);
 
-    void writeSummary(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
-                      const QuantLib::ext::shared_ptr<ore::analytics::MarketRiskGroup>& riskGroup,
-                      const QuantLib::ext::shared_ptr<ore::analytics::TradeGroup>& tradeGroup) override;
+    void writeReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
+                      const QuantLib::ext::shared_ptr<ore::analytics::MarketRiskGroupBase>& riskGroup,
+                      const QuantLib::ext::shared_ptr<ore::analytics::TradeGroupBase>& tradeGroup) override;
 
    std::vector<ore::data::TimePeriod> timePeriods() override;
 

@@ -94,5 +94,23 @@ HistoricalScenarioLoader::HistoricalScenarioLoader(const QuantLib::ext::shared_p
     LOG("Loaded " << historicalScenarios_.size() << " from " << startDate << " to " << endDate);
 }
 
+HistoricalScenarioLoader::HistoricalScenarioLoader(
+    const boost::shared_ptr<HistoricalScenarioReader>& scenarioReader,
+    const std::set<Date>& dates) {
+    while (scenarioReader->next()) {
+        Date scenarioDate = scenarioReader->date();
+
+        auto it = dates.find(scenarioDate);
+        if (it == dates.end())
+            continue;
+        else {
+            historicalScenarios_.push_back(scenarioReader->scenario());
+            dates_.push_back(scenarioDate);            
+        }
+        if (dates_.size() == dates.size())
+            break;
+    }    
+}
+
 } // namespace analytics
 } // namespace ore
