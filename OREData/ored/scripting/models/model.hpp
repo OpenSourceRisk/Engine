@@ -53,10 +53,12 @@ public:
         Size trainingSamples = Null<Size>();
         QuantExt::SequenceType sequenceType = QuantExt::SequenceType::SobolBrownianBridge;
         QuantExt::SequenceType trainingSequenceType = QuantExt::SequenceType::MersenneTwister;
+        bool externalDeviceCompatibilityMode = false;
         Size regressionOrder = 2;
         QuantLib::LsmBasisSystem::PolynomialType polynomType = QuantLib::LsmBasisSystem::PolynomialType::Monomial;
         QuantLib::SobolBrownianGenerator::Ordering sobolOrdering = QuantLib::SobolBrownianGenerator::Steps;
         QuantLib::SobolRsg::DirectionIntegers sobolDirectionIntegers = QuantLib::SobolRsg::DirectionIntegers::JoeKuoD7;
+        QuantLib::Real regressionVarianceCutoff = Null<QuantLib::Real>();
     };
 
     explicit Model(const Size n) : n_(n) {}
@@ -85,6 +87,9 @@ public:
     virtual Real dt(const Date& d1, const Date& d2) const {
         return ActualActual(ActualActual::ISDA).yearFraction(d1, d2);
     }
+
+    // time from reference date in this model
+    Real timeFromReference(const Date& d) const { return dt(referenceDate(), d); }
 
     // result must be as of max(refdate, obsdate); refdate < paydate and obsdate <= paydate required
     virtual RandomVariable pay(const RandomVariable& amount, const Date& obsdate, const Date& paydate,

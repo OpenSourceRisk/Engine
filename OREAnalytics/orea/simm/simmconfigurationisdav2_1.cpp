@@ -35,12 +35,12 @@ namespace analytics {
 
 using RiskType = CrifRecord::RiskType;
 
-SimmConfiguration_ISDA_V2_1::SimmConfiguration_ISDA_V2_1(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+SimmConfiguration_ISDA_V2_1::SimmConfiguration_ISDA_V2_1(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
                                                          const std::string& name, const std::string version)
     : SimmConfigurationBase(simmBucketMapper, name, version) {
 
     // Set up the correct concentration threshold getter
-    simmConcentration_ = boost::make_shared<SimmConcentration_ISDA_V2_1>(simmBucketMapper_);
+    simmConcentration_ = QuantLib::ext::make_shared<SimmConcentration_ISDA_V2_1>(simmBucketMapper_);
 
     // clang-format off
 
@@ -1045,14 +1045,14 @@ void SimmConfiguration_ISDA_V2_1::addLabels2(const RiskType& rt, const string& l
     SimmConfigurationBase::addLabels2Impl(rt, label_2);
 }
 
-string SimmConfiguration_ISDA_V2_1::labels2(const boost::shared_ptr<InterestRateIndex>& irIndex) const {
+string SimmConfiguration_ISDA_V2_1::label2(const QuantLib::ext::shared_ptr<InterestRateIndex>& irIndex) const {
     // Special for BMA
     if (boost::algorithm::starts_with(irIndex->name(), "BMA")) {
         return "Municipal";
     }
 
     // Otherwise pass off to base class
-    return SimmConfigurationBase::labels2(irIndex);
+    return SimmConfigurationBase::label2(irIndex);
 }
 
 } // namespace analytics

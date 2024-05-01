@@ -23,7 +23,7 @@
 namespace QuantExt {
 
 MultiLegOption::MultiLegOption(const std::vector<Leg>& legs, const std::vector<bool>& payer,
-                               const std::vector<Currency>& currency, const boost::shared_ptr<Exercise>& exercise,
+                               const std::vector<Currency>& currency, const QuantLib::ext::shared_ptr<Exercise>& exercise,
                                const Settlement::Type settlementType, Settlement::Method settlementMethod)
     : legs_(legs), payer_(payer), currency_(currency), exercise_(exercise), settlementType_(settlementType),
       settlementMethod_(settlementMethod) {
@@ -47,7 +47,7 @@ MultiLegOption::MultiLegOption(const std::vector<Leg>& legs, const std::vector<b
     for (auto const& l : legs_) {
         for (auto const& c : l) {
             registerWith(c);
-            if (auto lazy = boost::dynamic_pointer_cast<LazyObject>(c))
+            if (auto lazy = QuantLib::ext::dynamic_pointer_cast<LazyObject>(c))
                 lazy->alwaysForwardNotifications();
         }
     }
@@ -57,11 +57,21 @@ MultiLegOption::MultiLegOption(const std::vector<Leg>& legs, const std::vector<b
 void MultiLegOption::deepUpdate() {
     for (auto& l : legs_) {
         for (auto& c : l) {
-            if (auto lazy = boost::dynamic_pointer_cast<LazyObject>(c))
+            if (auto lazy = QuantLib::ext::dynamic_pointer_cast<LazyObject>(c))
                 lazy->deepUpdate();
         }
     }
     update();
+}
+
+bool MultiLegOption::isExpired() const {
+    Date today = Settings::instance().evaluationDate();
+    if (exercise_ == nullptr || exercise_->dates().empty()) {
+        return today >= maturityDate();
+    } else {
+        // only the option itself is represented, not something we exercised into
+        return today >= exercise_->dates().back();
+    }
 }
 
 Real MultiLegOption::underlyingNpv() const {
@@ -74,9 +84,7 @@ void MultiLegOption::setupArguments(PricingEngine::arguments* args) const {
     MultiLegOption::arguments* tmp = dynamic_cast<MultiLegOption::arguments*>(args);
     QL_REQUIRE(tmp != nullptr, "MultiLegOption: wrong pricing engine argument type");
     tmp->legs = legs_;
-    tmp->payer.resize(payer_.size());
-    for (Size i = 0; i < payer_.size(); ++i)
-        tmp->payer[i] = payer_[i] ? -1.0 : 1.0;
+    tmp->payer = payer_;
     tmp->currency = currency_;
     tmp->exercise = exercise_;
     tmp->settlementType = settlementType_;

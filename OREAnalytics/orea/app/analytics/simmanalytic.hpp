@@ -31,17 +31,17 @@ class SimmAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "SIMM";
 
-    SimmAnalyticImpl(const boost::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+    SimmAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
         setLabel(LABEL);
     }
-    void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+    void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
 };
 
 class SimmAnalytic : public Analytic {
 public:
-    SimmAnalytic(const boost::shared_ptr<InputParameters>& inputs, const Crif& crif = Crif(),
+    SimmAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs, const Crif& crif = Crif(),
                  const bool hasNettingSetDetails = false,
                  const bool determineWinningRegulations = true)
         : Analytic(std::make_unique<SimmAnalyticImpl>(inputs), {"SIMM"}, inputs, false, false, false, false),
@@ -56,7 +56,7 @@ public:
     bool determineWinningRegulations() { return determineWinningRegulations_; }
     
     //! Load CRIF from external source, override to generate CRIF
-    virtual void loadCrifRecords(const boost::shared_ptr<ore::data::InMemoryLoader>& loader);
+    virtual void loadCrifRecords(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader);
 
 private:
     Crif crif_;

@@ -55,7 +55,7 @@ Example/Example\_\#/Input/}.
 
 Parameter {\tt logMask} determines the verbosity of log file output. Log messages are 
 internally labelled as Alert, Critical, Error, Warning, Notice, Debug, associated with logMask values 1, 2, 4, 8, ..., 64. 
-The logMask allows filtering subsets of these categories and controlling the verbosity of log file output\footnote{by bitwise comparison of the the external logMask value with each message's log level}. LogMask 255 ensures maximum verbosity. \\
+The logMask allows filtering subsets of these categories and controlling the verbosity of log file output\footnote{by bitwise comparison of the external logMask value with each message's log level}. LogMask 255 ensures maximum verbosity. \\
 
 When ORE starts, it will initialise today's market, i.e. load market data, fixings and dividends, and build all term
 structures as specified in {\tt todaysmarket.xml}.  Moreover, ORE will load the trades in {\tt portfolio.xml} and link

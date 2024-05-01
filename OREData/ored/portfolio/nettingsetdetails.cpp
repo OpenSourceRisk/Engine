@@ -50,7 +50,7 @@ void NettingSetDetails::fromXML(XMLNode* node) {
     legalEntityId_ = XMLUtils::getChildValue(node, "LegalEntityId", false);
 }
 
-XMLNode* NettingSetDetails::toXML(XMLDocument& doc) {
+XMLNode* NettingSetDetails::toXML(XMLDocument& doc) const {
     XMLNode* nettingSetDetailsNode = doc.allocNode("NettingSetDetails");
     XMLUtils::addChild(doc, nettingSetDetailsNode, "NettingSetId", nettingSetId_);
     if (!agreementType_.empty())

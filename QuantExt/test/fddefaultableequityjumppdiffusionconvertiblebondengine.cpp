@@ -53,26 +53,26 @@ BOOST_AUTO_TEST_CASE(test_vanilla_bond) {
     Settings::instance().evaluationDate() = today;
 
     Real S0 = 100.0;
-    Handle<YieldTermStructure> rate(boost::make_shared<FlatForward>(0, NullCalendar(), 0.01, Actual365Fixed()));
-    Handle<YieldTermStructure> dividend(boost::make_shared<FlatForward>(0, NullCalendar(), 0.02, Actual365Fixed()));
-    Handle<BlackVolTermStructure> vol(boost::make_shared<BlackConstantVol>(0, NullCalendar(), 0.3, Actual365Fixed()));
+    Handle<YieldTermStructure> rate(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.01, Actual365Fixed()));
+    Handle<YieldTermStructure> dividend(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.02, Actual365Fixed()));
+    Handle<BlackVolTermStructure> vol(QuantLib::ext::make_shared<BlackConstantVol>(0, NullCalendar(), 0.3, Actual365Fixed()));
 
     Handle<YieldTermStructure> bondBenchmark(
-        boost::make_shared<FlatForward>(0, NullCalendar(), 0.03, Actual365Fixed()));
+        QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.03, Actual365Fixed()));
     Handle<DefaultProbabilityTermStructure> creditCurve(
-        boost::make_shared<FlatHazardRate>(0, NullCalendar(), 0.0050, Actual365Fixed()));
-    Handle<Quote> bondRecoveryRate(boost::make_shared<SimpleQuote>(0.25));
-    Handle<Quote> securitySpread(boost::make_shared<SimpleQuote>(0.00));
+        QuantLib::ext::make_shared<FlatHazardRate>(0, NullCalendar(), 0.0050, Actual365Fixed()));
+    Handle<Quote> bondRecoveryRate(QuantLib::ext::make_shared<SimpleQuote>(0.25));
+    Handle<Quote> securitySpread(QuantLib::ext::make_shared<SimpleQuote>(0.00));
 
-    auto equity = boost::make_shared<EquityIndex2>("myEqIndex", NullCalendar(), EURCurrency(),
-                                                  Handle<Quote>(boost::make_shared<SimpleQuote>(S0)), rate, dividend);
+    auto equity = QuantLib::ext::make_shared<EquityIndex2>("myEqIndex", NullCalendar(), EURCurrency(),
+                                                  Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(S0)), rate, dividend);
 
-    auto bond = boost::make_shared<FixedRateBond>(0, TARGET(), 100000.0, today, today + 5 * Years, 1 * Years,
+    auto bond = QuantLib::ext::make_shared<FixedRateBond>(0, TARGET(), 100000.0, today, today + 5 * Years, 1 * Years,
                                                   std::vector<Real>(1, 0.05), Thirty360(Thirty360::BondBasis));
 
     // vanilla pricing
 
-    auto vanillaEngine = boost::make_shared<DiscountingRiskyBondEngine>(bondBenchmark, creditCurve, bondRecoveryRate,
+    auto vanillaEngine = QuantLib::ext::make_shared<DiscountingRiskyBondEngine>(bondBenchmark, creditCurve, bondRecoveryRate,
                                                                         securitySpread, 1 * Years);
     bond->setPricingEngine(vanillaEngine);
     Real vanillaEngineNpv = bond->NPV();
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(test_vanilla_bond) {
     Real eta = 1.0;
     std::vector<Real> stepTimes = {1.0, 2.0, 3.0, 4.0, 5.0};
 
-    auto modelBuilder = boost::make_shared<DefaultableEquityJumpDiffusionModelBuilder>(
+    auto modelBuilder = QuantLib::ext::make_shared<DefaultableEquityJumpDiffusionModelBuilder>(
         stepTimes, equity, vol, creditCurve, p, eta, false, 24, 400, 1E-5, 1.5, Null<Real>(),
         DefaultableEquityJumpDiffusionModelBuilder::BootstrapMode::Simultaneously, true);
     auto model = modelBuilder->model();
@@ -91,13 +91,13 @@ BOOST_AUTO_TEST_CASE(test_vanilla_bond) {
     auto cpns = bond->cashflows();
     cpns.erase(
         std::remove_if(cpns.begin(), cpns.end(),
-                       [](boost::shared_ptr<CashFlow> c) { return boost::dynamic_pointer_cast<Coupon>(c) == nullptr; }),
+                       [](QuantLib::ext::shared_ptr<CashFlow> c) { return QuantLib::ext::dynamic_pointer_cast<Coupon>(c) == nullptr; }),
         cpns.end());
 
     ConvertibleBond2::MakeWholeData d; // avoid linker problem on linux
     auto convertibleBond =
-        boost::make_shared<ConvertibleBond2>(bond->settlementDays(), bond->calendar(), bond->issueDate(), cpns);
-    auto convertibleEngine = boost::make_shared<FdDefaultableEquityJumpDiffusionConvertibleBondEngine>(
+        QuantLib::ext::make_shared<ConvertibleBond2>(bond->settlementDays(), bond->calendar(), bond->issueDate(), cpns);
+    auto convertibleEngine = QuantLib::ext::make_shared<FdDefaultableEquityJumpDiffusionConvertibleBondEngine>(
         model, bondBenchmark, securitySpread, Handle<DefaultProbabilityTermStructure>(), bondRecoveryRate,
         Handle<FxIndex>(), false, 24, 100, 1E-4, 1.5);
     convertibleBond->setPricingEngine(convertibleEngine);

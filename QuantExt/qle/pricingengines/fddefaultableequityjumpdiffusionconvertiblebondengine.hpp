@@ -65,7 +65,7 @@ private:
     std::vector<Real> conversionRatioDiscretisationGrid_;
     bool generateAdditionalResults_;
 
-    mutable boost::shared_ptr<Fdm1dMesher> mesher_;
+    mutable QuantLib::ext::shared_ptr<Fdm1dMesher> mesher_;
 };
 
 } // namespace QuantExt

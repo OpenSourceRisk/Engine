@@ -54,10 +54,10 @@ std::string CamMcMultiLegOptionEngineBuilder::getCcyValue(const string& s, const
     return "";
 }
 
-boost::shared_ptr<PricingEngine> CamMcMultiLegOptionEngineBuilder::engineImpl(
+QuantLib::ext::shared_ptr<PricingEngine> CamMcMultiLegOptionEngineBuilder::engineImpl(
     const string& id, const std::vector<Date>& exDates, const Date& maturityDate,
     const std::vector<Currency>& currencies, const std::vector<Date>& fixingDates,
-    const std::vector<boost::shared_ptr<QuantLib::InterestRateIndex>>& indexes) {
+    const std::vector<QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>>& indexes) {
 
     DLOG("Building multi leg option engine for trade " << id << "...");
 
@@ -140,7 +140,7 @@ boost::shared_ptr<PricingEngine> CamMcMultiLegOptionEngineBuilder::engineImpl(
 
     // ir components
 
-    std::vector<boost::shared_ptr<IrModelData>> irData;
+    std::vector<QuantLib::ext::shared_ptr<IrModelData>> irData;
     for (Size i = 0; i < currencies.size(); ++i) {
         DLOG("IR component #" << i << " (" << currencies[i].code() << ")");
         discountCurves.push_back(market_->discountCurve(currencies[i].code(), configuration(MarketContext::pricing)));
@@ -154,7 +154,7 @@ boost::shared_ptr<PricingEngine> CamMcMultiLegOptionEngineBuilder::engineImpl(
                                                            << volTimes.size() << "), for ccy " << currencies[i]);
         auto reversionType = parseReversionType(getCcyValue("IrReversionType", currencies[i].code(), true));
         auto volatilityType = parseVolatilityType(getCcyValue("IrVolatilityType", currencies[i].code(), true));
-        auto lgmData = boost::make_shared<IrLgmData>();
+        auto lgmData = QuantLib::ext::make_shared<IrLgmData>();
         lgmData->reset();
         lgmData->ccy() = currencies[i].code();
         lgmData->calibrateH() = false;
@@ -182,11 +182,11 @@ boost::shared_ptr<PricingEngine> CamMcMultiLegOptionEngineBuilder::engineImpl(
 
     // fx components
 
-    std::vector<boost::shared_ptr<FxBsData>> fxData;
+    std::vector<QuantLib::ext::shared_ptr<FxBsData>> fxData;
     for (Size i = 1; i < currencies.size(); ++i) {
         string ccyPair = currencies[i].code() + currencies.front().code();
         DLOG("FX component # " << (i - 1) << " (" << ccyPair << ")");
-        auto bsData = boost::make_shared<FxBsData>();
+        auto bsData = QuantLib::ext::make_shared<FxBsData>();
         vector<Real> vols = parseListOfValues<Real>(getCcyValue("FxVolatility", ccyPair, true), &parseReal);
         vector<Real> volTimes =
             parseListOfValues<Real>(getCcyValue("FxVolatilityTimes", currencies[i].code(), false), &parseReal);
@@ -227,7 +227,7 @@ boost::shared_ptr<PricingEngine> CamMcMultiLegOptionEngineBuilder::engineImpl(
                                                << p.first << " expected 'Corr_Key1_Key2'");
             CorrelationFactor f_1 = parseCorrelationFactor(tokens[1]);
             CorrelationFactor f_2 = parseCorrelationFactor(tokens[2]);
-            corr[std::make_pair(f_1, f_2)] = Handle<Quote>(boost::make_shared<SimpleQuote>(parseReal(p.second)));
+            corr[std::make_pair(f_1, f_2)] = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(parseReal(p.second)));
             DLOG("added correlation " << tokens[1] << " " << tokens[2] << " " << p.second);
         }
     }
@@ -241,8 +241,8 @@ boost::shared_ptr<PricingEngine> CamMcMultiLegOptionEngineBuilder::engineImpl(
     std::string configurationInCcy = configuration(MarketContext::irCalibration);
     std::string configurationXois = configuration(MarketContext::pricing);
 
-    auto builder = boost::make_shared<CrossAssetModelBuilder>(
-        market_, boost::make_shared<CrossAssetModelData>(irData, fxData, corr, tolerance), configurationInCcy,
+    auto builder = QuantLib::ext::make_shared<CrossAssetModelBuilder>(
+        market_, QuantLib::ext::make_shared<CrossAssetModelData>(irData, fxData, corr, tolerance), configurationInCcy,
         configurationXois, configurationXois, configurationInCcy, configurationInCcy, configurationXois, !calibrate,
         continueOnCalibrationError, "", SalvagingAlgorithm::Spectral, id);
 
@@ -250,7 +250,7 @@ boost::shared_ptr<PricingEngine> CamMcMultiLegOptionEngineBuilder::engineImpl(
 
     // build the pricing engine
 
-    auto engine = boost::make_shared<McMultiLegOptionEngine>(
+    auto engine = QuantLib::ext::make_shared<McMultiLegOptionEngine>(
         builder->model(), parseSequenceType(engineParameter("Training.Sequence")),
         parseSequenceType(engineParameter("Pricing.Sequence")), parseInteger(engineParameter("Training.Samples")),
         parseInteger(engineParameter("Pricing.Samples")), parseInteger(engineParameter("Training.Seed")),
@@ -263,10 +263,10 @@ boost::shared_ptr<PricingEngine> CamMcMultiLegOptionEngineBuilder::engineImpl(
     return engine;
 }
 
-boost::shared_ptr<PricingEngine> CamAmcMultiLegOptionEngineBuilder::engineImpl(
+QuantLib::ext::shared_ptr<PricingEngine> CamAmcMultiLegOptionEngineBuilder::engineImpl(
     const string& id, const std::vector<Date>& exDates, const Date& maturityDate,
     const std::vector<Currency>& currencies, const std::vector<Date>& fixingDates,
-    const std::vector<boost::shared_ptr<QuantLib::InterestRateIndex>>& indexes) {
+    const std::vector<QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>>& indexes) {
 
     std::string ccysStr;
     for (auto const& c : currencies) {
@@ -283,8 +283,8 @@ boost::shared_ptr<PricingEngine> CamAmcMultiLegOptionEngineBuilder::engineImpl(
     std::vector<Size> externalModelIndices;
     std::vector<Handle<YieldTermStructure>> discountCurves;
     std::vector<Size> cIdx;
-    std::vector<boost::shared_ptr<IrModel>> lgm;
-    std::vector<boost::shared_ptr<FxBsParametrization>> fx;
+    std::vector<QuantLib::ext::shared_ptr<IrModel>> lgm;
+    std::vector<QuantLib::ext::shared_ptr<FxBsParametrization>> fx;
 
     // base ccy is the base ccy of the external cam by definition
     // but in case we only have one currency, we don't need this
@@ -318,13 +318,13 @@ boost::shared_ptr<PricingEngine> CamAmcMultiLegOptionEngineBuilder::engineImpl(
         }
     }
 
-    Handle<CrossAssetModel> model(boost::make_shared<CrossAssetModel>(lgm, fx, corr));
+    Handle<CrossAssetModel> model(QuantLib::ext::make_shared<CrossAssetModel>(lgm, fx, corr));
     // we assume that the model has the pricing discount curves attached already, so
     // we leave the discountCurves vector empty here
 
     // build the pricing engine
 
-    auto engine = boost::make_shared<McMultiLegOptionEngine>(
+    auto engine = QuantLib::ext::make_shared<McMultiLegOptionEngine>(
         model, parseSequenceType(engineParameter("Training.Sequence")),
         parseSequenceType(engineParameter("Pricing.Sequence")), parseInteger(engineParameter("Training.Samples")),
         parseInteger(engineParameter("Pricing.Samples")), parseInteger(engineParameter("Training.Seed")),
@@ -333,7 +333,8 @@ boost::shared_ptr<PricingEngine> CamAmcMultiLegOptionEngineBuilder::engineImpl(
         parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering")),
         parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")), discountCurves, simulationDates_,
         externalModelIndices, parseBool(engineParameter("MinObsDate")),
-        parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")));
+        parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
+        parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())));
 
     return engine;
 }

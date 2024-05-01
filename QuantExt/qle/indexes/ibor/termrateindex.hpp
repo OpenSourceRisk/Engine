@@ -33,14 +33,14 @@ public:
     TermRateIndex(const std::string& familyName, const Period& tenor, Natural settlementDays, const Currency& currency,
                   const Calendar& fixingCalendar, BusinessDayConvention convention, bool endOfMonth,
                   const DayCounter& dayCounter, Handle<YieldTermStructure> h = Handle<YieldTermStructure>(),
-                  const boost::shared_ptr<OvernightIndex>& rfrIndex = nullptr)
+                  const QuantLib::ext::shared_ptr<OvernightIndex>& rfrIndex = nullptr)
         : IborIndex(familyName, tenor, settlementDays, currency, fixingCalendar, convention, endOfMonth, dayCounter, h),
           rfrIndex_(rfrIndex) {}
 
-    boost::shared_ptr<OvernightIndex> rfrIndex() const { return rfrIndex_; }
+    QuantLib::ext::shared_ptr<OvernightIndex> rfrIndex() const { return rfrIndex_; }
 
 private:
-    boost::shared_ptr<OvernightIndex> rfrIndex_;
+    QuantLib::ext::shared_ptr<OvernightIndex> rfrIndex_;
 };
 
 } // namespace QuantExt

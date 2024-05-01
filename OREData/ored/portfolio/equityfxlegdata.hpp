@@ -40,7 +40,7 @@ public:
     //! Default constructor
     EquityMarginLegData() : ore::data::LegAdditionalData("EquityMargin") {}
     //! Constructor
-    EquityMarginLegData(boost::shared_ptr<ore::data::EquityLegData>& equityLegData, const vector<double>& rates, 
+    EquityMarginLegData(QuantLib::ext::shared_ptr<ore::data::EquityLegData>& equityLegData, const vector<double>& rates, 
         const vector<string>& rateDates = vector<string>(), const double& initialMarginFactor = QuantExt::Null<double>(),
         const double& multiplier = QuantExt::Null<double>())
         : ore::data::LegAdditionalData("EquityMargin"), equityLegData_(equityLegData), rates_(rates), rateDates_(rateDates), 
@@ -48,7 +48,7 @@ public:
 
     //! \name Inspectors
     //@{
-    const boost::shared_ptr<ore::data::EquityLegData> equityLegData() { return equityLegData_; } 
+    const QuantLib::ext::shared_ptr<ore::data::EquityLegData> equityLegData() { return equityLegData_; } 
     const vector<double>& rates() const { return rates_; }
     const vector<string>& rateDates() const { return rateDates_; }
     const double& initialMarginFactor() const { return initialMarginFactor_; }
@@ -58,11 +58,11 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(ore::data::XMLNode* node) override;
-    virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
 private:
    
-    boost::shared_ptr<ore::data::EquityLegData> equityLegData_;
+    QuantLib::ext::shared_ptr<ore::data::EquityLegData> equityLegData_;
     vector<double> rates_;
     vector<string> rateDates_;
     double initialMarginFactor_;
@@ -73,8 +73,8 @@ private:
 //! \name Utilities for building QuantLib Legs
 //@{
 QuantExt::Leg makeEquityMarginLeg(const ore::data::LegData& data,
-                                  const boost::shared_ptr<QuantExt::EquityIndex2>& equityCurve,
-                                  const boost::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+                                  const QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>& equityCurve,
+                                  const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
                                   const QuantLib::Date& openEndDateReplacement = QuantLib::Null<QuantLib::Date>());
 //@}
 

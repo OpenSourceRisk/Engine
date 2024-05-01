@@ -31,17 +31,17 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
-XvaRunner::XvaRunner(const boost::shared_ptr<InputParameters>& inputs,
-                     Date asof, const string& baseCurrency, const boost::shared_ptr<Portfolio>& portfolio,
-                     const boost::shared_ptr<NettingSetManager>& netting,
-                     const boost::shared_ptr<CollateralBalances>& collateralBalances,
-                     const boost::shared_ptr<EngineData>& engineData,
-                     const boost::shared_ptr<CurveConfigurations>& curveConfigs,
-                     const boost::shared_ptr<TodaysMarketParameters>& todaysMarketParams,
-                     const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-                     const boost::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
-                     const boost::shared_ptr<CrossAssetModelData>& crossAssetModelData,
-                     const boost::shared_ptr<ReferenceDataManager>& referenceData,
+XvaRunner::XvaRunner(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                     Date asof, const string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+                     const QuantLib::ext::shared_ptr<NettingSetManager>& netting,
+                     const QuantLib::ext::shared_ptr<CollateralBalances>& collateralBalances,
+                     const QuantLib::ext::shared_ptr<EngineData>& engineData,
+                     const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs,
+                     const QuantLib::ext::shared_ptr<TodaysMarketParameters>& todaysMarketParams,
+                     const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+                     const QuantLib::ext::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
+                     const QuantLib::ext::shared_ptr<CrossAssetModelData>& crossAssetModelData,
+                     const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                      const IborFallbackConfig& iborFallbackConfig, Real dimQuantile, Size dimHorizonCalendarDays,
                      map<string, bool> analytics, string calculationType, string dvaName, string fvaBorrowingCurve,
                      string fvaLendingCurve, bool fullInitialCollateralisation, bool storeFlows)
@@ -63,23 +63,23 @@ XvaRunner::XvaRunner(const boost::shared_ptr<InputParameters>& inputs,
     }
 }
 
-boost::shared_ptr<ScenarioSimMarketParameters>
+QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>
 XvaRunner::projectSsmData(const std::set<std::string>& currencyFilter) const {
     QL_FAIL("XvaRunner::projectSsmData() is only available in ORE+");
 }
 
-boost::shared_ptr<ore::analytics::ScenarioGenerator>
+QuantLib::ext::shared_ptr<ore::analytics::ScenarioGenerator>
 XvaRunner::getProjectedScenarioGenerator(const boost::optional<std::set<std::string>>& currencyFilter,
-                                         const boost::shared_ptr<Market>& market,
-                                         const boost::shared_ptr<ScenarioSimMarketParameters>& projectedSsmData,
-                                         const boost::shared_ptr<ScenarioFactory>& sf, const bool continueOnErr) const {
+                                         const QuantLib::ext::shared_ptr<Market>& market,
+                                         const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& projectedSsmData,
+                                         const QuantLib::ext::shared_ptr<ScenarioFactory>& sf, const bool continueOnErr) const {
     QL_REQUIRE(!currencyFilter,
                "XvaRunner::getProjectedScenarioGenerator() with currency filter is only available in ORE+");
     ScenarioGeneratorBuilder sgb(scenarioGeneratorData_);
     return sgb.build(model_, sf, projectedSsmData, asof_, market, Market::defaultConfiguration);
 }
 
-void XvaRunner::buildCamModel(const boost::shared_ptr<ore::data::Market>& market, bool continueOnErr) {
+void XvaRunner::buildCamModel(const QuantLib::ext::shared_ptr<ore::data::Market>& market, bool continueOnErr) {
 
     LOG("XvaRunner::buildCamModel() called");
 
@@ -96,7 +96,7 @@ void XvaRunner::bufferSimulationPaths() {
     LOG("XvaRunner::bufferSimulationPaths() called");
 
     auto stateProcess = model_->stateProcess();
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(stateProcess)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(stateProcess)) {
         tmp->resetCache(scenarioGeneratorData_->getGrid()->timeGrid().size() - 1);
     }
     auto pathGen = MultiPathGeneratorFactory().build(scenarioGeneratorData_->sequenceType(), stateProcess,
@@ -105,7 +105,7 @@ void XvaRunner::bufferSimulationPaths() {
                                                      scenarioGeneratorData_->directionIntegers());
 
     if (!bufferedPaths_) {
-        bufferedPaths_ = boost::make_shared<std::vector<std::vector<Path>>>(
+        bufferedPaths_ = QuantLib::ext::make_shared<std::vector<std::vector<Path>>>(
             scenarioGeneratorData_->samples(), std::vector<Path>(stateProcess->size(), TimeGrid()));
     }
 
@@ -119,13 +119,13 @@ void XvaRunner::bufferSimulationPaths() {
     LOG("XvaRunner::bufferSimulationPaths() finished");
 }
 
-void XvaRunner::buildSimMarket(const boost::shared_ptr<ore::data::Market>& market,
+void XvaRunner::buildSimMarket(const QuantLib::ext::shared_ptr<ore::data::Market>& market,
     const boost::optional<std::set<std::string>>& currencyFilter, const bool continueOnErr) {
     LOG("XvaRunner::buildSimMarket() called");
 
     Settings::instance().evaluationDate() = asof_;
 
-    boost::shared_ptr<ScenarioSimMarketParameters> projectedSsmData;
+    QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> projectedSsmData;
     if (currencyFilter) {
         projectedSsmData = projectSsmData(*currencyFilter);
     }
@@ -133,23 +133,23 @@ void XvaRunner::buildSimMarket(const boost::shared_ptr<ore::data::Market>& marke
         projectedSsmData = simMarketData_;
     }
 
-    boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
-    boost::shared_ptr<ScenarioGenerator> sg =
+    QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
+    QuantLib::ext::shared_ptr<ScenarioGenerator> sg =
         getProjectedScenarioGenerator(currencyFilter, market, projectedSsmData, sf, continueOnErr);
-    simMarket_ = boost::make_shared<ScenarioSimMarket>(market, projectedSsmData, Market::defaultConfiguration,
+    simMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(market, projectedSsmData, Market::defaultConfiguration,
                                                        *curveConfigs_, *todaysMarketParams_, true, false, true, false,
                                                        iborFallbackConfig_, false);
     simMarket_->scenarioGenerator() = sg;
 
     DLOG("build scenario data");
 
-    scenarioData_.linkTo(boost::make_shared<InMemoryAggregationScenarioData>(
+    scenarioData_.linkTo(QuantLib::ext::make_shared<InMemoryAggregationScenarioData>(
         scenarioGeneratorData_->getGrid()->valuationDates().size(), scenarioGeneratorData_->samples()));
     simMarket_->aggregationScenarioData() = *scenarioData_;
 
-    auto ed = boost::make_shared<EngineData>(*engineData_);
+    auto ed = QuantLib::ext::make_shared<EngineData>(*engineData_);
     ed->globalParameters()["RunType"] = "Exposure";
-    simFactory_ = boost::make_shared<EngineFactory>(ed, simMarket_, map<MarketContext, string>(), referenceData_,
+    simFactory_ = QuantLib::ext::make_shared<EngineFactory>(ed, simMarket_, map<MarketContext, string>(), referenceData_,
                                                     iborFallbackConfig_);
 }
 
@@ -159,7 +159,7 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
 
     Settings::instance().evaluationDate() = asof_;    
 
-    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
+    QuantLib::ext::shared_ptr<Portfolio> portfolio = QuantLib::ext::make_shared<Portfolio>();
     if (tradeIds) {
         for (auto const& t : *tradeIds) {
             QL_REQUIRE(portfolio_->has(t), "XvaRunner::buildCube(): portfolio does not contain trade with id '"
@@ -186,15 +186,15 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
 
     DLOG("build calculators");
 
-    std::vector<boost::shared_ptr<ValuationCalculator>> calculators;
-    boost::shared_ptr<NPVCalculator> npvCalculator = boost::make_shared<NPVCalculator>(baseCurrency_);
-    cubeInterpreter_ = boost::make_shared<CubeInterpretation>(storeFlows_, scenarioGeneratorData_->withCloseOutLag(),
+    std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>> calculators;
+    QuantLib::ext::shared_ptr<NPVCalculator> npvCalculator = QuantLib::ext::make_shared<NPVCalculator>(baseCurrency_);
+    cubeInterpreter_ = QuantLib::ext::make_shared<CubeInterpretation>(storeFlows_, scenarioGeneratorData_->withCloseOutLag(),
                                                               scenarioData_, scenarioGeneratorData_->getGrid());
     if (scenarioGeneratorData_->withCloseOutLag()) {
         // depth 2: NPV and close-out NPV
         cube_ = getNpvCube(asof_, portfolio->ids(), scenarioGeneratorData_->getGrid()->valuationDates(),
                            scenarioGeneratorData_->samples(), 2);
-        calculators.push_back(boost::make_shared<MPORCalculator>(npvCalculator, cubeInterpreter_->defaultDateNpvIndex(),
+        calculators.push_back(QuantLib::ext::make_shared<MPORCalculator>(npvCalculator, cubeInterpreter_->defaultDateNpvIndex(),
                                                                  cubeInterpreter_->closeOutDateNpvIndex()));
         calculationType_ = "NoLag";
         if (calculationType_ != inputCalculationType_) {
@@ -205,7 +205,7 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
             // regular, depth 2: NPV and cash flow
             cube_ = getNpvCube(asof_, portfolio->ids(), scenarioGeneratorData_->getGrid()->dates(),
                                scenarioGeneratorData_->samples(), 2);
-            calculators.push_back(boost::make_shared<CashflowCalculator>(
+            calculators.push_back(QuantLib::ext::make_shared<CashflowCalculator>(
                 baseCurrency_, asof_, scenarioGeneratorData_->getGrid(), cubeInterpreter_->mporFlowsIndex()));
         } else
             // regular, depth 1
@@ -225,10 +225,10 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
     engine.buildCube(portfolio, cube_, calculators, scenarioGeneratorData_->withMporStickyDate(), nettingCube_);
 }
 
-void XvaRunner::generatePostProcessor(const boost::shared_ptr<Market>& market,
-                                      const boost::shared_ptr<NPVCube>& npvCube,
-                                      const boost::shared_ptr<NPVCube>& nettingCube,
-                                      const boost::shared_ptr<AggregationScenarioData>& scenarioData,
+void XvaRunner::generatePostProcessor(const QuantLib::ext::shared_ptr<Market>& market,
+                                      const QuantLib::ext::shared_ptr<NPVCube>& npvCube,
+                                      const QuantLib::ext::shared_ptr<NPVCube>& nettingCube,
+                                      const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData,
                                       const bool continueOnErr,
                                       const std::map<std::string, QuantLib::Real>& currentIM) {
 
@@ -236,17 +236,17 @@ void XvaRunner::generatePostProcessor(const boost::shared_ptr<Market>& market,
 
     QL_REQUIRE(analytics_.size() > 0, "analytics map not set");
 
-    boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator =
+    QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> dimCalculator =
         getDimCalculator(npvCube, cubeInterpreter_, *scenarioData_, model_, nettingCube, currentIM);
 
-    postProcess_ = boost::make_shared<PostProcess>(portfolio_, netting_, collateralBalances_,
+    postProcess_ = QuantLib::ext::make_shared<PostProcess>(portfolio_, netting_, collateralBalances_,
                                                    market, "", npvCube, scenarioData, analytics_,
                                                    baseCurrency_, "None", 1.0, 0.95, calculationType_, dvaName_,
                                                    fvaBorrowingCurve_, fvaLendingCurve_, dimCalculator,
                                                    cubeInterpreter_, fullInitialCollateralisation_);
 }
 
-void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnErr,
+void XvaRunner::runXva(const QuantLib::ext::shared_ptr<Market>& market, bool continueOnErr,
                        const std::map<std::string, QuantLib::Real>& currentIM) {
 
     LOG("XvaRunner::runXva called");
@@ -257,26 +257,26 @@ void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnE
     generatePostProcessor(market, npvCube(), nettingCube(), *aggregationScenarioData(), continueOnErr, currentIM);
 }
 
-boost::shared_ptr<DynamicInitialMarginCalculator> XvaRunner::getDimCalculator(
-    const boost::shared_ptr<NPVCube>& cube, const boost::shared_ptr<CubeInterpretation>& cubeInterpreter,
-    const boost::shared_ptr<AggregationScenarioData>& scenarioData,
-    const boost::shared_ptr<QuantExt::CrossAssetModel>& model, const boost::shared_ptr<NPVCube>& nettingCube,
+QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> XvaRunner::getDimCalculator(
+    const QuantLib::ext::shared_ptr<NPVCube>& cube, const QuantLib::ext::shared_ptr<CubeInterpretation>& cubeInterpreter,
+    const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData,
+    const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& model, const QuantLib::ext::shared_ptr<NPVCube>& nettingCube,
     const std::map<std::string, QuantLib::Real>& currentIM) {
 
-    boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator;
+    QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> dimCalculator;
     Size dimRegressionOrder = 0;
     vector<string> dimRegressors;           // FIXME: empty vector means regression vs netting set NPV
     Size dimLocalRegressionEvaluations = 0; // skip local regression
     Real dimLocalRegressionBandwidth = 0.25;
 
-    dimCalculator = boost::make_shared<RegressionDynamicInitialMarginCalculator>(
+    dimCalculator = QuantLib::ext::make_shared<RegressionDynamicInitialMarginCalculator>(
         inputs_, portfolio_, cube, cubeInterpreter, scenarioData, dimQuantile_, dimHorizonCalendarDays_, dimRegressionOrder,
         dimRegressors, dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, currentIM);
 
     return dimCalculator;
 }
 
-std::set<std::string> XvaRunner::getNettingSetIds(const boost::shared_ptr<Portfolio>& portfolio) const {
+std::set<std::string> XvaRunner::getNettingSetIds(const QuantLib::ext::shared_ptr<Portfolio>& portfolio) const {
     // collect netting set ids from portfolio
     std::set<std::string> nettingSetIds;
     for (auto const& [tradeId,trade] : portfolio == nullptr ? portfolio_->trades() : portfolio->trades())
@@ -284,13 +284,13 @@ std::set<std::string> XvaRunner::getNettingSetIds(const boost::shared_ptr<Portfo
     return nettingSetIds;
 }
 
-boost::shared_ptr<NPVCube> XvaRunner::getNpvCube(const Date& asof, const std::set<std::string>& ids,
+QuantLib::ext::shared_ptr<NPVCube> XvaRunner::getNpvCube(const Date& asof, const std::set<std::string>& ids,
                                                  const std::vector<Date>& dates, const Size samples,
                                                  const Size depth) const {
     if (depth == 1) {
-        return boost::make_shared<SinglePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0f);
+        return QuantLib::ext::make_shared<SinglePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0f);
     } else {
-        return boost::make_shared<SinglePrecisionInMemoryCubeN>(asof, ids, dates, samples, depth, 0.0f);
+        return QuantLib::ext::make_shared<SinglePrecisionInMemoryCubeN>(asof, ids, dates, samples, depth, 0.0f);
     }
 }
 

@@ -379,11 +379,11 @@ node is shown in Listing \ref{lst:tenor_basis_conventions}.
 \begin{minted}[fontsize=\footnotesize]{xml}
 <TenorBasisSwap>
   <Id> </Id>
-  <LongIndex> </LongIndex>
-  <LongPayTenor> </ShortPayTenor>
-  <ShortIndex> </ShortIndex>
-  <ShortPayTenor> </ShortPayTenor>
-  <SpreadOnShort> </SpreadOnShort>
+  <PayIndex> </PayIndex>
+  <PayFrequency> </PayFrequency>
+  <ReceiveIndex> </ReceiveIndex>
+  <ReceiveFrequency> </ReceiveFrequency>
+  <SpreadOnRec> </SpreadOnRec>
   <IncludeSpread> </IncludeSpread>
   <SubPeriodsCouponType> </SubPeriodsCouponType>
 </TenorBasisSwap>
@@ -395,27 +395,21 @@ node is shown in Listing \ref{lst:tenor_basis_conventions}.
 
 The meanings of the various elements in this node are as follows:
 \begin{itemize}
-\item LongIndex: The name of the long tenor Ibor index. In the case of basis swaps with equal tenor indexes (like overnight 
-indexed vs overnight indexed basis swaps) it should be interpreted as the index of the received leg.
-\item LongPayTenor [Optional]: The frequency of payments on the LongIndex leg. This is usually the same as the LongIndex's 
-tenor. However, it can also be longer, e.g. overnight indexed vs overnight indexed basis swaps that may be quarterly on 
-both legs. If not provided, this defaults to the LongIndex's tenor.
-\item ShortIndex: The name of the short tenor Ibor or overnight index.
-\item ShortPayTenor [Optional]: The frequency of payments on the ShortIndex leg. This is usually the same as the
-ShortIndex's tenor. However, it can also be longer e.g.\ USD tenor basis swaps where the short tenor Ibor
-index is compounded and paid on the same frequency as the long tenor Ibor index, or overnight indexed vs overnight 
-indexed basis swaps that may be quarterly on both legs. If not provided, this defaults to the ShortIndex's tenor.
-\item SpreadOnShort [Optional]: \emph{True} if the tenor basis swap quote has the spread on the short tenor Ibor index
-leg and \emph{False} if not. If not provided, this defaults to \emph{True}.
-\item IncludeSpread [Optional]: \emph{True} if the tenor basis swap spread is to be included when compounding is
-performed on the short tenor Ibor index leg and \emph{False} if not. If not provided, this defaults to \emph{False}.
-\item SubPeriodsCouponType [Optional]: This field can have the value \emph{Compounding} or \emph{Averaging}. It applies 
-to Ibor vs OI and Ibor vs Ibor basis swaps when the frequency of payments on the short tenor leg does not equal the 
-short tenor index's tenor. If \emph{Compounding} is specified, then the short tenor Ibor index is compounded and paid on
-the frequency specified in the \lstinline!ShortPayTenor! node. If \emph{Averaging} is specified, then the short tenor 
-Ibor index is averaged and paid on the frequency specified in the \lstinline!ShortPayTenor! node. If not provided, this 
-defaults to \emph{Compounding}. In the context of overnight indexed vs overnight indexed basis swaps this value will apply 
-to both legs.
+\item PayIndex: The name of Ibor/Overnight Index of the pay leg.
+\item PayFrequency [Optional]: The frequency of payments on the PayIndex leg. This is usually the same as the PayIndex's tenor. 
+However, it can also be longer, e.g. overnight indexed vs overnight indexed basis swaps that may be quarterly on both legs. 
+If not provided, this defaults to the PayIndex's tenor.
+\item ReceiveIndex: The name of Ibor/Overnight Index of the receive leg.
+\item ReceiveFrequency [Optional]: The frequency of payments on the ReceiveIndex leg. This is usually the same as the ReceiveIndex's tenor. 
+However, it can also be longer, e.g. overnight indexed vs overnight indexed basis swaps that may be quarterly on both legs. 
+If not provided, this defaults to the ReceiveIndex's tenor.
+\item SpreadOnRec [Optional]: \emph{True}  if the tenor basis swap quote has the spread on the pay index leg and \emph{False} if not. 
+If not provided, this defaults to \emph{True}.
+\item IncludeSpread [Optional]: \emph{True} if the tenor basis swap spread is to be included when compounding is performed on the spread leg and \emph{False} if not. 
+If not provided, this defaults to \emph{False}.
+\item SubPeriodsCouponType [Optional]: This field can have the value \emph{Compounding} or \emph{Averaging}. It applies to Ibor vs OI and Ibor vs Ibor basis swaps when the frequency of payments on the spread leg does not equal the spread leg index’s tenor. 
+If \emph{Compounding} is specified, then the spread tenor Ibor index is compounded and paid on the frequency specified in the corresponding node. 
+If \emph{Averaging} is specified, then the short tenor Ibor index is averaged and paid on the frequency specified in the corresponding node.
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -984,14 +978,14 @@ The meanings of the various elements in this node are as follows:
 \item \lstinline!IsAveraging! [Optional]: The allowable values are \lstinline!true! and \lstinline!false!. This node indicates if the future contract is based on the average commodity price of the contract period. If omitted, it defaults to \lstinline!false!.
 \item \lstinline!OptionExpiryOffset! [Optional]: The number of business days that the option expiry date is before the future expiry date. Any non-negative integer is allowed here. If omitted, this takes a default value of zero and the expiry date of an option on the future contract is assumed to equal the expiry date of the future contract.
 \item \lstinline!ProhibitedExpiries! [Optional]: This node can be used to specify explicit dates which are not allowed as future contract expiry dates or as option expiry dates. A useful example of this is the ICE Brent contract which has the following constraint on expiry dates: \emph{If the day on which trading is due to cease would be either: (i) the Business Day preceding Christmas Day, or (ii) the Business Day preceding New Year’s Day, then trading shall cease on the next preceding Business Day}. Each \lstinline!Date! node can take optional attributes. The default values of these attributes is shown in Listing \ref{lst:commodity_future_conventions}. The \lstinline!convention! attribute accepts a valid business day convention in the list \lstinline!Preceding!, \lstinline!ModifiedPreceding!, \lstinline!Following! and \lstinline!ModifiedFollowing!. This \lstinline!convention! indicates how the future expiry date should be adjusted if it lands on the prohibited expiry \lstinline!Date!. If omitted, the default is \lstinline!Preceding!. Both \lstinline!Preceding! and \lstinline!ModifiedPreceding! indicate that the next available business day before the date is tested. \lstinline!Following! and \lstinline!ModifiedFollowing! indicate that the next available business day after the date is tested. The \lstinline!optionConvention! attribute allows the same values and behaves in the same way to determine how the option expiry date should be adjusted if it lands on the prohibited expiry \lstinline!Date!. The \lstinline!forFuture! and \lstinline!forOption! boolean attributes enable the prohibited expiry to apply only for the future expiry date or the option expiry date respectively by setting the value to \lstinline!false!.
-\item \lstinline!OptionExpiryMonthLag! [Optional]: The allowable values are any integer. This value indicates the number of months from the month containing the option expiry date to the month containing the expiry date. If 0, the commodity future option contract expiry date is anchored in the same month as the commodity future contract expiry date. If the value of \lstinline!OptionExpiryMonthLag! is $n > 0$, the commodity option future contract expires in the $n$-th month prior to the commodity future contract expiry month. If the value of \lstinline!OptionExpiryMonthLag! is $n < 0$, the commodity option future contract expires in the $n$-th month after the the commodity future contract expiry month. The value of \lstinline!OptionExpiryMonthLag! should be equal to \lstinline!ExpiryMonthLag! when \lstinline!OptionExpiryOffset! is used. The \lstinline!OptionExpiryMonthLag! is rarely used. An example is the Crude Palm Oil contract \lstinline!XKLS:FCPO! where the future contract expiry is in the delivery month and the option expiry is in the month that is 2 months prior to this. In this case, \lstinline!OptionExpiryMonthLag! is 2. If omitted, \lstinline!OptionExpiryMonthLag! defaults to 0.
+\item \lstinline!OptionExpiryMonthLag! [Optional]: The allowable values are any integer. This value indicates the number of months from the month containing the option expiry date to the month containing the expiry date. If 0, the commodity future option contract expiry date is anchored in the same month as the commodity future contract expiry date. If the value of \lstinline!OptionExpiryMonthLag! is $n > 0$, the commodity option future contract expires in the $n$-th month prior to the commodity future contract expiry month. If the value of \lstinline!OptionExpiryMonthLag! is $n < 0$, the commodity option future contract expires in the $n$-th month after the commodity future contract expiry month. The value of \lstinline!OptionExpiryMonthLag! should be equal to \lstinline!ExpiryMonthLag! when \lstinline!OptionExpiryOffset! is used. The \lstinline!OptionExpiryMonthLag! is rarely used. An example is the Crude Palm Oil contract \lstinline!XKLS:FCPO! where the future contract expiry is in the delivery month and the option expiry is in the month that is 2 months prior to this. In this case, \lstinline!OptionExpiryMonthLag! is 2. If omitted, \lstinline!OptionExpiryMonthLag! defaults to 0.
 \item \lstinline!OptionExpiryDay! [Optional]: This node can contain any integer in the range $1,\ldots,31$ indicating the day of the month on which an option expiry date is anchored. A value of 31 will guarantee that the last day in the month is used a base date. If omitted, this is not used. Setting this field takes precedence over \lstinline!OptionExpiryOffset!.\item \lstinline!OptionBusinessDayConvention! [Optional]: The business day convention used to adjust the option expiry date to a good business day if \lstinline!OptionExpiryDay! is used.
 \item \lstinline!OptionContractFrequency! [Optional]: This node indicates the frequency of the commodity future options if it differs from the frequency of the underlying future contract. The value here is usually \lstinline!Monthly!
 \item \lstinline!OptionNthWeekday! [Optional]: This node has the elements shown in Listing \ref{lst:nth_weekday_node}. This node is used to indicate a date in a given month in the form of the n-th named weekday of that month e.g. 3rd Wednesday. The allowable values for \lstinline!Nth! are ${1,2,3,4}$. The \lstinline!Weekday! node takes a weekday in the form of the first three characters of the weekday with the first character capitalised.
 \item \lstinline!OptionBusinessDayConvention! [Optional]: The business day convention used to adjust the option expiry date to a good business day if \lstinline!OptionExpiryDay! is used.
 \item \lstinline!OptionExpiryLastWeekdayOfMonth! [Optional]: This node is used to indicate a date in a given month in the form of the last named weekday of that month e.g. last Wednesday. The node takes a weekday in the form of the first three characters of the weekday with the first character capitalised.
 \item \lstinline!OptionExpiryWeeklyDayOfTheWeek! [Optional]: This node is used to indicate a date in a given week in the form of the named weekday, e.g. Wednesday. The node takes a weekday in the form of the first three characters of the weekday with the first character capitalised. This node is mandatory for weekly expiring options. The node is not allowed to use with any other option contract frequency.
-\item \lstinline!OptionUnderlyingFutureConvention! [Optional]: Sometimes the next contract expiry, as specified in the convention, is not the correct option underlying. For example the base metals options expiries on the 1st Wedenesday of the contract month, and during the first 3 months there are daily future contracts available. The option underlying is not the future contract which matures on the option expiry but the one which matures on the 3rd Wednesday of the month. This field is referencing to an commodity future convention which specifies the correct expiry date for the underlying contract.
+\item \lstinline!OptionUnderlyingFutureConvention! [Optional]: Sometimes the next contract expiry, as specified in the convention, is not the correct option underlying. For example the base metals options expiries on the 1st Wednesday of the contract month, and during the first 3 months there are daily future contracts available. The option underlying is not the future contract which matures on the option expiry but the one which matures on the 3rd Wednesday of the month. This field is referencing to an commodity future convention which specifies the correct expiry date for the underlying contract.
 \item \lstinline!FutureContinuationMappings! [Optional]: When building future curves, we may use market data that has a continuation expiry, i.e. \lstinline!c1!, \lstinline!c2!, etc. , as opposed to an explicit expiry date or tenor. In some cases, the continuation expiries coming from the market data provider may skip serial months and therefore we use the mapping here to map from the market data provider index to the relevant serial month.
 \item \lstinline!OptionContinuationMappings! [Optional]: When building option volatility structures, we may use market data that has a continuation expiry, i.e. \lstinline!c1!, \lstinline!c2!, etc. , as opposed to an explicit expiry date or tenor. In some cases, the continuation expiries coming from the market data provider may skip serial months and therefore we use the mapping here to map from the market data provider index to the relevant serial month. For example, for the Crude Palm Oil contract \lstinline!XKLS:FCPO!, the option expiry months are serial up to the 9th month and then alternate months. So, we would add a mapping from 10 to 11, 11 to 13 and so on so that the correct option expiry is arrived at when reading the market data quotes and constructing the option volatility structure.
 \item \lstinline!AveragingData! [Optional]: This node is needed for future contracts that are used in a piecewise commodity curve \lstinline!PriceSegment! and whose underlying is the average of other future prices or spot prices over a given period. An example is the ICE PMI power contract with contract specifications outlined \href{https://www.theice.com/products/6590369/PJM-Western-Hub-Real-Time-Peak-1-MW-Fixed-Price-Future}{here}. It is described in detail below.

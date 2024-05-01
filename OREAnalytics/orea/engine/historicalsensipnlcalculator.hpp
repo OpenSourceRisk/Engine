@@ -97,8 +97,8 @@ private:
 
 class HistoricalSensiPnlCalculator {
 public:
-    HistoricalSensiPnlCalculator(const boost::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
-                                 const boost::shared_ptr<SensitivityStream>& ss)
+    HistoricalSensiPnlCalculator(const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
+                                 const QuantLib::ext::shared_ptr<SensitivityStream>& ss)
         : hisScenGen_(hisScenGen), sensitivityStream_(ss) {}
     
     void populateSensiShifts(QuantLib::ext::shared_ptr<NPVCube>& cube, const vector<RiskFactorKey>& keys,

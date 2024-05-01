@@ -61,9 +61,10 @@ protected:
                          const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
                          const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;
 
+    std::vector<ore::data::TimePeriod> timePeriods() override { return {period_.get()}; }
+
 private:
     std::vector<Real> p_;
-    bool breakdown_ = false;
 };
 
 } // namespace analytics

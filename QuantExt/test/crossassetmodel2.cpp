@@ -108,7 +108,7 @@ namespace {
 struct Lgm31fTestData {
     Lgm31fTestData()
         : refDate(18, Dec, 2015),
-          yts(boost::make_shared<FlatForward>(refDate, 0.02, ActualActual(ActualActual::ISDA))) {
+          yts(QuantLib::ext::make_shared<FlatForward>(refDate, 0.02, ActualActual(ActualActual::ISDA))) {
 
         Settings::instance().evaluationDate() = refDate;
         Size tmp[31] = { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 16, 17, 18,
@@ -651,12 +651,12 @@ struct Lgm31fTestData {
         // for parametrization set up (without last time)
         Array irTimes2(irTimes.begin(), irTimes.end() - 1);
 
-        boost::shared_ptr<IrLgm1fParametrization> tmpIr;
+        QuantLib::ext::shared_ptr<IrLgm1fParametrization> tmpIr;
 
         // dummy yts (we check covariances here for which the yts does not
         // matter)
         Handle<YieldTermStructure> yts(
-            boost::make_shared<FlatForward>(refDate, 0.02, ActualActual(ActualActual::ISDA)));
+            QuantLib::ext::make_shared<FlatForward>(refDate, 0.02, ActualActual(ActualActual::ISDA)));
 
         Array alpha(LENGTH(irTen)), lambda(LENGTH(irTen));
 
@@ -673,7 +673,7 @@ struct Lgm31fTestData {
             lambda[i] =
                 std::sqrt((H_EUR[i] - (i == 0 ? 0.0 : H_EUR[i - 1])) / (irTimes[i] - (i == 0 ? 0.0 : irTimes[i - 1])));
         }
-        tmpIr = boost::make_shared<IrLgm1fPiecewiseLinearParametrization>(EURCurrency(), yts, irTimes2, alpha, irTimes2,
+        tmpIr = QuantLib::ext::make_shared<IrLgm1fPiecewiseLinearParametrization>(EURCurrency(), yts, irTimes2, alpha, irTimes2,
                                                                           lambda);
         parametrizations.push_back(tmpIr);
 
@@ -685,7 +685,7 @@ struct Lgm31fTestData {
             alpha[i] = std::sqrt((zeta_GBP[i] - (i == 0 ? 0.0 : zeta_GBP[i - 1])) /
                                  (irTimes[i] - (i == 0 ? 0.0 : irTimes[i - 1])));
         }
-        tmpIr = boost::make_shared<IrLgm1fPiecewiseLinearParametrization>(GBPCurrency(), yts, irTimes2, alpha, irTimes2,
+        tmpIr = QuantLib::ext::make_shared<IrLgm1fPiecewiseLinearParametrization>(GBPCurrency(), yts, irTimes2, alpha, irTimes2,
                                                                           lambda);
         parametrizations.push_back(tmpIr);
 
@@ -697,7 +697,7 @@ struct Lgm31fTestData {
             alpha[i] = std::sqrt((zeta_USD[i] - (i == 0 ? 0.0 : zeta_USD[i - 1])) /
                                  (irTimes[i] - (i == 0 ? 0.0 : irTimes[i - 1])));
         }
-        tmpIr = boost::make_shared<IrLgm1fPiecewiseLinearParametrization>(USDCurrency(), yts, irTimes2, alpha, irTimes2,
+        tmpIr = QuantLib::ext::make_shared<IrLgm1fPiecewiseLinearParametrization>(USDCurrency(), yts, irTimes2, alpha, irTimes2,
                                                                           lambda);
         parametrizations.push_back(tmpIr);
 
@@ -709,7 +709,7 @@ struct Lgm31fTestData {
             alpha[i] = std::sqrt((zeta_JPY[i] - (i == 0 ? 0.0 : zeta_JPY[i - 1])) /
                                  (irTimes[i] - (i == 0 ? 0.0 : irTimes[i - 1])));
         }
-        tmpIr = boost::make_shared<IrLgm1fPiecewiseLinearParametrization>(JPYCurrency(), yts, irTimes2, alpha, irTimes2,
+        tmpIr = QuantLib::ext::make_shared<IrLgm1fPiecewiseLinearParametrization>(JPYCurrency(), yts, irTimes2, alpha, irTimes2,
                                                                           lambda);
         parametrizations.push_back(tmpIr);
 
@@ -721,7 +721,7 @@ struct Lgm31fTestData {
             alpha[i] = std::sqrt((zeta_AUD[i] - (i == 0 ? 0.0 : zeta_AUD[i - 1])) /
                                  (irTimes[i] - (i == 0 ? 0.0 : irTimes[i - 1])));
         }
-        tmpIr = boost::make_shared<IrLgm1fPiecewiseLinearParametrization>(AUDCurrency(), yts, irTimes2, alpha, irTimes2,
+        tmpIr = QuantLib::ext::make_shared<IrLgm1fPiecewiseLinearParametrization>(AUDCurrency(), yts, irTimes2, alpha, irTimes2,
                                                                           lambda);
         parametrizations.push_back(tmpIr);
 
@@ -733,7 +733,7 @@ struct Lgm31fTestData {
             alpha[i] = std::sqrt((zeta_CAD[i] - (i == 0 ? 0.0 : zeta_CAD[i - 1])) /
                                  (irTimes[i] - (i == 0 ? 0.0 : irTimes[i - 1])));
         }
-        tmpIr = boost::make_shared<IrLgm1fPiecewiseLinearParametrization>(CADCurrency(), yts, irTimes2, alpha, irTimes2,
+        tmpIr = QuantLib::ext::make_shared<IrLgm1fPiecewiseLinearParametrization>(CADCurrency(), yts, irTimes2, alpha, irTimes2,
                                                                           lambda);
         parametrizations.push_back(tmpIr);
 
@@ -745,7 +745,7 @@ struct Lgm31fTestData {
             alpha[i] = std::sqrt((zeta_CHF[i] - (i == 0 ? 0.0 : zeta_CHF[i - 1])) /
                                  (irTimes[i] - (i == 0 ? 0.0 : irTimes[i - 1])));
         }
-        tmpIr = boost::make_shared<IrLgm1fPiecewiseLinearParametrization>(CHFCurrency(), yts, irTimes2, alpha, irTimes2,
+        tmpIr = QuantLib::ext::make_shared<IrLgm1fPiecewiseLinearParametrization>(CHFCurrency(), yts, irTimes2, alpha, irTimes2,
                                                                           lambda);
         parametrizations.push_back(tmpIr);
 
@@ -757,7 +757,7 @@ struct Lgm31fTestData {
             alpha[i] = std::sqrt((zeta_DKK[i] - (i == 0 ? 0.0 : zeta_DKK[i - 1])) /
                                  (irTimes[i] - (i == 0 ? 0.0 : irTimes[i - 1])));
         }
-        tmpIr = boost::make_shared<IrLgm1fPiecewiseLinearParametrization>(DKKCurrency(), yts, irTimes2, alpha, irTimes2,
+        tmpIr = QuantLib::ext::make_shared<IrLgm1fPiecewiseLinearParametrization>(DKKCurrency(), yts, irTimes2, alpha, irTimes2,
                                                                           lambda);
         parametrizations.push_back(tmpIr);
 
@@ -769,7 +769,7 @@ struct Lgm31fTestData {
             alpha[i] = std::sqrt((zeta_NOK[i] - (i == 0 ? 0.0 : zeta_NOK[i - 1])) /
                                  (irTimes[i] - (i == 0 ? 0.0 : irTimes[i - 1])));
         }
-        tmpIr = boost::make_shared<IrLgm1fPiecewiseLinearParametrization>(NOKCurrency(), yts, irTimes2, alpha, irTimes2,
+        tmpIr = QuantLib::ext::make_shared<IrLgm1fPiecewiseLinearParametrization>(NOKCurrency(), yts, irTimes2, alpha, irTimes2,
                                                                           lambda);
         parametrizations.push_back(tmpIr);
 
@@ -781,7 +781,7 @@ struct Lgm31fTestData {
             alpha[i] = std::sqrt((zeta_PLN[i] - (i == 0 ? 0.0 : zeta_PLN[i - 1])) /
                                  (irTimes[i] - (i == 0 ? 0.0 : irTimes[i - 1])));
         }
-        tmpIr = boost::make_shared<IrLgm1fPiecewiseLinearParametrization>(PLNCurrency(), yts, irTimes2, alpha, irTimes2,
+        tmpIr = QuantLib::ext::make_shared<IrLgm1fPiecewiseLinearParametrization>(PLNCurrency(), yts, irTimes2, alpha, irTimes2,
                                                                           lambda);
         parametrizations.push_back(tmpIr);
 
@@ -793,7 +793,7 @@ struct Lgm31fTestData {
             alpha[i] = std::sqrt((zeta_SEK[i] - (i == 0 ? 0.0 : zeta_SEK[i - 1])) /
                                  (irTimes[i] - (i == 0 ? 0.0 : irTimes[i - 1])));
         }
-        tmpIr = boost::make_shared<IrLgm1fPiecewiseLinearParametrization>(SEKCurrency(), yts, irTimes2, alpha, irTimes2,
+        tmpIr = QuantLib::ext::make_shared<IrLgm1fPiecewiseLinearParametrization>(SEKCurrency(), yts, irTimes2, alpha, irTimes2,
                                                                           lambda);
         parametrizations.push_back(tmpIr);
 
@@ -805,7 +805,7 @@ struct Lgm31fTestData {
             alpha[i] = std::sqrt((zeta_SGD[i] - (i == 0 ? 0.0 : zeta_SGD[i - 1])) /
                                  (irTimes[i] - (i == 0 ? 0.0 : irTimes[i - 1])));
         }
-        tmpIr = boost::make_shared<IrLgm1fPiecewiseLinearParametrization>(SGDCurrency(), yts, irTimes2, alpha, irTimes2,
+        tmpIr = QuantLib::ext::make_shared<IrLgm1fPiecewiseLinearParametrization>(SGDCurrency(), yts, irTimes2, alpha, irTimes2,
                                                                           lambda);
         parametrizations.push_back(tmpIr);
 
@@ -817,7 +817,7 @@ struct Lgm31fTestData {
             alpha[i] = std::sqrt((zeta_INR[i] - (i == 0 ? 0.0 : zeta_INR[i - 1])) /
                                  (irTimes[i] - (i == 0 ? 0.0 : irTimes[i - 1])));
         }
-        tmpIr = boost::make_shared<IrLgm1fPiecewiseLinearParametrization>(INRCurrency(), yts, irTimes2, alpha, irTimes2,
+        tmpIr = QuantLib::ext::make_shared<IrLgm1fPiecewiseLinearParametrization>(INRCurrency(), yts, irTimes2, alpha, irTimes2,
                                                                           lambda);
         parametrizations.push_back(tmpIr);
 
@@ -845,7 +845,7 @@ struct Lgm31fTestData {
                                       (inflTimes[i] - (i == 0 ? 0.0 : inflTimes[i - 1])));
             alphaInfl[i] = alpha_BGL[i];
         }
-        tmpIr = boost::make_shared<IrLgm1fPiecewiseLinearParametrization>(BGLCurrency(), yts, inflTimes2, alphaInfl,
+        tmpIr = QuantLib::ext::make_shared<IrLgm1fPiecewiseLinearParametrization>(BGLCurrency(), yts, inflTimes2, alphaInfl,
                                                                           inflTimes2, lambdaInfl);
         parametrizations.push_back(tmpIr);
 
@@ -858,7 +858,7 @@ struct Lgm31fTestData {
                                       (inflTimes[i] - (i == 0 ? 0.0 : inflTimes[i - 1])));
             alphaInfl[i] = alpha_BYR[i];
         }
-        tmpIr = boost::make_shared<IrLgm1fPiecewiseLinearParametrization>(BYRCurrency(), yts, inflTimes2, alphaInfl,
+        tmpIr = QuantLib::ext::make_shared<IrLgm1fPiecewiseLinearParametrization>(BYRCurrency(), yts, inflTimes2, alphaInfl,
                                                                           inflTimes2, lambdaInfl);
         parametrizations.push_back(tmpIr);
 
@@ -871,7 +871,7 @@ struct Lgm31fTestData {
                                       (inflTimes[i] - (i == 0 ? 0.0 : inflTimes[i - 1])));
             alphaInfl[i] = alpha_CZK[i];
         }
-        tmpIr = boost::make_shared<IrLgm1fPiecewiseLinearParametrization>(CZKCurrency(), yts, inflTimes2, alphaInfl,
+        tmpIr = QuantLib::ext::make_shared<IrLgm1fPiecewiseLinearParametrization>(CZKCurrency(), yts, inflTimes2, alphaInfl,
                                                                           inflTimes2, lambdaInfl);
         parametrizations.push_back(tmpIr);
 
@@ -889,10 +889,10 @@ struct Lgm31fTestData {
         // for parametrization set up (without last time)
         Array fxTimes2(fxTimes.begin(), fxTimes.end() - 1);
 
-        boost::shared_ptr<FxBsParametrization> tmpFx;
+        QuantLib::ext::shared_ptr<FxBsParametrization> tmpFx;
         Array sigma(LENGTH(fxTen));
 
-        Handle<Quote> dummyFxSpot(boost::make_shared<SimpleQuote>(1.0));
+        Handle<Quote> dummyFxSpot(QuantLib::ext::make_shared<SimpleQuote>(1.0));
 
         // FX #1 GBP
 
@@ -900,7 +900,7 @@ struct Lgm31fTestData {
         for (Size i = 0; i < LENGTH(fxTen); ++i) {
             sigma[i] = sigma_GBP[i];
         }
-        tmpFx = boost::make_shared<FxBsPiecewiseConstantParametrization>(GBPCurrency(), dummyFxSpot, fxTimes2, sigma);
+        tmpFx = QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(GBPCurrency(), dummyFxSpot, fxTimes2, sigma);
         parametrizations.push_back(tmpFx);
 
         // FX #2 USD
@@ -909,7 +909,7 @@ struct Lgm31fTestData {
         for (Size i = 0; i < LENGTH(fxTen); ++i) {
             sigma[i] = sigma_USD[i];
         }
-        tmpFx = boost::make_shared<FxBsPiecewiseConstantParametrization>(USDCurrency(), dummyFxSpot, fxTimes2, sigma);
+        tmpFx = QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(USDCurrency(), dummyFxSpot, fxTimes2, sigma);
         parametrizations.push_back(tmpFx);
 
         // FX #3 JPY
@@ -918,7 +918,7 @@ struct Lgm31fTestData {
         for (Size i = 0; i < LENGTH(fxTen); ++i) {
             sigma[i] = sigma_JPY[i];
         }
-        tmpFx = boost::make_shared<FxBsPiecewiseConstantParametrization>(JPYCurrency(), dummyFxSpot, fxTimes2, sigma);
+        tmpFx = QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(JPYCurrency(), dummyFxSpot, fxTimes2, sigma);
         parametrizations.push_back(tmpFx);
 
         // FX #4 AUD
@@ -927,7 +927,7 @@ struct Lgm31fTestData {
         for (Size i = 0; i < LENGTH(fxTen); ++i) {
             sigma[i] = sigma_AUD[i];
         }
-        tmpFx = boost::make_shared<FxBsPiecewiseConstantParametrization>(AUDCurrency(), dummyFxSpot, fxTimes2, sigma);
+        tmpFx = QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(AUDCurrency(), dummyFxSpot, fxTimes2, sigma);
         parametrizations.push_back(tmpFx);
 
         // FX #5 CAD
@@ -936,7 +936,7 @@ struct Lgm31fTestData {
         for (Size i = 0; i < LENGTH(fxTen); ++i) {
             sigma[i] = sigma_CAD[i];
         }
-        tmpFx = boost::make_shared<FxBsPiecewiseConstantParametrization>(CADCurrency(), dummyFxSpot, fxTimes2, sigma);
+        tmpFx = QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(CADCurrency(), dummyFxSpot, fxTimes2, sigma);
         parametrizations.push_back(tmpFx);
 
         // FX #6 CHF
@@ -945,7 +945,7 @@ struct Lgm31fTestData {
         for (Size i = 0; i < LENGTH(fxTen); ++i) {
             sigma[i] = sigma_CHF[i];
         }
-        tmpFx = boost::make_shared<FxBsPiecewiseConstantParametrization>(CHFCurrency(), dummyFxSpot, fxTimes2, sigma);
+        tmpFx = QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(CHFCurrency(), dummyFxSpot, fxTimes2, sigma);
         parametrizations.push_back(tmpFx);
 
         // FX #7 DKK
@@ -954,7 +954,7 @@ struct Lgm31fTestData {
         for (Size i = 0; i < LENGTH(fxTen); ++i) {
             sigma[i] = sigma_DKK[i];
         }
-        tmpFx = boost::make_shared<FxBsPiecewiseConstantParametrization>(DKKCurrency(), dummyFxSpot, fxTimes2, sigma);
+        tmpFx = QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(DKKCurrency(), dummyFxSpot, fxTimes2, sigma);
         parametrizations.push_back(tmpFx);
 
         // FX #8 NOK
@@ -963,7 +963,7 @@ struct Lgm31fTestData {
         for (Size i = 0; i < LENGTH(fxTen); ++i) {
             sigma[i] = sigma_NOK[i];
         }
-        tmpFx = boost::make_shared<FxBsPiecewiseConstantParametrization>(NOKCurrency(), dummyFxSpot, fxTimes2, sigma);
+        tmpFx = QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(NOKCurrency(), dummyFxSpot, fxTimes2, sigma);
         parametrizations.push_back(tmpFx);
 
         // FX #9 PLN
@@ -973,7 +973,7 @@ struct Lgm31fTestData {
             sigma[i] = sigma_PLN[i];
         }
 
-        tmpFx = boost::make_shared<FxBsPiecewiseConstantParametrization>(PLNCurrency(), dummyFxSpot, fxTimes2, sigma);
+        tmpFx = QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(PLNCurrency(), dummyFxSpot, fxTimes2, sigma);
         parametrizations.push_back(tmpFx);
 
         // FX #10 SEK
@@ -983,7 +983,7 @@ struct Lgm31fTestData {
             sigma[i] = sigma_SEK[i];
         }
 
-        tmpFx = boost::make_shared<FxBsPiecewiseConstantParametrization>(SEKCurrency(), dummyFxSpot, fxTimes2, sigma);
+        tmpFx = QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(SEKCurrency(), dummyFxSpot, fxTimes2, sigma);
         parametrizations.push_back(tmpFx);
 
         // FX #11 SGD
@@ -993,7 +993,7 @@ struct Lgm31fTestData {
             sigma[i] = sigma_SGD[i];
         }
 
-        tmpFx = boost::make_shared<FxBsPiecewiseConstantParametrization>(SGDCurrency(), dummyFxSpot, fxTimes2, sigma);
+        tmpFx = QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(SGDCurrency(), dummyFxSpot, fxTimes2, sigma);
         parametrizations.push_back(tmpFx);
 
         // FX #12 INR
@@ -1003,7 +1003,7 @@ struct Lgm31fTestData {
             sigma[i] = sigma_INR[i];
         }
 
-        tmpFx = boost::make_shared<FxBsPiecewiseConstantParametrization>(INRCurrency(), dummyFxSpot, fxTimes2, sigma);
+        tmpFx = QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(INRCurrency(), dummyFxSpot, fxTimes2, sigma);
         parametrizations.push_back(tmpFx);
 
         // FX #13, 14, 15 Inflation CPI EUR, UK, FR
@@ -1012,13 +1012,13 @@ struct Lgm31fTestData {
         Array sigma_CPI(1, 0.0075);
 
         tmpFx =
-            boost::make_shared<FxBsPiecewiseConstantParametrization>(BGLCurrency(), dummyFxSpot, notimes, sigma_CPI);
+            QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(BGLCurrency(), dummyFxSpot, notimes, sigma_CPI);
         parametrizations.push_back(tmpFx);
         tmpFx =
-            boost::make_shared<FxBsPiecewiseConstantParametrization>(BYRCurrency(), dummyFxSpot, notimes, sigma_CPI);
+            QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(BYRCurrency(), dummyFxSpot, notimes, sigma_CPI);
         parametrizations.push_back(tmpFx);
         tmpFx =
-            boost::make_shared<FxBsPiecewiseConstantParametrization>(CZKCurrency(), dummyFxSpot, notimes, sigma_CPI);
+            QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(CZKCurrency(), dummyFxSpot, notimes, sigma_CPI);
         parametrizations.push_back(tmpFx);
 
         // =========================================
@@ -1026,10 +1026,10 @@ struct Lgm31fTestData {
         // =========================================
 
         xmodelExact =
-            boost::make_shared<CrossAssetModel>(parametrizations, rho, SalvagingAlgorithm::None, IrModel::Measure::LGM,
+            QuantLib::ext::make_shared<CrossAssetModel>(parametrizations, rho, SalvagingAlgorithm::None, IrModel::Measure::LGM,
                                                 CrossAssetModel::Discretization::Exact);
         xmodelEuler =
-            boost::make_shared<CrossAssetModel>(parametrizations, rho, SalvagingAlgorithm::None, IrModel::Measure::LGM,
+            QuantLib::ext::make_shared<CrossAssetModel>(parametrizations, rho, SalvagingAlgorithm::None, IrModel::Measure::LGM,
                                                 CrossAssetModel::Discretization::Euler);
     }
 
@@ -1039,8 +1039,8 @@ struct Lgm31fTestData {
     Real c[31][31];
     Matrix rho;
     Handle<YieldTermStructure> yts;
-    std::vector<boost::shared_ptr<Parametrization> > parametrizations;
-    boost::shared_ptr<CrossAssetModel> xmodelExact, xmodelEuler;
+    std::vector<QuantLib::ext::shared_ptr<Parametrization> > parametrizations;
+    QuantLib::ext::shared_ptr<CrossAssetModel> xmodelExact, xmodelEuler;
 };
 
 } // namespace
@@ -1089,8 +1089,8 @@ BOOST_AUTO_TEST_CASE(testLgm31fPositiveCovariance) {
         simTimes_.push_back(ActualActual(ActualActual::ISDA).yearFraction(d.refDate, tmp));
     }
 
-    boost::shared_ptr<StochasticProcess> p_exact = d.xmodelExact->stateProcess();
-    boost::shared_ptr<StochasticProcess> p_euler = d.xmodelEuler->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> p_exact = d.xmodelExact->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> p_euler = d.xmodelEuler->stateProcess();
 
     // check that covariance matrices are positive semidefinite
 
@@ -1126,8 +1126,8 @@ BOOST_AUTO_TEST_CASE(testLgm31fMoments) {
 
     Lgm31fTestData d;
 
-    boost::shared_ptr<StochasticProcess> p_exact = d.xmodelExact->stateProcess();
-    boost::shared_ptr<StochasticProcess> p_euler = d.xmodelEuler->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> p_exact = d.xmodelExact->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> p_euler = d.xmodelEuler->stateProcess();
 
     Array x0 = p_exact->initialValues();
 
@@ -1143,7 +1143,7 @@ BOOST_AUTO_TEST_CASE(testLgm31fMoments) {
 
     const Size dim = 31;
 
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
         tmp->resetCache(grid.size() - 1 - 1);
     }
     MultiPathGeneratorSobolBrownianBridge pgen(p_euler, grid, SobolBrownianGenerator::Steps, seed);
@@ -1197,13 +1197,13 @@ BOOST_AUTO_TEST_CASE(testLgm31fMoments) {
                     tol = tol5;
                 }
             }
-            if (std::fabs(covariance(v_eu[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
-                                                         << ") is inconsistent with numerical "
-                                                            "value (Euler discretization, "
-                                                         << covariance(v_eu[i][j]) << "), error is "
-                                                         << v_an[i][j] - covariance(v_eu[i][j]) << " tolerance is "
-                                                         << tol);
+            if (std::fabs(boost::accumulators::covariance(v_eu[i][j]) - v_an[i][j]) > tol) {
+                BOOST_ERROR("analytical covariance at ("
+                            << i << "," << j << ") (" << v_an[i][j]
+                            << ") is inconsistent with numerical "
+                               "value (Euler discretization, "
+                            << boost::accumulators::covariance(v_eu[i][j]) << "), error is "
+                            << v_an[i][j] - boost::accumulators::covariance(v_eu[i][j]) << " tolerance is " << tol);
             }
         }
     }
@@ -1251,8 +1251,8 @@ BOOST_AUTO_TEST_CASE(testLgm31fMartingaleProperty) {
 
     Lgm31fTestData d;
 
-    boost::shared_ptr<StochasticProcess> p_exact = d.xmodelExact->stateProcess();
-    boost::shared_ptr<StochasticProcess> p_euler = d.xmodelEuler->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> p_exact = d.xmodelExact->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> p_euler = d.xmodelEuler->stateProcess();
 
     Real T = 2.0;
     Size steps = static_cast<Size>(T * 10.0);
@@ -1262,10 +1262,10 @@ BOOST_AUTO_TEST_CASE(testLgm31fMartingaleProperty) {
 
     const Size dim = 31, nIr = 13 + 3;
 
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(p_euler)) {
         tmp->resetCache(grid.size() - 1);
     }
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(p_exact)) {
         tmp->resetCache(grid.size() - 1);
     }
     MultiPathGeneratorSobolBrownianBridge pgen(p_euler, grid, SobolBrownianGenerator::Steps, seed);

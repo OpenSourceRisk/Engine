@@ -25,7 +25,10 @@ namespace QuantExt {
 void McLgmSwapEngine::calculate() const {
     leg_ = arguments_.legs;
     currency_ = std::vector<Currency>(leg_.size(), model_->irlgm1f(0)->currency());
-    payer_ = arguments_.payer;
+    payer_.resize(arguments_.payer.size());
+    for (Size i = 0; i < arguments_.payer.size(); ++i) {
+        payer_[i] = QuantLib::close_enough(arguments_.payer[i], -1.0);
+    }
     exercise_ = nullptr;
     McMultiLegBaseEngine::calculate();
     results_.value = resultValue_;

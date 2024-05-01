@@ -30,7 +30,7 @@
 #include <ored/utilities/serializationdate.hpp>
 
 #include <boost/serialization/serialization.hpp>
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 #include <vector>
 

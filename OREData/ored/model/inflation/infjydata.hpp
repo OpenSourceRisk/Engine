@@ -48,16 +48,15 @@ public:
     InfJyData();
 
     //! Detailed constructor
-    InfJyData(CalibrationType calibrationType,
-        const std::vector<CalibrationBasket>& calibrationBaskets,
-        const std::string& currency,
-        const std::string& index,
-        const ReversionParameter& realRateReversion,
-        const VolatilityParameter& realRateVolatility,
-        const VolatilityParameter& indexVolatility,
-        const LgmReversionTransformation& reversionTransformation = LgmReversionTransformation(),
-        const CalibrationConfiguration& calibrationConfiguration = CalibrationConfiguration(),
-        const bool ignoreDuplicateCalibrationExpiryTimes = false);
+    /* Note: If linkRealRateToNominalRateParams == true, the realRateVolatility and realRateReversion should be set to
+       the nominal rate parameters and the calibrate flag in these new parameters should be set to false. */
+    InfJyData(CalibrationType calibrationType, const std::vector<CalibrationBasket>& calibrationBaskets,
+              const std::string& currency, const std::string& index, const ReversionParameter& realRateReversion,
+              const VolatilityParameter& realRateVolatility, const VolatilityParameter& indexVolatility,
+              const LgmReversionTransformation& reversionTransformation = LgmReversionTransformation(),
+              const CalibrationConfiguration& calibrationConfiguration = CalibrationConfiguration(),
+              const bool ignoreDuplicateCalibrationExpiryTimes = false, const bool linkRealToNominalRateParams = false,
+              const Real linkedRealRateVolatilityScaling = 1.0);
 
     //! \name Inspectors
     //@{
@@ -66,12 +65,20 @@ public:
     const VolatilityParameter& indexVolatility() const;
     const LgmReversionTransformation& reversionTransformation() const;
     const CalibrationConfiguration& calibrationConfiguration() const;
+    bool linkRealRateParamsToNominalRateParams() const;
+    Real linkedRealRateVolatilityScaling() const;
+    //@}
+
+    //! \name Setters
+    //@{
+    void setRealRateReversion(ReversionParameter p);
+    void setRealRateVolatility(VolatilityParameter p);
     //@}
 
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
 private:
@@ -80,6 +87,8 @@ private:
     VolatilityParameter indexVolatility_;
     LgmReversionTransformation reversionTransformation_;
     CalibrationConfiguration calibrationConfiguration_;
+    bool linkRealToNominalRateParams_;
+    Real linkedRealRateVolatilityScaling_;
 };
 
 }

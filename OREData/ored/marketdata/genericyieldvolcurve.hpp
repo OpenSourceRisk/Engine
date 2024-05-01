@@ -51,26 +51,26 @@ public:
     //! Detailed constructor
     GenericYieldVolCurve(
         const Date& asof, const Loader& loader, const CurveConfigurations& curveConfigs,
-        const boost::shared_ptr<GenericYieldVolatilityCurveConfig>& config,
-        const map<string, boost::shared_ptr<SwapIndex>>& requiredSwapIndices,
-        const map<string, boost::shared_ptr<GenericYieldVolCurve>>& requiredVolCurves,
-        const std::function<bool(const boost::shared_ptr<MarketDatum>& md, Period& expiry, Period& term)>&
+        const QuantLib::ext::shared_ptr<GenericYieldVolatilityCurveConfig>& config,
+        const map<string, QuantLib::ext::shared_ptr<SwapIndex>>& requiredSwapIndices,
+        const map<string, QuantLib::ext::shared_ptr<GenericYieldVolCurve>>& requiredVolCurves,
+        const std::function<bool(const QuantLib::ext::shared_ptr<MarketDatum>& md, Period& expiry, Period& term)>&
             matchAtmQuote,
-        const std::function<bool(const boost::shared_ptr<MarketDatum>& md, Period& expiry, Period& term, Real& strike)>&
+        const std::function<bool(const QuantLib::ext::shared_ptr<MarketDatum>& md, Period& expiry, Period& term, Real& strike)>&
             matchSmileQuote,
-        const std::function<bool(const boost::shared_ptr<MarketDatum>& md, Period& term)>& matchShiftQuote,
+        const std::function<bool(const QuantLib::ext::shared_ptr<MarketDatum>& md, Period& term)>& matchShiftQuote,
         const bool buildCalibrationInfo);
     //@}
 
     //! \name Inspectors
     //@{
-    const boost::shared_ptr<SwaptionVolatilityStructure>& volTermStructure() { return vol_; }
-    boost::shared_ptr<IrVolCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
+    const QuantLib::ext::shared_ptr<SwaptionVolatilityStructure>& volTermStructure() { return vol_; }
+    QuantLib::ext::shared_ptr<IrVolCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
     //@}
 
 private:
-    boost::shared_ptr<SwaptionVolatilityStructure> vol_;
-    boost::shared_ptr<IrVolCalibrationInfo> calibrationInfo_;
+    QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> vol_;
+    QuantLib::ext::shared_ptr<IrVolCalibrationInfo> calibrationInfo_;
 };
 } // namespace data
 } // namespace ore

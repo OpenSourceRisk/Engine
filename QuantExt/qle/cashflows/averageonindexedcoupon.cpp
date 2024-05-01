@@ -34,7 +34,7 @@ namespace QuantExt {
 
 AverageONIndexedCoupon::AverageONIndexedCoupon(const Date& paymentDate, Real nominal, const Date& startDate,
                                                const Date& endDate,
-                                               const boost::shared_ptr<OvernightIndex>& overnightIndex, Real gearing,
+                                               const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex, Real gearing,
                                                Spread spread, Natural rateCutoff, const DayCounter& dayCounter,
                                                const Period& lookback, const Size fixingDays,
                                                const Date& rateComputationStartDate, const Date& rateComputationEndDate,
@@ -167,7 +167,7 @@ void CappedFlooredAverageONIndexedCoupon::performCalculations() const {
     if (cap_ != Null<Real>())
         capletRate = (nakedOption_ && floor_ == Null<Real>() ? -1.0 : 1.0) * pricer()->capletRate(effectiveCap());
     rate_ = swapletRate + floorletRate - capletRate;
-    auto p = boost::dynamic_pointer_cast<CapFlooredAverageONIndexedCouponPricer>(pricer());
+    auto p = QuantLib::ext::dynamic_pointer_cast<CapFlooredAverageONIndexedCouponPricer>(pricer());
     QL_REQUIRE(p, "CapFlooredAverageONIndexedCoupon::performCalculations(): internal error, could not cast to "
                   "CapFlooredAverageONIndexedCouponPricer");
     effectiveCapletVolatility_ = p->effectiveCapletVolatility();
@@ -200,18 +200,18 @@ Rate CappedFlooredAverageONIndexedCoupon::effectiveCap() const {
     */
     if (localCapFloor_) {
         if (includeSpread()) {
-            // A = \cdot \frac{\prod (1 + \tau_i \min ( \max ( f_i + s , F), C)) - 1}{\tau}
+            // A = \cdot \frac{\sum (\tau_i \min ( \max ( f_i + s , F), C))}{\tau}
             return cap_ - underlying_->spread();
         } else {
-            // A = g \cdot \frac{\prod (1 + \tau_i \min ( \max ( f_i , F), C)) - 1}{\tau} + s
+            // A = g \cdot \frac{\sum (\tau_i \min ( \max ( f_i , F), C))}{\tau} + s
             return cap_;
         }
     } else {
         if (includeSpread()) {
-            // A = \min \left( \max \left( \cdot \frac{\prod (1 + \tau_i(f_i + s)) - 1}{\tau}, F \right), C \right)
+            // A = \min \left( \max \left( \frac{\sum (\tau_i f_i)}{\tau} + s, F \right), C \right)
             return (cap_ / gearing() - underlying_->spread());
         } else {
-            // A = \min \left( \max \left( g \cdot \frac{\prod (1 + \tau_i f_i) - 1}{\tau} + s, F \right), C \right)
+            // A = \min \left( \max \left( g \cdot \frac{\sum (\tau_i f_i)}{\tau} + s, F \right), C \right)
             return (cap_ - underlying_->spread()) / gearing();
         }
     }
@@ -292,7 +292,7 @@ Handle<OptionletVolatilityStructure> CapFlooredAverageONIndexedCouponPricer::cap
 
 // average on leg implementation
 
-AverageONLeg::AverageONLeg(const Schedule& schedule, const boost::shared_ptr<OvernightIndex>& i)
+AverageONLeg::AverageONLeg(const Schedule& schedule, const QuantLib::ext::shared_ptr<OvernightIndex>& i)
     : schedule_(schedule), overnightIndex_(i), paymentAdjustment_(Following), paymentLag_(0),
       telescopicValueDates_(false), paymentCalendar_(schedule.calendar()), rateCutoff_(0), lookback_(0 * Days),
       fixingDays_(Null<Size>()), includeSpread_(false), nakedOption_(false), localCapFloor_(false), inArrears_(true) {}
@@ -423,13 +423,13 @@ AverageONLeg& AverageONLeg::withPaymentDates(const std::vector<Date>& paymentDat
 }
 
 AverageONLeg&
-AverageONLeg::withAverageONIndexedCouponPricer(const boost::shared_ptr<AverageONIndexedCouponPricer>& couponPricer) {
+AverageONLeg::withAverageONIndexedCouponPricer(const QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer>& couponPricer) {
     couponPricer_ = couponPricer;
     return *this;
 }
 
 AverageONLeg& AverageONLeg::withCapFlooredAverageONIndexedCouponPricer(
-    const boost::shared_ptr<CapFlooredAverageONIndexedCouponPricer>& couponPricer) {
+    const QuantLib::ext::shared_ptr<CapFlooredAverageONIndexedCouponPricer>& couponPricer) {
     capFlooredCouponPricer_ = couponPricer;
     return *this;
 }
@@ -516,12 +516,12 @@ AverageONLeg::operator Leg() const {
 
         if (close_enough(detail::get(gearings_, i, 1.0), 0.0)) {
             // fixed coupon
-            cashflows.push_back(boost::make_shared<FixedRateCoupon>(paymentDate, detail::get(notionals_, i, 1.0),
+            cashflows.push_back(QuantLib::ext::make_shared<FixedRateCoupon>(paymentDate, detail::get(notionals_, i, 1.0),
                                                                     detail::get(spreads_, i, 0.0), paymentDayCounter_,
                                                                     start, end, refStart, refEnd));
         } else {
             // floating coupon
-            auto cpn = boost::make_shared<AverageONIndexedCoupon>(
+            auto cpn = QuantLib::ext::make_shared<AverageONIndexedCoupon>(
                 paymentDate, detail::get(notionals_, i, notionals_.back()), start, end, overnightIndex_,
                 detail::get(gearings_, i, 1.0), detail::get(spreads_, i, 0.0), rateCutoff_, paymentDayCounter_,
                 lookback_, fixingDays_, rateComputationStartDate, rateComputationEndDate, telescopicValueDates_);

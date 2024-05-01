@@ -59,7 +59,7 @@ public:
         : CreditDefaultSwapOptionEngineBuilder("Black", "BlackCdsOptionEngine") {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId,
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId,
                                                         const string& term) override {
 
         string curveId = term.empty() ? creditCurveId : creditCurveId + "-" + term;
@@ -68,7 +68,7 @@ protected:
         Handle<DefaultProbabilityTermStructure> dpts =
             market_->defaultCurve(creditCurveId, configuration(MarketContext::pricing))->curve();
         Handle<Quote> recovery = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
-        return boost::make_shared<QuantExt::BlackCdsOptionEngine>(dpts, recovery->value(), yts, vol);
+        return QuantLib::ext::make_shared<QuantExt::BlackCdsOptionEngine>(dpts, recovery->value(), yts, vol);
     }
 };
 

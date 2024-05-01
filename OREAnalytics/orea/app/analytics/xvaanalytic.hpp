@@ -31,27 +31,27 @@ class XvaAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "XVA";
 
-    XvaAnalyticImpl(const boost::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) { setLabel(LABEL); }
-    virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+    XvaAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) { setLabel(LABEL); }
+    virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
 
-    void checkConfigurations(const boost::shared_ptr<Portfolio>& portfolio);
+    void checkConfigurations(const QuantLib::ext::shared_ptr<Portfolio>& portfolio);
     
 protected:
-    boost::shared_ptr<ore::data::EngineFactory> engineFactory() override;
+    QuantLib::ext::shared_ptr<ore::data::EngineFactory> engineFactory() override;
     void buildScenarioSimMarket();
     void buildCrossAssetModel(bool continueOnError);
     void buildScenarioGenerator(bool continueOnError);
 
     void initCubeDepth();
-    void initCube(boost::shared_ptr<NPVCube>& cube, const std::set<std::string>& ids, Size cubeDepth);    
+    void initCube(QuantLib::ext::shared_ptr<NPVCube>& cube, const std::set<std::string>& ids, Size cubeDepth);    
 
-    void initClassicRun(const boost::shared_ptr<Portfolio>& portfolio);
-    void buildClassicCube(const boost::shared_ptr<Portfolio>& portfolio);
-    boost::shared_ptr<Portfolio> classicRun(const boost::shared_ptr<Portfolio>& portfolio);
+    void initClassicRun(const QuantLib::ext::shared_ptr<Portfolio>& portfolio);
+    void buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio>& portfolio);
+    QuantLib::ext::shared_ptr<Portfolio> classicRun(const QuantLib::ext::shared_ptr<Portfolio>& portfolio);
 
-    boost::shared_ptr<EngineFactory> amcEngineFactory(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
+    QuantLib::ext::shared_ptr<EngineFactory> amcEngineFactory(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
                                                       const std::vector<Date>& grid);
     void buildAmcPortfolio();
     void amcRun(bool doClassicRun);
@@ -60,29 +60,32 @@ protected:
 
     Matrix creditStateCorrelationMatrix() const;
 
-    boost::shared_ptr<ScenarioSimMarket> simMarket_;
-    boost::shared_ptr<EngineFactory> engineFactory_;
-    boost::shared_ptr<CrossAssetModel> model_;
-    boost::shared_ptr<ScenarioGenerator> scenarioGenerator_;
-    boost::shared_ptr<Portfolio> amcPortfolio_, classicPortfolio_;
-    boost::shared_ptr<NPVCube> cube_, nettingSetCube_, cptyCube_, amcCube_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket_;
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory_;
+    QuantLib::ext::shared_ptr<CrossAssetModel> model_;
+    QuantLib::ext::shared_ptr<ScenarioGenerator> scenarioGenerator_;
+    QuantLib::ext::shared_ptr<Portfolio> amcPortfolio_, classicPortfolio_;
+    QuantLib::ext::shared_ptr<NPVCube> cube_, nettingSetCube_, cptyCube_, amcCube_;
     QuantLib::RelinkableHandle<AggregationScenarioData> scenarioData_;
-    boost::shared_ptr<CubeInterpretation> cubeInterpreter_;
-    boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
-    boost::shared_ptr<PostProcess> postProcess_;
+    QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpreter_;
+    QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
+    QuantLib::ext::shared_ptr<PostProcess> postProcess_;
     
     Size cubeDepth_ = 0;
-    boost::shared_ptr<DateGrid> grid_;
+    QuantLib::ext::shared_ptr<DateGrid> grid_;
     Size samples_ = 0;
 
     bool runSimulation_ = false;
     bool runXva_ = false;
 };
 
+static const std::set<std::string> xvaAnalyticSubAnalytics{"XVA", "EXPOSURE"};
+
 class XvaAnalytic : public Analytic {
 public:
-    XvaAnalytic(const boost::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<XvaAnalyticImpl>(inputs), {"XVA", "EXPOSURE"}, inputs, false, false, false, false) {}
+    XvaAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+        : Analytic(std::make_unique<XvaAnalyticImpl>(inputs), xvaAnalyticSubAnalytics, inputs, false, false, false,
+                   false) {}
 };
 
 } // namespace analytics

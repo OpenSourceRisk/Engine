@@ -223,13 +223,13 @@ public:
         std::vector<QuantLib::ext::shared_ptr<ore::data::Report>> reports_;
     };
 
-    MarketRiskReport(const std::string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+    MarketRiskReport(const std::string& calculationCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
                      const std::string& portfolioFilter, boost::optional<ore::data::TimePeriod> period,
                      const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr, 
         std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr,
         std::unique_ptr<MultiThreadArgs> multiThreadArgs = nullptr, const bool breakdown = false, 
         const bool requireTradePnl = false)
-        : baseCurrency_(baseCurrency), portfolio_(portfolio), portfolioFilter_(portfolioFilter), period_(period),
+        : calculationCurrency_(calculationCurrency), portfolio_(portfolio), portfolioFilter_(portfolioFilter), period_(period),
           hisScenGen_(hisScenGen), sensiArgs_(std::move(sensiArgs)),
           fullRevalArgs_(std::move(fullRevalArgs)),  multiThreadArgs_(std::move(multiThreadArgs)), breakdown_(breakdown), 
           requireTradePnl_(requireTradePnl) {
@@ -260,7 +260,7 @@ protected:
     bool sensiBased_ = false;
     bool fullReval_ = false;
 
-    std::string baseCurrency_;
+    std::string calculationCurrency_;
     QuantLib::ext::shared_ptr<Portfolio> portfolio_;
     std::string portfolioFilter_;
     boost::optional<ore::data::TimePeriod> period_;

@@ -41,11 +41,18 @@ using std::sort;
 namespace ore {
 namespace data {
 
-void CommoditySwaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void CommoditySwaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     reset();
 
     DLOG("CommoditySwaption::build() called for trade " << id());
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = std::string("Commodity");
+    additionalData_["isdaBaseProduct"] = std::string("Other");
+    additionalData_["isdaSubProduct"] = std::string("");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = std::string("");
 
     // Swaption details
     Settlement::Type settleType = parseSettlementType(option_.settlement());
@@ -67,23 +74,23 @@ void CommoditySwaption::build(const boost::shared_ptr<EngineFactory>& engineFact
                                  << io::iso_date(Settings::instance().evaluationDate()));
 
     // Build the underyling swap and check exercise date
-    boost::shared_ptr<QuantLib::Swap> swap = buildSwap(engineFactory);
+    QuantLib::ext::shared_ptr<QuantLib::Swap> swap = buildSwap(engineFactory);
     QL_REQUIRE(exDate <= startDate_, "Expected the expiry date, " << io::iso_date(exDate)
                                                                   << " to be on or before the swap start date "
                                                                   << io::iso_date(startDate_));
 
     // Build the swaption
-    exercise_ = boost::make_shared<EuropeanExercise>(exDate);
-    boost::shared_ptr<QuantExt::GenericSwaption> swaption =
-        boost::make_shared<QuantExt::GenericSwaption>(swap, exercise_, settleType, settleMethod);
+    exercise_ = QuantLib::ext::make_shared<EuropeanExercise>(exDate);
+    QuantLib::ext::shared_ptr<QuantExt::GenericSwaption> swaption =
+        QuantLib::ext::make_shared<QuantExt::GenericSwaption>(swap, exercise_, settleType, settleMethod);
 
     // Set the swaption's pricing engine
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
-    boost::shared_ptr<CommoditySwaptionEngineBuilder> engineBuilder =
-        boost::dynamic_pointer_cast<CommoditySwaptionEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
+    QuantLib::ext::shared_ptr<CommoditySwaptionEngineBuilder> engineBuilder =
+        QuantLib::ext::dynamic_pointer_cast<CommoditySwaptionEngineBuilder>(builder);
     auto configuration = builder->configuration(MarketContext::pricing);
     Currency currency = parseCurrency(ccy_);
-    boost::shared_ptr<PricingEngine> engine = engineBuilder->engine(currency, name_);
+    QuantLib::ext::shared_ptr<PricingEngine> engine = engineBuilder->engine(currency, name_);
     setSensitivityTemplate(*engineBuilder);
     swaption->setPricingEngine(engine);
 
@@ -91,27 +98,20 @@ void CommoditySwaption::build(const boost::shared_ptr<EngineFactory>& engineFact
     Position::Type positionType = parsePositionType(option_.longShort());
     if (settleType == Settlement::Cash) {
         Real multiplier = positionType == Position::Long ? 1.0 : -1.0;
-        instrument_ = boost::make_shared<VanillaInstrument>(swaption, multiplier);
+        instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(swaption, multiplier);
     } else {
-        instrument_ = boost::make_shared<EuropeanOptionWrapper>(swaption, positionType == Position::Long, exDate,
+        instrument_ = QuantLib::ext::make_shared<EuropeanOptionWrapper>(swaption, positionType == Position::Long, exDate,
                                                                 settleType == Settlement::Physical, swap);
     }
     // use underlying maturity independent of settlement type, following ISDA GRID/AANA guidance
     maturity_ = swap->maturityDate();
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = std::string("Commodity");
-    additionalData_["isdaBaseProduct"] = std::string("Other");
-    additionalData_["isdaSubProduct"] = std::string("");
-    // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = std::string("");
 }
 
 QuantLib::Real CommoditySwaption::notional() const {
     return commoditySwap_->notional();
 }
 
-boost::shared_ptr<QuantLib::Swap> CommoditySwaption::buildSwap(const boost::shared_ptr<EngineFactory>& engineFactory) {
+QuantLib::ext::shared_ptr<QuantLib::Swap> CommoditySwaption::buildSwap(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     // Some checks to make sure the underlying swap is supported
     QL_REQUIRE(legData_.size() == 2, "Expected two commodity legs but found " << legData_.size());
@@ -129,21 +129,21 @@ boost::shared_ptr<QuantLib::Swap> CommoditySwaption::buildSwap(const boost::shar
     if (legData_[0].legType() == "CommodityFixed") {
         QL_REQUIRE(legData_[1].legType() == "CommodityFloating",
                    "1st leg is CommodityFixed so 2nd leg should be CommodityFloating but is " << legData_[1].legType());
-        auto floatLeg = boost::dynamic_pointer_cast<CommodityFloatingLegData>(legData_[1].concreteLegData());
+        auto floatLeg = QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(legData_[1].concreteLegData());
         name_ = floatLeg->name();
     } else {
-        auto floatLeg = boost::dynamic_pointer_cast<CommodityFloatingLegData>(legData_[0].concreteLegData());
+        auto floatLeg = QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(legData_[0].concreteLegData());
 	QL_REQUIRE(floatLeg, "first leg has type " << legData_[0].legType() << ", expected CommodityFloating");
         name_ = floatLeg->name();
     }
 
     // Build the underlying commodity swap
-    commoditySwap_ = boost::make_shared<CommoditySwap>(envelope(), legData_);
+    commoditySwap_ = QuantLib::ext::make_shared<CommoditySwap>(envelope(), legData_);
     commoditySwap_->build(engineFactory);
 
     // Get the QuantLib::Swap from the commodity swap
     auto qlInstrument = commoditySwap_->instrument()->qlInstrument();
-    boost::shared_ptr<QuantLib::Swap> swap = boost::dynamic_pointer_cast<QuantLib::Swap>(qlInstrument);
+    QuantLib::ext::shared_ptr<QuantLib::Swap> swap = QuantLib::ext::dynamic_pointer_cast<QuantLib::Swap>(qlInstrument);
     QL_REQUIRE(swap, "Expected an underlying swap instrument from CommoditySwap");
 
     // Populate relevant member variables, notonal and notional currency are set by the underlying Swap build already.
@@ -156,16 +156,16 @@ boost::shared_ptr<QuantLib::Swap> CommoditySwaption::buildSwap(const boost::shar
 }
 
 std::map<AssetClass, std::set<std::string>>
-CommoditySwaption::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+CommoditySwaption::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
 
     std::map<AssetClass, std::set<std::string>> result;
 
     for (auto ld : legData_) {
         set<string> indices = ld.indices();
         for (auto ind : indices) {
-            boost::shared_ptr<Index> index = parseIndex(ind);
+            QuantLib::ext::shared_ptr<Index> index = parseIndex(ind);
             // only handle commodity
-            if (auto ci = boost::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {
+            if (auto ci = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {
                 result[AssetClass::COM].insert(ci->name());
             }
         }
@@ -194,7 +194,7 @@ void CommoditySwaption::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* CommoditySwaption::toXML(XMLDocument& doc) {
+XMLNode* CommoditySwaption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
 
     // Add the root CommoditySwaptionData node

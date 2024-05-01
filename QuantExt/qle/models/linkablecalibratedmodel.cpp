@@ -22,7 +22,7 @@
 #include <ql/utilities/null_deleter.hpp>
 #include <qle/models/linkablecalibratedmodel.hpp>
 
-using boost::shared_ptr;
+using QuantLib::ext::shared_ptr;
 using std::vector;
 
 namespace QuantExt {
@@ -70,7 +70,7 @@ void LinkableCalibratedModel::calibrate(const vector<ext::shared_ptr<BlackCalibr
                                         OptimizationMethod& method, const EndCriteria& endCriteria,
                                         const Constraint& additionalConstraint, const vector<Real>& weights,
                                         const vector<bool>& fixParameters) {
-    vector<boost::shared_ptr<CalibrationHelper> > tmp(instruments.size());
+    vector<QuantLib::ext::shared_ptr<CalibrationHelper> > tmp(instruments.size());
     for (Size i = 0; i < instruments.size(); ++i)
         tmp[i] = ext::static_pointer_cast<CalibrationHelper>(instruments[i]);
     calibrate(tmp, method, endCriteria, additionalConstraint, weights, fixParameters);
@@ -107,7 +107,7 @@ void LinkableCalibratedModel::calibrate(const vector<shared_ptr<CalibrationHelpe
 }
 
 Real LinkableCalibratedModel::value(const Array& params,
-                                    const vector<boost::shared_ptr<BlackCalibrationHelper> >& instruments) {
+                                    const vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper> >& instruments) {
     vector<ext::shared_ptr<CalibrationHelper> > tmp(instruments.size());
     for (Size i = 0; i < instruments.size(); ++i)
         tmp[i] = ext::static_pointer_cast<CalibrationHelper>(instruments[i]);
@@ -147,4 +147,17 @@ void LinkableCalibratedModel::setParams(const Array& params) {
     generateArguments();
     notifyObservers();
 }
+
+void LinkableCalibratedModel::setParam(Size idx, const Real value) {
+    int tmp = static_cast<int>(idx);
+    for (Size i = 0; i < arguments_.size(); ++i) {
+        for (Size j = 0; j < arguments_[i]->size(); ++j) {
+            if (tmp-- == 0)
+                arguments_[i]->setParam(j, value);
+        }
+    }
+    generateArguments();
+    notifyObservers();
+}
+
 } // namespace QuantExt

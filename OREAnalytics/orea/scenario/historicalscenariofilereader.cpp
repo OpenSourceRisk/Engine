@@ -32,7 +32,7 @@ namespace ore {
 namespace analytics {
 
 HistoricalScenarioFileReader::HistoricalScenarioFileReader(const string& fileName,
-                                                           const boost::shared_ptr<ScenarioFactory>& scenarioFactory)
+                                                           const QuantLib::ext::shared_ptr<ScenarioFactory>& scenarioFactory)
     : scenarioFactory_(scenarioFactory), file_(fileName, true), finished_(false) {
 
     // Do some checks
@@ -67,16 +67,19 @@ Date HistoricalScenarioFileReader::date() const {
     }
 }
 
-boost::shared_ptr<ore::analytics::Scenario> HistoricalScenarioFileReader::scenario() const {
+QuantLib::ext::shared_ptr<ore::analytics::Scenario> HistoricalScenarioFileReader::scenario() const {
     if (finished_) {
         return nullptr;
     } else {
         Date date = parseDate(file_.get("Date"));
         Real numeraire = parseReal(file_.get("Numeraire"));
         TLOG("Creating scenario for date " << io::iso_date(date));
-        boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(date, "", numeraire);
+        QuantLib::ext::shared_ptr<Scenario> scenario =
+            scenarioFactory_->buildScenario(date, true, std::string(), numeraire);
+        Real value;
         for (Size k = 0; k < keys_.size(); ++k) {
-            scenario->add(keys_[k], parseReal(file_.get(k + 3)));
+            if (ore::data::tryParseReal(file_.get(k + 3), value))
+                scenario->add(keys_[k], value);
         }
         return scenario;
     }

@@ -47,13 +47,13 @@ class Analytic {
 public:
     class Impl;
 
-    typedef std::map<std::string, std::map<std::string, boost::shared_ptr<ore::data::InMemoryReport>>>
+    typedef std::map<std::string, std::map<std::string, QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>>
         analytic_reports;
 
-    typedef std::map<std::string, std::map<std::string, boost::shared_ptr<NPVCube>>>
+    typedef std::map<std::string, std::map<std::string, QuantLib::ext::shared_ptr<NPVCube>>>
         analytic_npvcubes;
 
-    typedef std::map<std::string, std::map<std::string, boost::shared_ptr<AggregationScenarioData>>>
+    typedef std::map<std::string, std::map<std::string, QuantLib::ext::shared_ptr<AggregationScenarioData>>>
         analytic_mktcubes;
 
     struct Configurations { 
@@ -62,13 +62,13 @@ public:
         bool sensitivityConfigRequired = false;
         bool scenarioGeneratorConfigRequired = false;
         bool crossAssetModelConfigRequired = false;
-        boost::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams;
-        boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketParams;
-        boost::shared_ptr<ore::analytics::SensitivityScenarioData> sensiScenarioData;
-        boost::shared_ptr<ore::analytics::ScenarioGeneratorData> scenarioGeneratorData;
-        boost::shared_ptr<ore::analytics::CrossAssetModelData> crossAssetModelData;
-        boost::shared_ptr<CurveConfigurations> curveConfig;
-        boost::shared_ptr<ore::data::EngineData> engineData;
+        QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams;
+        QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketParams;
+        QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensiScenarioData;
+        QuantLib::ext::shared_ptr<ore::analytics::ScenarioGeneratorData> scenarioGeneratorData;
+        QuantLib::ext::shared_ptr<ore::analytics::CrossAssetModelData> crossAssetModelData;
+        QuantLib::ext::shared_ptr<CurveConfigurations> curveConfig;
+        QuantLib::ext::shared_ptr<ore::data::EngineData> engineData;
         QuantLib::Date asofDate;
     };
 
@@ -80,7 +80,7 @@ public:
              //! e.g. NPV, CASHFLOW, CASHFLOWNPV, etc., covered by the PricingAnalytic
              const std::set<std::string>& analyticTypes,
              //! Any inputs required by this Analytic
-             const boost::shared_ptr<InputParameters>& inputs,
+             const QuantLib::ext::shared_ptr<InputParameters>& inputs,
              //! Flag to indicate whether a simulation config file is required for this analytic
              bool simulationConfig = false,
              //! Flag to indicate whether a sensitivity config file is required for this analytic
@@ -93,30 +93,30 @@ public:
     virtual ~Analytic() {}
 
     //! Run only those analytic types that are inclcuded in the runTypes vector, run all if the runType vector is empty 
-    virtual void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+    virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const std::set<std::string>& runTypes = {});
 
     // we can build configurations here (today's market params, scenario sim market params, sensitivity scenasrio data)
     virtual void buildConfigurations(const bool = false){};
     virtual void setUpConfigurations();
     
-    virtual void buildMarket(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+    virtual void buildMarket(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const bool marketRequired = true);
     virtual void buildPortfolio();
-    virtual void marketCalibration(const boost::shared_ptr<MarketCalibrationReportBase>& mcr = nullptr);
+    virtual void marketCalibration(const QuantLib::ext::shared_ptr<MarketCalibrationReportBase>& mcr = nullptr);
     virtual void modifyPortfolio() {}
     virtual void replaceTrades() {}
 
     //! Inspectors
     const std::string label() const;
     const std::set<std::string>& analyticTypes() const { return types_; }
-    const boost::shared_ptr<InputParameters>& inputs() const { return inputs_; }
-    const boost::shared_ptr<ore::data::Market>& market() const { return market_; };
+    const QuantLib::ext::shared_ptr<InputParameters>& inputs() const { return inputs_; }
+    const QuantLib::ext::shared_ptr<ore::data::Market>& market() const { return market_; };
     // To allow SWIG wrapping
-    boost::shared_ptr<MarketImpl> getMarket() const {        
-        return boost::dynamic_pointer_cast<MarketImpl>(market_);
+    QuantLib::ext::shared_ptr<MarketImpl> getMarket() const {        
+        return QuantLib::ext::dynamic_pointer_cast<MarketImpl>(market_);
     }
-    const boost::shared_ptr<ore::data::Portfolio>& portfolio() const { return portfolio_; };
+    const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio() const { return portfolio_; };
     void setInputs(const QuantLib::ext::shared_ptr<InputParameters>& inputs) { inputs_ = inputs; }
     void setMarket(const QuantLib::ext::shared_ptr<ore::data::Market>& market) { market_ = market; };
     void setPortfolio(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio) { portfolio_ = portfolio; };
@@ -160,9 +160,9 @@ protected:
     QuantLib::ext::shared_ptr<InputParameters> inputs_;
 
     Configurations configurations_;
-    boost::shared_ptr<ore::data::Market> market_;
-    boost::shared_ptr<ore::data::Loader> loader_;
-    boost::shared_ptr<ore::data::Portfolio> portfolio_;
+    QuantLib::ext::shared_ptr<ore::data::Market> market_;
+    QuantLib::ext::shared_ptr<ore::data::Loader> loader_;
+    QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio_;
 
     analytic_reports reports_;
     analytic_npvcubes npvCubes_;
@@ -173,23 +173,23 @@ protected:
     //! and that parent/calling analytic will be writing its own set of intermediate reports
     bool writeIntermediateReports_ = true;
 
-    std::map<std::string, boost::shared_ptr<Analytic>> dependentAnalytics_;
+    std::map<std::string, QuantLib::ext::shared_ptr<Analytic>> dependentAnalytics_;
 };
 
 class Analytic::Impl {
 public:    
     Impl() {}
-    Impl(const boost::shared_ptr<InputParameters>& inputs) : inputs_(inputs) {}
+    Impl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : inputs_(inputs) {}
     virtual ~Impl(){}
     
     virtual void runAnalytic(
-        const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+        const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
         const std::set<std::string>& runTypes = {}) = 0;
     
     virtual void setUpConfigurations(){};
 
     //! build an engine factory
-    virtual boost::shared_ptr<ore::data::EngineFactory> engineFactory();
+    virtual QuantLib::ext::shared_ptr<ore::data::EngineFactory> engineFactory();
 
     void setLabel(const string& label) { label_ = label; }
     const std::string& label() const { return label_; };
@@ -240,10 +240,17 @@ public:
 template <class T> inline QuantLib::ext::shared_ptr<T> Analytic::dependentAnalytic(const std::string& key) const {
     auto it = dependentAnalytics_.find(key);
     QL_REQUIRE(it != dependentAnalytics_.end(), "Could not find dependent Analytic " << key);
-    boost::shared_ptr<T> analytic = boost::dynamic_pointer_cast<T>(it->second);
+    QuantLib::ext::shared_ptr<T> analytic = QuantLib::ext::dynamic_pointer_cast<T>(it->second);
     QL_REQUIRE(analytic, "Could not cast analytic for key " << key);
     return analytic;
 }
+
+QuantLib::ext::shared_ptr<ore::data::Loader> implyBondSpreads(const Date& asof,
+                 const QuantLib::ext::shared_ptr<InputParameters>& params,
+                 const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
+                 const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
+                 const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
+                 const std::string& excludeRegex);
 
 } // namespace analytics
 } // namespace oreplus

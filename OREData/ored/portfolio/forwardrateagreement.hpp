@@ -41,10 +41,10 @@ public:
         : ore::data::Swap(env, "ForwardRateAgreement"), longShort_(longShort), currency_(currency), startDate_(startDate),
           endDate_(endDate), index_(index), strike_(strike), amount_(amount) {}
 
-    void build(const boost::shared_ptr<EngineFactory>& engineFactory) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) override;
 
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     const string& index() const { return index_; }
 
 private:

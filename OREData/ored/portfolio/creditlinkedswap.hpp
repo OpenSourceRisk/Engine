@@ -46,9 +46,9 @@ public:
           defaultPayments_(defaultPayments), recoveryPayments_(recoveryPayments) {}
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
-    void build(const boost::shared_ptr<EngineFactory>& engineFactory) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) override;
 
     QuantLib::Real notional() const override;
 

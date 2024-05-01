@@ -1,4 +1,5 @@
 # Function for comparing two files.
+from pprint import pprint
 import os
 import argparse
 import collections
@@ -13,6 +14,7 @@ import re
 import jsondiff
 from lxml import etree
 from xmldiff import main, formatting
+from pathlib import Path
 
 
 def is_float(num: str):
@@ -414,7 +416,7 @@ def compare_files_df(name, file_1, file_2, config):
                         logger.warning('Failing test, because require_equal_optional_cols is true')
                         return False
                     else:
-                        logger.warning('Ignore unequal optional cols, because because require_equal_optional_cols is false')
+                        logger.warning('Ignore unequal optional cols, because require_equal_optional_cols is false')
                 else:
                     logger.warning('Failing test, because require_equal_optional_cols is not given, defaults to true')
                     return False
@@ -566,7 +568,7 @@ def compare_files_xml(name, file_1, file_2):
     logger.debug('%s: Comparing file %s against %s using xml diff', name, file_1, file_2)
     diff = main.diff_files(file_1, file_2, formatter=formatting.DiffFormatter())
     if len(diff) > 0:
-        logger.warning(diff)
+        logger.warning(f"XML diff ({name}.{Path(file_1).name}):\n{diff}")
         return False
     else:
         return True
@@ -594,7 +596,7 @@ def compare_files_json(name, file_1, file_2, config) -> bool:
     json_diff = jsondiff.diff(json_1, json_2, syntax='symmetric', marshal=True)
 
     # Filter out differences that can be ignored, or are within tolerances
-    validate_json_diff(json_diff, config, '')
+    validate_json_diff(json_1, json_2, json_diff, config, '')
 
     if json_diff:
         if isinstance(json_diff, dict):
@@ -607,7 +609,7 @@ def compare_files_json(name, file_1, file_2, config) -> bool:
         return True
 
 # Modifies jsondif.diff output so that 'ignoreable' diffs and diffs within tolerance/s are removed
-def validate_json_diff(json_diff: dict, config: dict, path: str) -> None:
+def validate_json_diff(json_1, json_2, json_diff: dict, config: dict, path: str) -> None:
     logger = logging.getLogger(__name__)
 
     if not json_diff:
@@ -620,7 +622,7 @@ def validate_json_diff(json_diff: dict, config: dict, path: str) -> None:
     # If the diff obj is a set of diffs between two arrays (denoted by dict with int keys)
     if all([isinstance(k, int) for k in json_diff.keys()]):
         for diff in json_diff.values():
-            validate_json_diff(diff, config, path)
+            validate_json_diff(json_1, json_2, diff, config, path)
 
     # If the diff obj is a dict of diffs between two objects
     else:
@@ -634,18 +636,19 @@ def validate_json_diff(json_diff: dict, config: dict, path: str) -> None:
                 del json_diff[key_to_check]
 
         for key, diff in json_diff.items():
+            # Insertions (key="$insert") and deletions (key="$delete") should count as a test failure
+            if "$" in key:
+                continue
+
             if isinstance(diff, dict):
                 new_path = ((path + str(key)) if path else str(key)) + '/'
-                validate_json_diff(diff, config, new_path)
+                validate_json_diff(json_1, json_2, diff, config, new_path)
 
             else:
-                # Insertions (key="$insert") and deletions (key="$delete") should count as a test failure
-                if "$" in key:
-                    continue
-
                 # At this point, we expect diff to be a list
                 if not isinstance(diff, list):
                     logger.warning(f"diff has invalid type: {type(diff)=}")
+                    logger.warning(f"{diff=}")
                     continue
                 # with 2 elements
                 if not (len(diff) == 2):
@@ -678,6 +681,46 @@ def validate_json_diff(json_diff: dict, config: dict, path: str) -> None:
                                     rel_check = abs_diff <= min(abs(val_1 * rel_tol), abs(val_2 * rel_tol))
                                     if abs_check or rel_check:
                                         diff.clear()
+
+                # Fallback comparison in the case of JSON array diffs due to differently ordering.
+                if diff:
+                    keys = config.get("keys")
+                    if keys is not None and path in keys:
+                        # Only compare on columns defined in "settings"
+                        names_to_check = [n.replace(path, '') for n in names if n.startswith(path)]
+
+                        logger.warning(f"jsondiff list comparison failed for {path=}. Falling back to datacompy.core.Compare()")
+                        path_tokens = [tok for tok in path.split('/') if tok]
+
+                        # Get the original JSON objs
+                        json_1_ptr = json_1
+                        json_2_ptr = json_2
+
+                        # Get the list/array within the JSON objs that failed the comparison
+                        if path_tokens:
+                            json_1_ptr = json_1_ptr[0]
+                            json_2_ptr = json_2_ptr[0]
+                            for pt in path_tokens:
+                                json_1_ptr = json_1_ptr[pt]
+                                json_2_ptr = json_2_ptr[pt]
+
+                        # Convert these lists (we are implicitly assuming they are lists) to DataFrame for datacompy comparison, similar to the CSV reports
+                        json_1_df = pd.DataFrame(json_1_ptr)
+                        # json_1_df = json_1_df[[header for header in json_1_df.columns if header in names_to_check + keys[path]]]
+                        json_2_df = pd.DataFrame(json_2_ptr)
+                        # json_2_df = json_2_df[[header for header in json_2_df.columns if header in names_to_check + keys[path]]]
+
+                        # Run comparison
+                        comp = Compare(json_1_df, json_2_df, join_columns=keys[path], abs_tol=abs_tol, rel_tol=rel_tol,
+                               df1_name='expected', df2_name='calculated')
+
+                        if comp.matches():
+                            diff.clear()
+                        else:
+                            print(json_1_df)
+                            print(json_2_df)
+                            logger.warning("Fallback comparison failed.")
+                            logger.warning(comp.report())
 
     # For the diffs that are now empty, we can remove them from the dict
     diffs_to_ignore = []

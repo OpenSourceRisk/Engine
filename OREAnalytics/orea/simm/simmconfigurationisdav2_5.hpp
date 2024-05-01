@@ -33,13 +33,13 @@ namespace analytics {
 */
 class SimmConfiguration_ISDA_V2_5 : public SimmConfigurationBase {
 public:
-    SimmConfiguration_ISDA_V2_5(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+    SimmConfiguration_ISDA_V2_5(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
                                 const QuantLib::Size& mporDays = 10,
                                 const std::string& name = "SIMM ISDA 2.5 (25 June 2022)",
                                 const std::string version = "2.5");
 
     //! Return the SIMM <em>Label2</em> value for the given interest rate index
-    std::string labels2(const boost::shared_ptr<QuantLib::InterestRateIndex>& irIndex) const override;
+    std::string label2(const QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>& irIndex) const override;
 
     //! Add SIMM <em>Label2</em> values under certain circumstances.
     void addLabels2(const CrifRecord::RiskType& rt, const std::string& label_2) override;

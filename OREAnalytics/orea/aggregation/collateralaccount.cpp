@@ -35,13 +35,13 @@ namespace ore {
 using namespace data;
 namespace analytics {
 
-CollateralAccount::CollateralAccount(const boost::shared_ptr<NettingSetDefinition>& csaDef, const Date& date_t0)
+CollateralAccount::CollateralAccount(const QuantLib::ext::shared_ptr<NettingSetDefinition>& csaDef, const Date& date_t0)
     : csaDef_(csaDef), balance_t0_(0.0) {
     accountBalances_.push_back(balance_t0_);
     accountDates_.push_back(date_t0);
 }
 
-CollateralAccount::CollateralAccount(const boost::shared_ptr<NettingSetDefinition>& csaDef, const Real& balance_t0,
+CollateralAccount::CollateralAccount(const QuantLib::ext::shared_ptr<NettingSetDefinition>& csaDef, const Real& balance_t0,
                                      const Date& date_t0)
     : csaDef_(csaDef), balance_t0_(balance_t0) {
     accountBalances_.push_back(balance_t0_);

@@ -159,7 +159,7 @@ Date & Author & Comment \\
 31 March 2023 & Acadia & updates for release 9\\
 16 June 2023 & Acadia & updates for release 10\\
 16 October 2023 & Acadia & updates for release 11\\
-15 January 2024 & Acadia & updates for release 12\\
+31 March 2024 & Acadia & updates for release 12\\
 \hline
 \end{supertabular}
 \end{center}
@@ -1243,7 +1243,7 @@ Example & Description \\
 \hline
 43 & Credit Portfolio Model \\
 \hline
-44 & ISDA SIMM Model \\
+44 & Initial Margin: ISDA SIMM and IM Schedule \\
 \hline
 45 & Collateralized Bond Obligation \\
 \hline
@@ -2132,7 +2132,7 @@ Figure \ref{fig_yoy_swap} shows the evolution of the 5Y maturity Year-on-Year in
 %--------------------------------------------------------
 
 The example in folder {\tt Examples/Example\_18} computes NPVs and cash flow projections for a vanilla bond portfolio
-consisting of a range of bond products, in particular demonstrating amortisation features:
+consisting of a range of bond products, in particular demonstrating amortisation features. Also, pricing using a benchmark bond price curve (bond definitions in referencedata.xml) is demonstrated:
 \begin{itemize}
 \item fixed rate bond
 \item floating rate bond linked to Euribor 6M
@@ -2143,6 +2143,7 @@ consisting of a range of bond products, in particular demonstrating amortisation
 \item bond with fixed annuity amortisation
 \item bond with floating annuity amortisation (this example needs QuantLib 1.10 or higher to work, in particular the amount() method in the Coupon class needs to be virtual)
 \item bond with fixed amount amortisation followed by percentage amortisation relative to previous notional
+\item fixed rate bond using a benchmark bond price curve instead of the benchmark yield curve
 \end{itemize}
 
 After running the example, the results of the computation can be found in the output files {\tt npv.csv} and {\tt
@@ -3240,12 +3241,14 @@ Bonds and CDS & Migration & Notional & Analytic \\
 The last demo case in this table can be activated by uncommenting the corresponding section at the end of the {\tt run.py} script.
  
 %--------------------------------------------------------------------
-\subsection{ISDA SIMM Model}% Example 44
+\subsection{Initial Margin: ISDA SIMM and IM Schedule}% Example 44
 \label{example:44}
 %--------------------------------------------------------------------
 
 This example demonstrates the calculation of initial margin using ISDA's Standard Initial Margin Model (SIMM) based on a provided 
-sensitivity file in ISDA's Common Risk Interchange Format (CRIF).
+sensitivity file in ISDA's Common Risk Interchange Format (CRIF). In addition, we show how to use the standard "IM Schdule" method to compute 
+initial margin.
+
 ORE covers all SIMM versions since inception to date, i.e.\ 1.0, 1.1, 1.2, 1.3, 1.3.38, 2.0, 2.1, 2.2, 2.3, 2.4 (=2.3.8), 2.5, 2.5A, 2.6 (=2.5.6).
 All versions have been tested against the respective ISDA SIMM model unit test suites and pass these tests.
 Any new SIMM versions will be added with each ORE release.
@@ -3273,7 +3276,7 @@ The SIMM calculation in this example is done for SIMM version 2.4 and 2.6, with 
 \end{itemize}
 
 \medskip
-There are four input files -- {\tt ore\_SIMM2.4\_1D.xml}, {\tt ore\_SIMM2.4\_10D.xml}, {\tt ore\_SIMM2.6\_1D.xml}, {\tt ore\_SIMM2.6\_10D.xml} -- with corresponding folders in the {\tt Output/} directory.
+There are four SIMM-related input files -- {\tt ore\_SIMM2.4\_1D.xml}, {\tt ore\_SIMM2.4\_10D.xml}, {\tt ore\_SIMM2.6\_1D.xml}, {\tt ore\_SIMM2.6\_10D.xml} -- with corresponding folders in the {\tt Output/} directory.
 The relevant inputs in the files are:
 
 \begin{itemize}
@@ -3291,6 +3294,34 @@ If the ORE Python module is installed, as shown in Example 42, then you can also
 
 \medskip
 \centerline{\tt python ore.py} 
+
+\subsubsection*{IM Schedule}
+
+As an additonal case in this example we demonstrate how to use the IM Schedule method to compute initial margin.
+The related input file is {\tt Input/ore\_schedule.xml}. It is also run when calling {\tt python run.py}, and results are written to folder 
+{\tt Output/IM\_SCHEDULE}.
+The basic input is provided in CRIF file format where ORE expects two lines per trade, one with RiskClass = PV and one with RiskClass = Notional, 
+so that the  amounts in these CRIF lines are interpeted as NPV respectively notional. 
+Further required columns are product class and end date, as shown in the example {\tt Input/crif\_schedule.csv}. Note that the product class has to be in
+\begin{itemize}
+  \item Rates
+  \item FX
+  \item Equity
+  \item Credit
+  \item Commodity
+\end{itemize}
+in contrast to SIMM where we use the combined RatesFX.
+
+To run the IM Schedule analytic, the following minimal addition to {\tt Input/ore\_schedule.xml} is required.
+\begin{minted}[fontsize=\scriptsize]{xml}
+  <Analytics>
+    <Analytic type="imschedule">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="crif">crif_schedule.csv</Parameter>
+      <Parameter name="calculationCurrency">USD</Parameter>
+    </Analytic>
+  </Analytics>
+\end{minted}
 
 %--------------------------------------------------------
 \subsection{Collateralized Bond Obligation}% Example 45
@@ -3621,6 +3652,13 @@ to a Swap instrument represented as scripted trade.
 Demonstration of the {\tt Scenario} analytic which has been added to export the simulation market's base scenario
 as a file.
 
+%--------------------------------------------------------------------
+\subsection{Overlapping close-out grids}% Example 61
+\label{example:61}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_61} demonstrates ORE's capability to handle xVA simulations using American Monte-Carlo with overlapping close-out grids.
+
 \clearpage
 %========================================================
 \section{Launchers and Visualisation}\label{sec:visualisation}
@@ -3778,7 +3816,7 @@ Example/Example\_\#/Input/}.
 
 Parameter {\tt logMask} determines the verbosity of log file output. Log messages are 
 internally labelled as Alert, Critical, Error, Warning, Notice, Debug, associated with logMask values 1, 2, 4, 8, ..., 64. 
-The logMask allows filtering subsets of these categories and controlling the verbosity of log file output\footnote{by bitwise comparison of the the external logMask value with each message's log level}. LogMask 255 ensures maximum verbosity. \\
+The logMask allows filtering subsets of these categories and controlling the verbosity of log file output\footnote{by bitwise comparison of the external logMask value with each message's log level}. LogMask 255 ensures maximum verbosity. \\
 
 When ORE starts, it will initialise today's market, i.e. load market data, fixings and dividends, and build all term
 structures as specified in {\tt todaysmarket.xml}.  Moreover, ORE will load the trades in {\tt portfolio.xml} and link
@@ -3903,6 +3941,7 @@ type can be (so far) in
 \item stress
 \item parametricVar
 \item simm
+\item imschedule
 \end{itemize}
 
 Each {\tt Analytic} section contains a list of key/value pairs to parameterise the analysis of the form {\tt <Parameter
@@ -3919,6 +3958,7 @@ the list above.
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="outputFileName">npv.csv</Parameter>
     <Parameter name="additionalResults">Y</Parameter>
+    <Parameter name="additionalResultsReportPrecision">6</Parameter>
   </Analytic>      
   <Analytic type="cashflow">
     <Parameter name="active">Y</Parameter>
@@ -4019,16 +4059,21 @@ needed for subsequent XVA analytics.
 <Analytics>
   <Analytic type="simulation">
     <Parameter name="active">Y</Parameter>
+    <Parameter name="amc">Y</Parameter>
+    <Parameter name="amcCg">Y</Parameter>
+    <Parameter name="xvaCgSensitivityConfigFile">xvasensiconfig.xml</Parameter>
+    <Parameter name="amcTradeTypes">Swap</Parameter>
+    <Parameter name="amcPricingEnginesFile">pricingengine_amc.xml</Parameter> -> not documented
     <Parameter name="simulationConfigFile">simulation.xml</Parameter>
     <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="storeFlows">Y</Parameter>
     <Parameter name="storeSurvivalProbabilities">Y</Parameter>
-    <Parameter name="cubeFile">cube_A.csv.gz</Parameter>
-    <Parameter name="nettingSetCubeFile">nettingSetCube_A.csv.gz</Parameter>
-    <Parameter name="cptyCubeFile">cptyCube_A.csv.gz</Parameter>
+    <Parameter name="salvageCorrelationMatrix">true</Parameter>
+    <Parameter name="scenariodump">scenariodump.csv</Parameter>
     <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
-    <Parameter name="aggregationScenarioDump">scenariodump.csv</Parameter>
+    <Parameter name="storeCreditStateNPVs">8</Parameter>
+    <Parameter name="cubeFile">cube_A.csv.gz</Parameter>
   </Analytic>
 </Analytics>      
 \end{minted}
@@ -4069,6 +4114,7 @@ to txt or csv in which case an uncompressed version of the file is written to di
     <Parameter name="csaFile">netting.xml</Parameter>
     <Parameter name="cubeFile">cube.csv.gz</Parameter>
     <Parameter name="scenarioFile">scenariodata.csv.gz</Parameter>
+    <Parameter name="collateralBalancesFile">collateralbalances.xml</Parameter>
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="exposureProfiles">Y</Parameter>
     <Parameter name="exposureProfilesByTrade">Y</Parameter>
@@ -4096,6 +4142,7 @@ to txt or csv in which case an uncompressed version of the file is written to di
     <Parameter name="kvaOurCvaRiskWeight">0.005</Parameter>
     <Parameter name="kvaTheirCvaRiskWeight">0.05</Parameter>
     <Parameter name="dim">Y</Parameter>
+    <Parameter name="dimModel">Regression</Parameter>
     <Parameter name="mva">Y</Parameter>
     <Parameter name="dimQuantile">0.99</Parameter>
     <Parameter name="dimHorizonCalendarDays">14</Parameter>
@@ -4110,6 +4157,8 @@ to txt or csv in which case an uncompressed version of the file is written to di
     <Parameter name="dimOutputGridPoints">0</Parameter>
     <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
     <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
+    <Parameter name="nettingSetCubeFile">nettingSetCube_A.csv.gz</Parameter>
+    <Parameter name="cptyCubeFile">cptyCube_A.csv.gz</Parameter>
     <Parameter name="fullInitialCollateralisation">true</Parameter>
     <Parameter name="flipViewXVA">N</Parameter>
     <Parameter name="flipViewBorrowingCurvePostfix">_BORROW</Parameter>
@@ -4129,6 +4178,7 @@ transfer amounts, margin period of risk
 \item {\tt cubeFile:} NPV cube file previously generated and to be post-processed here
 \item {\tt scenarioFile:} Scenario data previously generated and used in the post-processor (simulated index fixings and
 FX rates)
+\item {\tt collateralBalancesFile:} References an xml file that contains current VM and IM balances by netting set
 \item {\tt baseCurrency:} Expression currency for all NPVs, value adjustments, exposures
 \item {\tt exposureProfiles:} Flag to enable/disable exposure output for each netting set
 \item {\tt exposureProfilesByTrade:} Flag to enable/disable stand-alone exposure output for each trade
@@ -4186,7 +4236,10 @@ absolute netting set value falls below this limit and switches to equal distribu
 \item {\tt exerciseNextBreak:} Flag to terminate all trades at their next break date before aggregation and the
 subsequent analytics
 \item {\tt cva, dva, fva, colva, collateralFloor, dim, mva:} Flags to enable/disable these analytics. \todo[inline]{Add
-collateral rates floor to the collateral model file (netting.xml)}
+  collateral rates floor to the collateral model file (netting.xml)}
+\item {\tt dimModel:} Type of dynamic initial margin model to be applied -- {\em Regression} or {\em Flat}. {\em Regression} is applied by default
+  when the dimModel node is omitted (see appendix and further settings related to the regression DIM model below); {\em Flat} means a simple flat
+  projection of todays's IM amount on each path (this requires providing today's IM using the {\tt collateralBalancesFile} parameter, see above)
 \item {\tt dvaName:} Credit name to look up the own default probability curve and recovery rate for DVA calculation
 \item {\tt fvaBorrowingCurve:} Identifier of the borrowing yield curve
 \item {\tt fvaLendingCurve:} Identifier of the lending yield curve
@@ -4317,7 +4370,7 @@ shows an example.
 \label{lst:ore_zerotoparconversion}
 \end{listing}
 
-The parameters have the same interpretation as for the sensitivity analytic. There is one new parameter *sensitivityInputFile* which points to a csv file with the raw (zero)sensitivites. Those raw sensitivites will be converted into par sensitivities, using the the same methodology described in \ref{app:par_sensi} and the configuration is described in \ref{sec:sensitivity}.
+The parameters have the same interpretation as for the sensitivity analytic. There is one new parameter *sensitivityInputFile* which points to a csv file with the raw (zero)sensitivites. Those raw sensitivites will be converted into par sensitivities, using the same methodology described in \ref{app:par_sensi} and the configuration is described in \ref{sec:sensitivity}.
 
 The raw sensitivites csv input file *sensitivityInputFile* needs to have at least six columns, the column names can be user configured in the master input file. Here is a description of each of the columns:
 
@@ -4456,6 +4509,39 @@ Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
 \end{itemize}
 
 The SIMM analytic requires minimal market data input and today's market configuration - FX rates for conversions calculation currency, USD and result currency.
+
+\medskip The {\tt imschedule} 'analytic' provides initial margin calculation using the standard "IM Schedule" method that is based on 
+trade NPV, notional, end date and product class. ORE expects the inputs in the form of a CRIF file.
+Listing \ref{lst:ore_simm} shows a configuration example.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+   <Analytic type="imschedule">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="crif">schedule_crif.csv</Parameter>
+      <Parameter name="calculationCurrency">USD</Parameter>
+    </Analytic>
+<Analytics>
+\end{minted}
+\caption{ORE analytic: IM Schedule}
+\label{lst:ore_schedule}
+\end{listing}
+
+The input CRIF file here has two lines per trade, for RiskClass = PV respectively RiskClass Notional. 
+Additonally required columns are product class and end date, see example 44. 
+The idea is that the inputs can be externally provided. Therefore the IM Schedule analytic does not require a portfolio.
+The alternative -- ORE uses a portfolio to compute NPV, imply product class and end date -- has not been implemented yet.
+
+Note that the IM Schedule product class has to be in 
+\begin{itemize}
+  \item Rates
+  \item FX
+  \item Equity
+  \item Credit
+  \item Commodity
+\end{itemize}
+in contrast to SIMM where we use the combined RatesFX product class.
 
 %--------------------------------------------------------
 \subsection{Market: {\tt todaysmarket.xml}}\label{sec:market}
@@ -4946,219 +5032,8 @@ section (see \ref{sec:master_input}) where four market configuration IDs have to
 
 \medskip The configuration ID concept extends across all curve and volatility objects though currently used only to
 distinguish discounting.
- 
-%--------------------------------------------------------
-\subsection{Pricing Engines: {\tt pricingengine.xml}}
-%--------------------------------------------------------
-\label{sec:configuration_pricingengines}
 
-The pricing engine configuration file is provided to select pricing models and pricing engines by product type. The
-following is an overview over the Example section's {\tt pricingengine.xml}. Further below we discuss the Bermudan Swaption engine parametrisation in more detail.
-
-\begin{longlisting}
-%\hrule\medskip
-\begin{minted}[fontsize=\footnotesize]{xml}
-<PricingEngines>
-  <Product type="Swap">
-    <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
-    <Engine>DiscountingSwapEngine</Engine>
-    <EngineParameters/>
-  </Product>
-  <Product type="CrossCurrencySwap">
-    <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
-    <Engine>DiscountingCrossCurrencySwapEngine</Engine>
-    <EngineParameters/>
-  </Product>
-  <Product type="FxForward">
-    <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
-    <Engine>DiscountingFxForwardEngine</Engine>
-    <EngineParameters/>
-  </Product>
-  <Product type="FxOption">
-    <Model>GarmanKohlhagen</Model>
-    <ModelParameters/>
-    <Engine>AnalyticEuropeanEngine</Engine>
-    <EngineParameters/>
-  </Product>
-  <Product type="FxOptionAmerican">
-    <Model>GarmanKohlhagen</Model>
-    <ModelParameters/>
-    <Engine>FdBlackScholesVanillaEngine</Engine>
-    <EngineParameters>
-      <Parameter name="Scheme">Douglas</Parameter>
-      <Parameter name="TimeGridPerYear">100</Parameter>
-      <Parameter name="XGrid">100</Parameter>
-      <Parameter name="DampingSteps">0</Parameter>
-      <!-- optional, prevents too small time grids for increased
-           Greek precision when expiry is near, set to 1 if omitted -->
-      <Parameter name="TimeGridMinimumSize">1</Parameter>
-    </EngineParameters>
-  </Product>
-  <Product type="EuropeanSwaption">
-    <Model>BlackBachelier</Model> <!-- depends on input vol -->
-    <ModelParameters/>
-    <Engine>BlackBachelierSwaptionEngine</Engine>
-    <EngineParameters/>
-  </Product>
-  <Product type="Bond">
-    <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
-    <Engine>DiscountingRiskyBondEngine</Engine>
-    <EngineParameters>
-      <Parameter name="TimestepPeriod">6M</Parameter>
-    </EngineParameters>
-  </Product>
-  <Product type="BermudanSwaption">
-    <Model>LGM</Model>
-    <ModelParameters>
-      <Parameter name="Calibration">Bootstrap</Parameter>
-      <Parameter name="BermudanStrategy">CoterminalATM</Parameter>
-      <!-- ccy specific reversions -->
-      <Parameter name="Reversion_EUR">0.03</Parameter>
-      <Parameter name="Reversion_USD">0.04</Parameter>
-      <!-- reversion to use if no ccy specific value is given -->
-      <Parameter name="Reversion">0.02</Parameter>
-      <Parameter name="ReversionType">HullWhite</Parameter>
-      <Parameter name="Volatility">0.01</Parameter>
-      <Parameter name="VolatilityType">Hagan</Parameter>
-      <Parameter name="ShiftHorizon">0.5</Parameter>
-      <Parameter name="Tolerance">0.0001</Parameter>
-    </ModelParameters>
-    <Engine>Grid</Engine>
-    <EngineParameters>
-      <Parameter name="sy">3.0</Parameter>
-      <Parameter name="ny">10</Parameter>
-      <Parameter name="sx">3.0</Parameter>
-      <Parameter name="nx">10</Parameter>
-    </EngineParameters>
-  </Product>
-  <Product type="CapFloor">
-    <Model>IborCapModel</Model>
-    <ModelParameters/>
-    <Engine>IborCapEngine</Engine>
-    <EngineParameters/>
-  </Product>
-  <Product type="CapFlooredIborLeg">
-    <Model>BlackOrBachelier</Model>
-    <ModelParameters/>
-    <Engine>BlackIborCouponPricer</Engine>
-    <EngineParameters>
-      <!-- Black76 or BivariateLognormal -->
-      <TimingAdjustment>Black76</TimingAdjustment>
-      <!-- Correlation Parameter for BivariateLognormal -->
-      <Correlation>1.0</Correlation>
-    </EngineParameters>
-  </Product>
-  <Product type="EquityForward">
-    <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
-    <Engine>DiscountingEquityForwardEngine</Engine>
-    <EngineParameters/>
-  </Product>
-  <Product type="EquityOption">
-    <Model>BlackScholesMerton</Model>
-    <ModelParameters/>
-    <Engine>AnalyticEuropeanEngine</Engine>
-    <EngineParameters/>
-  </Product>
-  <Product type="Bond">
-    <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
-    <Engine>DiscountingRiskyBondEngine</Engine>
-    <EngineParameters>
-      <Parameter name="TimestepPeriod">6M</Parameter>
-    </EngineParameters>
-  </Product>
-  <Product type="CreditDefaultSwap">
-    <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
-    <Engine>MidPointCdsEngine</Engine>
-    <EngineParameters/>
-  </Product>
-  <Product type="CMS">
-    <Model>Hagan</Model><!-- or LinearTSR -->
-    <ModelParameters/>
-    <Engine>Analytic</Engine> <!-- or Numerical -->
-    <EngineParameters>
-      <!-- Alternative Yield Curve Models: ExactYield, ParallelShifts, NonParallelShifts -->
-      <Parameter name="YieldCurveModel">Standard</Parameter> 
-      <Parameter name="MeanReversion_EUR">0.01</Parameter>
-      <Parameter name="MeanReversion_USD">0.02</Parameter>
-      <Parameter name="MeanReversion">0.0</Parameter>
-    </EngineParameters>
-  </Product>
-  <Product type="CMSSpread">
-    <Model>BrigoMercurio</Model>
-    <ModelParameters/>
-    <Engine>Analytic</Engine>
-    <EngineParameters>
-      <Parameter name="IntegrationPoints">16</Parameter>
-    </EngineParameters>
-  </Product>
-  <GlobalParameters>
-    <Parameter name="ContinueOnCalibrationError">true</Parameter>
-    <!-- typically not present in a user configuration, but used internally -->
-    <Parameter name="Calibrate">true</Parameter>
-    <Parameter name="GenerateAdditionalResults">true</Parameter>
-    <Parameter name="RunType">NPV</Parameter>
-  </GlobalParameters>
-\end{minted}
-\caption{Pricing engine configuration}
-\label{lst:pricingengine_config}
-\end{longlisting}
-
-These settings will be taken into account when the engine factory is asked to build the respective pricing engines and required models, and to calibrate the required model.
-
-\medskip
-For example, in case of the Bermudan Swaption, the parameters are interpreted as follows:
-
-\begin{itemize}
-\item The only model currently supported for Bermudan Swaption pricing is the LGM selected here. 
-
-\item The first block of model parameters then provides initial values for the model (Reversion, Volatility) and chooses
-  the parametrisation of the LGM model with ReversionType and VolatilityType choices {\em HullWhite} and {\em
-    Hagan}. Notice the possibility to specify a currency-specific reversion. Calibration and BermudanStrategy can be set
-  to {\em None} in order to skip model calibration. Alternatively, Calibration is set to {\em Bootstrap} and
-  BermudanStrategy to {\em CoterminalATM} in order to calibrate to instrument-specific co-terminal ATM Swaptions,
-  i.e. chosen to match the instruments first expiry and final maturity.  If {\em CoterminalDealStrike} is chosen, the
-  co-terminal swaptions will match the fixed rate of the deal (if the deal has changing fixed rates, the first rate is
-  matched). Finally if the ShiftHorizon parameter is given, its value times the remaining maturity time of the deal is
-  chosen as the horizon shift parameter for the LGM model. If not given, this parameter defaults to $0.5$.
-
-\item The second block of engine parameters specifies the Numerical Swaption engine parameters which determine the
-  number of standard deviations covered in the probability density integrals (sy and sx), and the number of grid points
-  used per standard deviation (ny and nx).
-\end{itemize}
-
-To see the configuration options for the alternative CMS engines (Hagan Numerical, LinearTSR) or the Black Ibor coupon
-pricer (CapFlooredIborLeg), please refer to the commented parts in {\tt Examples/Input/pricingengine.xml}.
-
-\medskip
-This file is relevant in particular for structured products which are on the roadmap of future ORE releases. But it is also
-intended to allow the selection of optimised pricing engines for vanilla products such as Interest Rate Swaps.
-
-\medskip
-In addition to product specific settings there is also a block with global parameters with the following meaning:
-\begin{itemize}
-\item ContinueOnCalibrationError: If set to true an exceedence of a prescribed model calibration tolerance (for e.g. the
-  LGM model) will not cause the trade building to fail, instead a warning is logged and the trade is processed
-  anyway. Optional, defaults to false.
-\item Calibrate: If false, model calibration is disabled. This flag is usually not present in a user configuration, but
-  only used internally for certain workflows within ORE which do not require a model calibration. Optional, defaults to
-  true.
-\item GenerateAdditionalResults: If false, the generation of additional results within pricing engines will be
-  suppressed (for those pricing engines which support this). This flag is usually not present in a user configuration,
-  but only used internally to improve the performance for processes which only rely on the NPV as a result from pricing
-  engines, e.g. when repricing trades under sensitivity or stress scenarios. Option, defaults to false.
-\item RunType: Set automatically. One of NPV, SensitivityDelta, SensitivityDeltaGamma, Stress, Exposure, Capital,
-  TradeDetails, PortfolioAnalyser, HistoricalPnL, BondSpreadImply, AbsMaturityUpdate depending on the context for which
-  a portfolio was built. Might also be left empty. This is used by some pricing engines to adapt to certain run
-  types. E.g. a first order sensitivity pnl expansion might be used for a SensitivityDelta run by an engine which is
-  able to compute analytical or AAD first order sensitivities.
-\end{itemize}
+\include{parameterisation/pricingengines}
 
 %--------------------------------------------------------
 \subsection{Simulation: {\tt simulation.xml}}\label{sec:simulation}
@@ -5958,15 +5833,15 @@ StickyStrike.
     </Pairs>
     <Expiries>1Y,2Y</Expiries>
   </Correlations>
-  <AdditionalScenarioDataCurrencies>
+  <AggregationScenarioDataCurrencies>
     <Currency>EUR</Currency>
     <Currency>USD</Currency>
-  </AdditionalScenarioDataCurrencies>
-  <AdditionalScenarioDataIndices>
+  </AggregationScenarioDataCurrencies>
+  <AggregationScenarioDataIndices>
     <Index>EUR-EURIBOR-3M</Index>
     <Index>EUR-EONIA</Index>
     <Index>USD-LIBOR-3M</Index>
-  </AdditionalScenarioDataIndices>
+  </AggregationScenarioDataIndices>
 </Market>
 \end{minted}
 \caption{Simulation market configuration}
@@ -6409,6 +6284,7 @@ If a new calendar is added in this way and the schema is being used to validate 
 \input{tradedata/capfloor}
 \input{tradedata/forwardrateagreement}
 \input{tradedata/swaption}
+\input{tradedata/callableswap}
 \input{tradedata/fxforward}
 \input{tradedata/fxswap}
 \input{tradedata/fxoption}
@@ -6472,6 +6348,25 @@ If a new calendar is added in this way and the schema is being used to validate 
 
 \input{tradedata/totalReturnSwap}
 
+\input{tradedata/eq_outperformance.tex}
+\input{tradedata/doubledigitaloption}
+\input{tradedata/europeanoptioncontingentonabarrier}
+\input{tradedata/autocallable_01}
+\input{tradedata/performanceoption_01}
+\input{tradedata/window_barrieroption}
+\input{tradedata/generic_barrieroption}
+\input{tradedata/bestentryoption}
+\input{tradedata/basketoption}
+\input{tradedata/worstofbasketswap}
+\input{tradedata/rainbow_option}
+\input{tradedata/var_and_vol_derivatives}
+\input{tradedata/accumulator}
+\input{tradedata/tarf}
+\input{tradedata/knockoutswap}
+
+\input{tradedata/flexiswap}
+\input{tradedata/balanceguaranteedswap}
+
 %\include{tradecomponents}
 \input{tradecomponents/tradecomponentsintro}
 \input{tradecomponents/optiondata}
@@ -6504,6 +6399,8 @@ If a new calendar is added in this way and the schema is being used to validate 
 \input{tradecomponents/rangebound}
 \input{tradecomponents/bondbasketdata.tex}
 \input{tradecomponents/cbotranches.tex}
+\input{tradecomponents/formulabasedlegdata}
+
 \include{allowablevalues}
 
 %========================================================

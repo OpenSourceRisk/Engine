@@ -35,14 +35,14 @@ class BondRepo : public Trade {
 public:
     BondRepo() : Trade("BondRepo") {}
 
-    virtual void build(const boost::shared_ptr<EngineFactory>&) override;
+    virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
 
     //! Add underlying Bond names
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     const ore::data::BondData& bondData() const { return securityLegData_; }
     const ore::data::LegData& cashLegData() const { return cashLegData_; }
@@ -51,7 +51,7 @@ private:
     ore::data::BondData originalSecurityLegData_, securityLegData_;
     ore::data::LegData cashLegData_;
 
-    boost::shared_ptr<ore::data::Bond> securityLeg_;
+    QuantLib::ext::shared_ptr<ore::data::Bond> securityLeg_;
     Leg cashLeg_;
 };
 } // namespace data

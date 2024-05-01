@@ -45,7 +45,7 @@ void EquitySwap::checkEquitySwap(const vector<LegData>& legData) {
                "An Equity Swap must have 2 legs, an Equity Leg and an IR Leg - Trade: " + id());
 }
 
-void EquitySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void EquitySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("EquitySwap::build() called for " << id());
 
@@ -59,7 +59,7 @@ void EquitySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // 1 add indexing data from the equity leg, if this is desired
 
-    auto eqLegData = boost::dynamic_pointer_cast<EquityLegData>(legData_[equityLegIndex_].concreteLegData());
+    auto eqLegData = QuantLib::ext::dynamic_pointer_cast<EquityLegData>(legData_[equityLegIndex_].concreteLegData());
     QL_REQUIRE(eqLegData, "could not cast to EquityLegData for equity leg in equity swap, this is unexpected");
 
     if (legData_[irLegIndex_].indexingFromAssetLeg() && eqLegData->notionalReset()) {
@@ -72,7 +72,7 @@ void EquitySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         Leg tmpEqLeg = legBuilder->buildLeg(legData_[equityLegIndex_], engineFactory, dummy,
                                             engineFactory->configuration(MarketContext::pricing));
         for (Size i = 0; i < tmpEqLeg.size(); ++i) {
-            auto eqCpn = boost::dynamic_pointer_cast<QuantExt::EquityCoupon>(tmpEqLeg[i]);
+            auto eqCpn = QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityCoupon>(tmpEqLeg[i]);
             QL_REQUIRE(eqCpn, "EquitySwap::build(): expected EquityCoupon on equity leg, this is unexpected");
             valuationDates.push_back(ore::data::to_string(eqCpn->fixingStartDate()));
             if (i == tmpEqLeg.size() - 1)
@@ -109,14 +109,16 @@ void EquitySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         legData_[irLegIndex_].indexingFromAssetLeg() = false;
     }
 
+    // just underlying security; notionals and currencies are covered by the Swap class already
+    additionalData_["underlyingSecurityId"] = eqLegData->eqName();
+
     // 2 now build the swap using the updated leg data
 
     Swap::build(engineFactory);
+}
 
-    notionalCurrency_ = legCurrencies_[equityLegIndex_];
-
-    // just underlying security, notionals and currencies are covered by the Swap class already
-    additionalData_["underlyingSecurityId"] = eqLegData->eqName();
+void EquitySwap::setIsdaTaxonomyFields() {
+    Swap::setIsdaTaxonomyFields();
 
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Equity");
@@ -129,13 +131,21 @@ void EquitySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 QuantLib::Real EquitySwap::notional() const {
     Date asof = Settings::instance().evaluationDate();
     for (auto const& c : legs_[equityLegIndex_]) {
-        if (auto cpn = boost::dynamic_pointer_cast<QuantExt::EquityCoupon>(c)) {
+        if (auto cpn = QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityCoupon>(c)) {
             if (c->date() > asof)
                 return cpn->nominal();
         }
     }
     ALOG("Error retrieving current notional for equity swap " << id() << " as of " << io::iso_date(asof));
     return Null<Real>();
+}
+
+std::string EquitySwap::notionalCurrency() const {
+    // try to get the notional ccy from the additional results of the instrument
+    if (legCurrencies_.size() > equityLegIndex_)
+        return legCurrencies_[equityLegIndex_];
+    else
+        return Swap::notionalCurrency();
 }
 
 } // namespace data

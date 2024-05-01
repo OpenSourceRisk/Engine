@@ -25,11 +25,11 @@ namespace QuantExt {
 
 using namespace CrossAssetAnalytics;
 
-AnalyticCcLgmFxOptionEngine::AnalyticCcLgmFxOptionEngine(const boost::shared_ptr<CrossAssetModel>& model,
+AnalyticCcLgmFxOptionEngine::AnalyticCcLgmFxOptionEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
                                                          const Size foreignCurrency)
     : model_(model), foreignCurrency_(foreignCurrency), cacheEnabled_(false), cacheDirty_(true) {}
 
-Real AnalyticCcLgmFxOptionEngine::value(const Time t0, const Time t, const boost::shared_ptr<StrikedTypePayoff> payoff,
+Real AnalyticCcLgmFxOptionEngine::value(const Time t0, const Time t, const QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff,
                                         const Real domesticDiscount, const Real fxForward) const {
     Real H0 = Hz(0).eval(*model_, t);
     Real Hi = Hz(foreignCurrency_ + 1).eval(*model_, t);
@@ -76,7 +76,7 @@ void AnalyticCcLgmFxOptionEngine::calculate() const {
 
     QL_REQUIRE(arguments_.exercise->type() == Exercise::European, "only European options are allowed");
 
-    boost::shared_ptr<StrikedTypePayoff> payoff = boost::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
+    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff = QuantLib::ext::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
     QL_REQUIRE(payoff != NULL, "only striked payoff is allowed");
 
     Date expiry = arguments_.exercise->lastDate();

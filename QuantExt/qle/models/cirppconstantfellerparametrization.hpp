@@ -48,7 +48,7 @@ public:
     Real sigma(const Time t) const override;
     Real y0(const Time t) const override;
 
-    const boost::shared_ptr<Parameter> parameter(const Size) const override;
+    const QuantLib::ext::shared_ptr<Parameter> parameter(const Size) const override;
     const bool relaxed() const;
 
 protected:
@@ -56,7 +56,7 @@ protected:
     Real inverse(const Size j, const Real y) const override;
 
 private:
-    const boost::shared_ptr<PseudoParameter> kappa_, theta_, sigma_, y0_;
+    const QuantLib::ext::shared_ptr<PseudoParameter> kappa_, theta_, sigma_, y0_;
     bool relaxed_;
     const Real fellerFactor_;
 };
@@ -68,9 +68,9 @@ CirppConstantWithFellerParametrization<TS>::CirppConstantWithFellerParametrizati
     const Currency& currency, const Handle<TS>& termStructure, const Real kappa, const Real theta, const Real sigma,
     const Real y0, const bool shifted, bool relaxed, const Real fellerFactor, const std::string& name)
     : CirppParametrization<TS>(currency, termStructure, shifted, name),
-      kappa_(boost::make_shared<PseudoParameter>(1)),
-      theta_(boost::make_shared<PseudoParameter>(1)), sigma_(boost::make_shared<PseudoParameter>(1)),
-      y0_(boost::make_shared<PseudoParameter>(1)), relaxed_(relaxed), fellerFactor_(fellerFactor) {
+      kappa_(QuantLib::ext::make_shared<PseudoParameter>(1)),
+      theta_(QuantLib::ext::make_shared<PseudoParameter>(1)), sigma_(QuantLib::ext::make_shared<PseudoParameter>(1)),
+      y0_(QuantLib::ext::make_shared<PseudoParameter>(1)), relaxed_(relaxed), fellerFactor_(fellerFactor) {
     QL_REQUIRE((relaxed_ ? 4.0 : 2.0) * kappa * theta > sigma * sigma,
                "CirppConstantWithFellerParametrization: Feller constraint violated (kappa="
                    << kappa << ", theta=" << theta << ", sigma=" << sigma << " (relaxed=" << std::boolalpha << relaxed_
@@ -142,7 +142,7 @@ template <class TS> inline const bool CirppConstantWithFellerParametrization<TS>
 }
 
 template <class TS>
-inline const boost::shared_ptr<Parameter>
+inline const QuantLib::ext::shared_ptr<Parameter>
 CirppConstantWithFellerParametrization<TS>::parameter(const Size i) const {
     QL_REQUIRE(i < 4, "parameter " << i << " does not exist, only have 0..3");
     if (i == 0)

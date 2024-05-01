@@ -38,7 +38,7 @@ public:
     VolatilityConfig(std::string calendarStr = std::string(), QuantLib::Natural priority = 0);
 
     void fromXMLNode(ore::data::XMLNode* node);
-    void toXMLNode(XMLDocument& doc, XMLNode* node);
+    void toXMLNode(XMLDocument& doc, XMLNode* node) const;
 
     QuantLib::Natural priority() const { return priority_; };
     Calendar calendar() const { return calendar_; };
@@ -71,7 +71,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(ore::data::XMLNode* node) override;
-    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
 
 private:
@@ -94,7 +94,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(ore::data::XMLNode* node) override;
-    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
 
 private:
@@ -118,7 +118,7 @@ public:
     //! \name Serialisation
     //@{
     void fromBaseNode(ore::data::XMLNode* node);
-    void toBaseNode(ore::data::XMLDocument& doc, ore::data::XMLNode* node);
+    void toBaseNode(ore::data::XMLDocument& doc, ore::data::XMLNode* node) const;
     //@}
 
 private:
@@ -150,7 +150,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(ore::data::XMLNode* node) override;
-    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
 
 private:
@@ -187,7 +187,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(ore::data::XMLNode* node) override;
-    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
 
 private:
@@ -280,7 +280,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(ore::data::XMLNode* node) override;
-    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
 
 private:
@@ -328,7 +328,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(ore::data::XMLNode* node) override;
-    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
 
 private:
@@ -377,7 +377,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(ore::data::XMLNode* node) override;
-    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
 
 private:
@@ -426,7 +426,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(ore::data::XMLNode* node) override;
-    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
 
 private:
@@ -442,14 +442,14 @@ class VolatilityConfigBuilder : public XMLSerializable {
 public:
     explicit VolatilityConfigBuilder() {}
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     void loadVolatiltyConfigs(XMLNode* node);
 
-    const std::vector<boost::shared_ptr<VolatilityConfig>>& volatilityConfig() { return volatilityConfig_; };
+    const std::vector<QuantLib::ext::shared_ptr<VolatilityConfig>>& volatilityConfig() { return volatilityConfig_; };
 
 private:
-    std::vector<boost::shared_ptr<VolatilityConfig>> volatilityConfig_;
+    std::vector<QuantLib::ext::shared_ptr<VolatilityConfig>> volatilityConfig_;
 };
 
 

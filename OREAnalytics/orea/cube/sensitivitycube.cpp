@@ -56,7 +56,7 @@ std::ostream& operator<<(std::ostream& out, const SensitivityCube::crossPair& cp
     return out << cp.first << "-" << cp.second;
 }
 
-SensitivityCube::SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube,
+SensitivityCube::SensitivityCube(const QuantLib::ext::shared_ptr<NPVSensiCube>& cube,
                                  const vector<ShiftScenarioDescription>& scenarioDescriptions,
                                  const map<RiskFactorKey, QuantLib::Real>& targetShiftSizes,
                                  const map<RiskFactorKey, QuantLib::Real>& actualShiftSizes,
@@ -66,7 +66,7 @@ SensitivityCube::SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube,
     initialise();
 }
 
-SensitivityCube::SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube,
+SensitivityCube::SensitivityCube(const QuantLib::ext::shared_ptr<NPVSensiCube>& cube,
                                  const vector<string>& scenarioDescriptions,
                                  const map<RiskFactorKey, QuantLib::Real>& targetShiftSizes,
                                  const map<RiskFactorKey, QuantLib::Real>& actualShiftSizes,
@@ -225,7 +225,7 @@ Real SensitivityCube::delta(const Size tradeIdx, const RiskFactorKey& riskFactor
         return (cube_->get(tradeIdx, fd.index) - cube_->getT0(tradeIdx, 0)) * scaling(fd);
     } else if (s->second == ShiftScheme::Backward) {
         auto fd = index(riskFactorKey, downFactors_);
-        return cube_->getT0(tradeIdx, 0) - cube_->get(tradeIdx, fd.index) * scaling(fd);
+        return (cube_->getT0(tradeIdx, 0) - cube_->get(tradeIdx, fd.index)) * scaling(fd);
     } else if (s->second == ShiftScheme::Central) {
         auto fdup = index(riskFactorKey, upFactors_);
         auto fddown = index(riskFactorKey, downFactors_);

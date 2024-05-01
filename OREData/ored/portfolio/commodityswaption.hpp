@@ -40,12 +40,12 @@ public:
                       const std::vector<ore::data::LegData>& legData)
         : Trade("CommoditySwaption", env), legData_(legData) {}
 
-    void build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) override;
+    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory) override;
     QuantLib::Real notional() const override;
 
     //! Add underlying Commodity names
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     //! \name Inspectors
     //@{
@@ -56,7 +56,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(ore::data::XMLNode* node) override;
-    virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
 
     //! \name Trade
@@ -65,17 +65,17 @@ public:
     //@}
 
 private:
-    boost::shared_ptr<ore::data::LegData> createLegData() const { return boost::make_shared<ore::data::LegData>(); }
+    QuantLib::ext::shared_ptr<ore::data::LegData> createLegData() const { return QuantLib::ext::make_shared<ore::data::LegData>(); }
 
-    boost::shared_ptr<QuantLib::Swap> buildSwap(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory);
+    QuantLib::ext::shared_ptr<QuantLib::Swap> buildSwap(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory);
 
     ore::data::OptionData option_;
     vector<ore::data::LegData> legData_;
-    boost::shared_ptr<QuantLib::Exercise> exercise_;
+    QuantLib::ext::shared_ptr<QuantLib::Exercise> exercise_;
     std::string name_;
     std::string ccy_;
     QuantLib::Date startDate_;
-    boost::shared_ptr<CommoditySwap> commoditySwap_;
+    QuantLib::ext::shared_ptr<CommoditySwap> commoditySwap_;
 };
 
 } // namespace data

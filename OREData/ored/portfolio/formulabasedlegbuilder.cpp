@@ -23,23 +23,23 @@
 namespace ore {
 namespace data {
 
-Leg FormulaBasedLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+Leg FormulaBasedLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                      RequiredFixings& requiredFixings, const string& configuration,
                                      const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
-    auto formulaData = boost::dynamic_pointer_cast<FormulaBasedLegData>(data.concreteLegData());
+    auto formulaData = QuantLib::ext::dynamic_pointer_cast<FormulaBasedLegData>(data.concreteLegData());
     QL_REQUIRE(formulaData, "Wrong LegType, expected Formula");
     string formula = formulaData->formulaBasedIndex();
     Calendar cal;
     if (formulaData->fixingCalendar() != "")
         cal = parseCalendar(formulaData->fixingCalendar());
-    std::map<std::string, boost::shared_ptr<QuantLib::InterestRateIndex>> indexMaps;
+    std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>> indexMaps;
     auto formulaIndex =
         makeFormulaBasedIndex(formula, engineFactory->market(), configuration, indexMaps, cal);
     Leg result = makeFormulaBasedLeg(data, formulaIndex, engineFactory, indexMaps, openEndDateReplacement);
     // add required fixing dates
     for (auto const& m : indexMaps) {
         for (auto const& c : result) {
-            auto f = boost::dynamic_pointer_cast<FloatingRateCoupon>(c);
+            auto f = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c);
             QL_REQUIRE(f != nullptr, "expected FloatingRateCoupon in FormulaBasedLegBuilder");
             requiredFixings.addFixingDate(f->fixingDate(), m.first, f->date(), false);
         }

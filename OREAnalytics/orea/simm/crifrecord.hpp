@@ -366,10 +366,13 @@ std::ostream& operator<<(std::ostream& out, const CrifRecord::RiskType& rt);
 
 std::ostream& operator<<(std::ostream& out, const CrifRecord::ProductClass& pc);
 
+std::ostream& operator<<(std::ostream& out, const CrifRecord::CurvatureScenario& scenario);
+
 CrifRecord::RiskType parseRiskType(const std::string& rt);
 
 CrifRecord::ProductClass parseProductClass(const std::string& pc);
 
+CrifRecord::CurvatureScenario parseFrtbCurvatureScenario(const std::string& scenario);
 
 } // namespace analytics
 } // namespace ore
