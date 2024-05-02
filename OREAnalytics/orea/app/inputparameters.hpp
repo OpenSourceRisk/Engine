@@ -936,6 +936,7 @@ private:
     std::string parConversionOutputFileName_;
     std::string parConversionJacobiFileName_;
     std::string parConversionJacobiInverseFileName_;
+    std::string pnlOutputFileName_;
 };
     
 } // namespace analytics
