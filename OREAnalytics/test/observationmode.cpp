@@ -292,7 +292,8 @@ void simulation(string dateGridString, bool checkFixings) {
         QuantLib::ext::make_shared<analytics::ScenarioSimMarket>(initMarket, parameters);
 
     // build scenario generator
-    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory(new SimpleScenarioFactory);
+    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory =
+        QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
     QuantLib::ext::shared_ptr<ScenarioGenerator> scenarioGenerator = QuantLib::ext::make_shared<CrossAssetModelScenarioGenerator>(
         model, pathGen, scenarioFactory, parameters, today, dg, initMarket);
     simMarket->scenarioGenerator() = scenarioGenerator;

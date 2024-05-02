@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/utilities/initbuilders.hpp>
+#include <ored/utilities/databuilders.hpp>
 
 #include <ored/model/calibrationinstrumentfactory.hpp>
 #include <ored/model/calibrationinstruments/cpicapfloor.hpp>
@@ -104,8 +104,8 @@
 #include <ored/portfolio/builders/vanillaoption.hpp>
 #include <ored/portfolio/builders/varianceswap.hpp>
 #include <ored/portfolio/builders/yoycapfloor.hpp>
-#include <ored/portfolio/capfloor.hpp>
 #include <ored/portfolio/callableswap.hpp>
+#include <ored/portfolio/capfloor.hpp>
 #include <ored/portfolio/cbo.hpp>
 #include <ored/portfolio/cdo.hpp>
 #include <ored/portfolio/cliquetoption.hpp>
@@ -216,7 +216,7 @@
 
 namespace ore::data {
 
-void initBuilders() {
+void dataBuilders() {
 
     static boost::shared_mutex mutex;
     static bool hasRun = false;
@@ -249,7 +249,7 @@ void initBuilders() {
     ORE_REGISTER_CALIBRATION_INSTRUMENT("CpiCapFloor", CpiCapFloor, false)
     ORE_REGISTER_CALIBRATION_INSTRUMENT("YoYCapFloor", YoYCapFloor, false)
     ORE_REGISTER_CALIBRATION_INSTRUMENT("YoYSwap", YoYSwap, false)
-        
+
     ORE_REGISTER_REFERENCE_DATUM("Bond", BondReferenceDatum, false)
     ORE_REGISTER_REFERENCE_DATUM("CreditIndex", CreditIndexReferenceDatum, false)
     ORE_REGISTER_REFERENCE_DATUM("EquityIndex", EquityIndexReferenceDatum, false)
