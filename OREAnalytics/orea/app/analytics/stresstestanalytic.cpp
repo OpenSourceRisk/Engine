@@ -75,7 +75,7 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
             analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
             analytic()->configurations().curveConfig, analytic()->market(), inputs_->iborFallbackConfig());
         scenarioData = converter.convertStressScenarioData(scenarioData);
-        analytic()->stressTests()[label()]["stress_zero_scenarios"] = scenarioData;
+        analytic()->stressTests()[label()]["stress_ZeroStressData"] = scenarioData;
     }
 
     Settings::instance().evaluationDate() = inputs_->asof();

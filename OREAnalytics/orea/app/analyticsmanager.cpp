@@ -16,13 +16,14 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <orea/app/analytics/imscheduleanalytic.hpp>
 #include <orea/app/analytics/parconversionanalytic.hpp>
+#include <orea/app/analytics/parstressconversionanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/analytics/scenarioanalytic.hpp>
 #include <orea/app/analytics/scenariostatisticsanalytic.hpp>
 #include <orea/app/analytics/simmanalytic.hpp>
 #include <orea/app/analytics/stresstestanalytic.hpp>
-#include <orea/app/analytics/imscheduleanalytic.hpp>
 #include <orea/app/analytics/varanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/app/analyticsmanager.hpp>
@@ -65,6 +66,7 @@ AnalyticsManager::AnalyticsManager(const QuantLib::ext::shared_ptr<InputParamete
     addAnalytic("SCENARIO_STATISTICS", QuantLib::ext::make_shared<ScenarioStatisticsAnalytic>(inputs_));
     addAnalytic("SCENARIO", QuantLib::ext::make_shared<ScenarioAnalytic>(inputs_));
     addAnalytic("STRESS", QuantLib::ext::make_shared<StressTestAnalytic>(inputs_));
+    addAnalytic("PARSTRESSCONVERSION", QuantLib::ext::make_shared<ParStressConversionAnalytic>(inputs_));
 }
 
 void AnalyticsManager::clear() {

@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/engine/partozeroscenario.hpp
-    \brief Convert a par stress scenario into a zero stress scenario
+/*! \file orea/engine/parstressscenarioconverter.hpp
+    \brief Convert all par shifts in a single stress test scenario to a zero shifts
     \ingroup engine
 */
 
@@ -39,7 +39,7 @@ namespace analytics {
 // Utility function
 std::set<RiskFactorKey::KeyType> disabledParRates(bool irCurveParRates, bool irCapFloorParRates, bool creditParRates);
 
-//! Convert a par shifts in stress test scenario to zero shifts
+//! Convert all par shifts in a single stress test scenario to zero shifts
 class ParStressScenarioConverter {
 public:
     ParStressScenarioConverter(
@@ -50,6 +50,7 @@ public:
         const ore::analytics::ParSensitivityInstrumentBuilder::Instruments& parInstruments,
         bool useSpreadedTermStructure);
 
+    //! Convert par shifts in a stress scenario to zero shifts
     ore::analytics::StressTestScenarioData::StressTestData
     convertScenario(const StressTestScenarioData::StressTestData& scenario) const;
 

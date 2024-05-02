@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/engine/partozeroscenario.hpp
-    \brief Convert a par stress scenario into a zero stress scenario
+/*! \file orea/engine/parstressconverter.hpp
+    \brief Convert all par shifts in a stress test to a zero shifts
     \ingroup engine
 */
 
