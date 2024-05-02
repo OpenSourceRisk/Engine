@@ -66,7 +66,8 @@ engine/parsensitivityanalysis.cpp
 engine/parsensitivitycubestream.cpp
 engine/parsensitivityinstrumentbuilder.cpp
 engine/parsensitivityutilities.cpp
-engine/partozeroscenario.cpp
+engine/parstressconverter.cpp
+engine/parstressscenarioconverter.cpp
 engine/riskfilter.cpp
 engine/sensitivityaggregator.cpp
 engine/sensitivityanalysis.cpp
@@ -224,7 +225,8 @@ engine/parsensitivityanalysis.hpp
 engine/parsensitivitycubestream.hpp
 engine/parsensitivityinstrumentbuilder.hpp
 engine/parsensitivityutilities.hpp
-engine/partozeroscenario.hpp
+engine/parstressconverter.hpp
+engine/parstressscenarioconverter.hpp
 engine/riskfilter.hpp
 engine/sensitivityaggregator.hpp
 engine/sensitivityanalysis.hpp

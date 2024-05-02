@@ -16,23 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/engine/parsensitivityanalysis.hpp>
-#include <orea/engine/parsensitivityinstrumentbuilder.hpp>
 #include <orea/engine/parsensitivityutilities.hpp>
-#include <orea/engine/partozeroscenario.hpp>
-#include <orea/scenario/deltascenariofactory.hpp>
-#include <orea/scenario/scenario.hpp>
-#include <orea/scenario/scenariosimmarket.hpp>
-#include <orea/scenario/scenariosimmarketparameters.hpp>
-#include <orea/scenario/sensitivityscenariodata.hpp>
-#include <orea/scenario/stressscenariodata.hpp>
+#include <orea/engine/parstressscenarioconverter.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/instrument.hpp>
 #include <ql/instruments/capfloor.hpp>
-#include <ql/instruments/inflationcapfloor.hpp>
-#include <ql/math/optimization/constraint.hpp>
-#include <ql/math/optimization/costfunction.hpp>
-#include <ql/math/optimization/levenbergmarquardt.hpp>
+
 namespace ore {
 namespace analytics {
 
@@ -43,49 +32,6 @@ const static std::set<RiskFactorKey::KeyType> supportedCurveShiftTypes = {
     RiskFactorKey::KeyType::DiscountCurve, RiskFactorKey::KeyType::YieldCurve, RiskFactorKey::KeyType::IndexCurve,
     RiskFactorKey::KeyType::SurvivalProbability};
 
-//! Build a bi-graph from the parSensitivites and sort the graph by their dependency
-std::vector<RiskFactorKey>
-sortParRiskFactorByDependency(const ParSensitivityAnalysis::ParContainer& parWithRespectToZero) {
-
-    std::map<RiskFactorKey, std::set<RiskFactorKey>> parToZeroEdges;
-    std::map<RiskFactorKey, std::set<RiskFactorKey>> zeroToParEdges;
-    std::vector<RiskFactorKey> orderedKeys;
-    std::map<RiskFactorKey, size_t> order;
-    std::map<RiskFactorKey, std::set<RiskFactorKey>> dependencies;
-    for (const auto& [key, value] : parWithRespectToZero) {
-        const auto& [parKey, zeroKey] = key;
-        if (order.count(parKey) == 0) {
-            order[parKey] = 0;
-        }
-        if (!QuantLib::close_enough(value, 0.0)) {
-            parToZeroEdges[parKey].insert(zeroKey);
-            if (zeroKey != parKey) {
-                order[parKey] = order[parKey] + 1;
-                dependencies[zeroKey].insert(parKey);
-            }
-        }
-    }
-
-    std::queue<RiskFactorKey> zeroOrderParKeys;
-    for (const auto& [key, n] : order) {
-        if (n == 0) {
-            zeroOrderParKeys.push(key);
-        }
-    }
-
-    while (!zeroOrderParKeys.empty()) {
-        auto key = zeroOrderParKeys.front();
-        zeroOrderParKeys.pop();
-        orderedKeys.push_back(key);
-        for (const auto& dependentKey : dependencies[key]) {
-            order[dependentKey] -= 1;
-            if (order[dependentKey] == 0) {
-                zeroOrderParKeys.push(dependentKey);
-            }
-        }
-    }
-    return orderedKeys;
-}
 
 double computeTargetRate(const double fairRate, const double shift, const ShiftType shiftType) {
     double shiftedRate = fairRate;
@@ -178,22 +124,6 @@ double impliedCapVolatility(const RiskFactorKey& key, const ParSensitivityInstru
     return parVol;
 }
 
-std::set<RiskFactorKey::KeyType> disabledParRates(bool irCurveParRates, bool irCapFloorParRates, bool creditParRates) {
-    set<RiskFactorKey::KeyType> disabledParRates;
-    if (!irCurveParRates) {
-        disabledParRates.insert(RiskFactorKey::KeyType::DiscountCurve);
-        disabledParRates.insert(RiskFactorKey::KeyType::YieldCurve);
-        disabledParRates.insert(RiskFactorKey::KeyType::IndexCurve);
-    }
-    if (!irCapFloorParRates) {
-        disabledParRates.insert(RiskFactorKey::KeyType::OptionletVolatility);
-    }
-    if (!creditParRates) {
-        disabledParRates.insert(RiskFactorKey::KeyType::SurvivalProbability);
-    }
-    return disabledParRates;
-}
-
 //! Creates a copy from the parStressScenario and delete all par shifts  but keeps all zeroShifts
 StressTestScenarioData::StressTestData
 removeParShiftsCopy(const StressTestScenarioData::StressTestData& parStressScenario) {
@@ -216,98 +146,20 @@ removeParShiftsCopy(const StressTestScenarioData::StressTestData& parStressScena
 }
 } // namespace
 
-ParStressTestConverter::ParStressTestConverter(
-    const QuantLib::Date& asof, QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
-    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams,
-    const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiScenarioData,
-    const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
-    const QuantLib::ext::shared_ptr<ore::data::Market>& todaysMarket,
-    const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig)
-    : asof_(asof), todaysMarketParams_(todaysMarketParams), simMarketParams_(simMarketParams),
-      sensiScenarioData_(sensiScenarioData), curveConfigs_(curveConfigs), todaysMarket_(todaysMarket),
-      iborFallbackConfig_(iborFallbackConfig) {}
-
-QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> ParStressTestConverter::convertStressScenarioData(
-    const QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData>& stressTestData) const {
-    // Exit early if we have dont have any par stress shifts in any scenario
-    if (!stressTestData->hasScenarioWithParShifts()) {
-        LOG("ParStressConverter: No scenario with par shifts found, use it as is");
-        return stressTestData;
+std::set<RiskFactorKey::KeyType> disabledParRates(bool irCurveParRates, bool irCapFloorParRates, bool creditParRates) {
+    set<RiskFactorKey::KeyType> disabledParRates;
+    if (!irCurveParRates) {
+        disabledParRates.insert(RiskFactorKey::KeyType::DiscountCurve);
+        disabledParRates.insert(RiskFactorKey::KeyType::YieldCurve);
+        disabledParRates.insert(RiskFactorKey::KeyType::IndexCurve);
     }
-    QuantLib::ext::shared_ptr<StressTestScenarioData> results = QuantLib::ext::make_shared<StressTestScenarioData>();
-    results->useSpreadedTermStructures() = stressTestData->useSpreadedTermStructures();
-    // Identify all required parInstruments, ignore if a risk factor is a zeroshift in all scenarios
-    // The following risk factors arent supported in the par stress
-    std::set<RiskFactorKey::KeyType> disabledRiskFactors{
-        RiskFactorKey::KeyType::ZeroInflationCurve, RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility,
-        RiskFactorKey::KeyType::YoYInflationCapFloorVolatility, RiskFactorKey::KeyType::YoYInflationCurve};
-
-    auto disabled = disabledParRates(stressTestData->withIrCurveParShifts(), stressTestData->withIrCapFloorParShifts(),
-                                     stressTestData->withCreditCurveParShifts());
-    disabledRiskFactors.insert(disabled.begin(), disabled.end());
-
-    DLOG("ParStressConverter: The following risk factors will be not converted:")
-    for (const auto& keyType : disabledRiskFactors) {
-        DLOG(keyType);
+    if (!irCapFloorParRates) {
+        disabledParRates.insert(RiskFactorKey::KeyType::OptionletVolatility);
     }
-    LOG("ParStressConverter: Compute Par Sensitivities")
-    auto [simMarket, parAnalysis] = computeParSensitivity(disabledRiskFactors);
-    // Loop over scenarios
-    LOG("ParStressConverter: Build dependency graph of par instruments")
-    auto dependencyGraph = sortParRiskFactorByDependency(parAnalysis->parSensitivities());
-    ParStressScenarioConverter converter(asof_, dependencyGraph, simMarketParams_, sensiScenarioData_, simMarket,
-                                         parAnalysis->parInstruments(), stressTestData->useSpreadedTermStructures());
-
-    for (const auto& scenario : stressTestData->data()) {
-        DLOG("ParStressConverter: Scenario" << scenario.label);
-        if (scenario.containsParShifts()) {
-            try {
-                LOG("ParStressConverter: Scenario " << scenario.label << " Convert par shifts to zero shifts");
-                auto convertedScenario = converter.convertScenario(scenario);
-                results->data().push_back(std::move(convertedScenario));
-            } catch (const std::exception& e) {
-                ALOG("ParStressConverter: Conversion failed. Skip this scenario. Got " << e.what());
-            }
-        } else {
-            LOG("ParStressConverter: Skip scenario " << scenario.label << ", it contains only zero shifts");
-            results->data().push_back(scenario);
-        }
+    if (!creditParRates) {
+        disabledParRates.insert(RiskFactorKey::KeyType::SurvivalProbability);
     }
-    return results;
-}
-
-//! Creates a SimMarket, aligns the pillars and strikes of sim and sensitivity scenario market, computes par
-//! sensitivites
-std::pair<QuantLib::ext::shared_ptr<ScenarioSimMarket>, QuantLib::ext::shared_ptr<ParSensitivityAnalysis>>
-ParStressTestConverter::computeParSensitivity(const std::set<RiskFactorKey::KeyType>& typesDisabled) const {
-    auto parAnalysis = ext::make_shared<ParSensitivityAnalysis>(asof_, simMarketParams_, *sensiScenarioData_,
-                                                                Market::defaultConfiguration, true, typesDisabled);
-
-    LOG("ParStressConverter: Allign Pillars for par sensitivity analysis");
-    parAnalysis->alignPillars();
-    // Align Cap Floor Strikes
-    if (typesDisabled.count(RiskFactorKey::KeyType::OptionletVolatility) == 0) {
-        LOG("ParStressConverter: Allign CapFloor strikes and adjust optionletPillars");
-        for (const auto& [index, data] : sensiScenarioData_->capFloorVolShiftData()) {
-            simMarketParams_->setCapFloorVolStrikes(index, data->shiftStrikes);
-            simMarketParams_->setCapFloorVolAdjustOptionletPillars(true);
-        }
-    }
-    LOG("ParStressConverter: Build SimMarket");
-    auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
-        todaysMarket_, simMarketParams_, Market::defaultConfiguration,
-        curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
-        todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(), false,
-        sensiScenarioData_->useSpreadedTermStructures(), false, true, *iborFallbackConfig_);
-    LOG("ParStressConverter: Build ScenarioGenerator");
-    auto scnearioFactory = QuantLib::ext::make_shared<ore::analytics::DeltaScenarioFactory>(simMarket->baseScenario());
-    auto scenarioGenerator = QuantLib::ext::make_shared<SensitivityScenarioGenerator>(
-        sensiScenarioData_, simMarket->baseScenario(), simMarketParams_, simMarket, scnearioFactory, true, "", false,
-        simMarket->baseScenarioAbsolute());
-    simMarket->scenarioGenerator() = scenarioGenerator;
-    LOG("ParStressConverter: Compute ParInstrumentSensitivities");
-    parAnalysis->computeParInstrumentSensitivities(simMarket);
-    return {simMarket, parAnalysis};
+    return disabledParRates;
 }
 
 //! Check if the scenarios defines a shift for each par rate defined in the sensitivityScenarioData;
@@ -372,7 +224,8 @@ ParStressScenarioConverter::convertScenario(const StressTestScenarioData::Stress
             relevantParKeys.push_back(rfKey);
             const double fairRate = impliedParRate(rfKey);
             // TODO get shift type;
-            const double target = computeTargetRate(fairRate, getStressShift(rfKey, parStressScenario), ShiftType::Absolute);
+            const double target =
+                computeTargetRate(fairRate, getStressShift(rfKey, parStressScenario), ShiftType::Absolute);
             const double baseScenarioValue = simMarket_->baseScenario()->get(rfKey);
             const double baseScenarioAbsoluteValue = simMarket_->baseScenarioAbsolute()->get(rfKey);
             DLOG("ParStressConverter:  ParInstrument "
@@ -405,7 +258,8 @@ ParStressScenarioConverter::convertScenario(const StressTestScenarioData::Stress
             targetValue =
                 brent.solve(targetFunction, accuracy_, baseScenarioValues[rfKey], lowerBound(rfKey), upperBound(rfKey));
         } catch (const std::exception& e) {
-            ALOG("ParStressConverter: Couldn't find a solution to imply a zero rate for parRate " << rfKey << ", got " << e.what());
+            ALOG("ParStressConverter: Couldn't find a solution to imply a zero rate for parRate " << rfKey << ", got "
+                                                                                                  << e.what());
             targetValue = simMarket_->baseScenario()->get(rfKey);
         }
         zeroSimMarketScenario->add(rfKey, targetValue);
@@ -580,7 +434,7 @@ void ParStressScenarioConverter::updateTargetStressTestScenarioData(
 double ParStressScenarioConverter::lowerBound(const RiskFactorKey key) const {
     if (useSpreadedTermStructure_ && key.keytype == RiskFactorKey::KeyType::OptionletVolatility) {
         return minVol_ - simMarket_->baseScenarioAbsolute()->get(key);
-    } else if(key.keytype == RiskFactorKey::KeyType::OptionletVolatility){
+    } else if (key.keytype == RiskFactorKey::KeyType::OptionletVolatility) {
         return minVol_;
     } else if (useSpreadedTermStructure_ && (key.keytype == RiskFactorKey::KeyType::DiscountCurve ||
                                              key.keytype == RiskFactorKey::KeyType::YieldCurve ||
@@ -606,7 +460,5 @@ double ParStressScenarioConverter::upperBound(const RiskFactorKey key) const {
         return maxDiscountFactor_;
     }
 }
-
 } // namespace analytics
-
 } // namespace ore

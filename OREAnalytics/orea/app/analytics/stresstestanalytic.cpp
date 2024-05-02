@@ -20,7 +20,7 @@
 #include <orea/app/reportwriter.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/parsensitivityanalysis.hpp>
-#include <orea/engine/partozeroscenario.hpp>
+#include <orea/engine/parstressconverter.hpp>
 #include <orea/engine/stresstest.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 

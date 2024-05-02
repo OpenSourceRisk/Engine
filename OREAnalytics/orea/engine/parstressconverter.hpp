@@ -32,60 +32,9 @@
 #include <ored/configuration/iborfallbackconfig.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
+
 namespace ore {
 namespace analytics {
-class ParStressScenarioConverter {
-public:
-    ParStressScenarioConverter(
-        const QuantLib::Date& asof, const std::vector<RiskFactorKey>& sortedParInstrumentRiskFactorKeys,
-        const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams,
-        const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiScenarioData,
-        const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
-        const ore::analytics::ParSensitivityInstrumentBuilder::Instruments& parInstruments,
-        bool useSpreadedTermStructure);
-
-    ore::analytics::StressTestScenarioData::StressTestData
-    convertScenario(const StressTestScenarioData::StressTestData& scenario) const;
-
-private:
-    //! check if the scenario can be converted
-    bool scenarioCanBeConverted(const StressTestScenarioData::StressTestData& parStressScenario) const;
-    //! compute the time to tenor of the risk factor key
-    double maturityTime(const RiskFactorKey& key) const;
-
-    //! get the strike and tenor from a optionlet riskfactor key
-    std::pair<size_t, size_t> getCapFloorTenorAndStrikeIds(const RiskFactorKey& rfKey) const;
-
-    //! convert the scenario value to the corresponding zero shift size for the stress test data
-    double shiftsSizeForScenario(const RiskFactorKey rfKey, double targetValue, double baseValue) const;
-
-    //! add zero shifts in the stress test data
-    void updateTargetStressTestScenarioData(StressTestScenarioData::StressTestData& stressScenario,
-                                            const RiskFactorKey& key, const double zeroShift) const;
-
-    //! Compute the implied fair rate of the par instrument
-    double impliedParRate(const RiskFactorKey& key) const;
-
-    //! get the par stress shift size from stress test data
-    double getStressShift(const RiskFactorKey& key, const StressTestScenarioData::StressTestData& stressScenario) const;
-
-    double lowerBound(const RiskFactorKey key) const;
-    double upperBound(const RiskFactorKey key) const;
-
-    QuantLib::Date asof_;
-    const std::vector<RiskFactorKey> sortedParInstrumentRiskFactorKeys_;
-    QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketParams_;
-    QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensiScenarioData_;
-    mutable QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket> simMarket_;
-    const ore::analytics::ParSensitivityInstrumentBuilder::Instruments&  parInstruments_;
-    bool useSpreadedTermStructure_ = true;
-    
-    double minVol_ = 1e-8;
-    double maxVol_ = 10.0;
-    double minDiscountFactor_ = 1e-8;
-    double maxDiscountFactor_ = 10.0;
-    double accuracy_ = 1e-8;
-};
 
 class ParStressTestConverter {
 public:
@@ -109,7 +58,7 @@ private:
     //! Creates a SimMarket, aligns the pillars and strikes of sim and sensitivity scenario market, computes par
     //! sensitivites
     std::pair<QuantLib::ext::shared_ptr<ScenarioSimMarket>, QuantLib::ext::shared_ptr<ParSensitivityAnalysis>>
-    computeParSensitivity(const std::set<RiskFactorKey::KeyType>& typesDisabled) const;    
+    computeParSensitivity(const std::set<RiskFactorKey::KeyType>& typesDisabled) const;
 
     QuantLib::Date asof_;
     QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;
