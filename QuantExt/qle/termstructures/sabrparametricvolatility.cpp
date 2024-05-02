@@ -123,15 +123,10 @@ std::vector<std::pair<Real, bool>> SabrParametricVolatility::defaultModelParamet
 std::vector<Real> SabrParametricVolatility::direct(const std::vector<Real>& x, const Real forward,
                                                    const Real lognormalShift) const {
     std::vector<Real> y(4);
-    // beta as in QuantLib::SABRSpecs
-    y[1] = std::fabs(x[1]) < std::sqrt(-std::log(eps1)) ? std::exp(-(x[1] * x[1])) : eps1;
-    // max 0.02 normal vol equivalent
-    Real fbeta = std::pow(forward + lognormalShift, y[1]);
-    y[0] =
-        (std::fabs(x[0]) < std::sqrt(-std::log(fbeta * eps1 / 0.02)) ? 0.02 * std::exp(-(x[0] * x[0])) / fbeta : eps1);
-    // nu max 5.0
-    y[2] = (std::fabs(x[2]) < std::sqrt(-std::log(2.0 * eps1)) ? 2.0 * std::exp(-(x[2] * x[2])) : eps1);
-    // rho as in QuantLib::SABRSpecs
+    y[1] = std::max(eps1, std::min(1.0 - eps1, std::exp(-(x[1] * x[1]))));
+    Real fbeta = std::pow(std::max(forward + lognormalShift, eps1), y[1]);
+    y[0] = std::max(eps1, std::exp(-(x[0] * x[0])) / fbeta * max_nvol_equiv);
+    y[2] = std::max(eps1, std::exp(-(x[2] * x[2])) * max_nu);
     y[3] = std::fabs(x[3]) < 2.5 * M_PI ? eps2 * std::sin(x[3]) : eps2 * (x[3] > 0.0 ? 1.0 : (-1.0));
     return y;
 }
@@ -139,11 +134,11 @@ std::vector<Real> SabrParametricVolatility::direct(const std::vector<Real>& x, c
 std::vector<Real> SabrParametricVolatility::inverse(const std::vector<Real>& y, const Real forward,
                                                     const Real lognormalShift) const {
     std::vector<Real> x(4);
-    x[1] = std::sqrt(-std::log(y[1]));
-    Real fbeta = std::pow(forward + lognormalShift, y[1]);
-    x[0] = std::sqrt(-std::log(y[0] * fbeta / 0.02));
-    x[2] = std::sqrt(-std::log(y[2] / 2.0));
-    x[3] = std::asin(y[3] / eps2);
+    x[1] = std::sqrt(-std::log(std::min(1.0 - eps1, std::max(eps1, y[1]))));
+    Real fbeta = std::pow(std::max(forward + lognormalShift, eps1), y[1]);
+    x[0] = std::sqrt(-std::log(std::min(1.0 - eps1, std::max(eps1, y[0] * fbeta / max_nvol_equiv))));
+    x[2] = std::sqrt(-std::log(std::min(1.0 - eps1, std::max(eps1, y[2] / max_nu))));
+    x[3] = std::asin(std::max(-eps2, std::min(eps2, y[3])));
     return x;
 }
 
@@ -267,9 +262,9 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
 
     // if there are no free parameters, we just pass back the fixed parameters as the result
 
-    if(noFreeParams == 0) {
+    if (noFreeParams == 0) {
         std::vector<Real> resultParams;
-        for(auto const& p : params)
+        for (auto const& p : params)
             resultParams.push_back(p.first);
         return std::make_tuple(resultParams, 0.0, 0);
     }
@@ -286,6 +281,7 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
         Real lognormalShift_;
         std::vector<Real> strikes_;
         std::vector<Real> marketQuotes_;
+        Real refQuote_;
         std::function<std::vector<Real>(const std::vector<Real>&, const Real, const Real, const Real,
                                         const std::vector<Real>&)>
             evalSabr_;
@@ -310,21 +306,8 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
             Array result(strikes_.size());
             auto sabr = evalSabr(x);
             for (Size i = 0; i < strikes_.size(); ++i) {
-                result[i] = (marketQuotes_[i] - sabr[i]);
+                result[i] = (marketQuotes_[i] - sabr[i]) / refQuote_;
             }
-            return result;
-        }
-
-        Real normalizedError(const Array& x) const {
-            auto sabr = evalSabr(x);
-            Real maxQuote = *std::max_element(marketQuotes_.begin(), marketQuotes_.end());
-            Real result = 0.0;
-            for (Size i = 0; i < strikes_.size(); ++i) {
-                /* we want a relative error measure, but can't do this point by point, because for far-ootm strikes
-                 * premiums are close to zero */
-                result += std::pow((marketQuotes_[i] - sabr[i]) / maxQuote, 2.0);
-            }
-            result = std::sqrt(result / static_cast<Real>(strikes_.size()));
             return result;
         }
     };
@@ -364,6 +347,8 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
             marketSmile.timeToExpiry, marketSmile.strikes[i], marketSmile.forward, preferredOutputQuoteType(),
             marketSmile.lognormalShift, boost::none));
     }
+    // we use relative errors w.r.t. the max market quote, because far otm quotes are close to zero
+    t.refQuote_ = *std::max_element(t.marketQuotes_.begin(), t.marketQuotes_.end());
 
     // perform the calibration (this step might throw if all minimizations go wrong)
 
@@ -406,7 +391,7 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
             continue;
         }
 
-        Real thisError = t.normalizedError(problem.currentValue());
+        Real thisError = problem.functionValue();
         if (thisError < bestError) {
             bestError = thisError;
             for (Size i = 0, j = 0; i < bestResult.size(); ++i) {
@@ -426,6 +411,17 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
 
     return std::make_tuple(bestResult, bestError, ++attempt);
 }
+
+namespace {
+void laplaceInterpolationWithErrorHandling(Matrix& m, const std::vector<Real>& x, const std::vector<Real>& y) {
+    try {
+        laplaceInterpolation(m, x, y, 1E-6, 100);
+    } catch (const std::exception& e) {
+        QL_FAIL("Error during laplaceInterpolation() in SabrParametricVolatility: "
+                << e.what() << ", this might be related to the numerical parameters relTol, maxIterMult. Contact dev.");
+    }
+}
+} // namespace
 
 void SabrParametricVolatility::calculate() {
 
@@ -460,6 +456,7 @@ void SabrParametricVolatility::calculate() {
             calibrationErrors_[key] = error;
             noOfAttempts_[key] = noOfAttempts;
         } catch (const std::exception& e) {
+            std::cerr << "error: " << e.what() << std::endl;
             // all calibration failed -> do not populate params, but interpolate them below
         }
         lognormalShifts_[key] = s.lognormalShift;
@@ -515,10 +512,10 @@ void SabrParametricVolatility::calculate() {
 
     // interpolate the null values
 
-    laplaceInterpolation(alpha_, timeToExpiries_, underlyingLengths_);
-    laplaceInterpolation(beta_, timeToExpiries_, underlyingLengths_);
-    laplaceInterpolation(nu_, timeToExpiries_, underlyingLengths_);
-    laplaceInterpolation(rho_, timeToExpiries_, underlyingLengths_);
+    laplaceInterpolationWithErrorHandling(alpha_, timeToExpiries_, underlyingLengths_);
+    laplaceInterpolationWithErrorHandling(beta_, timeToExpiries_, underlyingLengths_);
+    laplaceInterpolationWithErrorHandling(nu_, timeToExpiries_, underlyingLengths_);
+    laplaceInterpolationWithErrorHandling(rho_, timeToExpiries_, underlyingLengths_);
 
     // sanitize values produced by the the interpolation that are not allowed
 
