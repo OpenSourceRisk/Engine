@@ -387,8 +387,8 @@ void InputParameters::setHistoricalScenarioReader(const std::string& fileName) {
     QL_REQUIRE(exists(baseScenarioPath), "The provided base scenario file, " << baseScenarioPath << ", does not exist");
     QL_REQUIRE(is_regular_file(baseScenarioPath),
                "The provided base scenario file, " << baseScenarioPath << ", is not a file");
-    historicalScenarioReader_ =
-        QuantLib::ext::make_shared<HistoricalScenarioFileReader>(fileName, QuantLib::ext::make_shared<SimpleScenarioFactory>());
+    historicalScenarioReader_ = QuantLib::ext::make_shared<HistoricalScenarioFileReader>(
+        fileName, QuantLib::ext::make_shared<SimpleScenarioFactory>(false));
 }
 
 void InputParameters::setAmcTradeTypes(const std::string& s) {
@@ -550,6 +550,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     parConversionOutputFileName_ = params->get("zeroToParSensiConversion", "outputFile", false);
     parConversionJacobiFileName_ = params->get("zeroToParSensiConversion", "jacobiOutputFile", false);
     parConversionJacobiInverseFileName_ = params->get("zeroToParSensiConversion", "jacobiInverseOutputFile", false);  
+    pnlOutputFileName_ = params->get("pnl", "outputFileName", false);
 
     // map internal report name to output file name
     fileNameMap_["npv"] = npvOutputFileName_;
@@ -571,6 +572,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     fileNameMap_["parConversionSensitivity"] = parConversionOutputFileName_;
     fileNameMap_["parConversionJacobi"] = parConversionJacobiFileName_;
     fileNameMap_["parConversionJacobi_inverse"] = parConversionJacobiInverseFileName_;
+    fileNameMap_["pnl"] = pnlOutputFileName_;
     
     vector<Size> dimOutputGridPoints;
     tmp = params->get("xva", "dimOutputGridPoints", false);

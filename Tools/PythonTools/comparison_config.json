@@ -1376,6 +1376,28 @@
             "rel_tol": 1e-6
           }
         ]
+      },
+	  "pnl.csv":{
+        "keys": [
+          "TradeId"
+        ],
+        "column_settings": [
+          {
+            "names": [
+			  "NPV(t0)",
+			  "NPV(asof=t0;mkt=t1)",
+			  "NPV(asof=t1;mkt=t0)",
+			  "NPV(t1)",
+			  "PeriodCashFlow",
+			  "Theta",
+			  "HypotheticalCleanPnL",
+			  "CleanPnL",
+			  "DirtyPnL"
+            ],
+            "abs_tol": 1e-6,
+            "rel_tol": 1e-12
+          }
+        ]
       }
     }
   },
@@ -1793,6 +1815,24 @@
             ],
             "abs_tol": 0,
             "rel_tol": null
+          }
+        ]
+      },
+      "saccr.json": {
+        "settings": [
+          {
+            "names": [
+              "addOn",
+              "cC",
+              "eAD",
+              "multiplier",
+              "npv",
+              "pfe",
+              "rC",
+              "rW"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
           }
         ]
       }

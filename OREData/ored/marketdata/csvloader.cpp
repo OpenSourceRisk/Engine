@@ -35,15 +35,16 @@ using namespace std;
 namespace ore {
 namespace data {
 
-CSVLoader::CSVLoader(const string& marketFilename, const string& fixingFilename, bool implyTodaysFixings)
-    : CSVLoader(marketFilename, fixingFilename, "", implyTodaysFixings) {}
+CSVLoader::CSVLoader(const string& marketFilename, const string& fixingFilename, bool implyTodaysFixings,
+		     Date fixingCutOffDate)
+    : CSVLoader(marketFilename, fixingFilename, "", implyTodaysFixings, fixingCutOffDate) {}
 
-CSVLoader::CSVLoader(const vector<string>& marketFiles, const vector<string>& fixingFiles, bool implyTodaysFixings)
-    : CSVLoader(marketFiles, fixingFiles, {}, implyTodaysFixings) {}
+CSVLoader::CSVLoader(const vector<string>& marketFiles, const vector<string>& fixingFiles, bool implyTodaysFixings, Date fixingCutOffDate)
+    : CSVLoader(marketFiles, fixingFiles, {}, implyTodaysFixings, fixingCutOffDate) {}
 
 CSVLoader::CSVLoader(const string& marketFilename, const string& fixingFilename, const string& dividendFilename,
-                     bool implyTodaysFixings)
-    : implyTodaysFixings_(implyTodaysFixings) {
+                     bool implyTodaysFixings, Date fixingCutOffDate)
+    : implyTodaysFixings_(implyTodaysFixings), fixingCutOffDate_(fixingCutOffDate) {
 
     // load market data
     loadFile(marketFilename, DataType::Market);
@@ -66,8 +67,9 @@ CSVLoader::CSVLoader(const string& marketFilename, const string& fixingFilename,
 }
 
 CSVLoader::CSVLoader(const vector<string>& marketFiles, const vector<string>& fixingFiles,
-                     const vector<string>& dividendFiles, bool implyTodaysFixings)
-    : implyTodaysFixings_(implyTodaysFixings) {
+                     const vector<string>& dividendFiles, bool implyTodaysFixings,
+		     Date fixingCutOffDate)
+    : implyTodaysFixings_(implyTodaysFixings), fixingCutOffDate_(fixingCutOffDate) {
 
     for (auto marketFile : marketFiles)
         // load market data
@@ -160,7 +162,8 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
                 }
             } else if (dataType == DataType::Fixing) {
                 // process fixings
-                if (date < today || (date == today && !implyTodaysFixings_)) {
+                if (date < today || (date == today && !implyTodaysFixings_)
+		    || (fixingCutOffDate_ != Date() && date <= fixingCutOffDate_)) {
                     if(!fixings_.insert(Fixing(date, key, value)).second) {
                         WLOG("Skipped Fixing " << key << "@" << QuantLib::io::iso_date(date)
                                                << " - this is already present.");
