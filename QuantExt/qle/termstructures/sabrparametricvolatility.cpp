@@ -456,7 +456,6 @@ void SabrParametricVolatility::calculate() {
             calibrationErrors_[key] = error;
             noOfAttempts_[key] = noOfAttempts;
         } catch (const std::exception& e) {
-            std::cerr << "error: " << e.what() << std::endl;
             // all calibration failed -> do not populate params, but interpolate them below
         }
         lognormalShifts_[key] = s.lognormalShift;
