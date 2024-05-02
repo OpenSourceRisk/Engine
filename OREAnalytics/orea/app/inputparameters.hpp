@@ -179,10 +179,6 @@ public:
     void setHistVarSimMarketParamsFromFile(const std::string& fileName);
     void setOutputHistoricalScenarios(const bool b) { outputHistoricalScenarios_ = b; }
 
-    
-    // Setters for PNL Explain
-    void setPNLDate(const std::string& s) { pnlDate_ = parseDate(s); }
-
     // Setters for exposure simulation
     void setSalvageCorrelationMatrix(bool b) { salvageCorrelationMatrix_ = b; }
     void setAmc(bool b) { amc_ = b; }
@@ -478,11 +474,6 @@ public:
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& histVarSimMarketParams() const { return histVarSimMarketParams_; }
     bool outputHistoricalScenarios() const { return outputHistoricalScenarios_; }
     
-    /*************************
-     * Getters for PNL Explain
-     *************************/    
-    const QuantLib::Date& pnlDate() { return pnlDate_; }
-    
     /*********************************
      * Getters for exposure simulation 
      *********************************/
@@ -762,12 +753,6 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> histVarSimMarketParams_;
     std::string baseScenarioLoc_;
     bool outputHistoricalScenarios_ = false;
-    
-    /*****************
-     * PNL Explain analytics
-     *****************/
-
-    QuantLib::Date pnlDate_;
 
     /*******************
      * EXPOSURE analytic

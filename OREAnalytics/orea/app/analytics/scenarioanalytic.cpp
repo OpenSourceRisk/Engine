@@ -42,17 +42,14 @@ void ScenarioAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryL
         return;
 
     LOG("ScenarioAnalytic::runAnalytic called");
-        
-    auto scenarioAnalytic = static_cast<ScenarioAnalytic*>(analytic());
-    QL_REQUIRE(scenarioAnalytic, "Analytic must be of type ScenarioAnalytic");
 
     analytic()->buildMarket(loader);
 
     LOG("Building scenario simulation market for date " << io::iso_date(inputs_->asof()));
     // FIXME: *configurations_.todaysMarketParams uninitialized?
     auto ssm = QuantLib::ext::make_shared<ScenarioSimMarket>(
-        analytic()->market(), scenarioAnalytic->configurations().simMarketParams, Market::defaultConfiguration,
-        *scenarioAnalytic->configurations().curveConfig, *scenarioAnalytic->configurations().todaysMarketParams, true,
+        analytic()->market(), analytic()->configurations().simMarketParams, Market::defaultConfiguration,
+        *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, true,
         useSpreadedTermStructures_, false, false, *inputs_->iborFallbackConfig());
 
     setScenarioSimMarket(ssm);

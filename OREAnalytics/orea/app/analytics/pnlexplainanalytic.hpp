@@ -23,17 +23,29 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/analytics/analyticfactory.hpp>
+#include <orea/app/analytics/pnlanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
 
 namespace ore {
 namespace analytics {
 
-class PNLExplainAnalyticImpl : public Analytic::Impl {
+class PnlExplainAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "PNL_EXPLAIN";
-    PNLExplainAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+    static constexpr const char* sensiLookupKey = "SENSI";
+    static constexpr const char* pnlLookupKey = "PNL";
+    PnlExplainAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
         : Analytic::Impl(inputs) {
         setLabel(LABEL);
+        
+        auto sensiAnalytic = AnalyticFactory::instance().build("SENSITIVITY", inputs_);
+        if (sensiAnalytic.second)
+            addDependentAnalytic(sensiLookupKey, sensiAnalytic.second);
+
+        auto pnlAnalytic = AnalyticFactory::instance().build("PNL", inputs_);
+        if (pnlAnalytic.second)
+            addDependentAnalytic(pnlLookupKey, pnlAnalytic.second);
     }
 
     virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -41,13 +53,11 @@ public:
     virtual void setUpConfigurations() override;
 };
 
-class PNLExplainAnalytic : public Analytic {
+class PnlExplainAnalytic : public Analytic {
 public:
-    static constexpr const char* sensiLookupKey = "SENSI";
-    PNLExplainAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<PNLExplainAnalyticImpl>(inputs), {"PNL_EXPLAIN"}, inputs, true, true) {
-        auto sensiAnalytic = boost::make_shared<PricingAnalytic>(inputs_);
-        addDependentAnalytic(sensiLookupKey, sensiAnalytic);
+    PnlExplainAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+        : Analytic(std::make_unique<PnlExplainAnalyticImpl>(inputs), {"PNL_EXPLAIN"}, inputs, true, true) {
+
     }
 };
 

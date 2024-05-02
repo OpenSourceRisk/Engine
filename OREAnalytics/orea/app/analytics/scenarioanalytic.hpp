@@ -63,11 +63,6 @@ public:
         auto sai = static_cast<ScenarioAnalyticImpl*>(impl_.get());
         return sai->scenario();
     };
-
-    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& scenarioSimMarket() const {
-        auto sai = static_cast<ScenarioAnalyticImpl*>(impl_.get());
-        return sai->scenarioSimMarket();
-    };
 };
 
 } // namespace analytics

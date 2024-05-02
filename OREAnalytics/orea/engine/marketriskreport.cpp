@@ -156,11 +156,11 @@ void MarketRiskReport::initialise() {
                 vector<Date>(1, fullRevalArgs_->simMarket_->asofDate()), hisScenGen_->numScenarios());
 
             histPnlGen_ = ext::make_shared<HistoricalPnlGenerator>(
-                baseCurrency_, portfolio_, fullRevalArgs_->simMarket_, 
+                calculationCurrency_, portfolio_, fullRevalArgs_->simMarket_, 
                 hisScenGen_, cube, factory_->modelBuilders(), fullRevalArgs_->dryRun_);
         } else {
             histPnlGen_ = ext::make_shared<HistoricalPnlGenerator>(
-                baseCurrency_, portfolio_, hisScenGen_,
+                calculationCurrency_, portfolio_, hisScenGen_,
                 fullRevalArgs_->engineData_,
                 multiThreadArgs_->nThreads_, multiThreadArgs_->today_, multiThreadArgs_->loader_,
                 multiThreadArgs_->curveConfigs_, multiThreadArgs_->todaysMarketParams_,
