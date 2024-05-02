@@ -31,7 +31,9 @@ class XvaAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "XVA";
 
-    XvaAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) { setLabel(LABEL); }
+    explicit XvaAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+        setLabel(LABEL);
+    }
     virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
@@ -81,8 +83,9 @@ protected:
 
 class XvaAnalytic : public Analytic {
 public:
-    XvaAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<XvaAnalyticImpl>(inputs), {"XVA", "EXPOSURE"}, inputs, false, false, false, false) {}
+    explicit XvaAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+        : Analytic(std::make_unique<XvaAnalyticImpl>(inputs), {"XVA", "EXPOSURE"}, inputs, false, false, false, false) {
+    }
 };
 
 } // namespace analytics
