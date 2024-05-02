@@ -46,6 +46,17 @@ SwaptionSabrCube::SwaptionSabrCube(
             registerWith(s);
 }
 
+namespace {
+void laplaceInterpolationWithErrorHandling(Matrix& m, const std::vector<Real>& x, const std::vector<Real>& y) {
+    try {
+        laplaceInterpolation(m, x, y, 1e-6, 100);
+    } catch (const std::exception& e) {
+        QL_FAIL("Error during laplaceInterpolation() in SwaptionSabrCube: "
+                << e.what() << ", this might be related to the numerical parameters relTol, maxIterMult. Contact dev.");
+    }
+}
+} // namespace
+
 void SwaptionSabrCube::performCalculations() const {
 
     SwaptionVolatilityCube::performCalculations();
@@ -81,7 +92,7 @@ void SwaptionSabrCube::performCalculations() const {
     }
 
     for (auto& v : interpolatedVolSpreads) {
-        laplaceInterpolation(v, allOptionTimes, allSwapLengths);
+        laplaceInterpolationWithErrorHandling(v, allOptionTimes, allSwapLengths);
     }
 
     // build market smiles on the grid
