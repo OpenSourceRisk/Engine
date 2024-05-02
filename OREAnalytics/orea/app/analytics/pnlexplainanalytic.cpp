@@ -28,10 +28,10 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
-void PNLExplainAnalyticImpl::setUpConfigurations() {
+void PnlExplainAnalyticImpl::setUpConfigurations() {
 }
 
-void PNLExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
+void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
         const std::set<std::string>& runTypes) {
     
     CONSOLEW("Pricing: Build Market");
@@ -42,25 +42,29 @@ void PNLExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     analytic()->buildPortfolio();
     CONSOLE("OK");
 
-    auto pnlexplainAnalytic = static_cast<PNLExplainAnalytic*>(analytic());
-    QL_REQUIRE(pnlexplainAnalytic, "Analytic must be of type PNLExplainAnalytic");
+    auto pnlexplainAnalytic = static_cast<PnlExplainAnalytic*>(analytic());
+    QL_REQUIRE(pnlexplainAnalytic, "Analytic must be of type PnlExplainAnalytic");
 
-    auto sensiAnalytic = analytic()->dependentAnalytic("SENSI");
+    auto pnlAnalytic = dependentAnalytic(pnlLookupKey);
+    pnlAnalytic->runAnalytic(loader);
+    auto pnlReport = pnlAnalytic->reports().at("PNL").at("pnl");
+
+    auto sensiAnalytic = dependentAnalytic(sensiLookupKey);
     sensiAnalytic->runAnalytic(loader, {"SENSITIVITY"});
     auto ss = ext::make_shared<SensitivityReportStream>(
         sensiAnalytic->reports().at("SENSITIVITY").at("sensitivity"));
 
     auto sensiReports = sensiAnalytic->reports();
 
-    boost::shared_ptr<ore::data::AdjustmentFactors> adjFactors;
-    if (auto adjLoader = boost::dynamic_pointer_cast<AdjustedInMemoryLoader>(loader))
-        adjFactors = boost::make_shared<ore::data::AdjustmentFactors>(adjLoader->adjustmentFactors());
+    QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors> adjFactors;
+    if (auto adjLoader = QuantLib::ext::dynamic_pointer_cast<AdjustedInMemoryLoader>(loader))
+        adjFactors = QuantLib::ext::make_shared<ore::data::AdjustmentFactors>(adjLoader->adjustmentFactors());
 
     // dates needed for scenarios
     set<Date> pnlDates;
     pnlDates.insert(inputs_->asof());
-    pnlDates.insert(inputs_->pnlDate());
-    TimePeriod period({inputs_->asof(), inputs_->pnlDate()});
+    pnlDates.insert(inputs_->mporDate());
+    TimePeriod period({inputs_->asof(), inputs_->mporDate()});
 
     auto scenarios = buildHistoricalScenarioGenerator(
         inputs_->historicalScenarioReader(), adjFactors, pnlDates, analytic()->configurations().simMarketParams,
@@ -73,23 +77,25 @@ void PNLExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     simMarket->scenarioGenerator() = scenarios;
     scenarios->baseScenario() = simMarket->baseScenario();
 
-    boost::shared_ptr<ScenarioShiftCalculator> shiftCalculator = boost::make_shared<ScenarioShiftCalculator>(
+    QuantLib::ext::shared_ptr<ScenarioShiftCalculator> shiftCalculator =
+        QuantLib::ext::make_shared<ScenarioShiftCalculator>(
         analytic()->configurations().sensiScenarioData, analytic()->configurations().simMarketParams);
 
     std::unique_ptr<MarketRiskReport::SensiRunArgs> sensiArgs =
         std::make_unique<MarketRiskReport::SensiRunArgs>(ss, shiftCalculator);
 
-    auto pnlExplainReport = ext::make_shared<PNLExplainReport>(inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(),
+    auto pnlExplainReport = ext::make_shared<PnlExplainReport>(inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(),
                                            period, scenarios, move(sensiArgs), nullptr, nullptr, true);
         
     LOG("Call VaR calculation");
     CONSOLEW("Risk: VaR Calculation");
     ext::shared_ptr<MarketRiskReport::Reports> reports = ext::make_shared<MarketRiskReport::Reports>();
-    QuantLib::ext::shared_ptr<InMemoryReport> pnlReport = QuantLib::ext::make_shared<InMemoryReport>();
-    reports->add(pnlReport);
+    QuantLib::ext::shared_ptr<InMemoryReport> pnlExplainOutput = QuantLib::ext::make_shared<InMemoryReport>();
+    reports->add(pnlExplainOutput);
 
     pnlExplainReport->calculate(reports);
     analytic()->reports()[label_]["pnl"] = pnlReport;
+    analytic()->reports()[label_]["pnl_explain"] = pnlExplainOutput;
 }
 
 } // namespace analytics

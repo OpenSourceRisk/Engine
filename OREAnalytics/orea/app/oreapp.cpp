@@ -1066,9 +1066,9 @@ void OREAppInputParameters::loadParameters() {
     if (!tmp.empty() && parseBool(tmp)) {
         insertAnalytic("PNL_EXPLAIN");
         
-        tmp = params_->get("pnlExplain", "pnlDate", false);
+        tmp = params_->get("pnlExplain", "mporDate", false);
         if (tmp != "")
-            setPNLDate(tmp);
+            setMporDate(parseDate(tmp));
     }
     /****************
      * SIMM and IM Schedule

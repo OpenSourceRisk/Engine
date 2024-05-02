@@ -21,6 +21,7 @@
 */
 #pragma once
 
+#include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/analytic.hpp>
 
@@ -30,15 +31,29 @@ namespace analytics {
 class PnlAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "PNL";
+    static constexpr const char* mporLookupKey = "MPOR";
 
     PnlAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
         setLabel(LABEL);
+        mporDate_ = inputs_->mporDate() != Date()
+                        ? inputs_->mporDate()
+                        : inputs_->mporCalendar().advance(inputs_->asof(), int(inputs_->mporDays()), QuantExt::Days);
+        LOG("ASOF date " << io::iso_date(inputs_->asof()));
+        LOG("MPOR date " << io::iso_date(mporDate_));
+    
+        auto mporAnalytic = AnalyticFactory::instance().build("SCENARIO", inputs);
+        if (mporAnalytic.second)
+            addDependentAnalytic(mporLookupKey, mporAnalytic.second);
     }
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
-};
+    const QuantLib::Date& mporDate() const { return mporDate_; }
+    std::vector<QuantLib::Date> additionalMarketDates() const override { return {mporDate_}; }
 
+private:
+    QuantLib::Date mporDate_;
+};
 
 /*!
   The P&L Analytic generates a P&L report as main output with the following columns
@@ -63,20 +78,18 @@ public:
 */
 class PnlAnalytic : public Analytic {
 public:
-    PnlAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs);
+    PnlAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+        : Analytic(std::make_unique<PnlAnalyticImpl>(inputs), {"PNL"}, inputs, false, false, false, false),
+          useSpreadedTermStructures_(true) {}
 
-    std::set<QuantLib::Date> marketDates() const override;
-    const QuantLib::Date& mporDate() const { return mporDate_; }
     const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& t0Scenario() const { return t0Scenario_; }
     const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& t1Scenario() const { return t1Scenario_; }
     bool useSpreadedTermStructures() const { return useSpreadedTermStructures_; }
-    static constexpr const char* mporLookupKey = "MPOR";
 
     void setT0Scenario(const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& scenario) { t0Scenario_ = scenario; }
     void setT1Scenario(const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& scenario) { t1Scenario_ = scenario; }
 
 private:
-    QuantLib::Date mporDate_;
     QuantLib::ext::shared_ptr<ore::analytics::Scenario> t0Scenario_, t1Scenario_;
     bool useSpreadedTermStructures_ = true;
 };

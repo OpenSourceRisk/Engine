@@ -21,10 +21,10 @@
 namespace ore {
 namespace analytics {
 
-class PNLExplainReport : public MarketRiskReport {
+class PnlExplainReport : public MarketRiskReport {
 public:
 
-    struct PNLExplainResults {
+    struct PnlExplainResults {
         QuantLib::Real asofMtm = 0.0;
         QuantLib::Real pnlMtm = 0.0;
         QuantLib::Real pnl = 0.0;
@@ -48,7 +48,7 @@ public:
         QuantLib::Real comVega = 0.0;
     };
 
-    PNLExplainReport(const std::string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+    PnlExplainReport(const std::string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
                      const std::string& portfolioFilter, boost::optional<ore::data::TimePeriod> period,
                      const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr,
                      std::unique_ptr<SensiRunArgs> sensiArgs = nullptr,
@@ -76,7 +76,7 @@ protected:
     void closeReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
 
 private:
-    std::map<std::string, PNLExplainResults> results_;
+    std::map<std::string, PnlExplainResults> results_;
 };
 
 } // namespace analytics

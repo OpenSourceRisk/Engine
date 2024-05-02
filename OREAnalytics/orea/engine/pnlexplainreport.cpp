@@ -21,7 +21,7 @@
 namespace ore {
 namespace analytics {
 
-void PNLExplainReport::createReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) {
+void PnlExplainReport::createReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) {
     QL_REQUIRE(reports->reports().size() == 1, "We should only report for PNL Explain");
     QuantLib::ext::shared_ptr<Report> report = reports->reports().at(0);
     // prepare report
@@ -50,23 +50,23 @@ void PNLExplainReport::createReports(const QuantLib::ext::shared_ptr<MarketRiskR
     ;
 }
 
-void PNLExplainReport::handleSensiResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& report,
+void PnlExplainReport::handleSensiResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& report,
     const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
     const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) {
 
 }
 
-void PNLExplainReport::addPnlCalculators(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) {
+void PnlExplainReport::addPnlCalculators(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) {
     pnlCalculators_.push_back(QuantLib::ext::make_shared<PNLCalculator>(period_.get()));
 }
 
-void PNLExplainReport::writeReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
+void PnlExplainReport::writeReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
     const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
     const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) {  
 
     std::vector<QuantLib::Real> sensiPnls = pnlCalculators_[0]->pnls();
     std::vector<QuantLib::Real> foSensiPnls = pnlCalculators_[0]->foPnls();
-    QL_REQUIRE(sensiPnls.size() == 1, "PNLExplainReport::writeReports - should have exactly 1 sensi pnl");
+    QL_REQUIRE(sensiPnls.size() == 1, "PnlExplainReport::writeReports - should have exactly 1 sensi pnl");
     Real pnl = sensiPnls[0];
     Real deltaPnl = foSensiPnls[0];
     Real gammaPnl = pnl - deltaPnl;
@@ -74,7 +74,7 @@ void PNLExplainReport::writeReports(const QuantLib::ext::shared_ptr<MarketRiskRe
     auto pId = portfolioId(tradeGroup);
     auto it = results_.find(pId);
     if (it == results_.end())
-        results_[pId] = PNLExplainResults();
+        results_[pId] = PnlExplainResults();
 
     auto mrg = ext::dynamic_pointer_cast<MarketRiskGroup>(riskGroup);
     QL_REQUIRE(mrg, "Require a group of type MarketRiskGroup");
@@ -123,16 +123,16 @@ void PNLExplainReport::writeReports(const QuantLib::ext::shared_ptr<MarketRiskRe
     }
 }
 
-bool PNLExplainReport::includeDeltaMargin(
+bool PnlExplainReport::includeDeltaMargin(
     const QuantLib::ext::shared_ptr<ore::analytics::MarketRiskGroupBase>& riskGroup) const {
     return true;
 }
-bool PNLExplainReport::includeGammaMargin(
+bool PnlExplainReport::includeGammaMargin(
     const QuantLib::ext::shared_ptr<ore::analytics::MarketRiskGroupBase>& riskGroup) const {
     return true;
 }
 
-void PNLExplainReport::closeReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) {
+void PnlExplainReport::closeReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) {
     QL_REQUIRE(reports->reports().size() == 1, "We should only report for PNL Explain");
     QuantLib::ext::shared_ptr<Report> report = reports->reports().at(0);
     for (const auto& r : results_) {
