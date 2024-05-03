@@ -19,6 +19,10 @@ different shift sizes applied to each point of the curve (or surface / cube).
 In case of the swaption volatility shifts, the single value given as {\tt Shift} (without the attributes {\tt expiry}
 and {\tt term}) represents a default value that is used whenever no explicit value is given for a expiry / term pair.
 
+In case of discount, index, yield and survival probability curves and cap floor surfaces the shifts can be defined as parRateShifts {\tt ParShift}. 
+It's default to shifts on the zero rates. If a curve in a asset class (e.g. rates) is defined as par rate shift, 
+all curves in this asset class has to be defined as par rate shift.
+
 \begin{longlisting}
 %\hrule\medskip
   \begin{minted}[fontsize=\scriptsize]{xml}
@@ -29,6 +33,7 @@ and {\tt term}) represents a default value that is used whenever no explicit val
         <ShiftType>Absolute</ShiftType>
         <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
         <Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
+        <ParShift>true</ParShift>
       </DiscountCurve>
       ...
     </DiscountCurves>
@@ -68,6 +73,7 @@ and {\tt term}) represents a default value that is used whenever no explicit val
         <ShiftType>Absolute</ShiftType>
         <ShiftExpiries>6M,1Y,2Y,3Y,5Y,10Y</ShiftExpiries>
         <Shifts>0.001,0.001,0.001,0.001,0.001,0.001</Shifts>
+        <ParShift>false</ParShift>
       </CapFloorVolatility>
     </CapFloorVolatilities>
   </StressTest>

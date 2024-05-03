@@ -56,6 +56,9 @@ public:
     typedef std::map<std::string, std::map<std::string, QuantLib::ext::shared_ptr<AggregationScenarioData>>>
         analytic_mktcubes;
 
+    typedef std::map<std::string, std::map<std::string, QuantLib::ext::shared_ptr<StressTestScenarioData>>>
+        analytic_stresstests;
+
     struct Configurations { 
         //! Booleans to determine if these configs are needed
         bool simulationConfigRequired = false;
@@ -128,6 +131,8 @@ public:
     analytic_reports& reports() { return reports_; };
     analytic_npvcubes& npvCubes() { return npvCubes_; };
     analytic_mktcubes& mktCubes() { return mktCubes_; };
+    analytic_stresstests& stressTests() { return stressTests_;}
+    
     const bool getWriteIntermediateReports() const { return writeIntermediateReports_; }
     void setWriteIntermediateReports(const bool flag) { writeIntermediateReports_ = flag; }
 
@@ -163,6 +168,7 @@ protected:
     analytic_reports reports_;
     analytic_npvcubes npvCubes_;
     analytic_mktcubes mktCubes_;
+    analytic_stresstests stressTests_;
 
     //! Whether to write intermediate reports or not.
     //! This would typically be used when the analytic is being called by another analytic

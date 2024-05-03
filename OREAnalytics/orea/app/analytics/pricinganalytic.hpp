@@ -41,8 +41,7 @@ public:
     void setUpConfigurations() override;
 };
 
-static const std::set<std::string> pricingAnalyticSubAnalytics {"NPV", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY",
-                                                                     "STRESS"};
+static const std::set<std::string> pricingAnalyticSubAnalytics {"NPV", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY"};
 
 class PricingAnalytic : public Analytic {
 public:
