@@ -62,6 +62,13 @@ public:
         //! The first date to load a a scenario for
         const std::set<QuantLib::Date>& dates);
 
+     /*! Constructor that loads scenarios from a vector */
+    HistoricalScenarioLoader(
+        //! A vector of scenarios
+        const std::vector<QuantLib::ext::shared_ptr<ore::analytics::Scenario>>& scenarios,
+        //! The first date to load a a scenario for
+        const std::set<QuantLib::Date>& dates);
+
     //! Get a Scenario for a given date
     QuantLib::ext::shared_ptr<ore::analytics::Scenario> getHistoricalScenario(const QuantLib::Date& date) const;
     //! Number of scenarios

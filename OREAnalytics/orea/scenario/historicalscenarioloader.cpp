@@ -112,5 +112,23 @@ HistoricalScenarioLoader::HistoricalScenarioLoader(
     }    
 }
 
+HistoricalScenarioLoader::HistoricalScenarioLoader(
+    const std::vector<QuantLib::ext::shared_ptr<ore::analytics::Scenario>>& scenarios,
+    const std::set<QuantLib::Date>& dates) {
+    for (const auto& s : scenarios) {
+        Date scenarioDate = s->asof();
+
+        auto it = dates.find(scenarioDate);
+        if (it == dates.end())
+            continue;
+        else {
+            historicalScenarios_.push_back(s);
+            dates_.push_back(scenarioDate);
+        }
+        if (dates_.size() == dates.size())
+            break;
+    }
+}
+
 } // namespace analytics
 } // namespace ore

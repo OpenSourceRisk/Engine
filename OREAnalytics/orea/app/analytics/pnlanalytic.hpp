@@ -23,6 +23,7 @@
 
 #include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
+#include <orea/app/analytics/scenarioanalytic.hpp>
 #include <orea/app/analytic.hpp>
 
 namespace ore {
@@ -33,7 +34,8 @@ public:
     static constexpr const char* LABEL = "PNL";
     static constexpr const char* mporLookupKey = "MPOR";
 
-    PnlAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+    PnlAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+        : Analytic::Impl(inputs), useSpreadedTermStructures_(true) {
         setLabel(LABEL);
         mporDate_ = inputs_->mporDate() != Date()
                         ? inputs_->mporDate()
@@ -42,17 +44,29 @@ public:
         LOG("MPOR date " << io::iso_date(mporDate_));
     
         auto mporAnalytic = AnalyticFactory::instance().build("SCENARIO", inputs);
-        if (mporAnalytic.second)
+        if (mporAnalytic.second) {
+            auto sai = static_cast<ScenarioAnalyticImpl*>(mporAnalytic.second->impl().get());
+            sai->setUseSpreadedTermStructures(true);
             addDependentAnalytic(mporLookupKey, mporAnalytic.second);
+        }
     }
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
+
+    bool useSpreadedTermStructures() const { return useSpreadedTermStructures_; }
     const QuantLib::Date& mporDate() const { return mporDate_; }
     std::vector<QuantLib::Date> additionalMarketDates() const override { return {mporDate_}; }
+    
+    const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& t0Scenario() const { return t0Scenario_; }
+    const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& t1Scenario() const { return t1Scenario_; }
+    void setT0Scenario(const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& scenario) { t0Scenario_ = scenario; }
+    void setT1Scenario(const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& scenario) { t1Scenario_ = scenario; }
 
 private:
+    bool useSpreadedTermStructures_ = true;
     QuantLib::Date mporDate_;
+    QuantLib::ext::shared_ptr<ore::analytics::Scenario> t0Scenario_, t1Scenario_;
 };
 
 /*!
@@ -79,19 +93,8 @@ private:
 class PnlAnalytic : public Analytic {
 public:
     PnlAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<PnlAnalyticImpl>(inputs), {"PNL"}, inputs, false, false, false, false),
-          useSpreadedTermStructures_(true) {}
+        : Analytic(std::make_unique<PnlAnalyticImpl>(inputs), {"PNL"}, inputs, false, false, false, false) {}
 
-    const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& t0Scenario() const { return t0Scenario_; }
-    const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& t1Scenario() const { return t1Scenario_; }
-    bool useSpreadedTermStructures() const { return useSpreadedTermStructures_; }
-
-    void setT0Scenario(const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& scenario) { t0Scenario_ = scenario; }
-    void setT1Scenario(const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& scenario) { t1Scenario_ = scenario; }
-
-private:
-    QuantLib::ext::shared_ptr<ore::analytics::Scenario> t0Scenario_, t1Scenario_;
-    bool useSpreadedTermStructures_ = true;
 };
 
 } // namespace analytics

@@ -549,8 +549,8 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
         varFileName_ = params->get("historicalSimulationVar", "outputFile", false);
     parConversionOutputFileName_ = params->get("zeroToParSensiConversion", "outputFile", false);
     parConversionJacobiFileName_ = params->get("zeroToParSensiConversion", "jacobiOutputFile", false);
-    parConversionJacobiInverseFileName_ = params->get("zeroToParSensiConversion", "jacobiInverseOutputFile", false);  
-    pnlOutputFileName_ = params->get("pnl", "outputFileName", false);
+    parConversionJacobiInverseFileName_ = params->get("zeroToParSensiConversion", "jacobiInverseOutputFile", false);
+    pnlExplainOutputFileName_ = params->get("pnlExplain", "outputFileName", false);
 
     // map internal report name to output file name
     fileNameMap_["npv"] = npvOutputFileName_;
@@ -572,7 +572,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     fileNameMap_["parConversionSensitivity"] = parConversionOutputFileName_;
     fileNameMap_["parConversionJacobi"] = parConversionJacobiFileName_;
     fileNameMap_["parConversionJacobi_inverse"] = parConversionJacobiInverseFileName_;
-    fileNameMap_["pnl"] = pnlOutputFileName_;
+    fileNameMap_["pnl_explain"] = pnlExplainOutputFileName_;
     
     vector<Size> dimOutputGridPoints;
     tmp = params->get("xva", "dimOutputGridPoints", false);

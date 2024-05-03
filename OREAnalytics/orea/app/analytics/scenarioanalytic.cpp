@@ -23,12 +23,6 @@ using namespace ore::analytics;
 
 namespace ore {
 namespace analytics {
-	
-// ScenarioAnalytic
-ScenarioAnalytic::ScenarioAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                                   const bool useSpreadedTermStructures)
-    : Analytic(std::make_unique<ScenarioAnalyticImpl>(inputs, useSpreadedTermStructures), {"SCENARIO"}, inputs, true,
-               false, false, false) {}
 
 void ScenarioAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();

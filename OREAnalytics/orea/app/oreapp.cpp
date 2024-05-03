@@ -1069,6 +1069,31 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("pnlExplain", "mporDate", false);
         if (tmp != "")
             setMporDate(parseDate(tmp));
+        
+        tmp = params_->get("pnlExplain", "historicalScenarioFile", false);
+        if (tmp != "") {
+            std::string scenarioFile = (inputPath / tmp).generic_string();
+            setHistoricalScenarioReader(scenarioFile);
+        }
+
+        tmp = params_->get("pnlExplain", "simulationConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Loading sensitivity scenario sim market parameters from file" << file);
+            setSensiSimMarketParamsFromFile(file);
+            setScenarioSimMarketParamsFromFile(file);
+        } else {
+            WLOG("ScenarioSimMarket parameters for sensitivity not loaded");
+        }
+        
+        tmp = params_->get("pnlExplain", "sensitivityConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Load sensitivity scenario data from file" << file);
+            setSensiScenarioDataFromFile(file);
+        } else {
+            WLOG("Sensitivity scenario data not loaded");
+        }
     }
     /****************
      * SIMM and IM Schedule

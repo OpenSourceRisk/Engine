@@ -416,10 +416,5 @@ void BacktestPNLCalculator::writePNL(Size scenarioIdx, bool isCall, const RiskFa
                              tradeId);
 }
 
-void BacktestPNLCalculator::populateTradePNLs(const TradePnLStore& allPnls, const TradePnLStore& foPnls) {
-    tradePnls_ = allPnls;
-    foTradePnls_ = foPnls;
-}
-
 } // namespace analytics
 } // namespace ore

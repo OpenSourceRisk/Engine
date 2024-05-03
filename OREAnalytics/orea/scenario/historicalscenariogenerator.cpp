@@ -529,13 +529,14 @@ QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGe
 
     hsr->load(simParams, marketParams);
 
-    auto scenarioFactory = boost::make_shared<SimpleScenarioFactory>();
+    auto scenarioFactory = QuantLib::ext::make_shared<SimpleScenarioFactory>();
 
-    boost::shared_ptr<HistoricalScenarioLoader> scenarioLoader = boost::make_shared<HistoricalScenarioLoader>(
+    QuantLib::ext::shared_ptr<HistoricalScenarioLoader> scenarioLoader =
+        QuantLib::ext::make_shared<HistoricalScenarioLoader>(
         hsr, dates);
 
     // Create the historical scenario generator
-    return boost::make_shared<HistoricalScenarioGenerator>(scenarioLoader, scenarioFactory, 
+    return QuantLib::ext::make_shared<HistoricalScenarioGenerator>(scenarioLoader, scenarioFactory, 
         adjFactors, ReturnConfiguration(), "hs_");
 }
 

@@ -25,9 +25,10 @@ class PnlExplainReport : public MarketRiskReport {
 public:
 
     struct PnlExplainResults {
-        QuantLib::Real asofMtm = 0.0;
-        QuantLib::Real pnlMtm = 0.0;
         QuantLib::Real pnl = 0.0;
+        QuantLib::Real delta = 0.0;
+        QuantLib::Real gamma = 0.0;
+        QuantLib::Real vega = 0.0;
         QuantLib::Real irDelta = 0.0;
         QuantLib::Real irGamma = 0.0;
         QuantLib::Real irVega = 0.0;
@@ -50,13 +51,14 @@ public:
 
     PnlExplainReport(const std::string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
                      const std::string& portfolioFilter, boost::optional<ore::data::TimePeriod> period,
+                     const QuantLib::ext::shared_ptr<Report>& pnlReport = nullptr,
                      const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr,
                      std::unique_ptr<SensiRunArgs> sensiArgs = nullptr,
                      std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr,
                      std::unique_ptr<MultiThreadArgs> multiThreadArgs = nullptr,
                      const bool requireTradePnl = false)
         : MarketRiskReport(baseCurrency, portfolio, portfolioFilter, period, hisScenGen, std::move(sensiArgs), std::move(fullRevalArgs), 
-            std::move(multiThreadArgs), true, requireTradePnl) {
+            std::move(multiThreadArgs), true, requireTradePnl), pnlReport_(pnlReport) {
         sensiBased_ = true;
     }
 
@@ -77,6 +79,8 @@ protected:
 
 private:
     std::map<std::string, PnlExplainResults> results_;
+    QuantLib::ext::shared_ptr<Report> pnlReport_;
+    QuantLib::Size pnlReportColumnSize_;
 };
 
 } // namespace analytics

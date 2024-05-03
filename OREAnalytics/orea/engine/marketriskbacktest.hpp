@@ -187,10 +187,6 @@ protected:
                                 const QuantLib::ext::shared_ptr<ore::analytics::MarketRiskGroupBase>& riskGroup,
                                 const QuantLib::ext::shared_ptr<ore::analytics::TradeGroupBase>& tradeGroup) override;
 
-    virtual bool runFullReval(const QuantLib::ext::shared_ptr<ore::analytics::MarketRiskGroupBase>& riskGroup) const {
-        return true;
-    }
-
     virtual void adjustFullRevalPnls(std::vector<QuantLib::Real>& pnls, std::vector<QuantLib::Real>& bmPnls,
                                      ore::analytics::TradePnLStore& tradePnls,
                                      const std::vector<QuantLib::Real>& foSensiPnls,
@@ -231,21 +227,19 @@ protected:
     */
      SummaryResults calculateSummary(const QuantLib::ext::shared_ptr<BacktestReports>& reports, const Data& data,
                                      bool isFull,
-         const std::vector<QuantLib::Real>& pnls, const std::vector<std::string>& tradeIds, const ore::analytics::TradePnLStore& tradePnls);
+         const std::vector<QuantLib::Real>& pnls, const std::vector<std::string>& tradeIds, const TradePnLStore& tradePnls);
 };
 
-class BacktestPNLCalculator : public ore::analytics::PNLCalculator {
+class BacktestPNLCalculator : public PNLCalculator {
 public:
     BacktestPNLCalculator(ore::data::TimePeriod pnlPeriod, const bool& writePnl, MarketRiskBacktest* backtest,
                           const QuantLib::ext::shared_ptr<MarketRiskBacktest::BacktestReports>& reports)
         : PNLCalculator(pnlPeriod), writePnl_(writePnl), backtest_(backtest), reports_(reports) {}
 
-    void writePNL(QuantLib::Size scenarioIdx, bool isCall, const ore::analytics::RiskFactorKey& key_1,
+    void writePNL(QuantLib::Size scenarioIdx, bool isCall, const RiskFactorKey& key_1,
                   QuantLib::Real shift_1, QuantLib::Real delta, QuantLib::Real gamma, QuantLib::Real deltaPnl, 
-                  QuantLib::Real gammaPnl, const ore::analytics::RiskFactorKey& key_2 = ore::analytics::RiskFactorKey(),
+                  QuantLib::Real gammaPnl, const RiskFactorKey& key_2 = RiskFactorKey(),
                   QuantLib::Real shift_2 = 0.0, const std::string& tradeId = "") override;
-
-    void populateTradePNLs(const TradePnLStore& allPnls, const TradePnLStore& foPnls) override;
 
     const TradePnLStore& tradePnls() { return tradePnls_; }
     const TradePnLStore& foTradePnls() { return foTradePnls_; }
@@ -254,7 +248,6 @@ private:
     const bool& writePnl_ = false;
     MarketRiskBacktest* backtest_;
     QuantLib::ext::shared_ptr<MarketRiskBacktest::BacktestReports> reports_;
-    ore::analytics::TradePnLStore tradePnls_, foTradePnls_;
 };
 
 } // namespace analytics
