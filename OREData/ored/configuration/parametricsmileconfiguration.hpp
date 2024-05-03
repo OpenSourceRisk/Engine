@@ -40,7 +40,7 @@ public:
         ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
         std::string name;
-        double initialValue = 0.0;
+        std::vector<double> initialValue = {0.0};
         bool isFixed = false;
     };
 
