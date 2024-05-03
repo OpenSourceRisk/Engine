@@ -385,7 +385,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                         for (Size i = 0; i < optionTenors.size(); ++i) {
                             for (Size j = 0; j < underlyingTenors.size(); ++j) {
                                 std::vector<std::pair<Real, bool>> tmp;
-                                Size idx = alpha.initialValue.size() == 1 ? 0 : i;
+                                Size idx = alpha.initialValue.size() == 1 ? 0 : i * underlyingTenors.size() + j;
                                 tmp.push_back(std::make_pair(alpha.initialValue[idx], alpha.isFixed));
                                 tmp.push_back(std::make_pair(beta.initialValue[idx], beta.isFixed));
                                 tmp.push_back(std::make_pair(nu.initialValue[idx], nu.isFixed));
@@ -625,25 +625,25 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                     if (auto p = QuantLib::ext::dynamic_pointer_cast<QuantExt::SabrParametricVolatility>(
                             sabr->parametricVolatility())) {
                         DLOG("SABR parameters:");
-                        DLOG("alpha (rows = underlying lengths, cols = option tenors):");
-                        DLOGGERSTREAM(p->alpha());
-                        DLOG("beta (rows = underlying lengths, cols = option tenors):");
-                        DLOGGERSTREAM(p->beta());
-                        DLOG("nu (rows = underlying lengths, cols = option tenors):");
-                        DLOGGERSTREAM(p->nu());
-                        DLOG("rho (rows = underlying lengths, cols = option tenors):");
-                        DLOGGERSTREAM(p->rho());
-                        DLOG("lognormal shift (rows = underlying lengths, cols = option tenors):");
-                        DLOGGERSTREAM(p->lognormalShift());
-                        DLOG("calibration attempts (rows = underlying lengths, cols = option tenors):");
-                        DLOGGERSTREAM(p->numberOfCalibrationAttempts());
-                        DLOG("calibration error (rows = underlying lengths, cols = option tenors, rmse of relative "
+                        DLOG("alpha (rows = option tenors, cols = underlying lengths):");
+                        DLOGGERSTREAM(transpose(p->alpha()));
+                        DLOG("beta (rows = option tenors, cols = underlying lengths):");
+                        DLOGGERSTREAM(transpose(p->beta()));
+                        DLOG("nu (rows = option tenors, cols = underlying lengths):");
+                        DLOGGERSTREAM(transpose(p->nu()));
+                        DLOG("rho (rows = option tenors, cols = underlying lengths):");
+                        DLOGGERSTREAM(transpose(p->rho()));
+                        DLOG("lognormal shift (rows = option tenors, cols = underlying lengths):");
+                        DLOGGERSTREAM(transpose(p->lognormalShift()));
+                        DLOG("calibration attempts (rows = option tenors, cols = underlying lengths):");
+                        DLOGGERSTREAM(transpose(p->numberOfCalibrationAttempts()));
+                        DLOG("calibration error (rows = option tenors, cols = underlying lengths, rmse of relative "
                              "errors w.r.t. max of sabr variant's preferred quotation type, i.e. nvol, slnvol, "
                              "premium:");
-                        DLOGGERSTREAM(p->calibrationError());
-                        DLOG("isInterpolated (rows = underlying lengths, cols = option tenors, 1 means calibration "
+                        DLOGGERSTREAM(transpose(p->calibrationError()));
+                        DLOG("isInterpolated (rows = option tenors, cols = underlying lengths, 1 means calibration "
                              "failed and point is interpolated):");
-                        DLOGGERSTREAM(p->isInterpolated());
+                        DLOGGERSTREAM(transpose(p->isInterpolated()));
                     }
                 }
             }
