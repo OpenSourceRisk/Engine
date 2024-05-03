@@ -123,7 +123,7 @@
   <xs:complexType name="parametricSmileConfigParameter">
     <xs:all>
       <xs:element type="xs:string" name="Name"/>
-      <xs:element type="xs:float" name="InitialValue"/>
+      <xs:element type="xs:string" name="InitialValue"/>
       <xs:element type="xs:boolean" name="IsFixed"/>
     </xs:all>
   </xs:complexType>
