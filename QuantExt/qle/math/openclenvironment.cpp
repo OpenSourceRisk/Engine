@@ -168,6 +168,11 @@ std::string errorText(cl_int err) {
         return "unknown cl error code " + std::to_string(err);
     }
 }
+
+void errorCallback(const char* errinfo, const void* private_info, size_t cb, void* user_data) {
+    printf("Error creating context: errinfo = '%s'\n", errinfo);
+}
+
 } // namespace
 
 class OpenClContext : public ComputeContext {
@@ -475,7 +480,7 @@ void OpenClContext::init() {
 
     // create context and command queue
 
-    context_ = clCreateContext(NULL, 1, &device_, NULL, NULL, &err);
+    context_ = clCreateContext(NULL, 1, &device_, &errorCallback, NULL, &err);
     QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::OpenClContext(): error during clCreateContext(): " << errorText(err));
 
 #if CL_VERSION_2_0
