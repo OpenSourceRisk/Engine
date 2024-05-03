@@ -329,7 +329,7 @@ void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveC
     Size dontThrowSteps = config.bootstrapConfig().dontThrowSteps();
 
     // Get configuration values for parametric smile
-    std::vector<std::pair<Real,bool>> initialModelParameters;
+    std::vector<std::vector<std::pair<Real, bool>>> initialModelParameters;
     Size maxCalibrationAttempts = 10;
     Real exitEarlyErrorThreshold = 0.005;
     Real maxAcceptableError = 0.05;
@@ -338,10 +338,19 @@ void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveC
         auto beta = config.parametricSmileConfiguration()->parameter("beta");
         auto nu = config.parametricSmileConfiguration()->parameter("nu");
         auto rho = config.parametricSmileConfiguration()->parameter("rho");
-        initialModelParameters.push_back(std::make_pair(alpha.initialValue, alpha.isFixed));
-        initialModelParameters.push_back(std::make_pair(beta.initialValue, beta.isFixed));
-        initialModelParameters.push_back(std::make_pair(nu.initialValue, nu.isFixed));
-        initialModelParameters.push_back(std::make_pair(rho.initialValue, rho.isFixed));
+        QL_REQUIRE(alpha.initialValue.size() == beta.initialValue.size() &&
+                       alpha.initialValue.size() == nu.initialValue.size() &&
+                       alpha.initialValue.size() == rho.initialValue.size(),
+                   "CapFloorVolCurve: parametric smile config: alpha size ("
+                       << alpha.initialValue.size() << ") beta size (" << beta.initialValue.size() << ") nu size ("
+                       << nu.initialValue.size() << ") rho size (" << rho.initialValue.size() << ") must match");
+        for (Size i = 0; i < alpha.initialValue.size(); ++i) {
+            initialModelParameters.push_back(std::vector<std::pair<Real, bool>>());
+            initialModelParameters.back().push_back(std::make_pair(alpha.initialValue[i], alpha.isFixed));
+            initialModelParameters.back().push_back(std::make_pair(beta.initialValue[i], beta.isFixed));
+            initialModelParameters.back().push_back(std::make_pair(nu.initialValue[i], nu.isFixed));
+            initialModelParameters.back().push_back(std::make_pair(rho.initialValue[i], rho.isFixed));
+        }
         maxCalibrationAttempts = config.parametricSmileConfiguration()->calibration().maxCalibrationAttempts;
         exitEarlyErrorThreshold = config.parametricSmileConfiguration()->calibration().exitEarlyErrorThreshold;
         maxAcceptableError = config.parametricSmileConfiguration()->calibration().maxAcceptableError;
@@ -795,7 +804,7 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
     QL_REQUIRE(config.optionalQuotes() == false, "Optional quotes for optionlet volatilities are not supported.");
 
     // Get configuration values for parametric smile
-    std::vector<std::pair<Real,bool>> initialModelParameters;
+    std::vector<std::vector<std::pair<Real,bool>>> initialModelParameters;
     Size maxCalibrationAttempts = 10;
     Real exitEarlyErrorThreshold = 0.005;
     Real maxAcceptableError = 0.05;
@@ -804,10 +813,19 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
         auto beta = config.parametricSmileConfiguration()->parameter("beta");
         auto nu = config.parametricSmileConfiguration()->parameter("nu");
         auto rho = config.parametricSmileConfiguration()->parameter("rho");
-        initialModelParameters.push_back(std::make_pair(alpha.initialValue, alpha.isFixed));
-        initialModelParameters.push_back(std::make_pair(beta.initialValue, beta.isFixed));
-        initialModelParameters.push_back(std::make_pair(nu.initialValue, nu.isFixed));
-        initialModelParameters.push_back(std::make_pair(rho.initialValue, rho.isFixed));
+        QL_REQUIRE(alpha.initialValue.size() == beta.initialValue.size() &&
+                       alpha.initialValue.size() == nu.initialValue.size() &&
+                       alpha.initialValue.size() == rho.initialValue.size(),
+                   "CapFloorVolCurve: parametric smile config: alpha size ("
+                       << alpha.initialValue.size() << ") beta size (" << beta.initialValue.size() << ") nu size ("
+                       << nu.initialValue.size() << ") rho size (" << rho.initialValue.size() << ") must match");
+        for (Size i = 0; i < alpha.initialValue.size(); ++i) {
+            initialModelParameters.push_back(std::vector<std::pair<Real, bool>>());
+            initialModelParameters.back().push_back(std::make_pair(alpha.initialValue[i], alpha.isFixed));
+            initialModelParameters.back().push_back(std::make_pair(beta.initialValue[i], beta.isFixed));
+            initialModelParameters.back().push_back(std::make_pair(nu.initialValue[i], nu.isFixed));
+            initialModelParameters.back().push_back(std::make_pair(rho.initialValue[i], rho.isFixed));
+        }
         maxCalibrationAttempts = config.parametricSmileConfiguration()->calibration().maxCalibrationAttempts;
         exitEarlyErrorThreshold = config.parametricSmileConfiguration()->calibration().exitEarlyErrorThreshold;
         maxAcceptableError = config.parametricSmileConfiguration()->calibration().maxAcceptableError;
@@ -1657,21 +1675,21 @@ void CapFloorVolCurve::buildCalibrationInfo(const Date& asof, const CurveConfigu
 
     if (p) {
         DLOG("SABR parameters:");
-        DLOG("alpha:");
+        DLOG("alpha (pls ignore second row, this is present for technical reasons):");
         DLOGGERSTREAM(p->alpha());
-        DLOG("beta:");
+        DLOG("beta (pls ignore second row, this is present for technical reasons):");
         DLOGGERSTREAM(p->beta());
-        DLOG("nu:");
+        DLOG("nu (pls ignore second row, this is present for technical reasons):");
         DLOGGERSTREAM(p->nu());
-        DLOG("rho:");
+        DLOG("rho (pls ignore second row, this is present for technical reasons):");
         DLOGGERSTREAM(p->rho());
-        DLOG("lognormal shift:");
+        DLOG("lognormal shift (pls ignore second row, this is present for technical reasons):");
         DLOGGERSTREAM(p->lognormalShift());
         DLOG("calibration attempts:");
         DLOGGERSTREAM(p->numberOfCalibrationAttempts());
         DLOG("calibration error:");
         DLOGGERSTREAM(p->calibrationError());
-        DLOG("isInterpolated:");
+        DLOG("isInterpolated (1 means calibration failed and point is interpolated):");
         DLOGGERSTREAM(p->isInterpolated());
     }
 
