@@ -284,8 +284,85 @@
 
       <IndexCurve index="EUR-EURIBOR-6M">
         <ShiftType>Absolute</ShiftType>
-        <Shifts>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</Shifts>
-        <ShiftTenors>1D, 1M,2M,3M,1M,2M,3M,4M,5M,6M,9M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,25Y,30Y,40Y,50Y,60Y</ShiftTenors>
+        <Shifts>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</Shifts>
+        <ShiftTenors>1D, 1M,2M,3M,4M,5M,6M,9M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,25Y,30Y,40Y,50Y,60Y</ShiftTenors>
+      </IndexCurve>
+
+      <IndexCurve index="USD-SOFR">
+        <ShiftType>Absolute</ShiftType>
+        <Shifts>0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00</Shifts>
+        <ShiftTenors>1D, 1W, 2W, 1M, 2M, 3M, 4M, 5M, 6M, 7M, 8M, 9M, 10M, 11M, 1Y, 15M, 18M, 21M, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftTenors>
+      </IndexCurve>
+    </IndexCurves>
+
+    <YieldCurves>
+      <!--      <YieldCurve name="__XCCY__-USD">
+        <ShiftType>Absolute</ShiftType>
+        <Shifts>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</Shifts>
+        <ShiftTenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftTenors>
+      </YieldCurve>-->
+    </YieldCurves>
+
+    <FxSpots>
+    </FxSpots>
+
+    <FxVolatilities>      <!-- strike dimension ignored -->
+    </FxVolatilities>
+
+    <!-- Swaption ATM vol shifts, strike dimension ignored -->
+    <SwaptionVolatilities>
+    </SwaptionVolatilities>
+
+    <!-- Cap/Floor (Optionlet) vol surface shifts, strike dimension ignored -->
+    <CapFloorVolatilities>
+    </CapFloorVolatilities>
+
+    <!-- Equity spot shifts -->
+    <EquitySpots>
+    </EquitySpots>
+
+    <!-- Equity ATM vol shifts -->
+    <EquityVolatilities>
+    </EquityVolatilities>
+    <SecuritySpreads />
+    <RecoveryRates/>
+    <SurvivalProbabilities/>
+
+  </StressTest>
+  <StressTest id="eur6m_zero">
+
+    <ParShifts>
+      <IRCurves>false</IRCurves>
+      <SurvivalProbability>false</SurvivalProbability>
+      <CapFloorVolatilities>false</CapFloorVolatilities>
+    </ParShifts>
+
+    <DiscountCurves>
+      <DiscountCurve ccy="EUR">
+        <ShiftType>Absolute</ShiftType>
+        <!--Shifts>0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0</Shifts-->
+        <Shifts>0.00, 0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00</Shifts>
+        <ShiftTenors>1D, 1W,2W,3W,1M,2M,3M,4M,5M,6M,7M,8M,9M,10M,11M,1Y,15M,18M,21M,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,11Y,12Y,15Y,20Y,25Y,30Y,40Y,50Y,60Y</ShiftTenors>
+      </DiscountCurve>
+      <DiscountCurve ccy="USD">
+        <ShiftType>Absolute</ShiftType>
+        <Shifts>0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00</Shifts>
+        <!--Shifts>0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00</Shifts-->
+        <ShiftTenors>1D,2D,3D,1W,2W,3W,1M,2M,3M,4M,5M,6M,7M,8M,9M,10M,11M,1Y,15M,18M,21M,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,25Y,30Y,40Y,50Y</ShiftTenors>
+      </DiscountCurve>
+    </DiscountCurves>
+
+    <IndexCurves>
+      <IndexCurve index="EUR-ESTER">
+        <ShiftType>Absolute</ShiftType>
+        <Shifts>0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00</Shifts>
+        <ShiftTenors>1D, 1W,2W,3W,1M,2M,3M,4M,5M,6M,7M,8M,9M,10M,11M,1Y,15M,18M,21M,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,11Y,12Y,15Y,20Y,25Y,30Y,40Y,50Y,60Y</ShiftTenors>
+      </IndexCurve>
+
+      <IndexCurve index="EUR-EURIBOR-6M">
+        <ShiftType>Absolute</ShiftType>
+        <Shifts>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</Shifts>
+        <ShiftTenors>1D, 1M,2M,3M,4M,5M,6M,9M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,25Y,30Y,40Y,50Y,60Y</ShiftTenors>
       </IndexCurve>
 
       <IndexCurve index="USD-SOFR">
@@ -361,8 +438,8 @@
 
       <IndexCurve index="EUR-EURIBOR-6M">
         <ShiftType>Absolute</ShiftType>
-        <Shifts>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</Shifts>
-        <ShiftTenors>1D, 1M,2M,3M,1M,2M,3M,4M,5M,6M,9M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,25Y,30Y,40Y,50Y,60Y</ShiftTenors>
+        <Shifts>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</Shifts>
+        <ShiftTenors>1D, 1M,2M,3M,4M,5M,6M,9M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,25Y,30Y,40Y,50Y,60Y</ShiftTenors>
       </IndexCurve>
 
       <IndexCurve index="USD-SOFR">

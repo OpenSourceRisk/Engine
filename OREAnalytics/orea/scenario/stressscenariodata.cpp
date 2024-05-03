@@ -266,6 +266,10 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                                                            << data.shifts[tenor].size() << ") for tenor "
                                                            << ore::data::to_string(tenor));
             }
+            QL_REQUIRE(data.shifts.size() == data.shiftExpiries.size(),
+                       "StressScenarioData: CapFloor " << key << ": Mismatch between size of expiries ("
+                                                       << data.shiftExpiries.size() << ") and shifts("
+                                                       << data.shifts.size() << ")");
             test.capVolShifts[key] = data;
         }
         LOG("Get Security spread stress parameters");

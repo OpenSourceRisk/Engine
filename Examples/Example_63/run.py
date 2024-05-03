@@ -10,6 +10,9 @@ oreex.print_headline("Run ORE for Sensitivity and Stress Analysis")
 oreex.run("Input/ore_stress.xml")
 oreex.get_times("Output/log.txt")
 
+oreex.print_headline("Run ORE for ParStressTestConversion Analysis")
+oreex.run("Input/ore_parstressconversion.xml")
+
 oreex.print_headline("Run ORE for Shifted CapFloor Surface NPV Analysis")
 oreex.run("Input/ore_valid_cap.xml")
 

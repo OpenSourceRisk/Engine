@@ -18,9 +18,11 @@
 
 #include <orea/engine/parsensitivityutilities.hpp>
 #include <orea/engine/parstressscenarioconverter.hpp>
+#include <orea/scenario/sensitivityscenariodata.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/instrument.hpp>
 #include <ql/instruments/capfloor.hpp>
+#include <ored/portfolio/structuredconfigurationwarning.hpp>
 
 namespace ore {
 namespace analytics {
@@ -162,11 +164,162 @@ std::set<RiskFactorKey::KeyType> disabledParRates(bool irCurveParRates, bool irC
     return disabledParRates;
 }
 
+//! Checks the the tenors for curves in a stresstest scenario are alligned with par sensitivity config
+bool checkCurveShiftData(const std::string& name, const StressTestScenarioData::CurveShiftData& stressShiftData,
+                         const std::map<std::string, QuantLib::ext::shared_ptr<SensitivityScenarioData::CurveShiftData>>& sensiData) {
+    auto it = sensiData.find(name);
+    if (it == sensiData.end()) {
+        StructuredConfigurationWarningMessage(
+            "StressScenario", name, "Par Shift to zero conversion",
+            "no par sensitivity scenario found. Please add par sensi config").log();
+        return false;
+    }
+    auto parShiftData = ext::dynamic_pointer_cast<SensitivityScenarioData::CurveShiftParData>(it->second);
+    if (parShiftData == nullptr) {
+        StructuredConfigurationWarningMessage("StressScenario", name, "Par Shift to zero conversion",
+                                              "no par sensitivity scenario found. Please add par sensi config")
+            .log();
+        return false;
+    }
+    const size_t nParShifts = parShiftData->shiftTenors.size();
+    const size_t nStressShifts = stressShiftData.shiftTenors.size();
+    if (nParShifts != nStressShifts) {
+        StructuredConfigurationWarningMessage(
+            "StressScenario", name, "Par Shift to zero conversion",
+            "mismatch between tenors, we have " + to_string(nParShifts) + " parInstruments defined but " +
+                to_string(nStressShifts) +
+                " shifts in the scenario. Please align pillars of stress test and par sensi config")
+            .log();
+        return false;
+    }
+    for (size_t i = 0; i < nParShifts; ++i){
+        if (parShiftData->shiftTenors[i] != stressShiftData.shiftTenors[i]){
+            StructuredConfigurationWarningMessage("StressScenario", name, "Par Shift to zero conversion",
+                                                  "tenors are not aligned, " + to_string(i) + " par Pillar is " +
+                                                      to_string(parShiftData->shiftTenors[i]) +
+                                                      " vs stress shift piller " +
+                                                      to_string(stressShiftData.shiftTenors[i]) +
+                                                      ". Please align pillars of stress test and par sensi config")
+                .log();
+            return false;
+        }
+    }
+    return true;
+}
+
+
+//! Checks the the strikes and expiries of cap floors in stresstest scenario are alligned with par sensitivity config
+bool checkCapFloorShiftData(const std::string& name, const StressTestScenarioData::CapFloorVolShiftData& stressShiftData,
+                         const std::map<std::string, QuantLib::ext::shared_ptr<SensitivityScenarioData::CapFloorVolShiftData>>& sensiData){
+
+    auto it = sensiData.find(name);
+    if (it == sensiData.end()) {
+        StructuredConfigurationWarningMessage(
+            "StressScenario", name, "Par Shift to zero conversion",
+            "no par cap floor sensitivity scenario found. Please add par sensi config")
+            .log();
+        return false;
+    }
+    auto parShiftData = ext::dynamic_pointer_cast<SensitivityScenarioData::CapFloorVolShiftParData>(it->second);
+    if (parShiftData == nullptr) {
+        StructuredConfigurationWarningMessage(
+            "StressScenario", name, "Par Shift to zero conversion",
+            "no par cap floor sensitivity scenario found. Please add par sensi config")
+            .log();
+        return false;
+    }
+    const size_t nParShifts = parShiftData->shiftExpiries.size();
+    const size_t nStressShifts = stressShiftData.shiftExpiries.size();
+    if (nParShifts != nStressShifts) {
+        StructuredConfigurationWarningMessage(
+            "StressScenario", name, "Par Shift to zero conversion",
+            "mismatch between capFloor expiries, we have " + to_string(nParShifts) + " parInstruments defined but " +
+                to_string(nStressShifts) +
+                " shifts in the scenario. Please align pillars of stress test and par sensi config")
+            .log();
+        return false;
+    }
+    for (size_t i = 0; i < nParShifts; ++i) {
+        if (parShiftData->shiftExpiries[i] != stressShiftData.shiftExpiries[i]) {
+            StructuredConfigurationWarningMessage(
+                "StressScenario", name, "Par Shift to zero conversion",
+                "CapFloor expiries are not aligned, " + to_string(i) + " CapFloor Pillar is " +
+                    to_string(parShiftData->shiftExpiries[i]) + " vs stress shift piller " +
+                    to_string(stressShiftData.shiftExpiries[i]) +
+                    ". Please align pillars of stress test and par sensi config")
+                .log();
+            return false;
+        }
+    }
+    if(!stressShiftData.shiftStrikes.empty()){
+        const size_t nParStrikes = parShiftData->shiftStrikes.size();
+        const size_t nSressStrikes = stressShiftData.shiftStrikes.size();
+
+        if (nParStrikes != nSressStrikes) {
+            StructuredConfigurationWarningMessage(
+                "StressScenario", name, "Par Shift to zero conversion",
+                "mismatch between capFloor strikes, we have " + to_string(nParStrikes) + " par strikes defined but " +
+                    to_string(nSressStrikes) +
+                    " strikes in the scenario. Please align strikes of stress test and par sensi config")
+                .log();
+            return false;
+        }
+        for (size_t i = 0; i < nParStrikes; ++i) {
+            if (parShiftData->shiftStrikes[i] != stressShiftData.shiftStrikes[i]) {
+                StructuredConfigurationWarningMessage(
+                    "StressScenario", name, "Par Shift to zero conversion",
+                    "CapFloor expiries are not aligned, " + to_string(i) + " CapFloor strike is " +
+                        to_string(parShiftData->shiftStrikes[i]) + " vs stress shift strike " +
+                        to_string(stressShiftData.shiftStrikes[i]) +
+                        ". Please align strikes of stress test and par sensi config")
+                    .log();
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 //! Check if the scenarios defines a shift for each par rate defined in the sensitivityScenarioData;
 bool ParStressScenarioConverter::scenarioCanBeConverted(
     const StressTestScenarioData::StressTestData& parStressScenario) const {
-    // TODO implement sanity check, that we have a shift for each par instrument
-    return true;
+    DLOG("Check if the par stresstest scenario is compatible with the parInstruments");
+    bool result = true;
+    if (parStressScenario.irCurveParShifts) {
+        // We require that shifts between stress scenario and sensi scenario are aligned
+        for (const auto& [ccy, curveShifts] : parStressScenario.discountCurveShifts) {
+            DLOG("Check if pillars between stress test and sensi config are alligned for discount curve " << ccy);
+            result = result && checkCurveShiftData(ccy, curveShifts, sensiScenarioData_->discountCurveShiftData());
+        }
+
+        for (const auto& [indexName, curveShifts] : parStressScenario.indexCurveShifts) {
+            DLOG("Check if pillars between stress test and sensi config are alligned for index curve " << indexName);
+            result = result && checkCurveShiftData(indexName, curveShifts, sensiScenarioData_->indexCurveShiftData());
+        }
+
+        for (const auto& [curveName, curveShifts] : parStressScenario.yieldCurveShifts) {
+            DLOG("Check if pillars between stress test and sensi config are alligned for yield curve " << curveName);
+            result = result && checkCurveShiftData(curveName, curveShifts, sensiScenarioData_->yieldCurveShiftData());
+        }
+    }
+
+    if (parStressScenario.creditCurveParShifts) {
+        for (const auto& [curveName, curveShifts] : parStressScenario.survivalProbabilityShifts) {
+            DLOG("Check if pillars between stress test and sensi config are alligned for credit curve " << curveName);
+            result = result && checkCurveShiftData(curveName, curveShifts, sensiScenarioData_->creditCurveShiftData());
+        }
+    }
+
+    if (parStressScenario.irCapFloorParShifts) {
+        for (const auto& [capSurfaceName, capShifts] : parStressScenario.capVolShifts) {
+            DLOG("Check if pillars and strikes between stress test and sensi config are alligned for cap floor surface "
+                 << capSurfaceName);
+            result =
+                result && checkCapFloorShiftData(capSurfaceName, capShifts, sensiScenarioData_->capFloorVolShiftData());
+        }
+    }
+
+    return result;
 }
 
 ParStressScenarioConverter::ParStressScenarioConverter(
@@ -238,7 +391,6 @@ ParStressScenarioConverter::convertScenario(const StressTestScenarioData::Stress
             DLOG("Skip parInsturment " << rfKey << " the shifts for this risk factor type are in zero domain.");
         }
     }
-
     // Optimize IR curves and Credit curves
     LOG("ParStressConverter: Imply zero shifts");
     std::map<RiskFactorKey, double> shifts;

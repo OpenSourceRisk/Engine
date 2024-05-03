@@ -23,6 +23,7 @@
 #include <orea/engine/parstressconverter.hpp>
 #include <orea/engine/stresstest.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
+#include <orea/app/structuredanalyticserror.hpp>
 
 using namespace ore::data;
 using namespace boost::filesystem;
@@ -70,12 +71,16 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     LOG("Stress Test Analysis called");
     QuantLib::ext::shared_ptr<StressTestScenarioData> scenarioData = inputs_->stressScenarioData();
     if (scenarioData != nullptr && scenarioData->hasScenarioWithParShifts()) {
-        ParStressTestConverter converter(
+        try{
+            ParStressTestConverter converter(
             inputs_->asof(), analytic()->configurations().todaysMarketParams,
             analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
             analytic()->configurations().curveConfig, analytic()->market(), inputs_->iborFallbackConfig());
-        scenarioData = converter.convertStressScenarioData(scenarioData);
-        analytic()->stressTests()[label()]["stress_ZeroStressData"] = scenarioData;
+            scenarioData = converter.convertStressScenarioData(scenarioData);
+            analytic()->stressTests()[label()]["stress_ZeroStressData"] = scenarioData;
+        } catch(const std::exception& e){
+            StructuredAnalyticsErrorMessage(label(), "ParConversionFailed", e.what()).log();
+        }
     }
 
     Settings::instance().evaluationDate() = inputs_->asof();

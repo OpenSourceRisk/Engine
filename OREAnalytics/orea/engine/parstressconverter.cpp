@@ -22,6 +22,7 @@
 #include <orea/engine/parstressconverter.hpp>
 #include <orea/engine/parstressscenarioconverter.hpp>
 #include <orea/scenario/deltascenariofactory.hpp>
+#include <orea/app/structuredanalyticswarning.hpp>
 
 namespace ore {
 namespace analytics {
@@ -123,7 +124,9 @@ QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> ParStressTestC
                 auto convertedScenario = converter.convertScenario(scenario);
                 results->data().push_back(std::move(convertedScenario));
             } catch (const std::exception& e) {
-                ALOG("ParStressConverter: Conversion failed. Skip this scenario. Got " << e.what());
+                StructuredAnalyticsWarningMessage("ParStressConversion", "ScenarioConversionFailed",
+                                                  "Skip Scenario " + scenario.label + ", got :" + e.what())
+                    .log();
             }
         } else {
             LOG("ParStressConverter: Skip scenario " << scenario.label << ", it contains only zero shifts");
