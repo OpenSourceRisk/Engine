@@ -205,10 +205,11 @@ inline void SabrStrippedOptionletAdapter<TimeInterpolator>::performCalculations(
 
     std::vector<ParametricVolatility::MarketSmile> marketSmiles;
     std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, bool>>> modelParameters;
-    QL_REQUIRE(initialModelParameters_.empty() ||
+    QL_REQUIRE(initialModelParameters_.empty() || initialModelParameters_.size() == 1 ||
                    initialModelParameters_.size() == this->optionletBase()->optionletFixingTimes().size(),
                "SabrStrippedOptionletAdapter: initial model parameters must be empty or their size ("
-                   << initialModelParameters_.size() << " must match the number of optionlet fixing times ("
+                   << initialModelParameters_.size()
+                   << ") must be 1 or it must match the number of optionlet fixing times ("
                    << this->optionletBase()->optionletFixingTimes().size() << ")");
     for (Size i = 0; i < this->optionletBase()->optionletFixingTimes().size(); ++i) {
         Real forward = atmInterpolation_->operator()(this->optionletBase()->optionletFixingTimes()[i]);
