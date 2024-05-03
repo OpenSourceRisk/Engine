@@ -42,7 +42,7 @@ void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
     populateFromReferenceData(engineFactory->referenceData());
 
     
-    for (const boost::shared_ptr<Trade>& trade : trades_) {
+    for (const QuantLib::ext::shared_ptr<Trade>& trade : trades_) {
 
 	    trade->reset();
 	    trade->build(engineFactory);
@@ -51,7 +51,7 @@ void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
         if (sensitivityTemplate_.empty())
             setSensitivityTemplate(trade->sensitivityTemplate());
 
-        Handle<Quote> fx = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
+        Handle<Quote> fx = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
 	    if (trade->npvCurrency() != npvCurrency_)
 	        fx = engineFactory->market()->fxRate(trade->npvCurrency() + npvCurrency_);
 	    fxRates_.push_back(fx);
@@ -72,7 +72,7 @@ void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
 
         QuantLib::ext::shared_ptr<InstrumentWrapper> instrumentWrapper = trade->instrument();
         Real effectiveMultiplier = instrumentWrapper->multiplier();
-	    if (auto optionWrapper = boost::dynamic_pointer_cast<ore::data::OptionWrapper>(instrumentWrapper)) {
+        if (auto optionWrapper = QuantLib::ext::dynamic_pointer_cast<ore::data::OptionWrapper>(instrumentWrapper)) {
 	        effectiveMultiplier *= optionWrapper->isLong() ? 1.0 : -1.0;
 	    }
 
@@ -166,7 +166,7 @@ void CompositeTrade::fromXML(XMLNode* node) {
             id = this->id() + "_" + std::to_string(i);
             DLOG("Parsing composite trade " << this->id() << " node " << i << " with id: " << id);
 
-            boost::shared_ptr<Trade> trade;
+            QuantLib::ext::shared_ptr<Trade> trade;
             try {
                 trade = TradeFactory::instance().build(tradeType);
                 trade->id() = id;
@@ -271,10 +271,11 @@ const std::map<std::string, boost::any>& CompositeTrade::additionalData() const 
     return additionalData_;
 }
 
-void CompositeTrade::populateFromReferenceData(const boost::shared_ptr<ReferenceDataManager>& referenceData) {
+void CompositeTrade::populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData) {
 
-    if (!portfolioId_.empty() && (referenceData->hasData(PortfolioBasketReferenceDatum::TYPE, portfolioId_))) {
-            auto ptfRefData = boost::dynamic_pointer_cast<PortfolioBasketReferenceDatum>(
+    if (!portfolioId_.empty() && referenceData != nullptr &&
+        (referenceData->hasData(PortfolioBasketReferenceDatum::TYPE, portfolioId_))) {
+        auto ptfRefData = QuantLib::ext::dynamic_pointer_cast<PortfolioBasketReferenceDatum>(
                 referenceData->getData(PortfolioBasketReferenceDatum::TYPE, portfolioId_));
             QL_REQUIRE(ptfRefData, "could not cast to PortfolioBasketReferenceDatum, this is unexpected");
             getTradesFromReferenceData(ptfRefData);
@@ -284,7 +285,8 @@ void CompositeTrade::populateFromReferenceData(const boost::shared_ptr<Reference
    
 }
 
-void CompositeTrade::getTradesFromReferenceData(const boost::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum) {
+void CompositeTrade::getTradesFromReferenceData(
+    const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum) {
 
     DLOG("populating portfolio basket data from reference data");
     QL_REQUIRE(ptfReferenceDatum, "populateFromReferenceData(): empty cbo reference datum given");
