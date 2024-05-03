@@ -27,7 +27,7 @@ namespace data {
 void ParametricSmileConfiguration::Parameter::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Parameter");
     name = XMLUtils::getChildValue(node, "Name", true);
-    initialValue = parseReal(XMLUtils::getChildValue(node, "InitialValue", true));
+    initialValue = parseListOfValues<Real>(XMLUtils::getChildValue(node, "InitialValue", true), parseReal);
     isFixed = parseBool(XMLUtils::getChildValue(node, "IsFixed", true));
 }
 
