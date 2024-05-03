@@ -795,6 +795,7 @@
       <xs:element type="extendedCurrencyCode" name="Currency" minOccurs="0"/>
       <xs:element type="businessDayConvention" name="PaymentConvention" minOccurs="0"/>
       <xs:element type="paymentLag" name="PaymentLag" minOccurs="0"/>
+      <xs:element type="xs:integer" name="NotionalPaymentLag" minOccurs="0"/>
       <xs:element type="xs:string" name="PaymentCalendar" minOccurs="0"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0"/>
       <xs:element name="Amortizations" minOccurs="0" maxOccurs="1">
@@ -2857,7 +2858,9 @@
       <xs:element type="currencyCode" name="Currency"/>
       <xs:element type="notionalCalculation" name="NotionalCalculation" minOccurs="0"/>
       <xs:element type="xs:float" name="NotionalOverride" minOccurs="0"/>
-      <xs:element type="compositeTradeComponents" name="Components"/>
+      <xs:element type="xs:boolean" name="PortfolioBasket" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="BasketName" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="compositeTradeComponents" name="Components" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
