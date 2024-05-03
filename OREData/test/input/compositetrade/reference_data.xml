@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<ReferenceData>
+	<ReferenceDatum id="MSFDSJP">
+		<Type>PortfolioBasket</Type>
+		<PortfolioBasketReferenceData>
+			<Components>
+				<Trade id="EqOption1">
+					<TradeType>EquityOption</TradeType>
+					<Envelope>
+						<CounterParty>{{netting_set_id}}</CounterParty>
+						<NettingSetId>{{netting_set_id}}</NettingSetId>
+						<AdditionalFields>
+							<valuation_date>2023-11-07</valuation_date>
+							<im_model>SIMM</im_model>
+							<post_regulations>SEC</post_regulations>
+							<collect_regulations>SEC</collect_regulations>
+						</AdditionalFields>
+					</Envelope>
+					<EquityOptionData>
+					  <OptionData>
+						<LongShort>Long</LongShort>
+						<OptionType>Call</OptionType>
+						<Style>European</Style>
+						<Settlement>Cash</Settlement>
+						<ExerciseDates>
+						  <ExerciseDate>2016-08-04</ExerciseDate>
+						</ExerciseDates>
+					  </OptionData>
+					  <Name>eurCorp</Name>
+					  <Currency>EUR</Currency>
+					  <Strike>95</Strike>
+					  <Quantity>1</Quantity>
+					</EquityOptionData>
+				</Trade>
+				<Trade id="EqOption2">
+					<TradeType>EquityOption</TradeType>
+					<Envelope>
+						<CounterParty>{{netting_set_id}}</CounterParty>
+						<NettingSetId>{{netting_set_id}}</NettingSetId>
+						<AdditionalFields>
+							<valuation_date>2023-11-07</valuation_date>
+							<im_model>SIMM</im_model>
+							<post_regulations>SEC</post_regulations>
+							<collect_regulations>SEC</collect_regulations>
+						</AdditionalFields>
+					</Envelope>
+					<EquityOptionData>
+						<OptionData>
+							<LongShort>Short</LongShort>
+							<OptionType>Put</OptionType>
+							<Style>European</Style>
+							<Settlement>Cash</Settlement>
+							<ExerciseDates>
+								<ExerciseDate>2016-08-04</ExerciseDate>
+							</ExerciseDates>
+						</OptionData>
+						<Name>eurCorp</Name>
+						<Currency>EUR</Currency>
+						<Strike>95</Strike>
+						<StrikeCurrency>EUR</StrikeCurrency>
+						<Quantity>1</Quantity>
+					</EquityOptionData>
+				</Trade>
+			</Components>
+		</PortfolioBasketReferenceData>
+	</ReferenceDatum>
+</ReferenceData>

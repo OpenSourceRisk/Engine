@@ -18,6 +18,8 @@
 
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/referencedata.hpp>
+#include <ored/portfolio/tradefactory.hpp>
+#include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 
@@ -393,6 +395,127 @@ XMLNode* CurrencyHedgedEquityIndexReferenceDatum::toXML(XMLDocument& doc) const 
     }
     return node;
 }
+
+// Portfolio Basket
+/*
+<ReferenceDatum id="MSFDSJP">
+ <PortfolioBasketReferenceData>
+  <Components>
+   <Trade>
+    <TradeType>EquityPosition</TradeType>
+     <Envelope>
+      <CounterParty>{{netting_set_id}}</CounterParty>
+       <NettingSetId>{{netting_set_id}}</NettingSetId>
+       <AdditionalFields>
+        <valuation_date>2023-11-07</valuation_date>
+        <im_model>SIMM</im_model>
+        <post_regulations>SEC</post_regulations>
+        <collect_regulations>SEC</collect_regulations>
+       </AdditionalFields>
+      </Envelope>
+      <EquityPositionData>
+       <Quantity>7006.0</Quantity>
+        <Underlying>
+         <Type>Equity</Type>
+         <Name>CR.N</Name>
+         <IdentifierType>RIC</IdentifierType>
+        </Underlying>
+       </EquityPositionData>
+      </Trade>
+      <Trade id="CashSWAP_USD.CASH">
+       <TradeType>Swap</TradeType>
+        <Envelope>
+          <CounterParty>{{netting_set_id}}</CounterParty>
+           <NettingSetId>{{netting_set_id}}</NettingSetId>
+           <AdditionalFields>
+            <valuation_date>2023-11-07</valuation_date>
+            <im_model>SIMM</im_model>
+            <post_regulations>SEC</post_regulations>
+            <collect_regulations>SEC</collect_regulations>
+           </AdditionalFields>
+          </Envelope>
+          <SwapData>
+           <LegData>
+           <Payer>true</Payer>
+           <LegType>Cashflow</LegType>
+           <Currency>USD</Currency>
+           <CashflowData>
+            <Cashflow>
+             <Amount date="2023-11-08">28641475.824680243</Amount>
+            </Cashflow>
+           </CashflowData>
+       </LegData>
+      </SwapData>
+     </Trade>
+   </Components>
+  </PortfolioBasketReferenceData>
+</ReferenceDatum>
+*/
+
+void PortfolioBasketReferenceDatum::fromXML(XMLNode* node) {
+        ReferenceDatum::fromXML(node);
+        XMLNode* innerNode = XMLUtils::getChildNode(node, type() + "ReferenceData");
+        QL_REQUIRE(innerNode, "No " + type() + "ReferenceData node");  
+
+        // Get the "Components" node
+        XMLNode* componentsNode = XMLUtils::getChildNode(innerNode, "Components");
+        QL_REQUIRE(componentsNode, "No Components node");
+
+        tradecomponents_.clear();
+        auto c = XMLUtils::getChildrenNodes(componentsNode, "Trade");
+        int k = 0;
+        for (auto const n : c) {
+
+            string tradeType = XMLUtils::getChildValue(n, "TradeType", true);
+            string id = XMLUtils::getAttribute(n, "id");
+            if (id == "") {
+                id = std::to_string(k);
+            }
+            
+            DLOG("Parsing composite trade " << this->id() << " node " << k << " with id: " << id);
+            
+            QuantLib::ext::shared_ptr<Trade> trade;
+            try {
+                trade = TradeFactory::instance().build(tradeType);
+                trade->id() = id;
+                Envelope componentEnvelope;
+                if (XMLNode* envNode = XMLUtils::getChildNode(n, "Envelope")) {
+                   componentEnvelope.fromXML(envNode);
+                }
+                Envelope env;
+                // the component trade's envelope is the main trade's envelope with possibly overwritten add fields
+                for (auto const& [k, v] : componentEnvelope.fullAdditionalFields()) {
+                   env.setAdditionalField(k, v);
+                }
+                    
+                trade->setEnvelope(env);
+                trade->fromXML(n);
+                tradecomponents_.push_back(trade);
+                DLOG("Added Trade " << id << " (" << trade->id() << ")"
+                                        << " type:" << tradeType << " to composite trade " << this->id() << ".");
+                k += 1;
+            } catch (const std::exception& e) {
+                StructuredTradeErrorMessage(
+                    id, tradeType,
+                    "Failed to build subtrade with id '" + id + "' inside composite trade: ", e.what())
+                    .log();
+            }
+            
+         }
+}
+
+XMLNode* PortfolioBasketReferenceDatum::toXML(XMLDocument& doc) const {
+        XMLNode* node = ReferenceDatum::toXML(doc);
+        XMLNode* rdNode = XMLUtils::addChild(doc, node, type() + "ReferenceData");
+        XMLUtils::appendNode(node, rdNode);
+        XMLNode* cNode = XMLUtils::addChild(doc, rdNode, "Components");
+        for (auto& u : tradecomponents_) {
+            auto test = u->toXML(doc);
+            XMLUtils::appendNode(cNode, test);
+        }
+
+        return node;
+    }
 
 // Credit
 void CreditReferenceDatum::fromXML(XMLNode* node) {
