@@ -74,6 +74,8 @@ public:
 private:
     static constexpr double eps1 = .0000001;
     static constexpr double eps2 = .9999;
+    static constexpr double max_nvol_equiv = 0.02;
+    static constexpr double max_nu = 2.0;
 
     void calculate();
 
