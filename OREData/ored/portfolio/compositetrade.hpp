@@ -101,8 +101,8 @@ public:
 
 private:
 
-    void populateFromReferenceData(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager);
-    void getTradesFromReferenceData(const boost::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum);
+    void populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager);
+    void getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum);
 
     string currency_;
     Real notionalOverride_;

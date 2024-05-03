@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(testCompositeReferenceData) {
 
     // build CompositeTrade with referencedata
     auto rdm = QuantLib::ext::make_shared<BasicReferenceDataManager>(TEST_INPUT_FILE("reference_data.xml"));
-    auto ptfReferenceDatum = boost::dynamic_pointer_cast<PortfolioBasketReferenceDatum>(rdm->getData("PortfolioBasket", "MSFDSJP"));
+    auto ptfReferenceDatum = QuantLib::ext::dynamic_pointer_cast<PortfolioBasketReferenceDatum>(rdm->getData("PortfolioBasket", "MSFDSJP"));
     auto refData = ptfReferenceDatum->getTrades();
     QuantLib::ext::shared_ptr<Trade> eqRefCall = refData[0];
     QuantLib::ext::shared_ptr<Trade> eqRefPut = refData[1];
@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(testConstructionWithCompositeTradeReferenceData) {
     // CompoiteTrade with Reference Data
     auto rdm = QuantLib::ext::make_shared<BasicReferenceDataManager>(TEST_INPUT_FILE("reference_data.xml"));
     auto ptfReferenceDatum =
-        boost::dynamic_pointer_cast<PortfolioBasketReferenceDatum>(rdm->getData("PortfolioBasket", "MSFDSJP"));
+        QuantLib::ext::dynamic_pointer_cast<PortfolioBasketReferenceDatum>(rdm->getData("PortfolioBasket", "MSFDSJP"));
     
     string xmlRefData = ptfReferenceDatum->toXMLString();
     PortfolioBasketReferenceDatum xmlPortfolioBasket("MSFDSJP");
