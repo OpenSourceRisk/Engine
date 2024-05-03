@@ -855,7 +855,8 @@ public:
             const bool notionalAmortizingExchange = false, const bool isNotResetXCCY = true,
             const string& foreignCurrency = "", const double foreignAmount = 0, const string& fxIndex = "",
             const std::vector<AmortizationData>& amortizationData = std::vector<AmortizationData>(),
-            const string& paymentLag = "", const std::string& paymentCalendar = "",
+            const string& paymentLag = "", const string& notionalPaymentLag = "",
+            const std::string& paymentCalendar = "",
             const std::vector<std::string>& paymentDates = std::vector<std::string>(),
             const std::vector<Indexing>& indexing = {}, const bool indexingFromAssetLeg = false,
             const string& lastPeriodDayCounter = "");
@@ -883,6 +884,7 @@ public:
     double foreignAmount() const { return foreignAmount_; }
     const string& fxIndex() const { return fxIndex_; }
     const string& paymentLag() const { return paymentLag_; }
+    const string& notionalPaymentLag() const { return notionalPaymentLag_; }
     const std::vector<AmortizationData>& amortizationData() const { return amortizationData_; }
     const std::string& paymentCalendar() const { return paymentCalendar_; }
     const string& legType() const { return concreteLegData_->legType(); }
@@ -941,7 +943,7 @@ private:
     double foreignAmount_ = 0.0;
     string fxIndex_;
     std::vector<AmortizationData> amortizationData_;
-    string paymentLag_;
+    string paymentLag_, notionalPaymentLag_;
     std::string paymentCalendar_;
     std::vector<std::string> paymentDates_;
     std::vector<Indexing> indexing_;
@@ -966,7 +968,7 @@ Leg makeBMALeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::BM
                const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeSimpleLeg(const LegData& data);
 Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalNomFlow, const bool amortNomFlow,
-                    const QuantLib::Natural paymentLag, const BusinessDayConvention paymentConvention,
+                    const QuantLib::Natural notionalPaymentLag, const BusinessDayConvention paymentConvention,
                     const Calendar paymentCalendar, const bool excludeIndexing = true);
 Leg makeCPILeg(const LegData& data, const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index,
                const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,

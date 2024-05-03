@@ -316,7 +316,7 @@ QuantLib::ext::shared_ptr<analytics::ScenarioSimMarket> buildScenarioSimMarket(Q
         QuantLib::ext::make_shared<MultiPathGeneratorMersenneTwister>(model->stateProcess(), dateGrid->timeGrid(), seed, antithetic);
 
     // build scenario generator
-    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory(new SimpleScenarioFactory);
+    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory = QuantLib::ext::make_shared<SimpleScenarioFactory>();
     QuantLib::ext::shared_ptr<ScenarioGenerator> scenarioGenerator = QuantLib::ext::make_shared<CrossAssetModelScenarioGenerator>(model, 
                                                                                                                   pathGen, 
                                                                                                                   scenarioFactory, 

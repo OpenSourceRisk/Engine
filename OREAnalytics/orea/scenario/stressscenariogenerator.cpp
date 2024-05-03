@@ -47,7 +47,8 @@ void StressScenarioGenerator::generateScenarios() {
     for (Size i = 0; i < stressData_->data().size(); ++i) {
         StressTestScenarioData::StressTestData data = stressData_->data().at(i);
         DLOG("Generate stress scenario #" << i << " '" << data.label << "'");
-        QuantLib::ext::shared_ptr<Scenario> scenario = stressScenarioFactory_->buildScenario(asof, data.label);
+        QuantLib::ext::shared_ptr<Scenario> scenario =
+            stressScenarioFactory_->buildScenario(asof, !stressData_->useSpreadedTermStructures(), data.label);
 
         if (simMarketData_->simulateFxSpots())
             addFxShifts(data, scenario);
@@ -109,7 +110,8 @@ void StressScenarioGenerator::addFxShifts(StressTestScenarioData::StressTestData
         RiskFactorKey key(RiskFactorKey::KeyType::FXSpot, ccypair);
         Real rate = scenario->get(key);
         Real newRate = relShift ? rate * (1.0 + size) : (rate + size);
-        scenario->add(RiskFactorKey(RiskFactorKey::KeyType::FXSpot, ccypair), newRate);
+        scenario->add(RiskFactorKey(RiskFactorKey::KeyType::FXSpot, ccypair),
+                      stressData_->useSpreadedTermStructures() ? newRate / rate : newRate);
     }
     DLOG("FX scenarios done");
 }
@@ -128,7 +130,8 @@ void StressScenarioGenerator::addEquityShifts(StressTestScenarioData::StressTest
         Real rate = baseScenarioAbsolute_->get(key);
 
         Real newRate = relShift ? rate * (1.0 + size) : (rate + size);
-        scenario->add(RiskFactorKey(RiskFactorKey::KeyType::EquitySpot, equity), newRate);
+        scenario->add(RiskFactorKey(RiskFactorKey::KeyType::EquitySpot, equity),
+                      stressData_->useSpreadedTermStructures() ? newRate / rate : newRate);
     }
     DLOG("Equity scenarios done");
 }
@@ -694,7 +697,8 @@ void StressScenarioGenerator::addSecuritySpreadShifts(StressTestScenarioData::St
         Real base_spread = baseScenarioAbsolute_->get(key);
 
         Real newSpread = relShift ? base_spread * (1.0 + size) : (base_spread + size);
-        scenario->add(RiskFactorKey(RiskFactorKey::KeyType::SecuritySpread, bond), newSpread);
+        scenario->add(RiskFactorKey(RiskFactorKey::KeyType::SecuritySpread, bond),
+                      stressData_->useSpreadedTermStructures() ? newSpread - base_spread : newSpread);
     }
     DLOG("Security spread scenarios done");
 }
@@ -712,7 +716,9 @@ void StressScenarioGenerator::addRecoveryRateShifts(StressTestScenarioData::Stre
         RiskFactorKey key(RiskFactorKey::KeyType::RecoveryRate, isin);
         Real base_recoveryRate = baseScenarioAbsolute_->get(key);
         Real new_recoveryRate = relShift ? base_recoveryRate * (1.0 + size) : (base_recoveryRate + size);
-        scenario->add(RiskFactorKey(RiskFactorKey::KeyType::RecoveryRate, isin), new_recoveryRate);
+        scenario->add(RiskFactorKey(RiskFactorKey::KeyType::RecoveryRate, isin),
+                      stressData_->useSpreadedTermStructures() ? new_recoveryRate - base_recoveryRate
+                                                               : new_recoveryRate);
     }
     DLOG("Recovery rate scenarios done");
 }

@@ -202,7 +202,15 @@ QuantLib::ext::shared_ptr<CSVLoader> OREApp::buildCsvLoader(const QuantLib::ext:
         WLOG("dividend data file not found");
     }
 
-    auto loader = QuantLib::ext::make_shared<CSVLoader>(marketFiles, fixingFiles, dividendFiles, implyTodaysFixings);
+    tmp = params->get("setup", "fixingCutoff", false);
+    Date cutoff = Date();
+    if (tmp != "")
+        cutoff = parseDate(tmp);
+    else {
+        WLOG("fixing cutoff date not set");
+    }
+    
+    auto loader = boost::make_shared<CSVLoader>(marketFiles, fixingFiles, dividendFiles, implyTodaysFixings, cutoff);
 
     return loader;
 }
@@ -240,7 +248,7 @@ void OREApp::analytics() {
         }
 
         // Run the requested analytics
-        analyticsManager_->runAnalytics(inputs_->analytics(), mcr);
+        analyticsManager_->runAnalytics(mcr);
 
         // Write reports to files in the results path
         Analytic::analytic_reports reports = analyticsManager_->reports();
@@ -492,7 +500,7 @@ void OREApp::run(const std::vector<std::string>& marketData,
         }
 
         // Run the requested analytics
-        analyticsManager_->runAnalytics(inputs_->analytics(), mcr);
+        analyticsManager_->runAnalytics(mcr);
 
         MEM_LOG_USING_LEVEL(ORE_WARNING)
         // Leave any report writing to the calling aplication
@@ -559,7 +567,7 @@ void OREAppInputParameters::loadParameters() {
     LOG("load OREAppInputParameters called");
 
     // switch default for backward compatibility
-    setEntireMarket(true);
+    setEntireMarket(false);
     setAllFixings(true);
     setEomInflationFixings(false);
     setUseMarketDataFixings(false);
@@ -761,6 +769,37 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->get("npv", "additionalResultsReportPrecision", false);
     if (tmp != "")
         setAdditionalResultsReportPrecision(parseInteger(tmp));
+
+    /*************
+     * P&L
+     *************/
+    
+    tmp = params_->get("pnl", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        insertAnalytic("PNL");
+
+	tmp = params_->get("pnl", "mporDate", false);
+	if (tmp != "")
+	    setMporDate(parseDate(tmp));
+
+	tmp = params_->get("pnl", "mporDays", false);
+	if (tmp != "")
+	    setMporDays(parseInteger(tmp));
+
+	tmp = params_->get("pnl", "mporCalendar", false);
+	if (tmp != "")
+	    setMporCalendar(tmp);
+
+	tmp = params_->get("pnl", "simulationConfigFile", false);
+	if (tmp != "") {
+	    string simulationConfigFile = (inputPath / tmp).generic_string();
+	    LOG("Loading scenario simulation config from file" << simulationConfigFile);
+	    // Should we check whether other analytics are setting this, too?
+	    setScenarioSimMarketParamsFromFile(simulationConfigFile);
+	} else {
+	    ALOG("Scenario Simulation market data not loaded");
+	}
+    }
 
     /*************
      * CASHFLOW
@@ -1395,6 +1434,11 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("simulation", "scenariodump", false);
         if (tmp != "")
             setWriteScenarios(true);
+
+        tmp = params_->get("simulation", "cvaBumpSensis", false);
+	if (tmp != "")
+	    setCvaBumpSensis(parseBool(tmp));
+
     }
 
     /**********************
