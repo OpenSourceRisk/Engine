@@ -17,6 +17,7 @@
 */
 
 #include <orea/engine/parsensitivityutilities.hpp>
+#include <ored/utilities/log.hpp>
 #include <ql/instruments/creditdefaultswap.hpp>
 #include <ql/instruments/forwardrateagreement.hpp>
 #include <ql/instruments/makecapfloor.hpp>
@@ -28,6 +29,7 @@
 #include <ql/pricingengine.hpp>
 #include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
+#include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
 #include <qle/instruments/brlcdiswap.hpp>
 #include <qle/instruments/crossccybasismtmresetswap.hpp>
@@ -55,7 +57,8 @@ class ImpliedCapFloorVolHelper {
 public:
     ImpliedCapFloorVolHelper(
         const QuantLib::Instrument& cap,
-        const std::function<QuantLib::ext::shared_ptr<PricingEngine>(const Handle<Quote>)> engineGenerator,
+        const std::function<QuantLib::ext::shared_ptr<QuantLib::PricingEngine>(const QuantLib::Handle<Quote>)>
+            engineGenerator,
         const Real targetValue);
     Real operator()(Volatility x) const;
     Real derivative(Volatility x) const;
@@ -63,7 +66,7 @@ public:
 private:
     Real targetValue_;
     QuantLib::ext::shared_ptr<PricingEngine> engine_;
-    QuantLib::ext::shared_ptr<SimpleQuote> vol_;
+    QuantLib::ext::shared_ptr<QuantLib::SimpleQuote> vol_;
     const Instrument::results* results_;
 };
 
@@ -200,7 +203,7 @@ Volatility impliedVolatilityWrapper(const CapFloorType& cap, Real targetValue, c
         // 2. Try to get implied Vol with defaults
         TLOG("Getting impliedVolatility for cap (" << cap.maturityDate() << " strike " << strikeStr << ")");
         try {
-            Volatility vol =
+            double vol =
                 impliedVolatilityImpl(cap, targetValue, d, guess, type, displacement, accuracy, maxEvaluations,
                                       minVolLognormal, maxVolLognormal, minVolNormal, maxVolNormal, index);
             TLOG("Got vol " << vol << " on first attempt");
