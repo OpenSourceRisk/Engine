@@ -339,12 +339,16 @@ OpenClContext::~OpenClContext() {
             releaseProgram(variatesProgram_, "variates");
         }
 
-        for (auto& k : kernel_) {
-            releaseKernel(k, "ore kernel");
+        for (Size i = 0; i < kernel_.size(); ++i) {
+            if (disposed_[i])
+                continue;
+            releaseKernel(kernel_[i], "ore kernel");
         }
 
-        for (auto& p : program_) {
-            releaseProgram(p, "ore program");
+        for (Size i = 0; i < program_.size(); ++i) {
+            if (disposed_[i])
+                continue;
+            releaseProgram(program_[i], "ore program");
         }
 
         if (err = clReleaseCommandQueue(queue_); err != CL_SUCCESS) {
