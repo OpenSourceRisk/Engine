@@ -46,9 +46,6 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     if (!analytic()->match(runTypes))
         return;
 
-    auto pnlAnalytic = static_cast<PnlAnalytic*>(analytic());
-    QL_REQUIRE(pnlAnalytic, "Analytic must be of type PnlAnalytic");
-
     Settings::instance().evaluationDate() = inputs_->asof();
     analytic()->configurations().asofDate = inputs_->asof();
     ObservationMode::instance().setMode(inputs_->observationModel());
@@ -80,7 +77,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams, inputs_->marketConfig("pricing"),
         *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
-        inputs_->continueOnError(), pnlAnalytic->useSpreadedTermStructures(), false, false, *inputs_->iborFallbackConfig());
+        inputs_->continueOnError(), useSpreadedTermStructures(), false, false, *inputs_->iborFallbackConfig());
     auto sgen = QuantLib::ext::make_shared<StaticScenarioGenerator>();
     simMarket->scenarioGenerator() = sgen;
 
@@ -146,13 +143,13 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     QuantLib::ext::shared_ptr<ore::analytics::Scenario> t0Scenario =
         getDifferenceScenario(asofBaseScenario, mporBaseScenario, inputs_->asof(), 1.0); 
-    pnlAnalytic->setT0Scenario(t0Scenario);
+    setT0Scenario(asofBaseScenario);
 
     // Create the inverse shift scenario as spread between t0 market and t1 market, to be applied to t1
 
     QuantLib::ext::shared_ptr<ore::analytics::Scenario> t1Scenario =
         getDifferenceScenario(mporBaseScenario, asofBaseScenario, mporDate(), 1.0); 
-    pnlAnalytic->setT1Scenario(t1Scenario);
+    setT1Scenario(mporBaseScenario);
 
     /********************************************************************************************
      *
@@ -273,12 +270,12 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     boost::shared_ptr<InMemoryReport> t0ScenarioReport = boost::make_shared<InMemoryReport>();
     auto t0sw = ScenarioWriter(nullptr, t0ScenarioReport);
-    t0sw.writeScenario(t0Scenario, true);
+    t0sw.writeScenario(asofBaseScenario, true);
     analytic()->reports()[label()]["pnl_scenario_t0"] = t0ScenarioReport;
 
     boost::shared_ptr<InMemoryReport> t1ScenarioReport = boost::make_shared<InMemoryReport>();
     auto t1sw = ScenarioWriter(nullptr, t1ScenarioReport);
-    t1sw.writeScenario(t1Scenario, true);
+    t1sw.writeScenario(mporBaseScenario, true);
     analytic()->reports()[label()]["pnl_scenario_t1"] = t1ScenarioReport;    
 }
 
