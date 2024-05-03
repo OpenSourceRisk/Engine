@@ -359,7 +359,8 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                         config->extrapolation() == GenericYieldVolatilityCurveConfig::Extrapolation::Flat);
                     cube->enableExtrapolation();
                 } else {
-                    std::vector<std::pair<Real,bool>> initialModelParameters;
+                    std::map<std::pair<QuantLib::Period, QuantLib::Period>, std::vector<std::pair<Real, bool>>>
+                        initialModelParameters;
                     Size maxCalibrationAttempts = 10;
                     Real exitEarlyErrorThreshold = 0.005;
                     Real maxAcceptableError = 0.05;
@@ -368,10 +369,30 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                         auto beta = config->parametricSmileConfiguration()->parameter("beta");
                         auto nu = config->parametricSmileConfiguration()->parameter("nu");
                         auto rho = config->parametricSmileConfiguration()->parameter("rho");
-                        initialModelParameters.push_back(std::make_pair(alpha.initialValue, alpha.isFixed));
-                        initialModelParameters.push_back(std::make_pair(beta.initialValue, beta.isFixed));
-                        initialModelParameters.push_back(std::make_pair(nu.initialValue, nu.isFixed));
-                        initialModelParameters.push_back(std::make_pair(rho.initialValue, rho.isFixed));
+                        QL_REQUIRE(alpha.initialValue.size() == beta.initialValue.size() &&
+                                       alpha.initialValue.size() == nu.initialValue.size() &&
+                                       alpha.initialValue.size() == rho.initialValue.size(),
+                                   "GenericYieldVolCurve: parametric smile config: alpha size ("
+                                       << alpha.initialValue.size() << ") beta size (" << beta.initialValue.size()
+                                       << ") nu size (" << nu.initialValue.size() << ") rho size ("
+                                       << rho.initialValue.size() << ") must match");
+                        QL_REQUIRE(alpha.initialValue.size() == 1 ||
+                                       alpha.initialValue.size() == optionTenors.size() * underlyingTenors.size(),
+                                   "GenericYieldVolCurve: parametric smile config: alpha, beta, nu, rho size ("
+                                       << alpha.initialValue.size() << ") must match product of option tenors ("
+                                       << optionTenors.size() << ") and swap tenors (" << underlyingTenors.size()
+                                       << ") = " << optionTenors.size() * underlyingTenors.size() << ")");
+                        for (Size i = 0; i < optionTenors.size(); ++i) {
+                            for (Size j = 0; j < underlyingTenors.size(); ++j) {
+                                std::vector<std::pair<Real, bool>> tmp;
+                                Size idx = alpha.initialValue.size() == 1 ? 0 : i;
+                                tmp.push_back(std::make_pair(alpha.initialValue[idx], alpha.isFixed));
+                                tmp.push_back(std::make_pair(beta.initialValue[idx], beta.isFixed));
+                                tmp.push_back(std::make_pair(nu.initialValue[idx], nu.isFixed));
+                                tmp.push_back(std::make_pair(rho.initialValue[idx], rho.isFixed));
+                                initialModelParameters[std::make_pair(optionTenors[i], underlyingTenors[j])] = tmp;
+                            }
+                        }
                         maxCalibrationAttempts =
                             config->parametricSmileConfiguration()->calibration().maxCalibrationAttempts;
                         exitEarlyErrorThreshold =
@@ -604,21 +625,24 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                     if (auto p = QuantLib::ext::dynamic_pointer_cast<QuantExt::SabrParametricVolatility>(
                             sabr->parametricVolatility())) {
                         DLOG("SABR parameters:");
-                        DLOG("alpha:");
+                        DLOG("alpha (rows = underlying lengths, cols = option tenors):");
                         DLOGGERSTREAM(p->alpha());
-                        DLOG("beta:");
+                        DLOG("beta (rows = underlying lengths, cols = option tenors):");
                         DLOGGERSTREAM(p->beta());
-                        DLOG("nu:");
+                        DLOG("nu (rows = underlying lengths, cols = option tenors):");
                         DLOGGERSTREAM(p->nu());
-                        DLOG("rho:");
+                        DLOG("rho (rows = underlying lengths, cols = option tenors):");
                         DLOGGERSTREAM(p->rho());
-                        DLOG("lognormal shift:");
+                        DLOG("lognormal shift (rows = underlying lengths, cols = option tenors):");
                         DLOGGERSTREAM(p->lognormalShift());
-                        DLOG("calibration attempts:");
+                        DLOG("calibration attempts (rows = underlying lengths, cols = option tenors):");
                         DLOGGERSTREAM(p->numberOfCalibrationAttempts());
-                        DLOG("calibration error:");
+                        DLOG("calibration error (rows = underlying lengths, cols = option tenors, rmse of relative "
+                             "errors w.r.t. max of sabr variant's preferred quotation type, i.e. nvol, slnvol, "
+                             "premium:");
                         DLOGGERSTREAM(p->calibrationError());
-                        DLOG("isInterpolated:");
+                        DLOG("isInterpolated (rows = underlying lengths, cols = option tenors, 1 means calibration "
+                             "failed and point is interpolated):");
                         DLOGGERSTREAM(p->isInterpolated());
                     }
                 }
