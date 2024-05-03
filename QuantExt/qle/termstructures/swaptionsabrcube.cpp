@@ -30,8 +30,9 @@ SwaptionSabrCube::SwaptionSabrCube(
     const boost::shared_ptr<SwapIndex>& shortSwapIndexBase,
     const QuantExt::SabrParametricVolatility::ModelVariant modelVariant,
     const boost::optional<QuantLib::VolatilityType> outputVolatilityType,
-    const std::vector<std::pair<Real, bool>>& initialModelParameters, const QuantLib::Size maxCalibrationAttempts,
-    const QuantLib::Real exitEarlyErrorThreshold, const QuantLib::Real maxAcceptableError)
+    const std::map<std::pair<Period, Period>, std::vector<std::pair<Real, bool>>>& initialModelParameters,
+    const QuantLib::Size maxCalibrationAttempts, const QuantLib::Real exitEarlyErrorThreshold,
+    const QuantLib::Real maxAcceptableError)
     : SwaptionVolatilityCube(atmVolStructure, optionTenors, swapTenors, strikeSpreads, volSpreads, swapIndexBase,
                              shortSwapIndexBase, false),
       atmOptionTenors_(atmOptionTenors), atmSwapTenors_(atmSwapTenors), modelVariant_(modelVariant),
@@ -116,8 +117,10 @@ void SwaptionSabrCube::performCalculations() const {
                                                                      {},
                                                                      strikes,
                                                                      vols});
-            if (!initialModelParameters_.empty())
-                modelParameters[std::make_pair(allOptionTimes[i], allSwapLengths[j])] = initialModelParameters_;
+            if (auto m = initialModelParameters_.find(std::make_pair(allOptionTenors[i], allSwapTenors[j]));
+                m != initialModelParameters_.end()) {
+                modelParameters[std::make_pair(allOptionTimes[i], allSwapLengths[j])] = m->second;
+            }
         }
     }
 
