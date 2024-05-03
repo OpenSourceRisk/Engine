@@ -185,6 +185,7 @@ public:
     std::pair<std::size_t, bool> initiateCalculation(const std::size_t n, const std::size_t id = 0,
                                                      const std::size_t version = 0,
                                                      const Settings settings = {}) override final;
+    void disposeCalculation(const std::size_t n) override final;
     std::size_t createInputVariable(double v) override final;
     std::size_t createInputVariable(double* v) override final;
     std::vector<std::vector<std::size_t>> createInputVariates(const std::size_t dim,
@@ -226,6 +227,7 @@ private:
     // 1a vectors per current calc id
 
     std::vector<std::size_t> size_;
+    std::vector<bool> disposed_;
     std::vector<bool> hasKernel_;
     std::vector<std::size_t> version_;
     std::vector<cl_program> program_;
@@ -497,6 +499,13 @@ void OpenClContext::init() {
     runHealthChecks();
 }
 
+void OpenClContext::disposeCalculation(const std::size_t id) {
+    QL_REQUIRE(!disposed_[id - 1], "OpenClContext::disposeCalculation(): id " << id << " was already disposed.");
+    disposed_[id - 1] = true;
+    releaseKernel(kernel_[id - 1], "kernel id " + std::to_string(id));
+    releaseProgram(program_[id - 1], "program id " + std::to_string(id));
+}
+
 std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_t n, const std::size_t id,
                                                                 const std::size_t version, const Settings settings) {
 
@@ -510,6 +519,7 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
         // initiate new calcaultion
 
         size_.push_back(n);
+        disposed_.push_back(false);
         hasKernel_.push_back(false);
         version_.push_back(version);
         program_.push_back(cl_program());
@@ -526,9 +536,11 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
 
         QL_REQUIRE(id <= hasKernel_.size(),
                    "OpenClContext::initiateCalculation(): id (" << id << ") invalid, got 1..." << hasKernel_.size());
-        QL_REQUIRE(size_[id - 1] == n, "OpenClCOntext::initiateCalculation(): size ("
+        QL_REQUIRE(size_[id - 1] == n, "OpenClContext::initiateCalculation(): size ("
                                            << size_[id - 1] << ") for id " << id << " does not match current size ("
                                            << n << ")");
+        QL_REQUIRE(!disposed_[id - 1], "OpenClContext::initiateCalculation(): id ("
+                                           << id << ") was already disposed, it can not be used any more.");
 
         if (version != version_[id - 1]) {
             hasKernel_[id - 1] = false;
