@@ -268,9 +268,8 @@ OpenClFramework::OpenClFramework() {
     for (std::size_t p = 0; p < nPlatforms; ++p) {
         char platformName[MAX_N_DEV_INFO];
         clGetPlatformInfo(platforms[p], CL_PLATFORM_NAME, MAX_N_DEV_INFO, platformName, NULL);
-        cl_uint nDevices;
-        clGetDeviceIDs(platforms[p], CL_DEVICE_TYPE_ALL, 3, devices_, &nDevices);
-        for (std::size_t d = 0; d < nDevices; ++d) {
+        clGetDeviceIDs(platforms[p], CL_DEVICE_TYPE_ALL, 3, devices_, &nDevices_);
+        for (std::size_t d = 0; d < nDevices_; ++d) {
             char deviceName[MAX_N_DEV_INFO], driverVersion[MAX_N_DEV_INFO], deviceVersion[MAX_N_DEV_INFO],
                 deviceExtensions[MAX_N_DEV_INFO];
             cl_device_fp_config doubleFpConfig;
@@ -307,21 +306,21 @@ OpenClFramework::OpenClFramework() {
 
             cl_int err;
 
-            context_ = clCreateContext(NULL, 1, &devices_[d], &errorCallback, NULL, &err);
+            context_[d] = clCreateContext(NULL, 1, &devices_[d], &errorCallback, NULL, &err);
             QL_REQUIRE(err == CL_SUCCESS,
                        "OpenClFramework::OpenClContext(): error during clCreateContext(): " << errorText(err));
 
 #if CL_VERSION_2_0
-            queue_ = clCreateCommandQueueWithProperties(context_, devices_[d], NULL, &err);
+            queue_[d] = clCreateCommandQueueWithProperties(context_, devices_[d], NULL, &err);
 #else
             // deprecated in cl version 2_0
-            queue_ = clCreateCommandQueue(context_, devices_[d], 0, &err);
+            queue_[d] = clCreateCommandQueue(context_[d], devices_[d], 0, &err);
 #endif
             QL_REQUIRE(err == CL_SUCCESS,
                        "OpenClFramework::OpenClContext(): error during clCreateCommandQueue(): " << errorText(err));
 
             contexts_["OpenCL/" + std::string(platformName) + "/" + std::string(deviceName)] =
-                new OpenClContext(devices_[d], context_, queue_, deviceInfo, supportsDoublePrecision);
+                new OpenClContext(devices_[d], context_[d], queue_[d], deviceInfo, supportsDoublePrecision);
         }
     }
 }
@@ -331,12 +330,14 @@ OpenClFramework::~OpenClFramework() {
         delete c;
     }
     cl_int err;
-    if (err = clReleaseCommandQueue(queue_); err != CL_SUCCESS) {
-        std::cerr << "OpenClFramework: error during clReleaseCommandQueue: " + errorText(err) << std::endl;
-    }
+    for (cl_uint d = 0; d < nDevices_; ++d) {
+        if (err = clReleaseCommandQueue(queue_[d]); err != CL_SUCCESS) {
+            std::cerr << "OpenClFramework: error during clReleaseCommandQueue: " + errorText(err) << std::endl;
+        }
 
-    if (err = clReleaseContext(context_); err != CL_SUCCESS) {
-        std::cerr << "OpenClFramework: error during clReleaseContext: " + errorText(err) << std::endl;
+        if (err = clReleaseContext(context_[d]); err != CL_SUCCESS) {
+            std::cerr << "OpenClFramework: error during clReleaseContext: " + errorText(err) << std::endl;
+        }
     }
 }
 
