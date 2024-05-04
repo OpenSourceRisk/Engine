@@ -34,6 +34,8 @@
 #endif
 #endif
 
+#define MAX_N_DEVICES 8U
+
 namespace QuantExt {
 
 class OpenClFramework : public ComputeFramework {
@@ -45,6 +47,7 @@ public:
 
 private:
     std::map<std::string, ComputeContext*> contexts_;
+    cl_device_id devices_[MAX_N_DEVICES];
     cl_context context_;
     cl_command_queue queue_;
 };
