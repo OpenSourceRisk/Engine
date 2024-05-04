@@ -487,18 +487,20 @@ void OpenClContext::init() {
     debugInfo_.nanoSecondsProgramBuild = 0;
     debugInfo_.nanoSecondsCalculation = 0;
 
-    cl_int err = CL_SUCCESS;
+    cl_int err;
 
     // create context and command queue
 
     healthy_ = false; // temporary
 
-    for(Size attempt = 0; attempt < 10 && err != CL_SUCCESS; ++attempt) {
+    for(Size attempt = 0; attempt < 10; ++attempt) {
         context_ = clCreateContext(NULL, 1, &device_, &errorCallback, NULL, &err);
         if(err != CL_SUCCESS) {
             std::cerr << "error during clCreateContext(): " << errorText(err) << " - will retry after 10s, attempt "
                       << attempt + 1 << std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(10));
+        } else {
+            break;
         }
     }
     QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::OpenClContext(): error during clCreateContext(): " << errorText(err));
