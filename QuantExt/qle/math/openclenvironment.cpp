@@ -22,6 +22,8 @@
 #include <ql/errors.hpp>
 
 #include <boost/algorithm/string/join.hpp>
+#include <boost/thread/lock_types.hpp>
+#include <boost/thread/shared_mutex.hpp>
 #include <boost/timer/timer.hpp>
 
 #include <chrono>
@@ -474,7 +476,11 @@ void OpenClContext::runHealthChecks() {
         std::make_pair("device_sizeof(double)", runHealthCheckProgram(kernelGetDoubleSize, "ore_get_double_size")));
 }
 
+boost::shared_mutex global_mutex;
+
 void OpenClContext::init() {
+
+    boost::unique_lock<boost::shared_mutex> lock(global_mutex);
 
     QL_REQUIRE(healthy_, "OpenClCOntext::init(): context is not healthy, check log for previous errors, aborting.");
 
