@@ -26,6 +26,7 @@
 
 #include <chrono>
 #include <iostream>
+#include <thread>
 
 #ifdef ORE_ENABLE_OPENCL
 #ifdef __APPLE__
@@ -497,7 +498,7 @@ void OpenClContext::init() {
         if(err != CL_SUCCESS) {
             std::cerr << "error during clCreateContext(): " << errorText(err) << " - will retry after 10s, attempt "
                       << attempt + 1 << std::endl;
-            std::this_thread::sleep_for(10s);
+            std::this_thread::sleep_for(std::chrono::seconds(10));
         }
     }
     QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::OpenClContext(): error during clCreateContext(): " << errorText(err));
