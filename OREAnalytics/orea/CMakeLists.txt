@@ -20,6 +20,7 @@ app/analytic.cpp
 app/analytics/analyticfactory.cpp
 app/analytics/imscheduleanalytic.cpp
 app/analytics/parconversionanalytic.cpp
+app/analytics/pnlanalytic.cpp
 app/analytics/pricinganalytic.cpp
 app/analytics/scenarioanalytic.cpp
 app/analytics/scenariostatisticsanalytic.cpp
@@ -27,8 +28,6 @@ app/analytics/simmanalytic.cpp
 app/analytics/varanalytic.cpp
 app/analytics/xvaanalytic.cpp
 app/analytics/xvastressanalytic.cpp
-app/analytics/pnlanalytic.cpp
->>>>>>> origin/master
 app/analyticsmanager.cpp
 app/cleanupsingletons.cpp
 app/initbuilders.cpp
@@ -171,6 +170,7 @@ app/analytic.hpp
 app/analytics/analyticfactory.hpp
 app/analytics/imscheduleanalytic.hpp
 app/analytics/parconversionanalytic.hpp
+app/analytics/pnlanalytic.hpp
 app/analytics/pricinganalytic.hpp
 app/analytics/scenarioanalytic.hpp
 app/analytics/scenariostatisticsanalytic.hpp
@@ -178,8 +178,6 @@ app/analytics/simmanalytic.hpp
 app/analytics/varanalytic.hpp
 app/analytics/xvaanalytic.hpp
 app/analytics/xvastressanalytic.hpp
-app/analytics/pnlanalytic.hpp
->>>>>>> origin/master
 app/analyticsmanager.hpp
 app/cleanupsingletons.hpp
 app/initbuilders.hpp
