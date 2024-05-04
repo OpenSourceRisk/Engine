@@ -22,21 +22,11 @@
 #include <ql/errors.hpp>
 
 #include <boost/algorithm/string/join.hpp>
-#include <boost/thread/lock_types.hpp>
-#include <boost/thread/shared_mutex.hpp>
 #include <boost/timer/timer.hpp>
 
 #include <chrono>
 #include <iostream>
 #include <thread>
-
-#ifdef ORE_ENABLE_OPENCL
-#ifdef __APPLE__
-#include <OpenCL/cl.h>
-#else
-#include <CL/cl.h>
-#endif
-#endif
 
 #define MAX_N_PLATFORMS 4U
 #define MAX_N_DEVICES 8U
@@ -181,7 +171,8 @@ void errorCallback(const char* errinfo, const void* private_info, size_t cb, voi
 
 class OpenClContext : public ComputeContext {
 public:
-    OpenClContext(cl_device_id device, const std::vector<std::pair<std::string, std::string>>& deviceInfo,
+    OpenClContext(cl_device_id device, cl_context& context, cl_command_queue& queue_,
+                  const std::vector<std::pair<std::string, std::string>>& deviceInfo,
                   const bool supportsDoublePrecision);
     ~OpenClContext() override final;
     void init() override final;
@@ -216,11 +207,10 @@ private:
 
     enum class ComputeState { idle, createInput, createVariates, calc };
 
-    bool healthy_ = true;
     bool initialized_ = false;
     cl_device_id device_;
-    cl_context context_;
-    cl_command_queue queue_;
+    cl_context& context_;
+    cl_command_queue& queue_;
 
     // set once in the ctor
     std::vector<std::pair<std::string, std::string>> deviceInfo_;
@@ -314,8 +304,26 @@ OpenClFramework::OpenClFramework() {
             deviceInfo.push_back(std::make_pair("device_double_fp_config", "not provided before opencl 1.2"));
             supportsDoublePrecision = supportsDoublePrecision || std::string(deviceExtensions).find("cl_khr_fp64");
 #endif
+
+            // create context and command queue
+
+            cl_int err;
+
+            context_ = clCreateContext(NULL, 1, &devices[d], &errorCallback, NULL, &err);
+            QL_REQUIRE(err == CL_SUCCESS,
+                       "OpenClFramework::OpenClContext(): error during clCreateContext(): " << errorText(err));
+
+#if CL_VERSION_2_0
+            queue_ = clCreateCommandQueueWithProperties(context_, device_, NULL, &err);
+#else
+            // deprecated in cl version 2_0
+            queue_ = clCreateCommandQueue(context_, devices[d], 0, &err);
+#endif
+            QL_REQUIRE(err == CL_SUCCESS,
+                       "OpenClFramework::OpenClContext(): error during clCreateCommandQueue(): " << errorText(err));
+
             contexts_["OpenCL/" + std::string(platformName) + "/" + std::string(deviceName)] =
-                new OpenClContext(devices[d], deviceInfo, supportsDoublePrecision);
+                new OpenClContext(devices[d], context_, queue_, deviceInfo, supportsDoublePrecision);
         }
     }
 }
@@ -324,17 +332,24 @@ OpenClFramework::~OpenClFramework() {
     for (auto& [_, c] : contexts_) {
         delete c;
     }
+    cl_int err;
+    if (err = clReleaseCommandQueue(queue_); err != CL_SUCCESS) {
+        std::cerr << "OpenClFramework: error during clReleaseCommandQueue: " + errorText(err) << std::endl;
+    }
+
+    if (err = clReleaseContext(context_); err != CL_SUCCESS) {
+        std::cerr << "OpenClFramework: error during clReleaseContext: " + errorText(err) << std::endl;
+    }
 }
 
-OpenClContext::OpenClContext(cl_device_id device, const std::vector<std::pair<std::string, std::string>>& deviceInfo,
+OpenClContext::OpenClContext(cl_device_id device, cl_context& context, cl_command_queue& queue,
+                             const std::vector<std::pair<std::string, std::string>>& deviceInfo,
                              const bool supportsDoublePrecision)
-    : initialized_(false), device_(device), deviceInfo_(deviceInfo), supportsDoublePrecision_(supportsDoublePrecision) {
-}
+    : initialized_(false), device_(device), context_(context), queue_(queue), deviceInfo_(deviceInfo),
+      supportsDoublePrecision_(supportsDoublePrecision) {}
 
 OpenClContext::~OpenClContext() {
     if (initialized_) {
-        cl_int err;
-
         if (variatesPoolSize_ > 0) {
             releaseMem(variatesPool_, "variates pool");
             releaseMem(variatesMtStateBuffer_, "variates state buffer");
@@ -354,14 +369,6 @@ OpenClContext::~OpenClContext() {
             if (disposed_[i])
                 continue;
             releaseProgram(program_[i], "ore program");
-        }
-
-        if (err = clReleaseCommandQueue(queue_); err != CL_SUCCESS) {
-            std::cerr << "OpenClContext: error during clReleaseCommandQueue: " + errorText(err) << std::endl;
-        }
-
-        if (err = clReleaseContext(context_); err != CL_SUCCESS) {
-            std::cerr << "OpenClContext: error during clReleaseContext: " + errorText(err) << std::endl;
         }
     }
 }
@@ -476,13 +483,7 @@ void OpenClContext::runHealthChecks() {
         std::make_pair("device_sizeof(double)", runHealthCheckProgram(kernelGetDoubleSize, "ore_get_double_size")));
 }
 
-boost::shared_mutex global_mutex;
-
 void OpenClContext::init() {
-
-    boost::unique_lock<boost::shared_mutex> lock(global_mutex);
-
-    QL_REQUIRE(healthy_, "OpenClCOntext::init(): context is not healthy, check log for previous errors, aborting.");
 
     if (initialized_) {
         return;
@@ -493,40 +494,12 @@ void OpenClContext::init() {
     debugInfo_.nanoSecondsProgramBuild = 0;
     debugInfo_.nanoSecondsCalculation = 0;
 
-    cl_int err;
-
-    // create context and command queue
-
-    healthy_ = false; // temporary
-
-    for(Size attempt = 0; attempt < 10; ++attempt) {
-        context_ = clCreateContext(NULL, 1, &device_, &errorCallback, NULL, &err);
-        if(err != CL_SUCCESS) {
-            std::cerr << "error during clCreateContext(): " << errorText(err) << " - will retry after 10s, attempt "
-                      << attempt + 1 << std::endl;
-            std::this_thread::sleep_for(std::chrono::seconds(10));
-        } else {
-            break;
-        }
-    }
-    QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::OpenClContext(): error during clCreateContext(): " << errorText(err));
-
-#if CL_VERSION_2_0
-    queue_ = clCreateCommandQueueWithProperties(context_, device_, NULL, &err);
-#else
-    // deprecated in cl version 2_0
-    queue_ = clCreateCommandQueue(context_, device_, 0, &err);
-#endif
-    QL_REQUIRE(err == CL_SUCCESS,
-               "OpenClContext::OpenClContext(): error during clCreateCommandQueue(): " << errorText(err));
-
-    healthy_ = initialized_ = true;
+    initialized_ = true;
 
     runHealthChecks();
 }
 
 void OpenClContext::disposeCalculation(const std::size_t id) {
-    boost::unique_lock<boost::shared_mutex> lock(global_mutex);
     QL_REQUIRE(!disposed_[id - 1], "OpenClContext::disposeCalculation(): id " << id << " was already disposed.");
     disposed_[id - 1] = true;
     releaseKernel(kernel_[id - 1], "kernel id " + std::to_string(id));
@@ -535,8 +508,6 @@ void OpenClContext::disposeCalculation(const std::size_t id) {
 
 std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_t n, const std::size_t id,
                                                                 const std::size_t version, const Settings settings) {
-    boost::unique_lock<boost::shared_mutex> lock(global_mutex);
-
     QL_REQUIRE(n > 0, "OpenClContext::initiateCalculation(): n must not be zero");
 
     bool newCalc = false;
@@ -610,7 +581,6 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
 }
 
 std::size_t OpenClContext::createInputVariable(double v) {
-    boost::unique_lock<boost::shared_mutex> lock(global_mutex);
     QL_REQUIRE(currentState_ == ComputeState::createInput,
                "OpenClContext::createInputVariable(): not in state createInput (" << static_cast<int>(currentState_)
                                                                                   << ")");
@@ -631,7 +601,6 @@ std::size_t OpenClContext::createInputVariable(double v) {
 }
 
 std::size_t OpenClContext::createInputVariable(double* v) {
-    boost::unique_lock<boost::shared_mutex> lock(global_mutex);
     QL_REQUIRE(currentState_ == ComputeState::createInput,
                "OpenClContext::createInputVariable(): not in state createInput (" << static_cast<int>(currentState_)
                                                                                   << ")");
@@ -653,8 +622,6 @@ std::size_t OpenClContext::createInputVariable(double* v) {
 }
 
 void OpenClContext::updateVariatesPool() {
-    boost::unique_lock<boost::shared_mutex> lock(global_mutex);
-
     QL_REQUIRE(nVariates_ > 0, "OpenClContext::updateVariatesPool(): internal error, got nVariates_ == 0.");
 
     constexpr std::size_t mt_N = 624; // mersenne twister N
@@ -920,7 +887,6 @@ std::vector<std::vector<std::size_t>> OpenClContext::createInputVariates(const s
 
 std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode,
                                           const std::vector<std::size_t>& args) {
-    boost::unique_lock<boost::shared_mutex> lock(global_mutex);
     QL_REQUIRE(currentState_ == ComputeState::createInput || currentState_ == ComputeState::createVariates ||
                    currentState_ == ComputeState::calc,
                "OpenClContext::applyOperation(): not in state createInput or calc (" << static_cast<int>(currentState_)
@@ -1051,7 +1017,6 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
 }
 
 void OpenClContext::freeVariable(const std::size_t id) {
-    boost::unique_lock<boost::shared_mutex> lock(global_mutex);
     QL_REQUIRE(currentState_ == ComputeState::calc,
                "OpenClContext::free(): not in state calc (" << static_cast<int>(currentState_) << ")");
     QL_REQUIRE(currentId_ > 0, "OpenClContext::freeVariable(): current id is not set");
@@ -1068,7 +1033,6 @@ void OpenClContext::freeVariable(const std::size_t id) {
 }
 
 void OpenClContext::declareOutputVariable(const std::size_t id) {
-    boost::unique_lock<boost::shared_mutex> lock(global_mutex);
     QL_REQUIRE(currentState_ != ComputeState::idle, "OpenClContext::declareOutputVariable(): state is idle");
     QL_REQUIRE(currentId_ > 0, "OpenClContext::declareOutputVariable(): current id not set");
     QL_REQUIRE(!hasKernel_[currentId_ - 1], "OpenClContext::declareOutputVariable(): id ("
@@ -1079,7 +1043,6 @@ void OpenClContext::declareOutputVariable(const std::size_t id) {
 }
 
 void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
-    boost::unique_lock<boost::shared_mutex> lock(global_mutex);
     struct exitGuard {
         exitGuard() {}
         ~exitGuard() {
