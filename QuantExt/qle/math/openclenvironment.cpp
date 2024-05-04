@@ -311,7 +311,7 @@ OpenClFramework::OpenClFramework() {
                        "OpenClFramework::OpenClContext(): error during clCreateContext(): " << errorText(err));
 
 #if CL_VERSION_2_0
-            queue_[d] = clCreateCommandQueueWithProperties(context_, devices_[d], NULL, &err);
+            queue_[d] = clCreateCommandQueueWithProperties(context_[d], devices_[d], NULL, &err);
 #else
             // deprecated in cl version 2_0
             queue_[d] = clCreateCommandQueue(context_[d], devices_[d], 0, &err);
