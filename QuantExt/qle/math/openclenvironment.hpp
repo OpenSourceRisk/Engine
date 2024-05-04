@@ -47,9 +47,10 @@ public:
 
 private:
     std::map<std::string, ComputeContext*> contexts_;
+    cl_uint nDevices_;
     cl_device_id devices_[MAX_N_DEVICES];
-    cl_context context_;
-    cl_command_queue queue_;
+    cl_context context_[MAX_N_DEVICES];
+    cl_command_queue queue_[MAX_N_DEVICES];
 };
 
 } // namespace QuantExt
