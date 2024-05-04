@@ -28,9 +28,8 @@
 #include <iostream>
 #include <thread>
 
-#define MAX_N_PLATFORMS 4U
-#define MAX_N_DEVICES 8U
 #define MAX_N_DEV_INFO 256U
+#define MAX_N_PLATFORMS 4U
 #define MAX_BUILD_LOG 65536U
 #define MAX_BUILD_LOG_LOGFILE 1024U
 
@@ -171,7 +170,7 @@ void errorCallback(const char* errinfo, const void* private_info, size_t cb, voi
 
 class OpenClContext : public ComputeContext {
 public:
-    OpenClContext(cl_device_id device, cl_context& context, cl_command_queue& queue_,
+    OpenClContext(cl_device_id& device, cl_context& context, cl_command_queue& queue_,
                   const std::vector<std::pair<std::string, std::string>>& deviceInfo,
                   const bool supportsDoublePrecision);
     ~OpenClContext() override final;
@@ -208,7 +207,7 @@ private:
     enum class ComputeState { idle, createInput, createVariates, calc };
 
     bool initialized_ = false;
-    cl_device_id device_;
+    cl_device_id& device_;
     cl_context& context_;
     cl_command_queue& queue_;
 
@@ -269,19 +268,18 @@ OpenClFramework::OpenClFramework() {
     for (std::size_t p = 0; p < nPlatforms; ++p) {
         char platformName[MAX_N_DEV_INFO];
         clGetPlatformInfo(platforms[p], CL_PLATFORM_NAME, MAX_N_DEV_INFO, platformName, NULL);
-        cl_device_id devices[MAX_N_DEVICES];
         cl_uint nDevices;
-        clGetDeviceIDs(platforms[p], CL_DEVICE_TYPE_ALL, 3, devices, &nDevices);
+        clGetDeviceIDs(platforms[p], CL_DEVICE_TYPE_ALL, 3, devices_, &nDevices);
         for (std::size_t d = 0; d < nDevices; ++d) {
             char deviceName[MAX_N_DEV_INFO], driverVersion[MAX_N_DEV_INFO], deviceVersion[MAX_N_DEV_INFO],
                 deviceExtensions[MAX_N_DEV_INFO];
             cl_device_fp_config doubleFpConfig;
             std::vector<std::pair<std::string, std::string>> deviceInfo;
 
-            clGetDeviceInfo(devices[d], CL_DEVICE_NAME, MAX_N_DEV_INFO, &deviceName, NULL);
-            clGetDeviceInfo(devices[d], CL_DRIVER_VERSION, MAX_N_DEV_INFO, &driverVersion, NULL);
-            clGetDeviceInfo(devices[d], CL_DEVICE_VERSION, MAX_N_DEV_INFO, &deviceVersion, NULL);
-            clGetDeviceInfo(devices[d], CL_DEVICE_EXTENSIONS, MAX_N_DEV_INFO, &deviceExtensions, NULL);
+            clGetDeviceInfo(devices_[d], CL_DEVICE_NAME, MAX_N_DEV_INFO, &deviceName, NULL);
+            clGetDeviceInfo(devices_[d], CL_DRIVER_VERSION, MAX_N_DEV_INFO, &driverVersion, NULL);
+            clGetDeviceInfo(devices_[d], CL_DEVICE_VERSION, MAX_N_DEV_INFO, &deviceVersion, NULL);
+            clGetDeviceInfo(devices_[d], CL_DEVICE_EXTENSIONS, MAX_N_DEV_INFO, &deviceExtensions, NULL);
 
             deviceInfo.push_back(std::make_pair("device_name", std::string(deviceName)));
             deviceInfo.push_back(std::make_pair("driver_version", std::string(driverVersion)));
@@ -290,7 +288,7 @@ OpenClFramework::OpenClFramework() {
 
             bool supportsDoublePrecision = false;
 #if CL_VERSION_1_2
-            clGetDeviceInfo(devices[d], CL_DEVICE_DOUBLE_FP_CONFIG, sizeof(cl_device_fp_config), &doubleFpConfig, NULL);
+            clGetDeviceInfo(devices_[d], CL_DEVICE_DOUBLE_FP_CONFIG, sizeof(cl_device_fp_config), &doubleFpConfig, NULL);
             deviceInfo.push_back(std::make_pair(
                 "device_double_fp_config",
                 ((doubleFpConfig & CL_FP_DENORM) ? std::string("Denorm,") : std::string()) +
@@ -309,21 +307,21 @@ OpenClFramework::OpenClFramework() {
 
             cl_int err;
 
-            context_ = clCreateContext(NULL, 1, &devices[d], &errorCallback, NULL, &err);
+            context_ = clCreateContext(NULL, 1, &devices_[d], &errorCallback, NULL, &err);
             QL_REQUIRE(err == CL_SUCCESS,
                        "OpenClFramework::OpenClContext(): error during clCreateContext(): " << errorText(err));
 
 #if CL_VERSION_2_0
-            queue_ = clCreateCommandQueueWithProperties(context_, devices[d], NULL, &err);
+            queue_ = clCreateCommandQueueWithProperties(context_, devices_[d], NULL, &err);
 #else
             // deprecated in cl version 2_0
-            queue_ = clCreateCommandQueue(context_, devices[d], 0, &err);
+            queue_ = clCreateCommandQueue(context_, devices_[d], 0, &err);
 #endif
             QL_REQUIRE(err == CL_SUCCESS,
                        "OpenClFramework::OpenClContext(): error during clCreateCommandQueue(): " << errorText(err));
 
             contexts_["OpenCL/" + std::string(platformName) + "/" + std::string(deviceName)] =
-                new OpenClContext(devices[d], context_, queue_, deviceInfo, supportsDoublePrecision);
+                new OpenClContext(devices_[d], context_, queue_, deviceInfo, supportsDoublePrecision);
         }
     }
 }
@@ -342,7 +340,7 @@ OpenClFramework::~OpenClFramework() {
     }
 }
 
-OpenClContext::OpenClContext(cl_device_id device, cl_context& context, cl_command_queue& queue,
+OpenClContext::OpenClContext(cl_device_id& device, cl_context& context, cl_command_queue& queue,
                              const std::vector<std::pair<std::string, std::string>>& deviceInfo,
                              const bool supportsDoublePrecision)
     : initialized_(false), device_(device), context_(context), queue_(queue), deviceInfo_(deviceInfo),
