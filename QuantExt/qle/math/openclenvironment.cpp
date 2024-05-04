@@ -212,6 +212,7 @@ private:
 
     enum class ComputeState { idle, createInput, createVariates, calc };
 
+    bool healthy_ = true;
     bool initialized_ = false;
     cl_device_id device_;
     cl_context context_;
@@ -473,6 +474,8 @@ void OpenClContext::runHealthChecks() {
 
 void OpenClContext::init() {
 
+    QL_REQUIRE(healthy_, "OpenClCOntext::init(): context is not healthy, check log for previous errors, aborting.");
+
     if (initialized_) {
         return;
     }
@@ -486,6 +489,8 @@ void OpenClContext::init() {
 
     // create context and command queue
 
+    healthy_ = false; // temporary
+
     context_ = clCreateContext(NULL, 1, &device_, &errorCallback, NULL, &err);
     QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::OpenClContext(): error during clCreateContext(): " << errorText(err));
 
@@ -498,7 +503,7 @@ void OpenClContext::init() {
     QL_REQUIRE(err == CL_SUCCESS,
                "OpenClContext::OpenClContext(): error during clCreateCommandQueue(): " << errorText(err));
 
-    initialized_ = true;
+    healthy_ = initialized_ = true;
 
     runHealthChecks();
 }
