@@ -526,6 +526,7 @@ void OpenClContext::init() {
 }
 
 void OpenClContext::disposeCalculation(const std::size_t id) {
+    boost::unique_lock<boost::shared_mutex> lock(global_mutex);
     QL_REQUIRE(!disposed_[id - 1], "OpenClContext::disposeCalculation(): id " << id << " was already disposed.");
     disposed_[id - 1] = true;
     releaseKernel(kernel_[id - 1], "kernel id " + std::to_string(id));
@@ -534,6 +535,7 @@ void OpenClContext::disposeCalculation(const std::size_t id) {
 
 std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_t n, const std::size_t id,
                                                                 const std::size_t version, const Settings settings) {
+    boost::unique_lock<boost::shared_mutex> lock(global_mutex);
 
     QL_REQUIRE(n > 0, "OpenClContext::initiateCalculation(): n must not be zero");
 
@@ -608,6 +610,7 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
 }
 
 std::size_t OpenClContext::createInputVariable(double v) {
+    boost::unique_lock<boost::shared_mutex> lock(global_mutex);
     QL_REQUIRE(currentState_ == ComputeState::createInput,
                "OpenClContext::createInputVariable(): not in state createInput (" << static_cast<int>(currentState_)
                                                                                   << ")");
@@ -628,6 +631,7 @@ std::size_t OpenClContext::createInputVariable(double v) {
 }
 
 std::size_t OpenClContext::createInputVariable(double* v) {
+    boost::unique_lock<boost::shared_mutex> lock(global_mutex);
     QL_REQUIRE(currentState_ == ComputeState::createInput,
                "OpenClContext::createInputVariable(): not in state createInput (" << static_cast<int>(currentState_)
                                                                                   << ")");
@@ -649,6 +653,7 @@ std::size_t OpenClContext::createInputVariable(double* v) {
 }
 
 void OpenClContext::updateVariatesPool() {
+    boost::unique_lock<boost::shared_mutex> lock(global_mutex);
 
     QL_REQUIRE(nVariates_ > 0, "OpenClContext::updateVariatesPool(): internal error, got nVariates_ == 0.");
 
@@ -915,6 +920,7 @@ std::vector<std::vector<std::size_t>> OpenClContext::createInputVariates(const s
 
 std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode,
                                           const std::vector<std::size_t>& args) {
+    boost::unique_lock<boost::shared_mutex> lock(global_mutex);
     QL_REQUIRE(currentState_ == ComputeState::createInput || currentState_ == ComputeState::createVariates ||
                    currentState_ == ComputeState::calc,
                "OpenClContext::applyOperation(): not in state createInput or calc (" << static_cast<int>(currentState_)
@@ -1045,6 +1051,7 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
 }
 
 void OpenClContext::freeVariable(const std::size_t id) {
+    boost::unique_lock<boost::shared_mutex> lock(global_mutex);
     QL_REQUIRE(currentState_ == ComputeState::calc,
                "OpenClContext::free(): not in state calc (" << static_cast<int>(currentState_) << ")");
     QL_REQUIRE(currentId_ > 0, "OpenClContext::freeVariable(): current id is not set");
@@ -1061,6 +1068,7 @@ void OpenClContext::freeVariable(const std::size_t id) {
 }
 
 void OpenClContext::declareOutputVariable(const std::size_t id) {
+    boost::unique_lock<boost::shared_mutex> lock(global_mutex);
     QL_REQUIRE(currentState_ != ComputeState::idle, "OpenClContext::declareOutputVariable(): state is idle");
     QL_REQUIRE(currentId_ > 0, "OpenClContext::declareOutputVariable(): current id not set");
     QL_REQUIRE(!hasKernel_[currentId_ - 1], "OpenClContext::declareOutputVariable(): id ("
@@ -1071,6 +1079,7 @@ void OpenClContext::declareOutputVariable(const std::size_t id) {
 }
 
 void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
+    boost::unique_lock<boost::shared_mutex> lock(global_mutex);
     struct exitGuard {
         exitGuard() {}
         ~exitGuard() {
