@@ -487,7 +487,7 @@ void OpenClContext::init() {
     debugInfo_.nanoSecondsProgramBuild = 0;
     debugInfo_.nanoSecondsCalculation = 0;
 
-    cl_int err;
+    cl_int err = CL_SUCCESS;
 
     // create context and command queue
 
