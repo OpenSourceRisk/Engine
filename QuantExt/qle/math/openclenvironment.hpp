@@ -26,6 +26,14 @@
 
 #include <map>
 
+#ifdef ORE_ENABLE_OPENCL
+#ifdef __APPLE__
+#include <OpenCL/cl.h>
+#else
+#include <CL/cl.h>
+#endif
+#endif
+
 namespace QuantExt {
 
 class OpenClFramework : public ComputeFramework {
@@ -37,6 +45,8 @@ public:
 
 private:
     std::map<std::string, ComputeContext*> contexts_;
+    cl_context context_;
+    cl_command_queue queue_;
 };
 
 } // namespace QuantExt
