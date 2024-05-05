@@ -170,7 +170,7 @@ void errorCallback(const char* errinfo, const void* private_info, size_t cb, voi
 
 class OpenClContext : public ComputeContext {
 public:
-    OpenClContext(cl_device_id& device, cl_context& context, cl_command_queue& queue_,
+    OpenClContext(cl_device_id* device, cl_context* context,
                   const std::vector<std::pair<std::string, std::string>>& deviceInfo,
                   const bool supportsDoublePrecision);
     ~OpenClContext() override final;
@@ -207,9 +207,9 @@ private:
     enum class ComputeState { idle, createInput, createVariates, calc };
 
     bool initialized_ = false;
-    cl_device_id& device_;
-    cl_context& context_;
-    cl_command_queue& queue_;
+    cl_device_id* device_;   // passed from framework
+    cl_context* context_;    // passed from framework
+    cl_command_queue queue_; // contructed per OpenClContext
 
     // set once in the ctor
     std::vector<std::pair<std::string, std::string>> deviceInfo_;
@@ -262,13 +262,16 @@ private:
 };
 
 OpenClFramework::OpenClFramework() {
+
     cl_platform_id platforms[MAX_N_PLATFORMS];
     cl_uint nPlatforms;
     clGetPlatformIDs(MAX_N_PLATFORMS, platforms, &nPlatforms);
+
     for (std::size_t p = 0; p < nPlatforms; ++p) {
         char platformName[MAX_N_DEV_INFO];
         clGetPlatformInfo(platforms[p], CL_PLATFORM_NAME, MAX_N_DEV_INFO, platformName, NULL);
         clGetDeviceIDs(platforms[p], CL_DEVICE_TYPE_ALL, 3, devices_, &nDevices_);
+
         for (std::size_t d = 0; d < nDevices_; ++d) {
             char deviceName[MAX_N_DEV_INFO], driverVersion[MAX_N_DEV_INFO], deviceVersion[MAX_N_DEV_INFO],
                 deviceExtensions[MAX_N_DEV_INFO];
@@ -287,7 +290,8 @@ OpenClFramework::OpenClFramework() {
 
             bool supportsDoublePrecision = false;
 #if CL_VERSION_1_2
-            clGetDeviceInfo(devices_[d], CL_DEVICE_DOUBLE_FP_CONFIG, sizeof(cl_device_fp_config), &doubleFpConfig, NULL);
+            clGetDeviceInfo(devices_[d], CL_DEVICE_DOUBLE_FP_CONFIG, sizeof(cl_device_fp_config), &doubleFpConfig,
+                            NULL);
             deviceInfo.push_back(std::make_pair(
                 "device_double_fp_config",
                 ((doubleFpConfig & CL_FP_DENORM) ? std::string("Denorm,") : std::string()) +
@@ -302,7 +306,7 @@ OpenClFramework::OpenClFramework() {
             supportsDoublePrecision = supportsDoublePrecision || std::string(deviceExtensions).find("cl_khr_fp64");
 #endif
 
-            // create context and command queue
+            // create context
 
             cl_int err;
 
@@ -310,17 +314,8 @@ OpenClFramework::OpenClFramework() {
             QL_REQUIRE(err == CL_SUCCESS,
                        "OpenClFramework::OpenClContext(): error during clCreateContext(): " << errorText(err));
 
-#if CL_VERSION_2_0
-            queue_[d] = clCreateCommandQueueWithProperties(context_[d], devices_[d], NULL, &err);
-#else
-            // deprecated in cl version 2_0
-            queue_[d] = clCreateCommandQueue(context_[d], devices_[d], 0, &err);
-#endif
-            QL_REQUIRE(err == CL_SUCCESS,
-                       "OpenClFramework::OpenClContext(): error during clCreateCommandQueue(): " << errorText(err));
-
             contexts_["OpenCL/" + std::string(platformName) + "/" + std::string(deviceName)] =
-                new OpenClContext(devices_[d], context_[d], queue_[d], deviceInfo, supportsDoublePrecision);
+                new OpenClContext(&devices_[d], &context_[d], deviceInfo, supportsDoublePrecision);
         }
     }
 }
@@ -331,20 +326,16 @@ OpenClFramework::~OpenClFramework() {
     }
     cl_int err;
     for (cl_uint d = 0; d < nDevices_; ++d) {
-        if (err = clReleaseCommandQueue(queue_[d]); err != CL_SUCCESS) {
-            std::cerr << "OpenClFramework: error during clReleaseCommandQueue: " + errorText(err) << std::endl;
-        }
-
         if (err = clReleaseContext(context_[d]); err != CL_SUCCESS) {
             std::cerr << "OpenClFramework: error during clReleaseContext: " + errorText(err) << std::endl;
         }
     }
 }
 
-OpenClContext::OpenClContext(cl_device_id& device, cl_context& context, cl_command_queue& queue,
+OpenClContext::OpenClContext(cl_device_id* device, cl_context* context,
                              const std::vector<std::pair<std::string, std::string>>& deviceInfo,
                              const bool supportsDoublePrecision)
-    : initialized_(false), device_(device), context_(context), queue_(queue), deviceInfo_(deviceInfo),
+    : initialized_(false), device_(device), context_(context), deviceInfo_(deviceInfo),
       supportsDoublePrecision_(supportsDoublePrecision) {}
 
 OpenClContext::~OpenClContext() {
@@ -368,6 +359,11 @@ OpenClContext::~OpenClContext() {
             if (disposed_[i])
                 continue;
             releaseProgram(program_[i], "ore program");
+        }
+
+        cl_int err;
+        if (err = clReleaseCommandQueue(queue_); err != CL_SUCCESS) {
+            std::cerr << "OpenClFramework: error during clReleaseCommandQueue: " + errorText(err) << std::endl;
         }
     }
 }
@@ -416,13 +412,13 @@ std::string OpenClContext::runHealthCheckProgram(const std::string& source, cons
 
     cl_int err;
 
-    cl_program program = clCreateProgramWithSource(context_, 1, &programPtr, NULL, &err);
+    cl_program program = clCreateProgramWithSource(*context_, 1, &programPtr, NULL, &err);
     if (err != CL_SUCCESS) {
         return errorText(err);
     }
     cleanup.p.push_back(program);
 
-    err = clBuildProgram(program, 1, &device_, NULL, NULL, NULL);
+    err = clBuildProgram(program, 1, device_, NULL, NULL, NULL);
     if (err != CL_SUCCESS) {
         return errorText(err);
     }
@@ -433,7 +429,7 @@ std::string OpenClContext::runHealthCheckProgram(const std::string& source, cons
     }
     cleanup.k.push_back(kernel);
 
-    cl_mem resultBuffer = clCreateBuffer(context_, CL_MEM_READ_WRITE, sizeof(cl_ulong), NULL, &err);
+    cl_mem resultBuffer = clCreateBuffer(*context_, CL_MEM_READ_WRITE, sizeof(cl_ulong), NULL, &err);
     if (err != CL_SUCCESS) {
         return errorText(err);
     }
@@ -492,6 +488,16 @@ void OpenClContext::init() {
     debugInfo_.nanoSecondsDataCopy = 0;
     debugInfo_.nanoSecondsProgramBuild = 0;
     debugInfo_.nanoSecondsCalculation = 0;
+
+    cl_int err;
+#if CL_VERSION_2_0
+    queue_ = clCreateCommandQueueWithProperties(*context_, *device_, NULL, &err);
+#else
+    // deprecated in cl version 2_0
+    queue_ = clCreateCommandQueue(*context_, *device_, 0, &err);
+#endif
+    QL_REQUIRE(err == CL_SUCCESS,
+               "OpenClFramework::OpenClContext(): error during clCreateCommandQueue(): " << errorText(err));
 
     initialized_ = true;
 
@@ -738,14 +744,14 @@ void OpenClContext::updateVariatesPool() {
 
         const char* programSourcePtr = programSource.c_str();
         cl_int err;
-        variatesProgram_ = clCreateProgramWithSource(context_, 1, &programSourcePtr, NULL, &err);
+        variatesProgram_ = clCreateProgramWithSource(*context_, 1, &programSourcePtr, NULL, &err);
         QL_REQUIRE(err == CL_SUCCESS,
                    "OpenClContext::updateVariatesPool(): error creating program: " << errorText(err));
-        err = clBuildProgram(variatesProgram_, 1, &device_, NULL, NULL, NULL);
+        err = clBuildProgram(variatesProgram_, 1, device_, NULL, NULL, NULL);
         if (err != CL_SUCCESS) {
             char buffer[MAX_BUILD_LOG];
-            clGetProgramBuildInfo(variatesProgram_, device_, CL_PROGRAM_BUILD_LOG, MAX_BUILD_LOG * sizeof(char), buffer,
-                                  NULL);
+            clGetProgramBuildInfo(variatesProgram_, *device_, CL_PROGRAM_BUILD_LOG, MAX_BUILD_LOG * sizeof(char),
+                                  buffer, NULL);
             QL_FAIL("OpenClContext::updateVariatesPool(): error during program build: "
                     << errorText(err) << ": " << std::string(buffer).substr(MAX_BUILD_LOG_LOGFILE));
         }
@@ -762,7 +768,7 @@ void OpenClContext::updateVariatesPool() {
         QL_REQUIRE(err == CL_SUCCESS,
                    "OpenClContext::updateVariatesPool(): error creating kernel generate: " << errorText(err));
 
-        variatesMtStateBuffer_ = clCreateBuffer(context_, CL_MEM_READ_WRITE, sizeof(cl_ulong) * mt_N, NULL, &err);
+        variatesMtStateBuffer_ = clCreateBuffer(*context_, CL_MEM_READ_WRITE, sizeof(cl_ulong) * mt_N, NULL, &err);
         QL_REQUIRE(err == CL_SUCCESS,
                    "OpenClContext::updateVariatesPool(): error creating mt state buffer: " << errorText(err));
 
@@ -805,7 +811,7 @@ void OpenClContext::updateVariatesPool() {
         bool active;
     } oldBufferReleaser(oldBuffer, variatesPoolSize_ > 0);
 
-    variatesPool_ = clCreateBuffer(context_, CL_MEM_READ_WRITE, fpSize * alignedSize, NULL, &err);
+    variatesPool_ = clCreateBuffer(*context_, CL_MEM_READ_WRITE, fpSize * alignedSize, NULL, &err);
     QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::updateVariatesPool(): error creating variates buffer with size "
                                       << fpSize * alignedSize << " bytes: " << errorText(err));
     cl_event copyEvent;
@@ -1080,7 +1086,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     cl_int err;
     cl_mem inputBuffer;
     if (inputBufferSize > 0) {
-        inputBuffer = clCreateBuffer(context_, CL_MEM_READ_WRITE, fpSize * inputBufferSize, NULL, &err);
+        inputBuffer = clCreateBuffer(*context_, CL_MEM_READ_WRITE, fpSize * inputBufferSize, NULL, &err);
         guard.mem.push_back(inputBuffer);
         QL_REQUIRE(err == CL_SUCCESS,
                    "OpenClContext::finalizeCalculation(): creating input buffer fails: " << errorText(err));
@@ -1089,7 +1095,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     std::size_t outputBufferSize = nOutputVars_[currentId_ - 1] * size_[currentId_ - 1];
     cl_mem outputBuffer;
     if (outputBufferSize > 0) {
-        outputBuffer = clCreateBuffer(context_, CL_MEM_READ_WRITE, fpSize * outputBufferSize, NULL, &err);
+        outputBuffer = clCreateBuffer(*context_, CL_MEM_READ_WRITE, fpSize * outputBufferSize, NULL, &err);
         guard.mem.push_back(outputBuffer);
         QL_REQUIRE(err == CL_SUCCESS,
                    "OpenClContext::finalizeCalculation(): creating output buffer fails: " << errorText(err));
@@ -1171,14 +1177,14 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
         cl_int err;
         const char* kernelSourcePtr = kernelSource.c_str();
-        program_[currentId_ - 1] = clCreateProgramWithSource(context_, 1, &kernelSourcePtr, NULL, &err);
+        program_[currentId_ - 1] = clCreateProgramWithSource(*context_, 1, &kernelSourcePtr, NULL, &err);
         QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::finalizeCalculation(): error during clCreateProgramWithSource(): "
                                           << errorText(err));
-        err = clBuildProgram(program_[currentId_ - 1], 1, &device_, NULL, NULL, NULL);
+        err = clBuildProgram(program_[currentId_ - 1], 1, device_, NULL, NULL, NULL);
         if (err != CL_SUCCESS) {
             char buffer[MAX_BUILD_LOG];
-            clGetProgramBuildInfo(program_[currentId_ - 1], device_, CL_PROGRAM_BUILD_LOG, MAX_BUILD_LOG * sizeof(char),
-                                  buffer, NULL);
+            clGetProgramBuildInfo(program_[currentId_ - 1], *device_, CL_PROGRAM_BUILD_LOG,
+                                  MAX_BUILD_LOG * sizeof(char), buffer, NULL);
             QL_FAIL("OpenClContext::finalizeCalculation(): error during program build for kernel '"
                     << kernelName << "': " << errorText(err) << ": "
                     << std::string(buffer).substr(MAX_BUILD_LOG_LOGFILE));
