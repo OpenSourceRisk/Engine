@@ -233,7 +233,6 @@ public:
           hisScenGen_(hisScenGen), sensiArgs_(std::move(sensiArgs)),
           fullRevalArgs_(std::move(fullRevalArgs)),  multiThreadArgs_(std::move(multiThreadArgs)), breakdown_(breakdown), 
           requireTradePnl_(requireTradePnl) {
-        initialise();
     }
     virtual ~MarketRiskReport() {}
 

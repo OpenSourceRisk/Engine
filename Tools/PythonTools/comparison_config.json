@@ -1398,6 +1398,50 @@
             "rel_tol": 1e-12
           }
         ]
+      },
+	  "pnl_explain.csv":{
+        "keys": [
+          "TradeId"
+        ],
+        "column_settings": [
+          {
+            "names": [
+			  "NPV(t0)",
+			  "NPV(asof=t0;mkt=t1)",
+			  "NPV(asof=t1;mkt=t0)",
+			  "NPV(t1)",
+			  "PeriodCashFlow",
+			  "Theta",
+			  "HypotheticalCleanPnL",
+			  "CleanPnL",
+			  "DirtyPnL",
+			  "ScenarioPnl",
+			  "TotalDelta",
+			  "TotalGamma",
+			  "TotalVega",
+			  "IrDelta",
+			  "IrGamma",
+			  "IrVega",
+			  "EqDelta",
+			  "EqGamma",
+			  "EqVega",
+			  "FxDelta",
+			  "FxGamma",
+			  "FxVega",
+			  "InfDelta",
+			  "InfGamma",
+			  "InfVega",
+			  "CreditDelta",
+			  "CreditGamma",
+			  "CreditVega",
+			  "CommDelta",
+			  "CommGamma",
+			  "CommVega"
+            ],
+            "abs_tol": 1e-6,
+            "rel_tol": 1e-12
+          }
+        ]
       }
     }
   },

@@ -248,6 +248,7 @@ void MarketRiskReport::registerProgressIndicators() {
 }
 
 void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports>& reports) {
+    initialise();
     registerProgressIndicators();
     
     LOG("Creating reports");
