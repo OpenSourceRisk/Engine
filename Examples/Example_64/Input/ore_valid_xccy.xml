@@ -63,6 +63,6 @@
       <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
       <Parameter name="scenarioOutputFile">stresstest.csv</Parameter>
       <Parameter name="outputThreshold">0.000001</Parameter>
-    </Analytic-->
+    </Analytic>
   </Analytics>
 </ORE>

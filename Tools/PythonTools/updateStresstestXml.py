@@ -5,7 +5,10 @@ def convert_cap_floor_scenario_definitions(stress_test_file, output_file):
     tree = ET.parse(stress_test_file)
     root = tree.getroot()
     for cap_floor_scenario_node in root.findall('.//CapFloorVolatility'):
-        print("Convert ", cap_floor_scenario_node.attrib['key'])
+        if 'key' in cap_floor_scenario_node.attrib.keys():
+            print("Convert ", cap_floor_scenario_node.attrib['key'])
+        else:
+            print("Convert ", cap_floor_scenario_node.attrib['ccy'])
         expiries = cap_floor_scenario_node.find('ShiftExpiries')
         shifts = cap_floor_scenario_node.find('Shifts')
         if expiries is not None and shifts is not None and len(list(shifts)) == 0:
@@ -18,9 +21,12 @@ def convert_cap_floor_scenario_definitions(stress_test_file, output_file):
                     shift_node.text = shift
                     shifts.append(shift_node)
             else:
-                print("Error, mismatch between tenor and shift values. Skip ", cap_floor_scenario_node.attrib['key'])
+                print("Error, mismatch between tenor and shift values. Skip")
         else:
-            print("Skip ", cap_floor_scenario_node.attrib['key'])
+            if 'key' in cap_floor_scenario_node.attrib.keys():
+                print("Skip ", cap_floor_scenario_node.attrib['key'])
+            else:
+                print("Skip ", cap_floor_scenario_node.attrib['ccy'])
 
     tree.write(output_file)
 
