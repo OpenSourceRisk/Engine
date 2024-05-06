@@ -87,6 +87,7 @@ public:
     virtual std::pair<std::size_t, bool> initiateCalculation(const std::size_t n, const std::size_t id = 0,
                                                              const std::size_t version = 0,
                                                              const Settings settings = {}) = 0;
+    virtual void disposeCalculation(const std::size_t id) = 0;
 
     virtual std::size_t createInputVariable(double v) = 0;
     virtual std::size_t createInputVariable(double* v) = 0;
