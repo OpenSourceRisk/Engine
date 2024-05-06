@@ -9,15 +9,17 @@
     </xs:sequence>
   </xs:complexType>
 
+  <xs:complexType name="stresstestparshifts" minOccurs="0"/>
+    <xs:sequence>
+      <xs:element type="bool" name="IrCurves" minOccurs="0"/>
+      <xs:element type="bool" name="CapFloorVolatilities" minOccurs="0"/>
+      <xs:element type="bool" name="SurvivalProbabilities" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
   <xs:complexType name="stresstest">
     <xs:all>
-      <xs:complexType name="ParShifts" minOccurs="0"/>
-        <xs:sequence>
-          <xs:element type="bool" name="IrCurves" minOccurs="0"/>
-          <xs:element type="bool" name="CapFloorVolatilities" minOccurs="0"/>
-          <xs:element type="bool" name="SurvivalProbabilities" minOccurs="0"/>
-        </xs:sequence>
-      </xs:complexType>
+      <xs:element type="stresstestparshifts" name="ParShifts"/>
       <xs:element type="discountcurves" name="DiscountCurves"/>
       <xs:element type="indexcurves" name="IndexCurves"/>
       <xs:element type="yieldcurves" name="YieldCurves"/>
