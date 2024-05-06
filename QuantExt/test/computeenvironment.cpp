@@ -337,10 +337,15 @@ BOOST_AUTO_TEST_CASE(testRngGenerationTmp) {
 
         double tol = settings.useDoublePrecision ? 1E-7 : 1E-3;
 
+        Size noErrors = 0, errorThreshold = 10;
         for (Size j = 0; j < 2; ++j) {
             for (Size i = 0; i < n; ++i) {
                 Real ref = sg.nextSequence().value[0];
-                BOOST_CHECK_SMALL(output[j][i] - ref, tol);
+                if(std::abs(output[j][i] - ref) > tol && noErrors < errorThreshold) {
+                    BOOST_ERROR("gpu value (" << output[j][i] << ") at j=" << j << ", i=" << i
+                                              << " does not match cpu value (" << ref << ")");
+                    noErrors++;
+                }
             }
         }
     }
