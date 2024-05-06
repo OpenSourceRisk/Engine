@@ -118,10 +118,6 @@ Leg makeNonStandardIborLeg(const QuantLib::ext::shared_ptr<IborIndex>& index, co
                                                             << resetDates.size() << ")");
 
     for (Size i = 0; i < fixingDates.size(); ++i) {
-        QL_REQUIRE(fixingDates[i] <= resetDates[i], "makeNonStandardIborLeg(): fixing date at "
-                                                        << i << " (" << fixingDates[i]
-                                                        << ") must be less or equal to reset date at " << i << " ("
-                                                        << resetDates[i] << ")");
         QL_REQUIRE(resetDates[i] <= calcDates.back(), "makeNonStandardIborLeg(): reset date at "
                                                           << i << " (" << resetDates[i]
                                                           << ") must be less or equal last calculation date ("
