@@ -326,7 +326,7 @@ void OpenClFramework::init() {
                 supportsDoublePrecision || std::string(deviceExtensions).find("cl_khr_fp64");
 #endif
 
-            // create context
+            // create context, this is static and will be deleted at program end (no clReleaseContext() necessary ?)
 
             cl_int err;
             context_[p][d] = clCreateContext(NULL, 1, &devices_[p][d], &errorCallback, NULL, &err);
@@ -349,14 +349,6 @@ OpenClFramework::OpenClFramework() {
 OpenClFramework::~OpenClFramework() {
     for (auto& [_, c] : contexts_) {
         delete c;
-    }
-    cl_int err;
-    for (cl_uint p = 0; p < nPlatforms_; ++p) {
-        for (cl_uint d = 0; d < nDevices_[p]; ++d) {
-            if (err = clReleaseContext(context_[p][d]); err != CL_SUCCESS) {
-                std::cerr << "OpenClFramework: error during clReleaseContext: " + errorText(err) << std::endl;
-            }
-        }
     }
 }
 
