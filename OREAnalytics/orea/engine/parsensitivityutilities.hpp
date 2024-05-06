@@ -44,7 +44,7 @@ double impliedVolatility(const QuantLib::CapFloor& cap, double targetValue,
 double impliedVolatility(const QuantLib::YoYInflationCapFloor& cap, double targetValue,
                          const QuantLib::Handle<QuantLib::YieldTermStructure>& d, double guess,
                          QuantLib::VolatilityType type, double displacement,
-                         const QuantLib::Handle<YoYInflationIndex>& index = {});
+                         const QuantLib::Handle<QuantLib::YoYInflationIndex>& index = {});
 
 } // namespace analytics
 } // namespace ore
