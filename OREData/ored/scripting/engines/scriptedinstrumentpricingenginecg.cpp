@@ -64,6 +64,11 @@ double externalAverage(const std::vector<double>& v) {
 
 } // namespace
 
+ScriptedInstrumentPricingEngineCG::~ScriptedInstrumentPricingEngineCG() {
+    if (externalCalculationId_)
+        ComputeEnvironment::instance().context().disposeCalculation(externalCalculationId_);
+}
+
 ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
     const std::string& npv, const std::vector<std::pair<std::string, std::string>>& additionalResults,
     const QuantLib::ext::shared_ptr<ModelCG>& model, const ASTNodePtr ast,
