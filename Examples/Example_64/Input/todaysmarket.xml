@@ -50,6 +50,7 @@
 	<YieldCurves id="default">
 		<YieldCurve name="__XCCY__-USD">Yield/USD/USD-IN-EUR</YieldCurve>
 	</YieldCurves>
+	
 	<DiscountingCurves id="default">
 		<DiscountingCurve currency="EUR">Yield/EUR/EUR-ESTER</DiscountingCurve>
 		<DiscountingCurve currency="USD">Yield/USD/USD-IN-EUR</DiscountingCurve>
@@ -67,11 +68,12 @@
 	<FxSpots id="default">
 		<FxSpot pair="EURUSD">FX/EUR/USD</FxSpot>
 	</FxSpots>
-	<DefaultCurves id="default">
-		<DefaultCurve name="Underlying1">Default/USD/Underlying1</DefaultCurve>
-	</DefaultCurves>
 	<CapFloorVolatilities id="default">
 		<CapFloorVolatility key="EUR-EURIBOR-6M">CapFloorVolatility/EUR/EUR</CapFloorVolatility>
 	</CapFloorVolatilities>
+	<DefaultCurves id="default">
+		<DefaultCurve name="Underlying1">Default/USD/Underlying1</DefaultCurve>
+	</DefaultCurves>
+	
 </TodaysMarket>
 

@@ -64,6 +64,6 @@
       <Parameter name="scenarioOutputFile">stresstest.csv</Parameter>
       <Parameter name="outputThreshold">0.000001</Parameter>
       <Parameter name="stressZeroScenarioDataFile">zeroStressScenarioData.xml</Parameter>
-    </Analytic-->
+    </Analytic>
   </Analytics>
 </ORE>

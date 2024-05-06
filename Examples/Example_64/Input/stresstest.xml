@@ -15,7 +15,6 @@
     <CapFloorVolatilities>
       <CapFloorVolatility key="EUR-EURIBOR-6M">
         <ShiftType>Absolute</ShiftType>
-        <ShiftExpiries>1Y, 2Y, 3Y, 4Y, 5Y, 6Y, 7Y, 8Y, 9Y</ShiftExpiries>
         <Shifts>
           <Shift tenor="1Y">0.01</Shift>
           <Shift tenor="2Y">0.01</Shift>
@@ -27,6 +26,8 @@
           <Shift tenor="8Y">0.01</Shift>
           <Shift tenor="9Y">0.01</Shift>
         </Shifts>
+        <ShiftExpiries>1Y, 2Y, 3Y, 4Y, 5Y, 6Y, 7Y, 8Y, 9Y</ShiftExpiries>
+        
       </CapFloorVolatility>
     </CapFloorVolatilities>
     <EquitySpots />
@@ -50,7 +51,6 @@
     <CapFloorVolatilities>
       <CapFloorVolatility key="EUR-EURIBOR-6M">
         <ShiftType>Absolute</ShiftType>
-        <ShiftExpiries>1Y, 2Y, 3Y, 4Y, 5Y, 6Y, 7Y, 8Y, 9Y</ShiftExpiries>
         <Shifts>
           <Shift tenor="1Y">0.01</Shift>
           <Shift tenor="2Y">0.01</Shift>
@@ -62,6 +62,7 @@
           <Shift tenor="8Y">0.01</Shift>
           <Shift tenor="9Y">0.01</Shift>
         </Shifts>
+        <ShiftExpiries>1Y, 2Y, 3Y, 4Y, 5Y, 6Y, 7Y, 8Y, 9Y</ShiftExpiries>
       </CapFloorVolatility>
     </CapFloorVolatilities>
     <EquitySpots />

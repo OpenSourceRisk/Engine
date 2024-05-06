@@ -351,16 +351,16 @@ XMLNode* StressTestScenarioData::toXML(ore::data::XMLDocument& doc) const {
         LOG("Write capFloor vol stress parameters");
         XMLNode* capFloorVolsNode = XMLUtils::addChild(doc, testNode, "CapFloorVolatilities");
         for (const auto& [key, data] : test.capVolShifts) {
-            XMLNode* capFloorVolNode = XMLUtils::addChild(doc, capFloorVolsNode, "CapFloorVolatilitiy");
+            XMLNode* capFloorVolNode = XMLUtils::addChild(doc, capFloorVolsNode, "CapFloorVolatility");
             XMLUtils::addAttribute(doc, capFloorVolNode, "key", key);
             XMLUtils::addChild(doc, capFloorVolNode, "ShiftType", ore::data::to_string(data.shiftType));
-            XMLUtils::addGenericChildAsList(doc, capFloorVolNode, "ShiftExpiries", data.shiftExpiries);
-            XMLUtils::addGenericChildAsList(doc, capFloorVolNode, "ShiftStrikes", data.shiftStrikes);
             XMLNode* shiftSizesNode = XMLUtils::addChild(doc, capFloorVolNode, "Shifts");
             for (const auto& [tenor, shifts] : data.shifts) {
                 XMLUtils::addGenericChildAsList(doc, shiftSizesNode, "Shift", shifts, "tenor",
                                                 ore::data::to_string(tenor));
             }
+            XMLUtils::addGenericChildAsList(doc, capFloorVolNode, "ShiftExpiries", data.shiftExpiries);
+            XMLUtils::addGenericChildAsList(doc, capFloorVolNode, "ShiftStrikes", data.shiftStrikes);
         }
         // SwaptionVolData
         // TODO: SwaptionVolData Missing
@@ -397,7 +397,7 @@ XMLNode* StressTestScenarioData::toXML(ore::data::XMLDocument& doc) const {
         volShiftDataToXml(doc, testNode, test.equityVolShifts, "equity", "EquityVolatility", "EquityVolatilities");
         // FX
         spotShiftDataToXml(doc, testNode, test.fxShifts, "ccypair", "FxSpot");
-        volShiftDataToXml(doc, testNode, test.fxVolShifts, "ccypair", "FXVolatility", "FXVolatilities");
+        volShiftDataToXml(doc, testNode, test.fxVolShifts, "ccypair", "FxVolatility", "FxVolatilities");
     }
     return node;
 }
