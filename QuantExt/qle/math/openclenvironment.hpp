@@ -24,6 +24,9 @@
 
 #include <qle/math/computeenvironment.hpp>
 
+#include <boost/thread/lock_types.hpp>
+#include <boost/thread/shared_mutex.hpp>
+
 #include <map>
 
 #ifdef ORE_ENABLE_OPENCL
@@ -34,7 +37,8 @@
 #endif
 #endif
 
-#define MAX_N_DEVICES 8U
+#define ORE_OPENCL_MAX_N_PLATFORMS 4U
+#define ORE_OPENCL_MAX_N_DEVICES 8U
 
 namespace QuantExt {
 
@@ -46,10 +50,21 @@ public:
     ComputeContext* getContext(const std::string& deviceName) override final;
 
 private:
+    static void init();
+
     std::map<std::string, ComputeContext*> contexts_;
-    cl_uint nDevices_;
-    cl_device_id devices_[MAX_N_DEVICES];
-    cl_context context_[MAX_N_DEVICES];
+
+    static boost::shared_mutex mutex_;
+    static bool initialized_;
+    static cl_uint nPlatforms_;
+    static std::string platformName_[ORE_OPENCL_MAX_N_PLATFORMS];
+    static std::string deviceName_[ORE_OPENCL_MAX_N_PLATFORMS][ORE_OPENCL_MAX_N_DEVICES];
+    static cl_uint nDevices_[ORE_OPENCL_MAX_N_PLATFORMS];
+    static cl_device_id devices_[ORE_OPENCL_MAX_N_PLATFORMS][ORE_OPENCL_MAX_N_DEVICES];
+    static cl_context context_[ORE_OPENCL_MAX_N_PLATFORMS][ORE_OPENCL_MAX_N_DEVICES];
+    static std::vector<std::pair<std::string, std::string>> deviceInfo_[ORE_OPENCL_MAX_N_PLATFORMS]
+                                                                       [ORE_OPENCL_MAX_N_DEVICES];
+    static bool supportsDoublePrecision_[ORE_OPENCL_MAX_N_PLATFORMS][ORE_OPENCL_MAX_N_DEVICES];
 };
 
 } // namespace QuantExt

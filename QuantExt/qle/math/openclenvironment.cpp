@@ -28,10 +28,9 @@
 #include <iostream>
 #include <thread>
 
-#define MAX_N_DEV_INFO 256U
-#define MAX_N_PLATFORMS 4U
-#define MAX_BUILD_LOG 65536U
-#define MAX_BUILD_LOG_LOGFILE 1024U
+#define ORE_OPENCL_MAX_N_DEV_INFO 256U
+#define ORE_OPENCL_MAX_BUILD_LOG 65536U
+#define ORE_OPENCL_MAX_BUILD_LOG_LOGFILE 1024U
 
 namespace QuantExt {
 
@@ -261,38 +260,58 @@ private:
     std::string currentSsa_;
 };
 
-OpenClFramework::OpenClFramework() {
+bool OpenClFramework::initialized_ = false;
+boost::shared_mutex OpenClFramework::mutex_;
+cl_uint OpenClFramework::nPlatforms_ = 0;
+std::string OpenClFramework::platformName_[ORE_OPENCL_MAX_N_PLATFORMS];
+std::string OpenClFramework::deviceName_[ORE_OPENCL_MAX_N_PLATFORMS][ORE_OPENCL_MAX_N_DEVICES];
+cl_uint OpenClFramework::nDevices_[ORE_OPENCL_MAX_N_PLATFORMS];
+cl_device_id OpenClFramework::devices_[ORE_OPENCL_MAX_N_PLATFORMS][ORE_OPENCL_MAX_N_DEVICES];
+cl_context OpenClFramework::context_[ORE_OPENCL_MAX_N_PLATFORMS][ORE_OPENCL_MAX_N_DEVICES];
+std::vector<std::pair<std::string, std::string>> OpenClFramework::deviceInfo_[ORE_OPENCL_MAX_N_PLATFORMS]
+                                                                             [ORE_OPENCL_MAX_N_DEVICES];
+bool OpenClFramework::supportsDoublePrecision_[ORE_OPENCL_MAX_N_PLATFORMS][ORE_OPENCL_MAX_N_DEVICES];
 
-    cl_platform_id platforms[MAX_N_PLATFORMS];
-    cl_uint nPlatforms;
-    clGetPlatformIDs(MAX_N_PLATFORMS, platforms, &nPlatforms);
+void OpenClFramework::init() {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
 
-    for (std::size_t p = 0; p < nPlatforms; ++p) {
-        char platformName[MAX_N_DEV_INFO];
-        clGetPlatformInfo(platforms[p], CL_PLATFORM_NAME, MAX_N_DEV_INFO, platformName, NULL);
-        clGetDeviceIDs(platforms[p], CL_DEVICE_TYPE_ALL, 3, devices_, &nDevices_);
+    if (initialized_)
+        return;
 
-        for (std::size_t d = 0; d < nDevices_; ++d) {
-            char deviceName[MAX_N_DEV_INFO], driverVersion[MAX_N_DEV_INFO], deviceVersion[MAX_N_DEV_INFO],
-                deviceExtensions[MAX_N_DEV_INFO];
+    initialized_ = true;
+
+    cl_platform_id platforms[ORE_OPENCL_MAX_N_PLATFORMS];
+    clGetPlatformIDs(ORE_OPENCL_MAX_N_PLATFORMS, platforms, &nPlatforms_);
+
+    for (std::size_t p = 0; p < nPlatforms_; ++p) {
+        char platformName[ORE_OPENCL_MAX_N_DEV_INFO];
+        clGetPlatformInfo(platforms[p], CL_PLATFORM_NAME, ORE_OPENCL_MAX_N_DEV_INFO, platformName, NULL);
+        clGetDeviceIDs(platforms[p], CL_DEVICE_TYPE_ALL, ORE_OPENCL_MAX_N_DEVICES, devices_[p], &nDevices_[p]);
+
+        platformName_[p] = std::string(platformName);
+
+        for (std::size_t d = 0; d < nDevices_[p]; ++d) {
+            char deviceName[ORE_OPENCL_MAX_N_DEV_INFO], driverVersion[ORE_OPENCL_MAX_N_DEV_INFO],
+                deviceVersion[ORE_OPENCL_MAX_N_DEV_INFO], deviceExtensions[ORE_OPENCL_MAX_N_DEV_INFO];
             cl_device_fp_config doubleFpConfig;
-            std::vector<std::pair<std::string, std::string>> deviceInfo;
 
-            clGetDeviceInfo(devices_[d], CL_DEVICE_NAME, MAX_N_DEV_INFO, &deviceName, NULL);
-            clGetDeviceInfo(devices_[d], CL_DRIVER_VERSION, MAX_N_DEV_INFO, &driverVersion, NULL);
-            clGetDeviceInfo(devices_[d], CL_DEVICE_VERSION, MAX_N_DEV_INFO, &deviceVersion, NULL);
-            clGetDeviceInfo(devices_[d], CL_DEVICE_EXTENSIONS, MAX_N_DEV_INFO, &deviceExtensions, NULL);
+            clGetDeviceInfo(devices_[p][d], CL_DEVICE_NAME, ORE_OPENCL_MAX_N_DEV_INFO, &deviceName, NULL);
+            clGetDeviceInfo(devices_[p][d], CL_DRIVER_VERSION, ORE_OPENCL_MAX_N_DEV_INFO, &driverVersion, NULL);
+            clGetDeviceInfo(devices_[p][d], CL_DEVICE_VERSION, ORE_OPENCL_MAX_N_DEV_INFO, &deviceVersion, NULL);
+            clGetDeviceInfo(devices_[p][d], CL_DEVICE_EXTENSIONS, ORE_OPENCL_MAX_N_DEV_INFO, &deviceExtensions, NULL);
 
-            deviceInfo.push_back(std::make_pair("device_name", std::string(deviceName)));
-            deviceInfo.push_back(std::make_pair("driver_version", std::string(driverVersion)));
-            deviceInfo.push_back(std::make_pair("device_version", std::string(deviceVersion)));
-            deviceInfo.push_back(std::make_pair("device_extensions", std::string(deviceExtensions)));
+            deviceInfo_[p][d].push_back(std::make_pair("device_name", std::string(deviceName)));
+            deviceInfo_[p][d].push_back(std::make_pair("driver_version", std::string(driverVersion)));
+            deviceInfo_[p][d].push_back(std::make_pair("device_version", std::string(deviceVersion)));
+            deviceInfo_[p][d].push_back(std::make_pair("device_extensions", std::string(deviceExtensions)));
 
-            bool supportsDoublePrecision = false;
+            deviceName_[p][d] = std::string(deviceName);
+
+            supportsDoublePrecision_[p][d] = false;
 #if CL_VERSION_1_2
-            clGetDeviceInfo(devices_[d], CL_DEVICE_DOUBLE_FP_CONFIG, sizeof(cl_device_fp_config), &doubleFpConfig,
+            clGetDeviceInfo(devices_[p][d], CL_DEVICE_DOUBLE_FP_CONFIG, sizeof(cl_device_fp_config), &doubleFpConfig,
                             NULL);
-            deviceInfo.push_back(std::make_pair(
+            deviceInfo_[p][d].push_back(std::make_pair(
                 "device_double_fp_config",
                 ((doubleFpConfig & CL_FP_DENORM) ? std::string("Denorm,") : std::string()) +
                     ((doubleFpConfig & CL_FP_INF_NAN) ? std::string("InfNan,") : std::string()) +
@@ -300,22 +319,29 @@ OpenClFramework::OpenClFramework() {
                     ((doubleFpConfig & CL_FP_ROUND_TO_ZERO) ? std::string("RoundZero,") : std::string()) +
                     ((doubleFpConfig & CL_FP_FMA) ? std::string("FMA,") : std::string()) +
                     ((doubleFpConfig & CL_FP_SOFT_FLOAT) ? std::string("SoftFloat,") : std::string())));
-            supportsDoublePrecision = supportsDoublePrecision || (doubleFpConfig != 0);
+            supportsDoublePrecision_[p][d] = supportsDoublePrecision_[p][d] || (doubleFpConfig != 0);
 #else
-            deviceInfo.push_back(std::make_pair("device_double_fp_config", "not provided before opencl 1.2"));
-            supportsDoublePrecision = supportsDoublePrecision || std::string(deviceExtensions).find("cl_khr_fp64");
+            deviceInfo_[p][d].push_back(std::make_pair("device_double_fp_config", "not provided before opencl 1.2"));
+            supportsDoublePrecision_[p][d] =
+                supportsDoublePrecision || std::string(deviceExtensions).find("cl_khr_fp64");
 #endif
 
             // create context
 
             cl_int err;
-
-            context_[d] = clCreateContext(NULL, 1, &devices_[d], &errorCallback, NULL, &err);
+            context_[p][d] = clCreateContext(NULL, 1, &devices_[p][d], &errorCallback, NULL, &err);
             QL_REQUIRE(err == CL_SUCCESS,
                        "OpenClFramework::OpenClContext(): error during clCreateContext(): " << errorText(err));
+        }
+    }
+}
 
-            contexts_["OpenCL/" + std::string(platformName) + "/" + std::string(deviceName)] =
-                new OpenClContext(&devices_[d], &context_[d], deviceInfo, supportsDoublePrecision);
+OpenClFramework::OpenClFramework() {
+    init();
+    for (std::size_t p = 0; p < nPlatforms_; ++p) {
+        for (std::size_t d = 0; d < nDevices_[p]; ++d) {
+            contexts_["OpenCL/" + platformName_[p] + "/" + deviceName_[p][d]] =
+                new OpenClContext(&devices_[p][d], &context_[p][d], deviceInfo_[p][d], supportsDoublePrecision_[p][d]);
         }
     }
 }
@@ -325,9 +351,11 @@ OpenClFramework::~OpenClFramework() {
         delete c;
     }
     cl_int err;
-    for (cl_uint d = 0; d < nDevices_; ++d) {
-        if (err = clReleaseContext(context_[d]); err != CL_SUCCESS) {
-            std::cerr << "OpenClFramework: error during clReleaseContext: " + errorText(err) << std::endl;
+    for (cl_uint p = 0; p < nPlatforms_; ++p) {
+        for (cl_uint d = 0; d < nDevices_[p]; ++d) {
+            if (err = clReleaseContext(context_[p][d]); err != CL_SUCCESS) {
+                std::cerr << "OpenClFramework: error during clReleaseContext: " + errorText(err) << std::endl;
+            }
         }
     }
 }
@@ -749,11 +777,11 @@ void OpenClContext::updateVariatesPool() {
                    "OpenClContext::updateVariatesPool(): error creating program: " << errorText(err));
         err = clBuildProgram(variatesProgram_, 1, device_, NULL, NULL, NULL);
         if (err != CL_SUCCESS) {
-            char buffer[MAX_BUILD_LOG];
-            clGetProgramBuildInfo(variatesProgram_, *device_, CL_PROGRAM_BUILD_LOG, MAX_BUILD_LOG * sizeof(char),
-                                  buffer, NULL);
+            char buffer[ORE_OPENCL_MAX_BUILD_LOG];
+            clGetProgramBuildInfo(variatesProgram_, *device_, CL_PROGRAM_BUILD_LOG,
+                                  ORE_OPENCL_MAX_BUILD_LOG * sizeof(char), buffer, NULL);
             QL_FAIL("OpenClContext::updateVariatesPool(): error during program build: "
-                    << errorText(err) << ": " << std::string(buffer).substr(MAX_BUILD_LOG_LOGFILE));
+                    << errorText(err) << ": " << std::string(buffer).substr(ORE_OPENCL_MAX_BUILD_LOG_LOGFILE));
         }
 
         variatesKernelSeedInit_ = clCreateKernel(variatesProgram_, "ore_seedInitialization", &err);
@@ -1182,12 +1210,12 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                                           << errorText(err));
         err = clBuildProgram(program_[currentId_ - 1], 1, device_, NULL, NULL, NULL);
         if (err != CL_SUCCESS) {
-            char buffer[MAX_BUILD_LOG];
+            char buffer[ORE_OPENCL_MAX_BUILD_LOG];
             clGetProgramBuildInfo(program_[currentId_ - 1], *device_, CL_PROGRAM_BUILD_LOG,
-                                  MAX_BUILD_LOG * sizeof(char), buffer, NULL);
+                                  ORE_OPENCL_MAX_BUILD_LOG * sizeof(char), buffer, NULL);
             QL_FAIL("OpenClContext::finalizeCalculation(): error during program build for kernel '"
                     << kernelName << "': " << errorText(err) << ": "
-                    << std::string(buffer).substr(MAX_BUILD_LOG_LOGFILE));
+                    << std::string(buffer).substr(ORE_OPENCL_MAX_BUILD_LOG_LOGFILE));
         }
         kernel_[currentId_ - 1] = clCreateKernel(program_[currentId_ - 1], kernelName.c_str(), &err);
         QL_REQUIRE(err == CL_SUCCESS,
