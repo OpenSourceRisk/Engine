@@ -48,6 +48,7 @@ public:
                                       const bool includePastCashflows = false, const bool useCachedSensis = false,
                                       const bool useExternalComputeFramework = false,
                                       const bool useDoublePrecisionForExternalCalculation = false);
+    ~ScriptedInstrumentPricingEngineCG();
 
     bool lastCalculationWasValid() const { return lastCalculationWasValid_; }
     const std::string& npvName() const { return npv_; }
