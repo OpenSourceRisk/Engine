@@ -58,8 +58,7 @@ MarketRiskBacktest::MarketRiskBacktest(
     const bool requireTradePnl)
     : MarketRiskReport(calculationCurrency, portfolio, portfolioFilter, btArgs->backtestPeriod_, hisScenGen, std::move(sensiArgs), std::move(revalArgs),
                        std::move(mtArgs), breakdown, requireTradePnl),
-      btArgs_(std::move(btArgs)) {    
-    initialise();
+      btArgs_(std::move(btArgs)) {
 }
 
 void MarketRiskBacktest::initialise() {
