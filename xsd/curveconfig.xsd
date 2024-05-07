@@ -113,7 +113,7 @@
   
   <xs:complexType name="proxySurface">
     <xs:all>
-      <xs:element type="xs:string" name="ProxyVolatilityCurve" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="ProxyVolatilityCurve"/>
       <xs:element type="xs:string" name="FXVolatilityCurve" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="CorrelationCurve" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="CDSVolatilityCurve" minOccurs="0" maxOccurs="1"/>
