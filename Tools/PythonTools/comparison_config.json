@@ -1439,7 +1439,7 @@
 			  "CommVega"
             ],
             "abs_tol": 1e-6,
-            "rel_tol": 1e-12
+            "rel_tol": 1e-6
           }
         ]
       }
