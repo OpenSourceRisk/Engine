@@ -23,7 +23,6 @@
 
 #pragma once
 #include <orea/engine/parsensitivityinstrumentbuilder.hpp>
-#include <orea/engine/parsensitivityutilities.hpp>
 
 namespace ore {
 namespace analytics {
@@ -37,63 +36,19 @@ public:
         const std::set<ore::analytics::RiskFactorKey::KeyType>& typesDisabled,
         const std::set<ore::analytics::RiskFactorKey::KeyType>& parTypes,
         const std::set<ore::analytics::RiskFactorKey>& relevantRiskFactors, const bool continueOnError,
-        const std::string& marketConfiguration, const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket)
-        : simMarket_(simMarket) {
-        ParSensitivityInstrumentBuilder().createParInstruments(instruments_, asof, simMarketParams, sensitivityData,
-                                                               typesDisabled, parTypes, relevantRiskFactors,
-                                                               continueOnError, marketConfiguration, simMarket);
-    };
+        const std::string& marketConfiguration, const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket);
 
     ZeroToParShiftConverter(const ParSensitivityInstrumentBuilder::Instruments& instruments_,
-                            const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket)
-        : instruments_(instruments_), simMarket_(simMarket){};
+                            const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket);
 
-    std::unordered_map<RiskFactorKey, double> parShifts(QuantLib::ext::shared_ptr<Scenario> scenario) const{
-        class SimMarketReseter{
-        public:
-            SimMarketReseter(const ext::shared_ptr<ScenarioSimMarket>& simMarket) : simMarket_(simMarket){
-                simMarket_->reset();
-            }
-            ~SimMarketReseter() { simMarket_->reset(); }
-            const ext::shared_ptr<ScenarioSimMarket>& market() const { return simMarket_; }
-
-        private:
-            ext::shared_ptr<ScenarioSimMarket> simMarket_;
-        };
-        QL_REQUIRE(simMarket_ != nullptr, "ZeroToParShiftConverter: need a simmarket");
-        SimMarketReseter market(simMarket_);
-        auto baseValues = parRates();
-        market.market()->applyScenario(scenario);
-        auto scenarioValues = parRates();
-        // Check if both maps have same keys;
-        QL_REQUIRE(baseValues.size() == scenarioValues.size(), "ZeroToParShiftConverter: internal error, both maps should have the same entries");
-        bool sameKeys = std::equal(baseValues.begin(), baseValues.end(), scenarioValues.begin(),
-                   [](const auto& a, const auto& b) { return a.first == b.first; });
-        QL_REQUIRE(sameKeys, "ZeroToParShiftConverter: internal error, both maps should have the same entries");
-        std::unordered_map<RiskFactorKey, double> shifts;
-        for (const auto& [key, amount] : baseValues) {
-            shifts[key] = scenarioValues[key] - amount;
-        }
-        return shifts;
-    }
+    std::unordered_map<RiskFactorKey, double> parShifts(QuantLib::ext::shared_ptr<Scenario> scenario) const;
 
 private:
-    std::unordered_map<RiskFactorKey, double> parRates() const { 
-        std::unordered_map<RiskFactorKey, double> results; 
-        for(const auto& [key, parInstrument] : instruments_.parHelpers_){
-            results[key] = impliedQuote(parInstrument);
-        }
-        for(const auto& [key, cap] : instruments_.parCaps_){
-            results[key] = impliedVolatility(key, instruments_);
-        }
-        for (const auto& [key, cap] : instruments_.parYoYCaps_) {
-            results[key] = impliedVolatility(key, instruments_);
-        }
-        return results;
-    }
+    std::unordered_map<RiskFactorKey, double> parRates() const;
 
     ParSensitivityInstrumentBuilder::Instruments instruments_;
     ext::shared_ptr<ScenarioSimMarket> simMarket_;
+    std::unordered_map<RiskFactorKey, double> baseValues_;
 };
 
 } // namespace analytics

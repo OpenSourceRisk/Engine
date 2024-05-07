@@ -31,11 +31,9 @@
 #include <ql/types.hpp>
 
 #include <boost/functional/hash.hpp>
-
 #include <map>
+#include <unordered_map>
 #include <vector>
-
-
 namespace ore {
 namespace analytics {
 using QuantLib::Array;
@@ -199,3 +197,8 @@ std::ostream& operator<<(std::ostream& out, const ShiftType& shiftType);
 
 } // namespace analytics
 } // namespace ore
+
+template <> 
+struct std::hash<ore::analytics::RiskFactorKey> {
+    std::size_t operator()(const ore::analytics::RiskFactorKey& k) const { return hash_value(k); }
+};

@@ -34,6 +34,7 @@
 #include <orea/app/analytics/stresstestanalytic.hpp>
 #include <orea/app/analytics/varanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
+#include <orea/app/analytics/zerotoparshiftanalytic.hpp>
 #include <orea/app/analyticsmanager.hpp>
 #include <orea/app/cleanupsingletons.hpp>
 #include <orea/app/initbuilders.hpp>
@@ -101,6 +102,7 @@
 #include <orea/engine/varcalculator.hpp>
 #include <orea/engine/xvaenginecg.hpp>
 #include <orea/engine/zerotoparcube.hpp>
+#include <orea/engine/zerotoparshift.hpp>
 #include <orea/scenario/aggregationscenariodata.hpp>
 #include <orea/scenario/clonedscenariogenerator.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>

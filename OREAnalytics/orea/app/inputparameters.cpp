@@ -563,6 +563,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     parConversionJacobiInverseFileName_ = params->get("zeroToParSensiConversion", "jacobiInverseOutputFile", false);
     pnlOutputFileName_ = params->get("pnl", "outputFileName", false);
     parStressTestConversionFile_ = params->get("parStressConversion", "stressZeroScenarioDataFile", false);
+    zeroToParShiftFile_ = params->get("zeroToParShift", "parShiftsFile", false);
     // map internal report name to output file name
     fileNameMap_["npv"] = npvOutputFileName_;
     fileNameMap_["cashflow"] = cashflowOutputFileName_;
@@ -586,6 +587,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     fileNameMap_["parConversionJacobi_inverse"] = parConversionJacobiInverseFileName_;
     fileNameMap_["pnl"] = pnlOutputFileName_;
     fileNameMap_["parStress_ZeroStressData"] = parStressTestConversionFile_;
+    fileNameMap_["parshifts"] = zeroToParShiftFile_;
     vector<Size> dimOutputGridPoints;
     tmp = params->get("xva", "dimOutputGridPoints", false);
     if (tmp != "")
@@ -684,6 +686,46 @@ void InputParameters::setParStressPricingEngine(const std::string& xml) {
 void InputParameters::setParStressPricingEngineFromFile(const std::string& fileName) {
     parStressPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
     parStressPricingEngine_->fromFile(fileName);
+}
+
+void InputParameters::setZeroToParShiftSimMarketParams(const std::string& xml) {
+    zeroToParShiftSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
+    zeroToParShiftSimMarketParams_->fromXMLString(xml);
+}
+
+void InputParameters::setZeroToParShiftSimMarketParamsFromFile(const std::string& fileName) {
+    zeroToParShiftSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
+    zeroToParShiftSimMarketParams_->fromFile(fileName);
+}
+
+void InputParameters::setZeroToParShiftScenarioData(const std::string& xml) {
+    zeroToParShiftScenarioData_ = QuantLib::ext::make_shared<StressTestScenarioData>();
+    zeroToParShiftScenarioData_->fromXMLString(xml);
+}
+
+void InputParameters::setZeroToParShiftScenarioDataFromFile(const std::string& fileName) {
+    zeroToParShiftScenarioData_ = QuantLib::ext::make_shared<StressTestScenarioData>();
+    zeroToParShiftScenarioData_->fromFile(fileName);
+}
+
+void InputParameters::setZeroToParShiftSensitivityScenarioData(const std::string& xml) {
+    zeroToParShiftSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    zeroToParShiftSensitivityScenarioData_->fromXMLString(xml);
+}
+
+void InputParameters::setZeroToParShiftSensitivityScenarioDataFromFile(const std::string& fileName) {
+    zeroToParShiftSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    zeroToParShiftSensitivityScenarioData_->fromFile(fileName);
+}
+
+void InputParameters::setZeroToParShiftPricingEngine(const std::string& xml) {
+    zeroToParShiftPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
+    zeroToParShiftPricingEngine_->fromXMLString(xml);
+}
+
+void InputParameters::setZeroToParShiftPricingEngineFromFile(const std::string& fileName) {
+    zeroToParShiftPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
+    zeroToParShiftPricingEngine_->fromFile(fileName);
 }
 
 Date InputParameters::mporDate() {

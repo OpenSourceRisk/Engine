@@ -381,6 +381,19 @@ public:
     void setParStressUpperBoundRatesDiscountFactor(const double value)  { parStressUpperBoundRatesDiscountFactor_ = value; }
     void setParStressAccurary(const double value)  { parStressAccurary_ = value; };
 
+    // Setters for zeroToParShift conversion
+    void setZeroToParShiftSimMarketParams(const std::string& xml);
+    void setZeroToParShiftSimMarketParamsFromFile(const std::string& fileName);
+    void setZeroToParShiftScenarioData(const std::string& xml);
+    void setZeroToParShiftScenarioDataFromFile(const std::string& fileName);
+    void setZeroToParShiftPricingEngine(const std::string& xml);
+    void setZeroToParShiftPricingEngineFromFile(const std::string& fileName);
+    void setZeroToParShiftPricingEngine(const QuantLib::ext::shared_ptr<EngineData>& engineData) {
+        zeroToParShiftPricingEngine_ = engineData;
+    }
+    void setZeroToParShiftSensitivityScenarioData(const std::string& xml);
+    void setZeroToParShiftSensitivityScenarioDataFromFile(const std::string& fileName);
+
     // Set list of analytics that shall be run
     void setAnalytics(const std::string& s); // parse to set<string>
     void insertAnalytic(const std::string& s); 
@@ -695,6 +708,16 @@ public:
     double parStressUpperBoundRatesDiscountFactor() const { return parStressUpperBoundRatesDiscountFactor_; }
     double parStressAccurary() const { return parStressAccurary_; };
 
+    /****************************
+     * Getters for zero to par shift
+     ****************************/
+    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& zeroToParShiftSimMarketParams() const { return zeroToParShiftSimMarketParams_; }
+    const QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData>& zeroToParShiftScenarioData() const { return zeroToParShiftScenarioData_; }
+    const QuantLib::ext::shared_ptr<ore::data::EngineData>& zeroToParShiftPricingEngine() const { return zeroToParShiftPricingEngine_; }
+    const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& zeroToParShiftSensitivityScenarioData() const {
+        return zeroToParShiftSensitivityScenarioData_;
+    }
+
     /*************************************
      * List of analytics that shall be run
      *************************************/
@@ -981,6 +1004,14 @@ protected:
     double parStressLowerBoundRatesDiscountFactor_;
     double parStressUpperBoundRatesDiscountFactor_;
     double parStressAccurary_;
+
+    /*****************
+     * ZERO TO PAR SHIFT CONVERSION analytic
+     *****************/
+    QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> zeroToParShiftSimMarketParams_;
+    QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> zeroToParShiftScenarioData_;
+    QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> zeroToParShiftSensitivityScenarioData_;
+    QuantLib::ext::shared_ptr<ore::data::EngineData> zeroToParShiftPricingEngine_;
 };
 
 inline const std::string& InputParameters::marketConfig(const std::string& context) {
@@ -1023,6 +1054,7 @@ private:
     std::string parConversionJacobiInverseFileName_;
     std::string pnlOutputFileName_;
     std::string parStressTestConversionFile_;
+    std::string zeroToParShiftFile_;
 };
 
 } // namespace analytics
