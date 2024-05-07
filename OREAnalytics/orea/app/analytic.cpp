@@ -137,8 +137,8 @@ std::set<QuantLib::Date> Analytic::marketDates() const {
     auto addDates = impl_->additionalMarketDates();
     mds.insert(addDates.begin(), addDates.end());
 
-    for (const auto& a : allDependentAnalytics()) {
-        addDates = a->impl()->additionalMarketDates();
+    for (const auto& a : impl_->dependentAnalytics()) {
+        addDates = a.second->impl()->additionalMarketDates();
         mds.insert(addDates.begin(), addDates.end());
     }
     return mds;
@@ -150,8 +150,8 @@ std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> Analyt
     if (configurations().todaysMarketParams)
         tmps.push_back(configurations().todaysMarketParams);
 
-    for (const auto& a : allDependentAnalytics()) {
-        auto ctmps = a->todaysMarketParams();
+    for (const auto& a : impl_->dependentAnalytics()) {
+        auto ctmps = a.second->todaysMarketParams();
         tmps.insert(end(tmps), begin(ctmps), end(ctmps));
     }
 
