@@ -9,21 +9,62 @@
     </xs:sequence>
   </xs:complexType>
 
+<xs:complexType name="stresstestparshifts">
+  <xs:all>
+    <xs:element type="bool" name="IRCurves" minOccurs="0"/>
+    <xs:element type="bool" name="CapFloorVolatilities" minOccurs="0"/>
+    <xs:element type="bool" name="SurvivalProbability" minOccurs="0"/>
+  </xs:all>
+</xs:complexType>
+
+<xs:complexType name="stresscapfloorvolatility">
+  <xs:sequence>
+    <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
+    <xs:element name="Shifts">
+      <xs:complexType>
+        <xs:sequence>
+          <xs:element name="Shift" maxOccurs="unbounded" minOccurs="0">
+            <xs:complexType>
+              <xs:simpleContent>
+                <xs:extension base="xs:string">
+                  <xs:attribute type="xs:string" name="tenor"/>
+                </xs:extension>
+              </xs:simpleContent>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+    </xs:element>
+    <xs:element type="xs:string" name="ShiftExpiries"/>
+    <xs:element type="xs:string" name="ShiftStrikes" minOccurs="0"/>
+    <xs:element type="indexNameType" name="Index" minOccurs="0"/>
+    <xs:element type="xs:boolean" name="IsRelative" minOccurs="0"/>
+  </xs:sequence>
+  <xs:attribute type="xs:string" name="key"/>
+  <xs:attribute type="currencyCode" name="ccy"/> <!-- deprecated -->
+</xs:complexType>
+
+<xs:complexType name="stresscapfloorvolatilities">
+  <xs:sequence>
+    <xs:element type="stresscapfloorvolatility" name="CapFloorVolatility" maxOccurs="unbounded" minOccurs="0"/>
+  </xs:sequence>
+</xs:complexType>
+
   <xs:complexType name="stresstest">
     <xs:all>
+      <xs:element type="stresstestparshifts" name="ParShifts" minOccurs="0"/>
       <xs:element type="discountcurves" name="DiscountCurves"/>
       <xs:element type="indexcurves" name="IndexCurves"/>
       <xs:element type="yieldcurves" name="YieldCurves"/>
       <xs:element type="fxspots" name="FxSpots"/>
       <xs:element type="fxvolatilities" name="FxVolatilities"/>
       <xs:element type="swaptionvolatilities" name="SwaptionVolatilities"/>
-      <xs:element type="capfloorvolatilities" name="CapFloorVolatilities"/>
+      <xs:element type="stresscapfloorvolatilities" name="CapFloorVolatilities"/>
       <xs:element type="equityspots" name="EquitySpots" minOccurs="0"/>
       <xs:element type="equityvolatilities" name="EquityVolatilities" minOccurs="0"/>
       <xs:element type="securityspreads" name="SecuritySpreads"/>
       <xs:element type="recoveryrates" name="RecoveryRates"/>
       <xs:element type="survivalprobabilities" name="SurvivalProbabilities"/>
-	  
     </xs:all>
     <xs:attribute type="xs:string" name="id" use="required"/>
   </xs:complexType>

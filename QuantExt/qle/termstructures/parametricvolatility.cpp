@@ -57,20 +57,21 @@ Real ParametricVolatility::convert(const Real inputQuote, const MarketQuoteType 
     Real forwardPremium;
     switch (marketModelType_) {
     case MarketModelType::Black76:
-        if (inputMarketQuoteType_ == MarketQuoteType::Price) {
+        if (inputMarketQuoteType == MarketQuoteType::Price) {
             forwardPremium = inputQuote / (discountCurve_.empty() ? 1.0 : discountCurve_->discount(timeToExpiry));
-        } else if (inputMarketQuoteType_ == MarketQuoteType::NormalVolatility) {
+        } else if (inputMarketQuoteType == MarketQuoteType::NormalVolatility) {
             forwardPremium =
                 bachelierBlackFormula(inputOptionType, strike, forward, inputQuote * std::sqrt(timeToExpiry));
-        } else if (inputMarketQuoteType_ == MarketQuoteType::ShiftedLognormalVolatility) {
+        } else if (inputMarketQuoteType == MarketQuoteType::ShiftedLognormalVolatility) {
             if (strike < -inputLognormalShift)
                 forwardPremium = inputOptionType == Option::Call ? forward - strike : 0.0;
-            else
+            else {
                 forwardPremium = blackFormula(inputOptionType, strike, forward, inputQuote * std::sqrt(timeToExpiry),
-                                              inputLognormalShift);
+                                              1.0, inputLognormalShift);
+            }
         } else {
             QL_FAIL("ParametricVolatility::convert(): MarketQuoteType ("
-                    << static_cast<int>(inputMarketQuoteType_) << ") not handled. Internal error, contact dev.");
+                    << static_cast<int>(inputMarketQuoteType) << ") not handled. Internal error, contact dev.");
         }
         break;
     default:
