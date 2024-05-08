@@ -116,7 +116,7 @@ std::ostream& operator<<(std::ostream& oss, const QuantExt::AnalyticLgmSwaptionE
     else if (m == QuantExt::AnalyticLgmSwaptionEngine::simple)
         oss << "SIMPLE";
     else
-        QL_FAIL("Reversion type not covered");
+        QL_FAIL("FloatSpreadMapping type not covered");
     return oss;
 }
 

@@ -146,7 +146,8 @@ private:
     mutable std::vector<std::string> optionExpiries_;
     mutable std::vector<std::string> optionTerms_;
     mutable std::vector<std::string> optionStrikes_;
-    QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping floatSpreadMapping_;
+    QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping floatSpreadMapping_ =
+        QuantExt::AnalyticLgmSwaptionEngine::proRata;
 };
 
 //! Enum parsers
