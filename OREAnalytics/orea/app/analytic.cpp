@@ -94,7 +94,7 @@ void Analytic::setUpConfigurations() {
         impl_->setUpConfigurations();
 }
 
-std::vector<QuantLib::ext::shared_ptr<Analytic>> Analytic::allDependentAnalytics() const {
+std::vector<QuantLib::ext::shared_ptr<Analytic>> Analytic::Impl::allDependentAnalytics() const {
     std::vector<QuantLib::ext::shared_ptr<Analytic>> analytics;
     for (const auto& [_, a] : dependentAnalytics_) {
         analytics.push_back(a);
@@ -102,6 +102,12 @@ std::vector<QuantLib::ext::shared_ptr<Analytic>> Analytic::allDependentAnalytics
         analytics.insert(end(analytics), begin(das), end(das));
     }
     return analytics;
+}
+
+QuantLib::ext::shared_ptr<Analytic> Analytic::Impl::dependentAnalytic(const std::string& key) const {
+    auto it = dependentAnalytics_.find(key);
+    QL_REQUIRE(it != dependentAnalytics_.end(), "Could not find dependent Analytic " << key);
+    return it->second;
 }
 
 const std::string Analytic::label() const { 
@@ -122,13 +128,29 @@ bool Analytic::match(const std::set<std::string>& runTypes) {
     return false;
 }
 
+std::vector<QuantLib::ext::shared_ptr<Analytic>> Analytic::allDependentAnalytics() const {
+    return impl_->allDependentAnalytics();
+}
+
+std::set<QuantLib::Date> Analytic::marketDates() const {
+    std::set<QuantLib::Date> mds = {inputs_->asof()};
+    auto addDates = impl_->additionalMarketDates();
+    mds.insert(addDates.begin(), addDates.end());
+
+    for (const auto& a : impl_->dependentAnalytics()) {
+        addDates = a.second->impl()->additionalMarketDates();
+        mds.insert(addDates.begin(), addDates.end());
+    }
+    return mds;
+}
+
 std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> Analytic::todaysMarketParams() {
     buildConfigurations();
     std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> tmps;
     if (configurations().todaysMarketParams)
         tmps.push_back(configurations().todaysMarketParams);
 
-    for (const auto& a : dependentAnalytics_) {
+    for (const auto& a : impl_->dependentAnalytics()) {
         auto ctmps = a.second->todaysMarketParams();
         tmps.insert(end(tmps), begin(ctmps), end(ctmps));
     }

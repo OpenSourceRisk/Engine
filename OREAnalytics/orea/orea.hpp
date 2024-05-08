@@ -27,6 +27,7 @@
 #include <orea/app/analytics/parconversionanalytic.hpp>
 #include <orea/app/analytics/parstressconversionanalytic.hpp>
 #include <orea/app/analytics/pnlanalytic.hpp>
+#include <orea/app/analytics/pnlexplainanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/analytics/scenarioanalytic.hpp>
 #include <orea/app/analytics/scenariostatisticsanalytic.hpp>
@@ -85,6 +86,7 @@
 #include <orea/engine/parsensitivityutilities.hpp>
 #include <orea/engine/parstressconverter.hpp>
 #include <orea/engine/parstressscenarioconverter.hpp>
+#include <orea/engine/pnlexplainreport.hpp>
 #include <orea/engine/riskfilter.hpp>
 #include <orea/engine/sensitivityaggregator.hpp>
 #include <orea/engine/sensitivityanalysis.hpp>

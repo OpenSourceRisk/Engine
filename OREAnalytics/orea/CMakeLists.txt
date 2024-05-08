@@ -20,6 +20,7 @@ app/analytic.cpp
 app/analytics/analyticfactory.cpp
 app/analytics/imscheduleanalytic.cpp
 app/analytics/parconversionanalytic.cpp
+app/analytics/pnlexplainanalytic.cpp
 app/analytics/pnlanalytic.cpp
 app/analytics/parstressconversionanalytic.cpp
 app/analytics/pricinganalytic.cpp
@@ -72,6 +73,7 @@ engine/parsensitivityinstrumentbuilder.cpp
 engine/parsensitivityutilities.cpp
 engine/parstressconverter.cpp
 engine/parstressscenarioconverter.cpp
+engine/pnlexplainreport.cpp
 engine/riskfilter.cpp
 engine/sensitivityaggregator.cpp
 engine/sensitivityanalysis.cpp
@@ -175,6 +177,7 @@ app/analytic.hpp
 app/analytics/analyticfactory.hpp
 app/analytics/imscheduleanalytic.hpp
 app/analytics/parconversionanalytic.hpp
+app/analytics/pnlexplainanalytic.hpp
 app/analytics/pnlanalytic.hpp
 app/analytics/parstressconversionanalytic.hpp
 app/analytics/pricinganalytic.hpp
@@ -236,6 +239,7 @@ engine/parsensitivityinstrumentbuilder.hpp
 engine/parsensitivityutilities.hpp
 engine/parstressconverter.hpp
 engine/parstressscenarioconverter.hpp
+engine/pnlexplainreport.hpp
 engine/riskfilter.hpp
 engine/sensitivityaggregator.hpp
 engine/sensitivityanalysis.hpp
@@ -328,7 +332,7 @@ simulation/simmarket.hpp
 version.hpp)
 
 writeAll("orea" "orea.hpp" "auto_link.hpp" "${OREAnalytics_HDR}")
-add_library(${OREA_LIB_NAME} ${OREAnalytics_SRC})
+add_library(${OREA_LIB_NAME} ${OREAnalytics_SRC} "engine/pnlexplainreport.cpp")
 target_link_libraries(${OREA_LIB_NAME} ${QL_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${QLE_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${ORED_LIB_NAME})
