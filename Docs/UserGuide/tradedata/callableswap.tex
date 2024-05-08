@@ -1,7 +1,7 @@
 \subsubsection{Callable Swap}\label{ss:callable_swap}
 
 The \lstinline!CallableSwapData! node is the trade data container for the \emph{CallableSwap} trade type. A Callable Swap is a
- swap that can be cancelled at predefined dates by one of the counterparties. A Callable Swap must have at least one leg, each described by a \lstinline!LegData! trade component sub-node as described in section
+ swap that can be cancelled at predefined dates by one of the counterparties. A Callable Swap must have at least one leg, each leg described by a \lstinline!LegData! trade component sub-node as described in section
 \ref{ss:leg_data}.  
 
 There must be at least one full coupon period after the exercise date for European Callable Swaps, and after the last exercise date for Bermudan and American Callable Swaps. 
