@@ -24,6 +24,7 @@
 #include <orea/app/analytics/parconversionanalytic.hpp>
 #include <orea/app/analytics/parstressconversionanalytic.hpp>
 #include <orea/app/analytics/pnlanalytic.hpp>
+#include <orea/app/analytics/pnlexplainanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/analytics/scenarioanalytic.hpp>
 #include <orea/app/analytics/scenariostatisticsanalytic.hpp>
@@ -55,6 +56,7 @@ void initBuilders(const bool registerOREAnalytics) {
         ORE_REGISTER_ANALYTIC_BUILDER("PARAMETRIC_VAR", {}, ParametricVarAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("PARCONVERSION", {}, ParConversionAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("PNL", {}, PnlAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("PNL_EXPLAIN", {}, PnlExplainAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("PRICING", pricingAnalyticSubAnalytics, PricingAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("SCENARIO", {}, ScenarioAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("SCENARIO_STATISTICS", {}, ScenarioStatisticsAnalytic, false);
