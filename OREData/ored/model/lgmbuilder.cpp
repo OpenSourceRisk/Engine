@@ -172,7 +172,7 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
       continueOnError_(continueOnError), referenceCalibrationGrid_(referenceCalibrationGrid),
       setCalibrationInfo_(setCalibrationInfo), id_(id),
       optimizationMethod_(QuantLib::ext::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
-      endCriteria_(EndCriteria(1000, 500, 1E-16, 1E-16, 1E-16)),
+      endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)),
       calibrationErrorType_(BlackCalibrationHelper::RelativePriceError) {
 
     marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
