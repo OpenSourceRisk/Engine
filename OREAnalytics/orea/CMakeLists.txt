@@ -21,10 +21,12 @@ app/analytics/analyticfactory.cpp
 app/analytics/imscheduleanalytic.cpp
 app/analytics/parconversionanalytic.cpp
 app/analytics/pnlanalytic.cpp
+app/analytics/parstressconversionanalytic.cpp
 app/analytics/pricinganalytic.cpp
 app/analytics/scenarioanalytic.cpp
 app/analytics/scenariostatisticsanalytic.cpp
 app/analytics/simmanalytic.cpp
+app/analytics/stresstestanalytic.cpp
 app/analytics/varanalytic.cpp
 app/analytics/xvaanalytic.cpp
 app/analyticsmanager.cpp
@@ -66,6 +68,10 @@ engine/npvrecord.cpp
 engine/parametricvar.cpp
 engine/parsensitivityanalysis.cpp
 engine/parsensitivitycubestream.cpp
+engine/parsensitivityinstrumentbuilder.cpp
+engine/parsensitivityutilities.cpp
+engine/parstressconverter.cpp
+engine/parstressscenarioconverter.cpp
 engine/riskfilter.cpp
 engine/sensitivityaggregator.cpp
 engine/sensitivityanalysis.cpp
@@ -170,10 +176,12 @@ app/analytics/analyticfactory.hpp
 app/analytics/imscheduleanalytic.hpp
 app/analytics/parconversionanalytic.hpp
 app/analytics/pnlanalytic.hpp
+app/analytics/parstressconversionanalytic.hpp
 app/analytics/pricinganalytic.hpp
 app/analytics/scenarioanalytic.hpp
 app/analytics/scenariostatisticsanalytic.hpp
 app/analytics/simmanalytic.hpp
+app/analytics/stresstestanalytic.hpp
 app/analytics/varanalytic.hpp
 app/analytics/xvaanalytic.hpp
 app/analyticsmanager.hpp
@@ -224,6 +232,10 @@ engine/observationmode.hpp
 engine/parametricvar.hpp
 engine/parsensitivityanalysis.hpp
 engine/parsensitivitycubestream.hpp
+engine/parsensitivityinstrumentbuilder.hpp
+engine/parsensitivityutilities.hpp
+engine/parstressconverter.hpp
+engine/parstressscenarioconverter.hpp
 engine/riskfilter.hpp
 engine/sensitivityaggregator.hpp
 engine/sensitivityanalysis.hpp
