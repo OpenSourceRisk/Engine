@@ -172,7 +172,7 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
       continueOnError_(continueOnError), referenceCalibrationGrid_(referenceCalibrationGrid),
       setCalibrationInfo_(setCalibrationInfo), id_(id),
       optimizationMethod_(QuantLib::ext::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
-      endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)),
+      endCriteria_(EndCriteria(1000, 500, 1E-16, 1E-16, 1E-16)),
       calibrationErrorType_(BlackCalibrationHelper::RelativePriceError) {
 
     marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
@@ -346,7 +346,8 @@ void LgmBuilder::performCalculations() const {
     }
 
     for (Size j = 0; j < swaptionBasket_.size(); j++) {
-        auto engine = QuantLib::ext::make_shared<QuantExt::AnalyticLgmSwaptionEngine>(model_, calibrationDiscountCurve_);
+        auto engine = QuantLib::ext::make_shared<QuantExt::AnalyticLgmSwaptionEngine>(model_, calibrationDiscountCurve_,
+                                                                                      data_->floatSpreadMapping());
         engine->enableCache(!data_->calibrateH(), !data_->calibrateA());
         swaptionBasket_[j]->setPricingEngine(engine);
         // necessary if notifications are disabled (observation mode = Disable)
