@@ -1477,11 +1477,15 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
             std::vector<CalibrationBasket> calBaskets(1, CalibrationBasket(calInstr));
             if (infModelType_ == "DK") {
                 // build DK config
+                std::string infName = IndexInfo(modelInfIndices_[i].first).infName();
+                Real vol = parseReal(modelParameter("InfDkVolatility",
+                                                    {resolvedProductTag_ + "_" + infName, infName, resolvedProductTag_},
+                                                    false, "0.0050"));
                 config = QuantLib::ext::make_shared<InfDkData>(
                     CalibrationType::Bootstrap, calBaskets, modelInfIndices_[i].second->currency().code(),
                     IndexInfo(modelInfIndices_[i].first).infName(),
                     ReversionParameter(LgmData::ReversionType::Hagan, true, ParamType::Piecewise, {}, {0.60}),
-                    VolatilityParameter(LgmData::VolatilityType::Hagan, false, ParamType::Piecewise, {}, {0.0050}),
+                    VolatilityParameter(LgmData::VolatilityType::Hagan, false, ParamType::Piecewise, {}, {vol}),
                     LgmReversionTransformation(),
                     // ignore duplicate expiry times among calibration instruments
                     true);
