@@ -538,9 +538,9 @@ void SabrParametricVolatility::calculate() {
         auto nNew = n == 1 ? n + 1 : n;
 
         auto alphaTmp = alpha_;
-        auto betaTmp = alpha_;
-        auto nuTmp = alpha_;
-        auto rhoTmp = alpha_;
+        auto betaTmp = beta_;
+        auto nuTmp = nu_;
+        auto rhoTmp = rho_;
         auto lognormalShiftTmp = lognormalShift_;
 
         alpha_ = Matrix(mNew, nNew, Null<Real>());

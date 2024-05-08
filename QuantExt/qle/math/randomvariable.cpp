@@ -1239,6 +1239,7 @@ RandomVariable conditionalExpectation(
     QL_REQUIRE(!regressor.empty(), "regressor vector is empty");
     Size n = regressor.front()->size();
     for (Size i = 1; i < regressor.size(); ++i) {
+        QL_REQUIRE(regressor[i] != nullptr, "regressor #" << i << " is null.");
         QL_REQUIRE(n == regressor[i]->size(), "regressor #" << i << " size (" << regressor[i]->size()
                                                             << ") must match regressor #0 size (" << n << ")");
     }
