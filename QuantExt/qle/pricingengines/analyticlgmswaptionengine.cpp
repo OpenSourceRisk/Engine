@@ -187,8 +187,6 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                                "higher than fixed leg's payment frequency in "
                                "analytic lgm swaption engine");
 
-        std::cout << "float mapping " << floatSpreadMapping_ << std::endl;
-
         if(floatSpreadMapping_ == simple) {
             Real annuity = 0.0;
             for (Size j = j1_; j < fixedLeg_.size(); ++j) {
