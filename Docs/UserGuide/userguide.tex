@@ -5204,6 +5204,7 @@ Each interest rate model is specified by a block as follows
         <ShiftHorizon>0.0</ShiftHorizon>
         <Scaling>1.0</Scaling>
       </ParameterTransformation>
+      <FloatSpreadMapping>proRata</FloatSpreadMapping>
     </LGM>
     <LGM ccy="EUR">
       <!-- ... -->
@@ -5241,6 +5242,8 @@ the time grid is empty
 \item {\tt ParameterTransformation: } LGM model prices are invariant under scaling and shift transformations
 \cite{Lichters} with advantages for numerical convergence of results in long term simulations. These transformations can
 be chosen here. Default settings are shiftHorizon 0 (time in years) and scaling factor 1.
+\item {\tt FloatSpreadMapping: } mapping of float spreads in analytic swaption pricing for model calibration: proRata,
+  nextCoupon, simple, optional, defaults to proRata.
 \end{itemize}
 
 The reason for having to specify one more {\tt Volatility/InitialValue} entries than {\tt Volatility/TimeGrid} entries (and at least one more calibration option than {\tt Volatility/TimeGrid} entries) is the fact that the intervals defined by the {\tt Volatility/TimeGrid} entries are spanning from $[0,t_1],[t_1,t_2]\ldots[t_n,\infty]$, which results in $n+1$ intervals.
