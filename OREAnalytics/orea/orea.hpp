@@ -25,12 +25,14 @@
 #include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analytics/imscheduleanalytic.hpp>
 #include <orea/app/analytics/parconversionanalytic.hpp>
+#include <orea/app/analytics/parstressconversionanalytic.hpp>
 #include <orea/app/analytics/pnlanalytic.hpp>
 #include <orea/app/analytics/pnlexplainanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/analytics/scenarioanalytic.hpp>
 #include <orea/app/analytics/scenariostatisticsanalytic.hpp>
 #include <orea/app/analytics/simmanalytic.hpp>
+#include <orea/app/analytics/stresstestanalytic.hpp>
 #include <orea/app/analytics/varanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/app/analyticsmanager.hpp>
@@ -80,6 +82,10 @@
 #include <orea/engine/parametricvar.hpp>
 #include <orea/engine/parsensitivityanalysis.hpp>
 #include <orea/engine/parsensitivitycubestream.hpp>
+#include <orea/engine/parsensitivityinstrumentbuilder.hpp>
+#include <orea/engine/parsensitivityutilities.hpp>
+#include <orea/engine/parstressconverter.hpp>
+#include <orea/engine/parstressscenarioconverter.hpp>
 #include <orea/engine/pnlexplainreport.hpp>
 #include <orea/engine/riskfilter.hpp>
 #include <orea/engine/sensitivityaggregator.hpp>

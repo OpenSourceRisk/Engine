@@ -618,10 +618,22 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
         StressTestScenarioData::CapFloorVolShiftData data = d.second;
 
         ShiftType shiftType = data.shiftType;
-        vector<Real> shifts = data.shifts;
+        
         vector<Real> shiftExpiryTimes(data.shiftExpiries.size(), 0.0);
+        vector<Real> shiftStrikes = data.shiftStrikes.empty() ? volStrikes : data.shiftStrikes;
+        
+        vector<vector<Real>> shifts;
+        for (size_t i = 0; i < data.shiftExpiries.size(); ++i) {
+            const auto tenor = data.shiftExpiries[i];
+            if (data.shiftStrikes.empty()){
+                const double shift = data.shifts[tenor].front();
+                shifts.push_back(std::vector<Real>(volStrikes.size(), shift));
+            } else{
+                shifts.push_back(data.shifts[tenor]);
+            }
+        }
 
-        //DayCounter dc = parseDayCounter(simMarketData_->capFloorVolDayCounter(key));
+        // DayCounter dc = parseDayCounter(simMarketData_->capFloorVolDayCounter(key));
         DayCounter dc;
         if (auto s = simMarket_.lock()) {
             dc = s->capFloorVol(key)->dayCounter();
@@ -647,11 +659,13 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
             shiftExpiryTimes[j] = dc.yearFraction(asof, asof + data.shiftExpiries[j]);
 
         // loop over shift expiries, apply same shifts across all strikes
-        vector<Real> shiftStrikes = volStrikes;
-        for (Size j = 0; j < shiftExpiryTimes.size(); ++j)
-            for (Size k = 0; k < shiftStrikes.size(); ++k)
-                applyShift(j, k, shifts[j], true, shiftType, shiftExpiryTimes, shiftStrikes, volExpiryTimes, volStrikes,
+        
+        for (Size j = 0; j < shiftExpiryTimes.size(); ++j) {
+            for (Size k = 0; k < shiftStrikes.size(); ++k) {
+                applyShift(j, k, shifts[j][k], true, shiftType, shiftExpiryTimes, shiftStrikes, volExpiryTimes, volStrikes,
                            volData, shiftedVolData, j == 0 && k == 0);
+            }
+        }
 
         // add shifted vol data to the scenario
         for (Size jj = 0; jj < n_cfvol_exp; ++jj) {
