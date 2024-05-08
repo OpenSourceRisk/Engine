@@ -16,13 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <orea/app/analytics/imscheduleanalytic.hpp>
 #include <orea/app/analytics/parconversionanalytic.hpp>
 #include <orea/app/analytics/pnlexplainanalytic.hpp>
+#include <orea/app/analytics/parstressconversionanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/analytics/scenarioanalytic.hpp>
 #include <orea/app/analytics/scenariostatisticsanalytic.hpp>
 #include <orea/app/analytics/simmanalytic.hpp>
-#include <orea/app/analytics/imscheduleanalytic.hpp>
+#include <orea/app/analytics/stresstestanalytic.hpp>
 #include <orea/app/analytics/varanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/app/analytics/pnlanalytic.hpp>
@@ -201,6 +203,15 @@ Analytic::analytic_mktcubes const AnalyticsManager::mktCubes() {
     Analytic::analytic_mktcubes results;
     for (auto a : analytics_) {
         auto rs = a.second->mktCubes();
+        results.insert(rs.begin(), rs.end());
+    }
+    return results;
+}
+
+Analytic::analytic_stresstests const AnalyticsManager::stressTests() {
+    Analytic::analytic_stresstests results;
+    for (auto a : analytics_) {
+        auto rs = a.second->stressTests();
         results.insert(rs.begin(), rs.end());
     }
     return results;
