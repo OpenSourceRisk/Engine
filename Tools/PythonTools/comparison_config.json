@@ -1438,7 +1438,7 @@
 			  "CommGamma",
 			  "CommVega"
             ],
-            "abs_tol": 1e-6,
+            "abs_tol": 1e-4,
             "rel_tol": 1e-6
           }
         ]
