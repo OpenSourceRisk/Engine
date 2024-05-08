@@ -1093,8 +1093,8 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("zeroToParShift", "marketConfigFile", false);
         if (tmp != "") {
             string file = (inputPath / tmp).generic_string();
-            LOG("Loading zero to par shift conversion scenario sim market parameters from file" << file);
-            setZeroToParShiftSimMarketParams(file);
+            LOG("Loading zero to par shift conversion scenario sim market parameters from file " << file);
+            setZeroToParShiftSimMarketParamsFromFile(file);
         } else {
             WLOG("ScenarioSimMarket parameters for zero to par shift conversion not loaded");
         }
@@ -1103,7 +1103,7 @@ void OREAppInputParameters::loadParameters() {
         if (tmp != "") {
             string file = (inputPath / tmp).generic_string();
             LOG("Load zero to par shift conversion scenario data from file" << file);
-            setZeroToParShiftScenarioData(file);
+            setZeroToParShiftScenarioDataFromFile(file);
         } else {
             WLOG("Zero to par shift conversion scenario data not loaded");
         }
@@ -1112,7 +1112,7 @@ void OREAppInputParameters::loadParameters() {
         if (tmp != "") {
             string file = (inputPath / tmp).generic_string();
             LOG("Load pricing engine data from file: " << file);
-            setZeroToParShiftPricingEngine(file);
+            setZeroToParShiftPricingEngineFromFile(file);
         } else {
             WLOG("Pricing engine data not found for Zero to par shift conversion, using global");
         }

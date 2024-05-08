@@ -34,8 +34,8 @@ void ZeroToParShiftAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().simulationConfigRequired = true;
     analytic()->configurations().sensitivityConfigRequired = true;
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
-    analytic()->configurations().simMarketParams = inputs_->stressSimMarketParams();
-    analytic()->configurations().sensiScenarioData = inputs_->stressSensitivityScenarioData();
+    analytic()->configurations().simMarketParams = inputs_->zeroToParShiftSimMarketParams();
+    analytic()->configurations().sensiScenarioData = inputs_->zeroToParShiftSensitivityScenarioData();
     setGenerateAdditionalResults(true);
 }
 
@@ -54,7 +54,7 @@ void ZeroToParShiftAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
     CONSOLE("OK");
 
     auto market = analytic()->market();
-    auto stressData = inputs_->stressScenarioData();
+    auto stressData = inputs_->zeroToParShiftScenarioData();
     auto simMarketData = analytic()->configurations().simMarketParams;
     auto curveConfigs = analytic()->configurations().curveConfig;
     auto todaysMarketParam = analytic()->configurations().todaysMarketParams;
@@ -83,8 +83,8 @@ void ZeroToParShiftAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
     QuantLib::ext::shared_ptr<InMemoryReport> report = QuantLib::ext::make_shared<InMemoryReport>();
     
     report->addColumn("ScenarioLabel", string());
-    report->addColumn("RiskFactorKeyPar", string());
-    report->addColumn("ParShift", double(), 2);
+    report->addColumn("ParKey", string());
+    report->addColumn("ParShift", double(), 6);
 
     // Zero to par Converter
     simMarket->reset();
@@ -93,11 +93,13 @@ void ZeroToParShiftAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
         auto scenario = scenarioGenerator->next(asof);
         auto label = scenario->label();
         auto shifts = shiftConvert.parShifts(scenario);
-        for(const auto&[key, shift] : shifts){
-            report->next();
-            report->add(label);
-            report->add(ore::data::to_string(key));
-            report->add(shift);
+        for (const auto& [key, shift] : shifts) {
+                if (std::abs(shift) > 1e-6) {
+                    report->next();
+                    report->add(label);
+                    report->add(ore::data::to_string(key));
+                    report->add(shift);
+                }
         }
     }
     analytic()->reports()[label()]["parshifts"] = report;

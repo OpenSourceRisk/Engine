@@ -25,6 +25,7 @@
 #include <orea/engine/parsensitivityinstrumentbuilder.hpp>
 #include <orea/engine/parsensitivityutilities.hpp>
 #include <orea/engine/zerotoparshift.hpp>
+#include <ored/utilities/to_string.hpp>
 
 namespace ore {
 namespace analytics {
@@ -46,9 +47,8 @@ ZeroToParShiftConverter::ZeroToParShiftConverter(
 ZeroToParShiftConverter::ZeroToParShiftConverter(const ParSensitivityInstrumentBuilder::Instruments& instruments_,
                                                  const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket)
     : instruments_(instruments_), simMarket_(simMarket) {
-
     QL_REQUIRE(simMarket_ != nullptr, "ZeroToParShiftConverter: need a simmarket");
-    simMarket_.reset();
+    simMarket_->reset();
 
     if (ObservationMode::instance().mode() == ObservationMode::Mode::Disable) {
         for (auto it : instruments_.parHelpers_)
@@ -58,23 +58,23 @@ ZeroToParShiftConverter::ZeroToParShiftConverter(const ParSensitivityInstrumentB
         for (auto it : instruments_.parYoYCaps_)
             it.second->deepUpdate();
     }
-
     baseValues_ = parRates();
+};
+
+class SimMarketReseter {
+public:
+    SimMarketReseter(const ext::shared_ptr<ScenarioSimMarket>& simMarket) : simMarket_(simMarket) {
+        simMarket_->reset();
+    }
+    ~SimMarketReseter() { simMarket_->reset(); }
+    const ext::shared_ptr<ScenarioSimMarket>& market() const { return simMarket_; }
+
+private:
+    ext::shared_ptr<ScenarioSimMarket> simMarket_;
 };
 
 std::unordered_map<RiskFactorKey, double>
 ZeroToParShiftConverter::parShifts(QuantLib::ext::shared_ptr<Scenario> scenario) const {
-    class SimMarketReseter {
-    public:
-        SimMarketReseter(const ext::shared_ptr<ScenarioSimMarket>& simMarket) : simMarket_(simMarket) {
-            simMarket_->reset();
-        }
-        ~SimMarketReseter() { simMarket_->reset(); }
-        const ext::shared_ptr<ScenarioSimMarket>& market() const { return simMarket_; }
-
-    private:
-        ext::shared_ptr<ScenarioSimMarket> simMarket_;
-    };
     QL_REQUIRE(simMarket_ != nullptr, "ZeroToParShiftConverter: need a simmarket");
     SimMarketReseter market(simMarket_);
 
