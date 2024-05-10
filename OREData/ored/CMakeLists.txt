@@ -22,8 +22,11 @@ configuration/onedimsolverconfig.cpp
 configuration/reportconfig.cpp
 configuration/volatilityconfig.cpp
 configuration/yieldcurveconfig.cpp
+marketdata/adjustedinmemoryloader.cpp
 marketdata/adjustmentfactors.cpp
 marketdata/basecorrelationcurve.cpp
+marketdata/bondspreadimply.cpp
+marketdata/bondspreadimplymarket.cpp
 marketdata/capfloorvolcurve.cpp
 marketdata/cdsvolcurve.cpp
 marketdata/clonedloader.cpp
@@ -296,6 +299,7 @@ portfolio/varianceswap.cpp
 portfolio/windowbarrieroption.cpp
 portfolio/worstofbasketswap.cpp
 report/csvreport.cpp
+report/inmemoryreport.cpp
 scripting/ast.cpp
 scripting/astprinter.cpp
 scripting/astresetter.cpp
@@ -391,8 +395,11 @@ configuration/swaptionvolcurveconfig.hpp
 configuration/volatilityconfig.hpp
 configuration/yieldcurveconfig.hpp
 configuration/yieldvolcurveconfig.hpp
+marketdata/adjustedinmemoryloader.hpp
 marketdata/adjustmentfactors.hpp
 marketdata/basecorrelationcurve.hpp
+marketdata/bondspreadimply.hpp
+marketdata/bondspreadimplymarket.hpp
 marketdata/capfloorvolcurve.hpp
 marketdata/cdsvolcurve.hpp
 marketdata/clonedloader.hpp

@@ -55,6 +55,8 @@ struct CashFlowResults {
     QuantLib::Real capStrike = QuantLib::Null<QuantLib::Real>();
     QuantLib::Real floorVolatility = QuantLib::Null<QuantLib::Real>();
     QuantLib::Real capVolatility = QuantLib::Null<QuantLib::Real>();
+    QuantLib::Real effectiveFloorVolatility = QuantLib::Null<QuantLib::Real>();
+    QuantLib::Real effectiveCapVolatility = QuantLib::Null<QuantLib::Real>();
 };
 
 std::ostream& operator<<(std::ostream& out, const CashFlowResults& t);

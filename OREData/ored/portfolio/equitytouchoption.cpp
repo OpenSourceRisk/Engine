@@ -139,7 +139,7 @@ void EquityTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFact
         QL_REQUIRE(builder, "No builder found for Swap");
         boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
             boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
-        underlying->setPricingEngine(swapBuilder->engine(ccy));
+        underlying->setPricingEngine(swapBuilder->engine(ccy, std::string(), std::string()));
     }
 
     bool isLong = (positionType == Position::Long) ? true : false;

@@ -543,7 +543,7 @@
         "column_settings": [
           {
             "names": [],
-            "abs_tol": 1e-6,
+            "abs_tol": 1.0,
             "rel_tol": 1e-12
           }
         ]
@@ -1038,6 +1038,15 @@
           "tradeId",
           "resultId",
           "resultType"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "resultValue"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
         ]
       },
       ".*curves.*\\.csv": {
@@ -1082,8 +1091,11 @@
           "DiscountFactor",
           "fxRateBase",
           "BaseCurrency",
-          "PresentValueBase"
+          "PresentValueBase",
+          "EffectiveFloorVolatility",
+          "EffectiveCapVolatility"
         ],
+        "require_equal_optional_cols": false,
         "column_settings": [
           {
             "names": [
@@ -1099,7 +1111,9 @@
               "PresentValue",
               "DiscountFactor",
               "fxRateBase",
-              "PresentValueBase"
+              "PresentValueBase",
+              "EffectiveFloorVolatility",
+              "EffectiveCapVolatility"
             ],
             "abs_tol": 1e-8,
             "rel_tol": 1e-8

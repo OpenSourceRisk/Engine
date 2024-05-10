@@ -21,7 +21,9 @@
 #include <orea/cube/cube_io.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/sensitivityfilestream.hpp>
+#include <orea/scenario/historicalscenariofilereader.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
+#include <orea/scenario/simplescenariofactory.hpp>
 #include <orea/simm/simmbucketmapperbase.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/utilities/currencyconfig.hpp>
@@ -32,12 +34,12 @@
 namespace ore {
 namespace analytics {
 
-vector<string> getFileNames(const string& fileString, const string& path) {
+vector<string> getFileNames(const string& fileString, const std::filesystem::path& path) {
     vector<string> fileNames;
     boost::split(fileNames, fileString, boost::is_any_of(",;"), boost::token_compress_on);
     for (auto it = fileNames.begin(); it < fileNames.end(); it++) {
         boost::trim(*it);
-        *it = path + "/" + *it;
+        *it = (path / *it).generic_string();
     }
     return fileNames;
 }
@@ -138,7 +140,7 @@ void InputParameters::setPortfolio(const std::string& xml) {
     portfolio_->fromXMLString(xml);
 }
 
-void InputParameters::setPortfolioFromFile(const std::string& fileNameString, const std::string& inputPath) {
+void InputParameters::setPortfolioFromFile(const std::string& fileNameString, const std::filesystem::path& inputPath) {
     vector<string> files = getFileNames(fileNameString, inputPath);
     portfolio_ = boost::make_shared<Portfolio>(buildFailedTrades_);
     for (auto file : files) {
@@ -188,6 +190,11 @@ void InputParameters::setScenarioSimMarketParams(const std::string& xml) {
 void InputParameters::setScenarioSimMarketParamsFromFile(const std::string& fileName) {
     scenarioSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
     scenarioSimMarketParams_->fromFile(fileName);
+}
+
+void InputParameters::setHistVarSimMarketParamsFromFile(const std::string& fileName) {
+    histVarSimMarketParams_ = boost::make_shared<ScenarioSimMarketParameters>();
+    histVarSimMarketParams_->fromFile(fileName);
 }
 
 void InputParameters::setSensiPricingEngineFromFile(const std::string& fileName) {
@@ -365,6 +372,19 @@ void InputParameters::setSensitivityStreamFromBuffer(const std::string& buffer) 
     sensitivityStream_ = boost::make_shared<SensitivityBufferStream>(buffer);
 }
 
+void InputParameters::setBenchmarkVarPeriod(const std::string& period) { 
+    benchmarkVarPeriod_ = period;
+}
+
+void InputParameters::setHistoricalScenarioReader(const std::string& fileName) {
+    boost::filesystem::path baseScenarioPath(fileName);
+    QL_REQUIRE(exists(baseScenarioPath), "The provided base scenario file, " << baseScenarioPath << ", does not exist");
+    QL_REQUIRE(is_regular_file(baseScenarioPath),
+               "The provided base scenario file, " << baseScenarioPath << ", is not a file");
+    historicalScenarioReader_ =
+        QuantLib::ext::make_shared<HistoricalScenarioFileReader>(fileName, boost::make_shared<SimpleScenarioFactory>());
+}
+
 void InputParameters::setAmcTradeTypes(const std::string& s) {
     // parse to set<string>
     auto v = parseListOfValues(s);
@@ -441,20 +461,19 @@ void InputParameters::setCreditSimulationParametersFromBuffer(const std::string&
 } 
     
 void InputParameters::setCrifFromFile(const std::string& fileName, char eol, char delim, char quoteChar, char escapeChar) {
-    boost::shared_ptr<SimmConfiguration> configuration =
-        buildSimmConfiguration(simmVersion_, boost::make_shared<SimmBucketMapperBase>(),simmCalibrationData(), mporDays());
     bool updateMappings = true;
     bool aggregateTrades = false;
-    auto crifLoader = CsvFileCrifLoader(fileName, configuration, CrifRecord::additionalHeaders, updateMappings, aggregateTrades, eol, delim, quoteChar, escapeChar, reportNaString());
+    auto crifLoader = CsvFileCrifLoader(fileName, getSimmConfiguration(), CrifRecord::additionalHeaders, updateMappings,
+                                        aggregateTrades, eol, delim, quoteChar, escapeChar, reportNaString());
     crif_ = crifLoader.loadCrif();
 }
 
 void InputParameters::setCrifFromBuffer(const std::string& csvBuffer, char eol, char delim, char quoteChar, char escapeChar) {
-    boost::shared_ptr<SimmConfiguration> configuration =
-        buildSimmConfiguration(simmVersion_, boost::make_shared<SimmBucketMapperBase>(), simmCalibrationData(), mporDays());
     bool updateMappings = true;
     bool aggregateTrades = false;
-    auto crifLoader = CsvBufferCrifLoader(csvBuffer, configuration, CrifRecord::additionalHeaders, updateMappings, aggregateTrades, eol, delim, quoteChar, escapeChar, reportNaString());
+    auto crifLoader =
+        CsvBufferCrifLoader(csvBuffer, getSimmConfiguration(), CrifRecord::additionalHeaders, updateMappings,
+                            aggregateTrades, eol, delim, quoteChar, escapeChar, reportNaString());
     crif_ = crifLoader.loadCrif();
 }
 
@@ -518,8 +537,10 @@ OutputParameters::OutputParameters(const boost::shared_ptr<Parameters>& params) 
     jacobiFileName_ = params->get("sensitivity", "jacobiOutputFile", false);    
     jacobiInverseFileName_ = params->get("sensitivity", "jacobiInverseOutputFile", false);    
     sensitivityScenarioFileName_ = params->get("sensitivity", "scenarioOutputFile", false);    
-    stressTestFileName_ = params->get("stress", "scenarioOutputFile", false);    
+    stressTestFileName_ = params->get("stress", "scenarioOutputFile", false);
     varFileName_ = params->get("parametricVar", "outputFile", false);
+    if (varFileName_.empty())
+        varFileName_ = params->get("historicalSimulationVar", "outputFile", false);
     parConversionOutputFileName_ = params->get("zeroToParSensiConversion", "outputFile", false);
     parConversionJacobiFileName_ = params->get("zeroToParSensiConversion", "jacobiOutputFile", false);
     parConversionJacobiInverseFileName_ = params->get("zeroToParSensiConversion", "jacobiInverseOutputFile", false);  
@@ -611,7 +632,9 @@ Date InputParameters::mporDate() {
         QL_REQUIRE(!mporCalendar().empty(), "MporCalendar or BaseCurrency is required for mpor date");
         QL_REQUIRE(mporDays() != Null<Size>(), "mporDays is required for mpor date");
 
-        int effectiveMporDays = mporForward() ? mporDays() : -static_cast<int>(mporDays());
+        int effectiveMporDays = mporForward()
+            ? static_cast<int>(mporDays())
+                               : -static_cast<int>(mporDays());
 
         mporDate_ = mporCalendar().advance(asof(), effectiveMporDays, QuantExt::Days);
     }

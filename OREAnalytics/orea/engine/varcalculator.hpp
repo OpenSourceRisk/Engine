@@ -24,20 +24,81 @@
 #pragma once
 
 #include <ored/report/report.hpp>
-#include <ored/utilities/timeperiod.hpp>
-
-#include <qle/math/covariancesalvage.hpp>
-
-#include <ql/math/array.hpp>
-#include <ql/math/matrix.hpp>
-
-#include <map>
-#include <set>
+#include <orea/engine/riskfilter.hpp>
+#include <orea/engine/marketriskreport.hpp>
 
 namespace ore {
 namespace analytics {
-using QuantLib::Array;
-using QuantLib::Matrix;
+
+class VarRiskGroup : public MarketRiskGroup {
+public:
+    VarRiskGroup() {}
+    VarRiskGroup(VarConfiguration::RiskClass riskClass, VarConfiguration::RiskType riskType)
+        : riskClass_(riskClass), riskType_(riskType) {}
+
+    VarConfiguration::RiskClass riskClass() const { return riskClass_; };
+    VarConfiguration::RiskType riskType() const { return riskType_; };
+
+    std::string to_string() override;
+    bool allLevel() const override;
+
+private:
+    VarConfiguration::RiskClass riskClass_;
+    VarConfiguration::RiskType riskType_;
+};
+
+class VarRiskGroupContainer : public MarketRiskGroupContainer {
+public:
+    VarRiskGroupContainer() {}
+
+    //! Used to order pairs [Risk class, Risk Type]
+    struct CompRisk {
+        static std::map<VarConfiguration::RiskClass, QuantLib::Size> rcOrder;
+        static std::map<VarConfiguration::RiskType, QuantLib::Size> rtOrder;
+
+        bool operator()(const QuantLib::ext::shared_ptr<VarRiskGroup>& lhs,
+                        const QuantLib::ext::shared_ptr<VarRiskGroup>& rhs) const;
+    };
+
+    QuantLib::ext::shared_ptr<MarketRiskGroup> next() override;
+    void add(const QuantLib::ext::shared_ptr<MarketRiskGroup>& riskGroup) override;
+    void reset() override;
+    QuantLib::Size size() override;
+
+private:
+    /*! Set of pairs [Risk Class, Risk Type] that will need to be covered by backtest
+        Each pair in the set defines a particular filter of the risk factors in the backtest
+    */
+    std::set<QuantLib::ext::shared_ptr<VarRiskGroup>, CompRisk> riskGroups_;
+    std::set<QuantLib::ext::shared_ptr<VarRiskGroup>>::const_iterator rgIdx_;
+};
+
+class VarTradeGroup : public TradeGroup {
+public:
+    VarTradeGroup() {}
+    VarTradeGroup(std::string portfolioId) : portfolioId_(portfolioId) {}
+
+    const std::string& portfolioId() const { return portfolioId_; };
+
+    std::string to_string() override { return portfolioId_; };
+    bool allLevel() const override { return true; };
+
+private:
+    std::string portfolioId_;
+};
+
+class VarTradeGroupContainer : public TradeGroupContainer {
+public:
+    VarTradeGroupContainer() {}
+
+    QuantLib::ext::shared_ptr<TradeGroup> next() override;
+    void add(const QuantLib::ext::shared_ptr<TradeGroup>& tradeGroup) override;
+    void reset() override;
+
+private:
+    std::set<QuantLib::ext::shared_ptr<VarTradeGroup>> tradeGroups_;
+    std::set<QuantLib::ext::shared_ptr<VarTradeGroup>>::const_iterator tgIdx_;
+};
 
 //! VaR Calculator
 class VarCalculator {
@@ -47,6 +108,39 @@ public:
 
     virtual QuantLib::Real var(QuantLib::Real confidence, const bool isCall = true, 
         const std::set<std::pair<std::string, QuantLib::Size>>& tradeIds = {}) = 0;
+};
+
+class VarReport : public MarketRiskReport {
+public:
+    VarReport(const std::string& baseCurrency,
+        const QuantLib::ext::shared_ptr<Portfolio> & portfolio,
+        const std::string& portfolioFilter,
+        const vector<Real>& p, boost::optional<ore::data::TimePeriod> period,
+        const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr,
+        std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr, 
+        const bool breakdown = false);
+
+    void createReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
+
+    const std::vector<Real>& p() const { return p_; }
+
+protected:
+    QuantLib::ext::shared_ptr<VarCalculator> varCalculator_;
+    
+    QuantLib::ext::shared_ptr<ore::analytics::ScenarioFilter>
+    createScenarioFilter(const QuantLib::ext::shared_ptr<MarketRiskGroup>& riskGroup) override;
+
+    virtual void createVarCalculator() = 0;
+    std::string portfolioId(const QuantLib::ext::shared_ptr<TradeGroup>& tradeGroup) const override;
+    std::string tradeGroupKey(const QuantLib::ext::shared_ptr<TradeGroup>& tradeGroup) const override;
+    void writeVarResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& report,
+                         const QuantLib::ext::shared_ptr<MarketRiskGroup>& riskGroup,
+                         const QuantLib::ext::shared_ptr<TradeGroup>& tradeGroup);
+
+private:
+    QuantLib::ext::shared_ptr<Portfolio> portfolio_;
+    std::string portfolioFilter_;
+    std::vector<Real> p_;
 };
 
 } // namespace analytics

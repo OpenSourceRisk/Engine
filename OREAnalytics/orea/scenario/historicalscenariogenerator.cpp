@@ -18,6 +18,7 @@
 
 #include <orea/scenario/historicalscenariogenerator.hpp>
 #include <orea/scenario/simplescenario.hpp>
+#include <orea/scenario/simplescenariofactory.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -469,7 +470,7 @@ void HistoricalScenarioGeneratorWithFilteredDates::reset() {
     i_orig_ = 0;
 }
 
-boost::shared_ptr<Scenario> HistoricalScenarioGeneratorWithFilteredDates::next(const Date& d) {
+QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGeneratorWithFilteredDates::next(const Date& d) {
     while (i_orig_ < gen_->numScenarios() && !isRelevantScenario_[i_orig_]) {
         gen_->next(d);
         ++i_orig_;
@@ -478,6 +479,25 @@ boost::shared_ptr<Scenario> HistoricalScenarioGeneratorWithFilteredDates::next(c
                "HistoricalScenarioGeneratorWithFilteredDates:next(): no more scenarios available");
     ++i_orig_;
     return gen_->next(d);
+}
+
+QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGenerator(
+    const QuantLib::ext::shared_ptr<HistoricalScenarioReader>& hsr,
+    const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors, const TimePeriod& period,
+    Calendar calendar, Size mporDays,
+    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParams,
+    const QuantLib::ext::shared_ptr<TodaysMarketParameters>& marketParams, const bool overlapping) {
+
+    hsr->load(simParams, marketParams);
+
+    auto scenarioFactory = boost::make_shared<SimpleScenarioFactory>();
+
+    boost::shared_ptr<HistoricalScenarioLoader> scenarioLoader = boost::make_shared<HistoricalScenarioLoader>(
+        hsr, period.startDates().front(), period.endDates().front(), calendar);
+
+    // Create the historical scenario generator
+    return boost::make_shared<HistoricalScenarioGenerator>(scenarioLoader, scenarioFactory, calendar, adjFactors,
+                                                           mporDays, overlapping, ReturnConfiguration(), "hs_");
 }
 
 } // namespace analytics

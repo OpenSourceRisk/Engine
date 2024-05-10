@@ -151,7 +151,7 @@ void RegressionDynamicInitialMarginCalculator::build() {
                             dimCube_->set(value, nettingSetCount, j, k);
                             nettingSetDIM_[n][j][k] = value;
                         }
-                    } catch(std::exception& e) {
+                    } catch(std::exception& ) {
                         QL_FAIL("Failed to lookup external IM for netting set " << n
                                 << " at date " << io::iso_date(d));
                     }
@@ -344,8 +344,8 @@ map<string, Real> RegressionDynamicInitialMarginCalculator::unscaledCurrentDIM()
             // the first date greater than t0+MPOR, check if it is closest
             Size lastIdx = (i == 0) ? 0 : (i - 1);
             Size lastDaysFromT0 = (cube_->dates()[lastIdx] - today);
-            int daysFromT0CloseOut = daysFromT0 - horizonCalendarDays_;
-            int prevDaysFromT0CloseOut = lastDaysFromT0 - horizonCalendarDays_;
+            int daysFromT0CloseOut = static_cast<int>(daysFromT0 - horizonCalendarDays_);
+            int prevDaysFromT0CloseOut = static_cast<int>(lastDaysFromT0 - horizonCalendarDays_);
             if (std::abs(daysFromT0CloseOut) <= std::abs(prevDaysFromT0CloseOut)) {
                 relevantDateIdx = i;
                 sqrtTimeScaling = std::sqrt(Real(horizonCalendarDays_) / Real(daysFromT0));

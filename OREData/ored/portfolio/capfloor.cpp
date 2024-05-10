@@ -116,7 +116,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
                     boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
                 QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
-                qlInstrument->setPricingEngine(swapBuilder->engine(parseCurrency(legData_.currency())));
+                qlInstrument->setPricingEngine(swapBuilder->engine(parseCurrency(legData_.currency()), std::string(), std::string()));
                 setSensitivityTemplate(*swapBuilder);
             } else {
                 qlInstrument->setPricingEngine(
@@ -193,7 +193,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
                 boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
             QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
-            qlInstrument->setPricingEngine(swapBuilder->engine(parseCurrency(legData_.currency())));
+            qlInstrument->setPricingEngine(swapBuilder->engine(parseCurrency(legData_.currency()), std::string(), std::string()));
             setSensitivityTemplate(*swapBuilder);
         } else {
             qlInstrument->setPricingEngine(
@@ -222,7 +222,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
                 boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
             QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
-            qlInstrument->setPricingEngine(swapBuilder->engine(parseCurrency(legData_.currency())));
+            qlInstrument->setPricingEngine(swapBuilder->engine(parseCurrency(legData_.currency()), std::string(), std::string()));
             setSensitivityTemplate(*swapBuilder);
         } else {
             qlInstrument->setPricingEngine(
@@ -252,7 +252,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
                 boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
             QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
-            qlInstrument->setPricingEngine(swapBuilder->engine(parseCurrency(legData_.currency())));
+            qlInstrument->setPricingEngine(swapBuilder->engine(parseCurrency(legData_.currency()), std::string(), std::string()));
             setSensitivityTemplate(*swapBuilder);
         } else {
             qlInstrument->setPricingEngine(
@@ -558,10 +558,12 @@ const std::map<std::string, boost::any>& CapFloor::additionalData() const {
     vector<Rate> caps;
     vector<Rate> effectiveCaps;
     vector<Volatility> capletVols;
+    vector<Volatility> effectiveCapletVols;
     vector<Real> capletAmounts;
     vector<Rate> floors;
     vector<Rate> effectiveFloors;
     vector<Volatility> floorletVols;
+    vector<Volatility> effectiveFloorletVols;
     vector<Real> floorletAmounts;
 
     try {
@@ -655,6 +657,7 @@ const std::map<std::string, boost::any>& CapFloor::additionalData() const {
                                         pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveCap));
                                     capletAmounts.push_back(pricer->capletRate(effectiveCap) * coupon->accrualPeriod() *
                                                             coupon->nominal());
+                                    effectiveCapletVols.push_back(tmp->effectiveCapletVolatility());
                                 }
                                 if (tmp->isFloored()) {
                                     floors.push_back(tmp->floor());
@@ -664,6 +667,7 @@ const std::map<std::string, boost::any>& CapFloor::additionalData() const {
                                         pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveFloor));
                                     floorletAmounts.push_back(pricer->floorletRate(effectiveFloor) *
                                                               coupon->accrualPeriod() * coupon->nominal());
+                                    effectiveFloorletVols.push_back(tmp->effectiveFloorletVolatility());
                                 }
                             }
                         } else if (auto tmp =
@@ -682,6 +686,7 @@ const std::map<std::string, boost::any>& CapFloor::additionalData() const {
                                         pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveCap));
                                     capletAmounts.push_back(pricer->capletRate(effectiveCap) * coupon->accrualPeriod() *
                                                             coupon->nominal());
+                                    effectiveCapletVols.push_back(tmp->effectiveCapletVolatility());
                                 }
                                 if (tmp->isFloored()) {
                                     floors.push_back(tmp->floor());
@@ -691,6 +696,7 @@ const std::map<std::string, boost::any>& CapFloor::additionalData() const {
                                         pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveFloor));
                                     floorletAmounts.push_back(pricer->floorletRate(effectiveFloor) *
                                                               coupon->accrualPeriod() * coupon->nominal());
+                                    effectiveFloorletVols.push_back(tmp->effectiveFloorletVolatility());
                                 }
                             }
 
@@ -709,6 +715,7 @@ const std::map<std::string, boost::any>& CapFloor::additionalData() const {
                                         pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveCap));
                                     capletAmounts.push_back(pricer->capletRate(effectiveCap) * coupon->accrualPeriod() *
                                                             coupon->nominal());
+                                    effectiveCapletVols.push_back(tmp->effectiveCapletVolatility());
                                 }
                                 if (tmp->isFloored()) {
                                     floors.push_back(tmp->floor());
@@ -718,6 +725,7 @@ const std::map<std::string, boost::any>& CapFloor::additionalData() const {
                                         pricer->capletVolatility()->volatility(tmp->fixingDate(), effectiveFloor));
                                     floorletAmounts.push_back(pricer->floorletRate(effectiveFloor) *
                                                               coupon->accrualPeriod() * coupon->nominal());
+                                    effectiveFloorletVols.push_back(tmp->effectiveFloorletVolatility());
                                 }
                             }
                         }
@@ -738,12 +746,14 @@ const std::map<std::string, boost::any>& CapFloor::additionalData() const {
             additionalData_["effectiveCaps"] = effectiveCaps;
             additionalData_["capletVols"] = capletVols;
             additionalData_["capletAmounts"] = capletAmounts;
+            additionalData_["effectiveCapletVols"] = effectiveCapletVols;
         }
         if (floors.size() > 0) {
             additionalData_["floors"] = floors;
             additionalData_["effectiveFloors"] = effectiveFloors;
             additionalData_["floorletVols"] = floorletVols;
             additionalData_["floorletAmounts"] = floorletAmounts;
+            additionalData_["effectiveFloorletVols"] = effectiveFloorletVols;
         }
 
     } catch (std::exception& e) {

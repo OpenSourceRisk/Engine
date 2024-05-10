@@ -39,13 +39,21 @@ public:
     class results;
     class engine;
 
+    //! exercise = nullptr means that the instrument is identical to the underlying itself (i.e. a swap)
     MultiLegOption(const std::vector<Leg>& legs, const std::vector<bool>& payer, const std::vector<Currency>& currency,
                    const boost::shared_ptr<Exercise>& exercise = boost::shared_ptr<Exercise>(),
                    const Settlement::Type settlementType = Settlement::Physical,
                    Settlement::Method settlementMethod = Settlement::PhysicalOTC);
 
+    const std::vector<Leg>& legs() const { return legs_; }
+    const std::vector<bool>& payer() const { return payer_; }
+    const std::vector<Currency>& currency() const { return currency_; }
+    const boost::shared_ptr<Exercise> exercise() const { return exercise_; }
+    const Settlement::Type settlementType() const { return settlementType_; }
+    const Settlement::Method settlementMethod() const { return settlementMethod_; }
+
     void deepUpdate() override;
-    bool isExpired() const override { return Settings::instance().evaluationDate() >= maturityDate(); }
+    bool isExpired() const override;
     void setupArguments(PricingEngine::arguments*) const override;
     void fetchResults(const PricingEngine::results*) const override;
 
@@ -67,7 +75,7 @@ private:
 class MultiLegOption::arguments : public virtual PricingEngine::arguments {
 public:
     std::vector<Leg> legs;
-    std::vector<Real> payer;
+    std::vector<bool> payer;
     std::vector<Currency> currency;
     boost::shared_ptr<Exercise> exercise;
     Settlement::Type settlementType;
