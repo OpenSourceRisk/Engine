@@ -286,7 +286,11 @@ defaults to \emph{Following}.
 not provided, this defaults to \emph{Backward}.
 \item PaymentCalendar [Optional]: The business day calendar used for determining coupon payment dates.
 If not specified, this defaults to the fixing calendar defined on the overnight index.
-\item RateCutoff: The rate cut-off on the overnight leg. Generally, the overnight fixing is only observed up to a certain number of days before the end of the interest period date. The last observed rate is applied for the remaining days in the period. This rate cut-off gives the number of days e.g.\ 1 for ESTR or SOFR.
+\item RateCutoff: The rate cut-off on the overnight leg. Generally, the overnight fixing
+is only observed up to a certain number of days before the end of the interest period date.
+The last observed rate is applied for the remaining days in the period.
+This rate cut-off gives the number of days e.g.\ 1 for ESTR or SOFR.
+If not specified, this defaults to 0 days.
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
