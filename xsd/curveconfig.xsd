@@ -116,6 +116,7 @@
       <xs:element type="xs:string" name="ProxyVolatilityCurve"/>
       <xs:element type="xs:string" name="FXVolatilityCurve" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="CorrelationCurve" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="CDSVolatilityCurve" minOccurs="0" maxOccurs="1"/>
     </xs:all>
     <xs:attribute type="xs:nonNegativeInteger" name="priority"/>
   </xs:complexType>
@@ -345,6 +346,7 @@
         <xs:element type="constantVolatilityConfig" name="Constant"/>
         <xs:element type="volatilityCurveConfig" name="Curve"/>
         <xs:element type="volatilityStrikeSurfaceConfig" name="StrikeSurface"/>
+        <xs:element type="proxySurface" name="ProxySurface"/>
       </xs:choice>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
