@@ -1,8 +1,9 @@
 \subsubsection{Exotic Variance and Volatility Derivatives}
 \label{SubSectionExoticVarianceSwap}
 
-Exotic variance/volatility swaps and options are represented as {\em scripted trades}, refer to Section
-\ref{app:scriptedtrade} for an introduction. Each of the supported variations and their payoff script
+Exotic variance/volatility swaps and options are represented as {\em scripted trades},
+refer to the scripted trade documentation in ore/Docs/ScriptedTrade for an introduction.
+Each of the supported variations and their payoff script
 name are shown in Table \ref{tab:exotic_variance_swap}. All swaps have an optional cap/floor feature.
 
 \begin{table}[hbt]
@@ -164,7 +165,7 @@ The meanings and allowable values for the \lstinline!VarianceOptionData! node be
   and the \lstinline!VarianceReference! should be \emph{0.324}. \\
   Allowable values: Any non-negative number, as a percentage expressed in decimal form.
   \item{}[index] \lstinline!Underlying!: Underlying index. \\
-  Allowable values: See Section \ref{data_index} for allowable values.
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
   \item{}[event] \lstinline!ValuationSchedule!: The schedule defining the (daily) observation period for the variance accrual. \\
   Allowable values: See Section \ref{ss:schedule_data}.
   \item{}[bool] \lstinline!SquaredPayoff!: Flag indicating whether the trade is a variance option (\emph{True}) or a volatility
@@ -176,7 +177,7 @@ The meanings and allowable values for the \lstinline!VarianceOptionData! node be
   \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency}  for allowable currency codes.
 \end{itemize}
 
@@ -317,7 +318,7 @@ The meanings and allowable values for the \lstinline!KIKOVarianceSwapData! node 
   $K_{vol}$ is in absolute terms). \\
   Allowable values: Any non-negative number.
   \item{}[index] \lstinline!Underlying!: Underlying index. \\
-  Allowable values: See Section \ref{data_index} for allowable values.
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
   \item{}[event] \lstinline!ValuationSchedule!: The schedule defining the (daily) observation period for the variance accrual. \\
   Allowable values: \lstinline!See! Section \ref{ss:schedule_data}.
   \item{}[bool] SquaredPayoff: Flag indicating whether the trade is a variance swap (\emph{True}) or a volatility
@@ -345,7 +346,7 @@ The meanings and allowable values for the \lstinline!KIKOVarianceSwapData! node 
   \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
@@ -482,7 +483,7 @@ The meanings and allowable values for the \lstinline!CorridorVarianceSwapData! n
   $K_{vol}$ is in absolute terms). \\
   Allowable values: Any non-negative number.
   \item{}[index] \lstinline!Underlying!: Underlying index. \\
-  Allowable values: See Section \ref{data_index} for allowable values.
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
   \item{}[event] \lstinline!ValuationSchedule!: The schedule defining the (daily) observation period for the variance accrual. \\
   Allowable values: See Section \ref{ss:schedule_data}.
   \item{}[bool] \lstinline!SquaredPayoff!: Flag indicating whether the trade is a variance swap (\emph{True}) or a volatility
@@ -520,7 +521,7 @@ The meanings and allowable values for the \lstinline!CorridorVarianceSwapData! n
   \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency}  for allowable currency codes.
 \end{itemize}
 
@@ -668,7 +669,7 @@ The meanings and allowable values for the \lstinline!KIKOCorridorVarianceSwapDat
   $K_{vol}$ is in absolute terms). \\
   Allowable values: Any non-negative number.
   \item{}[index] \lstinline!Underlying!: Underlying index. Currently only EQ, FX and COMM underlyings are supported. \\
-  Allowable values: See Section \ref{data_index} for allowable values.
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
   \item{}[event] \lstinline!ValuationSchedule!: The schedule defining the (daily) observation period for the
   variance accrual. \\
   Allowable values: See Section \ref{ss:schedule_data}.
@@ -704,11 +705,11 @@ The meanings and allowable values for the \lstinline!KIKOCorridorVarianceSwapDat
   settlement lag to reflect settlement after a knock-out event, or after the final variance observation date if
   no knock-out occurs. If the barrier is knock-in, this represents the settlement date, which is the final
   valuation date plus the settlement lag. \\
-  Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates, or DerivedSchedule (see \ref{app:scriptedtrade}).
+  Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates, or DerivedSchedule (see the scripted trade documentation in ore/Docs/ScriptedTrade).
   \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency}  for allowable currency codes.
 \end{itemize}
 
@@ -848,7 +849,7 @@ The meanings and allowable values for the \lstinline!ConditionalVarianceSwapData
   $K_{vol}$ is in absolute terms). \\
   Allowable values: Any non-negative number.
   \item{}[index] \lstinline!Underlying!: Underlying index. \\
-  Allowable values: See Section \ref{data_index} for allowable values.
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
   \item{}[event] \lstinline!ValuationSchedule!: The schedule defining the (daily) observation period for the variance accrual. \\
   Allowable values: See Section \ref{ss:schedule_data}.
   \item{}[bool] \lstinline!SquaredPayoff!: Flag indicating whether the trade is a variance swap (\emph{True}) or a volatility
@@ -887,7 +888,7 @@ The meanings and allowable values for the \lstinline!ConditionalVarianceSwapData
   \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
@@ -1033,7 +1034,7 @@ The meanings and allowable values for the \lstinline!ConditionalVarianceSwapData
   variance should be used here. \\
   Allowable values: Any non-negative number.
   \item{}[index] \lstinline!Underlying!: Underlying index. \\
-  Allowable values: See Section \ref{data_index} for allowable values.
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
   \item{}[event] \lstinline!ValuationSchedule!: The schedule defining the (daily) observation period for the variance accrual. \\
   Allowable values: See Section \ref{ss:schedule_data}.
   \item{}[bool] \lstinline!SquaredPayoff!: Flag indicating whether the trade is a variance swap (\emph{True}) or a volatility
@@ -1072,7 +1073,7 @@ The meanings and allowable values for the \lstinline!ConditionalVarianceSwapData
   \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
@@ -1151,8 +1152,8 @@ The meanings and allowable values of elements in the \lstinline!EquityPairwiseVa
   \item \lstinline!LongShort!: Own party position. \\
     Allowable values: \emph{Long}, \emph{Short}
   \item \lstinline!Underlyings!: The basket of underlyings. \\
-    Allowable values: The format follows that of a scripted trade underlying. See \ref{app:scriptedtrade}
-    (section Data Node / Index) for allowable values.
+    Allowable values: The format follows that of a scripted trade underlying. See the scripted trade documentation in
+    ore/Docs/ScriptedTrade (section Data Node / Index) for allowable values.
   \item \lstinline!UnderlyingStrikes!: The volatility strikes $K^{1,2}_{vol}$ of the underlyings quoted in absolute terms.
   If the swap was struck in terms of variance, the square roots of the variances should be used here. \\
     Allowable values: Any non-negative number, as a percentage expressed in decimal form.
@@ -1192,7 +1193,8 @@ The meanings and allowable values of elements in the \lstinline!EquityPairwiseVa
     Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
 \end{itemize}
 
-Pairwise variance swaps can alternatively be represented as {\em scripted trades}, refer to Section \ref{app:scriptedtrade} for an introduction.
+Pairwise variance swaps can alternatively be represented as {\em scripted trades}, refer to the scripted trade documentation
+in ore/Docs/ScriptedTrade for an introduction.
 
 \begin{minted}[fontsize=\footnotesize]{xml}
 <Trade id="EQ_VarianceSwap_Pairwise">
@@ -1333,7 +1335,7 @@ The meanings and allowable values for the \lstinline!PairwiseVarianceSwapData! n
   (where $K^{1,2}_{vol}$ is in absolute terms). \\
   Allowable values: Any non-negative number.
   \item{}[index] \lstinline!Underlyings!: Underlying index. \\
-  Allowable values: See Section \ref{data_index} for allowable values. 
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values. 
   \item{}[number] \lstinline!BasketStrike!: The basket volatility strike $\hat{K}_{vol}$ quoted in absolute terms. \\
   Allowable values: Any non-negative number, as a percentage expressed in decimal form.
   \item{}[number] \lstinline!BasketNotional!: The basket vega notional amount. \\
@@ -1344,7 +1346,7 @@ The meanings and allowable values for the \lstinline!PairwiseVarianceSwapData! n
   \item{}[event] \lstinline!LaggedValuationSchedule!: The end dates of the variance accrual schedule. This can be derived from the \lstinline!Schedule!
   using a DerivedSchedule (e.g.\ with a two-day lag, \emph{2D}). For the standard accrual period lengths of one day,
   set \lstinline!Shift! to \emph{1D}. \\
-  Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates, or DerivedSchedule (see \ref{app:scriptedtrade}).
+  Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates, or DerivedSchedule (see the scripted trade documentation in ore/Docs/ScriptedTrade).
   \item{}[number] \lstinline!AccrualLag!: The length (in days) of each variance accrual period. For classic variance swaps with no lag, set this to 1. \\
   Allowable values: Any integer greater than or equal to 1.
   \item{}[number] \lstinline!PayoffLimit!: The factor used to determine the maximum/minimum payoff under the swap. This corresponds to $C$
@@ -1363,7 +1365,7 @@ The meanings and allowable values for the \lstinline!PairwiseVarianceSwapData! n
   \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
@@ -1574,7 +1576,7 @@ The meanings and allowable values for the \lstinline!VarianceDispersionSwapData!
   \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
@@ -1805,7 +1807,7 @@ The meanings and allowable values for the \lstinline!CorridorVarianceDispersionS
   \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
@@ -2081,11 +2083,12 @@ The meanings and allowable values for the \lstinline!KOCorridorVarianceDispersio
   \item{}[event] \lstinline!SettlementSchedule!: The settlement dates derived from the \lstinline!KnockOutSchedule! using a
   settlement lag to reflect settlement after a knock-out event, or after the final variance observation date if
   no knock-out occurs.. \\
-  Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates, or DerivedSchedule (see \ref{app:scriptedtrade}).
+  Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates, or DerivedSchedule (see (see the scripted trade
+  documentation in ore/Docs/ScriptedTrade).
   \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
@@ -2176,7 +2179,7 @@ The meanings and allowable values for the \lstinline!GammaSwapData! node below.
   \item{}[event] \lstinline!SettlementDate!: The date on which the swap payoff is settled. \\
   Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
   \item{}[index] \lstinline!Underlying!: Underlying index. \\
-  Allowable values: See Section \ref{data_index} for allowable values.
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
   \item{}[event] \lstinline!ValuationSchedule!: The base schedule which defines the start dates of the variance accrual schedule. This node is
   also used to derive the variance accrual schedule. Note that the end date (or last date) of this schedule must be the final
   period end date of the instrument. \\
@@ -2184,7 +2187,7 @@ The meanings and allowable values for the \lstinline!GammaSwapData! node below.
   \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
@@ -2300,7 +2303,8 @@ The meanings and allowable values of elements in the \lstinline!EquityBasketVari
     Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
 \end{itemize}
 
-Basket variance swaps can alternatively be represented as {\em scripted trades}, refer to Section \ref{app:scriptedtrade} for an introduction.
+Basket variance swaps can alternatively be represented as {\em scripted trades}, refer to the scripted trade documentation in
+ore/Docs/ScriptedTrade for an introduction.
 
 \begin{minted}[fontsize=\footnotesize]{xml}
 <Trade id="EQ_VarianceSwap_Basket">
@@ -2409,7 +2413,7 @@ The meanings and allowable values for the \lstinline!BasketVarianceSwapData! nod
   strike. \\
   Allowable values: \emph{Long, Short}.
   \item{}[index] \lstinline!Underlyings!: List of underlying indices. \\
-  Allowable values: See Section \ref{data_index} for allowable values. 
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values. 
   \item{}[number] \lstinline!Strike!: The volatility strike $K_{vol}$ of the variance swap quoted in absolute terms.
   If the swap was struck in terms of variance, the square root of that variance should be used here. \\
   Allowable values: Any non-negative number, as a percentage expressed in decimal form.

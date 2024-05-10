@@ -1,6 +1,6 @@
 \subsubsection{Basket Options}
 
-Basket Options are represented as traditional trades or {\em scripted trades}, refer to Section \ref{app:scriptedtrade}
+Basket Options are represented as traditional trades or {\em scripted trades}, refer to ore/Docs/ScriptedTrade
 for an introduction of the latter. Each of the supported variations is represented by a separate payoff script as shown
 in Table \ref{tab:basketoptions}.
 
@@ -84,7 +84,7 @@ The traditional trade representation is as follows, using an equity underlying i
 with the following elements:
 
 \begin{itemize}
-\item Currency: The pay currency. Notice section \ref{sss:payccy_st}. \\
+\item Currency: The pay currency. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
   Allowable values: all supported currency codes, see Table \ref{tab:currency} \lstinline!Currency!.
 \item Notional: The quantity (for equity, commodity underlyings) / foreign amount (fx underlying) \\
   Allowable values: all positive real numbers
@@ -171,7 +171,7 @@ type indicated in square brackets.
           Allowable values: Any positive real number.
      \item{}[index] \lstinline!Underlyings!:
           List of underlying indices enclosed by {\tt <Value>} and {\tt </Value>} tags. \\
-          Allowable values: See Section \ref{data_index} for allowable values.
+          Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
     \item{}[number] \lstinline!Weights!: List of weights applied to the
       underlying prices in the basket, given in the same order as
       the Underlyings above, each weight enclosed by {\tt <Value>} and {\tt </Value>} tags.\\
@@ -179,7 +179,7 @@ type indicated in square brackets.
     \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
     in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
     be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-    COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}.
+    COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade.
       Allowable values: See Table \ref{tab:currency} \lstinline!Currency!
       for allowable currency codes.
 \end{itemize}
@@ -241,7 +241,7 @@ The traditional trade representation is as follows, using an equity underlying i
 with the following elements:
 
 \begin{itemize}
-\item Currency: The pay currency. Notice section \ref{sss:payccy_st}. \\
+\item Currency: The pay currency. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
   Allowable values: all supported currency codes, see Table \ref{tab:currency} \lstinline!Currency!.
 \item Notional: The quantity (for equity, commodity underlyings) / foreign amount (fx underlying) \\
   Allowable values: all positive real numbers
@@ -338,7 +338,7 @@ type indicated in square brackets.
     \item{}[event] \lstinline!Settlement!: Option settlement date. \\
     Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
     \item{}[event] \lstinline!ObservationDates!: Price monitoring schedule. \\
-    Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates, or DerivedSchedule (see \ref{app:scriptedtrade}).
+    Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates, or DerivedSchedule (see ore/Docs/ScriptedTrade).
     \item{}[optionType] \lstinline!PutCall!: Option type with \\
           Allowable values \emph{Call, Put}.
     \item{}[longShort] \lstinline!LongShort!: Position type,
@@ -352,7 +352,7 @@ type indicated in square brackets.
           Allowable values: Any positive real number.
     \item{}[index] \lstinline!Underlyings!: List of underlying indices
       enclosed by {\tt <Value>} and {\tt </Value>} tags. \\
-      See Section \ref{data_index} for allowable values.
+      See ore/Docs/ScriptedTrade's Index Section for allowable values.
     \item{}[number] \lstinline!Weights!: List of weights applied to the
           underlying prices in the basket, given in the same order as
           the Underlyings above, each weight enclosed by {\tt <Value>} and {\tt </Value>} tags.\\
@@ -360,7 +360,7 @@ type indicated in square brackets.
     \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} \lstinline!Currency! for allowable currency codes.
 \end{itemize}
 
@@ -420,7 +420,7 @@ The traditional trade representation is as follows, using an equity underlying i
 with the following elements:
 
 \begin{itemize}
-\item Currency: The pay currency. Notice section \ref{sss:payccy_st}. \\
+\item Currency: The pay currency. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
   Allowable values: all supported currency codes, see Table \ref{tab:currency} \lstinline!Currency!.
 \item Notional: The quantity (for equity, commodity underlyings) / foreign amount (fx underlying) \\
   Allowable values: all positive real numbers
@@ -521,7 +521,7 @@ type indicated in square brackets.
     \item{}[event] \lstinline!Settlement!: Option settlement date. \\
     Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
     \item{}[event] \lstinline!ObservationDates!: Price monitoring schedule. \\
-    Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates, or DerivedSchedule (see \ref{app:scriptedtrade}).
+    Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates, or DerivedSchedule (see ore/Docs/ScriptedTrade).
     \item{}[optionType] \lstinline!PutCall!: Option type with \\
           Allowable values \emph{Call, Put}.
     \item{}[longShort] \lstinline!LongShort!: Position type,
@@ -535,7 +535,7 @@ type indicated in square brackets.
 %          Allowable values: Any positive real number.
     \item{}[index] \lstinline!Underlyings!: List of underlying indices
           enclosed by {\tt <Value>} and {\tt </Value>} tags. \\
-          Allowable values: See Section \ref{data_index} for allowable values.
+          Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
      \item{}[number] \lstinline!Weights!: List of weights applied to the
           underlying prices in the basket, given in the same order as
           the Underlyings above, each weight enclosed by {\tt <Value>} and {\tt </Value>} tags.\\
@@ -543,7 +543,7 @@ type indicated in square brackets.
     \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} \lstinline!Currency! for allowable currency codes.
 \end{itemize}
 
@@ -602,7 +602,7 @@ The traditional trade representation is as follows, using an equity underlying i
 with the following elements:
 
 \begin{itemize}
-\item Currency: The pay currency. Notice section \ref{sss:payccy_st}. \\
+\item Currency: The pay currency. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
   Allowable values: all supported currency codes, see Table \ref{tab:currency} \lstinline!Currency!.
 \item Notional: The quantity (for equity, commodity underlyings) / foreign amount (fx underlying) \\
   Allowable values: all positive real numbers
@@ -707,7 +707,7 @@ type indicated in square brackets.
     \item{}[event] \lstinline!Settlement!: Option settlement date. \\
     Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
     \item{}[event] \lstinline!ObservationDates!: Price monitoring schedule. \\
-    Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates, or DerivedSchedule (see \ref{app:scriptedtrade}).
+    Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates, or DerivedSchedule (see ore/Docs/ScriptedTrade).
     \item{}[longShort] \lstinline!LongShort!: Position type,
           {\em Long} if we buy, {\em Short} if we sell.\\
     Allowable values: \emph{Long, Short}.
@@ -715,7 +715,7 @@ type indicated in square brackets.
           Allowable values: Any positive real number.
     \item{}[index] \lstinline!Underlyings!: List of underlying indices
           enclosed by {\tt <Value>} and {\tt </Value>} tags. \\
-          Allowable values: See Section \ref{data_index} for allowable values.
+          Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
     \item{}[number] \lstinline!Weights!: List of weights applied to the
           underlying prices in the basket, given in the same order as
           the Underlyings above, each weight enclosed by {\tt <Value>} and {\tt </Value>} tags.\\
@@ -723,7 +723,7 @@ type indicated in square brackets.
     \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} \lstinline!Currency!  for allowable currency codes.
 \end{itemize}
 
@@ -782,7 +782,7 @@ The traditional trade representation is as follows, using an equity underlying i
 with the following elements:
 
 \begin{itemize}
-\item Currency: The pay currency. Notice section \ref{sss:payccy_st}. \\
+\item Currency: The pay currency. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
   Allowable values: all supported currency codes, see Table \ref{tab:currency} \lstinline!Currency!.
 \item Notional: The quantity (for equity, commodity underlyings) / foreign amount (fx underlying) \\
   Allowable values: all positive real numbers
@@ -876,7 +876,7 @@ type indicated in square brackets.
     \item{}[event] \lstinline!Settlement!: Option settlement date. \\
     Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
     \item{}[event] \lstinline!ObservationDates!: Price monitoring schedule. \\
-    Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates, or DerivedSchedule (see \ref{app:scriptedtrade}).
+    Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates, or DerivedSchedule (see ore/Docs/ScriptedTrade).
     \item{}[longShort] \lstinline!LongShort!: Position type,
           {\em Long} if we buy, {\em Short} if we sell.\\
     Allowable values: \emph{Long, Short}.
@@ -885,7 +885,7 @@ type indicated in square brackets.
           Allowable values: Any positive real number.
     \item{}[index] \lstinline!Underlyings!: List of underlying indices
           enclosed by {\tt <Value>} and {\tt </Value>} tags. \\
-          Allowable values: See Section \ref{data_index} for allowable values.
+          Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
     \item{}[number] \lstinline!Weights!: List of weights applied to the
           underlying prices in the basket, given in the same order as
           the Underlyings above, each weight enclosed by {\tt <Value>} and {\tt </Value>} tags.\\
@@ -893,6 +893,6 @@ type indicated in square brackets.
     \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} \lstinline!Currency! for allowable currency codes.
 \end{itemize}

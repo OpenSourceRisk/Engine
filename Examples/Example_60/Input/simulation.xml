@@ -2,15 +2,15 @@
 <Simulation>
   <Parameters>
     <Discretization>Exact</Discretization>
-    <Grid>30,2W</Grid>
+    <Grid>1D, 2D, 3D, 5D, 6D, 7D, 8D, 9D, 10D, 11D, 12D, 13D, 14D, 15D, 1M, 2M, 3M, 6M, 9M, 1Y, 15M, 18M, 21M, 2Y, 3Y</Grid>
     <Calendar>EUR,USD</Calendar>
     <DayCounter>A365</DayCounter>
     <Sequence>SobolBrownianBridge</Sequence>
     <Scenario>Simple</Scenario>
     <Seed>42</Seed>
     <Samples>10000</Samples>
-    <!-- <CloseOutLag>0D</CloseOutLag> -->
-    <!-- <MporMode>StickyDate</MporMode> -->
+    <CloseOutLag>1W</CloseOutLag>
+    <MporMode>StickyDate</MporMode>
   </Parameters>
   <CrossAssetModel>
     <DomesticCcy>USD</DomesticCcy>

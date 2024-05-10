@@ -1,6 +1,6 @@
 \subsubsection{Rainbow Options}
 
-Rainbow Options are represented as traditional trades or {\em scripted trades}, refer to Section \ref{app:scriptedtrade}
+Rainbow Options are represented as traditional trades or {\em scripted trades}, refer to the scripted trade documentation in ore/Docs/ScriptedTrade
 for an introduction of the latter. Each of the supported variations, all European style, is represented by a separate
 payoff script as shown in Table \ref{tab:rainbowoptions} (excluding Rainbow Call Spread Options and Worst Performance Rainbow Options).
 
@@ -80,7 +80,7 @@ The traditional trade representation is as follows, using an equity underlying i
 with the following elements:
 
 \begin{itemize}
-\item Currency: The pay currency. Notice section \ref{sss:payccy_st}. \\
+\item Currency: The pay currency. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
   Allowable values: all supported currency codes, see Table \ref{tab:currency} \lstinline!Currency!.
 \item Notional: The quantity (for equity, commodity underlyings) / foreign amount (fx underlying) \\
   Allowable values: all positive real numbers
@@ -161,7 +161,7 @@ type indicated in square brackets.
           Allowable values: Any positive real number.
     \item{}[index] \lstinline!Underlyings!: List of underlying indices
           enclosed by {\tt <Value>} and {\tt </Value>} tags. \\
-          Allowable values: See Section \ref{data_index} for allowable values.
+          Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
     \item{}[number] \lstinline!Weights!: List of weights applied to each of
           the underlying prices, given in the same order as
           the Underlyings above, each weighted enclosed by {\tt <Value>} and {\tt </Value>} tags.\\
@@ -169,7 +169,7 @@ type indicated in square brackets.
     \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
@@ -217,7 +217,7 @@ The traditional trade representation is as follows, using an equity underlying i
 with the following elements:
 
 \begin{itemize}
-\item Currency: The pay currency. Notice section \ref{sss:payccy_st}. \\
+\item Currency: The pay currency. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
   Allowable values: all supported currency codes, see Table \ref{tab:currency} \lstinline!Currency!.
 \item Notional: The quantity (for equity, commodity underlyings) / foreign amount (fx underlying) \\
   Allowable values: all positive real numbers
@@ -298,7 +298,7 @@ type indicated in square brackets.
           Allowable values: Any positive real number.
     \item{}[index] \lstinline!Underlyings!: List of underlying indices
           enclosed by {\tt <Value>} and {\tt </Value>} tags. \\
-          Allowable values: See Section \ref{data_index} for allowable values.
+          Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
     \item{}[number] \lstinline!Weights!: List of weights applied to each of
           the underlying prices, given in the same order as
           the Underlyings above, each weighted enclosed by {\tt <Value>} and {\tt </Value>} tags.\\
@@ -306,7 +306,7 @@ type indicated in square brackets.
     \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
@@ -354,7 +354,7 @@ The traditional trade representation is as follows, using an equity underlying i
 with the following elements:
 
 \begin{itemize}
-\item Currency: The pay currency. Notice section \ref{sss:payccy_st}. \\
+\item Currency: The pay currency. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
   Allowable values: all supported currency codes, see Table \ref{tab:currency} \lstinline!Currency!.
 \item Notional: The quantity (for equity, commodity underlyings) / foreign amount (fx underlying) \\
   Allowable values: all positive real numbers
@@ -446,7 +446,7 @@ type indicated in square brackets.
           Allowable values: Any positive real number.
     \item{}[index] \lstinline!Underlyings!: List of underlying indices
           enclosed by {\tt <Value>} and {\tt </Value>} tags. \\
-          Allowable values: See Section \ref{data_index} for allowable values.
+          Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
     \item{}[number] \lstinline!Weights!: List of weights applied to each of
           the underlying prices, given in the same order as
           the Underlyings above, each weight enclosed by {\tt <Value>} and {\tt </Value>} tags.\\
@@ -454,7 +454,7 @@ type indicated in square brackets.
     \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
@@ -502,7 +502,7 @@ The traditional trade representation is as follows, using an equity underlying i
 with the following elements:
 
 \begin{itemize}
-\item Currency: The pay currency. Notice section \ref{sss:payccy_st}. \\
+\item Currency: The pay currency. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
   Allowable values: all supported currency codes, see Table \ref{tab:currency} \lstinline!Currency!.
 \item Notional: The quantity (for equity, commodity underlyings) / foreign amount (fx underlying) \\
   Allowable values: all positive real numbers
@@ -595,7 +595,7 @@ type indicated in square brackets.
           Allowable values: Any positive real number.
     \item{}[index] \lstinline!Underlyings!: List of underlying indices
           enclosed by {\tt <Value>} and {\tt </Value>} tags. \\
-          Allowable values: See Section \ref{data_index} for allowable values.
+          Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
     \item{}[number] \lstinline!Weights!: List of weights applied to each of
           the underlying prices, given in the same order as
           the Underlyings above, each weight enclosed by {\tt <Value>} and {\tt </Value>} tags.\\
@@ -603,14 +603,14 @@ type indicated in square brackets.
       \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
 \subsubsection*{European Rainbow Call Spread Option}
 
-European rainbow call spread options are represented as {\em scripted trades}, refer to
-Section \ref{app:scriptedtrade} for an introduction.
+European rainbow call spread options are represented as {\em scripted trades}, refer to the scripted trade documentation in ore/Docs/ScriptedTrade
+for an introduction.
 
 Trade input and the payoff script are described below.
 
@@ -673,7 +673,7 @@ The meanings and allowable values of the elements in the \lstinline!EuropeanRain
     \item{}[number] \lstinline!Notional!: The notional. \\
       Allowable values: A real number.
     \item{}[index] \lstinline!Underlyings!: The underlyings. \\
-      Allowable values: See Section \ref{data_index} for allowable values.
+      Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
       \item{}[number] \lstinline!InitialStrikes!: The initial strikes of the underlyings.\\
         Allowable values: A real number for each underlying.
       \item{}[number] \lstinline!Weights!: The weights for the best, second best, ..., worst performing underlying.\\
@@ -685,14 +685,15 @@ The meanings and allowable values of the elements in the \lstinline!EuropeanRain
       \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
  \end{itemize}
 
 \subsubsection*{Rainbow Call Spread Barrier Option}
 
 A rainbow call spread barrier option is an extension of the European Rainbow Call Spread Option, and is
-represented as {\em scripted trades}, refer to Section \ref{app:scriptedtrade} for an introduction.
+represented as {\em scripted trades}, refer to the scripted trade documentation in ore/Docs/ScriptedTrade
+for an introduction.
 
 Trade input and the payoff script are described below.
 
@@ -800,7 +801,7 @@ The meanings and allowable values of the elements in the \lstinline!RainbowCallS
   \item{}[number] \lstinline!Notional!: The notional. \\
   Allowable values: A real number.
   \item{}[index] \lstinline!Underlyings!: The underlyings. \\
-  Allowable values: See Section \ref{data_index} for allowable values.
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
   \item{}[number] \lstinline!InitialPrices!: The initial prices of the underlyings.\\
   Allowable values: A real number for each underlying.
   \item{}[number] \lstinline!Weights!: The weights for the best, second best, ..., worst performing underlying.\\
@@ -824,14 +825,14 @@ The meanings and allowable values of the elements in the \lstinline!RainbowCallS
   \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} \lstinline!Currency! for allowable currency codes.
 \end{itemize}
 
 \subsubsection*{Asian Rainbow Call Spread Option}
 
-Asian rainbow call spread options are represented as {\em scripted trades}, refer to
-Section \ref{app:scriptedtrade} for an introduction.
+Asian rainbow call spread options are represented as {\em scripted trades}, refer to the scripted trade documentation in ore/Docs/ScriptedTrade
+for an introduction.
 
 Trade input and the payoff script are described below.
 
@@ -913,7 +914,7 @@ The meanings and allowable values of the elements in the \lstinline!AsianRainbow
     \item{}[number] \lstinline!Notional!: The notional. \\
       Allowable values: A real number.
     \item{}[index] \lstinline!Underlyings!: The underlyings. \\
-      Allowable values: See Section \ref{data_index} for allowable values.
+      Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
     \item{}[number] \lstinline!InitialStrikes!: The initial strikes of the underlyings.\\
       Allowable values: A real number for each underlying.
     \item{}[number] \lstinline!Weights!: The weights for the best, second best, ..., worst performing underlying.\\
@@ -925,14 +926,15 @@ The meanings and allowable values of the elements in the \lstinline!AsianRainbow
     \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
     in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
     be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-    COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+    COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
       Allowable values: See Table \ref{tab:currency} for allowable currency codes.
  \end{itemize}
 
 \subsubsection*{Worst Performance Rainbow Option 01}
 
-A worst performance rainbow option 01 is represented as a {\em scripted trade}, refer to
-Section \ref{app:scriptedtrade} for an introduction.
+A worst performance rainbow option 01 is represented as a {\em scripted trade},
+refer to the scripted trade documentation in ore/Docs/ScriptedTrade
+for an introduction.
 
 Trade input and the payoff script are described below.
 
@@ -1014,7 +1016,7 @@ The meanings and allowable values for the \lstinline!WorstPerformanceRainbowOpti
   \item{}[longShort] \lstinline!LongShort!: Own party position in the option. \\
   Allowable values: \emph{Long, Short}.
   \item{}[index] \lstinline!Underlyings!: The basket of underlyings. \\
-  Allowable values: See Section \ref{data_index} for allowable values.
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
   \item{}[number] \lstinline!InitialPrices!: The agreed initial price for each basket underlying. \\
   Allowable values: Any positive number.
   \item{}[number] \lstinline!Premium!: Total option premium amount in terms of the \emph{PayCcy} \\
@@ -1032,14 +1034,15 @@ The meanings and allowable values for the \lstinline!WorstPerformanceRainbowOpti
   \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
 \subsubsection*{Worst Performance Rainbow Option 02}
 
-A worst performance rainbow option 02 is represented as a {\em scripted trade}, refer to
-Section \ref{app:scriptedtrade} for an introduction.
+A worst performance rainbow option 02 is represented as a {\em scripted trade},
+refer to the scripted trade documentation in ore/Docs/ScriptedTrade
+for an introduction.
 
 Trade input and the payoff script are described below.
 
@@ -1134,7 +1137,7 @@ The meanings and allowable values for the \lstinline!WorstPerformanceRainbowOpti
   \item{}[longShort] \lstinline!LongShort!: Own party position in the option. \\
   Allowable values: \emph{Long, Short}.
   \item{}[index] \lstinline!Underlyings!: The basket of underlyings. \\
-  Allowable values: See Section \ref{data_index} for allowable values.
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
   \item{}[number] \lstinline!InitialPrices!: The agreed initial price for each basket underlying. \\
   Allowable values: Any positive number.
   \item{}[number] \lstinline!Premium!: Total option premium amount in terms of the \emph{PayCcy} \\
@@ -1155,14 +1158,16 @@ The meanings and allowable values for the \lstinline!WorstPerformanceRainbowOpti
   \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} \lstinline!Currency! for allowable currency codes.
 \end{itemize}
 
 \subsubsection*{Worst Performance Rainbow Option 03}
 
 A worst performance rainbow option 03 is an extension of the Worst Performance Rainbow Option 01, and is
-represented as a {\em scripted trade}, refer to Section \ref{app:scriptedtrade} for an introduction.
+represented as a {\em scripted trade},
+refer to the scripted trade documentation in ore/Docs/ScriptedTrade
+for an introduction.
 
 Trade input and the payoff script are described below.
 
@@ -1292,7 +1297,7 @@ The meanings and allowable values for the \lstinline!WorstPerformanceRainbowOpti
   \item{}[longShort] \lstinline!LongShort!: Own party position in the option. \\
   Allowable values: \emph{Long, Short}.
   \item{}[index] \lstinline!Underlyings!: The basket of underlyings. \\
-  Allowable values: See Section \ref{data_index} for allowable values.
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
   \item{}[number] \lstinline!InitialPrices!: The agreed initial price for each basket underlying. \\
   Allowable values: Any positive number.
   \item{}[number] \lstinline!Premium!: Total option premium amount in terms of the \emph{PayCcy} \\
@@ -1325,13 +1330,14 @@ The meanings and allowable values for the \lstinline!WorstPerformanceRainbowOpti
   \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
 \subsubsection*{Worst Performance Rainbow Option 04}
 
-A worst performance rainbow option 04 is represented as a {\em scripted trade}, refer to Section \ref{app:scriptedtrade}
+A worst performance rainbow option 04 is represented as a {\em scripted trade},
+refer to the scripted trade documentation in ore/Docs/ScriptedTrade
 for an introduction.
 
 Trade input and the payoff script are described below.
@@ -1463,7 +1469,7 @@ The meanings and allowable values for the \lstinline!WorstPerformanceRainbowOpti
   \item{}[longShort] \lstinline!LongShort!: Own party position in the option. \\
   Allowable values: \emph{Long, Short}.
   \item{}[index] \lstinline!Underlyings!: The basket of underlyings. \\
-  Allowable values: See Section \ref{data_index} for allowable values.
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
   \item{}[number] \lstinline!InitialPrices!: The agreed initial price for each basket underlying. \\
   Allowable values: Any positive number.
   \item{}[number] \lstinline!Premium!: Total option premium amount in terms of the \emph{PayCcy} \\
@@ -1498,13 +1504,14 @@ The meanings and allowable values for the \lstinline!WorstPerformanceRainbowOpti
   \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
 \subsubsection*{Worst Performance Rainbow Option 05}
 
-A worst performance rainbow option 05 is represented as a {\em scripted trade}, refer to Section \ref{app:scriptedtrade}
+A worst performance rainbow option 05 is represented as a {\em scripted trade},
+refer to the scripted trade documentation in ore/Docs/ScriptedTrade
 for an introduction.
 
 Trade input and the payoff script are described below.
@@ -1607,7 +1614,7 @@ The meanings and allowable values for the \lstinline!WorstPerformanceRainbowOpti
   \emph{Put} if we buy \lstinline!CCY2! and sell \lstinline!CCY1! (where the \lstinline!Underlying! is in the
   form \lstinline!FX-SOURCE-CCY1-CCY2!). \\
   \item{}[index] \lstinline!Underlyings!: The basket of underlyings. \\
-  Allowable values: See Section \ref{data_index} for allowable values.
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
   \item{}[number] \lstinline!InitialPrices!: The agreed initial price for each basket underlying. \\
   Allowable values: Any positive number.
   \item{}[number] \lstinline!Premium!: Total option premium amount in terms of the \emph{PayCcy} \\
@@ -1630,6 +1637,6 @@ The meanings and allowable values for the \lstinline!WorstPerformanceRainbowOpti
   \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}

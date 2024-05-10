@@ -1271,6 +1271,16 @@ Example & Description \\
 \hline
 57 & Base Scenario Analytic \\
 \hline
+58 &  Historical Simulation VaR \\
+\hline
+59 & SABR model for Swaptions and Caps/Floors \\
+\hline
+60 &  Exposure and XVA with Overlapping Close-Out Grids \\
+\hline
+61 &  Fast Sensitivties using AAD and GPUs \\
+\hline
+62 &  P\&L Analytic \\
+\hline
 \end{tabular}
 \caption{ORE examples.}
 \label{tab_0}
@@ -3193,8 +3203,7 @@ or on macOS/Linux: {\tt ./env1/bin/activate }
 or even fully remove the environment again by removing the {\tt env1} folder.
 \end{enumerate}
 
-Finally, you can build the Python module and installable packages yourself following the instructions in sections \ref{sec:oreswig}, \ref{sec:win_wheel}, \ref{sec:nix_wheel}
-based on your local ORE code. 
+Finally, you can build the Python module and installable packages yourself following the instructions in sections \ref{sec:oreswig} based on your local ORE code. 
 
 %--------------------------------------------------------------------
 \subsection{Credit Portfolio Model}% Example 43
@@ -3629,7 +3638,7 @@ The respective NPV cubes are combined before generating results such as exposure
 \label{example:55}
 %--------------------------------------------------------------------
 
-This example demonstrates exposure simulation and XVA for another scripted product, an
+This example in folder {\tt Examples/Example\_55} demonstrates exposure simulation and XVA for another scripted product, an
 FX Target Redemption Forward (TaRF). In contrast to the cases presented above, you won't see
 the payoff script library in the Input folder, nor is the script embedded into the trade XML file.
 The trade type in this case is {\tt FxTARF} which has its own implementation in OREData/ored/portfolio/tarf.xpp
@@ -3637,11 +3646,12 @@ and a separate trade schema. However, the scipted trade framework is used under 
 script is embedded into the C++ code in OREData/ored/portfolio/tarf.cpp.
 
 %--------------------------------------------------------------------
-\subsection{CVA Sensitivity using AD}% Example 56
+\subsection{CVA Sensitivities using AAD}% Example 56
 \label{example:56}
 %--------------------------------------------------------------------
 
-This example demonstrates a prototype CVA sensitivity calculation applying Adjoint Algorithmic Differentiation (AAD)
+This example in folder {\tt Examples/Example\_56} demonstrates a prototype CVA sensitivity
+calculation applying Adjoint Algorithmic Differentiation (AAD)
 to a Swap instrument represented as scripted trade. 
 
 %--------------------------------------------------------------------
@@ -3653,11 +3663,125 @@ Demonstration of the {\tt Scenario} analytic which has been added to export the 
 as a file.
 
 %--------------------------------------------------------------------
-\subsection{Overlapping close-out grids}% Example 61
+\subsection{Historical Simlation VaR Analytic}% Example 58
+\label{example:58}
+%--------------------------------------------------------------------
+
+This example in folder {\tt Examples/Example\_58} demonstrates a historical simulation VaR calculation
+given a portfolio and externally provided ``market scenarios'' covering
+one or several historical observation period(s).
+The analytic is specified as usual in {\tt ore.xml} with the following parameters:
+\begin{itemize}
+\item outputFile: csv file name of the resulting VaR report 
+%\item breakdown: boolean, if true the VaR report will contain a breakdown by risk class and risk type, otherwise the report shows the portfolio-lvel VaR only.
+\item quantiles: comma searated list of quantiles to be reported
+\item portfolioFilter (optional): Only trades with {\tt portfolioId} equal to the provided filter name are processed, see {\tt portfolio.xml}; the entire portfolio is processed, if omitted
+\item historicalPeriod: comma-separated date list, an even number of ordered dates is required (d1, d2, d3, d4, ...), where each pair (d1-d2, d3-d4, ...) defines the start and end of historical observation periods used
+\item mporDays: Number of calendar days between historical scenarios taken from the observation periods in order to compute P\&L effects (typically 1 or 10) 
+\item mporCalendar: Calendar applied in the scenario date calculation
+\item mporOverlappingPeriods: Boolean, if true we use overlapping periods of length mporDays (t to t + 10 calendate days, t+1 to t+11, t+2 to t+12, ...), otherwise consecutive periods (t to t+10, t+10 to t+20, ...)
+\item simulationConfigFile: defines the structure of the simulation market applied in the P\&L calculation, e.g. discount and index curves, yield curve tenor points used, FX pairs etc.
+\item historicalScenarioFile: csv file containing the market scenarios for each date in the observation periods defined below; the granularity of the scenarios (e.g. discount and index curves, number of yield curve tenors) needs to match the simulation market definition above; each yield curve tenor scenario is represented as a discount factor 
+\end{itemize}
+
+The example is run as usual by calling {\tt python run.py}
+
+%--------------------------------------------------------------------
+\subsection{SABR Model for Swaptions and Caps/Floors}% Example 59
+\label{example:59}
+%--------------------------------------------------------------------
+
+This example in folder {\tt Examples/Example\_59} demonstrates the pricing of a Swaption and a Cap on
+volatility surfaces that are interpolated in smile direction using a SABR
+model flavour. As usual the example is run by calling {\tt python run.py}
+
+The essential configuration is in {\tt curveconfig.xml} where the
+Interpolation (Swaption) resp. StrikeInterpolation (Caps/Floors) allows
+the following new SABR types
+\begin{itemize}
+\item Hagan2002Lognormal
+\item Hagan2002Normal
+\item Hagan2002NormalZeroBeta
+\item Antonov2015FreeBoundaryNormal
+\item KienitzLawsonSwaynePde
+\item FlochKennedy
+\end{itemize}
+SABR parameters can be calibrated or have fixed externally provided values
+per option tenor and Swap tenor (Swaptions) resp. optionlet (Caps/Floors).
+
+%--------------------------------------------------------------------
+\subsection{Overlapping Close-Out Grids}% Example 60
+\label{example:60}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_60} demonstrates ORE's capability to handle xVA simulations using American Monte-Carlo with overlapping close-out grids.
+
+%--------------------------------------------------------------------
+\subsection{Fast Sensitivities using AAD and GPUs}% Example 61
 \label{example:61}
 %--------------------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_61} demonstrates ORE's capability to handle xVA simulations using American Monte-Carlo with overlapping close-out grids.
+This example in folder {\tt Examples/Example\_61} demonstrates alternative ways of speeding up sensitivity
+calculations - using AAD or an external compute device.
+The test portfolio consists of 
+\begin{itemize}
+\item Vanilla Equity Option
+\item Equity Barrier Option
+\item Equity Accumulator
+\item Asian Basket Option
+\item FX TaRFs
+\end{itemize}
+The sensitivity analysis is run in four ways, see {\tt run.py},
+\begin{itemize}
+\item with ``classic'' bump and revalue
+\item as above but using the Computation Graph, see {\tt UseCG=true} in {\tt pricingengine\_cg.xml}, which
+  is the basis for the following two approaches
+\item using AAD, see {\tt pricingengine\_ad.xml} (as in Example 
+\item using the external device if available, see {\tt pricingengine\_gpu.xml}
+\end{itemize}
+to compare sensitivities and performance. In the latter case we have set the external device in
+{\tt pricingengine\_gpu.xml} to ``BasicCpu/Default/Default'' which mimics an external device on the CPU.
+On a macbook pro (2023) with M2 Max processor, we can also choose  
+``OpenCL/Apple/Apple M2 Max'' here (a 38 core GPU).
+The Jupyter notebook {\tt ore.ipynb} in this Example\_61 folder also kicks
+off these four runs, but adds further commentary and visualises results.
+To run this notebook you need to build the Python bindings for release 12
+or ``pip install'' ORE v12.
+
+%--------------------------------------------------------------------
+\subsection{P\&L Analytic}% Example 62
+\label{example:62}
+%--------------------------------------------------------------------
+
+This example in folder {\tt Examples/Example\_62} demonstrates the P\&L analytic
+type on a very simple test portfolio that consists of two
+single-leg swaps. The example can be run as usual by calling {\tt python run.py}.
+Main output is the P\&L report in {\tt Output/pnl.csv} with the following columns
+\begin{itemize}
+\item TradeId
+\item Maturity and MaturityTime
+\item StartDate and EndDate of the P\&L period, referred to as t0 and t1 below
+\item NPV(t0)
+\item NPV(asof=t0; mkt=t1)
+\item NPV(asof=t1; mkt=t0)
+\item NPV(t1)
+\item PeriodCashFlow: Aggregate of trade flows in the period, converted into the P\&L currency below
+\item Theta: NPV(asof=t1; mkt=t0) - NPV(t0) + PeriodCashFLow
+\item HypotheticalCleanPnL: NPV(asof=t0; mkt=t1) - NPV(t0)
+\item CleanPnL: NPV(t1) - NPV(t0) + PeriodCashFlow 
+\item DirtyPnL: NPV(t1) - NPV(t0)
+\item Currency
+\end{itemize}
+Moreover we write
+\begin{itemize}
+\item Four ``flavours'' of NPV reports used here
+\item Four related additional results reports
+\item Two reports for the market scenarios used in the two ``lagged'' NPV calculations
+\end{itemize}
+
+This analytic is work in progress since it is based on the portfolio at t0 only: The t1 portfolio needs
+to be taken into account in order to work out the effects of portfolio changes (maturities, new business, trade
+changes) in the observation period.
 
 \clearpage
 %========================================================
@@ -5938,7 +6062,7 @@ specified, the default shift type {\tt Absolute} is used. Note regarding the rep
     </DiscountCurve>
 \end{minted}
 \caption{Sensitivity template definition}
-\label{lst:lst:sensi_config_template}
+\label{lst:sensi_config_template}
 \end{longlisting}
 
 The cross gamma filter section contains a list of pairs of sensitivity keys. For each possible pair of sensitivity keys
@@ -6983,7 +7107,7 @@ Trade types supported by AMC so far:
 \item MultiLegOption
 \end{enumerate}
 
-\subsubsection{Implementation Details}\label{sec:implementation_details}
+\subsubsection{*Implementation Details}\label{sec:implementation_details}
 
 \subsubsection*{AMC valuation engine and AMC pricing engines}
 
@@ -7097,7 +7221,7 @@ The specific engine implementations should convert the \verb+resultValue_+ to th
 by the (ORE) trade builder) so that they can be used as regular pricing engine consistently within ORE. Note that only
 the additional \verb+amcCalculator+ result is used by the AMC valuation engine, not any of the T0 NPVs directly.
 
-\subsubsection{Limitations and Open Points}
+\subsection*{Limitations and Open Points}
 \label{sec:amc_limitations}
 
 This sections lists known limitations of the AMC simulation engine.
@@ -7131,7 +7255,7 @@ down the computation of regression coefficients. It would be desirable to have t
 basis functions, e.g. by explicitly enumerating them in the configuration, so that a high order can be chosen even for
 products with a relatively large number of independent variables (like e.g. FX Options or Cross Currency Swaps).
 
-\subsubsection{Outlook: Trade Compression}
+\subsection*{Outlook: Trade Compression}
 
 For vanilla trades where the regression is only required to produce the NPV cube entries (and not to take exercise
 decisions etc.) it is not strictly necessary to do the regression analysis on a single trade level\footnote{except
@@ -7487,7 +7611,7 @@ Consider the lower case of \eqref{eq:CSA}: If the netting set value is negative 
 then the Credit Support Amount is just the negative difference $\CSA=-|\NPV| + \IA + \Th_{pay}$ so that we need to post collateral, but only the amount 
 beyond the combined threshold $\IA + \Th_{pay}$.
 
-\subsubsection{Margin Period of Risk} \label{sec:mpor}
+\subsubsection*{Margin Period of Risk} \label{sec:mpor}
 After a counterparty defaults, it takes time to close out the portfolio. During this time period the portfolio value will change upon market conditions, therefore the portfolio's close-out value is subject to market risk, which is referred also as the close-out risk and the corresponding close-out period is called as the {\em Margin Period of Risk} (MPoR).  
 
 Therefore, when a loss on the defaulted counterparty is realised at time $t_d$, the last time the collateral could be received is $t_d-\tau$, where $\tau$ denotes the MPoR. That is, the collateral at time $t_d$ is determined by the collateral value at $t_d-\tau$, namely $CSA(t_d-\tau)$, see equation \ref{eq:CSA}.
@@ -7751,7 +7875,424 @@ The par rate conversion supports the following par instruments:
 \end{itemize}
 
 
+\subsection{Economic P\&L}\label{economic_pnl}
+
+The economic P\&L of a portfolio denotes the change in its economic value over  
+a time period $t_1$ to $t_2$. The economic value evolution during the period is due to three components
+ 
+\begin{itemize}
+\item the change in present value from period start to end
+\item incoming and outgoing cash flows
+\item accumulated cost of funding required to set up the portfolio initially 
+\end{itemize}
+
+In the following, we consider a portfolio consisting of assets in various currencies. We decompose the portfolio into parts each denominated in a different currency and value each sub-portfolio in its currency. We denote the sub-portfolio values at time $t$ in the respective currency $P_1(t), P_2(t), \dots$. Instruments with cash flows in more than one currency are decomposed into single-currency instruments and assigned into the related sub-portfolio.
+The total portfolio value expressed in base currency (e.g. EUR) is 
+\begin{equation} 
+	P(t) = \sum_c P_c(t)\:X_c(t) \label{initial_value_base}
+\end{equation}
+where $X_c$ is the exchange rate that converts an amount in currency $c$ into an amount in base currency by multiplication. All prices $P_c(t)$ denote {\em dirty} market values (or theoretical values where market values are not available) at time $t$. 
+
+In the following we consider three points in time,
+\begin{itemize}
+\item $t_0$: the time just before the first actual cash flow has appeared in the portfolio under consideration, possibly years ago
+\item $t_1$: the beginning of the period for which we want to determine P\&L
+\item $t_2$: the end of the period for which we want to determine P\&L
+\end{itemize} 
+
+\subsubsection*{Original P\&L} \label{trade_start}
+
+The original P\&L is the portfolio's P\&L from portfolio inception $t_0$.
+In this case the portfolio value at $t_0$ is 
+$$P(t_0) = 0,$$
+and the P\&L up to time $t_2$ is given by the portfolio value at $t_2$ plus the balance of currency accounts that collect incoming and outgoing cash flows and are compounded up to time $t_2$:
+\begin{equation}
+\pi(0, t_2) = P(t_2) + \sum_c X_c(t_2)\:B_c(t_2)
+\label{pnl_3}
+\end{equation}
+where 
+\begin{equation}
+B_c(t_2) = \sum_{j=0}^{I(t_2)-1} F_c(\tau_j)\:C_c(\tau_j, t_2), \quad C_c(\tau_j, t_2)=\prod_{k=I(\tau_j)}^{I(t_2)-1} (1+r_c(\tau_k)\delta_k),
+\end{equation}
+sums and products are taken over daily time steps $\tau_j$ and
+
+\medskip
+\begin{tabular}{lp{10cm}}
+$I(t)$ & is the day's index associated with time $t$ \\
+$F_c(\tau_{j})$ & is the net cash flow in currency $c$ on date/time $\tau_j$, possibly zero \\
+$r_c(\tau_j)$ & is the Bank's overnight funding and investment rate in currency $c$ for interest period $[\tau_j, \,\tau_{j+1}]$ (overnight)\\
+$\delta_j$ & is the related day count fraction for period $[\tau_j, \,\tau_{j+1}]$ 
+\end{tabular}
+
+\bigskip
+
+The balances $B_c$ can also be constructed iteratively
+\begin{eqnarray*}
+B_c(\tau_{j+1}) &=& B_c(\tau_{j}) (1+r_c(\tau_j)\delta_j) + F_c(\tau_{j+1}) 
+\label{recursion}\\
+j &=& 0, 1, 2, \dots \nonumber\\
+B_c(\tau_0) &=& 0. \nonumber
+\end{eqnarray*}
+
+The P\&L for a period of interest $[t_1;\,t_2]$ is then computed by taking the difference
+\begin{eqnarray}
+	\pi(t_1, t_2) &=& \pi(0,t_2) - \pi(0,t_1) \label{pnl_1} \\
+		&=& P(t_2) - P(t_1) + \sum_c (X_c(t_2)\: B_c(t_2) - X_c(t_1)\: B_c(t_1))
+		\nonumber
+\end{eqnarray}
+
+One can show that
+\begin{equation} 
+	B_c(t_2) = B_c(t_1) \:C_c(t_1, t_2) 
+	+ \sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)\:C_c(\tau_j, t_2) 
+\label{bc}
+\end{equation}
+which separates the contribution to $B_c(t_2)$ from cash flows in period $[t_1;t_2]$ (right-most sum) and contributions from realized P\&L and cost of funding of previous periods accumulated in $B_c(t_1)$. We can now insert (\ref{bc}) into (\ref{pnl_1}) to eliminate $B_c(t_2)$ and obtain 
+\begin{eqnarray}
+	\pi(t_1, t_2) &=& P(t_2) - P(t_1)
+	+ \sum_c X_c(t_2) \sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)\:C_c(\tau_j, t_2)
+	\nonumber\\
+	&& + \sum_c B_c(t_1)\:\left\{X_c(t_2)\:C_c(t_1, t_2) - X_c(t_1)\right\} \label{pnl_1a}
+\end{eqnarray}
+ 
+\subsubsection*{Cost of Carry}
+
+Separating actual cash flows and prices from compounding effects yields
+$$
+	\pi(t_1, t_2) = P(t_2) - P(t_1)
+	+ \sum_c X_c(t_2)\sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)
+	+ CC(t_1,t_2)
+$$
+
+where the cost of carry term is 
+\begin{eqnarray}
+CC(t_1,t_2) &=& 
+	\sum_c X_c(t_2)\sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)\:
+	\left(C_c(\tau_j, t_2) - 1\right) \nonumber\\
+&& + \sum_c \:B_c(t_1)\:\left\{X_c(t_2)\:C_c(t_1, t_2) - X_c(t_1)\right\} 
+\label{CC}
+\end{eqnarray}
+
+\subsubsection*{Period P\&L after Sell-Down}
+
+At time $t_1$, we can write the original P\&L (equation \ref{pnl_3}) in respective currencies
+$$
+\pi_c(t_1) = P_c(t_1) + B_c(t_1), \qquad \pi(t_1) = \sum_c X_c(t_1)\:\pi_c(t_1).
+$$
+Inserting this into (\ref{CC}),
+\begin{eqnarray*}
+CC(t_1,t_2) &=& 
+	\sum_c X_c(t_2)\sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)\:
+	\left(C_c(\tau_j, t_2) - 1\right) \\
+&& + \sum_c \:(\pi_c(t_1) - P_c(t_1))\:\left\{X_c(t_2)\:C_c(t_1, t_2) - X_c(t_1)\right\}, 
+\end{eqnarray*}
+shows that there is a contribution to $\pi(t_1,t_2)$, via the cost of carry, due to compounding and FX effects on previous periods' P\&L result.
+
+\bigskip
+We now take the view that the portfolio is liquidated at time $t_1$, so that the account balance equals the P\&L at $t_1$. We further assume that this balance is then removed ("sell down" of P\&L) and transfered into a separate portfolio, the Bank's equity\footnote{Equity is in turn managed and most likely invested into financial instruments other than a Bank account}. The same portfolio is thereafter set up again so that the currency account balance turns into a liability $B_c(t_1) = - P_c(t_1)$, and the total starting balance is $B(t_1)=-P(t_1)$. In contrast to the previous section, this changes the balance at time $t_1$ suddenly and without relation to an actual cash flow.
+
+This raises the question how the artificial initial balance is funded subsequently, in currency for each sub-portfolio or in base currency only. This
+choice may vary by portfolio, depend on the actual currencies in which the Bank can source funding, depend on the location/economy in which the portfolio is run, which currency is a reasonable benchmark, etc. 
+
+\subsubsection*{Funding in Currency}\label{funding_ccy}
+
+In this section we take the view that each sub-portfolio is funded in currency
+so that we start with opening balances $B_c(t_1) = -P_c(t_1)$.
+
+Inserting the artificial opening balances at $t_1$ into (\ref{pnl_1a}) yields
+\begin{eqnarray}
+	\pi_2(t_1, t_2) &=& P(t_2) - P(t_1)
+	+ \sum_c X_c(t_2) \sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)\:C_c(\tau_j, t_2)
+	\nonumber\\
+	&& - \sum_c P_c(t_1)\:\left\{X_c(t_2)\:C_c(t_1, t_2) - X_c(t_1)\right\} \nonumber \\
+&=&	P(t_2)
+	+ \sum_c X_c(t_2) \sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)\:C_c(\tau_j, t_2)
+	\nonumber\\
+	&& - \sum_c P_c(t_1)\:X_c(t_2)\:C_c(t_1, t_2)
+	\label{pnl_2}
+\end{eqnarray}
+
+Note that only exchange rates at $t_2$ enter into the expression.
+
+\subsubsection*{Cost of Carry}
+
+Separating actual cash flows and prices from compounding effects yields
+
+$$
+	\pi_2(t_1, t_2) = P(t_2) + \sum_c X_c(t_2)\:\left\{-P_c(t_1)
+	+ \sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)\right\}
+	+ CC_2(t_1,t_2)
+$$
+
+where the cost of carry term is 
+\begin{eqnarray*}
+CC_2(t_1,t_2) &=& \sum_c \:X_c(t_2)\:
+\sum_{j=I(t_1)}^{I(t_2)-1} F_c(\tau_j) \: \left(C_c(\tau_j, t_2) - 1\right)\\
+&& - \sum_c \:X_c(t_2)\:P_c(t_1)\:\left(C_c(t_1, t_2) - 1\right)
+\end{eqnarray*}
+
+\subsubsection*{Funding in Base Currency}\label{funding_base_ccy}
+
+In this section we assume that the setup cost for the portfolio is converted into base currency at $t_1$ and funded subsequently in base currency.
+This means we insert artificial initial balances $B_c(t_1)=0$ except for the base currency account $B(t_1) = -P(t_1)$.
+Inserting this opening balance at $t_1$ into (\ref{pnl_1a}) now yields
+\begin{eqnarray}
+	\pi_3(t_1, t_2) &=& P(t_2) 
+	+ \sum_c X_c(t_2) \sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)\:C_c(\tau_j, t_2)
+	\nonumber\\
+	&& - P(t_1)\:C(t_1, t_2)
+	\label{pnl_4}
+\end{eqnarray}
+
+where $C(t_1,t_2)$ is the compounding factor in base currency.
+
+\subsubsection*{Cost of Carry}
+
+Separating actual cash flows and prices from compounding effects yields now
+
+$$
+	\pi_3(t_1, t_2) = P(t_2) - P(t_1) 
+	+ \sum_c X_c(t_2) \sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)
+	+ CC_3(t_1, t_2)
+$$
+where
+\begin{eqnarray*}
+CC_3(t_1, t_2) &=& 
+\sum_c X_c(t_2) \sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)\:(C_c(\tau_j, t_2)-1)\\
+&&  - P(t_1)\:(C(t_1, t_2) - 1)
+\end{eqnarray*}
+
+\subsubsection*{FX Effect}\label{fx_effect}
+
+The difference between (\ref{pnl_2}) and (\ref{pnl_3}) is 
+
+$$ \pi_2(t_1, t_2) - \pi_3(t_1, t_2) = P(t_1)\:C(t_1, t_2) 
+	- \sum_c P_c(t_1)\:X_c(t_2)\:C_c(t_1, t_2).
+$$
+
+The expected value of this difference at period start $t_1$ is zero, but the retrospectively realized difference at period end $t_2$ is nonzero in general.
+ 
+
+\subsection{Risk Hypothetical P\&L}\label{sec:pl}
+
+In the following we briefly describe approaches to generating P\&L
+vectors that feed into several subsequent sections for the purpose of
+computing risk measures such as Value at Risk or for backtesting a
+market risk model.
+
+These P\&L's are different from the economic P\&L introduced in
+section \ref{economic_pnl} above, but rather {\em risk-hypothetical} 
+due to the application  of some historical market moves to the
+current market which gives rise to a valuation change.
+  
+%\subsection{Basics}\label{sec:pl_basics}
+
+Consider a history of market risk factors $X_i(j)$ where $i\in\{1,\ldots,n\}$ identifies the risk factor and
+$j\in\{1,\ldots,m\}$ corresponds to a time $t_j$ on which the risk factor was observed. The times are assumed to be
+equally spaced, with $t_{j+1}-t_j$ corresponding to $1$ business day w.r.t. a given calendar. To generate an overlapping
+$k$-day PL, define the $k$ day return at time $t_j$ to be
+
+\begin{equation}\label{returns}
+r_i(j) = R_{T_i}(X_i(j), X_{i}(j+k))
+\end{equation}
+
+for $j=1,\ldots,m-k$. Note that the case of non-overlapping $k$ day returns fits in with straightforward modifications
+of the scheme described here. $R$ defines the return value for two observations of the same factor, which is one of the
+following
+
+\begin{eqnarray}
+  R_A(x,y) &=& y-x \\
+  R_R(x,y) &=& y/x - 1 \\
+  R_L(x,y) &=& \log(y/x)
+\end{eqnarray}
+
+where the subscript stands for absolute (A), relative (R) and lognormal (L) returns, respectively. Note that the
+relative and lognormal returns are not defined for $x=0$, and we consider a data point with $X_i(j)=0$ and for which we
+compute relative or lognormal returns to be an error in the data that needs to be corrected or excluded from the
+analysis. Also note that $R_R \approx R_L$ for small values of $y/x-1$, the difference $R_R-R_L$ approaching zero when
+$y/x$ approaches $1$.
+
+Now assume $t_m$ to be the reference date (e.g. for the value at risk calculation) and
+
+\begin{equation}
+  X(m) = \{ X_i(m) \}_{i=1,\ldots,n}
+\end{equation}
+
+the market factor values on the reference date.
+
+\subsubsection*{Full Revaluation P\&L}\label{fullpl}
+
+For a given portfolio denote its NPV at $t_m$ by $\nu(X(m))$. Then we can compute a {\em full revaluation PL} vector
+
+\begin{equation}\label{fullrevalpl}
+\pi_F = \{ \pi_F(j) \}_{j=1,\ldots,m-k}
+\end{equation}
+
+as
+
+\begin{equation}
+  \pi_F(j) = \nu( X'(m,j) ) - \nu ( X(m) )
+\end{equation}
+
+by pricing the portfolio under each perturbed market factor vector
+
+\begin{equation}
+  X'(m,j) = \{ X'_i(m,j) \}_{i=1,\ldots,n}
+\end{equation}
+
+which is defined by
+
+\begin{equation}\label{histReturns}
+  X'_i(m,j) = a_{T_i}( X_i(m),  R_{T_i}(X_i(j),X_i(j+k)) )
+\end{equation}
+
+with the return application function
+
+\begin{eqnarray}
+  a_A(x,r) &=& x+r \\
+  a_R(x,r) &=& x(1+r) \\
+  a_L(x,r) &=& x e^r
+\end{eqnarray}
+
+and return types $T_i \in \{ A, R, L \}$, dependent on the particular factor $X_i$. Table \ref{sensiReturnTypes} shows a
+possible choice of return types for the different risk factors (in ORE notation). Note, that the factors Discount
+Curve, Index Curve and Survival Probability are discount factors resp. survival probabilities that are converted to zero
+rate resp. hazard rate shifts by taking the log. Also note, that the factors Recovery Rate and Basis Correlation are
+bounded (a recovery rate must be in $[0,1]$ while the base correlation must be in $[-1,1]$), so that after a shift is
+applied, the result has to be capped / floored appropriately to ensure valid scenario values.
+
+\subsubsection*{Sensitivity based P\&L}\label{sensipl}
+
+As an alternative to the full revaluation PL in \eqref{fullrevalpl} we can approximate this PL using a Taylor expansion
+of $\nu(X'(m,j))$ viewed as a function of the returns $R_{T_i}$\footnote{i.e. we view $\nu$ as a function of the second
+argument of $a_{T_i}$ in \ref{histReturns}} around the expansion point $(0,0,\ldots,0)$ generating a {\em sensitivity
+  based PL},
+
+\begin{equation}
+\pi_S = \{ \pi_S(j) \}_{j=1,\ldots,m-k}
+\end{equation}
+
+with
+
+\begin{equation}
+\begin{aligned}\label{taylorPl}
+  \pi_S(j) = & \sum_{i=1}^n D^i_{T_i}\nu(X(m)) R_{T_i}(X_i(m), X'_i(m,j)) + \\
+           \frac{1}{2}& \sum_{i,l=1}^n D^{i,l}_{T_i,T_l}\nu(X(m)) R_{T_i}(X_i(m), X'_i(m,j)) R_{T_l}(X_l(m), X'_l(m,j)),
+\end{aligned}
+\end{equation}
+
+where we use sensitivities up to second order. Here $D^i_{T_i}$ denotes a first or second order derivative operator, depending
+on the market factor specific shift type $T_i \in \{ A,R,L \}$, i.e.
+
+\begin{eqnarray}\label{derivs}
+  D^i_A f(x) &=& \frac{\partial f(x)}{\partial x_i}, \\
+  D^i_R f(x) = D^i_L f(x) &=& x_i\frac{\partial f(x)}{\partial x_i}
+\end{eqnarray}
+
+and using the short hand notation
+
+\begin{equation}\label{derivs_short}
+  D^{i,l}_{T_i,T_l} f(x) = D^i_{T_i} D^l_{T_l} f(x).
+\end{equation}
+
+These first and second order sensitivities may be computed analytically, or (more common) as finite difference
+approximations (``bump and revalue'' approximations), see section \ref{sec:app_sensi}. To clarify the relationship of \eqref{derivs}
+and a finite difference scheme for derivatives computation in a bit more detail we note that for a absolute shift $h>0$
+
+\begin{equation}
+\frac{f(x+h)-f(x)}{h} \rightarrow f'(x)
+\end{equation}
+
+for $h\rightarrow 0$ by definition of $f'$ while for a relative shift
+
+\begin{equation}
+  \frac{f(x(1+h))-f(x)}{h} = x \frac{f(x(1+h))-f(x)}{xh} \rightarrow xf'(x)
+\end{equation}
+
+for $h\rightarrow 0$ and for a log shift
+
+\begin{equation}\label{logshift}
+\frac{f(xe^h)-f(x)}{h} \rightarrow xf'(x)
+\end{equation}
+
+using e.g. L'Hospital's rule, so that
+
+\begin{itemize}
+\item both a relative and a log shift bump and revalue sensitivity approximate the same value $xf'(x)$ in the limit for
+  $h\rightarrow 0$,
+\item an absolute shift sensitivity can be transformed into a relative / log shift sensitivity (in the limit for
+  $h\rightarrow 0$) by multiplying with the risk factor value $x$, and vice versa.
+\end{itemize}
+
+We also note that the usual way of bumping continuously compounded zero rates to compute a Discount Curve or Index Curve
+sensitivity by $h^*$ is equivalent to \eqref{logshift} with $h=h^*t$, where $t$ is the maturity of the respective
+rate. Therefore in practice a log return of discount factors can not directly be combined with a sensitivity expressed
+in zero rate shifts, but has to be scaled by $1/t$ before doing so.
+
+Since the number of second order deriviatives can be quite big in realistic setups with hundreds or even thousands of
+market factors, in practice only part of the second order deriviatives might be fed into \eqref{taylorPl} assuming the
+rest to be zero.
+
+Note that the types $T_i$ used to generate the historical returns \eqref{histReturns} can be different from those used
+in the Taylor expansion \eqref{taylorPl}. It is important though that the same types $T_i$ are used for the
+derivatives operators $D^i_{T_i}$ and the returns $R_{T_i}$ in \eqref{taylorPl}. 
+
+A number of configurations are hard-coded into ORE depending on whether raw sensitivities, backtesting sensitivities or CRIF sensitivities are being called. These configurations are displayed in \ref{sensiReturnTypes} - note that there is currently no distinction made in ORE between raw sensitivities and backtest sensitivities.
+
+\begin{table}[ht]
+  \begin{tabular}{|l|c|c|c|c|}
+    \hline
+    \multicolumn{1}{|c|}{\multirow{2}{*}{ORE Risk Factor}} & \multicolumn{2}{c|}{Backtest Sensitivities} & \multicolumn{2}{c|}{CRIF Sensitivities} \\ \cline{2-5} 
+    \multicolumn{1}{|c|}{} & \multicolumn{1}{c|}{Return Type} & \multicolumn{1}{c|}{Shift Size} & \multicolumn{1}{c|}{Return Type} & \multicolumn{1}{c|}{Shift Size} \\ \hline
+    Discount Curve & A & 0.01\% & A & 0.01\% \\
+    Index Curve & A & 0.01\% & A & 0.01\% \\
+    Yield Curve & A & 0.01\% & A & 0.01\% \\
+    Dividend Yield & A & 0.01\% & A & 0.01\% \\
+    Equity Forecast Curve & A & 0.01\% & A & 0.01\% \\
+    Swaption Volatility* & R & 1\% & A & 0.01\% \\
+    Optionlet Volatility* & R & 1\% & A & 0.01\% \\
+    FX Spot** & R & 1\% & R & 0.1\% \\
+    FX Volatility & R & 1\% & A & 1\% \\
+    Equity Spot & R & 1\% & R & 1\% \\
+    Equity Volatility & R & 1\% & A & 1\% \\
+    Yield Volatility & R & 1\% & R & 1\% \\
+    Survival Probability & A & 0.01\% & A & 0.01\% \\
+    CDS Volatility & R & 1\% & R & 1\% \\
+    Correlation & R & 1\% & - & - \\
+    Base Correlation & A & 1\% & A & 1\% \\
+    Zero Inflation Curve & A & 0.01\% & A & 0.01\% \\
+    YoY Inflation Curve & A & 0.01\% & A & 0.01\% \\
+    Zero Inflation CF Vol & R & 1\% & R & 1\% \\
+    YoY Inflation CF Vol & R & 1\% & R & 1\% \\
+    Commodity Curve & R & 1\% & R & 1\% \\
+    Commodity Volatility & R & 1\% & A & 1\% \\
+    Security Spread & A & 0.01\% & - & - \\ \hline
+  \end{tabular}
+  \caption{Sensitivity return type configuration for raw, backtest and CRIF sensitivities}
+  \label{sensiReturnTypes}
+\end{table}
+
+\newpage
+*We predominantly use normal IR volatilities with an absolute shift of $0.01\%$. For lognormal IR volatilities an absolute shift of $1\%$ applies. Also, notice that ``Optionlet Volatility'' is the ORE name for ``Cap / Floor Volatility''.
+
+**During a CRIF run, the FX spot delta is computed using the central difference approximation by default. A smaller shift size of $0.1\%$ is used because of this. Furthermore, for FX vanilla European and American options, there are analytic formulae available for FX deltas. These are implemented in ORE during a CRIF run.
+
+Note - the values $A$ and $R$ here refer to the absolute and relative shifts defined in \eqref{derivs}. 
+
 \subsection{Value at Risk}\label{sec:app_var}
+
+\subsubsection*{Historical Simulation VaR}\label{histsimvar}
+
+The historical simulation VaR is defined to be a $p$-quantile of the empirical distribution generated by the full
+revaluation PL vector $\pi_F = \{ \pi_F(j) \}_{j}$. Here, with ``generated'' we mean that we weigh each $\pi_F(j)$ with
+the same probability $1/J$, where $J$ denotes the number of elements in the vector.
+
+\subsubsection*{Historical Simulation Taylor VaR}\label{histtaylorvar}
+
+Similarly, the historical simulation Taylor VaR is defined to be the $p$-quantile of the empirical distribution
+generated by the sensitivity based PL vector $\pi_S$ (call side), resp. $-\pi_S$ (post side).
+
+\subsubsection*{Parametric VaR}\label{parametricvar}
 
 For the computation of the parametric, or variance-covariance VaR, we rely on a second order sensitivity-based P\&L approximation
 
@@ -7771,7 +8312,7 @@ ensure this property, which basically replaces negative Eigenvalues by zero and 
 \cite{corrSalv};
 \item first or second order derivative operators $D$, depending
 on the market factor specific shift type $T_i \in \{ A,R,L \}$ (absolute shifts, relative shifts, absolute log-shifts), i.e.
-\begin{eqnarray*}\label{derivs}
+\begin{eqnarray*}\label{derivs2}
   D^i_A \,V(x) &=& \frac{\partial V(x)}{\partial x_i} \\
   D^i_R \,V(x) = D^i_L f(x) &=& x_i\frac{\partial V(x)}{\partial x_i}
 \end{eqnarray*}
@@ -7908,6 +8449,8 @@ implementation of the inverse cumulative normal distribution to transform $U[0,1
 
 \bibitem{Daniels} Daniels, H. E. (1987), Tail Probability Approximations, International Statistical Review, 55, 37-48.
 
+\bibitem{ScriptedTrade} ORE Scripted Trade Module, latest version at \url{https://github.com/OpenSourceRisk/Engine/tree/master/Docs/ScriptedTrade}
+  
 \end{thebibliography}
 
 \newpage

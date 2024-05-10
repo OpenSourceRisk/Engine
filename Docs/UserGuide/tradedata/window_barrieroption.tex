@@ -55,8 +55,8 @@ The meanings and allowable values of the elements in the data node follow below.
 
 \item Currency: The payout currency. The result of the payout formula above is treated to be in this currency. Note that
   for (non-quanto) FxWindowBarrierOption this should be the domestic (\lstinline!CCY2!) currency. For non-quanto Equity-
-  and CommodityAccumulators this should be the currency the equity or commodity is quoted in. Notice section
-  \ref{sss:payccy_st}. \\
+  and CommodityAccumulators this should be the currency the equity or commodity is quoted in.
+  Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
 
 Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
 
@@ -119,8 +119,8 @@ Allowable values: See \ref{ss:barrier_data}, allowable types are \emph{UpAndOut}
 
 % alternative representation as scripts
 
-Window Barrier Options can be alternatively represented as {\em scripted trades}, refer to Section
-\ref{app:scriptedtrade} for an introduction.
+Window Barrier Options can be alternatively represented as {\em scripted trades}, refer to ore/Docs/ScriptedTrade
+for an introduction.
 
 Trade input and the payoff script are described below.
 
@@ -205,11 +205,11 @@ The meanings and allowable values of the elements in the \lstinline!WindowBarrie
     \item{}[number] \lstinline!Quantity!: Number of option contracts. For FX, this should be the bought amount. \\
     Allowable values: Any positive real number.
     \item{}[index] \lstinline!Underlying!: Underlying index. \\
-    Allowable values: See Section \ref{data_index} for allowable values.
+    Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
     \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
     Allowable values: See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
     \item{}[event] \lstinline!PremiumPayDate!: Option premium payment date. \\

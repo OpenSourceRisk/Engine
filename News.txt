@@ -1,3 +1,100 @@
+Changes for the 12th ORE release:
+=================================
+
+ORE v12 includes the following notable changes.
+
+INSTRUMENTS & PRICING
+- support for rules-based Bermudan exercise dates (ticket 11947)
+- new date generation rule for weekly schedules (ticket 12070) - Matthias ?
+- advanced AMC regression model for resetting XCCY Swaps (ticket 12111)
+- support American Swaption, add FD Pricer (ticket 11618) - Peter, Example?
+- add Burley 2020 scrambled Sobol sequence (ticket 12140)
+- rates curve building: support mixed interpolations (ticket 12159)
+- support indexed cashflows in AMC (ticket 12206)
+- add priorities to yield curve segments / remove quote if maturity is identical to next quote e.g. due to holidays (ticket 9557)
+- use swap index discount curve for LGM Calibration (ticket 12201)
+- migrate formula-based coupon into ORE (ticket 12263)
+- Support Security Spread over Discount Curve in Scripted Trade (ticket 12268)
+- Support Security Spread over Discount for single-ccy Swap and Swaption (ticket 12275)
+- add LGM1F engine to ST using FD / numerical Integration (ticket 12306)
+- Analytic Pricer for OI Swaptions (ticket 11974)
+- RPA - premium is ignored in underlying swaption (ticket 10089)
+- migrate callable swap to ORE (ticket 12370)
+- migrate flexi swap to ORE (ticket 12370)
+- migrate balance guaranteed swap to ORE (ticket 12370)
+- configurable settlement date flows handling (ticket 12372)
+- allow to generate past cashflows in scripted trade module (ticket 12417)
+- Handle near-collinear predictor variables in linear regression (AMC and Scripted Trade) (ticet 12419)
+- introduce notional payment lag for resetting cross urrency swaps (ticket 12379)
+
+MARKETS AND TERMSTRUCTURES
+- SABR pricing for Swaptions and Caps/Floors (ticket 12325)
+- Import SABR parameters instead of calibration (ticket 12491)
+
+ANALYTICS
+- XVA Sensi PoC (ticket 12028, Example ?)
+- allow for overlapping close-out grid in xva date grid (ticket 9859)
+- expose SCENARIO analytic in ORE (ticket 11990)
+- support relative shifts in stress test when using spreaded termstructures (12216)
+- feed t0 VM into xVA calculation (ticket 12241)
+- fix the IA implementation in ORE (ticket 12277)
+- configurable shift size and difference scheme per product for sensi calcs (ticket 12014)
+- Full Revaluation Historical VaR as stand-alone Analytic (ticket 9793)
+- swaption is repriced on each sensi scenario (ticket 12189)
+- output effective SOFR / RFR cap vols in reports (ticket 12192)
+- DIM calc extension: return flat IM amount (ticket 12318)
+- Move IM Schedule calculator to ORE (ticket 11730), see the extended Example 44
+- migrate bond spread imply to ORE (ticket 12370)
+- migrate market risk backtest to ORE (ticket 12370)
+- migrate calculation of stoplight bounds to ORE (ticket 12370)
+- SIMM performance improvements (ticket 12397)
+- add a P&L analytic (ticket 12458)
+- XVA Sensitivity using AAD, proof of concept and example (ticket ?)
+- ZeroShiftToParShift Conversion (ticket 12401) STATUS ??????
+- par stress test (ticket 12148) STATUS ????????
+- XVA Stress testing (ticket 12376) STATUS ???????
+- XVA Bump & Reval Sensitivities, Raw and Par (ticket 12437) STATUS ?????
+
+TESTS
+- test suite for ORE-SWIG (ticket 11823)
+- move move AD unit tests into QuantExt (ticket 12188)
+- migrate deltagamma engines to ORE (ticket 12370)
+- migrate pairwise variance swap to ORE (ticket 12370)
+- migrate equity outperformance option to ORE (ticket 12370)
+
+NEW & EXTENDED EXAMPLES
+- 44: ISDA SIMM and IM Schedule
+- 54: Scripted Trade exposure with AMC: Bermudan Swaption and LPI Swap
+- 55: Scripted Trade exposure with AMC: TaRF
+- 56: Proof of Concept: CVA Sensitivities using AAD
+- 57: Base Scenario Analytic
+- 58: Historical Simulation VaR
+- 59: SABR model for Swaptions and Caps/Floors
+- 60: Exposure and XVA with Overlapping Close-Out Grids
+- 61: Utilize a GPU: Parallelized Sensitivities
+- 62: P&L Analytic
+
+DOCUMENTATION
+- documentation of pricing engine configuration (ticket 12337)
+- docs for migrated instruments (ticket 12317)
+- identify supported compiler and boost versions (ticket 11431) TODO update user guide
+- clean up ORE cmake build flags (ticket 12048) TODO and update user guide
+- Update the ORE Design document (ticket 12375)
+
+LANGUAGE BINDINGS & PYTHON MODULE
+- Add NPV Cube and joint cube to swig (ticket 12421)
+- Notebook freezes - prevent OREApp from being instantiated twice in the same process? Clean Up after OREApp::run(). Make OREApp::run() thread-safe. (ticket 12317)
+- ORE-SWIG wheels github workflow (ticket 12436)
+
+GPU
+- add option to use double precision to opencl (ticket 12386)
+- add mersenne twister RNG to opencl (ticket 12387)
+- set up xva-cg example to support GPU (ticket 12487) STATUS ??????
+
+OTHER
+- QuantLib version ?????
+
+
 Changes for the 11th ORE release (1.8.11.0):
 ============================================
 

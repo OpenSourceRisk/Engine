@@ -97,7 +97,7 @@ The meanings and allowable values of elements in the \lstinline!EquityWorstOfBas
   field in the \lstinline!Underlying! node. Note that for (non-quanto) FxWorstOfBasketSwaps,
   this should be the domestic (\lstinline!CCY2!) currency, as defined in the Name field in the
   \lstinline!Underlying! node. For non-quanto Equity- and CommodityWorstOfBasketSwaps, this
-  should be currency the equity or commodity is quoted in. Notice Section \ref{sss:payccy_st}. \\
+  should be currency the equity or commodity is quoted in. Notice Section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
     Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
   \item \lstinline!LongShort!: Own party position. \\
     Allowable values: \emph{Long}, \emph{Short}
@@ -131,14 +131,14 @@ The meanings and allowable values of elements in the \lstinline!EquityWorstOfBas
   \item \lstinline!FloatingPeriodSchedule!: Period dates used for calculating floating coupon
   accrual fractions, and for observing underlying prices for calculating performances. \\
     Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates/Rules, or
-    DerivedSchedule for scripted trades (see the Event data structure \ref{app:scriptedtrade}).
+    DerivedSchedule for scripted trades (see the Event data structure in the scripted trade documentation at ore/Docs/ScriptedTrade).
   \item \lstinline!FloatingFixingSchedule! [Optional]: Fixing dates for floating coupons linked
     to Ibor indices. The $d^\text{th}$ date in this schedule is the fixing date for the $(d+1)^\text{th}$
     date in the \lstinline!FloatingPayDates!. For floating coupons linked to overnight indices
     this scheulde is not relevant, the fixing dates are derived from the FloatingPeriodScheudle
     and FloatingLookback. \\
     Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates/Rules, or
-    DerivedSchedule for scripted trades (see the Event data structure \ref{app:scriptedtrade}).
+    DerivedSchedule for scripted trades (see the Event data structure in ore/Docs/ScriptedTrade).
     If left blank or omitted, defaults to a \lstinline!DerivedSchedule! with the
     \lstinline!FloatingPeriodSchedule! set as the base schedule.
   \item \lstinline!FixedDeterminationSchedule! [Optional]: If \lstinline!AccruingFixedCoupons!
@@ -148,21 +148,21 @@ The meanings and allowable values of elements in the \lstinline!EquityWorstOfBas
   coupon amounts are calculated. The coupon amount is scaled by the number of fixed trigger
   days relative to the total number of days in the period. \\
     Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates/Rules, or
-    DerivedSchedule for scripted trades (see the Event data structure \ref{app:scriptedtrade}).
+    DerivedSchedule for scripted trades (see the Event data structure in ore/Docs/ScriptedTrade).
     If left blank or omitted, defaults to a \lstinline!DerivedSchedule! with the
     \lstinline!FloatingPeriodSchedule! set as the base schedule.
   \item \lstinline!KnockOutDeterminationSchedule! [Optional]: Dates on which a knock-out
   event is evaluated, after which the instrument is considered to be terminated and no
   payout is made. \\
     Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates/Rules, or
-    DerivedSchedule for scripted trades (see the Event data structure \ref{app:scriptedtrade}).
+    DerivedSchedule for scripted trades (see the Event data structure in ore/Docs/ScriptedTrade).
     If left blank or omitted, defaults to a \lstinline!DerivedSchedule! with the
     \lstinline!FloatingPeriodSchedule! set as the base schedule.
   \item \lstinline!KnockInDeterminationSchedule! [Optional]: Observation dates for
   determining if a knock-in event has occurred. If \lstinline!BermudanKnockIn!
   is \emph{True}, this node is required. \\
     Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates/Rules, or
-    DerivedSchedule for scripted trades (see the Event data structure \ref{app:scriptedtrade}).
+    DerivedSchedule for scripted trades (see the Event data structure in ore/Docs/ScriptedTrade).
   \item \lstinline!FixedAccrualSchedule! [Optional]: The fixed coupon paid out for each determination date
   in the \lstinline!FixedDeterminationSchedule! is scaled according to the number of days
   in the \lstinline!FixedAccrualSchedule! for which a fixed trigger event occurred, as a fraction of
@@ -170,13 +170,13 @@ The meanings and allowable values of elements in the \lstinline!EquityWorstOfBas
   \lstinline!FixedDeterminationSchedule!). If \lstinline!AccruingFixedCoupons! is
   \emph{True}, this node is required. \\
     Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates/Rules, or
-    DerivedSchedule for scripted trades (see the Event data structure \ref{app:scriptedtrade}).
+    DerivedSchedule for scripted trades (see the Event data structure in ore/Docs/ScriptedTrade).
   \item \lstinline!FloatingPayDates!: Floating coupon payment dates. \\
     Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates, Rules, or
-    DerivedSchedule (see \ref{app:scriptedtrade}).
+    DerivedSchedule (see ore/Docs/ScriptedTrade).
   \item \lstinline!FixedPayDates! [Optional]: Fixed coupon payment dates. \\
     Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates/Rules, or
-    DerivedSchedule for scripted trades (see the Event data structure \ref{app:scriptedtrade}).
+    DerivedSchedule for scripted trades (see the Event data structure in ore/Docs/ScriptedTrade).
     If left blank or omitted, defaults to the \lstinline!FloatingPayDates!.
   \item \lstinline!KnockInPayDate! [Optional]: Settlement date for the knock-in
   payment, subject to a knock-in event having been triggered. \\
@@ -208,7 +208,7 @@ The meanings and allowable values of elements in the \lstinline!EquityWorstOfBas
     \emph{true}, \emph{false}, etc. The full set of allowable values is given in Table
     \ref{tab:boolean_allowable}. If left blank or omitted, defaults to \emph{False}.
   \item \lstinline!FloatingIndex!: Underlying index of the floating leg. \\
-    Allowable values: See \ref{app:scriptedtrade} (section Data Node / Index). This must
+    Allowable values: See ore/Docs/ScriptedTrade (section Data Node / Index). This must
     be an InterestRate underlying. Overnight indices are not supported.
   \item \lstinline!FloatingSpread! [Optional]: Spread on the floating rate. \\
     Allowable values: Any number. If left blank or omitted, defaults to zero.
@@ -244,7 +244,7 @@ The meanings and allowable values of elements in the \lstinline!EquityWorstOfBas
   The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
 \end{itemize}
 
-Worst Of Basket Swaps can alternatively be represented as {\em scripted trades}, refer to Section \ref{app:scriptedtrade} for an introduction.
+Worst Of Basket Swaps can alternatively be represented as {\em scripted trades}, refer to ore/Docs/ScriptedTrade for an introduction.
 
 \begin{minted}[fontsize=\footnotesize]{xml}
   <TradeType>ScriptedTrade</TradeType>
@@ -393,20 +393,20 @@ The meanings and allowable values of the elements in the \lstinline!WorstOfBaske
   \item{}[number] \lstinline!InitialFixedRate!: Rate of the initial fixed payment. \\
   Allowable values: Any number, as a percentage expressed in decimal form.
   \item{}[index] \lstinline!Underlyings!: The basket of underlyings. \\
-  Allowable values: See Section \ref{data_index} for allowable values.
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
   \item{}[number] \lstinline!InitialPrices!: The agreed initial price for each underlying in the basket. \\
   Allowable values: Any positive number. The number of \lstinline!Value! sub-nodes should match the number of underlyings.
   This must have the same number of entries as \lstinline!Underlyings!.
   \item{}[event] \lstinline!DeterminationDates!: Floating leg period dates, knock-out determination dates, and fixed trigger
   determination dates. The first date is only used for calculating the floating leg accrual fraction, and corresponds
   to the contract effective date. \\
-  Allowable values: See Section \ref{ss:schedule_data} ScheduleData, or DerivedSchedule (see \ref{app:scriptedtrade}) if
+  Allowable values: See Section \ref{ss:schedule_data} ScheduleData, or DerivedSchedule (see ore/Docs/ScriptedTrade) if
   derived from \lstinline!SettlementDates! or \lstinline!FixingSchedule!. The number of determination dates should
   match the number of settlement and fixing dates.
   \item{}[event] \lstinline!SettlementDates!: The set of settlement dates corresponding to each determination date. While the first
   settlement date is unused in the calculations, this format simplifies the input, e.g.\ the settlement schedule can be
   a derived schedule, with the \emph{DeterminationDates} as the base schedule. \\
-  Allowable values: See section \ref{ss:schedule_data} ScheduleData, or DerivedSchedule (see \ref{app:scriptedtrade}) if
+  Allowable values: See section \ref{ss:schedule_data} ScheduleData, or DerivedSchedule (see ore/Docs/ScriptedTrade) if
   derived from \lstinline!DeterminationDates! or \lstinline!FixingSchedule!. The number of settlement dates should
   match the number of determination and fixing dates.
   \item{}[number] \lstinline!KnockOutLevels!: For each determination date, the barrier level used to determine whether a knock-out
@@ -427,19 +427,19 @@ The meanings and allowable values of the elements in the \lstinline!WorstOfBaske
   Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc. The
   full set of allowable values is given in Table \ref{tab:boolean_allowable}.
   \item{}[index] \lstinline!FloatingIndex!: Underlying index of the floating leg. \\
-  Allowable values: See Section \ref{data_index} for allowable values. Overnight indices are not supported.
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values. Overnight indices are not supported.
   \item{}[number] \lstinline!FloatingSpread!: Spread on the floating rate. \\
   Allowable values: Any number.
   \item{}[dayCounter] \lstinline!FloatingDayCountFraction!: The day count fraction for the floating leg accrual
   calculations. \\
   Allowable values: See \lstinline!DayCount Convention! in Table \ref{tab:daycount}.
   \item{}[event] \lstinline!FixingSchedule!: The fixing schedule of the floating leg payments. \\
-  Allowable values: See Section \ref{ss:schedule_data} ScheduleData, or DerivedSchedule (see \ref{app:scriptedtrade}) if
+  Allowable values: See Section \ref{ss:schedule_data} ScheduleData, or DerivedSchedule (see ore/Docs/ScriptedTrade) if
   derived from \lstinline!DeterminationDates! or \lstinline!SettlementDates!. The number of fixing dates should
   match the number of determination and settlement dates.
   \item{}[number] \lstinline!Strike!: Strike price for each underlying in the basket. When calculating the equity amount,
   this is the price used to calculate the number of shares owing of the worst-performing asset. \\
   Allowable values: Any number, as a percentage of the initial prices, expressed in decimal form.
-  \item{}[currency] \lstinline!PayCcy!: Settlement currency. Notice section \ref{sss:payccy_st}. \\
+  \item{}[currency] \lstinline!PayCcy!: Settlement currency. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
   Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
 \end{itemize}
