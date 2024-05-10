@@ -1279,7 +1279,9 @@ Example & Description \\
 \hline
 61 &  Fast Sensitivties using AAD and GPUs \\
 \hline
-62 &  P\&L Analytic \\
+62 &  P\&L and P\&L Explain Analytics \\
+\hline
+63 &  Stress Tests in the Par-Rate Domain \\
 \hline
 \end{tabular}
 \caption{ORE examples.}
@@ -3749,14 +3751,14 @@ To run this notebook you need to build the Python bindings for release 12
 or ``pip install'' ORE v12.
 
 %--------------------------------------------------------------------
-\subsection{P\&L Analytic}% Example 62
+\subsection{P\&L and P\&L Explain Analytics}% Example 62
 \label{example:62}
 %--------------------------------------------------------------------
 
 This example in folder {\tt Examples/Example\_62} demonstrates the P\&L analytic
 type on a very simple test portfolio that consists of two
 single-leg swaps. The example can be run as usual by calling {\tt python run.py}.
-Main output is the P\&L report in {\tt Output/pnl.csv} with the following columns
+Main output is the P\&L report in {\tt Output/Pnl/pnl.csv} with the following columns
 \begin{itemize}
 \item TradeId
 \item Maturity and MaturityTime
@@ -3782,6 +3784,19 @@ Moreover we write
 This analytic is work in progress since it is based on the portfolio at t0 only: The t1 portfolio needs
 to be taken into account in order to work out the effects of portfolio changes (maturities, new business, trade
 changes) in the observation period.
+
+Furthermore, this example runs a second batch (see {\tt Input/ore\_explain.xml}) to explain the
+P\&L above in terms of portfolio sensitivities and changes in related market moves. The main output of this
+is in {\tt Output/PnlExplain/pnl\_explain.csv}. The PnlExplain analytic contains the Pnl analytic as dependent
+analytic, i.e. the PnlExplain analytic is self-sufficient kicking off Pnl calculation internally. 
+The only additional piece of input for the explainer run is {\tt sensitivity.xml}.
+
+%--------------------------------------------------------------------
+\subsection{Stress Tests in the Par-Rate Domain}% Example 63
+\label{example:63}
+%--------------------------------------------------------------------
+
+TODO
 
 \clearpage
 %========================================================
