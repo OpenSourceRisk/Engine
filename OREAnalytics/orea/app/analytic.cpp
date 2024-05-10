@@ -29,6 +29,8 @@
 #include <orea/engine/valuationengine.hpp>
 #include <orea/aggregation/dimregressioncalculator.hpp>
 
+#include <ored/marketdata/bondspreadimply.hpp>
+#include <ored/marketdata/compositeloader.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/portfolio/builders/currencyswap.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
@@ -162,17 +164,21 @@ void Analytic::buildMarket(const boost::shared_ptr<ore::data::InMemoryLoader>& l
     // first build the market if we have a todaysMarketParams
     if (configurations().todaysMarketParams) {
         try {
-            // Note: we usually update the loader with implied data, but we simply use the provided loader here
-             loader_ = loader;
+            // imply bond spreads (no exclusion of securities in ore, just in ore+) and add results to loader
+            auto bondSpreads = implyBondSpreads(configurations().asofDate, inputs_, configurations_.todaysMarketParams,
+                                                loader, configurations_.curveConfig, std::string());
+
+            // Join the loaders
+            loader_ = boost::make_shared<CompositeLoader>(loader, bondSpreads);
+
             // Check that the loader has quotes
-            QL_REQUIRE( loader_->hasQuotes(inputs()->asof()),
-                       "There are no quotes available for date " << inputs()->asof());
+            QL_REQUIRE(loader_->hasQuotes(configurations().asofDate),
+                       "There are no quotes available for date " << configurations().asofDate);
             // Build the market
-            market_ = boost::make_shared<TodaysMarket>(inputs()->asof(), configurations().todaysMarketParams, loader_,
-                                                       configurations().curveConfig, inputs()->continueOnError(),
-                                                       true, inputs()->lazyMarketBuilding(), inputs()->refDataManager(),
-                                                       false, *inputs()->iborFallbackConfig());
-            // Note: we usually wrap the market into a PC market, but skip this step here
+            market_ = boost::make_shared<TodaysMarket>(
+                configurations().asofDate, configurations().todaysMarketParams, loader_, configurations().curveConfig,
+                inputs()->continueOnError(), true, inputs()->lazyMarketBuilding(), inputs()->refDataManager(), false,
+                *inputs()->iborFallbackConfig());
         } catch (const std::exception& e) {
             if (marketRequired)
                 QL_FAIL("Failed to build market: " << e.what());
@@ -240,6 +246,29 @@ void MarketDataAnalyticImpl::runAnalytic(
     CONSOLEW("Build Market");
     analytic()->buildMarket(loader);
     CONSOLE("OK");
+}
+
+boost::shared_ptr<Loader> implyBondSpreads(const Date& asof,
+                                           const boost::shared_ptr<ore::analytics::InputParameters>& params,
+                                           const boost::shared_ptr<TodaysMarketParameters>& todaysMarketParams,
+                                           const boost::shared_ptr<Loader>& loader,
+                                           const boost::shared_ptr<CurveConfigurations>& curveConfigs,
+                                           const std::string& excludeRegex) {
+
+    auto securities = BondSpreadImply::requiredSecurities(asof, todaysMarketParams, curveConfigs, *loader,
+                                                          true, excludeRegex);
+
+    if (!securities.empty()) {
+        // always continue on error and always use lazy market building
+        boost::shared_ptr<Market> market =
+            boost::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, true, true, true,
+                                             params->refDataManager(), false, *params->iborFallbackConfig());
+        return BondSpreadImply::implyBondSpreads(securities, params->refDataManager(), market, params->pricingEngine(),
+                                                 Market::defaultConfiguration, *params->iborFallbackConfig());
+    } else {
+        // no bonds that require a spread imply => return null ptr
+        return boost::shared_ptr<Loader>();
+    }
 }
 
 } // namespace analytics

@@ -49,7 +49,8 @@ class LgmBuilder : public QuantExt::ModelBuilder {
 public:
     /*! The configuration refers to the configuration to read swaption vol and swap index from the market.
         The discounting curve to price calibrating swaptions is derived from the swap index directly though,
-        i.e. it is not read as a discount curve from the market. */
+        i.e. it is not read as a discount curve from the market (except as a fallback in case we do not find
+        the swap index). */
     LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<IrLgmData>& data,
                const std::string& configuration = Market::defaultConfiguration, Real bootstrapTolerance = 0.001,
                const bool continueOnError = false, const std::string& referenceCalibrationGrid = "",
@@ -62,9 +63,9 @@ public:
     std::string qualifier() { return data_->qualifier(); }
     std::string ccy() { return currency_; }
     boost::shared_ptr<QuantExt::LGM> model() const;
-    /* the curve used to build the lgm parametrization, this can be relinked later outside this builder to e.g.
-       calibrate fx processes using an xccy curve instead of the in currency curve that we use for the calibration of
-       the LGM model in this builder */
+    /* The curve used to build the lgm parametrization. This is initially the swap index discount curve (see ctor). It
+       can be relinked later outside this builder to calibrate fx processes, for which one wants to use a xccy curve
+       instead of the in-ccy curve that is used to calibrate the LGM model within this builder. */
     RelinkableHandle<YieldTermStructure> discountCurve() { return modelDiscountCurve_; }
     boost::shared_ptr<QuantExt::IrLgm1fParametrization> parametrization() const;
     std::vector<boost::shared_ptr<BlackCalibrationHelper>> swaptionBasket() const;

@@ -62,16 +62,12 @@ public:
 
     bool isExercised() const;
 
+    std::map<AssetClass, std::set<std::string>>
+    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+
 private:
     OptionData optionData_;
     vector<LegData> legData_;
-
-    //! build European Vanilla Swaption
-    void buildEuropean(const boost::shared_ptr<EngineFactory>&);
-    boost::shared_ptr<VanillaSwap> buildVanillaSwap(const boost::shared_ptr<EngineFactory>&);
-
-    //! build all other types of Swaptions
-    void buildBermudanOrAmerican(const boost::shared_ptr<EngineFactory>&);
 
     //! build underlying swaps for exposure simulation
     std::vector<boost::shared_ptr<Instrument>> buildUnderlyingSwaps(const boost::shared_ptr<PricingEngine>&,
@@ -84,5 +80,6 @@ private:
     Settlement::Type settlementType_;
     Settlement::Method settlementMethod_;
 };
+
 } // namespace data
 } // namespace ore

@@ -202,10 +202,11 @@ public:
 protected:
     QuantLib::ext::shared_ptr<InputParameters> inputs_;
 
-private:
-    Analytic* analytic_;
     //! label for logging purposes primarily
     std::string label_;
+
+private:
+    Analytic* analytic_;
     bool generateAdditionalResults_ = false;
 };
 
@@ -239,6 +240,13 @@ template <class T> inline QuantLib::ext::shared_ptr<T> Analytic::dependentAnalyt
     QL_REQUIRE(analytic, "Could not cast analytic for key " << key);
     return analytic;
 }
+
+boost::shared_ptr<ore::data::Loader> implyBondSpreads(const Date& asof,
+                 const boost::shared_ptr<InputParameters>& params,
+                 const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
+                 const boost::shared_ptr<ore::data::Loader>& loader,
+                 const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
+                 const std::string& excludeRegex);
 
 } // namespace analytics
 } // namespace oreplus

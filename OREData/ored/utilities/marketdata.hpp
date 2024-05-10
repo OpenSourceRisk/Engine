@@ -55,6 +55,11 @@ QuantLib::Handle<QuantLib::YieldTermStructure>
 xccyYieldCurve(const boost::shared_ptr<Market>& market, const std::string& ccyCode, bool& outXccyExists,
                const std::string& configuration = Market::defaultConfiguration);
 
+/*! Get a yield curve by name, where name can refer to an index or a yield curve name */
+QuantLib::Handle<QuantLib::YieldTermStructure>
+indexOrYieldCurve(const boost::shared_ptr<Market>& market, const std::string& name,
+                  const std::string& configuration = Market::defaultConfiguration);
+
 /*! For a given security id and credit curve id return the internal name for a security specific
     copy of the credit curve. This is used to separate sensitivities on credit curves by securities. */
 std::string securitySpecificCreditCurveName(const std::string& securityId, const std::string& creditCurveId);
@@ -88,10 +93,6 @@ std::string prettyPrintInternalCurveName(std::string name);
 boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, const string& foreign,
                                                   const boost::shared_ptr<Market>& market, const string& configuration,
                                                   bool useXbsCurves = false);
-
-/*! Get a Xccy curve from  given a market */
-Handle<YieldTermStructure> xccyYieldCurve(const boost::shared_ptr<Market>& market, const string& ccyCode,
-                                          const string& configuration);
 
 std::tuple<Natural, Calendar, BusinessDayConvention> getFxIndexConventions(const string& index);
 

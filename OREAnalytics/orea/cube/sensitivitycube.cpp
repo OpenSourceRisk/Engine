@@ -225,7 +225,7 @@ Real SensitivityCube::delta(const Size tradeIdx, const RiskFactorKey& riskFactor
         return (cube_->get(tradeIdx, fd.index) - cube_->getT0(tradeIdx, 0)) * scaling(fd);
     } else if (s->second == ShiftScheme::Backward) {
         auto fd = index(riskFactorKey, downFactors_);
-        return cube_->getT0(tradeIdx, 0) - cube_->get(tradeIdx, fd.index) * scaling(fd);
+        return (cube_->getT0(tradeIdx, 0) - cube_->get(tradeIdx, fd.index)) * scaling(fd);
     } else if (s->second == ShiftScheme::Central) {
         auto fdup = index(riskFactorKey, upFactors_);
         auto fddown = index(riskFactorKey, downFactors_);

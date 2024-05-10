@@ -56,7 +56,7 @@ void McCamFxOptionEngine::calculate() const {
 
     leg_ = {domesticLeg, foreignLeg};
     currency_ = {domesticCcy_, foreignCcy_};
-    payer_ = {1.0, 1.0};
+    payer_ = {false, false};
     exercise_ = arguments_.exercise;
     optionSettlement_ = Settlement::Cash;
 

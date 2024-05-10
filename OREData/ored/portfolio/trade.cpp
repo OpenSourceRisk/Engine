@@ -110,13 +110,17 @@ void Trade::validate() const {
     // QL_REQUIRE(notional_ != Null<Real>(), "Notional has not been set for trade " << id_ << ".");
     // QL_REQUIRE(notionalCurrency_ != "", "Notional currency has not been set for trade " << id_ << ".");
     QL_REQUIRE(maturity_ != Null<Date>(), "Maturity not set for trade " << id_ << ".");
-    QL_REQUIRE(!envelope_.empty(), "Envelope not set for trade " << id_ << ".");
+    QL_REQUIRE(envelope_.initialized(), "Envelope not set for trade " << id_ << ".");
     if (legs_.size() > 0) {
         QL_REQUIRE(legs_.size() == legPayers_.size(),
                    "Inconsistent number of pay/receive indicators for legs in trade " << id_ << ".");
         QL_REQUIRE(legs_.size() == legCurrencies_.size(),
                    "Inconsistent number of leg currencies for legs in trade " << id_ << ".");
     }
+}
+
+void Trade::setEnvelope(const Envelope& envelope) {
+    envelope_ = envelope;
 }
 
 void Trade::reset() {

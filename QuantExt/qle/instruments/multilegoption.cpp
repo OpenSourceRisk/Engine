@@ -64,6 +64,16 @@ void MultiLegOption::deepUpdate() {
     update();
 }
 
+bool MultiLegOption::isExpired() const {
+    Date today = Settings::instance().evaluationDate();
+    if (exercise_ == nullptr || exercise_->dates().empty()) {
+        return today >= maturityDate();
+    } else {
+        // only the option itself is represented, not something we exercised into
+        return today >= exercise_->dates().back();
+    }
+}
+
 Real MultiLegOption::underlyingNpv() const {
     calculate();
     QL_REQUIRE(underlyingNpv_ != Null<Real>(), "MultiLegOption: underlying npv not available");
@@ -74,9 +84,7 @@ void MultiLegOption::setupArguments(PricingEngine::arguments* args) const {
     MultiLegOption::arguments* tmp = dynamic_cast<MultiLegOption::arguments*>(args);
     QL_REQUIRE(tmp != nullptr, "MultiLegOption: wrong pricing engine argument type");
     tmp->legs = legs_;
-    tmp->payer.resize(payer_.size());
-    for (Size i = 0; i < payer_.size(); ++i)
-        tmp->payer[i] = payer_[i] ? -1.0 : 1.0;
+    tmp->payer = payer_;
     tmp->currency = currency_;
     tmp->exercise = exercise_;
     tmp->settlementType = settlementType_;

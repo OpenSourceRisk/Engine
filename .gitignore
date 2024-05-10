@@ -321,3 +321,4 @@ Examples/**/pricingstats.csv
 *fdb_latexmk
 *.fls
 
+.gitmodules

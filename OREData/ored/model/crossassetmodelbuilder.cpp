@@ -162,6 +162,35 @@ void CrossAssetModelBuilder::resetModelParams(const CrossAssetModel::AssetType t
     }
 }
 
+void CrossAssetModelBuilder::copyModelParams(const CrossAssetModel::AssetType t0, const Size param0, const Size index0,
+                                             const Size i0, const CrossAssetModel::AssetType t1, const Size param1,
+                                             const Size index1, const Size i1, const Real mult) const {
+    auto mp0 = model_->MoveParameter(t0, param0, index0, i0);
+    auto mp1 = model_->MoveParameter(t1, param1, index1, i1);
+    auto s0 = 0, s1 = 0;
+    for (Size i = 0; i < mp0.size(); ++i)
+        if (!mp0[i])
+            s0++;
+    for (Size i = 0; i < mp1.size(); ++i)
+        if (!mp1[i])
+            s1++;
+    QL_REQUIRE(s0 == s1, "CrossAssetModelBuilder::copyModelParams(): source range size ("
+                             << s0 << ") does not match target range size (" << s1 << ") when copying (" << t0 << ","
+                             << param0 << "," << index0 << "," << i0 << ") -> (" << t1 << "," << param1 << "," << index1
+                             << "," << i1 << ")");
+    std::vector<Real> sourceValues(s0);
+    for (Size idx0 = 0, count = 0; idx0 < mp0.size(); ++idx0) {
+        if (!mp0[idx0]) {
+            sourceValues[count++] = params_[idx0];
+        }
+    }
+    for (Size idx1 = 0, count = 0; idx1 < mp1.size(); ++idx1) {
+        if (!mp1[idx1]) {
+            model_->setParam(idx1, sourceValues[count++] * mult);
+        }
+    }
+}
+
 void CrossAssetModelBuilder::buildModel() const {
 
     LOG("Start building CrossAssetModel");
@@ -351,7 +380,9 @@ void CrossAssetModelBuilder::buildModel() const {
         processInfo[CrossAssetModel::AssetType::EQ].emplace_back(eqName, 1);
     }
 
-    // Build the INF parametrizations and calibration baskets
+    /*******************************************************
+     * Build the INF parametrizations and calibration baskets
+     */
     vector<boost::shared_ptr<Parametrization>> infParameterizations;
     for (Size i = 0; i < config_->infConfigs().size(); i++) {
         boost::shared_ptr<InflationModelData> imData = config_->infConfigs()[i];
@@ -367,6 +398,27 @@ void CrossAssetModelBuilder::buildModel() const {
             processInfo[CrossAssetModel::AssetType::INF].emplace_back(dkData->index(), 1);
         } else if (auto jyData = boost::dynamic_pointer_cast<InfJyData>(imData)) {
             if (!buildersAreInitialized) {
+                // for linked real rate params we have to resize the real rate params here again, because their time grid
+                // might have been overwritten in the ir calibration step
+                if (jyData->linkRealRateParamsToNominalRateParams()) {
+                    Size ccyIndex = std::distance(currencies.begin(),
+                                                  std::find(currencies.begin(), currencies.end(), jyData->currency()));
+                    VolatilityParameter rrVol = jyData->realRateVolatility();
+                    ReversionParameter rrRev = jyData->realRateReversion();
+                    rrVol.setCalibrate(false);
+                    rrRev.setCalibrate(false);
+                    auto volTimes = irParametrizations[ccyIndex]->parameterTimes(0);
+                    auto volValues = irParametrizations[ccyIndex]->parameterValues(0);
+                    auto revTimes = irParametrizations[ccyIndex]->parameterTimes(1);
+                    auto revValues = irParametrizations[ccyIndex]->parameterValues(1);
+                    rrVol.setTimes(std::vector<Real>(volTimes.begin(), volTimes.end()));
+                    rrRev.setTimes(std::vector<Real>(revTimes.begin(), revTimes.end()));
+                    rrVol.setValues(std::vector<Real>(volValues.begin(), volValues.end()));
+                    rrRev.setValues(std::vector<Real>(revValues.begin(), revValues.end()));
+                    rrVol. mult(jyData->linkedRealRateVolatilityScaling());
+                    jyData->setRealRateReversion(rrRev);
+                    jyData->setRealRateVolatility(rrVol);
+                }
                 subBuilders_[CrossAssetModel::AssetType::INF][i] = boost::make_shared<InfJyBuilder>(
                     market_, jyData, configurationInfCalibration_, referenceCalibrationGrid_, dontCalibrate_);
             }
@@ -842,6 +894,15 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
     // Calibration configuration.
     const auto& cc = data.calibrationConfiguration();
 
+    // if we link the real rate params to the nominal rate params, we copy them over now (ir calibration is done at this point)
+    if(data.linkRealRateParamsToNominalRateParams()) {
+        Size irIdx = model_->ccyIndex(model_->infjy(modelIdx)->currency());
+        copyModelParams(CrossAssetModel::AssetType::IR, 0, irIdx, Null<Size>(), CrossAssetModel::AssetType::INF, 0,
+                        modelIdx, Null<Size>(), data.linkedRealRateVolatilityScaling());
+        copyModelParams(CrossAssetModel::AssetType::IR, 1, irIdx, Null<Size>(), CrossAssetModel::AssetType::INF, 1,
+                        modelIdx, Null<Size>(), 1.0);
+    }
+
     if (data.calibrationType() == CalibrationType::BestFit) {
 
         // If calibration type is BestFit, do a global optimisation on the parameters that need to be calibrated.
@@ -937,6 +998,13 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
     }
 
     // Log the calibration details.
+    TLOG("INF (JY) " << data.index() << " model parameters after calibration:");
+    TLOG("Real    rate vol times   : " << inflationParam->parameterTimes(0));
+    TLOG("Real    rate vol values  : " << inflationParam->parameterValues(0));
+    TLOG("Real    rate rev times   : " << inflationParam->parameterTimes(1));
+    TLOG("Real    rate rev values  : " << inflationParam->parameterValues(1));
+    TLOG("R/N conversion   times   : " << inflationParam->parameterTimes(2));
+    TLOG("R/N conversion   values  : " << inflationParam->parameterValues(2));
     DLOG("INF (JY) " << data.index() << " calibration errors:");
     inflationCalibrationErrors_[modelIdx] = getCalibrationError(allHelpers);
     if (data.calibrationType() == CalibrationType::Bootstrap) {

@@ -2534,6 +2534,43 @@
     </YieldCurve>
     -->
     <YieldCurve>
+        <CurveId>EURBMB</CurveId>
+        <CurveDescription>EUR BM Bond Curve</CurveDescription>
+        <Currency>EUR</Currency>
+        <DiscountCurve/>
+        <Segments>
+            <FittedBond>
+                <Type>FittedBond</Type>
+                <Quotes>
+                    <Quote>BOND/PRICE/SECURITY_2</Quote>
+                    <Quote>BOND/PRICE/SECURITY_3</Quote>
+                    <Quote>BOND/PRICE/SECURITY_4</Quote>
+                    <Quote>BOND/PRICE/SECURITY_5</Quote>
+                </Quotes>
+                <!-- mapping of Ibor curves used in the bonds from which the curve is built -->
+                <IborIndexCurves>
+                    <IborIndexCurve iborIndex="EUR-EURIBOR-6M">EUR6M</IborIndexCurve>
+                </IborIndexCurves>
+                <!-- flat extrapolation before first and after last bond maturity -->
+                <ExtrapolateFlat>true</ExtrapolateFlat>
+            </FittedBond>
+        </Segments>
+        <!-- NelsonSiegel, Svensson, ExponentialSplines -->
+        <InterpolationMethod>NelsonSiegel</InterpolationMethod>
+        <YieldCurveDayCounter>A365</YieldCurveDayCounter>
+        <Extrapolation>true</Extrapolation>
+        <BootstrapConfig>
+            <!-- desired accuracy (in implied quote) -->
+            <Accuracy>0.1</Accuracy>
+            <!-- tolerable accuracy -->
+            <GlobalAccuracy>0.5</GlobalAccuracy>
+            <!-- do not throw even if tolerable accuracy is breached -->
+            <DontThrow>false</DontThrow>
+            <!-- max calibration trials to reach desired accuracy -->
+            <MaxAttempts>20</MaxAttempts>
+        </BootstrapConfig>
+    </YieldCurve>
+    <YieldCurve>
       <CurveId>BENCHMARK_EUR</CurveId>
       <CurveDescription>Bond benchmark curve in EUR</CurveDescription>
       <Currency>EUR</Currency>
@@ -2556,14 +2593,14 @@
       <Currency>EUR</Currency>
       <DiscountCurve></DiscountCurve>
       <Segments>
-	    <Direct>
-	      <Type>Zero</Type>
-	      <Quotes>
-	        <Quote>ZERO/RATE/EUR/BOND_YIELD_EUR/A365/5Y</Quote>
-	        <Quote>ZERO/RATE/EUR/BOND_YIELD_EUR/A365/10Y</Quote>
-	      </Quotes>
-	      <Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
-	    </Direct>
+        <Direct>
+          <Type>Zero</Type>
+          <Quotes>
+            <Quote>ZERO/RATE/EUR/BOND_YIELD_EUR/A365/5Y</Quote>
+            <Quote>ZERO/RATE/EUR/BOND_YIELD_EUR/A365/10Y</Quote>
+          </Quotes>
+          <Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+        </Direct>
       </Segments>
     </YieldCurve>
     <YieldCurve>
@@ -2913,8 +2950,8 @@
           <CurveDescription>EUHICPXT CPI Cap/Floor vol surface derived from price quotes</CurveDescription>
           <Type>ZC</Type>
           <QuoteType>Price</QuoteType>
-	  <VolatilityType>Lognormal</VolatilityType>
-	  <Extrapolation>Y</Extrapolation>
+      <VolatilityType>Lognormal</VolatilityType>
+      <Extrapolation>Y</Extrapolation>
           <DayCounter>ACT</DayCounter>
           <Calendar>TARGET</Calendar>
           <BusinessDayConvention>MF</BusinessDayConvention>
@@ -2924,40 +2961,40 @@
           <Index>EUHICPXT</Index>
           <IndexCurve>Inflation/EUHICPXT/EUHICPXT_ZC_Swaps</IndexCurve>
           <IndexInterpolated>false</IndexInterpolated>
-	  <ObservationLag>3M</ObservationLag>
+      <ObservationLag>3M</ObservationLag>
           <YieldTermStructure>Yield/EUR/EUR1D</YieldTermStructure>
       </InflationCapFloorVolatility>
       <InflationCapFloorVolatility>
-	<CurveId>UKRPI_ZC_CF</CurveId>
-	<CurveDescription>UKRPI CPI Cap/Floor vol surface derived from price quotes</CurveDescription>
-	<Type>ZC</Type>
-	<QuoteType>Price</QuoteType>
-	<VolatilityType>Lognormal</VolatilityType>
-	<Extrapolation>Y</Extrapolation>
-	<DayCounter>Actual/365 (Fixed)</DayCounter>
-	<Calendar>GBP</Calendar>
-	<BusinessDayConvention>Following</BusinessDayConvention>
-	<Tenors>2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y</Tenors>
-	<CapStrikes/> 
+    <CurveId>UKRPI_ZC_CF</CurveId>
+    <CurveDescription>UKRPI CPI Cap/Floor vol surface derived from price quotes</CurveDescription>
+    <Type>ZC</Type>
+    <QuoteType>Price</QuoteType>
+    <VolatilityType>Lognormal</VolatilityType>
+    <Extrapolation>Y</Extrapolation>
+    <DayCounter>Actual/365 (Fixed)</DayCounter>
+    <Calendar>GBP</Calendar>
+    <BusinessDayConvention>Following</BusinessDayConvention>
+    <Tenors>2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y</Tenors>
+    <CapStrikes/> 
         <FloorStrikes>-0.03,-0.02,-0.015,-0.01,-0.005,0.00,0.005,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
-	<Index>UKRPI</Index>
-	<IndexCurve>Inflation/UKRPI/UKRPI_ZC_Swaps</IndexCurve>
-	<IndexInterpolated>false</IndexInterpolated>
-	<ObservationLag>2M</ObservationLag>
-	<YieldTermStructure>Yield/GBP/GBP1D</YieldTermStructure>
+    <Index>UKRPI</Index>
+    <IndexCurve>Inflation/UKRPI/UKRPI_ZC_Swaps</IndexCurve>
+    <IndexInterpolated>false</IndexInterpolated>
+    <ObservationLag>2M</ObservationLag>
+    <YieldTermStructure>Yield/GBP/GBP1D</YieldTermStructure>
       </InflationCapFloorVolatility>
       <InflationCapFloorVolatility>
         <CurveId>USCPI_ZC_CF</CurveId>
         <CurveDescription>Price Surface ZC CapFloor USCPI</CurveDescription>
         <Type>ZC</Type>
-	<QuoteType>Price</QuoteType>
-	<VolatilityType>Lognormal</VolatilityType>
-	<Extrapolation>Y</Extrapolation>
+    <QuoteType>Price</QuoteType>
+    <VolatilityType>Lognormal</VolatilityType>
+    <Extrapolation>Y</Extrapolation>
         <DayCounter>ACT</DayCounter>
         <Calendar>US</Calendar>
         <BusinessDayConvention>MF</BusinessDayConvention>
         <Tenors>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,30Y</Tenors>
-	<CapStrikes/> 
+    <CapStrikes/> 
         <FloorStrikes>-0.02,-0.015,-0.01,-0.005,0.00,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
         <Index>USCPI</Index>
         <IndexCurve>Inflation/USCPI/USCPI_ZC_Swaps</IndexCurve>
@@ -2967,20 +3004,20 @@
       </InflationCapFloorVolatility>
       <InflationCapFloorVolatility>
         <CurveId>EUHICPXT_YY_CF_N</CurveId>
-	<CurveDescription>EUR normal cap floor volatilities</CurveDescription>
+    <CurveDescription>EUR normal cap floor volatilities</CurveDescription>
         <Type>YY</Type>
-	<QuoteType>Volatility</QuoteType>
-	<VolatilityType>Normal</VolatilityType>
-	<Extrapolation>TRUE</Extrapolation>
-	<DayCounter>Actual/365 (Fixed)</DayCounter>
-	<Calendar>TARGET</Calendar>
-	<BusinessDayConvention>Following</BusinessDayConvention>
-	<Tenors>2Y,5Y,7Y,10Y,15Y,20Y</Tenors>
-	<Strikes>-0.02,-0.01,0,0.01,0.02,0.03</Strikes>
-	<Index>EUHICPXT</Index>
+    <QuoteType>Volatility</QuoteType>
+    <VolatilityType>Normal</VolatilityType>
+    <Extrapolation>TRUE</Extrapolation>
+    <DayCounter>Actual/365 (Fixed)</DayCounter>
+    <Calendar>TARGET</Calendar>
+    <BusinessDayConvention>Following</BusinessDayConvention>
+    <Tenors>2Y,5Y,7Y,10Y,15Y,20Y</Tenors>
+    <Strikes>-0.02,-0.01,0,0.01,0.02,0.03</Strikes>
+    <Index>EUHICPXT</Index>
         <IndexCurve>Inflation/EUHICPXT/EUHICPXT_YY_Swaps</IndexCurve>
         <IndexInterpolated>false</IndexInterpolated>
-	<ObservationLag>3M</ObservationLag>
+    <ObservationLag>3M</ObservationLag>
         <YieldTermStructure>Yield/EUR/EUR1D</YieldTermStructure>
       </InflationCapFloorVolatility>
   </InflationCapFloorVolatilities>

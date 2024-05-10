@@ -203,6 +203,11 @@ Real BlackOvernightIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
         bool shiftedLn = capletVolatility()->volatilityType() == ShiftedLognormal;
         Rate cfValue = shiftedLn ? blackFormula(optionType, effStrike, averageRate, stdDev, 1.0, shift)
                                  : bachelierBlackFormula(optionType, effStrike, averageRate, stdDev, 1.0);
+        Real effectiveTime = capletVolatility()->timeFromReference(fixingDates.back());
+        if (optionType == Option::Type::Call)
+            effectiveCapletVolatility_ = stdDev / std::sqrt(effectiveTime);
+        else
+            effectiveFloorletVolatility_ = stdDev / std::sqrt(effectiveTime);
 
         // add spread to average rate
         if (coupon_->underlying()->includeSpread()) {
@@ -434,6 +439,12 @@ Real BlackAverageONIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
         bool shiftedLn = capletVolatility()->volatilityType() == ShiftedLognormal;
         Rate cfValue = shiftedLn ? blackFormula(optionType, effStrike, averageRate, stdDev, 1.0, shift)
                                  : bachelierBlackFormula(optionType, effStrike, averageRate, stdDev, 1.0);
+
+        Real effectiveTime = capletVolatility()->timeFromReference(fixingDates.back());
+        if (optionType == Option::Type::Call)
+            effectiveCapletVolatility_ = stdDev / std::sqrt(effectiveTime);
+        else
+            effectiveFloorletVolatility_ = stdDev / std::sqrt(effectiveTime);
 
         // add spread to average rate
         if (coupon_->includeSpread()) {
