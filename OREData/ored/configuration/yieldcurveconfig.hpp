@@ -1,6 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
- Copyright (C) 2023 Oleg Kulkov
+ Copyright (C) 2023,2024 Oleg Kulkov
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -79,7 +79,8 @@ public:
         WeightedAverage,
         YieldPlusDefault,
         IborFallback,
-        BondYieldShifted
+        BondYieldShifted,
+        CheapestToDeliver
     };
     //! Default destructor
     virtual ~YieldCurveSegment() {}
@@ -511,6 +512,56 @@ private:
     std::string numeratorCurveCurrency_;
     std::string denominatorCurveId_;
     std::string denominatorCurveCurrency_;
+};
+
+//! Cheapest To Deliver curve segment
+/*! Used to configure a QuantExt::Type::CheapestToDeliver.
+\ingroup configuration
+        */
+    class CheapestToDeliverCurveSegment : public YieldCurveSegment {
+public:
+    //! \name Constructors/Destructors
+    //@{
+    //! Default constructor
+    CheapestToDeliverCurveSegment() {}
+    //! Detailed constructor
+    CheapestToDeliverCurveSegment(const std::string& typeId,
+                                  const bool ccBasisIncluded,
+                                  const map<std::string, std::string>& ctdCurvesId,
+                                  const std::vector<Period> pillars,
+                                  const vector<Real>& ctdSpreads);
+    //@}
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    //@}
+
+    //! \name Inspectors
+    //@{
+    //const bool CCBasisIncluded() const { return ccBasisIncluded_; }
+    const map<std::string, std::string>& ctdCurves() const { return ctdCurves_; }
+    const std::vector<Period> pillars() { return pillars_; }
+    const map<std::string, Real>& ctdSpreads() const { return ctdSpreads_; }
+    const bool getRule() { return rule_; }
+    const std::vector<pair<Period, Period>> getPeriods() { return periods_; }
+
+    //@}
+
+    //! \name Visitability
+    //@{
+    void accept(QuantLib::AcyclicVisitor& v) override;
+    //@}
+
+private:
+    //bool ccBasisIncluded_;
+    map<std::string, std::string> ctdCurves_;
+    std::vector<pair<Period, Period>> periods_;
+    std::vector<Period> pillars_;
+    map<std::string, Real> ctdSpreads_;
+    bool rule_;
+
 };
 
 //! FittedBond yield curve segment
