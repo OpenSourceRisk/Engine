@@ -24,6 +24,7 @@
 
 #include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/tradefactory.hpp>
+#include <ored/portfolio/referencedata.hpp>
 #include <ostream>
 
 namespace ore {
@@ -57,21 +58,23 @@ public:
     }
 
     //! Fully-specified Constructor
-    CompositeTrade(const string currency, const vector<boost::shared_ptr<Trade>>& trades,
+    CompositeTrade(const string currency, const vector<QuantLib::ext::shared_ptr<Trade>>& trades,
                    const string notionalCalculation = "", const Real notionalOverride = 0.0,
                    const Envelope& env = Envelope(), const TradeActions& ta = TradeActions())
         : Trade("CompositeTrade", env, ta), currency_(currency), notionalOverride_(notionalOverride),
           notionalCalculation_(notionalCalculation), trades_(trades) {}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
-    virtual void build(const boost::shared_ptr<EngineFactory>&) override;
+    virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
     QuantLib::Real notional() const override;
 
     //! \name Inspectors
     //@{
     const string& currency() const { return currency_; }
+    const string& portfolioId() const { return portfolioId_; }
+    const bool& portfolioBasket() const { return portfolioBasket_; }
     const string& notionalCalculation() const { return notionalCalculation_; }
-    const vector<boost::shared_ptr<Trade>>& trades() const { return trades_; }
+    const vector<QuantLib::ext::shared_ptr<Trade>>& trades() const { return trades_; }
     //@}
 
     //! \name Utility functions
@@ -86,22 +89,28 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name trade overrides
     //@{
     std::map<std::string, RequiredFixings::FixingDates> fixings(const QuantLib::Date& settlementDate) const override;
-    std::map<AssetClass, std::set<std::string>> underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const override;;
+    std::map<AssetClass, std::set<std::string>> underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const override;;
     const std::map<std::string,boost::any>& additionalData() const override;
     //@}
 
 private:
+
+    void populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager);
+    void getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum);
+
     string currency_;
     Real notionalOverride_;
     string notionalCalculation_;
-    vector<boost::shared_ptr<Trade>> trades_;
+    vector<QuantLib::ext::shared_ptr<Trade>> trades_;
     vector<Handle<Quote>> fxRates_, fxRatesNotional_;
+    string portfolioId_;
+    bool portfolioBasket_;
 };
 
 } // namespace data

@@ -46,7 +46,7 @@ public:
                       // const string& inArrears,
                       const DayCounter& floatingDayCountFraction, const Period& floatingLookback,
                       const bool includeSpread, const string& currency,
-                      const vector<boost::shared_ptr<Underlying>> underlyings, const string& knockInLevel,
+                      const vector<QuantLib::ext::shared_ptr<Underlying>> underlyings, const string& knockInLevel,
                       const vector<string> fixedTriggerLevels, const vector<string> knockOutLevels,
                       const ScriptedTradeEventData& fixedAccrualSchedule)
         : longShort_(longShort), quantity_(quantity), strike_(strike), initialFixedRate_(initialFixedRate),
@@ -64,9 +64,10 @@ public:
           fixedAccrualSchedule_(fixedAccrualSchedule) {
         initIndices();
     }
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
+    void setIsdaTaxonomyFields() override;
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
 private:
     void initIndices();
@@ -83,7 +84,7 @@ private:
     Period floatingLookback_;
     bool includeSpread_;
     string currency_;
-    vector<boost::shared_ptr<Underlying>> underlyings_;
+    vector<QuantLib::ext::shared_ptr<Underlying>> underlyings_;
     string knockInLevel_;
     vector<string> fixedTriggerLevels_, knockOutLevels_;
     ScriptedTradeEventData fixedAccrualSchedule_;

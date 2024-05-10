@@ -50,15 +50,15 @@ protected:
         return assetName + "/" + ccy.code();
     }
 
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy) override {
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy) override {
 
-        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
+        QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
             market_->equitySpot(assetName, configuration(ore::data::MarketContext::pricing)),
             market_->equityDividendCurve(assetName, configuration(ore::data::MarketContext::pricing)),
             market_->equityForecastCurve(assetName, configuration(ore::data::MarketContext::pricing)),
             market_->equityVol(assetName, configuration(ore::data::MarketContext::pricing)));
 
-        return boost::make_shared<QuantExt::AnalyticEuropeanEngine>(gbsp);
+        return QuantLib::ext::make_shared<QuantExt::AnalyticEuropeanEngine>(gbsp);
     }
 };
 

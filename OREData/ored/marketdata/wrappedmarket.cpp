@@ -21,10 +21,10 @@
 namespace ore {
 namespace data {
 
-WrappedMarket::WrappedMarket(const boost::shared_ptr<Market>& m, const bool handlePseudoCurrencies)
+WrappedMarket::WrappedMarket(const QuantLib::ext::shared_ptr<Market>& m, const bool handlePseudoCurrencies)
     : Market(handlePseudoCurrencies), market_(m) {}
 
-boost::shared_ptr<Market> WrappedMarket::underlyingMarket() const { return market_; }
+QuantLib::ext::shared_ptr<Market> WrappedMarket::underlyingMarket() const { return market_; }
 
 Date WrappedMarket::asofDate() const { return market_->asofDate(); }
 

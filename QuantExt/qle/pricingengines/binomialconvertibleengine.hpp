@@ -46,14 +46,14 @@ using namespace QuantLib;
 
 template <class T> class BinomialConvertibleEngine : public ConvertibleBond::option::engine {
 public:
-    BinomialConvertibleEngine(const boost::shared_ptr<GeneralizedBlackScholesProcess>& process,
+    BinomialConvertibleEngine(const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
                               const Handle<YieldTermStructure>& referenceCurve, const Handle<Quote>& creditSpread,
                               const Handle<DefaultProbabilityTermStructure>& defaultCurve,
                               const Handle<Quote>& recoveryRate, Size timeSteps);
     void calculate() const override;
 
 private:
-    boost::shared_ptr<GeneralizedBlackScholesProcess> process_;
+    QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> process_;
     Handle<YieldTermStructure> referenceCurve_;
     Handle<Quote> creditSpread_;
     Handle<DefaultProbabilityTermStructure> defaultCurve_;

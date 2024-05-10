@@ -57,6 +57,9 @@ private:
     std::vector<Date> startDates_, endDates_;
 };
 
+TimePeriod totalTimePeriod(std::vector<std::string> timePeriods, Size mporDays = QuantLib::Null<Size>(),
+                           const QuantLib::Calendar& calendar = QuantLib::Calendar());
+
 std::ostream& operator<<(std::ostream& out, const TimePeriod& t);
 
 } // namespace data

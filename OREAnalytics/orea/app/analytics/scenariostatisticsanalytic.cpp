@@ -49,10 +49,10 @@ void ScenarioStatisticsAnalyticImpl::setUpConfigurations() {
 void ScenarioStatisticsAnalyticImpl::buildScenarioSimMarket() {
     
     std::string configuration = inputs_->marketConfig("simulation");
-    simMarket_ = boost::make_shared<ScenarioSimMarket>(
+    simMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
             analytic()->market(),
             analytic()->configurations().simMarketParams,
-            boost::make_shared<FixingManager>(inputs_->asof()),
+            QuantLib::ext::make_shared<FixingManager>(inputs_->asof()),
             configuration,
             *inputs_->curveConfigs().get(),
             *analytic()->configurations().todaysMarketParams,
@@ -66,7 +66,7 @@ void ScenarioStatisticsAnalyticImpl::buildScenarioGenerator(const bool continueO
     if (!model_)
         buildCrossAssetModel(continueOnCalibrationError);
     ScenarioGeneratorBuilder sgb(analytic()->configurations().scenarioGeneratorData);
-    boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
+    QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
     string config = inputs_->marketConfig("simulation");
     scenarioGenerator_ = sgb.build(model_, sf, analytic()->configurations().simMarketParams, inputs_->asof(), analytic()->market(), config); 
     QL_REQUIRE(scenarioGenerator_, "failed to build the scenario generator"); 
@@ -78,9 +78,9 @@ void ScenarioStatisticsAnalyticImpl::buildScenarioGenerator(const bool continueO
     LOG("simulation grid back date " << io::iso_date(grid_->dates().back()));    
 
     if (inputs_->writeScenarios()) {
-        auto report = boost::make_shared<InMemoryReport>();
+        auto report = QuantLib::ext::make_shared<InMemoryReport>();
         analytic()->reports()["SCENARIO_STATISTICS"]["scenario"] = report;
-        scenarioGenerator_ = boost::make_shared<ScenarioWriter>(scenarioGenerator_, report);
+        scenarioGenerator_ = QuantLib::ext::make_shared<ScenarioWriter>(scenarioGenerator_, report);
     }
 }
 
@@ -97,7 +97,7 @@ void ScenarioStatisticsAnalyticImpl::buildCrossAssetModel(const bool continueOnC
     model_ = *modelBuilder.model();
 }
 
-void ScenarioStatisticsAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+void ScenarioStatisticsAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                   const std::set<std::string>& runTypes) {
 
     LOG("Scenario analytic called with asof " << io::iso_date(inputs_->asof()));
@@ -128,19 +128,19 @@ void ScenarioStatisticsAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::da
 
     // Output scenario statistics and distribution reports
     const vector<RiskFactorKey>& keys = simMarket_->baseScenario()->keys();
-    boost::shared_ptr<ScenarioGenerator> scenarioGenerator =
+    QuantLib::ext::shared_ptr<ScenarioGenerator> scenarioGenerator =
     inputs_->scenarioOutputZeroRate()
-        ? boost::make_shared<ScenarioGeneratorTransform>(scenarioGenerator_, simMarket_,
+        ? QuantLib::ext::make_shared<ScenarioGeneratorTransform>(scenarioGenerator_, simMarket_,
                                                             analytic()->configurations().simMarketParams)
         : scenarioGenerator_;
 
-        auto statsReport = boost::make_shared<InMemoryReport>();
+        auto statsReport = QuantLib::ext::make_shared<InMemoryReport>();
     scenarioGenerator->reset();
         ReportWriter().writeScenarioStatistics(scenarioGenerator, keys, samples_, grid_->valuationDates(),
                                                *statsReport);
     analytic()->reports()["SCENARIO_STATISTICS"]["scenario_statistics"] = statsReport;
 
-    auto distributionReport = boost::make_shared<InMemoryReport>();
+    auto distributionReport = QuantLib::ext::make_shared<InMemoryReport>();
     scenarioGenerator->reset();
     ReportWriter().writeScenarioDistributions(scenarioGenerator, keys, samples_, grid_->valuationDates(),
                                               inputs_->scenarioDistributionSteps(), *distributionReport);

@@ -27,7 +27,7 @@
 
 #include <orea/app/oreapp.hpp>
 
-#include <ored/utilities/initbuilders.hpp>
+#include <orea/app/initbuilders.hpp>
 
 #include <qle/version.hpp>
 
@@ -71,12 +71,12 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    ore::data::initBuilders();
+    ore::analytics::initBuilders();
 
     string inputFile(argv[1]);
 
     try {
-        auto params = boost::make_shared<Parameters>();
+        auto params = QuantLib::ext::make_shared<Parameters>();
         params->fromFile(inputFile);
         OREApp ore(params, true);
         ore.run();

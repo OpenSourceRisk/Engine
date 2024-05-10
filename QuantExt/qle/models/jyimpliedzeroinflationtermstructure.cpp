@@ -27,12 +27,12 @@ using QuantLib::Time;
 namespace QuantExt {
 
 JyImpliedZeroInflationTermStructure::JyImpliedZeroInflationTermStructure(
-    const boost::shared_ptr<CrossAssetModel>& model, Size index)
+    const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index)
     : ZeroInflationModelTermStructure(model, index) {}
 
 QL_DEPRECATED_DISABLE_WARNING
 JyImpliedZeroInflationTermStructure::JyImpliedZeroInflationTermStructure(
-    const boost::shared_ptr<CrossAssetModel>& model, Size index, bool indexIsInterpolated)
+    const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index, bool indexIsInterpolated)
     : ZeroInflationModelTermStructure(model, index, indexIsInterpolated) {}
 QL_DEPRECATED_ENABLE_WARNING
 
@@ -58,7 +58,7 @@ void JyImpliedZeroInflationTermStructure::checkState() const {
         "three elements but got " << state_.size());
 }
 
-Real inflationGrowth(const boost::shared_ptr<CrossAssetModel>& model, Size index,
+Real inflationGrowth(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index,
     Time S, Time T, Real irState, Real rrState, bool indexIsInterpolated) {
 
     QL_REQUIRE(T >= S, "inflationGrowth: end time (" << T << ") must be >= start time (" << S << ")");

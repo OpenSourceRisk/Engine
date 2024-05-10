@@ -30,10 +30,10 @@ namespace ore {
 namespace analytics {
 
 CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
-    boost::shared_ptr<QuantExt::CrossAssetModel> model,
-    boost::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGenerator,
-    boost::shared_ptr<ScenarioFactory> scenarioFactory, boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig,
-    Date today, boost::shared_ptr<DateGrid> grid, boost::shared_ptr<ore::data::Market> initMarket,
+    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model,
+    QuantLib::ext::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGenerator,
+    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory, QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketConfig,
+    Date today, QuantLib::ext::shared_ptr<DateGrid> grid, QuantLib::ext::shared_ptr<ore::data::Market> initMarket,
     const std::string& configuration)
     : ScenarioPathGenerator(today, grid->dates(), grid->timeGrid()), model_(model), pathGenerator_(pathGenerator),
       scenarioFactory_(scenarioFactory), simMarketConfig_(simMarketConfig), initMarket_(initMarket),
@@ -126,7 +126,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
             // fxVols_ are indexed by ccyPairs
             DLOG("Pair " << pair << " index " << index);
             // index - 1 to convert "IR" index into an "FX" index
-            fxVols_.push_back(boost::make_shared<CrossAssetModelImpliedFxVolTermStructure>(model_, index - 1));
+            fxVols_.push_back(QuantLib::ext::make_shared<CrossAssetModelImpliedFxVolTermStructure>(model_, index - 1));
             DLOG("Set up CrossAssetModelImpliedFxVolTermStructures for " << pair << " done");
         }
     }
@@ -152,7 +152,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
             // eqVols_ are indexed by ccyPairs
             DLOG("EQ Vol Name = " << equityName << ", index = " << eqIndex);
             // index - 1 to convert "IR" index into an "FX" index
-            eqVols_.push_back(boost::make_shared<CrossAssetModelImpliedEqVolTermStructure>(model_, eqIndex));
+            eqVols_.push_back(QuantLib::ext::make_shared<CrossAssetModelImpliedEqVolTermStructure>(model_, eqIndex));
             DLOG("Set up CrossAssetModelImpliedEqVolTermStructures for " << equityName << " done");
         }
     }
@@ -223,14 +223,14 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     // cache curves
 
     for (Size j = 0; j < n_ccy_; ++j) {
-        curves_.push_back(boost::make_shared<QuantExt::ModelImpliedYieldTermStructure>(model_->irModel(j), dc, true));
+        curves_.push_back(QuantLib::ext::make_shared<QuantExt::ModelImpliedYieldTermStructure>(model_->irModel(j), dc, true));
     }
 
     for (Size j = 0; j < n_indices_; ++j) {
         std::string indexName = simMarketConfig_->indices()[j];
-        boost::shared_ptr<IborIndex> index = *initMarket_->iborIndex(indexName, configuration_);
+        QuantLib::ext::shared_ptr<IborIndex> index = *initMarket_->iborIndex(indexName, configuration_);
         Handle<YieldTermStructure> fts = index->forwardingTermStructure();
-        auto impliedFwdCurve = boost::make_shared<ModelImpliedYtsFwdFwdCorrected>(
+        auto impliedFwdCurve = QuantLib::ext::make_shared<ModelImpliedYtsFwdFwdCorrected>(
             model_->irModel(model_->ccyIndex(index->currency())), fts, dc, false);
         fwdCurves_.push_back(impliedFwdCurve);
         indices_.push_back(index->clone(Handle<YieldTermStructure>(impliedFwdCurve)));
@@ -241,14 +241,14 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         Currency ccy = ore::data::parseCurrency(simMarketConfig_->yieldCurveCurrencies().at(curveName));
         Handle<YieldTermStructure> yts = initMarket_->yieldCurve(curveName, configuration_);
         auto impliedYieldCurve =
-            boost::make_shared<ModelImpliedYtsFwdFwdCorrected>(model_->irModel(model_->ccyIndex(ccy)), yts, dc, false);
+            QuantLib::ext::make_shared<ModelImpliedYtsFwdFwdCorrected>(model_->irModel(model_->ccyIndex(ccy)), yts, dc, false);
         yieldCurves_.push_back(impliedYieldCurve);
         yieldCurveCurrency_.push_back(ccy);
     }
 
     for (Size j = 0; j < n_com_; ++j) {
-        boost::shared_ptr<CommodityModel> cm = model_->comModel(j);
-        auto pts = boost::make_shared<QuantExt::ModelImpliedPriceTermStructure>(model_->comModel(j), dc, true);
+        QuantLib::ext::shared_ptr<CommodityModel> cm = model_->comModel(j);
+        auto pts = QuantLib::ext::make_shared<QuantExt::ModelImpliedPriceTermStructure>(model_->comModel(j), dc, true);
         comCurves_.push_back(pts);
     }
 
@@ -264,14 +264,14 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         auto mt = model_->modelType(CrossAssetModel::AssetType::INF, idx);
         QL_REQUIRE(mt == CrossAssetModel::ModelType::DK || mt == CrossAssetModel::ModelType::JY,
                    "CrossAssetModelScenarioGenerator: expected inflation model to be JY or DK.");
-        boost::shared_ptr<ZeroInflationModelTermStructure> ts;
+        QuantLib::ext::shared_ptr<ZeroInflationModelTermStructure> ts;
 
 
         if (mt == CrossAssetModel::ModelType::DK) {
-            ts = boost::make_shared<DkImpliedZeroInflationTermStructure>(
+            ts = QuantLib::ext::make_shared<DkImpliedZeroInflationTermStructure>(
                 model_, idx);
         } else {
-            ts = boost::make_shared<JyImpliedZeroInflationTermStructure>(model_, idx);
+            ts = QuantLib::ext::make_shared<JyImpliedZeroInflationTermStructure>(model_, idx);
             QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
                        "Simulation of INF JY model is only supported for LGM1F ir model type.");
         }
@@ -285,12 +285,12 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         auto mt = model_->modelType(CrossAssetModel::AssetType::INF, idx);
         QL_REQUIRE(mt == CrossAssetModel::ModelType::DK || mt == CrossAssetModel::ModelType::JY,
                    "CrossAssetModelScenarioGenerator: expected inflation model to be JY or DK.");
-        boost::shared_ptr<YoYInflationModelTermStructure> ts;
+        QuantLib::ext::shared_ptr<YoYInflationModelTermStructure> ts;
         if (mt == CrossAssetModel::ModelType::DK) {
-            ts = boost::make_shared<DkImpliedYoYInflationTermStructure>(
+            ts = QuantLib::ext::make_shared<DkImpliedYoYInflationTermStructure>(
                 model_, idx, false);
         } else {
-            ts = boost::make_shared<JyImpliedYoYInflationTermStructure>(
+            ts = QuantLib::ext::make_shared<JyImpliedYoYInflationTermStructure>(
                 model_, idx, false);
         }
         QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
@@ -300,13 +300,13 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
 
     for (Size j = 0; j < n_cr_; ++j) {
         if (model_->modelType(CrossAssetModel::AssetType::CR, j) == CrossAssetModel::ModelType::LGM1F) {
-            lgmDefaultCurves_.push_back(boost::make_shared<QuantExt::LgmImpliedDefaultTermStructure>(
+            lgmDefaultCurves_.push_back(QuantLib::ext::make_shared<QuantExt::LgmImpliedDefaultTermStructure>(
                 model_, j, model_->ccyIndex(model_->crlgm1f(j)->currency())));
-            cirppDefaultCurves_.push_back(boost::shared_ptr<QuantExt::CirppImpliedDefaultTermStructure>());
+            cirppDefaultCurves_.push_back(QuantLib::ext::shared_ptr<QuantExt::CirppImpliedDefaultTermStructure>());
         } else if (model_->modelType(CrossAssetModel::AssetType::CR, j) == CrossAssetModel::ModelType::CIRPP) {
-            lgmDefaultCurves_.push_back(boost::shared_ptr<QuantExt::LgmImpliedDefaultTermStructure>());
+            lgmDefaultCurves_.push_back(QuantLib::ext::shared_ptr<QuantExt::LgmImpliedDefaultTermStructure>());
             cirppDefaultCurves_.push_back(
-                boost::make_shared<QuantExt::CirppImpliedDefaultTermStructure>(model_->crcirppModel(j), j));
+                QuantLib::ext::make_shared<QuantExt::CirppImpliedDefaultTermStructure>(model_->crcirppModel(j), j));
         }
     }
 
@@ -320,8 +320,8 @@ void copyPathToArray(const MultiPath& p, Size t, Size a, Array& target) {
 }
 } // namespace
 
-std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
-    std::vector<boost::shared_ptr<Scenario>> scenarios(dates_.size());
+std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
+    std::vector<QuantLib::ext::shared_ptr<Scenario>> scenarios(dates_.size());
     QL_REQUIRE(pathGenerator_ != nullptr, "CrossAssetModelScenarioGenerator::nextPath(): pathGenerator is null");
     Sample<MultiPath> sample = pathGenerator_->next();
     DayCounter dc = model_->irModel(0)->termStructure()->dayCounter();
@@ -343,7 +343,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
     for (Size i = 0; i < dates_.size(); i++) {
         Real t = timeGrid_[i + 1]; // recall: time grid has inserted t=0
 
-        scenarios[i] = scenarioFactory_->buildScenario(dates_[i]);
+        scenarios[i] = scenarioFactory_->buildScenario(dates_[i], true);
 
         // populate IR states
         copyPathToArray(sample.value, i + 1, model_->pIdx(CrossAssetModel::AssetType::IR, 0), ir_state[0]);

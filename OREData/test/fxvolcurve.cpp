@@ -69,14 +69,14 @@ struct TodaysMarketArguments {
 
         filename = "market.txt";
         string fixingsFilename = "fixings.txt";
-        loader = boost::make_shared<CSVLoader>(TEST_INPUT_FILE(filename), TEST_INPUT_FILE(fixingsFilename), false);
+        loader = QuantLib::ext::make_shared<CSVLoader>(TEST_INPUT_FILE(filename), TEST_INPUT_FILE(fixingsFilename), false);
     }
 
     Date asof;
-    boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();
-    boost::shared_ptr<CurveConfigurations> curveConfigs = boost::make_shared<CurveConfigurations>();
-    boost::shared_ptr<TodaysMarketParameters> todaysMarketParameters = boost::make_shared<TodaysMarketParameters>();
-    boost::shared_ptr<Loader> loader;
+    QuantLib::ext::shared_ptr<Conventions> conventions = QuantLib::ext::make_shared<Conventions>();
+    QuantLib::ext::shared_ptr<CurveConfigurations> curveConfigs = QuantLib::ext::make_shared<CurveConfigurations>();
+    QuantLib::ext::shared_ptr<TodaysMarketParameters> todaysMarketParameters = QuantLib::ext::make_shared<TodaysMarketParameters>();
+    QuantLib::ext::shared_ptr<Loader> loader;
 };
 
 }
@@ -100,27 +100,27 @@ BOOST_AUTO_TEST_CASE(testFxVolWildCards) {
         TodaysMarketArguments tma_wc(asof, c.second);
 
         // Check that the market builds without error.
-        boost::shared_ptr<TodaysMarket> market_full = boost::make_shared<TodaysMarket>(tma_full.asof, tma_full.todaysMarketParameters,
+        QuantLib::ext::shared_ptr<TodaysMarket> market_full = QuantLib::ext::make_shared<TodaysMarket>(tma_full.asof, tma_full.todaysMarketParameters,
             tma_full.loader, tma_full.curveConfigs, false, true, false);
-        boost::shared_ptr<TodaysMarket> market_wc = boost::make_shared<TodaysMarket>(tma_wc.asof, tma_wc.todaysMarketParameters,
+        QuantLib::ext::shared_ptr<TodaysMarket> market_wc = QuantLib::ext::make_shared<TodaysMarket>(tma_wc.asof, tma_wc.todaysMarketParameters,
             tma_wc.loader, tma_wc.curveConfigs, false, true, false);
 
         // Portfolio containing 2 AU CPI zero coupon swaps, AUD 10M, that should price at 0, i.e. NPV < AUD 0.01.
         // Similar to the fixing file, the helpers on the release date depend on the publication roll setting.
 
-        boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+        QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
         engineData->model("FxOption") = "GarmanKohlhagen";
         engineData->engine("FxOption") = "AnalyticEuropeanEngine";
-        boost::shared_ptr<EngineFactory> engineFactory_full = boost::make_shared<EngineFactory>(engineData, market_full);
-        boost::shared_ptr<EngineFactory> engineFactory_wc = boost::make_shared<EngineFactory>(engineData, market_wc);
+        QuantLib::ext::shared_ptr<EngineFactory> engineFactory_full = QuantLib::ext::make_shared<EngineFactory>(engineData, market_full);
+        QuantLib::ext::shared_ptr<EngineFactory> engineFactory_wc = QuantLib::ext::make_shared<EngineFactory>(engineData, market_wc);
         
         
         string portfolioFile = "portfolio.xml";
-        boost::shared_ptr<Portfolio> portfolio_full = boost::make_shared<Portfolio>();
+        QuantLib::ext::shared_ptr<Portfolio> portfolio_full = QuantLib::ext::make_shared<Portfolio>();
         portfolio_full->fromFile(TEST_INPUT_FILE(portfolioFile));
         portfolio_full->build(engineFactory_full);
         
-        boost::shared_ptr<Portfolio> portfolio_wc = boost::make_shared<Portfolio>();
+        QuantLib::ext::shared_ptr<Portfolio> portfolio_wc = QuantLib::ext::make_shared<Portfolio>();
         portfolio_wc->fromFile(TEST_INPUT_FILE(portfolioFile));
         portfolio_wc->build(engineFactory_wc);
 

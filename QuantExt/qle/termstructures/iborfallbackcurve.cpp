@@ -26,8 +26,8 @@
 
 namespace QuantExt {
 
-IborFallbackCurve::IborFallbackCurve(const boost::shared_ptr<IborIndex>& originalIndex,
-                                     const boost::shared_ptr<OvernightIndex>& rfrIndex, const Real spread,
+IborFallbackCurve::IborFallbackCurve(const QuantLib::ext::shared_ptr<IborIndex>& originalIndex,
+                                     const QuantLib::ext::shared_ptr<OvernightIndex>& rfrIndex, const Real spread,
                                      const Date& switchDate)
     : YieldTermStructure(originalIndex->forwardingTermStructure()->dayCounter()), originalIndex_(originalIndex),
       rfrIndex_(rfrIndex), spread_(spread), switchDate_(switchDate) {
@@ -38,9 +38,9 @@ IborFallbackCurve::IborFallbackCurve(const boost::shared_ptr<IborIndex>& origina
     enableExtrapolation();
 }
 
-boost::shared_ptr<IborIndex> IborFallbackCurve::originalIndex() const { return originalIndex_; }
+QuantLib::ext::shared_ptr<IborIndex> IborFallbackCurve::originalIndex() const { return originalIndex_; }
 
-boost::shared_ptr<OvernightIndex> IborFallbackCurve::rfrIndex() const { return rfrIndex_; }
+QuantLib::ext::shared_ptr<OvernightIndex> IborFallbackCurve::rfrIndex() const { return rfrIndex_; }
 
 Real IborFallbackCurve::spread() const { return spread_; }
 
@@ -63,14 +63,11 @@ Real IborFallbackCurve::discountImpl(QuantLib::Time t) const {
     if (today < switchDate_) {
         return originalIndex_->forwardingTermStructure()->discount(t);
     }
-    // approximately take into account 2d lookback and coupon period ignoring holidays
-    Real dt = timeFromReference(today + 2 * Days);
     Date endDate = today + originalIndex_->tenor();
     Real couponTime = rfrIndex_->dayCounter().yearFraction(today, endDate);
     Real curveTime = timeFromReference(endDate);
-    Real tm = std::max(t - dt, 0.0);
     Real s = std::log(1.0 + couponTime * spread_) / curveTime;
-    return rfrIndex_->forwardingTermStructure()->discount(tm) * std::exp(-s * tm);
+    return rfrIndex_->forwardingTermStructure()->discount(t) * std::exp(-s * t);
 }
 
 } // namespace QuantExt

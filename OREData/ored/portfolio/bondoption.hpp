@@ -47,14 +47,14 @@ public:
           knocksOut_(knocksOut) {}
 
     // Build QuantLib/QuantExt instrument, link pricing engine
-    virtual void build(const boost::shared_ptr<EngineFactory>&) override;
+    virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
 
     //! Add underlying Bond names
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     const BondData& bondData() const { return bondData_; }
     const OptionData& optionData() const { return optionData_; }
@@ -72,7 +72,7 @@ private:
     string currency_;
     bool knocksOut_;
 
-    boost::shared_ptr<ore::data::Bond> underlying_;
+    QuantLib::ext::shared_ptr<ore::data::Bond> underlying_;
 };
 } // namespace data
 } // namespace ore

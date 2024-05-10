@@ -26,10 +26,10 @@ namespace QuantExt {
 AverageOIS::AverageOIS(Type type, Real nominal, const Schedule& fixedLegSchedule, Rate fixedRate,
                        const DayCounter& fixedDCB, BusinessDayConvention fixedLegPaymentAdjustment,
                        const Calendar& fixedLegPaymentCalendar, const Schedule& onLegSchedule,
-                       const boost::shared_ptr<OvernightIndex>& overnightIndex,
+                       const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex,
                        BusinessDayConvention onLegPaymentAdjustment, const Calendar& onLegPaymentCalendar,
                        Natural rateCutoff, Spread onLegSpread, Real onLegGearing, const DayCounter& onLegDCB,
-                       const boost::shared_ptr<AverageONIndexedCouponPricer>& onLegCouponPricer,
+                       const QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer>& onLegCouponPricer,
                        const bool telescopicValueDates)
     : Swap(2), type_(type), nominals_(std::vector<Real>(1, nominal)), fixedRates_(std::vector<Rate>(1, fixedRate)),
       fixedDayCounter_(fixedDCB), fixedPaymentAdjustment_(fixedLegPaymentAdjustment),
@@ -43,11 +43,11 @@ AverageOIS::AverageOIS(Type type, Real nominal, const Schedule& fixedLegSchedule
 AverageOIS::AverageOIS(Type type, std::vector<Real> nominals, const Schedule& fixedLegSchedule,
                        std::vector<Rate> fixedRates, const DayCounter& fixedDCB,
                        BusinessDayConvention fixedLegPaymentAdjustment, const Calendar& fixedLegPaymentCalendar,
-                       const Schedule& onLegSchedule, const boost::shared_ptr<OvernightIndex>& overnightIndex,
+                       const Schedule& onLegSchedule, const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex,
                        BusinessDayConvention onLegPaymentAdjustment, const Calendar& onLegPaymentCalendar,
                        Natural rateCutoff, std::vector<Spread> onLegSpreads, std::vector<Real> onLegGearings,
                        const DayCounter& onLegDCB,
-                       const boost::shared_ptr<AverageONIndexedCouponPricer>& onLegCouponPricer,
+                       const QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer>& onLegCouponPricer,
                        const bool telescopicValueDates)
     : Swap(2), type_(type), nominals_(nominals), fixedRates_(fixedRates), fixedDayCounter_(fixedDCB),
       fixedPaymentAdjustment_(fixedLegPaymentAdjustment), fixedPaymentCalendar_(fixedLegPaymentCalendar),
@@ -155,7 +155,7 @@ Spread AverageOIS::fairSpread() const {
     return onSpreads_[0] - NPV_ / (overnightLegBPS() / basisPoint);
 }
 
-void AverageOIS::setONIndexedCouponPricer(const boost::shared_ptr<AverageONIndexedCouponPricer>& onCouponPricer) {
+void AverageOIS::setONIndexedCouponPricer(const QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer>& onCouponPricer) {
     QuantExt::setCouponPricer(legs_[1], onCouponPricer);
     update();
 }

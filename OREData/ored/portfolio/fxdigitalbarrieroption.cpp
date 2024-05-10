@@ -39,9 +39,15 @@ namespace data {
 
 bool checkBarrier(Real spot, Barrier::Type type, Real barrier);
 
-void FxDigitalBarrierOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void FxDigitalBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
-    const boost::shared_ptr<Market> market = engineFactory->market();
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
+    additionalData_["isdaSubProduct"] = string("Digital");  
+    additionalData_["isdaTransaction"] = string("");
+
+    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
 
     // Only American supported for now
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for FxOption");
@@ -95,41 +101,52 @@ void FxDigitalBarrierOption::build(const boost::shared_ptr<EngineFactory>& engin
     }
     DLOG("Setting up FxDigitalBarrierOption with strike " << strike << " level " << level << " foreign/bought "
                                                           << boughtCcy << " domestic/sold " << soldCcy);
+
     // from this point on it's important not to use domesticCurrency_, foreignCurrency_, strike_, barrier_.level(), etc
     // rather the local variables (boughtCcy, soldCcy, strike, level, etc) should be used as they may have been flipped.
 
-    // Create a CashOrNothing payoff for digital options
-    boost::shared_ptr<StrikedTypePayoff> payoff(new CashOrNothingPayoff(type, strike, payoffAmount_));
+    additionalData_["payoffAmount"] = payoffAmount_;
+    additionalData_["payoffCurrency"] = payoffCurrency_;
+    additionalData_["effectiveForeignCurrency"] = boughtCcy.code();
+    additionalData_["effectiveDomesticCurrency"] = soldCcy.code();
 
+    npvCurrency_ = soldCcy.code(); // sold is the domestic
+    notional_ = payoffAmount_;
+    notionalCurrency_ = payoffCurrency_ != "" ? payoffCurrency_ : domesticCurrency_; // see logic above
+    
     // Exercise
     // Digital Barrier Options assume an American exercise that pays at expiry
     Date expiryDate = parseDate(option_.exerciseDates().front());
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(expiryDate);
+    QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(expiryDate);
+    maturity_ = std::max(option_.premiumData().latestPremiumDate(), expiryDate);
+
+    // Create a CashOrNothing payoff for digital options
+    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff(new CashOrNothingPayoff(type, strike, payoffAmount_));
 
     // QL does not have an FXDigitalBarrierOption, so we add a barrier option here and wrap
     // it in a composite
-    boost::shared_ptr<Instrument> vanilla = boost::make_shared<VanillaOption>(payoff, exercise);
-    boost::shared_ptr<Instrument> barrier =
-        boost::make_shared<BarrierOption>(barrierType, level, rebate, payoff, exercise);
+    QuantLib::ext::shared_ptr<Instrument> vanilla = QuantLib::ext::make_shared<VanillaOption>(payoff, exercise);
+    QuantLib::ext::shared_ptr<Instrument> barrier =
+        QuantLib::ext::make_shared<BarrierOption>(barrierType, level, rebate, payoff, exercise);
 
     // Check if the barrier has been triggered already
     Calendar cal = ore::data::parseCalendar(calendar_);
-    boost::shared_ptr<QuantExt::FxIndex> fxIndex;
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex;
     if (!fxIndex_.empty())
         fxIndex = buildFxIndex(fxIndex_, soldCcy.code(), boughtCcy.code(), engineFactory->market(),
                                engineFactory->configuration(MarketContext::pricing));
 
     // set pricing engines
     // we buy foreign with domestic(=sold ccy).
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    boost::shared_ptr<FxDigitalBarrierOptionEngineBuilder> fxBarrierOptBuilder =
-        boost::dynamic_pointer_cast<FxDigitalBarrierOptionEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<FxDigitalBarrierOptionEngineBuilder> fxBarrierOptBuilder =
+        QuantLib::ext::dynamic_pointer_cast<FxDigitalBarrierOptionEngineBuilder>(builder);
     // if an 'in' option is triggered it becomes an FxDigitalOption, so we need an fxDigitalOption pricer
     builder = engineFactory->builder("FxDigitalOption");
     QL_REQUIRE(builder, "No builder found for FxDigitalOption");
-    boost::shared_ptr<FxDigitalOptionEngineBuilder> fxOptBuilder =
-        boost::dynamic_pointer_cast<FxDigitalOptionEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<FxDigitalOptionEngineBuilder> fxOptBuilder =
+        QuantLib::ext::dynamic_pointer_cast<FxDigitalOptionEngineBuilder>(builder);
     setSensitivityTemplate(*builder);
 
     barrier->setPricingEngine(fxBarrierOptBuilder->engine(boughtCcy, soldCcy, expiryDate));
@@ -141,41 +158,25 @@ void FxDigitalBarrierOption::build(const boost::shared_ptr<EngineFactory>& engin
     // If premium data is provided
     // 1) build the fee trade and pass it to the instrument wrapper for pricing
     // 2) add fee payment as additional trade leg for cash flow reporting
-    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers,
-                                       positionType == Position::Long ? 1.0 : -1.0, option_.premiumData(), -bsInd,
-                                       soldCcy, engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
+    addPremiums(additionalInstruments, additionalMultipliers, positionType == Position::Long ? 1.0 : -1.0,
+                option_.premiumData(), -bsInd, soldCcy, engineFactory,
+                fxOptBuilder->configuration(MarketContext::pricing));
 
     Settlement::Type settleType = parseSettlementType(option_.settlement());
 
     Handle<Quote> spot = market->fxSpot(boughtCcy.code() + soldCcy.code());
-    instrument_ = boost::shared_ptr<InstrumentWrapper>(new SingleBarrierOptionWrapper(
+    instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(new SingleBarrierOptionWrapper(
         barrier, positionType == Position::Long ? true : false, expiryDate,
         settleType == Settlement::Physical ? true : false, vanilla, barrierType, spot, level, rebate, soldCcy,
         start, fxIndex, cal, 1, 1, additionalInstruments, additionalMultipliers));
-
-    npvCurrency_ = soldCcy.code(); // sold is the domestic
-    notional_ = payoffAmount_;
-    notionalCurrency_ = payoffCurrency_ != "" ? payoffCurrency_ : domesticCurrency_; // see logic above
-    maturity_ = std::max(lastPremiumDate, expiryDate);
 
     if (start != Date()) {
         for (Date d = start; d <= expiryDate; d = cal.advance(d, 1 * Days)) {
             requiredFixings_.addFixingDate(d, fxIndex_, expiryDate);
         }
     }
-
-    additionalData_["payoffAmount"] = payoffAmount_;
-    additionalData_["payoffCurrency"] = payoffCurrency_;
-    additionalData_["effectiveForeignCurrency"] = boughtCcy.code();
-    additionalData_["effectiveDomesticCurrency"] = soldCcy.code();
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
-    additionalData_["isdaBaseProduct"] = string("Simple Exotic");
-    additionalData_["isdaSubProduct"] = string("Digital");  
-    additionalData_["isdaTransaction"] = string("");  
 }
 
 bool checkBarrier(Real spot, Barrier::Type type, Real barrier) {
@@ -207,7 +208,7 @@ void FxDigitalBarrierOption::fromXML(XMLNode* node) {
     domesticCurrency_ = XMLUtils::getChildValue(fxNode, "DomesticCurrency", true);
 }
 
-XMLNode* FxDigitalBarrierOption::toXML(XMLDocument& doc) {
+XMLNode* FxDigitalBarrierOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fxNode = doc.allocNode("FxDigitalBarrierOptionData");
     XMLUtils::appendNode(node, fxNode);

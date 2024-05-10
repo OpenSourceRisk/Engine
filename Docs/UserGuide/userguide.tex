@@ -159,7 +159,7 @@ Date & Author & Comment \\
 31 March 2023 & Acadia & updates for release 9\\
 16 June 2023 & Acadia & updates for release 10\\
 16 October 2023 & Acadia & updates for release 11\\
-15 January 2024 & Acadia & updates for release 12\\
+31 March 2024 & Acadia & updates for release 12\\
 \hline
 \end{supertabular}
 \end{center}
@@ -1243,7 +1243,7 @@ Example & Description \\
 \hline
 43 & Credit Portfolio Model \\
 \hline
-44 & ISDA SIMM Model \\
+44 & Initial Margin: ISDA SIMM and IM Schedule \\
 \hline
 45 & Collateralized Bond Obligation \\
 \hline
@@ -3241,12 +3241,14 @@ Bonds and CDS & Migration & Notional & Analytic \\
 The last demo case in this table can be activated by uncommenting the corresponding section at the end of the {\tt run.py} script.
  
 %--------------------------------------------------------------------
-\subsection{ISDA SIMM Model}% Example 44
+\subsection{Initial Margin: ISDA SIMM and IM Schedule}% Example 44
 \label{example:44}
 %--------------------------------------------------------------------
 
 This example demonstrates the calculation of initial margin using ISDA's Standard Initial Margin Model (SIMM) based on a provided 
-sensitivity file in ISDA's Common Risk Interchange Format (CRIF).
+sensitivity file in ISDA's Common Risk Interchange Format (CRIF). In addition, we show how to use the standard "IM Schdule" method to compute 
+initial margin.
+
 ORE covers all SIMM versions since inception to date, i.e.\ 1.0, 1.1, 1.2, 1.3, 1.3.38, 2.0, 2.1, 2.2, 2.3, 2.4 (=2.3.8), 2.5, 2.5A, 2.6 (=2.5.6).
 All versions have been tested against the respective ISDA SIMM model unit test suites and pass these tests.
 Any new SIMM versions will be added with each ORE release.
@@ -3274,7 +3276,7 @@ The SIMM calculation in this example is done for SIMM version 2.4 and 2.6, with 
 \end{itemize}
 
 \medskip
-There are four input files -- {\tt ore\_SIMM2.4\_1D.xml}, {\tt ore\_SIMM2.4\_10D.xml}, {\tt ore\_SIMM2.6\_1D.xml}, {\tt ore\_SIMM2.6\_10D.xml} -- with corresponding folders in the {\tt Output/} directory.
+There are four SIMM-related input files -- {\tt ore\_SIMM2.4\_1D.xml}, {\tt ore\_SIMM2.4\_10D.xml}, {\tt ore\_SIMM2.6\_1D.xml}, {\tt ore\_SIMM2.6\_10D.xml} -- with corresponding folders in the {\tt Output/} directory.
 The relevant inputs in the files are:
 
 \begin{itemize}
@@ -3292,6 +3294,34 @@ If the ORE Python module is installed, as shown in Example 42, then you can also
 
 \medskip
 \centerline{\tt python ore.py} 
+
+\subsubsection*{IM Schedule}
+
+As an additonal case in this example we demonstrate how to use the IM Schedule method to compute initial margin.
+The related input file is {\tt Input/ore\_schedule.xml}. It is also run when calling {\tt python run.py}, and results are written to folder 
+{\tt Output/IM\_SCHEDULE}.
+The basic input is provided in CRIF file format where ORE expects two lines per trade, one with RiskClass = PV and one with RiskClass = Notional, 
+so that the  amounts in these CRIF lines are interpeted as NPV respectively notional. 
+Further required columns are product class and end date, as shown in the example {\tt Input/crif\_schedule.csv}. Note that the product class has to be in
+\begin{itemize}
+  \item Rates
+  \item FX
+  \item Equity
+  \item Credit
+  \item Commodity
+\end{itemize}
+in contrast to SIMM where we use the combined RatesFX.
+
+To run the IM Schedule analytic, the following minimal addition to {\tt Input/ore\_schedule.xml} is required.
+\begin{minted}[fontsize=\scriptsize]{xml}
+  <Analytics>
+    <Analytic type="imschedule">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="crif">crif_schedule.csv</Parameter>
+      <Parameter name="calculationCurrency">USD</Parameter>
+    </Analytic>
+  </Analytics>
+\end{minted}
 
 %--------------------------------------------------------
 \subsection{Collateralized Bond Obligation}% Example 45
@@ -3622,6 +3652,13 @@ to a Swap instrument represented as scripted trade.
 Demonstration of the {\tt Scenario} analytic which has been added to export the simulation market's base scenario
 as a file.
 
+%--------------------------------------------------------------------
+\subsection{Overlapping close-out grids}% Example 61
+\label{example:61}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_61} demonstrates ORE's capability to handle xVA simulations using American Monte-Carlo with overlapping close-out grids.
+
 \clearpage
 %========================================================
 \section{Launchers and Visualisation}\label{sec:visualisation}
@@ -3904,6 +3941,7 @@ type can be (so far) in
 \item stress
 \item parametricVar
 \item simm
+\item imschedule
 \end{itemize}
 
 Each {\tt Analytic} section contains a list of key/value pairs to parameterise the analysis of the form {\tt <Parameter
@@ -4076,6 +4114,7 @@ to txt or csv in which case an uncompressed version of the file is written to di
     <Parameter name="csaFile">netting.xml</Parameter>
     <Parameter name="cubeFile">cube.csv.gz</Parameter>
     <Parameter name="scenarioFile">scenariodata.csv.gz</Parameter>
+    <Parameter name="collateralBalancesFile">collateralbalances.xml</Parameter>
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="exposureProfiles">Y</Parameter>
     <Parameter name="exposureProfilesByTrade">Y</Parameter>
@@ -4103,6 +4142,7 @@ to txt or csv in which case an uncompressed version of the file is written to di
     <Parameter name="kvaOurCvaRiskWeight">0.005</Parameter>
     <Parameter name="kvaTheirCvaRiskWeight">0.05</Parameter>
     <Parameter name="dim">Y</Parameter>
+    <Parameter name="dimModel">Regression</Parameter>
     <Parameter name="mva">Y</Parameter>
     <Parameter name="dimQuantile">0.99</Parameter>
     <Parameter name="dimHorizonCalendarDays">14</Parameter>
@@ -4138,6 +4178,7 @@ transfer amounts, margin period of risk
 \item {\tt cubeFile:} NPV cube file previously generated and to be post-processed here
 \item {\tt scenarioFile:} Scenario data previously generated and used in the post-processor (simulated index fixings and
 FX rates)
+\item {\tt collateralBalancesFile:} References an xml file that contains current VM and IM balances by netting set
 \item {\tt baseCurrency:} Expression currency for all NPVs, value adjustments, exposures
 \item {\tt exposureProfiles:} Flag to enable/disable exposure output for each netting set
 \item {\tt exposureProfilesByTrade:} Flag to enable/disable stand-alone exposure output for each trade
@@ -4195,7 +4236,10 @@ absolute netting set value falls below this limit and switches to equal distribu
 \item {\tt exerciseNextBreak:} Flag to terminate all trades at their next break date before aggregation and the
 subsequent analytics
 \item {\tt cva, dva, fva, colva, collateralFloor, dim, mva:} Flags to enable/disable these analytics. \todo[inline]{Add
-collateral rates floor to the collateral model file (netting.xml)}
+  collateral rates floor to the collateral model file (netting.xml)}
+\item {\tt dimModel:} Type of dynamic initial margin model to be applied -- {\em Regression} or {\em Flat}. {\em Regression} is applied by default
+  when the dimModel node is omitted (see appendix and further settings related to the regression DIM model below); {\em Flat} means a simple flat
+  projection of todays's IM amount on each path (this requires providing today's IM using the {\tt collateralBalancesFile} parameter, see above)
 \item {\tt dvaName:} Credit name to look up the own default probability curve and recovery rate for DVA calculation
 \item {\tt fvaBorrowingCurve:} Identifier of the borrowing yield curve
 \item {\tt fvaLendingCurve:} Identifier of the lending yield curve
@@ -4465,6 +4509,39 @@ Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
 \end{itemize}
 
 The SIMM analytic requires minimal market data input and today's market configuration - FX rates for conversions calculation currency, USD and result currency.
+
+\medskip The {\tt imschedule} 'analytic' provides initial margin calculation using the standard "IM Schedule" method that is based on 
+trade NPV, notional, end date and product class. ORE expects the inputs in the form of a CRIF file.
+Listing \ref{lst:ore_simm} shows a configuration example.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+   <Analytic type="imschedule">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="crif">schedule_crif.csv</Parameter>
+      <Parameter name="calculationCurrency">USD</Parameter>
+    </Analytic>
+<Analytics>
+\end{minted}
+\caption{ORE analytic: IM Schedule}
+\label{lst:ore_schedule}
+\end{listing}
+
+The input CRIF file here has two lines per trade, for RiskClass = PV respectively RiskClass Notional. 
+Additonally required columns are product class and end date, see example 44. 
+The idea is that the inputs can be externally provided. Therefore the IM Schedule analytic does not require a portfolio.
+The alternative -- ORE uses a portfolio to compute NPV, imply product class and end date -- has not been implemented yet.
+
+Note that the IM Schedule product class has to be in 
+\begin{itemize}
+  \item Rates
+  \item FX
+  \item Equity
+  \item Credit
+  \item Commodity
+\end{itemize}
+in contrast to SIMM where we use the combined RatesFX product class.
 
 %--------------------------------------------------------
 \subsection{Market: {\tt todaysmarket.xml}}\label{sec:market}
@@ -5127,6 +5204,7 @@ Each interest rate model is specified by a block as follows
         <ShiftHorizon>0.0</ShiftHorizon>
         <Scaling>1.0</Scaling>
       </ParameterTransformation>
+      <FloatSpreadMapping>proRata</FloatSpreadMapping>
     </LGM>
     <LGM ccy="EUR">
       <!-- ... -->
@@ -5164,6 +5242,8 @@ the time grid is empty
 \item {\tt ParameterTransformation: } LGM model prices are invariant under scaling and shift transformations
 \cite{Lichters} with advantages for numerical convergence of results in long term simulations. These transformations can
 be chosen here. Default settings are shiftHorizon 0 (time in years) and scaling factor 1.
+\item {\tt FloatSpreadMapping: } mapping of float spreads in analytic swaption pricing for model calibration: proRata,
+  nextCoupon, simple, optional, defaults to proRata.
 \end{itemize}
 
 The reason for having to specify one more {\tt Volatility/InitialValue} entries than {\tt Volatility/TimeGrid} entries (and at least one more calibration option than {\tt Volatility/TimeGrid} entries) is the fact that the intervals defined by the {\tt Volatility/TimeGrid} entries are spanning from $[0,t_1],[t_1,t_2]\ldots[t_n,\infty]$, which results in $n+1$ intervals.
@@ -6057,10 +6137,16 @@ Stress tests can be applied in ORE to the same market segments and with same gra
 This file {\tt stressconfig.xml} specifies how stress tests can be configured. The general structure is shown in listing
 \ref{lst:stress_config}.
 
-In this example, two stress scenarios ``parallel\_rates'' and ``twist'' are defined. Each scenario definition contains
+In this example, two zero stress scenarios ``parallel\_rates'' and ``twist'' and one par rate ``par\_parallel'' are defined. 
+Each scenario definition contains
 the market components to be shifted in this scenario in a similar syntax that is also used for the sensitivity
 configuration, see \ref{sec:sensitivity}. Components that should not be shifted, can just be omitted in the definition
-of the scenario.
+of the scenario. Shifts for rate curves, credit curves and interest rate cap/floors can be given as par or zero rate shifts.
+By default shifts are zero rate shifts. If shifts are marked as par rate shifts all components (rate/credit/caps) shifts are 
+par shifts in that category, for example it is not possible to have par rate first for one yield curve and zero rate for 
+another curve in the same scenario. In case of par stress scenario, the shifted par instruments and related conventions are defined 
+in a sensitivity configuration.  The number number stress shifts (tenors/expiries and strikes) need to be allign with
+ the tenors/expiries and strikes of par instruments \ref{sec:sensitivity}.
 
 However, instead of specifying one shift size per market component, here a whole vector of shifts can be given, with
 different shift sizes applied to each point of the curve (or surface / cube).
@@ -6070,7 +6156,6 @@ and {\tt term}) represents a default value that is used whenever no explicit val
 
 UseSpreadedTermStructures: If set to true, spreaded termstructures over t0 will be used for the scenario calculation, to
 improve the alignment of the scenario sim market and t0 curves.
-
 
 \begin{longlisting}
 %\hrule\medskip
@@ -6127,6 +6212,56 @@ improve the alignment of the scenario sim market and t0 curves.
   </StressTest>
   <StressTest id="twist">
     ...
+  </StressTest>
+  <StressTest id="par_parallel">
+    <ParShifts>
+      <IRCurves>true</IRCurves>
+      <SurvivalProbability>true</SurvivalProbability>
+      <CapFloorVolatilities>true</CapFloorVolatilities>
+    </ParShifts>
+    <DiscountCurves>
+      <DiscountCurve ccy="EUR">
+        <ShiftType>Absolute</ShiftType>
+        <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+        <Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
+      </DiscountCurve>
+      ...
+    </DiscountCurves>
+    <IndexCurves>
+      ...
+    </IndexCurves>
+    <YieldCurves />
+    <FxSpots />
+    <FxVolatilities />
+    <SwaptionVolatilities />
+    <CapFloorVolatilities>
+      <CapFloorVolatility key="EUR-EURIBOR-6M">
+        <ShiftType>Absolute</ShiftType>
+        <ShiftExpiries>1Y, 2Y, 3Y, 4Y, 5Y, 6Y, 7Y, 8Y, 9Y</ShiftExpiries>
+        <Shifts>
+          <Shift tenor="1Y">0.01</Shift>
+          <Shift tenor="2Y">0.01</Shift>
+          <Shift tenor="3Y">0.01</Shift>
+          <Shift tenor="4Y">0.01</Shift>
+          <Shift tenor="5Y">0.01</Shift>
+          <Shift tenor="6Y">0.01</Shift>
+          <Shift tenor="7Y">0.01</Shift>
+          <Shift tenor="8Y">0.01</Shift>
+          <Shift tenor="9Y">0.01</Shift>
+        </Shifts>
+      </CapFloorVolatility>
+    </CapFloorVolatilities>
+    <EquitySpots />
+    <EquityVolatilities />
+    <SecuritySpreads />
+    <RecoveryRates />
+    <SurvivalProbabilities>
+      <SurvivalProbability name="Underlying1">
+        <ShiftType>Absolute</ShiftType>
+        <Shifts>0.01, 0.01, 0.01, 0.01, 0.01</Shifts>
+        <ShiftTenors>1Y, 2Y, 3Y, 5Y, 10Y</ShiftTenors>
+      </SurvivalProbability>
+    </SurvivalProbabilities>
   </StressTest>
 </StressTesting>
   \end{minted}
@@ -6207,6 +6342,7 @@ If a new calendar is added in this way and the schema is being used to validate 
 \input{tradedata/capfloor}
 \input{tradedata/forwardrateagreement}
 \input{tradedata/swaption}
+\input{tradedata/callableswap}
 \input{tradedata/fxforward}
 \input{tradedata/fxswap}
 \input{tradedata/fxoption}
@@ -6270,6 +6406,25 @@ If a new calendar is added in this way and the schema is being used to validate 
 
 \input{tradedata/totalReturnSwap}
 
+\input{tradedata/eq_outperformance.tex}
+\input{tradedata/doubledigitaloption}
+\input{tradedata/europeanoptioncontingentonabarrier}
+\input{tradedata/autocallable_01}
+\input{tradedata/performanceoption_01}
+\input{tradedata/window_barrieroption}
+\input{tradedata/generic_barrieroption}
+\input{tradedata/bestentryoption}
+\input{tradedata/basketoption}
+\input{tradedata/worstofbasketswap}
+\input{tradedata/rainbow_option}
+\input{tradedata/var_and_vol_derivatives}
+\input{tradedata/accumulator}
+\input{tradedata/tarf}
+\input{tradedata/knockoutswap}
+
+\input{tradedata/flexiswap}
+\input{tradedata/balanceguaranteedswap}
+
 %\include{tradecomponents}
 \input{tradecomponents/tradecomponentsintro}
 \input{tradecomponents/optiondata}
@@ -6302,6 +6457,8 @@ If a new calendar is added in this way and the schema is being used to validate 
 \input{tradecomponents/rangebound}
 \input{tradecomponents/bondbasketdata.tex}
 \input{tradecomponents/cbotranches.tex}
+\input{tradecomponents/formulabasedlegdata}
+
 \include{allowablevalues}
 
 %========================================================

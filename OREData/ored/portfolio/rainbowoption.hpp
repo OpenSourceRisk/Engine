@@ -33,43 +33,44 @@ namespace data {
 
 class RainbowOption : public ScriptedTrade {
 public:
-    explicit RainbowOption(const boost::shared_ptr<Conventions>& conventions = nullptr,
+    explicit RainbowOption(const QuantLib::ext::shared_ptr<Conventions>& conventions = nullptr,
                            const std::string& tradeType = "RainbowOption")
         : ScriptedTrade(tradeType) {}
     RainbowOption(const std::string& currency, const std::string& notional, const std::string& strike,
-                  const std::vector<boost::shared_ptr<Underlying>>& underlyings, const OptionData& optionData,
+                  const std::vector<QuantLib::ext::shared_ptr<Underlying>>& underlyings, const OptionData& optionData,
                   const std::string& settlement)
         : currency_(currency), notional_(notional), strike_(strike), underlyings_(underlyings), optionData_(optionData),
           settlement_(settlement) {
         initIndices();
     }
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
+    void setIsdaTaxonomyFields() override;
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
 private:
     void initIndices();
     std::string currency_, notional_, strike_;
-    std::vector<boost::shared_ptr<Underlying>> underlyings_;
+    std::vector<QuantLib::ext::shared_ptr<Underlying>> underlyings_;
     OptionData optionData_;
     std::string settlement_;
 };
 
 class EquityRainbowOption : public RainbowOption {
 public:
-    explicit EquityRainbowOption(const boost::shared_ptr<Conventions>& conventions = nullptr)
+    explicit EquityRainbowOption(const QuantLib::ext::shared_ptr<Conventions>& conventions = nullptr)
         : RainbowOption(conventions, "EquityRainbowOption") {}
 };
 
 class FxRainbowOption : public RainbowOption {
 public:
-    explicit FxRainbowOption(const boost::shared_ptr<Conventions>& conventions = nullptr)
+    explicit FxRainbowOption(const QuantLib::ext::shared_ptr<Conventions>& conventions = nullptr)
         : RainbowOption(conventions, "FxRainbowOption") {}
 };
 
 class CommodityRainbowOption : public RainbowOption {
 public:
-    explicit CommodityRainbowOption(const boost::shared_ptr<Conventions>& conventions = nullptr)
+    explicit CommodityRainbowOption(const QuantLib::ext::shared_ptr<Conventions>& conventions = nullptr)
         : RainbowOption(conventions, "CommodityRainbowOption") {}
 };
 

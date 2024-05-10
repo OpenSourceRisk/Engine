@@ -30,7 +30,7 @@ namespace analytics {
 
 CubeWriter::CubeWriter(const std::string& filename) : filename_(filename) {}
 
-void CubeWriter::write(const boost::shared_ptr<NPVCube>& cube, const std::map<std::string, std::string>& nettingSetMap,
+void CubeWriter::write(const QuantLib::ext::shared_ptr<NPVCube>& cube, const std::map<std::string, std::string>& nettingSetMap,
                        bool append) {
 
     // Convert dates into strings

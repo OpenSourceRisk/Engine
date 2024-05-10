@@ -38,20 +38,26 @@ void InflationSwap::checkInflationSwap(const vector<LegData>& legData) {
     QL_REQUIRE(hasInflationLeg, "InflationSwap must have at least one inflation leg (e.g. CPI, YY)");
 }
 
-void InflationSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void InflationSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("InflationSwap::build() called for " << id());
 
     checkInflationSwap(legData_);
 
     Swap::build(engineFactory);
+}
+
+void InflationSwap::setIsdaTaxonomyFields() {
+    Swap::setIsdaTaxonomyFields();
 
     // ISDA taxonomy, override Swap settings Base Product and add Transaction here
     additionalData_["isdaBaseProduct"] = string("Inflation Swap");
-    if (std::find_if(legData_.begin(), legData_.end(), [](const LegData& d) { return d.legType() == "CPI"; }) != legData_.end())
-        additionalData_["isdaTransaction"] = string("Zero Coupon");  
-    else if (std::find_if(legData_.begin(), legData_.end(), [](const LegData& d) { return d.legType() == "YY"; }) != legData_.end())
-        additionalData_["isdaTransaction"] = string("Year on Year");  
+    if (std::find_if(legData_.begin(), legData_.end(), [](const LegData& d) { return d.legType() == "CPI"; }) !=
+        legData_.end())
+        additionalData_["isdaTransaction"] = string("Zero Coupon");
+    else if (std::find_if(legData_.begin(), legData_.end(), [](const LegData& d) { return d.legType() == "YY"; }) !=
+             legData_.end())
+        additionalData_["isdaTransaction"] = string("Year on Year");
 }
 
 } // namespace data

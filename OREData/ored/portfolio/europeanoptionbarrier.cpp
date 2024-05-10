@@ -23,7 +23,7 @@
 namespace ore {
 namespace data {
 
-void EuropeanOptionBarrier::build(const boost::shared_ptr<EngineFactory>& factory) {
+void EuropeanOptionBarrier::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
     // set script parameters
 
@@ -204,7 +204,7 @@ void EuropeanOptionBarrier::fromXML(XMLNode* node) {
     initIndices();
 }
 
-XMLNode* EuropeanOptionBarrier::toXML(XMLDocument& doc) {
+XMLNode* EuropeanOptionBarrier::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* tradeNode = doc.allocNode("EuropeanOptionBarrierData");
     XMLUtils::appendNode(node, tradeNode);

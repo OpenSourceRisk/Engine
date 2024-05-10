@@ -33,8 +33,8 @@ namespace data {
 using namespace QuantLib;
 
 ModelImpl::ModelImpl(const DayCounter& dayCounter, const Size size, const std::vector<std::string>& currencies,
-                     const std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>>& irIndices,
-                     const std::vector<std::pair<std::string, boost::shared_ptr<ZeroInflationIndex>>>& infIndices,
+                     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
+                     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
                      const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
                      const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig)
     : Model(size), dayCounter_(dayCounter), currencies_(currencies), indexCurrencies_(indexCurrencies),
@@ -145,7 +145,7 @@ RandomVariable ModelImpl::discount(const Date& obsdate, const Date& paydate, con
 namespace {
 struct comp {
     comp(const std::string& indexInput) : indexInput_(indexInput) {}
-    template <typename T> bool operator()(const std::pair<IndexInfo, boost::shared_ptr<T>>& p) const {
+    template <typename T> bool operator()(const std::pair<IndexInfo, QuantLib::ext::shared_ptr<T>>& p) const {
         return p.first.name() == indexInput_;
     }
     const std::string indexInput_;
@@ -153,7 +153,7 @@ struct comp {
 } // namespace
 
 RandomVariable ModelImpl::getInflationIndexFixing(const bool returnMissingFixingAsNull, const std::string& indexInput,
-                                                  const boost::shared_ptr<ZeroInflationIndex>& infIndex,
+                                                  const QuantLib::ext::shared_ptr<ZeroInflationIndex>& infIndex,
                                                   const Size indexNo, const Date& limDate, const Date& obsdate,
                                                   const Date& fwddate, const Date& baseDate) const {
     RandomVariable res(size());
@@ -232,7 +232,7 @@ RandomVariable ModelImpl::eval(const std::string& indexInput, const Date& obsdat
                 }
             } else {
                 // handle all other cases than ibor fallback indices
-                boost::shared_ptr<Index> idx = indexInfo.index(obsdate);
+                QuantLib::ext::shared_ptr<Index> idx = indexInfo.index(obsdate);
                 Real fixing = Null<Real>();
                 try {
                     fixing = idx->fixing(idx->fixingCalendar().adjust(obsdate, Preceding));

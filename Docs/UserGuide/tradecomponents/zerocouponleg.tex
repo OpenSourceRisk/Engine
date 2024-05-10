@@ -5,7 +5,7 @@ A Zero Coupon Fixed leg contains a series of Zero Coupon payments, i.e $(1 + r)^
 
 Listing \ref{lst:zerolegdata} shows an example for a leg of type Zero Coupon Fixed. 
 
-To create a leg with only one payment, the schedule must only contain the start and end date. Note that this can be achieved by setting the \emph{Tenor} to \emph{0D} in a rules based Schedule. 
+To create a leg with only one payment, the schedule must only contain the start and end date. Note that this can be achieved by setting the \emph{Tenor} to \emph{0D} or \emph{1T}  in a rules based Schedule. 
 
 Note that the DayCounter in a Zero Coupon Fixed leg is used to compute $t$ in $(1+r)^t$ so that the series of zero coupon payments are calculated as $(1 + r)^t \,N$. For all other leg types, the DayCounter is used to compute the “Accrual” (i.e. the accrual time period of a coupon) in a coupon payment calculated as: $N * Accrual * r$. However, the “Accrual” in the coupon formula is defaulted to 1 for the Zero Coupon Fixed leg type.
 

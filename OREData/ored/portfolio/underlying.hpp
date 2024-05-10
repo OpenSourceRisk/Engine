@@ -46,7 +46,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(ore::data::XMLNode* node) override;
-    virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
 
     //! \name Setters
@@ -86,7 +86,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 };
 
@@ -117,7 +117,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
 private:
@@ -145,7 +145,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
 private:
@@ -169,7 +169,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 };
 
@@ -185,7 +185,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 };
 
@@ -203,7 +203,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 private:
     QuantLib::CPI::InterpolationType interpolation_;
@@ -221,7 +221,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 };
 
@@ -247,7 +247,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
 private:
@@ -261,13 +261,13 @@ public:
                                const std::string& basicUnderlyingNodeName = "Name")
         : nodeName_(nodeName), basicUnderlyingNodeName_(basicUnderlyingNodeName) {}
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
-    const boost::shared_ptr<Underlying>& underlying() { return underlying_; };
+    const QuantLib::ext::shared_ptr<Underlying>& underlying() { return underlying_; };
 
 private:
     const std::string nodeName_, basicUnderlyingNodeName_;
-    boost::shared_ptr<Underlying> underlying_;
+    QuantLib::ext::shared_ptr<Underlying> underlying_;
 };
 
 } // namespace data

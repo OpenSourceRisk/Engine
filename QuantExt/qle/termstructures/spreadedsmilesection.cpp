@@ -20,11 +20,11 @@
 
 namespace QuantExt {
 
-SpreadedSmileSection::SpreadedSmileSection(const boost::shared_ptr<SmileSection>& underlyingSection,
+SpreadedSmileSection::SpreadedSmileSection(const QuantLib::ext::shared_ptr<SmileSection>& underlyingSection,
                                            const Handle<Quote>& spread)
     : QuantLib::SpreadedSmileSection(underlyingSection, spread) {}
 
-SpreadedSmileSection::SpreadedSmileSection(const boost::shared_ptr<QuantLib::SpreadedSmileSection>& underlyingSection)
+SpreadedSmileSection::SpreadedSmileSection(const QuantLib::ext::shared_ptr<QuantLib::SpreadedSmileSection>& underlyingSection)
     : QuantLib::SpreadedSmileSection(*underlyingSection) {}
 
 Volatility SpreadedSmileSection::volatilityImpl(Rate k) const {

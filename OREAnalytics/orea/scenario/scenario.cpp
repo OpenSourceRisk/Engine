@@ -27,7 +27,15 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
-bool Scenario::isCloseEnough(const boost::shared_ptr<Scenario>& s) const {
+std::size_t hash_value(const RiskFactorKey& k) {
+    std::size_t seed = 0;
+    boost::hash_combine(seed, k.keytype);
+    boost::hash_combine(seed, k.name);
+    boost::hash_combine(seed, k.index);
+    return seed;
+}
+
+bool Scenario::isCloseEnough(const QuantLib::ext::shared_ptr<Scenario>& s) const {
     return asof() == s->asof() && label() == s->label() && QuantLib::close_enough(getNumeraire(), s->getNumeraire()) &&
            keys() == s->keys() && std::all_of(keys().begin(), keys().end(), [this, s](const RiskFactorKey& k) {
                return QuantLib::close_enough(this->get(k), s->get(k));

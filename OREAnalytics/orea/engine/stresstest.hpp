@@ -55,15 +55,15 @@ namespace analytics {
 class StressTest {
 public:
     //! Constructor
-    StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
-               const boost::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
-               const boost::shared_ptr<ore::data::EngineData>& engineData,
-               const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-               const boost::shared_ptr<StressTestScenarioData>& stressData,
+    StressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
+               const QuantLib::ext::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
+               const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
+               const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+               const QuantLib::ext::shared_ptr<StressTestScenarioData>& stressData,
                const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
                const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
-               boost::shared_ptr<ScenarioFactory> scenarioFactory = {},
-               const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+               QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory = {},
+               const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
                const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
                bool continueOnError = false);
 
@@ -83,7 +83,7 @@ public:
     const std::map<std::pair<std::string, std::string>, Real>& delta() { return delta_; }
 
     //! Write NPV by trade/scenario to a file (base and shifted NPVs, delta)
-    void writeReport(const boost::shared_ptr<ore::data::Report>& report, Real outputThreshold = 0.0);
+    void writeReport(const QuantLib::ext::shared_ptr<ore::data::Report>& report, Real outputThreshold = 0.0);
 
 private:
     // base NPV by trade
