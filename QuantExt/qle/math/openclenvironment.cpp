@@ -650,7 +650,7 @@ void OpenClContext::updateVariatesPool() {
     QL_REQUIRE(nVariates_ > 0, "OpenClContext::updateVariatesPool(): internal error, got nVariates_ == 0.");
 
     constexpr std::size_t size_one = 1; // constant 1
-    constexpr std::size_t mt_N = 624;  // mersenne twister N
+    constexpr std::size_t mt_N = 624;   // mersenne twister N
 
     std::size_t fpSize = settings_.useDoublePrecision ? sizeof(double) : sizeof(float);
 
@@ -661,7 +661,7 @@ void OpenClContext::updateVariatesPool() {
 
         std::string fpTypeStr = settings_.useDoublePrecision ? "double" : "float";
         std::string fpSuffix = settings_.useDoublePrecision ? "" : "f";
-	std::string fpMaxValue = settings_.useDoublePrecision ? "0x1.fffffffffffffp1023" : "0x1.fffffep127f";
+        std::string fpMaxValue = settings_.useDoublePrecision ? "0x1.fffffffffffffp1023" : "0x1.fffffep127f";
 
         // clang-format off
         // ported from from QuantLib::InverseCumulativeNormal
