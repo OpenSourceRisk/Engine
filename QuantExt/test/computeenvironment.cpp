@@ -334,16 +334,20 @@ BOOST_AUTO_TEST_CASE(testRngGenerationTmp) {
 
         auto sg = GenericPseudoRandom<MersenneTwisterUniformRng, InverseCumulativeNormal>::make_sequence_generator(
             1, settings.rngSeed);
+	MersenneTwisterUniformRng mt(settings.rngSeed);
 
-        double tol = settings.useDoublePrecision ? 1E-7 : 1E-3;
+        double tol = settings.useDoublePrecision ? 1E-12 : 1E-4;
 
         Size noErrors = 0, errorThreshold = 10;
         for (Size j = 0; j < 2; ++j) {
             for (Size i = 0; i < n; ++i) {
-                Real ref = sg.nextSequence().value[0];
-                if(std::abs(output[j][i] - ref) > tol && noErrors < errorThreshold) {
+              Real ref = sg.nextSequence().value[0];
+	      Real err = std::abs(output[j][i] - ref);
+	      if(std::abs(ref) > 1E-10)
+		err /= std::abs(ref);
+              if(err > tol && noErrors < errorThreshold) {
                     BOOST_ERROR("gpu value (" << output[j][i] << ") at j=" << j << ", i=" << i
-                                              << " does not match cpu value (" << ref << ")");
+				<< " does not match cpu value (" << ref << "), error " << err << ", tol " << tol);
                     noErrors++;
                 }
             }

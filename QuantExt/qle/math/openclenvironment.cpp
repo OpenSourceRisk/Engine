@@ -649,7 +649,8 @@ std::size_t OpenClContext::createInputVariable(double* v) {
 void OpenClContext::updateVariatesPool() {
     QL_REQUIRE(nVariates_ > 0, "OpenClContext::updateVariatesPool(): internal error, got nVariates_ == 0.");
 
-    constexpr std::size_t mt_N = 624; // mersenne twister N
+    constexpr std::size_t size_one = 1; // constant 1
+    constexpr std::size_t mt_N = 624;  // mersenne twister N
 
     std::size_t fpSize = settings_.useDoublePrecision ? sizeof(double) : sizeof(float);
 
@@ -660,6 +661,7 @@ void OpenClContext::updateVariatesPool() {
 
         std::string fpTypeStr = settings_.useDoublePrecision ? "double" : "float";
         std::string fpSuffix = settings_.useDoublePrecision ? "" : "f";
+	std::string fpMaxValue = settings_.useDoublePrecision ? "0x1.fffffffffffffp1023" : "0x1.fffffep127f";
 
         // clang-format off
         // ported from from QuantLib::InverseCumulativeNormal
@@ -687,12 +689,12 @@ void OpenClContext::updateVariatesPool() {
             "    const " + fpTypeStr + " d4_ = 3.754408661907416e+00" + fpSuffix + ";\n"
             "    const " + fpTypeStr + " x_low_ = 0.02425" + fpSuffix + ";\n"
             "    const " + fpTypeStr + " x_high_ = 1.0" + fpSuffix + " - x_low_;\n"
-            "    const " + fpTypeStr + " x = x0 / (" + fpTypeStr + ")UINT_MAX;\n"
+            "    const " + fpTypeStr + " x = ((" + fpTypeStr + ")x0 + 0.5" + fpSuffix + ") / 4294967296.0"+ fpSuffix + ";\n"
             "    if (x < x_low_ || x_high_ < x) {\n"
             "        if (x0 == UINT_MAX) {\n"
-            "          return 0x1.fffffep127" + fpSuffix + ";\n"
+            "          return " + fpMaxValue + ";\n"
             "        } else if(x0 == 0) {\n"
-            "          return -0x1.fffffep127" + fpSuffix + ";\n"
+            "          return -" + fpMaxValue + ";\n"
             "        }\n"
             "        " + fpTypeStr + " z;\n"
             "        if (x < x_low_) {\n"
@@ -718,7 +720,7 @@ void OpenClContext::updateVariatesPool() {
 
         std::string kernelSourceSeedInit = "__kernel void ore_seedInitialization(const ulong s, __global ulong* mt) {\n"
             "  const ulong N = 624;\n"
-            "  mt[0]= s & 0xffffffffU;\n"
+            "  mt[0]= s & 0xffffffffUL;\n"
             "  for (ulong mti=1; mti<N; ++mti) {\n"
             "    mt[mti] = (1812433253UL * (mt[mti-1] ^ (mt[mti-1] >> 30)) + mti);\n"
             "    mt[mti] &= 0xffffffffUL;\n"
@@ -751,8 +753,8 @@ void OpenClContext::updateVariatesPool() {
             "   ulong mti = get_global_id(0);\n"
             "   ulong y = mt[mti];\n"
             "   y ^= (y >> 11);\n"
-            "   y ^= (y << 7) & 0x9d2c5680U;\n"
-            "   y ^= (y << 15) & 0xefc60000U;\n"
+            "   y ^= (y << 7) & 0x9d2c5680UL;\n"
+            "   y ^= (y << 15) & 0xefc60000UL;\n"
             "   y ^= (y >> 18);\n"
             "   output[offset + mti] = ore_invCumN((uint)y);\n"
             "}\n\n";
@@ -798,8 +800,7 @@ void OpenClContext::updateVariatesPool() {
         QL_REQUIRE(err == CL_SUCCESS,
                    "OpenClContext::updateVariatesPool(): error setting kernel args seed init: " << errorText(err));
 
-        constexpr std::size_t sizeOne = 1;
-        err = clEnqueueNDRangeKernel(queue_, variatesKernelSeedInit_, 1, NULL, &sizeOne, NULL, 0, NULL, &initEvent);
+        err = clEnqueueNDRangeKernel(queue_, variatesKernelSeedInit_, 1, NULL, &size_one, NULL, 0, NULL, &initEvent);
         QL_REQUIRE(err == CL_SUCCESS,
                    "OpenClContext::updateVariatesPool(): error running kernel seed init: " << errorText(err));
     }
@@ -855,7 +856,7 @@ void OpenClContext::updateVariatesPool() {
                    "OpenClContext::updateVariatesPool(): error setting args for kernel twist: " << errorText(err));
         cl_event twistEvent;
         err = clEnqueueNDRangeKernel(
-            queue_, variatesKernelTwist_, 1, NULL, &mt_N, NULL, variatesPoolSize_ == 0 || haveGenerated ? 1 : 0,
+            queue_, variatesKernelTwist_, 1, NULL, &size_one, NULL, variatesPoolSize_ == 0 || haveGenerated ? 1 : 0,
             variatesPoolSize_ == 0 ? &initEvent : (haveGenerated ? &generateEvent : NULL), &twistEvent);
         QL_REQUIRE(err == CL_SUCCESS,
                    "OpenClContext::updateVariatesPool(): error running kernel twist: " << errorText(err));
