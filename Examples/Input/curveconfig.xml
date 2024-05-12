@@ -3154,6 +3154,12 @@
 			<SpreadQuote>BOND/YIELD_SPREAD/SECURITY_3</SpreadQuote>
 			<RecoveryRateQuote>RECOVERY_RATE/RATE/SECURITY_3</RecoveryRateQuote>
 		</Security>
+		<Security>
+		  <CurveId>ISIN:XS0983610930</CurveId>
+		  <CurveDescription>Security</CurveDescription>
+		  <SpreadQuote>BOND/YIELD_SPREAD/ISIN:XS0983610930</SpreadQuote>
+		  <CPRQuote>CPR/RATE/ISIN:XS0983610930</CPRQuote>
+		</Security>
 	</Securities>
 	<CommodityCurves>
 		<CommodityCurve>
