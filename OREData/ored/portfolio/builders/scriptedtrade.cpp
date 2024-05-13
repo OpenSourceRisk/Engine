@@ -1378,7 +1378,6 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
     std::vector<QuantLib::ext::shared_ptr<FxBsData>> fxConfigs;
     std::vector<QuantLib::ext::shared_ptr<EqBsData>> eqConfigs;
     std::vector<QuantLib::ext::shared_ptr<CommoditySchwartzData>> comConfigs;
-    // TODO: populate comConfigs
 
     // calibration expiries and terms for IR, INF, FX, EQ parametrisations (this will only work for a fixed reference
     // date, due to the way the cam builder and nested builders work, see ticket #940)
@@ -1597,8 +1596,27 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
     std::vector<QuantLib::ext::shared_ptr<CrLgmData>> crLgmConfigs;
     std::vector<QuantLib::ext::shared_ptr<CrCirData>> crCirConfigs;
 
-    // COMM configs, not supported at this point
-    QL_REQUIRE(commIndices_.empty(), "GaussianCam model does not support commodity underlyings currently");
+    // COMM configs
+    for (auto const& comm : commIndices_) {
+        auto config = QuantLib::ext::make_shared<CommoditySchwartzData>();
+        config->currency() = getCommCcy(comm);
+        config->name() = comm.commName();
+        if (calibrationExpiries.empty() || zeroVolatility_) {
+            config->calibrationType() = CalibrationType::None;
+            config->calibrateSigma() = false;
+            config->sigmaParamType() = ParamType::Constant;
+            config->sigmaValue() = 0.0;
+        } else {
+            config->calibrationType() = CalibrationType::BestFit;
+            config->calibrateSigma() = true;
+            config->sigmaParamType() = ParamType::Constant;
+            config->sigmaValue() = 0.10; // start value for optimizer
+            config->optionExpiries() = calibrationExpiries;
+            config->optionStrikes() =
+                std::vector<std::string>(calibrationExpiries.size(), "ATMF"); // hardcoded ATMF calibration strike
+        }
+        comConfigs.push_back(config);
+    }
 
     std::string configurationInCcy = configuration(MarketContext::irCalibration);
     std::string configurationXois = configuration(MarketContext::pricing);
