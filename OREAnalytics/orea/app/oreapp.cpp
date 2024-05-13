@@ -284,7 +284,18 @@ void OREApp::analytics() {
                 LOG("write market cube " << reportName << " to file " << fileName);
                 saveAggregationScenarioData(fileName, *b.second);
             }
-        }        
+        }
+
+        for (auto a: analyticsManager_->stressTests()){
+            for(auto b: a.second){
+                string reportName = b.first;
+                std::string fileName =
+                    inputs_->resultsPath().string() + "/" + outputs_->outputFileName(reportName, "xml");
+                LOG("write converted stress test scenario definition " << reportName << " to file " << fileName);
+                b.second->toFile(fileName);
+            }
+        }
+
     }
     catch (std::exception& e) {
         ostringstream oss;
@@ -953,6 +964,122 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("stress", "outputThreshold", false);
         if (tmp != "")
             setStressThreshold(parseReal(tmp));
+
+        tmp = params_->get("stress", "optimiseRiskFactors", false);
+        if (tmp != "")
+            setStressOptimiseRiskFactors(parseBool(tmp));
+
+        tmp = params_->get("stress", "sensitivityConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Load sensitivity scenario data from file" << file);
+            setStressSensitivityScenarioDataFromFile(file);
+        } else {
+            WLOG("Sensitivity scenario data not loaded, don't support par stress tests");
+        }
+
+        tmp = params_->get("stress", "lowerBoundCapVols", false);
+        if (tmp != "") {
+            setStressLowerBoundCapFloorVolatility(parseReal(tmp));
+        }
+        tmp = params_->get("stress", "upperBoundCapVols", false);
+        if (tmp != "") {
+            setStressUpperBoundCapFloorVolatility(parseReal(tmp));
+        }
+        tmp = params_->get("stress", "lowerBoundDiscountFactors", false);
+        if (tmp != "") {
+            setStressLowerBoundRatesDiscountFactor(parseReal(tmp));
+        }
+        tmp = params_->get("stress", "upperBoundDiscountFactors", false);
+        if (tmp != "") {
+            setStressUpperBoundRatesDiscountFactor(parseReal(tmp));
+        }
+        tmp = params_->get("stress", "lowerBoundSurvivalProb", false);
+        if (tmp != "") {
+            setStressLowerBoundSurvivalProb(parseReal(tmp));
+        }
+        tmp = params_->get("stress", "upperBoundSurvivalProb", false);
+        if (tmp != "") {
+            setStressUpperBoundSurvivalProb(parseReal(tmp));
+        }
+        tmp = params_->get("stress", "accuracy", false);
+        if (tmp != "") {
+            setStressAccurary(parseReal(tmp));
+        }
+    }
+
+    /****************
+     * PAR STRESS CONVERSION
+     ****************/
+
+    tmp = params_->get("parStressConversion", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        insertAnalytic("PARSTRESSCONVERSION");
+        setParStressPricingEngine(pricingEngine());
+        tmp = params_->get("parStressConversion", "marketConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Loading parStressConversion test scenario sim market parameters from file" << file);
+            setParStressSimMarketParamsFromFile(file);
+        } else {
+            WLOG("ScenarioSimMarket parameters for par stress conversion testing not loaded");
+        }
+
+        tmp = params_->get("parStressConversion", "stressConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Load stress test scenario data from file" << file);
+            setParStressScenarioDataFromFile(file);
+        } else {
+            WLOG("Stress scenario data not loaded");
+        }
+
+        tmp = params_->get("parStressConversion", "pricingEnginesFile", false);
+        if (tmp != "") {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Load pricing engine data from file: " << file);
+            setParStressPricingEngineFromFile(file);
+        } else {
+            WLOG("Pricing engine data not found for stress testing, using global");
+        }
+
+        tmp = params_->get("parStressConversion", "sensitivityConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Load sensitivity scenario data from file" << file);
+            setParStressSensitivityScenarioDataFromFile(file);
+        } else {
+            WLOG("Sensitivity scenario data not loaded, don't support par stress tests");
+        }
+
+        tmp = params_->get("parStressConversion", "lowerBoundCapVols", false);
+        if (tmp != "") {
+            setParStressLowerBoundCapFloorVolatility(parseReal(tmp));
+        }
+        tmp = params_->get("parStressConversion", "upperBoundCapVols", false);
+        if (tmp != "") {
+            setParStressUpperBoundCapFloorVolatility(parseReal(tmp));
+        }
+        tmp = params_->get("parStressConversion", "lowerBoundDiscountFactors", false);
+        if (tmp != "") {
+            setParStressLowerBoundRatesDiscountFactor(parseReal(tmp));
+        }
+        tmp = params_->get("parStressConversion", "upperBoundDiscountFactors", false);
+        if (tmp != "") {
+            setParStressUpperBoundRatesDiscountFactor(parseReal(tmp));
+        }
+        tmp = params_->get("parStressConversion", "lowerBoundSurvivalProb", false);
+        if (tmp != "") {
+            setParStressLowerBoundSurvivalProb(parseReal(tmp));
+        }
+        tmp = params_->get("parStressConversion", "upperBoundSurvivalProb", false);
+        if (tmp != "") {
+            setParStressUpperBoundSurvivalProb(parseReal(tmp));
+        }
+        tmp = params_->get("parStressConversion", "accuracy", false);
+        if (tmp != "") {
+            setParStressAccurary(parseReal(tmp));
+        }
     }
 
     /********************
@@ -1059,9 +1186,45 @@ void OREAppInputParameters::loadParameters() {
             setOutputHistoricalScenarios(parseBool(tmp));
     }
 
-    /**********************
+    /****************
+     * PNL Explain
+     ****************/
+    tmp = params_->get("pnlExplain", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        insertAnalytic("PNL_EXPLAIN");
+        
+        tmp = params_->get("pnlExplain", "mporDate", false);
+        if (tmp != "")
+            setMporDate(parseDate(tmp));
+        
+        tmp = params_->get("pnlExplain", "historicalScenarioFile", false);
+        if (tmp != "") {
+            std::string scenarioFile = (inputPath / tmp).generic_string();
+            setHistoricalScenarioReader(scenarioFile);
+        }
+
+        tmp = params_->get("pnlExplain", "simulationConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Loading sensitivity scenario sim market parameters from file" << file);
+            setSensiSimMarketParamsFromFile(file);
+            setScenarioSimMarketParamsFromFile(file);
+        } else {
+            WLOG("ScenarioSimMarket parameters for sensitivity not loaded");
+        }
+        
+        tmp = params_->get("pnlExplain", "sensitivityConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Load sensitivity scenario data from file" << file);
+            setSensiScenarioDataFromFile(file);
+        } else {
+            WLOG("Sensitivity scenario data not loaded");
+        }
+    }
+    /****************
      * SIMM and IM Schedule
-     **********************/
+     ****************/
 
     LOG("SIMM");
     tmp = params_->get("simm", "active", false);

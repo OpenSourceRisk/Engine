@@ -46,9 +46,6 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     if (!analytic()->match(runTypes))
         return;
 
-    auto pnlAnalytic = static_cast<PnlAnalytic*>(analytic());
-    QL_REQUIRE(pnlAnalytic, "Analytic must be of type PnlAnalytic");
-
     Settings::instance().evaluationDate() = inputs_->asof();
     analytic()->configurations().asofDate = inputs_->asof();
     ObservationMode::instance().setMode(inputs_->observationModel());
@@ -80,7 +77,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams, inputs_->marketConfig("pricing"),
         *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
-        inputs_->continueOnError(), pnlAnalytic->useSpreadedTermStructures(), false, false, *inputs_->iborFallbackConfig());
+        inputs_->continueOnError(), useSpreadedTermStructures(), false, false, *inputs_->iborFallbackConfig());
     auto sgen = QuantLib::ext::make_shared<StaticScenarioGenerator>();
     simMarket->scenarioGenerator() = sgen;
 
@@ -126,11 +123,11 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
      *******************************************************************************************/
 
     // Set eveluationDate to t1 > t0
-    Settings::instance().evaluationDate() = pnlAnalytic->mporDate();
+    Settings::instance().evaluationDate() = mporDate();
 
     // Set the configurations asof date for the mpor analytic to t1, too
-    auto mporAnalytic = analytic()->dependentAnalytic<ScenarioAnalytic>(pnlAnalytic->mporLookupKey);
-    mporAnalytic->configurations().asofDate = pnlAnalytic->mporDate();
+    auto mporAnalytic = dependentAnalytic(mporLookupKey);
+    mporAnalytic->configurations().asofDate = mporDate();
     mporAnalytic->configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
     mporAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
 
@@ -141,17 +138,18 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     Settings::instance().evaluationDate() = inputs_->asof();
         
     QuantLib::ext::shared_ptr<Scenario> asofBaseScenario = simMarket->baseScenarioAbsolute();
-    QuantLib::ext::shared_ptr<Scenario> mporBaseScenario = mporAnalytic->scenarioSimMarket()->baseScenarioAbsolute();
+    auto sai = static_cast<ScenarioAnalyticImpl*>(mporAnalytic->impl().get());
+    QuantLib::ext::shared_ptr<Scenario> mporBaseScenario = sai->scenarioSimMarket()->baseScenarioAbsolute();
 
     QuantLib::ext::shared_ptr<ore::analytics::Scenario> t0Scenario =
         getDifferenceScenario(asofBaseScenario, mporBaseScenario, inputs_->asof(), 1.0); 
-    pnlAnalytic->setT0Scenario(t0Scenario);
+    setT0Scenario(asofBaseScenario);
 
     // Create the inverse shift scenario as spread between t0 market and t1 market, to be applied to t1
 
     QuantLib::ext::shared_ptr<ore::analytics::Scenario> t1Scenario =
-        getDifferenceScenario(mporBaseScenario, asofBaseScenario, pnlAnalytic->mporDate(), 1.0); 
-    pnlAnalytic->setT1Scenario(t1Scenario);
+        getDifferenceScenario(mporBaseScenario, asofBaseScenario, mporDate(), 1.0); 
+    setT1Scenario(mporBaseScenario);
 
     /********************************************************************************************
      *
@@ -193,10 +191,10 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
      *
      ***********************************************************************************************/
 
-    Date d1 = pnlAnalytic->mporDate();
+    Date d1 = mporDate();
     Settings::instance().evaluationDate() = d1;
     analytic()->configurations().asofDate = d1;
-    auto simMarket1 = mporAnalytic->scenarioSimMarket();
+    auto simMarket1 = sai->scenarioSimMarket();
     auto sgen1 = QuantLib::ext::make_shared<StaticScenarioGenerator>();
     analytic()->setMarket(simMarket1);
     sgen1->setScenario(t1Scenario);
@@ -228,7 +226,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
      *
      ***************************************************************************************/
         
-    sgen1->setScenario(mporAnalytic->scenarioSimMarket()->baseScenario());
+    sgen1->setScenario(sai->scenarioSimMarket()->baseScenario());
     simMarket1->scenarioGenerator() = sgen1;
     simMarket1->update(d1);
     analytic()->buildPortfolio();
@@ -260,7 +258,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     QuantLib::ext::shared_ptr<InMemoryReport> pnlReport = QuantLib::ext::make_shared<InMemoryReport>();
     ReportWriter(inputs_->reportNaString())
         .writePnlReport(*pnlReport, t0NpvReport, t0NpvLaggedReport, t1NpvLaggedReport, t1NpvReport,
-			t0CashFlowReport, inputs_->asof(), pnlAnalytic->mporDate(),
+			t0CashFlowReport, inputs_->asof(), mporDate(),
 			effectiveResultCurrency, analytic()->market(), inputs_->marketConfig("pricing"), analytic()->portfolio());
     analytic()->reports()[LABEL]["pnl"] = pnlReport;
 
@@ -272,33 +270,13 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     boost::shared_ptr<InMemoryReport> t0ScenarioReport = boost::make_shared<InMemoryReport>();
     auto t0sw = ScenarioWriter(nullptr, t0ScenarioReport);
-    t0sw.writeScenario(t0Scenario, true);
+    t0sw.writeScenario(asofBaseScenario, true);
     analytic()->reports()[label()]["pnl_scenario_t0"] = t0ScenarioReport;
 
     boost::shared_ptr<InMemoryReport> t1ScenarioReport = boost::make_shared<InMemoryReport>();
     auto t1sw = ScenarioWriter(nullptr, t1ScenarioReport);
-    t1sw.writeScenario(t1Scenario, true);
+    t1sw.writeScenario(mporBaseScenario, true);
     analytic()->reports()[label()]["pnl_scenario_t1"] = t1ScenarioReport;    
-}
-
-PnlAnalytic::PnlAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-    : Analytic(std::make_unique<PnlAnalyticImpl>(inputs), {"PNL"},
-	       inputs, false, false, false, false),
-      useSpreadedTermStructures_(true) {
-    mporDate_ = inputs_->mporDate() != Date()
-                    ? inputs_->mporDate()
-                    : inputs_->mporCalendar().advance(inputs_->asof(), int(inputs_->mporDays()), QuantExt::Days);
-    LOG("ASOF date " << io::iso_date(inputs_->asof()));
-    LOG("MPOR date " << io::iso_date(mporDate_));
-    auto mporAnalytic = boost::make_shared<ScenarioAnalytic>(inputs, useSpreadedTermStructures_);
-    mporAnalytic->configurations().curveConfig = inputs->curveConfigs().get("mpor");
-    dependentAnalytics_[mporLookupKey] = mporAnalytic;
-}
-
-set<QuantLib::Date> PnlAnalytic::marketDates() const {
-    set<QuantLib::Date> dates = Analytic::marketDates();
-    dates.insert(mporDate_);
-    return dates;
 }
 
 } // namespace analytics

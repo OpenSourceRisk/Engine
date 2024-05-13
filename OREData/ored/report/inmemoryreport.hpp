@@ -59,6 +59,7 @@ public:
     const vector<ReportType>& data(Size i) const;
     void toFile(const string& filename, const char sep = ',', const bool commentCharacter = true, char quoteChar = '\0',
                 const string& nullString = "#N/A", bool lowerHeader = false);
+    void jumpToColumn(Size i) { i_ = i; }
 
 private:
     Size i_;
