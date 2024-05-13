@@ -66,7 +66,8 @@ public:
         const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(
             const QuantLib::Date&, const std::set<std::string>&, const std::vector<QuantLib::Date>&,
             const QuantLib::Size)>& cptyCubeFactory = {},
-        const std::string& context = "unspecified");
+        const std::string& context = "unspecified",
+        const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& offSetScenario);
 
     // can be optionally called to set the agg scen data (which is done in the ssm for single-threaded runs)
     void setAggregationScenarioData(const QuantLib::ext::shared_ptr<AggregationScenarioData>& aggregationScenarioData);
@@ -121,9 +122,9 @@ private:
                                                              const std::vector<QuantLib::Date>&, const QuantLib::Size)>
         cptyCubeFactory_;
     std::string context_;
-
-    QuantLib::ext::shared_ptr<AggregationScenarioData> aggregationScenarioData_;
-
+    QuantLib::ext::shared_ptr<ore::analytics::Scenario> offsetScenario_;
+    QuantLib::ext::shared_ptr<AggregationScenarioData>
+            aggregationScenarioData_;
     std::vector<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>> miniCubes_;
     std::vector<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>> miniNettingSetCubes_;
     std::vector<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>> miniCptyCubes_;
