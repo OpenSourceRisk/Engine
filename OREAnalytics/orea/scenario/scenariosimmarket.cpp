@@ -2875,7 +2875,7 @@ ScenarioSimMarket::ScenarioSimMarket(
         recastScenario(offsetScenario_, offsetScenario_->coordinates(), coordinatesData_);
         for (auto& [key, quote] : simData_) {
             if (offsetScenario_->has(key)) {
-                quote->setValue(quote->value() + offsetScenario_->get(key));
+                quote->setValue(addDifferenceToScenario(key.keytype, quote->value(), offsetScenario_->get(key)));
             } else {
                 QL_FAIL("ScenarioSimMarket: Offset Scenario doesnt contain key "
                         << key
@@ -2887,7 +2887,8 @@ ScenarioSimMarket::ScenarioSimMarket(
         for (auto& [key, quote] : simData_) {
             if (offsetScenario_->has(key)) {
                 quote->setValue(offsetScenario_->get(key));
-                absoluteSimData_[key] += offsetScenario_->get(key);
+                absoluteSimData_[key] =
+                    addDifferenceToScenario(key.keytype, absoluteSimData_[key], offsetScenario_->get(key));
             } else {
                 QL_FAIL("ScenarioSimMarket: Offset Scenario doesnt contain key "
                         << key
