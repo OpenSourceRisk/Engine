@@ -1301,8 +1301,8 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
 
     map<CorrelationKey, Handle<Quote>> camCorrelations;
     for (auto const& c : tmpCorrelations) {
-        CorrelationFactor f_1 = parseCorrelationFactor(c.first.first);
-        CorrelationFactor f_2 = parseCorrelationFactor(c.first.second);
+        CorrelationFactor f_1 = parseCorrelationFactor(c.first.first, '#');
+        CorrelationFactor f_2 = parseCorrelationFactor(c.first.second, '#');
         // update index for JY from 0 to 1 (i.e. to the factor driving the inf index ("fx") process)
         // in all other cases the index 0 is fine, since there is only one driving factor always
         if (infModelType_ == "JY") {
@@ -1321,11 +1321,11 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
     std::set<CorrelationFactor> allCorrRiskFactors;
 
     for (auto const& m : modelIndices_)
-        allCorrRiskFactors.insert(parseCorrelationFactor(convertIndexToCamCorrelationEntry(m).first));
+        allCorrRiskFactors.insert(parseCorrelationFactor(convertIndexToCamCorrelationEntry(m).first, '#'));
     for (auto const& m : modelIrIndices_)
-        allCorrRiskFactors.insert(parseCorrelationFactor(convertIndexToCamCorrelationEntry(m.first).first));
+        allCorrRiskFactors.insert(parseCorrelationFactor(convertIndexToCamCorrelationEntry(m.first).first, '#'));
     for (auto const& m : modelInfIndices_)
-        allCorrRiskFactors.insert(parseCorrelationFactor(convertIndexToCamCorrelationEntry(m.first).first));
+        allCorrRiskFactors.insert(parseCorrelationFactor(convertIndexToCamCorrelationEntry(m.first).first, '#'));
     for (auto const& ccy : modelCcys_)
         allCorrRiskFactors.insert({CrossAssetModel::AssetType::IR, ccy, 0});
 
