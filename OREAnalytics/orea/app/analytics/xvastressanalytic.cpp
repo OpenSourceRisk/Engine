@@ -62,7 +62,7 @@ void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::dat
     auto baseScenario = simMarket->baseScenario();
     auto scenarioFactory = QuantLib::ext::make_shared<CloneScenarioFactory>(baseScenario);
     auto scenarioGenerator = QuantLib::ext::make_shared<StressScenarioGenerator>(
-        inputs_->stressScenarioData(), baseScenario, inputs_->xvaStressSimMarketParams(), simMarket, scenarioFactory,
+        inputs_->xvaStressScenarioData(), baseScenario, inputs_->xvaStressSimMarketParams(), simMarket, scenarioFactory,
         simMarket->baseScenarioAbsolute());
     simMarket->scenarioGenerator() = scenarioGenerator;
 
@@ -77,11 +77,20 @@ void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::dat
     xvaAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
 
     // debug
-    xvaAnalytic->reports()["XVA"]["xva"]->toFile("tmp_t0.csv");
+    xvaAnalytic->reports()["XVA"]["xva"]->toFile("xva_org.csv");
 
     // stress scenario runs
+    for (size_t i = 0; i < scenarioGenerator->samples(); ++i) {
+        
+        
+        auto scenario = scenarioGenerator->next(simMarket->asofDate());
+        XvaAnalytic newAnalytic(inputs_, scenario);
+        CONSOLEW("XVA_STRESS: Compute scenario " << scenario->label());
+        newAnalytic.runAnalytic(loader, {"EXPOSURE", "XVA"});
+        newAnalytic.reports()["XVA"]["xva"]->toFile("xva_" + scenario->label() + ".csv");
+    }
 
-    // ...
+
 
     // set the result report
 

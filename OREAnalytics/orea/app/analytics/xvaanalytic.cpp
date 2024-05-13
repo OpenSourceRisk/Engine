@@ -130,6 +130,19 @@ void XvaAnalyticImpl::buildScenarioSimMarket() {
             false, true, false,
             *inputs_->iborFallbackConfig(),
             false, offsetScenario_);
+    if (offsetScenario_ != nullptr){
+        LOG("Offset Scenario SimMarket");
+        LOG("Offset scenario is absolute = " << offsetScenario_->isAbsolute());
+        for (const auto& key : offsetScenario_->keys()) {
+
+            LOG(key << " : " << offsetScenario_->get(key));
+        }
+    }
+    LOG("Finished Scenario SimMarket");
+    for(const auto& key : simMarket_->baseScenario()->keys()){
+        LOG(key << " : " << simMarket_->baseScenario()->get(key) << " : "
+                << simMarket_->baseScenarioAbsolute()->get(key));
+    }
 }
 
 void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationError) {
@@ -138,7 +151,8 @@ void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationErr
     ScenarioGeneratorBuilder sgb(analytic()->configurations().scenarioGeneratorData);
     QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
     string config = inputs_->marketConfig("simulation");
-    scenarioGenerator_ = sgb.build(model_, sf, analytic()->configurations().simMarketParams, inputs_->asof(), analytic()->market(), config); 
+    auto market = offsetScenario_ == nullptr ? analytic()->market() : simMarket_;
+    scenarioGenerator_ = sgb.build(model_, sf, analytic()->configurations().simMarketParams, inputs_->asof(), market, config);
     QL_REQUIRE(scenarioGenerator_, "failed to build the scenario generator"); 
     samples_ = analytic()->configurations().scenarioGeneratorData->samples();
     LOG("simulation grid size " << grid_->size());
