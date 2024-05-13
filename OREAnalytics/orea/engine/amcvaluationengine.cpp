@@ -820,12 +820,11 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
                     std::string configuration = configurationFinalModel_;
                     market = QuantLib::ext::make_shared<ScenarioSimMarket>(
                         initMarket, simMarketParams_, QuantLib::ext::make_shared<FixingManager>(today_), configuration,
-                        curveConfigs_, todaysMarketParams_, continueOnError, false, true, false, iborFallbackConfig_,
+                        *curveConfigs_, *todaysMarketParams_, continueOnError, false, true, false, iborFallbackConfig_,
                         false, offsetScenario_);
                 }
 
                 // build cam
-
                 ore::data::CrossAssetModelBuilder modelBuilder(
                     market, crossAssetModelData_, configurationLgmCalibration_, configurationFxCalibration_,
                     configurationEqCalibration_, configurationInfCalibration_, configurationCrCalibration_,
