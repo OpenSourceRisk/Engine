@@ -146,6 +146,8 @@ std::pair<std::string, Period> convertIndexToCamCorrelationEntry(const std::stri
                               0 * Days);
     } else if (info.isEq()) {
         return std::make_pair("EQ:" + info.eq()->name(), 0 * Days);
+    } else if (info.isComm()) {
+        return std::make_pair("COMM:" + info.commName(), 0 * Days);
     } else {
         QL_FAIL("convertIndextoCamCorrelationEntry(): index '" << i << "' not recognised");
     }
