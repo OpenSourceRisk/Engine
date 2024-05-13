@@ -138,16 +138,16 @@ ASTNodePtr parseScript(const std::string& code) {
 std::pair<std::string, Period> convertIndexToCamCorrelationEntry(const std::string& i) {
     IndexInfo info(i);
     if (info.isIr()) {
-        return std::make_pair("IR:" + info.ir()->currency().code(), info.ir()->tenor());
+        return std::make_pair("IR#" + info.ir()->currency().code(), info.ir()->tenor());
     } else if (info.isInf()) {
-        return std::make_pair("INF:" + info.infName(), 0 * Days);
+        return std::make_pair("INF#" + info.infName(), 0 * Days);
     } else if (info.isFx()) {
-        return std::make_pair("FX:" + info.fx()->sourceCurrency().code() + info.fx()->targetCurrency().code(),
+        return std::make_pair("FX#" + info.fx()->sourceCurrency().code() + info.fx()->targetCurrency().code(),
                               0 * Days);
     } else if (info.isEq()) {
-        return std::make_pair("EQ:" + info.eq()->name(), 0 * Days);
+        return std::make_pair("EQ#" + info.eq()->name(), 0 * Days);
     } else if (info.isComm()) {
-        return std::make_pair("COMM:" + info.commName(), 0 * Days);
+        return std::make_pair("COM#" + info.commName(), 0 * Days);
     } else {
         QL_FAIL("convertIndextoCamCorrelationEntry(): index '" << i << "' not recognised");
     }
