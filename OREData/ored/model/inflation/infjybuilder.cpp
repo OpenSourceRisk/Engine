@@ -334,19 +334,24 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
                                             strikeValue, zeroInflationIndex_, obsLag, observationInterpolation);
         inst->setPricingEngine(engine);
 
+        auto fixingDate = inst->fixingDate();
+        auto t = inflationTime(fixingDate, *zts, false);
+
         // Build the helper using the NPV as the premium.
-        auto premium = dontCalibrate_ ? 0.01 : inst->NPV();
+        Real premium;
+        if(dontCalibrate_)
+            premium = 0.01;
+        else if(t <= 0.0)
+            premium = 0.0;
+        else
+            premium = inst->NPV();
+
         auto helper = QuantLib::ext::make_shared<CpiCapFloorHelper>(capfloor, baseCpi, maturity, calendar, bdc, calendar, bdc,
                                                             strikeValue, inflationIndex, obsLag, premium,
                                                             observationInterpolation);
 
-
-        // Add the helper's time to expiry.
-        auto fixingDate = helper->instrument()->fixingDate();
-        auto t = inflationTime(fixingDate, *zts, false);
-
-        // if time is not positive deactivate helper
-        if (t < 0.0 || QuantLib::close_enough(t, 0.0)) {
+        // if time is not positive or market prem is zero deactivate helper
+        if (t < 0.0 || QuantLib::close_enough(t, 0.0) || QuantLib::close_enough(premium, 0.0)) {
             active[i] = false;
             continue;
         }

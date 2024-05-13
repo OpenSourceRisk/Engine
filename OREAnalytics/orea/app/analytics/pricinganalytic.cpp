@@ -21,7 +21,6 @@
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/parsensitivityanalysis.hpp>
 #include <orea/engine/parsensitivitycubestream.hpp>
-#include <orea/engine/stresstest.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 
 using namespace ore::data;
@@ -138,24 +137,10 @@ void PricingAnalyticImpl::runAnalytic(
             analytic()->reports()[type]["cashflownpv"] = report;
             CONSOLE("OK");
         }
-        else if (type == "STRESS") {
-            CONSOLEW("Risk: Stress Test Report");
-            LOG("Stress Test Analysis called");
-            Settings::instance().evaluationDate() = inputs_->asof();
-            std::string marketConfig = inputs_->marketConfig("pricing");
-            QuantLib::ext::shared_ptr<StressTest> stressTest = QuantLib::ext::make_shared<StressTest>(
-                analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
-                inputs_->stressSimMarketParams(), inputs_->stressScenarioData(),
-                *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, nullptr,
-                inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
-                inputs_->continueOnError());
-            stressTest->writeReport(report, inputs_->stressThreshold());
-            analytic()->reports()[type]["stress"] = report;
-            CONSOLE("OK");
-        }
         else if (type == "SENSITIVITY") {
             CONSOLEW("Risk: Sensitivity Report");
             LOG("Sensi Analysis - Initialise");
+            bool recalibrateModels = true;
             bool ccyConv = false;
             std::string configuration = inputs_->marketConfig("pricing");
             QuantLib::ext::shared_ptr<SensitivityAnalysis> sensiAnalysis;
@@ -164,7 +149,7 @@ void PricingAnalyticImpl::runAnalytic(
                 sensiAnalysis = QuantLib::ext::make_shared<SensitivityAnalysis>(
                     analytic()->portfolio(), analytic()->market(), configuration, inputs_->pricingEngine(),
                     analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
-                    inputs_->sensiRecalibrateModels(), analytic()->configurations().curveConfig,
+                    recalibrateModels, analytic()->configurations().curveConfig,
                     analytic()->configurations().todaysMarketParams, ccyConv, inputs_->refDataManager(),
                     *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
                 LOG("Single-threaded sensi analysis created");
@@ -174,7 +159,7 @@ void PricingAnalyticImpl::runAnalytic(
                 sensiAnalysis = QuantLib::ext::make_shared<SensitivityAnalysis>(
                     inputs_->nThreads(), inputs_->asof(), loader, analytic()->portfolio(), configuration,
                     inputs_->pricingEngine(), analytic()->configurations().simMarketParams,
-                    analytic()->configurations().sensiScenarioData, inputs_->sensiRecalibrateModels(),
+                    analytic()->configurations().sensiScenarioData, recalibrateModels,
                     analytic()->configurations().curveConfig, analytic()->configurations().todaysMarketParams, ccyConv,
                     inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
                 LOG("Multi-threaded sensi analysis created");
@@ -185,7 +170,7 @@ void PricingAnalyticImpl::runAnalytic(
             if (inputs_->parSensi() || inputs_->alignPillars()) {
                 parAnalysis= QuantLib::ext::make_shared<ParSensitivityAnalysis>(
                     inputs_->asof(), analytic()->configurations().simMarketParams,
-                    *analytic()->configurations().sensiScenarioData, Market::defaultConfiguration,
+                    *analytic()->configurations().sensiScenarioData, "",
                     true, typesDisabled);
                 if (inputs_->alignPillars()) {
                     LOG("Sensi analysis - align pillars (for the par conversion or because alignPillars is enabled)");
