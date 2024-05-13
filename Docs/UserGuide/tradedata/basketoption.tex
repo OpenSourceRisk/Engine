@@ -42,7 +42,7 @@ Trade input and the associated payoff script are described in the following for 
 
 The traditional trade representation is as follows, using an equity underlying in this example:
 
-\begin{minted}[fontsize=\footnotesize]{xml}
+\begin{minted}[fontsize=\scriptsize]{xml}
 <Trade id="VanillaBasketOption#1">
   <TradeType>EquityBasketOption</TradeType>
   <Envelope>
@@ -101,7 +101,7 @@ with the following elements:
 
 The representation as a scripted trade is as follows:
 
-\begin{minted}[fontsize=\footnotesize]{xml}
+\begin{minted}[fontsize=\scriptsize]{xml}
 <Trade id="VanillaBasketOption#1">
   <TradeType>ScriptedTrade</TradeType>
   <Envelope/>
@@ -129,7 +129,7 @@ The VanillaBasketOption script referenced in the trade above is
 shown in Listing \ref{lst:vanillabasketoption}.
 
 \begin{listing}[hbt]
-\begin{minted}[fontsize=\footnotesize]{Basic}
+\begin{minted}[fontsize=\scriptsize]{Basic}
 REQUIRE SIZE(Underlyings) == SIZE(Weights);
 
 NUMBER u, basketPrice, ExerciseProbability, Payoff, currentNotional;
@@ -188,7 +188,7 @@ type indicated in square brackets.
 
 The traditional trade representation is as follows, using an equity underlying in this example:
 
-\begin{minted}[fontsize=\footnotesize]{xml}
+\begin{minted}[fontsize=\scriptsize]{xml}
 <Trade id="AsianBasketOption#1">
   <TradeType>EquityBasketOption</TradeType>
   <Envelope>
@@ -260,7 +260,7 @@ with the following elements:
 
 The representation as a scripted trade is as follows:
 
-\begin{minted}[fontsize=\footnotesize]{xml}
+\begin{minted}[fontsize=\scriptsize]{xml}
 <Trade id="AsianBasketOption#1">
   <TradeType>ScriptedTrade</TradeType>
   <Envelope/>
@@ -300,7 +300,7 @@ The AsianBasketOption script referenced in the trade above is
 shown in Listing \ref{lst:asianbasketoption}.
 
 \begin{listing}[hbt]
-\begin{minted}[fontsize=\footnotesize]{Basic}
+\begin{minted}[fontsize=\scriptsize]{Basic}
 REQUIRE SIZE(Underlyings) == SIZE(Weights);
 
 NUMBER d, u, basketPrice, ExerciseProbability, Payoff;
@@ -368,7 +368,7 @@ type indicated in square brackets.
 
 The traditional trade representation is as follows, using an equity underlying in this example:
 
-\begin{minted}[fontsize=\footnotesize]{xml}
+\begin{minted}[fontsize=\scriptsize]{xml}
 <Trade id="AverageStrikeBasketOption#1">
   <TradeType>EquityBasketOption</TradeType>
   <Envelope>
@@ -437,7 +437,7 @@ with the following elements:
 
 The representation as a scripted trade is as follows:
 
-\begin{minted}[fontsize=\footnotesize]{xml}
+\begin{minted}[fontsize=\scriptsize]{xml}
 <Trade id="AverageStrikeBasketOption#1">
   <TradeType>ScriptedTrade</TradeType>
   <Envelope/>
@@ -476,7 +476,7 @@ The AverageStrikeBasketOption script referenced in the trade above is
 shown in Listing \ref{lst:averagestrikebasketoption}.
 
 \begin{listing}[hbt]
-\begin{minted}[fontsize=\footnotesize]{Basic}
+\begin{minted}[fontsize=\scriptsize]{Basic}
 REQUIRE SIZE(Underlyings) == SIZE(Weights);
 
 NUMBER d, u, timeAverageBasketPrice, currentNotional;
@@ -551,7 +551,7 @@ type indicated in square brackets.
 
 The traditional trade representation is as follows, using an equity underlying in this example:
 
-\begin{minted}[fontsize=\footnotesize]{xml}
+\begin{minted}[fontsize=\scriptsize]{xml}
 <Trade id="LookbackCallBasketOption#1">
   <TradeType>EquityBasketOption</TradeType>
   <Envelope>
@@ -619,7 +619,7 @@ with the following elements:
 
 The representation as a scripted trade is as follows:
 
-\begin{minted}[fontsize=\footnotesize]{xml}
+\begin{minted}[fontsize=\scriptsize]{xml}
 <Trade id="LookbackCallBasketOption#1">
   <TradeType>ScriptedTrade</TradeType>
   <Envelope/>
@@ -657,7 +657,7 @@ The LookbackCallBasketOption script referenced in the trade above is
 shown in Listing \ref{lst:lookbackcallbasketoption}.
 
 \begin{listing}[hbt]
-\begin{minted}[fontsize=\footnotesize]{Basic}
+\begin{minted}[fontsize=\scriptsize]{Basic}
 REQUIRE SIZE(Underlyings) == SIZE(Weights);
 
 NUMBER d, u, basketPrice, minBasketPrice, currentNotional;
@@ -731,7 +731,7 @@ type indicated in square brackets.
 
 The traditional trade representation is as follows, using an equity underlying in this example:
 
-\begin{minted}[fontsize=\footnotesize]{xml}
+\begin{minted}[fontsize=\scriptsize]{xml}
 <Trade id="LookbackPutBasketOption#1">
   <TradeType>EquityBasketOption</TradeType>
   <Envelope>
@@ -799,7 +799,7 @@ with the following elements:
 
 The representation as a scripted trade is as follows:
 
-\begin{minted}[fontsize=\footnotesize]{xml}
+\begin{minted}[fontsize=\scriptsize]{xml}
 <Trade id="LookbackPutBasketOption#1">
   <TradeType>ScriptedTrade</TradeType>
   <Envelope/>
@@ -837,7 +837,7 @@ The LookbackCallBasketOption script referenced in the trade above is
 shown in Listing \ref{lst:lookbackputbasketoption}.
 
 \begin{listing}[hbt]
-\begin{minted}[fontsize=\footnotesize]{Basic}
+\begin{minted}[fontsize=\scriptsize]{Basic}
 REQUIRE SIZE(Underlyings) == SIZE(Weights);
 
 NUMBER d, u, basketPrice, maxBasketPrice;

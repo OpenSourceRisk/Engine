@@ -159,7 +159,7 @@ Date & Author & Comment \\
 31 March 2023 & Acadia & updates for release 9\\
 16 June 2023 & Acadia & updates for release 10\\
 16 October 2023 & Acadia & updates for release 11\\
-31 March 2024 & Acadia & updates for release 12\\
+24 May 2024 & Acadia & updates for release 12\\
 \hline
 \end{supertabular}
 \end{center}
@@ -195,12 +195,16 @@ The project aims at reaching quantitative risk ma\-nage\-ment practitioners (be 
 firms, consulting companies or regulatory bodies) who are looking for accessible software solutions, and quant
 developers in charge of the implementation of pricing and risk methods similar to those in ORE. Moreover, the project
 aims at reaching academics and students who would like to teach or learn quantitative risk management using a freely
-available, contemporary risk application.
+available, contemporary risk application. And in the meantime, as ORE is used in risk services at industrial scale since 2018
+with over 150 users, ORE is aimed at firms that consider the replacement of third party licensed software. 
 
 \subsubsection*{Contributions}
 Quaternion Risk Management \cite{QRM} has been committed to sponsoring the Open Source Risk project through ongoing project
 administration, through providing an initial release and a series of subsequent releases in order to achieve a wide
-analytics, product and risk factor class coverage. Since Quaternion's acquisition by Acadia Inc. in February 2021, Acadia \cite{acadia} is committed to continue the sponsorship. The Open Source Risk project works will continue with former Quaternion now operating as Acadia's Quantitative Services unit. 
+analytics, product and risk factor class coverage. Since Quaternion's acquisition by Acadia Inc. in February 2021,
+Acadia \cite{acadia} has been committed to continue the sponsorship. The Open Source Risk project work continues with
+former Quaternion operating as Acadia's Quantitative Services unit. And with Acadia's acquisiton by London Stock
+Exchange Group (LSEG) in 2023, the journey continues under the roof of LSEG Post Trade.
 
 The community is invited to contribute to ORE, for example through
 feedback, discussions and suggested enhancement in the forum on the ORE site \cite{ORE}, as well as contributions of ORE
@@ -208,8 +212,8 @@ enhancements in the form of source code. See the FAQ section on the ORE site \ci
 
 \subsection{Scope}
 
-ORE currently provides portfolio pricing, cash flow generation, market risk analysis and a range of contemporary derivative portfolio analytics. The latter are based on a Monte Carlo simulation framework which yields 
-the evolution of various exposure measures:
+ORE currently provides portfolio pricing, cash flow generation, market risk analysis and a range of contemporary derivative
+portfolio analytics. The latter are based on a Monte Carlo simulation framework which yields the evolution of various exposure measures:
 \begin{itemize}
 \item EE aka EPE (Expected Exposure or Expected Positive Exposure)
 \item ENE (Expected Negative Exposure, i.e. the counterparty's perspective)
@@ -227,26 +231,39 @@ and derivative value adjustments (xVA)
 for portfolios with netting, variation and initial margin agreements. 
 
 \medskip
-The market risk framework provides sensitivity analysis, stress testing and several parametric VaR versions (Delta VaR, Delta-Gamma Normal VaR, Delta-Gamma VaR with Cornish-Fisher expansion and Saddlepoint method),  across all asset classes and products. 
+The market risk framework provides
+\begin{itemize}
+\item sensitivity analysis, also in the ``par'' domain
+\item stress testing, also in the ``par'' domain
+\item several parametric VaR versions (Delta VaR, Delta-Gamma Normal VaR, Delta-Gamma VaR with Cornish-Fisher expansion and Saddlepoint method)
+\item historical simulation VaR
+\item P\&L and P\&L explain
+\end{itemize}
+across all asset classes and products. 
 
 \medskip
-Thanks to Acadia's open-source strategy, ORE's financial instrument scope was extended beyond the initial vanilla scope with quarterly releases since version 7 (September 2022) to cover
+Thanks to Acadia's open-source strategy, ORE's financial instrument scope was extended beyond the initial vanilla scope with quarterly releases since version 7 to cover
 \begin{itemize}
 \item "First Generation" Equity and FX Exotics, released September with ORE v7
 \item Commodity products (Swaps, Basis Swaps, Average Price Options, Swaptions), released December 22 with ORE v8
 \item Credit products (Index CDS and Index CDS Options, Credit-Linked Swaps, Synthetic CDOs), released March 23 with ORE v9
 \item Bond products and Hybrids (Bond Options, Bond Repos, Bond TRS, Composite Trades, Convertible Bonds, Generic TRS with mixed basket underlyings, CFDs), released in June 23 with ORE v10
+\item a Scripted Trade framework in October 23 with ORE v11: This allows the modelling of complex hybrid payoffs
+  such as Accumulators, TARFs, PRDCs, Basket Options, etc, across IR, FX, INF, EQ, COM classes.  Scripted Trades are fully
+  integrated into the market risk and exposure simulation frameworks, supported by American Monte Carlo methods for pricing
+  and exposure simulation. The user can now extend the instrument scope conveniently by adding payoff scripts (embedded into
+  the trade XML or in separate script "library" XML) and without recompiling the code base.
+\item Formula-based legs, Callable Swaps, Flexi Swaps, Balance Guaranteed Swaps and American Swaptions in May 24 with ORE v12
 \end{itemize}
+
 These contributions were accompanied by analytics extensions to enhance ORE usability
 \begin{itemize}
 \item Exposure simulation for xVA and PFE, adding Commodity to the asset class coverage, and adding American Monte Carlo for Exotics, released in December 22 with ORE v8
 \item Market Risk including multi-threaded sensitivity analysis, par sensitivity conversion, parametric delta/gamma VaR with Cornish-Fisher expansion and Saddlepoint method, released in March 23 with ORE v9
 \item Portfolio Credit Model, released in June 23 with ORE v10
 \item ISDA's Standard Initial Margin Model (SIMM), released in June 23 with ORE v10
+\item Historical Simulation VaR, P\&L and P\&L Explain, released in May 24 with ORE v12
 \end{itemize}
-
-With ORE v11 the release of the {\em Scripted Trade} framework followed. This allows the modelling of complex hybrid payoffs such as Accumulators, TARFs, PRDCs, Basket Options, etc, across IR, FX, INF, EQ, COM classes.  Scripted Trades are fully integrated into the market risk and exposure simulation frameworks, supported by American Monte Carlo methods for pricing and exposure simulation. 
-The user can now extend the instrument scope conveniently by adding payoff scripts (embedded into the trade XML or in separate script "library" XML) and without recompiling the code base.
 
 \medskip 
 The product coverage of the latest release of ORE is sketched in Table \ref{tab_coverage}.
@@ -263,7 +280,7 @@ Interest Rate Swaps & Y & Y & Y & Y\\
 \hline
 Caps/Floors & Y & Y & Y & Y\\
 \hline
-Swaptions & Y & Y & Y &Y \\
+Swaptions, Callable Swaps & Y & Y & Y &Y \\
 \hline
 Constant Maturity Swaps, CMS Caps/Floors & Y & Y & Y & Y\\
 \hline
@@ -319,6 +336,8 @@ ASCOTs & Y & Y & Y & Y \\
 \hline
 Scripted Trades & Y & Y & Y & Y \\
 \hline
+Flexi Swaps and Balance Guaranteed Swaps & Y & Y & Y & Y \\
+\hline
 \end{tabular}
 \caption{ORE product coverage. FX/Equity Exotics include Barrier, Digital, Digital Barrier (FX only), Double Barrier, European Barrier, KIKO Barrier (FX only), Touch and Double Touch Options. Scripted Trades cover single and multi-asset products across all asset classes except Credit (so far), see Example\_52 and the separate documentation in Docs/ScriptedTrade.}
 \label{tab_coverage}
@@ -348,17 +367,16 @@ See section \ref{example:42} on how to use ORE-Python.
 It is planned that subsequent ORE releases will also provide the calculation of {\bf regulatory capital charges} 
 \begin{itemize}
 \item for Counterparty Credit Risk under the standardised approach (SA-CCR)
-\item for Market Risk (FRTB-SA)
+\item for Market Risk (SMRC, FRTB-SA)
 \item for CVA Risk (BA-CVA, SA-CVA)
 \end{itemize}
 
-We also expect to contribute performance enhancements over time that are currently in development at Acadia, primarily based on the scripted trade framework
-\begin{itemize}
-\item AAD for fast calculation of trade sensitivities and xVAs
-\item tailored interfaces for utilising GPUs
-\end{itemize}
+{\bf Performance:} ORE v12 contains applications of {\bf AAD} for sensitivity analysis, CVA sensitivity (proof-of concept stage),
+as well as applications of {\bf GPUs} to parallelize computations (see Examples 56 and 61), with significant
+speed-ups. Both areas are active work in progress, and further enhancements and tests should be released over the next releases.
 
-There is demand among our clients for extended coverage of the ORE-Python version, so that we also expect steady growth of the Python wrapper around ORE.
+{\bf ORE Python:} Moreover, there is demand among ORE users for extended coverage of the ORE-Python version, so that we also expect steady growth
+of the Python wrapper around ORE.
 
 \subsection{Further Resources}
 \begin{itemize}
@@ -380,7 +398,7 @@ launch ORE using its command line application, and we discuss typical results an
 parametrisation and the structure of trade and market data input.
 
 %========================================================
-\section{Release Notes}\label{sec:releasenotes}
+\section{Release Notes: TODO}\label{sec:releasenotes}
 %========================================================
 
 See the full history of release notes in {\tt News.txt} in the top level directory of the ORE's github repository.
@@ -1283,6 +1301,12 @@ Example & Description \\
 \hline
 63 &  Stress Tests in the Par-Rate Domain \\
 \hline
+64 &  Formula-based Coupon \\
+\hline
+65 &  Flexi Swap \\
+\hline
+66 &  Balance Guaranteed Swap \\
+\hline
 \end{tabular}
 \caption{ORE examples.}
 \label{tab_0}
@@ -1523,6 +1547,9 @@ The example is an extreme case where the underlying Swap is deeply in the money 
 call exercise probability is close to one. Modify the Swap and Swaption fixed rates closer to the money ($\approx$ 1\%)
 to see the deviation between net exposure of the callable Swap and the exposure of a 'short' Swap with maturity on
 exercise.
+
+We have added more recently the combined CallableSwap instrument representation, check {\tt portfolio.xml} and compare
+the CallableSwap NPV in {\tt npv.csv} to the package NPV of Swap and Swaption.
 
 %--------------------------------------------------------
 \subsection{Cap/Floor Exposure}\label{sec:capfloor}
@@ -3796,7 +3823,49 @@ The only additional piece of input for the explainer run is {\tt sensitivity.xml
 \label{example:63}
 %--------------------------------------------------------------------
 
-TODO
+The stress testing framework in ORE has been operated so far in the ``raw'' domain
+of zero rate shifts, hazard rate shifts, optionlet volatility shifts etc.
+To analyse the impact of market rate shifts (Swap rates, CDS spreads, flat vols), one had to
+manipulate the market data input into ORE and re-run the entire ORE process multiple times.
+
+This example in folder {\tt Examples/Example\_63} demonstrates the extended
+stress testing framework that can be operated in the ``par'' rate domain instead.
+
+%--------------------------------------------------------------------
+\subsection{Formula-based Coupon}% Example 64
+\label{example:64}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_64} demonstrates the
+formula based leg in the context of Swaps with CMS Spread and
+Digital CMS Spread legs, as well as a Bond with a CMS Spread leg.
+
+The formula-based leg can be seen as a predecessor of the more versatile
+scripted trade framework. However, the formula leg may be used to
+apply a multi-factor Log-normal Swap Rate model instead of the Gaussian
+interest rate models currently applied in the scripted trade framework.
+
+%--------------------------------------------------------------------
+\subsection{Flexi Swap}% Example 65
+\label{example:65}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_65 demonstrates the
+FlexiSwap instrument in ORE - in a nutshell an amortizing swap in which one party
+has the option to reduce the notional in each period to any value between the current
+notional and a specified lower bound for that period.
+
+%--------------------------------------------------------------------
+\subsection{Balance Guaranteed Swap}% Example 66
+\label{example:66}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_66 demonstrates the
+Balance Guaranteed Swap (BGS) instrument, an amortizing Swap with prepayments
+that match prepayments in an underlying reference security. In ORE this
+BGS is approximated by a FlexiSwap instrument with amorization bounds
+given by two ``conditional prepayment rate (CPR)'' levels, e.g. determined by
+current and past CPRs or expert judement.
 
 \clearpage
 %========================================================
@@ -4078,9 +4147,14 @@ type can be (so far) in
 \item xva
 \item sensitivity
 \item stress
+\item parStressConversion
 \item parametricVar
+\item historicalSimulationVar
+\item pnl
+\item pnlExplain
 \item simm
 \item imschedule
+\item scenario
 \end{itemize}
 
 Each {\tt Analytic} section contains a list of key/value pairs to parameterise the analysis of the form {\tt <Parameter

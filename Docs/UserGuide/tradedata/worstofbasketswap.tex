@@ -10,7 +10,7 @@ have trade data containers (respectively):
 Listing \ref{lst:eqworstofbasketswap_data} shows the structure of example trades for an Equity underlying.
 
 \begin{listing}[H]
-\begin{minted}[fontsize=\footnotesize]{xml}
+\begin{minted}[fontsize=\scriptsize]{xml}
 <Trade id="EQ_WorstOfBasketSwap">
   <TradeType>EquityWorstOfBasketSwap</TradeType>
   <Envelope>
@@ -246,7 +246,7 @@ The meanings and allowable values of elements in the \lstinline!EquityWorstOfBas
 
 Worst Of Basket Swaps can alternatively be represented as {\em scripted trades}, refer to ore/Docs/ScriptedTrade for an introduction.
 
-\begin{minted}[fontsize=\footnotesize]{xml}
+\begin{minted}[fontsize=\scriptsize]{xml}
   <TradeType>ScriptedTrade</TradeType>
   <Envelope>
      ....
@@ -300,7 +300,7 @@ Worst Of Basket Swaps can alternatively be represented as {\em scripted trades},
 The WorstOfBasketSwap script referenced in the trade above is shown in Listing \ref{lst:worst_of_basket_swap}.
 
 \begin{listing}[hbt] 
-\begin{minted}[fontsize=\footnotesize]{Basic} 
+\begin{minted}[fontsize=\tiny]{Basic} 
 REQUIRE SIZE(Underlyings) == SIZE(InitialPrices);
 REQUIRE SIZE(SettlementDates) == SIZE(DeterminationDates);
 REQUIRE SIZE(KnockOutLevels) == SIZE(DeterminationDates) - 1;
