@@ -67,7 +67,7 @@ public:
             const QuantLib::Date&, const std::set<std::string>&, const std::vector<QuantLib::Date>&,
             const QuantLib::Size)>& cptyCubeFactory = {},
         const std::string& context = "unspecified",
-        const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& offSetScenario);
+        const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& offSetScenario = nullptr);
 
     // can be optionally called to set the agg scen data (which is done in the ssm for single-threaded runs)
     void setAggregationScenarioData(const QuantLib::ext::shared_ptr<AggregationScenarioData>& aggregationScenarioData);
