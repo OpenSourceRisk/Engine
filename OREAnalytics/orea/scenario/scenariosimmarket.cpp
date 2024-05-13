@@ -22,8 +22,9 @@
 */
 
 #include <orea/engine/observationmode.hpp>
-#include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/deltascenario.hpp>
+#include <orea/scenario/scenariosimmarket.hpp>
+#include <orea/scenario/scenarioutilities.hpp>
 #include <orea/scenario/simplescenario.hpp>
 
 #include <ored/marketdata/curvespecparser.hpp>
@@ -308,21 +309,23 @@ ScenarioSimMarket::ScenarioSimMarket(const QuantLib::ext::shared_ptr<Market>& in
                                      const TodaysMarketParameters& todaysMarketParams, const bool continueOnError,
                                      const bool useSpreadedTermStructures, const bool cacheSimData,
                                      const bool allowPartialScenarios, const IborFallbackConfig& iborFallbackConfig,
-                                     const bool handlePseudoCurrencies)
+                                     const bool handlePseudoCurrencies,
+                                     const QuantLib::ext::shared_ptr<Scenario>& offSetScenario)
     : ScenarioSimMarket(initMarket, parameters, QuantLib::ext::make_shared<FixingManager>(initMarket->asofDate()),
                         configuration, curveConfigs, todaysMarketParams, continueOnError, useSpreadedTermStructures,
-                        cacheSimData, allowPartialScenarios, iborFallbackConfig, handlePseudoCurrencies) {}
+                        cacheSimData, allowPartialScenarios, iborFallbackConfig, handlePseudoCurrencies,
+                        offSetScenario) {}
 
 ScenarioSimMarket::ScenarioSimMarket(
     const QuantLib::ext::shared_ptr<Market>& initMarket, const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& parameters,
     const QuantLib::ext::shared_ptr<FixingManager>& fixingManager, const std::string& configuration,
     const ore::data::CurveConfigurations& curveConfigs, const ore::data::TodaysMarketParameters& todaysMarketParams,
     const bool continueOnError, const bool useSpreadedTermStructures, const bool cacheSimData,
-    const bool allowPartialScenarios, const IborFallbackConfig& iborFallbackConfig, const bool handlePseudoCurrencies)
+    const bool allowPartialScenarios, const IborFallbackConfig& iborFallbackConfig, const bool handlePseudoCurrencies, const QuantLib::ext::shared_ptr<Scenario>& offSetScenario)
     : SimMarket(handlePseudoCurrencies), parameters_(parameters), fixingManager_(fixingManager),
       filter_(QuantLib::ext::make_shared<ScenarioFilter>()), useSpreadedTermStructures_(useSpreadedTermStructures),
       cacheSimData_(cacheSimData), allowPartialScenarios_(allowPartialScenarios),
-      iborFallbackConfig_(iborFallbackConfig) {
+      iborFallbackConfig_(iborFallbackConfig), offsetScenario_(offSetScenario) {
 
     LOG("building ScenarioSimMarket...");
     asof_ = initMarket->asofDate();
@@ -2842,6 +2845,55 @@ ScenarioSimMarket::ScenarioSimMarket(
     DLOG("building swap indices...");
     for (const auto& it : parameters->swapIndices()) {
         addSwapIndexToSsm(it.first, continueOnError);
+    }
+
+    if (offsetScenario_ != nullptr && offsetScenario_->isAbsolute() && !useSpreadedTermStructures_) {
+        recastScenario(offsetScenario_, offsetScenario_->coordinates(), coordinatesData_);
+        for (auto& [key, quote] : simData_) {
+            if (offsetScenario_->has(key)) {
+                quote->setValue(offsetScenario_->get(key));
+            } else {
+                QL_FAIL("ScenarioSimMarket: Offset Scenario doesnt contain key "
+                        << key
+                        << ". Internal error, possibly an internal error in the recastScenario method, contact dev.");
+            }
+        }
+    } else if (offsetScenario_ != nullptr && offsetScenario_->isAbsolute() && useSpreadedTermStructures_) {
+        recastScenario(offsetScenario_, offsetScenario_->coordinates(), coordinatesData_);
+        for (auto& [key, data] : simData_) {
+            if (offsetScenario_->has(key)) {
+                auto shift = getDifferenceScenario(key.keytype, absoluteSimData_[key], offsetScenario_->get(key));
+                data->setValue(shift);
+                absoluteSimData_[key] = offsetScenario_->get(key);
+            } else {
+                QL_FAIL("ScenarioSimMarket: Offset Scenario doesnt contain key "
+                        << key
+                        << ". Internal error, possibly an internal error in the recastScenario method, contact dev.");
+            }
+        }
+    } else if (offsetScenario_ != nullptr && !offsetScenario_->isAbsolute() && !useSpreadedTermStructures_) {
+        recastScenario(offsetScenario_, offsetScenario_->coordinates(), coordinatesData_);
+        for (auto& [key, quote] : simData_) {
+            if (offsetScenario_->has(key)) {
+                quote->setValue(quote->value() + offsetScenario_->get(key));
+            } else {
+                QL_FAIL("ScenarioSimMarket: Offset Scenario doesnt contain key "
+                        << key
+                        << ". Internal error, possibly an internal error in the recastScenario method, contact dev.");
+            }
+        }
+    } else if (offsetScenario_ != nullptr && !offsetScenario_->isAbsolute() && useSpreadedTermStructures_) {
+        recastScenario(offsetScenario_, offsetScenario_->coordinates(), coordinatesData_);
+        for (auto& [key, quote] : simData_) {
+            if (offsetScenario_->has(key)) {
+                quote->setValue(offsetScenario_->get(key));
+                absoluteSimData_[key] += offsetScenario_->get(key);
+            } else {
+                QL_FAIL("ScenarioSimMarket: Offset Scenario doesnt contain key "
+                        << key
+                        << ". Internal error, possibly an internal error in the recastScenario method, contact dev.");
+            }
+        }
     }
 
     LOG("building base scenario");

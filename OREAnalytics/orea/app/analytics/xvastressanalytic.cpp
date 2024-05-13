@@ -45,7 +45,7 @@ void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::dat
     Settings::instance().evaluationDate() = inputs_->asof();
     std::string marketConfig = inputs_->marketConfig("pricing"); // FIXME
 
-    auto xvaAnalytic = analytic()->dependentAnalytic<XvaAnalytic>("XVA");
+    auto xvaAnalytic = dependentAnalytic<XvaAnalytic>("XVA");
 
     // build t0, sim market, stress scenario generator
 
@@ -73,7 +73,7 @@ void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::dat
     CONSOLEW("XVA_STRESS: Running stress scenarios");
 
     // base scenario run
-
+    
     xvaAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
 
     // debug
@@ -97,7 +97,7 @@ void XvaStressAnalyticImpl::setUpConfigurations() {
 
 XvaStressAnalytic::XvaStressAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
     : Analytic(std::make_unique<XvaStressAnalyticImpl>(inputs), {"XVA_STRESS"}, inputs, true, false, false, false) {
-    dependentAnalytics_["XVA"] = QuantLib::ext::make_shared<XvaAnalytic>(inputs);
+    impl()->addDependentAnalytic("XVA", QuantLib::ext::make_shared<XvaAnalytic>(inputs));
 }
 
 } // namespace analytics

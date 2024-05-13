@@ -72,7 +72,8 @@ protected:
     QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpreter_;
     QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
     QuantLib::ext::shared_ptr<PostProcess> postProcess_;
-    
+    QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
+
     Size cubeDepth_ = 0;
     QuantLib::ext::shared_ptr<DateGrid> grid_;
     Size samples_ = 0;
@@ -85,9 +86,16 @@ static const std::set<std::string> xvaAnalyticSubAnalytics{"XVA", "EXPOSURE"};
 
 class XvaAnalytic : public Analytic {
 public:
-    explicit XvaAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<XvaAnalyticImpl>(inputs), xvaAnalyticSubAnalytics, inputs, false, false, false, false) {
-    }
+    explicit XvaAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                         const QuantLib::ext::shared_ptr<Scenario> offSetScenario = nullptr)
+        : Analytic(std::make_unique<XvaAnalyticImpl>(inputs), xvaAnalyticSubAnalytics, inputs, false, false, false,
+                   false), offsetScenario_(offSetScenario) {}
+
+    void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& scenario) { offsetScenario_ = scenario; }
+    const QuantLib::ext::shared_ptr<Scenario>& offsetScenario() const { return offsetScenario_; }
+
+private:
+    QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
 };
 
 } // namespace analytics

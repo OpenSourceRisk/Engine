@@ -604,9 +604,9 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
 AMCValuationEngine::AMCValuationEngine(
     const QuantLib::Size nThreads, const QuantLib::Date& today, const QuantLib::Size nSamples,
     const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
-    const QuantLib::ext::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData, const std::vector<string>& aggDataIndices,
-    const std::vector<string>& aggDataCurrencies, const Size aggDataNumberCreditStates,
-    const QuantLib::ext::shared_ptr<CrossAssetModelData>& crossAssetModelData,
+    const QuantLib::ext::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
+    const std::vector<string>& aggDataIndices, const std::vector<string>& aggDataCurrencies,
+    const Size aggDataNumberCreditStates, const QuantLib::ext::shared_ptr<CrossAssetModelData>& crossAssetModelData,
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
     const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
     const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
@@ -615,9 +615,11 @@ AMCValuationEngine::AMCValuationEngine(
     const std::string& configurationCrCalibration, const std::string& configurationFinalModel,
     const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData,
     const ore::data::IborFallbackConfig& iborFallbackConfig, const bool handlePseudoCurrenciesTodaysMarket,
-    const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
-                                                                   const std::vector<QuantLib::Date>&,
-                                                                   const QuantLib::Size)>& cubeFactory)
+    const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(
+        const QuantLib::Date&, const std::set<std::string>&, const std::vector<QuantLib::Date>&, const QuantLib::Size)>&
+        cubeFactory,
+    const QuantLib::ext::shared_ptr<Scenario>& offSetScenario,
+    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams)
     : useMultithreading_(true), aggDataIndices_(aggDataIndices), aggDataCurrencies_(aggDataCurrencies),
       aggDataNumberCreditStates_(aggDataNumberCreditStates), scenarioGeneratorData_(scenarioGeneratorData),
       nThreads_(nThreads), today_(today), nSamples_(nSamples), loader_(loader),
@@ -627,7 +629,8 @@ AMCValuationEngine::AMCValuationEngine(
       configurationInfCalibration_(configurationInfCalibration),
       configurationCrCalibration_(configurationCrCalibration), configurationFinalModel_(configurationFinalModel),
       referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
-      handlePseudoCurrenciesTodaysMarket_(handlePseudoCurrenciesTodaysMarket), cubeFactory_(cubeFactory) {
+      handlePseudoCurrenciesTodaysMarket_(handlePseudoCurrenciesTodaysMarket), cubeFactory_(cubeFactory),
+      offsetScenario_(offSetScenario), simMarketParams_(simMarketParams) {
 #ifndef QL_ENABLE_SESSIONS
     QL_FAIL(
         "AMCValuationEngine requires a build with QL_ENABLE_SESSIONS = ON when ctor multi-threaded runs is called.");
@@ -808,10 +811,23 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
                     today_, todaysMarketParams_, loaders[id], curveConfigs_, true, true, true, referenceData_, false,
                     iborFallbackConfig_, false, handlePseudoCurrenciesTodaysMarket_);
 
+                QuantLib::ext::shared_ptr<ore::data::Market> market = initMarket;
+
+                if(offsetScenario_ != nullptr){
+                    QL_REQUIRE(simMarketParams_ != nullptr,
+                               "AMC Valuation Engine can not build simMarket without simMarketParam");
+                    bool continueOnError = true;
+                    std::string configuration = configurationFinalModel_;
+                    market = QuantLib::ext::make_shared<ScenarioSimMarket>(
+                        initMarket, simMarketParams_, QuantLib::ext::make_shared<FixingManager>(today_), configuration,
+                        curveConfigs_, todaysMarketParams_, continueOnError, false, true, false, iborFallbackConfig_,
+                        false, offsetScenario_);
+                }
+
                 // build cam
 
                 ore::data::CrossAssetModelBuilder modelBuilder(
-                    initMarket, crossAssetModelData_, configurationLgmCalibration_, configurationFxCalibration_,
+                    market, crossAssetModelData_, configurationLgmCalibration_, configurationFxCalibration_,
                     configurationEqCalibration_, configurationInfCalibration_, configurationCrCalibration_,
                     configurationFinalModel_, false, true, "", SalvagingAlgorithm::None, "xva/amc cam building");
 

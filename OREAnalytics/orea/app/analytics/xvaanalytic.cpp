@@ -129,7 +129,7 @@ void XvaAnalyticImpl::buildScenarioSimMarket() {
             inputs_->continueOnError(), 
             false, true, false,
             *inputs_->iborFallbackConfig(),
-            false);
+            false, offsetScenario_);
 }
 
 void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationError) {
@@ -157,8 +157,10 @@ void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationErr
 void XvaAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError) {
     LOG("XVA: Build Simulation Model (continueOnCalibrationError = "
         << std::boolalpha << continueOnCalibrationError << ")");
+    ext::shared_ptr<Market> market = offsetScenario_ != nullptr ? simMarket_ : analytic()->market();
+    QL_REQUIRE(market != nullptr, "Internal error, buildCrossAssetModel needs to be called after the market is built.");
     CrossAssetModelBuilder modelBuilder(
-        analytic()->market(), analytic()->configurations().crossAssetModelData, inputs_->marketConfig("lgmcalibration"),
+        market, analytic()->configurations().crossAssetModelData, inputs_->marketConfig("lgmcalibration"),
         inputs_->marketConfig("fxcalibration"), inputs_->marketConfig("eqcalibration"),
         inputs_->marketConfig("infcalibration"), inputs_->marketConfig("crcalibration"),
         inputs_->marketConfig("simulation"), false, continueOnCalibrationError, "",
@@ -360,7 +362,7 @@ void XvaAnalyticImpl::buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio
             analytic()->configurations().todaysMarketParams, inputs_->marketConfig("simulation"),
             analytic()->configurations().simMarketParams, false, false, QuantLib::ext::make_shared<ScenarioFilter>(),
             inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, false, false, cubeFactory, {},
-            cptyCubeFactory, "xva-simulation");
+            cptyCubeFactory, "xva-simulation", offsetScenario_);
 
         engine.setAggregationScenarioData(*scenarioData_);
         engine.registerProgressIndicator(progressBar);
@@ -460,7 +462,8 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
 
     if (inputs_->nThreads() == 1) {
         initCube(amcCube_, amcPortfolio_->ids(), cubeDepth_);
-        AMCValuationEngine amcEngine(model_, inputs_->scenarioGeneratorData(), analytic()->market(),
+        ext::shared_ptr<ore::data::Market> market = offsetScenario_ == nullptr ? analytic()->market() : simMarket_;
+        AMCValuationEngine amcEngine(model_, inputs_->scenarioGeneratorData(), market,
                                      inputs_->exposureSimMarketParams()->additionalScenarioDataIndices(),
                                      inputs_->exposureSimMarketParams()->additionalScenarioDataCcys(),
                                      inputs_->exposureSimMarketParams()->additionalScenarioDataNumberOfCreditStates());
@@ -489,7 +492,8 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
                                      inputs_->marketConfig("lgmcalibration"), inputs_->marketConfig("fxcalibration"),
                                      inputs_->marketConfig("eqcalibration"), inputs_->marketConfig("infcalibration"),
                                      inputs_->marketConfig("crcalibration"), inputs_->marketConfig("simulation"),
-                                     inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, cubeFactory);
+                                     inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, cubeFactory, 
+                                     offsetScenario_, analytic()->configurations().simMarketParams);
 
         amcEngine.registerProgressIndicator(progressBar);
         amcEngine.registerProgressIndicator(progressLog);
@@ -644,7 +648,11 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         grid_, inputs_->storeCreditStateNPVs(), inputs_->flipViewXVA());
 
     if (runSimulation_) {
-    
+        if(analytic() != nullptr){
+            XvaAnalytic* xvaAnalytic =
+                static_cast<XvaAnalytic*>(analytic());
+            offsetScenario_ = xvaAnalytic->offsetScenario();
+        }
         LOG("XVA: Build simulation market");
         buildScenarioSimMarket();
 
