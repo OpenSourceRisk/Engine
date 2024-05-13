@@ -16,13 +16,6 @@
 		<Indices>
 			<Index>EUR-ESTER</Index>
 		</Indices>
-		<BenchmarkCurves>
-		</BenchmarkCurves>
-		<CapFloorVolatilities>
-
-		</CapFloorVolatilities>
-		<DefaultCurves>
-		</DefaultCurves>
 		<CreditStates>
 			<NumberOfFactors>0</NumberOfFactors>
 		</CreditStates>
