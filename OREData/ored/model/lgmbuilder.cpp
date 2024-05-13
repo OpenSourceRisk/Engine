@@ -346,7 +346,8 @@ void LgmBuilder::performCalculations() const {
     }
 
     for (Size j = 0; j < swaptionBasket_.size(); j++) {
-        auto engine = QuantLib::ext::make_shared<QuantExt::AnalyticLgmSwaptionEngine>(model_, calibrationDiscountCurve_);
+        auto engine = QuantLib::ext::make_shared<QuantExt::AnalyticLgmSwaptionEngine>(model_, calibrationDiscountCurve_,
+                                                                                      data_->floatSpreadMapping());
         engine->enableCache(!data_->calibrateH(), !data_->calibrateA());
         swaptionBasket_[j]->setPricingEngine(engine);
         // necessary if notifications are disabled (observation mode = Disable)

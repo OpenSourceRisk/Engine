@@ -855,7 +855,7 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> histVarSimMarketParams_;
     std::string baseScenarioLoc_;
     bool outputHistoricalScenarios_ = false;
-    
+
     /*******************
      * EXPOSURE analytic
      *******************/
@@ -1054,6 +1054,7 @@ private:
     std::string parConversionJacobiInverseFileName_;
     std::string pnlOutputFileName_;
     std::string parStressTestConversionFile_;
+    std::string pnlExplainOutputFileName_;
     std::string zeroToParShiftFile_;
 };
 

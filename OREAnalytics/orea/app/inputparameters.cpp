@@ -563,6 +563,8 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     parConversionJacobiInverseFileName_ = params->get("zeroToParSensiConversion", "jacobiInverseOutputFile", false);
     pnlOutputFileName_ = params->get("pnl", "outputFileName", false);
     parStressTestConversionFile_ = params->get("parStressConversion", "stressZeroScenarioDataFile", false);
+    pnlExplainOutputFileName_ = params->get("pnlExplain", "outputFileName", false);
+
     zeroToParShiftFile_ = params->get("zeroToParShift", "parShiftsFile", false);
     // map internal report name to output file name
     fileNameMap_["npv"] = npvOutputFileName_;
@@ -587,6 +589,8 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     fileNameMap_["parConversionJacobi_inverse"] = parConversionJacobiInverseFileName_;
     fileNameMap_["pnl"] = pnlOutputFileName_;
     fileNameMap_["parStress_ZeroStressData"] = parStressTestConversionFile_;
+    fileNameMap_["pnl_explain"] = pnlExplainOutputFileName_;
+    
     fileNameMap_["parshifts"] = zeroToParShiftFile_;
     vector<Size> dimOutputGridPoints;
     tmp = params->get("xva", "dimOutputGridPoints", false);

@@ -18,6 +18,7 @@
 
 #include <orea/app/analytics/imscheduleanalytic.hpp>
 #include <orea/app/analytics/parconversionanalytic.hpp>
+#include <orea/app/analytics/pnlexplainanalytic.hpp>
 #include <orea/app/analytics/parstressconversionanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/analytics/scenarioanalytic.hpp>
@@ -257,7 +258,7 @@ void AnalyticsManager::toFile(const ore::analytics::Analytic::analytic_reports& 
             if (it->second == 1) {
                 // The report name is unique, check whether we want to rename it or use the standard name
                 auto it2 = reportNames.find(reportName);
-                fileName = it2 != reportNames.end() ? it2->second : reportName;
+                fileName = (it2 != reportNames.end() && !it2->second.empty()) ? it2->second : reportName;
             }
             else {
                 ALOG("Report " << reportName << " occurs " << it->second << " times, fix report naming");

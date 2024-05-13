@@ -42,6 +42,7 @@ public:
     std::pair<std::size_t, bool> initiateCalculation(const std::size_t n, const std::size_t id = 0,
                                                      const std::size_t version = 0,
                                                      const Settings settings = {}) override final;
+    void disposeCalculation(const std::size_t id) override final;
     std::size_t createInputVariable(double v) override final;
     std::size_t createInputVariable(double* v) override final;
     std::vector<std::vector<std::size_t>> createInputVariates(const std::size_t dim,
@@ -92,6 +93,7 @@ private:
 
     std::vector<std::size_t> size_;
     std::vector<std::size_t> version_;
+    std::vector<bool> disposed_;
     std::vector<program> program_;
     std::vector<std::size_t> numberOfInputVars_;
     std::vector<std::size_t> numberOfVariates_;
@@ -141,6 +143,12 @@ void BasicCpuContext::init() {
     initialized_ = true;
 }
 
+void BasicCpuContext::disposeCalculation(const std::size_t id) {
+    QL_REQUIRE(!disposed_[id - 1], "BasicCpuContext::disposeCalculation(): id " << id << " was already disposed.");
+    program_[id - 1].clear();
+    disposed_[id - 1] = true;
+}
+
 std::pair<std::size_t, bool> BasicCpuContext::initiateCalculation(const std::size_t n, const std::size_t id,
                                                                   const std::size_t version, const Settings settings) {
 
@@ -155,6 +163,7 @@ std::pair<std::size_t, bool> BasicCpuContext::initiateCalculation(const std::siz
 
         size_.push_back(n);
         version_.push_back(version);
+        disposed_.push_back(false);
         program_.push_back(program());
         numberOfInputVars_.push_back(0);
         numberOfVariates_.push_back(0);
@@ -170,9 +179,11 @@ std::pair<std::size_t, bool> BasicCpuContext::initiateCalculation(const std::siz
 
         QL_REQUIRE(id <= size_.size(),
                    "BasicCpuContext::initiateCalculation(): id (" << id << ") invalid, got 1..." << size_.size());
-        QL_REQUIRE(size_[id - 1] == n, "BasicCpuCOntext::initiateCalculation(): size ("
+        QL_REQUIRE(size_[id - 1] == n, "BasicCpuContext::initiateCalculation(): size ("
                                            << size_[id - 1] << ") for id " << id << " does not match current size ("
                                            << n << ")");
+        QL_REQUIRE(!disposed_[id - 1], "BasicCpuContext::initiateCalculation(): id ("
+                                           << id << ") was already disposed, it can not be used any more.");
 
         if (version != version_[id - 1]) {
             version_[id - 1] = version;

@@ -66,7 +66,7 @@ class AnalyticLgmSwaptionEngine : public GenericEngine<Swaption::arguments, Swap
 public:
     /*! nextCoupon is Mapping A, proRata is Mapping B
         in Lichters, Stamm, Gallagher (2015), 11.2.2 */
-    enum FloatSpreadMapping { nextCoupon, proRata };
+    enum FloatSpreadMapping { nextCoupon, proRata, simple };
 
     /*! Lgm model based constructor */
     AnalyticLgmSwaptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
@@ -95,10 +95,11 @@ public:
     void clearCache();
 
 private:
+    Real flatAmount(const Size k) const;
     Real yStarHelper(const Real y) const;
-    const QuantLib::ext::shared_ptr<IrLgm1fParametrization> p_;
-    const Handle<YieldTermStructure> c_;
-    const FloatSpreadMapping floatSpreadMapping_;
+    QuantLib::ext::shared_ptr<IrLgm1fParametrization> p_;
+    Handle<YieldTermStructure> c_;
+    mutable FloatSpreadMapping floatSpreadMapping_;
     bool caching_, lgm_H_constant_, lgm_alpha_constant_;
     mutable Real H0_, D0_, zetaex_, S_m1, u_, w_;
     mutable std::vector<Real> S_, Hj_, Dj_;

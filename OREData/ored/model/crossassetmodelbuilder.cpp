@@ -979,7 +979,9 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
             resetModelParams(CrossAssetModel::AssetType::INF, 2, modelIdx, Null<Size>());
             resetModelParams(CrossAssetModel::AssetType::INF, rrIdx, modelIdx, Null<Size>());
 
-            while (inflationCalibrationErrors_[modelIdx] > cc.rmseTolerance() && numIts < cc.maxIterations()) {
+            while (inflationCalibrationErrors_[modelIdx] >
+                       std::min(cc.rmseTolerance(), config_->bootstrapTolerance()) &&
+                   numIts < cc.maxIterations()) {
                 model_->calibrateInfJyIterative(modelIdx, 2, idxBasket, *optimizationMethod_, endCriteria_);
                 model_->calibrateInfJyIterative(modelIdx, rrIdx, rrBasket, *optimizationMethod_, endCriteria_);
                 numIts++;
@@ -1008,14 +1010,14 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
     DLOG("INF (JY) " << data.index() << " calibration errors:");
     inflationCalibrationErrors_[modelIdx] = getCalibrationError(allHelpers);
     if (data.calibrationType() == CalibrationType::Bootstrap) {
-        if (fabs(inflationCalibrationErrors_[modelIdx]) < cc.rmseTolerance()) {
+        if (fabs(inflationCalibrationErrors_[modelIdx]) < config_->bootstrapTolerance()) {
             TLOGGERSTREAM("Calibration details:");
             TLOGGERSTREAM(getCalibrationDetails(rrBasket, idxBasket, inflationParam, rrVol.calibrate()));
             TLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
         } else {
             std::stringstream ss;
             ss << "INF (JY) " << modelIdx << " calibration error " << std::scientific
-               << inflationCalibrationErrors_[modelIdx] << " exceeds tolerance " << cc.rmseTolerance();
+               << inflationCalibrationErrors_[modelIdx] << " exceeds tolerance " << config_->bootstrapTolerance();
             string exceptionMessage = ss.str();
             StructuredModelErrorMessage("Failed to calibrate INF JY Model", exceptionMessage, id_).log();
             WLOGGERSTREAM("Calibration details:");
