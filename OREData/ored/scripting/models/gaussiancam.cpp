@@ -197,25 +197,26 @@ void GaussianCam::performCalculations() const {
     }
 
     indexPositionInProcess_.clear();
-    eqIndexInCam_.clear();
-    comIndexInCam_.clear();
+    eqIndexInCam_.resize(indices_.size());
+    comIndexInCam_.resize(indices_.size());
+    std::fill(eqIndexInCam_.begin(), eqIndexInCam_.end(), Null<Size>());
+    std::fill(comIndexInCam_.begin(), comIndexInCam_.end(), Null<Size>());
     for (Size i = 0; i < indices_.size(); ++i) {
         if (indices_[i].isFx()) {
             // FX
             Size ccyIdx = cam_->ccyIndex(parseCurrency(indexCurrencies_[i]));
             QL_REQUIRE(ccyIdx > 0, "fx index '" << indices_[i] << "' has unexpected for ccy = base ccy");
             indexPositionInProcess_.push_back(cam_->pIdx(CrossAssetModel::AssetType::FX, ccyIdx - 1));
-            eqIndexInCam_.push_back(Null<Size>());
         } else if (indices_[i].isEq()) {
             // EQ
             Size eqIdx = cam_->eqIndex(indices_[i].eq()->name());
             indexPositionInProcess_.push_back(cam_->pIdx(CrossAssetModel::AssetType::EQ, eqIdx));
-            eqIndexInCam_.push_back(eqIdx);
+            eqIndexInCam_[i] = eqIdx;
         } else if(indices_[i].isComm()) {
             // COM
             Size comIdx = cam_->comIndex(indices_[i].commName());
             indexPositionInProcess_.push_back(cam_->pIdx(CrossAssetModel::AssetType::COM, comIdx));
-            comIndexInCam_.push_back(comIdx);
+            comIndexInCam_[i] = comIdx;
         } else {
             QL_FAIL("GuassianCam::performCalculations(): index '" << indices_[i].name()
                                                                   << "' expected to be FX, EQ, COMM");
