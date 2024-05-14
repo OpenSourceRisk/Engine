@@ -1,0 +1,68 @@
+<StressTesting>
+  <UseSpreadedTermStructures>true</UseSpreadedTermStructures>
+  <StressTest id="eur_1d_up">
+
+    <ParShifts>
+      <IRCurves>true</IRCurves>
+      <SurvivalProbability>true</SurvivalProbability>
+      <CapFloorVolatilities>true</CapFloorVolatilities>
+    </ParShifts>
+
+    <DiscountCurves>
+      <DiscountCurve ccy="EUR">
+        <ShiftType>Absolute</ShiftType>
+        <!--Shifts>0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0</Shifts-->
+        <Shifts>0.01, 0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
+        <ShiftTenors>3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y</ShiftTenors>
+      </DiscountCurve>
+    </DiscountCurves>
+
+    <IndexCurves>
+      <IndexCurve index="EUR-EURIBOR-6M">
+        <ShiftType>Absolute</ShiftType>
+        <Shifts>0.02, 0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02</Shifts>
+        <ShiftTenors>3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y</ShiftTenors>
+      </IndexCurve>
+
+      <IndexCurve index="EUR-EURIBOR-3M">
+        <ShiftType>Absolute</ShiftType>
+        <Shifts>0.02, 0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02</Shifts>
+        <ShiftTenors>3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y</ShiftTenors>
+      </IndexCurve>
+
+      <IndexCurve index="EUR-EONIA">
+        <ShiftType>Absolute</ShiftType>
+        <Shifts>0.01, 0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
+        <ShiftTenors>3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y</ShiftTenors>
+      </IndexCurve>
+    </IndexCurves>
+
+    <YieldCurves/>
+
+    <FxSpots>
+    </FxSpots>
+
+    <FxVolatilities>      <!-- strike dimension ignored -->
+    </FxVolatilities>
+
+    <!-- Swaption ATM vol shifts, strike dimension ignored -->
+    <SwaptionVolatilities>
+    </SwaptionVolatilities>
+
+    <!-- Cap/Floor (Optionlet) vol surface shifts, strike dimension ignored -->
+    <CapFloorVolatilities>
+    </CapFloorVolatilities>
+
+    <!-- Equity spot shifts -->
+    <EquitySpots>
+    </EquitySpots>
+
+    <!-- Equity ATM vol shifts -->
+    <EquityVolatilities>
+    </EquityVolatilities>
+    <SecuritySpreads />
+    <RecoveryRates/>
+    <SurvivalProbabilities/>
+
+  </StressTest>
+</StressTesting>
